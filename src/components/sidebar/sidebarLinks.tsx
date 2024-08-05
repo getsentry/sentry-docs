@@ -33,6 +33,10 @@ const productSidebarItems = [
     root: 'cli',
   },
   {
+    title: 'Api Docs',
+    root: 'api-docs',
+  },
+  {
     title: 'Sentry API',
     root: 'api',
   },

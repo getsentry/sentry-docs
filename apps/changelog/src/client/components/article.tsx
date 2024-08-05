@@ -57,7 +57,7 @@ export default function Article({
   );
 }
 
-function LoadingArticle() {
+export function LoadingArticle() {
   return (
     <article className="bg-white rounded-lg shadow-lg mb-8">
       <div className="p-6">
