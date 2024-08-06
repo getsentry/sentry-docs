@@ -33,7 +33,7 @@ export function GitHubCTA() {
             Create a GH issue
           </Link>{' '}
           &nbsp;&nbsp;|&nbsp;&nbsp;
-          <Link href="https://sentry.zendesk.com/hc/en-us/">Contact support</Link>{' '}
+          <Link href="https://sentry.zendesk.com/hc/en-us/">Get support</Link>{' '}
         </div>
       </small>
     </div>
