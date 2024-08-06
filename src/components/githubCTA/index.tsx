@@ -30,7 +30,7 @@ export function GitHubCTA() {
           </Link>{' '}
           &nbsp;&nbsp;|&nbsp;&nbsp;
           <Link href="https://github.com/getsentry/sentry-docs/issues/new/choose">
-            Create a GH issue
+            Create a docs issue
           </Link>{' '}
           &nbsp;&nbsp;|&nbsp;&nbsp;
           <Link href="https://sentry.zendesk.com/hc/en-us/">Get support</Link>{' '}
