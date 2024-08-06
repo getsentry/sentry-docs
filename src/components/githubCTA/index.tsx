@@ -24,7 +24,7 @@ export function GitHubCTA() {
         welcome, whether fixing a typo (drat!) or suggesting an update ("yeah, this would
         be better").
         <div>
-          <Link href={sourceUrl}>Edit this page in GH</Link> &nbsp;&nbsp;|&nbsp;&nbsp;
+          <Link href={sourceUrl}>Edit this page</Link> &nbsp;&nbsp;|&nbsp;&nbsp;
           <Link href="https://docs.sentry.io/contributing/">
             Learn about contributing to docs
           </Link>{' '}
