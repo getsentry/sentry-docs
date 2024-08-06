@@ -83,3 +83,83 @@ In order for the Sentry SDK to work as expected, and for it to be in sync with O
 <Note>
 Trace propagation is needed for Sentry to automatically connect services together. (For example, if you want to connect the frontend and backend, or different backend services.) This makes it possible to see related errors across services. <PlatformLink to="/tracing/trace-propagation">Learn more about Trace Propagation.</PlatformLink>
 </Note>
+
+## Required Instrumentation
+
+By default, Sentry will register OpenTelemetry instrumentation to automatically capture spans for traces spanning incoming and outgoing HTTP requests, DB queries, and more.
+
+If tracing is not enabled (no `tracesSampleRate` is defined in the SDK configuration), only a minimal amount of OpenTelemetry instrumentation will be registered. This includes the following:
+
+- <PlatformLink to="/configuration/integrations/http/">httpIntegration</PlatformLink> registers [@opentelemetry/instrumentation-http](https://www.npmjs.com/package/@opentelemetry/instrumentation-http)
+- <PlatformLink to="/configuration/integrations/nodefetch/">nativeNodeFetchIntegration</PlatformLink> registers [opentelemetry-instrumentation-fetch-node](https://www.npmjs.com/package/opentelemetry-instrumentation-fetch-node)
+
+<PlatformSection notSupported={['javascript.aws-lambda', 'javascript.gcp-functions']}>
+  <Note>
+    If tracing is not enabled, performance instrumentations will not be registered but they will still be included in the bundle. If you
+    want to reduce the bundle size or used dependencies, you can also <PlatformLink to="/configuration/tree-shaking/#setting-up-sentry-without-performance-integrations">Set up Sentry without Performance Integrations</PlatformLink>.
+  </Note>
+</PlatformSection>
+
+These are needed to make sure that trace propagation works correctly. Additionally, the HTTP instrumentation is configured to ensure that request isolation is automatically applied for Sentry.
+
+If you want to add your own http/node-fetch instrumentation, you have to follow the following steps:
+
+### Custom HTTP Instrumentation
+
+You won't be able to add `@opentelemetry/instrumentation-http` yourself and will need to use `httpIntegration` in order for Sentry to work as expected. If you want to use custom configuration for your HTTP instrumentation, you can use the <PlatformLink to="/configuration/integrations/http/">httpIntegration configuration</PlatformLink>.
+
+### Custom Node Fetch Instrumentation
+
+If tracing is disabled, the Node Fetch instrumentation will not emit any spans. In this scenario, it will only inject sentry-specific trace propagation headers. You are free to add your own Node Fetch instrumentation on top of this which may emit spans as you like.
+
+## Using a Custom Sampler
+
+While you can use your own sampler, we recommend that you use the `SentrySampler`. This will ensure that the correct subset of traces will be sent to Sentry, based on your `tracesSampleRate`. It will also ensure that all other Sentry features like trace propagation work as expected. If you do need to use your own sampler, make sure to wrap your `SamplingResult` with our `wrapSamplingDecision` method like in the example below:
+
+```javascript
+const { NodeTracerProvider } = require("@opentelemetry/sdk-trace-node");
+const Sentry = require("@sentry/node");
+const {
+  SentrySpanProcessor,
+  SentryPropagator,
+  SentrySampler,
+  wrapSamplingDecision
+} = require("@sentry/opentelemetry");
+
+// implements Sampler from "@opentelemetry/sdk-trace-node"
+class CustomSampler {
+  shouldSample(context, _traceId, _spanName, _spanKind, attributes, _links) {
+    const decision = yourDecisionLogic();
+
+    // wrap the result
+    return wrapSamplingDecision({
+      decision,
+      context,
+      spanAttributes: attributes,
+    });
+  }
+
+  toString() {
+    return CustomSampler.name;
+  }
+}
+
+const sentryClient = Sentry.init({
+  dsn: "__DSN__",
+  skipOpenTelemetrySetup: true,
+
+  // By defining any sample rate,
+  // tracing intergations will be added by default
+  // omit this if you do not want any performance integrations to be added
+  tracesSampleRate: 0,
+});
+
+const provider = new NodeTracerProvider({
+  sampler: new CustomSampler(),
+});
+
+// ...rest of your setup
+
+// Validate that the setup is correct
+Sentry.validateOpenTelemetrySetup();
+```
