@@ -24,13 +24,16 @@ export function GitHubCTA() {
         welcome, whether fixing a typo (drat!) or suggesting an update ("yeah, this would
         be better").
         <div>
-          <Link href={sourceUrl}>Suggest an edit to this page</Link>{' '}
-          &nbsp;&nbsp;|&nbsp;&nbsp;
-          <Link href="https://docs.sentry.io/contributing/">Contribute to Docs</Link>{' '}
+          <Link href={sourceUrl}>Edit this page in GH</Link> &nbsp;&nbsp;|&nbsp;&nbsp;
+          <Link href="https://docs.sentry.io/contributing/">
+            Learn about contributing to docs
+          </Link>{' '}
           &nbsp;&nbsp;|&nbsp;&nbsp;
           <Link href="https://github.com/getsentry/sentry-docs/issues/new/choose">
-            Report a problem
+            Create a GH issue
           </Link>{' '}
+          &nbsp;&nbsp;|&nbsp;&nbsp;
+          <Link href="https://sentry.zendesk.com/hc/en-us/">Contact support</Link>{' '}
         </div>
       </small>
     </div>
