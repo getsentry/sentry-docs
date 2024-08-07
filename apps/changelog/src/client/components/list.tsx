@@ -9,7 +9,7 @@ import Article from './article';
 import {Pagination} from './pagination';
 import {CategoryTag} from './tag';
 
-const ENTRIES_PER_PAGE = 3;
+const ENTRIES_PER_PAGE = 10;
 
 type EnhancedChangelog = Omit<Changelog, 'publishedAt'> & {
   categories: Category[];
