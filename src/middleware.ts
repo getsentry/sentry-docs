@@ -3432,6 +3432,10 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     from: '/sdk/features/data-handling/',
     to: '/sdk/data-handling/',
   },
+  {
+    from: '/sdk/craft-quick-start/',
+    to: '/sdk/processes/releases/',
+  },
 ];
 
 const redirectMap = new Map(
