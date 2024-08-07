@@ -3469,7 +3469,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     to: 'platforms/react-native/',
   },
   {
-    from: '/learn/scopes/?platform=rust',
+    from: '/learn/scopes/?platform=rust/',
     to: '/platforms/rust/enriching-events/scopes/',
   },
   {
