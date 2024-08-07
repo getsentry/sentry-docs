@@ -1570,6 +1570,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/javascript/guides/:guide/enriching-events/fingerprinting/',
   },
   {
+    from: '/platforms/javascript/guides/:guide/tracing/instrumentation/opentelemetry/',
+    to: '/platforms/javascript/guides/:guide/opentelemetry/',
+  },
+  {
     from: '/learn/cli/configuration/',
     to: '/cli/configuration/',
   },
@@ -3431,6 +3435,26 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/sdk/features/data-handling/',
     to: '/sdk/data-handling/',
+  },
+  {
+    from: '/sdk/craft-quick-start/',
+    to: '/sdk/processes/releases/',
+  },
+  {
+    from: '/sdk/metrics/',
+    to: '/sdk/telemetry/metrics/',
+  },
+  {
+    from: '/sdk/check-ins/',
+    to: '/sdk/telemetry/check-ins/',
+  },
+  {
+    from: '/sdk/profiles/',
+    to: '/sdk/telemetry/profiles/',
+  },
+  {
+    from: '/sdk/distributed-tracing/',
+    to: '/sdk/telemetry/traces/distributed-tracing/',
   },
 ];
 
