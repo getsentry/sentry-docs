@@ -3436,6 +3436,22 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     from: '/sdk/craft-quick-start/',
     to: '/sdk/processes/releases/',
   },
+  {
+    from: '/sdk/metrics/',
+    to: '/sdk/telemetry/metrics/',
+  },
+  {
+    from: '/sdk/check-ins/',
+    to: '/sdk/telemetry/check-ins/',
+  },
+  {
+    from: '/sdk/profiles/',
+    to: '/sdk/telemetry/profiles/',
+  },
+  {
+    from: '/sdk/distributed-tracing/',
+    to: '/sdk/telemetry/traces/distributed-tracing/',
+  },
 ];
 
 const redirectMap = new Map(
