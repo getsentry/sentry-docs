@@ -1,11 +1,10 @@
 const formatDate = (date: string | Date) => {
-  const options: Intl.DateTimeFormatOptions = {
+  const now = new Date(date).toLocaleDateString('en-EN', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
     timeZone: 'UTC'
-  };
-  const now = new Date(date).toLocaleDateString('en-EN', options);
+  });
 
   return now;
 };

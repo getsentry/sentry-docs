@@ -1,17 +1,31 @@
 'use client';
-import {Fragment} from 'react';
+import Link from 'next/link';
+import {createSerializer, parseAsArrayOf, parseAsInteger, parseAsString} from 'nuqs';
 
-export default function Pagination({
+const serialize = createSerializer({
+  month: parseAsString,
+  categories: parseAsArrayOf(parseAsString),
+  page: parseAsInteger.withDefault(1).withOptions({clearOnDefault: true}),
+  search: parseAsString,
+});
+
+export function Pagination({
   totalPages,
   currentPage,
   setPageNumber,
+  monthParam,
+  search,
+  selectedCategoriesIds,
 }: {
   totalPages: number;
   currentPage: number;
+  selectedCategoriesIds: string[];
+  monthParam: string | null;
+  search: string | null;
   setPageNumber: (pageNumber: number) => void;
 }) {
-  const prevPage = currentPage - 1 > 0;
-  const nextPage = currentPage + 1 <= parseInt(totalPages.toString(), 10);
+  const navigationToPrevPageAllowed = currentPage - 1 > 0;
+  const navigationToNextPageAllowed = currentPage + 1 <= totalPages;
 
   const pages: Array<number> = [];
   let pushedMiddle = false;
@@ -27,12 +41,20 @@ export default function Pagination({
   return (
     <div className="flex items-center justify-center gap-0 md:gap-4">
       <ConditionalLink
-        href={`#page${Math.max(currentPage - 1, 1)}`}
-        onClick={() => setPageNumber(Math.max(currentPage - 1, 1))}
-        condition={prevPage}
+        href={serialize({
+          month: monthParam,
+          categories: selectedCategoriesIds.length === 0 ? null : selectedCategoriesIds,
+          page: Math.max(currentPage - 1, 1),
+          search,
+        })}
+        onClick={(e: MouseEvent) => {
+          e.preventDefault();
+          setPageNumber(Math.max(currentPage - 1, 1));
+        }}
+        condition={navigationToPrevPageAllowed}
       >
         <button
-          disabled={!prevPage}
+          disabled={!navigationToPrevPageAllowed}
           className="hidden md:flex items-center gap-2 px-6 py-3 font-sans text-xs font-bold text-center text-gray-900 uppercase align-middle transition-all rounded-lg select-none hover:bg-darkPurple/10 active:bg-darkPurple disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
           type="button"
         >
@@ -56,30 +78,47 @@ export default function Pagination({
       </ConditionalLink>
       <div className="flex items-center gap-0 md:gap-2">
         {pages.map(page => (
-          <a
+          <Link
             key={page}
-            href={page === 0 ? undefined : `#page${page}`}
-            onClick={() => (page === 0 ? {} : setPageNumber(page))}
+            href={serialize({
+              month: monthParam,
+              categories:
+                selectedCategoriesIds.length === 0 ? null : selectedCategoriesIds,
+              page: page,
+              search,
+            })}
+            onClick={e => {
+              e.preventDefault();
+              setPageNumber(page);
+            }}
           >
             <button
-              className={`${page === currentPage ? 'bg-darkPurple relative h-10 max-h-[40px] w-10 max-w-[40px] select-none rounded-lg  text-center align-middle font-sans text-xs font-medium uppercase text-white shadow-md bg-darkPurple transition-all hover:shadow-lg hover:bg-darkPurple focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none' : 'relative h-10 max-h-[40px] w-10 max-w-[40px] select-none rounded-lg text-center align-middle font-sans text-xs font-medium uppercase text-gray-900 transition-all hover:bg-darkPurple/10 active:bg-darkPurple/20 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none'}`}
+              className={`${page === currentPage ? 'bg-darkPurple relative h-10 max-h-[40px] w-10 max-w-[40px] select-none rounded-lg  text-center align-middle font-sans text-xs font-medium uppercase text-white shadow-md  hover:shadow-lg hover:bg-darkPurple focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none' : 'relative h-10 max-h-[40px] w-10 max-w-[40px] select-none rounded-lg text-center align-middle font-sans text-xs font-medium uppercase text-gray-900 hover:bg-darkPurple/10 active:bg-darkPurple/20 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none'}`}
               type="button"
             >
               <span className="absolute transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
                 {page === 0 ? '...' : page}
               </span>
             </button>
-          </a>
+          </Link>
         ))}
       </div>
       <ConditionalLink
-        href={`#page${currentPage + 1}`}
-        onClick={() => setPageNumber(currentPage + 1)}
-        condition={nextPage}
+        href={serialize({
+          month: monthParam,
+          categories: selectedCategoriesIds.length === 0 ? null : selectedCategoriesIds,
+          page: currentPage + 1,
+          search,
+        })}
+        onClick={(e: MouseEvent) => {
+          e.preventDefault();
+          setPageNumber(currentPage + 1);
+        }}
+        condition={navigationToNextPageAllowed}
       >
         <button
-          disabled={!nextPage}
-          className="hidden md:flex items-center gap-2 px-6 py-3 font-sans text-xs font-bold text-center text-gray-900 uppercase align-middle transition-all rounded-lg select-none hover:bg-darkPurple/10 active:bg-darkPurple/20 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+          disabled={!navigationToNextPageAllowed}
+          className="hidden md:flex items-center gap-2 px-6 py-3 font-sans text-xs font-bold text-center text-gray-900 uppercase align-middle rounded-lg select-none hover:bg-darkPurple/10 active:bg-darkPurple/20 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
           type="button"
         >
           Next
@@ -107,10 +146,11 @@ export default function Pagination({
 // @ts-expect-error TODO(lforst): leftover from migration
 function ConditionalLink({children, condition, onClick, ...props}) {
   return condition ? (
-    <a onClick={onClick} {...props}>
+    // @ts-ignore
+    <Link onClick={onClick} {...props}>
       {children}
-    </a>
+    </Link>
   ) : (
-    <Fragment>{children}</Fragment>
+    <>{children}</>
   );
 }

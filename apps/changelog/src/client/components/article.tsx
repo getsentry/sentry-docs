@@ -1,6 +1,6 @@
 import {ReactNode} from 'react';
-import Tag from './tag';
-import { DateComponent } from './date';
+import {DateComponent} from './date';
+import {CategoryTag} from './tag';
 
 type ArticleProps = {
   children?: ReactNode;
@@ -41,7 +41,7 @@ export default function Article({
         <h3 className="text-3xl text-primary font-semibold mb-2">{title}</h3>
         <div>
           <div className="flex flex-wrap gap-1 py-1">
-            {Array.isArray(tags) && tags.map(tag => <Tag key={tag} text={tag} />)}
+            {Array.isArray(tags) && tags.map(tag => <CategoryTag key={tag} text={tag} />)}
           </div>
 
           <div className="prose max-w-none text-gray-700 py-2">{children}</div>
