@@ -3493,7 +3493,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/react-native/tracing/instrumentation/automatic-instrumentation/',
   },
   {
-    from: '/platforms/rust/env_logger/index.html',
+    from: '/platforms/rust/env_logger/index.html/',
     to: '/platforms/rust/configuration/environments/',
   },
   {
