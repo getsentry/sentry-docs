@@ -1,135 +1,42 @@
 ---
 title: Set Up Metrics
 description: "Learn how to measure the data points you care about by configuring Metrics in your PHP app."
-sidebar_order: 5500
-notSupported:
-  - php.symfony
+sidebar_order: 5000
 ---
 
 <Include name="feature-stage-beta-metrics.mdx" />
 
-<Include name="metrics-api-change.mdx" />
+Sentry metrics are numerical values that allow you to pinpoint and solve issues impacting user experience and app performance. You can measure and track the data points that are important to you and your application, such as latency, processing time, event size or number of user signups. This gives you a broad overview of the behaviour and health of your system.
 
-<Note>
+In Sentry, metrics are extracted from your span data, to ensure they are contextually linked to the rest of your data through Tracing, so you can do more than just observe. If you notice an unexpected pattern, you can zoom in to see a snapshot through your entire system with a trace and get rich additional debugging information through issues, replays or profiles to help you understand the root cause and take action.
 
-Metrics for PHP are supported with Sentry PHP SDK version `4.5.0` and above.
+## How to attach data to a span
 
-</Note>
-
-Sentry metrics help you pinpoint and solve issues that impact user experience and app performance by measuring the data points that are important to you. You can track things like processing time, event size, user signups, and conversion rates, then correlate them back to tracing data in order to get deeper insights and solve issues faster.
-
-## Emit a Counter
-
-Counters are one of the more basic types of metrics and can be used to count certain event occurrences.
-
-To emit a counter, do the following:
+Sentry's tracing product has to be enabled in order for Metrics to work. To begin capturing metrics data, you first need to start a transaction. Check out the <PlatformLink to="/tracing/">performance setup</PlatformLink> and <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">custom instrumentation</PlatformLink> documentation for more detailed information.
 
 ```php
-// Increment a counter by one for each button click.
-\Sentry\metrics()->increment(
-    key: 'button_click',
-    value: 1,
-    tags: [
-        'browser' => 'Firefox',
-        'app_version' => '1.0.0',
-    ],
-);
+// Fetch the current span
+$span = \Sentry\SentrySdk::getCurrentHub()->getSpan();
+if ($span !== null) {
+    // Attach the data to the span
+    $span->setData([
+        'foo' => 'bar',
+        'baz' => 123,
+    ]);
+}
 ```
 
-## Emit a Distribution
-
-Distributions help you get the most insights from your data by allowing you to obtain aggregations such as `p90`, `min`, `max`, and `avg`.
-
-To emit a distribution, do the following:
+## Further examples on how to attach certain measurements to a span
 
 ```php
-// Add '15.0' to a distribution used for tracking the loading times per page.
-\Sentry\metrics()->distribution(
-    key: 'page_load',
-    value: 15.0,
-    unit: \Sentry\Metrics\MetricsUnit::millisecond(),
-    tags: [
-        'page' => '/home',
-    ],
-);
+$span = \Sentry\SentrySdk::getCurrentHub()->getSpan();
+if ($span !== null) {
+    $span->setData([
+        'processing_time' => $event->getProcessingTime(),
+        'user_email' => $identity->get('email'),
+        'memory_peak_usage' => memory_get_peak_usage(false),
+    ]);
+}
 ```
 
-## Emit a Set
-
-Sets are useful for looking at unique occurrences and counting the unique elements you added.
-
-To emit a set, do the following:
-
-```php
-// Add 'jane' to a set used for tracking the number of users that viewed a page.
-\Sentry\metrics()->set(
-    key: 'user_view',
-    value: 'jane',
-    unit: \Sentry\Metrics\MetricsUnit::custom('username'),
-    tags: [
-        'page' => '/home',
-    ],
-);
-```
-
-## Emit a Gauge
-
-Gauges let you obtain aggregates like `min`, `max`, `avg`, `sum`, and `count`. They can be represented in a more space-efficient way than distributions, but they can't be used to get percentiles. If percentiles aren't important to you, we recommend using gauges.
-
-To emit a gauge, do the following:
-
-```php
-// Add '15.0' to a gauge used for tracking the loading times for a page.
-\Sentry\metrics()->gauge(
-    key: 'page_load',
-    value: 15.0,
-    unit: \Sentry\Metrics\MetricsUnit::millisecond(),
-    tags: [
-        'page' => '/home',
-    ],
-);
-```
-
-## Emit a Timer
-
-Timers can be used to measure the execution time of a specific block of code. They're implemented like distributions, but measured in seconds.
-
-To emit a timer, do the following:
-
-```php
-\Sentry\metrics()->timing(
-    key: 'event_processing_time',
-    callback: static fn() => process(),
-);
-```
-
-## Flush Your Metrics
-
-All metrics emitted have to be manually flushed to Sentry.
-
-To flush your metrics, do the following:
-
-```php
-use function Sentry\metrics;
-
-metrics()->flush();
-```
-
-To reduce overhead, we recommend registering the flushing in a shutdown function.
-
-```php
-use function Sentry\metrics;
-
-register_shutdown_function(static fn () => metrics()->flush());
-```
-
-## Setup Code Locations
-
-To attach the code location of your metrics, set `attach_metric_code_locations` to `true` (the default is `false`).
-
-```php
-\Sentry\init([
-   'dsn' => '___PUBLIC_DSN___',
-   'attach_metric_code_locations' => true,
-]);
-```
+After you emit your span data, you need to configure the metric you want to track in the Sentry UI from this data field. Learn about this [here](https://docs.sentry.io/product/explore/metrics/metrics-set-up/).
