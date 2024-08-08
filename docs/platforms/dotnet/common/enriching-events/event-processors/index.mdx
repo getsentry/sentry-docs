@@ -1,17 +1,40 @@
 ---
 title: Event Processors
-description: "Learn more about how you can add your own event processors globally or to the current scope."
+description: "Learn how event processors can enrich events globally or in the current scope."
 ---
 
-You can enrich events with additional data by adding your own event processors, either on the scope level or globally. Though event processors are similar to <PlatformIdentifier name="before-send" /> and <PlatformIdentifier name="before-send-transaction" />, there are two key differences:
+Event processors can enrich events with additional, either globally or within a particular scope. Though event processors are similar to <PlatformIdentifier name="before-send" /> and <PlatformIdentifier name="before-send-transaction" />, there are two key differences:
 
-- <PlatformIdentifier name="before-send" /> and <PlatformIdentifier name="before-send-transaction" /> are
-  guaranteed to be run last, after all other event processors, (which means they
-  get the final version of the event right before it's sent, hence the name). Event
-  processors added with either of the methods below run in an undetermined order,
-  which means changes to the event may still be made after the event processor runs.
-- While <PlatformIdentifier name="before-send" />, <PlatformIdentifier name="before-send-transaction" />, and processors added with <PlatformIdentifier name="Sentry.add-global-event-processor" /> run globally, regardless of scope, processors added with <PlatformIdentifier name="scope.add-event-processor" /> only run on events captured while that scope is active.
+1. <PlatformIdentifier name="before-send" /> and <PlatformIdentifier name="before-send-transaction" /> are
+  guaranteed to be run after all other processing, just before an event gets sent. Event processors run in an undetermined order, so changes to the event may still be made after the event processor runs.
+2. <PlatformIdentifier name="before-send" /> and <PlatformIdentifier name="before-send-transaction" /> always run globally. Processors can be configured to run either globally or only within a particular scope.
 
-Like <PlatformIdentifier name="before-send" /> and <PlatformIdentifier name="before-send-transaction" />, event processors are passed two arguments, the event itself and <PlatformLink to="/configuration/filtering/#using-hints">a `hint` object</PlatformLink> containing extra metadata.
+## Duplicate Event Detection
+
+By default, Sentry includes a global processor that detects and drops duplicate events.
+
+This processor be configured by via `SentryOptions.DeduplicateMode` when initialising the Sentry SDK. This is a flag enum consisting of the following values:
+- `DeduplicateMode.SameEvent`: Same event instance. Assumes no object reuse/pooling.
+- `DeduplicateMode.SameExceptionInstance`: An exception that was captured twice.
+- `DeduplicateMode.InnerException`: An exception already captured exists as an inner exception.
+- `DeduplicateMode.AggregateException`: An exception already captured is part of the aggregate exception.
+- `DeduplicateMode.All`: All modes combined.
+
+The default value for `SentryOptions.DeduplicateMode` is `DeduplicateMode.All ^ DeduplicateMode.InnerException` (so all detected duplicate events will be dropped except those from inner exceptions). However, if we only wanted `SameEvent` and `SameExceptionInstance` events to be dropped, we could initialize the SDK as follows:
+
+```csharp
+SentrySdk.Init(options => {
+  // ... configure other options here
+  options.DeduplicateMode = DeduplicateMode.SameEvent | DeduplicateMode.SameExceptionInstance;
+})
+```
+Alternatively, duplicate event detection can be disabled entirely by calling `DisableDuplicateEventDetection`:
+
+```csharp
+SentrySdk.Init(options => {
+  // ... configure other options here
+  options.DisableDuplicateEventDetection();
+})
+```
 
 <PlatformContent includePath="enriching-events/event-processors" />
