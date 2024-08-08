@@ -4,7 +4,7 @@ import {serialize} from 'next-mdx-remote/serialize';
 
 import Header from './header';
 import {getChangelogs} from '../../server/utils';
-import {ChangelogList} from '@/client/components/list';
+import {ChangelogEntry, ChangelogList} from '@/client/components/list';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,13 +12,21 @@ export default async function Page() {
   const changelogs = await getChangelogs();
 
   const changelogsWithMdxSummaries = await Promise.all(
-    changelogs.map(async changelog => {
-      const mdxSummary = await serialize(changelog.summary || '');
-      return {
-        ...changelog,
-        mdxSummary,
-      };
-    })
+    changelogs
+      .filter(changelog => {
+        return changelog.publishedAt !== null;
+      })
+      .map(async (changelog): Promise<ChangelogEntry> => {
+        const mdxSummary = await serialize(changelog.summary || '');
+        return {
+          id: changelog.id,
+          title: changelog.title,
+          slug: changelog.slug,
+          publishedAt: changelog.publishedAt!,
+          categories: changelog.categories,
+          mdxSummary,
+        };
+      })
   );
 
   return (
