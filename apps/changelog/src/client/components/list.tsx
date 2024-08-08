@@ -205,7 +205,10 @@ export function ChangelogList({changelogs}: {changelogs: ChangelogEntry[]}) {
               aria-label="Search..."
               type="text"
               value={searchValue ?? ''}
-              onChange={e => setSearchValue(e.target.value ? e.target.value : null)}
+              onChange={e => {
+                setPageParam(null);
+                setSearchValue(e.target.value ? e.target.value : null);
+              }}
               placeholder="Search..."
               className="form-input flex-1 rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-primary-500 focus:ring-primary-500"
             />
@@ -234,7 +237,7 @@ export function ChangelogList({changelogs}: {changelogs: ChangelogEntry[]}) {
                 setPageParam(pageNumber, {history: 'push'});
               }}
               search={searchValue}
-              selectedDate={monthAndYearParam}
+              selectedMonth={monthAndYearParam}
               selectedCategoriesIds={selectedCategoriesIds}
             />
           )}

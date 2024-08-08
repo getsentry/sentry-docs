@@ -13,14 +13,14 @@ export function Pagination({
   totalPages,
   currentPage,
   onPageNumberChange,
-  selectedDate,
+  selectedMonth,
   search,
   selectedCategoriesIds,
 }: {
   totalPages: number;
   currentPage: number;
   selectedCategoriesIds: string[];
-  selectedDate: string | null;
+  selectedMonth: string | null;
   search: string | null;
   onPageNumberChange: (pageNumber: number) => void;
 }) {
@@ -42,7 +42,7 @@ export function Pagination({
     <div className="flex items-center justify-center gap-0 md:gap-4">
       <ConditionalLink
         href={serialize({
-          month: selectedDate,
+          month: selectedMonth,
           categories: selectedCategoriesIds.length === 0 ? null : selectedCategoriesIds,
           page: Math.max(currentPage - 1, 1),
           search,
@@ -81,7 +81,7 @@ export function Pagination({
           <Link
             key={page}
             href={serialize({
-              month: selectedDate,
+              month: selectedMonth,
               categories:
                 selectedCategoriesIds.length === 0 ? null : selectedCategoriesIds,
               page: page,
@@ -105,7 +105,7 @@ export function Pagination({
       </div>
       <ConditionalLink
         href={serialize({
-          month: selectedDate,
+          month: selectedMonth,
           categories: selectedCategoriesIds.length === 0 ? null : selectedCategoriesIds,
           page: currentPage + 1,
           search,
