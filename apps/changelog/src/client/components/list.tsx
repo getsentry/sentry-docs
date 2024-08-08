@@ -4,17 +4,18 @@ import {type Category, type Changelog} from '@prisma/client';
 import {MDXRemote, MDXRemoteSerializeResult} from 'next-mdx-remote';
 import Link from 'next/link';
 import {parseAsArrayOf, parseAsInteger, parseAsString, useQueryState} from 'nuqs';
-import {Fragment, useState} from 'react';
+import {Fragment} from 'react';
 import Article from './article';
 import {Pagination} from './pagination';
 import {CategoryTag} from './tag';
 
 const ENTRIES_PER_PAGE = 10;
 
-type EnhancedChangelog = Omit<Changelog, 'publishedAt'> & {
+type ChangelogEntry = {
+  id: string;
+  publishedAt: Date;
   categories: Category[];
   mdxSummary: MDXRemoteSerializeResult;
-  publishedAt: string;
 };
 
 /**
@@ -29,7 +30,7 @@ function changelogEntryPublishDateToAddressableTag(date: Date) {
   });
 }
 
-export default function Changelogs({changelogs}: {changelogs: EnhancedChangelog[]}) {
+export function ChangelogList({changelogs}: {changelogs: ChangelogEntry[]}) {
   const [searchValue, setSearchValue] = useQueryState('search', parseAsString);
 
   const [monthAndYearParam, setMonthParam] = useQueryState('month');
@@ -129,7 +130,7 @@ export default function Changelogs({changelogs}: {changelogs: EnhancedChangelog[
         new Date(changelog.publishedAt)
       );
 
-      const prevChangelog: EnhancedChangelog | undefined = arr[i - 1];
+      const prevChangelog: ChangelogEntry | undefined = arr[i - 1];
       const prevChangelogHasDifferentMonth =
         !prevChangelog ||
         changelogEntryPublishDateToAddressableTag(new Date(prevChangelog.publishedAt)) !==

@@ -1,19 +1,19 @@
-import { Fragment } from "react";
-import type { Metadata } from "next";
-import { serialize } from "next-mdx-remote/serialize";
+import {Fragment} from 'react';
+import type {Metadata} from 'next';
+import {serialize} from 'next-mdx-remote/serialize';
 
-import Header from "./header";
-import { getChangelogs } from "../../server/utils";
-import List from "@/client/components/list";
+import Header from './header';
+import {getChangelogs} from '../../server/utils';
+import {ChangelogList} from '@/client/components/list';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
-export default async function ChangelogList() {
+export default async function Page() {
   const changelogs = await getChangelogs();
 
   const changelogsWithMdxSummaries = await Promise.all(
-    changelogs.map(async (changelog) => {
-      const mdxSummary = await serialize(changelog.summary || "");
+    changelogs.map(async changelog => {
+      const mdxSummary = await serialize(changelog.summary || '');
       return {
         ...changelog,
         mdxSummary,
@@ -24,7 +24,7 @@ export default async function ChangelogList() {
   return (
     <Fragment>
       <Header />
-      <List changelogs={changelogsWithMdxSummaries} />
+      <ChangelogList changelogs={changelogsWithMdxSummaries} />
     </Fragment>
   );
 }
@@ -32,7 +32,7 @@ export default async function ChangelogList() {
 export function generateMetadata(): Metadata {
   return {
     description:
-      "Stay up to date on everything big and small, from product updates to SDK changes with the Sentry Changelog.",
+      'Stay up to date on everything big and small, from product updates to SDK changes with the Sentry Changelog.',
     alternates: {
       canonical: `https://sentry.io/changelog/`,
     },
