@@ -1,7 +1,6 @@
 import {ReactNode} from 'react';
-
-import Date from './date';
 import Tag from './tag';
+import { DateComponent } from './date';
 
 type ArticleProps = {
   children?: ReactNode;
@@ -48,7 +47,7 @@ export default function Article({
           <div className="prose max-w-none text-gray-700 py-2">{children}</div>
           <dl>
             <dd className="text-xs leading-6 text-gray-400">
-              {date && <Date date={date} />}
+              {date && <DateComponent date={date} />}
             </dd>
           </dl>
         </div>

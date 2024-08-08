@@ -1,6 +1,6 @@
 ---
 title: Signal Handlers
-sidebar_order: 30
+sidebar_order: 40
 ---
 
 Native Sentry SDKs like sentry-native and sentry-cocoa have to work with signal handlers
@@ -9,7 +9,7 @@ This applies to mobile SDKs as well as the native SDK.  As signal handlers
 are notoriously difficult to work with and the restrictions placed on us are
 quite limiting we have to partially bend the rules of what is acceptable.
 
-# General Risks
+## General Risks
 
 The general risks with signal handlers stem from the interruptive nature:
 
@@ -25,7 +25,7 @@ theory you can only call [async safe functions](https://man7.org/linux/man-pages
 which unfortunately put a lot of limitations in place.  In particular not even
 allocations are possible, let alone most threading functions.
 
-# Basic Recommendations
+## Basic Recommendations
 
 We want to optimize our outcomes for getting good crash reports and getting
 crash reports altogether.  We do not necessarily optimize for not crashing if
@@ -49,7 +49,7 @@ disk in reducing priority.  If for instance we can only collect auxiliary
 information with the risk of crashing in the crash handler, that one should be
 extracted and dumped after the stack trace has been created.
 
-# Memory Allocation
+## Memory Allocation
 
 The recommendation is for libraries to use custom allocation functions which
 under normal circumstances use `malloc` but after once have entered a crashing
@@ -57,7 +57,7 @@ situation in the signal handler switch over to a bump allocator.  This is
 necessary as malloc can (and will!) hold a lock when entering into a signal
 handler which can cause us to either dead lock or crash.
 
-# Locks and Signal Handler Marking
+## Locks and Signal Handler Marking
 
 Another issues is that we cannot generally use locks properly once in signal
 handlers.  The way the native SDK is dealing with this situation is to
@@ -66,7 +66,7 @@ generic code that might be wanting to wait for a real lock can either
 additionally block on the spinlock or silently pass if it's in the same
 thread as the signal handler.
 
-# Writing Files
+## Writing Files
 
 For writing files the `fwrite` family of functions must not be used as they
 are not async safe.  Instead, the underlying `write` and `open` functions
