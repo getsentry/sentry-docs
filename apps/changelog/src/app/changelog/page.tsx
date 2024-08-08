@@ -22,7 +22,7 @@ export default async function Page() {
           id: changelog.id,
           title: changelog.title,
           slug: changelog.slug,
-          publishedAt: changelog.publishedAt!,
+          publishedAt: changelog.publishedAt!.toISOString(),
           categories: changelog.categories,
           mdxSummary,
         };

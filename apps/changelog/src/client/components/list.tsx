@@ -17,7 +17,7 @@ export type ChangelogEntry = {
   slug: string;
   summary?: string;
   image?: string | null | undefined;
-  publishedAt: Date;
+  publishedAt: string; // Dates are passed to client components serialized as strings
   categories: Category[];
   mdxSummary: MDXRemoteSerializeResult;
 };
@@ -72,7 +72,7 @@ export function ChangelogList({changelogs}: {changelogs: ChangelogEntry[]}) {
       }
 
       const addressableDate = changelogEntryPublishDateToAddressableTag(
-        changelog.publishedAt
+        new Date(changelog.publishedAt)
       );
 
       // map all categories to a string
@@ -86,7 +86,7 @@ export function ChangelogList({changelogs}: {changelogs: ChangelogEntry[]}) {
       return searchableContent.toLowerCase().includes(searchValue.toLowerCase());
     })
     .sort((a, b) => {
-      return b.publishedAt.getTime() - a.publishedAt.getTime();
+      return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
     });
 
   const filteredChangelogs = filteredChangelogsWithoutMonthFilter
@@ -98,7 +98,7 @@ export function ChangelogList({changelogs}: {changelogs: ChangelogEntry[]}) {
       }
 
       const addressableDate = changelogEntryPublishDateToAddressableTag(
-        changelog.publishedAt
+        new Date(changelog.publishedAt)
       );
 
       return monthAndYearParam === addressableDate;
@@ -119,7 +119,7 @@ export function ChangelogList({changelogs}: {changelogs: ChangelogEntry[]}) {
     }
 
     datesGroupedByMonthAndYear.add(
-      changelogEntryPublishDateToAddressableTag(changelog.publishedAt)
+      changelogEntryPublishDateToAddressableTag(new Date(changelog.publishedAt))
     );
   });
 
@@ -130,13 +130,15 @@ export function ChangelogList({changelogs}: {changelogs: ChangelogEntry[]}) {
   const paginatedChangelogs = filteredChangelogs
     .slice(ENTRIES_PER_PAGE * (selectedPage - 1), ENTRIES_PER_PAGE * selectedPage)
     .map((changelog, i, arr) => {
-      const monthYear = changelogEntryPublishDateToAddressableTag(changelog.publishedAt);
+      const monthYear = changelogEntryPublishDateToAddressableTag(
+        new Date(changelog.publishedAt)
+      );
 
       const prevChangelog: ChangelogEntry | undefined = arr[i - 1];
       const prevChangelogHasDifferentMonth =
         !prevChangelog ||
-        changelogEntryPublishDateToAddressableTag(prevChangelog.publishedAt) !==
-          changelogEntryPublishDateToAddressableTag(changelog.publishedAt);
+        changelogEntryPublishDateToAddressableTag(new Date(prevChangelog.publishedAt)) !==
+          changelogEntryPublishDateToAddressableTag(new Date(changelog.publishedAt));
 
       return (
         <Fragment key={changelog.id}>
@@ -228,11 +230,11 @@ export function ChangelogList({changelogs}: {changelogs: ChangelogEntry[]}) {
             <Pagination
               currentPage={selectedPage}
               totalPages={numberOfPages}
-              setPageNumber={pageNumber => {
+              onPageNumberChange={pageNumber => {
                 setPageParam(pageNumber, {history: 'push'});
               }}
               search={searchValue}
-              monthParam={monthAndYearParam}
+              selectedDate={monthAndYearParam}
               selectedCategoriesIds={selectedCategoriesIds}
             />
           )}
@@ -253,8 +255,9 @@ export function ChangelogList({changelogs}: {changelogs: ChangelogEntry[]}) {
             .filter(monthAndYear => {
               return filteredChangelogsWithoutMonthFilter.some(changelog => {
                 return (
-                  changelogEntryPublishDateToAddressableTag(changelog.publishedAt) ===
-                  monthAndYear
+                  changelogEntryPublishDateToAddressableTag(
+                    new Date(changelog.publishedAt)
+                  ) === monthAndYear
                 );
               });
             })

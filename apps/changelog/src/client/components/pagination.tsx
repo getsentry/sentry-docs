@@ -12,17 +12,17 @@ const serialize = createSerializer({
 export function Pagination({
   totalPages,
   currentPage,
-  setPageNumber,
-  monthParam,
+  onPageNumberChange,
+  selectedDate,
   search,
   selectedCategoriesIds,
 }: {
   totalPages: number;
   currentPage: number;
   selectedCategoriesIds: string[];
-  monthParam: string | null;
+  selectedDate: string | null;
   search: string | null;
-  setPageNumber: (pageNumber: number) => void;
+  onPageNumberChange: (pageNumber: number) => void;
 }) {
   const navigationToPrevPageAllowed = currentPage - 1 > 0;
   const navigationToNextPageAllowed = currentPage + 1 <= totalPages;
@@ -42,14 +42,14 @@ export function Pagination({
     <div className="flex items-center justify-center gap-0 md:gap-4">
       <ConditionalLink
         href={serialize({
-          month: monthParam,
+          month: selectedDate,
           categories: selectedCategoriesIds.length === 0 ? null : selectedCategoriesIds,
           page: Math.max(currentPage - 1, 1),
           search,
         })}
         onClick={(e: MouseEvent) => {
           e.preventDefault();
-          setPageNumber(Math.max(currentPage - 1, 1));
+          onPageNumberChange(Math.max(currentPage - 1, 1));
         }}
         condition={navigationToPrevPageAllowed}
       >
@@ -81,7 +81,7 @@ export function Pagination({
           <Link
             key={page}
             href={serialize({
-              month: monthParam,
+              month: selectedDate,
               categories:
                 selectedCategoriesIds.length === 0 ? null : selectedCategoriesIds,
               page: page,
@@ -89,7 +89,7 @@ export function Pagination({
             })}
             onClick={e => {
               e.preventDefault();
-              setPageNumber(page);
+              onPageNumberChange(page);
             }}
           >
             <button
@@ -105,14 +105,14 @@ export function Pagination({
       </div>
       <ConditionalLink
         href={serialize({
-          month: monthParam,
+          month: selectedDate,
           categories: selectedCategoriesIds.length === 0 ? null : selectedCategoriesIds,
           page: currentPage + 1,
           search,
         })}
         onClick={(e: MouseEvent) => {
           e.preventDefault();
-          setPageNumber(currentPage + 1);
+          onPageNumberChange(currentPage + 1);
         }}
         condition={navigationToNextPageAllowed}
       >
