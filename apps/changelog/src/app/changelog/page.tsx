@@ -22,7 +22,8 @@ export default async function Page() {
           id: changelog.id,
           title: changelog.title,
           slug: changelog.slug,
-          publishedAt: changelog.publishedAt!.toISOString(),
+          // Because `getChangelogs` is cached, it sometimes returns its results serialized and sometimes not. Therefore we have to deserialize the string to be able to call toUTCString().
+          publishedAt: new Date(changelog.publishedAt!).toUTCString(),
           categories: changelog.categories,
           mdxSummary,
         };
