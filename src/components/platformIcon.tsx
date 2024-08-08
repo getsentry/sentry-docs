@@ -87,6 +87,7 @@ import MongodbSVG from 'platformicons/svg/mongodb.svg';
 import NativecSVG from 'platformicons/svg/nativec.svg';
 import NestjsSVG from 'platformicons/svg/nestjs.svg';
 import NextjsSVG from 'platformicons/svg/nextjs.svg';
+import NuxtSVG from 'platformicons/svg/nuxt.svg';
 import NodejsSVG from 'platformicons/svg/nodejs.svg';
 import OpenaiSVG from 'platformicons/svg/openai.svg';
 import PerlSVG from 'platformicons/svg/perl.svg';
@@ -221,6 +222,7 @@ import MongodbSVGLarge from 'platformicons/svg_80x80/mongodb.svg';
 import NativecSVGLarge from 'platformicons/svg_80x80/nativec.svg';
 import NestjsSVGLarge from 'platformicons/svg_80x80/nestjs.svg';
 import NextjsSVGLarge from 'platformicons/svg_80x80/nextjs.svg';
+import NuxtSVGLarge from 'platformicons/svg_80x80/nuxt.svg';
 import NodejsSVGLarge from 'platformicons/svg_80x80/nodejs.svg';
 import OpenaiSVGLarge from 'platformicons/svg_80x80/openai.svg';
 import PerlSVGLarge from 'platformicons/svg_80x80/perl.svg';
@@ -621,6 +623,10 @@ const formatToSVG = {
     sm: NextjsSVG,
     lg: NextjsSVGLarge,
   },
+  nuxt: {
+    sm: NuxtSVG,
+    lg: NuxtSVGLarge,
+  },
   nodejs: {
     sm: NodejsSVG,
     lg: NodejsSVGLarge,
@@ -887,6 +893,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-fastify': 'fastify',
   'javascript-nestjs': 'nestjs',
   'javascript-nextjs': 'nextjs',
+  'javascript-nuxt': 'nuxt',
   'javascript-node': 'nodejs',
   'javascript-react': 'react',
   'javascript-remix': 'remix',
