@@ -1,0 +1,36 @@
+---
+title: Automatic Detection
+sidebar_order: 51
+description: "Learn how automatic detection of uptime monitoring works."
+---
+
+<Include name="feature-stage-alpha-uptime.mdx" />
+
+The automatic detection of uptime alerts sets up uptime alerts for the most frequently encountered
+hostnames in all URLs of your error data. This helps ensure that critical hostnames are continuously monitored,
+enhancing the reliability and availability of your web services.
+
+## How It Works
+
+We analyze all the URLs detected in your project's captured error data to find the hostname that appears most frequently. We then create an uptime alert if it passes our [uptime check criteria](/product/alerts/uptime-monitoring/#uptime-check-criteria).
+
+To avoid creating flaky alerts, the hostname undergoes an "onboarding period" of three days. During this period, we send HTTP requests to the hostname every hour. If the request fails at least three times, the hostname is dropped and re-evaluated after seven days.
+
+<Alert level="info">
+Sentry will execute uptime checks against the hostname root path of the most frequently seen URLs. For example, if the most seen URL in your events is `GET https://www.example.com/docs/introduction` the check will be `GET https://www.example.com/`.
+</Alert>
+
+## Disabling Automatic Detection
+Deleting an alert will disable automatic detection for the entire project linked to the host. This feature can also be turned off globally for the entire organization from the [organization settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/organization) page.
+
+Alternatively, the hostname's `robots.txt` can be updated to disallow Sentry:
+
+```txt{tabTitle: Example}{filename: robots.txt}
+User-agent: SentryUptimeBot
+Disallow: *
+```
+
+## Current Limitations
+
+In the current version, automatically-detected uptime alerts can only be deleted, not edited. Support for editing
+will be added in the future. Additionally, each organization is limited to one automatically-detected host.
