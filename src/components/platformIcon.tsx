@@ -852,6 +852,7 @@ export const PLATFORM_TO_ICON = {
   'go-iris': 'iris',
   'go-martini': 'martini',
   'go-negroni': 'go',
+  'go-zerolog': 'go',
   godot: 'godot',
   huggingface: 'huggingface',
   java: 'java',

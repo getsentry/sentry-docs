@@ -226,6 +226,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/go/guides/negroni/',
   },
   {
+    from: '/platforms/go/zerolog/',
+    to: '/platforms/go/guides/zerolog/',
+  },
+  {
     from: '/clients/go/integrations/http/',
     to: '/platforms/go/guides/http/',
   },
