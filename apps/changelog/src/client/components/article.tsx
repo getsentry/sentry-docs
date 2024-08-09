@@ -13,19 +13,14 @@ type ArticleProps = {
   title?: string;
 };
 
-export default function Article({
+export function Article({
   title = '',
   image,
   tags = [],
   date = null,
   children,
-  loading,
   className,
 }: ArticleProps) {
-  if (loading) {
-    return <LoadingArticle />;
-  }
-
   return (
     <article className={`bg-white rounded-lg shadow-lg mb-8 ${className}`}>
       {/* this needs to be a plain <img> next/image doesn't work here because of redirects we do */}
@@ -43,7 +38,6 @@ export default function Article({
           <div className="flex flex-wrap gap-1 py-1">
             {Array.isArray(tags) && tags.map(tag => <CategoryTag key={tag} text={tag} />)}
           </div>
-
           <div className="prose max-w-none text-gray-700 py-2">{children}</div>
           <dl>
             <dd className="text-xs leading-6 text-gray-400">
@@ -56,7 +50,7 @@ export default function Article({
   );
 }
 
-function LoadingArticle() {
+export function LoadingArticle() {
   return (
     <article className="bg-white rounded-lg shadow-lg mb-8">
       <div className="p-6">

@@ -5,7 +5,7 @@ import {MDXRemote, MDXRemoteSerializeResult} from 'next-mdx-remote';
 import Link from 'next/link';
 import {parseAsArrayOf, parseAsInteger, parseAsString, useQueryState} from 'nuqs';
 import {Fragment} from 'react';
-import Article from './article';
+import {Article} from './article';
 import {Pagination} from './pagination';
 import {CategoryTag} from './tag';
 
@@ -149,7 +149,7 @@ export function ChangelogList({changelogs}: {changelogs: ChangelogEntry[]}) {
               <div className="flex-1 border-t-[1px] border-gray-400" />
             </div>
           )}
-          <Link href={`/changelog/${changelog.slug}`} key={changelog.id}>
+          <Link href={`/changelog/${changelog.slug}`}>
             <Article
               className="fancy-border"
               key={changelog.id}
