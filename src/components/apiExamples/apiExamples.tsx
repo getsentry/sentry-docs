@@ -1,13 +1,10 @@
 'use client';
 
-// prismjs must be loaded before loading prism-json
-// eslint-disable-next-line simple-import-sort/imports
-import Prism from 'prismjs';
-import 'prismjs/components/prism-json';
-
-import {Fragment, useState} from 'react';
+import {Fragment, useEffect, useRef, useState} from 'react';
 
 import {type API} from 'sentry-docs/build/resolveOpenAPI';
+
+import styles from './apiExamples.module.scss';
 
 type ExampleProps = {
   api: API;
@@ -15,7 +12,14 @@ type ExampleProps = {
   selectedTabView: number;
 };
 
+const requestStyles = `${styles['api-block-example']} ${styles.request}`;
+const responseStyles = `${styles['api-block-example']} ${styles.response}`;
+
+// overwriting global code block font size
+const jsonCodeBlockStyles = `!text-[0.8rem] language-json`;
+
 function Example({api, selectedTabView, selectedResponse}: ExampleProps) {
+  const ref = useRef(null);
   let exampleJson: any;
   if (api.responses[selectedResponse].content?.examples) {
     exampleJson = Object.values(
@@ -25,17 +29,26 @@ function Example({api, selectedTabView, selectedResponse}: ExampleProps) {
     exampleJson = api.responses[selectedResponse].content?.example;
   }
 
+  // load prism dynamically for these codeblocks,
+  // otherwise the highlighting applies globally
+  useEffect(() => {
+    (async () => {
+      const {highlightAllUnder} = await import('prismjs');
+      await import('prismjs/components/prism-json');
+      if (ref.current) {
+        highlightAllUnder(ref.current);
+      }
+    })();
+  }, [selectedResponse, selectedTabView]);
+
   return (
-    <pre className="api-block-example response">
+    <pre className={responseStyles} ref={ref}>
       {selectedTabView === 0 &&
         (exampleJson ? (
           <code
+            className={jsonCodeBlockStyles}
             dangerouslySetInnerHTML={{
-              __html: Prism.highlight(
-                JSON.stringify(exampleJson, null, 2),
-                Prism.languages.json,
-                'json'
-              ),
+              __html: JSON.stringify(exampleJson, null, 2),
             }}
           />
         ) : (
@@ -43,11 +56,12 @@ function Example({api, selectedTabView, selectedResponse}: ExampleProps) {
         ))}
       {selectedTabView === 1 && (
         <code
+          className={jsonCodeBlockStyles}
           dangerouslySetInnerHTML={{
-            __html: Prism.highlight(
-              JSON.stringify(api.responses[selectedResponse].content?.schema, null, 2),
-              Prism.languages.json,
-              'json'
+            __html: JSON.stringify(
+              api.responses[selectedResponse].content?.schema,
+              null,
+              2
             ),
           }}
         />
@@ -101,7 +115,7 @@ export function ApiExamples({api}: Props) {
   return (
     <Fragment>
       <div className="api-block">
-        <pre className="api-block-example request">{apiExample.join(' \\\n')}</pre>
+        <pre className={requestStyles}>{apiExample.join(' \\\n')}</pre>
       </div>
       <div className="api-block">
         <div className="api-block-header response">
