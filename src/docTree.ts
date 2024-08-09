@@ -44,18 +44,20 @@ async function getDocsRootNodeUncached(): Promise<DocNode> {
   );
 }
 
+export const sidebarOrderSorter = (a: FrontMatter, b: FrontMatter) => {
+  const partDiff = slugWithoutIndex(a.slug).length - slugWithoutIndex(b.slug).length;
+  if (partDiff !== 0) {
+    return partDiff;
+  }
+  const orderDiff = (a.sidebar_order || 99999) - (b.sidebar_order || 99999);
+  if (orderDiff !== 0) {
+    return orderDiff;
+  }
+  return (a.title || '').localeCompare(b.title || '');
+};
+
 function frontmatterToTree(frontmatter: FrontMatter[]): DocNode {
-  const sortedDocs = frontmatter.sort((a, b) => {
-    const partDiff = slugWithoutIndex(a.slug).length - slugWithoutIndex(b.slug).length;
-    if (partDiff !== 0) {
-      return partDiff;
-    }
-    const orderDiff = (a.sidebar_order || 99999) - (b.sidebar_order || 99999);
-    if (orderDiff !== 0) {
-      return orderDiff;
-    }
-    return (a.title || '').localeCompare(b.title || '');
-  });
+  const sortedDocs = frontmatter.sort(sidebarOrderSorter);
 
   const rootNode: DocNode = {
     path: '/',
