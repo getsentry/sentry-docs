@@ -13,6 +13,9 @@ const nextConfig = {
 
   experimental: {
     serverComponentsExternalPackages: ['rehype-preset-minify'],
+    outputFileTracingExcludes: {
+      '/**/*': ['./.git/**/*', './apps/**/*'],
+    },
   },
 
   webpack: (config, _options) => {
