@@ -6,6 +6,9 @@ import Header from './header';
 import {getChangelogs} from '../../server/utils';
 import {ChangelogEntry, ChangelogList} from '@/client/components/list';
 import {startSpan} from '@sentry/nextjs';
+import type {Plugin} from 'unified';
+import {visit} from 'unist-util-visit';
+import {Element} from 'hast';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +24,20 @@ export default async function Page() {
     () =>
       Promise.all(
         changelogsWithPublishedAt.map(async (changelog): Promise<ChangelogEntry> => {
-          const mdxSummary = await serialize(changelog.summary || '');
+          const mdxSummary = await serialize(
+            changelog.summary || '',
+            {
+              mdxOptions: {
+                rehypePlugins: [
+                  // Because we render the changelog entries as <a> tags, and it is not allowed to render <a> tags
+                  // within other a tags, we need to strip away the <a> tags inside the previews here.
+                  // @ts-ignore
+                  stripLinks,
+                ],
+              },
+            },
+            true
+          );
           return {
             id: changelog.id,
             title: changelog.title,
@@ -52,3 +68,17 @@ export function generateMetadata(): Metadata {
     },
   };
 }
+
+const stripLinks: Plugin = () => {
+  return tree => {
+    return visit(tree, 'element', (node: Element) => {
+      if (node.tagName === 'a') {
+        node.tagName = 'span';
+        if (node.properties) {
+          delete node.properties.href;
+          delete node.properties.class;
+        }
+      }
+    });
+  };
+};
