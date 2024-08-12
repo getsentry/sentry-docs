@@ -1,0 +1,55 @@
+---
+title: Bundle Size
+description: Why we think twice before adding a new line of code to the SDK
+sidebar_order: 11
+---
+
+In contrast to most other SDKs, we really have to be careful how much code we add to the browser SDKs and _in what way_ we do it.
+The reason is that browser SDK code (with the exception of our Loader) is loaded synchronously, either in its own JS bundle or in the main JS bundle of the frontend web application.
+
+Hence, our SDK directly contributes to the bundle size of the page and can have an impact on the performance of the page.
+
+## What do we do against it?
+
+Well, we can't just stop developing new features or fixes. But we can be smart about it:
+
+- We run bundle size checks on each PR to measure potential size increases (or decreases).
+- Our CI setup fails if the bundle size surpasses a certain threshold for specific bundling combinations.
+- We have lint rules against certain syntax that increases bundle size more than necessary.
+- When reviewing PRs, we keep an eye on the bundle size impact of the changes and try to identifies opportunities for optimization.
+
+Most importantly, whenever we add a new feature, we try to write it in a tree-shakeable way.
+
+### Writing Tree-Shakeable Code
+
+If you want to contribute a new feature to the SDK, please keep in mind to build the feature in an opt-in, tree-shakeable way.
+In most cases, this means building the feature as an `Integration` or - helpful for smaller features - as a package export that users can import.
+
+Specifically for building integrations, be aware that writing an integration does not mean it has to be opt-in for users by default.
+If we deem it valuable enough, we can add an integration by default, which, yes, will increase the bundle size for many users.
+However users can still set up [advanced tree-shaking](https://docs.sentry.io/platforms/javascript/configuration/tree-shaking/) to remove the integrations they don't need.
+The important part is that building integrations enables tree-shaking.
+
+Keeping in mind the above, opting users into a feature that should remain tree-shakeable means that we can't enabled the feature with a simple flag in the SDK.
+Instead, we need to let users import the feature explicitly and register it:
+
+```js
+// Not tree-shakeable
+Sentry.init({
+  enableReplay: true, // internally: if (enableReplay) { ...replay code }
+});
+
+// tree-shakeable
+Sentry.init({
+  integrations: [replayIntegration()],
+});
+```
+
+## What we're not doing
+
+As with all things, there are exceptions to these rule and we have added size-increasing features in the past.
+
+- While we are cautious about bundle size, it does not mean we don't add new things to the SDK.
+- If there's enough value for the change to be added by default, we will increase the bundle size.
+- If fixing incorrect behavior requires more code, we will increase the bundle size.
+- We don't sacrifice code readability entirely for bundle size. We try to find a balance.

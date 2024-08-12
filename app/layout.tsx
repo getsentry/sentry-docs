@@ -18,9 +18,8 @@ export const metadata: Metadata = {
     icon:
       process.env.NODE_ENV === 'production' ? '/favicon.ico' : '/favicon_localhost.png',
   },
-  metadataBase: new URL('https://docs.sentry.io/'),
   openGraph: {
-    images: 'https://docs.sentry.io/changelog/assets/og.png',
+    images: '/og.png',
   },
   other: {
     'zd-site-verification': 'ocu6mswx6pke3c6qvozr2e',
@@ -29,7 +28,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <body className={`${rubik.variable} text-darkPurple`}>
         <Theme accentColor="iris" grayColor="sand" radius="large" scaling="95%">
           {children}

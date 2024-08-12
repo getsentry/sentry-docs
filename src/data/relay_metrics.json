@@ -2,7 +2,7 @@
   {
     "type": "Histogram",
     "name": "buffer.dequeue_attempts",
-    "description": "Number of attempts needed to dequeue spooled envelopes from disk.\n\nAs long as there are enough permits in the [`crate::utils::BufferGuard`], this number should\nalways be one.",
+    "description": "Number of attempts needed to dequeue spooled envelopes from disk.",
     "features": []
   },
   {
@@ -32,13 +32,13 @@
   {
     "type": "Counter",
     "name": "buffer.envelopes_read",
-    "description": "Number of _envelopes_ the envelope buffer reads back from disk.",
+    "description": "Number of _envelopes_ the envelope buffer produces.",
     "features": []
   },
   {
     "type": "Counter",
     "name": "buffer.envelopes_written",
-    "description": "Number of _envelopes_ the envelope buffer spools to disk.",
+    "description": "Number of _envelopes_ the envelope buffer ingests.",
     "features": []
   },
   {
@@ -48,9 +48,21 @@
     "features": []
   },
   {
+    "type": "Gauge",
+    "name": "buffer.push_inflight",
+    "description": "Number of envelopes currently waiting to be buffered.\n\nThis corresponds to the number of corresponding tokio tasks currently scheduled or running.",
+    "features": []
+  },
+  {
     "type": "Counter",
     "name": "buffer.reads",
-    "description": "Number times the envelope buffer reads back from disk.",
+    "description": "Number of times the envelope buffer reads back from disk.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "buffer.stack_count",
+    "description": "The number of individual stacks in the priority queue.\n\nPer combination of `(own_key, sampling_key)`, a new stack is created.",
     "features": []
   },
   {
@@ -68,7 +80,7 @@
   {
     "type": "Counter",
     "name": "buffer.writes",
-    "description": "Number times the envelope buffer spools to disk.",
+    "description": "Number of times the envelope buffer spools to disk.",
     "features": []
   },
   {
@@ -111,18 +123,6 @@
     "type": "Counter",
     "name": "event.protocol",
     "description": "Number of events that hit any of the store-like endpoints: Envelope, Store, Security,\nMinidump, Unreal.\n\nThe events are counted before they are rate limited, filtered, or processed in any way.\n\nThis metric is tagged with:\n- `version`: The event protocol version number defaulting to `7`.",
-    "features": []
-  },
-  {
-    "type": "Histogram",
-    "name": "event.queue_size",
-    "description": "The number of envelopes in the queue.\n\nThe queue holds all envelopes that are being processed at a particular time in Relay:\n\n- When Relay receives a Request, it ensures the submitted data is wrapped in a single\nenvelope.\n- The envelope receives some preliminary processing to determine if it can be processed or\nif it must be rejected.\n- Once this determination has been made, the HTTP request that created the envelope\nterminates and, if the request is to be further processed, the envelope enters a queue.\n- After the envelope finishes processing and is sent upstream, the envelope is considered\nhandled and it leaves the queue.\n\nThe queue size can be configured with `cache.event_buffer_size`.",
-    "features": []
-  },
-  {
-    "type": "Histogram",
-    "name": "event.queue_size.pct",
-    "description": "The number of envelopes in the queue as a percentage of the maximum number of envelopes that\ncan be stored in the queue.\n\nThe value ranges from `0` when the queue is empty to `1` when the queue is full and no\nadditional events can be added. The queue size can be configured using `event.queue_size`.",
     "features": []
   },
   {
@@ -221,12 +221,6 @@
     "type": "Timer",
     "name": "health.message.duration",
     "description": "Timing in milliseconds for handling and responding to a health check request.\n\nThis metric is tagged with:\n- `type`: The type of the health check, `liveness` or `readiness`.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "health.system_memory.rss",
-    "description": "The currently used Resident Set Size (RSS).",
     "features": []
   },
   {
