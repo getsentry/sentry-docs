@@ -113,6 +113,7 @@ import ServerlessSVG from 'platformicons/svg/serverless.svg';
 import SidekiqSVG from 'platformicons/svg/sidekiq.svg';
 import SinatraSVG from 'platformicons/svg/sinatra.svg';
 import SolidSVG from 'platformicons/svg/solid.svg';
+import SolidStartSVG from 'platformicons/svg/solidstart.svg';
 import SpringSVG from 'platformicons/svg/spring.svg';
 import SpringbootSVG from 'platformicons/svg/springboot.svg';
 import SqlSVG from 'platformicons/svg/sql.svg';
@@ -248,6 +249,7 @@ import ServerlessSVGLarge from 'platformicons/svg_80x80/serverless.svg';
 import SidekiqSVGLarge from 'platformicons/svg_80x80/sidekiq.svg';
 import SinatraSVGLarge from 'platformicons/svg_80x80/sinatra.svg';
 import SolidSVGLarge from 'platformicons/svg_80x80/solid.svg';
+import SolidStartSVGLarge from 'platformicons/svg_80x80/solidstart.svg';
 import SpringSVGLarge from 'platformicons/svg_80x80/spring.svg';
 import SpringbootSVGLarge from 'platformicons/svg_80x80/springboot.svg';
 import SqlSVGLarge from 'platformicons/svg_80x80/sql.svg';
@@ -727,6 +729,10 @@ const formatToSVG = {
     sm: SolidSVG,
     lg: SolidSVGLarge,
   },
+  solidstart: {
+    sm: SolidStartSVG,
+    lg: SolidStartSVGLarge,
+  },
   spring: {
     sm: SpringSVG,
     lg: SpringSVGLarge,
@@ -898,6 +904,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-react': 'react',
   'javascript-remix': 'remix',
   'javascript-solid': 'solid',
+  'javascript-solidstart': 'solidstart',
   'javascript-svelte': 'svelte',
   'javascript-sveltekit': 'svelte',
   'javascript-vue': 'vue',
