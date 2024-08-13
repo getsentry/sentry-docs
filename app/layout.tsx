@@ -28,9 +28,16 @@ export const metadata: Metadata = {
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
-    <html lang="en">
-      <body className={`${rubik.variable} text-darkPurple`}>
-        <Theme accentColor="iris" grayColor="sand" radius="large" scaling="95%">
+    // hardcoded dark mode for now
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${rubik.variable} dark`}>
+        <Theme
+          accentColor="iris"
+          grayColor="sand"
+          radius="large"
+          scaling="95%"
+          appearance="dark"
+        >
           {children}
         </Theme>
       </body>
