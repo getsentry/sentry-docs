@@ -414,6 +414,14 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/python/integrations/starlite/',
   },
   {
+    from: '/clients/python/integrations/litestar/',
+    to: '/platforms/python/integrations/litestar/',
+  },
+  {
+    from: '/platforms/python/litestar/',
+    to: '/platforms/python/integrations/litestar/',
+  },
+  {
     from: '/platforms/python/beam/',
     to: '/platforms/python/integrations/beam/',
   },
