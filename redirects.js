@@ -22,6 +22,10 @@ const developerDocsRedirects = [
     source: '/api/:path*',
     destination: '/application/api/:path*',
   },
+  {
+    source: '/sdk/performance/:path*',
+    destination: '/sdk/telemetry/traces/:path*',
+  },
 ];
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
@@ -585,6 +589,10 @@ const userDocsRedirects = [
     source: '/api/organizations/experimental-retrieve-release-health-session-statistics/',
     destination: '/api/releases/retrieve-release-health-session-statistics/',
   },
+  {
+    source: '/api/rate-limits/',
+    destination: '/api/ratelimits/',
+  },
 ];
 
 /**
@@ -592,6 +600,7 @@ const userDocsRedirects = [
  *
  * loads the redirects based on the environment variable `NEXT_PUBLIC_DEVELOPER_DOCS`
  */
+// eslint-disable-next-line require-await
 const redirects = async () => {
   console.log(
     '🔄 using',
