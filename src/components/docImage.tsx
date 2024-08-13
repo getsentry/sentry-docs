@@ -40,20 +40,18 @@ export default function DocImage({
     .map(s => parseInt(s, 10));
 
   return (
-    <div style={{textAlign: 'center'}}>
-      <a href={imgPath} target="_blank" rel="noreferrer">
-        <Image
-          {...props}
-          src={src}
-          width={width}
-          height={height}
-          style={{
-            width: '100%',
-            height: 'auto',
-          }}
-          alt={props.alt ?? ''}
-        />
-      </a>
-    </div>
+    <a href={imgPath} target="_blank" rel="noreferrer">
+      <Image
+        {...props}
+        src={src}
+        width={width}
+        height={height}
+        style={{
+          width: '100%',
+          height: 'auto',
+        }}
+        alt={props.alt ?? ''}
+      />
+    </a>
   );
 }
