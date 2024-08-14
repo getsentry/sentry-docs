@@ -99,8 +99,6 @@ type CodeSelection = {
 type CodeContextType = {
   codeKeywords: CodeKeywords;
   isLoading: boolean;
-  // sharedCodeSelection: [SelectedCodeTabs, React.Dispatch<[string, string]>];
-  // addCodeSelection,
   sharedKeywordSelection: [
     Record<string, number>,
     React.Dispatch<Record<string, number>>,
