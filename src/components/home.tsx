@@ -59,7 +59,7 @@ export async function Home() {
         <h2 className="text-2xl mt-16 mb-6 font-medium">Get to know us</h2>
         <div className="flex flex-wrap gap-6">
           <Link href="/product/sentry-basics/" className="w-full">
-            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4">
+            <div className="flex flex-col md:flex-row shadow dark:bg-[var(--gray-4)] p-6 rounded gap-4">
               <Image src={RocketImage} height={64} alt="Rocket image" />
               <div className="space-y-2">
                 <h3 className="text-xl font-medium">What is Sentry?</h3>
@@ -71,7 +71,7 @@ export async function Home() {
             </div>
           </Link>
           <Link href="/organization" className="w-full md:w-[calc(50%-12px)]">
-            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4 h-full">
+            <div className="flex flex-col md:flex-row shadow dark:bg-[var(--gray-4)] p-6 rounded gap-4 h-full">
               <Image
                 src={OrganizationImage}
                 height={64}
@@ -85,7 +85,7 @@ export async function Home() {
             </div>
           </Link>
           <Link href="/pricing" className="w-full md:w-[calc(50%-12px)]">
-            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4 h-full">
+            <div className="flex flex-col md:flex-row shadow dark:bg-[var(--gray-4)] p-6 rounded gap-4 h-full">
               <Image
                 src={CalculatorImage}
                 height={64}
@@ -99,7 +99,7 @@ export async function Home() {
             </div>
           </Link>
           <Link href="/api" className="w-full md:w-[calc(50%-12px)]">
-            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4 h-full">
+            <div className="flex flex-col md:flex-row shadow dark:bg-[var(--gray-4)] p-6 rounded gap-4 h-full">
               <Image
                 src={PlugImage}
                 height={64}
@@ -113,7 +113,7 @@ export async function Home() {
             </div>
           </Link>
           <Link href="/cli" className="w-full md:w-[calc(50%-12px)]">
-            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4 h-full">
+            <div className="flex flex-col md:flex-row shadow dark:bg-[var(--gray-4)] p-6 rounded gap-4 h-full">
               <Image
                 src={TerminalImage}
                 height={64}
@@ -127,7 +127,7 @@ export async function Home() {
             </div>
           </Link>
           <Link href="/security-legal-pii" className="w-full md:w-[calc(50%-12px)]">
-            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4 h-full">
+            <div className="flex flex-col md:flex-row shadow dark:bg-[var(--gray-4)] p-6 rounded gap-4 h-full">
               <Image
                 src={SecurityImage}
                 height={64}
@@ -141,7 +141,7 @@ export async function Home() {
             </div>
           </Link>
           <Link href="/concepts" className="w-full md:w-[calc(50%-12px)]">
-            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4 h-full">
+            <div className="flex flex-col md:flex-row shadow dark:bg-[var(--gray-4)] p-6 rounded gap-4 h-full">
               <Image
                 src={ConceptsImage}
                 height={64}
@@ -158,7 +158,7 @@ export async function Home() {
         <h2 className="text-2xl mt-10 mb-6 font-medium">Talk to us</h2>
         <div className="flex flex-col md:flex-row gap-6">
           <Link href="https://discord.com/invite/sentry" className="w-full">
-            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4">
+            <div className="flex flex-col md:flex-row shadow dark:bg-[var(--gray-4)] p-6 rounded gap-4 h-full">
               <Image src={ChatBubble} height={64} alt="Chat bubble image" />
               <div className="space-y-2">
                 <h3 className="text-xl font-medium">Sentry Discord</h3>
@@ -167,7 +167,7 @@ export async function Home() {
             </div>
           </Link>
           <Link href="https://sentry.zendesk.com/hc/en-us/" className="w-full">
-            <div className="flex flex-col md:flex-row shadow p-6 rounded gap-4">
+            <div className="flex flex-col md:flex-row shadow dark:bg-[var(--gray-4)] p-6 rounded gap-4 h-full">
               <Image src={SupportImage} height={64} alt="Support image" />
               <div className="space-y-2">
                 <h3 className="text-xl font-medium">Support</h3>
