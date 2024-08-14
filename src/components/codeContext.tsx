@@ -296,9 +296,12 @@ const getLocallyStoredSelections = (): SelectedCodeTabs => {
 export function CodeContextProvider({children}: {children: React.ReactNode}) {
   const [codeKeywords, setCodeKeywords] = useState(cachedCodeKeywords ?? DEFAULTS);
   const [isLoading, setIsLoading] = useState<boolean>(cachedCodeKeywords ? false : true);
-  const [storedCodeSelection, setStoredCodeSelection] = useState<SelectedCodeTabs>(() =>
-    getLocallyStoredSelections()
-  );
+  const [storedCodeSelection, setStoredCodeSelection] = useState<SelectedCodeTabs>({});
+
+  // populate state using localstorage
+  useEffect(() => {
+    setStoredCodeSelection(getLocallyStoredSelections());
+  }, []);
 
   useEffect(() => {
     if (cachedCodeKeywords === null) {
