@@ -5,6 +5,8 @@ import type {Metadata} from 'next';
 import {Rubik} from 'next/font/google';
 import Script from 'next/script';
 
+import {ThemeProvider} from 'sentry-docs/components/theme-provider';
+
 const rubik = Rubik({
   weight: ['400', '500', '700'],
   style: ['normal', 'italic'],
@@ -28,18 +30,18 @@ export const metadata: Metadata = {
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
-    // hardcoded dark mode for now
     <html lang="en" suppressHydrationWarning>
-      <body className={`${rubik.variable} dark`}>
-        <Theme
-          accentColor="iris"
-          grayColor="sand"
-          radius="large"
-          scaling="95%"
-          appearance="dark"
+      <body className={`${rubik.variable}`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
         >
-          {children}
-        </Theme>
+          <Theme accentColor="iris" grayColor="sand" radius="large" scaling="95%">
+            {children}
+          </Theme>
+        </ThemeProvider>
       </body>
       <Script
         defer

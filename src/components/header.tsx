@@ -8,6 +8,7 @@ import sidebarStyles from './sidebar/style.module.scss';
 import {MobileMenu} from './mobileMenu';
 import {NavLink} from './navlink';
 import {Search} from './search';
+import {ThemeToggle} from './theme-toggle';
 
 export const sidebarToggleId = sidebarStyles['navbar-menu-toggle'];
 
@@ -64,6 +65,7 @@ export function Header({pathname, searchPlatforms, noSearch}: Props) {
           <NavLink href="https://sentry.io/changelog/">Changelog</NavLink>
           <NavLink href="https://try.sentry-demo.com/demo/start/">Sandbox</NavLink>
           <NavLink href="https://sentry.io/">Sign In</NavLink>
+          <ThemeToggle />
         </div>
         <div className="lg:hidden ml-auto">
           <MobileMenu pathname={pathname} searchPlatforms={searchPlatforms} />
