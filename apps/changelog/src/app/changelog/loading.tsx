@@ -1,7 +1,7 @@
 import {Fragment} from 'react';
 
 import Header from './header';
-import Article from '@/client/components/article';
+import {LoadingArticle} from '@/client/components/article';
 
 export default function Loading() {
   return (
@@ -24,7 +24,7 @@ export default function Loading() {
         </div>
         <div className="col-span-12 md:col-span-8">
           <div className="max-w-3xl mx-auto px-4 pb-4 sm:px-6 md:px-8 mt-28">
-            <Article loading />
+            <LoadingArticle />
           </div>
         </div>
         <div className="hidden md:block md:col-span-2 pl-5 pt-10">

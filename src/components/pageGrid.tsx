@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import {nodeForPath} from 'sentry-docs/docTree';
+import {nodeForPath, sidebarOrderSorter} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 
 type Props = {
@@ -28,10 +28,7 @@ export function PageGrid({header}: Props) {
         {parentNode.children
           /* NOTE: temp fix while we figure out the reason why some nodes have empty front matter */
           .filter(c => c.frontmatter.title)
-          .sort(
-            (a, b) =>
-              (a.frontmatter.sidebar_order ?? 0) - (b.frontmatter.sidebar_order ?? 0)
-          )
+          .sort((a, b) => sidebarOrderSorter(a.frontmatter, b.frontmatter))
           .map(n => (
             <li key={n.path} style={{marginBottom: '1rem'}}>
               <h4 style={{marginBottom: '0px'}}>

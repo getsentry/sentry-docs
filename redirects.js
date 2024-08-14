@@ -589,6 +589,10 @@ const userDocsRedirects = [
     source: '/api/organizations/experimental-retrieve-release-health-session-statistics/',
     destination: '/api/releases/retrieve-release-health-session-statistics/',
   },
+  {
+    source: '/api/rate-limits/',
+    destination: '/api/ratelimits/',
+  },
 ];
 
 /**

@@ -414,6 +414,14 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/python/integrations/starlite/',
   },
   {
+    from: '/clients/python/integrations/litestar/',
+    to: '/platforms/python/integrations/litestar/',
+  },
+  {
+    from: '/platforms/python/litestar/',
+    to: '/platforms/python/integrations/litestar/',
+  },
+  {
     from: '/platforms/python/beam/',
     to: '/platforms/python/integrations/beam/',
   },
@@ -3260,6 +3268,50 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/javascript/guides/aws-lambda/layer/',
     to: '/platforms/javascript/guides/aws-lambda/install/',
+  },
+  {
+    from: '/api/projects/post-project-service-hooks/',
+    to: '/api/projects/register-a-new-service-hook/',
+  },
+  {
+    from: '/clients/cocoa/',
+    to: '/platforms/apple/',
+  },
+  {
+    from: '/clients/react-native/',
+    to: 'platforms/react-native/',
+  },
+  {
+    from: '/learn/scopes/?platform=rust/',
+    to: '/platforms/rust/enriching-events/scopes/',
+  },
+  {
+    from: '/platforms/android/android-video/',
+    to: '/platforms/android/',
+  },
+  {
+    from: '/platforms/android/tracing/included-instrumentation/',
+    to: '/platforms/android/tracing/instrumentation/automatic-instrumentation',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/tracing/trace-propagation/',
+    to: '/platforms/javascript/guides/cordova/tracing/instrumentation/custom-instrumentation/',
+  },
+  {
+    from: '/platforms/javascript/pluggable-integrations/',
+    to: '/platforms/javascript/configuration/integrations/#lazy-loading-integrations',
+  },
+  {
+    from: '/platforms/react-native/tracing/included-instrumentation/',
+    to: '/platforms/react-native/tracing/instrumentation/automatic-instrumentation/',
+  },
+  {
+    from: '/platforms/rust/env_logger/index.html/',
+    to: '/platforms/rust/configuration/environments/',
+  },
+  {
+    from: '/clients/cordova/',
+    to: '/platforms/javascript/guides/cordova/',
   },
 ];
 
