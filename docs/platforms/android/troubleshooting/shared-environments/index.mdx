@@ -1,0 +1,60 @@
+---
+title: Shared Environments
+description: "Learn how to use the Sentry SDK within another SDK."
+sidebar_order: 1
+---
+
+<Note>
+
+Using the sentry SDK within another SDK is discouraged. This can lead to unexpected behavior and potential data leakage. If you need to use Sentry within another SDK, please follow the best practices outlined below.
+
+</Note>
+
+<Note>
+
+When setting up Sentry in a shared environment where multiple Sentry instances may run, you should **not use `Sentry.init()`**, as this will pollute the global state.
+
+</ Note>
+
+In order to not conflict with other Sentry instances, you should use the `Hub` API to create a new instance of Sentry.
+The Hub API works the same way as the global Sentry instance, but it is not global and can be used within your component.
+
+```kotlin
+import io.sentry.Hub
+import io.sentry.SentryOptions
+import io.sentry.SentryOptions.BeforeSendCallback
+import io.sentry.UncaughtExceptionHandlerIntegration
+
+val options = SentryOptions().apply {
+    dsn = "___PUBLIC_DSN___"
+    isEnableUncaughtExceptionHandler = true
+    setBeforeSend { event, _ ->
+        // as uncaught exceptions are captured globally,
+        // you need to filter out events which are not relevant for your SDK
+        if (isRelevantForMySdk(event.throwable)) {
+            return@setBeforeSend event
+        }
+
+        return@setBeforeSend null
+    }
+
+}
+
+val hub = Hub(options)
+
+val integration = UncaughtExceptionHandlerIntegration()
+options.addIntegration(integration)
+integration.register(hub, options)
+```
+
+Once the Hub is configured, you can use it to capture events:
+
+```kotlin
+hub.captureException(IllegalStateException("Example Exception"))
+```
+
+If your SDK can be opened and closed multiple times, you should also close the Hub when you are done with it:
+
+```kotlin
+hub.close()
+```
