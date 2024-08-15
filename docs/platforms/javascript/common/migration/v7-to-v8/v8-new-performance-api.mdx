@@ -162,7 +162,46 @@ Previously, spans & transactions had a bunch of properties and methods to be use
 favor of a slimmer, more straightforward API, which is also aligned with OpenTelemetry Spans. You can refer to the table
 below to see which things used to exist, and how they can/should be mapped going forward:
 
-<Include name="migration/javascript-v8/new-span-schema" />
+The `spanToJSON`, `getRootSpan`, `setHttpStatus`, `spanToTraceHeader`, and `spanToTraceContext` are all exported by the SDK to be used.
+
+| Old name                   | Replace with                                                |
+| -------------------------- | ----------------------------------------------------------- |
+| `span.traceId`             | `span.spanContext().traceId`                                |
+| `span.spanId`              | `span.spanContext().spanId`                                 |
+| `span.parentSpanId`        | `spanToJSON(span).parent_span_id`                           |
+| `span.status`              | `spanToJSON(span).status`                                   |
+| `span.sampled`             | `spanIsSampled(span)`                                       |
+| `span.startTimestamp`      | `span.startTime` - note that this has a different format!   |
+| `span.tags`                | use attributes, or set tags on the scope                    |
+| `span.data`                | `spanToJSON(span).data`                                     |
+| `span.transaction`         | `getRootSpan(span)`                                         |
+| `span.instrumenter`        | Removed                                                     |
+| `span.finish()`            | `span.end()`                                                |
+| `span.end()`               | Same                                                        |
+| `span.setTag()`            | `span.setAttribute()`, or set tags on the scope             |
+| `span.setData()`           | `span.setAttribute()`                                       |
+| `span.setStatus()`         | `span.setStatus` - note that this has a different signature |
+| `span.setHttpStatus()`     | `setHttpStatus(span, status)`                               |
+| `span.setName()`           | `span.updateName()`                                         |
+| `span.startChild()`        | Call `Sentry.startSpan()` independently                     |
+| `span.isSuccess()`         | `spanToJSON(span).status === 'ok'`                          |
+| `span.toTraceparent()`     | `spanToTraceHeader(span)`                                   |
+| `span.toContext()`         | Removed                                                     |
+| `span.updateWithContext()` | Removed                                                     |
+| `span.getTraceContext()`   | `spanToTraceContext(span)`                                  |
+
+In addition, a transaction has this API:
+
+| Old name                    | Replace with                                     |
+| --------------------------- | ------------------------------------------------ |
+| `name`                      | `spanToJSON(span).description`                   |
+| `trimEnd`                   | Removed                                          |
+| `parentSampled`             | `spanIsSampled(span)` & `spanContext().isRemote` |
+| `metadata`                  | Use attributes instead or set on scope           |
+| `setContext()`              | Set context on scope instead                     |
+| `setMeasurement()`          | `Sentry.setMeasurement()`                        |
+| `setMetadata()`             | Use attributes instead or set on scope           |
+| `getDynamicSamplingContext` | `getDynamicSamplingContextFromSpan(span)`        |
 
 ### Attributes vs. Data vs. Tags vs. Context
 
