@@ -171,7 +171,7 @@ config.enabled_environments = %w[production]
 
 <ConfigKey name="excluded-exceptions">
 
-You can use this option if you never wish to be notified of certain exceptions. In the example below, the exceptions Rails uses to generate 404 responses will be suppressed.
+You can use this option to stop getting notifications about certain exceptions. In the example below, the exceptions Rails uses to generate 404 responses will be suppressed.
 
 ```ruby
 config.excluded_exceptions += ['ActionController::RoutingError', 'ActiveRecord::RecordNotFound']
@@ -183,7 +183,7 @@ You can find the list of exceptions that are excluded by default in `Sentry::Con
 
 <ConfigKey name="inspect-exception-causes-for-exclusion">
 
-Inspect an incoming exception's causes when determining whether or not that exception should be excluded. This option works together with `excluded_exceptions`. Default value is `true`.
+Inspect an incoming exception's causes when determining whether or not that exception should be excluded. This option works together with `excluded_exceptions`. The default value is `true`.
 
 ```ruby
 config.inspect_exception_causes_for_exclusion = true
@@ -193,13 +193,13 @@ config.inspect_exception_causes_for_exclusion = true
 
 <ConfigKey name="skip-rake-integration">
 
-Determine whether to ignore exceptions caused by rake integrations. Default is `false`.
+Determine whether to ignore exceptions caused by rake integrations. The default is `false`.
 
 </ConfigKey>
 
 <ConfigKey name="trusted-proxies">
 
-These trusted proxies will be skipped when the SDK computing the user's ip address. `sentry-rails` will automatically inject the value of `Rails.application.config.action_dispatch.trusted_proxies` to this option.
+These trusted proxies will be skipped when the SDK computes the user's ip address and `sentry-rails` will automatically inject the value of `Rails.application.config.action_dispatch.trusted_proxies` to this option.
 
 ```ruby
 config.trusted_proxies = ["2.2.2.2"]
@@ -211,11 +211,11 @@ config.trusted_proxies = ["2.2.2.2"]
 
 <ConfigKey name="traces-sample-rate">
 
-A number between 0 and 1, controlling the percentage chance a given transaction will be sent to Sentry. (0 represents 0% while 1 represents 100%.) Applies equally to all transactions created in the app. Either this or <PlatformIdentifier name="traces-sampler" /> must be defined to enable tracing.
+A number between 0 and 1 that determines the percentage of total transaction that will be sent to Sentry (with 0 representing 0% and 1, 100%). This will apply equally to all transactions created in the app. Either this or <PlatformIdentifier name="traces-sampler" /> must be defined to enable tracing.
 
-If <PlatformIdentifier name="traces-sample-rate" /> is 0, this means that no new traces will be created. However, if you have another service (for example a JS frontend) that makes requests to your service that include trace information, those traces will be continued and thus transactions will be sent to Sentry.
+If <PlatformIdentifier name="traces-sample-rate" /> is set to 0, no new traces will be created. However, if you have another service (for example a JS frontend) that makes requests to your service and has trace information, those traces will be continued and transactions will be sent to Sentry.
 
-If you want to disable all tracing you need to set <PlatformIdentifier name="traces-sample-rate" />`=None` or set <PlatformIdentifier name="enable-tracing" />`=False`. In this case, no new traces will be started and no incoming traces will be continued.
+To disable all tracing, you'll either need to set <PlatformIdentifier name="traces-sample-rate" />`=None` or set <PlatformIdentifier name="enable-tracing" />`=False`. Once this is done, no new traces will be started and no incoming traces will be continued.
 
 <PlatformContent includePath="performance/traces-sample-rate" />
 
@@ -223,7 +223,9 @@ If you want to disable all tracing you need to set <PlatformIdentifier name="tra
 
 <ConfigKey name="traces-sampler">
 
-A lambda or proc responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="traces-sample-rate" /> must be defined to enable tracing.
+A lambda or proc that's responsible for determining the chance that a given transaction has of being sent to Sentry (from 0-100%). It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). 
+
+It can also be used for filtering transactions, by returning 0 for those that are of no interest. Either this or <PlatformIdentifier name="traces-sample-rate" /> must be defined to enable tracing.
 
 <PlatformContent includePath="performance/traces-sampler-as-sampler" />
 
@@ -231,7 +233,7 @@ A lambda or proc responsible for determining the percentage chance a given trans
 
 <ConfigKey name="enable-backpressure-handling">
 
-A boolean (default false) that controls whether a new monitor thread will be spawned to perform health checks on the SDK. If the system is unhealthy, the SDK will keep halving the `traces_sample_rate` set by you in 10 second intervals until recovery. This downsampling helps ensure that the system stays stable and reduces SDK overhead under high load.
+A boolean (the default is false) that controls whether a new monitor thread will be spawned to perform health checks on the SDK. If the system is unhealthy, the SDK will keep halving the `traces_sample_rate` set by you in 10 second intervals until recovery. This downsampling helps ensure that the system stays stable and reduces SDK overhead under high load.
 
 </ConfigKey>
 
@@ -241,7 +243,7 @@ An optional property that controls which downstream services receive tracing dat
 
 The option may contain an array of strings or regex against which the URLs of outgoing requests are matched.
 If one of the entries in the list matches the URL of an outgoing request, trace headers will be attached to that request.
-String entries do not have to be full matches, meaning the URL of a request is matched when it _contains_ a string provided through the option.
+String entries don't have to be full matches, (meaning the URL of a request is matched when it _contains_ a string provided through the option).
 
 By default, trace headers are attached to every outgoing request from the instrumented client.
 
@@ -273,7 +275,7 @@ By the time <PlatformIdentifier name="before-send" /> is executed, all scope dat
 
 <ConfigKey name="before-send-transaction">
 
-Provide a lambda or proc that is called with an SDK-specific transaction event object, and can return a modified transaction event object, or `nil` to skip reporting the event. One way this might be used is for manual PII stripping before sending.
+Provides a lambda or proc that's called with an SDK-specific transaction event object, and can return a modified transaction event object, or `nil` to skip reporting the event. One way this might be used is for manual PII stripping before sending.
 
 <PlatformContent includePath="configuration/before-send-transaction/" />
 
