@@ -16,7 +16,9 @@ export const metadata: Metadata = {
   title: 'Home',
   icons: {
     icon:
-      process.env.NODE_ENV === 'production' ? '/favicon.ico' : '/favicon_localhost.png',
+      process.env.NODE_ENV === 'production'
+        ? 'https://changelog.sentry.dev/favicon.ico'
+        : '/favicon_localhost.png',
   },
   openGraph: {
     images: '/img/hero.png',
