@@ -1,14 +1,10 @@
-To set up the Sentry SDK initialize it in the client and server.
-
-### Client-side Setup
-
-Initialize the Sentry SDK in your `entry-client.tsx` file.
+Initialize the Sentry SDK in your `src/entry-client.tsx` file.
 
 If you're using Solid Router, add the `solidRouterBrowserTracingIntegration` to collect meaningful performance data about the health of your page loads and associated requests.
 
 <SignInNote />
 
-```jsx {filename:entry-client.tsx}
+```jsx {filename:src/entry-client.tsx}
 import * as Sentry from '@sentry/solidstart';
 import { solidRouterBrowserTracingIntegration } from '@sentry/solidstart/solidrouter';
 import { mount, StartClient } from '@solidjs/start/client';
@@ -22,13 +18,28 @@ Sentry.init({
 mount(() => <StartClient />, document.getElementById('app'));
 ```
 
+<Note>
+
+  Depending on the configuration of your SolidStart project, the file structure may differ from the code listed on this page.
+  For example, for JavaScript projects files end in `.js` and `.jsx` while we use TypeScript snippets here ending in `.ts` and `.tsx`.
+
+</Note>
+
 ### Server-side Setup
 
-Create an instrument file `instrument.server.mjs` and initialize the Sentry SDK.
+Create an instrument file `instrument.server.mjs`, initialize the Sentry SDK and deploy it alongside your application.
+For example by placing it in the `public` folder.
+
+<Note>
+
+  Placing `instrument.server.mjs` inside the `public` folder makes it accessible to the outside world.
+  Consider blocking requests to this file or finding a more appropriate location which your backend can access.
+
+</Note>
 
 <SignInNote />
 
-```javascript {filename:instrument.server.mjs}
+```javascript {filename:public/instrument.server.mjs}
 import * as Sentry from '@sentry/solidstart';
 
 Sentry.init({
@@ -39,9 +50,9 @@ Sentry.init({
 
 ### Instrumentation
 
-Complete the setup by adding the Sentry middleware to your `middleware.ts` file. If you don't have a `middleware.ts` file yet, create one:
+Complete the setup by adding the Sentry middleware to your `src/middleware.ts` file. If you don't have a `src/middleware.ts` file yet, create one:
 
-```typescript {filename:middleware.ts}
+```typescript {filename:src/middleware.ts}
 import { sentryBeforeResponseMiddleware } from '@sentry/solidstart/middleware';
 import { createMiddleware } from '@solidjs/start/middleware';
 
@@ -53,7 +64,7 @@ export default createMiddleware({
 });
 ```
 
-And specify `middleware.ts` in `app.config.ts`:
+And specify `src/middleware.ts` in `app.config.ts`:
 
 ```typescript {filename:app.config.ts}
 import { defineConfig } from '@solidjs/start/config';
@@ -66,7 +77,7 @@ export default defineConfig({
 
 The Sentry middleware enhances the data collected by Sentry on the server side by enabling distributed tracing between the client and server.
 
-If you previously added the `solidRouterBrowserTracingIntegration` integration in `entry-client.tsx`, wrap your Solid Router with `withSentryRouterRouting`.
+If you previously added the `solidRouterBrowserTracingIntegration` integration in `src/entry-client.tsx`, wrap your Solid Router with `withSentryRouterRouting`.
 This creates a higher order component, which will enable Sentry to collect navigation spans.
 
 ```tsx {filename:app.tsx}
@@ -90,13 +101,13 @@ export default function App() {
 Add an `--import` flag to the `NODE_OPTIONS` environment variable wherever you run your application.
 
 ```bash {tabTitle: npm}
-NODE_OPTIONS='--import=./src/instrument.server.mjs npm start
+NODE_OPTIONS='--import=./public/instrument.server.mjs npm start
 ```
 
 ```bash {tabTitle: yarn}
-NODE_OPTIONS='--import=./src/instrument.server.mjs yarn start
+NODE_OPTIONS='--import=./public/instrument.server.mjs yarn start
 ```
 
 ```bash {tabTitle: pnpm}
-NODE_OPTIONS='--import=./src/instrument.server.mjs pnpm start
+NODE_OPTIONS='--import=./public/instrument.server.mjs pnpm start
 ```
