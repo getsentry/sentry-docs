@@ -1,5 +1,9 @@
+'use client';
+
+import {useEffect, useState} from 'react';
 import {HamburgerMenuIcon} from '@radix-ui/react-icons';
 import Image from 'next/image';
+import Link from 'next/link';
 
 import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
 
@@ -17,7 +21,47 @@ type Props = {
   noSearch?: boolean;
 };
 
+type User = {
+  avatarUrl: string;
+  email: string;
+  id: string;
+  isActive: boolean;
+  name: string;
+  username: string;
+};
+
+function Avatar({user}: {user: User}) {
+  return (
+    <Link href="https://sentry.io" className="">
+      <div className="flex items-center space-x-2 px-4">
+        <Image
+          src={user.avatarUrl}
+          alt={user.name}
+          width={32}
+          height={32}
+          className="rounded-full h-8 w-8"
+        />
+        <div className="flex flex-col gap-1">
+          <span className="font-medium text-sm">{user.name}</span>
+          <span className="text-xs text-gray-500">{user.username}</span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 export function Header({pathname, searchPlatforms, noSearch}: Props) {
+  // this should work on production (given the request is not blocked by ad blockers),
+  // but it doesn't on dev or previews because of CORS
+  // I implemeted a workaround in the form of an api route while building this
+  const [user, setUser] = useState<User | null>(null);
+  useEffect(() => {
+    fetch('https://sentry.io/api/0/users/me/', {credentials: 'include'})
+      .then(r => r.json())
+      .then(setUser)
+      // eslint-disable-next-line no-console
+      .catch(console.error);
+  }, []);
   return (
     <header className="bg-white h-[var(--header-height)] w-full z-50 border-b border-gray fixed top-0">
       {/* define a header-height variable for consumption by other components */}
@@ -58,6 +102,7 @@ export function Header({pathname, searchPlatforms, noSearch}: Props) {
         <div className="hidden lg:flex justify-end flex-1 space-x-2 items-center">
           <NavLink href="https://sentry.io/changelog/">Changelog</NavLink>
           <NavLink href="https://try.sentry-demo.com/demo/start/">Sandbox</NavLink>
+<<<<<<< Updated upstream
           <NavLink href="https://sentry.io/">Sign In</NavLink>
           <NavLink
             href="https://sentry.io/signup/"
@@ -65,6 +110,15 @@ export function Header({pathname, searchPlatforms, noSearch}: Props) {
           >
             Get Started
           </NavLink>
+||||||| Stash base
+          <NavLink href="https://sentry.io/">Sign In</NavLink>
+=======
+          {user ? (
+            <Avatar user={user} />
+          ) : (
+            <NavLink href="https://sentry.io/">Sign In</NavLink>
+          )}
+>>>>>>> Stashed changes
         </div>
         <div className="lg:hidden ml-auto">
           <MobileMenu pathname={pathname} searchPlatforms={searchPlatforms} />
