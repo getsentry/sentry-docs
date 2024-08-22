@@ -34,7 +34,8 @@ function Avatar({user}: {user: User}) {
   return (
     <Link href="https://sentry.io" className="">
       <div className="flex items-center space-x-2 px-4">
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src={user.avatarUrl}
           alt={user.name}
           width={32}
