@@ -18,6 +18,31 @@ export const capitilize = (str: string) => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
+export const formatGuideOrPlatformTitle = (title: string) => {
+  const lowerCase = title.toLowerCase();
+  if (lowerCase === 'ios') {
+    return 'iOS';
+  }
+
+  if (lowerCase === 'macos') {
+    return 'macOS';
+  }
+
+  if (lowerCase === 'tvos') {
+    return 'tvOS';
+  }
+
+  if (lowerCase === 'visionos') {
+    return 'visionOS';
+  }
+
+  if (lowerCase === 'watchos') {
+    return 'watchOS';
+  }
+
+  return capitilize(title);
+};
+
 export const uniqByReference = <T>(arr: T[]): T[] => Array.from(new Set(arr));
 
 export const splitToChunks = <T>(numChunks: number, arr: T[]): T[][] => {
