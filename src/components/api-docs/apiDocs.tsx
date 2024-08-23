@@ -6,11 +6,12 @@ import {Fragment, useEffect, useState} from 'react';
 import {LoadingArticle} from 'apps/changelog/src/client/components/article';
 import {OpenAPIV3_1} from 'openapi-types';
 import {API, APICategory} from 'src/build/resolveOpenAPI';
-import {resolveRemoteApiSpec} from 'src/build/shared';
+// import {resolveRemoteApiSpec} from 'src/build/shared';
 import SwaggerUI, {SwaggerUIProps} from 'swagger-ui-react';
 
 import {HTTPSnippetGenerators} from './plugins';
 import {getSnippetConfig} from './settings';
+import {LOCAL_API_SPEC} from './localApiSpec';
 
 type OpenApiSpec = OpenAPIV3_1.Document;
 
@@ -77,9 +78,11 @@ export function ApiDocs({api}: Props) {
   const [apiSpec, setApiSpec] = useState<OpenApiSpec | null>(null);
 
   useEffect(() => {
-    const fetchApiSpec = async () => {
-      const remoteSpec = (await resolveRemoteApiSpec()) as any as OpenApiSpec;
-      setApiSpec(remoteSpec);
+    const fetchApiSpec =  () => {
+      // this is temporary, for demo purposed
+      const spec = LOCAL_API_SPEC as any as OpenApiSpec;
+      // const spec = (await resolveRemoteApiSpec()) as any as OpenApiSpec;
+      setApiSpec(spec);
     };
 
     fetchApiSpec();
