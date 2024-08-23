@@ -9,22 +9,3 @@ export const resolveRemoteApiSpec = async (): Promise<DeRefedOpenAPI> => {
   );
   return response.json() as Promise<DeRefedOpenAPI>;
 };
-
-export const resolveSpecWithXHR = new Promise<DeRefedOpenAPI>((resolve, reject) => {
-  const xhr = new XMLHttpRequest();
-  xhr.onreadystatechange = () => {
-    if (xhr.readyState === XMLHttpRequest.DONE) {
-      return resolve(JSON.parse(xhr.responseText) as DeRefedOpenAPI);
-    }
-    if (xhr.readyState === XMLHttpRequest.UNSENT) {
-      return reject('Failed to fetch schema');
-    }
-    return undefined;
-  };
-  xhr.open(
-    'GET',
-    `https://raw.githubusercontent.com/getsentry/sentry-api-schema/${SENTRY_API_SCHEMA_SHA}/openapi-derefed.json`,
-    true
-  );
-  xhr.send(null);
-});
