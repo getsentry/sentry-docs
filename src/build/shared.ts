@@ -1,7 +1,7 @@
 import {DeRefedOpenAPI} from './open-api/types';
 
 export const BASE_REGISTRY_URL = 'https://release-registry.services.sentry.io';
-const SENTRY_API_SCHEMA_SHA = '6851c7f94c9b09cfec8d357c5bab0ce4bb597ee8';
+const SENTRY_API_SCHEMA_SHA = 'aee3c08319966d0f5381ce7d083cd81e4fdb00f9';
 
 export const resolveRemoteApiSpec = async (): Promise<DeRefedOpenAPI> => {
   const response = await fetch(
