@@ -9,6 +9,7 @@ import './type.scss';
 
 import {Breadcrumbs} from '../breadcrumbs';
 import {CodeContextProvider} from '../codeContext';
+import GisccusComments from '../comments';
 import {GitHubCTA} from '../githubCTA';
 import {Header} from '../header';
 import {PlatformSdkDetail} from '../platformSdkDetail';
@@ -73,6 +74,19 @@ export function DocPage({
                 <CodeContextProvider>{children}</CodeContextProvider>
               </div>
               {hasGithub && <GitHubCTA />}
+              <GisccusComments
+                id="comments"
+                repo="a-hariti/sentry-docs"
+                repoId="R_kgDOMU8RQg"
+                category="Announcements"
+                categoryId="DIC_kwDOMU8RQs4Ch2U0"
+                mapping="pathname"
+                reactionsEnabled="1"
+                emitMetadata="0"
+                theme="light"
+                lang="en"
+                loading="lazy"
+              />
             </div>
           </div>
 
