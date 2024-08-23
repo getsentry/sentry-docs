@@ -169,7 +169,7 @@ In this example, we create a new transaction that is attached to the trace speci
 
 </PlatformCategorySection>
 
-### Inject Tracing Information to Outgoing Requests
+### Inject Tracing Information into Outgoing Requests
 
 For distributed tracing to work, the two headers that you extracted and stored in the active root span, `sentry-trace` and `baggage`, must be added to outgoing HTTP requests.
 
@@ -205,6 +205,51 @@ In this example, tracing information is propagated to the project running at `ht
 
 The two services are now connected with your custom distributed tracing implementation.
 
+<PlatformCategorySection notSupported={['browser']}>
+
+### Injecting Tracing Information into HTML
+
+If you're server-side rendering HTML and you use a Sentry SDK in your browser application, you can connect the backend and frontend traces by injecting your server's tracing information as `<meta>` tags into the HTML that's initially served to the browser. When the frontend SDK is initialized, it will automatically pick up the tracing information from the `<meta>` tags and continue the trace. Note, that your browser SDK needs to register `browserTracingIntegration` for this to work.
+
+The easiest and recommended way to do this is to use the `Sentry.getTraceMetaTags()`:
+
+```javascript {5} {filename:index.js}
+function renderHtml() {
+  return `
+    <html>
+      <head>
+        ${Sentry.getTraceMetaTags()}
+      </head>
+      <body>
+        <!-- Your HTML content -->
+      </body>
+    </html>
+  `;
+}
+```
+
+Alternatively, if you need more control over how meta tags are generated, you can use `Sentry.getTraceData()` to get only the meta tag values and generate the meta tags yourself:
+
+```javascript {2, 7-8} {filename:index.js}
+function renderHtml() {
+  const metaTagValues = Sentry.getTraceData();
+
+  return `
+    <html>
+      <head>
+        <meta name="sentry-trace" content="${metaTagValues["sentry-trace"]}">
+        <meta name="baggage" content="${metaTagValues.baggage}">
+      </head>
+      <body>
+        <!-- Your HTML content -->
+      </body>
+    </html>
+  `;
+}
+```
+
+</PlatformCategorySection>
+
 ### Starting a New Trace
 
 Available since SDK version `8.5.0`.
@@ -214,7 +259,7 @@ This means that spans or errors collected by the SDK during this new trace will 
 
 To start a new trace that remains valid throughout the duration of a callback, use `startNewTrace`:
 
-```javascript {2-6}
+```javascript {2-9}
 myButton.addEventListener("click", async () => {
   Sentry.startNewTrace(() => {
     Sentry.startSpan(

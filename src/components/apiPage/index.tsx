@@ -9,7 +9,7 @@ import remarkCodeTitles from 'sentry-docs/remark-code-title';
 
 import './styles.scss';
 
-import {ApiExamples} from '../apiExamples';
+import {ApiExamples} from '../apiExamples/apiExamples';
 import {DocPage} from '../docPage';
 import {SmartLink} from '../smartLink';
 
