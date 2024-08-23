@@ -1,7 +1,6 @@
 import {HamburgerMenuIcon} from '@radix-ui/react-icons';
 import Image from 'next/image';
 
-import {getChangelogLink} from 'sentry-docs/getChangelogLink';
 import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
 
 import sidebarStyles from './sidebar/style.module.scss';
@@ -56,12 +55,18 @@ export function Header({pathname, searchPlatforms, noSearch}: Props) {
             <Search path={pathname} searchPlatforms={searchPlatforms} showChatBot />
           </div>
         )}
-        <div className="hidden lg:flex justify-end flex-1 space-x-2 items-center">
-          <NavLink href={getChangelogLink()}>Changelog</NavLink>
+        <div className="hidden lg-xl:flex justify-end flex-1 space-x-2 items-center">
+          <NavLink href="https://sentry.io/changelog/">Changelog</NavLink>
           <NavLink href="https://try.sentry-demo.com/demo/start/">Sandbox</NavLink>
           <NavLink href="https://sentry.io/">Sign In</NavLink>
+          <NavLink
+            href="https://sentry.io/signup/"
+            className="transition-all duration-300 ease-in-out hover:bg-gradient-to-r hover:from-[#fa7faa] hover:via-[#ff9691] hover:to-[#ffb287]"
+          >
+            Get Started
+          </NavLink>
         </div>
-        <div className="lg:hidden ml-auto">
+        <div className="lg-xl:hidden ml-auto">
           <MobileMenu pathname={pathname} searchPlatforms={searchPlatforms} />
         </div>
       </nav>

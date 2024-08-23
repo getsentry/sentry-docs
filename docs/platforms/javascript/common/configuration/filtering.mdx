@@ -189,6 +189,13 @@ There are four modes you can choose from:
 
 If you choose a mode to only apply tags, the tags can then be used in Sentry to filter your issue stream with the `third_party_code` tag in the issue search bar.
 
+<Note>
+
+The `thirdPartyErrorFilterIntegration` will not work with the [Sentry Loader Script or CDN Bundles](https://docs.sentry.io/platforms/javascript/install/loader/).
+This is the case because the Sentry Loader Script and CDN Bundles are detected as "third party" by the integration. This makes it apply the chosen behavior to almost all events, since the Sentry SDK wraps many browser-native APIs.
+
+</Note>
+
 ## Filtering Transaction Events
 
 To prevent certain transactions from being reported to Sentry, use the <PlatformIdentifier name="traces-sampler" /> or <PlatformIdentifier name="before-send-transaction" /> configuration option, which allows you to provide a function to evaluate the current transaction and drop it if it's not one you want.
@@ -213,13 +220,15 @@ If the transaction currently being processed has a parent transaction (from an u
 
 Learn more about <PlatformLink to="/configuration/sampling/">configuring the sample rate</PlatformLink>.
 
-### Using <PlatformIdentifier name="before-send-transaction" />
+### Using `beforeSendTransaction`
 
 <PlatformContent includePath="configuration/before-send-transaction" />
 
 ## Filtering Spans
 
-To prevent certain spans from being reported to Sentry, use the <PlatformIdentifier name="before-send-span" /> configuration option, which allows you to provide a function to evaluate the current span and drop it if it's not one you want.
-This API is available from Javascript SDK version 8.2.0 and above.
+Available since Javascript SDK version `8.2.0`.
+
+To prevent certain spans from being reported to Sentry, use the <PlatformIdentifier name="before-send-span" /> configuration option which allows you to provide a function to modify and drop a child span.
+This function is only called for child spans of the root span. If you want to modify or drop the root span, including its child spans, use [`beforeSendTransaction`](#using-beforesendtransaction) instead.
 
 <PlatformContent includePath="configuration/before-send-span" />
