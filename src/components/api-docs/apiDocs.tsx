@@ -6,7 +6,6 @@ import {Fragment, useEffect, useState} from 'react';
 import {LoadingArticle} from 'apps/changelog/src/client/components/article';
 import {OpenAPIV3_1} from 'openapi-types';
 import {API, APICategory} from 'src/build/resolveOpenAPI';
-// import {resolveRemoteApiSpec} from 'src/build/shared';
 import SwaggerUI, {SwaggerUIProps} from 'swagger-ui-react';
 
 import {LOCAL_API_SPEC} from './localApiSpec';
