@@ -887,6 +887,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-capacitor': 'capacitor',
   'javascript-connect': 'connect',
   'javascript-cordova': 'cordova',
+  'javascript-cloudflare': 'cloudflare',
   'javascript-deno': 'deno',
   'javascript-electron': 'electron',
   'javascript-ember': 'ember',
