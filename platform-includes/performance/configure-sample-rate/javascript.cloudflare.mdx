@@ -1,60 +1,35 @@
 <SignInNote />
 
-```javascript
-import * as Sentry from "@sentry/bun";
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [],
-});
-```
-
 ## Cloudflare Pages
 
-To use this SDK, add the `sentryPagesPlugin` as
-[middleware to your Cloudflare Pages application](https://developers.cloudflare.com/pages/functions/middleware/).
-
-We recommend adding a `functions/_middleware.js` for the middleware setup so that Sentry is initialized for your entire
-app.
-
-```javascript
-// functions/_middleware.js
+```javascript {filename:functions/_middleware.js}
 import * as Sentry from "@sentry/cloudflare";
 
 export const onRequest = [
-  // Make sure Sentry is the first middleware
   Sentry.sentryPagesPlugin((context) => ({
     dsn: "___PUBLIC_DSN___",
-    // We recommend adjusting this value in production, or using tracesSampler
-    // for finer control
-    tracesSampleRate: 1.0,
+    // To set a uniform sample rate
+    tracesSampleRate: 0.2
 
-    // Set `tracePropagationTargets` to control for which URLs trace propagation should be enabled
-    tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+    // Alternatively, to control sampling dynamically
+    tracesSampler: samplingContext => { ... }
   })),
-  // Add more middlewares here
 ];
 ```
 
 ## Cloudflare Workers
 
-To use this SDK, wrap your handler with the `withSentry` function. This will initialize the SDK and hook into the
-environment. Note that you can turn off almost all side effects using the respective options.
-
-Currently only ESM handlers are supported.
-
-```javascript
+```javascript {filename:functions/_middleware.js}
 import * as Sentry from '@sentry/cloudflare';
 
 export default withSentry(
   env => ({
     dsn: "___PUBLIC_DSN___",
-    // We recommend adjusting this value in production, or using tracesSampler
-    // for finer control
-    tracesSampleRate: 1.0,
+    // To set a uniform sample rate
+    tracesSampleRate: 0.2
 
-    // Set `tracePropagationTargets` to control for which URLs trace propagation should be enabled
-    tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+    // Alternatively, to control sampling dynamically
+    tracesSampler: samplingContext => { ... }
   }),
   {
     async fetch(request, env, ctx) {
