@@ -27,16 +27,16 @@ Types of matches available:
 
 The general format of a rule is: `type:pattern owners`
 
- - **`type`** - Can be either `path`, `module`, `url`, or `tags.TAG_NAME`, which matches the specified tag.
- - **`pattern`** - The pattern you're matching on, which supports unix-style [glob syntax](<https://en.wikipedia.org/wiki/Glob_(programming)>). For example, add `*` to match anything and `?` to match a single character. _This is not a regex._ For example:
-   - `src/javascript/*.[tj]sx` for a `path` type
-   - `com.example.app` for a `module` type
-   - `https://www.example.io/v/[0-9]/checkout` for a `url` type
-   - `Chrome 81.0.?` for a `tags.browser` type
- - **`owners`** - The owner or a list of owners, separated by a space. Owners can be identified by either the Sentry user's email or the name of the team, prefixed with `#`. For example:
-   - `example@company.com`
-   - `example1@company.com example2@company.com`
-   - `#backend-team`
+- **`type`** - Can be either `path`, `module`, `url`, or `tags.TAG_NAME`, which matches the specified tag.
+- **`pattern`** - The pattern you're matching on, which supports unix-style [glob syntax](<https://en.wikipedia.org/wiki/Glob_(programming)>). For example, add `*` to match anything and `?` to match a single character. _This is not a regex._ For example:
+  - `src/javascript/*.[tj]sx` for a `path` type
+  - `com.example.app` for a `module` type
+  - `https://www.example.io/v/[0-9]/checkout` for a `url` type
+  - `Chrome 81.0.?` for a `tags.browser` type
+- **`owners`** - The owner or a list of owners, separated by a space. Owners can be identified by either the Sentry user's email or the name of the team, prefixed with `#`. For example:
+  - `example@company.com`
+  - `example1@company.com example2@company.com`
+  - `#backend-team`
 
 Teams _must_ have access to the project to become owners. To grant a team access to a project, navigate to **[Project] > Settings > Project Teams**, and click "Add Team".
 
@@ -131,11 +131,11 @@ path:dist/frontend/components/*    #frontend
 
 When Sentry receives an event with a stack trace filepath: `dist/frontend/components/sidebar.js`, we:
 
-1. Evaluate against the code owners top-to-bottom; we get one match with two owners in the rule.
+1. Evaluate against the code owners top-to-bottom; we get one match.
+
+2. Evaluate against the ownership rules top-to-bottom; we get two matches, one with two owners.
 
    a. Evaluate the rule left-to-right; we choose the first owner.
-
-2. Evaluate against the ownership rules top-to-bottom; we get two matches.
 
 The matches, in order, are:
 
@@ -168,8 +168,6 @@ You can automatically assign issues to their owners by enabling the "Auto-assign
 If an issue has already been assigned manually, new events will not change the current assignee. If an issue has not been assigned and a new event has multiple owners, Sentry assigns it to the owner(s) from the last matching rule (regardless of the rule `type`).
 
 Please keep in mind that auto-assignment may be skipped if a project is creating too many new issues at a given time due to rate limits. We'll try to auto-assign it the next time an event comes in for those skipped issues. If you are encountering this limit with non-recurring issues, you may want to take a look at [issue grouping](/concepts/data-management/event-grouping/) strategies.
-
-
 
 ## Troubleshooting
 
