@@ -12,12 +12,12 @@ Using the Sentry SDK within another SDK is [discouraged](https://docs.sentry.io/
 
 <Note>
 
-When setting up Sentry in a shared environment where multiple Sentry instances may run, you should **not use `Sentry.init()`**, as this will pollute the global state.
+When setting up Sentry inside a library, the consuming app could use the Sentry SDK as well, thus you should **not use `Sentry.init()`**, as this will pollute the global state.
 
 </Note>
 
 In order to not conflict with other Sentry instances, you should use the `Hub` API to create a new instance of Sentry.
-The Hub API works the same way as the global Sentry instance, but it is not global and can be used within your component. If you want to capture uncaught exceptions, you can use the `UncaughtExceptionHandlerIntegration` to capture them. As this will capture all uncaught exceptions within your app, you should use the `BeforeSendCallback` to filter out events that are not relevant for your SDK.
+The Hub API works the same way as the global Sentry instance, but it is not global and can be used within your component. If you want to capture uncaught exceptions, you can use the `UncaughtExceptionHandlerIntegration` to capture them. As this will capture all uncaught exceptions within an app, you should use the `BeforeSendCallback` to only accept events that are relevant for your SDK.
 
 ```kotlin
 import io.sentry.Hub
@@ -30,7 +30,7 @@ val options = SentryOptions().apply {
     isEnableUncaughtExceptionHandler = true
     setBeforeSend { event, _ ->
         // as uncaught exceptions are captured globally,
-        // you need to filter out events which are not relevant for your SDK
+        // you need to only accept events which are relevant
         if (isRelevantForMySdk(event.throwable)) {
             return@setBeforeSend event
         }
