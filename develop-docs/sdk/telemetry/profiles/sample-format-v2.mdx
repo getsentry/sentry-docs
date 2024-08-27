@@ -11,12 +11,16 @@ The *Sample Format V2* is designed for use in continuous profiling. Therefore, a
 
 ```json
 {
+    "profiler_id": "76e564243495495da5bb90152d3afdef",
     "chunk_id": "11cde81c68384f67afd587b3766f1285",
     "client_sdk": {
         "name": "sentry.python.aiohttp",
         "version": "2.13.0"
     },
     "platform": "python",
+    "release": "1.0",
+    "environment": "production"
+    "version": "2",
     "profile": {
         "frames": [
             {
@@ -58,9 +62,168 @@ The *Sample Format V2* is designed for use in continuous profiling. Therefore, a
             }
         }
     },
-    "profiler_id": "76e564243495495da5bb90152d3afdef",
-    "version": "2",
-    "release": "1.0",
-    "environment": "production"
 }
 ```
+
+### Profile metadata
+
+`debug_meta`
+
+: *Object, required on native platforms.* This carry the same payload as <Link
+to="/sdk/event-payloads/sdk/">`debug_meta` interface</Link>. It is required to
+have it for native platforms in order to symbolicate, otherwise you can omit it.
+
+`profiler_id`
+
+: *String, required.* Hexadecimal string representing a uuid4 value. The length
+is exactly 32 characters. Dashes are not allowed. Has to be lowercase. 
+Random UUID for each profiler session.
+
+`chunk_id`
+
+: *String, required.* Hexadecimal string representing a uuid4 value. The length
+is exactly 32 characters. Dashes are not allowed. Has to be lowercase.
+This is a Random UUID identifying a chunk.
+
+`client_sdk`
+
+: *Object, optional.* Contains information about the client *SDK*.
+
+It can have the following attributes:
+- `name`
+- `version`
+
+`platform`
+
+: *String, required.* This value represents the platform the SDK is submitting
+from.
+
+`release`
+
+: *String, required.* The release version of the application.
+
+**Release versions must be unique across all projects in your organization**.
+This value can be the git SHA for the given project, or a product identifier
+with a semantic version (suggested format `my-project-name@1.0.0`).
+
+`environment`
+
+: *String, recommended.* The environment name, such as `production` or
+`staging`. The default value should be `production`.
+
+`version`
+
+: *String, required.* Represents the version of the Sample format.
+
+Acceptable values are:
+- `"2"`
+
+`profile`
+
+: *Object, required.* It contains all the raw data collected when profiling. See
+[profile data](#profile-data).
+
+
+### Profile data
+
+The profile data consists of
+- sample, which specifies the start time, their corresponding thread and a stack,
+- stacks, which are lists of frames,
+- frames, which identify the function and/or line of code for each item in a stacktrace,
+- thread metadata, with info about threads.
+
+The selected format is trying to keep the amount of data we transfer to the server as limited as possible.
+
+```json
+{
+  "profile": {
+    "samples": [
+      { ... },
+      ...
+    ],
+    "stacks": [
+      [ ... ],
+      ...
+    ],
+    "frames": [
+      { ... },
+      ...
+    ],
+    "thread_metadata": {
+      "259": {
+        ...
+      }
+    }
+  }
+}
+```
+
+When collecting a stack trace, you will:
+1. Capture the stack trace.
+2. Capture an absolute timestamp of when the stack trace was "captured".
+3. Capture the thread ID where this stack trace was captured.
+4. Create a list of indices for each frames (add it to the frame list if needed
+or use the existing frame's index).
+5. Check if that stack exists in the list of stacks and if it doesn't, add it to the list of stacks
+6. Create a sample containing the thread ID, the timestamp and the
+stack ID.
+
+You should collect samples at a frequency of 101Hz, or roughly once every 10
+milliseconds.
+
+`samples`
+
+: *List, required* Contains a list of sample object captured during execution.
+Each sample can contain the following attributes:
+
+- `timestamp`: *64-bit floating point, required.* Contains the Unix timestamp 
+  in seconds with millisecond precision when the sample was captured.
+- `stack_id`: *Integer, required.* Contains the stack index from the `stacks` list.
+- `thread_id`: *String, required.* Contains the thread ID on which the sample was captured.
+
+```json
+    {
+        "timestamp": 1724762625.5756555,
+        "thread_id": "6154596352",
+        "stack_id": 0
+    }
+```
+
+`stacks`
+
+: *List, required*. Contains a list of frame indices forming a stack trace.
+
+Frames in a stack should be ordered from leaf to root. It means your main frame
+should be at the end of the list.
+
+It's encouraged to deduplicate stacks by only storing it once and referring to
+the same `stack_id` for each sample that needs it.
+
+`frames`
+
+: *List, required*. Contains a list of frame objects (see [Frame
+Attributes](/sdk/event-payloads/stacktrace/#frame-attributes)).
+
+Each object should contain at least a `filename`, `function` or
+`instruction_addr` attribute. All values are optional, but recommended.
+
+For native platforms (`cocoa` for example), `instruction_addr` is
+required in order to be able to symbolicate and get more info about the frame.
+
+For the rest of the platforms, whatever is passed here will travel to the
+frontend and whatever is available can be used to show more or less information.
+
+We will use `module` or `package` (in that order) to group frames when needed.
+
+Some attributes are not used at the moment:
+- `raw_function`
+- `pre_context`
+- `post_context`
+- `stack_start`
+- `vars`
+- `addr_mode`
+- `platform`
+
+`thread_metadata`
+
+TODO
