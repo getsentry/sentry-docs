@@ -5,10 +5,7 @@
 import {promises as fs} from 'fs';
 
 import {DeRefedOpenAPI} from './open-api/types';
-
-// SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-// DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = 'aee3c08319966d0f5381ce7d083cd81e4fdb00f9';
+import {resolveRemoteApiSpec} from './shared';
 
 const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
@@ -25,10 +22,7 @@ async function resolveOpenAPI(): Promise<DeRefedOpenAPI> {
       );
     }
   }
-  const response = await fetch(
-    `https://raw.githubusercontent.com/getsentry/sentry-api-schema/${SENTRY_API_SCHEMA_SHA}/openapi-derefed.json`
-  );
-  return await response.json();
+  return resolveRemoteApiSpec();
 }
 
 export type APIParameter = {
