@@ -93,6 +93,42 @@ It can have the following attributes:
 - `name`
 - `version`
 
+`measurements`
+
+: *Object, optional.* This field contains various metrics measured during the profile collection.
+
+A measurement is a collection of measurement values and a unit for those values.
+It will only be shown in the UI if it's been integrated. Right now, we only
+support 2 metrics:
+- `frozen_frame_renders`: when a frozen frame was detected.
+- `slow_frame_renders`: when a slow frame was detected.
+
+A measurement value can contain the following attributes:
+- `elapsed_since_start_ns`: number of nanoseconds since the start of the profile
+  (stored in `timestamp`). It should be wall time.
+- `value`: value for the measurement, as a `float64`. We accept `float64`
+  formatted as `string` as well.
+
+These are the values accepted for `unit`:
+- `nanosecond`
+- `ns`
+- `hertz`
+- `hz`
+- `byte`
+- `percent`
+
+```json
+{
+  "cpu_0": {
+    "unit": "percent",
+    "values": {
+      "elapsed_since_start_ns: "1234567890",
+      "value": 12.64,
+    }
+  }
+}
+```
+
 `platform`
 
 : *String, required.* This value represents the platform the SDK is submitting
@@ -226,4 +262,49 @@ Some attributes are not used at the moment:
 
 `thread_metadata`
 
-TODO
+: *Object, required.* Contains an object with a field for each thread ID
+detected during runtime.
+
+This object can contain these attributes:
+- `name`: name of the thread.
+- `priority`: the priority of the thread.
+
+This information will be used on the flamechart to power the thread selector.
+
+```json
+{
+  "thread_metadata": {
+    "259": {
+      "name": "com.apple.main-thread",
+      "priority": 31
+    }
+  }
+}
+```
+
+## Validation
+
+We will reject a chunk (profile) in Relay for several reasons:
+- chunk data is missing (no frame, no sample, no stack)
+- not enough samples (we need at least 2 samples)
+- any of the metadata required is missing
+- size of the chunk exceeds 50MB
+
+It is suggested to validate these conditions before sending the chunk.
+
+It's suggested to remove unnecessary data like thread data without samples from
+`thread_metadata`.
+
+## Ingestion
+
+After this payload is generated, serialize it as JSON, pack it into an
+[Envelope](/sdk/envelopes/) with the item type `profile_chunk` and send 
+it to Relay.
+
+This envelope should look like this:
+
+```json
+{"event_id":"a229377b82ad4898be7c3a6272d052d9"}
+{"type":"profile_chunk"}
+{ /* profile JSON payload */}
+````
