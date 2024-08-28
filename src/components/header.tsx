@@ -42,8 +42,8 @@ function Avatar({user}: {user: User}) {
           height={32}
           className="rounded-full h-8 w-8"
         />
-        <div className="flex flex-col gap-1">
-          <span className="font-medium text-sm">{user.name}</span>
+        <div className="flex flex-col">
+          <span className="font-medium text-sm text-primary">{user.name}</span>
           <span className="text-xs text-gray-500">{user.username}</span>
         </div>
       </div>
