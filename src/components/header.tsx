@@ -111,7 +111,7 @@ export function Header({pathname, searchPlatforms, noSearch}: Props) {
             <Search path={pathname} searchPlatforms={searchPlatforms} showChatBot />
           </div>
         )}
-        <div className="hidden lg-xl:flex justify-end flex-1 space-x-2 items-center">
+        <div className="hidden lg-xl:flex justify-end flex-1 space-x-2 items-center min-w-fit">
           <NavLink href="https://sentry.io/changelog/">Changelog</NavLink>
           <NavLink href="https://try.sentry-demo.com/demo/start/">Sandbox</NavLink>
           {user ? (
