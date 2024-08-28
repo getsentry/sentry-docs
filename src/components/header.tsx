@@ -122,6 +122,7 @@ export function Header({pathname, searchPlatforms, noSearch}: Props) {
               </NavLink>
             </Fragment>
           )}
+          <ThemeToggle />
         </div>
         <div className="lg-xl:hidden ml-auto">
           <MobileMenu pathname={pathname} searchPlatforms={searchPlatforms} />
