@@ -100,7 +100,7 @@ export function Header({pathname, searchPlatforms, noSearch}: Props) {
             <Search path={pathname} searchPlatforms={searchPlatforms} showChatBot />
           </div>
         )}
-        <div className="hidden lg:flex justify-end flex-1 space-x-2 items-center">
+        <div className="hidden lg-xl:flex justify-end flex-1 space-x-2 items-center">
           <NavLink href="https://sentry.io/changelog/">Changelog</NavLink>
           <NavLink href="https://try.sentry-demo.com/demo/start/">Sandbox</NavLink>
           {user ? (
@@ -117,7 +117,7 @@ export function Header({pathname, searchPlatforms, noSearch}: Props) {
             </Fragment>
           )}
         </div>
-        <div className="lg:hidden ml-auto">
+        <div className="lg-xl:hidden ml-auto">
           <MobileMenu pathname={pathname} searchPlatforms={searchPlatforms} />
         </div>
       </nav>
