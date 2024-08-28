@@ -80,7 +80,7 @@ export function Expandable({title, children, permalink}: Props) {
     return () => {
       window.removeEventListener('hashchange', onHashChange);
     };
-  }, []);
+  }, [title, permalink]);
 
   return (
     <ExpandableWrapper>
