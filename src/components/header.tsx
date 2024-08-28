@@ -44,8 +44,12 @@ function Avatar({user}: {user: User}) {
           className="rounded-full h-8 w-8"
         />
         <div className="flex flex-col">
-          <span className="font-medium text-sm text-primary">{user.name}</span>
-          <span className="text-xs text-gray-500">{user.username}</span>
+          <span className="font-medium text-sm text-[var(--foreground)]">
+            {user.name}
+          </span>
+          <span className="text-xs text-[var(--foreground-secondary)]">
+            {user.username}
+          </span>
         </div>
       </div>
     </Link>
@@ -64,11 +68,12 @@ export function Header({pathname, searchPlatforms, noSearch}: Props) {
       // eslint-disable-next-line no-console
       .catch(console.error);
   }, []);
+
   return (
     <header className="bg-[var(--gray-1)] h-[var(--header-height)] w-full z-50 border-b border-[var(--gray-a3)] fixed top-0">
       {/* define a header-height variable for consumption by other components */}
       <style>{':root { --header-height: 80px; }'}</style>
-      <nav className="mx-auto px-6 lg:px-8 py-2 flex items-center text-primary">
+      <nav className="mx-auto px-6 lg:px-8 py-2 flex items-center">
         {pathname !== '/' && (
           <button className="lg:hidden mr-3">
             <label
@@ -106,7 +111,7 @@ export function Header({pathname, searchPlatforms, noSearch}: Props) {
             <Search path={pathname} searchPlatforms={searchPlatforms} showChatBot />
           </div>
         )}
-        <div className="hidden lg-xl:flex justify-end flex-1 space-x-2 items-center">
+        <div className="hidden lg-xl:flex justify-end flex-1 space-x-2 items-center min-w-fit">
           <NavLink href="https://sentry.io/changelog/">Changelog</NavLink>
           <NavLink href="https://try.sentry-demo.com/demo/start/">Sandbox</NavLink>
           {user ? (
