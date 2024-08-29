@@ -5,7 +5,6 @@ export const GET = (_request: Request) => {
     `
 Sitemap: ${isDeveloperDocs ? 'https://develop.sentry.dev/sitemap.xml' : 'https://docs.sentry.io/sitemap.xml'}
 User-agent: *
-Disallow: /development-api/
 `.trim(),
     {headers: {'content-type': 'text/plain'}}
   );
