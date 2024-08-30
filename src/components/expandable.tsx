@@ -36,6 +36,9 @@ const ExpandableWrapper = styled.div`
   border-left: 3px solid var(--accent-12);
   margin-bottom: 1rem;
   padding: 0.5rem 1rem;
+  h2 {
+    margin-top: 0;
+  }
 `;
 
 function slugify(str: string) {
@@ -77,7 +80,7 @@ export function Expandable({title, children, permalink}: Props) {
     return () => {
       window.removeEventListener('hashchange', onHashChange);
     };
-  }, []);
+  }, [title, permalink]);
 
   return (
     <ExpandableWrapper>

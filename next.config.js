@@ -1,7 +1,5 @@
 const {redirects} = require('./redirects.js');
 
-const createMDX = require('@next/mdx');
-const remarkPrism = require('remark-prism');
 const {codecovWebpackPlugin} = require('@codecov/webpack-plugin');
 const {withSentryConfig} = require('@sentry/nextjs');
 
@@ -13,6 +11,9 @@ const nextConfig = {
 
   experimental: {
     serverComponentsExternalPackages: ['rehype-preset-minify'],
+    outputFileTracingExcludes: {
+      '/**/*': ['./.git/**/*', './apps/**/*'],
+    },
   },
 
   webpack: (config, _options) => {
@@ -33,15 +34,7 @@ const nextConfig = {
   redirects,
 };
 
-const withMDX = createMDX({
-  options: {
-    remarkPlugins: [remarkPrism],
-  },
-});
-
-module.exports = withMDX(nextConfig);
-
-module.exports = withSentryConfig(module.exports, {
+module.exports = withSentryConfig(nextConfig, {
   org: 'sentry',
   project: 'docs',
 

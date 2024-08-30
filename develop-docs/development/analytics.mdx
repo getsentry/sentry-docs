@@ -102,18 +102,8 @@ analytics.record(
 
 Run the tests that touch the endpoint to ensure everything is Gucci.
 
-### Step 3: Add it to ETL
-
-To also send the analytics event in Amplitude, add the event to this file: [https://github.com/getsentry/etl/blob/master/etl/operators/analytics_events_schema.py](https://github.com/getsentry/etl/blob/master/etl/operators/analytics_events_schema.py)
-
-```jsx
-'my_backend_event.sent': { // Needs to match the `type` field in the class you created in step 1
-    'name': 'My Backend Event', // The event name in Amplitude
-    'uid_field': 'target_user_id' // Optional. Field name that represents the user id of the event.
-},
-```
-
-Note that in the future this will change so that by default, all events will go to Amplitude.
+### Step 3: 
+By default, a new event type is aggregated and sent to Amplitude as long as there is a user_id sent along with the event. If you would like to send events unaggregated, refer to [our Amplitude aggregation docs](https://github.com/getsentry/etl/blob/master/documentation/amplitude_analytics.md)
 
 ## Route-Based Frontend Analytics
 
@@ -202,7 +192,7 @@ For analytics events that happen in Sentry, the function `trackAnalytics` is wha
 
 ### Step 1: Add the Typescript Definition
 
-First, add the Typescript definiition of the event to an analytics event file inside the `analytics` directory like [issueAnalyticsEvents.tsx](https://github.com/getsentry/sentry/blob/master/static/app/utils/analytics/issueAnalyticsEvents.tsx). There are two parts of this:
+First, add the Typescript definition of the event to an analytics event file inside the `analytics` directory like [issueAnalyticsEvents.tsx](https://github.com/getsentry/sentry/blob/master/static/app/utils/analytics/issueAnalyticsEvents.tsx). There are two parts of this:
 
 1. Define the event parameters that get exported
 
@@ -217,7 +207,7 @@ export type ExampleTutorialEventParameters = {
 };
 ```
 
-2. Define the Reload to Amplitude name mapping. If the value is `null`, then the event will not be sent to Amplitude. This is usually only done for very high volumne events.
+2. Define the Reload to Amplitude name mapping. If the value is `null`, then the event will not be sent to Amplitude. This is usually only done for very high volume events.
 
 ```tsx
 export const exampleTutorialEventMap: Record<

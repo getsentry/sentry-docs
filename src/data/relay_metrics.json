@@ -13,6 +13,12 @@
   },
   {
     "type": "Gauge",
+    "name": "buffer.disk_used",
+    "description": "The used disk for the buffer.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
     "name": "buffer.envelopes_disk_count",
     "description": "The number of envelopes waiting for project states on disk.\n\nNote this metric *will not be logged* when we encounter envelopes in the database on startup,\nbecause counting those envelopes reliably would risk locking the db for multiple seconds.\n\nThe disk buffer size can be configured with `spool.envelopes.max_disk_size`.",
     "features": []
@@ -32,13 +38,19 @@
   {
     "type": "Counter",
     "name": "buffer.envelopes_read",
-    "description": "Number of _envelopes_ the envelope buffer reads back from disk.",
+    "description": "Number of _envelopes_ the envelope buffer produces.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "buffer.envelopes_returned",
+    "description": "Number of envelopes that were returned to the envelope buffer by the project cache.\n\nThis happens when the envelope buffer falsely assumes that the envelope's projects are loaded\nin the cache and sends the envelope onward, even though the project cache cannot handle it.",
     "features": []
   },
   {
     "type": "Counter",
     "name": "buffer.envelopes_written",
-    "description": "Number of _envelopes_ the envelope buffer spools to disk.",
+    "description": "Number of _envelopes_ the envelope buffer ingests.",
     "features": []
   },
   {
@@ -50,7 +62,13 @@
   {
     "type": "Counter",
     "name": "buffer.reads",
-    "description": "Number times the envelope buffer reads back from disk.",
+    "description": "Number of times the envelope buffer reads back from disk.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "buffer.stack_count",
+    "description": "The number of individual stacks in the priority queue.\n\nPer combination of `(own_key, sampling_key)`, a new stack is created.",
     "features": []
   },
   {
@@ -68,7 +86,7 @@
   {
     "type": "Counter",
     "name": "buffer.writes",
-    "description": "Number times the envelope buffer spools to disk.",
+    "description": "Number of times the envelope buffer spools to disk.",
     "features": []
   },
   {
@@ -600,7 +618,7 @@
   {
     "type": "Counter",
     "name": "project_state.redis.requests",
-    "description": "Number of times a project state is requested from the central Redis cache.\n\nThis has a tag `hit` with values `true` or `false`.  If false the request will be\nsent to the sentry endpoint.",
+    "description": "Number of times a project state is requested from the central Redis cache.\n\nThis metric is tagged with:\n- `hit`: One of:\n- `revision`: the cached version was validated to be up to date using its revision.\n- `project_config`: the request was handled by the cache.\n- `project_config_revision`: the request was handled by the cache and the revision did\nnot change.\n- `false`: the request will be sent to the sentry endpoint.",
     "features": [
       "processing"
     ]

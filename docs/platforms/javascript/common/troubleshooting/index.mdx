@@ -128,7 +128,6 @@ Starting with version `6.7.0` of the JavaScript SDK, you can use the `tunnel` op
 
 To enable the `tunnel` option, provide either a relative or an absolute URL in your `Sentry.init` call. When you use a relative URL, it's relative to the current origin, and this is the form that we recommend. Using a relative URL will not trigger a preflight CORS request, so no events will be blocked, because the ad-blocker will not treat these events as third-party requests.
 
-<SignInNote />
 
 ```javascript
 Sentry.init({
@@ -221,7 +220,8 @@ const SENTRY_PROJECT_IDS = ["123456"];
 
 export const postAction = async ({ request }) => {
   try {
-    const envelope = await request.text();
+    const envelopeBytes = await req.arrayBuffer();
+    const envelope = new TextDecoder().decode(envelopeBytes);
     const piece = envelope.split("\n")[0];
     const header = JSON.parse(piece);
     const dsn = new URL(header["dsn"]);
@@ -236,7 +236,7 @@ export const postAction = async ({ request }) => {
     }
 
     const upstream_sentry_url = `https://${SENTRY_HOST}/api/${project_id}/envelope/`;
-    await fetch(upstream_sentry_url, { method: "POST", body: envelope });
+    await fetch(upstream_sentry_url, { method: "POST", body: envelopeBytes });
 
     return json({}, { status: 200 });
   } catch (e) {

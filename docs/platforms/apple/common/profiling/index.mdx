@@ -19,7 +19,6 @@ notSupported:
 
 Profiling depends on Sentry’s Tracing product being enabled beforehand. To enable tracing in the SDK:
 
-<SignInNote />
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -51,7 +50,6 @@ iOS profiling is available starting in SDK version `8.12.0`.
 
 </Note>
 
-<SignInNote />
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -98,3 +96,23 @@ To set up launch profiling, use the `enableAppLaunchProfiling` option and config
 If you use `SentryOptions.tracesSampler` or `SentryOptions.profilesSampler`, it will be invoked after you call `SentrySDK.startWithOptions`, with `SentryTransactionContext.forNextAppLaunch` set to `true` indicating that it's evaluating a launch profile sampling decision. If instead you simply set `SentryOptions.tracesSampleRate` and `SentryOptions.profilesSampleRate`, those numerical rates will be used directly.
 
 Currently, launch profiles are attached to a special performance transaction operation called `app.launch` and displayed in the product simply as `launch`.
+
+## Continuous Profiling
+
+<Note>
+
+This feature is experimental and may have bugs.
+
+</Note>
+
+_(New in version 8.36.0)_
+
+The current profiling implementation stops the profiler automatically after 30 seconds (unless you manually stop it earlier). Naturally, this limitation makes it difficult to get full coverage of your app's execution. We now offer an experimental continuous mode, where profiling data is periodically uploaded while running, with no limit to how long the profiler may run.
+
+Previously, profiles only ran in tandem with performance transactions that were started either automatically or manually with `SentrySDK.startTransaction`. Now, you can start and stop the profiler directly with `SentrySDK.startProfiler` and `SentrySDK.stopProfiler`. You can also start a profile at app launch by setting `SentryOptions.enableAppLaunchProfiling = true` in your call to `SentrySDK.startWithOptions`. 
+
+Continuous profiling mode is enabled by default, requiring no changes to `SentryOptions` when you start the SDK to opt in. If you had previously set `SentryOptions.profilesSampleRate` or `SentryOptions.profilesSampler` to use transaction-based profiling, then remove those lines of code from your configuration.
+
+These new APIs do not offer any sampling functionality—every call to start the profiler will start it, and the same goes for launch profiles if you've configured that. If you are interested in reducing the amount of profiles that run, you must take care to do it at the callsites.
+
+Continuous profiling has implications for your org's billing structure. This feature is only available for subscription plans that enrolled after June 5, 2024.

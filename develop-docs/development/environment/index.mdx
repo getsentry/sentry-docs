@@ -21,6 +21,8 @@ When you're done with setup, you'll want to also review the <Link to="/developme
 
 Simply run `devenv sync` inside of your sentry or getsentry repo.
 
+NOTE: After running `devenv sync` you may need to restart your terminal to continue.
+
 
 ## Running the Development Server
 
@@ -69,20 +71,17 @@ yarn mkcert-localhost
 
 Running `sentry devserver` will automatically use HTTPS when the certificates have been installed.
 
-### Ingestion Pipeline (Relay)
+### Ingestion Pipeline (Relay) aka Sending Events to your Dev Environment
 
-Some services are not run in all situations. Among those are <Link to="/services/relay/">Relay</Link> and the ingest workers. 
+<Link to="/services/relay/">Relay</Link> and the ingest workers are not started by default. Follow the instructions below to start them so you can send events to your dev environment Sentry instance:
 
-**If you need to ingest errors, but don't require metrics ingestion:** Set `SENTRY_USE_RELAY=True` in `~/.sentry/sentry.conf.py`. If `sentry devservices` 
-is currently up, make sure to restart it after you make the change. This will launch Relay as part of the `devserver` workflow.
+- Set `SENTRY_USE_RELAY = True` in `~/.sentry/sentry.conf.py`. This will tell `sentry devservices up` to also start services that Relay needs.
+- Run `sentry devservices up` to start the services Relay needs. (like for example Kafka)
+- (Re-)Start your devserver with the `--ingest` flag (e.g. `sentry devserver --workers --ingest`). This will start the Relay container and all related services alongside your devserver.
 
-Additionally, you can explicitly control this during `devserver` usage with the `--ingest` and `--no-ingest` flags. The `sentry devservices`
-command will not update Relay automatically in that case, to do this manually run:
+Note: To update Relay, manually run `sentry devservices up --skip-only-if relay`.
 
-```shell
-sentry devservices up --skip-only-if relay
-sentry devserver --workers --ingest
-```
+#### Metrics Ingestion Pipeline
 
 **If you want to enable the entire metrics ingestion pipeline:** You need to add the following to your config at `~/.sentry/sentry.conf.py`:
 
@@ -132,7 +131,7 @@ environment, you can create `getsentry/conf/settings/devlocal.py` and put the
 configuration option overrides there. This module will be automatically imported
 by `dev.py` if it exists.
 
-To enable the ingest workers, follow the steps described <Link to="#ingestion-pipeline-relay">here</Link> and run 
+To enable the ingest workers, follow the steps described <Link to="#ingestion-pipeline-relay">here</Link> and run
 ```shell
 getsentry devserver --workers --ingest
 ```
