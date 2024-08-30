@@ -16,7 +16,11 @@ export const metadata: Metadata = {
   title: 'Home',
   icons: {
     icon:
-      process.env.NODE_ENV === 'production' ? '/favicon.ico' : '/favicon_localhost.png',
+      // we use the absolute url (for the alternative prod domain),
+      // otherwise we run into the issue that sentry.io/changelog will not find the favicon
+      process.env.NODE_ENV === 'production'
+        ? 'https://changelog.sentry.dev/favicon.ico'
+        : '/favicon_localhost.png',
   },
   openGraph: {
     images: '/img/hero.png',
@@ -29,7 +33,7 @@ export const metadata: Metadata = {
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="en">
-      <body className={`${rubik.variable} text-darkPurple`}>
+      <body className={`${rubik.variable}`}>
         <Theme accentColor="iris" grayColor="sand" radius="large" scaling="95%">
           {children}
         </Theme>
