@@ -26,6 +26,10 @@ const developerDocsRedirects = [
     source: '/sdk/performance/:path*',
     destination: '/sdk/telemetry/traces/:path*',
   },
+  {
+    source: '/sdk/event-payloads/types/',
+    destination: '/sdk/event-payloads/',
+  },
 ];
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
