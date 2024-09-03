@@ -67,6 +67,40 @@ Sentry.startSpan(
 );
 ```
 
+## Enable Continuous Profiling
+
+<Include name="feature-stage-beta.mdx" />
+
+_(New in version 8.28.0)
+
+The current profiling implementation stops the profiler automatically after 30 seconds (unless you manually stop it earlier). Naturally, this limitation makes it difficult to get full coverage of your app's execution. We now offer an experimental continuous mode, where profiling data is periodically uploaded while running, with no limit on how long the profiler may run.
+
+To get started with continuous profiling, you can start and stop the profiler directly with `Sentry.profiler.startProfiling` and `Sentry.profiler.stopProfiling`.
+
+<Note>
+
+If you previously set `profilesSampleRate` or `profilesSampler` to use transaction-based profiling, you must remove those lines of code from your configuration in order to use continuous profiling.
+
+</Note>
+
+```js
+const Sentry = require('@sentry/node');
+
+Sentry.init({
+    dsn: "___PUBLIC_DSN___" ,
+})
+
+Sentry.profiler.startProfiling();
+
+// run some code here
+
+Sentry.profiler.stopProfiling();
+```
+
+These new APIs do not offer any sampling functionality—every call to start the profiler will run and start sending profiling data. If you are interested in reducing the amount of profiles that run, you must take care to do it at the callsites.
+
+Continuous profiling has implications for your org's billing structure. This feature is only available for subscription plans that enrolled after June 5, 2024.
+
 ## How Does It Work?
 
 Under the hood, the Sentry profiler uses V8's [CpuProfiler](https://v8docs.nodesource.com/node-18.2/d2/d34/classv8_1_1_cpu_profiler.html) to collect stack samples. This means that `sentry/profiling-node` is written as a [native add-on](https://nodejs.org/docs/latest-v18.x/api/addons.html) for Node and won't run in environments like Deno or Bun. Profiling enhances tracing by providing profiles for individual transactions. This allows you to look at higher level performance information like transaction and span durations before diving deeper and looking at profiles.
@@ -88,8 +122,9 @@ We recommend you have your own CPU resource-monitoring in place, because the act
 
 Starting from version `0.1.0`, the `@sentry/profiling-node` package precompiles binaries for a number of common architectures. This minimizes the tooling required to run the package and avoids compiling the package from source in most cases, which speeds up installation. Currently, we ship prebuilt binaries for the following architectures and Node versions:
 
+- macOS arm64: Node v16, v18, v20, v22
 - macOS x64: Node v16, v18, v20, v22
-- Linux ARM64 (musl): Node v16, v18, v20, v22
+- Linux arm64 (musl): Node v16, v18, v20, v22
 - Linux x64 (glibc): Node v16, v18, v20, v22
 - Windows x64: Node v16, v18, v20, v22
 
