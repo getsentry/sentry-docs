@@ -1,0 +1,42 @@
+---
+title: Developing with Ngrok
+description: This document explains how to use ngrok with the development server.
+sidebar_title: Ngrok
+sidebar_order: 30
+---
+
+# Using ngrok
+
+The development server can be operated behind ngrok for when you need to receive traffic from the outside world. This comes up frequently when working with integrations. 
+
+## Ngrok in `monolith` mode
+
+The following are the steps will setup ngrok for integrations in `monolith` mode:
+
+### Step 1: Create Ngrok Config File
+Start off by defining a configuration file for `ngrok`:
+
+```yaml
+version: '2'
+authtoken: <YOUR-NGROK-AUTHTOKEN>
+tunnels:
+  acme-org:
+    proto: http
+    hostname: <yourdomain>.ngrok.io
+    addr: 8000
+    host_header: "rewrite"
+```
+
+You can grab your auth token from https://dashboard.ngrok.com/get-started/your-authtoken
+
+### Step 2: Start Ngrok
+Next start up ngrok with your configuration file:
+```shell
+ngrok start --all --config ngrok.yml
+```
+
+### Step 3: Start Devserver
+When starting the devserver, use the `--ngrok` flag:
+```shell
+sentry devserver --ngrok=<yourname>.ngrok.io
+```
