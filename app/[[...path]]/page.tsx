@@ -19,7 +19,6 @@ import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {getDevDocsFrontMatter, getDocsFrontMatter, getFileBySlug} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {setServerContext} from 'sentry-docs/serverContext';
-import {formatGuideOrPlatformTitle} from 'sentry-docs/utils';
 
 export async function generateStaticParams() {
   const docs = await (isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter());
@@ -141,9 +140,7 @@ export async function generateMetadata({params}: MetadataProps): Promise<Metadat
       const guideOrPlatform = getCurrentPlatformOrGuide(rootNode, params.path);
       title =
         pageNode.frontmatter.title +
-        (guideOrPlatform
-          ? ` | Sentry for ${formatGuideOrPlatformTitle(guideOrPlatform.name)}`
-          : '');
+        (guideOrPlatform ? ` | Sentry for ${pageNode.frontmatter.title}` : '');
       description = pageNode.frontmatter.description ?? '';
     }
   }
