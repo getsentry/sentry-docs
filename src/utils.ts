@@ -14,33 +14,44 @@ export function sortBy<A>(arr: A[], comp: (v: A) => number): A[] {
   });
 }
 
-export const capitilize = (str: string) => {
+export const capitalize = (str: string) => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
 export const formatGuideOrPlatformTitle = (title: string) => {
   const lowerCase = title.toLowerCase();
-  if (lowerCase === 'ios') {
-    return 'iOS';
-  }
 
-  if (lowerCase === 'macos') {
-    return 'macOS';
-  }
+  switch (lowerCase) {
+    case 'ios':
+      return 'iOS';
 
-  if (lowerCase === 'tvos') {
-    return 'tvOS';
-  }
+    case 'macos':
+      return 'macOS';
 
-  if (lowerCase === 'visionos') {
-    return 'visionOS';
-  }
+    case 'tvos':
+      return 'tvOS';
 
-  if (lowerCase === 'watchos') {
-    return 'watchOS';
-  }
+    case 'visionos':
+      return 'visionOS';
 
-  return capitilize(title);
+    case 'watchos':
+      return 'watchOS';
+
+    case 'dotnet':
+      return '.NET';
+
+    case 'kotlin-multiplatform':
+      return 'Kotlin Multiplatform';
+
+    case 'php':
+      return 'PHP';
+
+    case 'react-native':
+      return 'React Native';
+
+    default:
+      return capitalize(title);
+  }
 };
 
 export const uniqByReference = <T>(arr: T[]): T[] => Array.from(new Set(arr));
