@@ -140,7 +140,7 @@ export async function generateMetadata({params}: MetadataProps): Promise<Metadat
       const guideOrPlatform = getCurrentPlatformOrGuide(rootNode, params.path);
       title =
         pageNode.frontmatter.title +
-        (guideOrPlatform ? ` | Sentry for ${pageNode.frontmatter.title}` : '');
+        (guideOrPlatform ? ` | Sentry for ${guideOrPlatform.title}` : '');
       description = pageNode.frontmatter.description ?? '';
     }
   }
