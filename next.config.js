@@ -3,6 +3,34 @@ const {redirects} = require('./redirects.js');
 const {codecovWebpackPlugin} = require('@codecov/webpack-plugin');
 const {withSentryConfig} = require('@sentry/nextjs');
 
+const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
+  ? {}
+  : {
+      '/**/*': [
+        './.git/**/*',
+        './apps/**/*',
+        'develop-docs/**/*',
+        'node_modules/@esbuild/darwin-arm64',
+      ],
+      '/platform-redirect': [
+        'docs/organization/integrations/**/*',
+        'docs/product/**/*',
+        'docs/concepts/**/*',
+        'docs/api/**/*',
+        'docs/pricing/**/*',
+        'docs/account/**/*',
+        '**/*.gif',
+        'public/mdx-images/**/*',
+        '*.pdf',
+      ],
+      '\\[\\[\\.\\.\\.path\\]\\]': [
+        'docs/**/*',
+        'node_modules/prettier/plugins',
+        'node_modules/rollup/dist',
+      ],
+      'sitemap.xml': ['docs/**/*', 'public/mdx-images/**/*', '*.gif', '*.pdf', '*.png'],
+    };
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
@@ -11,9 +39,7 @@ const nextConfig = {
 
   experimental: {
     serverComponentsExternalPackages: ['rehype-preset-minify'],
-    outputFileTracingExcludes: {
-      '/**/*': ['./.git/**/*', './apps/**/*'],
-    },
+    outputFileTracingExcludes,
   },
 
   webpack: (config, _options) => {
