@@ -50,7 +50,7 @@ export async function Home() {
             <Image
               src={HeroImage}
               alt="Sentry's hero image"
-              className="max-h-[200px] w-full md:max-h-[390px]"
+              className="max-h-[200px] w-auto md:max-h-[390px]"
             />
           </div>
         </div>
