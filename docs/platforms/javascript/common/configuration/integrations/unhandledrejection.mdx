@@ -38,14 +38,15 @@ The `onUnhandledRejectionIntegration` registers handlers to capture global unhan
 
 ## Options
 
-### `exitEvenIfOtherHandlersAreRegistered`
+### `mode`
 
-_Type: `boolean`_
+_Type: `'none' | 'warn' | 'strict'`_
 
-If set to false, the SDK will _not_ exit if we detect that another uncaught exception handler is registered.
+This option defines what to do after capturing an unhandled rejection.
+It that mimicks behavior of [node's](https://nodejs.org/api/cli.html#--unhandled-rejectionsmode) `--unhandled-rejection` flag:
 
-### `onFatalError`
+- `strict`: Raise the unhandled rejection as an uncaught exception. If the exception is handled, unhandledRejection is emitted.
+- `warn`: Always trigger a warning, no matter if the unhandledRejection hook is set or not but do not print the deprecation warning.
+- `none`: Silence all warnings.
 
-_Type: `(firstError: Error, secondError: Error | undefined) => void`_
-
-This method is called when an uncaught error would cause the process to exit. `secondError` will be set if the handler was called multiple times. This can happen either because `onFatalError` itself threw, or because an independent error happened somewhere else while `onFatalError` was running.
+Defaults to `none`.
