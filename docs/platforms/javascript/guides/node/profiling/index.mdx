@@ -37,7 +37,6 @@ pnpm add @sentry/node @sentry/profiling-node
 
 To enable profiling, import `@sentry/profiling-node`, add `ProfilingIntegration` to your `integrations`, and set the `profilesSampleRate`.
 
-
 ```javascript
 const Sentry = require("@sentry/node");
 const { nodeProfilingIntegration } = require("@sentry/profiling-node");
@@ -67,11 +66,32 @@ Sentry.startSpan(
 );
 ```
 
+Alternatively, instead of a `profilesSampleRate` your can also provide a `profilesSampler` function:
+
+```javascript
+const Sentry = require("@sentry/node");
+const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    // Add our Profiling integration
+    nodeProfilingIntegration(),
+  ],
+  tracesSampleRate: 1.0,
+
+  // This function will be called for every sampled span to determine if it should be profiled
+  profilesSampler: (samplingContext) => {
+    return 1.0;
+  },
+});
+```
+
 ## Enable Continuous Profiling
 
 <Include name="feature-stage-beta.mdx" />
 
-_(New in version 8.28.0)
+_(New in version 8.28.0)_
 
 The current profiling implementation stops the profiler automatically after 30 seconds (unless you manually stop it earlier). Naturally, this limitation makes it difficult to get full coverage of your app's execution. We now offer an experimental continuous mode, where profiling data is periodically uploaded while running, with no limit on how long the profiler may run.
 
@@ -84,11 +104,11 @@ If you previously set `profilesSampleRate` or `profilesSampler` to use transacti
 </Note>
 
 ```js
-const Sentry = require('@sentry/node');
+const Sentry = require("@sentry/node");
 
 Sentry.init({
-    dsn: "___PUBLIC_DSN___" ,
-})
+  dsn: "___PUBLIC_DSN___",
+});
 
 Sentry.profiler.startProfiling();
 
