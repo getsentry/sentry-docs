@@ -9,14 +9,14 @@ The SDK should auto-instrument all outgoing HTTP requests, regardless of the lib
 | Attribute | Description | Notes |
 |:--|:--|:--|
 | `op` | Always `"http.client"` | Required |
-| `description` | A string including the HTTP request method, and the full URL. e.g., `"GET https://example.com/data.json?filter=all"` | Required [^1] |
+| `description` | A string including the HTTP request method, and the partial URL. e.g., `"GET https://example.com/data.json"` | Required [^1] |
 | `data` | A key-value mapping of span attributes. (e.g., `{"http.query": "filter=all", "server.address": "prod-2.example.com"}`) | Required for full experience. See [Span Data](#span-data) for details |
 
 ### Span Data
 
 None of the span data fields are hard requirements, but attaching as many of them as possible is a more future-proof approach. We recommend that the SDK adds every attribute listed in the [HTTP Span Data Conventions](/sdk/performance/span-data-conventions/#http). The minimal requirements are:
 
-- `server.address` must be set to allow correct domain grouping _for descriptions containing relative URLs_. e.g., the description `"GET /data.json"` is missing a domain. In this case, `server.address` must be set. If the span description contains the full URL, `span.server` can be omitted
+- `server.address` must be set to allow correct domain grouping _for descriptions containing relative URLs_. e.g., the description `"GET /data.json"` is missing a domain. In this case, `server.address` must be set. If the span description contains the partial URL, `span.server` can be omitted
 - `http.response.status_code` must be set to enable response code breakdowns
 
 ## Instrumentation Example
@@ -24,7 +24,7 @@ None of the span data fields are hard requirements, but attaching as many of the
 Consider a website called "App Ex", running on `app.example.com`. This JavaScript code that issues an HTTP request from the browser:
 
 ```javascript
-fetch("/data.json?user=1")
+fetch("/data.json")
 ```
 
 Should result in the following span, assuming the request was successful:

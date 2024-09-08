@@ -13,6 +13,24 @@
   },
   {
     "type": "Gauge",
+    "name": "buffer.disk_used",
+    "description": "The used disk for the buffer.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "buffer.envelope_stacks_popped",
+    "description": "Number of times an envelope stack is popped from the priority queue of stacks in the\nenvelope buffer.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "buffer.envelopes_count",
+    "description": "Number of elements in the envelope buffer across all the stacks.\n\nThis metric is tagged with:\n- `storage_type`: The type of storage used in the envelope buffer.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
     "name": "buffer.envelopes_disk_count",
     "description": "The number of envelopes waiting for project states on disk.\n\nNote this metric *will not be logged* when we encounter envelopes in the database on startup,\nbecause counting those envelopes reliably would risk locking the db for multiple seconds.\n\nThe disk buffer size can be configured with `spool.envelopes.max_disk_size`.",
     "features": []
@@ -37,8 +55,20 @@
   },
   {
     "type": "Counter",
+    "name": "buffer.envelopes_returned",
+    "description": "Number of envelopes that were returned to the envelope buffer by the project cache.\n\nThis happens when the envelope buffer falsely assumes that the envelope's projects are loaded\nin the cache and sends the envelope onward, even though the project cache cannot handle it.",
+    "features": []
+  },
+  {
+    "type": "Counter",
     "name": "buffer.envelopes_written",
     "description": "Number of _envelopes_ the envelope buffer ingests.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.initialization.duration",
+    "description": "Timing in milliseconds for the time it takes for initialize the buffer.",
     "features": []
   },
   {
@@ -48,15 +78,15 @@
     "features": []
   },
   {
-    "type": "Gauge",
-    "name": "buffer.push_inflight",
-    "description": "Number of envelopes currently waiting to be buffered.\n\nThis corresponds to the number of corresponding tokio tasks currently scheduled or running.",
-    "features": []
-  },
-  {
     "type": "Counter",
     "name": "buffer.reads",
     "description": "Number of times the envelope buffer reads back from disk.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.spool.duration",
+    "description": "Timing in milliseconds for the time it takes for the buffer to spool data to disk.",
     "features": []
   },
   {
@@ -69,6 +99,12 @@
     "type": "Counter",
     "name": "buffer.state.transition",
     "description": "Number of state changes in the envelope buffer.\nThis metric is tagged with:\n- `state_in`: The previous state. `memory`, `memory_file_standby`, or `disk`.\n- `state_out`: The new state. `memory`, `memory_file_standby`, or `disk`.\n- `reason`: Why a transition was made (or not made).",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.unspool.duration",
+    "description": "Timing in milliseconds for the time it takes for the buffer to unspool data from disk.",
     "features": []
   },
   {
@@ -612,7 +648,7 @@
   {
     "type": "Counter",
     "name": "project_state.redis.requests",
-    "description": "Number of times a project state is requested from the central Redis cache.\n\nThis has a tag `hit` with values `true` or `false`.  If false the request will be\nsent to the sentry endpoint.",
+    "description": "Number of times a project state is requested from the central Redis cache.\n\nThis metric is tagged with:\n- `hit`: One of:\n- `revision`: the cached version was validated to be up to date using its revision.\n- `project_config`: the request was handled by the cache.\n- `project_config_revision`: the request was handled by the cache and the revision did\nnot change.\n- `false`: the request will be sent to the sentry endpoint.",
     "features": [
       "processing"
     ]
@@ -667,6 +703,12 @@
     "type": "Timer",
     "name": "replay.recording.process",
     "description": "Time in milliseconds spent on parsing, normalizing and scrubbing replay recordings.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "replay.segment_limit_exceeded",
+    "description": "Incremented every time a segment exceeds the expected limit.",
     "features": []
   },
   {
