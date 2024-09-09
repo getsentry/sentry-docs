@@ -2,6 +2,7 @@ import {Fragment} from 'react';
 
 import {serverContext} from 'sentry-docs/serverContext';
 import {sortPages} from 'sentry-docs/utils';
+import {VERSION_INDICATOR} from 'sentry-docs/versioning';
 
 import {NavChevron} from './sidebar/navChevron';
 import {SidebarLink} from './sidebarLink';
@@ -35,19 +36,22 @@ export const toTree = (nodeList: Node[]): EntityTree[] => {
     .sort((a, b) => a.path.localeCompare(b.path))
     .forEach(node => {
       let curPath = '';
-      node.path.split('/').reduce((r, name: string) => {
-        curPath += `${name}/`;
-        if (!r[name]) {
-          r[name] = {result: []};
-          r.result.push({
-            name,
-            children: r[name].result,
-            node: curPath === node.path ? node : null,
-          });
-        }
+      // hide versioned pages in sidebar
+      if (!node.path.includes(VERSION_INDICATOR)) {
+        node.path.split('/').reduce((r, name: string) => {
+          curPath += `${name}/`;
+          if (!r[name]) {
+            r[name] = {result: []};
+            r.result.push({
+              name,
+              children: r[name].result,
+              node: curPath === node.path ? node : null,
+            });
+          }
 
-        return r[name];
-      }, level);
+          return r[name];
+        }, level);
+      }
     });
 
   result.length; // result[0] is undefined without this. wat
