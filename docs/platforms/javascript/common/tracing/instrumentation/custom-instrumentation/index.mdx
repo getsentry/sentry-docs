@@ -187,14 +187,64 @@ Sentry.suppressTracing(() => {
 ### Distributed Tracing
 
 See <PlatformLink to="/tracing/trace-propagation/custom-instrumentation/">Distributed Tracing</PlatformLink> for details on how to manually set up distributed tracing.
+
 </PlatformSection>
 
 ## Improving Span Data
 
-### Adding Span operations ("op")
+### Adding Span Attributes
+
+You can capture span attributes along with your spans. Span attributes can be of type `string`, `number` or `boolean`, as well as (non-mixed) arrays of these types. You can specify attributes when starting a span:
+
+```javascript
+Sentry.startSpan(
+  {
+    attributes: {
+      attr1: "value1",
+      attr2: 42,
+      attr3: true,
+    },
+  },
+  () => {
+    // Do something
+  }
+);
+```
+
+Or you can also add attributes to an existing span:
+
+```javascript
+const span = Sentry.getActiveSpan();
+if (span) {
+  span.setAttribute("attr1", "value1");
+  // Or set multiple attributes at once:
+  span.setAttributes({
+    attr2: 42,
+    attr3: true,
+  });
+}
+```
+
+### Adding Span Operations ("op")
 
 Spans can have an operation associated with them, which help activate Sentry identify additional context about the span. For example database related spans have the `db` span operation associated with them. The Sentry product offers additional controls, visualizations and filters for spans with known operations.
 
 Sentry maintains a [list of well known span operations](https://develop.sentry.dev/sdk/performance/span-operations/#list-of-operations) and it is recommended that you use one of those operations if it is applicable to your span.
 
 <PlatformContent includePath="performance/span-operations" />
+
+### Updating the Span Name
+
+You can update the name of a span at any time:
+
+```javascript
+const span = Sentry.getActiveSpan();
+if (span) {
+  span.updateName("New Name");
+}
+```
+
+Please note that in certain scenarios, the span name will be overwritten by the SDK. This is the case for spans with any of the following attribute combinations:
+
+* Spans with `http.method` or `http.requrest.method` attributes will automatically have their name set to the method + the URL path
+* Spans with `db.system` attributes will automatically have their name set to the system + the statement
