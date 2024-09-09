@@ -8,6 +8,8 @@ import {VERSION_INDICATOR} from 'sentry-docs/versioning';
 
 import styles from './style.module.scss';
 
+import {VersionBanner} from '../versionBanner';
+
 const stripTrailingSlash = (url: string) => {
   return url.replace(/\/$/, '');
 };
@@ -47,6 +49,14 @@ export function VersionSelector({versions}: {versions: string[]}) {
 
   return (
     <div>
+      {selectedVersion !== 'latest' && (
+        <VersionBanner
+          version={selectedVersion}
+          onClickLatest={() => {
+            handleVersionChange('latest');
+          }}
+        />
+      )}
       <RadixSelect.Root value={selectedVersion} onValueChange={handleVersionChange}>
         <RadixSelect.Trigger aria-label="Version" className={styles.select}>
           <RadixSelect.Value placeholder="Version">
