@@ -307,10 +307,63 @@ This envelope should look like this:
 There are some additional contexts we need to attach to the *transactions/spans* payloads for continuous profiling to be connected to tracing.
 
 1. Profile Context:
-  - The profile context for a transaction needs to be updated to contain the profiler id so it can be associated back to the transaction. the context at `.contexts.profile` should look like:
-  ```json
-  {
-    "profiler_id": "42928c7ee9174231956f077581145489"
-  } 
-  ```
+
+The profile context for a transaction needs to be updated to contain the profiler id so it can be associated back to the transaction. 
+The context at `.contexts.profile` should look like:
+
+```json
+{
+  "profiler_id": "42928c7ee9174231956f077581145489"
+} 
+```
+
 2. Trace Context
+
+The trace context for a transaction needs to be updated to contain the active `thread id` so we know which thread is associated with the transaction. This is often implemented as the thread that the transaction was started in.
+
+The context at `.contexts.trace` should look like:
+
+```json
+{
+	"data": {
+		"thread.id": "thread id",
+		"thread.name": "thread name",
+	},
+	// existing trace context
+} 
+```
+
+`thread.id`
+
+*String, required.* This should be a string that matches the thread id in the *thread_metadata* of the profile chunk.
+
+`thread.name`
+
+*String, optional.* This should be a string that matches the thread name in the *thread_metadata* of the profile chunk.
+
+3. Span Data
+
+The span data for a span needs to be updated to contain the active *thread id* so we know which thread is associated with the transaction.
+This is often implemented as the thread that the transaction was started in.
+
+The data at `.spans[].data` should look like:
+
+```json
+{
+  "thread.id": "thread id", // this should be a string that matches the thread id in the thread_metadata of the profile chunk
+	"thread.name": "thread name", // optional
+	"profiler_id": "42928c7ee9174231956f077581145489" // optional to override the one from the trace context but should not be necessary
+}
+```
+
+`thread.id`
+
+*String, required.* This should be a string that matches the thread id in the *thread_metadata* of the profile chunk.
+
+`thread.name`
+
+*String, optional.* This should be a string that matches the thread name in the *thread_metadata* of the profile chunk.
+
+`profiler_id`
+
+*String, optional.* To override the one from the trace context but should not be necessary.
