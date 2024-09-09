@@ -34,7 +34,7 @@ export function VersionSelector({versions}: {versions: string[]}) {
         return pathname?.split(VERSION_INDICATOR)[0];
       }
 
-      return `${stripTrailingSlash(pathname)}${VERSION_INDICATOR}${version}`;
+      return `${stripTrailingSlash(pathname.split(VERSION_INDICATOR)[0])}${VERSION_INDICATOR}${version}`;
     }
 
     return '';

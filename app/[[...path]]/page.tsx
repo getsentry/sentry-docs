@@ -109,9 +109,10 @@ export default async function Page({params}: {params: {path?: string[]}}) {
   }
   const {mdxSource, frontMatter} = doc;
 
+  // collect versioned files
   const versions = (await getDocsFrontMatter())
-    .filter(docc => {
-      return docc.slug.includes('__v') && docc.slug.includes(pageNode.path);
+    .filter(({slug}) => {
+      return slug.includes('__v') && slug.includes(pageNode.path.split('__v')[0]);
     })
     .map(({slug}) => {
       const segments = slug.split('__v');
