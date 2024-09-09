@@ -47,6 +47,7 @@ function MDXLayoutRenderer({mdxSource, ...rest}) {
 export default async function Page({params}: {params: {path?: string[]}}) {
   // get frontmatter of all docs in tree
   const rootNode = await getDocsRootNode();
+
   setServerContext({
     rootNode,
     path: params.path ?? [],
@@ -108,8 +109,19 @@ export default async function Page({params}: {params: {path?: string[]}}) {
   }
   const {mdxSource, frontMatter} = doc;
 
+  const versions = (await getDocsFrontMatter())
+    .filter(docc => {
+      return docc.slug.includes('__v') && docc.slug.includes(pageNode.path);
+    })
+    .map(({slug}) => {
+      const segments = slug.split('__v');
+      return segments[segments.length - 1];
+    });
+
   // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc.
-  return <MDXLayoutRenderer mdxSource={mdxSource} frontMatter={frontMatter} />;
+  return (
+    <MDXLayoutRenderer mdxSource={mdxSource} frontMatter={{...frontMatter, versions}} />
+  );
 }
 
 type MetadataProps = {

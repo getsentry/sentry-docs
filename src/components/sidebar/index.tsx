@@ -12,6 +12,7 @@ import styles from './style.module.scss';
 
 import {ScrollActiveLink} from '../focus-active-link';
 import {PlatformSelector} from '../platformSelector';
+import {VersionSelector} from '../versionSelector';
 
 import {DevelopDocsSidebar} from './developDocsSidebar';
 import {SidebarLinks} from './sidebarLinks';
@@ -22,7 +23,7 @@ const headerClassName = `${styles['sidebar-title']} flex items-center`;
 
 export const sidebarToggleId = styles['navbar-menu-toggle'];
 
-export async function Sidebar({path}: SidebarProps) {
+export async function Sidebar({path, versions}: SidebarProps) {
   const rootNode = await getDocsRootNode();
 
   if (isDeveloperDocs) {
@@ -92,6 +93,11 @@ export async function Sidebar({path}: SidebarProps) {
               currentPlatform={currentGuide || currentPlatform}
             />
           </div>
+          {versions && versions.length >= 1 && (
+            <div className="mb-3">
+              <VersionSelector versions={versions} />
+            </div>
+          )}
         </div>
         <div className={styles.toc}>
           <ScrollActiveLink activeLinkSelector={activeLinkSelector} />

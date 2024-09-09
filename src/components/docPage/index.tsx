@@ -50,7 +50,7 @@ export function DocPage({
       <Header pathname={pathname} searchPlatforms={searchPlatforms} />
 
       <section className="px-0 flex relative">
-        {sidebar ?? <Sidebar path={path} />}
+        {sidebar ?? <Sidebar path={path} versions={frontMatter.versions} />}
         <main className="main-content flex w-full mt-[var(--header-height)] flex-1 mx-auto">
           <div
             className={[
