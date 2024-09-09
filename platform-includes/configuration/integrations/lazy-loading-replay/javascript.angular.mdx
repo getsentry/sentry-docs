@@ -2,10 +2,14 @@
 Sentry.init({
   // Note, replayIntegration is NOT instantiated below:
   integrations: [],
+
+  // Replay sample rates still have to be set in `Sentry.init`:
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
 });
 
 // Sometime later
-import("@sentry/angular").then(lazyLoadedSentry => {
-  Sentry.addIntegration(lazyLoadedSentry.replayIntegration());
+Sentry.lazyLoadIntegration("replayIntegration").then((replayIntegration) => {
+  Sentry.addIntegration(replayIntegration());
 });
 ```
