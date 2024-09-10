@@ -63,21 +63,32 @@ For prior versions, you can work around this by configuring the SDK only to take
 
 ## Using Flutter multi-view for Web
 
-Multi-view embedding was introduced in Flutter 3.24. A short description of this feature can be found [here on Medium](https://medium.com/flutter/whats-new-in-flutter-3-24-6c040f87d1e4).
-A more detailed guide about the usage is available in the [Flutter docs](https://docs.flutter.dev/platform-integration/web/embedding-flutter-web).
+Multi-view embedding was introduced in Flutter 3.24. In the [Flutter docs](https://docs.flutter.dev/platform-integration/web/embedding-flutter-web) you will find a detailed guide about the usage of this feature.
 
-Using Sentry in a multi-view application is possible, but there are some limitations. To make the [sentry flutter example app](https://github.com/getsentry/sentry-dart/tree/main/flutter/example) `multi-view` ready, you will need to modify some parts.
+Using Sentry in a multi-view application is possible, but there are some limitations.
+The following features do not currently support multi-view:
 
-The `SentryWidget` with the `SentryScreenshotWidget` and the `SentryUserInteractionWidget` do not currently support multiple instances, and cannot be used in a `multi-view` application.
+- Screenshots via the `SentryScreenshotWidget` (which is part of the `SentryWidget`)
+- User interaction integration via the `SentryUserInteractionWidget` (which is part of the `SentryWidget`)
+- Window & Device events via the `WidgetsBindingIntegration`
+
+To prevent the `WidgetsBindingIntegration` from loading by default, you will need to remove the integration.
+
+```dart
+// ignore: implementation_imports
+import 'package:sentry_flutter/src/integrations/widgets_binding_integration.dart';
+...
+final integration = options.integrations.firstWhere(
+    (element) => element is WidgetsBindingIntegration);
+options.removeIntegration(integration);
+```
+
+### Enable multi-view in the example app
+
+To make the [sentry flutter example app](https://github.com/getsentry/sentry-dart/tree/main/flutter/example) `multi-view` ready, you will need to modify the `main.dart` and create the `multi_view_app.dart` file next to the `main.dart` and insert the content from the [docs](https://docs.flutter.dev/platform-integration/web/embedding-flutter-web#handling-view-changes-from-dart).
+Modify the `index.html`in the `web` directory and add the `flutter_bootstrap.js` file.
 
 Also note the `NavigatorKey` in the `MaterialApp` widget. This key is a single `GlobalKey` in the `example app` and therefore doesn't support multiple instances. If you rely on this `NavigatorKey` you will need to handle multiple `Keys` and pass them to the appropriate view/instance. For simplicity, we will not use the `NavigatorKey` in the following example.
-
-### Example app as multi-view
-
-Modify your `main.dart` and create the `multi_view_app.dart` file next to your `main.dart` and insert the content from the [docs](https://docs.flutter.dev/platform-integration/web/embedding-flutter-web#handling-view-changes-from-dart).
-Modify the `index.html`in the `web` directory and add the `flutter_bootstrap.js`.
-
-The last step is to add `--web-renderer auto` as additional run args.
 
 Now you should be able to see 2 instances of the same application side by side, with different ViewIds in the `AppBar`.
 
