@@ -1,6 +1,6 @@
 const {redirects} = require('./redirects.js');
 
-const {codecovWebpackPlugin} = require('@codecov/webpack-plugin');
+const {codecovNextJSWebpackPlugin} = require('@codecov/nextjs-webpack-plugin');
 const {withSentryConfig} = require('@sentry/nextjs');
 
 const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
@@ -42,12 +42,13 @@ const nextConfig = {
     outputFileTracingExcludes,
   },
 
-  webpack: (config, _options) => {
+  webpack: (config, options) => {
     config.plugins.push(
-      codecovWebpackPlugin({
+      codecovNextJSWebpackPlugin({
         enableBundleAnalysis: typeof process.env.CODECOV_TOKEN === 'string',
         bundleName: 'sentry-docs',
         uploadToken: process.env.CODECOV_TOKEN,
+        webpack: options.webpack,
       })
     );
 
