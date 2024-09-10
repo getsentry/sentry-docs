@@ -115,7 +115,9 @@ export default async function Page({params}: {params: {path?: string[]}}) {
     .filter(({slug}) => {
       return (
         slug.includes(VERSION_INDICATOR) &&
-        slug.includes(pageNode.path.split(VERSION_INDICATOR)[0])
+        pageNode.path
+          .split(VERSION_INDICATOR)[0]
+          .includes(slug.split(VERSION_INDICATOR)[0])
       );
     })
     .map(({slug}) => {
