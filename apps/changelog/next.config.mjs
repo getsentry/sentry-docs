@@ -1,5 +1,6 @@
 import {withSentryConfig} from '@sentry/nextjs';
 import WebpackHookPlugin from 'webpack-hook-plugin';
+import {codecovNextJSWebpackPlugin} from '@codecov/nextjs-webpack-plugin';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -8,7 +9,7 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   transpilePackages: ['next-mdx-remote'],
-  webpack: (config, {dev, nextRuntime}) => {
+  webpack: (config, {dev, nextRuntime, webpack}) => {
     if (dev && nextRuntime === 'nodejs') {
       config.plugins.push(
         new WebpackHookPlugin({
@@ -16,6 +17,15 @@ const nextConfig = {
         })
       );
     }
+
+    config.plugins.push(
+      codecovNextJSWebpackPlugin({
+        enableBundleAnalysis: typeof process.env.CODECOV_TOKEN === 'string',
+        bundleName: 'sentry-changelog',
+        uploadToken: process.env.CODECOV_TOKEN,
+        webpack,
+      })
+    );
 
     return config;
   },
