@@ -4,7 +4,7 @@ import {ChevronDownIcon} from '@radix-ui/react-icons';
 import * as RadixSelect from '@radix-ui/react-select';
 import {usePathname, useRouter} from 'next/navigation';
 
-import {VERSION_INDICATOR} from 'sentry-docs/versioning';
+import {getLocalStorageVersionKey, VERSION_INDICATOR} from 'sentry-docs/versioning';
 
 import styles from './style.module.scss';
 
@@ -14,7 +14,7 @@ const stripTrailingSlash = (url: string) => {
   return url.replace(/\/$/, '');
 };
 
-export function VersionSelector({versions}: {versions: string[]}) {
+export function VersionSelector({versions, sdk}: {sdk: string; versions: string[]}) {
   const availableVersions = ['latest', ...versions];
   const router = useRouter();
   const pathname = usePathname();
@@ -45,6 +45,7 @@ export function VersionSelector({versions}: {versions: string[]}) {
   const handleVersionChange = (newVersion: string) => {
     setSelectedVersion(newVersion);
     router.push(getVersionedPathname(newVersion));
+    localStorage.setItem(getLocalStorageVersionKey(sdk), newVersion);
   };
 
   return (
@@ -60,7 +61,7 @@ export function VersionSelector({versions}: {versions: string[]}) {
       <RadixSelect.Root value={selectedVersion} onValueChange={handleVersionChange}>
         <RadixSelect.Trigger aria-label="Version" className={styles.select}>
           <RadixSelect.Value placeholder="Version">
-            Version: {selectedVersion}
+            <span className="text-sm">SDK version: {selectedVersion}</span>
           </RadixSelect.Value>
           <RadixSelect.Icon>
             <ChevronDownIcon />

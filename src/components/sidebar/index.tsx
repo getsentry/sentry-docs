@@ -95,7 +95,7 @@ export async function Sidebar({path, versions}: SidebarProps) {
           </div>
           {versions && versions.length >= 1 && (
             <div className="mb-3">
-              <VersionSelector versions={versions} />
+              <VersionSelector versions={versions} sdk={currentPlatform?.name || ''} />
             </div>
           )}
         </div>
