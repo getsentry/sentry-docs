@@ -111,6 +111,59 @@ curl -X POST \
 For the full list of supported values, see [_Event Payloads_](https://develop.sentry.dev/sdk/event-payloads/) and linked
 documents.
 
+## Uploading a Compressed Minidump
+
+You can compress your minidump using `gzip` if its size exceeds the limits in the next section.
+
+In this case, you would `POST` the minidump as a gzip-encoded binary:
+
+```bash
+gzip mini.dmp
+
+curl -X POST \
+  '___MINIDUMP_URL___' \
+  -H 'content-type:application/x-dmp' \
+  -H 'content-encoding: gzip' \
+  --data-binary @mini.dmp.gz
+```
+
+Since `curl` doesn't allow adding multipart form fields to "data" `POST` requests, you cannot easily pass additional data as fields as in the previous section's examples.
+
+In that case, you must construct the multipart content manually and compress it as a whole:
+
+```bash
+# Use a consistent multipart boundary throughout the example 
+# and ensure it is a unique string inside the entire multipart body
+printf -- '--boundary_minidumpXYZ\r\n' > multipart_body.txt
+
+# Add additional data via JSON or using the bracket syntax (the latter requiring a field for each entry)
+printf -- 'Content-Disposition: form-data; name="sentry"\r\n\r\n' >> multipart_body.txt
+printf -- '{"release":"my-project-name@2.3.12","tags":{"mytag":"value"}}\r\n' >> multipart_body.txt
+
+# Add the boundary before each field (in this case the minidump)
+printf -- '--boundary_minidumpXYZ\r\n' >> multipart_body.txt
+
+# Add the minidump field header
+printf -- 'Content-Disposition: form-data; name="upload_file_minidump"; filename="mini.dmp"\r\n' >> multipart_body.txt
+printf -- 'Content-Type: application/x-dmp\r\n\r\n' >> multipart_body.txt
+
+# Append the minidump content
+cat mini.dmp >> multipart_body.txt
+
+# Add the closing boundary
+printf -- '\r\n--boundary_minidumpXYZ--\r\n' >> multipart_body.txt
+
+# Compress the entire multipart body
+gzip multipart_body.txt
+
+# Send the compressed multipart body with curl
+curl -X POST \
+     '___MINIDUMP_URL___' \
+     -H 'Content-Type: multipart/form-data; boundary=boundary_minidumpXYZ' \
+     -H 'Content-Encoding: gzip' \
+     --data-binary @multipart_body.txt.gz
+```
+
 ## Size Limits
 
 Event ingestion imposes limits on the size and number of fields in multipart
