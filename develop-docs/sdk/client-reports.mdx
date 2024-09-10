@@ -118,6 +118,29 @@ filtered or filtered by by dynamic sampling _at a relay_. Client SDKs must never
 emit these _unless_ they are operating as a relay.  The reason codes for these
 need to match the reason codes that relay would emit directly to Sentry.
 
+### Special Case for Span Outcomes
+
+When a transaction is dropped, we record an additional `span` category event containing the number of the spans inside the transaction plus one.
+The plus one stems from the fact that Relay extracts an additional span from the transaction. If a transaction contains no spans, we still want to report one dropped transaction and one dropped span. This also applies to transactions that are not sampled.
+If certain spans are dropped in `beforeSendTransaction`, an event processor etc., we also want to report those.
+
+```json
+{
+	"discarded_events": [
+		{
+			"reason": "queue_overflow",
+			"category": "transaction",
+			"quantity": 1
+		},
+		{
+			"reason": "queue_overflow",
+			"category": "span",
+			"quantity": 3 // 2 spans + 1 span (the transaction itself should be counted)
+		}
+	]
+}
+```
+
 ## SDK Side Recommendations
 
 The client reports feature doesn't expect 100 percent correct numbers, and it is
