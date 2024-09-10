@@ -8,7 +8,7 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   transpilePackages: ['next-mdx-remote'],
-  webpack: (config, {dev, nextRuntime, webpack}) => {
+  webpack: (config, {dev, nextRuntime}) => {
     if (dev && nextRuntime === 'nodejs') {
       config.plugins.push(
         new WebpackHookPlugin({
