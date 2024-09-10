@@ -1,0 +1,216 @@
+```dart {filename:multi_view_app.dart}{tabTitle: multi_view_app.dart}
+// multi_view_app.dart
+
+// Copyright 2014 The Flutter Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+import 'dart:ui' show FlutterView;
+import 'package:flutter/widgets.dart';
+
+/// Calls [viewBuilder] for every view added to the app to obtain the widget to
+/// render into that view. The current view can be looked up with [View.of].
+class MultiViewApp extends StatefulWidget {
+  const MultiViewApp({super.key, required this.viewBuilder});
+
+  final WidgetBuilder viewBuilder;
+
+  @override
+  State<MultiViewApp> createState() => _MultiViewAppState();
+}
+
+class _MultiViewAppState extends State<MultiViewApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _updateViews();
+  }
+
+  @override
+  void didUpdateWidget(MultiViewApp oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Need to re-evaluate the viewBuilder callback for all views.
+    _views.clear();
+    _updateViews();
+  }
+
+  @override
+  void didChangeMetrics() {
+    _updateViews();
+  }
+
+  Map<Object, Widget> _views = <Object, Widget>{};
+
+  void _updateViews() {
+    final Map<Object, Widget> newViews = <Object, Widget>{};
+    for (final FlutterView view
+        in WidgetsBinding.instance.platformDispatcher.views) {
+      final Widget viewWidget = _views[view.viewId] ?? _createViewWidget(view);
+      newViews[view.viewId] = viewWidget;
+    }
+    setState(() {
+      _views = newViews;
+    });
+  }
+
+  Widget _createViewWidget(FlutterView view) {
+    return View(
+      view: view,
+      child: Builder(
+        builder: widget.viewBuilder,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ViewCollection(views: _views.values.toList(growable: false));
+  }
+}
+```
+
+```dart {filename:main.dart}{tabTitle: main.dart}
+import 'multi_view_app.dart';
+import 'package:sentry_flutter/src/integrations/widgets_binding_integration.dart';
+
+...
+
+Future<void> main() async {
+  await setupSentry(
+    () => runWidget(
+      MultiViewApp(
+        viewBuilder: (BuildContext context) => DefaultAssetBundle(
+          bundle: SentryAssetBundle(),
+          child: const MyApp(),
+        ),
+      ),
+    ),
+    exampleDsn,
+  );
+}
+
+Future<void> setupSentry(
+...
+}) async {
+  await SentryFlutter.init(
+    (options) {
+      ...
+      final integration = options.integrations
+          .firstWhere((element) => element is WidgetsBindingIntegration);
+      options.removeIntegration(integration);
+    },
+    // Init your App.
+    appRunner: appRunner,
+  );
+}
+
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  Widget build(BuildContext context) {
+    return feedback.BetterFeedback(
+      child: ChangeNotifierProvider<ThemeProvider>(
+        create: (_) => ThemeProvider(),
+        child: Builder(
+          builder: (context) => MaterialApp(
+            navigatorObservers: [
+              SentryNavigatorObserver(),
+            ],
+            theme: Provider.of<ThemeProvider>(context).theme,
+            home: const MainScaffold(),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+...
+
+
+class MainScaffold extends StatelessWidget {
+  ...
+
+  @override
+  Widget build(BuildContext context) {
+    ...
+    return Scaffold(
+      appBar: AppBar(
+        title:
+            Text('Sentry Flutter Example (ViewId:${View.of(context).viewId})'),
+        actions: [
+          ...
+        ],
+      ),
+      body: SingleChildScrollView(
+        ...
+      ),
+    );
+  }
+
+  ...
+}
+
+
+```
+
+```js {filename:flutter_bootstrap.js}{tabTitle: flutter_bootstrap.js}
+// flutter_bootstrap.js
+{{ flutter_js; }}
+{{ flutter_build_config; }}
+
+_flutter.loader.load({
+  onEntrypointLoaded: async function onEntrypointLoaded(engineInitializer) {
+    let engine = await engineInitializer.initializeEngine({
+      multiViewEnabled: true, // Enables embedded mode.
+    });
+    let app = await engine.runApp();
+    // Make this `app` object available to your JS app.
+    app.addView({ hostElement: document.querySelector("#left") });
+    app.addView({ hostElement: document.querySelector("#right") });
+  },
+});
+```
+
+```html {filename:index.html}{tabTitle: index.html}
+<!doctype html>
+<html>
+  ...
+  <body>
+    <div style="width: 100%; height: 100%; position: absolute;">
+      <div id="left" style="width: 50%; height: 100%; float: left;"></div>
+      <div id="right" style="width: 50%; height: 100%; float: left;"></div>
+    </div>
+    <!-- This script installs service_worker.js to provide PWA functionality to
+       application. For more information, see:
+       https://developers.google.com/web/fundamentals/primers/service-workers -->
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("flutter_service_worker.js");
+        });
+      }
+    </script>
+    <script src="main.dart.js" type="application/javascript"></script>
+    <script
+      src="flutter_bootstrap.js"
+      type="application/javascript"
+      async
+    ></script>
+  </body>
+</html>
+```

@@ -60,3 +60,25 @@ There is an [issue with the Sentry Flutter SDK](https://github.com/getsentry/sen
 This is an [issue](https://github.com/flutter/flutter/issues/135245) with Flutter itself and should be fixed in [Flutter 3.15](https://github.com/flutter/flutter/labels/found%20in%20release%3A%203.15).
 
 For prior versions, you can work around this by configuring the SDK only to take screenshots when the app is in the `resumed` state. To do this, set `SentryFlutterOptions.attachScreenshotOnlyWhenResumed` to `true`.
+
+## Using Flutter multi-view for Web
+
+Multi-view embedding was introduced in Flutter 3.24. A short description of this feature can be found [here on Medium](https://medium.com/flutter/whats-new-in-flutter-3-24-6c040f87d1e4).
+A more detailed guide about the usage is available in the [Flutter docs](https://docs.flutter.dev/platform-integration/web/embedding-flutter-web).
+
+Using Sentry in a multi-view application is possible, but there are some limitations. To make the [sentry flutter example app](https://github.com/getsentry/sentry-dart/tree/main/flutter/example) `multi-view` ready, you will need to modify some parts.
+
+The `SentryWidget` with the `SentryScreenshotWidget` and the `SentryUserInteractionWidget` do not currently support multiple instances, and cannot be used in a `multi-view` application.
+
+Also note the `NavigatorKey` in the `MaterialApp` widget. This key is a single `GlobalKey` in the `example app` and therefore doesn't support multiple instances. If you rely on this `NavigatorKey` you will need to handle multiple `Keys` and pass them to the appropriate view/instance. For simplicity, we will not use the `NavigatorKey` in the following example.
+
+### Example app as multi-view
+
+Modify your `main.dart` and create the `multi_view_app.dart` file next to your `main.dart` and insert the content from the [docs](https://docs.flutter.dev/platform-integration/web/embedding-flutter-web#handling-view-changes-from-dart).
+Modify the `index.html`in the `web` directory and add the `flutter_bootstrap.js`.
+
+The last step is to add `--web-renderer auto` as additional run args.
+
+Now you should be able to see 2 instances of the same application side by side, with different ViewIds in the `AppBar`.
+
+<Include name="troubleshooting/flutter/enable_multi_view.mdx" />
