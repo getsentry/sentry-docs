@@ -1,0 +1,85 @@
+---
+title: Angular Error Handler
+description: "Learn about Sentry's Angular SDK Error Handler and how to configure it."
+---
+
+Sentry's Angular SDK provides a custom Angular `ErrorHandler` that automatically extracts and captures errors in your Angular application. The main benefit is that Angular often wraps errors in its own error classes, making
+it hard for Sentry to extract the important data correctly without a custom error handler.
+
+On this page, you'll learn how to work with the the SDKs `ErrorHandler` if you need to customize it further.
+
+## Using the Sentry `ErrorHandler`
+
+Simply register the Sentry `ErrorHandler` in your Angular application's providers. We recommend to do this in your main `app.config.ts` or `app.module.ts` file to ensure that the `ErrorHandler` is available everywhere in your application.
+
+```typescript {tabTitle:App Config} {filename:app.config.ts} {3,8-11}
+import { ApplicationConfig, ErrorHandler } from "@angular/core";
+
+import * as Sentry from "@sentry/angular";
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    // ...
+    {
+      provide: ErrorHandler,
+      useValue: Sentry.createErrorHandler(),
+    },
+  ],
+};
+export class AppModule {}
+```
+
+```typescript {tabTitle:NGModule Config} {filename:app.module.ts} {3,8-11}
+import { ErrorHandler, NgModule } from "@angular/core";
+
+import * as Sentry from "@sentry/angular";
+
+@NgModule({
+  // ...
+  providers: [
+    {
+      provide: ErrorHandler,
+      useValue: Sentry.createErrorHandler(),
+    },
+  ],
+})
+export class AppModule {}
+```
+
+### Options
+
+Optionally, you can configure the behavior of the `ErrorHandler` by passing an object to the `createErrorHandler` function. The following options are available:
+
+#### `logErrors`
+
+_Type: `boolean` Default: `true`_
+
+Log errors to the console. This is `true` by default, to ensure consistency with Angular's default behavior.
+
+#### `extractor`
+
+_Type: `function` Default: `undefined`_
+
+A function that extracts the raw, incoming error object. By default, the SDK uses its own extraction logic but you can override it by providing your own function.
+
+## Multiple Error Handlers
+
+Angular doesn't allow providing multiple `ErrorHandler` instances in the same Angular application in `app.config.ts` or `app.module.ts`.
+Therefore, if you're using your own error handler or you want to add additional logic to Sentry's `ErrorHandler`, extend Sentry's `ErrorHandler`:
+
+```typescript
+import * as Sentry from "@sentry/angular";
+
+export class CustomErrorHandler extends Sentry.ErrorHandler {
+  constructor() {
+    // Pass options to Sentry's ErrorHandler here. For Example:
+    super({ logErrors: false });
+  }
+
+  handleError(error: any): void {
+    // Your custom error handling logic
+    // Call Sentry's error handler to capture errors:
+    super.handleError(error);
+  }
+}
+```
