@@ -1,6 +1,4 @@
-<SignInNote />
-
-```javascript {tabTitle: npm}
+```javascript {tabTitle:npm}
 import * as Sentry from "@sentry/browser";
 
 Sentry.init({
@@ -12,7 +10,7 @@ Sentry.init({
 });
 ```
 
-```html {tabTitle: Loader}
+```html {tabTitle: Loader (v7)}
 <script>
   // Configure sentryOnLoad before adding the Loader Script
   window.sentryOnLoad = function () {
@@ -21,11 +19,35 @@ Sentry.init({
       sendDefaultPii: true,
     });
 
-    Sentry.lazyLoadIntegration("httpClientIntegration").then(
-      (integration) => {
-        Sentry.addIntegration(integration());
-      }
-    );
+    if (Sentry.httpClientIntegration) {
+      Sentry.addIntegration(Sentry.httpClientIntegration());
+    }
+  };
+</script>
+
+<script
+  src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js"
+  crossorigin="anonymous"
+></script>
+<script
+  src="https://browser.sentry-cdn.com/7.118.0/httpclient.min.js"
+  integrity="sha384-8MAyqW/E9fuqd5JmBqR/UN56Anxd7O06nt+PUTE5G6rRCLsApJc9qoc1cZl9tiQU"
+  crossorigin="anonymous"
+></script>
+```
+
+```html {tabTitle: Loader (v8)}
+<script>
+  // Configure sentryOnLoad before adding the Loader Script
+  window.sentryOnLoad = function () {
+    Sentry.init({
+      // This option is required for capturing headers and cookies.
+      sendDefaultPii: true,
+    });
+
+    Sentry.lazyLoadIntegration("httpClientIntegration").then((integration) => {
+      Sentry.addIntegration(integration());
+    });
   };
 </script>
 

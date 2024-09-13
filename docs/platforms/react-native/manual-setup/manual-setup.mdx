@@ -4,18 +4,22 @@ description: "Learn about manual configuration for iOS and Android."
 sidebar_order: 3
 ---
 
-If you can’t (or prefer not to) run the [automatic setup](/platforms/react-native), use the instructions below to configure your application.
+If you can't (or prefer not to) run the [automatic setup](/platforms/react-native), use the instructions below to configure your application.
 
 ## Install SDK Package
 
 Install the `@sentry/react-native` package:
 
 ```bash {tabTitle:npm}
-npm install --save @sentry/react-native
+npm install @sentry/react-native --save
 ```
 
-```bash {tabTitle:Yarn}
+```bash {tabTitle:yarn}
 yarn add @sentry/react-native
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/react-native
 ```
 
 ## iOS
@@ -107,17 +111,9 @@ export SENTRY_CLI_DEBUG_FILES_UPLOAD_EXTRA_ARGS="--extra --flags"
 
 For more information about what options to use in `SENTRY_CLI_DEBUG_FILES_UPLOAD_EXTRA_ARGS` visit the [Sentry CLI Apple Debug Symbols](/platforms/apple/dsym/#sentry-cli) documentation.
 
-### Linking the Native Library via CocoaPods
+### Using Node With nvm or Volta
 
-To link the native library via CocoaPods, link to the native module in your Podfile. In React Native versions 0.60 and above, the podspec should be automatically linked. If isn't, you can link to the native module manually by adding the `RNSentry.podspec` to your Podfile as follows:
-
-```ruby
-pod 'RNSentry', :path => '../node_modules/@sentry/react-native/RNSentry.podspec'
-```
-
-### Using node with nvm or Volta
-
-If you are using nvm or Volta, Xcode has trouble locating the default node binary, which can look similar to the [troubleshooting example](/platforms/react-native/troubleshooting/#using-node-with-nvm-or-volta).
+If you're using nvm or Volta, Xcode may have trouble locating the default node binary. The suggested workaround in this [troubleshooting example](/platforms/react-native/troubleshooting/#using-node-with-nvm-or-volta) can help.
 
 ## Android
 
@@ -139,6 +135,35 @@ auth.token=___ORG_AUTH_TOKEN___
 We enable the Gradle integration in your `android/app/build.gradle` file by adding the following line before the `android` options:
 
 ```groovy {filename:android/app/build.gradle}
+apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
+```
+
+To change the default behavior, you can pass the following Sentry Gradle Integration options and environmental variables:
+
+```bash
+export SENTRY_PROPERTIES=path/to/sentry.properties
+export SENTRY_DISABLE_AUTO_UPLOAD=true # Temporarily disable source maps upload
+
+export SENTRY_DIST=1234
+export SENTRY_RELEASE=app@1.0.0
+```
+
+```groovy {filename:android/app/build.gradle}
+project.ext.sentryCli = [
+    logLevel: "debug" // Enable verbose debug output
+    sentryProperties: "path/to/sentry.properties",
+    flavorAware: false, // When enabled looks for sentry-{flavor}-{build_type}.properties
+    modulesPaths: [
+      "node_modules",
+      "../node_modules",
+    ],
+    skipCollectModules: false,
+
+    collectModulesScript: "path/to/node_modules/@sentry/react-native/dist/js/tools/collectModules.js",
+    copyDebugIdScript: "path/to/node_modules/@sentry/react-native/scripts/copy-debugid.js",
+    hasSourceMapDebugIdScript: "path/to/node_modules/@sentry/react-native/scripts/has-sourcemap-debugid.js",
+]
+
 apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
 ```
 
@@ -183,76 +208,4 @@ sentry {
       enabled = false
     }
 }
-```
-
-### Enable Logging for `sentry-cli`
-
-You can also enable logging for `sentry-cli` by adding this config before the above `apply from:` line:
-
-```groovy {filename:android/app/build.gradle}
-project.ext.sentryCli = [
-    logLevel: "debug"
-]
-
-apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
-```
-
-### Fetch `sentry.properties`
-
-We also support fetching different `sentry.properties` files for different flavors. For that, you need to add:
-
-```groovy {filename:android/app/build.gradle}
-project.ext.sentryCli = [
-    logLevel: "debug",
-    flavorAware: true
-]
-
-apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
-```
-
-The corresponding flavor files should also be placed within the specific build type folder where you intend to use them. For example, the "Android demo release" flavor would be `react-native/android/sentry-demo-release.properties`.
-
-We recommend leaving `logLevel: "debug"` since we look for specific `sentry.properties` files depending on your flavor's name.
-
-Include the project by adding it to your dependency list in `android/app/build.gradle`:
-
-```groovy {filename:android/app/build.gradle}
-dependencies {
-    // ... other dependencies listed here //
-    implementation project(':@sentry_react-native')
-}
-```
-
-If you're linking manually, make sure your `MainApplication.java` is similar to:
-
-```java
-import io.sentry.react.RNSentryPackage;
-
-public class MainApplication extends Application implements ReactApplication {
-
-    @Override
-    protected List<ReactPackage> getPackages() {
-      List<ReactPackage> packages = new PackageList(this).getPackages();
-      packages.add(new RNSentryPackage());
-      return packages;
-    }
-}
-```
-
-```kotlin
-import io.sentry.react.RNSentryPackage
-
-class MainApplication() : Application(), ReactApplication {
-  override fun getPackages():List<ReactPackage> =
-    PackageList(this).packages.apply {
-      add(RNSentryPackage())
-    }
-}
-```
-
-Add the following to your `settings.gradle` file:
-
-```groovy {filename:android/settings.gradle}
-include ':@sentry_react-native'
-project(':@sentry_react-native').projectDir = new File(rootProject.projectDir, '../node_modules/@sentry/react-native/android')
 ```

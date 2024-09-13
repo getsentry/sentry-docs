@@ -8,9 +8,22 @@ jobs:
     name: Update Algolia index
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: getsentry/action-setup-volta@c52be2ea13cfdc084edb806e81958c13e445941e # v1.2.0
-      - uses: oven-sh/setup-bun@v1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4
+        id: setup-node
+        with:
+          node-version-file: 'package.json'
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            docs:
+              - 'docs/**'
+              - 'includes/**'
+              - 'platform-includes/**'
+            dev-docs:
+              - 'develop-docs/**'
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
@@ -22,16 +35,27 @@ jobs:
 
       - run: yarn install --frozen-lockfile
         if: steps.cache.outputs.cache-hit != 'true'
-      # Remove the changelog directory to avoid a build error due to missing `DATABASE_URL`
-      # and save some build time
-      - run: rm -r app/changelog/feed.xml
-      - run: yarn build
+
       # bun seems to be the most straightforward way to run a TypeScript script
       # without introducing another dependency like ts-node or tsx for everyone else
-      - run: bun ./scripts/algolia.ts
+
+      - name: Build index for user docs
+        run: yarn build && bun ./scripts/algolia.ts
+        if: steps.filter.outputs.docs == 'true'
         env:
           ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
           ALGOLIA_API_KEY: ${{ secrets.ALGOLIA_API_KEY }}
           DOCS_INDEX_NAME: ${{ secrets.DOCS_INDEX_NAME }}
           NEXT_PUBLIC_ALGOLIA_APP_ID: ${{ secrets.NEXT_PUBLIC_ALGOLIA_APP_ID }}
           NEXT_PUBLIC_ALGOLIA_SEARCH_KEY: ${{ secrets.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY }}
+
+      - name: Build index for developer docs
+        run: yarn build:developer-docs && bun ./scripts/algolia.ts
+        if: steps.filter.outputs.dev-docs == 'true'
+        env:
+          ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
+          ALGOLIA_API_KEY: ${{ secrets.ALGOLIA_API_KEY }}
+          DOCS_INDEX_NAME: ${{ secrets.DEVELOP_DOCS_INDEX_NAME }}
+          NEXT_PUBLIC_ALGOLIA_APP_ID: ${{ secrets.NEXT_PUBLIC_ALGOLIA_APP_ID }}
+          NEXT_PUBLIC_ALGOLIA_SEARCH_KEY: ${{ secrets.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY }}
+          NEXT_PUBLIC_DEVELOPER_DOCS: 1

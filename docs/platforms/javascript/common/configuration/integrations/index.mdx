@@ -20,7 +20,6 @@ To disable system integrations, set `defaultIntegrations: false` when calling `i
 
 To override their settings, provide a new instance with your config to the `integrations` option. For example, to turn off browser capturing console calls:
 
-<SignInNote />
 
 ```javascript
 Sentry.init({
@@ -50,7 +49,19 @@ For all other cases, we recommend you use the `integrations` option.
 
 ## Lazy Loading Integrations
 
-You can lazy load pluggable integrations via `Sentry.lazyLoadIntegration()`. This will try to load the integration from the CDN, allowing you to add an integration without increasing the initial bundle size.
+Lazy-loading lets you add pluggable integrations without increasing the initial bundle size. You can do this in two ways:
+
+### 1. Dynamic Import (recommended)
+
+You can add the integration with a dynamic import using `import()`. This method loads the integration from the npm package. To avoid running into issues with `import()`, you should use a bundler that supports dynamic imports. If you're using a tool like Vite for your project, the bundling process is probably already set up.
+
+<PlatformContent includePath="configuration/integrations/lazy-loading-replay" />
+
+### 2. Load from CDN with `lazyLoadIntegration()`
+
+You can also lazy-load pluggable integrations via `Sentry.lazyLoadIntegration()`. This will attempt to load the integration from the Sentry CDN.
+Note that this function will reject if it fails to load the integration from the Sentry CDN, which can happen if a user has an ad-blocker or if there's a network problem. You should always make sure that rejections are handled for this function in your application.
+
 
 ```javascript
 async function loadHttpClient() {
@@ -60,8 +71,6 @@ async function loadHttpClient() {
   Sentry.addIntegration(httpClientIntegration());
 }
 ```
-
-Note that this function will reject if it fails to load the integration from the CDN, which can happen e.g. if a user has an ad-blocker or if there is a network problem. You should always make sure to handle rejections for this function in your application.
 
 Lazy loading is available for the following integrations:
 

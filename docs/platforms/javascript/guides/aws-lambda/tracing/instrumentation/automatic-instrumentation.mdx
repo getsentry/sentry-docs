@@ -4,28 +4,24 @@ description: "Learn what transactions are captured after tracing is enabled."
 sidebar_order: 10
 ---
 
-When performance is enabled through `tracesSampleRate`, `enableTracing` or a `tracesSampler` function, the Sentry SDK will automatically capture spans for the following:
+When performance is enabled through `tracesSampleRate`, `enableTracing` or a `tracesSampler` function, the Sentry SDK will automatically capture spans for incoming requests, and HTTP requests made with:
 
-- HTTP requests made with:
-  - `http`
-  - `https`
-  - `fetch`
+- `http`
+- `https`
+- `fetch`
 
-These are automatically set up for you without any further configuration.
+Database instrumentation can be manually enabled by adding the corresponding integrations to the `integrations` array in the `init` method. The following packages are supported:
 
-The following instrumentation can be manually enabled by adding the corresponding integration to the `integrations` array in the `init` method:
+- `mysql`
+- `mysql2`
+- `pg`
+- `graphql` (including Apollo Server)
+- `mongo`
+- `mongoose`
+- `ioredis`
+- `prisma` (requires additional configuration - see <PlatformLink to="/configuration/integrations/prisma/">Prisma Integration</PlatformLink>)
 
-- DB queries made with:
-  - `mysql`
-  - `mysql2`
-  - `pg`
-  - `graphql` (including Apollo Server)
-  - `mongo`
-  - `mongoose`
-  - `ioredis`
-  - `prisma`
-
-You can add these as follows:
+You can add the integrations as follows:
 
 ```javascript
 const Sentry = require("@sentry/aws-serverless");
@@ -34,7 +30,6 @@ Sentry.init({
   dsn: "___PUBLIC_DSN___",
   tracesSampleRate: 1.0,
   integrations: [
-    Sentry.prismaIntegration(),
     Sentry.mysqlIntegration(),
     Sentry.mysql2Integration(),
     Sentry.pgIntegration(),

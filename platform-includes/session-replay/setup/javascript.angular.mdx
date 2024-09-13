@@ -22,20 +22,12 @@ Sentry.init({
 });
 ```
 
-With the settings above, session replays with errors are always captured.
-You can verify this by triggering a test error somewhere in your Angular app, for example in your main app component:
+### Verify
 
-```html {filename: app.component.html}
-<button (click)="throwTestError()">Test Sentry Error</button>
-```
+While you're testing, we recommend that you set `replaysSessionSampleRate` to `1.0`. This ensures that every user session will be sent to Sentry.
 
-Then, in your `app.component.ts` add:
+Once testing is complete, **we recommend lowering this value in production**. We still recommend keeping `replaysOnErrorSampleRate` set to `1.0`, so that, whenever possible, every error has an associated replay with additional debugging context.
 
-```javascript {filename: app.component.ts}
-public throwTestError(): void {
-  throw new Error("Sentry Test Error");
-}
-```
 
 ### PII & Privacy Considerations
 
@@ -49,16 +41,8 @@ To learn more about Session Replay privacy, [read our docs.](/platforms/javascri
 
 ### Lazy-loading Replay
 
-Once you've added the integration, Replay will start automatically. If you don't want to start it immediately (lazy-load it), you can use `addIntegration`:
+Once you've added the integration, Replay will start automatically. If you don't want to start it immediately (lazy-load it), you can use `lazyLoadIntegration`:
 
-```javascript {filename: main.ts} {3, 7-8}
-Sentry.init({
-  // Note, replayIntegration is NOT instantiated below:
-  integrations: [],
-});
+<PlatformContent includePath="configuration/integrations/lazy-loading-replay" />
 
-// Sometime later
-import("@sentry/angular").then(lazyLoadedSentry => {
-  Sentry.addIntegration(lazyLoadedSentry.replayIntegration());
-});
-```
+You can lazy-load the `replayIntegration` directly in `main.ts` (as shown in the example) but also in other parts of your application, for example a lazy-loaded module or component.

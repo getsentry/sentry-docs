@@ -52,6 +52,13 @@ Example scenarios where it should be explicitly set to true:
 
 Defaults to `false`, unless in Blazor WASM, MAUI, Unity, or Xamarin where the default is `true`.
 
+In server applications, when Global Mode is **disabled**, data stored in the scope is only available in the context of the particular request in which it is created.
+
+For UI applications (like MAUI) when Global mode is **enabled**, a single scope stack is shared by the whole application.
+
+See the <PlatformLink to="/enriching-events/scopes/">Scopes and Hubs documentation</PlatformLink> for more information.
+
+
 </ConfigKey>
 
 <ConfigKey name="debug">
@@ -216,6 +223,14 @@ By the time <PlatformIdentifier name="before-send" /> is executed, all scope dat
 
 This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
 The callback typically gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
+
+</ConfigKey>
+
+<ConfigKey name="before-send-transaction">
+
+This function is called with an SDK-specific transaction object, and can return a modified transaction object, or `null` to skip reporting the transaction. This can be used, for instance, for manual PII-stripping before sending.
+
+By the time <PlatformIdentifier name="before-send-transaction" /> is executed, all scope data has already been applied to the event and further modification of the scope won't have any effect.
 
 </ConfigKey>
 

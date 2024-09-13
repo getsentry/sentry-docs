@@ -1,10 +1,12 @@
+---
+title: Hub & Scope Refactoring
+---
+
 <Alert title="Note" level="info">
 This is work in progress.
 
 Development has started in JS and Python, but we are still ironing out the wrinkles.
 </Alert>
-
-# Hub & Scope Refactoring
 
 Historically Sentry's SDKs implemented the Hubs and Scopes models, a major defining aspect of the <Link to="/sdk/unified-api/">Unified API</Link>. This introduced a lot of complexity in a user facing manner, allowed more room for error from the user as well as SDK maintainers. Since looking at adopting OpenTelemetry "packages", to replace or in addition to, our existing performance packages in SDKs, there is a forcing factor. Sentry's model being different to OpenTelemetry's prevents us from supporting OpenTelemetry.
 
@@ -52,8 +54,7 @@ The `Transport` is not touched. It will not change.
 
 The `Client` stays the same. The only difference will be that there is always a client available. More on that later.
 
-- TODO: add more explanation about how that there is now always a client.
-- TODO: explain which scope the client should be stored on (and why)
+Before `Sentry.init` is invoked, there's a `NoOpClient` on global scope which is replaced by an actual client on `Sentry.init`. Users may bind a different client to either of the three scopes.
 
 ### Scope
 
@@ -111,7 +112,7 @@ This soft copy-on-write relies on `Scope` being forked in certain cases:
 	- in some cases, we may only be able to intercept `Context` storage, i.e. when an already forked `Context` is being stored, e.g. in a ThreadLocal variable.
 	- in some cases we can intercept `Context` forking, i.e. when a mutated copy of a `Context` is created
 	- in some cases it might be necessary to have a mix of both, since not all auto instrumentation and user instrumentation go through a single place in the same way. e.g. in Java SDK we're sometimes handed a `Context` with some properties already set into our `ContextStorage` where we can then wrap it and intercept future forks of that `Context`
-	- {open question} do we need to fork every time OTel `Context` copied or only when a new OTel span is set
+	- \{open question} do we need to fork every time OTel `Context` copied or only when a new OTel span is set
 
 While it's still possible to misuse, this is a sort of soft copy-on-write that should protect most users.
 
@@ -181,16 +182,16 @@ Here's how the new APIs roughly map to the old-style APIs. In case of `configure
 			<td></td>
 		</tr>
 		<tr>
-			<td rowspan="2" style="vertical-align: middle;"><code>with configure_scope() as scope</code></td>
-			<td><code>scope = Scope.get_isolation_scope()</code></td>
+			<td rowspan="2" style={{verticalAlign: "middle"}}><code>with configure_scope() as scope</code></td>
+			<td><code>scope = get_isolation_scope()</code></td>
 			<td>Should affect the whole transaction (one request/response cycle, one execution of a task, etc.).</td>
 		</tr>
 		<tr>
-			<td><code>scope = Scope.get_current_scope()</code></td>
+			<td><code>scope = get_current_scope()</code></td>
 			<td>Should affect the whole span or a part of code isolated via a forked current scope with <code>new_scope</code>.</td>
 		</tr>
 		<tr>
-			<td rowspan="2" style="vertical-align: middle;"><code>with push_scope() as scope</code></td>
+			<td rowspan="2" style={{verticalAlign: "middle"}}><code>with push_scope() as scope</code></td>
 			<td><code>with isolation_scope() as scope</code></td>
 			<td>We're starting a new transaction-worthy unit (request/response cycle, etc.).</td>
 		</tr>
@@ -200,6 +201,17 @@ Here's how the new APIs roughly map to the old-style APIs. In case of `configure
 		</tr>
 	</tbody>
 </table>
+
+### Thing we found while implementing
+
+- We need to have good defaults for forking behaviours so our customers don't have to think about it. There's integrations, where forking only current scope or forking both isolation and current scope makes sense. We should find a good default that works for most customers.
+- No longer having a stack of scopes means you should no longer call methods on actual Scopes (used to be Hub) references. When a fork is happening and e.g. `setTag` is invoked on the previous `Scopes` reference, the data won't be visible inside the forked scopes. This used to work but no longer does.
+- We now have to create global scope very early when the customer hasn't had a chance to specify their options. We use default options for things like breadcrumb limit etc. until `Sentry.init` where we replace the options used on global scope. This also means we're now creating multiple instances of `SentryOptions`, so we need to lazily create things like executors/threads etc. that are costly.
+- If another SDK builds on top of the SDK that's being changed, there may have to be some sort of CombinedScopeView that merges the scopes into one for synching. This should no longer be needed as soon as the other SDK also supports different scope types.
+- If insertion order matters for data we now need some way of sorting when merging data, e.g. to send out an event. For breadcrumbs, we want to send them in insertion order which means we somehow have to keep track of when a breadcrumb was added. When merging data we then sort them and afterwards apply the breadcrumb limit again. A similar problem exists for event processors on scope as well which should also be executed in insertion order.
+- It feels like there should be some easy to use API for forking isolation scope, starting/continuing a trace (and transaction) from incoming headers/metadata which currently doesn't exist.
+- We decided to not deprecate/remove configureScope for Java SDK as it makes it harder for customers to hold a reference to a scope (which they shouldn't). It now has an overload that allows passing in a scope type (global, isolation, current, combined). We have a default scope we write to for the old overload. We do not want to default to combined/merged scope since that would mean you can manipulate a scope you wouldn't expect, e.g. when using `withScope`.
+- For Java SDK we also keep `pushScope` around and added `pushIsolationScope`. We deprecated `popScope` as users should now call `close` on a lifecycle token we hand back in the push methods. The token can also be used as an automaitcally closed resource in a `try` block.
 
 ---
 
@@ -277,7 +289,7 @@ We can use `Propagator.extract` to fork isolation scope. We try to read the `Sco
 
 #### Tracing Without Performance
 
-Untested: 
+Untested:
 In `Propagator.extract` we can create `PropagationContext` from incoming headers (or similar metadata) or fall back to creating a new `PropagationContext` with random IDs. We then store this `PropagationContet` on the isolation scope. In `Propagator.inject` and when sending events to Sentry, we can use that `PropagationContext` from isolation scope and generate headers (or similar).
 
 - tbd: how does freezing DSC/baggage work? Can we simply freeze whenever the first request (or similar) goes out?

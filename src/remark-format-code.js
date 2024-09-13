@@ -11,8 +11,14 @@ export default function remarkFormatCodeBlocks() {
       // skip code blocks with diff meta as they might have
       // broken syntax due to + and - characters
       // or with `onboardingOptions` as they need to have predictable line numbers
+      // or `@inject` statements as they often lead to unnecessary line breaks
       .filter(
-        node => !(node.meta?.includes('diff') || node.meta?.includes('onboardingOptions'))
+        node =>
+          !(
+            node.meta?.includes('diff') ||
+            node.meta?.includes('onboardingOptions') ||
+            node.value?.includes('@inject packages')
+          )
       )
       .map(node => formatCode(node));
 

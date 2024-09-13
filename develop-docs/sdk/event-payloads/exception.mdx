@@ -41,7 +41,7 @@ description of `ValueError`.
 
 `thread_id`
 
-: An optional value which refers to a thread in the <Link to="/sdk/event-payloads/threads/">Threads Interface</Link>.
+: An optional value which refers to a thread in the [Thread Interface](/sdk/event-payloads/threads/).
 
 `mechanism`
 
@@ -50,7 +50,7 @@ created this exception.
 
 `stacktrace`
 
-: An optional stack trace object corresponding to the <Link to="/sdk/event-payloads/stacktrace/">Stack Trace Interface</Link>.
+: An optional stack trace object corresponding to the [Stack Trace Interface](/sdk/event-payloads/stacktrace/).
 
 ## Exception Mechanism
 
@@ -63,23 +63,19 @@ from the operating system or runtime APIs, as well as mechanism-specific values.
 
 `type`
 
-: Required unique identifier of this mechanism determining rendering and
-processing of the mechanism data.
+: Required unique identifier of this mechanism determining rendering and processing of the mechanism data.
 
 `description`
 
-: Optional human-readable description of the error mechanism and a possible hint
-on how to solve this error.
+: Optional human-readable description of the error mechanism and a possible hint on how to solve this error.
 
 `help_link`
 
-: Optional fully qualified URL to an online help resource, possibly interpolated
-with error parameters.
+: Optional fully qualified URL to an online help resource, possibly interpolated with error parameters.
 
 `handled`
 
-: Optional flag indicating whether the user has handled the exception
-(for example, via `try ... catch`).
+: Optional flag indicating whether the user has handled the exception (for example, via `try ... catch`).
 
 `synthetic`
 
@@ -91,6 +87,25 @@ try to use other information (top in-app frame function) rather than exception
 type and value in the UI for the primary event display. This flag should be set
 for all "segfaults" for instance as every single error group would look very
 similar otherwise.
+
+`exception_id`
+
+: An optional numeric value providing an ID for the exception relative
+to this specific event. The SDK should assign simple incrementing integers
+to each exception in the tree, starting with 0 for the root of the tree.
+In other words, when flattened into the list provided in the exception
+values on the event, the last exception in the list should have ID 0,
+the previous one should have ID 1, the next previous should have ID 2, etc.
+
+`parent_id`
+
+: An optional numeric value pointing at the exception_id that is the
+parent of this exception. The SDK should assign this to all exceptions except
+the root exception (the last to be listed in the exception values).
+
+`is_exception_group`
+
+: An optional flag indicating that this exception is part of an exception group type specific to the platform or language.
 
 `meta`
 
@@ -326,3 +341,34 @@ Flat list, omitting `values`:
   ]
 }
 ```
+
+Exception group:
+
+```json
+{
+  "exception": [
+    {
+      "type": "Error",
+      "value": "An error occurred",
+      "mechanism": {
+        "type": "generic",
+        "handled": true,
+        "is_exception_group": true
+        "exception_id": 0
+      }
+    },
+    {
+      "type": "Error",
+      "value": "Another error occurred",
+      "mechanism": {
+        "type": "generic",
+        "handled": false,
+        "is_exception_group": true,
+        "exception_id": 1,
+        "parent_id": 0
+      }
+    }
+  ]
+}
+```
+`;
