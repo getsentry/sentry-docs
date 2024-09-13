@@ -11,6 +11,7 @@ export async function LambdaLayerDetail({canonical}: {canonical: string}) {
     ...layer,
     accountNumber: layer.account_number,
     layerName: layer.layer_name,
+    regions: [...layer.regions].sort((a, b) => a.region.localeCompare(b.region)),
   }));
 
   return <LambdaLayerDetailClient canonical={canonical} layerList={layerList} />;

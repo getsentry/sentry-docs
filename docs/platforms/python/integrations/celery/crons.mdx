@@ -30,6 +30,9 @@ app.conf.beat_schedule = {
     },
 }
 ```
+<Note>
+Please note that only crontab parseable schedules will be successfully upserted.
+</Note>
 
 Next, we need to initialize Sentry. Where to do this depends on how you run beat:
 - If beat is running in your worker process (that is, you're running your worker with the `-B`/`--beat` option), initialize Sentry in either the `celeryd_init` or `beat_init` signal.
@@ -37,9 +40,20 @@ Next, we need to initialize Sentry. Where to do this depends on how you run beat
 
 Make sure to also set `monitor_beat_tasks=True` in `CeleryIntegration`.
 
-<SignInNote />
 
-```python
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python {"onboardingOptions": {"performance": "12-14", "profiling": "15-18"}}
 # tasks.py
 from celery import signals
 
@@ -51,7 +65,13 @@ from sentry_sdk.integrations.celery import CeleryIntegration
 def init_sentry(**kwargs):
     sentry_sdk.init(
         dsn='___PUBLIC_DSN___',
-        enable_tracing=True,
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for tracing.
+        traces_sample_rate=1.0,
+        # Set profiles_sample_rate to 1.0 to profile 100%
+        # of sampled transactions.
+        # We recommend adjusting this value in production.
+        profiles_sample_rate=1.0,
         integrations=[
             CeleryIntegration(
                 monitor_beat_tasks=True
@@ -78,12 +98,10 @@ You don't need to create Cron Monitors for your tasks on Sentry.io, we'll do it 
 
 You can exclude Celery Beat tasks from being auto-instrumented. To do this, add a list of tasks you want to exclude as option `exclude_beat_tasks` when creating `CeleryIntegration`. The list can contain simple strings with the full task name, as specified in the Celery Beat schedule, or regular expressions to match multiple tasks.
 
-<SignInNote />
 
 ```python
     sentry_sdk.init(
-        dsn='___PUBLIC_DSN___',
-        enable_tracing=True,
+        # ...
         integrations=[
             CeleryIntegration(
                 monitor_beat_tasks=True,
@@ -93,8 +111,6 @@ You can exclude Celery Beat tasks from being auto-instrumented. To do this, add 
                 ]
             ),
         ],
-        environment="local.dev.grace",
-        release="v1.0",
     )
 ```
 
@@ -112,8 +128,6 @@ Make sure the Sentry `@sentry_sdk.monitor` decorator is below Celery's `@app.tas
 
 </Note>
 
-<SignInNote />
-
 ```python
 # tasks.py
 from celery import Celery, signals
@@ -126,13 +140,7 @@ app = Celery('tasks', broker='...')
 @signals.celeryd_init.connect
 def init_sentry(**kwargs):
     sentry_sdk.init(
-        dsn='___PUBLIC_DSN___',
-        enable_tracing=True,
-        integrations=[
-            CeleryIntegration()
-        ],
-        environment="local.dev.grace",
-        release="v1.0",
+        # same as above
     )
 
 

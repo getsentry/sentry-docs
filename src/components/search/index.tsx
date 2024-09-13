@@ -14,6 +14,7 @@ import algoliaInsights from 'search-insights';
 
 import {useOnClickOutside} from 'sentry-docs/clientUtils';
 import {useKeyboardNavigate} from 'sentry-docs/hooks/useKeyboardNavigate';
+import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 
 import styles from './search.module.scss';
 
@@ -33,8 +34,8 @@ function uuidv4() {
 
 // Initialize Algolia Insights
 algoliaInsights('init', {
-  appId: 'OOK48W9UCL',
-  apiKey: '2d64ec1106519cbc672d863b0d200782',
+  appId: process.env.NEXT_PUBLIC_ALGOLIA_APP_ID,
+  apiKey: process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY,
 });
 
 // We dont want to track anyone cross page/sessions or use cookies
@@ -44,7 +45,17 @@ const randomUserToken = uuidv4();
 
 const MAX_HITS = 10;
 
-const search = new SentryGlobalSearch([
+// this type is not exported from the global-search package
+type SentryGlobalSearchConfig = ConstructorParameters<typeof SentryGlobalSearch>[0];
+
+const developerDocsSites: SentryGlobalSearchConfig = [
+  'develop',
+  'zendesk_sentry_articles',
+  'docs',
+  'blog',
+];
+
+const userDocsSites: SentryGlobalSearchConfig = [
   {
     site: 'docs',
     pathBias: true,
@@ -54,7 +65,9 @@ const search = new SentryGlobalSearch([
   'zendesk_sentry_articles',
   'develop',
   'blog',
-]);
+];
+const config = isDeveloperDocs ? developerDocsSites : userDocsSites;
+const search = new SentryGlobalSearch(config);
 
 function relativizeUrl(url: string) {
   return url.replace(/^(https?:\/\/docs\.sentry\.io)(?=\/|$)/, '');
@@ -209,6 +222,9 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
             onChange={({target: {value}}) => searchFor(value)}
             onFocus={() => setInputFocus(true)}
             ref={inputRef}
+            onKeyDown={ev => {
+              ev.stopPropagation();
+            }}
           />
           <kbd className={styles['search-hotkey']} data-focused={inputFocus}>
             {inputFocus ? 'esc' : '⌘K'}

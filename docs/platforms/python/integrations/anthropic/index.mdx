@@ -16,9 +16,9 @@ If you want to try the beta features and are willing to give feedback, please le
 
 This integration connects Sentry with the [Anthropic Python SDK](https://github.com/anthropics/anthropic-sdk-python) and works with Anthropic versions `0.16.0` and above.
 
-Once you've installed this SDK, you can use Sentry AI Monitoring, a Sentry dashboard that helps you understand what's going on with your AI pipelines.
+Once you've installed this SDK, you can use Sentry LLM Monitoring, a Sentry dashboard that helps you understand what's going on with your AI pipelines.
 
-Sentry AI Monitoring will automatically collect information about prompts, tokens, and models from providers like OpenAI. Learn more about it [here.](/product/ai-monitoring)
+Sentry LLM Monitoring will automatically collect information about prompts, tokens, and models from providers like OpenAI. Learn more about it [here](/product/insights/llm-monitoring).
 
 ## Install
 
@@ -30,26 +30,13 @@ pip install --upgrade 'sentry-sdk[anthropic]'
 
 ## Configure
 
-Add `AnthropicIntegration()` to your `integrations` in the `sentry_sdk.init` call:
+If you have the `anthropic` package in your dependencies, the Anthropic integration will be enabled automatically when you initialize the Sentry SDK.
 
-```python
-from anthropic import Anthropic
-
-import sentry_sdk
-
-sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
-    traces_sample_rate=1.0,
-    integrations=[AnthropicIntegration()],
-)
-
-client = Anthropic()
-```
+<PlatformContent includePath="getting-started-config" />
 
 ## Verify
 
-Verify that the integration works by creating an AI pipeline. The resulting data should show up in your AI monitoring dashboard.
+Verify that the integration works by creating an AI pipeline. The resulting data should show up in your LLM monitoring dashboard.
 
 ```python
 import sentry_sdk
@@ -73,7 +60,7 @@ def my_pipeline():
         )
 ```
 
-After running this script, a pipeline will be created in the [AI Monitoring](/product/ai-monitoring) section of the Sentry dashboard.
+After running this script, a pipeline will be created in the [LLM Monitoring](/product/insights/llm-monitoring) section of the Sentry dashboard.
 
 The pipeline will have an associated Anthropic span for the `messages.create` operation.
 
@@ -96,10 +83,8 @@ import sentry_sdk
 from sentry_sdk.integrations.anthropic import AnthropicIntegration
 
 sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
+    # same options as above
     send_default_pii=True,
-    traces_sample_rate=1.0,
     integrations=[
         AnthropicIntegration(
             include_prompts=False, # Exclude prompts from being sent to Sentry, despite send_default_pii=True

@@ -1,7 +1,9 @@
 'use client';
 
-import {createContext, useEffect, useReducer, useState} from 'react';
+import {createContext, useEffect, useState} from 'react';
 import Cookies from 'js-cookie';
+
+import {isLocalStorageAvailable} from 'sentry-docs/utils';
 
 type ProjectCodeKeywords = {
   API_URL: string;
@@ -89,15 +91,20 @@ export const DEFAULTS: CodeKeywords = {
 };
 
 type SelectedCodeTabs = Record<string, string | undefined>;
+type CodeSelection = {
+  groupId: string;
+  selection: string;
+};
 
 type CodeContextType = {
   codeKeywords: CodeKeywords;
   isLoading: boolean;
-  sharedCodeSelection: [SelectedCodeTabs, React.Dispatch<[string, string]>];
   sharedKeywordSelection: [
     Record<string, number>,
     React.Dispatch<Record<string, number>>,
   ];
+  storedCodeSelection: SelectedCodeTabs;
+  updateCodeSelection: (selection: CodeSelection) => void;
 };
 
 export const CodeContext = createContext<CodeContextType | null>(null);
@@ -214,7 +221,8 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
         PROJECT_SLUG: project.projectSlug,
         ORG_ID: project.organizationId,
         ORG_SLUG: project.organizationSlug,
-        ORG_INGEST_DOMAIN: `o${project.organizationId}.ingest.sentry.io`,
+        ORG_INGEST_DOMAIN:
+          parsedDsn.host ?? `o${project.organizationId}.ingest.sentry.io`,
         MINIDUMP_URL: formatMinidumpURL(parsedDsn),
         UNREAL_URL: formatUnrealEngineURL(parsedDsn),
         title: `${project.organizationSlug} / ${project.projectSlug}`,
@@ -276,10 +284,24 @@ export async function createOrgAuthToken({
   }
 }
 
+const getLocallyStoredSelections = (): SelectedCodeTabs => {
+  if (isLocalStorageAvailable()) {
+    return Object.fromEntries(
+      Object.entries(localStorage).filter(([key]) => key.startsWith('Tabgroup:'))
+    );
+  }
+  return {};
+};
+
 export function CodeContextProvider({children}: {children: React.ReactNode}) {
   const [codeKeywords, setCodeKeywords] = useState(cachedCodeKeywords ?? DEFAULTS);
-
   const [isLoading, setIsLoading] = useState<boolean>(cachedCodeKeywords ? false : true);
+  const [storedCodeSelection, setStoredCodeSelection] = useState<SelectedCodeTabs>({});
+
+  // populate state using localstorage
+  useEffect(() => {
+    setStoredCodeSelection(getLocallyStoredSelections());
+  }, []);
 
   useEffect(() => {
     if (cachedCodeKeywords === null) {
@@ -292,6 +314,21 @@ export function CodeContextProvider({children}: {children: React.ReactNode}) {
     }
   }, [setIsLoading, setCodeKeywords]);
 
+  const updateCodeSelection = ({groupId, selection}: CodeSelection) => {
+    // update context state
+    setStoredCodeSelection(current => {
+      return {
+        ...current,
+        [groupId]: selection,
+      };
+    });
+
+    // update local storage
+    if (isLocalStorageAvailable()) {
+      localStorage.setItem(groupId, selection);
+    }
+  };
+
   // sharedKeywordSelection maintains a global mapping for each "keyword"
   // namespace to the index of the selected item.
   //
@@ -299,24 +336,10 @@ export function CodeContextProvider({children}: {children: React.ReactNode}) {
   // that is the only namespace that actually has a list
   const sharedKeywordSelection = useState<Record<string, number>>({});
 
-  const storedSelections = Object.fromEntries(
-    Object.entries(
-      // default to an empty object if localStorage is not available on the server
-      typeof localStorage === 'undefined' ? {} : localStorage
-    ).filter(([key]) => key.startsWith('Tabgroup:'))
-  );
-
-  // Maintains the global selection for which code block tab is selected
-  const sharedCodeSelection = useReducer(
-    (tabs: SelectedCodeTabs, [groupId, value]: [string, string]) => {
-      return {...tabs, [groupId]: value};
-    },
-    storedSelections
-  );
-
   const result: CodeContextType = {
     codeKeywords,
-    sharedCodeSelection,
+    storedCodeSelection,
+    updateCodeSelection,
     sharedKeywordSelection,
     isLoading,
   };

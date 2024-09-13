@@ -1,6 +1,10 @@
 import type {NextRequest} from 'next/server';
 import {NextResponse} from 'next/server';
 
+// This env var is set in next.config.js based on the `NEXT_PUBLIC_DEVELOPER_DOCS` env var at build time
+// a workaround edge middleware not having access to env vars
+const isDeveloperDocs = process.env.DEVELOPER_DOCS_;
+
 export const config = {
   // learn more: https://nextjs.org/docs/pages/building-your-application/routing/middleware#matcher
   matcher: [
@@ -9,8 +13,7 @@ export const config = {
     // - _next/static (static files)
     // - _next/image (image optimization files)
     // - favicon.ico (favicon file)
-    // - changelog
-    '/((?!api|_next/static|_next/image|favicon.ico|changelog).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };
 
@@ -56,11 +59,32 @@ const handleRedirects = (request: NextRequest) => {
 
 type Redirect = {
   /** a string with a leading and a trailing slash */
-  from: `/${string}/`;
+  from: `/${string}/` | '/';
   to: string;
 };
 
-const REDIRECTS: Redirect[] = [
+/** Note: if you want to set redirects for developer docs, set them below in `DEVELOPER_DOCS_REDIRECTS` */
+const USER_DOCS_REDIRECTS: Redirect[] = [
+  {
+    from: '/platforms/python/http_errors/',
+    to: '/platforms/python/integrations/django/http_errors/',
+  },
+  {
+    from: '/platforms/javascript/guides/react/configuration/integrations/trycatch/',
+    to: '/platforms/javascript/configuration/integrations/browserapierrors/',
+  },
+  {
+    from: '/platforms/javascript/performance/instrumentation/custom-instrumentation/caches-module/',
+    to: '/platforms/javascript/guides/node/performance/instrumentation/custom-instrumentation/caches-module/',
+  },
+  {
+    from: '/account/early-adopter-features/discord/',
+    to: '/organization/integrations/notification-incidents/discord/',
+  },
+  {
+    from: '/platforms/python/migration/configuration/filtering/',
+    to: '/platforms/python/configuration/filtering/',
+  },
   {
     from: '/organization/integrations/github/',
     to: '/organization/integrations/source-code-mgmt/github/',
@@ -126,6 +150,18 @@ const REDIRECTS: Redirect[] = [
     to: '/product/performance/',
   },
   {
+    from: '/product/data-management-settings/event-grouping/',
+    to: '/concepts/data-management/event-grouping/',
+  },
+  {
+    from: '/product/data-management-settings/data-forwarding/',
+    to: '/concepts/data-management/data-forwarding/',
+  },
+  {
+    from: '/product/data-management-settings/filtering/',
+    to: '/concepts/data-management/filtering/',
+  },
+  {
     from: '/platforms/data-management/',
     to: '/concepts/data-management/',
   },
@@ -174,10 +210,6 @@ const REDIRECTS: Redirect[] = [
     to: '/platforms/go/usage/serverless/',
   },
   {
-    from: '/platforms/go/martini/',
-    to: '/platforms/go/guides/martini/',
-  },
-  {
     from: '/platforms/go/fasthttp/',
     to: '/platforms/go/guides/fasthttp/',
   },
@@ -196,6 +228,10 @@ const REDIRECTS: Redirect[] = [
   {
     from: '/platforms/go/negroni/',
     to: '/platforms/go/guides/negroni/',
+  },
+  {
+    from: '/platforms/go/logrus/',
+    to: '/platforms/go/guides/logrus/',
   },
   {
     from: '/clients/go/integrations/http/',
@@ -302,6 +338,10 @@ const REDIRECTS: Redirect[] = [
     to: '/platforms/react-native/sourcemaps/',
   },
   {
+    from: '/platforms/react-native/touchevents/',
+    to: '/platforms/react-native/configuration/touchevents/',
+  },
+  {
     from: '/platforms/python/data-collected/',
     to: '/platforms/python/data-management/data-collected/',
   },
@@ -380,6 +420,14 @@ const REDIRECTS: Redirect[] = [
   {
     from: '/platforms/python/starlite/',
     to: '/platforms/python/integrations/starlite/',
+  },
+  {
+    from: '/clients/python/integrations/litestar/',
+    to: '/platforms/python/integrations/litestar/',
+  },
+  {
+    from: '/platforms/python/litestar/',
+    to: '/platforms/python/integrations/litestar/',
   },
   {
     from: '/platforms/python/beam/',
@@ -607,7 +655,7 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/php/guides/symfony/performance/pm-integrations/',
-    to: '/platforms/php/guides/symfony/performance/instrumentation/automatic-instrumentation/',
+    to: '/platforms/php/guides/symfony/tracing/instrumentation/automatic-instrumentation/',
   },
   {
     from: '/clients/php/integrations/laravel/',
@@ -1119,11 +1167,15 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/performance/event-detail/',
-    to: '/product/sentry-basics/concepts/tracing/event-detail/',
+    to: '/concepts/key-terms/tracing/trace-view/',
   },
   {
     from: '/product/sentry-basics/tracing/event-detail/',
-    to: '/product/sentry-basics/concepts/tracing/event-detail/',
+    to: '/product/sentry-basics/concepts/key-terms/tracing/trace-view/',
+  },
+  {
+    from: '/concepts/key-terms/tracing/event-detail/',
+    to: '/concepts/key-terms/tracing/trace-view/',
   },
   {
     from: '/product/sentry-basics/dsn-explainer/',
@@ -1358,6 +1410,10 @@ const REDIRECTS: Redirect[] = [
     to: '/platforms/javascript/guides/react/features/react-router/',
   },
   {
+    from: '/platforms/javascript/guides/session-replay/',
+    to: '/platforms/javascript/session-replay/',
+  },
+  {
     from: '/platforms/javascript/react/',
     to: '/platforms/javascript/guides/react/',
   },
@@ -1528,6 +1584,10 @@ const REDIRECTS: Redirect[] = [
   {
     from: '/platforms/javascript/guides/:guide/usage/sdk-fingerprinting/',
     to: '/platforms/javascript/guides/:guide/enriching-events/fingerprinting/',
+  },
+  {
+    from: '/platforms/javascript/guides/:guide/tracing/instrumentation/opentelemetry/',
+    to: '/platforms/javascript/guides/:guide/opentelemetry/',
   },
   {
     from: '/learn/cli/configuration/',
@@ -1826,10 +1886,6 @@ const REDIRECTS: Redirect[] = [
     to: '/organization/integrations/notification-incidents/msteams/',
   },
   {
-    from: '/product/integrations/threads/',
-    to: '/organization/integrations/notification-incidents/threads/',
-  },
-  {
     from: '/product/integrations/rootly/',
     to: '/organization/integrations/notification-incidents/rootly/',
   },
@@ -2066,6 +2122,14 @@ const REDIRECTS: Redirect[] = [
     to: '/organization/early-adopter-features/',
   },
   {
+    from: '/pricing/am2-pricing/',
+    to: '/pricing/legacy-pricing/',
+  },
+  {
+    from: '/pricing/quotas/manage-event-stream-guide/adjusting-quotas/',
+    to: '/pricing/quotas/manage-event-stream-guide/#adjusting-quotas',
+  },
+  {
     from: '/learn/pricing/',
     to: '/pricing/',
   },
@@ -2075,23 +2139,27 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/learn/quotas/',
-    to: '/organization/quotas/',
+    to: '/pricing/quotas/',
   },
   {
     from: '/product/quotas/',
-    to: '/organization/quotas/',
+    to: '/pricing/quotas/',
+  },
+  {
+    from: '/learn/sensitive-data/',
+    to: '/security-legal-pii/scrubbing/',
   },
   {
     from: '/product/data-management-settings/dynamic-sampling/getting-started/',
-    to: '/organization/quotas/',
+    to: '/pricing/quotas/',
   },
   {
     from: '/product/data-management-settings/dynamic-sampling/benefits-dynamic-sampling/',
-    to: '/organization/quotas/',
+    to: '/pricing/quotas/',
   },
   {
     from: '/guides/manage-event-stream/',
-    to: '/organization/quotas/manage-event-stream-guide/',
+    to: '/pricing/quotas/manage-event-stream-guide/',
   },
   {
     from: '/learn/sso/',
@@ -2151,27 +2219,27 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/profiling/',
-    to: '/product/profiling/',
+    to: '/product/explore/profiling/',
   },
   {
     from: '/profiling/performance-overhead/',
-    to: '/product/profiling/performance-overhead/',
+    to: '/product/explore/profiling/performance-overhead/',
   },
   {
     from: '/profiling/setup/',
-    to: '/product/profiling/getting-started/',
+    to: '/product/explore/profiling/getting-started/',
   },
   {
     from: '/profiling/getting-started/',
-    to: '/product/profiling/getting-started/',
+    to: '/product/explore/profiling/getting-started/',
   },
   {
     from: '/profiling/mobile-app-profiling/',
-    to: '/product/profiling/mobile-app-profiling/',
+    to: '/product/explore/profiling/mobile-app-profiling/',
   },
   {
     from: '/profiling/mobile-app-profiling/metrics/',
-    to: '/product/profiling/mobile-app-profiling/metrics/',
+    to: '/product/explore/profiling/mobile-app-profiling/metrics/',
   },
   {
     from: '/product/error-monitoring/filtering/',
@@ -2239,43 +2307,39 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/discover/',
-    to: '/product/discover-queries/',
+    to: '/product/explore/discover-queries/',
   },
   {
     from: '/workflow/discover/',
-    to: '/product/discover-queries/',
+    to: '/product/explore/discover-queries/',
   },
   {
     from: '/workflow/discover2/',
-    to: '/product/discover-queries/',
+    to: '/product/explore/discover-queries/',
   },
   {
     from: '/performance-monitoring/discover/',
-    to: '/product/discover-queries/',
-  },
-  {
-    from: '/performance-monitoring/discover-queries/',
-    to: '/product/discover-queries/',
+    to: '/product/explore/discover-queries/',
   },
   {
     from: '/performance/discover/',
-    to: '/product/discover-queries/',
+    to: '/product/explore/discover-queries/',
   },
   {
     from: '/guides/discover/',
-    to: '/product/discover-queries/uncover-trends/',
+    to: '/product/explore/discover-queries/uncover-trends/',
   },
   {
     from: '/product/sentry-basics/guides/discover/',
-    to: '/product/discover-queries/uncover-trends/',
+    to: '/product/explore/discover-queries/uncover-trends/',
   },
   {
     from: '/workflow/discover2/query-builder/',
-    to: '/product/discover-queries/query-builder/',
+    to: '/product/explore/discover-queries/query-builder/',
   },
   {
     from: '/performance-monitoring/discover-queries/query-builder/',
-    to: '/product/discover-queries/query-builder/',
+    to: '/product/explore/discover-queries/query-builder/',
   },
   {
     from: '/product/crons/alerts/',
@@ -2582,6 +2646,10 @@ const REDIRECTS: Redirect[] = [
     to: '/concepts/search/searchable-properties/releases/',
   },
   {
+    from: '/product/sentry-basics/search/searchable-properties/spans/',
+    to: '/concepts/search/searchable-properties/spans/',
+  },
+  {
     from: '/product/sentry-basics/search/searchable-properties/session-replay/',
     to: '/concepts/search/searchable-properties/session-replay/',
   },
@@ -2636,126 +2704,6 @@ const REDIRECTS: Redirect[] = [
   {
     from: '/platforms/python/gnu_backtrace/',
     to: '/platforms/python/integrations/gnu_backtrace/',
-  },
-  {
-    from: '/api/releases/post-organization-release-files/',
-    to: '/api/releases/update-an-organization-release-file/',
-  },
-  {
-    from: '/api/releases/post-release-deploys/',
-    to: '/api/releases/create-a-new-deploy-for-an-organization/',
-  },
-  {
-    from: '/api/projects/post-project-user-reports/',
-    to: '/api/projects/submit-user-feedback/',
-  },
-  {
-    from: '/api/projects/post-project-keys/',
-    to: '/api/projects/create-a-new-client-key/',
-  },
-  {
-    from: '/api/events/get-group-events-latest/',
-    to: '/api/events/retrieve-the-latest-event-for-an-issue/',
-  },
-  {
-    from: '/api/organizations/get-event-id-lookup/',
-    to: '/api/organizations/resolve-an-event-id/',
-  },
-  {
-    from: '/api/events/get-project-group-index/',
-    to: '/api/events/list-a-projects-issues/',
-  },
-  {
-    from: '/api/events/get-group-hashes/',
-    to: '/api/events/list-an-issues-hashes/',
-  },
-  {
-    from: '/api/projects/get-project-stats/',
-    to: '/api/projects/retrieve-event-counts-for-a-project/',
-  },
-  {
-    from: '/api/projects/get-project-index/',
-    to: '/api/projects/list-your-projects/',
-  },
-  {
-    from: '/api/organizations/get-organization-users/',
-    to: '/api/organizations/list-an-organizations-users/',
-  },
-  {
-    from: '/api/events/get-group-details/',
-    to: '/api/events/retrieve-an-issue/',
-  },
-  {
-    from: '/api/events/get-project-event-details/',
-    to: '/api/events/retrieve-an-event-for-a-project/',
-  },
-  {
-    from: '/api/events/get-group-tag-key-details/',
-    to: '/api/events/retrieve-tag-details/',
-  },
-  {
-    from: '/api/organizations/get-organization-projects/',
-    to: '/api/organizations/list-an-organizations-projects/',
-  },
-  {
-    from: '/api/releases/post-project-release-files/',
-    to: '/api/releases/upload-a-new-project-release-file/',
-  },
-  {
-    from: '/api/projects/get-project-users/',
-    to: '/api/projects/list-a-projects-users/',
-  },
-  {
-    from: '/api/projects/put-project-details/',
-    to: '/api/projects/update-a-project/',
-  },
-  {
-    from: '/api/projects/post-debug-files/',
-    to: '/api/projects/upload-a-new-file/',
-  },
-  {
-    from: '/api/organizations/get-organization-stats/',
-    to: '/api/organizations/retrieve-event-counts-for-an-organization/',
-  },
-  {
-    from: '/api/releases/post-organization-releases/',
-    to: '/api/releases/create-a-new-release-for-an-organization/',
-  },
-  {
-    from: '/api/projects/get-project-keys/',
-    to: '/api/projects/list-a-projects-client-keys/',
-  },
-  {
-    from: '/api/teams/get-organization-teams/',
-    to: '/api/teams/list-an-organizations-teams/',
-  },
-  {
-    from: '/api/teams/post-team-projects/',
-    to: '/api/teams/create-a-new-project/',
-  },
-  {
-    from: '/api/events/put-project-group-index/',
-    to: '/api/events/bulk-mutate-a-list-of-issues/',
-  },
-  {
-    from: '/api/events/delete-project-group-index/',
-    to: '/api/events/bulk-remove-a-list-of-issues/',
-  },
-  {
-    from: '/api/projects/delete-project-details/',
-    to: '/api/projects/delete-a-project/',
-  },
-  {
-    from: '/api/events/get-group-events/',
-    to: '/api/events/list-an-issues-events/',
-  },
-  {
-    from: '/api/organizations/get-organization-details/',
-    to: '/api/organizations/retrieve-an-organization/',
-  },
-  {
-    from: '/api/organizations/experimental-retrieve-release-health-session-statistics/',
-    to: '/api/releases/retrieve-release-health-session-statistics/',
   },
   {
     from: '/learn/context/',
@@ -2966,6 +2914,14 @@ const REDIRECTS: Redirect[] = [
     to: '/pricing/',
   },
   {
+    from: '/accounts/pricing/',
+    to: '/pricing/',
+  },
+  {
+    from: '/product/account/pricing/',
+    to: '/pricing/',
+  },
+  {
     from: '/platforms/dotnet/compatibility/',
     to: '/platforms/dotnet/',
   },
@@ -3023,39 +2979,35 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/accounts/quotas/',
-    to: '/organization/quotas/',
+    to: '/pricing/quotas/',
   },
   {
     from: '/product/accounts/quotas/spike-protection/',
-    to: '/organization/quotas/spike-protection/',
+    to: '/pricing/quotas/spike-protection/',
   },
   {
     from: '/product/accounts/quotas/spend-allocation/',
-    to: '/organization/quotas/spend-allocation/',
+    to: '/pricing/quotas/spend-allocation/',
   },
   {
     from: '/product/accounts/quotas/manage-event-stream-guide/',
-    to: '/organization/quotas/manage-event-stream-guide/',
+    to: '/pricing/quotas/manage-event-stream-guide/',
   },
   {
     from: '/product/accounts/quotas/manage-transaction-quota/',
-    to: '/organization/quotas/manage-transaction-quota/',
+    to: '/pricing/quotas/manage-transaction-quota/',
   },
   {
     from: '/product/accounts/quotas/manage-replay-quota/',
-    to: '/organization/quotas/manage-replay-quota/',
+    to: '/pricing/quotas/manage-replay-quota/',
   },
   {
     from: '/product/accounts/quotas/manage-attachments-quota/',
-    to: '/organization/quotas/manage-attachments-quota/',
+    to: '/pricing/quotas/manage-attachments-quota/',
   },
   {
     from: '/product/accounts/quotas/manage-cron-monitors/',
-    to: '/organization/quotas/manage-cron-monitors/',
-  },
-  {
-    from: '/product/accounts/migration/',
-    to: '/concepts/migration/',
+    to: '/pricing/quotas/manage-cron-monitors/',
   },
   {
     from: '/product/accounts/auth-tokens/',
@@ -3083,12 +3035,492 @@ const REDIRECTS: Redirect[] = [
   },
   {
     from: '/account/quotas/',
-    to: '/organization/quotas/',
+    to: '/pricing/quotas/',
+  },
+  {
+    from: '/accounts/quotas/',
+    to: '/pricing/quotas/',
+  },
+  {
+    from: '/organization/quotas/',
+    to: '/pricing/quotas/',
   },
   {
     from: '/account/sso/',
     to: '/organization/authentication/sso/',
   },
+  {
+    from: '/product/ai-monitoring/',
+    to: '/product/insights/llm-monitoring/',
+  },
+  {
+    from: '/product/ai-monitoring/getting-started/',
+    to: '/product/insights/llm-monitoring/getting-started/',
+  },
+  {
+    from: '/product/ai-monitoring/getting-started/the-dashboard/',
+    to: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
+  },
+  {
+    from: '/product/llm-monitoring/',
+    to: '/product/insights/llm-monitoring/',
+  },
+  {
+    from: '/product/llm-monitoring/getting-started/',
+    to: '/product/insights/llm-monitoring/getting-started/',
+  },
+  {
+    from: '/product/llm-monitoring/getting-started/the-dashboard/',
+    to: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
+  },
+  {
+    from: '/product/metrics/',
+    to: '/product/explore/metrics/',
+  },
+  {
+    from: '/product/profiling/',
+    to: '/product/explore/profiling/',
+  },
+  {
+    from: '/product/discover-queries/',
+    to: '/product/explore/discover-queries/',
+  },
+  {
+    from: '/product/session-replay/',
+    to: '/product/explore/session-replay/',
+  },
+  {
+    from: '/enriching-error-data/advanced-datascrubbing/',
+    to: '/concepts/data-management/advanced-datascrubbing/',
+  },
+  {
+    from: '/data-management/advanced-datascrubbing/',
+    to: '/concepts/data-management/advanced-datascrubbing/',
+  },
+  {
+    from: '/platforms/javascript/guides/react/features/component-tracking/',
+    to: '/platforms/javascript/guides/react/features/component-names/',
+  },
+  {
+    from: '/platforms/rust/usage/sdk-fingerprinting/',
+    to: '/concepts/data-management/event-grouping/fingerprint-rules/',
+  },
+  {
+    from: '/platforms/javascript/guides/angular/lazy-load-sentry/',
+    to: '/platforms/javascript/guides/angular/',
+  },
+  {
+    from: '/platforms/java/guides/spring/data-management/data-forwarding/',
+    to: '/platforms/java/guides/spring/data-management/',
+  },
+  {
+    from: '/support/',
+    to: 'https://sentry.zendesk.com/hc/en-us/',
+  },
+  {
+    from: '/product/security-policy-reporting/',
+    to: '/security-legal-pii/security/security-policy-reporting/',
+  },
+  {
+    from: '/product/session-replay/protecting-user-privacy/',
+    to: '/security-legal-pii/scrubbing/protecting-user-privacy/',
+  },
+  {
+    from: '/product/data-management-settings/restrict-display/',
+    to: '/security-legal-pii/scrubbing/restrict-display/',
+  },
+  {
+    from: '/product/performance/requests/',
+    to: '/product/insights/requests/',
+  },
+  {
+    from: '/product/performance/queries/',
+    to: '/product/insights/queries/',
+  },
+  {
+    from: '/product/performance/resources/',
+    to: '/product/insights/assets/',
+  },
+  {
+    from: '/product/performance/assets/',
+    to: '/product/insights/assets/',
+  },
+  {
+    from: '/product/performance/mobile-vitals/',
+    to: '/product/insights/mobile-vitals/',
+  },
+  {
+    from: '/product/performance/mobile-vitals/screen-loads/',
+    to: '/product/insights/mobile-vitals/screen-loads/',
+  },
+  {
+    from: '/product/performance/mobile-vitals/app-starts/',
+    to: '/product/insights/mobile-vitals/app-starts/',
+  },
+  {
+    from: '/product/performance/web-vitals/',
+    to: '/product/insights/web-vitals/',
+  },
+  {
+    from: '/product/performance/web-vitals/web-vitals-concepts/',
+    to: '/product/insights/web-vitals/web-vitals-concepts/',
+  },
+  {
+    from: '/product/performance/caches/',
+    to: '/product/insights/caches/',
+  },
+  {
+    from: '/product/performance/caches/cache-page/',
+    to: '/product/insights/caches/cache-page/',
+  },
+  {
+    from: '/product/performance/queue-monitoring/',
+    to: '/product/insights/queue-monitoring/',
+  },
+  {
+    from: '/product/performance/queue-monitoring/queues-page/',
+    to: '/product/insights/queue-monitoring/queues-page/',
+  },
+  {
+    from: '/product/explore/session-replay/protecting-user-privacy/',
+    to: '/security-legal-pii/scrubbing/protecting-user-privacy/',
+  },
+  {
+    from: '/account/choose-your-data-center/',
+    to: '/organization/data-storage-location/',
+  },
+  {
+    from: '/account/early-adopter/',
+    to: '/organization/early-adopter-features/',
+  },
+  {
+    from: '/account/quotas/spike-protection/',
+    to: '/pricing/quotas/spike-protection/',
+  },
+  {
+    from: '/_platforms/',
+    to: '/platforms',
+  },
+  {
+    from: '/accounts/require-2fa/',
+    to: '/organization/authentication/two-factor-authentication/',
+  },
+  {
+    from: '/platforms/go/guides/fiber/',
+    to: '/platforms/go/',
+  },
+  {
+    from: '/platforms/go/guides/fiber/user-feedback/configuration/',
+    to: '/platforms/go/user-feedback/',
+  },
+  {
+    from: '/platforms/javascript/guides/',
+    to: '/platforms/javascript/',
+  },
+  {
+    from: '/platforms/native/crashpad/',
+    to: '/platforms/native/guides/crashpad/',
+  },
+  {
+    from: '/platforms/python/legacy-sdk/integrations/pylons/',
+    to: '/platforms/python/legacy-sdk/integrations/#pylons',
+  },
+  {
+    from: '/concepts/data-management/event-grouping/grouping-breakdown/',
+    to: '/concepts/data-management/event-grouping/',
+  },
+  {
+    from: '/product/explore/session-replay/performance-overhead/',
+    to: '/product/explore/session-replay/web/performance-overhead/',
+  },
+  {
+    from: '/organization/integrations/project-mgmt/jira/',
+    to: '/organization/integrations/issue-tracking/jira/',
+  },
+  {
+    from: '/organization/integrations/source-code-/',
+    to: '/organization/integrations/source-code-mgmt/',
+  },
+  {
+    from: '/product/explore/session-replay/getting-started/',
+    to: '/product/explore/session-replay/',
+  },
+  {
+    from: '/product/explore/session-replay/replay-page-and-filters/',
+    to: '/product/explore/session-replay/web/replay-page-and-filters/',
+  },
+  {
+    from: '/platforms/nintendo-switch/',
+    to: '/platforms/unity/native-support/',
+  },
+  {
+    from: '/product/teams/roles/',
+    to: '/organization/membership/#team-level-roles',
+  },
+  {
+    from: '/enriching-error-data/additional-data/',
+    to: '/concepts/key-terms/enrich-data/',
+  },
+  {
+    from: '/performance/instrumentation/automatic-instrumentation/',
+    to: '/tracing/instrumentation/automatic-instrumentation',
+  },
+  {
+    from: '/concepts/key-terms/key-terms/tracing/trace-view/#operations-breakdown/',
+    to: '/product/insights/',
+  },
+  {
+    from: '/platforms/javascript/guides/aws-lambda/container-image/',
+    to: '/platforms/javascript/guides/aws-lambda/install/',
+  },
+  {
+    from: '/platforms/javascript/guides/aws-lambda/layer/',
+    to: '/platforms/javascript/guides/aws-lambda/install/',
+  },
+  {
+    from: '/api/projects/post-project-service-hooks/',
+    to: '/api/projects/register-a-new-service-hook/',
+  },
+  {
+    from: '/clients/cocoa/',
+    to: '/platforms/apple/',
+  },
+  {
+    from: '/clients/react-native/',
+    to: 'platforms/react-native/',
+  },
+  {
+    from: '/learn/scopes/?platform=rust/',
+    to: '/platforms/rust/enriching-events/scopes/',
+  },
+  {
+    from: '/platforms/android/android-video/',
+    to: '/platforms/android/',
+  },
+  {
+    from: '/platforms/android/tracing/included-instrumentation/',
+    to: '/platforms/android/tracing/instrumentation/automatic-instrumentation',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/tracing/trace-propagation/',
+    to: '/platforms/javascript/guides/cordova/tracing/instrumentation/custom-instrumentation/',
+  },
+  {
+    from: '/platforms/javascript/pluggable-integrations/',
+    to: '/platforms/javascript/configuration/integrations/#lazy-loading-integrations',
+  },
+  {
+    from: '/platforms/react-native/tracing/included-instrumentation/',
+    to: '/platforms/react-native/tracing/instrumentation/automatic-instrumentation/',
+  },
+  {
+    from: '/platforms/rust/env_logger/index.html/',
+    to: '/platforms/rust/configuration/environments/',
+  },
+  {
+    from: '/clients/cordova/',
+    to: '/platforms/javascript/guides/cordova/',
+  },
 ];
 
-const redirectMap = new Map(REDIRECTS.map(r => [r.from as string, r.to]));
+const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
+  {
+    from: '/',
+    to: '/getting-started/',
+  },
+  {
+    from: '/docs-components/',
+    to: '/development/docs/',
+  },
+  {
+    from: '/docs/',
+    to: '/development/docs/',
+  },
+  {
+    from: '/inclusion/',
+    to: '/development/inclusive-language/',
+  },
+  {
+    from: '/translations/',
+    to: '/development/translations/',
+  },
+  {
+    from: '/environment/',
+    to: '/development/environment/',
+  },
+  {
+    from: '/environment/pycharm/',
+    to: '/development/environment/pycharm/',
+  },
+  {
+    from: '/environment/u2f/',
+    to: '/development/environment/u2f/',
+  },
+  {
+    from: '/testing/',
+    to: '/development/testing/',
+  },
+  {
+    from: '/philosophy/',
+    to: '/development/philosophy/',
+  },
+  {
+    from: '/commit-messages/',
+    to: '/development/commit-messages/',
+  },
+  {
+    from: '/code-review/',
+    to: '/development/code-review/',
+  },
+  {
+    from: '/workflow/',
+    to: '/development/workflow/',
+  },
+  {
+    from: '/continuous-integration/',
+    to: '/development/continuous-integration/',
+  },
+  {
+    from: '/python-dependencies/',
+    to: '/development/python-dependencies/',
+  },
+  {
+    from: '/rust/',
+    to: '/development/rust/',
+  },
+  {
+    from: '/database-migrations/',
+    to: '/development/database-migrations/',
+  },
+  {
+    from: '/testing/',
+    to: '/development/testing/',
+  },
+  {
+    from: '/analytics/',
+    to: '/development/analytics/',
+  },
+  {
+    from: '/architecture/',
+    to: '/application/architecture/',
+  },
+  {
+    from: '/sentry-vs-getsentry/',
+    to: '/application/sentry-vs-getsentry/',
+  },
+  {
+    from: '/config/',
+    to: '/application/config/',
+  },
+  {
+    from: '/issue-platform/',
+    to: '/application/issue-platform/',
+  },
+  {
+    from: '/issue-platform-detectors/',
+    to: '/application/issue-platform-detectors/',
+  },
+  {
+    from: '/feature-flags/',
+    to: '/application/feature-flags/',
+  },
+  {
+    from: '/feature-flags/flagpole/',
+    to: '/application/feature-flags/flagpole/',
+  },
+  {
+    from: '/ab-testing/',
+    to: '/application/ab-testing/',
+  },
+  {
+    from: '/options/',
+    to: '/application/options/',
+  },
+  {
+    from: '/serializers/',
+    to: '/application/serializers/',
+  },
+  {
+    from: '/grouping/',
+    to: '/application/grouping/',
+  },
+  {
+    from: '/pii/',
+    to: '/application/pii/',
+  },
+  {
+    from: '/pii/types/',
+    to: '/application/pii/types/',
+  },
+  {
+    from: '/pii/methods/',
+    to: '/application/pii/methods/',
+  },
+  {
+    from: '/pii/selectors/',
+    to: '/application/pii/selectors/',
+  },
+  {
+    from: '/transaction-clustering/',
+    to: '/application/transaction-clustering/',
+  },
+  {
+    from: '/dynamic-sampling/',
+    to: '/application/dynamic-sampling/',
+  },
+  {
+    from: '/dynamic-sampling/architecture/',
+    to: '/application/dynamic-sampling/architecture/',
+  },
+  {
+    from: '/dynamic-sampling/fidelity-and-biases/',
+    to: '/application/dynamic-sampling/fidelity-and-biases/',
+  },
+  {
+    from: '/dynamic-sampling/the-big-picture/',
+    to: '/application/dynamic-sampling/the-big-picture/',
+  },
+  {
+    from: '/feedback-architecture/',
+    to: '/application/feedback-architecture/',
+  },
+  {
+    from: '/feature-flags/options-backed-features/',
+    to: '/application/feature-flags/options-backed-features/',
+  },
+  {
+    from: '/options/',
+    to: '/backend/options/',
+  },
+  {
+    from: '/sdk/features/data-handling/',
+    to: '/sdk/data-handling/',
+  },
+  {
+    from: '/sdk/craft-quick-start/',
+    to: '/sdk/processes/releases/',
+  },
+  {
+    from: '/sdk/metrics/',
+    to: '/sdk/telemetry/metrics/',
+  },
+  {
+    from: '/sdk/check-ins/',
+    to: '/sdk/telemetry/check-ins/',
+  },
+  {
+    from: '/sdk/profiles/',
+    to: '/sdk/telemetry/profiles/',
+  },
+  {
+    from: '/sdk/distributed-tracing/',
+    to: '/sdk/telemetry/traces/distributed-tracing/',
+  },
+];
+
+const redirectMap = new Map(
+  (isDeveloperDocs ? DEVELOPER_DOCS_REDIRECTS : USER_DOCS_REDIRECTS).map(r => [
+    r.from as string,
+    r.to,
+  ])
+);

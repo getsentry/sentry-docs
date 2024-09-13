@@ -14,7 +14,7 @@ export function sortBy<A>(arr: A[], comp: (v: A) => number): A[] {
   });
 }
 
-export const capitilize = (str: string) => {
+export const capitalize = (str: string) => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
@@ -29,6 +29,7 @@ export const splitToChunks = <T>(numChunks: number, arr: T[]): T[][] => {
 
 type Page = {
   context: {
+    sidebar_hidden?: boolean;
     sidebar_order?: number;
     sidebar_title?: string;
     title?: string;
@@ -91,3 +92,5 @@ export function captureException(exception: unknown): void {
 export function isTruthy<T>(value: T | undefined | null): value is T {
   return value !== undefined && value !== null;
 }
+
+export const isLocalStorageAvailable = () => typeof localStorage !== 'undefined';

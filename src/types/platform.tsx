@@ -59,6 +59,12 @@ export interface PlatformGuide
    * The relative URL to the docs for this guide
    */
   url: string;
+  /**
+   * Useful to define the "parent" guide. When specified the Guide will inherit configuration values
+   * from the parent guide. This is useful for node-based guides such as express, as their parent platform
+   * is javascript and "node" should be a guide that can be inherited from.
+   */
+  fallbackGuide?: string;
 }
 
 export interface PlatformIntegration extends Omit<PlatformGuide, 'type'> {

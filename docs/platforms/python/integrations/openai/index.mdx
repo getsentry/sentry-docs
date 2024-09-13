@@ -16,9 +16,9 @@ If you want to try the beta features and are willing to give feedback, please le
 This integration connects Sentry with the [OpenAI Python SDK](https://github.com/openai/openai-python).
 The integration has been confirmed to work with OpenAI 1.13.3.
 
-Once you've installed this SDK, you can use Sentry AI Monitoring, a Sentry dashboard that helps you understand what's going on with your AI pipelines.
+Once you've installed this SDK, you can use Sentry LLM Monitoring, a Sentry dashboard that helps you understand what's going on with your AI pipelines.
 
-Sentry AI Monitoring will automatically collect information about prompts, tokens, and models from providers like OpenAI. Learn more about it [here.](/product/ai-monitoring)
+Sentry LLM Monitoring will automatically collect information about prompts, tokens, and models from providers like OpenAI. Learn more about it [here](/product/insights/llm-monitoring).
 
 ## Install
 
@@ -34,24 +34,11 @@ If you have the `openai` package in your dependencies, the OpenAI integration wi
 
 An additional dependency, `tiktoken`, is required if you want to calculate token usage for streaming chat responses.
 
-<SignInNote />
-
-```python
-import sentry_sdk
-from openai import OpenAI
-
-sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
-    traces_sample_rate=1.0,
-)
-
-client = OpenAI()
-```
+<PlatformContent includePath="getting-started-config" />
 
 ## Verify
 
-Verify that the integration works by creating an AI pipeline. The resulting data should show up in your AI monitoring dashboard.
+Verify that the integration works by creating an AI pipeline. The resulting data should show up in your LLM monitoring dashboard.
 
 
 ```python
@@ -75,7 +62,7 @@ def my_pipeline():
       )
 ```
 
-After running this script, a pipeline will be created in the [AI Monitoring](/product/ai-monitoring) section of the Sentry dashboard. The pipeline will have an associated OpenAI span for the `chat.completions.create` operation.
+After running this script, a pipeline will be created in the [LLM Monitoring](/product/insights/llm-monitoring) section of the Sentry dashboard. The pipeline will have an associated OpenAI span for the `chat.completions.create` operation.
 
 It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 
@@ -98,17 +85,31 @@ import sentry_sdk
 from sentry_sdk.integrations.openai import OpenAIIntegration
 
 sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
+    # ...
     send_default_pii=True,
-    traces_sample_rate=1.0,
     integrations = [
         OpenAIIntegration(
-            include_prompts=False, # LLM/tokenizer inputs/outputs will be not sent to Sentry, despite send_default_pii=True
+            include_prompts=False,  # LLM/tokenizer inputs/outputs will be not sent to Sentry, despite send_default_pii=True
+            tiktoken_encoding_name="cl100k_base",
         ),
     ],
 )
 ```
+
+You can pass the following keyword arguments to `OpenAIIntegration()`:
+
+- `include_prompts`:
+
+  Whether LLM and tokenizer inputs and outputs should be sent to Sentry. Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
+
+  The default is `True`.
+
+- `tiktoken_encoding_name`:
+
+  If you want to calculate token usage for streaming chat responses you need to have an additional dependency, [tiktoken](https://pypi.org/project/tiktoken/) installed and specify the `tiktoken_encoding_name` that you use for tokenization. See the [OpenAI Cookbook](https://cookbook.openai.com/examples/how_to_count_tokens_with_tiktoken) for possible values.
+
+  The default is `None`.
+
 
 ## Supported Versions
 
