@@ -214,6 +214,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/go/guides/fasthttp/',
   },
   {
+    from: '/platforms/go/fiber/',
+    to: '/platforms/go/guides/fiber/',
+  },
+  {
     from: '/platforms/go/echo/',
     to: '/platforms/go/guides/echo/',
   },
