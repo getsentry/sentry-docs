@@ -5,7 +5,7 @@ sidebar_order: 30
 
 In addition to making its source code available publicly, Sentry offers and maintains a minimal setup that works out-of-the-box for simple use cases. This version comes with no guarantees or dedicated support. Sentry engineers will do their best to answer questions and are dedicated to making sure self-hosted is running, but that's where our involvement ends. For anything else, we expect users to rely on the [Sentry Self-Hosted community](https://discord.gg/sentry) on Discord. The self-hosted repository should serve as a blueprint for how various Sentry services connect for a complete setup. This will be useful for folks willing to maintain larger installations with custom infrastructure.
 
-For the sake of simplicity and ubiquity, we have chosen to use [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/), along with a bash-based install and upgrade script.
+For the sake of simplicity and ubiquity, we have chosen to use [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/), along with a bash-based install and upgrade script.
 
 If you're self-hosting Sentry and want to know how to switch to Sentry SaaS, check out this [live workshop](https://sentry.io/resources/migrate-to-sentry-saas-workshop/) to learn more about our relocation tooling.
 
@@ -93,23 +93,24 @@ Environment="NO_PROXY=127.0.0.0/8"
 
 From there you can run `./install.sh` like usual.
 
-By default Sentry sends anonymous usage statistics to the Sentry team. It helps to improve the product. Also there can be different external integrations with third party services like Slack or Twilio. To make these features work it's required to allow Docker containers to access the Internet. To add your proxy environment variables into Sentry's Docker containers, create `~/.docker/config.json` with these contents:
+By default Sentry sends anonymous usage statistics to the Sentry team. It helps to improve the product. You can disable this feature by adding `SENTRY_BEACON = False` into `sentry.conf.py` file. Also there can be different external integrations with third party services like Slack or Twilio. To make these features work it's required to allow Docker containers to access the Internet. To add your proxy environment variables into Sentry's Docker containers, create `/etc/docker/config.json` file (or `~/.docker/config.json` if you're running Docker on rootless mode) with these contents:
 
 ```json
 {
- "proxies":
- {
-   "default":
-   {
-     "httpProxy": "http://proxy:3128",
-     "httpsProxy": "http://proxy:3128",
-     "noProxy": "relay,web,sentry,127.0.0.0/8"
-   }
- }
+  "proxies": {
+    "httpProxy": "http://proxy:3128",
+    "httpsProxy": "http://proxy:3128",
+    "noProxy": "smtp,memcached,redis,postgres,kafka,clickhouse,snuba-api,symbolicator,web,worker,nginx,relay,vroom,172.17.0.0/16,127.0.0.0/8"
+  }
 }
 ```
 
-You can disable this feature by adding `SENTRY_BEACON = False` into `sentry.conf.py` file.
+To apply new Docker daemon configuration, restart your Docker service with `systemctl restart docker.service`.
+
+<Alert title="Note" level="info">
+  The value `172.17.0.0/16` is the default IP pools for Docker. If you are customizing your Docker default IP pools, please modify the value accordingly.
+  Further information regarding Docker default IP pools can be found on the [Troubleshooting guide](/self-hosted/troubleshooting/#docker-network-conflicting-ip-address).
+</Alert>
 
 ## Errors-only Self-hosted Sentry
 
