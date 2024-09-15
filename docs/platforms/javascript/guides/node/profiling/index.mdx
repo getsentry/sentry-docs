@@ -37,8 +37,6 @@ pnpm add @sentry/node @sentry/profiling-node
 
 To enable profiling, import `@sentry/profiling-node`, add `ProfilingIntegration` to your `integrations`, and set the `profilesSampleRate`.
 
-<SignInNote />
-
 ```javascript
 const Sentry = require("@sentry/node");
 const { nodeProfilingIntegration } = require("@sentry/profiling-node");
@@ -50,7 +48,12 @@ Sentry.init({
     nodeProfilingIntegration(),
   ],
   tracesSampleRate: 1.0,
-  // Set sampling rate for profiling - this is relative to tracesSampleRate
+
+  // Set profilesSampleRate to 1.0 to profile every transaction.
+  // Since profilesSampleRate is relative to tracesSampleRate,
+  // the final profiling rate can be computed as tracesSampleRate * profilesSampleRate
+  // For example, a tracesSampleRate of 0.5 and profilesSampleRate of 0.5 would
+  // result in 25% of transactions being profiled (0.5*0.5=0.25)
   profilesSampleRate: 1.0,
 });
 
@@ -67,6 +70,62 @@ Sentry.startSpan(
   }
 );
 ```
+
+Alternatively, instead of a `profilesSampleRate` your can also provide a `profilesSampler` function:
+
+```javascript
+const Sentry = require("@sentry/node");
+const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    // Add our Profiling integration
+    nodeProfilingIntegration(),
+  ],
+  tracesSampleRate: 1.0,
+
+  // This function will be called for every sampled span
+  // to determine if it should be profiled
+  profilesSampler: (samplingContext) => {
+    return 1.0;
+  },
+});
+```
+
+## Enable Continuous Profiling
+
+<Include name="feature-stage-beta.mdx" />
+
+_(New in version 8.28.0)_
+
+The current profiling implementation stops the profiler automatically after 30 seconds (unless you manually stop it earlier). Naturally, this limitation makes it difficult to get full coverage of your app's execution. We now offer an experimental continuous mode, where profiling data is periodically uploaded while running, with no limit on how long the profiler may run.
+
+To get started with continuous profiling, you can start and stop the profiler directly with `Sentry.profiler.startProfiling` and `Sentry.profiler.stopProfiling`.
+
+<Note>
+
+If you previously set `profilesSampleRate` or `profilesSampler` to use transaction-based profiling, you must remove those lines of code from your configuration in order to use continuous profiling.
+
+</Note>
+
+```js
+const Sentry = require("@sentry/node");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+});
+
+Sentry.profiler.startProfiling();
+
+// run some code here
+
+Sentry.profiler.stopProfiling();
+```
+
+These new APIs do not offer any sampling functionality—every call to start the profiler will run and start sending profiling data. If you are interested in reducing the amount of profiles that run, you must take care to do it at the callsites.
+
+Continuous profiling has implications for your org's billing structure. This feature is only available for subscription plans that enrolled after June 5, 2024.
 
 ## How Does It Work?
 
@@ -89,8 +148,9 @@ We recommend you have your own CPU resource-monitoring in place, because the act
 
 Starting from version `0.1.0`, the `@sentry/profiling-node` package precompiles binaries for a number of common architectures. This minimizes the tooling required to run the package and avoids compiling the package from source in most cases, which speeds up installation. Currently, we ship prebuilt binaries for the following architectures and Node versions:
 
+- macOS arm64: Node v16, v18, v20, v22
 - macOS x64: Node v16, v18, v20, v22
-- Linux ARM64 (musl): Node v16, v18, v20, v22
+- Linux arm64 (musl): Node v16, v18, v20, v22
 - Linux x64 (glibc): Node v16, v18, v20, v22
 - Windows x64: Node v16, v18, v20, v22
 

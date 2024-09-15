@@ -9,7 +9,6 @@ import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypePresetMinify from 'rehype-preset-minify';
 import rehypePrismDiff from 'rehype-prism-diff';
 import rehypePrismPlus from 'rehype-prism-plus';
-import rehypeSlug from 'rehype-slug';
 import remarkGfm from 'remark-gfm';
 import remarkMdxImages from 'remark-mdx-images';
 
@@ -17,7 +16,9 @@ import getAppRegistry from './build/appRegistry';
 import getPackageRegistry from './build/packageRegistry';
 import {apiCategories} from './build/resolveOpenAPI';
 import getAllFilesRecursively from './files';
+import remarkDefList from './mdx-deflist';
 import rehypeOnboardingLines from './rehype-onboarding-lines';
+import rehypeSlug from './rehype-slug.js';
 import remarkCodeTabs from './remark-code-tabs';
 import remarkCodeTitles from './remark-code-title';
 import remarkComponentSpacing from './remark-component-spacing';
@@ -303,6 +304,7 @@ export async function getFileBySlug(slug: string) {
         remarkExtractFrontmatter,
         [remarkTocHeadings, {exportRef: toc}],
         remarkGfm,
+        remarkDefList,
         remarkFormatCodeBlocks,
         [remarkImageSize, {sourceFolder: cwd, publicFolder: path.join(root, 'public')}],
         remarkMdxImages,

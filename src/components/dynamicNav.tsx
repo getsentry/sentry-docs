@@ -3,6 +3,7 @@ import {Fragment} from 'react';
 import {serverContext} from 'sentry-docs/serverContext';
 import {sortPages} from 'sentry-docs/utils';
 
+import {NavChevron} from './sidebar/navChevron';
 import {SidebarLink} from './sidebarLink';
 import {SmartLink} from './smartLink';
 
@@ -111,6 +112,7 @@ type Props = {
   showDepth?: number;
   suppressMissing?: boolean;
   title?: string;
+  withChevron?: boolean;
 };
 
 export function DynamicNav({
@@ -124,6 +126,7 @@ export function DynamicNav({
   suppressMissing = false,
   noHeadingLink = false,
   headerClassName,
+  withChevron = false,
 }: Props) {
   if (root.startsWith('/')) {
     root = root.substring(1);
@@ -161,11 +164,12 @@ export function DynamicNav({
     parentNode && !noHeadingLink ? (
       <SmartLink
         to={`/${root}/`}
-        className={`${headerClassName} ${path.join('/') === root ? 'active' : ''}`}
+        className={`${headerClassName} ${path.join('/') === root ? 'active' : ''} justify-between`}
         activeClassName="active"
         data-sidebar-link
       >
         <h6>{title}</h6>
+        {withChevron && <NavChevron direction={isActive ? 'down' : 'right'} />}
       </SmartLink>
     ) : (
       <div className={headerClassName} data-sidebar-link>
@@ -177,7 +181,7 @@ export function DynamicNav({
     <li className="mb-3" data-sidebar-branch>
       {header}
       {(!collapse || isActive) && entity.children && (
-        <ul data-sidebar-tree>
+        <ul data-sidebar-tree className="pl-3">
           {prependLinks &&
             prependLinks.map(link => (
               <SidebarLink to={link[0]} key={link[0]} title={link[1]} path={linkPath} />

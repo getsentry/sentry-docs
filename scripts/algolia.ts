@@ -23,7 +23,12 @@
 import fs from 'fs';
 import {join} from 'path';
 
-import {extrapolate, htmlToAlgoliaRecord} from '@sentry-internal/global-search';
+import {
+  extrapolate,
+  htmlToAlgoliaRecord,
+  sentryAlgoliaIndexSettings,
+  standardSDKSlug,
+} from '@sentry-internal/global-search';
 import algoliasearch, {SearchIndex} from 'algoliasearch';
 
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
@@ -90,6 +95,12 @@ async function indexAndUpload() {
     deleteResult.objectIDs.length,
     DOCS_INDEX_NAME
   );
+
+  if (!isDeveloperDocs) {
+    console.log('🔥 Applying custom index settings ...');
+    await index.setSettings(sentryAlgoliaIndexSettings);
+    console.log(`🔥 Applied custom settings to ${DOCS_INDEX_NAME}`);
+  }
 }
 
 async function fetchExistingRecordIds(algoliaIndex: SearchIndex) {
@@ -121,6 +132,17 @@ async function generateAlogliaRecords(pageFrontMatters: FrontMatter[]) {
 async function getRecords(pageFm: FrontMatter) {
   console.log('processing:', pageFm.slug);
 
+  let sdk: string | undefined;
+  let framework: string | undefined;
+  if (pageFm.slug.includes('platforms/')) {
+    sdk = standardSDKSlug(pageFm.slug.split('/')[1])?.slug as string;
+    framework = sdk;
+
+    if (pageFm.slug.includes('/guides/')) {
+      framework = standardSDKSlug(pageFm.slug.split('/')[3])?.slug as string;
+    }
+  }
+
   try {
     const htmlFile = join(staticHtmlFilesPath, pageFm.slug + '.html');
     const html = fs.readFileSync(htmlFile).toString();
@@ -131,6 +153,8 @@ async function getRecords(pageFm: FrontMatter) {
         url: '/' + pageFm.slug + '/',
         pathSegments: extrapolate(pageFm.slug, '/').map(x => `/${x}/`),
         keywords: pageFm.keywords,
+        sdk,
+        framework,
       },
       '#main'
     );

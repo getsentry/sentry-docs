@@ -6,7 +6,7 @@ notSupported: ["javascript.capacitor"]
 sidebar_order: 9000
 ---
 
-<Expandable title="Updating to a new Sentry SDK version">
+<Expandable permalink title="Updating to a new Sentry SDK version">
 
 If you update your Sentry SDK to a new major version, you might encounter breaking changes that need some adaption on your end.
 Check out our [migration guide](https://github.com/getsentry/sentry-javascript/blob/master/MIGRATION.md) to learn everything you need
@@ -14,7 +14,7 @@ to know to get up and running again with the latest Sentry features.
 
 </Expandable>
 
-<Expandable title="Debugging additional data">
+<Expandable permalink title="Debugging additional data">
 
 You can view the JSON payload of an event to see how Sentry stores additional data in the event. The shape of the data may not exactly match the description.
 
@@ -24,7 +24,7 @@ For more details, see the [full documentation on Event Payload](https://develop.
 
 </Expandable>
 
-<Expandable title="Max JSON payload size">
+<Expandable permalink title="Max JSON payload size">
 
 `maxValueLength` has a default value of 250, but you can adjust this value according to your needs if your messages are longer. Please note that not every single value is affected by this option.
 
@@ -32,7 +32,7 @@ For more details, see the [full documentation on Event Payload](https://develop.
 
 <PlatformCategorySection supported={['browser']}>
 
-<Expandable title="CORS attributes and headers">
+<Expandable permalink title="CORS attributes and headers">
 
 To gain visibility into a JavaScript exception thrown from scripts originating from different origins, do two things:
 
@@ -73,7 +73,7 @@ Most community CDNs properly set an `Access-Control-Allow-Origin` header.
 
 <PlatformCategorySection supported={['browser']}>
 
-<Expandable title="Unexpected OPTIONS request">
+<Expandable permalink title="Unexpected OPTIONS request">
 
 If your application started to misbehave because of performing additional OPTIONS requests, it is most likely an issue with unwanted `sentry-trace` request headers, which can happen when you are using too generic a configuration for our Tracing Integration in the Browser SDK.
 
@@ -83,7 +83,7 @@ To fix this, change the `tracePropagationTargets` option during SDK initializati
 </PlatformCategorySection>
 
 <PlatformCategorySection supported={['browser']}>
-<Expandable title="`instrument.js` Line Numbers for Console Log statements">
+<Expandable permalink title="`instrument.js` Line Numbers for Console Log statements">
 
 If `instrument.js` displays in your console while debugging, add Sentry to your [Framework Ignore List](https://developer.chrome.com/docs/devtools/settings/ignore-list/#skip-extensions) by adding this pattern: `/@sentry/`
 
@@ -93,7 +93,7 @@ Chrome then ignores the SDK stack frames when debugging.
 </PlatformCategorySection>
 
 <PlatformCategorySection supported={['browser']}>
-<Expandable title="Dealing with Ad-Blockers">
+<Expandable permalink title="Dealing with Ad-Blockers">
 
 When you are using our CDN, ad-blocking or script-blocking extensions may prevent our SDK from being fetched and initialized properly. Because of this, any call to the SDKs API will fail and may cause your application to behave unexpectedly.
 
@@ -105,7 +105,7 @@ You can work around our CDN bundles being blocked by [using our NPM packages](#u
 
 </Expandable>
 
-<Expandable title="Using the `tunnel` Option">
+<Expandable permalink title="Using the `tunnel` Option">
 
 <PlatformSection supported={["javascript.nextjs"]}>
 
@@ -127,8 +127,6 @@ A tunnel is an HTTP endpoint that acts as a proxy between Sentry and your applic
 Starting with version `6.7.0` of the JavaScript SDK, you can use the `tunnel` option to tell the SDK to deliver events to the configured URL, instead of using the DSN. This allows the SDK to remove `sentry_key` from the query parameters, which is one of the main reasons ad-blockers prevent sending events in the first place. This option also stops the SDK from sending preflight requests, which was one of the requirements that necessitated sending the `sentry_key` in the query parameters.
 
 To enable the `tunnel` option, provide either a relative or an absolute URL in your `Sentry.init` call. When you use a relative URL, it's relative to the current origin, and this is the form that we recommend. Using a relative URL will not trigger a preflight CORS request, so no events will be blocked, because the ad-blocker will not treat these events as third-party requests.
-
-<SignInNote />
 
 ```javascript
 Sentry.init({
@@ -221,7 +219,8 @@ const SENTRY_PROJECT_IDS = ["123456"];
 
 export const postAction = async ({ request }) => {
   try {
-    const envelope = await request.text();
+    const envelopeBytes = await req.arrayBuffer();
+    const envelope = new TextDecoder().decode(envelopeBytes);
     const piece = envelope.split("\n")[0];
     const header = JSON.parse(piece);
     const dsn = new URL(header["dsn"]);
@@ -236,7 +235,7 @@ export const postAction = async ({ request }) => {
     }
 
     const upstream_sentry_url = `https://${SENTRY_HOST}/api/${project_id}/envelope/`;
-    await fetch(upstream_sentry_url, { method: "POST", body: envelope });
+    await fetch(upstream_sentry_url, { method: "POST", body: envelopeBytes });
 
     return json({}, { status: 200 });
   } catch (e) {
@@ -308,7 +307,7 @@ If you would like to copy and paste the snippet directly, here it is minified:
 
 </PlatformCategorySection>
 
-<Expandable title="Third party promise libraries">
+<Expandable permalink title="Third party promise libraries">
 
 When you include and configure Sentry, our JavaScript SDK automatically attaches global handlers to _capture_ uncaught exceptions and unhandled promise rejections. You can disable this default behavior by changing the `onunhandledrejection` option to `false` in your GlobalHandlers integration and manually hook into each event handler, then call `Sentry.captureException` or `Sentry.captureMessage` directly.
 
@@ -316,7 +315,7 @@ You may also need to manage your configuration if you are using a third-party li
 
 </Expandable>
 
-<Expandable title="Events with 'Non-Error Exception'">
+<Expandable permalink title="Events with 'Non-Error Exception'">
 
 If you’re seeing errors with the message “Non-Error exception (or promise rejection) captured with keys: x, y, z.”, this happens when you a) call `Sentry.captureException()` with a plain object, b) throw a plain object, or c) reject a promise with a plain object.
 
@@ -328,7 +327,7 @@ To get better insight into these error events, we recommend finding where the pl
 
 <PlatformCategorySection supported={['browser']}>
 
-<Expandable title="Capturing resource 404s">
+<Expandable permalink title="Capturing resource 404s">
 
 By default, Sentry does not capture errors when a resource (like an image or a css file) fails to load. If you would like it to do so, you can use the following code. (Note: We recommend loading Sentry as early as possible in any case, but this method in particular will only work if Sentry is loaded before other resources.)
 
@@ -339,14 +338,12 @@ document.body.addEventListener(
     if (!event.target) return;
 
     if (event.target.tagName === "IMG") {
-      Sentry.captureMessage(
-        `Failed to load image: ${event.target.src}`,
-        "warning"
+      Sentry.captureException(
+        new Error(`Failed to load image: ${event.target.src}`)
       );
     } else if (event.target.tagName === "LINK") {
-      Sentry.captureMessage(
-        `Failed to load css: ${event.target.href}`,
-        "warning"
+      Sentry.captureException(
+        new Error(`Failed to load css: ${event.target.href}`)
       );
     }
   },
@@ -359,7 +356,7 @@ Remember to pass in `true` as the second parameter to `addEventListener()`. With
 </Expandable>
 </PlatformCategorySection>
 
-<Expandable title="Build errors with vite">
+<Expandable permalink title="Build errors with vite">
 
 If you're using the [Vite Bundler](https://vitejs.dev/) and a Sentry NPM package, and you see the following error:
 
@@ -383,7 +380,7 @@ export default defineConfig({
 
 </Expandable>
 
-<Expandable title="Missing module `diagnostics_channel`">
+<Expandable permalink title="Missing module `diagnostics_channel`">
 
 <Include name="diagnostics-channel-build-error-troubleshooting.mdx" />
 
