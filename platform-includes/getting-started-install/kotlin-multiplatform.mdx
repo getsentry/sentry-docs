@@ -2,49 +2,34 @@ To install the Kotlin Multiplatform SDK, you need to add the following to your `
 
 ```kotlin {filename:shared/build.gradle.kts}
 plugins {
-    kotlin("multiplatform")
-    kotlin("native.cocoapods")
+    id("io.sentry.kotlin.multiplatform.gradle") version {{@inject packages.version('sentry.kotlin.gradle.kmp', '0.9.0') }}
     // .. your other plugins
 }
+```
 
-kotlin {
-  android()
-  iosX64()
-  iosArm64()
-  iosSimulatorArm64()
+If you support all the targets then the plugin will auto install the KMP dependency.
+Otherwise you will have to manually install the KMP dependency.
 
-  sourceSets {
-    val commonMain by getting {
-      dependencies {
-        implementation("io.sentry:sentry-kotlin-multiplatform:{{@inject packages.version('sentry.kotlin.kmp', '0.0.1-alpha.2') }}")
-      }
-    }
+## Installing Sentry Cocoa dependency
 
-    // Android target
-    val androidMain by getting {
-      dependsOn(commonMain)
-    }
+In order for the SDK to properly work for Apple targets, it is required to install the Sentry Cocoa SDK.
+The important step is that in order to use the Sentry Cocoa SDK within KMP we need to configure the linker to point to the framework.
+so that during compilation it knows how to resolve the symbols.
 
-    // Apple targets:
-    val iosMain by getting {
-      dependsOn(commonMain)
-    }
-  }
+### Cocoapods
 
-  cocoapods {
-    summary = "Some description for the Shared Module"
-    homepage = "Link to the Shared Module homepage"
-    ios.deploymentTarget = "14.1"
-    podfile = project.file("../iosApp/Podfile")
-    // Make sure you use the proper version according to our Cocoa SDK Version Compatibility Table.
-    pod("Sentry") {
-      version = "~> 8.25"
-      linkOnly = true
-      extraOpts += listOf("-compiler-option", "-fmodules")
-    }
-    framework {
-      baseName = "shared"
-    }
-  }
+If you use the Cocoapods Gradle plugin the plugin will try to install the Sentry Cocoa SDK through the Cocoapods plugin. If there is an existing one, it will ignore it. The Cocoapods Gradle Plugin automatically sets up linking for you.
+
+### Swift Package Manager
+
+If you use Swift Package Manager (SPM) then the plugin will try to set up the linking for you.
+Based on the project path it will determine where Xcode has cached the Sentry framework and use
+that to link the framework.
+
+If you have a custom path to the project you can use the plugin to configure that.
+
+```kotlin {filename:shared/build.gradle.kts}
+senryKmp {
+  xcodeProjPath = "your_path/iOS.xcodeproj"
 }
 ```
