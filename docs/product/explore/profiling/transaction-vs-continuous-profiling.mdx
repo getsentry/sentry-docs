@@ -1,8 +1,46 @@
-
 ---
-title: "Transaction vs Continuous Profiling"
-sidebar_order: 120
-description: "Continuous and transaction based profiling are two different modes with which you can profile the runtime of your application. They approach profiling from a different points of view with different tradeoffs. The documentation here serves as an explanation of those tradeoffs."
+title: Transaction vs Continuous Profiling
+sidebar_order: 140
+description: "Continuous and transaction based profiling are two different modes with which you can profile the runtime of your application. This document serves as an explanation as to why we did it and what it enables."
 ---
 
-Nothing to see here
+<Note>
+We have released a new profiling mode called continuous profiling mode with fundamental differences from the previous transaction based profiling mode. This document serves as an explanation as to why we did so along with a couple of things that are helpful to know.
+</Note>
+
+## A bit of context first
+
+Transaction based profiling was the first profiling mode supported at Sentry, it  simply means that any code executed between Sentry.startTransaction and transaction.finish is subject to being profiled. In this mode, all profiles are attached to transactions (and are even sent as part of the same envelope). This has the benefit of automatically profiling parts of the application that are actually instrumented while requiring no extra effort. This approach however has drawback that continuous profiling aims to address, one of the most obvious ones being that profiles cannot exceed 30 second durations.
+
+In theory, transactions can be infinitely long as their duration does not impact payload size as start and end are represented by two timestamps. Profiles however are different, each stack sample that is collected by the profiler increases the payload size, which is why all Sentry SDKs had enforced a max profile duration of 30s. This limitation helps us safeguard from large payload that could otherwise harm your application performance. This unfortunately comes at the expense of limiting profiling capabilities as it means profiling is now no longer able to profile long running tasks like machine learning pipelines or build workflows. This feedback was the major driving force why we've introduced continuous profiling.
+
+The cap on max profile duration is however not the only drawback of transaction based profiling, another limitation of it is that the profiling data you collect, will only ever be as good as the instrumentation you have. In other words, if there are parts of your application that you did not instrument, the chance of you finding out that they are slowing down your application are near zero.
+
+To address these limitations, we have worked on a different profiling mode, one that does not impose constraints on profile durations and can surface parts of your application that might be slowing down your application even though you may not have instrumented them.
+
+## Continuous Profiling mode
+
+In countinuous profiling mode, the profiler runs continuously (no pun intended) and regularly flushes what we call profile "profile chunks" to the server, this enables us to extend profile durations and continuously profile your application.
+
+Continuous profiling mode is suitable for profiling long running workflows or processes that you want full visibility into, while the transaction based profiling is largely suitable for workflows where you want to limit profiling to only a subset of your application.
+
+
+## SDK Differences
+
+Transaction based profiling was opaque from the SDK point of view with the SDK being in full control of when the profiler woulds start and stop based on the transactions it would generate. In continuous profiling mode, this is no longer true. Developers can now control when the profiler is started or stopped via new top level SDK methods. The exact method naming varies, but most SDKs that support continuous profiling now expose a top level Sentry.profiler that exposes a startProfiling and stopProfiling method (please see SDK docs for exact definitions).
+
+It is advisable that you call the startProfiling method right after the Sentry SDK is initialized so that you gain visibility at the earliest point in your application lifecycle. From then on, the profiler will keep collecting profiles and sending chunks to Sentry until stopProfiling is called.
+
+## Enabling transaction or continuous profiling mode
+
+Unfortunately, it is currently not possible to use both profiling modes at the same time, as they are mutually exlusive. Since the mode you intend on using depend on the SDK initialization arguments, it means that the profiling mode will have to be selected at the time the Sentry SDK is initialized.
+
+In order to enable continuous profiling mode, you should ensure that neither profileSampleRate or profilesSampler are set as the values to the Sentry.Init call. If either of those value are set, the SDK will default to transaction based profiling. When the SDK is configured for continuous profiling, the top level calls to start profiles will enable calls to the profiler. If the SDK is configured for transaction based profiling, then these calls will void and not trigger the profiler.
+
+Note that while the profiling mode cannot be changed at runtime, it is fine for different projects or applications to use different profiling modes, or to switch modes.
+
+## Differences in Product Experience
+
+The major difference in product experience when using continuous profiling is that you will be able to visualize a flamegraph for your entire application, which means you can now take a step back from the previous transaction based view and look at your application's runtime as a whole. This makes it easier to for you to prioritize the functions that are slowing down your entire application and not just one particular transaction.
+
+The product experience otherwise remains largely the same with entrypoints into profiling being supported from various parts of the performance product.
