@@ -35,7 +35,35 @@ It is advisable that you call the startProfiling method right after the Sentry S
 
 Unfortunately, it is currently not possible to use both profiling modes at the same time, as they are mutually exlusive. Since the mode you intend on using depend on the SDK initialization arguments, it means that the profiling mode will have to be selected at the time the Sentry SDK is initialized.
 
-In order to enable continuous profiling mode, you should ensure that neither profileSampleRate or profilesSampler are set as the values to the Sentry.Init call. If either of those value are set, the SDK will default to transaction based profiling. When the SDK is configured for continuous profiling, the top level calls to start profiles will enable calls to the profiler. If the SDK is configured for transaction based profiling, then these calls will void and not trigger the profiler.
+To enable continuous profiling mode, you should ensure that neither profileSampleRate or profilesSampler are set as the values to the Sentry.Init call. If either of those value are set, the SDK will default to transaction based profiling. When the SDK is configured for continuous profiling, the top level calls to start profiles will enable calls to the profiler. If the SDK is configured for transaction based profiling, then these calls will void and not trigger the profiler.
+
+Example of enabling continuous profiling in NodeJS
+
+```javascript
+Sentry.Init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [nodeProfilingIntegration()]
+})
+
+Sentry.profiler.startProfiling();
+```
+
+If you wish to keep using transaction based profiling, then the options remain the same and you should either set profilesSampleRate or profilesSampler option on the SDK.
+
+
+Example of enabling transaction based profiling in NodeJS
+
+```javascript
+Sentry.Init({
+  dsn: "___PUBLIC_DSN___",
+  profileSampleRate: 0.1 // profiles 10% of transactions
+  integrations: [nodeProfilingIntegration()]
+})
+
+const transaction = Sentry.startTransaction();
+//code executed between these two calls is subject to profiling
+transaction.finish();
+```
 
 Note that while the profiling mode cannot be changed at runtime, it is fine for different projects or applications to use different profiling modes, or to switch modes.
 
