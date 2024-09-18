@@ -1,0 +1,47 @@
+---
+title: Process Isolation
+description: "Learn more about how process isolation (or request isolation) works in the Sentry SDK."
+supported:
+  - javascript.nextjs
+  - javascript.node
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.hapi
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.astro
+  - javascript.remix
+notSupported:
+  - javascript
+---
+
+In server-side environments, the <PlatformLink to='/enriching-events/scopes'>isolation scope</PlatformLink> is automatically forked around request boundaries. This means that each request will have its own isolation scope, and data set on the isolation scope will only apply to events captured during that request. This is done automatically by the SDK.
+
+However, the request isolation happens when the request itself is processed. This means that if you e.g. have a middleware where you want to set Sentry data (e.g. `Sentry.setUser()` in an auth middleware), you have to manually fork the isolation scope with `Sentry.withIsolationScope()` - see [Using withIsolationScope](../scopes/#using-withisolationscope).
+
+This is also necessary if you want to isolate a non-request process, e.g. a background job.
+
+The following example shows how you can use `withIsolationScope` to attach a user and a tag in an auth middleware:
+
+```javascript
+const auth = (req, res, next) => {
+  Sentry.withIsolationScope(() => {
+    const authUser = findUserForHeader(req.headers["authorization"]);
+    if (!authUser) {
+      Sentry.setTag("Authenticated", false);
+      Sentry.setUser(null);
+      next(new Error("Authentication Error"));
+    } else {
+      Sentry.setTag("Authenticated", true);
+      Sentry.setUser(authUser);
+      next();
+    }
+  });
+};
+```
+
+This way, the user & tag will only be attached to events captured during the request that passed the auth middleware.
