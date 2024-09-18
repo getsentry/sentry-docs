@@ -21,27 +21,16 @@ notSupported:
 
 In server-side environments, the <PlatformLink to='/enriching-events/scopes'>isolation scope</PlatformLink> is automatically forked around request boundaries. This means that each request will have its own isolation scope, and data set on the isolation scope will only apply to events captured during that request. This is done automatically by the SDK.
 
-However, the request isolation happens when the request callback itself is being executed. This means that if you e.g. have a middleware where you want to set Sentry data (e.g. `Sentry.setUser()` in an auth middleware), you have to manually fork the isolation scope with `Sentry.withIsolationScope()` - see [Using withIsolationScope](../scopes/#using-withisolationscope).
+However, tehre are also other cases where you may want to have isolation, for example in background jobs or when you want to isolate a specific part of your code. In these cases, you can use `Sentry.withIsolationScope()` to create a new isolation scope that is valid inside of the callback you pass to it - see [Using withIsolationScope](../scopes/#using-withisolationscope).
 
-This is also necessary if you want to isolate a non-request process, e.g. a background job.
-
-The following example shows how you can use `withIsolationScope` to attach a user and a tag in an auth middleware:
+The following example shows how you can use `withIsolationScope` to attach data for a specific job run:
 
 ```javascript
-const auth = (req, res, next) => {
-  Sentry.withIsolationScope(() => {
-    const authUser = findUserForHeader(req.headers["authorization"]);
-    if (!authUser) {
-      Sentry.setTag("Authenticated", false);
-      Sentry.setUser(null);
-      next(new Error("Authentication Error"));
-    } else {
-      Sentry.setTag("Authenticated", true);
-      Sentry.setUser(authUser);
-      next();
-    }
+async function job(jobId) {
+  return Sentry.withIsolationScope(async () => {
+    // Only valid for events in this callback
+    Sentry.setTag("jobId", jobId);
+    await doSomething();
   });
-};
+}
 ```
-
-This way, the user & tag will only be attached to events captured during the request that passed the auth middleware.
