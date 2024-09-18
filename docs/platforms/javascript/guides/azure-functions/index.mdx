@@ -1,52 +1,33 @@
 ---
 title: Azure Functions
-description: "Learn about using Sentry with Azure Functions."
+description: "Learn how to use Sentry's Azure Functions SDK."
 sdk: sentry.javascript.node
 fallbackGuide: javascript.node
 categories:
   - serverless
 ---
 
-Add `@sentry/node` as a dependency:
+## Features
 
-```bash {tabTitle:npm}
-npm install --save @sentry/node
-```
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
 
-```bash {tabTitle:Yarn}
-yarn add @sentry/node
-```
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+## Install
+
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "profiling"]}
+/>
+
+Sentry captures data by using an SDK within your application’s runtime. This means that you have to add `@sentry/node` as a runtime dependency to your application:
+
+<PlatformContent includePath="getting-started-install" />
+
+## Configure
 
 To set up Sentry error logging for an Azure Function:
 
-<SignInNote />
-
-```javascript
-"use strict";
-
-const Sentry = require("@sentry/node");
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-});
-
-module.exports = async function (context, req) {
-  try {
-    await notExistFunction();
-  } catch (e) {
-    Sentry.withScope((scope) => {
-      scope.setSDKProcessingMetadata({ request: req });
-      Sentry.captureException(e);
-    });
-    await Sentry.flush(2000);
-  }
-
-  context.res = {
-    status: 200,
-    body: "Hello from Azure Cloud Function!",
-  };
-};
-```
+<PlatformContent includePath="getting-started-config" />
 
 You can obtain the DSN using your Sentry account from your organization's _Settings > Projects > Client Keys (DSN)_ in the Sentry web UI.
 

@@ -1,0 +1,34 @@
+name: Delete Stale Vercel Preview Deployments
+
+on:
+  # Run the workflow daily at 2:00 AM UTC
+  schedule:
+    - cron: '0 2 * * *'
+  # Allows manual triggering of the workflow
+  workflow_dispatch:
+
+jobs:
+  delete-stale-deployments:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Run cleanup script for user docs
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_USER_DOCS }}
+          VERCEL_API_TOKEN: ${{ secrets.VERCEL_API_TOKEN }}
+          VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
+        run: bun scripts/preview-deployment-cleanup.ts
+
+      - name: Run cleanup script for developer docs
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_DEVELOP_DOCS }}
+          VERCEL_API_TOKEN: ${{ secrets.VERCEL_API_TOKEN }}
+          VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
+        run: bun scripts/preview-deployment-cleanup.ts

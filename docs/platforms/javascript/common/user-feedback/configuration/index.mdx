@@ -18,12 +18,13 @@ The following configuration options apply to version 8.0.0 and above of the Java
 
 The following options can be configured for the integration in `feedbackIntegration({})`:
 
-| Key            | Type                                       | Default           | Description                                                                                                                                                                                                                                |
-| -------------- | ------------------------------------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `autoInject`   | `boolean`                                  | `true`            | Injects the Feedback widget into the application when the integration is added. Set `autoInject: false` if you want to call `feedback.attachTo()` or `feedback.createWidget()` directly, or only want to show the widget on certain views. |
-| `showBranding` | `boolean`                                  | `true`            | Displays the Sentry logo inside of the form.                                                                                                                                                                                               |
-| `colorScheme`  | <code>"system" \| "light" \| "dark"</code> | `"system"`        | Shows the color theme choices. `"system"` will use your OS color scheme.                                                                                                                                                                   |
-| `id`           | `string`                                   | `sentry-feedback` | The `id` attribute of the `<div>` that contains the feedback widget. See [CSS Customization](#css-customization) for more.                                                                                                                 |
+| Key            | Type                                                                                      | Default           | Description                                                                                                                                                                                                                                |
+| -------------- | ----------------------------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `autoInject`   | `boolean`                                                                                 | `true`            | Injects the Feedback widget into the application when the integration is added. Set `autoInject: false` if you want to call `feedback.attachTo()` or `feedback.createWidget()` directly, or only want to show the widget on certain views. |
+| `showBranding` | `boolean`                                                                                 | `true`            | Displays the Sentry logo inside of the form.                                                                                                                                                                                               |
+| `colorScheme`  | <code>"system" \| "light" \| "dark"</code>                                                | `"system"`        | Shows the color theme choices. `"system"` will use your OS color scheme.                                                                                                                                                                   |
+| `id`           | `string`                                                                                  | `sentry-feedback` | The `id` attribute of the `<div>` that contains the feedback widget. See [CSS Customization](#css-customization) for more.                                                                                                                 |
+| `tags`         | `Record<string, number \| string \| boolean \| bigint \| symbol \| null \| undefined>` | `{}`              | <PlatformLink to="/enriching-events/tags/">Tags</PlatformLink> to set on the feedback event.                                                                                                                                                                                                         |
 
 ### Auto-Inject vs. Manual Injection
 
@@ -35,16 +36,45 @@ const feedback = feedbackIntegration({
   autoInject: false,
 });
 
+// Create and render the button
 const widget = feedback.createWidget();
-widget.appendToDom();
 
 // Later, when it's time to clean up:
 widget.removeFromDom();
 ```
+```typescript {tabTitle: NextJS}
+function ToggleFeedbackButton() {
+  const [feedback, setFeedback] = useState();
+  // Read `getFeedback` on the client only, to avoid hydration errors when server rendering
+  useEffect(() => {
+    setFeedback(Sentry.getFeedback());
+  }, []);
+
+  const [widget, setWidget] = useState();
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        if (widget) {
+          widget.removeFromDom();
+          setWidget(null);
+        } else {
+          setWidget(feedback.createWidget());
+        }
+      }}
+    >
+      {widget ? "Remove Widget" : "Create Widget"}
+    </button>
+  );
+}
+```
+
 
 Read more about how to [use your own UI](#bring-your-own-button) below.
 
 ### User and Form
+
+The following options can be configured for the integration in `feedbackIntegration({})`:
 
 | Key                | Type                     | Default                               | Description                                                                                                            |
 | ------------------ | ------------------------ | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
@@ -84,6 +114,7 @@ The following options can be configured for the integration in `feedbackIntegrat
 | Key                           | Default                                  | Description                                                                    |
 | ----------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------ |
 | `triggerLabel`                | `"Report a Bug"`                         | The label of the injected button that opens up the feedback form when clicked. |
+| `triggerAriaLabel`            | `triggerLabel` \|\| `"Report a Bug"`       | The aria label of the injected button that opens up the feedback form when clicked. Available starting in SDK v8.20.0. |
 | `formTitle`                   | `"Report a Bug"`                         | The title at the top of the feedback form.                                     |
 | `submitButtonLabel`           | `"Send Bug Report"`                      | The label of the submit button used in the feedback form.                      |
 | `cancelButtonLabel`           | `"Cancel"`                               | The label of cancel buttons used in the feedback form.                         |
@@ -209,14 +240,14 @@ feedbackIntegration({
 
 Because it’s sometimes useful to know when a user started interacting with the feedback form, we've made it possible for you to add custom logging, or start and stop background timers on the page that tell you when the user is done.
 
-Pass these callbacks when you initialize the Feedback integration:
+The following options can be configured for the integration in `feedbackIntegration({})`:
 
 ```javascript
 feedbackIntegration({
   onFormOpen: () => {},
   onFormClose: () => {},
-  onSubmitSuccess: () => {},
-  onSubmitError: () => {},
+  onSubmitSuccess: (data: FeedbackFormData) => {},
+  onSubmitError: (error: Error) => {},
 });
 ```
 
@@ -234,15 +265,50 @@ feedback.attachTo(document.querySelector("#your-button"), {
   formTitle: "Report a Bug!",
 });
 ```
+```typescript {tabTitle: NextJs}
+function AttachToFeedbackButton() {
+  const [feedback, setFeedback] = useState();
+  // Read `getFeedback` on the client only, to avoid hydration errors when server rendering
+  useEffect(() => {
+    setFeedback(Sentry.getFeedback());
+  }, []);
 
-Alternatively, you can call `feedback.createForm()` and have full control over when the form gets loaded, added to the dom, and finally shown to the user. Here is an example using JSX to define a button:
+  const buttonRef = useRef();
+  useEffect(() => {
+    if (feedback) {
+      const unsubscribe = feedback.attachTo(buttonRef.current)
+      return unsubscribe;
+    }
+    return () => {};
+  }, [feedback]);
 
-```typescript
-import { BrowserClient, Feedback, getClient } from "@sentry/react";
+  return (
+    <button type="button" ref={buttonRef}>
+      Give me feedback
+    </button>
+  );
+}
+```
 
-function MyFeedbackButton() {
-  const client = getClient<BrowserClient>();
-  const feedback = client?.getIntegration(Feedback);
+Alternatively, you can call `feedback.createForm()` and have full control over when the form gets loaded, added to the dom, and finally shown to the user.
+
+```javascript
+const feedback = feedbackIntegration({
+  // Disable injecting the default widget
+  autoInject: false,
+});
+
+const form = await feedback.createForm();
+form.appendToDom();
+form.open();
+```
+```typescript {tabTitle: NextJS}
+function CreateFeedbackFromButton() {
+  const [feedback, setFeedback] = useState();
+  // Read `getFeedback` on the client only, to avoid hydration errors when server rendering
+  useEffect(() => {
+    setFeedback(Sentry.getFeedback());
+  }, []);
 
   // Don't render custom feedback button if Feedback integration isn't installed
   if (!feedback) {
@@ -250,11 +316,14 @@ function MyFeedbackButton() {
   }
 
   return (
-    <button type="button" onClick={async () => {
-      const form = await feedback.createForm();
-      form.appendToDom();
-      form.open();
-    }}>
+    <button
+      type="button"
+      onClick={async () => {
+        const form = await feedback.createForm();
+        form.appendToDom();
+        form.open();
+      }}
+    >
       Give me feedback
     </button>
   );
@@ -263,13 +332,13 @@ function MyFeedbackButton() {
 
 ### Bring Your Own Widget
 
-You can also use your own UI components to gather feedback and pass the feedback data object to the `sendFeedback()` function. The `sendFeedback` function accepts two parameters:
+You can also use your own UI components to gather feedback and pass the feedback data object to the `captureFeedback()` function. The `captureFeedback` function accepts two parameters:
 
-- A JavaScript object with a required `message` property and also optional `name` and `email` properties, or a `FormData` instance with the same properties.
-- An optional "options" object.
+- A JavaScript object with a required `message` property and also optional `name` and `email` properties.
+- An optional "hints" object.
 
 ```javascript
-Sentry.sendFeedback(
+Sentry.captureFeedback(
   {
     name: "Jane Doe", // optional
     email: "email@example.org", // optional
@@ -277,6 +346,7 @@ Sentry.sendFeedback(
   },
   {
     includeReplay: true, // optional
+    attachments: [] // optional
   }
 );
 ```
@@ -285,25 +355,151 @@ Here's a simple example:
 
 ```html
 <form id="my-feedback-form">
-  <input name="name" />
-  <input name="email" />
+  <input name="name" placeholder="Your Name" />
+  <input name="email" placeholder="Your Email" />
   <textarea name="message" placeholder="What's the issue?" />
+  <input type="file" name="attachment" />
+  <button type="submit">Submit</button>
 </form>
 ```
 
 ```javascript
-import { sendFeedback } from "@sentry/react";
+import { captureFeedback } from "@sentry/react";
 
 document
   .getElementById("my-feedback-form")
   .addEventListener("submit", (event) => {
-    const formData = new FormData(event.currentTarget);
-    sendFeedback(formData);
     event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+    const attachment = async () => {
+      const attatchmentField = formData.get("attachment") as File;
+      const data = new Uint8Array(
+        await attatchmentField.arrayBuffer()
+      );
+      const attachmentData = {
+        data,
+        filename: 'upload', // Or pass attatchmentField.name,
+        // No need to set `contentType` because it's encoded in the `data` array
+      };
+      return attachmentData;
+    };
+
+    Sentry.captureFeedback({
+      name: String(formData.get('name')),
+      email: String(formData.get('email')),
+      message: String(formData.get('message')),
+    }, {
+      attachments: [await attachment()],
+    });
   });
 ```
-
 </PlatformSection>
+
+### Loading Strategies
+
+Because the `feedbackIntegration` is a user-facing integration, we offer two loading strategies that have bundle size implications.
+
+<Note>
+For most users, we recommend using `feedbackIntegration` in your `Sentry.init` call. This will set up user feedback with good defaults, matching the environment.
+</Note>
+
+All of the code examples on this page use `feedbackIntegration` as a default because it's available regardless of whether you've chosen the CDN or NPM installation method. However, the implementation of `feedbackIntegration` is different for the two installation methods. For NPM users, `feedbackIntegration` is an alias of `feedbackSyncIntegration`. For CDN users, `feedbackIntegration` is an alias of `feedbackAsyncIntegration`.
+
+#### `feedbackSyncIntegration`
+
+If you've installed the SDK with NPM, this loading strategy is used by default. The strategy isn't available if you've installed the SDK via the CDN.
+
+This integration includes all the code needed to render the "Send Feedback" button, as well as the form that is triggered when the button is clicked. Choosing this loading strategy means accepting the largest upfront bundle size in your application. The benefit of this is that the feedback widget is guaranteed to open when the user interacts with it, but in either case, network connectivity is required to send the feedback message.
+
+#### `feedbackAsyncIntegration`
+
+If you installed the SDK with the CDN, this loading strategy is used by default. If you used NPM, you can still choose to use this loading strategy by adding this integration to your `Sentry.init` call.
+
+This integration includes the minimum amount of code needed upfront to show the "Send Feedback" button on the screen when the page is loaded. When the user clicks on that button, the integration will asynchronously load internal integrations from `https://browser.sentry-cdn.com` that show the form and let the user type out their feedback message. This has the benefit of being the smallest bundle size. The drawback is that asynchronous loading can fail if, for example, the user has an ad-blocker.
+
+#### When Installed Via CDN
+
+For CDN users `feedbackIntegration` is an alias of `feedbackAsyncIntegration`.
+
+```javascript {tabTitle: Default Strategy}
+import * as Sentry from '@sentry/browser';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  integrations: [
+    // Use the default strategy, an alias for `feedbackAsyncIntegration`
+    Sentry.feedbackIntegration({
+      // Additional SDK configuration goes in here, for example:
+      colorScheme: 'system',
+    }),
+  ]
+});
+```
+
+```javascript {tabTitle: Async Strategy}
+import * as Sentry from '@sentry/browser';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  integrations: [
+    // Use the async strategy so everything is bundled for page load
+    Sentry.feedbackAsyncIntegration({
+      // Additional SDK configuration goes in here, for example:
+      colorScheme: 'system',
+    }),
+  ]
+});
+```
+
+#### When Installed Via NPM
+
+For NPM users `feedbackIntegration` is an alias of `feedbackSyncIntegration`.
+
+```javascript {tabTitle: Default Strategy}
+import * as Sentry from '@sentry/browser';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  integrations: [
+    // Use the default strategy, an alias for `feedbackSyncIntegration`
+    Sentry.feedbackIntegration({
+      // Additional SDK configuration goes in here, for example:
+      colorScheme: 'system',
+    }),
+  ]
+});
+```
+
+```javascript {tabTitle: Sync Strategy}
+import * as Sentry from '@sentry/browser';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  integrations: [
+    // Use the sync strategy so everything is bundled for page load
+    Sentry.feedbackSyncIntegration({
+      // Additional SDK configuration goes in here, for example:
+      colorScheme: 'system',
+    }),
+  ]
+});
+```
+
+```javascript {tabTitle: Async Strategy}
+import * as Sentry from '@sentry/browser';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  integrations: [
+    // Use the async strategy to keep bundle size lower
+    Sentry.feedbackAsyncIntegration({
+      // Additional SDK configuration goes in here, for example:
+      colorScheme: 'system',
+    }),
+  ]
+});
+```
 
 ## Crash-Report Modal
 

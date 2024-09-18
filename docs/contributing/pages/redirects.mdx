@@ -10,9 +10,17 @@ Redirects allow you to automatically redirect an incoming request path to a new 
 There are two ways to add redirects in the Sentry docs:
 
 - [Add a New Redirect in `middleware.ts` (Recommended)](#add-a-new-redirect-in-middlewarets-recommended)
-- [Add a New Redirect in `vercel.json`](#add-a-new-redirect-in-verceljson)
+- [Add a New Redirect in `redirects.js`](#example-redirect-in-redirectsjs)
 
-Because Sentry has a limited number of Vercel redirects, you should configure your redirects in `middleware.ts` whenever possible. You should only use `vercel.json` if you need to use regular expressions in your redirects.
+<Note>
+  Both files make the distinction between SDK docs (ie. end user docs) and developer docs.
+</Note>
+
+Because Sentry has a limited number of `next.config.js` redirects, you should configure your redirects in `middleware.ts` whenever possible. You should only use `redirects.js` ie (`next.config.js`) if you need to use regular expressions and wildcard path segments in your redirects.
+
+<Alert level="warning">
+  It's no longer recommended to use `vercel.json` for redirects due to its limitations (doesn't work on localhost, requires a static file ...)
+</Alert>
 
 ### Add a New Redirect in `middleware.ts` (Recommended)
 
@@ -36,24 +44,26 @@ const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
 ];
 ```
 
-### Add a New Redirect in `vercel.json`
+### Add a New Redirect in `redirects.js`
 
 Sentry has a limited number of Vercel redirects, so you should only configure redirects in `vercel.json` if your redirects need to use regular expressions. Otherwise, use [`middleware.ts`](#add-a-new-redirect-in-middlewarets-recommended).
 
-To add a new redirect in [`vercel.json`](https://github.com/getsentry/sentry-docs/blob/master/vercel.json#L34), add a new object in `redirects` with the following properties:
+To add a new redirect in `redirects.js` (which is consumed by `next.config.js`'s [`redirects`](https://nextjs.org/docs/app/api-reference/next-config-js/redirects)), add a new object to the corresponding redirects with the following properties:
 
 - `source`: The incoming request path pattern.
 - `destination`: The new destination path you want to route to.
 
-#### Example Redirect in `vercel.json`
+#### Example Redirect in `redirects.js`
 
-The example below redirects URLs like `https://docs.sentry.io/cli/(.*)` to `https://docs.sentry.io/product/cli/$1` with a matching regex pattern. For example, `https://docs.sentry.io/cli/installation/` would be redirected to `https://docs.sentry.io/product/cli/installation/`.
+The example below redirects URLs like `https://docs.sentry.io/cli/:path*` to `https://docs.sentry.io/product/cli/:path*` with a [path pattern](https://nextjs.org/docs/app/api-reference/next-config-js/redirects#path-matching) or a [Regex](https://nextjs.org/docs/app/api-reference/next-config-js/redirects#regex-path-matching).
 
-```json {filename:vercel.json}
+For example, `https://docs.sentry.io/cli/installation/` would be redirected to `https://docs.sentry.io/product/cli/installation/`.
+
+```json {filename:redirects.js}
  "redirects": [
     {
-      "source": "/cli/(.*)",
-      "destination": "/product/cli/$1"
+      "source": "/cli/:path*",
+      "destination": "/product/cli/:path*",
     },
  ]
 ```

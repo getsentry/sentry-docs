@@ -1,5 +1,6 @@
-import {getDocsFrontMatter} from 'sentry-docs/mdx';
+import {getDevDocsFrontMatter, getDocsFrontMatter} from 'sentry-docs/mdx';
 
+import {isDeveloperDocs} from './isDeveloperDocs';
 import {platformsData} from './platformsData';
 import {
   FrontMatter,
@@ -38,21 +39,25 @@ export function getDocsRootNode(): Promise<DocNode> {
 }
 
 async function getDocsRootNodeUncached(): Promise<DocNode> {
-  return frontmatterToTree(await getDocsFrontMatter());
+  return frontmatterToTree(
+    isDeveloperDocs ? getDevDocsFrontMatter() : await getDocsFrontMatter()
+  );
 }
 
+export const sidebarOrderSorter = (a: FrontMatter, b: FrontMatter) => {
+  const partDiff = slugWithoutIndex(a.slug).length - slugWithoutIndex(b.slug).length;
+  if (partDiff !== 0) {
+    return partDiff;
+  }
+  const orderDiff = (a.sidebar_order || 99999) - (b.sidebar_order || 99999);
+  if (orderDiff !== 0) {
+    return orderDiff;
+  }
+  return (a.title || '').localeCompare(b.title || '');
+};
+
 function frontmatterToTree(frontmatter: FrontMatter[]): DocNode {
-  const sortedDocs = frontmatter.sort((a, b) => {
-    const partDiff = slugWithoutIndex(a.slug).length - slugWithoutIndex(b.slug).length;
-    if (partDiff !== 0) {
-      return partDiff;
-    }
-    const orderDiff = (a.sidebar_order || 99999) - (b.sidebar_order || 99999);
-    if (orderDiff !== 0) {
-      return orderDiff;
-    }
-    return (a.title || '').localeCompare(b.title || '');
-  });
+  const sortedDocs = frontmatter.sort(sidebarOrderSorter);
 
   const rootNode: DocNode = {
     path: '/',
@@ -63,7 +68,7 @@ function frontmatterToTree(frontmatter: FrontMatter[]): DocNode {
     },
     children: [],
     missing: false,
-    sourcePath: 'src/components/home.tsx',
+    sourcePath: isDeveloperDocs ? 'develop-docs/index.mdx' : '',
   };
 
   const slugMap: {[slug: string]: DocNode} = {};

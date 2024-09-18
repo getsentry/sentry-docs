@@ -1,0 +1,43 @@
+## Add Readable Stack Traces to Errors
+
+To upload source maps, use the `sentrySolidStartVite` plugin from `@sentry/solidstart` and configure an auth token.
+Auth tokens can be passed to the plugin explicitly with the `authToken` option. You can use the
+`SENTRY_AUTH_TOKEN` environment variable or have an `.env.sentry-build-plugin` file in the working directory when
+building your project.
+
+We recommend you add the auth token to your CI/CD environment as an environment variable.
+
+Learn more about configuring the plugin in our
+[Sentry Vite Plugin documentation](https://www.npmjs.com/package/@sentry/vite-plugin).
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env.sentry-build-plugin}
+SENTRY_ORG="___ORG_SLUG___"
+SENTRY_PROJECT="___PROJECT_SLUG___"
+SENTRY_AUTH_TOKEN="___ORG_AUTH_TOKEN___"
+```
+
+Add the plugin to your `app.config.ts`.
+
+
+```TypeScript {filename:app.config.ts}
+// app.config.ts
+import { defineConfig } from '@solidjs/start/config';
+import { sentrySolidStartVite } from '@sentry/solidstart';
+
+export default defineConfig({
+  // ...
+
+  vite: {
+    plugins: [
+      sentrySolidStartVite({
+        org: process.env.SENTRY_ORG,
+        project: process.env.SENTRY_PROJECT,
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+      }),
+    ],
+  },
+  // ...
+});
+```

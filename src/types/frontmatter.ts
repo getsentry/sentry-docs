@@ -37,6 +37,11 @@ export interface FrontMatter {
   notoc?: boolean;
 
   /**
+   * Set this to true to hide from the sidebar
+   */
+  sidebar_hidden?: boolean;
+
+  /**
    * The order of this page in auto generated sidebars and grids.
    */
   sidebar_order?: number;

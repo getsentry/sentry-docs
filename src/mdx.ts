@@ -9,7 +9,6 @@ import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypePresetMinify from 'rehype-preset-minify';
 import rehypePrismDiff from 'rehype-prism-diff';
 import rehypePrismPlus from 'rehype-prism-plus';
-import rehypeSlug from 'rehype-slug';
 import remarkGfm from 'remark-gfm';
 import remarkMdxImages from 'remark-mdx-images';
 
@@ -17,6 +16,9 @@ import getAppRegistry from './build/appRegistry';
 import getPackageRegistry from './build/packageRegistry';
 import {apiCategories} from './build/resolveOpenAPI';
 import getAllFilesRecursively from './files';
+import remarkDefList from './mdx-deflist';
+import rehypeOnboardingLines from './rehype-onboarding-lines';
+import rehypeSlug from './rehype-slug.js';
 import remarkCodeTabs from './remark-code-tabs';
 import remarkCodeTitles from './remark-code-title';
 import remarkComponentSpacing from './remark-component-spacing';
@@ -26,6 +28,7 @@ import remarkImageSize from './remark-image-size';
 import remarkTocHeadings, {TocNode} from './remark-toc-headings';
 import remarkVariables from './remark-variables';
 import {FrontMatter, Platform, PlatformConfig} from './types';
+import {isTruthy} from './utils';
 
 const root = process.cwd();
 
@@ -95,8 +98,31 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
   return frontMatter;
 }
 
-export function getAllFilesFrontMatter(folder: string = 'docs') {
+export function getDevDocsFrontMatter(): FrontMatter[] {
+  const folder = 'develop-docs';
   const docsPath = path.join(root, folder);
+  const files = getAllFilesRecursively(docsPath);
+  const fmts = files
+    .map(file => {
+      const fileName = file.slice(docsPath.length + 1);
+      if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
+        return undefined;
+      }
+
+      const source = fs.readFileSync(file, 'utf8');
+      const {data: frontmatter} = matter(source);
+      return {
+        ...(frontmatter as FrontMatter),
+        slug: fileName.replace(/\/index.mdx?$/, '').replace(/\.mdx?$/, ''),
+        sourcePath: path.join(folder, fileName),
+      };
+    })
+    .filter(isTruthy);
+  return fmts;
+}
+
+function getAllFilesFrontMatter() {
+  const docsPath = path.join(root, 'docs');
   const files = getAllFilesRecursively(docsPath);
   const allFrontMatter: FrontMatter[] = [];
   files.forEach(file => {
@@ -114,14 +140,9 @@ export function getAllFilesFrontMatter(folder: string = 'docs') {
     allFrontMatter.push({
       ...(frontmatter as FrontMatter),
       slug: formatSlug(fileName),
-      sourcePath: path.join(folder, fileName),
+      sourcePath: path.join('docs', fileName),
     });
   });
-
-  if (folder !== 'docs') {
-    // We exit early if we're not in the docs folder. We use this for the changelog.
-    return allFrontMatter;
-  }
 
   // Add all `common` files in the right place.
   const platformsPath = path.join(docsPath, 'platforms');
@@ -283,6 +304,7 @@ export async function getFileBySlug(slug: string) {
         remarkExtractFrontmatter,
         [remarkTocHeadings, {exportRef: toc}],
         remarkGfm,
+        remarkDefList,
         remarkFormatCodeBlocks,
         [remarkImageSize, {sourceFolder: cwd, publicFolder: path.join(root, 'public')}],
         remarkMdxImages,
@@ -317,7 +339,7 @@ export async function getFileBySlug(slug: string) {
             },
             content: [
               s(
-                'svg.anchor.before',
+                'svg.anchorlink.before',
                 {
                   xmlns: 'http://www.w3.org/2000/svg',
                   width: 16,
@@ -333,6 +355,7 @@ export async function getFileBySlug(slug: string) {
           },
         ],
         [rehypePrismPlus, {ignoreMissing: true}],
+        rehypeOnboardingLines,
         [rehypePrismDiff, {remove: true}],
         rehypePresetMinify,
       ];

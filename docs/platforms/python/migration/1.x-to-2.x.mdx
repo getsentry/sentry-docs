@@ -20,7 +20,6 @@ The deprecated `with_locals` and `request_bodies` options have been removed in f
 
 **These are all potential changes you need to apply to your init**:
 
-<SignInNote />
 
 ```python diff
 import sentry_sdk
@@ -51,7 +50,7 @@ The signature for the experimental Sentry Metrics callback function set with `be
 
 ## API
 
-The API function `last_event_id()` was removed. The last event ID is still returned by `capture_event()`, `capture_exception()`, and `capture_message()`.
+The API function `last_event_id()` was removed in 2.0.0, but was brought back by public demand in 2.2.0. The last event ID is returned by `capture_event()`, `capture_exception()`, and `capture_message()` in all SDK versions.
 
 ## Custom Instrumentation
 
@@ -65,16 +64,48 @@ The SDK will take care of deciding what data belongs on which scope as long as y
 
 The old APIs will continue to work in 2.0, but we recommend migrating to their new counterparts as soon as possible since they will be removed in the next major release.
 
-### Hub Cloning
+### Activating a Custom Hub
 
-Creating a new isolation scope provides a similar level of isolation to what you'd previously get by using a hub clone:
+If you were using a custom hub to isolate event data, we recommend using a custom isolation scope instead. To activate the custom isolation scope, you will need to explicitly pass the isolation scope to `use_isolation_scope`, which creates a context manager that activates the scope. Here is an example of how to change your code to make it work:
 
 ```python diff
-- hub = Hub(Hub.current)
-- # do something
-+ with isolation_scope() as scope:
-+     # do something
+  import sentry_sdk
++ import sentry_sdk.scope
+
+- with my_hub:
++ with sentry_sdk.scope.use_isolation_scope(my_isolation_scope):
+      sentry_sdk.capture_message("I am isolated")
 ```
+
+### Cloning a Hub
+
+If you previously cloned a hub by passing a hub to the `Hub` constructor, you should now fork an isolation scope by calling the scope's `fork()` method, like this:
+
+```python diff
+- import sentry_sdk
+
+- my_cloned_hub = sentry_sdk.Hub(my_hub)
++ my_cloned_isolation_scope = my_isolation_scope.fork()
+```
+
+You can follow the previous section's instructions to activate the cloned isolation scope.
+
+### Activating Current Hub Clone
+
+If you previously used `with sentry_sdk.Hub(sentry_sdk.Hub.current)` to clone the current hub and activate the clone, you should now use `with sentry_sdk.isolation_scope()`, like so:
+
+
+```python diff
+  import sentry_sdk
+
+- with sentry_sdk.Hub(sentry_sdk.Hub.current) as hub:
++ with sentry_sdk.isolation_scope() as scope:
+      sentry_sdk.capture_message("I am isolated!")
+```
+
+`sentry_sdk.isolation_scope` is a context manager that creates a new isolation scope by forking the current isolation scope. The forked isolation scope is activated during the context manager's lifetime, providing a similar level of isolation within the context manager as the previous `Hub`-based approach.
+
+Note that using `sentry_sdk.isolation_scope()` is equivalent to `sentry_sdk.scope.use_isolation_scope(sentry_sdk.get_isolation_scope().fork())`.
 
 ### Scope Configuring
 
@@ -86,18 +117,18 @@ a task, and so on) or just a specific part of the code.
 If you want your scope change to affect a smaller unit of code such as a span, use the current scope.
 
 ```python diff
-- with configure_scope() as scope:
+- with sentry_sdk.configure_scope() as scope:
 -     # do something with scope
-+ scope = Scope.get_current_scope()
++ scope = sentry_sdk.get_current_scope()
 + # do something with scope
 ```
 
 If you want your scope change to affect the whole transaction, use the isolation scope.
 
 ```python diff
-- with configure_scope() as scope:
+- with sentry_sdk.configure_scope() as scope:
 -     # do something with scope
-+ scope = Scope.get_isolation_scope()
++ scope = sentry_sdk.get_isolation_scope()
 + # do something with scope
 ```
 
@@ -111,7 +142,7 @@ transaction = sentry_sdk.transaction(...)
 - with sentry_sdk.configure_scope() as scope:
 -     scope.set_transaction_name("new-transaction-name")
 
-+ scope = sentry_sdk.Scope.get_current_scope()
++ scope = sentry_sdk.get_current_scope()
 + scope.set_transaction_name("new-transaction-name")
 ```
 
@@ -122,18 +153,18 @@ Scope pushing translates to forking a scope in `2.0`. You either want to fork th
 If you only want to apply something to a smaller, localized part of the code, fork the current scope with `new_scope()`:
 
 ```python diff
-- with push_scope() as scope:
+- with sentry_sdk.push_scope() as scope:
 -     # do something
-+ with new_scope() as scope:
++ with sentry_sdk.new_scope() as scope:
 +     # do something
 ```
 
 If you're wrapping a whole request-response cycle or a whole execution of a task, fork the isolation scope:
 
 ```python diff
-- with push_scope() as scope:
+- with sentry_sdk.push_scope() as scope:
 -     # do something
-+ with isolation_scope() as scope:
++ with sentry_sdk.isolation_scope() as scope:
 +     # do something
 ```
 

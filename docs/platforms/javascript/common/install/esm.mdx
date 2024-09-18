@@ -9,6 +9,7 @@ supported:
   - javascript.fastify
   - javascript.hapi
   - javascript.koa
+  - javascript.nestjs
 ---
 
 <Alert>
@@ -27,7 +28,7 @@ import * as Sentry from "@sentry/node";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
-  // Add Performance Monitoring by setting tracesSampleRate
+  // Add Tracing by setting tracesSampleRate
   // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
 });
@@ -40,4 +41,26 @@ Adjust the Node.js call for your application to use the [--import](https://nodej
 node --import ./instrument.mjs app.mjs
 ```
 
+If it is not possible for you to pass the `--import` flag to the Node.js binary, you can alternatively use the `NODE_OPTIONS` environment variable as follows:
+
+```bash
+NODE_OPTIONS="--import ./instrument.mjs" npm run start
+```
+
 We do not support ESM in Node versions before 18.19.0.
+
+## Skipping instrumentation
+
+By default, all packages are wrapped under the hood by [import-in-the-middle](https://www.npmjs.com/package/import-in-the-middle). If you run into a problem with a package, you can skip instrumentation for it by configuring `registerEsmLoaderHooks` in your `Sentry.init()` config:
+
+```javascript {tabTitle:ESM} {filename: instrument.mjs}
+import * as Sentry from "@sentry/node";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  registerEsmLoaderHooks: {
+    // Provide a list of package names to exclude from instrumentation
+    exclude: ["package-name"],
+  },
+});
+```

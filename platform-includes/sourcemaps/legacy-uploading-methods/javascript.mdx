@@ -82,7 +82,6 @@ Assuming you have the `@sentry/webpack` package installed on version `1.x`, you 
 
 Example:
 
-<SignInNote />
 
 ```javascript {filename:webpack.config.js}
 const SentryWebpackPlugin = require("@sentry/webpack-plugin");
@@ -112,7 +111,6 @@ module.exports = {
 
 The Sentry webpack plugin will automatically inject a release value into the SDK so you must either omit the `release` option from `Sentry.init` or make sure `Sentry.init`'s `release` option matches the plugin's `release` option exactly:
 
-<SignInNote />
 
 ```javascript
 Sentry.init({
@@ -138,7 +136,6 @@ This applies when using the following packages on version `2.x` and above:
 
 Example of using the `release.uploadLegacySourcemaps` option:
 
-<SignInNote />
 
 ```javascript {filename:webpack.config.js} {tabTitle:Webpack}
 const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
@@ -254,7 +251,6 @@ export default {
 
 The Sentry bundler plugins will automatically inject a release value into the SDK so you must either omit the `release` option from `Sentry.init` or make sure `Sentry.init`'s `release` option matches the plugin's `release.name` option exactly:
 
-<SignInNote />
 
 ```javascript
 Sentry.init({
@@ -333,7 +329,7 @@ To verify that the distribution has been set correctly in the SDK, open an issue
 
 If you've uploaded source maps and they aren't applying to your code in an issue in Sentry, take a look at the JSON of the event and look for the `abs_path` to see exactly where we're attempting to resolve the file - for example, `http://localhost:8000/scripts/script.js` (`abs_path` will appear once for each frame in the stack trace - match this up with the file(s) that are not deminified.). A link to the JSON view can be found at the top of the issue page next to the date the event occurred. The uploaded artifact names must match these values.
 
-If you have **dynamic values in your path** (for example, `https://www.site.com/{some_value}/scripts/script.js`), you may want to use the <PlatformSection notSupported={['javascript.node', 'javascript.aws-lambda', 'javascript.azure-functions', 'javascript.connect', 'javascript.express', 'javascript.fastify', 'javascript.gcp-functions', 'javascript.hapi', 'javascript.koa', 'javascript.nestjs']}><PlatformLink to="/configuration/integrations/rewriteframes">`rewriteFrames` integration</PlatformLink></PlatformSection><PlatformSection supported={['javascript.node', 'javascript.aws-lambda', 'javascript.azure-functions', 'javascript.connect', 'javascript.express', 'javascript.fastify', 'javascript.gcp-functions', 'javascript.hapi', 'javascript.koa', 'javascript.nestjs']}><PlatformLink to="/configuration/integrations/pluggable-integrations/#rewriteframes">`rewriteFrames` integration</PlatformLink></PlatformSection> to change your `abs_path` values.
+If you have **dynamic values in your path** (for example, `https://www.site.com/{some_value}/scripts/script.js`), you may want to use the <PlatformSection notSupported={['javascript.node', 'javascript.connect', 'javascript.express', 'javascript.fastify', 'javascript.hapi', 'javascript.koa', 'javascript.nestjs']}><PlatformLink to="/configuration/integrations/rewriteframes">`rewriteFrames` integration</PlatformLink></PlatformSection><PlatformSection supported={['javascript.node', 'javascript.connect', 'javascript.express', 'javascript.fastify', 'javascript.hapi', 'javascript.koa', 'javascript.nestjs']}><PlatformLink to="/configuration/integrations/pluggable-integrations/#rewriteframes">`rewriteFrames` integration</PlatformLink></PlatformSection> to change your `abs_path` values.
 
 #### Using sentry-cli
 
@@ -347,7 +343,7 @@ If your `sourceMappingURL` comment is similar to:
 An example `sentry-cli` command to upload these files correctly would look like this (assuming you're in the `/scripts` directory, running your web server from one directory higher, which is why we're using the `--url-prefix` option):
 
 ```shell
-sentry-cli releases files VERSION upload-sourcemaps . --url-prefix '~/scripts'
+sentry-cli sourcemaps upload --url-prefix '~/scripts' .
 ```
 
 This command uploads all JavaScript files in the current directory. The Artifacts page in Sentry should now look like:
@@ -361,13 +357,13 @@ This command uploads all JavaScript files in the current directory. The Artifact
 Alternately you can specify which files to upload. For example:
 
 ```
-sentry-cli releases files VERSION upload-sourcemaps script.min.js script.min.js.map --url-prefix '~/scripts'
+sentry-cli sourcemaps upload --url-prefix '~/scripts' script.min.js script.min.js.map
 ```
 
 You can also upload it with the fully qualified URL. For example:
 
 ```
-sentry-cli releases files VERSION upload-sourcemaps . --url-prefix 'http://localhost:8000/scripts'
+sentry-cli sourcemaps upload --url-prefix 'http://localhost:8000/scripts' .
 ```
 
 #### Using the API
