@@ -144,9 +144,8 @@ export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
           </AnimatePresence>
         </span>
       </KeywordDropdown>
-      <div>
-        {createPortal(<AnimatePresence>{selector}</AnimatePresence>, document.body)}
-      </div>
+      {document &&
+        createPortal(<AnimatePresence>{selector}</AnimatePresence>, document.body)}
     </Fragment>
   );
 }

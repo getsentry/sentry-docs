@@ -192,8 +192,8 @@ export function OrgAuthTokenCreator() {
           </AnimatePresence>
         </span>
       </KeywordDropdown>
-
-      {createPortal(<AnimatePresence>{selector}</AnimatePresence>, document.body)}
+      {document &&
+        createPortal(<AnimatePresence>{selector}</AnimatePresence>, document.body)}
     </Fragment>
   );
 }
