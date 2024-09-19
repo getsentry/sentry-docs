@@ -9,13 +9,17 @@ We've released a new profiling mode called **continuous profiling**. Read on to 
 
 ## Historical Context
 
-Transaction based profiling was the first profiling mode supported at Sentry, it  simply means that any code executed between Sentry.startTransaction and transaction.finish is subject to being profiled. In this mode, all profiles are attached to transactions (and are even sent as part of the same envelope). This has the benefit of automatically profiling parts of the application that are actually instrumented while requiring no extra effort. This approach however has drawback that continuous profiling aims to address, one of the most obvious ones being that profiles cannot exceed 30 second durations.
+Transaction-based profiling was the first profiling mode supported by Sentry. It made it so that any code executed between `Sentry.startTransaction` and `transaction.finish` could be profiled. In this mode, all profiles were attached to transactions and sent as part of the same envelope. 
 
-In theory, transactions can be infinitely long as their duration does not impact payload size as start and end are represented by two timestamps. Profiles however are different, each stack sample that is collected by the profiler increases the payload size, which is why all Sentry SDKs had enforced a max profile duration of 30s. This limitation helps us safeguard from large payload that could otherwise harm your application performance. This unfortunately comes at the expense of limiting profiling capabilities as it means profiling is now no longer able to profile long running tasks like machine learning pipelines or build workflows. This feedback was the major driving force why we've introduced continuous profiling.
+This had the benefit of automatically profiling parts of the application that were actually instrumented while requiring no extra effort. This approach had drawbacks that continuous profiling aims to address - one of the most obvious ones being that profiles couldn't exceed 30-second durations.
 
-The cap on max profile duration is however not the only drawback of transaction based profiling, another limitation of it is that the profiling data you collect, will only ever be as good as the instrumentation you have. In other words, if there are parts of your application that you did not instrument, the chance of you finding out that they are slowing down your application are near zero.
+In theory, transactions can be infinitely long since their duration doesn't impact payload size because start and end are represented by two timestamps. But profiles are different. Each stack sample that is collected by the profiler increases the payload size, which is why all Sentry SDKs had enforced a max profile duration of 30s. This limitation helps safeguard against large payloads that could harm your application performance. 
 
-To address these limitations, we have worked on a different profiling mode, one that does not impose constraints on profile durations and can surface parts of your application that might be slowing down your application even though you may not have instrumented them.
+This unfortunately, comes at the expense of limiting profiling capabilities, making it so that profiling isn't able to profile long-running tasks such as machine learning pipelines or build workflows. This feedback was the driving force behind continuous profiling.
+
+The cap on max profile duration isn't the only drawback of transaction-based profiling. Another limitation is that the profiling data you collect will only ever be as good as the instrumentation you have. In other words, if there are parts of your application that you didn't instrument, the chance of you finding out that they're slowing down your application are near zero.
+
+To address these limitations, we created a different profiling mode, one that doesn't impose constraints on profile durations and can surface parts of your application that might be slowing down your application even if you haven't instrumented them.
 
 ## Continuous profiling mode
 
