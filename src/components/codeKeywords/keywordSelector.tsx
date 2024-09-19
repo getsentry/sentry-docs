@@ -92,12 +92,13 @@ export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
               .filter(({title}) => {
                 return title.includes(orgFilter);
               })
-              .map((item, idx) => {
+              .map(item => {
+                const idx = choices.findIndex(({title}) => title === item.title);
                 const isActive = idx === currentSelectionIdx;
                 return (
                   <ItemButton
                     data-sentry-mask
-                    key={idx}
+                    key={item.title}
                     isActive={isActive}
                     onClick={() => {
                       const newSharedSelection = {...sharedSelection};
