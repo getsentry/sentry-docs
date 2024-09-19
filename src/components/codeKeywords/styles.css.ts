@@ -1,3 +1,5 @@
+'use client';
+
 import {ArrowDown} from 'react-feather';
 import styled from '@emotion/styled';
 import {motion} from 'framer-motion';

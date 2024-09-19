@@ -1,3 +1,5 @@
+'use client';
+
 import {Fragment, useContext, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {usePopper} from 'react-popper';
@@ -5,6 +7,7 @@ import {AnimatePresence} from 'framer-motion';
 import {useTheme} from 'next-themes';
 
 import {useOnClickOutside} from 'sentry-docs/clientUtils';
+import {useIsMounted} from 'sentry-docs/hooks/isMounted';
 
 import {CodeContext, createOrgAuthToken} from '../codeContext';
 
@@ -40,6 +43,8 @@ export function OrgAuthTokenCreator() {
   const [isAnimating, setIsAnimating] = useState(false);
   const {theme} = useTheme();
   const isDarkMode = theme === 'dark';
+
+  const {isMounted} = useIsMounted();
 
   useOnClickOutside({
     ref: {current: referenceEl},
@@ -192,7 +197,7 @@ export function OrgAuthTokenCreator() {
           </AnimatePresence>
         </span>
       </KeywordDropdown>
-      {document &&
+      {isMounted &&
         createPortal(<AnimatePresence>{selector}</AnimatePresence>, document.body)}
     </Fragment>
   );

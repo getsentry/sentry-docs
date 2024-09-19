@@ -1,3 +1,5 @@
+'use client';
+
 import {motion, MotionProps} from 'framer-motion';
 
 export function AnimatedContainer({

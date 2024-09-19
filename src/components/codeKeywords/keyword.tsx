@@ -1,3 +1,5 @@
+'use client';
+
 import {MotionProps} from 'framer-motion';
 
 import {KeywordSpan} from './styles.css';

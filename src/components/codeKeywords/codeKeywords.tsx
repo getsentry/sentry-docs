@@ -1,3 +1,5 @@
+'use client';
+
 import {Children, cloneElement, ReactElement} from 'react';
 
 import {KeywordSelector} from './keywordSelector';
