@@ -492,38 +492,10 @@ const NAV_ITEMS: NavItemsProps[] = [
   {
     id: 'blog',
     title: 'Blog',
-    type: 'button',
+    type: 'a',
+    to: 'https://blog.sentry.io',
     variant: 'ghost',
     className: '',
-    children: [
-      {
-        id: 'blogMenu',
-        title: '',
-        children: [
-          {
-            id: 'sentryBlog',
-            title: 'Sentry Blog',
-            to: 'https://blog.sentry.io/',
-            variant: 'ghost',
-            type: 'a',
-          },
-          {
-            id: 'enggBlog',
-            title: 'Engineering Blog',
-            to: 'https://sentry.engineering/',
-            variant: 'ghost',
-            type: 'a',
-          },
-          {
-            id: 'changelog',
-            title: 'Changelog',
-            to: 'https://sentry.io/changelog/',
-            variant: 'ghost',
-            type: 'a',
-          },
-        ],
-      },
-    ],
   },
   {
     id: 'sandbox',
