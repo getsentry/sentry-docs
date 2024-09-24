@@ -4,21 +4,24 @@ sidebar_order: 51
 description: "Learn how automatic detection of uptime monitoring works."
 ---
 
-<Include name="feature-stage-alpha-uptime.mdx" />
+<Include name="feature-stage-beta-uptime.mdx" />
 
-The automatic detection of uptime alerts sets up uptime alerts for the most frequently encountered
-hostnames in all URLs of your error data. This helps ensure that critical hostnames are continuously monitored,
-enhancing the reliability and availability of your web services.
+The automatic detection of uptime alerts sets up an uptime alert for the most frequently encountered hostname in all URLs of your error data. This helps ensure that your most critical hostname is continuously monitored, enhancing the reliability and availability of your web services.
 
 ## How It Works
 
-We analyze all the URLs detected in your project's captured error data to find the hostname that appears most frequently. We then create an uptime alert if it passes our [uptime check criteria](/product/alerts/uptime-monitoring/#uptime-check-criteria).
+We analyze all the URLs detected in your project's captured error data to find the hostname that appears most frequently. We then create an uptime alert if it passes our [uptime check criteria](/product/alerts/uptime-monitoring/#uptime-check-criteria). Automatic uptime checks are configured to run once a minute as GET requests.
 
 To avoid creating flaky alerts, the hostname undergoes an "onboarding period" of three days. During this period, we send HTTP requests to the hostname every hour. If the request fails at least three times, the hostname is dropped and re-evaluated after seven days.
 
 <Alert level="info">
-Sentry will execute uptime checks against the hostname root path of the most frequently seen URLs. For example, if the most seen URL in your events is `GET https://www.example.com/docs/introduction` the check will be `GET https://www.example.com/`.
+  Sentry will execute uptime checks against the hostname root path of the most
+  frequently seen URLs. For example, if the most seen URL in your events is `GET
+  https://www.example.com/docs/introduction` the check will be `GET
+  https://www.example.com/`.
 </Alert>
+
+After an automatically detected uptime alert is created, you can [customize its configuration](/product/alerts/create-alerts/uptime-alert-config/) such as the HTTP request method, headers, and request body.
 
 ## Disabling Automatic Detection
 
@@ -33,9 +36,7 @@ Disallow: *
 ```
 
 <Alert level="warning">
-**Note:** The `robots.txt` file will only prevent Sentry from detecting URLs that it encounters in the future. Existing URLs that have already been detected will continue to have uptime alerts unless they are manually deleted.
+  **Note:** The `robots.txt` file will only prevent Sentry from detecting URLs
+  that it encounters in the future. Existing URLs that have already been
+  detected will continue to have uptime alerts unless they are manually deleted.
 </Alert>
-
-## Current Limitations
-
-At present, automatically detected uptime alerts have limited editability. You cannot update the URLs associated with these alerts. Only the alert name and owner can be modified. The ability to edit URLs and other alert settings is planned for a future release. Additionally, each organization is limited to one automatically detected hostname.
