@@ -1,0 +1,83 @@
+---
+title: Debug IDs
+description: Requirements for the JS SDK to pick up Debug IDs
+sidebar_order: 12
+---
+
+## Requirements
+
+This section outlines everything needed for Sentry and the Sentry SDK to pick up Debug IDs to unminify/symbolicate JavaScript files.
+It explains the necessary modifications to generated artifacts for source mapping to work.
+
+We follow our [TC39 Debug ID Proposal](https://github.com/tc39/source-map/blob/main/proposals/debug-id.md). However, because Debug IDs are not yet a standard, we need to employ a workaround.
+
+### The Shape of Debug IDs
+
+Debug IDs should be UUIDs, e.g., `85314830-023f-4cf1-a267-535f4e37bb17`. The UUID version does not matter.
+
+### Debug ID References
+
+Embed Debug IDs in JavaScript files and their source map for Sentry indexing.
+
+JavaScript files should have a `//# debugId=...` comment at the end:
+
+```js
+"use strict";
+console.log("Hello world!");
+//# debugId=85314830-023f-4cf1-a267-535f4e37bb17
+```
+
+If a JS file has a source map reference, append the `debugId` comment after the `sourceMappingURL` comment:
+
+```js
+"use strict";
+console.log("Hello world!");
+//# sourceMappingURL=index.js.map
+//# debugId=85314830-023f-4cf1-a267-535f4e37bb17
+```
+
+The corresponding source map should embed the same Debug ID using both `debug_id` and `debugId` fields for compatibility:
+
+```json
+{
+  "version": 3,
+  "file": "index.js",
+  "sources": [],
+  "sourcesContent": [],
+  "names": [],
+  "mappings": "...",
+  "debug_id": "85314830-023f-4cf1-a267-535f4e37bb17",
+  "debugId": "85314830-023f-4cf1-a267-535f4e37bb17"
+}
+```
+
+Since JS runtimes do not provide access to the `//# debugId=...` comment, inform the Sentry SDK about the Debug IDs for all loaded JavaScript files via a global variable.
+
+Prepend each JavaScript file with a snippet to write file information and Debug IDs into a global variable. **Ensure that any changes to a JavaScript file also update the `mappings` in the corresponding source map.**
+
+The snippet should look as follows:
+
+```js
+{
+  var globalObject =
+    typeof window !== "undefined"
+      ? window
+      : typeof global !== "undefined"
+        ? global
+        : typeof self !== "undefined"
+          ? self
+          : {};
+
+  var stack = new globalObject.Error().stack;
+
+  if (stack) {
+    globalObject._sentryDebugIds = globalObject._sentryDebugIds || {};
+    globalObject._sentryDebugIds[stack] =
+      "85314830-023f-4cf1-a267-535f4e37bb17";
+  }
+}
+```
+
+This snippet creates an error to capture the stack trace, which includes the file name/path. The stack trace is used as a key to map to the Debug ID for that file inside a global `_sentryDebugIds` object. The Sentry SDK parses out the Debug IDs and file names from this object when an error is captured.
+
+You can minify this snippet into one line, which will simplify updating the source map `mappings`.

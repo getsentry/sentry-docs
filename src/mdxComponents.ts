@@ -11,7 +11,6 @@ import DocImage from './components/docImage';
 import {Expandable} from './components/expandable';
 import {GuideGrid} from './components/guideGrid';
 import {JsBundleList} from './components/jsBundleList';
-import {JsonSchema} from './components/jsonSchema';
 import {LambdaLayerDetail} from './components/lambdaLayerDetail';
 import {LinkWithPlatformIcon} from './components/linkWithPlatformIcon';
 import {OnboardingOption, OnboardingOptionButtons} from './components/onboarding';
@@ -45,7 +44,6 @@ export function mdxComponents(
     CodeTabs,
     ConfigKey,
     CreateGitHubAppForm,
-    JsonSchema,
     ConfigValue,
     DefinitionList,
     Expandable,
