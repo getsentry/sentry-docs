@@ -63,22 +63,17 @@ The *Sample Format V2* is designed for use in continuous profiling. Therefore, a
 
 `debug_meta`
 
-: *Object, required on native platforms.* This carries the same payload as the <Link
-to="/sdk/event-payloads/sdk/">`debug_meta` interface</Link>. It is required to
-have it for native platforms in order to symbolicate, otherwise you can omit it.
-For non-native platforms, you can omit this.
+: *Object, required on native platforms.* This carries the same payload as the [`debug_meta` interface](/sdk/event-payloads/sdk/).
+  It is required to have it for native platforms in order to symbolicate, otherwise you can omit it.
+  For non-native platforms, you can omit this.
 
 `profiler_id`
 
-: *String, required.* Hexadecimal string representing a uuid4 value. The length
-must be exactly 32 characters. Dashes and uppercase letters are not allowed.
-Random UUID for each profiler session.
+: *String, required.* Hexadecimal string representing a uuid4 value. The length must be exactly 32 characters. Dashes and uppercase letters are not allowed. Random UUID for each profiler session.
 
 `chunk_id`
 
-: *String, required.* Hexadecimal string representing a uuid4 value. The length
-must be exactly 32 characters. Dashes and uppercase letters are not allowed.
-This is a Random UUID identifying a chunk.
+: *String, required.* Hexadecimal string representing a uuid4 value. The length must be exactly 32 characters. Dashes and uppercase letters are not allowed. This is a Random UUID identifying a chunk.
 
 `client_sdk`
 
@@ -125,8 +120,7 @@ These are the values accepted for `unit`:
 
 `platform`
 
-: *String, required.* This value represents the platform the SDK is submitting
-from.
+: *String, required.* This value represents the platform the SDK is submitting from.
 
 `release`
 
@@ -138,8 +132,7 @@ with a semantic version (suggested format `my-project-name@1.0.0`).
 
 `environment`
 
-: *String, recommended.* The environment name, such as `production` or
-`staging`. The default value is `production`.
+: *String, recommended.* The environment name, such as `production` or `staging`. The default value is `production`.
 
 `version`
 
@@ -150,8 +143,7 @@ Acceptable values are:
 
 `profile`
 
-: *Object, required.* It contains all the raw data collected when profiling. See
-[profile data](#profile-data).
+: *Object, required.* It contains all the raw data collected when profiling. See [profile data](#profile-data).
 
 
 ### Profile data
@@ -231,8 +223,7 @@ the same `stack_id` for each sample that needs it.
 
 `frames`
 
-: *List, required*. Contains a list of frame objects (see [Frame
-Attributes](/sdk/event-payloads/stacktrace/#frame-attributes)).
+: *List, required*. Contains a list of frame objects (see [Frame Attributes](/sdk/event-payloads/stacktrace/#frame-attributes)).
 
 Each object should contain at least a `filename`, `function` or
 `instruction_addr` attribute. All values are optional, but recommended.
@@ -256,8 +247,7 @@ Some attributes are not used at the moment:
 
 `thread_metadata`
 
-: *Object, required.* Contains an object with a field for each thread ID
-detected during runtime.
+: *Object, required.* Contains an object with a field for each thread ID detected during runtime.
 
 This object can contain these attributes:
 - `name`: name of the thread.
@@ -291,7 +281,9 @@ It's suggested to remove unnecessary data like thread data without samples from
 ## Ingestion
 
 After this payload is generated, serialize it as JSON, pack it into an
-[Envelope](/sdk/envelopes/) with the item type `profile_chunk` and send 
+
+[Envelope](/sdk/envelopes/) with the item type [`profile_chunk`](/sdk/envelopes/#profile-chunk) and send 
+
 it to Relay.
 
 This envelope should look like this:
@@ -301,3 +293,69 @@ This envelope should look like this:
 {"type":"profile_chunk"}
 { /* profile_chunk JSON payload */}
 ````
+
+## Modifying Transactions Payload
+
+Additional context needs to be attached to the *transactions/spans* payloads for continuous profiling to be connected to tracing.
+
+1. Profile Context:
+
+The profile context for a transaction needs to be updated to contain the profiler id so it can be associated back to the transaction. 
+The context at `.contexts.profile` should look like:
+
+```json
+{
+  "profiler_id": "42928c7ee9174231956f077581145489"
+} 
+```
+
+2. Trace Context
+
+The trace context for a transaction needs to be updated to contain the active `thread id` so we know which thread is associated with the transaction. This is often implemented as the thread that the transaction was started in.
+
+The context at `.contexts.trace` should look like:
+
+```json
+{
+	"data": {
+		"thread.id": "thread id",
+		"thread.name": "thread name",
+	},
+	// existing trace context
+} 
+```
+
+`thread.id`
+
+*String, required.* This should be a string that matches the thread id in the *thread_metadata* of the profile chunk.
+
+`thread.name`
+
+*String, optional.* This should be a string that matches the thread name in the *thread_metadata* of the profile chunk.
+
+3. Span Data
+
+Span data needs to be updated in order for a span to contain the active *thread id* so we know which thread is associated with the transaction.
+This is often implemented as the thread that the transaction was started in.
+
+The data at `.spans[].data` should look like:
+
+```json
+{
+  "thread.id": "thread id",
+	"thread.name": "thread name",
+	"profiler_id": "42928c7ee9174231956f077581145489"
+}
+```
+
+`thread.id`
+
+*String, required.* This should be a string that matches the thread id in the *thread_metadata* of the profile chunk.
+
+`thread.name`
+
+*String, optional.* This should be a string that matches the thread name in the *thread_metadata* of the profile chunk.
+
+`profiler_id`
+
+*String, optional.* To override the one from the trace context but should not be necessary.

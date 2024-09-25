@@ -18,42 +18,6 @@ export const capitalize = (str: string) => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
-export const formatGuideOrPlatformTitle = (title: string) => {
-  const lowerCase = title.toLowerCase();
-
-  switch (lowerCase) {
-    case 'ios':
-      return 'iOS';
-
-    case 'macos':
-      return 'macOS';
-
-    case 'tvos':
-      return 'tvOS';
-
-    case 'visionos':
-      return 'visionOS';
-
-    case 'watchos':
-      return 'watchOS';
-
-    case 'dotnet':
-      return '.NET';
-
-    case 'kotlin-multiplatform':
-      return 'Kotlin Multiplatform';
-
-    case 'php':
-      return 'PHP';
-
-    case 'react-native':
-      return 'React Native';
-
-    default:
-      return capitalize(title);
-  }
-};
-
 export const uniqByReference = <T>(arr: T[]): T[] => Array.from(new Set(arr));
 
 export const splitToChunks = <T>(numChunks: number, arr: T[]): T[][] => {

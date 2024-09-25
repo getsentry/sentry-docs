@@ -210,12 +210,12 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/go/usage/serverless/',
   },
   {
-    from: '/platforms/go/martini/',
-    to: '/platforms/go/guides/martini/',
-  },
-  {
     from: '/platforms/go/fasthttp/',
     to: '/platforms/go/guides/fasthttp/',
+  },
+  {
+    from: '/platforms/go/fiber/',
+    to: '/platforms/go/guides/fiber/',
   },
   {
     from: '/platforms/go/echo/',

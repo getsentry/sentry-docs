@@ -49,6 +49,7 @@ import FalconSVG from 'platformicons/svg/falcon.svg';
 import FastapiSVG from 'platformicons/svg/fastapi.svg';
 import FasthttpSVG from 'platformicons/svg/fasthttp.svg';
 import FastifySVG from 'platformicons/svg/fastify.svg';
+import FiberSVG from 'platformicons/svg/fiber.svg';
 import FlaskSVG from 'platformicons/svg/flask.svg';
 import FlutterSVG from 'platformicons/svg/flutter.svg';
 import FontSVG from 'platformicons/svg/font.svg';
@@ -79,9 +80,9 @@ import KotlinSVG from 'platformicons/svg/kotlin.svg';
 import LangchainSVG from 'platformicons/svg/langchain.svg';
 import LaravelSVG from 'platformicons/svg/laravel.svg';
 import LinuxSVG from 'platformicons/svg/linux.svg';
+import LitestarSVG from 'platformicons/svg/litestar.svg';
 import LogbackSVG from 'platformicons/svg/logback.svg';
 import LoguruSVG from 'platformicons/svg/loguru.svg';
-import MartiniSVG from 'platformicons/svg/martini.svg';
 import MauiSVG from 'platformicons/svg/maui.svg';
 import MongodbSVG from 'platformicons/svg/mongodb.svg';
 import NativecSVG from 'platformicons/svg/nativec.svg';
@@ -185,6 +186,7 @@ import FalconSVGLarge from 'platformicons/svg_80x80/falcon.svg';
 import FastapiSVGLarge from 'platformicons/svg_80x80/fastapi.svg';
 import FasthttpSVGLarge from 'platformicons/svg_80x80/fasthttp.svg';
 import FastifySVGLarge from 'platformicons/svg_80x80/fastify.svg';
+import FiberSVGLarge from 'platformicons/svg_80x80/fiber.svg';
 import FlaskSVGLarge from 'platformicons/svg_80x80/flask.svg';
 import FlutterSVGLarge from 'platformicons/svg_80x80/flutter.svg';
 import FontSVGLarge from 'platformicons/svg_80x80/font.svg';
@@ -215,9 +217,9 @@ import KotlinSVGLarge from 'platformicons/svg_80x80/kotlin.svg';
 import LangchainSVGLarge from 'platformicons/svg_80x80/langchain.svg';
 import LaravelSVGLarge from 'platformicons/svg_80x80/laravel.svg';
 import LinuxSVGLarge from 'platformicons/svg_80x80/linux.svg';
+import LitestarSVGLarge from 'platformicons/svg_80x80/litestar.svg';
 import LogbackSVGLarge from 'platformicons/svg_80x80/logback.svg';
 import LoguruSVGLarge from 'platformicons/svg_80x80/loguru.svg';
-import MartiniSVGLarge from 'platformicons/svg_80x80/martini.svg';
 import MauiSVGLarge from 'platformicons/svg_80x80/maui.svg';
 import MongodbSVGLarge from 'platformicons/svg_80x80/mongodb.svg';
 import NativecSVGLarge from 'platformicons/svg_80x80/nativec.svg';
@@ -473,6 +475,10 @@ const formatToSVG = {
     sm: FasthttpSVG,
     lg: FasthttpSVGLarge,
   },
+  fiber: {
+    sm: FiberSVG,
+    lg: FiberSVGLarge,
+  },
   flask: {
     sm: FlaskSVG,
     lg: FlaskSVGLarge,
@@ -593,6 +599,10 @@ const formatToSVG = {
     sm: LinuxSVG,
     lg: LinuxSVGLarge,
   },
+  litestar: {
+    sm: LitestarSVG,
+    lg: LitestarSVGLarge,
+  },
   logback: {
     sm: LogbackSVG,
     lg: LogbackSVGLarge,
@@ -600,10 +610,6 @@ const formatToSVG = {
   loguru: {
     sm: LoguruSVG,
     lg: LoguruSVGLarge,
-  },
-  martini: {
-    sm: MartiniSVG,
-    lg: MartiniSVGLarge,
   },
   maui: {
     sm: MauiSVG,
@@ -860,9 +866,9 @@ export const PLATFORM_TO_ICON = {
   go: 'go',
   'go-echo': 'echo',
   'go-fasthttp': 'fasthttp',
+  'go-fiber': 'fiber',
   'go-gin': 'gin',
   'go-iris': 'iris',
-  'go-martini': 'martini',
   'go-negroni': 'go',
   'go-logrus': 'go',
   godot: 'godot',
@@ -954,6 +960,7 @@ export const PLATFORM_TO_ICON = {
   'python-huey': 'huey',
   'python-huggingface_hub': 'huggingface',
   'python-langchain': 'langchain',
+  'python-litestar': 'litestar',
   'python-loguru': 'loguru',
   'python-openai': 'openai',
   'python-pylons': 'python',
@@ -965,6 +972,7 @@ export const PLATFORM_TO_ICON = {
   'python-sanic': 'sanic',
   'python-serverless': 'serverless',
   'python-starlette': 'starlette',
+  'python-starlite': 'litestar',
   'python-strawberry': 'strawberry',
   'python-spark': 'apache-spark',
   'python-sqlalchemy': 'sqlalchemy',

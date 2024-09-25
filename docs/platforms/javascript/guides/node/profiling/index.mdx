@@ -37,7 +37,6 @@ pnpm add @sentry/node @sentry/profiling-node
 
 To enable profiling, import `@sentry/profiling-node`, add `ProfilingIntegration` to your `integrations`, and set the `profilesSampleRate`.
 
-
 ```javascript
 const Sentry = require("@sentry/node");
 const { nodeProfilingIntegration } = require("@sentry/profiling-node");
@@ -49,7 +48,12 @@ Sentry.init({
     nodeProfilingIntegration(),
   ],
   tracesSampleRate: 1.0,
-  // Set sampling rate for profiling - this is relative to tracesSampleRate
+
+  // Set profilesSampleRate to 1.0 to profile every transaction.
+  // Since profilesSampleRate is relative to tracesSampleRate,
+  // the final profiling rate can be computed as tracesSampleRate * profilesSampleRate
+  // For example, a tracesSampleRate of 0.5 and profilesSampleRate of 0.5 would
+  // result in 25% of transactions being profiled (0.5*0.5=0.25)
   profilesSampleRate: 1.0,
 });
 
@@ -67,11 +71,33 @@ Sentry.startSpan(
 );
 ```
 
+Alternatively, instead of a `profilesSampleRate` your can also provide a `profilesSampler` function:
+
+```javascript
+const Sentry = require("@sentry/node");
+const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    // Add our Profiling integration
+    nodeProfilingIntegration(),
+  ],
+  tracesSampleRate: 1.0,
+
+  // This function will be called for every sampled span
+  // to determine if it should be profiled
+  profilesSampler: (samplingContext) => {
+    return 1.0;
+  },
+});
+```
+
 ## Enable Continuous Profiling
 
 <Include name="feature-stage-beta.mdx" />
 
-_(New in version 8.28.0)
+_(New in version 8.28.0)_
 
 The current profiling implementation stops the profiler automatically after 30 seconds (unless you manually stop it earlier). Naturally, this limitation makes it difficult to get full coverage of your app's execution. We now offer an experimental continuous mode, where profiling data is periodically uploaded while running, with no limit on how long the profiler may run.
 
@@ -84,11 +110,11 @@ If you previously set `profilesSampleRate` or `profilesSampler` to use transacti
 </Note>
 
 ```js
-const Sentry = require('@sentry/node');
+const Sentry = require("@sentry/node");
 
 Sentry.init({
-    dsn: "___PUBLIC_DSN___" ,
-})
+  dsn: "___PUBLIC_DSN___",
+});
 
 Sentry.profiler.startProfiling();
 
@@ -105,18 +131,7 @@ Continuous profiling has implications for your org's billing structure. This fea
 
 Under the hood, the Sentry profiler uses V8's [CpuProfiler](https://v8docs.nodesource.com/node-18.2/d2/d34/classv8_1_1_cpu_profiler.html) to collect stack samples. This means that `sentry/profiling-node` is written as a [native add-on](https://nodejs.org/docs/latest-v18.x/api/addons.html) for Node and won't run in environments like Deno or Bun. Profiling enhances tracing by providing profiles for individual transactions. This allows you to look at higher level performance information like transaction and span durations before diving deeper and looking at profiles.
 
-## Runtime Flags
-
-The default mode of the v8 CpuProfiler is [kEagerLogging](https://v8docs.nodesource.com/node-18.2/d2/dc3/namespacev8.html#a874b4921ddee43bef58d8538e3149374) which enables the profiler even when no profiles are active—this is good because it makes calls to `startProfiling` fast with the tradeoff of constant CPU overhead. This behavior can be controlled via the `SENTRY_PROFILER_LOGGING_MODE` environment variable with values of `eager|lazy`. If you opt to use the lazy logging mode, calls to `startProfiling` may be slow. (Depending on environment and node version, it can be in the order of a few hundred ms.)
-
-Here's an example of starting a server with lazy logging mode:
-
-```bash
-# Run profiler in lazy mode
-SENTRY_PROFILER_LOGGING_MODE=lazy node server.js
-```
-
-We recommend you have your own CPU resource-monitoring in place, because the actual resource use could be environment-dependent.
+<Include name="profiling-node-runtime-flags.mdx" />
 
 ## Precompiled Binaries
 
