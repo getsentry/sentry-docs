@@ -54,6 +54,11 @@ export const Selections = styled('div')`
 `;
 
 export const DropdownHeader = styled('div')`
+  font-family:
+    'Rubik',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI';
   padding: 6px 8px;
   font-size: 0.875rem;
   color: #80708f;
