@@ -20,10 +20,25 @@ Sentry has an abstraction called "filestore" that handles storing attachments, s
 
 The configuration for GCS backend is pointed to `sentry.filestore.gcs.GoogleCloudStorage`. You will need to set `GOOGLE_APPLICATION_CREDENTIALS` environment variable. For more information, refer to the [Google Cloud documentation for setting up authentication](https://cloud.google.com/storage/docs/reference/libraries#setting_up_authentication).
 
+On your `sentry/config.yml` file, you will need to set the following:
+
 ```yaml
 filestore.backend: "gcs"
 filestore.options:
   bucket_name: "..."
+```
+
+If you set up via service account key, you will need to configure your `docker-compose.yml` file with the following:
+
+```yaml
+x-sentry-defaults: &sentry-defaults
+  # ...
+  environment:
+    # The rest of the environment variables
+    GOOGLE_APPLICATION_CREDENTIALS: "/run/secrets/service_account.json"
+  volumes:
+    # The rest of the volumes
+    - "/path/to/service_account.json:/run/secrets/service_account.json:ro"
 ```
 
 ### S3 backend
@@ -33,6 +48,8 @@ filestore.options:
 </Alert>
 
 The configuration for S3-compatible backend is pointed to `sentry.filestore.s3.S3Boto3Storage`.
+
+On your `sentry/config.yml` file, you will need to set the following:
 
 ```yaml
 filestore.backend: 's3'
@@ -60,8 +77,18 @@ Vroom is the service that handles profiling. By default the data for profiling i
 
 You will need to set `GOOGLE_APPLICATION_CREDENTIALS` environment variable. For more information, refer to the [Google Cloud documentation for setting up authentication](https://cloud.google.com/storage/docs/reference/libraries#setting_up_authentication).
 
-```bash
-gs://my-bucket
+On your `docker-compose.yml` file, you will need to add the following (this assumes you are setting up via service account file):
+
+```yaml
+services:
+  vroom:
+    environment:
+      # The rest of the environment variables
+      SENTRY_BUCKET_PROFILES: "gs://my-bucket"
+      GOOGLE_APPLICATION_CREDENTIALS: "/run/secrets/service_account.json"
+    volumes:
+      # The rest of the volumes
+      - "/path/to/service_account.json:/run/secrets/service_account.json:ro"
 ```
 
 ### S3 backend
@@ -70,18 +97,20 @@ gs://my-bucket
   Although S3 support is available, it is not thoroughly tested and is not used by Sentry SaaS internally. Therefore, it is experiemental and not officially supported.
 </Alert>
 
-```bash
-# For regular AWS S3
-s3://my-bucket?awssdk=v1&region=us-west-1&endpoint=amazonaws.com
+On your `docker-compose.yml` file, you will need to add the following:
 
-# For other S3-compatible APIs
-s3://my-bucket?awssdk=v1&region=any-region&endpoint=minio.yourcompany.com&s3ForcePathStyle=true&disableSSL
+```yaml
+services:
+  vroom:
+    environment:
+      # The rest of the environment variables
+      SENTRY_BUCKET_PROFILES: "s3://my-bucket?awssdk=v1&region=us-west-1&endpoint=amazonaws.com"
+      # For other S3-compatible APIs
+      SENTRY_BUCKET_PROFILES: "s3://my-bucket?awssdk=v1&region=any-region&endpoint=minio.yourcompany.com&s3ForcePathStyle=true&disableSSL"
+      AWS_ACCESS_KEY: "foobar"
+      AWS_SECRET_KEY: "foobar"
+      AWS_SESSION_TOKEN: "foobar" # (optional)
 ```
-
-Additional environment variables should be provided:
-- `AWS_ACCESS_KEY=foobar`
-- `AWS_SECRET_KEY=foobar`
-- `AWS_SESSION_TOKEN=foobar` (optional)
 
 Further explanation on the query string options:
 - `region`: The AWS region for requests.
