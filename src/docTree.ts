@@ -1,6 +1,5 @@
-import {getDevDocsFrontMatter, getDocsFrontMatter} from 'sentry-docs/mdx';
-
 import {isDeveloperDocs} from './isDeveloperDocs';
+import {getDevDocsFrontMatter, getDocsFrontMatter} from './mdx';
 import {platformsData} from './platformsData';
 import {
   FrontMatter,
