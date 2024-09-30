@@ -1,12 +1,63 @@
-```dart {filename:multi_view_app.dart}{tabTitle: multi_view_app.dart}
+```dart {filename:main.dart}{tabTitle: lib/main.dart}
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:sentry_flutter/src/integrations/widgets_binding_integration.dart';
+import 'dart:ui' show FlutterView;
+
+// ATTENTION: Change the DSN below with your own to see the events in Sentry. Get one at sentry.io
+const String exampleDsn =
+    'https://e85b375ffb9f43cf8bdf9787768149e0@o447951.ingest.sentry.io/5428562';
+
+Future<void> main() async {
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = exampleDsn;
+      final integration = options.integrations
+          .firstWhere((element) => element is WidgetsBindingIntegration);
+      options.removeIntegration(integration);
+    },
+    // Init your App.
+    appRunner: () => runWidget(
+      MultiViewApp(
+        viewBuilder: (BuildContext context) => DefaultAssetBundle(
+          bundle: SentryAssetBundle(),
+          child: const MyApp(),
+        ),
+      ),
+    ),
+  );
+}
+
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      navigatorObservers: [
+        SentryNavigatorObserver(),
+      ],
+      home: Scaffold(
+        body: Center(
+          child: Text(
+              'Sentry Flutter Example (ViewId:${View.of(context).viewId})'),
+        ),
+      ),
+    );
+  }
+}
+
 // multi_view_app.dart
 
 // Copyright 2014 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-
-import 'dart:ui' show FlutterView;
-import 'package:flutter/widgets.dart';
 
 /// Calls [viewBuilder] for every view added to the app to obtain the widget to
 /// render into that view. The current view can be looked up with [View.of].
@@ -77,98 +128,7 @@ class _MultiViewAppState extends State<MultiViewApp>
 }
 ```
 
-```dart {filename:main.dart}{tabTitle: main.dart}
-import 'multi_view_app.dart';
-import 'package:sentry_flutter/src/integrations/widgets_binding_integration.dart';
-
-...
-
-Future<void> main() async {
-  await setupSentry(
-    () => runWidget(
-      MultiViewApp(
-        viewBuilder: (BuildContext context) => DefaultAssetBundle(
-          bundle: SentryAssetBundle(),
-          child: const MyApp(),
-        ),
-      ),
-    ),
-    exampleDsn,
-  );
-}
-
-Future<void> setupSentry(
-...
-}) async {
-  await SentryFlutter.init(
-    (options) {
-      ...
-      final integration = options.integrations
-          .firstWhere((element) => element is WidgetsBindingIntegration);
-      options.removeIntegration(integration);
-    },
-    // Init your App.
-    appRunner: appRunner,
-  );
-}
-
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
-
-  @override
-  _MyAppState createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  @override
-  Widget build(BuildContext context) {
-    return feedback.BetterFeedback(
-      child: ChangeNotifierProvider<ThemeProvider>(
-        create: (_) => ThemeProvider(),
-        child: Builder(
-          builder: (context) => MaterialApp(
-            navigatorObservers: [
-              SentryNavigatorObserver(),
-            ],
-            theme: Provider.of<ThemeProvider>(context).theme,
-            home: const MainScaffold(),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-...
-
-
-class MainScaffold extends StatelessWidget {
-  ...
-
-  @override
-  Widget build(BuildContext context) {
-    ...
-    return Scaffold(
-      appBar: AppBar(
-        title:
-            Text('Sentry Flutter Example (ViewId:${View.of(context).viewId})'),
-        actions: [
-          ...
-        ],
-      ),
-      body: SingleChildScrollView(
-        ...
-      ),
-    );
-  }
-
-  ...
-}
-
-
-```
-
-```js {filename:flutter_bootstrap.js}{tabTitle: flutter_bootstrap.js}
+```js {filename:flutter_bootstrap.js}{tabTitle: web/flutter_bootstrap.js}
 // flutter_bootstrap.js
 {{ flutter_js; }}
 {{ flutter_build_config; }}
@@ -186,10 +146,47 @@ _flutter.loader.load({
 });
 ```
 
-```html {filename:index.html}{tabTitle: index.html}
+```html {filename:index.html}{tabTitle: web/index.html}
 <!doctype html>
 <html>
-  ...
+  <head>
+    <!--
+          If you are serving your web app in a path other than the root, change the
+          href value below to reflect the base path you are serving from.
+
+          The path provided below has to start and end with a slash "/" in order for
+          it to work correctly.
+
+          For more details:
+          * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+          This is a placeholder for base href that will be replaced by the value of
+          the `--base-href` argument provided to `flutter build`.
+        -->
+    <base href="$FLUTTER_BASE_HREF" />
+
+    <meta charset="UTF-8" />
+    <meta content="IE=Edge" http-equiv="X-UA-Compatible" />
+    <meta
+      name="description"
+      content="Demonstrates how to use the multiview feature with the sentry plugin."
+    />
+
+    <!-- iOS meta tags & icons -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta
+      name="apple-mobile-web-app-title"
+      content="sentry multiview example"
+    />
+    <link rel="apple-touch-icon" href="icons/Icon-192.png" />
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" type="image/png" href="favicon.png" />
+
+    <title>sentry multiview example</title>
+    <link rel="manifest" href="manifest.json" />
+  </head>
   <body>
     <div style="width: 100%; height: 100%; position: absolute;">
       <div id="left" style="width: 50%; height: 100%; float: left;"></div>

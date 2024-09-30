@@ -78,18 +78,27 @@ To prevent the `WidgetsBindingIntegration` from loading by default, you will nee
 // ignore: implementation_imports
 import 'package:sentry_flutter/src/integrations/widgets_binding_integration.dart';
 ...
-final integration = options.integrations.firstWhere(
-    (element) => element is WidgetsBindingIntegration);
-options.removeIntegration(integration);
+SentryFlutter.init(
+  (options) {
+    ...
+    final integration = options.integrations
+        .firstWhere((element) => element is WidgetsBindingIntegration);
+    options.removeIntegration(integration);
+  },
+  // Init your App.
+  appRunner: appRunner,
+);
 ```
 
-### Enable multi-view in the example app
+### Example application using the multi-view feature with the sentry plugin
 
-To make the [sentry flutter example app](https://github.com/getsentry/sentry-dart/tree/main/flutter/example) `multi-view` ready, you will need to modify the `main.dart` and create the `multi_view_app.dart` file next to the `main.dart` and insert the content from the [docs](https://docs.flutter.dev/platform-integration/web/embedding-flutter-web#handling-view-changes-from-dart).
-Modify the `index.html`in the `web` directory and add the `flutter_bootstrap.js` file.
+Below is the code for an **example application** using the **multi-view** feature in combination with the **sentry plugin**.
 
-Also note the `NavigatorKey` in the `MaterialApp` widget. This key is a single `GlobalKey` in the `example app` and therefore doesn't support multiple instances. If you rely on this `NavigatorKey` you will need to handle multiple `Keys` and pass them to the appropriate view/instance. For simplicity, we will not use the `NavigatorKey` in the following example.
+Copy the `main.dart` into the `lib` folder of your existing project. This file already contains the code of the `multi_view_app.dart` from the [`flutter documentation`](https://docs.flutter.dev/platform-integration/web/embedding-flutter-web#handling-view-changes-from-dart).
+Next, copy the `flutter_bootstrap.js` and the `index.html` into the `web` folder.
 
-Now you should be able to see 2 instances of the same application side by side, with different ViewIds in the `AppBar`.
+Make sure you are using **Flutter 3.24** or newer and run the application.
+
+Now you should be able to see **2** instances of the same application side by side, with different **ViewIds** in the `body`.
 
 <Include name="troubleshooting/flutter/enable_multi_view.mdx" />
