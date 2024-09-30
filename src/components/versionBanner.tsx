@@ -14,8 +14,7 @@ export function VersionBanner({
     <div
       className={`fixed bg-opacity-70	backdrop-blur-sm flex items-center content-center top-24 left-[50%] translate-x-[-50%] p-3 shadow-xl rounded bg-yellow-400 ${show ? '' : 'hidden'}`}
     >
-      You are currently reading docs for sdk version {version}. Redirect to latest
-      version?{' '}
+      You're on version {version} of our SDK docs. Want to go to the latest version?{' '}
       <Button className="ml-2" onClick={onClickLatest}>
         Latest
       </Button>
