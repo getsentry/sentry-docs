@@ -29,6 +29,7 @@ import remarkTocHeadings, {TocNode} from './remark-toc-headings';
 import remarkVariables from './remark-variables';
 import {FrontMatter, Platform, PlatformConfig} from './types';
 import {isTruthy} from './utils';
+import {VERSION_INDICATOR} from './versioning';
 
 const root = process.cwd();
 
@@ -92,6 +93,13 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
     const trailingIndex = '/index';
     if (fm.slug.endsWith(trailingIndex)) {
       fm.slug = fm.slug.slice(0, fm.slug.length - trailingIndex.length);
+    }
+
+    //  versioned index files get appended to the path (e.g. /path/index__v1 becomes /path__v1)
+    const versionedIndexFileIndicator = `${trailingIndex}${VERSION_INDICATOR}`;
+    if (fm.slug.includes(versionedIndexFileIndicator)) {
+      const segments = fm.slug.split(versionedIndexFileIndicator);
+      fm.slug = `${segments[0]}${VERSION_INDICATOR}${segments[1]}`;
     }
   });
 
@@ -237,6 +245,22 @@ function getAllFilesFrontMatter() {
   return allFrontMatter;
 }
 
+/**
+ *  Generate a file path for versioned content, or return an invalid one if the slug is not versioned
+ */
+export const getVersionedIndexPath = (
+  pathRoot: string,
+  slug: string,
+  fileExtension: string
+) => {
+  let versionedSlug = 'does/not/exist.mdx';
+  const segments = slug.split(VERSION_INDICATOR);
+  if (segments.length === 2) {
+    versionedSlug = `${segments[0]}/index${VERSION_INDICATOR}${segments[1]}${fileExtension}`;
+  }
+  return path.join(pathRoot, versionedSlug);
+};
+
 export async function getFileBySlug(slug: string) {
   const configPath = path.join(root, slug, 'config.yml');
 
@@ -247,13 +271,15 @@ export async function getFileBySlug(slug: string) {
 
   let mdxPath = path.join(root, `${slug}.mdx`);
   let mdxIndexPath = path.join(root, slug, 'index.mdx');
+  let versionedMdxIndexPath = getVersionedIndexPath(root, slug, '.mdx');
   let mdPath = path.join(root, `${slug}.md`);
   let mdIndexPath = path.join(root, slug, 'index.md');
 
   if (
     slug.indexOf('docs/platforms/') === 0 &&
-    [mdxPath, mdxIndexPath, mdPath, mdIndexPath].filter(p => fs.existsSync(p)).length ===
-      0
+    [mdxPath, mdxIndexPath, mdPath, mdIndexPath, versionedMdxIndexPath].filter(p =>
+      fs.existsSync(p)
+    ).length === 0
   ) {
     // Try the common folder.
     const slugParts = slug.split('/');
@@ -273,10 +299,14 @@ export async function getFileBySlug(slug: string) {
       mdxIndexPath = path.join(root, commonFilePath, 'index.mdx');
       mdPath = path.join(root, `${commonFilePath}.md`);
       mdIndexPath = path.join(root, commonFilePath, 'index.md');
+      versionedMdxIndexPath = getVersionedIndexPath(root, commonFilePath, '.mdx');
     }
   }
 
-  const sourcePath = [mdxPath, mdxIndexPath, mdPath].find(fs.existsSync) ?? mdIndexPath;
+  const sourcePath =
+    [mdxPath, mdxIndexPath, mdPath, versionedMdxIndexPath].find(fs.existsSync) ??
+    mdIndexPath;
+
   const source = fs.readFileSync(sourcePath, 'utf8');
 
   process.env.ESBUILD_BINARY_PATH = path.join(
