@@ -130,3 +130,59 @@ SentrySDK.resumeAppHangTracking()
 [SentrySDK resumeAppHangTracking];
 
 ```
+
+### App Hangs V2
+
+<Note>
+
+This feature is experimental and may have bugs.
+
+</Note>
+
+Since version 8.37.0, you can enable AppHangsV2, which is available on iOS and tvOS.
+AppHangsV2 works similarly to the prior version. The main difference is that it differentiates between app hangs,
+for which the main thread is fully blocked and for which not, and you can ignore non-fully blocking app hangs.
+A fully-blocking app hang is when the main thread is stuck completely, and the app can't render a single frame.
+A non-fully-blocking app hang is when the app appears stuck to the user but can still render a few frames.
+Fully-blocking app hangs are more actionable because the stacktrace shows the exact blocking location on the
+main thread. As the main thread isn't completely blocked, non-fully-blocking app hangs can have a stacktrace
+that doesn't highlight the exact blocking location.
+To enable the feature:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableAppHangTrackingV2 = true
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableAppHangTrackingV2 = YES;
+}];
+```
+
+As stacktraces might not be 100% accurate for non-fully blocked app hangs, you can disable them with the option `enableReportNonFullyBlockingAppHangs`:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableReportNonFullyBlockingAppHangs = false
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableReportNonFullyBlockingAppHangs = NO;
+}];
+```
