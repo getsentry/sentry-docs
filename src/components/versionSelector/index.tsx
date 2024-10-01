@@ -1,5 +1,5 @@
 'use client';
-import {useState} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import {ChevronDownIcon} from '@radix-ui/react-icons';
 import * as RadixSelect from '@radix-ui/react-select';
 import {usePathname, useRouter} from 'next/navigation';
@@ -19,28 +19,54 @@ export function VersionSelector({versions, sdk}: {sdk: string; versions: string[
   const router = useRouter();
   const pathname = usePathname();
 
-  const getCurrentVersion = () => {
+  const getLocallyStoredVersion = useCallback(() => {
+    return localStorage.getItem(getLocalStorageVersionKey(sdk));
+  }, [sdk]);
+
+  const getCurrentVersion = useCallback(() => {
     if (pathname?.includes(VERSION_INDICATOR)) {
       const segments = pathname.split(VERSION_INDICATOR);
       return segments[segments.length - 1];
     }
 
     return 'latest';
-  };
+  }, [pathname]);
 
   const [selectedVersion, setSelectedVersion] = useState(getCurrentVersion());
 
-  const getVersionedPathname = (version: string) => {
-    if (pathname) {
-      if (version === 'latest') {
-        return pathname?.split(VERSION_INDICATOR)[0];
+  const getVersionedPathname = useCallback(
+    (version: string) => {
+      if (pathname) {
+        if (version === 'latest') {
+          return pathname?.split(VERSION_INDICATOR)[0];
+        }
+
+        return `${stripTrailingSlash(pathname.split(VERSION_INDICATOR)[0])}${VERSION_INDICATOR}${version}`;
       }
 
-      return `${stripTrailingSlash(pathname.split(VERSION_INDICATOR)[0])}${VERSION_INDICATOR}${version}`;
-    }
+      return '';
+    },
+    [pathname]
+  );
 
-    return '';
-  };
+  /**
+   * when a user has previously selected a version from the version selector
+   * we want to redirect to this version again on other pages - this has to happen on client side since
+   * we do not know anything about version preferences on the server
+   */
+  useEffect(() => {
+    const pathVersion = getCurrentVersion();
+    const storedSelection = getLocallyStoredVersion();
+    if (storedSelection !== null && pathVersion !== storedSelection) {
+      router.replace(getVersionedPathname(storedSelection));
+    }
+  }, [
+    getCurrentVersion,
+    getLocallyStoredVersion,
+    getVersionedPathname,
+    pathname,
+    router,
+  ]);
 
   const handleVersionChange = (newVersion: string) => {
     setSelectedVersion(newVersion);
