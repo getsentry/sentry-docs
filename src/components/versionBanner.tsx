@@ -12,13 +12,17 @@ export function VersionBanner({
 
   return (
     <div
-      className={`fixed bg-opacity-70	backdrop-blur-sm flex items-center content-center top-24 left-[50%] translate-x-[-50%] p-3 shadow-xl rounded bg-yellow-400 ${show ? '' : 'hidden'}`}
+      className={`fixed right-5 bg-opacity-70 dark:bg-opacity-60	backdrop-blur-sm flex items-center content-center top-24 p-3 shadow-xl rounded bg-yellow-400   ${show ? '' : 'hidden'}`}
     >
       You're on version {version} of our SDK docs. Want to go to the latest version?{' '}
-      <Button className="ml-2" onClick={onClickLatest}>
+      <Button className="ml-2 dark:bg-primary" onClick={onClickLatest}>
         Latest
       </Button>
-      <Button variant="ghost" className="mx-2" onClick={() => setShow(false)}>
+      <Button
+        variant="ghost"
+        className="mx-2 dark:text-primary"
+        onClick={() => setShow(false)}
+      >
         Hide
       </Button>
     </div>
