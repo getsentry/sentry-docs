@@ -18,17 +18,16 @@ export default defineNuxtConfig({
 
 Adding this module enables the Sentry SDK in your Nuxt application. The Sentry Nuxt Module will then automatically look for the Sentry configuration files and initialize the SDK accordingly.
 
-
 ### Client-side Setup
 
-Add a `sentry.client.config.(js|ts)` file to the root of your project (this is probably the same level as the `package.json`). In this file, import and initialize Sentry, specifying any SDK options for the client:
+Add a `sentry.client.config.ts` file to the root of your project (this is probably the same level as the `package.json`). In this file, import and initialize Sentry, specifying any SDK options for the client:
 
-<SignInNote />
-
-```javascript {filename:sentry.client.config.(js|ts)}
+```javascript {filename:sentry.client.config.ts}
 import * as Sentry from '@sentry/nuxt';
 
 Sentry.init({
+  // If set up, you can use your runtime config here
+  // dsn: useRuntimeConfig().public.sentry.dsn,
   dsn: "___PUBLIC_DSN___",
 
   // We recommend adjusting this value in production, or using tracesSampler
@@ -39,26 +38,46 @@ Sentry.init({
 
 ### Server-side Setup
 
-1. Add an `instrument.server.mjs` file to your `public` folder. In this file, import and initialize Sentry, specifying any SDK options for the server:
+1. Add a `sentry.server.config.ts` file to the root of your project:
 
-<SignInNote />
-
-```javascript {filename:public/instrument.server.mjs}
+```javascript {filename:sentry.server.config.ts}
 import * as Sentry from '@sentry/nuxt';
 
 Sentry.init({
-    dsn: "___PUBLIC_DSN___"
+  dsn: "___PUBLIC_DSN___"
 });
 ```
 
-2. Add an `--import` flag to the `NODE_OPTIONS` environment variable wherever you run your application.
-For local previews, update your `nuxt preview` script in the `package.json` (see below).
-Also, ensure this environment variable is set in your deployment environment, such as on Netlify or Vercel.
+The Nuxt `useRuntimeConfig()` does not work in the Sentry server config due to technical reasons (the config file has to
+be loaded before Nuxt is loaded). To be able to use `process.env` you either have to add `--env-file=.env` to your node command
+or use the `dotenv` package:
 
-```json {filename:package.json}
+```bash {tabTitle: env-file}
+node --env-file=.env --import ./.output/server/sentry.server.config.mjs .output/server/index.mjs
+```
+
+
+
+```javascript {tabTitle: dotenv} {filename:sentry.server.config.ts} {1,4}
+import dotenv from 'dotenv';
+import * as Sentry from '@sentry/nuxt';
+
+dotenv.config();
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___"
+});
+```
+
+2. Add an [--import flag](https://nodejs.org/api/cli.html#--importmodule) to the Node options of your `node` command you run
+in production (not `nuxt preview`), so the file loads before any other imports (keep in mind the `.mjs` file ending).
+Depending on your setup, you might need to adjust the path to the `sentry.server.config.mjs` file:
+
+```json {filename:package.json} {4}
 {
   "scripts": {
-    "preview": "NODE_OPTIONS='--import ./public/instrument.server.mjs' nuxt preview"
+    "preview": "nuxt preview",
+    "start": "node --import ./.output/server/sentry.server.config.mjs .output/server/index.mjs"
   }
 }
 ```

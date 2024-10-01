@@ -1,7 +1,25 @@
 const {redirects} = require('./redirects.js');
 
-const {codecovWebpackPlugin} = require('@codecov/webpack-plugin');
+const {codecovNextJSWebpackPlugin} = require('@codecov/nextjs-webpack-plugin');
 const {withSentryConfig} = require('@sentry/nextjs');
+
+const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
+  ? {}
+  : {
+      '/**/*': [
+        './.git/**/*',
+        './apps/**/*',
+        'develop-docs/**/*',
+        'node_modules/@esbuild/darwin-arm64',
+      ],
+      '/platform-redirect': ['**/*.gif', 'public/mdx-images/**/*', '*.pdf'],
+      '\\[\\[\\.\\.\\.path\\]\\]': [
+        'docs/**/*',
+        'node_modules/prettier/plugins',
+        'node_modules/rollup/dist',
+      ],
+      'sitemap.xml': ['docs/**/*', 'public/mdx-images/**/*', '*.gif', '*.pdf', '*.png'],
+    };
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -11,14 +29,16 @@ const nextConfig = {
 
   experimental: {
     serverComponentsExternalPackages: ['rehype-preset-minify'],
+    outputFileTracingExcludes,
   },
 
-  webpack: (config, _options) => {
+  webpack: (config, options) => {
     config.plugins.push(
-      codecovWebpackPlugin({
+      codecovNextJSWebpackPlugin({
         enableBundleAnalysis: typeof process.env.CODECOV_TOKEN === 'string',
         bundleName: 'sentry-docs',
         uploadToken: process.env.CODECOV_TOKEN,
+        webpack: options.webpack,
       })
     );
 

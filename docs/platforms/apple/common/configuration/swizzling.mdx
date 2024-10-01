@@ -28,7 +28,6 @@ The Cocoa SDK uses [swizzling](https://nshipster.com/method-swizzling/) to provi
 
 Since Cocoa 7.5.0, you can opt out of swizzling using options. When you disable swizzling, the SDK disables the features above:
 
-<SignInNote />
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -45,5 +44,36 @@ SentrySDK.start { options in
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
     options.enableSwizzling = NO;
+}];
+```
+
+
+## Deactivate Swizzling for Specific Classes
+
+To deactivate swizzling for specific classes, you can use the option `swizzleClassNameExcludes`, which is available with Sentry Cocoa SDK version `8.23.0` and above. The SDK checks if the name of a class it intends to swizzle contains any class name configured using this option. For example, if you add `MyUIViewController` to this list, the Sentry Cocoa SDK excludes the following classes from swizzling:
+
+- `YourApp.MyUIViewController`
+- `YourApp.MyUIViewControllerA`
+- `MyApp.MyUIViewController`
+
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.swizzleClassNameExcludes = [
+      "MyUIViewController",
+    ]
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.swizzleClassNameExcludes = [NSSet setWithObjects:
+      @"MyUIViewController",
+      nil
+    ];
 }];
 ```

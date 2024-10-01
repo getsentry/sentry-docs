@@ -66,6 +66,10 @@ type Redirect = {
 /** Note: if you want to set redirects for developer docs, set them below in `DEVELOPER_DOCS_REDIRECTS` */
 const USER_DOCS_REDIRECTS: Redirect[] = [
   {
+    from: '/platforms/python/http_errors/',
+    to: '/platforms/python/integrations/django/http_errors/',
+  },
+  {
     from: '/platforms/javascript/guides/react/configuration/integrations/trycatch/',
     to: '/platforms/javascript/configuration/integrations/browserapierrors/',
   },
@@ -206,12 +210,12 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/go/usage/serverless/',
   },
   {
-    from: '/platforms/go/martini/',
-    to: '/platforms/go/guides/martini/',
-  },
-  {
     from: '/platforms/go/fasthttp/',
     to: '/platforms/go/guides/fasthttp/',
+  },
+  {
+    from: '/platforms/go/fiber/',
+    to: '/platforms/go/guides/fiber/',
   },
   {
     from: '/platforms/go/echo/',
@@ -224,6 +228,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/go/negroni/',
     to: '/platforms/go/guides/negroni/',
+  },
+  {
+    from: '/platforms/go/logrus/',
+    to: '/platforms/go/guides/logrus/',
   },
   {
     from: '/clients/go/integrations/http/',
@@ -412,6 +420,14 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/python/starlite/',
     to: '/platforms/python/integrations/starlite/',
+  },
+  {
+    from: '/clients/python/integrations/litestar/',
+    to: '/platforms/python/integrations/litestar/',
+  },
+  {
+    from: '/platforms/python/litestar/',
+    to: '/platforms/python/integrations/litestar/',
   },
   {
     from: '/platforms/python/beam/',

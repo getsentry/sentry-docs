@@ -13,6 +13,30 @@
   },
   {
     "type": "Gauge",
+    "name": "buffer.disk_used",
+    "description": "The used disk for the buffer.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.drain.duration",
+    "description": "Timing in milliseconds for the time it takes for the buffer to drain its envelopes.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "buffer.envelope_stacks_popped",
+    "description": "Number of times an envelope stack is popped from the priority queue of stacks in the\nenvelope buffer.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "buffer.envelopes_count",
+    "description": "Number of elements in the envelope buffer across all the stacks.\n\nThis metric is tagged with:\n- `storage_type`: The type of storage used in the envelope buffer.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
     "name": "buffer.envelopes_disk_count",
     "description": "The number of envelopes waiting for project states on disk.\n\nNote this metric *will not be logged* when we encounter envelopes in the database on startup,\nbecause counting those envelopes reliably would risk locking the db for multiple seconds.\n\nThe disk buffer size can be configured with `spool.envelopes.max_disk_size`.",
     "features": []
@@ -37,8 +61,20 @@
   },
   {
     "type": "Counter",
+    "name": "buffer.envelopes_returned",
+    "description": "Number of envelopes that were returned to the envelope buffer by the project cache.\n\nThis happens when the envelope buffer falsely assumes that the envelope's projects are loaded\nin the cache and sends the envelope onward, even though the project cache cannot handle it.",
+    "features": []
+  },
+  {
+    "type": "Counter",
     "name": "buffer.envelopes_written",
     "description": "Number of _envelopes_ the envelope buffer ingests.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.initialization.duration",
+    "description": "Timing in milliseconds for the time it takes for initialize the buffer.",
     "features": []
   },
   {
@@ -48,15 +84,45 @@
     "features": []
   },
   {
-    "type": "Gauge",
-    "name": "buffer.push_inflight",
-    "description": "Number of envelopes currently waiting to be buffered.\n\nThis corresponds to the number of corresponding tokio tasks currently scheduled or running.",
+    "type": "Timer",
+    "name": "buffer.peek.duration",
+    "description": "Timing in milliseconds for the time it takes for the buffer to peek.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.pop.duration",
+    "description": "Timing in milliseconds for the time it takes for the buffer to pop.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.push.duration",
+    "description": "Timing in milliseconds for the time it takes for the buffer to push.",
     "features": []
   },
   {
     "type": "Counter",
     "name": "buffer.reads",
     "description": "Number of times the envelope buffer reads back from disk.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "buffer.ready_to_pop",
+    "description": "Number of times the readiness check of the buffer is polled.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.spool.duration",
+    "description": "Timing in milliseconds for the time it takes for the buffer to spool data to disk.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "buffer.spooled_envelopes",
+    "description": "Number of envelopes spool to disk.",
     "features": []
   },
   {
@@ -72,9 +138,27 @@
     "features": []
   },
   {
+    "type": "Counter",
+    "name": "buffer.try_pop",
+    "description": "Number of times an envelope from the buffer is trying to be popped.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.unspool.duration",
+    "description": "Timing in milliseconds for the time it takes for the buffer to unspool data from disk.",
+    "features": []
+  },
+  {
     "type": "Gauge",
     "name": "buffer.unspool.periodic",
     "description": "Number of queue keys (project key pairs) unspooled during proactive unspool.\nThis metric is tagged with:\n- `reason`: Why keys are / are not unspooled.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "buffer.unspooled_envelopes",
+    "description": "Number of envelopes unspooled from disk.",
     "features": []
   },
   {
@@ -612,7 +696,7 @@
   {
     "type": "Counter",
     "name": "project_state.redis.requests",
-    "description": "Number of times a project state is requested from the central Redis cache.\n\nThis has a tag `hit` with values `true` or `false`.  If false the request will be\nsent to the sentry endpoint.",
+    "description": "Number of times a project state is requested from the central Redis cache.\n\nThis metric is tagged with:\n- `hit`: One of:\n- `revision`: the cached version was validated to be up to date using its revision.\n- `project_config`: the request was handled by the cache.\n- `project_config_revision`: the request was handled by the cache and the revision did\nnot change.\n- `false`: the request will be sent to the sentry endpoint.",
     "features": [
       "processing"
     ]
@@ -667,6 +751,12 @@
     "type": "Timer",
     "name": "replay.recording.process",
     "description": "Time in milliseconds spent on parsing, normalizing and scrubbing replay recordings.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "replay.segment_limit_exceeded",
+    "description": "Incremented every time a segment exceeds the expected limit.",
     "features": []
   },
   {

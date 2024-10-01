@@ -26,6 +26,10 @@ const developerDocsRedirects = [
     source: '/sdk/performance/:path*',
     destination: '/sdk/telemetry/traces/:path*',
   },
+  {
+    source: '/sdk/event-payloads/types/',
+    destination: '/sdk/event-payloads/',
+  },
 ];
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
@@ -588,6 +592,10 @@ const userDocsRedirects = [
   {
     source: '/api/organizations/experimental-retrieve-release-health-session-statistics/',
     destination: '/api/releases/retrieve-release-health-session-statistics/',
+  },
+  {
+    source: '/api/rate-limits/',
+    destination: '/api/ratelimits/',
   },
 ];
 

@@ -16,11 +16,11 @@ After installation you should be able to run `devenv bootstrap` which will guide
 
 When you're done with setup, you'll want to also review the <Link to="/development/workflow/">development workflow</Link>.
 
-
 ## Keeping your environment up-to-date
 
 Simply run `devenv sync` inside of your sentry or getsentry repo.
 
+NOTE: After running `devenv sync` you may need to restart your terminal to continue.
 
 ## Running the Development Server
 
@@ -106,6 +106,8 @@ sentry devservices up snuba
 
 See also: <Link to="/sentry-vs-getsentry/">Sentry vs Getsentry</Link>
 
+Before running `getsentry`, you might need to run `devenv sync` inside the `getsentry` directory if you have previously run `sentry` locally, as there might be differences between the environments.
+
 Just like running `sentry` (see above), you can start the `devservices` using the following command in the `getsentry` folder:
 
 ```shell
@@ -120,9 +122,7 @@ getsentry devserver --workers
 
 **Note**: You **cannot** have both sentry and getsentry devserver running at the same time.
 
-After the server warms up for a little while, you must access it
-at [http://dev.getsentry.net:8000](http://dev.getsentry.net:8000/).
-Using localhost doesn't work.
+After the server warms up, access it at [http://dev.getsentry.net:8000](http://dev.getsentry.net:8000/). Using localhost won't work. Note that the **http** protocol is used, not **https**. If you encounter a certificate error while accessing it locally, it might be because your browser has remembered that `dev.getsentry.net` previously used the https protocol (possibly while running `yarn dev-ui`) and is now redirecting all http requests to https. To resolve this, open the site in an **incognito window** of your browser.
 
 If you need to overwrite configuration options for your local
 environment, you can create `getsentry/conf/settings/devlocal.py` and put the
@@ -130,16 +130,16 @@ configuration option overrides there. This module will be automatically imported
 by `dev.py` if it exists.
 
 To enable the ingest workers, follow the steps described <Link to="#ingestion-pipeline-relay">here</Link> and run
+
 ```shell
 getsentry devserver --workers --ingest
 ```
 
-
 ## Running siloed instances
 
-By default `sentry devserver` will run a monolith mode application server. You can also run ``devserver`` with siloed application instances. Before you do, you need to <Link to="/database-migrations/#cloning-a-monolith-database">create split silo databases</Link>.
+By default `sentry devserver` will run a monolith mode application server. You can also run `devserver` with siloed application instances. Before you do, you need to <Link to="/database-migrations/#cloning-a-monolith-database">create split silo databases</Link>.
 
-The devserver command supports  `--silo` option that lets you create siloed instances. Any workers, consumers, or celery-beat processes will be started with the same silo mode.
+The devserver command supports `--silo` option that lets you create siloed instances. Any workers, consumers, or celery-beat processes will be started with the same silo mode.
 
 ```shell
 # Start control silo servers
@@ -148,6 +148,7 @@ sentry devserver --silo=control --celery-beat --workers
 # Start region silo servers
 sentry devserver --silo=region --celery-beat --workers --ingest
 ```
+
 Siloed servers have the following port assignments:
 
 - 8000 - Webpack
@@ -158,42 +159,7 @@ In the above setup your local environment will use org slug domains, and send re
 
 ### Ngrok and siloed servers
 
-To combine ngrok and local development servers you’ll need to reserve multiple domains in ngrok, and create a configuration file for ngrok:
-
-```yaml
-version: '2'
-authtoken: <YOUR-NGROK-AUTHTOKEN>
-tunnels:
-  acme-org:
-    proto: http
-    hostname: acme.<yourname>.ngrok.dev
-    addr: 8000
-  control-silo:
-    proto: http
-    hostname: <yourname>.ngrok.dev
-    host_header: 'rewrite'
-    addr: 8000
-  region-silo:
-    proto: http
-    hostname: us.<yourname>.ngrok.dev
-    addr: 8010
-    host_header: 'rewrite'
-```
-
-Then run all the required servers
-
-```shell
-# Run a control silo with ngrok
-sentry devserver --silo=control --ngrok <yourname>.ngrok.dev
-
-# Run a region silo without ngrok
-sentry devserver --silo=region --ngrok <yourname>.ngrok.dev
-
-# Run ngrok
-ngrok start --all --config regions.yml
-```
-
-This setup will result in both the region and control servers responding to different domains. The multi-region setup with ngrok also enables customer-domains and you'll need ngrok domains for each organization you plan on using. In this configuration, CORS will work similar to production. For ngrok setup with non-siloed development server see <Link to="/backend/development-server/">developement server</Link>.
+Refer to <Link to="/development/ngrok/">ngrok docs</Link>.
 
 ### Siloed Django Shell
 

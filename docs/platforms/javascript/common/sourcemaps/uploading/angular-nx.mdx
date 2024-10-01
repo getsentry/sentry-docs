@@ -19,7 +19,7 @@ Before you register the Sentry bundler plugin, first ensure that you can registe
 Typically, this is possible if you have access to a `webpack.config.js` or a similar configuration file.
 If this already is the case, skip to [step 2](#2-register-the-sentry-webpack-plugin).
 
-If you can't register a plugin, you'll need to change the executor in your `project.json` to a custom executor that allows you to register it (such as [`@nx/angular:webpack-browser`](https://nx.dev/nx-api/angular/executors/webpack-browser) or [`@nx/angular:browser-esbuild`](https://nx.dev/nx-api/angular/executors/browser-esbuild)). 
+If you can't register a plugin, you'll need to change the executor in your `project.json` to a custom executor that allows you to register it (such as [`@nx/angular:webpack-browser`](https://nx.dev/nx-api/angular/executors/webpack-browser) or [`@nx/angular:browser-esbuild`](https://nx.dev/nx-api/angular/executors/browser-esbuild)).
 
 Check out the example below: in your `project.json`, replace the default executor (`@angular-devkit/build-angular:browser`) with `@nx/angular:webpack-browser`:
 
@@ -53,8 +53,11 @@ If you are on an older version and you want to upload source maps we recommend u
 
 </Note>
 
-To upload source maps you have to configure an auth token.
-Auth tokens can be passed to the plugin explicitly with the `authToken` option, with a `SENTRY_AUTH_TOKEN` environment variable, or with an `.env.sentry-build-plugin` file in the working directory when building your project.
+To upload source maps you have to configure an [Organization Auth Token](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/).
+
+Alternatively, you can also use a [User Auth Token](https://sentry.io/orgredirect/organizations/:orgslug/settings/account/api/auth-tokens/), with the "Project: Read & Write" and "Release: Admin" permissions.
+
+Auth tokens can be passed to the plugin explicitly with the `authToken` option, with a `SENTRY_AUTH_TOKEN` environment variable, or with an `.env.sentry-build-plugin` file (don't forget to add it to your `.gitignore` file, as this is sensitive data) in the working directory when building your project.
 We recommend you add the auth token to your CI/CD environment as an environment variable.
 
 <OrgAuthTokenNote />
@@ -81,8 +84,6 @@ pnpm add @sentry/webpack-plugin --save-dev
 
 Register the Sentry webpack plugin in your `webpack.config.js`:
 
-<SignInNote />
-
 ```javascript {filename:webpack.config.js}
 const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
 
@@ -102,8 +103,8 @@ module.exports = {
 
 <Alert>
   Generating sourcemaps may expose them to the public, potentially causing your
-  source code to be leaked. You can prevent this by configuring your server to deny access to `.js.map` files, or by
-  using [Sentry Webpack Plugin's
+  source code to be leaked. You can prevent this by configuring your server to
+  deny access to `.js.map` files, or by using [Sentry Webpack Plugin's
   `sourcemaps.filesToDeleteAfterUpload`](https://www.npmjs.com/package/@sentry/webpack-plugin#sourcemapsfilestodeleteafterupload)
   option to delete source maps after they've been uploaded to Sentry.
 </Alert>
@@ -152,8 +153,8 @@ Then, follow the [official Nx documentation](https://nx.dev/nx-api/angular/execu
 
 <Alert>
   Generating sourcemaps may expose them to the public, potentially causing your
-  source code to be leaked. You can prevent this by configuring your server to deny access to `.js.map` files, or by
-  using [Sentry Esbuild Plugin's
+  source code to be leaked. You can prevent this by configuring your server to
+  deny access to `.js.map` files, or by using [Sentry Esbuild Plugin's
   `sourcemaps.filesToDeleteAfterUpload`](https://www.npmjs.com/package/@sentry/esbuild-plugin#sourcemapsfilestodeleteafterupload)
   option to delete source maps after they've been uploaded to Sentry.
 </Alert>

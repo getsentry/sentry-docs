@@ -125,7 +125,7 @@ Envelopes can have a number of headers which are valid in all situations:
 
 `sdk`
 
-: *Object, recommended.* This can carry the same payload as the <Link to="/sdk/event-payloads/sdk/">`sdk` interface</Link>
+: *Object, recommended.* This can carry the same payload as the [`sdk` interface](/sdk/event-payloads/sdk/)
   in the event payload but can be carried for all events. This means that SDK
   information can be carried for minidumps, session data and other submissions.
 
@@ -157,13 +157,13 @@ JavaScript
 
 Python
 
-: `datetime.now(timezone.utc).isoformat()`<br />  
+: `datetime.now(timezone.utc).isoformat()`<br />
   *Don't use `datetime.utcnow()`, as it will omit the time zone.*
 
 .NET
 
-: `DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)`  
-  or  
+: `DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)`
+  or
   `DateTimeOffset.UtcNow.ToString("o", CultureInfo.InvariantCulture)`
 
 Java
@@ -184,7 +184,7 @@ There are two generic headers for every Item:
 
 `type`
 
-**String, required.** Specifies the type of this Item and its contents. Based
+: **String, required.** Specifies the type of this Item and its contents. Based
   on the Item type, more headers may be required. See [Data Model](#data-model) for a list
   of all Item types.
 
@@ -323,7 +323,7 @@ encoded in JSON.
 
 `event_id`
 
-**UUID String, required.** Corresponds to the `event_id` field of the event
+: **UUID String, required.** Corresponds to the `event_id` field of the event
   payload. Clients are required to generate an event identifier ahead of time
   and set it at least in the Envelope headers. If the identifier mismatches
   between the Envelope and payload, the Envelope header takes precedence.
@@ -346,7 +346,7 @@ in JSON.
 
 `event_id`
 
-**UUID String, required.** Corresponds to the `event_id` field of the
+: **UUID String, required.** Corresponds to the `event_id` field of the
   transaction payload. Clients are required to generate an event identifier
   ahead of time and set it at least in the Envelope headers. If the identifier
   mismatches between the Envelope and payload, the Envelope header takes
@@ -380,13 +380,13 @@ file. It is always associated to an event or transaction.
 
 `event_id`
 
-**UUID String, required.** The identifier of the event or transaction.
+: **UUID String, required.** The identifier of the event or transaction.
 
 **Additional Item Headers:**
 
 `filename`
 
-**String, required.**  The name of the uploaded file without a path component.
+: **String, required.**  The name of the uploaded file without a path component.
 
 `attachment_type`
 
@@ -402,7 +402,7 @@ file. It is always associated to an event or transaction.
     ingestion, event contexts and extra fields are extracted from this file.
   - `unreal.logs`: A plain-text log file obtained from UE4 crashes. During
     event ingestion, the last logs are extracted into event breadcrumbs.
-  - `event.view_hierarchy`: An JSON file with a predefined structure, see [RFC #33](https://github.com/getsentry/rfcs/blob/main/text/0033-view-hierarchy.md). 
+  - `event.view_hierarchy`: An JSON file with a predefined structure, see [RFC #33](https://github.com/getsentry/rfcs/blob/main/text/0033-view-hierarchy.md).
 
 `content_type`
 
@@ -476,7 +476,7 @@ details.
 
 ### User Feedback
 
-User Feedback was called User Report in the beginning. Therefore the envelope item type is `"user_report"`. 
+User Feedback was called User Report in the beginning. Therefore the envelope item type is `"user_report"`.
 The item contains a user feedback / user report JSON payload:
 ```json
 {"event_id":"9ec79c33ec9942ab8353589fcb2e04dc","email":"john@me.com","name":"John Me","comments":"It broke."}\n
@@ -486,7 +486,7 @@ The item contains a user feedback / user report JSON payload:
 
 `event_id`
 
-**UUID String, required.** The identifier of the event or transaction.
+: **UUID String, required.** The identifier of the event or transaction.
 
 
 `email`
@@ -499,7 +499,7 @@ The item contains a user feedback / user report JSON payload:
 
 `comments`
 
-: *String, recommended.* Comments of the user about what happened. 
+: *String, recommended.* Comments of the user about what happened.
 
 **Constraints:**
 
@@ -511,7 +511,7 @@ The item contains a user feedback / user report JSON payload:
 
 `event_id`
 
-**UUID String, required.** The identifier of the event or transaction.
+: **UUID String, required.** The identifier of the event or transaction.
 
 **Additional Item Headers:**
 
@@ -537,6 +537,48 @@ details.
 
 *None*
 
+### Replay Event
+
+Item type `"replay_event"` contains a replay payload encoded in JSON.
+
+See the <Link to="/sdk/replays/">replays</Link> documentation for the payload
+details.
+
+**Constraints:**
+
+- This Item may occur at most once per Envelope.
+- This Item must be sent with a Replay Recording Item.
+
+**Envelope Headers:**
+
+*None*
+
+**Additional Item Headers:**
+
+*None*
+
+### Replay Recording
+
+Item type `"replay_recording"` contains a replay recording payload encoded in JSON *or* a gzipped JSON.
+
+See the <Link to="/sdk/replays/">replays</Link> documentation for the payload
+details.
+
+**Constraints:**
+
+- This Item may occur at most once per Envelope.
+- This Item must be sent with a Replay Recording Item.
+
+**Envelope Headers:**
+
+*None*
+
+**Additional Item Headers:**
+
+`length`
+
+: **integer, required.** The size of the Replay recording payload
+
 ### Profile
 
 Item type `"profile"`. This Item contains a profile payload encoded
@@ -546,6 +588,23 @@ in JSON.
 
 - This Item may occur at most once per Envelope.
 - This Item needs to be in the same Envelope as the associated transaction.
+
+**Envelope Headers:**
+
+*None*
+
+**Additional Item Headers:**
+
+*None*
+
+### Profile Chunk
+
+Item type `"profile_chunk"`. This Item contains a profile_chunk (profile sample format V2) payload encoded
+in JSON.
+
+**Constraints:**
+
+*None*
 
 **Envelope Headers:**
 
@@ -633,7 +692,7 @@ These limits are subject to future change and defined currently as:
 - *100MB* for each attachment item
 - *1MB* for event (errors and transactions), span, and metric (statsd, buckets, meta) items.
 - *100KB* for monitor check-in items
-- *50MB* for profile items 
+- *50MB* for profile items
 - *10MB* for compressed replay item
 - *100MB* for replay item after decompression
 - *100 sessions* per envelope
