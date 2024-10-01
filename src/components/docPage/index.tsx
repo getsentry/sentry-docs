@@ -4,6 +4,7 @@ import {getCurrentGuide, getCurrentPlatform, nodeForPath} from 'sentry-docs/docT
 import {serverContext} from 'sentry-docs/serverContext';
 import {FrontMatter} from 'sentry-docs/types';
 import {isTruthy} from 'sentry-docs/utils';
+import {getUnversionedPath} from 'sentry-docs/versioning';
 
 import './type.scss';
 
@@ -43,14 +44,18 @@ export function DocPage({
 
   const searchPlatforms = [currentPlatform?.name, currentGuide?.name].filter(isTruthy);
 
-  const leafNode = nodeForPath(rootNode, path);
+  const unversionedPath = getUnversionedPath(path, false);
+
+  const leafNode = nodeForPath(rootNode, unversionedPath);
 
   return (
     <div className="tw-app">
       <Header pathname={pathname} searchPlatforms={searchPlatforms} />
 
       <section className="px-0 flex relative">
-        {sidebar ?? <Sidebar path={path} versions={frontMatter.versions} />}
+        {sidebar ?? (
+          <Sidebar path={unversionedPath.split('/')} versions={frontMatter.versions} />
+        )}
         <main className="main-content flex w-full mt-[var(--header-height)] flex-1 mx-auto">
           <div
             className={[

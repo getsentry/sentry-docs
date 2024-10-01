@@ -2,7 +2,7 @@ import {Fragment} from 'react';
 
 import {serverContext} from 'sentry-docs/serverContext';
 import {sortPages} from 'sentry-docs/utils';
-import {VERSION_INDICATOR} from 'sentry-docs/versioning';
+import {getUnversionedPath, VERSION_INDICATOR} from 'sentry-docs/versioning';
 
 import {NavChevron} from './sidebar/navChevron';
 import {SidebarLink} from './sidebarLink';
@@ -31,11 +31,11 @@ export interface EntityTree extends Entity<EntityTree> {}
 export const toTree = (nodeList: Node[]): EntityTree[] => {
   const result: EntityTree[] = [];
   const level = {result};
-
   nodeList
     .sort((a, b) => a.path.localeCompare(b.path))
     .forEach(node => {
       let curPath = '';
+
       // hide versioned pages in sidebar
       if (!node.path.includes(VERSION_INDICATOR)) {
         node.path.split('/').reduce((r, name: string) => {
@@ -54,8 +54,7 @@ export const toTree = (nodeList: Node[]): EntityTree[] => {
       }
     });
 
-  result.length; // result[0] is undefined without this. wat
-  return result[0].children;
+  return result.length > 0 ? result[0].children : [];
 };
 
 export const renderChildren = (
@@ -168,7 +167,7 @@ export function DynamicNav({
     parentNode && !noHeadingLink ? (
       <SmartLink
         to={`/${root}/`}
-        className={`${headerClassName} ${path.join('/') === root ? 'active' : ''} justify-between`}
+        className={`${headerClassName} ${getUnversionedPath(path, false) === root ? 'active' : ''} justify-between`}
         activeClassName="active"
         data-sidebar-link
       >

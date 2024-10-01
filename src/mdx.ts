@@ -70,6 +70,26 @@ export function getDocsFrontMatter(): Promise<FrontMatter[]> {
   return getDocsFrontMatterCache;
 }
 
+/**
+ * collect all available versions for a given document path
+ */
+export const getVersionsFromDoc = (frontMatter: FrontMatter[], docPath: string) => {
+  const versions = frontMatter
+    .filter(({slug}) => {
+      return (
+        slug.includes(VERSION_INDICATOR) &&
+        docPath.split(VERSION_INDICATOR)[0].includes(slug.split(VERSION_INDICATOR)[0])
+      );
+    })
+    .map(({slug}) => {
+      const segments = slug.split(VERSION_INDICATOR);
+      return segments[segments.length - 1];
+    });
+
+  // remove duplicates
+  return [...new Set(versions)];
+};
+
 async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
   const frontMatter = getAllFilesFrontMatter();
 
@@ -256,8 +276,14 @@ export const getVersionedIndexPath = (
   let versionedSlug = 'does/not/exist.mdx';
   const segments = slug.split(VERSION_INDICATOR);
   if (segments.length === 2) {
-    versionedSlug = `${segments[0]}/index${VERSION_INDICATOR}${segments[1]}${fileExtension}`;
+    if (segments[1].includes('common')) {
+      const segmentWithoutCommon = segments[1].split('/common')[0];
+      versionedSlug = `${segments[0]}/common/index${VERSION_INDICATOR}${segmentWithoutCommon}${fileExtension}`;
+    } else {
+      versionedSlug = `${segments[0]}/index${VERSION_INDICATOR}${segments[1]}${fileExtension}`;
+    }
   }
+
   return path.join(pathRoot, versionedSlug);
 };
 
@@ -293,6 +319,7 @@ export async function getFileBySlug(slug: string) {
       commonFilePath = path.join(commonPath, slugParts.slice(5).join('/'));
     } else if (slugParts.length >= 3 && slugParts[1] === 'platforms') {
       commonFilePath = path.join(commonPath, slugParts.slice(3).join('/'));
+      versionedMdxIndexPath = getVersionedIndexPath(root, commonFilePath, '.mdx');
     }
     if (commonFilePath && fs.existsSync(commonPath)) {
       mdxPath = path.join(root, `${commonFilePath}.mdx`);

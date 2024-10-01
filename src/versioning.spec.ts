@@ -8,5 +8,7 @@ describe('versioning', () => {
     expect(getUnversionedPath('/some/path')).toBe('/some/path/');
     expect(getUnversionedPath('/some/path__v2')).toBe('/some/path/');
     expect(getUnversionedPath('/some/path__v2/')).toBe('/some/path/');
+    expect(getUnversionedPath(['some', 'path__v2'])).toBe('some/path/');
+    expect(getUnversionedPath(['some', 'path__v2'], false)).toBe('some/path');
   });
 });

@@ -16,10 +16,14 @@ import {
   nodeForPath,
 } from 'sentry-docs/docTree';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
-import {getDevDocsFrontMatter, getDocsFrontMatter, getFileBySlug} from 'sentry-docs/mdx';
+import {
+  getDevDocsFrontMatter,
+  getDocsFrontMatter,
+  getFileBySlug,
+  getVersionsFromDoc,
+} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {setServerContext} from 'sentry-docs/serverContext';
-import {VERSION_INDICATOR} from 'sentry-docs/versioning';
 
 export async function generateStaticParams() {
   const docs = await (isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter());
@@ -90,6 +94,7 @@ export default async function Page({params}: {params: {path?: string[]}}) {
   }
 
   const pageNode = nodeForPath(rootNode, params.path);
+
   if (!pageNode) {
     // eslint-disable-next-line no-console
     console.warn('no page node', params.path);
@@ -111,19 +116,8 @@ export default async function Page({params}: {params: {path?: string[]}}) {
   const {mdxSource, frontMatter} = doc;
 
   // collect versioned files
-  const versions = (await getDocsFrontMatter())
-    .filter(({slug}) => {
-      return (
-        slug.includes(VERSION_INDICATOR) &&
-        pageNode.path
-          .split(VERSION_INDICATOR)[0]
-          .includes(slug.split(VERSION_INDICATOR)[0])
-      );
-    })
-    .map(({slug}) => {
-      const segments = slug.split(VERSION_INDICATOR);
-      return segments[segments.length - 1];
-    });
+  const allFm = await getDocsFrontMatter();
+  const versions = getVersionsFromDoc(allFm, pageNode.path);
 
   // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc.
   return (

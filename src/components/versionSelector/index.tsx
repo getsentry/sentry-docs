@@ -62,7 +62,7 @@ export function VersionSelector({versions, sdk}: {sdk: string; versions: string[
       pathVersion !== storedSelection &&
       versions.includes(storedSelection)
     ) {
-      router.replace(getVersionedPathname(storedSelection));
+      // router.replace(getVersionedPathname(storedSelection));
     }
   }, [
     getCurrentVersion,
