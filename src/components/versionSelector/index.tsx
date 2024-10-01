@@ -70,6 +70,7 @@ export function VersionSelector({versions, sdk}: {sdk: string; versions: string[
     getVersionedPathname,
     pathname,
     router,
+    versions,
   ]);
 
   const handleVersionChange = (newVersion: string) => {
