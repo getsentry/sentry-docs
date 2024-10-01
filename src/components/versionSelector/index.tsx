@@ -57,7 +57,11 @@ export function VersionSelector({versions, sdk}: {sdk: string; versions: string[
   useEffect(() => {
     const pathVersion = getCurrentVersion();
     const storedSelection = getLocallyStoredVersion();
-    if (storedSelection !== null && pathVersion !== storedSelection) {
+    if (
+      storedSelection !== null &&
+      pathVersion !== storedSelection &&
+      versions.includes(storedSelection)
+    ) {
       router.replace(getVersionedPathname(storedSelection));
     }
   }, [
