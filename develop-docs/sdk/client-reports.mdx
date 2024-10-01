@@ -12,7 +12,7 @@ for events that were never sent.  Chained relays are also able to emit these
 client reports to inform the next relay in chain about _some_ outcomes.
 
 Due to a bug in Relay, which discards envelopes containing unknown envelope
-items, the minimum required version of Sentry for client reports is 
+items, the minimum required version of Sentry for client reports is
 [21.9.0](https://github.com/getsentry/relay/blob/master/CHANGELOG.md#2190).
 
 Before client reports were added there were no insights into the full number of events generated within applications instrumented with Sentry SDKs. It was always clear to track the number of events dropped on Sentry server side for any number of reason, but there was a gap in knowing just how many events were never sent from the SDKs at all. Are there patterns in different platforms? Are there problems we are not aware of? If a customer were to call Sentry and ask where there events are, we would have no answer, and no way to find out if there are truly missing events from their SDKs. Client reports removes some of this doubt. That being said we are not looking to perfectly measure every nuance and edge case of events being discarded in SDKs. It is more important to have a best effort and be able to gain insights to our SDKs and their host applications.
@@ -75,14 +75,11 @@ The following fields exist:
 
 `timestamp`
 
-_String | Number, optional_. The timestamp of when the client report was created.
-Must be an ISO DateTime string or a UNIX timestamp. If not sent, the server
-will assume the current UTC timestamp. In the data model, this is called
-`received`.
+: _String | Number, optional_. The timestamp of when the client report was created. Must be an ISO DateTime string or a UNIX timestamp. If not sent, the server will assume the current UTC timestamp. In the data model, this is called `received`.
 
 `discarded_events`
 
-_List of outcome objects_ (`reason`, `category`, `quantity`)
+: _List of outcome objects_ \{`reason`, `category`, `quantity`\}
 
 - `reason`: A string reason that defines why events were lost.
 - `category`: The data category for which the discard reason applies. These are the same data categories used for [rate limits](/sdk/rate-limiting/#definitions).
@@ -111,7 +108,7 @@ that SDKs send these under normal operation:
 
 `rate_limited_events`, `filtered_events`, `filtered_sampling_events`
 
-_List of outcome objects_ (`reason`, `category`, `quantity`)
+: _List of outcome objects_ \{`reason`, `category`, `quantity`\}
 
 These function like `discarded_events` but identify events that were rate limited,
 filtered or filtered by by dynamic sampling _at a relay_. Client SDKs must never

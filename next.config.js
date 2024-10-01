@@ -1,6 +1,6 @@
 const {redirects} = require('./redirects.js');
 
-const {codecovWebpackPlugin} = require('@codecov/webpack-plugin');
+const {codecovNextJSWebpackPlugin} = require('@codecov/nextjs-webpack-plugin');
 const {withSentryConfig} = require('@sentry/nextjs');
 
 const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
@@ -12,17 +12,7 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         'develop-docs/**/*',
         'node_modules/@esbuild/darwin-arm64',
       ],
-      '/platform-redirect': [
-        'docs/organization/integrations/**/*',
-        'docs/product/**/*',
-        'docs/concepts/**/*',
-        'docs/api/**/*',
-        'docs/pricing/**/*',
-        'docs/account/**/*',
-        '**/*.gif',
-        'public/mdx-images/**/*',
-        '*.pdf',
-      ],
+      '/platform-redirect': ['**/*.gif', 'public/mdx-images/**/*', '*.pdf'],
       '\\[\\[\\.\\.\\.path\\]\\]': [
         'docs/**/*',
         'node_modules/prettier/plugins',
@@ -42,12 +32,13 @@ const nextConfig = {
     outputFileTracingExcludes,
   },
 
-  webpack: (config, _options) => {
+  webpack: (config, options) => {
     config.plugins.push(
-      codecovWebpackPlugin({
+      codecovNextJSWebpackPlugin({
         enableBundleAnalysis: typeof process.env.CODECOV_TOKEN === 'string',
         bundleName: 'sentry-docs',
         uploadToken: process.env.CODECOV_TOKEN,
+        webpack: options.webpack,
       })
     );
 
