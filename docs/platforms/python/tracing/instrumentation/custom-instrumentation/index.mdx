@@ -37,7 +37,7 @@ If you want to have more fine-grained performance monitoring, you can add child 
 
 - Using a context manager
 - Using a decorator (this works on sync and async functions)
-- Manually
+- Manually starting and finishing a span
 
 Calling a `sentry_sdk.start_span()` will find the current active transaction and attach the span to it.
 
@@ -83,7 +83,7 @@ When tracing a static or class method, you **must** add the `@sentry_sdk.trace` 
 
 </Alert>
 
-### Manually
+### Manually Starting and Finishing a Span
 
 ```python
 import sentry_sdk
@@ -103,7 +103,6 @@ def eat_pizza(pizza):
 The parameter `name` in `start_span()` used to be called `description`. In version 2.15.0 `description` was deprecated and from 2.15.0 on, only `name` should be used. `description` will be removed in `3.0.0`.
 
 </Alert>
-
 
 When you create your span manually, make sure to call `span.finish()` after the block of code you want to wrap in a span to finish the span. If you do not finish the span it will not be sent to Sentry.
 
@@ -206,7 +205,7 @@ To enable performance monitoring for the functions specified in `functions_to_tr
 
 ## Accessing the Current Transaction
 
-To change data in an already ongoing transaction, use `sentry_sdk.get_current_scope().transaction`. This property will return a transaction if there's one running, otherwise it will return `None`.
+The `sentry_sdk.get_current_scope().transaction` property returns the active transaction or `None` if no transaction is active. You can use this property to modify data on the transaction.
 
 ```python
 import sentry_sdk
