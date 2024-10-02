@@ -50,25 +50,25 @@ from sentry_sdk.ai.monitoring import ai_track, record_token_usage
 import sentry_sdk
 import requests
 
-@ai_track(description="AI tool")
+@ai_track("AI tool")
 def some_workload_function(**kwargs):
     """
     This function is an example of calling arbitrary code with @ai_track so that it shows up in the Sentry trace
     """
     time.sleep(5)
 
-@ai_track(description="LLM")
+@ai_track("LLM")
 def some_llm_call():
     """
     This function is an example of calling an LLM provider that isn't officially supported by Sentry.
     """
-    with sentry_sdk.start_span(op="ai.chat_completions.create.examplecom", description="Example.com LLM") as span:
+    with sentry_sdk.start_span(op="ai.chat_completions.create.examplecom", name="Example.com LLM") as span:
         result = requests.get('https://example.com/api/llm-chat?question=say+hello').json()
         # this annotates the tokens used by the LLM so that they show up in the graphs in the dashboard
         record_token_usage(span, total_tokens=result["usage"]["total_tokens"])
         return result["text"]
 
-@ai_track(description="My AI pipeline")
+@ai_track("My AI pipeline")
 def some_pipeline():
     """
     The topmost level function with @ai_track gets the operation "ai.pipeline", which makes it show up
