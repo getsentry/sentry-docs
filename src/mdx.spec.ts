@@ -59,7 +59,7 @@ describe('mdx', () => {
         {title: 'js', slug: 'platforms/javascript__v2'},
         {title: 'go', slug: 'platforms/go__v2'},
       ];
-      const versions = getVersionsFromDoc(fm, '/platforms/javascript');
+      const versions = getVersionsFromDoc(fm, 'platforms/javascript');
       expect(versions).toHaveLength(1);
       expect(versions).toContain('2');
     });
@@ -72,7 +72,7 @@ describe('mdx', () => {
         {title: 'js', slug: 'platforms/javascript__v1.23.1'},
         {title: 'go', slug: 'platforms/go__v2'},
       ];
-      const versions = getVersionsFromDoc(fm, '/platforms/javascript');
+      const versions = getVersionsFromDoc(fm, 'platforms/javascript');
       expect(versions).toHaveLength(3);
       expect(versions).toContain('1.23');
       expect(versions).toContain('1.23.1');
@@ -89,6 +89,18 @@ describe('mdx', () => {
       const versions = getVersionsFromDoc(fm, 'platforms/javascript/guides/nextjs');
       expect(versions).toHaveLength(1);
       expect(versions).toContain('2');
+    });
+
+    test('should not contain versions for partly matching slugs', () => {
+      const fm: FrontMatter[] = [
+        ...mockFm,
+        {title: 'js', slug: 'platforms/javascript__v2'},
+      ];
+      const versions = getVersionsFromDoc(
+        fm,
+        'platforms/javascript/configuration/environments'
+      );
+      expect(versions).toHaveLength(0);
     });
   });
 });

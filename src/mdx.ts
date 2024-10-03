@@ -78,7 +78,7 @@ export const getVersionsFromDoc = (frontMatter: FrontMatter[], docPath: string) 
     .filter(({slug}) => {
       return (
         slug.includes(VERSION_INDICATOR) &&
-        docPath.split(VERSION_INDICATOR)[0].includes(slug.split(VERSION_INDICATOR)[0])
+        slug.split(VERSION_INDICATOR)[0] === docPath.split(VERSION_INDICATOR)[0]
       );
     })
     .map(({slug}) => {
@@ -288,7 +288,8 @@ export const getVersionedIndexPath = (
 };
 
 export async function getFileBySlug(slug: string) {
-  const configPath = path.join(root, slug, 'config.yml');
+  // no versioning on a config file
+  const configPath = path.join(root, slug.split(VERSION_INDICATOR)[0], 'config.yml');
 
   let configFrontmatter: PlatformConfig | undefined;
   if (fs.existsSync(configPath)) {
