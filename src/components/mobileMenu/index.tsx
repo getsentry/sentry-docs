@@ -62,7 +62,7 @@ export function MobileMenu({pathname, searchPlatforms}: Props) {
                 <Link href="https://sentry.io/">Sign In</Link>
               </DropdownMenu.Item>
               <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
-                <Link href="https://sentry.io/signup/">Get Started</Link>
+                <Link href="https://sentry.io/signup/">Start For Free</Link>
               </DropdownMenu.Item>
             </DropdownMenu.Content>
           </Theme>
