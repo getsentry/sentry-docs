@@ -5,7 +5,7 @@ sidebar_order: 30
 
 Django migrations are how we handle changes to the database in Sentry.
 
-Django migration official docs: [https://docs.djangoproject.com/en/5.1/topics/migrations/](https://docs.djangoproject.com/en/5.1/topics/migrations/) . These will cover most things you need to understand what a migration is doing.
+Django migration official docs: [https://docs.djangoproject.com/en/2.2/topics/migrations/](https://docs.djangoproject.com/en/2.2/topics/migrations/) . These will cover most things you need to understand what a migration is doing.
 
 ## Commands
 
@@ -92,13 +92,10 @@ To run the test locally, run `pytest` with `--migrations` flag. For example, `py
 If you would like to speed up the migration tests and do not require rebuilding the databases on each test run, supply `--reuse-db` as an additional option to the test command.
 
 ### Backup Testing
-
 When you add or change a model, an error message in CI may appear explaining that one or multiple tests "produced an `export.json` backup file that was missing the above models".
 In order to resolve this, there are two steps:
-
 1. Add the new or modified model to the exhaustive organization in [testutils/helpers/backups.py](https://github.com/getsentry/sentry/blob/f9e6aa610340fd41cc13490aeda71b06bbc933c2/src/sentry/testutils/helpers/backups.py#L366) by creating an instance of your model, for example by invoking MyModel.objects.create(). This ensures the presence of the new model when creating the snapshot and during testing.
 2. The snapshot files can be regenerated using the following command:
-
 ```
 SENTRY_SNAPSHOTS_WRITEBACK=1 pytest tests/sentry/backup/test_sanitize.py
 ```
@@ -297,13 +294,13 @@ Renaming tables is dangerous and will result in downtime. The reason this occurs
 
 - Don't rename the table in Postgres. Instead, just rename the model in Django, and make sure `Meta.db_table` is set to the current tablename so that nothing breaks. This is the preferred method.
 - If you absolutely want to rename the table, then the steps would be:
-- Create a table with the new name
-- Start dual-writing to both the old and new table, ideally in a transaction.
-- Backfill the old rows into the new table.
-- Change the model to start reading from the new table.
-- Stop writing to the old table and remove references from the code.
-- Drop the old table.
-- Generally, this is not worth doing and a lot of risk/effort compared to the reward.
+ - Create a table with the new name
+ - Start dual-writing to both the old and new table, ideally in a transaction.
+ - Backfill the old rows into the new table.
+ - Change the model to start reading from the new table.
+ - Stop writing to the old table and remove references from the code.
+ - Drop the old table.
+ - Generally, this is not worth doing and a lot of risk/effort compared to the reward.
 
 ### Adding Columns
 
@@ -434,7 +431,8 @@ SENTRY_SILO_DEVSERVER=1 SENTRY_SILO_MODE=CONTROL getsentry upgrade
 ## Migration Deployment
 
 <Alert title="Employees Only" level="warning">
-  The following section covers migration deployment in Sentry's SaaS products.
+  The following section covers migration deployment in Sentry's
+  SaaS products.
 </Alert>
 
 We support two kinds of migrations in our SaaS deployments:
@@ -446,9 +444,9 @@ We support two kinds of migrations in our SaaS deployments:
 
 Deployment migrations are run in each region and tenant before code is deployed. Deployment migrations are expected to finish quickly and all statements must complete within 5 seconds. If a migration could take longer because a large number of rows is being operated on, it should be deployed as a post-deploy migration instead. Deployment migrations are ideal for:
 
-- Adding new tables and columns.
-- Adding indexes to most tables.
-- Removing columns and tables - as long as you follow the processes outlined
+* Adding new tables and columns.
+* Adding indexes to most tables.
+* Removing columns and tables - as long as you follow the processes outlined
   above.
 
 ### Post-deploy migrations (is_post_deployment)
@@ -457,14 +455,14 @@ Post-deploy migrations are run manually by engineers **after** a migration has b
 
 Post-deploy migrations are ideal for:
 
-- Adding indexes to large tables, where adding the index would take longer than
+* Adding indexes to large tables, where adding the index would take longer than
   5 seconds in any given region.
-- Doing data backfills or mutations on tables with more than 50,000 rows.
+* Doing data backfills or mutations on tables with more than 50,000 rows.
 
 Post-deploy migrations **should not** be used for:
 
-- Column additions, removals or renames.
-- Table creation.
+* Column additions, removals or renames.
+* Table creation.
 
 Using post-deploy migrations for these operations will cause an outage.
 
@@ -482,7 +480,7 @@ Under `Materials`, input the getsentry SHA you want to run migrations from. The 
 
 ![post-deploy migration materials](./img/post-deploy-pipeline-materials.png)
 
-Then click `Environment Variables` and fill in a value for `django_app` and `django_migration`. The django_app should match the app name containing the migration. e.g. `sentry`, `getsentry`. Next, input the name of the migration to run, e.g. `0233_pickle_to_json_admin_auditlogentry`.
+Then click `Environment Variables` and fill in a value for `django_app` and `django_migration`. The django_app should match the app name containing the migration. e.g. `sentry`, `getsentry`.  Next, input the name of the migration to run, e.g. `0233_pickle_to_json_admin_auditlogentry`.
 
 ![post-deploy migration variables](./img/post-deploy-pipeline-variables.png)
 
