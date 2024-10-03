@@ -29,7 +29,7 @@ import remarkTocHeadings, {TocNode} from './remark-toc-headings';
 import remarkVariables from './remark-variables';
 import {FrontMatter, Platform, PlatformConfig} from './types';
 import {isTruthy} from './utils';
-import {VERSION_INDICATOR} from './versioning';
+import {isVersioned, VERSION_INDICATOR} from './versioning';
 
 const root = process.cwd();
 
@@ -287,6 +287,17 @@ export const getVersionedIndexPath = (
   return path.join(pathRoot, versionedSlug);
 };
 
+export const addVersionToFilePath = (filePath: string, version: string) => {
+  const parts = filePath.split('.');
+  if (parts.length > 1) {
+    const extension = parts.pop();
+    return `${parts.join('.')}__v${version}.${extension}`;
+  }
+
+  // file has no extension
+  return `${filePath}__v${version}`;
+};
+
 export async function getFileBySlug(slug: string) {
   // no versioning on a config file
   const configPath = path.join(root, slug.split(VERSION_INDICATOR)[0], 'config.yml');
@@ -329,6 +340,11 @@ export async function getFileBySlug(slug: string) {
       mdIndexPath = path.join(root, commonFilePath, 'index.md');
       versionedMdxIndexPath = getVersionedIndexPath(root, commonFilePath, '.mdx');
     }
+  }
+
+  // check if a versioned index file exists
+  if (isVersioned(slug) && fs.existsSync(mdxIndexPath)) {
+    mdxIndexPath = addVersionToFilePath(mdxIndexPath, slug.split(VERSION_INDICATOR)[1]);
   }
 
   const sourcePath =

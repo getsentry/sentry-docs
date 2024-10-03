@@ -8,7 +8,7 @@ import {
   PlatformGuide,
   PlatformIntegration,
 } from './types';
-import {isVersioned, VERSION_INDICATOR} from './versioning';
+import {isVersioned, stripVersion, VERSION_INDICATOR} from './versioning';
 
 export interface DocNode {
   children: DocNode[];
@@ -221,10 +221,10 @@ export function getCurrentPlatformOrGuide(
   }
 
   if (path.length >= 4 && path[2] === 'guides') {
-    return getGuide(rootNode, path[1], path[3]);
+    return getGuide(rootNode, path[1], stripVersion(path[3]));
   }
 
-  return getPlatform(rootNode, path[1]);
+  return getPlatform(rootNode, stripVersion(path[1]));
 }
 
 export function getGuide(

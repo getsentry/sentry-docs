@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'vitest';
 
-import {getVersionedIndexPath, getVersionsFromDoc} from './mdx';
+import {addVersionToFilePath, getVersionedIndexPath, getVersionsFromDoc} from './mdx';
 import {FrontMatter} from './types';
 
 const mockFm: FrontMatter[] = [
@@ -101,6 +101,20 @@ describe('mdx', () => {
         'platforms/javascript/configuration/environments'
       );
       expect(versions).toHaveLength(0);
+    });
+  });
+
+  describe('addVersionToFilePath', () => {
+    test('should add version to file path', () => {
+      expect(addVersionToFilePath('platforms/javascript', '2')).toBe(
+        'platforms/javascript__v2'
+      );
+    });
+
+    test('should add version to file with extension', () => {
+      expect(addVersionToFilePath('platforms/javascript/index.mdx', '2')).toBe(
+        'platforms/javascript/index__v2.mdx'
+      );
     });
   });
 });

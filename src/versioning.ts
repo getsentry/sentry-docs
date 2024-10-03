@@ -12,3 +12,5 @@ export const getUnversionedPath = (path: string | string[], trailingSlash = true
 };
 
 export const isVersioned = (path: string) => path.includes(VERSION_INDICATOR);
+
+export const stripVersion = (path: string) => path.split(VERSION_INDICATOR)[0];
