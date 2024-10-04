@@ -1,0 +1,78 @@
+---
+title: General
+sidebar_order: 1
+description: "Learn about the general deployment setup when using Sentry."
+supported:
+  - javascript.nuxt
+---
+
+<PlatformSection supported={['javascript.nuxt']}>
+  Nuxt compiles all your code for the client and server side to ECMAScript modules (ESM) syntax ([learn more about ESM and Nuxt](https://nuxt.com/docs/guide/concepts/esm)).
+</PlatformSection>
+
+Adding Sentry on the server-side for a project in ESM syntax is different from adding Sentry to a project in CommonJS (CJS) syntax.
+The Sentry initialization code needs to be loaded first when the application starts.
+Preloading the Sentry server config file can be done with the Node [`--import`](https://nodejs.org/api/cli.html#--importmodule) CLI flag when starting the application.
+
+Internally, Sentry uses a specific ESM loader hook "[import-in-the-middle/hook.mjs](https://www.npmjs.com/package/import-in-the-middle)" which is
+automatically added when you add the Sentry server-side config file with `--import`. This will automatically instrument all modules in your application.
+
+## Setup Sentry Server Config
+
+As described above, there are some prerequisites for adding Sentry to a Nuxt project in ESM syntax:
+
+1. The possibility to add the node `--import` CLI flag.
+2. Knowing the correct path to your Sentry server config file within your deployment environment (to add the path to the `--import` CLI flag).
+3. The `hook.mjs` file is available under `node_modules/import-in-the-middle/hook.mjs` wherever your server-side code is executed.
+4. Running Node.js version 18.19.0 or higher (support for `--import`).
+
+### Adding the `--import` CLI flag
+
+You can either add the flag directly to the `node` command when starting the application:
+
+```bash
+node --import ./path/to/sentry-server-config.mjs ./path/to/index.mjs
+```
+
+or use the `NODE_OPTIONS` environment variable:
+
+```bash
+NODE_OPTIONS="--import ./path/to/sentry-server-config.mjs" node ./path/to/index.mjs
+```
+
+If modifying the `node` command is not possible, you can also add the `NODE_OPTIONS` environment variable wherever you can set environment variables within your deployment environment.
+Make sure that this variable is only available during server runtime (not during build time).
+
+### `import-in-the-middle/hook.mjs` is available
+
+Usually, the file `node_modules/import-in-the-middle/hook.mjs` is automatically available when installing dependencies.
+However, some deployment providers use custom node bundlers that might not include all `node_modules` in order to save storage.
+This is often done by tracing the node files and only including the necessary dependencies. Since Sentry has to include the `hook.mjs` file internally with `module.register()` it might not be discovered by some bundlers and therefore not included.
+If you get a warning that the `hook.mjs` file is not found, please report this in [the Sentry JS GitHub repo](https://github.com/getsentry/sentry-javascript/issues) or file an issue at your deployment provider.
+
+## Setup other environment variables
+
+In case you are using environment variables in your project to set up Sentry don't forget to also add them inside your deployment environment:
+
+```bash
+SENTRY_DSN="___PUBLIC_DSN___"
+SENTRY_AUTH_TOKEN="___ORG_AUTH_TOKEN___"
+```
+
+
+
+## Troubleshooting
+
+As all packages are wrapped under the hood by [import-in-the-middle](https://www.npmjs.com/package/import-in-the-middle), you might run into issues with certain packages. If you run into a problem with a package, you can skip instrumentation for it by configuring `registerEsmLoaderHooks` in your `Sentry.init()` config.
+
+```javascript {tabTitle:ESM} {filename: instrument.mjs}
+import * as Sentry from "@sentry/node";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  registerEsmLoaderHooks: {
+    // Provide a list of package names to exclude from instrumentation
+    exclude: ["package-name"],
+  },
+});
+```
