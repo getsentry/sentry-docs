@@ -20,9 +20,17 @@ type Props = {
 };
 
 const udpatePathIfVersionedFileDoesNotExist = (path: string): string => {
-  if (isVersioned(path) && !fs.existsSync(path)) {
+  if (!isVersioned(path)) {
+    return path;
+  }
+  // Add .mdx extension if not present
+  const pathWithExtension =
+    path.endsWith('.mdx') || path.endsWith('.md') ? path : `${path}.mdx`;
+
+  if (isVersioned(pathWithExtension) && !fs.existsSync(pathWithExtension)) {
     return stripVersion(path);
   }
+
   return path;
 };
 
