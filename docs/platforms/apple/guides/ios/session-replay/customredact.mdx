@@ -1,66 +1,82 @@
 ---
-title: Using Custom Redact for Session Replay
+title: Using Custom Masking for Session Replay
 sidebar_order: 5501
 notSupported:
-description: "Learn how to redact parts of your app's data in Session Replay."
+description: "Learn how to mask parts of your app's data in Session Replay."
 ---
 
 <Alert>
 
-If you custom redact your Session Replays, you may accidentally expose sensitive customer data. Be sure to double-check what you choose to expose.
+If you choose to use custom masking in your Session Replays, you may accidentally expose sensitive customer data. Be sure to double-check what you choose to expose.
 
 </Alert>
 
-By default, our Session Replay SDK masks all text content, images, and user input. This helps ensure that no sensitive data will be exposed. You can also manually choose which parts of your app's data to redact by using the different options listed below.
+By default, our Session Replay SDK masks all text content, images, and user input. This helps ensure that no sensitive data will be exposed. You can also manually choose which parts of your app's data you want to mask by using the different options listed below.
 
 
-## Redact by View Class
+## Mask by View Class
 
-You can choose which type of view you want to redact or ignore by using the `redactViewClasses` or `ignoreViewClasses` options.
+You can choose which type of view you want to mask or ignore by using the `maskedViewClasses` or `unmaskedViewClasses` options.
 
-Let's say you have a custom view that you want to redact and a `UILabel` subclass (which normally would be redacted) that you want to ignore. You can set the options like this:
+Let's say you have a custom view that you want to mask and a `UILabel` subclass (which normally would be masked) that you doesn't want to mask. You can set the options like this:
 
 ```swift
-  options.experimental.sessionReplay.redactViewClasses = [MyCustomView.self]
-  options.experimental.sessionReplay.ignoreViewClasses = [MyCustomLabel.self]
+  options.experimental.sessionReplay.maskedViewClasses = [MyCustomView.self]
+  options.experimental.sessionReplay.unmaskedViewClasses = [MyCustomLabel.self]
 ```
 
-## Redact by View Instance
+## Mask by View Instance
 
-You can also choose to redact or ignore a specific view instance by using the [replay API](/api/replays/) or view extensions like this:
+You can also choose to mask or unmask a specific view instance by using the [replay API](/api/replays/) or view extensions like this:
 
 ```swift
-  SentrySDK.replay.redactView(view: view)
-  SentrySDK.replay.ignoreView(view: label)
+  SentrySDK.replay.maskView(view: view)
+  SentrySDK.replay.unmaskView(view: label)
 ```
 or
 
 ```swift
-  view.sentryReplayRedact()
-  label.sentryReplayIgnore()
+  view.sentryReplayMask()
+  label.sentryReplayUnmask()
 ```
 
 ## SwiftUI
 
-Because of the way SwiftUI is transformed into UIKit, it will often be over-redacted. A modifier like `background` uses the same element as an `Image`.
-In order to control the SwiftUI redact process, you first need to disable the default redaction options:
+Because of the way SwiftUI is transformed into UIKit, it will often be over-masked. A modifier like `background` uses the same element as an `Image`.
+In order to control the SwiftUI masking process, you need to use the `sentryReplayUnmask` and/or `sentryReplayMask` modifiers. 
+
+In this example we want to show the message, but not the user name.
+```swift
+  @Binding var user: String
+
+  var body: some View {
+    VStack {
+      Text("Hello")
+        .sentryReplayUnmask()
+      Text("\(user)")
+    }
+  }
+```
+
+In this example, we need to unmask the VStack because its background element will be masked by default.
+To hide the username, we need to mask it.
 
 ```swift
-    options.experimental.sessionReplay.redactAllText = false
-    options.experimental.sessionReplay.redactAllImages = false
-```
+  @Binding var user: String
 
-Then you can manually choose which `View` you want to redact with the `replayRedact` modifier:
-
-```swift    
-    var body: some View {
-        Text("Hello, World!")
-            .sentryReplayRedact()
+  var body: some View {
+    VStack {
+      Text("Hello")
+      Text("\(user)")
+        .sentrtReplayMask()
     }
+    .background(.blue)
+    .sentryReplayUnmask() 
+  }
 ```
 
-<Note>
-Disabling the default redaction options will expose all text and images in the session replay. 
-Make sure to redact them manually.
-</Note>
+<Alert>
 
+Before publising an App with Session Replay enabled, make sure to test it thoroughly to ensure that no sensitive data is exposed.
+
+</Alert>
