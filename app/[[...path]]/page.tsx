@@ -24,6 +24,7 @@ import {
 } from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {setServerContext} from 'sentry-docs/serverContext';
+import {stripVersion} from 'sentry-docs/versioning';
 
 export async function generateStaticParams() {
   const docs = await (isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter());
@@ -148,9 +149,13 @@ export async function generateMetadata({params}: MetadataProps): Promise<Metadat
   const rootNode = await getDocsRootNode();
 
   if (params.path) {
-    const pageNode = nodeForPath(rootNode, params.path);
+    const pageNode = nodeForPath(
+      rootNode,
+      stripVersion(params.path.join('/')).split('/')
+    );
     if (pageNode) {
       const guideOrPlatform = getCurrentPlatformOrGuide(rootNode, params.path);
+
       title =
         pageNode.frontmatter.title +
         (guideOrPlatform ? ` | Sentry for ${guideOrPlatform.title}` : '');
