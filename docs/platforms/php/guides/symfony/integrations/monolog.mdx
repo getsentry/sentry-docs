@@ -1,0 +1,29 @@
+---
+title: Monolog
+description: "Learn how to enable Sentry's Symfony SDK to capture Monolog events."
+---
+
+When using [Monolog](https://github.com/Seldaek/monolog) you can configure a [breadcrumb](../../enriching-events/breadcrumbs/) handler to capture Monolog messages as breadcrumbs and a handler that captures messages as events in Sentry.
+The breadcrumb handler will not send anything to Sentry directly, it only records breadcrumbs that will be attached to any event or exception sent to Sentry.
+
+```yaml
+services:
+    # Configure the breadcrumb handler as a service
+    Sentry\Monolog\BreadcrumbHandler:
+        arguments:
+            - '@Sentry\State\HubInterface'
+            - !php/const Monolog\Logger::INFO # Configures the level of messages to capture as breadcrumbs
+
+monolog:
+    handlers:
+        # Register the breadcrumb handler as a Monolog handler
+        sentry_breadcrumbs:
+            type: service
+            name: sentry_breadcrumbs
+            id: Sentry\Monolog\BreadcrumbHandler
+        # Register the handler as a Monolog handler to capture messages as events
+        sentry:
+            type: sentry
+            level: !php/const Monolog\Logger::ERROR # Configures the level of messages to capture as events
+            hub_id: Sentry\State\HubInterface
+```
