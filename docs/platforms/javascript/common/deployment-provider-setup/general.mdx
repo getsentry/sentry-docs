@@ -50,6 +50,25 @@ However, some deployment providers use custom node bundlers that might not inclu
 This is often done by tracing the node files and only including the necessary dependencies. Since Sentry has to include the `hook.mjs` file internally with `module.register()` it might not be discovered by some bundlers and therefore not included.
 If you get a warning that the `hook.mjs` file is not found, please report this in [the Sentry JS GitHub repo](https://github.com/getsentry/sentry-javascript/issues) or file an issue at your deployment provider.
 
+Nitro (which is used by Nuxt and SolidStart on the server side) uses [`@vercel/nft`](https://github.com/vercel/nft) during the build. `@vercel/nft` includes files that are added with `module.register()` from version 0.27.4 onwards.
+In case you get a runtime error along the lines `Cannot find module '/node_modules/import-in-the-middle/hook.mjs'`, make sure to add a resolution (yarn) or an override (npm/pnpm) for `@vercel/nft`:
+
+```json {tabTitle:yarn} {filename: package.json}
+{
+  "resolutions": {
+    "@vercel/nft": "^0.27.4"
+  }
+}
+```
+
+```json {tabTitle:npm/pnpm} {filename: package.json}
+{
+  "overrides": {
+    "@vercel/nft": "^0.27.4"
+  }
+}
+```
+
 ## Setup other environment variables
 
 In case you are using environment variables in your project to set up Sentry don't forget to also add them inside your deployment environment:
@@ -61,7 +80,7 @@ SENTRY_AUTH_TOKEN="___ORG_AUTH_TOKEN___"
 
 
 
-## Troubleshooting
+## Exclude modules from import-in-the-middle
 
 As all packages are wrapped under the hood by [import-in-the-middle](https://www.npmjs.com/package/import-in-the-middle), you might run into issues with certain packages. If you run into a problem with a package, you can skip instrumentation for it by configuring `registerEsmLoaderHooks` in your `Sentry.init()` config.
 
