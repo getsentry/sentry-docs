@@ -1,0 +1,43 @@
+---
+title: Monolog
+description: "Learn how to enable Sentry's PHP SDK to capture Monolog events."
+---
+
+When using [Monolog](https://github.com/Seldaek/monolog) you can configure a [breadcrumb](../../enriching-events/breadcrumbs/) handler to capture Monolog messages as breadcrumbs and a handler that captures messages as events in Sentry.
+The breadcrumb handler will not send anything to Sentry directly, it only records breadcrumbs that will be attached to any event or exception sent to Sentry.
+
+```php
+<?php
+
+use Monolog\Level;
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+
+// Setup the Sentry SDK, this can also be done elsewhere in your application
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___'
+]);
+
+// Create a Monolog channel with a breadcrumb handler and a Sentry handler
+$log = new Logger('sentry');
+$log->pushHandler(new \Sentry\Monolog\BreadcrumbHandler(
+    hub: \Sentry\SentrySdk::getCurrentHub(),
+    level: Level::Info, // Take note of the level here, messages with that level or higher will be attached to future Sentry events as breadcrumbs
+));
+$log->pushHandler(new \Sentry\Monolog\Handler(
+    hub: \Sentry\SentrySdk::getCurrentHub(),
+    level: Level::Error, // Take note of the level here, messages with that level or higher will be sent to Sentry
+    bubble: true,
+    fillExtraContext: false, // Will add a `monolog.context` & `monolog.extra`, key to the event with the Monolog `context` & `extra` values
+));
+
+// Log an error:
+$log->error('Something bad happened');
+
+// To log an exception you can use the following code:
+try {
+    throw new RuntimeException('Some exception');
+} catch (RuntimeException $exception) {
+    $log->error('Some exception happened', ['exception' => $exception]);
+}
+```
