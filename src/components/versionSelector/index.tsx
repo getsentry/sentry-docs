@@ -26,7 +26,7 @@ export function VersionSelector({versions, sdk}: {sdk: string; versions: string[
   const getCurrentVersion = useCallback(() => {
     if (pathname?.includes(VERSION_INDICATOR)) {
       const segments = pathname.split(VERSION_INDICATOR);
-      return segments[segments.length - 1];
+      return segments[segments.length - 1].replace('/', '');
     }
 
     return 'latest';
