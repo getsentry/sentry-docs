@@ -52,8 +52,9 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
   let doc: Awaited<ReturnType<typeof getFileBySlug>> | null = null;
 
   if (guide) {
-    let guidePath = `platform-includes/${includePath}/${guide}`;
-    guidePath = udpatePathIfVersionedFileDoesNotExist(guidePath);
+    const guidePath = udpatePathIfVersionedFileDoesNotExist(
+      `platform-includes/${includePath}/${guide}`
+    );
     try {
       doc = await getFileBySlug(guidePath);
     } catch (e) {
@@ -65,8 +66,9 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
     const rootNode = await getDocsRootNode();
     const guideObject = getCurrentGuide(rootNode, path);
 
-    let fallbackGuidePath = `platform-includes/${includePath}/${guideObject?.fallbackGuide}`;
-    fallbackGuidePath = udpatePathIfVersionedFileDoesNotExist(fallbackGuidePath);
+    const fallbackGuidePath = udpatePathIfVersionedFileDoesNotExist(
+      `platform-includes/${includePath}/${guideObject?.fallbackGuide}`
+    );
 
     if (guideObject?.fallbackGuide) {
       try {
@@ -79,8 +81,9 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
 
   if (!doc) {
     try {
-      let platformPath = `platform-includes/${includePath}/${platform}`;
-      platformPath = udpatePathIfVersionedFileDoesNotExist(platformPath);
+      const platformPath = udpatePathIfVersionedFileDoesNotExist(
+        `platform-includes/${includePath}/${platform}`
+      );
 
       doc = await getFileBySlug(platformPath);
     } catch (e) {
@@ -92,8 +95,9 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
     const rootNode = await getDocsRootNode();
     const platformObject = getPlatform(rootNode, platform);
 
-    let fallbackPlatformPath = `platform-includes/${includePath}/${platformObject?.fallbackPlatform}`;
-    fallbackPlatformPath = udpatePathIfVersionedFileDoesNotExist(fallbackPlatformPath);
+    const fallbackPlatformPath = udpatePathIfVersionedFileDoesNotExist(
+      `platform-includes/${includePath}/${platformObject?.fallbackPlatform}`
+    );
 
     if (platformObject?.fallbackPlatform) {
       try {
