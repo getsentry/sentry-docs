@@ -20,18 +20,16 @@ Transaction names are composed from a combination of displayed screen names, (fo
 
 UI instrumentation tracing is disabled by default, but you can enable it by setting the `enableUserInteractionTracing` options to `true` and wrapping your root component:
 
-```javascript
+```javascript {3-3, 7-9}
 import * as Sentry from "@sentry/react-native";
 
+const navigationIntegration = Sentry.reactNavigationIntegration(); // Or any other navigation integration
+
 Sentry.init({
-  // ...
-  integrations: [
-    new Sentry.ReactNativeTracing({
-      enableUserInteractionTracing: true,
-      routingInstrumentation,
-      // ...
-    }),
-  ],
+  dsn: "___PUBLIC_DSN___",
+  enableUserInteractionTracing: true,
+  tracesSampleRate: 1.0,
+  integrations: [navigationIntegration],
 });
 
 const App = () => <View>Your App</View>;
@@ -41,7 +39,7 @@ export default Sentry.wrap(App);
 
 The label by which UI elements are identified is set by the `labelName` option in `Sentry.wrap`. If no value is supplied, `sentry-label` will be used instead. If an element can't be identified, the transaction won't be captured.
 
-```javascript
+```javascript {2-2}
 export default Sentry.wrap(App, {
   touchEventBoundaryProps: { labelName: "my-label" },
 });
@@ -62,7 +60,7 @@ To create UI transactions from React Native Gesture Handler, you need to wrap in
   Only [RNGH API v2](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/gesture/) is supported.
 </Note>
 
-```javascript
+```javascript {10-11}
 import React from "react";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { sentryTraceGesture } from "@sentry/react-native";

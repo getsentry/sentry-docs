@@ -10,19 +10,15 @@ Sentry's React Native SDK package ships with instrumentation for [React Native N
 
 You will need to pass the `Navigation` object imported from the library to initialize our routing instrumentation. It is recommended that you initialize our SDK and the routing instrumentation as early as possible in the lifecycle of your app; this would most likely be before the point where you initialize your screens.
 
-```javascript {filename: index.js}
+```javascript {7-9} {filename: index.js}
 import * as Sentry from "@sentry/react-native";
 import { Navigation } from 'react-native-navigation';
 
 Sentry.init({
-  ...
+  dsn: "___PUBLIC_DSN___",
   integrations: [
-    new Sentry.ReactNativeTracing({
-      // Pass instrumentation to be used as `routingInstrumentation`
-      routingInstrumentation: new Sentry.ReactNativeNavigationInstrumentation(
-        Navigation,
-      )
-      // ...
+    Sentry.reactNativeNavigationIntegration({
+      navigation: Navigation,
     }),
   ],
 })
@@ -33,11 +29,26 @@ Sentry.init({
 You can configure the instrumentation by passing an options object to the constructor:
 
 ```javascript
-new Sentry.ReactNativeNavigationInstrumentation({
-  routeChangeTimeoutMs: 1000, // default: 1000
+Sentry.reactNativeNavigationIntegration({
+  navigation: Navigation, // Navigation from `react-native-navigation`
+  routeChangeTimeoutMs: 1_000, // default: 1_000
+  enableTabsInstrumentation: true, // default: false
+  ignoreEmptyBackNavigationTransactions: true, // default: true
 });
 ```
 
+### navigation
+
+This option is required and should be the `Navigation` object imported from the navigation library.
+
 ### routeChangeTimeoutMs
 
-This option specifies how long the instrumentation will wait for the route to mount after a change has been initiated before the transaction is discarded. The default value is 1000ms.
+This option specifies how long the instrumentation will wait for the route to mount after a change has been initiated before the transaction is discarded. The default value is `1_000`.
+
+### enableTabsInstrumentation
+
+This instrumentation will create a transaction on tab change. By default, only navigation commands create transactions. The default value is `false`.
+
+### ignoreEmptyBackNavigationTransactions
+
+This ensures that transactions that are from routes that've been seen and don't have any spans, are not being sampled. This removes a lot of clutter, making it so that most back navigation transactions are now ignored. The default value is `true`.
