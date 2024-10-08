@@ -13,7 +13,7 @@ type Props = {
   header?: string;
 };
 
-export function PageGrid({header}: Props) {
+export function PageGrid({header, exclude}: Props) {
   const {rootNode, path} = serverContext();
 
   const parentNode = nodeForPath(rootNode, path);
@@ -27,7 +27,7 @@ export function PageGrid({header}: Props) {
       <ul>
         {parentNode.children
           /* NOTE: temp fix while we figure out the reason why some nodes have empty front matter */
-          .filter(c => c.frontmatter.title)
+          .filter(c => c.frontmatter.title && !exclude?.includes(c.slug))
           .sort((a, b) => sidebarOrderSorter(a.frontmatter, b.frontmatter))
           .map(n => (
             <li key={n.path} style={{marginBottom: '1rem'}}>
