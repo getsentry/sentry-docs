@@ -39,11 +39,11 @@ The global scope is applied to _all_ events, no matter where they originate. You
 
 You can access the global scope via `Sentry.getGlobalScope()`.
 
-Note that the global scope can only be used to write data, not to capture events. Events can only be captured on the current scope (e.g. `getCurrentScope().captureException()` and similar APIs).
+Note, that the global scope can only be used to write data, not to capture events. Events can only be captured on the current scope (for example, `getCurrentScope().captureException()` and similar APIs).
 
 ### Isolation Scope
 
-The isolation scope is used to isolate events from each other. For example, each request in a web server might get its own isolation scope, so that events from one request don't interfere with events from another request. In most cases, you'll want to put data that should be applied to your events on the isolation scope - which is also why all `Sentry.setXXX` methods, like `Sentry.setTag()`, will write data onto the currently active isolation scope. A classic example for data that belongs on the isolation scope is a user - each request may have a different user, so you want to make sure that the user is set on the isolation scope.
+The isolation scope is used to isolate events from each other. For example, each request in a web server might get its own isolation scope, so that events from one request don't interfere with events from another. In most cases, you'll want to put data that should be applied to your events on the isolation scope. This is why all `Sentry.setXXX` methods, like `Sentry.setTag()` will write data onto the currently active isolation scope. A classic example of data that belongs on the isolation scope is user data, where each request may have a different user, so you'd want to make sure that the user is set on the isolation scope.
 
 You can access the isolation scope via `Sentry.getIsolationScope()`, but usually you'll just use the `Sentry.setXXX` methods to set data on the currently active isolation scope:
 
@@ -54,16 +54,14 @@ Sentry.getIsolationScope().setTag("my-tag", "my value");
 ```
 
 <PlatformCategorySection supported={["browser"]}>
-  In the browser, the isolation scope is never forked, because it is impossible
-  to keep track of where an isolation scope would belong to. Because of this, in
-  the browser the isolation scope is effectively global.
+In the browser, the isolation scope is never forked because it's impossible to keep track of where an isolation scope would belong. This is why the isolation scope is effectively global in the browser.
 </PlatformCategorySection>
 
-Note that the isolation scope can only be used to write data, not to capture events. Events can only be captured on the current scope (e.g. `getCurrentScope().captureException()` and similar APIs).
+Note, that the isolation scope can only be used to write data, not to capture events. Events can only be captured on the current scope (for example, `getCurrentScope().captureException()` and similar APIs).
 
 ### Current Scope
 
-The current scope is the local scope that is currently active. Unlike the rarely-forked isolation scope, the current scope may be forked more frequently and under the hood. It can be used to store data that should only be applied to specific events. In most cases, you should not access this scope directly, but use `Sentry.withScope` to create a new scope that is only active for a specific part of your code:
+Current scope is the local scope that's currently active. Unlike the rarely-forked isolation scope, the current scope may be forked more frequently and under the hood. It can be used to store data that should only be applied to specific events. In most cases, you shouldn't access this scope directly, but use `Sentry.withScope` to create a new scope that's only active for a specific part of your code:
 
 ```javascript
 Sentry.withScope((scope) => {
@@ -77,7 +75,7 @@ Sentry.withScope((scope) => {
 Sentry.captureException(new Error("my other error"));
 ```
 
-You can access the current scope via `Sentry.getCurrentScope()`, but usually you should use `Sentry.withScope()` to interact with local scopes instead.
+You can access the current scope via `Sentry.getCurrentScope()`, but you should use `Sentry.withScope()` to interact with local scopes in most cases instead.
 
 ## How Scope Data is Applied to Events
 
@@ -106,7 +104,7 @@ Sentry.captureException(new Error("my error"));
 
 ## Configuring the Scope
 
-There are two main ways to interact with the scope. You can access the current scope via `Sentry.getCurrentScope()` and use setters on the resulting scope, or you can use global methods like `Sentry.setTag()` directly, which will set on the respective scope under the hood (which will be the isolation scope).
+There are two main ways to interact with the scope. You can access the current scope via `Sentry.getCurrentScope()` and use setters on the resulting scope, or you can use global methods like `Sentry.setTag()` directly, which will set on the respective scope under the hood (this will be the isolation scope).
 
 You'll first need to import the SDK, as usual:
 
@@ -140,6 +138,6 @@ In the following example we use <PlatformIdentifier name="with-scope" /> to atta
 
 <PlatformContent includePath="enriching-events/scopes/with-scope" />
 
-The scope inside the `withScope()` callback is only valid inside of the callback. Once the callback ends, the scope will be removed and no longer applied. The inner scope is only applied to events that are captured inside of the callback. `withScope()` will clone (or fork) the current scope, so that the current scope is not modified. This allows you to
+The scope inside the `withScope()` callback is only valid inside of the callback. Once the callback ends, the scope will be removed and will no longer apply. The inner scope is only applied to events that are captured inside of the callback. `withScope()` will clone (or fork) the current scope, so the current scope won't be modified. This allows you to
 more easily isolate pieces of context information to specific locations in your code or
 even call <PlatformIdentifier name="clear" /> to briefly remove all context information.
