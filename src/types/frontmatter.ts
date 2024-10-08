@@ -60,4 +60,10 @@ export interface FrontMatter {
    * Specific guides that this page is relevant to.
    */
   supported?: string[];
+
+  /**
+   * Available versions for this page
+   * @example ['v7.119.0', 'next']
+   */
+  versions?: string[];
 }

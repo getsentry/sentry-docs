@@ -1,6 +1,5 @@
-import {getDevDocsFrontMatter, getDocsFrontMatter} from 'sentry-docs/mdx';
-
 import {isDeveloperDocs} from './isDeveloperDocs';
+import {getDevDocsFrontMatter, getDocsFrontMatter} from './mdx';
 import {platformsData} from './platformsData';
 import {
   FrontMatter,
@@ -9,6 +8,7 @@ import {
   PlatformGuide,
   PlatformIntegration,
 } from './types';
+import {isVersioned, stripVersion, VERSION_INDICATOR} from './versioning';
 
 export interface DocNode {
   children: DocNode[];
@@ -134,6 +134,7 @@ function frontmatterToTree(frontmatter: FrontMatter[]): DocNode {
 export function nodeForPath(node: DocNode, path: string | string[]): DocNode | undefined {
   const stringPath = typeof path === 'string' ? path : path.join('/');
   const parts = slugWithoutIndex(stringPath);
+
   for (let i = 0; i < parts.length; i++) {
     const maybeChild = node.children.find(child => child.slug === parts[i]);
     if (maybeChild) {
@@ -197,7 +198,7 @@ export function getCurrentPlatform(
   if (path.length < 2 || path[0] !== 'platforms') {
     return undefined;
   }
-  return getPlatform(rootNode, path[1]);
+  return getPlatform(rootNode, path[1].split(VERSION_INDICATOR)[0]);
 }
 
 export function getCurrentGuide(
@@ -205,7 +206,7 @@ export function getCurrentGuide(
   path: string[]
 ): PlatformGuide | undefined {
   if (path.length >= 4 && path[2] === 'guides') {
-    return getGuide(rootNode, path[1], path[3]);
+    return getGuide(rootNode, path[1], path[3].split(VERSION_INDICATOR)[0]);
   }
 
   return undefined;
@@ -220,10 +221,10 @@ export function getCurrentPlatformOrGuide(
   }
 
   if (path.length >= 4 && path[2] === 'guides') {
-    return getGuide(rootNode, path[1], path[3]);
+    return getGuide(rootNode, path[1], stripVersion(path[3]));
   }
 
-  return getPlatform(rootNode, path[1]);
+  return getPlatform(rootNode, stripVersion(path[1]));
 }
 
 export function getGuide(
@@ -244,7 +245,9 @@ export function extractPlatforms(rootNode: DocNode): Platform[] {
     return [];
   }
 
-  return platformsNode.children.map(nodeToPlatform);
+  return platformsNode.children
+    .filter(({path}) => !isVersioned(path))
+    .map(nodeToPlatform);
 }
 
 function extractGuides(platformNode: DocNode): PlatformGuide[] {
@@ -252,7 +255,9 @@ function extractGuides(platformNode: DocNode): PlatformGuide[] {
   if (!guidesNode) {
     return [];
   }
-  return guidesNode.children.map(n => nodeToGuide(platformNode.slug, n));
+  return guidesNode.children
+    .filter(({path}) => !isVersioned(path))
+    .map(n => nodeToGuide(platformNode.slug, n));
 }
 
 const extractIntegrations = (p: DocNode): PlatformIntegration[] => {
