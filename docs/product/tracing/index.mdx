@@ -1,34 +1,34 @@
 ---
 title: Tracing
 sidebar_order: 20
-description: "Learn about using tracing and distributed tracing for observing and debugging application performance issues. You'll see the impact of errors across your full stack and microservices."
+description: "Learn about using tracing and distributed tracing for observing and debugging application performance issues."
 ---
 
 ## What's Tracing?
 
-User interactions like page loads or button clicks rely on a series of requests and operations across both the frontend and the backend. If something goes wrong, it can be hard to find out which link in the chain of actions is causing the problem. This is where tracing comes in.
+Tracing is the process of tracking the flow and timing of requests and operations as they happen throughout your entire application. Each trace has a unique identifier that's shared between backend, frontend, and other services, connecting them. This makes it possible to look at a trace and see an entire chain of events that may have lead to an error or other issue. This helps you understand the impact of errors across your full stack and microservices.
 
-Tracing is a powerful debugging tool that allows you to track the flow and timing of requests and operations as they happen throughout your entire system. While tracing can be useful if instrumented in just the frontend or backend, it's most powerful when set up for your full stack (distributed tracing), especially if you use microservices.
+### What's Distributed Tracing?
 
-With distributed tracing, you can identify performance bottlenecks that are affecting your application. You can then use the Sentry Trace Explorer and Trace View to dig deeper to find the root cause. Distributed tracing is particularly helpful for identifying problems you can't just debug using console logs, such as race conditions, N+1, and caching issues.
+Distributed tracing enables you to trace and visualize interactions between multiple instrumented services, allowing you to identify performance bottlenecks that are affecting your application no matter where they're coming from. You can then use the Sentry Trace Explorer and Trace View to dig deeper to find the root cause. Distributed tracing is particularly helpful for identifying problems you can't just debug using console logs, such as race conditions, N+1, and caching issues.
 
-## Traces, Spans and Transactions
+While Sentry tracing can be useful if instrumented in just the frontend or the backend, it's most powerful when set up for your full stack (distributed tracing). This is especially true if you use microservices. Even if you mostly work on the frontend, frontend problems often require backend fixes, and setting up Sentry for your backend can help you find the root cause of a problem faster. Distributed tracing also helps you understand how different parts of the system interact.
 
-You'll see references to traces, spans, and transactions in Sentry, so it's helpful to have a working definition of what they are.
+Distributed tracing can help with:
+
+- Identifying performance bottlenecks by finding the root cause of slow requests
+- Debugging frontend and backend problems
+- Understanding how different parts of the system interact
+- Highlighting operations or endpoints that consume the most time
+
+### Traces
+
+A trace is a unique identifier that tracks a complete operation across multiple services. Every event sent to Sentry (Errors, Spans, Replays, Profiles, and so on)will have a trace id linking frontend and backend events together.
+
+### Spans
+
+ A span is a single unit of work or operation within a trace. It represents a specific task, like an API call, a database query, or a rendering process. Spans include details like start and end times, helping measure the duration of each task and identify bottlenecks or failures. In distributed tracing, spans are connected to show how tasks across different services interact.
 
 ### Transactions
 
 Transactions are a Sentry-specific unit of measurement that references any event that users send to Sentry. In addition to standard event fields, transactions also contains child spans and have a unique transaction ID.
-
-### Traces
-
-Traces are also a way to identify events that require one or more services in an environment. Each trace has a string of globally unique characters called a trace ID, that's shared by both frontend and backend services they help connect all the actions that take place to make an event such as a button click or a page scroll. Each trace is composed of multiple spans.
-
-This makes it possible to see (and eventually debug) an entire chain of events from frontend to backend. Every event sent to Sentry (Errors, Spans, Replays, Profiles, and so on) will have a unique trace ID.
-
-### Spans
-
-Spans are the telemetry that help record a specific request as it traverses through various services or components in a distributed system, providing a comprehensive view of its path, timing, and interactions for troubleshooting and performance analysis.
-
-### Distributed Tracing
-Distributed tracing enables you to trace and visualize interactions between multiple instrumented services. For example, your users may interact with a front-end API service, which talks to two internal APIs to fulfill their request. In order to have traces connect spans for all these services, it is necessary to propagate trace context between these services, usually by using an HTTP header.
