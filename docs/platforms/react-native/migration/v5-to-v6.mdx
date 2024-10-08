@@ -234,27 +234,20 @@ Sentry.init({
 });
 ```
 
-### Updated behaviour of `tracePropagationTargets` in React Native
+### Updated Behavior of `tracePropagationTargets` in React Native
 
-We updated the behaviour of the SDKs when no `tracePropagationTargets` option was defined. As a reminder, you can
-provide a list of strings or RegExes that will be matched against URLs to tell the SDK, to which outgoing requests
-tracing HTTP headers should be attached to. These tracing headers are used for distributed tracing.
+We updated the behavior of the SDKs when no `tracePropagationTargets` option was defined. As a reminder, you can provide a list of strings or RegExes that will be matched against URLs to let the SDK know which outgoing requests tracing HTTP headers should be attached to. These tracing headers are used for distributed tracing.
 
-Previously, on the browser and in React native, when `tracePropagationTargets` were not defined, they defaulted to the following:
-`['localhost', /^\/(?!\/)/]`. This meant that all request targets to that had "localhost" in the URL, or started with a
-`/` were equipped with tracing headers. This default was chosen to prevent CORS errors in your browser applications.
-However, this default had a few flaws.
+Previously, on the browser and in React native, when `tracePropagationTargets` weren't defined, they defaulted to the following:
+`['localhost', /^\/(?!\/)/]`. This meant that all request targets that had "localhost" in the URL, or started with a
+`/` were equipped with tracing headers. This default was chosen to prevent CORS errors in your browser applications. However, this default had a few flaws.
 
-Going forward, when the `tracePropagationTargets` option is not set,
+Going forward, when the `tracePropagationTargets` option isn't set:
 - tracing headers will be attached to all outgoing requests in React Native
-- and to all outgoing on the same origin on the Browser (including WebViews).
+- tracing headers will also be attached to all outgoing requests on the same origin as the Browser (including WebViews)
 
 For example, if you're on `https://example.com/` and you send a request to
-`https://example.com/api`, the request will be traced (ie. will have trace headers attached). Requests to
-`https://api.example.com/` will not, because it is on a different origin. The same goes for all applications running on
-`localhost`.
+`https://example.com/api`, the request will be traced (in other words, it will have trace headers attached). Requests sent to `https://api.example.com/` on the other hand, will not, because they're on a different origin. The same goes for all applications running on `localhost`.
 
-When you provide a `tracePropagationTargets` option, all of the entries you defined will now be matched
-against the full URL of the outgoing request. Previously, it was only matched against what you called request APIs with.
-For example, if you made a request like `fetch("/api/posts")`, the provided `tracePropagationTargets` were only compared
-against `"/api/posts"`.
+When you provide a `tracePropagationTargets` option, all of the entries you define will now be matched
+against the full URL of the outgoing request. Previously, it was only matched against what you called request APIs with. For example, if you made a request like `fetch("/api/posts")`, the provided `tracePropagationTargets` were only compared against `"/api/posts"`.
