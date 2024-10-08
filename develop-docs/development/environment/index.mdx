@@ -55,6 +55,28 @@ You can create other users with `sentry createuser`.
 
 Please refer to [Frontend Development Server](/frontend/development-server/) and [Backend Development Server](/backend/development-server/) for alternative ways to bring up the Sentry UI.
 
+### Enabling HTTPS
+
+You may wish to run the development server over a secure HTTPS connection. This can be done by generating & installing local certificates and running a reverse proxy.
+
+We will be using [mkcert](https://github.com/FiloSottile/mkcert) to create and install a locally-trusted, development certificate and [Caddy](https://caddyserver.com/) as our reverse proxy. The following will install `mkcert` and `caddy` and then create and install the local certificates, and run the server.
+
+```shell
+brew install mkcert
+brew install nss # if you use Firefox
+brew install caddy
+yarn mkcert-localhost
+yarn https-proxy
+```
+
+Now you can visit the dev server using `https` at port `:8003` instead of over `http` at `:8000`.
+
+<Alert title="HTTP Strict-Transport-Security" level="info">
+  You might get into a situation where [HSTS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security) is enabled for your domain and you're unable to visit using `http` anymore.
+
+  To clear the HSTS visit `chrome://net-internals/#hsts` in Chrome based browsers and use the "Delete domain security policies" form.
+</Alert>
+
 ### Ingestion Pipeline (Relay) aka Sending Events to your Dev Environment
 
 <Link to="/services/relay/">Relay</Link> and the ingest workers are not started by default. Follow the instructions below to start them so you can send events to your dev environment Sentry instance:
