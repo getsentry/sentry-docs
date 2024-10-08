@@ -73,11 +73,14 @@ export function VersionSelector({versions, sdk}: {sdk: string; versions: string[
     versions,
   ]);
 
-  const handleVersionChange = (newVersion: string) => {
-    setSelectedVersion(newVersion);
-    router.push(getVersionedPathname(newVersion));
-    localStorage.setItem(getLocalStorageVersionKey(sdk), newVersion);
-  };
+  const handleVersionChange = useCallback(
+    (newVersion: string) => {
+      setSelectedVersion(newVersion);
+      router.push(getVersionedPathname(newVersion));
+      localStorage.setItem(getLocalStorageVersionKey(sdk), newVersion);
+    },
+    [getVersionedPathname, router, sdk]
+  );
 
   return (
     <div>
