@@ -44,7 +44,7 @@ async function getDocsRootNodeUncached(): Promise<DocNode> {
   );
 }
 
-export const sidebarOrderSorter = (a: FrontMatter, b: FrontMatter) => {
+const sidebarOrderSorter = (a: FrontMatter, b: FrontMatter) => {
   const partDiff = slugWithoutIndex(a.slug).length - slugWithoutIndex(b.slug).length;
   if (partDiff !== 0) {
     return partDiff;
