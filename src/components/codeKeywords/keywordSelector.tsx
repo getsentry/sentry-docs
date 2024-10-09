@@ -37,7 +37,8 @@ export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
   const [dropdownEl, setDropdownEl] = useState<HTMLElement | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [orgFilter, setOrgFilter] = useState('');
-  const {theme} = useTheme();
+  const {resolvedTheme: theme} = useTheme();
+
   const isDarkMode = theme === 'dark';
   const {isMounted} = useIsMounted();
 
