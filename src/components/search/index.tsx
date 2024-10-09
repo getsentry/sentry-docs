@@ -70,7 +70,9 @@ const config = isDeveloperDocs ? developerDocsSites : userDocsSites;
 const search = new SentryGlobalSearch(config);
 
 function relativizeUrl(url: string) {
-  return url.replace(/^(https?:\/\/docs\.sentry\.io)(?=\/|$)/, '');
+  return isDeveloperDocs
+    ? url
+    : url.replace(/^(https?:\/\/docs\.sentry\.io)(?=\/|$)/, '');
 }
 
 type Props = {
