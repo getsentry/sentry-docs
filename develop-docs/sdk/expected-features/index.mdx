@@ -4,14 +4,15 @@ sidebar_order: 4
 ---
 
 The following is a description of features that are commonly expected in Sentry SDKs.  Make sure to also
-have read the <Link to="/sdk/unified-api">unified API design</Link> documentation
+have read the <Link to="/sdk/miscellaneous/unified-api">unified API design</Link> documentation
 which explains the common API design.
 
 ## Background Sending
 
 Events should be transmitted in a background thread or similar system.  This queue must be flushed when the
 application shuts down with a specific timeout.  This feature is typically user facing and explained
-as part of [shutdown and draining](https://docs.sentry.io/error-reporting/configuration/draining/?platform=swift).
+as part of [shutdown and draining](https://docs.sentry.io/platforms/javascript/configuration/draining/).
+
 
 ## Uncaught Exception Handler
 
@@ -23,11 +24,11 @@ This behavior is typically provided by a default integration that can be disable
 
 Scopes should be provided by SDKs to set common attributes and context data on events sent to Sentry emitted from the current scope. They should be inherited to lower scopes so that they can be set "globally" on startup.  Note that some attributes can only be set in the client options (`release`, `environment`) and not on scopes.
 
-What scope means depends on the application, for a web framework it is most likely a single request/response cycle. For a mobile application there is often just one single scope that represents the single user and their actions. Scoping can be difficult to implement because it often has to deal with threads or concurrency and can involve deep integration with frameworks. <Link to="/sdk/unified-api#scope">see the scopes page</Link> for more information.
+What scope means depends on the application, for a web framework it is most likely a single request/response cycle. For a mobile application there is often just one single scope that represents the single user and their actions. Scoping can be difficult to implement because it often has to deal with threads or concurrency and can involve deep integration with frameworks. <Link to="/sdk/miscellaneous/unified-api#scope">see the scopes page</Link> for more information.
 
 ## Automatic Context Data
 
-Automatic addition of useful attributes such as `tags` or `extra` or specific `contexts`. Typically means the SDK hooks into a framework so that it can set attributes that are known to be useful for most users. Please check [Data Handling](/sdk/data-handling) for considerations.
+Automatic addition of useful attributes such as `tags` or `extra` or specific `contexts`. Typically means the SDK hooks into a framework so that it can set attributes that are known to be useful for most users. Please check [Data Handling](/sdk/expected-features/data-handling) for considerations.
 
 ## Breadcrumbs
 
@@ -41,7 +42,7 @@ With deeper framework integration, the automatic recording of breadcrumbs is pos
 * System Events: low battery, low storage space, airplane mode started, memory warnings, device orientation changed, etc.
 * [Outgoing HTTP requests](#http-client-integrations)
 
-Check out the [complete breadcrumb documentation](https://develop.sentry.dev/sdk/event-payloads/breadcrumbs/#breadcrumb-types) for more types.
+Check out the [complete breadcrumb documentation](/sdk/data-model/event-payloads/breadcrumbs/#breadcrumb-types) for more types.
 
 ## Event Sampling
 
@@ -65,14 +66,14 @@ ignore_transactions = ['GET /api/health','/api/v1/*']
 
 Respect Sentry’s HTTP 429 `Retry-After` header, or, if the SDK supports multiple payload types (e.g. errors and transactions), the `X-Sentry-Rate-Limits` header. Outgoing SDK requests should be dropped during the backoff period.
 
-See <Link to="/sdk/rate-limiting">Rate Limiting</Link> for details.
+See <Link to="/sdk/expected-features/rate-limiting">Rate Limiting</Link> for details.
 
 
 ## Backpressure Management
 
 Backend SDKs (typically used in server applications) should have backpressure management logic that dynamically downsamples transactions when the throughput in the system is too high.
 
-See <Link to="/sdk/performance/backpressure">Backpressure Management</Link> for details.
+See <Link to="/sdk/telemetry/traces/backpressure/">Backpressure Management</Link> for details.
 
 ## In-App frames
 
@@ -98,7 +99,7 @@ Ability to get the ID of the last event sent. Event IDs are useful for correlati
 
 ## User Feedback
 
-For all SDKs, it is strongly recommended to send the `User Feedback` as an [envelope](/sdk/envelopes/#user-feedback). Alternatively, the SDKs can
+For all SDKs, it is strongly recommended to send the `User Feedback` as an [envelope item](/sdk/data-model/envelope-items/#user-feedback). Alternatively, the SDKs can
 use the [User Feedback endpoint](https://docs.sentry.io/api/projects/submit-user-feedback/), which is not recommended.
 
 ### User Facing Platforms
@@ -130,7 +131,7 @@ Envelope item:
 
 ## Attachments
 
-Attachments are files stored alongside an event. To send an attachment, add it as an [envelope item](/sdk/envelopes/#attachment)
+Attachments are files stored alongside an event. To send an attachment, add it as an [envelope item](/sdk/data-model/envelope-items/#attachment)
 to the corresponding event.
 
 We recommend implementing two types of attachments, one with a path and another with a byte array.
@@ -142,7 +143,7 @@ The overload that takes a `path` should consider:
 * If reading the attachment fails, the SDK should not drop the whole envelope, but just the attachment's envelope item.
 * If the SDK is in debug mode log (`debug=true`) out errors to make debugging easier.
 
-If the SDK supports [transactions](/sdk/envelopes/#transaction), the attachments should offer a flag `addToTransactions`,
+If the SDK supports [transactions](/sdk/data-model/envelope-items/#transaction), the attachments should offer a flag `addToTransactions`,
 that specifies if SDK adds the attachment to every transaction or not. The default should be `false`.
 
 Use the implementations of [Java](https://github.com/getsentry/sentry-java/blob/main/sentry/src/main/java/io/sentry/Attachment.java),
@@ -158,7 +159,7 @@ useful because attachments could quickly eat up the users' disk space. Furthermo
 
 ## Screenshots
 
-When the user opts-in, if technically possible, take a screenshot of the application during a crash or error and include it as an [attachment](#attachments) to the [envelope](/sdk/envelopes/) with the event.
+When the user opts-in, if technically possible, take a screenshot of the application during a crash or error and include it as an [attachment](#attachments) to the [envelope](/sdk/data-model/envelopes/) with the event.
 
 This feature only applies to SDKs with a user interface, such as Mobile and Desktop.
 In some environments such as native iOS, taking a screenshot requires the UI thread and in the event of a crash, that might not be available. So inherently this feature will be a best effort solution.
@@ -209,7 +210,7 @@ Consider having the SDK retry sending events once the device is back online, whe
 
 Once the device is back online, the SDK is likely going to empty its disk queue in a quick burst of requests. This can trigger different abuse filters in Sentry. To account for that, it's considered to add a small delay between cached event captures. A recommended value is 100 milliseconds.
 
-If the SDK is being [rate-limited](/sdk/rate-limiting/), which causes the SDK to drop any event that reaches its HTTP transport, cosider stop consuming the disk cache until the `Retry-After` timeout is reached or the app restarts.
+If the SDK is being [rate-limited](/sdk/expected-features/rate-limiting/), which causes the SDK to drop any event that reaches its HTTP transport, cosider stop consuming the disk cache until the `Retry-After` timeout is reached or the app restarts.
 
 #### Example implementations
 
@@ -287,7 +288,7 @@ If Performance Monitoring is both supported by the SDK and enabled in the client
 - HTTP requests must be enhanced with a [`sentry-trace` HTTP header](/sdk/performance/#header-sentry-trace) to support [distributed tracing](https://docs.sentry.io/product/sentry-basics/tracing/distributed-tracing)
 - HTTP requests must be enhanced with a [`traceparent` HTTP header](/sdk/performance/#header-traceparent) to support [distributed tracing](https://docs.sentry.io/product/sentry-basics/tracing/distributed-tracing)
 - HTTP requests must be enhanced with a [`baggage` HTTP header](/sdk/performance/dynamic-sampling-context/#baggage-header) to support [dynamic sampling](/sdk/performance/dynamic-sampling-context/)
-- span status must match HTTP response status code ([see Span status to HTTP status code mapping](/sdk/event-payloads/span/))
+- span status must match HTTP response status code ([see Span status to HTTP status code mapping](/sdk/data-model/event-payloads/span/))
 - when network error occurs, span status must be set to `internal_error`
 - span data must follow the [Span Data Conventions](/sdk/performance/span-data-conventions/)
 
@@ -308,9 +309,9 @@ The HTTP Client integration should have 3 configuration options:
 
 The HTTP Client integration should capture error events with the following properties:
 
-The Request interface, see the <Link to="/sdk/event-payloads/request/">Spec</Link> for details.
+The Request interface, see the <Link to="/sdk/data-model/event-payloads/request/">Spec</Link> for details.
 
-The Response context, see the <Link to="/sdk/event-payloads/contexts/#response-context">Spec</Link> for details.
+The Response context, see the <Link to="/sdk/data-model/event-payloads/contexts/#response-context">Spec</Link> for details.
 
 ```json
 {
@@ -329,12 +330,12 @@ The Response context, see the <Link to="/sdk/event-payloads/contexts/#response-c
 }
 ```
 
-The Exception Interface, see the <Link to="/sdk/event-payloads/exception/">Spec</Link> for details.
+The Exception Interface, see the <Link to="/sdk/data-model/event-payloads/exception/">Spec</Link> for details.
 
 If the HTTP Client integration does not throw an exception for unsuccessful requests, you can create a synthetic exception following this Spec:
 
-- Set the <Link to="/sdk/event-payloads/exception/#exception-mechanism">Exception Mechanism</Link> with a proper `type` such as `SentryOkHttpInterceptor`.
-- Set the <Link to="/sdk/event-payloads/stacktrace/">Stack Trace Interface</Link> with `snapshot=true`.
+- Set the <Link to="/sdk/data-model/event-payloads/exception/#exception-mechanism">Exception Mechanism</Link> with a proper `type` such as `SentryOkHttpInterceptor`.
+- Set the <Link to="/sdk/data-model/event-payloads/stacktrace/">Stack Trace Interface</Link> with `snapshot=true`.
   - `HTTP Client Error with status code: $code`.
 
 When capturing error events, pass the original `Request` and `Response` objects from the HTTP Client as `hints`, so the users may filter out events in `beforeSend` with the full context.
@@ -345,7 +346,7 @@ As an example, see the [OkHTTP Client integration](https://github.com/getsentry/
 
 ## GraphQL Client Integrations
 
-The GraphQL Client integrations should match the guidelines for [HTTP Client Integrations](/sdk/features/#http-client-integrations) with a few differences:
+The GraphQL Client integrations should match the guidelines for [HTTP Client Integrations](/sdk/expected-features/#http-client-integrations) with a few differences:
 
 The `failedRequestStatusCodes` parameter does not exist because GraphQL errors are not HTTP errors, so that the request can be errored even though the HTTP status code of the response is successful.
 
@@ -412,7 +413,7 @@ The `fingerprints` field should be set to `["$operationName", "$operationType", 
 
 ### Server
 
-The GraphQL Performance integration should match the guidelines for [GraphQL Client Integrations](/sdk/features/#graphql-client-integrations) with a few differences:
+The GraphQL Performance integration should match the guidelines for [GraphQL Client Integrations](/sdk/expected-features/#graphql-client-integrations) with a few differences:
 
 The transaction's name should be set with the GraphQL operation name, if possible, otherwise fallback to something unique that makes sense, e.g. the canonical name of the actual/generated class.
 
