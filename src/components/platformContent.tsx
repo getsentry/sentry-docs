@@ -7,7 +7,12 @@ import {getCurrentGuide, getDocsRootNode, getPlatform} from 'sentry-docs/docTree
 import {getFileBySlug} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {serverContext} from 'sentry-docs/serverContext';
-import {isVersioned, stripVersion} from 'sentry-docs/versioning';
+import {
+  getVersion,
+  isVersioned,
+  stripVersion,
+  VERSION_INDICATOR,
+} from 'sentry-docs/versioning';
 
 import {Include} from './include';
 
@@ -55,6 +60,7 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
     const guidePath = udpatePathIfVersionedFileDoesNotExist(
       `platform-includes/${includePath}/${guide}`
     );
+
     try {
       doc = await getFileBySlug(guidePath);
     } catch (e) {
@@ -67,7 +73,7 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
     const guideObject = getCurrentGuide(rootNode, path);
 
     const fallbackGuidePath = udpatePathIfVersionedFileDoesNotExist(
-      `platform-includes/${includePath}/${guideObject?.fallbackGuide}`
+      `platform-includes/${includePath}/${guideObject?.fallbackGuide}${VERSION_INDICATOR}${getVersion(guide || '')}`
     );
 
     if (guideObject?.fallbackGuide) {
