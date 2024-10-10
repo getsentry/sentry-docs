@@ -1,0 +1,90 @@
+---
+title: Capture Your First Distributed Tracing Error
+sidebar_order: 3
+description: "Learn how to capture your first error and view it in Sentry."
+---
+
+Now that the sample apps are up and running on your local environment and integrated with the Sentry SDKs, you're ready to generate the first error. Please ensure you have BOTH apps running (on http://localhost:3000 and http://localhost:3001).
+
+You should see the 'One-Stop Shop' site running on http://localhost:3000. When you click on any of the product buttons, this will trigger a call to the backend for product info. As long as your Express server is running, you should see titles, images and descriptions for each product.
+
+## 1. Trigger an Error
+
+To start using Sentry's error monitoring feature, you need some errors first. Let's add in an obvious error that will be easy to see in Sentry.
+
+If you're using your own source code, skip this step. Instead, select your [platform](/platforms/) and follow its **Verify** step inside the **Getting Started** guide to introduce an error.
+
+1. In the `tracing-frontend` repo, open `src/App.js` and update the `onClick` handler by replacing the string passed to the `getProduct()` function from `nonfat-water` to `debug-sentry`.
+
+```jsx {filename:App.js}
+    <div className="btn-parent">
+        <button className="btn" onClick={() => getProduct("clown-shoes")}>
+            Clown Shoes
+        </button>
+    </div>
+    <div className="btn-parent">
+        <button className="btn" onClick={() => getProduct("debug-sentry")}>
+        Nonfat Water
+       </button>
+    </div>
+```
+Take note that in the `server.js` file of the `backend-tracing` repo, there is a middleware function handling the `/products/debug-sentry` route, which throws a sample error:
+
+```javascript{filename:server.js}
+app.get("/products/debug-sentry", (req, res) => {
+    console.log('Sentry Error thrown!');
+    throw new Error("My first Sentry error!");
+  });
+```
+
+
+
+1. Save the file.
+
+1. Go back to the browser window and try clicking on the **Nonfat Water** button again, you will no longer see the expected product information. Instead, you'll see text saying something went wrong.  If you look at line 88 of the `App.js` file in the `frontend-tracing` repo, you'll see this is what the frontend displays when it's call to the backend doesn't return any data.
+
+1. Open the terminal window that's running the `backend-tracing` server. Here, you'll see that a log letting you know that an error has occurred.
+
+```bash
+Sentry Error thrown!
+```
+
+
+
+## 2. View the Error in Sentry
+
+Now that you've triggered an error, let's see what it looks like in Sentry.
+
+1. Open the **Issues** page in [Sentry.io](https://sentry.io/). Make sure your project is selected in the projects dropdown.
+
+2. Select the error from the issues list to to view the full details and context of this error.
+
+   Note that Sentry aggregates similar errors (events) into one [Issue](/product/issues/). If you trigger this error multiple times, you won't see more issues appear. Instead, you'll see the number of events for that issue increase.
+
+3. On the [Issue Details](/product/issues/issue-details/) page, scroll down to the stack trace.
+
+   Notice that the stack trace is _minified_. JavaScript is typically minified to reduce to the size of the source code. This means you can't see the actual lines of code from your app in the stack trace.
+
+   With a little configuration, Sentry can unminify your code back to its readable form and display your source code in each stack frame. You'll set this up in the next section.
+
+### UI Walkthrough
+
+The interactive demo below walks through how to view error details in Sentry.
+
+<div style={{"height":"0px","paddingBottom":"calc(52.1021021021021% + 41px)","position":"relative","width":"100%"}}>
+  <iframe
+    src="https://demo.arcade.software/nTTSJdR4TyqHATbVMOzA?embed"
+    frameborder="0"
+    loading="lazy"
+    webkitallowfullscreen
+    mozallowfullscreen
+    allowfullscreen
+    allow="fullscreen;"
+    style={{"colorScheme":"light","height":"100%","left":"0px","position":"absolute","top":"0px","width":"100%"}}
+    title="FE Tutorial - View First Error"
+  ></iframe>
+</div>
+
+## Next
+
+At this point, you've verified that Sentry is monitoring errors for your app. So you know there's an issue, but where do you go to fix it? In the next section, you'll learn how to [Enable Readable Stack Traces in Your Errors](/product/sentry-basics/integrate-frontend/upload-source-maps/) so Sentry can show you exactly which line in which file is causing the issue.
