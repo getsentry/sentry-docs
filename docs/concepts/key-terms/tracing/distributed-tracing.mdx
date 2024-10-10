@@ -21,7 +21,44 @@ It's important to note that tracing is not [profiling](https://github.com/produc
 
 Learn more in this [Tracing: Frontend issues with backend solutions](https://sentry.io/resources/tracing-frontend-issues-with-backend-solutions/?original_referrer=https%3A%2F%2Fblog.sentry.io%2F) workshop.
 
-### Why Tracing?
+### The Tracing Data Model
+
+Ultimately, any data structure is defined by the kind of data it contains, and relationships between data structures are defined by how links between them are recorded. Traces, transactions, and spans are no different.
+
+#### Traces
+
+Traces are defined as the collection of all transactions that share a `trace_id` value.
+
+#### Transactions
+
+Transactions share most properties (start and end time, tags, and so on) with their root spans. They also have a `transaction_name` property, used in the UI to identify the transaction. Common examples include endpoint paths for backend request transactions, task names for cron job transactions, and URLs for page-load transactions.
+
+Before the transaction is sent, the `tags` and `data` properties will get merged with data from the global scope. (Global scope data is set in `Sentry.init()` or by using `Sentry.configureScope()`, `Sentry.setTag()`, `Sentry.setUser()`, or `Sentry.setExtra()`.)
+
+
+<Note>
+
+Transaction names can contain **sensitive data**. See [Scrubbing Sensitive Data](/platforms/javascript/data-management/sensitive-data/#scrubbing-data) for more information.
+
+</Note>
+
+#### Spans
+
+Span data includes:
+
+- `parent_span_id`: ties the span to its parent span
+- `op`: short string identifying the type or category of operation the span is measuring
+- `start_timestamp`: when the span was opened
+- `end_timestamp`: when the span was closed
+- `description`: longer description of the span's operation
+- `status`: short code indicating operation's status
+- `tags`: key-value pairs holding additional data about the span
+- `data`: arbitrarily-structured additional data about the span
+
+An example use of the `op` and `description` properties together is `op: db.query` and `description: SELECT * FROM users WHERE last_active < %s`. The `status` property indicates the success or failure of the span's operation, or a response code for HTTP requests. `Tags` and `data` attach further contextual information to the span, such as `function: middleware.auth.is_authenticated` for a function call or `request: {url: ..., headers: ... , body: ...}` for an HTTP request.
+To search span data see [Searchable Properties](/concepts/search/searchable-properties/spans/)
+
+### What Can Tracing Help With?
 
 Applications consist of interconnected components or services. For example, a modern web application may include:
 
@@ -47,7 +84,7 @@ Top-level spans can be broken down into smaller spans, mirroring the way one fun
 
 ![Diagram illustrating the parent-child relationship between spans within a single transaction.](./img/diagram-transaction-spans.png)
 
-### Tracing, Transaction & Span Example: Investigating Slow Page Load
+### Tracing Example: Investigating Slow Page Load
 
 Suppose your web application is slow to load. A lot has to happen for your app to get to a usable state: multiple requests to your backend, calls to your database or external APIs, and browser processing. Which part is slowing things down?
 
@@ -141,50 +178,6 @@ For a backend periodically polling for data from an external service, processing
   - Handling the request (_S_)
 
 \* Starred spans are parents of later transactions (and their root spans).
-
-### The Tracing Data Model
-
-> "Show me your flowchart and conceal your tables, and I shall continue to be mystified. Show me your tables, and I won't usually need your flowchart; it'll be obvious."
->
-> -- [Fred Brooks](https://en.wikipedia.org/wiki/Fred_Brooks), The Mythical Man Month (1975)
-
-Ultimately, any data structure is defined by the kind of data it contains, and relationships between data structures are defined by how links between them are recorded. Traces, transactions, and spans are no different.
-
-#### Traces
-
-Traces are defined as the collection of all transactions that share a `trace_id` value.
-
-#### Transactions
-
-Transactions share most properties (start and end time, tags, etc.) with their root spans. They also have a `transaction_name` property, used in the UI to identify the transaction. Common examples include endpoint paths for backend request transactions, task names for cron job transactions, and URLs for page-load transactions.
-
-<Note>
-
-Transaction names can contain **sensitive data**. See [Scrubbing Sensitive Data](/platforms/javascript/data-management/sensitive-data/#scrubbing-data) for more information.
-
-</Note>
-
-Before the transaction is sent, the `tags` and `data` properties will get merged with data from the global scope. (Global scope data is set in `Sentry.init()` or by using `Sentry.configureScope()`, `Sentry.setTag()`, `Sentry.setUser()`, and `Sentry.setExtra()`.)
-
-Transaction names can contain **sensitive data**. See [Scrubbing Sensitive Data](/platforms/javascript/data-management/sensitive-data/#scrubbing-data) for more information.
-
-
-
-#### Spans
-
-Span data includes:
-
-- `parent_span_id`: ties the span to its parent span
-- `op`: short string identifying the type or category of operation the span is measuring
-- `start_timestamp`: when the span was opened
-- `end_timestamp`: when the span was closed
-- `description`: longer description of the span's operation
-- `status`: short code indicating operation's status
-- `tags`: key-value pairs holding additional data about the span
-- `data`: arbitrarily-structured additional data about the span
-
-An example use of the `op` and `description` properties together is `op: db.query` and `description: SELECT * FROM users WHERE last_active < %s`. The `status` property indicates the success or failure of the span's operation, or a response code for HTTP requests. `Tags` and `data` attach further contextual information to the span, such as `function: middleware.auth.is_authenticated` for a function call or `request: {url: ..., headers: ... , body: ...}` for an HTTP request.
-To search span data see [Searchable Properties](/concepts/search/searchable-properties/spans/)
 
 ### Important Information About Tracing, Spans & Transactions
 
