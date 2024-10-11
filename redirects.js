@@ -597,6 +597,10 @@ const userDocsRedirects = [
     source: '/api/rate-limits/',
     destination: '/api/ratelimits/',
   },
+  {
+    source: '/platforms/react-native/manual-setup/codepush/',
+    destination: '/platforms/react-native/sourcemaps/uploading/codepush/',
+  },
 ];
 
 /**
