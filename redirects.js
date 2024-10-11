@@ -3,7 +3,7 @@ const isDeveloperDocs = !!process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const developerDocsRedirects = [
   {
-    source: '/sdk/unified-api/tracing/:path*',
+    source: '/sdk/miscellaneous/unified-api/tracing/:path*',
     destination: '/sdk/performance/:path*',
   },
   {
