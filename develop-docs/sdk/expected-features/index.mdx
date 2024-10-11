@@ -285,12 +285,12 @@ If Performance Monitoring is both supported by the SDK and enabled in the client
 
 - operation: `http.client`
 - description: `$METHOD $url` (uppercase HTTP method), e.g. `GET https://sentry.io`
-- HTTP requests must be enhanced with a [`sentry-trace` HTTP header](/sdk/performance/#header-sentry-trace) to support [distributed tracing](https://docs.sentry.io/product/sentry-basics/tracing/distributed-tracing)
-- HTTP requests must be enhanced with a [`traceparent` HTTP header](/sdk/performance/#header-traceparent) to support [distributed tracing](https://docs.sentry.io/product/sentry-basics/tracing/distributed-tracing)
-- HTTP requests must be enhanced with a [`baggage` HTTP header](/sdk/performance/dynamic-sampling-context/#baggage-header) to support [dynamic sampling](/sdk/performance/dynamic-sampling-context/)
+- HTTP requests must be enhanced with a [`sentry-trace` HTTP header](/sdk/telemetry/traces/#header-sentry-trace) to support [distributed tracing](https://docs.sentry.io/product/sentry-basics/tracing/distributed-tracing)
+- HTTP requests must be enhanced with a [`traceparent` HTTP header](/sdk/telemetry/traces/#header-traceparent) to support [distributed tracing](https://docs.sentry.io/product/sentry-basics/tracing/distributed-tracing)
+- HTTP requests must be enhanced with a [`baggage` HTTP header](/sdk/telemetry/traces/dynamic-sampling-context/#baggage-header) to support [dynamic sampling](/sdk/telemetry/traces/dynamic-sampling-context/)
 - span status must match HTTP response status code ([see Span status to HTTP status code mapping](/sdk/data-model/event-payloads/span/))
 - when network error occurs, span status must be set to `internal_error`
-- span data must follow the [Span Data Conventions](/sdk/performance/span-data-conventions/)
+- span data must follow the [Span Data Conventions](/sdk/telemetry/traces/span-data-conventions/)
 
 ### HTTP Client Errors
 
@@ -303,7 +303,7 @@ The HTTP Client integration should have 3 configuration options:
 - `failedRequestStatusCodes` defaults to `500 - 599`, this configuration option accepts a `List` of `HttpStatusCodeRange` which is a range of HTTP status code -> `min` to `max` or a single `status_code`.
   - The SDK will only capture HTTP Client errors if the HTTP Response status code is within the defined ranges in `failedRequestStatusCodes`.
   - If the language has a `Range` type, it should be used instead of `HttpStatusCodeRange`.
-- `failedRequestTargets` defaults to (`.*`), this configuration option accepts a `List` of `String` that may be Regular expressions as well, similar to <Link to="/sdk/performance/#tracepropagationtargets">tracePropagationTargets</Link>.
+- `failedRequestTargets` defaults to (`.*`), this configuration option accepts a `List` of `String` that may be Regular expressions as well, similar to <Link to="/sdk/telemetry/traces/#tracepropagationtargets">tracePropagationTargets</Link>.
   - The SDK will only capture HTTP Client errors if the HTTP Request URL is a match for any of the `failedRequestsTargets`.
 -  sensitive `headers` should only be set if `sendDefaultPii` is enabled, e.g. `Cookie` and `Set-Cookie`.
 
@@ -431,9 +431,9 @@ Spans should be created for [resolvers](https://www.apollographql.com/docs/apoll
 
 Spans should be created for [data loaders](https://graphql.org/learn/best-practices/#server-side-batching-caching/), if possible.
 
-The operation type should follow the [Span Operation Conventions](/sdk/performance/span-operations/).
+The operation type should follow the [Span Operation Conventions](/sdk/telemetry/traces/span-operations/).
 
-Extra (`data`) attributes for transactions and/or spans, there are [Span Data](/sdk/performance/span-data-conventions/) and [OTel GraphQL](https://opentelemetry.io/docs/specs/otel/trace/semantic_conventions/instrumentation/graphql/) conventions.
+Extra (`data`) attributes for transactions and/or spans, there are [Span Data](/sdk/telemetry/traces/span-data-conventions/) and [OTel GraphQL](https://opentelemetry.io/docs/specs/otel/trace/semantic_conventions/instrumentation/graphql/) conventions.
 
 Instrumenting APM for GraphQL will depend on the instrumented GraphQL library, if there are available hooks for it, the SDK should use them, otherwise, the SDK could try to monkeypatch the library or instrument the transport layer using heuristics, for example, if the URL ends with `graphql`, if there are HTTP Headers, etc.
 
