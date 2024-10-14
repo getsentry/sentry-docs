@@ -47,10 +47,6 @@ const developerDocsRedirects = [
     destination: '/sdk/expected-features/rate-limiting/:path*',
   },
   {
-    source: '/sdk/envelopes/:path*',
-    destination: '/sdk/data-model/envelopes/:path*',
-  },
-  {
     source: '/sdk/event-payloads/:path*',
     destination: '/sdk/data-model/event-payloads/:path*',
   },
@@ -150,6 +146,12 @@ const developerDocsRedirects = [
   {
     source: '/sdk/envelopes/#reserved-types',
     destination: '/sdk/data-model/envelope-items/#reserved-types',
+  },
+  // Redirect of the main /sdk/envelopes page that now lives on /sdk/data-model/envelopes/ page
+  // Must come after the redirects of the sub sections above.
+  {
+    source: '/sdk/envelopes/:path*',
+    destination: '/sdk/data-model/envelopes/:path*',
   },
 ];
 
