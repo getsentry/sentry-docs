@@ -88,7 +88,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/store/:path*',
-    destination: '/sdk/miscellaneous/store/#size-limits:path*',
+    destination: '/sdk/miscellaneous/store/:path*',
   },
   {
     source: '/sdk/processes/:path*',
