@@ -47,6 +47,10 @@ const developerDocsRedirects = [
     destination: '/sdk/expected-features/rate-limiting/:path*',
   },
   {
+    source: '/sdk/envelopes/:path*',
+    destination: '/sdk/data-model/envelopes/:path*',
+  },
+  {
     source: '/sdk/event-payloads/:path*',
     destination: '/sdk/data-model/event-payloads/:path*',
   },
@@ -89,69 +93,6 @@ const developerDocsRedirects = [
   {
     source: '/sdk/processes/:path*',
     destination: '/sdk/development-process/:path*',
-  },
-  // Redirects of sections in /sdk/envelope pages that now live on /sdk/data-model/envelope-items/ page
-  {
-    source: '/sdk/envelopes/#event',
-    destination: '/sdk/data-model/envelope-items/#event',
-  },
-  {
-    source: '/sdk/envelopes/#transaction',
-    destination: '/sdk/data-model/envelope-items/#transaction',
-  },
-  {
-    source: '/sdk/envelopes/#attachment',
-    destination: '/sdk/data-model/envelope-items/#attachment',
-  },
-  {
-    source: '/sdk/envelopes/#session',
-    destination: '/sdk/data-model/envelope-items/#session',
-  },
-  {
-    source: '/sdk/envelopes/#statsd',
-    destination: '/sdk/data-model/envelope-items/#statsd',
-  },
-  {
-    source: '/sdk/envelopes/#metric-meta',
-    destination: '/sdk/data-model/envelope-items/#metric-meta',
-  },
-  {
-    source: '/sdk/envelopes/#user-feedback',
-    destination: '/sdk/data-model/envelope-items/#user-feedback',
-  },
-  {
-    source: '/sdk/envelopes/#client-report',
-    destination: '/sdk/data-model/envelope-items/#client-report',
-  },
-  {
-    source: '/sdk/envelopes/#replay-event',
-    destination: '/sdk/data-model/envelope-items/#replay-event',
-  },
-  {
-    source: '/sdk/envelopes/#replay-recording',
-    destination: '/sdk/data-model/envelope-items/#replay-recording',
-  },
-  {
-    source: '/sdk/envelopes/#profile',
-    destination: '/sdk/data-model/envelope-items/#profile',
-  },
-  {
-    source: '/sdk/envelopes/#profile-chunk',
-    destination: '/sdk/data-model/envelope-items/#profile-chunk',
-  },
-  {
-    source: '/sdk/envelopes/#check-ins',
-    destination: '/sdk/data-model/envelope-items/#check-ins',
-  },
-  {
-    source: '/sdk/envelopes/#reserved-types',
-    destination: '/sdk/data-model/envelope-items/#reserved-types',
-  },
-  // Redirect of the main /sdk/envelopes page that now lives on /sdk/data-model/envelopes/ page
-  // Must come after the redirects of the sub sections above.
-  {
-    source: '/sdk/envelopes/:path*',
-    destination: '/sdk/data-model/envelopes/:path*',
   },
 ];
 
