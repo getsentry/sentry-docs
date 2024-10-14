@@ -3,7 +3,7 @@ const isDeveloperDocs = !!process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const developerDocsRedirects = [
   {
-    source: '/sdk/unified-api/tracing/:path*',
+    source: '/sdk/miscellaneous/unified-api/tracing/:path*',
     destination: '/sdk/performance/:path*',
   },
   {
@@ -27,8 +27,72 @@ const developerDocsRedirects = [
     destination: '/sdk/telemetry/traces/:path*',
   },
   {
-    source: '/sdk/event-payloads/types/',
-    destination: '/sdk/event-payloads/',
+    source: '/sdk/data-model/event-payloads/types/',
+    destination: '/sdk/data-model/event-payloads/',
+  },
+  {
+    source: '/sdk/basics/:path*',
+    destination: '/sdk/development-process/basics/:path*',
+  },
+  {
+    source: '/sdk/data-handling/:path*',
+    destination: '/sdk/expected-features/data-handling/:path*',
+  },
+  {
+    source: '/sdk/features/:path*',
+    destination: '/sdk/expected-features/:path*',
+  },
+  {
+    source: '/sdk/rate-limiting/:path*',
+    destination: '/sdk/expected-features/rate-limiting/:path*',
+  },
+  {
+    source: '/sdk/envelopes/:path*',
+    destination: '/sdk/data-model/envelopes/:path*',
+  },
+  {
+    source: '/sdk/event-payloads/:path*',
+    destination: '/sdk/data-model/event-payloads/:path*',
+  },
+  {
+    source: '/sdk/hub_and_scope_refactoring/:path*',
+    destination: '/sdk/miscellaneous/hub_and_scope_refactoring/:path*',
+  },
+  {
+    source: '/sdk/unified-api/:path*',
+    destination: '/sdk/miscellaneous/unified-api/:path*',
+  },
+  {
+    source: '/sdk/sessions/:path*',
+    destination: '/sdk/telemetry/sessions/:path*',
+  },
+  {
+    source: '/sdk/client-reports/:path*',
+    destination: '/sdk/telemetry/client-reports/:path*',
+  },
+  {
+    source: '/sdk/replays/:path*',
+    destination: '/sdk/telemetry/replays/:path*',
+  },
+  {
+    source: '/sdk/setup-wizards/:path*',
+    destination: '/sdk/expected-features/setup-wizards/:path*',
+  },
+  {
+    source: '/sdk/serverless/:path*',
+    destination: '/sdk/serverless-sdks/:path*',
+  },
+  {
+    source: '/sdk/signal-handlers/:path*',
+    destination: '/sdk/native-sdks/signal-handlers/:path*',
+  },
+  {
+    source: '/sdk/store/:path*',
+    destination: '/sdk/miscellaneous/store/:path*',
+  },
+  {
+    source: '/sdk/processes/:path*',
+    destination: '/sdk/development-process/:path*',
   },
 ];
 
