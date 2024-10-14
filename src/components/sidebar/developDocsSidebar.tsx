@@ -15,6 +15,7 @@ const devDocsMenuItems: {root: string; title: string; hideChevron?: boolean}[] =
   {root: 'frontend', title: 'Frontend'},
   {root: 'backend', title: 'Backend'},
   {root: 'sdk', title: 'SDK Development'},
+  {root: 'relay', title: 'Relay Development'},
   {root: 'services', title: 'Services'},
   {root: 'integrations', title: 'Integrations'},
   {root: 'self-hosted', title: 'Self-Hosted Sentry'},
