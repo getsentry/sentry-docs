@@ -38,13 +38,15 @@ Query monitoring works best with up-to-date SDK versions. The following minimum 
 
 ### Span Eligibility
 
-Sentry tries to extract metrics for all SQL-like dialects. NoSQL databases like MongoDB, graph databases like Neo4j, and other non-SQL database systems are not currently eligible for this feature.
+Sentry tries to extract metrics for all SQL-like dialects, as well as MongoDB. Other NoSQL databases like Elasticsearch, graph databases like Neo4j, and other non-SQL database systems are not currently eligible for this feature.
+
+<Note>MongoDB support is currently available to [Early Adopters](/organization/early-adopter-features/). Early Adopter features are still in-progress and may have bugs. We recognize the irony.</Note>
 
 If you are using <PlatformLink to="/tracing/instrumentation/automatic-instrumentation">automatic instrumentation</PlatformLink>, query monitoring should work without any configuration. If you've manually instrumented Sentry, you'll need to make sure that your spans conform to our standards for the best experience:
 
 - The span `op` field is set to an [eligible value](https://develop.sentry.dev/sdk/performance/span-operations/#database).
-- The span's description contains the full, parameterized SQL query (e.g. `"SELECT * FROM users WHERE id = ?"`). Supported placeholder values are `%s`, `?`, `:c0` (e.g. `:c0`, `:c1`) and `$1` (e.g. `$1`, `$2`).
-- The `db.system` span data value is set to the [correct identifier](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/attributes-registry/db.md#generic-database-attributes) (e.g., `"postgresql"` or `"mysql"`).
+- The span's description contains the full, parameterized query (e.g. `"SELECT * FROM users WHERE id = ?"`). Supported placeholder values for SQL are `%s`, `?`, `:c0` (e.g. `:c0`, `:c1`) and `$1` (e.g. `$1`, `$2`). MongoDB span descriptions should contain valid JSON, and placeholders should be the string `"?"`.
+- The `db.system` span data value is set to the [correct identifier](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/attributes-registry/db.md#generic-database-attributes) (e.g., `"postgresql"` or `"mongodb"`).
 
 ## Queries Page
 
@@ -58,18 +60,23 @@ The query description table below shows a list of queries, along with their volu
 
 By default, this table is sorted by most [time spent](#what-is-time-spent). This means that queries at the top are usually really slow, very frequent, or both. You can change this to sort by queries per minute to see the most frequently run queries, or by average duration to see the slowest queries.
 
-You can also use the dropdowns above to filter the table for specific SQL commands (such as `SELECT` and `UPDATE`) and tables queried.
+You can also use the dropdowns above to filter all data for specific commands (such as `SELECT` and `UPDATE`) and tables/collections queried.
 
 To view more details, click on a query from the table to open its **Query Summary** page.
 
 ### Query Parameterization
 
-In some cases, Sentry processes queries and simplifies them to improve readability. For example:
+In some cases, Sentry processes queries and simplifies them to improve readability. For example, for SQL queries:
 
 - Table names are removed from column selections if possible (e.g., `SELECT "users"."name", "users"."id", "users.age" FROM users` becomes `SELECT name, id, age FROM users`)
 - Long lists of `SELECT` arguments are collapsed (e.g., `SELECT id, name, age, city, country, phone FROM users` becomes `SELECT .. FROM users`)
 - Long lists of `VALUES` arguments are collapsed (e.g., `INSERT INTO users (id, email, name, age) VALUES (%s %s %s %s)` becomes `INSERT INTO users (..) VALUES (%s)`)
 - `CASE / WHEN` statements are collapsed
+
+For MongoDB queries:
+
+- Leaf values are replaced with the placeholder `"?"`
+- A maximum depth is applied to deeply nested query objects
 
 You can see the full query by hovering on a truncated description, or clicking it to see its **Query Summary** page.
 
