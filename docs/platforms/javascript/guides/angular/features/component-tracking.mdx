@@ -3,7 +3,7 @@ title: Track Angular Components
 description: "Learn how Sentry's Angular SDK allows you to monitor the rendering performance of your application and its components."
 ---
 
-Sentry's Angular SDK offers a feature to monitor the performance of your Angular components: Component Tracking. Enabling this feature provides you with spans in your transactions that show the initialization and update cycles of your Angular components. This allows you to drill down into how your components are behaving so you can identify slow initializations or frequent updates, which might have an impact on your app's performance.
+Sentry's Angular SDK offers a component-tracking feature to monitor the performance of your Angular components. Enabling this feature starts spans that show the initialization and update cycles of your Angular components. This allows you to drill down into how your components are behaving so you can identify slow initializations or frequent updates, which may be impacting your app's performance.
 
 <Alert>
 
@@ -13,25 +13,37 @@ To set up component tracking, you need to configure tracing. For details on how 
 
 To track your components as part of your transactions, use any (or a combination) of the following options.
 
-## Using the `trace` directive
+## Using the `trace` Directive
 
-Our `TraceDirective` tracks a duration between the `OnInit` and `AfterViewInit` lifecycle hooks in your component template. It adds spans called **`ui.angular.init`** to the currently active transaction that allows you to track specific individual instances of your components. If you want to track all instances instead, use [`TraceClass`](#using-traceclass).
+Our `TraceDirective` tracks the duration between the `OnInit` and `AfterViewInit` lifecycle hooks in your component template. It adds spans called `ui.angular.init` to the currently active transaction that allows you to track specific individual instances of your components. To track all instances, use [`TraceClass`](#using-traceclass).
 
-Import `TraceModule` either globally in your application's `app.module.ts` file or in the module(s) in which
-you want to track your components:
+For both standalone components and NGModule-based app configs, register the `TraceModule` in the `imports` array of the standalone component or module that you want to use it in:
 
-```typescript {filename:app.module.ts} {1,5}
+```typescript {tabTitle:Standalone Component} {filename:app.component.ts} {3,8}
+import { Component } from "@angular/core";
+import { RouterOutlet } from "@angular/router";
+import * as Sentry from "@sentry/angular";
+
+@Component({
+  selector: "app-root",
+  standalone: true,
+  imports: [Sentry.TraceModule],
+  // ...
+})
+export class AppComponent {}
+```
+
+```typescript {tabTitle:NGModule Config} {filename:app.module.ts} {1,4}
 import * as Sentry from "@sentry/angular";
 
 @NgModule({
-  // ...
   imports: [Sentry.TraceModule],
   // ...
 })
 export class AppModule {}
 ```
 
-Then, in your component's template, add the directive to all components you want to track. Remember to give the `trace` attribute a name, which will be shown in the span's description:
+Then, in your component's template, add the `trace` directive to all components you want to track. Remember to give the `trace` attribute a name, which will be shown in the span's description:
 
 ```html {filename:app.component.(ts|html)}
 <app-header trace="header"></app-header>

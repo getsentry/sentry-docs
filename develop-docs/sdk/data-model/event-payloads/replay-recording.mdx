@@ -1,0 +1,206 @@
+---
+title: Replay Recordings
+---
+
+A replay recording consists of a list of instructions for the replayer to play back for the viewer. This page aims to document the custom events that are used on top of the events provided by [rrweb](https://github.com/rrweb-io/rrweb), the recording library that powers Session Replay.
+
+The recording event is an object with the following required properties:
+
+`type`
+
+: **EventTypeEnum** The `type` describes what type of event it is. See the enum below.
+
+```
+EventTypeEnum {
+  DomContentLoaded,
+  Load,
+  FullSnapshot,
+  IncrementalSnapshot,
+  Meta,
+  Custom,
+  Plugin,
+}
+```
+
+`timestamp`
+
+: **float** The timestamp (in milliseconds) at which the event occurs
+
+`data`
+
+: **unknown** `data` schema is dependent on the `type`. View the [base types](https://github.com/rrweb-io/rrweb/blob/master/packages/types/src/index.ts) or Sentry's [custom types](https://github.com/getsentry/sentry-javascript/blob/master/packages/replay-internal/src/types/replayFrame.ts).
+
+## Custom Events
+
+Sentry custom events augment the replay with additional context in order to help the user debug issues. Custom events have the following format for the `data` property of the event:
+
+`tag`
+
+: **string** The tag is used to describe the "type" of custom event. This will determine how the event gets used in the UI.
+
+`payload`
+
+: **object** The `payload` is similar to the upper level `data` attribute, whose schema is dependent on the `tag`.
+
+In addition to the TypeScript references linked above, the following sections will describe the expected `payload` for custom events.
+
+### Options
+
+This recording event is used to record the SDK configuration options. This should only be sent on the first segment as we do not expect the options to change throughout the lifecycle of a replay. See [this issue](https://github.com/getsentry/sentry-javascript/issues/7140) for more context around the decision to send this as a recording event rather than part of the `"replay_event"`. Note that these options are generally used internally to debug rather than a customer-facing feature (e.g. there is no way to query/filter replays using these options).
+
+The payload for `"options"` is a record of configuration name -> configuration value. There is no defined schema as options can vary by SDKs.
+
+```json
+{
+  "type": 5,
+  "timestamp": 1709218280301,
+  "data": {
+    "tag": "options",
+    "payload": {
+      "shouldRecordCanvas": false,
+      "sessionSampleRate": 1,
+      "errorSampleRate": 1,
+      "useCompressionOption": true,
+      "blockAllMedia": false,
+      "maskAllText": false,
+      "maskAllInputs": false,
+      "useCompression": false,
+      "networkDetailHasUrls": false,
+      "networkCaptureBodies": true,
+      "networkRequestHasHeaders": true,
+      "networkResponseHasHeaders": true
+    }
+  }
+}
+```
+
+### Breadcrumbs
+
+Breadcrumbs are named as such because they are intercepted from the web SDK and forwarded as a custom recording event. They have the same structure as describe in <Link to="/sdk/data-model/event-payloads/breadcrumbs/">breadcrumbs interface</Link>.
+
+```json
+{
+  "type": 5,
+  "timestamp": 1710853999781,
+  "data": {
+    "tag": "breadcrumb",
+    "payload": {
+      "timestamp": 1710853999.781,
+      "type": "default",
+      "category": "navigation",
+      "data": {
+        "from": "/issues/4893218638/",
+        "to": "/performance/trace/b6e75da452bf40ee8330af41c5989545/"
+      }
+    }
+  }
+}
+```
+
+### performanceSpan
+
+Similar to breadcrumbs, `"performanceSpan"` has a similar interface to Spans. The following is an example of a network request made in the browser. We have additional instrumentation to capture request and response payloads when configured to do so.
+
+```json
+{
+  "type": 5,
+  "timestamp": 1710854008431,
+  "data": {
+    "tag": "performanceSpan",
+    "payload": {
+      "op": "resource.fetch",
+      "description": "https://us.sentry.io/api/0/projects/foo/javascript/events/eea92bc02315448591e159d8138ef3e8/owners/",
+      "startTimestamp": 1710854008.431,
+      "endTimestamp": 1710854009.234,
+      "data": {
+        "method": "GET",
+        "statusCode": 200,
+        "request": {
+          "headers": {
+            "content-type": "application/json",
+            "accept": "application/json; charset=utf-8",
+            "sentry-trace": "b07d0e356aa1477bb279d9fe5680fcd0-83881f299ca64b4f-1"
+          }
+        },
+        "response": {
+          "headers": {
+            "content-length": "36",
+            "content-type": "application/json"
+          },
+          "size": 36,
+          "body": {
+            "owners": [],
+            "rule": null,
+            "rules": []
+          }
+        }
+      }
+    }
+  }
+},
+
+```
+
+## Mobile Replay Events
+
+Mobile replays are captured as video rather than a series of mutations. In order to support mobile replays, the following custom event is required:
+
+| property               | type      | description                                                                                                                          |
+| ---------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| type                   | `5`       | Custom event                                                                                                                         |
+| data.tag               | `"video"` | The string `"video"`                                                                                                                 |
+| data.payload.duration  | integer   | The video duration in milliseconds                                                                                                   |
+| data.payload.segmentId | integer   | The segment id. This should be the same as the replay segment id. This will be used by the UI to fetch the video from the Sentry API |
+
+```json
+{
+  "type": 5,
+  "timestamp": 1710854008431,
+  "data": {
+    "tag": "video",
+    "payload": {
+      "duration": 5000,
+      "segmentId": 0
+    }
+  }
+}
+```
+
+### Additional Events
+
+Mobile replays follow the same rrweb protocol, but because mobile replays are captured by video, a majority of the rrweb events do not apply. Outlined below are the ones that do.
+
+#### Meta Event
+
+This should be emitted at the start of a replay (i.e. on the first segment) and when the user's viewport dimensions change.
+
+| property    | type    | description                        |
+| ----------- | ------- | ---------------------------------- |
+| type        | `4`     | "Meta" event                       |
+| data.href   | string  | The current URI                    |
+| data.width  | integer | The width of the current viewport  |
+| data.height | integer | The height of the current viewport |
+
+```json
+{
+  "type": 4,
+  "timestamp": 1710854008431,
+  "data": {
+    "href": "file://screen",
+    "width": 360,
+    "height": 800
+  }
+}
+```
+
+#### Touch Interactions
+
+| property         | type    | description                                                                                                                                                                                                             |
+| ---------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| type             | `3`     | "Incremental mutation" event                                                                                                                                                                                            |
+| data.source      | `2`     | "Mouse Interaction"                                                                                                                                                                                                     |
+| data.type        | integer | [MouseInteraction](https://github.com/getsentry/rrweb/blob/0722035e75a9aeedd716107cbcc949eba6da2a6a/packages/types/src/index.ts#L361-L373) enum. TouchStart = 7, TouchMove_Departed = 8, TouchEnd = 9, TouchCancel = 10 |
+| data.id          | integer | Unique id of the event                                                                                                                                                                                                  |
+| data.x           | integer | The x-coordinate of the touch event                                                                                                                                                                                     |
+| data.y           | integer | The y-coordinate of the touch event                                                                                                                                                                                     |
+| data.pointerType | `2`     | [PointerTypes](https://github.com/getsentry/rrweb/blob/0722035e75a9aeedd716107cbcc949eba6da2a6a/packages/types/src/index.ts#L375-L379) enum. Touch = 2                                                                  |

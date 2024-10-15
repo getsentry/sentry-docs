@@ -19,8 +19,7 @@ const isSupported = (
     return false;
   }
 
-  // @ts-ignore
-  const categories = Object.values(platformOrGuide.categories) as string[];
+  const categories = (platformOrGuide.categories || []) as string[];
 
   if (supported.length && !supported.some(v => categories.includes(v))) {
     return false;
