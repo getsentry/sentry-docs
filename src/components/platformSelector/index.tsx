@@ -195,9 +195,15 @@ export function PlatformSelector({
                     platform={{
                       ...platform,
                       // only keep guides that are in the matches list
-                      guides: platform.guides.filter(g =>
-                        matches.some(m => m.key === g.key)
-                      ),
+                      guides: platform.guides
+                        .filter(g =>
+                          matches.some(m => m.key === g.key && m.type === 'guide')
+                        )
+                        .sort((a, b) => {
+                          const indexA = matches.findIndex(m => m.key === a.key);
+                          const indexB = matches.findIndex(m => m.key === b.key);
+                          return indexA - indexB;
+                        }),
 
                       integrations: platform.integrations.filter(i =>
                         matches.some(m => m.key === i.key)
