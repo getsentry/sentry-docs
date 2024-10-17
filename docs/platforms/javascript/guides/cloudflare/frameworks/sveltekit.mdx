@@ -25,9 +25,9 @@ compatibility_flags = ["nodejs_compat"]
 # compatibility_flags = ["nodejs_als"]
 ```
 
-To use this SDK, update your `src/hooks.server.ts` file to use the `Sentry.wrapRequestHandler` method from the Sentry Cloudflare SDK and remove the `Sentry.init` call from `@sentry/sveltekit`.
+To use this SDK, update your `src/hooks.server.(ts|js)` file to use the `Sentry.wrapRequestHandler` method from the Sentry Cloudflare SDK and remove the `Sentry.init` call from `@sentry/sveltekit`.
 
-```diff
+```typescript diff {filename:hooks.server.(ts|js)}
  import { sequence } from "@sveltejs/kit/hooks";
  import { handleErrorWithSentry, sentryHandle } from "@sentry/sveltekit";
 -import * as Sentry from '@sentry/sveltekit';
@@ -59,6 +59,8 @@ To use this SDK, update your `src/hooks.server.ts` file to use the `Sentry.wrapR
 -// If you have custom handlers, make sure to place them after `sentryHandle()` in the `sequence` function.
 -export const handle = sequence(sentryHandle());
 +export const handle = sequence(handleInitSentry, sentryHandle());
+
+export const handleError = handleErrorWithSentry(myErrorHandler);
 ```
 
 If you need to use environmental variables, you can access them using `event.platform.env`.
