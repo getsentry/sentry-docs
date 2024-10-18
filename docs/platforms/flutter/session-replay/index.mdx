@@ -9,7 +9,7 @@ description: "Learn how to enable the Beta of Mobile Session Replay in your app.
 
 Mobile support for Session Replay is in Beta. Features available in Beta are still work-in-progress and may have bugs. We recognize the irony.
 
-If you have any questions, feedback or would like to report a bug, please open a [GitHub issue](https://github.com/getsentry/sentry-react-native/issues/new?assignees=&labels=Platform%3A+React-Native%2CType%3A+%F0%9F%AA%B2+Bug&projects=&template=BUG_REPORT.md) with a link to a relevant replay in Sentry if possible.
+If you have any questions, feedback or would like to report a bug, please open a [GitHub issue](https://github.com/getsentry/sentry-dart/issues/new?template=BUG_REPORT.yml) with a link to a relevant replay in Sentry if possible.
 
 </Note>
 
@@ -19,39 +19,27 @@ By default, our Session Replay SDK masks all text content, images, and user inpu
 
 ## Pre-requisites
 
-Make sure your Sentry React Native SDK version is at least 5.26.0.
+Make sure your Sentry Flutter SDK version is at least 8.9.0, which is required for Session Replay. 
+You can update your `pubspec.yaml` to the matching version:
 
-## Install
-
-If you already have the SDK installed, you can update it to the latest version with:
-
-```bash {tabTitle:npm}
-npm install @sentry/react-native --save
-```
-
-```bash {tabTitle:yarn}
-yarn add @sentry/react-native
-```
-
-```bash {tabTitle:pnpm}
-pnpm add @sentry/react-native
+```yaml
+dependencies:
+  sentry_flutter: ^8.9.0
 ```
 
 ## Set Up
 
 To set up the integration, add the following to your Sentry initialization.
 
-```javascript
-import * as Sentry from "@sentry/react-native";
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  _experiments: {
-    replaysSessionSampleRate: 1.0,
-    replaysOnErrorSampleRate: 1.0,
+```dart
+await SentryFlutter.init(
+  (options) {
+    ...
+    options.experimental.replay.sessionSampleRate = 1.0;
+    options.experimental.replay.onErrorSampleRate = 1.0;
   },
-  integrations: [Sentry.mobileReplayIntegration()],
-});
+  appRunner: () => runApp(MyApp()),
+);
 ```
 
 ## Verify
@@ -75,55 +63,33 @@ Sampling begins as soon as a session starts. <PlatformIdentifier name="replays-s
 
 ## Privacy
 
-The SDK is recording and aggressively redacting all text and images. We plan to add fine controls for redacting, but in this version, we just allow either on or off. The default is on. Please don’t turn it off if you have sensitive data in your app. Before the Beta is complete, we'll give you the controls you need.
+The SDK is recording and aggressively redacting (masking) all text and images, according to the configuration in `options.experimental.replay`.
+You can tune this and add custom masking rules to fit your needs. For example, you can explicitly mask or unmask widgets by type,
+or you can even have a callback to decide whether a specific widget instance should be masked:
+
+```dart
+  options.experimental.replay.mask<IconButton>();
+  options.experimental.replay.unmask<Image>();
+  options.experimental.replay.maskCallback<Text>(
+      (Element element, Text widget) =>
+          (widget.data?.contains('secret') ?? false)
+              ? SentryMaskingDecision.mask
+              : SentryMaskingDecision.continueProcessing);
+```
+
+You can find more details in respective methods' code documentation.
 
 <Note>
 
-If you encounter any data not being redacted with the default settings, please let us know through a [GitHub issue](https://github.com/getsentry/sentry-react-native/issues/new?assignees=&labels=Platform%3A+React-Native%2CType%3A+%F0%9F%AA%B2+Bug&projects=&template=BUG_REPORT.md).
+If you encounter any data not being redacted with the default settings, please let us know through a [GitHub issue](https://github.com/getsentry/sentry-dart/issues/new?template=BUG_REPORT.yml).
 
 </Note>
 
 To disable redaction altogether (not to be used on applications with sensitive data):
 
-```javascript
-Sentry.mobileReplayIntegration({
-  maskAllText: false,
-  maskAllImages: false,
-  maskAllVectors: false,
-}),
-```
-
-## React Component Names
-
-Sentry helps you capture your React components and unlock additional insights in your application. You can set it up to use React component names.
-
-So instead of looking at this:
-
-```html {tabTitle:Generic Components}
-View > Touchable > View > Text
-```
-
-You can also see exactly which React component was used, like:
-
-```html {tabTitle:React Components}
-MyCard (View, MyCard.ts) > MyButton (Touchable, MyCard.ts) > View > Text
-```
-
-To add React Component Names use `annotateReactComponents` in `metro.config.js`.
-
-```js {tabTitle: React Native}
-const { getDefaultConfig } = require("@react-native/metro-config");
-const { withSentryConfig } = require("@sentry/react-native/metro");
-module.exports = withSentryConfig(getDefaultConfig(__dirname), {
-  annotateReactComponents: true,
-});
-```
-
-```js {tabTitle: Expo}
-const { getSentryExpoConfig } = require("@sentry/react-native/metro");
-const config = getSentryExpoConfig(__dirname, {
-  annotateReactComponents: true,
-});
+```dart
+  options.experimental.replay.maskAllText = false;
+  options.experimental.replay.maskAllImages = false;
 ```
 
 ## Error Linking
