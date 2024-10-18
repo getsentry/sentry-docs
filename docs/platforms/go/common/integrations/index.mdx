@@ -1,0 +1,63 @@
+---
+title: Integrations
+description: "Learn about the automatic integrations Sentry provides and how to configure them."
+sidebar_order: 500
+---
+
+## Default Integrations
+
+These integrations are enabled by default and integrate into the standard library or the Go runtime itself. They are documented so you can be aware of what they do and disable them if they cause issues.
+
+To disable default integrations, you can provide an empty list of integrations when calling `sentry.Init()`.
+
+```go
+sentry.Init(sentry.ClientOptions{
+    Dsn: "https://examplePublicKey@o0.ingest.sentry.io/0",
+	Integrations: func(i []sentry.Integration) []sentry.Integration {
+		return []sentry.Integration{}
+	},
+})
+```
+
+### ModulesIntegration
+
+This integration records all Go modules used in your application, including the version, as part of event details.
+
+### EnvironmentIntegration
+
+This integration fills the event data with Go runtime and OS-level specific information, such as CPU core/thread count and runtime version.
+
+### IgnoreErrorsIntegration
+
+This integration allows you to ignore certain error patterns using regular expressions. It ensures that errors matching the specified patterns are not sent to Sentry.
+
+### IgnoreTransactionsIntegration
+
+This integration lets you ignore specific transactions that match the provided patterns. This is useful when certain transaction names should not be captured.
+
+### ContextifyFramesIntegration
+
+This integration captures context around lines of code that caused an error. It provides a snapshot of source code, including lines before and after the error, for better debugging.
+
+### GlobalTagsIntegration
+
+This integration adds global tags to all events. These can be defined as environment variables using the `SENTRY_TAGS_` prefix or within the client options.
+
+### Disabling certain Integrations
+
+You can customize the list of integrations without disabling all the default ones using the Integrations option. In the example below, all integrations are enabled except the ContextifyFrames Integration:
+
+```go
+sentry.Init(sentry.ClientOptions{
+	Integrations: func(integrations []sentry.Integration) []sentry.Integration {
+		var filteredIntegrations []sentry.Integration
+		for _, integration := range integrations {
+			if integration.Name() == "ContextifyFrames" {
+				continue
+			}
+			filteredIntegrations = append(filteredIntegrations, integration)
+		}
+		return filteredIntegrations
+	},
+})
+```
