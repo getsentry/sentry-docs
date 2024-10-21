@@ -59,15 +59,20 @@ import {
   Scope,
 } from "@sentry/browser";
 
+// filter integrations that use the global variable
+const integrations = getDefaultIntegrations({}).filter((defaultIntegration) => {
+  return ![
+    "BrowserApiErrors",
+    "Breadcrumbs",
+    "GlobalHandlers",
+  ].includes(defaultIntegration.name);
+});
+
 const client = new BrowserClient({
   dsn: "___PUBLIC_DSN___",
   transport: makeFetchTransport,
   stackParser: defaultStackParser,
-  // filter integrations that use the global variable
-  integrations: (defaultIntegrations) => 
-    defaultIntegrations.filter(
-      (integration) => !["BrowserApiErrors", "Breadcrumbs", "GlobalHandlers"].includes(integration.name)
-    ),
+  integrations: integrations,
 });
 
 const scope = new Scope();
