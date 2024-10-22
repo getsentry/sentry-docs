@@ -22,9 +22,9 @@ options.experimental.sessionReplay.maskAllText = false
 options.experimental.sessionReplay.maskAllImages = false
 ```
 
-Session Replay Unmasked        |  Session Replay Masked
-:-----------------------------:|:-----------------------------:
-![](./img/session-replay.jpg)  |   ![](./img/session-replay-redacted.jpg)
+|Session Replay Unmasked        |  Session Replay Masked                   |
+|:-----------------------------:|:---------------------------------------: |
+|![session replay unmasked](./img/session-replay.jpg)  |![session replay masked](./img/session-replay-redacted.jpg) |
 
 
 _Make sure your Sentry Android SDK version is at least 7.15.0._
@@ -133,3 +133,22 @@ AndroidView(
   factory = { context -> ... }
 )
 ```
+
+## Masking Behavior
+
+Here are some general rules we follow when applying masking rules:
+
+### View Groups
+
+- When a `ViewGroup` is marked as masked, **all its child views inherit this behavior and will be masked too**, even if some of those child views would typically be ignored. This approach prioritizes safety and ensures no sensitive information is exposed unintentionally.
+
+- When a `ViewGroup` is marked as unmasked, **its child views do not automatically inherit its behavior**. Each child view must be explicitly marked as unmasked if you want to capture them in the replay.
+
+### Masking prioritization
+
+The following order determines how masking/unmasking rules are applied:
+
+  1. Check if a view is marked as `unmasked` via a tag/extension function/modifier
+  2. Check if a view is marked as `masked` via a tag/extension function/modifier
+  3. Check if a view's class is marked as unmasked via `addUnmaskViewClass`
+  4. Check if a view's class is marked as masked via `addMaskViewClass`
