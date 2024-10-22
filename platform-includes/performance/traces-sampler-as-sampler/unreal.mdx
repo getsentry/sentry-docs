@@ -1,0 +1,49 @@
+```cpp
+UCLASS()
+class USomeTraceSampler : public USentryTraceSampler
+{
+	GENERATED_BODY()
+
+public:
+	virtual bool Sample_Implementation(USentrySamplingContext* samplingContext, float& samplingValue) override
+    {
+        const FString& path =
+            *samplingContext->GetCustomSamplingContext().Find("__HttpPath");
+
+        if (path.Equals(TEXT("/payment")))
+        {
+            // These are important - take a big sample
+            samplingValue = 0.5;
+        }
+        else
+        {
+            // Default sample rate
+            samplingValue = 0.1;
+        }
+
+	    return true;
+
+        // Or return false to fallback to options.TracesSampleRate (1.0 in this case)
+    }
+};
+
+...
+
+FConfigureSettingsDelegate SettingsDelegate;
+SettingsDelegate.BindDynamic(this, &USomeClass::HandleSettingsDelegate);
+
+void USomeClass::HandleSettingsDelegate(USentrySettings* Settings)
+{
+    // Set a uniform sample rate
+    Settings->TracesSampleRate = 1.0f;
+
+    // OR: Determine traces sample rate based on the sampling context
+    Settings->TracesSampler = USomeTraceSampler::StaticCLass();
+}
+
+...
+
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+SentrySubsystem->InitializeWithSettings(SettingsDelegate);
+```
