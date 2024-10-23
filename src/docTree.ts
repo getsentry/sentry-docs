@@ -191,6 +191,10 @@ export const getPreviousNode = (node: DocNode): DocNode | undefined | 'root' => 
     return 'root';
   }
 
+  if (node.path === 'getting-started' && isDeveloperDocs) {
+    return undefined;
+  }
+
   const previousSibling = getPreviousSiblingNode(node);
   if (previousSibling) {
     if (previousSibling.path === 'platforms') {

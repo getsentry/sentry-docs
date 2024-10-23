@@ -65,42 +65,11 @@ export default async function Page({params}: {params: {path?: string[]}}) {
     path: params.path ?? [],
   });
 
-  if (isDeveloperDocs) {
-    // get the MDX for the current doc and render it
-    let doc: Awaited<ReturnType<typeof getFileBySlug>> | null = null;
-    try {
-      doc = await getFileBySlug(`develop-docs/${params.path?.join('/') ?? ''}`);
-    } catch (e) {
-      if (e.code === 'ENOENT') {
-        // eslint-disable-next-line no-console
-        console.error('ENOENT', params.path);
-        return notFound();
-      }
-      throw e;
-    }
-    const {mdxSource, frontMatter} = doc;
-    // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc
-    return <MDXLayoutRenderer mdxSource={mdxSource} frontMatter={frontMatter} />;
-  }
-  if (!params.path) {
+  if (!params.path && !isDeveloperDocs) {
     return <Home />;
   }
 
-  if (params.path[0] === 'api' && params.path.length > 1) {
-    const categories = await apiCategories();
-    const category = categories.find(c => c.slug === params?.path?.[1]);
-    if (category) {
-      if (params.path.length === 2) {
-        return <ApiCategoryPage category={category} />;
-      }
-      const api = category.apis.find(a => a.slug === params.path?.[2]);
-      if (api) {
-        return <ApiPage api={api} />;
-      }
-    }
-  }
-
-  const pageNode = nodeForPath(rootNode, params.path);
+  const pageNode = nodeForPath(rootNode, params.path ?? '');
 
   if (!pageNode) {
     // eslint-disable-next-line no-console
@@ -127,6 +96,45 @@ export default async function Page({params}: {params: {path?: string[]}}) {
         : previousNode
           ? {path: previousNode.path, title: previousNode.frontmatter.title}
           : undefined;
+  }
+
+  if (isDeveloperDocs) {
+    // get the MDX for the current doc and render it
+    let doc: Awaited<ReturnType<typeof getFileBySlug>> | null = null;
+    try {
+      doc = await getFileBySlug(`develop-docs/${params.path?.join('/') ?? ''}`);
+    } catch (e) {
+      if (e.code === 'ENOENT') {
+        // eslint-disable-next-line no-console
+        console.error('ENOENT', params.path);
+        return notFound();
+      }
+      throw e;
+    }
+    const {mdxSource, frontMatter} = doc;
+    // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc
+    return (
+      <MDXLayoutRenderer
+        mdxSource={mdxSource}
+        frontMatter={frontMatter}
+        nextPage={nextPage}
+        previousPage={previousPage}
+      />
+    );
+  }
+
+  if (params.path?.[0] === 'api' && params.path.length > 1) {
+    const categories = await apiCategories();
+    const category = categories.find(c => c.slug === params?.path?.[1]);
+    if (category) {
+      if (params.path.length === 2) {
+        return <ApiCategoryPage category={category} />;
+      }
+      const api = category.apis.find(a => a.slug === params.path?.[2]);
+      if (api) {
+        return <ApiPage api={api} />;
+      }
+    }
   }
 
   // get the MDX for the current doc and render it

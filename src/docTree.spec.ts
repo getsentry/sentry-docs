@@ -1,4 +1,4 @@
-import {describe, expect, test} from 'vitest';
+import {describe, expect, test, vi} from 'vitest';
 
 import {
   DocNode,
@@ -302,6 +302,19 @@ describe('docTree', () => {
       });
 
       expect(getPreviousNode(accounts)).toBe(undefined);
+    });
+
+    test('should return undefined for getting-started page in developer docs', () => {
+      vi.mock('./isDeveloperDocs', () => ({
+        isDeveloperDocs: true,
+      }));
+
+      const home = createNode('', 'Home');
+      const gettingStarted = createNode('getting-started', 'Getting Started');
+      home.children = [gettingStarted];
+      gettingStarted.parent = home;
+
+      expect(getPreviousNode(gettingStarted)).toBeUndefined();
     });
   });
 
