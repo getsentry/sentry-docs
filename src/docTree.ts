@@ -156,22 +156,22 @@ export function nodeForPath(node: DocNode, path: string | string[]): DocNode | u
 export const getNextNode = (node: DocNode): DocNode | undefined => {
   const children = node.children.filter(filterVisibleSiblings).sort(sortSiblingsByOrder);
   // Check for children first
-  if (children.length > 0) {
+  if (
+    children.length > 0 &&
+    !isRootPlatformPath(children[0].path) &&
+    !isRootGuidePath(children[0].path)
+  ) {
     return children[0];
   }
 
   // If no children, look for siblings or parent siblings
   let currentNode: DocNode | undefined = node;
   while (currentNode?.parent) {
-    if (
-      isRootPlatformPath(currentNode.parent.path) ||
-      isRootGuidePath(currentNode.parent.path)
-    ) {
-      return undefined;
-    }
-
     const nextSibling = getNextSiblingNode(currentNode);
     if (nextSibling) {
+      if (isRootPlatformPath(nextSibling.path) || isRootGuidePath(nextSibling.path)) {
+        return undefined;
+      }
       return nextSibling;
     }
     currentNode = currentNode.parent;
@@ -186,8 +186,15 @@ export const getNextNode = (node: DocNode): DocNode | undefined => {
  * the previous sibling, or the previous sibling of a parent node.
  */
 export const getPreviousNode = (node: DocNode): DocNode | undefined => {
+  if (isRootPlatformPath(node.path) || isRootGuidePath(node.path)) {
+    return undefined;
+  }
+
   const previousSibling = getPreviousSiblingNode(node);
   if (previousSibling) {
+    if (previousSibling.path === 'platforms') {
+      return undefined;
+    }
     return previousSibling;
   }
   return node.parent;

@@ -203,12 +203,24 @@ describe('docTree', () => {
     });
 
     test('should not return siblings for root platform or guide paths', () => {
-      expect(
-        getNextNode(createNode('platforms/javascript', 'JavaScript'))
-      ).toBeUndefined();
-      expect(
-        getNextNode(createNode('platforms/javascript/guides/nextjs', 'Next.js'))
-      ).toBeUndefined();
+      const platforms = createNode('platforms', 'Platforms');
+      const js = createNode('platforms/javascript', 'JavaScript');
+      const python = createNode('platforms/python', 'Python');
+      platforms.children = [js, python];
+      platforms.children.forEach(child => {
+        child.parent = platforms;
+      });
+
+      const nextjs = createNode('platforms/javascript/guides/nextjs', 'Next.js');
+      const angular = createNode('platforms/javascript/guides/angular', 'Angular');
+      js.children = [nextjs, angular];
+      js.children.forEach(child => {
+        child.parent = js;
+      });
+
+      expect(getNextNode(js)).toBeUndefined();
+      expect(getNextNode(nextjs)).toBeUndefined();
+      expect(getNextNode(angular)).toBeUndefined();
     });
   });
 
@@ -259,12 +271,37 @@ describe('docTree', () => {
     });
 
     test('should not return siblings for root platform or guide paths', () => {
-      expect(
-        getPreviousNode(createNode('platforms/javascript', 'JavaScript'))
-      ).toBeUndefined();
-      expect(
-        getPreviousNode(createNode('platforms/javascript/guides/nextjs', 'Next.js'))
-      ).toBeUndefined();
+      const platforms = createNode('platforms', 'Platforms');
+      const js = createNode('platforms/javascript', 'JavaScript');
+      const python = createNode('platforms/python', 'Python');
+      platforms.children = [js, python];
+      platforms.children.forEach(child => {
+        child.parent = platforms;
+      });
+
+      const nextjs = createNode('platforms/javascript/guides/nextjs', 'Next.js');
+      const angular = createNode('platforms/javascript/guides/angular', 'Angular');
+      js.children = [nextjs, angular];
+      js.children.forEach(child => {
+        child.parent = js;
+      });
+
+      expect(getPreviousNode(js)).toBe(undefined);
+      expect(getPreviousNode(python)).toBe(undefined);
+      expect(getPreviousNode(nextjs)).toBe(undefined);
+      expect(getPreviousNode(angular)).toBe(undefined);
+    });
+
+    test('should not return /platforms as previous page', () => {
+      const docs = createNode('', 'Docs');
+      const platforms = createNode('platforms', 'Platforms');
+      const accounts = createNode('accounts', 'Accounts');
+      docs.children = [platforms, accounts];
+      docs.children.forEach(child => {
+        child.parent = docs;
+      });
+
+      expect(getPreviousNode(accounts)).toBe(undefined);
     });
   });
 
