@@ -270,7 +270,7 @@ describe('docTree', () => {
       expect(getPreviousNode(xA)).toBe(xB);
     });
 
-    test('should not return siblings for root platform or guide paths', () => {
+    test('should return root as previous page for root platform or guide paths', () => {
       const platforms = createNode('platforms', 'Platforms');
       const js = createNode('platforms/javascript', 'JavaScript');
       const python = createNode('platforms/python', 'Python');
@@ -286,10 +286,10 @@ describe('docTree', () => {
         child.parent = js;
       });
 
-      expect(getPreviousNode(js)).toBe(undefined);
-      expect(getPreviousNode(python)).toBe(undefined);
-      expect(getPreviousNode(nextjs)).toBe(undefined);
-      expect(getPreviousNode(angular)).toBe(undefined);
+      expect(getPreviousNode(js)).toBe('root');
+      expect(getPreviousNode(python)).toBe('root');
+      expect(getPreviousNode(nextjs)).toBe('root');
+      expect(getPreviousNode(angular)).toBe('root');
     });
 
     test('should not return /platforms as previous page', () => {

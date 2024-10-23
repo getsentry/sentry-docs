@@ -185,9 +185,10 @@ export const getNextNode = (node: DocNode): DocNode | undefined => {
  * Returns the previous node in the tree, which is either the last child of the parent,
  * the previous sibling, or the previous sibling of a parent node.
  */
-export const getPreviousNode = (node: DocNode): DocNode | undefined => {
+export const getPreviousNode = (node: DocNode): DocNode | undefined | 'root' => {
+  // in this special case, calculating the root node is unnecessary so we return a string instead
   if (isRootPlatformPath(node.path) || isRootGuidePath(node.path)) {
-    return undefined;
+    return 'root';
   }
 
   const previousSibling = getPreviousSiblingNode(node);
