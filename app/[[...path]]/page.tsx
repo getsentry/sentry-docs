@@ -101,19 +101,32 @@ export default async function Page({params}: {params: {path?: string[]}}) {
   }
 
   const pageNode = nodeForPath(rootNode, params.path);
-  const nextNode = pageNode ? getNextNode(pageNode) : undefined;
-  const previousNode = pageNode ? getPreviousNode(pageNode) : undefined;
-  const nextPage = nextNode
-    ? {path: nextNode.path, title: nextNode.frontmatter.title}
-    : undefined;
-  const previousPage = previousNode
-    ? {path: previousNode.path, title: previousNode.frontmatter.title}
-    : undefined;
 
   if (!pageNode) {
     // eslint-disable-next-line no-console
     console.warn('no page node', params.path);
     return notFound();
+  }
+
+  // gather previous and next page that will be displayed in the bottom pagination
+  let previousPage = pageNode?.frontmatter?.previousPage;
+  let nextPage = pageNode?.frontmatter?.nextPage;
+
+  if (!nextPage || !('path' in nextPage) || !('title' in nextPage)) {
+    const nextNode = pageNode ? getNextNode(pageNode) : undefined;
+    nextPage = nextNode
+      ? {path: nextNode.path, title: nextNode.frontmatter.title}
+      : undefined;
+  }
+
+  if (!previousPage || !('path' in previousPage) || !('title' in previousPage)) {
+    const previousNode = pageNode ? getPreviousNode(pageNode) : undefined;
+    previousPage =
+      previousNode === 'root'
+        ? {path: '', title: 'Welcome to Sentry'}
+        : previousNode
+          ? {path: previousNode.path, title: previousNode.frontmatter.title}
+          : undefined;
   }
 
   // get the MDX for the current doc and render it
