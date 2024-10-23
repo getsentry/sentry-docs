@@ -13,6 +13,7 @@ import {PlatformContent} from 'sentry-docs/components/platformContent';
 import {
   getCurrentPlatformOrGuide,
   getDocsRootNode,
+  getNextNode,
   nodeForPath,
 } from 'sentry-docs/docTree';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
@@ -42,7 +43,11 @@ export const dynamic = 'force-static';
 
 const mdxComponentsWithWrapper = mdxComponents(
   {Include, PlatformContent},
-  ({children, frontMatter}) => <DocPage frontMatter={frontMatter}>{children}</DocPage>
+  ({children, frontMatter, nextPage}) => (
+    <DocPage frontMatter={frontMatter} nextPage={nextPage}>
+      {children}
+    </DocPage>
+  )
 );
 
 function MDXLayoutRenderer({mdxSource, ...rest}) {
@@ -95,6 +100,10 @@ export default async function Page({params}: {params: {path?: string[]}}) {
   }
 
   const pageNode = nodeForPath(rootNode, params.path);
+  const nextNode = pageNode ? getNextNode(pageNode) : undefined;
+  const nextPage = nextNode
+    ? {path: nextNode.path, title: nextNode.frontmatter.title}
+    : undefined;
 
   if (!pageNode) {
     // eslint-disable-next-line no-console
@@ -122,7 +131,11 @@ export default async function Page({params}: {params: {path?: string[]}}) {
 
   // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc.
   return (
-    <MDXLayoutRenderer mdxSource={mdxSource} frontMatter={{...frontMatter, versions}} />
+    <MDXLayoutRenderer
+      mdxSource={mdxSource}
+      frontMatter={{...frontMatter, versions}}
+      nextPage={nextPage}
+    />
   );
 }
 

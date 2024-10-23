@@ -146,6 +146,65 @@ export function nodeForPath(node: DocNode, path: string | string[]): DocNode | u
   return node;
 }
 
+/**
+ * Returns the next node in the tree, which is either the first child,
+ * the next sibling, or the next sibling of a parent node.
+ *
+ * @param node The current DocNode
+ * @returns The next DocNode in the tree, or undefined if there is no next node
+ */
+export const getNextNode = (node: DocNode): DocNode | undefined => {
+  const children = node.children.filter(filterVisibleSiblings).sort(sortSiblingsByOrder);
+  // Check for children first
+  if (children.length > 0) {
+    return children[0];
+  }
+
+  // If no children, look for siblings or parent siblings
+  let currentNode: DocNode | undefined = node;
+  while (currentNode?.parent) {
+    if (
+      isRootPlatformPath(currentNode.parent.path) ||
+      isRootGuidePath(currentNode.parent.path)
+    ) {
+      return undefined;
+    }
+
+    const nextSibling = getNextSiblingNode(currentNode);
+    if (nextSibling) {
+      return nextSibling;
+    }
+    currentNode = currentNode.parent;
+  }
+
+  // If we've reached this point, there are no more nodes to traverse
+  return undefined;
+};
+
+const sortSiblingsByOrder = (a: DocNode, b: DocNode) =>
+  (a.frontmatter.sidebar_order ?? 10) - (b.frontmatter.sidebar_order ?? 10);
+
+const filterVisibleSiblings = (s: DocNode) =>
+  (s.frontmatter.sidebar_title || s.frontmatter.title) &&
+  !s.frontmatter.sidebar_hidden &&
+  !s.frontmatter.draft &&
+  s.path;
+
+const getNextSiblingNode = (node: DocNode): DocNode | undefined => {
+  // filter out root platform and guide paths as these siblings do not make sense in navigation
+  if (node.parent) {
+    const siblings = node.parent.children
+      .sort(sortSiblingsByOrder)
+      .filter(filterVisibleSiblings);
+
+    const index = siblings.indexOf(node);
+    if (index < siblings.length - 1) {
+      return siblings[index + 1];
+    }
+  }
+  return undefined;
+};
+
 function nodeToPlatform(n: DocNode): Platform {
   const platformData = platformsData()[n.slug];
   const caseStyle = platformData?.case_style || n.frontmatter.caseStyle;
@@ -182,6 +241,18 @@ function nodeToGuide(platform: string, n: DocNode): PlatformGuide {
     fallbackGuide: n.frontmatter.fallbackGuide,
   };
 }
+
+export const isRootPlatformPath = (path: string) => {
+  return path.startsWith('platforms/') && path.split('/').length === 2;
+};
+
+export const isRootGuidePath = (path: string) => {
+  return (
+    path.startsWith('platforms/') &&
+    path.split('/').length === 4 &&
+    path.split('/')[2].startsWith('guides')
+  );
+};
 
 export function getPlatform(rootNode: DocNode, name: string): Platform | undefined {
   const platformNode = nodeForPath(rootNode, ['platforms', name]);
