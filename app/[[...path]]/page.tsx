@@ -14,6 +14,7 @@ import {
   getCurrentPlatformOrGuide,
   getDocsRootNode,
   getNextNode,
+  getPreviousNode,
   nodeForPath,
 } from 'sentry-docs/docTree';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
@@ -43,8 +44,8 @@ export const dynamic = 'force-static';
 
 const mdxComponentsWithWrapper = mdxComponents(
   {Include, PlatformContent},
-  ({children, frontMatter, nextPage}) => (
-    <DocPage frontMatter={frontMatter} nextPage={nextPage}>
+  ({children, frontMatter, nextPage, previousPage}) => (
+    <DocPage frontMatter={frontMatter} nextPage={nextPage} previousPage={previousPage}>
       {children}
     </DocPage>
   )
@@ -101,8 +102,12 @@ export default async function Page({params}: {params: {path?: string[]}}) {
 
   const pageNode = nodeForPath(rootNode, params.path);
   const nextNode = pageNode ? getNextNode(pageNode) : undefined;
+  const previousNode = pageNode ? getPreviousNode(pageNode) : undefined;
   const nextPage = nextNode
     ? {path: nextNode.path, title: nextNode.frontmatter.title}
+    : undefined;
+  const previousPage = previousNode
+    ? {path: previousNode.path, title: previousNode.frontmatter.title}
     : undefined;
 
   if (!pageNode) {
@@ -135,6 +140,7 @@ export default async function Page({params}: {params: {path?: string[]}}) {
       mdxSource={mdxSource}
       frontMatter={{...frontMatter, versions}}
       nextPage={nextPage}
+      previousPage={previousPage}
     />
   );
 }

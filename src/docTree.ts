@@ -181,6 +181,52 @@ export const getNextNode = (node: DocNode): DocNode | undefined => {
   return undefined;
 };
 
+/**
+ * Returns the previous node in the tree, which is either the last child of the parent,
+ * the previous sibling, or the previous sibling of a parent node.
+ */
+export const getPreviousNode = (node: DocNode): DocNode | undefined => {
+  const previousSibling = getPreviousSiblingNode(node);
+  if (previousSibling) {
+    return previousSibling;
+  }
+  return node.parent;
+};
+
+const getNextSiblingNode = (node: DocNode): DocNode | undefined => {
+  if (!node.parent) {
+    return undefined;
+  }
+
+  const siblings = node.parent.children
+    .sort(sortSiblingsByOrder)
+    .filter(filterVisibleSiblings);
+
+  const index = siblings.indexOf(node);
+  if (index < siblings.length - 1) {
+    return siblings[index + 1];
+  }
+
+  return undefined;
+};
+
+const getPreviousSiblingNode = (node: DocNode): DocNode | undefined => {
+  if (!node.parent) {
+    return undefined;
+  }
+
+  const siblings = node.parent.children
+    .sort(sortSiblingsByOrder)
+    .filter(filterVisibleSiblings);
+
+  const index = siblings.indexOf(node);
+  if (index > 0) {
+    return siblings[index - 1];
+  }
+
+  return undefined;
+};
+
 const sortSiblingsByOrder = (a: DocNode, b: DocNode) =>
   (a.frontmatter.sidebar_order ?? 10) - (b.frontmatter.sidebar_order ?? 10);
 
@@ -189,21 +235,6 @@ const filterVisibleSiblings = (s: DocNode) =>
   !s.frontmatter.sidebar_hidden &&
   !s.frontmatter.draft &&
   s.path;
-
-const getNextSiblingNode = (node: DocNode): DocNode | undefined => {
-  // filter out root platform and guide paths as these siblings do not make sense in navigation
-  if (node.parent) {
-    const siblings = node.parent.children
-      .sort(sortSiblingsByOrder)
-      .filter(filterVisibleSiblings);
-
-    const index = siblings.indexOf(node);
-    if (index < siblings.length - 1) {
-      return siblings[index + 1];
-    }
-  }
-  return undefined;
-};
 
 function nodeToPlatform(n: DocNode): Platform {
   const platformData = platformsData()[n.slug];

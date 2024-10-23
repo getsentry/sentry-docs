@@ -4,6 +4,7 @@ import {
   DocNode,
   getCurrentPlatformOrGuide,
   getNextNode,
+  getPreviousNode,
   isRootGuidePath,
   isRootPlatformPath,
   nodeForPath,
@@ -207,6 +208,62 @@ describe('docTree', () => {
       ).toBeUndefined();
       expect(
         getNextNode(createNode('platforms/javascript/guides/nextjs', 'Next.js'))
+      ).toBeUndefined();
+    });
+  });
+
+  describe('getPreviousNode', () => {
+    const root = createRootNode();
+
+    const a = createNode('a', 'A');
+    const a1 = createNode('a1', 'A1');
+    const a2 = createNode('a2', 'A2');
+    a.children = [a1, a2];
+    a.children.forEach(child => {
+      child.parent = a;
+    });
+
+    const b = createNode('b', 'B');
+    const c = createNode('c', 'C');
+    root.children = [a, b, c];
+    root.children.forEach(child => {
+      child.parent = root;
+    });
+
+    test('should return previous child of parent', () => {
+      expect(getPreviousNode(c)).toBe(b);
+    });
+
+    test('should return previous sibling if previous sibling has children', () => {
+      expect(getPreviousNode(b)).toBe(a);
+    });
+
+    test('should return undefined if no children or siblings', () => {
+      expect(getPreviousNode(createNode('d', 'D'))).toBeUndefined();
+    });
+
+    test('should return parent for first child', () => {
+      expect(getPreviousNode(a1)).toBe(a);
+    });
+
+    test('should respect sidebar order for sorting', () => {
+      const xRoot = createRootNode();
+      const xA = createNode('a', 'A', {sidebar_order: 2} as FrontMatter);
+      const xB = createNode('b', 'B', {sidebar_order: 1} as FrontMatter);
+      xRoot.children = [xA, xB];
+      xRoot.children.forEach(child => {
+        child.parent = xRoot;
+      });
+
+      expect(getPreviousNode(xA)).toBe(xB);
+    });
+
+    test('should not return siblings for root platform or guide paths', () => {
+      expect(
+        getPreviousNode(createNode('platforms/javascript', 'JavaScript'))
+      ).toBeUndefined();
+      expect(
+        getPreviousNode(createNode('platforms/javascript/guides/nextjs', 'Next.js'))
       ).toBeUndefined();
     });
   });
