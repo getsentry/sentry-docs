@@ -179,12 +179,11 @@ export async function generateMetadata({params}: MetadataProps): Promise<Metadat
     }
   }
 
-  let canonical = domain;
-  if (customCanonicalTag) {
-    canonical = domain + checkCanonicalTagFormat(customCanonicalTag);
-  } else if (params.path) {
-    canonical = `${domain}/${params.path.join('/')}/`;
-  }
+  const canonical = customCanonicalTag
+    ? domain + checkCanonicalTagFormat(customCanonicalTag)
+    : params.path
+      ? `${domain}/${params.path.join('/')}/`
+      : domain;
 
   return {
     title,
