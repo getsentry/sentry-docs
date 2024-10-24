@@ -1,0 +1,24 @@
+To instrument certain parts of your code, you can create transactions to capture them.
+
+```cpp
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+// Transactions can be started by providing the name and the operation
+USentryTransaction* transaction = SentrySubsystem->StartTransaction(
+    TEXT("transaction name"),
+    TEXT("transaction operation")
+);
+
+// Transactions can have child spans (and those spans can have child spans as well)
+USentrySpan* span = transaction->StartChild(
+    TEXT("span name"),
+    TEXT("span description")
+);
+
+// ...
+// (Perform the operation represented by the span/transaction)
+// ...
+
+span->Finish();
+transaction->Finish();
+```
