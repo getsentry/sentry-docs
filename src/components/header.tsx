@@ -61,7 +61,11 @@ export function Header({pathname, searchPlatforms, noSearch}: Props) {
         </a>
         {!noSearch && (
           <div className="hidden md:flex justify-center lg:justify-start w-full px-6">
-            <Search path={pathname} searchPlatforms={searchPlatforms} showChatBot />
+            <Search
+              path={pathname}
+              searchPlatforms={searchPlatforms}
+              showChatBot={false}
+            />
           </div>
         )}
         <div className="hidden lg-xl:flex justify-end flex-1 space-x-2 items-center min-w-fit">
