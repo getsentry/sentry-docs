@@ -17,17 +17,19 @@ pip install --upgrade 'sentry-sdk[celery]'
 
 If you have the `celery` package in your dependencies, the Celery integration will be enabled automatically when you initialize the Sentry SDK.
 
-Make sure that the **call to `sentry_sdk.init()` is loaded on worker startup**, and not only in the module where your tasks are defined. Otherwise, the initialization happens too late and events might end up not being reported.
+<Alert>
+Make sure that the call to `sentry_sdk.init()` is loaded on worker startup and not only in the module where your tasks are defined. Otherwise, the initialization may happen too late and events might not get reported.
+</Alert>
 
-### Setup Celery (Without Django)
+### Set Up Celery Without Django
 
-To get the most out of Sentry make sure to initialize the Sentry SDK in your Celery worker processes as well as your application that is sending messages to Celery.
+When using Celery without Django, you'll need to initialize the Sentry SDK in both your application and the Celery worker process.
 
 In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
 
 Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
 
-#### Setup in Celery
+#### Set Up Celery
 
 <OnboardingOptionButtons
   options={["error-monitoring", "performance", "profiling"]}
@@ -60,7 +62,7 @@ def add(x, y):
     return x + y
 ```
 
-The [`celeryd_init`](https://docs.celeryq.dev/en/stable/userguide/signals.html?#celeryd-init) signal is triggered when the Celery deamon is started, before the worker processes are spawned. You can use the [`worker_init`](https://docs.celeryq.dev/en/stable/userguide/signals.html?#worker-init) signal instead if you want to initialize Sentry on start of each worker process.
+The [`celeryd_init`](https://docs.celeryq.dev/en/stable/userguide/signals.html?#celeryd-init) signal is triggered when the Celery deamon starts, before the worker processes are spawned. If you need to initialize Sentry for each individual worker process, us the [`worker_init`](https://docs.celeryq.dev/en/stable/userguide/signals.html?#worker-init) signal instead.
 
 #### Setup in Your Application
 
@@ -93,13 +95,13 @@ if __name__ == "__main__":
     main()
 ```
 
-### Setup Celery With Django
+### Set Up Celery With Django
 
-If you're using Celery with Django in a conventional setup, have already initialized the SDK in your `settings.py` file as described in the [Django integration documentation](/platforms/python/integrations/django/#configure), and have Celery using the same settings with [`config_from_object`](https://docs.celeryq.dev/en/stable/django/first-steps-with-django.html), you don't need to initialize the SDK separately for Celery.
+If you're using Celery with Django in a typical setup, have initialized the SDK in your `settings.py` file (as described in the [Django integration documentation](/platforms/python/integrations/django/#configure)), and have your Celery configured to use the same settings as [`config_from_object`](https://docs.celeryq.dev/en/stable/django/first-steps-with-django.html), there's no need to initialize the Celery SDK separately.
 
 ## Verify
 
-To verify if your SDK is initialized on worker start, you can pass `debug=True` to `sentry_sdk.init()` to see extra output in your Celery logs when the SDK is initialized. If the output appears during worker startup and not only after a task has started, then it's working properly.
+To confirm that your SDK is initialized on worker start, pass `debug=True` to `sentry_sdk.init()`. This will add extra output to your Celery logs when the SDK is initialized. If you see the output during worker startup, and not just after a task has started, then it's working correctly.
 
 <Alert level="info" title="Note on distributed tracing">
 
