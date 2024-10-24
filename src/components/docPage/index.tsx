@@ -85,7 +85,7 @@ export function DocPage({
                 <CodeContextProvider>{children}</CodeContextProvider>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 not-prose mt-8">
+              <div className="grid grid-cols-2 gap-4 not-prose mt-16">
                 <div className="col-span-1">
                   {previousPage && <PaginationNav node={previousPage} title="Previous" />}
                 </div>
