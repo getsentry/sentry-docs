@@ -50,7 +50,7 @@ Select which Sentry features you'd like to install in addition to Error Monitori
   options={["error-monitoring", "performance", "profiling"]}
 />
 
-```python {filename:tasks.py} {"onboardingOptions": {"performance": "12-14", "profiling": "15-18"}}
+```python {diff} {filename:tasks.py} {"onboardingOptions": {"performance": "12-14", "profiling": "15-18"}}
 # tasks.py
 from celery import signals
 
@@ -69,11 +69,11 @@ def init_sentry(**kwargs):
         # of sampled transactions.
         # We recommend adjusting this value in production.
         profiles_sample_rate=1.0,
-        integrations=[
-            CeleryIntegration(
-                monitor_beat_tasks=True
-            )
-        ],
++       integrations=[
++           CeleryIntegration(
++               monitor_beat_tasks=True
++           )
++       ],
         environment="local.dev.grace",
         release="v1.0",
     )
@@ -95,16 +95,16 @@ You don't need to create Cron Monitors for your tasks on Sentry.io, we'll do it 
 
 You can exclude Celery Beat tasks from being auto-instrumented. To do this, add a list of tasks you want to exclude as option `exclude_beat_tasks` when creating `CeleryIntegration`. The list can contain simple strings with the full task name, as specified in the Celery Beat schedule, or regular expressions to match multiple tasks.
 
-```python
+```python {diff}
     sentry_sdk.init(
         # ...
         integrations=[
             CeleryIntegration(
                 monitor_beat_tasks=True,
-                exclude_beat_tasks=[
-                    "some-task-a",
-                    "payment-check-.*",
-                ]
++               exclude_beat_tasks=[
++                   "some-task-a",
++                   "payment-check-.*",
++               ]
             ),
         ],
     )
@@ -124,7 +124,7 @@ Make sure the Sentry `@sentry_sdk.monitor` decorator is below Celery's `@app.tas
 
 </Note>
 
-```python {filename:tasks.py}
+```python {diff} {filename:tasks.py}
 # tasks.py
 from celery import Celery, signals
 
@@ -140,7 +140,7 @@ def init_sentry(**kwargs):
     )
 
 @app.task
-@sentry_sdk.monitor(monitor_slug='<monitor-slug>')  # 👈 this is the new line.
++@sentry_sdk.monitor(monitor_slug='<monitor-slug>')
 def tell_the_world(msg):
     print(msg)
 ```
