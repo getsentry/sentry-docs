@@ -18,7 +18,9 @@ pip install --upgrade 'sentry-sdk[celery]'
 If you have the `celery` package in your dependencies, the Celery integration will be enabled automatically when you initialize the Sentry SDK.
 
 <Alert>
-Make sure that the call to `sentry_sdk.init()` is loaded on worker startup and not only in the module where your tasks are defined. Otherwise, the initialization may happen too late and events might not get reported.
+  Make sure that the call to `sentry_sdk.init()` is loaded on worker startup and
+  not only in the module where your tasks are defined. Otherwise, the
+  initialization may happen too late and events might not get reported.
 </Alert>
 
 ### Set up Celery Without Django
@@ -100,6 +102,23 @@ If you're using Celery with Django in a typical setup, have initialized the SDK 
 ## Verify
 
 To confirm that your SDK is initialized on worker start, pass `debug=True` to `sentry_sdk.init()`. This will add extra output to your Celery logs when the SDK is initialized. If you see the output during worker startup, and not just after a task has started, then it's working correctly.
+
+The snippet below includes an intentional `ZeroDivisionError` in the Celery task that will be captured by Sentry. To trigger the error call `debug_sentry.delay()`:
+
+```python {filename:tasks.py} {"onboardingOptions": {"performance": "12-14", "profiling": "15-18"}}
+from celery import Celery, signals
+import sentry_sdk
+
+app = Celery("tasks", broker="...")
+
+@signals.celeryd_init.connect
+def init_sentry(**_kwargs):
+    sentry_sdk.init(...)  # same as above
+
+@app.task
+def debug_sentry():
+    1/0
+```
 
 <Alert level="info" title="Note on distributed tracing">
 
