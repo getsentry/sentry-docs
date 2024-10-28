@@ -154,7 +154,7 @@ export function nodeForPath(node: DocNode, path: string | string[]): DocNode | u
  * @returns The next DocNode in the tree, or undefined if there is no next node
  */
 export const getNextNode = (node: DocNode): DocNode | undefined => {
-  const children = node.children.filter(filterVisibleSiblings).sort(sortSiblingsByOrder);
+  const children = node.children.filter(filterVisibleSiblings).sort(sortBySidebarOrder);
   // Check for children first
   if (
     children.length > 0 &&
@@ -211,7 +211,7 @@ const getNextSiblingNode = (node: DocNode): DocNode | undefined => {
   }
 
   const siblings = node.parent.children
-    .sort(sortSiblingsByOrder)
+    .sort(sortBySidebarOrder)
     .filter(filterVisibleSiblings);
 
   const index = siblings.indexOf(node);
@@ -228,7 +228,7 @@ const getPreviousSiblingNode = (node: DocNode): DocNode | undefined => {
   }
 
   const siblings = node.parent.children
-    .sort(sortSiblingsByOrder)
+    .sort(sortBySidebarOrder)
     .filter(filterVisibleSiblings);
 
   const index = siblings.indexOf(node);
@@ -239,7 +239,7 @@ const getPreviousSiblingNode = (node: DocNode): DocNode | undefined => {
   return undefined;
 };
 
-const sortSiblingsByOrder = (a: DocNode, b: DocNode) =>
+const sortBySidebarOrder = (a: DocNode, b: DocNode) =>
   (a.frontmatter.sidebar_order ?? 10) - (b.frontmatter.sidebar_order ?? 10);
 
 const filterVisibleSiblings = (s: DocNode) =>
