@@ -72,7 +72,23 @@ The following features don't currently support multi-view:
 - User interaction integration via the `SentryUserInteractionWidget` (which is part of the `SentryWidget`)
 - Window and Device events via the `WidgetsBindingIntegration`
 
-These features are automatically disabled if a `multi-view` application is recognised.
+To prevent the `WidgetsBindingIntegration` from loading by default, you'll need to remove the integration as shown below:
+
+```dart
+// ignore: implementation_imports
+import 'package:sentry_flutter/src/integrations/widgets_binding_integration.dart';
+...
+SentryFlutter.init(
+  (options) {
+    ...
+    final integration = options.integrations
+        .firstWhere((element) => element is WidgetsBindingIntegration);
+    options.removeIntegration(integration);
+  },
+  // Init your App.
+  appRunner: appRunner,
+);
+```
 
 ### Example Application
 
