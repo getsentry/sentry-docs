@@ -11,7 +11,7 @@ import {NavNode} from './types';
 import {docNodeToNavNode, getNavNodes} from './utils';
 
 /** a root of `"some-root"` maps to the `/some-root/` url */
-// we should probably get rid of this
+// todo: we should probably get rid of this
 const productSidebarItems = [
   {
     title: 'Account Settings',
