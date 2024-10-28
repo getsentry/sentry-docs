@@ -132,6 +132,17 @@ type MetadataProps = {
   };
 };
 
+// Helper function to clean up canonical tags missing leading or trailing slash
+function formatCanonicalTag(tag: string) {
+  if (tag.charAt(0) !== '/') {
+    tag = '/' + tag;
+  }
+  if (tag.charAt(tag.length - 1) !== '/') {
+    tag = tag + '/';
+  }
+  return tag;
+}
+
 export async function generateMetadata({params}: MetadataProps): Promise<Metadata> {
   const domain = isDeveloperDocs
     ? 'https://develop.sentry.dev'
@@ -142,6 +153,7 @@ export async function generateMetadata({params}: MetadataProps): Promise<Metadat
     : domain;
   let title =
     'Sentry Docs | Application Performance Monitoring &amp; Error Tracking Software';
+  let customCanonicalTag;
   let description =
     'Self-hosted and cloud-based application performance monitoring &amp; error tracking that helps software teams see clearer, solve quicker, &amp; learn continuously.';
   const images = [{url: `${previewDomain ?? domain}/meta.jpg`, width: 1200, height: 822}];
@@ -160,13 +172,18 @@ export async function generateMetadata({params}: MetadataProps): Promise<Metadat
         pageNode.frontmatter.title +
         (guideOrPlatform ? ` | Sentry for ${guideOrPlatform.title}` : '');
       description = pageNode.frontmatter.description ?? '';
+
+      if (pageNode.frontmatter.customCanonicalTag) {
+        customCanonicalTag = formatCanonicalTag(pageNode.frontmatter.customCanonicalTag);
+      }
     }
   }
 
-  let canonical = domain;
-  if (params.path) {
-    canonical = `${domain}/${params.path.join('/')}/`;
-  }
+  const canonical = customCanonicalTag
+    ? domain + customCanonicalTag
+    : params.path
+      ? `${domain}/${params.path.join('/')}/`
+      : domain;
 
   return {
     title,
