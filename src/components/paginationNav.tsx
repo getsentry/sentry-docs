@@ -10,7 +10,7 @@ export function PaginationNav({
   title: 'Previous' | 'Next';
 }) {
   return (
-    <a href={`/${node.path}`} className="no-underline group">
+    <a href={`/${node.path}`} className="no-underline">
       <div
         className={`py-3 px-4 border-2 rounded-md transition-colors hover:[border-color:var(--accent)] ${
           title === 'Previous' ? 'text-left' : 'text-right'
@@ -22,19 +22,11 @@ export function PaginationNav({
             title === 'Previous' ? 'justify-start' : 'justify-end'
           }`}
         >
-          {title === 'Previous' && (
-            <div className="transition-transform group-hover:-translate-x-1">
-              <DoubleArrowLeftIcon />
-            </div>
-          )}
+          {title === 'Previous' && <DoubleArrowLeftIcon />}
 
           {node.title}
 
-          {title === 'Next' && (
-            <div className="transition-transform group-hover:translate-x-1">
-              <DoubleArrowRightIcon />
-            </div>
-          )}
+          {title === 'Next' && <DoubleArrowRightIcon />}
         </div>
       </div>
     </a>
