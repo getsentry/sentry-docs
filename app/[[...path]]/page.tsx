@@ -11,6 +11,7 @@ import {Home} from 'sentry-docs/components/home';
 import {Include} from 'sentry-docs/components/include';
 import {PlatformContent} from 'sentry-docs/components/platformContent';
 import {
+  DocNode,
   getCurrentPlatformOrGuide,
   getDocsRootNode,
   getNextNode,
@@ -26,6 +27,7 @@ import {
 } from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {setServerContext} from 'sentry-docs/serverContext';
+import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
 import {stripVersion} from 'sentry-docs/versioning';
 
 export async function generateStaticParams() {
@@ -78,25 +80,28 @@ export default async function Page({params}: {params: {path?: string[]}}) {
   }
 
   // gather previous and next page that will be displayed in the bottom pagination
-  let previousPage = pageNode?.frontmatter?.previousPage;
-  let nextPage = pageNode?.frontmatter?.nextPage;
+  const getPaginationDetails = (
+    getNode: (node: DocNode) => DocNode | undefined | 'root',
+    page: PaginationNavNode | undefined
+  ) => {
+    if (page && 'path' in page && 'title' in page) {
+      return page;
+    }
 
-  if (!nextPage || !('path' in nextPage) || !('title' in nextPage)) {
-    const nextNode = pageNode ? getNextNode(pageNode) : undefined;
-    nextPage = nextNode
-      ? {path: nextNode.path, title: nextNode.frontmatter.title}
-      : undefined;
-  }
+    const node = getNode(pageNode);
 
-  if (!previousPage || !('path' in previousPage) || !('title' in previousPage)) {
-    const previousNode = pageNode ? getPreviousNode(pageNode) : undefined;
-    previousPage =
-      previousNode === 'root'
-        ? {path: '', title: 'Welcome to Sentry'}
-        : previousNode
-          ? {path: previousNode.path, title: previousNode.frontmatter.title}
-          : undefined;
-  }
+    if (node === 'root') {
+      return {path: '', title: 'Welcome to Sentry'};
+    }
+
+    return node ? {path: node.path, title: node.frontmatter.title} : undefined;
+  };
+
+  const previousPage = getPaginationDetails(
+    getPreviousNode,
+    pageNode?.frontmatter?.previousPage
+  );
+  const nextPage = getPaginationDetails(getNextNode, pageNode?.frontmatter?.nextPage);
 
   if (isDeveloperDocs) {
     // get the MDX for the current doc and render it
