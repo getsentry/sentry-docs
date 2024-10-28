@@ -1,0 +1,36 @@
+---
+title: Request Isolation
+description: "Learn more about how request isolation (or process isolation) works in the Sentry SDK."
+supported:
+  - javascript.nextjs
+  - javascript.node
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.hapi
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.astro
+  - javascript.remix
+notSupported:
+  - javascript
+---
+
+In server-side environments, the <PlatformLink to='/enriching-events/scopes'>isolation scope</PlatformLink> automatically forks around request boundaries. This is done automatically by the SDK. As a result, each request has its own isolation scope, and data set on the isolation scope only applies to events captured during that request. 
+
+However, there are also other times when you may want to have isolation, for example, in background jobs or when you want to isolate a specific part of your code. In these cases, you can use `Sentry.withIsolationScope()` to create a new isolation scope that's valid inside of the callback you pass to it. Learn more about using [withIsolationScope](../scopes/#using-withisolationscope).
+
+The following example shows how you can use `withIsolationScope` to attach data to a specific job run:
+
+```javascript
+async function job(jobId) {
+  return Sentry.withIsolationScope(async () => {
+    // Only valid for events in this callback
+    Sentry.setTag("jobId", jobId);
+    await doSomething();
+  });
+}
+```

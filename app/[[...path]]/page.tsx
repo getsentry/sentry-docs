@@ -16,9 +16,15 @@ import {
   nodeForPath,
 } from 'sentry-docs/docTree';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
-import {getDevDocsFrontMatter, getDocsFrontMatter, getFileBySlug} from 'sentry-docs/mdx';
+import {
+  getDevDocsFrontMatter,
+  getDocsFrontMatter,
+  getFileBySlug,
+  getVersionsFromDoc,
+} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {setServerContext} from 'sentry-docs/serverContext';
+import {stripVersion} from 'sentry-docs/versioning';
 
 export async function generateStaticParams() {
   const docs = await (isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter());
@@ -47,6 +53,7 @@ function MDXLayoutRenderer({mdxSource, ...rest}) {
 export default async function Page({params}: {params: {path?: string[]}}) {
   // get frontmatter of all docs in tree
   const rootNode = await getDocsRootNode();
+
   setServerContext({
     rootNode,
     path: params.path ?? [],
@@ -88,6 +95,7 @@ export default async function Page({params}: {params: {path?: string[]}}) {
   }
 
   const pageNode = nodeForPath(rootNode, params.path);
+
   if (!pageNode) {
     // eslint-disable-next-line no-console
     console.warn('no page node', params.path);
@@ -108,8 +116,14 @@ export default async function Page({params}: {params: {path?: string[]}}) {
   }
   const {mdxSource, frontMatter} = doc;
 
+  // collect versioned files
+  const allFm = await getDocsFrontMatter();
+  const versions = getVersionsFromDoc(allFm, pageNode.path);
+
   // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc.
-  return <MDXLayoutRenderer mdxSource={mdxSource} frontMatter={frontMatter} />;
+  return (
+    <MDXLayoutRenderer mdxSource={mdxSource} frontMatter={{...frontMatter, versions}} />
+  );
 }
 
 type MetadataProps = {
@@ -135,9 +149,13 @@ export async function generateMetadata({params}: MetadataProps): Promise<Metadat
   const rootNode = await getDocsRootNode();
 
   if (params.path) {
-    const pageNode = nodeForPath(rootNode, params.path);
+    const pageNode = nodeForPath(
+      rootNode,
+      stripVersion(params.path.join('/')).split('/')
+    );
     if (pageNode) {
       const guideOrPlatform = getCurrentPlatformOrGuide(rootNode, params.path);
+
       title =
         pageNode.frontmatter.title +
         (guideOrPlatform ? ` | Sentry for ${guideOrPlatform.title}` : '');

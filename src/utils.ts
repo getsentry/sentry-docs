@@ -94,3 +94,7 @@ export function isTruthy<T>(value: T | undefined | null): value is T {
 }
 
 export const isLocalStorageAvailable = () => typeof localStorage !== 'undefined';
+
+export const stripTrailingSlash = (url: string) => {
+  return url.replace(/\/$/, '');
+};
