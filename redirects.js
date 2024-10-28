@@ -199,6 +199,10 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/organization/integrations/launchdarkly/',
+    destination: '/organization/integrations/feature-flag/launchdarkly/',
+  },
+  {
     source: '/internal/:path*',
     destination: 'https://develop.sentry.dev',
   },
