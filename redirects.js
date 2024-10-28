@@ -207,6 +207,10 @@ const userDocsRedirects = [
     destination: 'https://develop.sentry.dev',
   },
   {
+    source: '/organization/integrations/goastai/',
+    destination: '/organization/integrations/issue-tracking/goast/',
+  },
+  {
     source: '/development/sdk-dev/:path*',
     destination: 'https://develop.sentry.dev',
   },
