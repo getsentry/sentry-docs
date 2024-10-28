@@ -133,7 +133,7 @@ type MetadataProps = {
 };
 
 // Helper function to clean up canonical tags missing leading or trailing slash
-function checkCanonicalTagFormat(tag: string) {
+function formatCanonicalTag(tag: string) {
   if (tag.charAt(0) !== '/') {
     tag = '/' + tag;
   }
@@ -174,13 +174,13 @@ export async function generateMetadata({params}: MetadataProps): Promise<Metadat
       description = pageNode.frontmatter.description ?? '';
 
       if (pageNode.frontmatter.customCanonicalTag) {
-        customCanonicalTag = pageNode.frontmatter.customCanonicalTag;
+        customCanonicalTag = formatCanonicalTag(pageNode.frontmatter.customCanonicalTag);
       }
     }
   }
 
   const canonical = customCanonicalTag
-    ? domain + checkCanonicalTagFormat(customCanonicalTag)
+    ? domain + customCanonicalTag
     : params.path
       ? `${domain}/${params.path.join('/')}/`
       : domain;
