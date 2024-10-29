@@ -798,6 +798,68 @@ const userDocsRedirects = [
       '/platforms/react-native/data-management/debug-files/source-context/data-management/debug-files/upload/',
     destination: '/platforms/react-native/data-management/debug-files/upload/',
   },
+  // Redirects for prior Insights information architecture:
+  {
+    source: '/product/insights/requests/',
+    destination: '/product/insights/backend/requests/',
+  },
+  {
+    source: '/product/insights/queries/',
+    destination: '/product/insights/backend/queries/',
+  },
+  {
+    source: '/product/insights/assets/',
+    destination: '/product/insights/frontend/assets/',
+  },
+  {
+    source: '/product/insights/mobile-vitals/',
+    destination: '/product/insights/mobile/',
+  },
+  {
+    source: '/product/insights/mobile-vitals/app-starts/',
+    destination: '/product/insights/mobile/app-starts/',
+  },
+  {
+    source: '/product/insights/mobile-vitals/screen-loads/',
+    destination: '/product/insights/mobile/screen-loads/',
+  },
+  {
+    source: '/product/insights/web-vitals/',
+    destination: '/product/insights/frontend/web-vitals/',
+  },
+  {
+    source: '/product/insights/web-vitals/web-vitals-concepts/',
+    destination: '/product/insights/frontend/web-vitals/web-vitals-concepts/',
+  },
+  {
+    source: '/product/insights/caches/',
+    destination: '/product/insights/backend/caches/',
+  },
+  {
+    source: '/product/insights/caches/cache-page/',
+    destination: '/product/insights/backend/caches/cache-page/',
+  },
+  {
+    source: '/product/insights/queue-monitoring/',
+    destination: '/product/insights/backend/queue-monitoring/',
+  },
+  {
+    source: '/product/insights/queue-monitoring/queues-page/',
+    destination: '/product/insights/backend/queue-monitoring/queues-page/',
+  },
+  {
+    source: '/product/insights/llm-monitoring/',
+    destination: '/product/insights/ai/llm-monitoring/',
+  },
+  {
+    source: '/product/insights/llm-monitoring/getting-started/',
+    destination: '/product/insights/ai/llm-monitoring/getting-started/',
+  },
+  {
+    source: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
+    destination: '/product/insights/ai/llm-monitoring/getting-started/the-dashboard/',
+  },
+  // End of Insights reduirects.
 ];
 
 /**
