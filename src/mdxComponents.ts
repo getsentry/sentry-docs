@@ -31,6 +31,16 @@ import {SandboxLink} from './components/sandboxLink';
 import {SignInNote} from './components/signInNote';
 import {SmartLink} from './components/smartLink';
 import {VimeoEmbed} from './components/video';
+import {IconAdd} from './icons/iconAdd';
+import {IconChevron} from './icons/iconChevron';
+import {IconClock} from './icons/iconClock';
+import {IconClose} from './icons/iconClose';
+import {IconDelete} from './icons/iconDelete';
+import {IconDocs} from './icons/iconDocs';
+import {IconEdit} from './icons/iconEdit';
+import {IconOpen} from './icons/iconOpen';
+import {IconStar} from './icons/iconStar';
+import {IconSubtract} from './icons/iconSubtract';
 
 export function mdxComponents(
   dynamicComponents: any = {},
@@ -43,30 +53,40 @@ export function mdxComponents(
     CodeBlock,
     CodeTabs,
     ConfigKey,
-    CreateGitHubAppForm,
     ConfigValue,
+    CreateGitHubAppForm,
     DefinitionList,
     Expandable,
     GuideGrid,
+    IconAdd,
+    IconChevron,
+    IconClock,
+    IconClose,
+    IconDelete,
+    IconDocs,
+    IconEdit,
+    IconOpen,
+    IconStar,
+    IconSubtract,
     JsBundleList,
     LambdaLayerDetail,
     Link: SmartLink,
     LinkWithPlatformIcon,
     Note,
+    OnboardingOption,
+    OnboardingOptionButtons,
     OrgAuthTokenNote,
     PageGrid,
     ParamTable,
     PiiFields,
+    PlatformCategorySection,
     PlatformGrid,
     PlatformIdentifier,
     PlatformLink,
     PlatformLinkWithLogo,
-    PlatformSection,
-    PlatformCategorySection,
     PlatformOrGuideName,
     PlatformSdkPackageName,
-    OnboardingOption,
-    OnboardingOptionButtons,
+    PlatformSection,
     RelayMetrics,
     SandboxLink,
     SignInNote,
