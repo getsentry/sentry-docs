@@ -7,11 +7,11 @@ This document describes a desired state, it is not yet fully implemented in Rela
 </Alert>
 
 
-Relay enforces quotas defined in Sentry and propagates them as rate limits. In most cases,
+Relay enforces quotas defined in Sentry and propagates them as rate limits to clients. In most cases,
 this is a simple one-to-one mapping of data category to envelope item.
 
 The transaction and span rate limits are more complicated. Spans and Transactions both
-have a total and an additional indexed category. They are also closely related, a transaction is a container for spans.
+have a "total" and an additional "indexed" category. They are also closely related, a transaction is a container for spans.
 A dropped transaction results in dropped spans.
 
 The following document describes how transaction and span quotas interact with each other within Relay.
@@ -30,21 +30,23 @@ Related Documentation:
 ## Enforcement
 
 The following rules hold true:
-- A quota for the transaction category is equivalent to a quota for the spans category.
-- A quota for the spans category is equivalent to a quota for the transaction category.
+- A quota for the transaction category is also enforced for the span category.
+- A quota for the span category is also enforced for the transaction category.
 - When a transaction is dropped, all the contained spans should be reported in outcomes.
 - If either transactions or spans are rate limited, clients should receive a limit for both categories.
 - Indexed quotas only affect the payload for their respective category.
 
 These rules can be visualized using this table:
 
-|                         | Transaction Payload | Transaction Metric | Span Payload | Span Metric |
+| Rate Limit / Item       | Transaction Payload | Transaction Metric | Span Payload | Span Metric |
 | ----------------------- | ------------------- | ------------------ | ------------ | ----------- |
 | **Transaction**         | ❌                  | ❌                 | ❌           | ❌          |
 | **Transaction Indexed** | ❌                  | ✅                 | ✅           | ✅          |
 | **Span**                | ❌                  | ❌                 | ❌           | ❌          |
 | **Span Indexed**        | ✅                  | ✅                 | ❌           | ✅          |
 
+- ❌: Item rejected.
+- ✅: Item accepted.
 
 ## Outcomes
 
@@ -119,7 +121,7 @@ contained spans. The transaction itself will still be ingested.
 | ------------------- | ------------------- | ------------ | ------------ |
 | ✅                  | ✅                  | ❌           | ✅           |
 
-**Outcomes**:
+**Negative Outcomes**:
 
 | `transaction` | `transaction_indexed` | `span` | `span_indexed` |
 | ------------- | --------------------- | ------ | -------------- |
@@ -160,7 +162,7 @@ contained spans. The transaction itself will still be ingested.
 | ------------------- | ------------------- | ------------ | ------------ |
 | ❌                  | ❌                  | ❌           | ❌           |
 
-**Outcomes**:
+**Negative Outcomes**:
 
 | `transaction` | `transaction_indexed` | `span` | `span_indexed` |
 | ------------- | --------------------- | ------ | -------------- |
@@ -171,7 +173,7 @@ contained spans. The transaction itself will still be ingested.
 
 ## FAQ / Reasoning
 
-### Why can transaction limits be propagated as span limits and vice versa?
+### Why do transaction limits need to be propagated as span limits and vice versa?
 
 At first glance this is non-obvious, spans can exist without transactions
 and also transactions can exist without (standalone) spans, so why can the quotas
@@ -181,18 +183,13 @@ The reasoning lies in the Sentry product and how the information is used within 
 Because of Relay, Sentry can safely assume spans exist if the user/SDK sends transactions
 and more and more of the product is built on the basis of spans. From this point of view
 transactions and spans convey the same information, it is just represented differently.
-This paradigm shift from transaction to spans is also visible in the billing. AM2 and before
-only used transactions for billing, whereas AM3 uses spans now. But AM3 still accepts transactions
-it just bills on spans. Disabling ingestion for spans on AM3 therefore also would require the same
-quota to be set for transactions, but since quotas are tracked separately a transaction quota
-may never trigger the span quota or vice versa.
 
-The logical conclusion and simplification is, to just treat span and transaction rate limits
+The logical conclusion and simplification is, to treat span and transaction rate limits
 equally (important: treat the limits the same, the quotas are still tracked separately).
-Another upside is, enforcing these limits on SDKs does not require extra logic, it is all contained
-within Relay.
+Enforcing these limits on SDKs then does not require extra logic, it is all contained
+within Relay and works for any SDK version, future and present.
 
-### Why do span outcomes and transaction outcomes differ?
+### Why can span outcomes and transaction outcomes become inconsistent?
 
 There can be multiple reasons for this in the entire pipeline, these are just some reasons why there
 can be differences caused by Relay:
@@ -209,13 +206,13 @@ but the span count cannot be recovered from an invalid transaction.
 From top to bottom:
 
 - Do you completely disable ingestion? Configure the limit for the `span` and `transaction` data categories.
-- Is it billing related? For example, spike protection operates on the category of the billing unit
-(AM2: transactions, AM3: spans), use the respective data category for the limit.
+- Is it billing related? For example, spike protection operates on the category of the billing unit,
+use the respective data category for the limit.
 - Use the total category (not indexed) which makes most sense to you. When in doubt, ask the Relay team.
 
 ### Should I ever use an indexed category in a Quota?
 
-No.
+No, unless the intention is to protect infrastructure (abuse limits).
 
 Indexed quotas are only useful to protect downstream infrastructure through abuse quotas.
 They are inherently more expensive to enforce, cannot be propagated to clients and are generally a sign
