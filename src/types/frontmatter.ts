@@ -1,3 +1,5 @@
+import {PaginationNavNode} from './paginationNavNode';
+
 /**
  ** a YAML-formatted blob defined at the top of every markdown or mdx file
  */
@@ -25,6 +27,11 @@ export interface FrontMatter {
    * A list of keywords for indexing with search.
    */
   keywords?: string[];
+
+  /**
+   * The next page in the bottom pagination navigation.
+   */
+  nextPage?: PaginationNavNode;
   /**
    * Set this to true to disable indexing (robots, algolia) of this content.
    */
@@ -33,11 +40,20 @@ export interface FrontMatter {
    * Specific guides that this page is not relevant to.
    */
   notSupported?: string[];
+
   /**
    * Set this to true to disable page-level table of contents rendering.
    */
   notoc?: boolean;
 
+  /**
+   * The previous page in the bottom pagination navigation.
+   */
+  previousPage?: PaginationNavNode;
+
+  /**
+   * The next page in the sidebar navigation.
+   */
   /**
    * Set this to true to hide from the sidebar
    */
@@ -62,7 +78,6 @@ export interface FrontMatter {
    * Specific guides that this page is relevant to.
    */
   supported?: string[];
-
   /**
    * Available versions for this page
    * @example ['v7.119.0', 'next']
