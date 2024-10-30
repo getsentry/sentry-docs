@@ -4,15 +4,12 @@ import {ChevronDownIcon} from '@radix-ui/react-icons';
 import * as RadixSelect from '@radix-ui/react-select';
 import {usePathname, useRouter} from 'next/navigation';
 
+import {stripTrailingSlash} from 'sentry-docs/utils';
 import {getLocalStorageVersionKey, VERSION_INDICATOR} from 'sentry-docs/versioning';
 
 import styles from './style.module.scss';
 
 import {VersionBanner} from '../versionBanner';
-
-const stripTrailingSlash = (url: string) => {
-  return url.replace(/\/$/, '');
-};
 
 export function VersionSelector({versions, sdk}: {sdk: string; versions: string[]}) {
   const availableVersions = ['latest', ...versions];

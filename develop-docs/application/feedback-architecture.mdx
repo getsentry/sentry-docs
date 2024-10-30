@@ -1,5 +1,6 @@
 ---
 title: User Feedback Architecture
+sidebar_order: 20
 ---
 
 **The goal of this doc is to give engineers an in-depth understanding of User Feedback's backend.**
@@ -15,12 +16,12 @@ When broken down, there are **5** ways to create feedback in our system 😵‍�
 `FeedbackCreationSource(Enum)` in [create_feedback.py](https://github.com/getsentry/sentry/blob/2b642e149c79b251e1c2f4339fc73d656347d74e/src/sentry/feedback/usecases/create_feedback.py#L33-L33).
 The 4 ways _clients_ can create feedback are:
 
-`NEW_FEEDBACK_ENVELOPE`: [The new format](https://develop.sentry.dev/sdk/envelopes/#full-examples) created by the Replay team when adding
+`NEW_FEEDBACK_ENVELOPE`: [The new format](https://develop.sentry.dev/sdk/data-model/envelopes/#full-examples) created by the Replay team when adding
 the [User Feedback Widget](https://docs.sentry.io/product/user-feedback/#user-feedback-widget)
 to the JavaScript SDK. It allows adding more information, for example tags,
 release, url, etc.
 
-`USER_REPORT_ENVELOPE`: [The older format](https://develop.sentry.dev/sdk/envelopes/#user-feedback) with name/email/comments, that requires
+`USER_REPORT_ENVELOPE`: [The older format](https://develop.sentry.dev/sdk/data-model/envelope-items/#user-feedback) with name/email/comments, that requires
 `event_id` to link a Sentry error event.
 
 `USER_REPORT_DJANGO_ENDPOINT`: [The deprecated Web API](https://docs.sentry.io/api/projects/submit-user-feedback/)
@@ -41,7 +42,7 @@ which
 
 ## Feedback events
 
-The new and preferred way to send feedback from the SDK is in an [event envelope](https://develop.sentry.dev/sdk/envelopes/#full-examples).
+The new and preferred way to send feedback from the SDK is in an [event envelope](https://develop.sentry.dev/sdk/data-model/envelopes/#full-examples).
 The format is the same as error events, except the `type` header = `"feedback"`. While
 user reports have an associated event, **new feedback _is_ an event**. This
 offers 2 improvements:
@@ -51,17 +52,18 @@ offers 2 improvements:
 
 The user's submission is wrapped in a context object:
 
-```Python/Javascript
+```Pseudo-code
 event[”contexts”][”feedback”] = {
 	"name": <user-provided>,
 	"contact_email": <user-provided>,
 	"message": <user-provided>,
 	"url": <referring web page>,
-	"source": <developer-provided, ex: "widget">
+	"source": <developer-provided, ex: "widget">,
+	"associated_event_id": <developer-provided, should be a valid error event in the same project>
 }
 
-// all fields are technically optional, but recommended
-// the widget can be configured to require a non-empty email and/or name
+// All fields are optional except message.
+// The widget can be configured to require a non-empty email and/or name.
 ```
 
 - This doc refers to the payload format (`event` in the pseudo-code above) as a “**feedback event”**.
@@ -84,7 +86,7 @@ In Relay v24.5.1, we migrated feedback to its own kafka topic + consumer,
 ### Attachments
 
 We only use attachments for the widget’s screenshot feature, which allows users
-to submit **at most 1 screenshot per feedback**. Attachments are another [item type](https://develop.sentry.dev/sdk/envelopes/#attachment)
+to submit **at most 1 screenshot per feedback**. Attachments are another [item type](https://develop.sentry.dev/sdk/data-model/envelopes/#attachment)
 in an envelope.
 
 - SDK v8.0.0+, Relay v24.5.1+: Sends the feedback and attachment items in the same envelope.
@@ -99,7 +101,7 @@ a separate topic and storage, and the UI makes a separate request for them.
 
 The deprecated way of sending feedback is as a **user report**. This is a simple typed dict:
 
-```Python/Javascript
+```Pseudo-code
 user_report = {
 	"event_id": <required UUID str>,
 	"email": <optional str>,
@@ -139,7 +141,7 @@ Simplified diagram:
 
 ### Envelopes
 
-User reports are also sent to Relay in [envelope format](https://develop.sentry.dev/sdk/envelopes/#user-feedback).
+User reports are also sent to Relay in [envelope format](https://develop.sentry.dev/sdk/data-model/envelope-items/#user-feedback).
 **This item type is misleadingly called “user feedback” in some of our docs, but the
 item header will read `"user_report"`.**
 
@@ -207,11 +209,13 @@ This feature is available if you enable the following feature flags.
 - `organizations:user-feedback-ui`
 - `organizations:user-feedback-replay-clip` (v24.7.1+)
 
-Auto-registered flags for issue platform (you won't be able to grep these in the sentry repo, but you need to enable them too):
+Auto-registered flags for issue platform, for versions \<= v24.10.0 only:
 
 - `organizations:feedback-ingest`
 - `organizations:feedback-visible`
 - `organizations:feedback-post-process-group`
+
+(You won't be able to grep for these in the sentry repo, but you do need to enable them.)
 
 You need to have v24.4.2 or higher in order to use the latest functionality of User
 Feedback, such as adding screenshots. Also note that User Feedback is only available

@@ -3,7 +3,7 @@ const isDeveloperDocs = !!process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const developerDocsRedirects = [
   {
-    source: '/sdk/unified-api/tracing/:path*',
+    source: '/sdk/miscellaneous/unified-api/tracing/:path*',
     destination: '/sdk/performance/:path*',
   },
   {
@@ -27,13 +27,181 @@ const developerDocsRedirects = [
     destination: '/sdk/telemetry/traces/:path*',
   },
   {
-    source: '/sdk/event-payloads/types/',
-    destination: '/sdk/event-payloads/',
+    source: '/sdk/data-model/event-payloads/types/',
+    destination: '/sdk/data-model/event-payloads/',
+  },
+  {
+    source: '/sdk/basics/:path*',
+    destination: '/sdk/development-process/basics/:path*',
+  },
+  {
+    source: '/sdk/data-handling/:path*',
+    destination: '/sdk/expected-features/data-handling/:path*',
+  },
+  {
+    source: '/sdk/features/:path*',
+    destination: '/sdk/expected-features/:path*',
+  },
+  {
+    source: '/sdk/rate-limiting/:path*',
+    destination: '/sdk/expected-features/rate-limiting/:path*',
+  },
+  {
+    source: '/sdk/envelopes/:path*',
+    destination: '/sdk/data-model/envelopes/:path*',
+  },
+  {
+    source: '/sdk/event-payloads/:path*',
+    destination: '/sdk/data-model/event-payloads/:path*',
+  },
+  {
+    source: '/sdk/hub_and_scope_refactoring/:path*',
+    destination: '/sdk/miscellaneous/hub_and_scope_refactoring/:path*',
+  },
+  {
+    source: '/sdk/unified-api/:path*',
+    destination: '/sdk/miscellaneous/unified-api/:path*',
+  },
+  {
+    source: '/sdk/sessions/:path*',
+    destination: '/sdk/telemetry/sessions/:path*',
+  },
+  {
+    source: '/sdk/client-reports/:path*',
+    destination: '/sdk/telemetry/client-reports/:path*',
+  },
+  {
+    source: '/sdk/replays/:path*',
+    destination: '/sdk/telemetry/replays/:path*',
+  },
+  {
+    source: '/sdk/setup-wizards/:path*',
+    destination: '/sdk/expected-features/setup-wizards/:path*',
+  },
+  {
+    source: '/sdk/serverless/:path*',
+    destination: '/sdk/serverless-sdks/:path*',
+  },
+  {
+    source: '/sdk/signal-handlers/:path*',
+    destination: '/sdk/native-sdks/signal-handlers/:path*',
+  },
+  {
+    source: '/sdk/store/:path*',
+    destination: '/sdk/miscellaneous/store/:path*',
+  },
+  {
+    source: '/sdk/processes/:path*',
+    destination: '/sdk/development-process/:path*',
+  },
+  {
+    source: '/application/ab-testing/',
+    destination: '/backend/ab-testing/',
+  },
+  {
+    source: '/application/api/:path*',
+    destination: '/backend/api/:path*',
+  },
+  {
+    source: '/application/serializers/',
+    destination: '/backend/serializers/',
+  },
+  {
+    source: '/application/feature-flags/:path*',
+    destination: '/backend/feature-flags/:path*',
+  },
+  {
+    source: '/application/grouping/',
+    destination: '/backend/grouping/',
+  },
+  {
+    source: '/application/issue-platform/',
+    destination: '/backend/issue-platform/',
+  },
+  {
+    source: '/application/transaction-clustering/',
+    destination: '/backend/transaction-clustering/',
+  },
+  {
+    source: '/application/translations/',
+    destination: '/backend/translations/',
+  },
+  {
+    source: '/application/pii/:path*',
+    destination: '/backend/pii/:path*',
+  },
+  {
+    source: '/backend/control-silo/',
+    destination: '/application/control-silo/',
+  },
+  {
+    source: '/backend/cross-region-replication/',
+    destination: '/application/cross-region-replication/',
+  },
+  {
+    source: '/backend/cross-region-rpc/',
+    destination: '/application/cross-region-rpc/',
+  },
+  {
+    source: '/development/python-dependencies/',
+    destination: '/backend/python-dependencies/',
+  },
+  {
+    source: '/development/docs/',
+    destination: '/development/documentation/',
+  },
+  {
+    source: '/development/philosophy/',
+    destination: '/getting-started/philosophy/',
+  },
+  {
+    source: '/services/metrics/',
+    destination: '/backend/metrics/',
+  },
+  {
+    source: '/services/nodestore/',
+    destination: '/backend/nodestore/',
+  },
+  {
+    source: '/services/devservices/',
+    destination: '/development/devservices/',
+  },
+  {
+    source: '/services/queue/',
+    destination: '/backend/queue/',
+  },
+  {
+    source: '/services/quotas/',
+    destination: '/backend/quotas/',
+  },
+  {
+    source: '/services/tsdb/',
+    destination: '/services/tsdb/',
+  },
+  {
+    source: '/services/ports/',
+    destination: '/development/environment/ports/',
+  },
+  {
+    source: '/services/buffers/',
+    destination: '/backend/buffers/',
+  },
+  {
+    source: '/services/digests/',
+    destination: '/backend/digests/',
+  },
+  {
+    source: '/services/emails/',
+    destination: '/backend/emails/',
   },
 ];
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
+  {
+    source: '/organization/integrations/launchdarkly/',
+    destination: '/organization/integrations/feature-flag/launchdarkly/',
+  },
   {
     source: '/internal/:path*',
     destination: 'https://develop.sentry.dev',
@@ -41,6 +209,10 @@ const userDocsRedirects = [
   {
     source: '/development/(contribute|server)/:path*',
     destination: 'https://develop.sentry.dev',
+  },
+  {
+    source: '/organization/integrations/goastai/',
+    destination: '/organization/integrations/issue-tracking/goast/',
   },
   {
     source: '/development/sdk-dev/:path*',
@@ -596,6 +768,14 @@ const userDocsRedirects = [
   {
     source: '/api/rate-limits/',
     destination: '/api/ratelimits/',
+  },
+  {
+    source: '/platforms/react-native/manual-setup/codepush/',
+    destination: '/platforms/react-native/sourcemaps/uploading/codepush/',
+  },
+  {
+    source: '/organization/integrations/launchdarkly/',
+    destination: '/organization/integrations/feature-flag/launchdarkly/',
   },
 ];
 
