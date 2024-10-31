@@ -4,14 +4,14 @@ import {useEffect} from 'react';
 export default function Mermaid() {
   useEffect(() => {
     (async function () {
-      const escapeHTML = (str) => {
+      const escapeHTML = str => {
         return str.replace(/[&<>"']/g, function (match) {
           const escapeMap = {
             '&': '&amp;',
             '<': '&lt;',
             '>': '&gt;',
             '"': '&quot;',
-            "'": '&#39;'
+            "'": '&#39;',
           };
           return escapeMap[match];
         });
