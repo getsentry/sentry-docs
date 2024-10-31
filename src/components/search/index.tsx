@@ -1,6 +1,7 @@
 'use client';
 
 import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
+import * as Sentry from '@sentry/nextjs';
 import {
   Hit,
   Result,
@@ -200,15 +201,21 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
       return;
     }
 
-    algoliaInsights('clickedObjectIDsAfterSearch', {
-      eventName: 'documentation_search_result_click',
-      userToken: randomUserToken,
-      index: hit.index,
-      objectIDs: [hit.id],
-      // Positions in Algolia are 1 indexed
-      queryID: hit.queryID ?? '',
-      positions: [position + 1],
-    });
+    // we don't want analytics to crash anything or log errors the console
+    // so we'll catch any errors and send them to Sentry here silently
+    try {
+      algoliaInsights('clickedObjectIDsAfterSearch', {
+        eventName: 'documentation_search_result_click',
+        userToken: randomUserToken,
+        index: hit.index,
+        objectIDs: [hit.id],
+        // Positions in Algolia are 1 indexed
+        queryID: hit.queryID ?? '',
+        positions: [position + 1],
+      });
+    } catch (error) {
+      Sentry.captureException(error);
+    }
   }, []);
 
   return (
