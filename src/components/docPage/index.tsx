@@ -1,5 +1,4 @@
 import {ReactNode} from 'react';
-import Script from 'next/script';
 
 import {getCurrentGuide, getCurrentPlatform, nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
@@ -14,6 +13,7 @@ import {Breadcrumbs} from '../breadcrumbs';
 import {CodeContextProvider} from '../codeContext';
 import {GitHubCTA} from '../githubCTA';
 import {Header} from '../header';
+import Mermaid from '../mermaid';
 import {PaginationNav} from '../paginationNav';
 import {PlatformSdkDetail} from '../platformSdkDetail';
 import {Sidebar} from '../sidebar';
@@ -54,9 +54,6 @@ export function DocPage({
   const unversionedPath = getUnversionedPath(path, false);
 
   const leafNode = nodeForPath(rootNode, unversionedPath);
-
-  // a hack to show syntax highlighting on editors
-  const javascript = String.raw;
 
   return (
     <div className="tw-app">
@@ -112,34 +109,7 @@ export function DocPage({
           )}
         </main>
       </section>
-      {/* can't use useEffect here (server component) */}
-      <Script
-        type="module"
-        id="mermaid-script"
-        dangerouslySetInnerHTML={{
-          __html: javascript`
-              const mermaidBlocks = document.querySelectorAll('.language-mermaid');
-              if (mermaidBlocks.length >= 0) {
-                const {default: mermaid} = await import(
-                  'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs'
-                );
-                mermaid.initialize({startOnLoad: false});
-                mermaidBlocks.forEach(block => {
-                  // get rid of code highlighting
-                  const code = block.textContent;
-                  block.innerHTML = code;
-                  // force transparent background
-                  block.style.backgroundColor = 'transparent';
-                  const parentCodeTabs = block.closest('.code-tabs-wrapper')
-                  if(parentCodeTabs) {
-                    parentCodeTabs.innerHTML = block.outerHTML;
-                  }
-                });
-                await mermaid.run({nodes: document.querySelectorAll('.language-mermaid')});
-              }
-          `,
-        }}
-      />
+      <Mermaid />
     </div>
   );
 }
