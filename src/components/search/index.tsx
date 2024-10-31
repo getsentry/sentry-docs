@@ -247,8 +247,8 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
         );
 
         // close the search results and scroll to the heading if it exists
+        setInputFocus(false);
         if (foundHeading) {
-          setInputFocus(false);
           foundHeading.scrollIntoView({
             behavior: 'smooth',
           });
