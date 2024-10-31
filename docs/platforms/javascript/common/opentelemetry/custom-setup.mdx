@@ -111,7 +111,17 @@ If you want to add your own http/node-fetch instrumentation, you have to follow 
 
 ### Custom HTTP Instrumentation
 
-You won't be able to add `@opentelemetry/instrumentation-http` yourself and will need to use `httpIntegration` in order for Sentry to work as expected. If you want to use custom configuration for your HTTP instrumentation, you can use the <PlatformLink to="/configuration/integrations/http/">httpIntegration configuration</PlatformLink>.
+You can add your own `@opentelemetry/instrumentation-http` instance in your setup. However, in this case, you need to disable span creation in Sentry's `httpIntegration`:
+
+```javascript
+const sentryClient = Sentry.init({
+  dsn: "___DSN___",
+  skipOpenTelemetrySetup: true,
+  integrations: [Sentry.httpIntegration({ spans: false })],
+});
+```
+
+It's important that `httpIntegration` is still registered this way to ensure that the Sentry SDK can correctly isolate requests, for example when capturing errors.
 
 ### Custom Node Fetch Instrumentation
 
@@ -168,3 +178,26 @@ const provider = new NodeTracerProvider({
 // Validate that the setup is correct
 Sentry.validateOpenTelemetrySetup();
 ```
+## ESM loaders
+
+If your application is running in ESM (`import`/`export` syntax), OpenTelemetry requires a [special setup](https://github.com/open-telemetry/opentelemetry-js/blob/main/doc/esm-support.md) to work correctly.
+The Sentry SDK will automatically detect if your application is running in ESM mode and by default [register a loader hook](https://github.com/open-telemetry/opentelemetry-js/blob/main/doc/esm-support.md#instrumentation-hook-required-for-esm) itself.
+If you are also registering a loader hook, you need to disable Sentry's loader hook:
+
+```javascript
+Sentry.init({
+  skipOpenTelemetrySetup: true,
+  registerEsmLoaderHooks: false,
+});
+```
+
+<Note>
+
+Registering loader hooks multiple times might result in duplicated spans being created.
+[More details.](https://github.com/getsentry/sentry-javascript/issues/14065#issuecomment-2435546961)
+
+</Note>
+
+Alternatively, you can also use Sentry's loader hook and remove your own loader hook registration code.
+In this case, ensure that you initialize the Sentry SDK in its own file and you load this file prior to your application via `node --import instrument.mjs your-app.mjs`.
+<PlatformLink to="/install">Learn more about ESM installation methods.</PlatformLink>
