@@ -32,7 +32,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/basics/:path*',
-    destination: '/sdk/development-process/basics/:path*',
+    destination: '/sdk/processes/basics/:path*',
   },
   {
     source: '/sdk/data-handling/:path*',
@@ -80,19 +80,31 @@ const developerDocsRedirects = [
   },
   {
     source: '/sdk/serverless/:path*',
-    destination: '/sdk/serverless-sdks/:path*',
+    destination: '/sdk/platform-specifics/serverless-sdks/:path*',
+  },
+  {
+    source: '/sdk/serverless-sdks/:path*',
+    destination: '/sdk/platform-specifics/serverless-sdks/:path*',
+  },
+  {
+    source: '/sdk/native-sdks/:path*',
+    destination: '/sdk/platform-specifics/native-sdks/:path*',
+  },
+  {
+    source: '/sdk/javascript-sdks/:path*',
+    destination: '/sdk/platform-specifics/javascript-sdks/:path*',
   },
   {
     source: '/sdk/signal-handlers/:path*',
-    destination: '/sdk/native-sdks/signal-handlers/:path*',
+    destination: '/sdk/platform-specifics/native-sdks/signal-handlers/:path*',
   },
   {
     source: '/sdk/store/:path*',
     destination: '/sdk/miscellaneous/store/:path*',
   },
   {
-    source: '/sdk/processes/:path*',
-    destination: '/sdk/development-process/:path*',
+    source: '/sdk/development-process/:path*',
+    destination: '/sdk/processes/:path*',
   },
   {
     source: '/application/ab-testing/',
