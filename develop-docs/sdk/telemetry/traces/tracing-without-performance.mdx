@@ -13,7 +13,7 @@ Tracing without Performance is the default fallback behavior of SDKs, when users
 This means that SDKs in this mode always:
 
 - continue incoming traces
-- attache `event.contexts.trace` context on events (e.g. errors, check-ins)
+- attach `event.contexts.trace` context on events (e.g. errors, check-ins)
 - attach the `trace` envelope header to Sentry envelopes, populated from the dynamic sampling context
 - propagate trace data (`sentry-trace`, `baggage`) via the usual channels (e.g. HTTP headers, `<meta> HTML tags`, etc), with the correct [sampling decision](#sampling-decision)
 
@@ -21,7 +21,7 @@ If users [explicitly opt out](#completely-disable-tracing) of all tracing capabi
 
 ## Configuration
 
-Twp is active by default if users don't specify sampling options that enable span collection and sending.
+TwP is active by default if users don't specify sampling options that enable span collection and sending.
 For example, the following trivial SDK setup (note the absence of sampling options) enables TwP:
 
 ```JavaScript
@@ -30,7 +30,7 @@ Sentry.init({
 });
 ```
 
-TwP mode can be disabled by either "upgrading" to Tracing _with_ Performance (see below) or by entirely opting out of trace propagation.
+TwP mode can be disabled by configuring the SDK for [regular tracing](#enable-regular-tracing) or by entirely opting out of trace propagation ([completely disabling tracing](#completely-disable-tracing)).
 
 <Alert>
 
@@ -39,9 +39,9 @@ This is fine as long as there's a good reason why additional configuration is re
 
 </Alert>
 
-### Upgrading to Tracing With Performance
+### Enable Regular Tracing
 
-As soon as users specify a tracing option in the SDK configuration, SDKs will use the normal tracing mode, which means collecting and sending spans (or transactions).
+As soon as users specify a tracing option in the SDK configuration, SDKs will use the normal tracing mode, which means collecting and sending spans (or transactions) in addition to continuing and propagating traces.
 
 This can be achieved by specifying `tracesSampleRate` or `tracesSampler`, or any other equivalent option in the SDK configuration:
 
@@ -56,7 +56,7 @@ Sentry.init({
 });
 ```
 
-It's important to note that setting `tracesSampleRate: 0` disables TwP mode.
+It's important to note that setting `tracesSampleRate: 0` does not mean that we fall back to TwP mode but that sampling decisions are always negative and we propagate the trace with a negative sampling decision.
 
 ### Completely Disabling Tracing
 
