@@ -793,6 +793,11 @@ const userDocsRedirects = [
     source: '/organization/integrations/launchdarkly/',
     destination: '/organization/integrations/feature-flag/launchdarkly/',
   },
+  {
+    source:
+      '/platforms/react-native/data-management/debug-files/source-context/data-management/debug-files/upload/',
+    destination: '/platforms/react-native/data-management/debug-files/upload/',
+  },
 ];
 
 /**
