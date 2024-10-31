@@ -4,6 +4,18 @@ import {useEffect} from 'react';
 export default function Mermaid() {
   useEffect(() => {
     (async function () {
+      const escapeHTML = (str) => {
+        return str.replace(/[&<>"']/g, function (match) {
+          const escapeMap = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+          };
+          return escapeMap[match];
+        });
+      };
       const mermaidBlocks =
         document.querySelectorAll<HTMLDivElement>('.language-mermaid');
       if (mermaidBlocks.length === 0) {
@@ -14,7 +26,7 @@ export default function Mermaid() {
       mermaidBlocks.forEach(block => {
         // get rid of code highlighting
         const code = block.textContent ?? '';
-        block.innerHTML = code;
+        block.innerHTML = escapeHTML(code);
         // force transparent background
         block.style.backgroundColor = 'transparent';
         const parentCodeTabs = block.closest('.code-tabs-wrapper');
