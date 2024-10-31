@@ -1,6 +1,7 @@
 'use client';
 
 import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
+import {captureException} from '@sentry/nextjs';
 import {
   Hit,
   Result,
@@ -9,7 +10,7 @@ import {
 } from '@sentry-internal/global-search';
 import DOMPurify from 'dompurify';
 import Link from 'next/link';
-import {useRouter} from 'next/navigation';
+import {usePathname, useRouter} from 'next/navigation';
 import algoliaInsights from 'search-insights';
 
 import {useOnClickOutside} from 'sentry-docs/clientUtils';
@@ -90,6 +91,7 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
   const [showOffsiteResults, setShowOffsiteResults] = useState(false);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleClickOutside = useCallback((ev: MouseEvent) => {
     // don't close the search results if the user is clicking the expand button
@@ -196,20 +198,65 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
   });
 
   const trackSearchResultClick = useCallback((hit: Hit, position: number): void => {
-    if (hit.id === undefined) {
-      return;
+    try {
+      algoliaInsights('clickedObjectIDsAfterSearch', {
+        eventName: 'documentation_search_result_click',
+        userToken: randomUserToken,
+        index: hit.index,
+        objectIDs: [hit.id],
+        // Positions in Algolia are 1 indexed
+        queryID: hit.queryID ?? '',
+        positions: [position + 1],
+      });
+    } catch (error) {
+      captureException(error);
     }
-
-    algoliaInsights('clickedObjectIDsAfterSearch', {
-      eventName: 'documentation_search_result_click',
-      userToken: randomUserToken,
-      index: hit.index,
-      objectIDs: [hit.id],
-      // Positions in Algolia are 1 indexed
-      queryID: hit.queryID ?? '',
-      positions: [position + 1],
-    });
   }, []);
+
+  const removeTags = useCallback((str: string) => {
+    return str.replace(/<\/?[^>]+(>|$)/g, '');
+  }, []);
+
+  const handleSearchResultClick = useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement>, hit: Hit, position: number): void => {
+      if (hit.id === undefined) {
+        return;
+      }
+
+      trackSearchResultClick(hit, position);
+
+      // edge case when the clicked search result is the currently visited paged
+      if (relativizeUrl(hit.url) === pathname) {
+        // do not navigate to the search result page in this case
+        event.preventDefault();
+
+        // sanitize the title to remove any html tags
+        const title = hit?.title && removeTags(hit.title);
+
+        if (!title) {
+          return;
+        }
+
+        // check for heading with the same text as the title
+        const headings =
+          document
+            .querySelector('main > div.prose')
+            ?.querySelectorAll('h1, h2, h3, h4, h5, h6') ?? [];
+        const foundHeading = Array.from(headings).find(heading =>
+          heading.textContent?.toLowerCase().includes(title.toLowerCase())
+        );
+
+        // close the search results and scroll to the heading if it exists
+        if (foundHeading) {
+          setInputFocus(false);
+          foundHeading.scrollIntoView({
+            behavior: 'smooth',
+          });
+        }
+      }
+    },
+    [pathname, removeTags, trackSearchResultClick]
+  );
 
   return (
     <div className={styles.search} ref={ref}>
@@ -271,7 +318,7 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
                             focused?.id === hit.id ? styles['sgs-hit-focused'] : ''
                           }`}
                           ref={
-                            // Scroll to eleemnt on focus
+                            // Scroll to element on focus
                             hit.id === focused?.id
                               ? el => el?.scrollIntoView({block: 'nearest'})
                               : undefined
@@ -279,7 +326,7 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
                         >
                           <Link
                             href={relativizeUrl(hit.url)}
-                            onClick={() => trackSearchResultClick(hit, index)}
+                            onClick={e => handleSearchResultClick(e, hit, index)}
                           >
                             {hit.title && (
                               <h6>
