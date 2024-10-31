@@ -227,6 +227,10 @@ const userDocsRedirects = [
     destination: '/organization/integrations/issue-tracking/goast/',
   },
   {
+    source: '/organization/integrations/github-deployment-gates/',
+    destination: '/product/releases/setup/release-automation/github-deployment-gates/',
+  },
+  {
     source: '/development/sdk-dev/:path*',
     destination: 'https://develop.sentry.dev',
   },
