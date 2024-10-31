@@ -11,8 +11,11 @@ import {Home} from 'sentry-docs/components/home';
 import {Include} from 'sentry-docs/components/include';
 import {PlatformContent} from 'sentry-docs/components/platformContent';
 import {
+  DocNode,
   getCurrentPlatformOrGuide,
   getDocsRootNode,
+  getNextNode,
+  getPreviousNode,
   nodeForPath,
 } from 'sentry-docs/docTree';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
@@ -24,6 +27,7 @@ import {
 } from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {setServerContext} from 'sentry-docs/serverContext';
+import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
 import {stripVersion} from 'sentry-docs/versioning';
 
 export async function generateStaticParams() {
@@ -42,7 +46,11 @@ export const dynamic = 'force-static';
 
 const mdxComponentsWithWrapper = mdxComponents(
   {Include, PlatformContent},
-  ({children, frontMatter}) => <DocPage frontMatter={frontMatter}>{children}</DocPage>
+  ({children, frontMatter, nextPage, previousPage}) => (
+    <DocPage frontMatter={frontMatter} nextPage={nextPage} previousPage={previousPage}>
+      {children}
+    </DocPage>
+  )
 );
 
 function MDXLayoutRenderer({mdxSource, ...rest}) {
@@ -59,6 +67,42 @@ export default async function Page({params}: {params: {path?: string[]}}) {
     path: params.path ?? [],
   });
 
+  if (!params.path && !isDeveloperDocs) {
+    return <Home />;
+  }
+
+  const pageNode = nodeForPath(rootNode, params.path ?? '');
+
+  if (!pageNode) {
+    // eslint-disable-next-line no-console
+    console.warn('no page node', params.path);
+    return notFound();
+  }
+
+  // gather previous and next page that will be displayed in the bottom pagination
+  const getPaginationDetails = (
+    getNode: (node: DocNode) => DocNode | undefined | 'root',
+    page: PaginationNavNode | undefined
+  ) => {
+    if (page && 'path' in page && 'title' in page) {
+      return page;
+    }
+
+    const node = getNode(pageNode);
+
+    if (node === 'root') {
+      return {path: '', title: 'Welcome to Sentry'};
+    }
+
+    return node ? {path: node.path, title: node.frontmatter.title} : undefined;
+  };
+
+  const previousPage = getPaginationDetails(
+    getPreviousNode,
+    pageNode?.frontmatter?.previousPage
+  );
+  const nextPage = getPaginationDetails(getNextNode, pageNode?.frontmatter?.nextPage);
+
   if (isDeveloperDocs) {
     // get the MDX for the current doc and render it
     let doc: Awaited<ReturnType<typeof getFileBySlug>> | null = null;
@@ -74,13 +118,17 @@ export default async function Page({params}: {params: {path?: string[]}}) {
     }
     const {mdxSource, frontMatter} = doc;
     // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc
-    return <MDXLayoutRenderer mdxSource={mdxSource} frontMatter={frontMatter} />;
-  }
-  if (!params.path) {
-    return <Home />;
+    return (
+      <MDXLayoutRenderer
+        mdxSource={mdxSource}
+        frontMatter={frontMatter}
+        nextPage={nextPage}
+        previousPage={previousPage}
+      />
+    );
   }
 
-  if (params.path[0] === 'api' && params.path.length > 1) {
+  if (params.path?.[0] === 'api' && params.path.length > 1) {
     const categories = await apiCategories();
     const category = categories.find(c => c.slug === params?.path?.[1]);
     if (category) {
@@ -92,14 +140,6 @@ export default async function Page({params}: {params: {path?: string[]}}) {
         return <ApiPage api={api} />;
       }
     }
-  }
-
-  const pageNode = nodeForPath(rootNode, params.path);
-
-  if (!pageNode) {
-    // eslint-disable-next-line no-console
-    console.warn('no page node', params.path);
-    return notFound();
   }
 
   // get the MDX for the current doc and render it
@@ -122,7 +162,12 @@ export default async function Page({params}: {params: {path?: string[]}}) {
 
   // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc.
   return (
-    <MDXLayoutRenderer mdxSource={mdxSource} frontMatter={{...frontMatter, versions}} />
+    <MDXLayoutRenderer
+      mdxSource={mdxSource}
+      frontMatter={{...frontMatter, versions}}
+      nextPage={nextPage}
+      previousPage={previousPage}
+    />
   );
 }
 
@@ -131,6 +176,17 @@ type MetadataProps = {
     path?: string[];
   };
 };
+
+// Helper function to clean up canonical tags missing leading or trailing slash
+function formatCanonicalTag(tag: string) {
+  if (tag.charAt(0) !== '/') {
+    tag = '/' + tag;
+  }
+  if (tag.charAt(tag.length - 1) !== '/') {
+    tag = tag + '/';
+  }
+  return tag;
+}
 
 export async function generateMetadata({params}: MetadataProps): Promise<Metadata> {
   const domain = isDeveloperDocs
@@ -142,6 +198,7 @@ export async function generateMetadata({params}: MetadataProps): Promise<Metadat
     : domain;
   let title =
     'Sentry Docs | Application Performance Monitoring &amp; Error Tracking Software';
+  let customCanonicalTag;
   let description =
     'Self-hosted and cloud-based application performance monitoring &amp; error tracking that helps software teams see clearer, solve quicker, &amp; learn continuously.';
   const images = [{url: `${previewDomain ?? domain}/meta.jpg`, width: 1200, height: 822}];
@@ -160,13 +217,18 @@ export async function generateMetadata({params}: MetadataProps): Promise<Metadat
         pageNode.frontmatter.title +
         (guideOrPlatform ? ` | Sentry for ${guideOrPlatform.title}` : '');
       description = pageNode.frontmatter.description ?? '';
+
+      if (pageNode.frontmatter.customCanonicalTag) {
+        customCanonicalTag = formatCanonicalTag(pageNode.frontmatter.customCanonicalTag);
+      }
     }
   }
 
-  let canonical = domain;
-  if (params.path) {
-    canonical = `${domain}/${params.path.join('/')}/`;
-  }
+  const canonical = customCanonicalTag
+    ? domain + customCanonicalTag
+    : params.path
+      ? `${domain}/${params.path.join('/')}/`
+      : domain;
 
   return {
     title,

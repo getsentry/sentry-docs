@@ -1,5 +1,6 @@
 ---
 title: User Feedback Architecture
+sidebar_order: 20
 ---
 
 **The goal of this doc is to give engineers an in-depth understanding of User Feedback's backend.**
@@ -51,17 +52,18 @@ offers 2 improvements:
 
 The user's submission is wrapped in a context object:
 
-```Python/Javascript
+```Pseudo-code
 event[”contexts”][”feedback”] = {
 	"name": <user-provided>,
 	"contact_email": <user-provided>,
 	"message": <user-provided>,
 	"url": <referring web page>,
-	"source": <developer-provided, ex: "widget">
+	"source": <developer-provided, ex: "widget">,
+	"associated_event_id": <developer-provided, should be a valid error event in the same project>
 }
 
-// all fields are technically optional, but recommended
-// the widget can be configured to require a non-empty email and/or name
+// All fields are optional except message.
+// The widget can be configured to require a non-empty email and/or name.
 ```
 
 - This doc refers to the payload format (`event` in the pseudo-code above) as a “**feedback event”**.
@@ -99,7 +101,7 @@ a separate topic and storage, and the UI makes a separate request for them.
 
 The deprecated way of sending feedback is as a **user report**. This is a simple typed dict:
 
-```Python/Javascript
+```Pseudo-code
 user_report = {
 	"event_id": <required UUID str>,
 	"email": <optional str>,
@@ -207,11 +209,13 @@ This feature is available if you enable the following feature flags.
 - `organizations:user-feedback-ui`
 - `organizations:user-feedback-replay-clip` (v24.7.1+)
 
-Auto-registered flags for issue platform (you won't be able to grep these in the sentry repo, but you need to enable them too):
+Auto-registered flags for issue platform, for versions \<= v24.10.0 only:
 
 - `organizations:feedback-ingest`
 - `organizations:feedback-visible`
 - `organizations:feedback-post-process-group`
+
+(You won't be able to grep for these in the sentry repo, but you do need to enable them.)
 
 You need to have v24.4.2 or higher in order to use the latest functionality of User
 Feedback, such as adding screenshots. Also note that User Feedback is only available

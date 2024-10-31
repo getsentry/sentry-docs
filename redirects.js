@@ -94,10 +94,114 @@ const developerDocsRedirects = [
     source: '/sdk/processes/:path*',
     destination: '/sdk/development-process/:path*',
   },
+  {
+    source: '/application/ab-testing/',
+    destination: '/backend/ab-testing/',
+  },
+  {
+    source: '/application/api/:path*',
+    destination: '/backend/api/:path*',
+  },
+  {
+    source: '/application/serializers/',
+    destination: '/backend/serializers/',
+  },
+  {
+    source: '/application/feature-flags/:path*',
+    destination: '/backend/feature-flags/:path*',
+  },
+  {
+    source: '/application/grouping/',
+    destination: '/backend/grouping/',
+  },
+  {
+    source: '/application/issue-platform/',
+    destination: '/backend/issue-platform/',
+  },
+  {
+    source: '/application/transaction-clustering/',
+    destination: '/backend/transaction-clustering/',
+  },
+  {
+    source: '/application/translations/',
+    destination: '/backend/translations/',
+  },
+  {
+    source: '/application/pii/:path*',
+    destination: '/backend/pii/:path*',
+  },
+  {
+    source: '/backend/control-silo/',
+    destination: '/application/control-silo/',
+  },
+  {
+    source: '/backend/cross-region-replication/',
+    destination: '/application/cross-region-replication/',
+  },
+  {
+    source: '/backend/cross-region-rpc/',
+    destination: '/application/cross-region-rpc/',
+  },
+  {
+    source: '/development/python-dependencies/',
+    destination: '/backend/python-dependencies/',
+  },
+  {
+    source: '/development/docs/',
+    destination: '/development/documentation/',
+  },
+  {
+    source: '/development/philosophy/',
+    destination: '/getting-started/philosophy/',
+  },
+  {
+    source: '/services/metrics/',
+    destination: '/backend/metrics/',
+  },
+  {
+    source: '/services/nodestore/',
+    destination: '/backend/nodestore/',
+  },
+  {
+    source: '/services/devservices/',
+    destination: '/development/devservices/',
+  },
+  {
+    source: '/services/queue/',
+    destination: '/backend/queue/',
+  },
+  {
+    source: '/services/quotas/',
+    destination: '/backend/quotas/',
+  },
+  {
+    source: '/services/tsdb/',
+    destination: '/services/tsdb/',
+  },
+  {
+    source: '/services/ports/',
+    destination: '/development/environment/ports/',
+  },
+  {
+    source: '/services/buffers/',
+    destination: '/backend/buffers/',
+  },
+  {
+    source: '/services/digests/',
+    destination: '/backend/digests/',
+  },
+  {
+    source: '/services/emails/',
+    destination: '/backend/emails/',
+  },
 ];
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
+  {
+    source: '/organization/integrations/launchdarkly/',
+    destination: '/organization/integrations/feature-flag/launchdarkly/',
+  },
   {
     source: '/internal/:path*',
     destination: 'https://develop.sentry.dev',
@@ -105,6 +209,10 @@ const userDocsRedirects = [
   {
     source: '/development/(contribute|server)/:path*',
     destination: 'https://develop.sentry.dev',
+  },
+  {
+    source: '/organization/integrations/goastai/',
+    destination: '/organization/integrations/issue-tracking/goast/',
   },
   {
     source: '/development/sdk-dev/:path*',
@@ -664,6 +772,10 @@ const userDocsRedirects = [
   {
     source: '/platforms/react-native/manual-setup/codepush/',
     destination: '/platforms/react-native/sourcemaps/uploading/codepush/',
+  },
+  {
+    source: '/organization/integrations/launchdarkly/',
+    destination: '/organization/integrations/feature-flag/launchdarkly/',
   },
 ];
 
