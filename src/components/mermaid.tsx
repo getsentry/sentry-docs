@@ -4,7 +4,7 @@ import {useEffect} from 'react';
 export default function Mermaid() {
   useEffect(() => {
     (async function () {
-      const escapeHTML = str => {
+      const escapeHTML = (str: string) => {
         return str.replace(/[&<>"']/g, function (match) {
           const escapeMap = {
             '&': '&amp;',
