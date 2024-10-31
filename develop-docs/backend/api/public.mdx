@@ -410,6 +410,79 @@ will be triggered to make your changes automatically go live:
    makes and merges a PR in `sentry-docs`, which kicks off a deploy via Vercel to
    https://docs.sentry.io/api/.
 
+## Troubleshooting API Docs Tests
+
+NOTE: The `openapi-diff` test is supposed to fail when CI runs on your pull request as it is meant to highlight the schema changes. It is not required to merge.
+
+**Problem**: `TypeError: Cannot read properties of null (reading 'type')`
+
+**Solution**: If you have a `ChoiceField` that can be null, make sure you're using the right option. `allow_blank` should be used for textual choices, while `allow_null` should be used for numeric and other non-textual choices.
+
+---
+
+**Problem**: `must have required property '<property_name>'`
+```json
+{
+        "type": "Validation",
+        "message": "must have required property '<property_name>'",
+        "instancePath": "",
+        "schemaPath": "#/required",
+        "keyword": "required",
+        "params": {
+            "missingProperty": "<property_name>"
+        },
+        "examplePath": "<endpoint_path>"
+}
+```
+
+**Solution**: Your example response is missing the required property `<property_name>` which is specified by the response class. `<property_name>` should either be made optional in the response class or added to the example response.
+
+---
+
+**Problem**: `must NOT have additional properties`
+```json
+{
+        "type": "Validation",
+        "message": "must NOT have additional properties",
+        "instancePath": "",
+        "schemaPath": "#/additionalProperties",
+        "keyword": "additionalProperties",
+        "params": {
+            "additionalProperty": "<property_name>"
+        },
+        "examplePath": "<endpoint_path>"
+}
+```
+
+**Solution**: Your example response includes a property with `<property_name>` that is not included in the response class. This either needs to be added to the response class or removed from the example.
+
+---
+
+**Problem**: `must be <type>`
+```json
+{
+        "type": "Validation",
+        "message": "must be <type>",
+        "instancePath": "/0/<property_name>",
+        "schemaPath": "#/items/properties/<property_name>/type",
+        "keyword": "type",
+        "params": {
+            "type": "<type>"
+        },
+        "examplePath": "<endpoint_path>"
+}
+```
+
+**Solution**: The type of the value for a property in your example response does not match the type for the property specified by the response class. The example value or the type of the property in the response class should be fixed.
+
+---
+
+**Problem**: `sentry.apidocs.utils.SentryApiBuildError: projects is not defined by OPENAPI_TAGS in src/sentry/apidocs/build.py for <endpoint title>`
+
+**Solution**: You need to add the endpoint to a [sidebar tab](/backend/api/public/#3-sidebar-tab) with the decorator `@extend_schema(tags=['<section title>'])`.
+
+---
+
 ## Requesting an API to be public
 
 Are you a Sentry user who wants an endpoint to be public?
@@ -422,6 +495,7 @@ and add the `Component: API` label.
 
 The team responsible for the endpoint will review the stability of the endpoint. If the endpoint
 will not have breaking changes in future, they can determine whether to make it public.
+
 
 ### FAQs
 
