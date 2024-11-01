@@ -3,23 +3,20 @@
 import {Fragment, useState} from 'react';
 import {jsx, jsxs} from 'react/jsx-runtime';
 import {toJsxRuntime} from 'hast-util-to-jsx-runtime';
+import {Nodes} from 'hastscript/lib/create-h';
 import bash from 'refractor/lang/bash.js';
-import javascript from 'refractor/lang/javascript.js';
 import json from 'refractor/lang/json.js';
 import {refractor} from 'refractor/lib/core.js';
 
 import {type API} from 'sentry-docs/build/resolveOpenAPI';
 
-refractor.register(json);
-refractor.register(javascript);
-refractor.register(bash);
-
-import {Nodes} from 'hastscript/lib/create-h';
-
 import styles from './apiExamples.module.scss';
 
 import {CodeBlock} from '../codeBlock';
 import {CodeTabs} from '../codeTabs';
+
+refractor.register(bash);
+refractor.register(json);
 
 type ExampleProps = {
   api: API;
