@@ -1,4 +1,4 @@
-Enable screenshots by setting the `attachScreenshot` option to `true` and wrap your root widget with `SentryWidget(child: MyApp())`.
+Enable screenshots by setting the `attachScreenshot` option to `true` and wrap your root widget with `SentryWidget`.
 
 ```dart
 await SentryFlutter.init(
@@ -7,7 +7,7 @@ await SentryFlutter.init(
     options.attachScreenshot = true;
   },
   appRunner: () => runApp(
-    // Wrap your app widget with the [SentryWidget] widget.
+    // Wrap your root widget with the [SentryWidget] widget.
     SentryWidget(
       child: MyApp(),
     ),
@@ -17,14 +17,18 @@ await SentryFlutter.init(
 
 ### Filtering Screenshots
 
-You can filter your screenshots by using the `beforeScreenshot` callback.
-It is called before taking a screenshot and if the callback returns `false`, the screenshot will not be attached.
+You can filter your screenshots by using the `beforeScreenshot` callback which is called before adding a screenshot to an event.
+
+If the callback returns `false`, the screenshot will not be attached.
 
 ```dart
 await SentryFlutter.init((options) {
   options.beforeScreenshot = (event, {hint}) {
-    // Return false if you don't want to attach the screenshot based on some condition.
-    return true;
+    // Example: based on some condition you can decide to attach the screenshot or drop it
+    if (event.throwable is MyImportantException) {
+      return true;
+    }
+    return false;
   };
 });
 ```
