@@ -1,8 +1,20 @@
 'use client';
 
-import {Fragment, useEffect, useRef, useState} from 'react';
+import {Fragment, useState} from 'react';
+import {jsx, jsxs} from 'react/jsx-runtime';
+import {toJsxRuntime} from 'hast-util-to-jsx-runtime';
+import bash from 'refractor/lang/bash.js';
+import javascript from 'refractor/lang/javascript.js';
+import json from 'refractor/lang/json.js';
+import {refractor} from 'refractor/lib/core.js';
 
 import {type API} from 'sentry-docs/build/resolveOpenAPI';
+
+refractor.register(json);
+refractor.register(javascript);
+refractor.register(bash);
+
+import {Nodes} from 'hastscript/lib/create-h';
 
 import styles from './apiExamples.module.scss';
 
@@ -19,7 +31,6 @@ const responseStyles = `${styles['api-block-example']} ${styles.response}`;
 const jsonCodeBlockStyles = `!text-[0.8rem] language-json`;
 
 function Example({api, selectedTabView, selectedResponse}: ExampleProps) {
-  const ref = useRef(null);
   let exampleJson: any;
   if (api.responses[selectedResponse].content?.examples) {
     exampleJson = Object.values(
@@ -29,42 +40,29 @@ function Example({api, selectedTabView, selectedResponse}: ExampleProps) {
     exampleJson = api.responses[selectedResponse].content?.example;
   }
 
-  // load prism dynamically for these codeblocks,
-  // otherwise the highlighting applies globally
-  useEffect(() => {
-    (async () => {
-      const {highlightAllUnder} = await import('prismjs');
-      await import('prismjs/components/prism-json');
-      if (ref.current) {
-        highlightAllUnder(ref.current);
-      }
-    })();
-  }, [selectedResponse, selectedTabView]);
-
   return (
-    <pre className={responseStyles} ref={ref}>
+    <pre className={responseStyles}>
       {selectedTabView === 0 &&
         (exampleJson ? (
-          <code
-            className={jsonCodeBlockStyles}
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify(exampleJson, null, 2),
-            }}
-          />
+          <code className={jsonCodeBlockStyles}>
+            {toJsxRuntime(
+              refractor.highlight(JSON.stringify(exampleJson, null, 2), 'json') as Nodes,
+              {Fragment, jsx, jsxs}
+            )}
+          </code>
         ) : (
           strFormat(api.responses[selectedResponse].description)
         ))}
       {selectedTabView === 1 && (
-        <code
-          className={jsonCodeBlockStyles}
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(
-              api.responses[selectedResponse].content?.schema,
-              null,
-              2
-            ),
-          }}
-        />
+        <code className={jsonCodeBlockStyles}>
+          {toJsxRuntime(
+            refractor.highlight(
+              JSON.stringify(api.responses[selectedResponse].content?.schema, null, 2),
+              'json'
+            ) as Nodes,
+            {Fragment, jsx, jsxs}
+          )}
+        </code>
       )}
     </pre>
   );
@@ -115,7 +113,13 @@ export function ApiExamples({api}: Props) {
   return (
     <Fragment>
       <div className="api-block">
-        <pre className={requestStyles}>{apiExample.join(' \\\n')}</pre>
+        <pre className={requestStyles}>
+          {toJsxRuntime(refractor.highlight(apiExample.join(' \\\n'), 'bash') as Nodes, {
+            Fragment,
+            jsx,
+            jsxs,
+          })}
+        </pre>
       </div>
       <div className="api-block">
         <div className="api-block-header response">
