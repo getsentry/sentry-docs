@@ -18,13 +18,15 @@ import {Nodes} from 'hastscript/lib/create-h';
 
 import styles from './apiExamples.module.scss';
 
+import {CodeBlock} from '../codeBlock';
+import {CodeTabs} from '../codeTabs';
+
 type ExampleProps = {
   api: API;
   selectedResponse: number;
   selectedTabView: number;
 };
 
-const requestStyles = `${styles['api-block-example']} ${styles.request}`;
 const responseStyles = `${styles['api-block-example']} ${styles.response}`;
 
 // overwriting global code block font size
@@ -112,15 +114,20 @@ export function ApiExamples({api}: Props) {
 
   return (
     <Fragment>
-      <div className="api-block">
-        <pre className={requestStyles}>
-          {toJsxRuntime(refractor.highlight(apiExample.join(' \\\n'), 'bash') as Nodes, {
-            Fragment,
-            jsx,
-            jsxs,
-          })}
-        </pre>
-      </div>
+      <CodeTabs>
+        <CodeBlock language="bash">
+          <pre>
+            {toJsxRuntime(
+              refractor.highlight(apiExample.join(' \\\n'), 'bash') as Nodes,
+              {
+                Fragment,
+                jsx,
+                jsxs,
+              }
+            )}
+          </pre>
+        </CodeBlock>
+      </CodeTabs>
       <div className="api-block">
         <div className="api-block-header response">
           <div className="tabs-group">
