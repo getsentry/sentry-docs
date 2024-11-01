@@ -27,11 +27,6 @@ type ExampleProps = {
   selectedTabView: number;
 };
 
-const responseStyles = `${styles['api-block-example']} ${styles.response}`;
-
-// overwriting global code block font size
-const jsonCodeBlockStyles = `!text-[0.8rem] language-json`;
-
 function Example({api, selectedTabView, selectedResponse}: ExampleProps) {
   let exampleJson: any;
   if (api.responses[selectedResponse].content?.examples) {
@@ -43,10 +38,10 @@ function Example({api, selectedTabView, selectedResponse}: ExampleProps) {
   }
 
   return (
-    <pre className={responseStyles}>
+    <pre className={styles['api-block-example']}>
       {selectedTabView === 0 &&
         (exampleJson ? (
-          <code className={jsonCodeBlockStyles}>
+          <code className="!text-[0.8rem]">
             {toJsxRuntime(
               refractor.highlight(JSON.stringify(exampleJson, null, 2), 'json') as Nodes,
               {Fragment, jsx, jsxs}
@@ -56,7 +51,7 @@ function Example({api, selectedTabView, selectedResponse}: ExampleProps) {
           strFormat(api.responses[selectedResponse].description)
         ))}
       {selectedTabView === 1 && (
-        <code className={jsonCodeBlockStyles}>
+        <code className="!text-[0.8rem]">
           {toJsxRuntime(
             refractor.highlight(
               JSON.stringify(api.responses[selectedResponse].content?.schema, null, 2),
