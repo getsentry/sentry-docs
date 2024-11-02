@@ -32,6 +32,10 @@ type Props = {
   api: API;
 };
 
+const codeToJsx = (code: string, lang = 'json') => {
+  return toJsxRuntime(refractor.highlight(code, lang) as Nodes, {Fragment, jsx, jsxs});
+};
+
 export function ApiExamples({api}: Props) {
   const apiExample = [
     `curl https://sentry.io${api.apiPath}`,
@@ -96,16 +100,7 @@ export function ApiExamples({api}: Props) {
     <Fragment>
       <CodeTabs>
         <CodeBlock language="bash">
-          <pre>
-            {toJsxRuntime(
-              refractor.highlight(apiExample.join(' \\\n'), 'bash') as Nodes,
-              {
-                Fragment,
-                jsx,
-                jsxs,
-              }
-            )}
-          </pre>
+          <pre>{codeToJsx(apiExample.join(' \\\n'), 'bash')}</pre>
         </CodeBlock>
       </CodeTabs>
       <div className="api-block">
@@ -152,29 +147,16 @@ export function ApiExamples({api}: Props) {
           {selectedTabView === 0 &&
             (exampleJson ? (
               <code className="!text-[0.8rem]">
-                {toJsxRuntime(
-                  refractor.highlight(
-                    JSON.stringify(exampleJson, null, 2),
-                    'json'
-                  ) as Nodes,
-                  {Fragment, jsx, jsxs}
-                )}
+                {codeToJsx(JSON.stringify(exampleJson, null, 2), 'json')}
               </code>
             ) : (
               strFormat(api.responses[selectedResponse].description)
             ))}
           {selectedTabView === 1 && (
             <code className="!text-[0.8rem]">
-              {toJsxRuntime(
-                refractor.highlight(
-                  JSON.stringify(
-                    api.responses[selectedResponse].content?.schema,
-                    null,
-                    2
-                  ),
-                  'json'
-                ) as Nodes,
-                {Fragment, jsx, jsxs}
+              {codeToJsx(
+                JSON.stringify(api.responses[selectedResponse].content?.schema, null, 2),
+                'json'
               )}
             </code>
           )}
