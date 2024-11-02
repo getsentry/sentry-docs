@@ -1,7 +1,8 @@
 'use client';
 
-import {Fragment, useState} from 'react';
+import {Fragment, useEffect, useState} from 'react';
 import {jsx, jsxs} from 'react/jsx-runtime';
+import {Clipboard} from 'react-feather';
 import {toJsxRuntime} from 'hast-util-to-jsx-runtime';
 import {Nodes} from 'hastscript/lib/create-h';
 import bash from 'refractor/lang/bash.js';
@@ -10,6 +11,7 @@ import {refractor} from 'refractor/lib/core.js';
 
 import {type API} from 'sentry-docs/build/resolveOpenAPI';
 
+import codeBlockStyles from '../codeBlock/code-blocks.module.scss';
 import styles from './apiExamples.module.scss';
 
 import {CodeBlock} from '../codeBlock';
@@ -17,50 +19,6 @@ import {CodeTabs} from '../codeTabs';
 
 refractor.register(bash);
 refractor.register(json);
-
-type ExampleProps = {
-  api: API;
-  selectedResponse: number;
-  selectedTabView: number;
-};
-
-function Example({api, selectedTabView, selectedResponse}: ExampleProps) {
-  let exampleJson: any;
-  if (api.responses[selectedResponse].content?.examples) {
-    exampleJson = Object.values(
-      api.responses[selectedResponse].content?.examples ?? {}
-    ).map(e => e.value)[0];
-  } else if (api.responses[selectedResponse].content?.example) {
-    exampleJson = api.responses[selectedResponse].content?.example;
-  }
-
-  return (
-    <pre className={styles['api-block-example']}>
-      {selectedTabView === 0 &&
-        (exampleJson ? (
-          <code className="!text-[0.8rem]">
-            {toJsxRuntime(
-              refractor.highlight(JSON.stringify(exampleJson, null, 2), 'json') as Nodes,
-              {Fragment, jsx, jsxs}
-            )}
-          </code>
-        ) : (
-          strFormat(api.responses[selectedResponse].description)
-        ))}
-      {selectedTabView === 1 && (
-        <code className="!text-[0.8rem]">
-          {toJsxRuntime(
-            refractor.highlight(
-              JSON.stringify(api.responses[selectedResponse].content?.schema, null, 2),
-              'json'
-            ) as Nodes,
-            {Fragment, jsx, jsxs}
-          )}
-        </code>
-      )}
-    </pre>
-  );
-}
 
 const strFormat = (str: string) => {
   const s = str.trim();
@@ -103,6 +61,36 @@ export function ApiExamples({api}: Props) {
   const tabViews = api.responses[selectedResponse].content?.schema
     ? ['RESPONSE', 'SCHEMA']
     : ['RESPONSE'];
+
+  const [showCopied, setShowCopied] = useState(false);
+
+  // Show the copy button after js has loaded
+  // otherwise the copy button will not work
+  const [showCopyButton, setShowCopyButton] = useState(false);
+  useEffect(() => {
+    setShowCopyButton(true);
+  }, []);
+  async function copyCode(code: string) {
+    await navigator.clipboard.writeText(code);
+    setShowCopied(true);
+    setTimeout(() => setShowCopied(false), 1200);
+  }
+
+  let exampleJson: any;
+  if (api.responses[selectedResponse].content?.examples) {
+    exampleJson = Object.values(
+      api.responses[selectedResponse].content?.examples ?? {}
+    ).map(e => e.value)[0];
+  } else if (api.responses[selectedResponse].content?.example) {
+    exampleJson = api.responses[selectedResponse].content?.example;
+  }
+
+  const codeToCopy =
+    selectedTabView === 0
+      ? exampleJson
+        ? JSON.stringify(exampleJson, null, 2)
+        : strFormat(api.responses[selectedResponse].description)
+      : JSON.stringify(api.responses[selectedResponse].content?.schema, null, 2);
 
   return (
     <Fragment>
@@ -152,12 +140,45 @@ export function ApiExamples({api}: Props) {
                 )
             )}
           </div>
+
+          <button className={styles.copy} onClick={() => copyCode(codeToCopy)}>
+            {showCopyButton && <Clipboard size={16} />}
+          </button>
         </div>
-        <Example
-          api={api}
-          selectedTabView={selectedTabView}
-          selectedResponse={selectedResponse}
-        />
+        <pre className={`${styles['api-block-example']} relative`}>
+          <div className={codeBlockStyles.copied} style={{opacity: showCopied ? 1 : 0}}>
+            Copied
+          </div>
+          {selectedTabView === 0 &&
+            (exampleJson ? (
+              <code className="!text-[0.8rem]">
+                {toJsxRuntime(
+                  refractor.highlight(
+                    JSON.stringify(exampleJson, null, 2),
+                    'json'
+                  ) as Nodes,
+                  {Fragment, jsx, jsxs}
+                )}
+              </code>
+            ) : (
+              strFormat(api.responses[selectedResponse].description)
+            ))}
+          {selectedTabView === 1 && (
+            <code className="!text-[0.8rem]">
+              {toJsxRuntime(
+                refractor.highlight(
+                  JSON.stringify(
+                    api.responses[selectedResponse].content?.schema,
+                    null,
+                    2
+                  ),
+                  'json'
+                ) as Nodes,
+                {Fragment, jsx, jsxs}
+              )}
+            </code>
+          )}
+        </pre>
       </div>
     </Fragment>
   );
