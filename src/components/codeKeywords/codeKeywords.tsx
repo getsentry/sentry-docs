@@ -9,9 +9,14 @@ export const KEYWORDS_REGEX = /\b___(?:([A-Z_][A-Z0-9_]*)\.)?([A-Z_][A-Z0-9_]*)_
 
 export const ORG_AUTH_TOKEN_REGEX = /___ORG_AUTH_TOKEN___/g;
 
+export const JS_PACKAGE_REGEX = /___JS_PACKAGE___/g;
+
 type ChildrenItem = ReturnType<typeof Children.toArray>[number] | React.ReactNode;
 
-export function makeKeywordsClickable(children: React.ReactNode) {
+export function makeKeywordsClickable(
+  children: React.ReactNode,
+  currentJsPackage?: string
+) {
   const items = Children.toArray(children);
 
   return items.reduce((arr: ChildrenItem[], child) => {
@@ -19,12 +24,14 @@ export function makeKeywordsClickable(children: React.ReactNode) {
       const updatedChild = cloneElement(
         child as ReactElement,
         {},
-        makeKeywordsClickable((child as ReactElement).props.children)
+        makeKeywordsClickable((child as ReactElement).props.children, currentJsPackage)
       );
       arr.push(updatedChild);
       return arr;
     }
-    if (ORG_AUTH_TOKEN_REGEX.test(child)) {
+    if (JS_PACKAGE_REGEX.test(child)) {
+      resolveJsPackage(arr, child, currentJsPackage);
+    } else if (ORG_AUTH_TOKEN_REGEX.test(child)) {
       makeOrgAuthTokenClickable(arr, child);
     } else if (KEYWORDS_REGEX.test(child)) {
       makeProjectKeywordsClickable(arr, child);
@@ -34,6 +41,12 @@ export function makeKeywordsClickable(children: React.ReactNode) {
 
     return arr;
   }, [] as ChildrenItem[]);
+}
+
+function resolveJsPackage(arr: ChildrenItem[], str: string, currentGuide?: string) {
+  runRegex(arr, str, JS_PACKAGE_REGEX, lastIndex => (
+    <span key={`js-package-${lastIndex}`}>{`@sentry/${currentGuide}`}</span>
+  ));
 }
 
 function makeOrgAuthTokenClickable(arr: ChildrenItem[], str: string) {

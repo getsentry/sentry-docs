@@ -55,6 +55,9 @@ export function DocPage({
 
   const leafNode = nodeForPath(rootNode, unversionedPath);
 
+  const currentJsPackage =
+    currentGuide?.sdk?.split('.').at(-1) || currentPlatform?.sdk?.split('.').at(-1);
+
   return (
     <div className="tw-app">
       <Header pathname={pathname} searchPlatforms={searchPlatforms} />
@@ -83,7 +86,9 @@ export function DocPage({
               </hgroup>
               {/* This exact id is important for Algolia indexing */}
               <div id="main">
-                <CodeContextProvider>{children}</CodeContextProvider>
+                <CodeContextProvider currentJsPackage={currentJsPackage}>
+                  {children}
+                </CodeContextProvider>
               </div>
 
               <div className="grid grid-cols-2 gap-4 not-prose mt-16">

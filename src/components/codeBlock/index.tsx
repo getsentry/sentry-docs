@@ -1,10 +1,11 @@
 'use client';
 
-import {useEffect, useRef, useState} from 'react';
+import {useContext, useEffect, useRef, useState} from 'react';
 import {Clipboard} from 'react-feather';
 
 import styles from './code-blocks.module.scss';
 
+import {CodeContext} from '../codeContext';
 import {makeKeywordsClickable} from '../codeKeywords';
 
 export interface CodeBlockProps {
@@ -17,6 +18,7 @@ export interface CodeBlockProps {
 export function CodeBlock({filename, language, children}: CodeBlockProps) {
   const [showCopied, setShowCopied] = useState(false);
   const codeRef = useRef<HTMLDivElement>(null);
+  const codeContext = useContext(CodeContext);
 
   // Show the copy button after js has loaded
   // otherwise the copy button will not work
@@ -57,7 +59,9 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
       <div className={styles.copied} style={{opacity: showCopied ? 1 : 0}}>
         Copied
       </div>
-      <div ref={codeRef}>{makeKeywordsClickable(children)}</div>
+      <div ref={codeRef}>
+        {makeKeywordsClickable(children, codeContext?.currentJsPackage)}
+      </div>
     </div>
   );
 }

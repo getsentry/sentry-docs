@@ -105,6 +105,7 @@ type CodeContextType = {
   ];
   storedCodeSelection: SelectedCodeTabs;
   updateCodeSelection: (selection: CodeSelection) => void;
+  currentJsPackage?: string;
 };
 
 export const CodeContext = createContext<CodeContextType | null>(null);
@@ -293,7 +294,13 @@ const getLocallyStoredSelections = (): SelectedCodeTabs => {
   return {};
 };
 
-export function CodeContextProvider({children}: {children: React.ReactNode}) {
+export function CodeContextProvider({
+  children,
+  currentJsPackage,
+}: {
+  children: React.ReactNode;
+  currentJsPackage?: string;
+}) {
   const [codeKeywords, setCodeKeywords] = useState(cachedCodeKeywords ?? DEFAULTS);
   const [isLoading, setIsLoading] = useState<boolean>(cachedCodeKeywords ? false : true);
   const [storedCodeSelection, setStoredCodeSelection] = useState<SelectedCodeTabs>({});
@@ -337,6 +344,7 @@ export function CodeContextProvider({children}: {children: React.ReactNode}) {
   const sharedKeywordSelection = useState<Record<string, number>>({});
 
   const result: CodeContextType = {
+    currentJsPackage,
     codeKeywords,
     storedCodeSelection,
     updateCodeSelection,
