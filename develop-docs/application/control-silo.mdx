@@ -42,8 +42,26 @@ When a request is handled by the API Gateway, the response delivered to the clie
 
 Integrations can be shared by multiple organizations. For example, a single MS teams workspace can be connected to multiple organizations, and those organizations can live in multiple regions. A few of our integrations leverage refresh tokens and use short lived access tokens. To avoid racy updates when tokens become invalidated and need to be refreshed, we send outbound requests to control silo, which acts as a proxy for the integration service. By funnelling all outbound traffic for integrations that require refresh tokens through control silo we can more easily co-ordinate token replacements.
 
-![credential-proxy-flowchart](https://mermaid.ink/svg/pako:eNqdk01uwjAQha8y9RoukAWbdsumdOnNKH4Bq_GY2hNBhbh7DUnURJFA7c4ave_Nry-mjg6mMhlfHaTGm-d94mDFCtcaE71j76PsfBvHyGsUTbGdhrb5AxzyjfrV03qzmeAVZYgjn3MH4hZJF-KJMy3lpJFC1j7RVLpE28gFFUXpRUsGClB2rPwMZDfn6gQHUc9tvqVPtyllXboMAxirlqi-8XXvMUB08nqYGloZqfWyEI2fEML56Avw8ihhQpOQDz3x0LPIjlEyng2hO5ZRgXLZLNzo-5eO750KTv-vaX46M51ZmYAU2LtythcrRNboAQHWVOXp0HDXqjVWrkXKncbdt9Sm0tRhZfrehis3VVP2UKJwvjS77b_C_UdcfwDQFR3U)
-[diagram source](https://mermaid.live/edit#pako:eNqdk01uwjAQha8y9RoukAWbdsumdOnNKH4Bq_GY2hNBhbh7DUnURJFA7c4ave_Nry-mjg6mMhlfHaTGm-d94mDFCtcaE71j76PsfBvHyGsUTbGdhrb5AxzyjfrV03qzmeAVZYgjn3MH4hZJF-KJMy3lpJFC1j7RVLpE28gFFUXpRUsGClB2rPwMZDfn6gQHUc9tvqVPtyllXboMAxirlqi-8XXvMUB08nqYGloZqfWyEI2fEML56Avw8ihhQpOQDz3x0LPIjlEyng2hO5ZRgXLZLNzo-5eO750KTv-vaX46M51ZmYAU2LtythcrRNboAQHWVOXp0HDXqjVWrkXKncbdt9Sm0tRhZfrehis3VVP2UKJwvjS77b_C_UdcfwDQFR3U)
+```mermaid
+sequenceDiagram
+
+actor RegionSilo
+actor ControlSilo
+actor MsTeams
+
+RegionSilo ->> RegionSilo: send issue alert
+RegionSilo ->> ControlSilo : send issue alert to msteams
+ControlSilo ->> ControlSilo : load integration metadata
+ControlSilo ->> ControlSilo : add integration credentials to request
+ControlSilo ->> MsTeams : send notification request with credentials
+MsTeams -->> ControlSilo : token expired!
+ControlSilo ->> MsTeams : refresh token
+MsTeams -->> ControlSilo : response
+ControlSilo ->> ControlSilo : update stored token
+ControlSilo ->> MsTeams : send notification with new token
+MsTeams -->> ControlSilo : response
+ControlSilo -->> RegionSilo : response
+```
 
 The integration proxy is implemented as a class that integrations requiring refresh tokens can sub-class. Currently the following integrations use the integration credential proxy:
 
@@ -121,8 +139,16 @@ where id in (...) and schedule_for < current_timestamp
 
 For each mailbox with undelivered messages, we select a block of messages, and update their next schedule time to be a few minutes in the future. Doing this helps reduce the next scheduling task from attempting to deliver the same messages again.
 
-![mailbox-delivery-flowchart](https://mermaid.ink/svg/pako:eNqNUTtyAzEIvQpD7VxgCzdJm2pbNXjF2owl2EjIn_H47lFiJ5OkcTrgfWB4F5wsMg5Y-a2xTvwitC2UgwZdqLhMspA6PJt6sQSjJPvAfvbwtF7_IsAAs2iETJI2duIKR_EdZK6Vtlz_o07OBaz5X4-5eSsMkZMcuJwfW7UlkjMon_xbBS6ZYbYCvrtDm2TT_rHbuNBRwanuwQ1iIVGgrxuD4gozl97G_tFLUICAfUXmgEMvI8_UkgcMeu1Uam7jWSccvDRe4e3UewA4zJRqn3IUt_J6S-kzrOs7BGObcw)
-[diagram source](https://mermaid.live/edit#pako:eNqNUTtyAzEIvQpD7VxgCzdJm2pbNXjF2owl2EjIn_H47lFiJ5OkcTrgfWB4F5wsMg5Y-a2xTvwitC2UgwZdqLhMspA6PJt6sQSjJPvAfvbwtF7_IsAAs2iETJI2duIKR_EdZK6Vtlz_o07OBaz5X4-5eSsMkZMcuJwfW7UlkjMon_xbBS6ZYbYCvrtDm2TT_rHbuNBRwanuwQ1iIVGgrxuD4gozl97G_tFLUICAfUXmgEMvI8_UkgcMeu1Uam7jWSccvDRe4e3UewA4zJRqn3IUt_J6S-kzrOs7BGObcw)
+```mermaid
+sequenceDiagram
+
+participant Control Silo
+
+Control Silo ->> Control Silo : find mailboxes with messages
+Control Silo ->> Control Silo : filter out mailboxes with future delivery
+Control Silo ->> Control Silo : update next delivery time for the next block
+Control Silo ->> Control Silo : Spawn task to drain a mailbox
+```
 
 ### Webhook Delivery
 
@@ -130,8 +156,23 @@ Scheduled webhooks are delivered by celery tasks. Delivery tasks attempt to forw
 
 Draining a mailbox involves sending as many messages from a given mailbox as we can. Should we hit a networking error, the current head of line will be rescheduled and have its attempt number increased.
 
-![delivery flow chart](https://mermaid.ink/svg/pako:eNqNUrFuAjEM_RUrM1SoapcbWIq6dYE1i0l8XETOviYOokL8e8NBK5CQYIkS-eW9Z_sdjBNPpjGZvguxo0XATcLe8oBJgwsDssKHsCaJsApRbitL2gThS8HyNRCm8_nNT2jgk9R10BF6WEdxW5AWegxxLXvLUWSAVhJhxfSUM27IMsAj0tBCJ7KFkAHXsqPKuAdUpX7QDJ4iKb3cJbpyX3kWFMOO0khWm1GMCrk4V52cnnADn94x8jqbTd9m-zP4keuzr38xipmAUpL0nNb7SQfgiemwS9RT3dVlJIDsIVF2HfkSaRRnb3k8LJuJ6SnVpfiaisNJwxrtKoM1Tb16arFEtcbysUKxqKx-2JlGU6GJKYNH_QuRaVqsbU0M-aCSvs5JGwN3_AUkRNw7)
+```mermaid
+sequenceDiagram
+participant Control Silo
+participant Region Silo
 
-[diagram source](https://mermaid.live/edit#pako:eNqNUrFuAjEM_RUrM1SoapcbWIq6dYE1i0l8XETOviYOokL8e8NBK5CQYIkS-eW9Z_sdjBNPpjGZvguxo0XATcLe8oBJgwsDssKHsCaJsApRbitL2gThS8HyNRCm8_nNT2jgk9R10BF6WEdxW5AWegxxLXvLUWSAVhJhxfSUM27IMsAj0tBCJ7KFkAHXsqPKuAdUpX7QDJ4iKb3cJbpyX3kWFMOO0khWm1GMCrk4V52cnnADn94x8jqbTd9m-zP4keuzr38xipmAUpL0nNb7SQfgiemwS9RT3dVlJIDsIVF2HfkSaRRnb3k8LJuJ6SnVpfiaisNJwxrtKoM1Tb16arFEtcbysUKxqKx-2JlGU6GJKYNH_QuRaVqsbU0M-aCSvs5JGwN3_AUkRNw7)
+Control Silo ->> Control Silo : Fetch head block of mailbox
+loop foreach message
+  Control Silo ->> Control Silo : if hook is above max attempts delete.
+  Control Silo ->> Region Silo : Deliver hook
+	alt success
+	  Region Silo -->> Control Silo : 200-40x
+	  Control Silo ->> Control Silo : delete hook
+	else error
+	  Region Silo -->> Control Silo : 50x
+    Control Silo ->> Control Silo : increment attempt and reschedule
+	end
+end
+```
 
 Notably, most 40x errors are considered 'successful' deliveries. The reason for this is that re-attempting a delivery of a webhook that initially had a 40x response will generally not result in a 200.

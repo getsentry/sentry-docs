@@ -13,6 +13,7 @@ import {Breadcrumbs} from '../breadcrumbs';
 import {CodeContextProvider} from '../codeContext';
 import {GitHubCTA} from '../githubCTA';
 import {Header} from '../header';
+import Mermaid from '../mermaid';
 import {PaginationNav} from '../paginationNav';
 import {PlatformSdkDetail} from '../platformSdkDetail';
 import {Sidebar} from '../sidebar';
@@ -108,6 +109,7 @@ export function DocPage({
           )}
         </main>
       </section>
+      <Mermaid />
     </div>
   );
 }

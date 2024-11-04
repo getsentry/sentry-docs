@@ -74,8 +74,15 @@ event[”contexts”][”feedback”] = {
 
 ### Ingest diagram
 
-![](https://mermaid.ink/svg/pako:eNptkc1qwzAQhF9F7MmGmN59KJSmx_ZQ91IsYxR5YwvbkqqfgEny7l05NW0hOg3a0erb2TNI0yGU0DthB_ax55rREdbWnyY69mTtpKQIyuiGFcUju3BAfcLJWORwYe84iYVrHlaxOo6tNNrHGV1WK92jD8URsTsIORZ4Qh18k6cXv76t8VfEiJ4JzyRO6BYWhB_TL9KhCNhubVrlfcTU425hbWf-UHD44TBSRudQS_QcbhTmP4WmNHwwDuvsbZN5c8dIuC9pmCoQwpwgvY4HUWccqiQenim3cTDRU055Azugl7NQHWV9TiFzCAPOVCxJTqofAgeur2QUMZhq0RLK4CLuINqOhtwrQTuat0vsFLG93pa37vD6DRJvo7g)
-[diagram source](https://mermaid.live/edit#pako:eNptkc1qwzAQhF9F7MmGmN59KJSmx_ZQ91IsYxR5YwvbkqqfgEny7l05NW0hOg3a0erb2TNI0yGU0DthB_ax55rREdbWnyY69mTtpKQIyuiGFcUju3BAfcLJWORwYe84iYVrHlaxOo6tNNrHGV1WK92jD8URsTsIORZ4Qh18k6cXv76t8VfEiJ4JzyRO6BYWhB_TL9KhCNhubVrlfcTU425hbWf-UHD44TBSRudQS_QcbhTmP4WmNHwwDuvsbZN5c8dIuC9pmCoQwpwgvY4HUWccqiQenim3cTDRU055Azugl7NQHWV9TiFzCAPOVCxJTqofAgeur2QUMZhq0RLK4CLuINqOhtwrQTuat0vsFLG93pa37vD6DRJvo7g)
+```mermaid
+graph TD
+    app[Your Application] --> |"envelope"| Relay
+	Relay --> f_consumer([ingest-feedback-events])
+	f_consumer --> |"queues as celery task"| create_feedback_issue
+	create_feedback_issue --> o_consumer(["ingest-occurrences"])
+	o_consumer --> nodestore[(Nodestore)]
+	o_consumer --> |"EventStream"| snuba[("Snuba/Clickhouse")]
+```
 
 In Relay v24.5.1, we migrated feedback to its own kafka topic + consumer,
 `ingest-feedback-events`. This decouples risk and ownership from errors
@@ -114,8 +121,39 @@ user_report = {
 
 ### Ingest diagram
 
-![](https://mermaid.ink/svg/pako:eNp9VNtq3DAQ_ZVBEHAgy77vQ6EkDfShF7KhUKzFaOXZtYgtqbpsCUn-vaOxvWmT3frF4-HozJkzIz8J7VoUK7EPyndwfyOtTDFvx8812hQeS0qmgN6F1KBtvTM21VIsc8Sw2CG2W6UfpNiMQB1U7JoJPrhW9YS9Lkm44yT8MPh7ghMdvf6uuctWJ-NsrG_nCBYQsgVjIeAOQ8AwlYrqgE1RMVYrSaAndmZokmuO0iZdqBIek42JMeNJHlgsPsCzFJ9vAQ9kAfjgNMaIrRTPZ9jfZpnjbMlj2xcXgPaAvfMI3njsjWWA8r7-6XKAj973Rqviw2bWNZ8oau6wVzwhDhihSIc3uqqN3WNMC5WS0t1AjcTNJZOPAAa_t3BWNc4ZlG2BRwojIk7yZjHfv63vi5A3-3GG_NTJ9wvzX2VsYgTfq7RzYSjZkz4ziWs0LVAeMFS0hZMhTutMrJZmSmvIlrzi-JilSxGTC1hXX-fwcnMCSG18KiuypvuhBl4Pm7eqrtbltbym2T10jrrg02MDpafJLm4yLrNvST87e2oVvYtpHzDWFZk2xVKMerjcLOVXxmDIG95aFs2K_qUUV4LUD8q0dO2fpAWQInU4EHZFYW_2XZJC2hcCqpzc-tFqsUoh45UYhd4YRXd1EKud6iNlsTVU68v4I-H_ycsfwTWaqg)
-[diagram source](https://mermaid.live/edit#pako:eNp9VNtq3DAQ_ZVBEHAgy77vQ6EkDfShF7KhUKzFaOXZtYgtqbpsCUn-vaOxvWmT3frF4-HozJkzIz8J7VoUK7EPyndwfyOtTDFvx8812hQeS0qmgN6F1KBtvTM21VIsc8Sw2CG2W6UfpNiMQB1U7JoJPrhW9YS9Lkm44yT8MPh7ghMdvf6uuctWJ-NsrG_nCBYQsgVjIeAOQ8AwlYrqgE1RMVYrSaAndmZokmuO0iZdqBIek42JMeNJHlgsPsCzFJ9vAQ9kAfjgNMaIrRTPZ9jfZpnjbMlj2xcXgPaAvfMI3njsjWWA8r7-6XKAj973Rqviw2bWNZ8oau6wVzwhDhihSIc3uqqN3WNMC5WS0t1AjcTNJZOPAAa_t3BWNc4ZlG2BRwojIk7yZjHfv63vi5A3-3GG_NTJ9wvzX2VsYgTfq7RzYSjZkz4ziWs0LVAeMFS0hZMhTutMrJZmSmvIlrzi-JilSxGTC1hXX-fwcnMCSG18KiuypvuhBl4Pm7eqrtbltbym2T10jrrg02MDpafJLm4yLrNvST87e2oVvYtpHzDWFZk2xVKMerjcLOVXxmDIG95aFs2K_qUUV4LUD8q0dO2fpAWQInU4EHZFYW_2XZJC2hcCqpzc-tFqsUoh45UYhd4YRXd1EKud6iNlsTVU68v4I-H_ycsfwTWaqg)
+```mermaid
+graph TD
+	subgraph Sentry
+		report_endpoint["/user-feedback"]
+		crash_report_modal["Crash Report View"]
+	end
+
+	subgraph functions[Functions - run in referrer]
+		save_userreport
+	    shim_to_feedback
+		create_feedback_issue
+		save_userreport --> |"IF event processed"| shim_to_feedback
+		shim_to_feedback --> create_feedback_issue
+	end
+
+	%% envelope pipeline
+	app[Your Application] --> |"envelope"| Relay
+	Relay --> a_topic([ingest-attachments])
+	a_topic --> save_userreport
+
+	%% endpoint and crash reports
+	app --> |"POST"| report_endpoint --> save_userreport
+	app --> |"POST"| crash_report_modal --> save_userreport
+
+	%% issues platform
+	create_feedback_issue --> o_consumer(["ingest-occurrences"])
+	o_consumer --> nodestore[(Nodestore)]
+	o_consumer --> |"EventStream"| snuba[(Snuba/Clickhouse)]
+
+	%% user report saves/updates
+	save_userreport --> postgres[("Postgres")]
+	snuba --> |"queries eventstore"| save_userreport
+```
 
 <br />
 
@@ -134,8 +172,14 @@ added a post process job to the errors pipeline: [`link_event_to_user_report()`]
 This is the 5th, automated way of creating feedback.
 
 Simplified diagram:
-![](https://mermaid.ink/svg/pako:eNpdULtuwzAM_BWBUwIkzm4UXZq1QIF0MwNDlllLTfSoKAUokvx7ZasZWi06kMfj8a6g_EjQwhRl0OJ9j06Ux9rYPvn-g2gcpDqJ7fZZ3BCapkG4CXZ5kN3qMH-7l7NRJ-0z0_qIDtPSfAx8ZYqGWNCFXOLkI83zIfSffqirKu4QKEYfWQTPSYToFTGLmQVH8fRXbZfDKBPxIlXoUyTuVghvvxihOqnSi5X_B9XdsAFL0UozlgSucw0habLFZFvg2Uw6IaC7F6LMyR--nYI2xUwbqB72Rpbk7KNIoyk3vtZIl2TvP_9DeX4)
-[diagram source](https://mermaid.live/edit#pako:eNpdULtuwzAM_BWBUwIkzm4UXZq1QIF0MwNDlllLTfSoKAUokvx7ZasZWi06kMfj8a6g_EjQwhRl0OJ9j06Ux9rYPvn-g2gcpDqJ7fZZ3BCapkG4CXZ5kN3qMH-7l7NRJ-0z0_qIDtPSfAx8ZYqGWNCFXOLkI83zIfSffqirKu4QKEYfWQTPSYToFTGLmQVH8fRXbZfDKBPxIlXoUyTuVghvvxihOqnSi5X_B9XdsAFL0UozlgSucw0habLFZFvg2Uw6IaC7F6LMyR--nYI2xUwbqB72Rpbk7KNIoyk3vtZIl2TvP_9DeX4)
+
+```mermaid
+graph TD
+    shim_to_feedback --> |"..."| snuba[(Snuba/Clickhouse)]
+	snuba --> |"queries eventstore"| pp_job
+    pp_job["errors post process job"] <--> |"queries/updates"| postgres[("Postgres")]
+	pp_job --> shim_to_feedback
+```
 
 <br />
 
@@ -179,8 +223,24 @@ Crash reports are also shimmed to feedback. The pipeline is the same as the
 
 ## Sentry UI
 
-![](https://mermaid.ink/svg/pako:eNp9Uj1vwjAQ_SvWTUECsWdgKaViqFQVmDhUmeRILBI7tc8DAv577YRAG6F68fn53b37OkNmcoIUCiubUqznqEU4zu87YMXGyoJcB8fTGMeFJbdNED5utkg2juwnNcayGyGMdg--034vt8kqXtOXSmXH0nhHPYV03hmokR-ypNmeIoSsnPPkvgKxMUrzFmHaQQi7pwwxmczEBeHtdY1wEV4FlwVRvpfZUWyWIpkebq_RPYRtc_8jEpK0k57ZEvuSBuSB3u23lV3GzMScWKrKRe2ZiJ0Si2dh_y_jHvZX3zqzn0jv8O3JqtieyzDTtsdxEE-oA3UYQ022lioPy3GOQghcUk0IaTArVZSMgPoaiNKzWZ10BilbT2PwTS6Z5kqGYdaQHmTlAkq5Csv03q1bu3XXH4El2dU)
-[diagram source](https://mermaid.live/edit#pako:eNp9Uj1vwjAQ_SvWTUECsWdgKaViqFQVmDhUmeRILBI7tc8DAv577YRAG6F68fn53b37OkNmcoIUCiubUqznqEU4zu87YMXGyoJcB8fTGMeFJbdNED5utkg2juwnNcayGyGMdg--034vt8kqXtOXSmXH0nhHPYV03hmokR-ypNmeIoSsnPPkvgKxMUrzFmHaQQi7pwwxmczEBeHtdY1wEV4FlwVRvpfZUWyWIpkebq_RPYRtc_8jEpK0k57ZEvuSBuSB3u23lV3GzMScWKrKRe2ZiJ0Si2dh_y_jHvZX3zqzn0jv8O3JqtieyzDTtsdxEE-oA3UYQ022lioPy3GOQghcUk0IaTArVZSMgPoaiNKzWZ10BilbT2PwTS6Z5kqGYdaQHmTlAkq5Csv03q1bu3XXH4El2dU)
+```mermaid
+graph TD
+    subgraph Storages
+        postgres[("Postgres (UserReports)")]
+        snuba[(Snuba/Clickhouse)]
+    end
+
+	subgraph Sentry
+		issues_endpoint["/issues"]
+		issues_endpoint --> |"GET"| ui["Feedback UI (/feedback)"]
+		report_endpoint["/user-feedback"]
+        report_endpoint --> |"GET"| report_ui["Issue Details UI > User Feedback"]
+        issues_endpoint --> |"GET"| report_ui
+    end
+
+    postgres --> |"queries"| report_endpoint
+	snuba --> |"queries"| issues_endpoint
+```
 
 You can view the user reports related to a specific issue at the "User Feedback"
 tab of Issue Details. This excludes "new" feedback (anything sent from the widget).
