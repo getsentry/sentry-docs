@@ -77,8 +77,11 @@ dotenv.config();
 
 After adding `sentry.server.config.ts` and building the project, you might get an error like this:
 `Failed to register ESM hook import-in-the-middle/hook.mjs`. You can add an override (npm/pnpm) or a resolution (yarn)
-for `@vercel/nft` to fix this. This will add the `hook.mjs` file to your build output.
-See the [underlying issue in the UnJS Nitro project](https://github.com/unjs/nitro/issues/2703).
+for `@vercel/nft` to fix this. This will add the `hook.mjs` file to your build output. See the [underlying issue in the UnJS Nitro project](https://github.com/unjs/nitro/issues/2703).
+
+
+Nitro updated `@vercel/nft` in Nitro version `2.10.0`, so you might not get this error anymore, and you don't need to
+add this override/resolution.
 
 ```json {tabTitle:npm} {filename:package.json}
 "overrides": {
@@ -97,5 +100,19 @@ See the [underlying issue in the UnJS Nitro project](https://github.com/unjs/nit
   "overrides": {
     "@vercel/nft": "^0.27.4"
   }
+}
+```
+
+**pnpm and import-in-the-middle**
+
+Sentry injects `import "import-in-the-middle/hook.mjs"` in your server entry. This import acts as a hint for node bundlers to really include this file.
+As pnpm implements a strict dependency isolation, this import might cause problems.
+Per default, `shamefully-hoist` is `false` ([pnpm docs here](https://pnpm.io/next/npmrc#shamefully-hoist)) and this prevents accessing non-declared dependencies.
+You probably don't want to change this setting, so you have to explicitly add the dependency `import-in-the-middle`:
+
+```json {tabTitle:pnpm} {filename:package.json}
+// only when using pnpm
+"dependencies": {
+  "import-in-the-middle": "^1.11.2"
 }
 ```
