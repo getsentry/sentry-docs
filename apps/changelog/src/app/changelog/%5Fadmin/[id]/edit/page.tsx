@@ -4,7 +4,10 @@ import Link from 'next/link';
 import {prismaClient} from '@/server/prisma-client';
 import {EditChangelogForm} from '@/client/components/forms/editChangelogForm';
 
-export default async function ChangelogCreatePage({params}: {params: {id: string}}) {
+export default async function ChangelogCreatePage(props: {
+  params: Promise<{id: string}>;
+}) {
+  const params = await props.params;
   const categories = await prismaClient.category.findMany({
     orderBy: {
       name: 'asc',
