@@ -22,7 +22,10 @@ export default function Mermaid() {
         return;
       }
       const {default: mermaid} = await import('mermaid');
-      mermaid.initialize({startOnLoad: false});
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'neutral',
+      });
       mermaidBlocks.forEach(block => {
         // get rid of code highlighting
         const code = block.textContent ?? '';
