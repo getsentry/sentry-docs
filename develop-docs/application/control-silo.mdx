@@ -44,23 +44,22 @@ Integrations can be shared by multiple organizations. For example, a single MS t
 
 ```mermaid
 sequenceDiagram
+  actor RegionSilo
+  actor ControlSilo
+  actor MsTeams
 
-actor RegionSilo
-actor ControlSilo
-actor MsTeams
-
-RegionSilo ->> RegionSilo: send issue alert
-RegionSilo ->> ControlSilo : send issue alert to msteams
-ControlSilo ->> ControlSilo : load integration metadata
-ControlSilo ->> ControlSilo : add integration credentials to request
-ControlSilo ->> MsTeams : send notification request with credentials
-MsTeams -->> ControlSilo : token expired!
-ControlSilo ->> MsTeams : refresh token
-MsTeams -->> ControlSilo : response
-ControlSilo ->> ControlSilo : update stored token
-ControlSilo ->> MsTeams : send notification with new token
-MsTeams -->> ControlSilo : response
-ControlSilo -->> RegionSilo : response
+  RegionSilo ->> RegionSilo: send issue alert
+  RegionSilo ->> ControlSilo : send issue alert to msteams
+  ControlSilo ->> ControlSilo : load integration metadata
+  ControlSilo ->> ControlSilo : add integration credentials to request
+  ControlSilo ->> MsTeams : send notification request with credentials
+  MsTeams -->> ControlSilo : token expired!
+  ControlSilo ->> MsTeams : refresh token
+  MsTeams -->> ControlSilo : response
+  ControlSilo ->> ControlSilo : update stored token
+  ControlSilo ->> MsTeams : send notification with new token
+  MsTeams -->> ControlSilo : response
+  ControlSilo -->> RegionSilo : response
 ```
 
 The integration proxy is implemented as a class that integrations requiring refresh tokens can sub-class. Currently the following integrations use the integration credential proxy:
@@ -141,13 +140,12 @@ For each mailbox with undelivered messages, we select a block of messages, and u
 
 ```mermaid
 sequenceDiagram
+  participant Control Silo
 
-participant Control Silo
-
-Control Silo ->> Control Silo : find mailboxes with messages
-Control Silo ->> Control Silo : filter out mailboxes with future delivery
-Control Silo ->> Control Silo : update next delivery time for the next block
-Control Silo ->> Control Silo : Spawn task to drain a mailbox
+  Control Silo ->> Control Silo : find mailboxes with messages
+  Control Silo ->> Control Silo : filter out mailboxes with future delivery
+  Control Silo ->> Control Silo : update next delivery time for the next block
+  Control Silo ->> Control Silo : Spawn task to drain a mailbox
 ```
 
 ### Webhook Delivery
@@ -158,21 +156,21 @@ Draining a mailbox involves sending as many messages from a given mailbox as we 
 
 ```mermaid
 sequenceDiagram
-participant Control Silo
-participant Region Silo
+  participant Control Silo
+  participant Region Silo
 
-Control Silo ->> Control Silo : Fetch head block of mailbox
-loop foreach message
-  Control Silo ->> Control Silo : if hook is above max attempts delete.
-  Control Silo ->> Region Silo : Deliver hook
-	alt success
-	  Region Silo -->> Control Silo : 200-40x
-	  Control Silo ->> Control Silo : delete hook
-	else error
-	  Region Silo -->> Control Silo : 50x
-    Control Silo ->> Control Silo : increment attempt and reschedule
-	end
-end
+  Control Silo ->> Control Silo : Fetch head block of mailbox
+  loop foreach message
+    Control Silo ->> Control Silo : if hook is above max attempts delete.
+    Control Silo ->> Region Silo : Deliver hook
+    alt success
+      Region Silo -->> Control Silo : 200-40x
+      Control Silo ->> Control Silo : delete hook
+    else error
+      Region Silo -->> Control Silo : 50x
+      Control Silo ->> Control Silo : increment attempt and reschedule
+    end
+  end
 ```
 
 Notably, most 40x errors are considered 'successful' deliveries. The reason for this is that re-attempting a delivery of a webhook that initially had a 40x response will generally not result in a 200.

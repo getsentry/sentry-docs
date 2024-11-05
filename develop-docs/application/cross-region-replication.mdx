@@ -41,8 +41,21 @@ User, Organization, and Membership deletions are the most common form of cross r
 
 The flow for removing a user is
 
-![tombstone workflow diagram](https://mermaid.ink/svg/pako:eNplkTFrwzAQhf-K0BYcD203Q7O0ayHEdNMiSxdHIN2l0qk0hPz3ntMUYme703vf49A7a0cedKcLfFVAB-_Bjtkmg7YyYU0DZIOyOaasPsu0HW3m4MLRIqs3Qs4UVR8izZUdjIHwJhicUNVuNs0MUZ3yEIFB1UkP_vXp-cXgzCLQktlBou8b06hiZabKA_2oBKXYEZYRktFerxd4OD3Kq-b-XjFt6xBDOTzE3ruuoXOsn05hSkORz1va29XCvQNH6EKcIXqtE-Rkg5dWzgaVMpoPkMDoTkYPe1sjG23wItappf6ETnecK6x1PXrL_yXqbm9jkVfwQer7-Gv6WvjlF-fzsOs)
-[diagram source](https://mermaid.live/edit#pako:eNplkTFrwzAQhf-K0BYcD203Q7O0ayHEdNMiSxdHIN2l0qk0hPz3ntMUYme703vf49A7a0cedKcLfFVAB-_Bjtkmg7YyYU0DZIOyOaasPsu0HW3m4MLRIqs3Qs4UVR8izZUdjIHwJhicUNVuNs0MUZ3yEIFB1UkP_vXp-cXgzCLQktlBou8b06hiZabKA_2oBKXYEZYRktFerxd4OD3Kq-b-XjFt6xBDOTzE3ruuoXOsn05hSkORz1va29XCvQNH6EKcIXqtE-Rkg5dWzgaVMpoPkMDoTkYPe1sjG23wItappf6ETnecK6x1PXrL_yXqbm9jkVfwQer7-Gv6WvjlF-fzsOs)
+```mermaid
+sequenceDiagram
+  autonumber
+
+  actor User
+  participant Control Silo
+  participant Region Silo
+
+  User ->>+ Control Silo : delete user id=123
+  Control Silo ->> Control Silo : Remove user + save outbox message
+  Control Silo -->>- User : bye
+  Control Silo --)+ Region Silo : Publish outbox message
+  Region Silo ->>- Region Silo : Save tombstone
+  Region Silo --) Region Silo : Reconcile tombstone
+```
 
 In step 5 and 6 of the above diagram we reconcile the tombstone changes with the rest of the data in the region. Tombstones needs to be reconciled for each relation that the removed record had. For example, removing a user will:
 

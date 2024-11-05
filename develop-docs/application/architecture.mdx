@@ -9,28 +9,28 @@ Edges represent service dependencies.
 
 ```mermaid
 graph TD
-app[Your Application] --> |SDK| lb{{Load Balancer}}
-lb --> |"sentry.example.com/api/\d+/store/"| relay
-lb --> |"sentry.example.com"| sentry_web["Sentry (web)"]
-symbolicator --> sentry_web
-relay --> kafka
-relay --> redis
-sentry_web --> snuba
-sentry_web --> memcached
-sentry_web --> postgres
-sentry_web --> redis
-snuba --> kafka
-snuba --> redis
-snuba --> clickhouse
-kafka --> zookeeper
-sentry_web --> sentry_worker["Sentry (worker)"]
-sentry_worker --> memcached
-sentry_worker --> redis
-sentry_worker --> postgres
-sentry_worker --> symbolicator
+  app[Your Application] --> |SDK| lb{{Load Balancer}}
+  lb --> |"sentry.example.com/api/\d+/store/"| relay
+  lb --> |"sentry.example.com"| sentry_web["Sentry (web)"]
+  symbolicator --> sentry_web
+  relay --> kafka
+  relay --> redis
+  sentry_web --> snuba
+  sentry_web --> memcached
+  sentry_web --> postgres
+  sentry_web --> redis
+  snuba --> kafka
+  snuba --> redis
+  snuba --> clickhouse
+  kafka --> zookeeper
+  sentry_web --> sentry_worker["Sentry (worker)"]
+  sentry_worker --> memcached
+  sentry_worker --> redis
+  sentry_worker --> postgres
+  sentry_worker --> symbolicator
 
-click snuba "https://github.com/getsentry/snuba" "Snuba Documentation"
-click relay "https://github.com/getsentry/relay" "Relay Documentation"
+  click snuba "https://github.com/getsentry/snuba" "Snuba Documentation"
+  click relay "https://github.com/getsentry/relay" "Relay Documentation"
 ```
 ## Event pipeline
 
@@ -49,26 +49,25 @@ For more information read [Path of an event through Relay](https://getsentry.git
 
 ```mermaid
 graph TD
+  app[Your application] --> |sends crashes| lb{{nginx}}
+  lb --> |/api/n/store/| relay
+  relay --> kafka[(Ingest Kafka)]
+  kafka --> ingest-consumer["Sentry ingest consumer"]
+  ingest-consumer --> preprocess-event
 
-app[Your application] --> |sends crashes| lb{{nginx}}
-lb --> |/api/n/store/| relay
-relay --> kafka[(Ingest Kafka)]
-kafka --> ingest-consumer["Sentry ingest consumer"]
-ingest-consumer --> preprocess-event
+  subgraph celery["Sentry celery tasks"]
+    preprocess-event --> save-event
+    preprocess-event --> process-event
+    preprocess-event --> symbolicate-event
+    symbolicate-event --> process-event
+    process-event --> save-event
+    save-event --> snuba-kafka[("Snuba Kafka<br>(eventstream)")]
+  end
 
-subgraph celery["Sentry celery tasks"]
-  preprocess-event --> save-event
-  preprocess-event --> process-event
-  preprocess-event --> symbolicate-event
-  symbolicate-event --> process-event
-  process-event --> save-event
-  save-event --> snuba-kafka[("Snuba Kafka<br>(eventstream)")]
-end
-
-subgraph snuba["Snuba"]
-  snuba-kafka --> snuba-consumer["Snuba consumers"]
-  snuba-consumer --> clickhouse[("Clickhouse")]
-end
+  subgraph snuba["Snuba"]
+    snuba-kafka --> snuba-consumer["Snuba consumers"]
+    snuba-consumer --> clickhouse[("Clickhouse")]
+  end
 ```
 
 ## Multi-Region
@@ -116,23 +115,23 @@ In addition to the siloed modes, there also exists a **Monolith** mode. In monol
 
 ```mermaid
 flowchart TD
+  ui[Frontend UI] --> usr
+  ui --> cs
+  ui --> eur
 
-ui[Frontend UI] --> usr
-ui --> cs
-ui --> eur
+  subgraph usr [US Region]
+    usapi[US Sentry API] --> uspg[(US Postgres)]
+    usapi --> used[(EU Event Data)]
+  end
 
+  subgraph cs [Control Silo]
+    capi[Control Silo Sentry API] --> cpg[(Control Postgres)]
+  end
 
-subgraph usr [US Region]
-  usapi[US Sentry API] --> uspg[(US Postgres)]
-  usapi --> used[(EU Event Data)]
-end
-subgraph cs [Control Silo]
-  capi[Control Silo Sentry API] --> cpg[(Control Postgres)]
-end
-subgraph eur [EU Region]
-  euapi[EU Sentry API] --> eupg[(EU Postgres)]
-  euapi --> eued[(EU Event Data)]
-end
+  subgraph eur [EU Region]
+    euapi[EU Sentry API] --> eupg[(EU Postgres)]
+    euapi --> eued[(EU Event Data)]
+  end
 ```
 
 Each region silo can be scaled independently, and is isolated from other regions. Within each region exists separate, dedicated infrastructure and applications as outlined in the [application overview](/architecture/#high-level-overview).
