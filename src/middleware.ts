@@ -1,5 +1,5 @@
-import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
+import type {NextRequest} from 'next/server';
+import {NextResponse} from 'next/server';
 
 // This env var is set in next.config.js based on the `NEXT_PUBLIC_DEVELOPER_DOCS` env var at build time
 // a workaround edge middleware not having access to env vars
@@ -27,7 +27,7 @@ const handleRedirects = (request: NextRequest) => {
 
   const redirectTo = redirectMap.get(urlPath);
   if (redirectTo) {
-    return NextResponse.redirect(new URL(redirectTo, request.url), { status: 301 });
+    return NextResponse.redirect(new URL(redirectTo, request.url), {status: 301});
   }
 
   // If we don't find an exact match, we try to look for a :guide placeholder
