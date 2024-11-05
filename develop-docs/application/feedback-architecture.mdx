@@ -76,12 +76,12 @@ event[”contexts”][”feedback”] = {
 
 ```mermaid
 graph TD
-    app[Your Application] --> |"envelope"| Relay
-	Relay --> f_consumer([ingest-feedback-events])
-	f_consumer --> |"queues as celery task"| create_feedback_issue
-	create_feedback_issue --> o_consumer(["ingest-occurrences"])
-	o_consumer --> nodestore[(Nodestore)]
-	o_consumer --> |"EventStream"| snuba[("Snuba/Clickhouse")]
+  app[Your Application] --> |"envelope"| Relay
+  Relay --> f_consumer([ingest-feedback-events])
+  f_consumer --> |"queues as celery task"| create_feedback_issue
+  create_feedback_issue --> o_consumer(["ingest-occurrences"])
+  o_consumer --> nodestore[(Nodestore)]
+  o_consumer --> |"EventStream"| snuba[("Snuba/Clickhouse")]
 ```
 
 In Relay v24.5.1, we migrated feedback to its own kafka topic + consumer,
@@ -123,36 +123,36 @@ user_report = {
 
 ```mermaid
 graph TD
-	subgraph Sentry
-		report_endpoint["/user-feedback"]
-		crash_report_modal["Crash Report View"]
-	end
+  subgraph Sentry
+    report_endpoint["/user-feedback"]
+    crash_report_modal["Crash Report View"]
+  end
 
-	subgraph functions[Functions - run in referrer]
-		save_userreport
-	    shim_to_feedback
-		create_feedback_issue
-		save_userreport --> |"IF event processed"| shim_to_feedback
-		shim_to_feedback --> create_feedback_issue
-	end
+  subgraph functions[Functions - run in referrer]
+    save_userreport
+    shim_to_feedback
+    create_feedback_issue
+    save_userreport --> |"IF event processed"| shim_to_feedback
+    shim_to_feedback --> create_feedback_issue
+  end
 
-	%% envelope pipeline
-	app[Your Application] --> |"envelope"| Relay
-	Relay --> a_topic([ingest-attachments])
-	a_topic --> save_userreport
+  %% envelope pipeline
+  app[Your Application] --> |"envelope"| Relay
+  Relay --> a_topic([ingest-attachments])
+  a_topic --> save_userreport
 
-	%% endpoint and crash reports
-	app --> |"POST"| report_endpoint --> save_userreport
-	app --> |"POST"| crash_report_modal --> save_userreport
+  %% endpoint and crash reports
+  app --> |"POST"| report_endpoint --> save_userreport
+  app --> |"POST"| crash_report_modal --> save_userreport
 
-	%% issues platform
-	create_feedback_issue --> o_consumer(["ingest-occurrences"])
-	o_consumer --> nodestore[(Nodestore)]
-	o_consumer --> |"EventStream"| snuba[(Snuba/Clickhouse)]
+  %% issues platform
+  create_feedback_issue --> o_consumer(["ingest-occurrences"])
+  o_consumer --> nodestore[(Nodestore)]
+  o_consumer --> |"EventStream"| snuba[(Snuba/Clickhouse)]
 
-	%% user report saves/updates
-	save_userreport --> postgres[("Postgres")]
-	snuba --> |"queries eventstore"| save_userreport
+  %% user report saves/updates
+  save_userreport --> postgres[("Postgres")]
+  snuba --> |"queries eventstore"| save_userreport
 ```
 
 <br />
@@ -175,10 +175,10 @@ Simplified diagram:
 
 ```mermaid
 graph TD
-    shim_to_feedback --> |"..."| snuba[(Snuba/Clickhouse)]
-	snuba --> |"queries eventstore"| pp_job
-    pp_job["errors post process job"] <--> |"queries/updates"| postgres[("Postgres")]
-	pp_job --> shim_to_feedback
+  shim_to_feedback --> |"..."| snuba[(Snuba/Clickhouse)]
+  snuba --> |"queries eventstore"| pp_job
+  pp_job["errors post process job"] <--> |"queries/updates"| postgres[("Postgres")]
+  pp_job --> shim_to_feedback
 ```
 
 <br />
@@ -225,21 +225,21 @@ Crash reports are also shimmed to feedback. The pipeline is the same as the
 
 ```mermaid
 graph TD
-    subgraph Storages
-        postgres[("Postgres (UserReports)")]
-        snuba[(Snuba/Clickhouse)]
-    end
+  subgraph Storages
+    postgres[("Postgres (UserReports)")]
+    snuba[(Snuba/Clickhouse)]
+  end
 
-	subgraph Sentry
-		issues_endpoint["/issues"]
-		issues_endpoint --> |"GET"| ui["Feedback UI (/feedback)"]
-		report_endpoint["/user-feedback"]
-        report_endpoint --> |"GET"| report_ui["Issue Details UI > User Feedback"]
-        issues_endpoint --> |"GET"| report_ui
-    end
+  subgraph Sentry
+    issues_endpoint["/issues"]
+    issues_endpoint --> |"GET"| ui["Feedback UI (/feedback)"]
+    report_endpoint["/user-feedback"]
+    report_endpoint --> |"GET"| report_ui["Issue Details UI > User Feedback"]
+    issues_endpoint --> |"GET"| report_ui
+  end
 
-    postgres --> |"queries"| report_endpoint
-	snuba --> |"queries"| issues_endpoint
+  postgres --> |"queries"| report_endpoint
+  snuba --> |"queries"| issues_endpoint
 ```
 
 You can view the user reports related to a specific issue at the "User Feedback"
