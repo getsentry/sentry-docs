@@ -1,9 +1,11 @@
 'use client';
 import {useEffect} from 'react';
+import {useTheme} from 'next-themes';
 
 export default function Mermaid() {
+  const theme = useTheme();
   useEffect(() => {
-    (async function () {
+    const renderMermaid = async () => {
       const escapeHTML = (str: string) => {
         return str.replace(/[&<>"']/g, function (match) {
           const escapeMap = {
@@ -24,7 +26,7 @@ export default function Mermaid() {
       const {default: mermaid} = await import('mermaid');
       mermaid.initialize({
         startOnLoad: false,
-        theme: 'neutral',
+        theme: theme.resolvedTheme === 'light' ? 'default' : 'dark',
       });
       mermaidBlocks.forEach(block => {
         // get rid of code highlighting
@@ -38,7 +40,8 @@ export default function Mermaid() {
         }
       });
       await mermaid.run({nodes: document.querySelectorAll('.language-mermaid')});
-    })();
-  }, []);
+    };
+    renderMermaid();
+  }, [theme]);
   return null;
 }
