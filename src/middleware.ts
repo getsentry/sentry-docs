@@ -1,5 +1,5 @@
-import type {NextRequest} from 'next/server';
-import {NextResponse} from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 // This env var is set in next.config.js based on the `NEXT_PUBLIC_DEVELOPER_DOCS` env var at build time
 // a workaround edge middleware not having access to env vars
@@ -27,7 +27,7 @@ const handleRedirects = (request: NextRequest) => {
 
   const redirectTo = redirectMap.get(urlPath);
   if (redirectTo) {
-    return NextResponse.redirect(new URL(redirectTo, request.url), {status: 301});
+    return NextResponse.redirect(new URL(redirectTo, request.url), { status: 301 });
   }
 
   // If we don't find an exact match, we try to look for a :guide placeholder
@@ -65,6 +65,10 @@ type Redirect = {
 
 /** Note: if you want to set redirects for developer docs, set them below in `DEVELOPER_DOCS_REDIRECTS` */
 const USER_DOCS_REDIRECTS: Redirect[] = [
+  {
+    from: '/platforms/python/http_errors/',
+    to: '/platforms/python/integrations/django/http_errors/',
+  },
   {
     from: '/platforms/javascript/guides/react/configuration/integrations/trycatch/',
     to: '/platforms/javascript/configuration/integrations/browserapierrors/',
@@ -206,12 +210,12 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/go/usage/serverless/',
   },
   {
-    from: '/platforms/go/martini/',
-    to: '/platforms/go/guides/martini/',
-  },
-  {
     from: '/platforms/go/fasthttp/',
     to: '/platforms/go/guides/fasthttp/',
+  },
+  {
+    from: '/platforms/go/fiber/',
+    to: '/platforms/go/guides/fiber/',
   },
   {
     from: '/platforms/go/echo/',
@@ -228,6 +232,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/go/slog/',
     to: '/platforms/go/guides/slog/',
+  },
+  {
+    from: '/platforms/go/logrus/',
+    to: '/platforms/go/guides/logrus/',
   },
   {
     from: '/clients/go/integrations/http/',
@@ -416,6 +424,14 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/python/starlite/',
     to: '/platforms/python/integrations/starlite/',
+  },
+  {
+    from: '/clients/python/integrations/litestar/',
+    to: '/platforms/python/integrations/litestar/',
+  },
+  {
+    from: '/platforms/python/litestar/',
+    to: '/platforms/python/integrations/litestar/',
   },
   {
     from: '/platforms/python/beam/',
@@ -1574,6 +1590,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/javascript/guides/:guide/enriching-events/fingerprinting/',
   },
   {
+    from: '/platforms/javascript/guides/:guide/tracing/instrumentation/opentelemetry/',
+    to: '/platforms/javascript/guides/:guide/opentelemetry/',
+  },
+  {
     from: '/learn/cli/configuration/',
     to: '/cli/configuration/',
   },
@@ -2699,7 +2719,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/clientdev/interfaces/http/',
-    to: 'https://develop.sentry.dev/sdk/event-payloads/request',
+    to: 'https://develop.sentry.dev/sdk/data-model/event-payloads/request',
   },
   {
     from: '/clients/csharp/',
@@ -3261,6 +3281,50 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/platforms/javascript/guides/aws-lambda/layer/',
     to: '/platforms/javascript/guides/aws-lambda/install/',
   },
+  {
+    from: '/api/projects/post-project-service-hooks/',
+    to: '/api/projects/register-a-new-service-hook/',
+  },
+  {
+    from: '/clients/cocoa/',
+    to: '/platforms/apple/',
+  },
+  {
+    from: '/clients/react-native/',
+    to: 'platforms/react-native/',
+  },
+  {
+    from: '/learn/scopes/?platform=rust/',
+    to: '/platforms/rust/enriching-events/scopes/',
+  },
+  {
+    from: '/platforms/android/android-video/',
+    to: '/platforms/android/',
+  },
+  {
+    from: '/platforms/android/tracing/included-instrumentation/',
+    to: '/platforms/android/tracing/instrumentation/automatic-instrumentation',
+  },
+  {
+    from: '/platforms/javascript/guides/cordova/tracing/trace-propagation/',
+    to: '/platforms/javascript/guides/cordova/tracing/instrumentation/custom-instrumentation/',
+  },
+  {
+    from: '/platforms/javascript/pluggable-integrations/',
+    to: '/platforms/javascript/configuration/integrations/#lazy-loading-integrations',
+  },
+  {
+    from: '/platforms/react-native/tracing/included-instrumentation/',
+    to: '/platforms/react-native/tracing/instrumentation/automatic-instrumentation/',
+  },
+  {
+    from: '/platforms/rust/env_logger/index.html/',
+    to: '/platforms/rust/configuration/environments/',
+  },
+  {
+    from: '/clients/cordova/',
+    to: '/platforms/javascript/guides/cordova/',
+  },
 ];
 
 const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
@@ -3435,6 +3499,26 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/sdk/features/data-handling/',
     to: '/sdk/data-handling/',
+  },
+  {
+    from: '/sdk/craft-quick-start/',
+    to: '/sdk/processes/releases/',
+  },
+  {
+    from: '/sdk/metrics/',
+    to: '/sdk/telemetry/metrics/',
+  },
+  {
+    from: '/sdk/check-ins/',
+    to: '/sdk/telemetry/check-ins/',
+  },
+  {
+    from: '/sdk/profiles/',
+    to: '/sdk/telemetry/profiles/',
+  },
+  {
+    from: '/sdk/distributed-tracing/',
+    to: '/sdk/telemetry/traces/distributed-tracing/',
   },
 ];
 

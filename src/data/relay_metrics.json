@@ -13,6 +13,36 @@
   },
   {
     "type": "Gauge",
+    "name": "buffer.disk_used",
+    "description": "The used disk for the buffer.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.drain.duration",
+    "description": "Timing in milliseconds for the time it takes for the buffer to drain its envelopes.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "buffer.envelope_body_size",
+    "description": "The amount of bytes in the item payloads of an envelope pushed to the envelope buffer.\n\nThis is not quite the same as the actual size of a serialized envelope, because it ignores\nthe envelope header and item headers.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "buffer.envelope_stacks_popped",
+    "description": "Number of times an envelope stack is popped from the priority queue of stacks in the\nenvelope buffer.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "buffer.envelopes_count",
+    "description": "Number of elements in the envelope buffer across all the stacks.\n\nThis metric is tagged with:\n- `storage_type`: The type of storage used in the envelope buffer.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
     "name": "buffer.envelopes_disk_count",
     "description": "The number of envelopes waiting for project states on disk.\n\nNote this metric *will not be logged* when we encounter envelopes in the database on startup,\nbecause counting those envelopes reliably would risk locking the db for multiple seconds.\n\nThe disk buffer size can be configured with `spool.envelopes.max_disk_size`.",
     "features": []
@@ -37,8 +67,26 @@
   },
   {
     "type": "Counter",
+    "name": "buffer.envelopes_returned",
+    "description": "Number of envelopes that were returned to the envelope buffer by the project cache.\n\nThis happens when the envelope buffer falsely assumes that the envelope's projects are loaded\nin the cache and sends the envelope onward, even though the project cache cannot handle it.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.envelopes_serialization",
+    "description": "Timing in milliseconds for the time it takes for the envelopes to be serialized.",
+    "features": []
+  },
+  {
+    "type": "Counter",
     "name": "buffer.envelopes_written",
     "description": "Number of _envelopes_ the envelope buffer ingests.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.initialization.duration",
+    "description": "Timing in milliseconds for the time it takes for initialize the buffer.",
     "features": []
   },
   {
@@ -48,15 +96,45 @@
     "features": []
   },
   {
-    "type": "Gauge",
-    "name": "buffer.push_inflight",
-    "description": "Number of envelopes currently waiting to be buffered.\n\nThis corresponds to the number of corresponding tokio tasks currently scheduled or running.",
+    "type": "Timer",
+    "name": "buffer.peek.duration",
+    "description": "Timing in milliseconds for the time it takes for the buffer to peek.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.pop.duration",
+    "description": "Timing in milliseconds for the time it takes for the buffer to pop.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.push.duration",
+    "description": "Timing in milliseconds for the time it takes for the buffer to push.",
     "features": []
   },
   {
     "type": "Counter",
     "name": "buffer.reads",
     "description": "Number of times the envelope buffer reads back from disk.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "buffer.ready_to_pop",
+    "description": "Number of times the readiness check of the buffer is polled.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.spool.duration",
+    "description": "Timing in milliseconds for the time it takes for the buffer to spool data to disk.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "buffer.spooled_envelopes",
+    "description": "Number of envelopes spool to disk.",
     "features": []
   },
   {
@@ -72,9 +150,27 @@
     "features": []
   },
   {
+    "type": "Counter",
+    "name": "buffer.try_pop",
+    "description": "Number of times an envelope from the buffer is trying to be popped.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.unspool.duration",
+    "description": "Timing in milliseconds for the time it takes for the buffer to unspool data from disk.",
+    "features": []
+  },
+  {
     "type": "Gauge",
     "name": "buffer.unspool.periodic",
     "description": "Number of queue keys (project key pairs) unspooled during proactive unspool.\nThis metric is tagged with:\n- `reason`: Why keys are / are not unspooled.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "buffer.unspooled_envelopes",
+    "description": "Number of envelopes unspooled from disk.",
     "features": []
   },
   {
@@ -315,6 +411,12 @@
   },
   {
     "type": "Timer",
+    "name": "legacy_project_cache.task.duration",
+    "description": "Timing in milliseconds for processing a task in the legacy project cache service.\n\nA task is a unit of work the service does. Each branch of the\n`tokio::select` is a different task type.\n\nThis metric is tagged with:\n- `task`: The type of the task the project cache does.",
+    "features": []
+  },
+  {
+    "type": "Timer",
     "name": "metrics.aggregator.message.duration",
     "description": "Timing in milliseconds for processing a message in the aggregator service.\n\nThis metric is tagged with:\n- `message`: The type of message that was processed.",
     "features": []
@@ -416,32 +518,6 @@
     "features": []
   },
   {
-    "type": "Counter",
-    "name": "metrics.meta.agg.items",
-    "description": "Incremnted for every metric meta item added to the metric meta aggregator.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "metrics.meta.agg.update",
-    "description": "Incremented every time the meta aggregator emitted an update that needs to be stored or\nsent upstream.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "metrics.meta.parsing_failed",
-    "description": "Number of times that parsing a metric meta item from an envelope failed.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "metrics.meta.redis.update",
-    "description": "Incremented every time a redis key is updated to store or update metadata.",
-    "features": [
-      "redis"
-    ]
-  },
-  {
     "type": "Histogram",
     "name": "metrics.partitions.flushed",
     "description": "The number of metric partitions flushed in a cycle.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).",
@@ -518,21 +594,9 @@
     "features": []
   },
   {
-    "type": "Gauge",
-    "name": "project_cache.garbage.queue_size",
-    "description": "The number of items currently in the garbage disposal queue.",
-    "features": []
-  },
-  {
     "type": "Counter",
     "name": "project_cache.hit",
     "description": "Number of times a project is looked up from the cache.\n\nThe cache may contain and outdated or expired project state. In that case, the project state\nis updated even after a cache hit.",
-    "features": []
-  },
-  {
-    "type": "Timer",
-    "name": "project_cache.message.duration",
-    "description": "Timing in milliseconds for handling a project cache message.\n\nThis metric is tagged with:\n- `message`: The type of message that was processed.",
     "features": []
   },
   {
@@ -550,7 +614,7 @@
   {
     "type": "Timer",
     "name": "project_cache.task.duration",
-    "description": "Timing in milliseconds for processing a task in the project cache service.\n\nA task is a unit of work the service does. Each branch of the\n`tokio::select` is a different task type.\n\nThis metric is tagged with:\n- `task`: The type of the task the processor does.",
+    "description": "Timing in milliseconds for processing a task in the project cache service.\n\nThis metric is tagged with:\n- `task`: The type of the task the project cache does.",
     "features": []
   },
   {
@@ -568,33 +632,9 @@
     ]
   },
   {
-    "type": "Timer",
-    "name": "project_state.eviction.duration",
-    "description": "Total time in milliseconds spent evicting outdated and unused projects happens.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "project_state.flush_all_metric_meta",
-    "description": "Number of full metric data flushes.\n\nA full flush takes all contained items of the aggregator and flushes them upstream,\nat best this happens once per freshly loaded project.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "project_state.get",
-    "description": "Number of times a project state is looked up from the cache.\n\nThis includes lookups for both cached and new projects. As part of this, updates for\noutdated or expired project caches are triggered.\n\nRelated metrics:\n- `project_cache.hit`: For successful cache lookups, even for outdated projects.\n- `project_cache.miss`: For failed lookups resulting in an update.",
-    "features": []
-  },
-  {
     "type": "Counter",
     "name": "project_state.metrics.no_project",
     "description": "The amount of times metrics of a project have been flushed without the project being\nfetched/available.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "project_state.no_cache",
-    "description": "Number of times a project config was requested with `.no-cache`.\n\nThis effectively counts the number of envelopes or events that have been sent with a\ncorresponding DSN. Actual queries to the upstream may still be deduplicated for these\nproject state requests.\n\nA maximum of 1 such requests per second is allowed per project key. This metric counts only\npermitted requests.",
     "features": []
   },
   {
@@ -612,7 +652,7 @@
   {
     "type": "Counter",
     "name": "project_state.redis.requests",
-    "description": "Number of times a project state is requested from the central Redis cache.\n\nThis has a tag `hit` with values `true` or `false`.  If false the request will be\nsent to the sentry endpoint.",
+    "description": "Number of times a project state is requested from the central Redis cache.\n\nThis metric is tagged with:\n- `hit`: One of:\n- `revision`: the cached version was validated to be up to date using its revision.\n- `project_config`: the request was handled by the cache.\n- `project_config_revision`: the request was handled by the cache and the revision did\nnot change.\n- `false`: the request will be sent to the sentry endpoint.",
     "features": [
       "processing"
     ]
@@ -671,8 +711,20 @@
   },
   {
     "type": "Counter",
+    "name": "replay.segment_limit_exceeded",
+    "description": "Incremented every time a segment exceeds the expected limit.",
+    "features": []
+  },
+  {
+    "type": "Counter",
     "name": "requests",
     "description": "Number of HTTP requests reaching Relay.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "requests.body_read.duration",
+    "description": "Timing in milliseconds to the time it takes to read an HTTP body.",
     "features": []
   },
   {
@@ -715,6 +767,12 @@
     "type": "Gauge",
     "name": "service.back_pressure",
     "description": "A number of messages queued in a services inbound message channel.\n\nThis metric is emitted once per second for every running service. Without backlogs, this\nnumber should be close to `0`. If this number is monotonically increasing, the service is\nnot able to process the inbound message volume.\n\nThis metric is tagged with:\n- `service`: The fully qualified type name of the service implementation.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "service.idle_time_nanos",
+    "description": "The amount of time a service spends waiting for new messages.\n\nThis is an indicator of how much more load a service can take on.\n\nCaveat: Some services circumvent the service framework by using custom incoming queues.\nFor these, we cannot fully rely on this metric.\n\nThis metric is tagged with:\n- `service`: The fully qualified type name of the service implementation.",
     "features": []
   },
   {

@@ -1,15 +1,14 @@
 const defaultTheme = require('tailwindcss/defaultTheme');
+
 import {
-  scopedPreflightStyles,
   isolateInsideOfContainer,
+  scopedPreflightStyles,
 } from 'tailwindcss-scoped-preflight';
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    './app/**/*.{js,ts,jsx,tsx}',
-    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
-  ],
+  darkMode: ['selector', '.dark'],
+  content: ['./app/**/*.{js,ts,jsx,tsx}', './src/components/**/*.{js,ts,jsx,tsx,mdx}'],
   theme: {
     extend: {
       animation: {
@@ -22,16 +21,16 @@ module.exports = {
       },
       keyframes: () => ({
         fadeIn: {
-          '0%': { opacity: 0 },
-          '100%': { opacity: 1 },
+          '0%': {opacity: 0},
+          '100%': {opacity: 1},
         },
         fadeInLeft: {
-          '0%': { opacity: 0, transform: 'translateX(-20px)' },
-          '100%': { opacity: 1, transform: 'translateX(0)' },
+          '0%': {opacity: 0, transform: 'translateX(-20px)'},
+          '100%': {opacity: 1, transform: 'translateX(0)'},
         },
         fadeInRight: {
-          '0%': { opacity: 0, transform: 'translateX(20px)' },
-          '100%': { opacity: 1, transform: 'translateX(0)' },
+          '0%': {opacity: 0, transform: 'translateX(20px)'},
+          '100%': {opacity: 1, transform: 'translateX(0)'},
         },
       }),
       fontFamily: {
@@ -54,6 +53,9 @@ module.exports = {
         'accent-md-violet': '#584774',
         red: '#e1567c',
         gold: '#F1B71C',
+      },
+      screens: {
+        'lg-xl': {min: '1130px'},
       },
     },
   },

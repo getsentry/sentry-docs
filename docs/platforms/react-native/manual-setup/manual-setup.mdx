@@ -138,6 +138,35 @@ We enable the Gradle integration in your `android/app/build.gradle` file by addi
 apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
 ```
 
+To change the default behavior, you can pass the following Sentry Gradle Integration options and environmental variables:
+
+```bash
+export SENTRY_PROPERTIES=path/to/sentry.properties
+export SENTRY_DISABLE_AUTO_UPLOAD=true # Temporarily disable source maps upload
+
+export SENTRY_DIST=1234
+export SENTRY_RELEASE=app@1.0.0
+```
+
+```groovy {filename:android/app/build.gradle}
+project.ext.sentryCli = [
+    logLevel: "debug" // Enable verbose debug output
+    sentryProperties: "path/to/sentry.properties",
+    flavorAware: false, // When enabled looks for sentry-{flavor}-{build_type}.properties
+    modulesPaths: [
+      "node_modules",
+      "../node_modules",
+    ],
+    skipCollectModules: false,
+
+    collectModulesScript: "path/to/node_modules/@sentry/react-native/dist/js/tools/collectModules.js",
+    copyDebugIdScript: "path/to/node_modules/@sentry/react-native/scripts/copy-debugid.js",
+    hasSourceMapDebugIdScript: "path/to/node_modules/@sentry/react-native/scripts/has-sourcemap-debugid.js",
+]
+
+apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
+```
+
 ### Enable Sentry AGP
 
 You can enable native symbol upload and other features by adding the [Sentry Android Gradle Plugin (AGP)](/platforms/android/configuration/gradle) dependency to `android/build.gradle`.
@@ -180,32 +209,3 @@ sentry {
     }
 }
 ```
-
-### Enable Logging for `sentry-cli`
-
-You can also enable logging for `sentry-cli` by adding this config before the above `apply from:` line:
-
-```groovy {filename:android/app/build.gradle}
-project.ext.sentryCli = [
-    logLevel: "debug"
-]
-
-apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
-```
-
-### Fetch `sentry.properties`
-
-We also support fetching different `sentry.properties` files for different flavors. For that, you need to add:
-
-```groovy {filename:android/app/build.gradle}
-project.ext.sentryCli = [
-    logLevel: "debug",
-    flavorAware: true
-]
-
-apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
-```
-
-The corresponding flavor files should also be placed within the specific build type folder where you intend to use them. For example, the "Android demo release" flavor would be `react-native/android/sentry-demo-release.properties`.
-
-We recommend leaving `logLevel: "debug"` since we look for specific `sentry.properties` files depending on your flavor's name.

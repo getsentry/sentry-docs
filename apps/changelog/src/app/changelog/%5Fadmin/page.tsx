@@ -103,10 +103,11 @@ export default async function ChangelogsListPage() {
                   <span className="text-gray-500">
                     <Text size="1">
                       {' '}
-                      {new Date(changelog.publishedAt || '').toLocaleDateString(
-                        undefined,
-                        {month: 'long', day: 'numeric'}
-                      )}
+                      {new Date(changelog.publishedAt || '').toLocaleDateString('en-EN', {
+                        month: 'long',
+                        day: 'numeric',
+                        timeZone: 'UTC',
+                      })}
                     </Text>
                     <br />
                   </span>

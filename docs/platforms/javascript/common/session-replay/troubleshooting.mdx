@@ -16,9 +16,25 @@ notSupported:
   - javascript.hapi
   - javascript.koa
   - javascript.nestjs
+  - javascript.cloudflare
 excerpt: ""
 description: "Troubleshooting Session Replay-specific Issues"
 ---
+
+<Expandable title="Replay doesn't match my application" permalink>
+
+There are a few cases where the replay playback won't match the look of your application. Below, are some common causes and solutions if you experience this.
+
+### Missing elements from the replay
+
+* You may be using unsupported and/or deprecated elements such as `<frame>` (not to be confused with `<iframe>`).
+* The element may be blocked by the [privacy configuration](/platforms/javascript/session-replay/privacy/#blocking) (by default, elements with the class name `sentry-block` or the attribute `data-sentry-block`).
+
+### CSS is wrong or missing
+
+* There may be edge cases with complex CSS selectors which break the styling. Please [file an issue on GitHub](https://github.com/getsentry/sentry-javascript/issues) if you encounter this.
+
+</Expandable>
 
 <Expandable title="My `canvas` elements aren't getting captured" permalink>
 
@@ -31,6 +47,7 @@ If you are on a supported SDK version and your `canvas` elements still aren't ge
 <Expandable title="Replay is slowing down my `canvas`" permalink>
 
 The integration needs to enable `preserveDrawingBuffer` to export images from 3D and WebGL canvases. This can negatively affect canvas performance. If your canvas application is impacted by enabling `preserveDrawingBuffer`, you'll need to <PlatformLink to="/session-replay/#canvas-recording-performance">enable manual snapshotting</PlatformLink> and call a `snapshot()` method inside of your re-paint loop.
+
 </Expandable>
 
 <Expandable title="My custom CSS/images/fonts/media aren't appearing when I view the Replay" permalink>
@@ -48,7 +65,7 @@ Due to [browser limitations](https://developer.mozilla.org/en-US/docs/Web/SVG/El
 
 <Expandable title="Why am I seeing too many or too few rage clicks?" permalink>
 
-There might be fewer rage clicks than you expect if the user stopped waiting for the site to respond before the 7 second threshold. This is why the rage click issues that you *do* see are so valuable, because the user that clicked at least 3 times and continued waiting at least 7 seconds for the site to respond is likely very frustrated.
+There might be fewer rage clicks than you expect if the user stopped waiting for the site to respond before the 7 second threshold. This is why the rage click issues that you _do_ see are so valuable, because the user that clicked at least 3 times and continued waiting at least 7 seconds for the site to respond is likely very frustrated.
 
 You might also see more rage clicks than you expected from buttons that don't trigger a DOM mutation or page scroll (such as "Print" and "Download" buttons). There is no reliable way for the SDK to detect that a download or print has initiated, so a slow click might be generated even if the button is not actually "dead". For these cases, you can configure the SDK via `slowClickIgnoreSelectors` - see [Configuration](/platforms/javascript/session-replay/configuration/) for more details.
 
@@ -65,7 +82,6 @@ Sentry.replayIntegration({
 ```
 
 </Expandable>
-
 
 <Expandable title="Why can't I see the full HTTP request body or all the headers?" permalink>
 
@@ -103,6 +119,7 @@ We're always working on ways to reduce the bundle size. Additionally, there are 
 The Sentry SDK attempts to minimize potential [performance overhead](/product/explore/session-replay/performance-overhead/#how-is-session-replay-optimized) in a few different ways. For example, by keeping track of the number of DOM mutations that are happening then disabling recording when a large number of changes are detected. Many simultaneous mutations can slow down a web page whether Session Replay is installed or not, but when a large number of mutations happen, the Replay client can incur an additional slowdown because it records each change.
 
 If you're seeing the "A large number of mutations was detected" message while watching a replay, it means that your page could be optimized. For example, a dropdown list with thousands of entries could be refactored so that rows are virtualized where only the visible rows are rendered in the DOM. Another potential solution is to paginate the results fetch more data as the user scrolls through it. The SDK has a <PlatformLink to="/session-replay/configuration/#mutation-limits">configuration</PlatformLink> that allows you to configure the limits before recording stops.
+
 </Expandable>
 
 <Expandable title="Text in the iframe isn't masked" permalink>
@@ -142,7 +159,11 @@ With this configuration, Replay is able to capture response bodies from Apollo C
 </Expandable>
 
 <Expandable title="`console` calls are triggering replays to record" permalink>
-Using the [`captureConsoleIntegration`](https://docs.sentry.io/platforms/javascript/configuration/integrations/captureconsole/) can cause replays to record as if you have triggered an exception. You can use [`beforeErrorSampling`](https://docs.sentry.io/platforms/javascript/guides/sveltekit/session-replay/understanding-sessions/#ignore-certain-errors-for-error-sampling) to avoid this behavior.
+  Using the
+  [`captureConsoleIntegration`](https://docs.sentry.io/platforms/javascript/configuration/integrations/captureconsole/)
+  can cause replays to record as if you have triggered an exception. You can use
+  [`beforeErrorSampling`](https://docs.sentry.io/platforms/javascript/guides/sveltekit/session-replay/understanding-sessions/#ignore-certain-errors-for-error-sampling)
+  to avoid this behavior.
 </Expandable>
 
 <Expandable title="Clicks are incorrectly resulting in a dead or rage click" permalink>
@@ -150,4 +171,5 @@ Using the [`captureConsoleIntegration`](https://docs.sentry.io/platforms/javascr
 There are certain cases (such as clicking a button to play an audio clip) where Sentry incorrectly records a click as a dead click (note: rage clicks are a subset of dead clicks). As a workaround, you can use the [`slowClickIgnoreSelector`](/platforms/javascript/session-replay/configuration/#general-integration-configuration) configuration option to ignore dead clicks for specific selectors.
 
 If you want to turn off [rage click issues](/product/issues/issue-details/replay-issues/) altogether, you can disable them by going to the **Settings** page in Sentry, clicking "Projects", and selecting the project for which you want to disable rage clicks. From here, select "Replays" under the "PROCESSING" heading and toggle off "Create Rage Click Issues".
+
 </Expandable>

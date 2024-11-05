@@ -16,6 +16,7 @@ notSupported:
   - javascript.hapi
   - javascript.koa
   - javascript.nestjs
+  - javascript.cloudflare
 description: "Learn about customizing sessions with the Session Replay SDK."
 ---
 
@@ -85,7 +86,7 @@ replay.start();
 replay.startBuffering();
 ```
 
-This can be used either if both `replaysSessionSampleRate` and `replaysOnErrorSampleRate` are `0` and thus no session has been started automatically, or if you previously stopped a session and want to start a new one (see below). `start()` and `startBuffering()` will throw an error if a session is currently running.
+If both `replaysSessionSampleRate` and `replaysOnErrorSampleRate` are `0`, then you'll need to manually start a session replay, as shown above. This is also useful if you previously stopped a session and want to start a new one (see below). If a session is currently running, `start()` and `startBuffering()` are safe and have no effect. They will [log a debug message](/platforms/javascript/configuration/options/#debug) in this case.
 
 ## Manually Stopping Replay
 
@@ -107,7 +108,7 @@ await replay.flush();
 
 In `session` mode, this will upload any pending recording data to Sentry. In `buffer` mode, this will upload any pending recording data to Sentry and then continue recording, the same as when an error is sampled with `replaysOnErrorSampleRate`.
 
-Note that it's safe to call `flush()` at any time, even if Session Replay is stopped, in which case, it will do nothing.
+Calling `flush()` while Session Replay is stopped will start a new session recording.
 
 ## Examples of Custom Sampling
 
@@ -198,7 +199,6 @@ replayIntegration({
 If you return `false` from this method for a given error, we will not check the error sample rate for this error.
 If you return `true`, we will continue to check the error sample rate as normal.
 
-
 ### Connect Replays with Support Software
 
 Replays do not need to be connected to an application error, they can also be used to supplement your support tickets.
@@ -227,13 +227,13 @@ Sentry.init({
  * Your widget will need to have an event/hook to trigger flushing the replay to
  * Sentry.
  */
-MySupportWidget.on('open', () => {
+MySupportWidget.on("open", () => {
   const replay = Sentry.getReplay();
   // Send replay to Sentry
   replay.flush();
   // Retrieve the replay id that was saved and attach it to your support widget
   const replayId = replay.getReplayId();
-  MySupportWidget.setTag('replayId', replayId);
+  MySupportWidget.setTag("replayId", replayId);
 });
 
 /**

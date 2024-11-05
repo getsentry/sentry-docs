@@ -1,0 +1,37 @@
+To set up distributed tracing, use Sentry's middleware to inject tracing information into meta tags.
+
+Create or modify the `middleware.ts` file and import and add `sentryBeforeResponseMiddleware`
+
+```typescript {filename: middleware.ts}
+import { sentryBeforeResponseMiddleware } from '@sentry/solidstart/middleware';
+import { createMiddleware } from '@solidjs/start/middleware';
+
+export default createMiddleware({
+  onBeforeResponse: [
+    sentryBeforeResponseMiddleware(),
+    // Add your other middleware handlers after `sentryBeforeResponseMiddleware`
+  ],
+});
+````
+
+If you didn't use a middleware before, don't forget to specify it in `app.config.ts`
+
+```typescript {filename: app.config.ts}
+import { defineConfig } from '@solidjs/start/config';
+
+export default defineConfig({
+  // ...
+  middleware: './src/middleware.ts',
+});
+```
+
+To get around possible [Browser CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) issues, you should define `tracePropagationTargets` for client-side.
+
+```javascript
+// hooks.client.js
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.solidRouterBrowserTracingIntegration()],
+  tracePropagationTargets: ["https://myproject.org", /^\/api\//],
+});
+```

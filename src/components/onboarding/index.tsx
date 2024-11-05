@@ -212,7 +212,7 @@ export function OnboardingOptionButtons({
   }, [options, touchedOptions]);
 
   return (
-    <div className="flex flex-wrap gap-3 py-2 bg-white/90 sticky top-[80px] z-[4] shadow-[var(--shadow-6)] transition">
+    <div className="onboarding-options flex flex-wrap gap-3 py-2 bg-[var(--white)] dark:bg-[var(--gray-1)]  sticky top-[80px] z-[4] shadow-[var(--shadow-6)] transition">
       {options.map(option => (
         <Button
           variant="surface"

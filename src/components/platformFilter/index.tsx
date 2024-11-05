@@ -38,11 +38,15 @@ export function PlatformFilter({platforms}: {platforms: Platform[]}) {
     uniqByReference(matches.map(x => (x.type === 'platform' ? x : x.platform))).map(p => {
       return {
         ...p,
-        guides: p.guides.filter(g => matches.some(m => m.key === g.key)),
+        guides: matches
+          .filter(m => m.type === 'guide' && m.platform.key === p.key)
+          .map(m => p.guides.find(g => g.key === m.key)!)
+          .filter(Boolean),
         integrations: p.integrations.filter(i => matches.some(m => m.key === i.key)),
       };
     })
   );
+
   return (
     <div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-8 md:items-end">
@@ -62,7 +66,7 @@ export function PlatformFilter({platforms}: {platforms: Platform[]}) {
       {matches.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {platformColumns.map((column, i) => (
-            <div key={i} className="flex flex-col gap-4">
+            <div key={i} className={`flex flex-col gap-4 ${styles.platform}`}>
               {column.map(platform =>
                 platform.guides.length === 0 && platform.integrations.length === 0 ? (
                   <Link href={platform.url} key={platform.key}>

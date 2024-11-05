@@ -1,29 +1,30 @@
-import { Fragment, Suspense } from "react";
-import { type Changelog } from "@prisma/client";
-import type { Metadata, ResolvingMetadata } from "next";
-import { unstable_cache } from "next/cache";
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { getServerSession } from "next-auth/next";
-import { MDXRemote } from "next-mdx-remote/rsc";
+import {Fragment, Suspense} from 'react';
+import {type Changelog} from '@prisma/client';
+import type {Metadata, ResolvingMetadata} from 'next';
+import {unstable_cache} from 'next/cache';
+import Link from 'next/link';
+import {notFound} from 'next/navigation';
+import {getServerSession} from 'next-auth/next';
+import {MDXRemote} from 'next-mdx-remote/rsc';
 
-import { prismaClient } from "@/server/prisma-client";
-import Article from "@/client/components/article";
-import ArticleFooter from "@/client/components/articleFooter";
-import { authOptions } from "@/server/authOptions";
-import { mdxOptions } from "@/server/mdxOptions";
+import {prismaClient} from '@/server/prisma-client';
+import {Article} from '@/client/components/article';
+import ArticleFooter from '@/client/components/articleFooter';
+import {authOptions} from '@/server/authOptions';
+import {mdxOptions} from '@/server/mdxOptions';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(
-  { params }: { params: { slug: string } },
+  props: {params: Promise<{slug: string}>},
   parent: ResolvingMetadata
 ): Promise<Metadata> {
+  const params = await props.params;
   let changelog: Changelog | null = null;
   try {
     changelog = await getChangelog(params.slug);
   } catch (e) {
-    return { title: (await parent).title };
+    return {title: (await parent).title};
   }
 
   return {
@@ -39,7 +40,7 @@ export async function generateMetadata(
 }
 
 const getChangelog = unstable_cache(
-  async (slug) => {
+  async slug => {
     try {
       return await prismaClient.changelog.findUnique({
         where: {
@@ -53,15 +54,12 @@ const getChangelog = unstable_cache(
       return null;
     }
   },
-  ["changelog-detail"],
-  { tags: ["changelog-detail"] }
+  ['changelog-detail'],
+  {tags: ['changelog-detail']}
 );
 
-export default async function ChangelogEntry({
-  params,
-}: {
-  params: { slug: string };
-}) {
+export default async function ChangelogEntry(props: {params: Promise<{slug: string}>}) {
+  const params = await props.params;
   const changelog = await getChangelog(params.slug);
 
   if (!changelog) {
@@ -112,7 +110,7 @@ export default async function ChangelogEntry({
           >
             <Suspense fallback={<Fragment>Loading...</Fragment>}>
               <MDXRemote
-                source={changelog?.content || "No content found."}
+                source={changelog?.content || 'No content found.'}
                 options={
                   {
                     mdxOptions,
