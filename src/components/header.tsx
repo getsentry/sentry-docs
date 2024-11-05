@@ -68,7 +68,7 @@ export function Header({pathname, searchPlatforms, noSearch}: Props) {
           <NavLink href="https://sentry.io/changelog/">Changelog</NavLink>
           <NavLink href="https://try.sentry-demo.com/demo/start/">Sandbox</NavLink>
           <Fragment>
-            <NavLink href="https://sentry.io/">Sign In</NavLink>
+            <NavLink href="https://sentry.io/">Go to Sentry</NavLink>
             <NavLink
               href="https://sentry.io/signup/"
               className="transition-all duration-300 ease-in-out hover:bg-gradient-to-r hover:from-[#fa7faa] hover:via-[#ff9691] hover:to-[#ffb287]"

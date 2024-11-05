@@ -67,28 +67,45 @@ sentry_sdk.init(
     integrations=[
         BottleIntegration(
             transaction_style="endpoint",
+            failed_request_status_codes={*range(500, 600)},
         ),
     ],
 )
 
 ```
 
-You can pass the following keyword arguments to `BottleIntegration()`:
+Each of the following options are supported as keyword arguments to `BottleIntegration()`.
 
-- `transaction_style`:
+### `transaction_style`
 
-  ```python
-  @app.route("/myurl/<foo>")
-  def myendpoint():
-      return "ok"
-  ```
+The `transaction_style` option specifies how the transaction name is generated. You can set the option to `"endpoint"` (the default) or `"url"`.
 
-  In the above code, you would set the transaction to:
+For example, given the following route:
 
-  - `/myurl/<foo>` if you set `transaction_style="url"`.
-  - `myendpoint` if you set `transaction_style="endpoint"`
+```python
+@app.route("/myurl/<foo>")
+def myendpoint():
+    return "ok"
+```
 
-  The default is `"endpoint"`.
+- If you set `transaction_style="endpoint"`, the transaction name will be `"myendpoint"`, since that is the route handler function's name.
+- If you set `transaction_style="url"`, the transaction name will be `"/myurl/<foo>"`, since that is the URL path.
+
+
+### `failed_request_status_codes`
+
+A `set` of integers that will determine when an [`HTTPResponse`](https://bottlepy.org/docs/dev/api.html#bottle.HTTPResponse), which is raised or returned by the request handler, should be reported to Sentry. The `HTTPResponse` is reported to Sentry if its status code is contained in the `failed_request_status_codes` set.
+
+Examples of valid values for `failed_request_status_codes`:
+
+- `{500}` will only report `HTTPResponse` with status 500.
+- `{400, *range(500, 600)}` will report `HTTPResponse` with status 400 as well as those in the 5xx range.
+- `set()` (the empty set) will not report any `HTTPResponse` to Sentry.
+
+The default is `{*range(500, 600)}`, meaning that any `HTTPResponse` with a status in the 5xx range is reported to Sentry.
+
+Regardless of how `failed_request_status_codes` is configured, any non-`HTTPResponse` exceptions raised by the handler are reported to Sentry. For example, if your request handler raises an unhandled `AttributeError`, the `AttributeError` gets reported to Sentry, even if you have set `failed_request_status_codes=set()`.
+
 
 ## Supported Versions
 

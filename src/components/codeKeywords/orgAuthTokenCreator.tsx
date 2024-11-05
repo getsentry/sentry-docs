@@ -41,7 +41,7 @@ export function OrgAuthTokenCreator() {
     dropdownPopperOptions
   );
   const [isAnimating, setIsAnimating] = useState(false);
-  const {theme} = useTheme();
+  const {resolvedTheme: theme} = useTheme();
   const isDarkMode = theme === 'dark';
 
   const {isMounted} = useIsMounted();
