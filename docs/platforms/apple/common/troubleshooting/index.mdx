@@ -50,6 +50,24 @@ Check your app for any procedure that cleans the cache of your app during runtim
 
 Since Xcode 14 App Store Connect doesn't make debug symbols available for download anymore, see [Xcode Release Notes](https://developer.apple.com/documentation/xcode-release-notes/xcode-14-release-notes#Deprecations). Please use a different way of uploading the debug symbols by following the [documentation](/platforms/apple/dsym/).
 
+## Unknown receiver '\<SomeReceiver\>', Use of undeclared identifier '\<SomeIdentifier\>'
+
+If you see an error like `Unknown receiver 'SwiftDescriptor'` or `Use of undeclared identifier 'SentryLog'` during the application build process, there's a conflict stemming from `APPLICATION_EXTENSION_API_ONLY`. By default, the Sentry Cocoapod is configured with `APPLICATION_EXTENSION_API_ONLY=YES`, but some `post_install` script likely changed it. To fix this error, add the following to the `Podfile`.
+
+```ruby {filename:ios/Podfile}
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      if target.name == 'Sentry'
+        config.build_settings['APPLICATION_EXTENSION_API_ONLY'] = 'YES'
+      else
+        # configuration for other targets
+      end
+    end
+  end
+end
+```
+
 ## Crash in `SentrySubClassFinder.actOnSubclassesOfViewControllerInImage`
 
 Suppose your app crashes in `SentrySubClassFinder actOnSubclassesOfViewControllerInImage` with a stacktrace similar to the one below:
@@ -132,3 +150,9 @@ You can also try switching to Sentry-Dynamic when integrating the Cocoa SDK via 
 
 If you compile your project with Xcode 15.4 and none of the above works, [Apple staff on the Apple forum](https://forums.developer.apple.com/forums/thread/751573)
 say it is due to a bug in Xcode 15.4. They recommend sticking to Xcode 15.3 until Apple fixes this bug in a future Xcode release.
+
+## Release Health Misses Unhandled Events and Missing Mach Info
+
+If the release health page shows fewer events in the unhandled tab, your events miss the unhandled property or mach info; please update the Cocoa SDK to version 8.33.0 or above or stay on version 8.30.0.
+
+We introduced a bug with a refactoring [#4101](https://github.com/getsentry/sentry-cocoa/pull/4101) released in 8.30.1, that caused unhandled/crash events to have the unhandled property and mach info missing, which is required for release health to show events in the unhandled tab. It's essential to mention that this bug doesn't impact release health statistics, such as crash-free session or user rates.

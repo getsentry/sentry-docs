@@ -16,7 +16,7 @@ Sentry.init({
     Sentry.replayIntegration(),
     SentryCore.thirdPartyErrorFilterIntegration({
       filterKeys: ['sentry-changelog'],
-      behaviour: 'drop-error-if-contains-third-party-frames',
+      behaviour: 'apply-tag-if-contains-third-party-frames',
     }),
   ],
 });

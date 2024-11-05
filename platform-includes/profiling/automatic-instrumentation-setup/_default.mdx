@@ -20,7 +20,29 @@ Sentry.init({
   // Since profilesSampleRate is relative to tracesSampleRate,
   // the final profiling rate can be computed as tracesSampleRate * profilesSampleRate
   // For example, a tracesSampleRate of 0.5 and profilesSampleRate of 0.5 would
-  // results in 25% of transactions being profiled (0.5*0.5=0.25)
+  // result in 25% of transactions being profiled (0.5*0.5=0.25)
   profilesSampleRate: 1.0,
+});
+```
+
+Alternatively, instead of a `profilesSampleRate` your can also provide a `profilesSampler` function:
+
+```javascript
+const Sentry = require("@sentry/browser");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    // Add browser profiling integration to the list of integrations
+    Sentry.browserTracingIntegration(),
+    Sentry.browserProfilingIntegration(),
+  ],
+  tracesSampleRate: 1.0,
+
+  // This function will be called for every sampled span
+  // to determine if it should be profiled
+  profilesSampler: (samplingContext) => {
+    return 1.0;
+  },
 });
 ```

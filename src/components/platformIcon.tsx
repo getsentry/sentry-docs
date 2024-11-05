@@ -49,6 +49,7 @@ import FalconSVG from 'platformicons/svg/falcon.svg';
 import FastapiSVG from 'platformicons/svg/fastapi.svg';
 import FasthttpSVG from 'platformicons/svg/fasthttp.svg';
 import FastifySVG from 'platformicons/svg/fastify.svg';
+import FiberSVG from 'platformicons/svg/fiber.svg';
 import FlaskSVG from 'platformicons/svg/flask.svg';
 import FlutterSVG from 'platformicons/svg/flutter.svg';
 import FontSVG from 'platformicons/svg/font.svg';
@@ -79,15 +80,16 @@ import KotlinSVG from 'platformicons/svg/kotlin.svg';
 import LangchainSVG from 'platformicons/svg/langchain.svg';
 import LaravelSVG from 'platformicons/svg/laravel.svg';
 import LinuxSVG from 'platformicons/svg/linux.svg';
+import LitestarSVG from 'platformicons/svg/litestar.svg';
 import LogbackSVG from 'platformicons/svg/logback.svg';
 import LoguruSVG from 'platformicons/svg/loguru.svg';
-import MartiniSVG from 'platformicons/svg/martini.svg';
 import MauiSVG from 'platformicons/svg/maui.svg';
 import MongodbSVG from 'platformicons/svg/mongodb.svg';
 import NativecSVG from 'platformicons/svg/nativec.svg';
 import NestjsSVG from 'platformicons/svg/nestjs.svg';
 import NextjsSVG from 'platformicons/svg/nextjs.svg';
 import NodejsSVG from 'platformicons/svg/nodejs.svg';
+import NuxtSVG from 'platformicons/svg/nuxt.svg';
 import OpenaiSVG from 'platformicons/svg/openai.svg';
 import PerlSVG from 'platformicons/svg/perl.svg';
 import PhpSVG from 'platformicons/svg/php.svg';
@@ -112,6 +114,7 @@ import ServerlessSVG from 'platformicons/svg/serverless.svg';
 import SidekiqSVG from 'platformicons/svg/sidekiq.svg';
 import SinatraSVG from 'platformicons/svg/sinatra.svg';
 import SolidSVG from 'platformicons/svg/solid.svg';
+import SolidStartSVG from 'platformicons/svg/solidstart.svg';
 import SpringSVG from 'platformicons/svg/spring.svg';
 import SpringbootSVG from 'platformicons/svg/springboot.svg';
 import SqlSVG from 'platformicons/svg/sql.svg';
@@ -183,6 +186,7 @@ import FalconSVGLarge from 'platformicons/svg_80x80/falcon.svg';
 import FastapiSVGLarge from 'platformicons/svg_80x80/fastapi.svg';
 import FasthttpSVGLarge from 'platformicons/svg_80x80/fasthttp.svg';
 import FastifySVGLarge from 'platformicons/svg_80x80/fastify.svg';
+import FiberSVGLarge from 'platformicons/svg_80x80/fiber.svg';
 import FlaskSVGLarge from 'platformicons/svg_80x80/flask.svg';
 import FlutterSVGLarge from 'platformicons/svg_80x80/flutter.svg';
 import FontSVGLarge from 'platformicons/svg_80x80/font.svg';
@@ -213,15 +217,16 @@ import KotlinSVGLarge from 'platformicons/svg_80x80/kotlin.svg';
 import LangchainSVGLarge from 'platformicons/svg_80x80/langchain.svg';
 import LaravelSVGLarge from 'platformicons/svg_80x80/laravel.svg';
 import LinuxSVGLarge from 'platformicons/svg_80x80/linux.svg';
+import LitestarSVGLarge from 'platformicons/svg_80x80/litestar.svg';
 import LogbackSVGLarge from 'platformicons/svg_80x80/logback.svg';
 import LoguruSVGLarge from 'platformicons/svg_80x80/loguru.svg';
-import MartiniSVGLarge from 'platformicons/svg_80x80/martini.svg';
 import MauiSVGLarge from 'platformicons/svg_80x80/maui.svg';
 import MongodbSVGLarge from 'platformicons/svg_80x80/mongodb.svg';
 import NativecSVGLarge from 'platformicons/svg_80x80/nativec.svg';
 import NestjsSVGLarge from 'platformicons/svg_80x80/nestjs.svg';
 import NextjsSVGLarge from 'platformicons/svg_80x80/nextjs.svg';
 import NodejsSVGLarge from 'platformicons/svg_80x80/nodejs.svg';
+import NuxtSVGLarge from 'platformicons/svg_80x80/nuxt.svg';
 import OpenaiSVGLarge from 'platformicons/svg_80x80/openai.svg';
 import PerlSVGLarge from 'platformicons/svg_80x80/perl.svg';
 import PhpSVGLarge from 'platformicons/svg_80x80/php.svg';
@@ -246,6 +251,7 @@ import ServerlessSVGLarge from 'platformicons/svg_80x80/serverless.svg';
 import SidekiqSVGLarge from 'platformicons/svg_80x80/sidekiq.svg';
 import SinatraSVGLarge from 'platformicons/svg_80x80/sinatra.svg';
 import SolidSVGLarge from 'platformicons/svg_80x80/solid.svg';
+import SolidStartSVGLarge from 'platformicons/svg_80x80/solidstart.svg';
 import SpringSVGLarge from 'platformicons/svg_80x80/spring.svg';
 import SpringbootSVGLarge from 'platformicons/svg_80x80/springboot.svg';
 import SqlSVGLarge from 'platformicons/svg_80x80/sql.svg';
@@ -469,6 +475,10 @@ const formatToSVG = {
     sm: FasthttpSVG,
     lg: FasthttpSVGLarge,
   },
+  fiber: {
+    sm: FiberSVG,
+    lg: FiberSVGLarge,
+  },
   flask: {
     sm: FlaskSVG,
     lg: FlaskSVGLarge,
@@ -589,6 +599,10 @@ const formatToSVG = {
     sm: LinuxSVG,
     lg: LinuxSVGLarge,
   },
+  litestar: {
+    sm: LitestarSVG,
+    lg: LitestarSVGLarge,
+  },
   logback: {
     sm: LogbackSVG,
     lg: LogbackSVGLarge,
@@ -596,10 +610,6 @@ const formatToSVG = {
   loguru: {
     sm: LoguruSVG,
     lg: LoguruSVGLarge,
-  },
-  martini: {
-    sm: MartiniSVG,
-    lg: MartiniSVGLarge,
   },
   maui: {
     sm: MauiSVG,
@@ -620,6 +630,10 @@ const formatToSVG = {
   nextjs: {
     sm: NextjsSVG,
     lg: NextjsSVGLarge,
+  },
+  nuxt: {
+    sm: NuxtSVG,
+    lg: NuxtSVGLarge,
   },
   nodejs: {
     sm: NodejsSVG,
@@ -720,6 +734,10 @@ const formatToSVG = {
   solid: {
     sm: SolidSVG,
     lg: SolidSVGLarge,
+  },
+  solidstart: {
+    sm: SolidStartSVG,
+    lg: SolidStartSVGLarge,
   },
   spring: {
     sm: SpringSVG,
@@ -848,11 +866,12 @@ export const PLATFORM_TO_ICON = {
   go: 'go',
   'go-echo': 'echo',
   'go-fasthttp': 'fasthttp',
+  'go-fiber': 'fiber',
   'go-gin': 'gin',
   'go-iris': 'iris',
-  'go-martini': 'martini',
   'go-negroni': 'go',
   'go-zerolog': 'go',
+  'go-logrus': 'go',
   godot: 'godot',
   huggingface: 'huggingface',
   java: 'java',
@@ -876,6 +895,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-capacitor': 'capacitor',
   'javascript-connect': 'connect',
   'javascript-cordova': 'cordova',
+  'javascript-cloudflare': 'cloudflare',
   'javascript-deno': 'deno',
   'javascript-electron': 'electron',
   'javascript-ember': 'ember',
@@ -888,10 +908,12 @@ export const PLATFORM_TO_ICON = {
   'javascript-fastify': 'fastify',
   'javascript-nestjs': 'nestjs',
   'javascript-nextjs': 'nextjs',
+  'javascript-nuxt': 'nuxt',
   'javascript-node': 'nodejs',
   'javascript-react': 'react',
   'javascript-remix': 'remix',
   'javascript-solid': 'solid',
+  'javascript-solidstart': 'solidstart',
   'javascript-svelte': 'svelte',
   'javascript-sveltekit': 'svelte',
   'javascript-vue': 'vue',
@@ -939,6 +961,7 @@ export const PLATFORM_TO_ICON = {
   'python-huey': 'huey',
   'python-huggingface_hub': 'huggingface',
   'python-langchain': 'langchain',
+  'python-litestar': 'litestar',
   'python-loguru': 'loguru',
   'python-openai': 'openai',
   'python-pylons': 'python',
@@ -950,6 +973,7 @@ export const PLATFORM_TO_ICON = {
   'python-sanic': 'sanic',
   'python-serverless': 'serverless',
   'python-starlette': 'starlette',
+  'python-starlite': 'litestar',
   'python-strawberry': 'strawberry',
   'python-spark': 'apache-spark',
   'python-sqlalchemy': 'sqlalchemy',

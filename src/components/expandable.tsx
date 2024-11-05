@@ -10,27 +10,16 @@ type Props = {
   permalink?: boolean;
 };
 
-type ExpandedProps = {
-  isExpanded: boolean;
-};
-
-const ExpandedIndicator = styled(({isExpanded: _, ...props}) => (
-  <ArrowDown {...props} />
-))<ExpandedProps>`
+const Arrow = styled(({...props}) => <ArrowDown {...props} />)<{className: string}>`
   user-select: none;
   transition: transform 200ms ease-in-out;
-  transform: rotate(${p => (p.isExpanded ? '180deg' : '0')});
   stroke-width: 3px;
   position: absolute;
   right: 0;
   top: 4px;
 `;
 
-const ExpandableBody = styled.div<ExpandedProps>`
-  display: ${props => (props.isExpanded ? 'block' : 'none')};
-`;
-
-const ExpandableWrapper = styled.div`
+const Details = styled.details`
   background: var(--accent-2);
   border-color: var(--accent-12);
   border-left: 3px solid var(--accent-12);
@@ -38,6 +27,9 @@ const ExpandableWrapper = styled.div`
   padding: 0.5rem 1rem;
   h2 {
     margin-top: 0;
+  }
+  &[open] .expandable-arrow {
+    transform: rotate(180deg);
   }
 `;
 
@@ -53,7 +45,7 @@ const header = (title: string, permalink?: boolean) =>
     <h2 id={slugify(title)} className="!mb-0">
       <a
         href={'#' + slugify(title)}
-        className="!text-[1rem] !font-medium hover:!no-underline !text-darkPurple"
+        className="w-full !text-[1rem] !font-medium hover:!no-underline !text-[var(--foreground)]"
       >
         {title}
       </a>
@@ -80,20 +72,15 @@ export function Expandable({title, children, permalink}: Props) {
     return () => {
       window.removeEventListener('hashchange', onHashChange);
     };
-  }, []);
+  }, [title, permalink]);
 
   return (
-    <ExpandableWrapper>
-      <p
-        className="m-0 font-medium cursor-pointer relative pr-8 select-none"
-        onClick={() => {
-          setIsExpanded(!isExpanded);
-        }}
-      >
-        {header(title, permalink)}
-        <ExpandedIndicator isExpanded={isExpanded} />
-      </p>
-      <ExpandableBody isExpanded={isExpanded}>{children}</ExpandableBody>
-    </ExpandableWrapper>
+    <Details open={isExpanded}>
+      <summary className="m-0 font-medium cursor-pointer relative pr-8 select-none appearance-none list-none">
+        {header(title, true)}
+        <Arrow className="expandable-arrow" />
+      </summary>
+      {children}
+    </Details>
   );
 }

@@ -8,11 +8,11 @@ When you add Sentry to your app, you get a lot of valuable information about err
 
 The Sentry SDKs have several configuration options to help you filter out events.
 
-We also offer [Inbound Filters](/concepts/data-management/filtering/) to filter events in sentry.io. We recommend filtering at the client level though, because it removes the overhead of sending events you don't actually want. Learn more about the [fields available in an event](https://develop.sentry.dev/sdk/event-payloads/).
+We also offer [Inbound Filters](/concepts/data-management/filtering/) to filter events in sentry.io. We recommend filtering at the client level though, because it removes the overhead of sending events you don't actually want. Learn more about the [fields available in an event](https://develop.sentry.dev/sdk/data-model/event-payloads/).
 
 ## Filtering Error Events
 
-Configure your SDK to filter error events by using the <PlatformIdentifier name="before-send" /> callback method and configuring, enabling, or disabling integrations.
+To prevent certain errors from being reported to Sentry, use the <PlatformIdentifier name="before-send" /> or <PlatformIdentifier name="add-exception-filter" /> configuration options, which allows you to evaluate whether to send an error or now. Alternatively, you can also control the behaviour by enabling, or disabling integrations.
 
 ### Using <PlatformIdentifier name="before-send" />
 
@@ -21,6 +21,32 @@ All Sentry SDKs support the <PlatformIdentifier name="before-send" /> callback m
 <PlatformContent includePath="configuration/before-send/" />
 
 Note also that breadcrumbs can be filtered, as discussed in [our Breadcrumbs documentation](/product/error-monitoring/breadcrumbs/).
+
+### Using <PlatformIdentifier name="add-exception-filter" /> and <PlatformIdentifier name="add-exception-filter-for-type" />
+
+The SDK also allows you to provide your own, custom exception filters. These have to inherit from <PlatformIdentifier name="IExceptionFilter" />
+
+```csharp
+public class MyExceptionFilter : IExceptionFilter
+{
+    public bool Filter(Exception ex)
+    {
+        // TODO: Add your filtering logic
+    }
+}
+```
+
+and can then be provided to the options during initialization.
+
+```csharp
+options.AddExceptionFilter(new MyExceptionFilter());
+```
+
+Exception types provided via <PlatformIdentifier name="add-exception-filter-for-type" /> automatically get filtered and prevented from being set to Sentry.
+
+```csharp
+options.AddExceptionFilterForType<MyCustomException>();
+```
 
 ## Filtering Transaction Events
 
