@@ -1,0 +1,67 @@
+---
+title: Span Protocol
+---
+
+<Alert level="info">
+  This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement levels.
+  
+  Furthermore, this is work in progress and does not represent the final state.
+</Alert>
+
+The SDK must implement a new "span" envelope item, which is used to emit an entire span tree (one root span and its children).
+The payload of each envelope item follows the [OpenTelemetry Protocol](https://opentelemetry.io/docs/specs/otel/protocol/).
+
+```
+{
+	"event_id":"9ec79c33ec9942ab8353589fcb2e04dc"
+}
+{
+	"type": "span"
+}
+{
+  	"traceId": "32d3c7cb501fbddbe3ce1016a72d50b5",
+  	"spanId": "e91d37480970523b",
+  	"name": "GET /",
+  	"startTime": "1544712660",
+  	"endTime": "1544712680",
+  	"attributes": [
+		{
+			"key": "sentry.op",
+	      	"value": {
+	        	"stringValue": "http.sever",
+	      	}
+		},
+    	{
+	    	"key": "http.response.status_code",
+      		"value": {
+	      		"intValue": "200",
+	    	}
+	  	}
+  	]
+}
+{
+	"type": "span"
+}
+{
+	"traceId": "32d3c7cb501fbddbe3ce1016a72d50b5",
+  	"spanId": "6b22b3af586e777a",
+  	"parentSpanId": "e91d37480970523b",
+  	"name": "UserMiddleware",
+  	"startTimeUnix": "1544712665",
+  	"endTimeUnix": "1544712675",
+  	"attributes": [
+	  	{
+	    	"key": "sentry.op",
+      		"value": {
+	      		"stringValue": "middleware.handle",
+	    	}
+	  	},
+	  	{
+	    	"key": "user.email",
+      		"value": {
+	    		"stringValue": "jane.doe@example.com",
+	    	}
+	  	}
+	]
+}
+```
