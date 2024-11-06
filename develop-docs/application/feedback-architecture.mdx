@@ -1,5 +1,6 @@
 ---
 title: User Feedback Architecture
+sidebar_order: 20
 ---
 
 **The goal of this doc is to give engineers an in-depth understanding of User Feedback's backend.**
@@ -15,12 +16,12 @@ When broken down, there are **5** ways to create feedback in our system 😵‍�
 `FeedbackCreationSource(Enum)` in [create_feedback.py](https://github.com/getsentry/sentry/blob/2b642e149c79b251e1c2f4339fc73d656347d74e/src/sentry/feedback/usecases/create_feedback.py#L33-L33).
 The 4 ways _clients_ can create feedback are:
 
-`NEW_FEEDBACK_ENVELOPE`: [The new format](https://develop.sentry.dev/sdk/envelopes/#full-examples) created by the Replay team when adding
+`NEW_FEEDBACK_ENVELOPE`: [The new format](https://develop.sentry.dev/sdk/data-model/envelopes/#full-examples) created by the Replay team when adding
 the [User Feedback Widget](https://docs.sentry.io/product/user-feedback/#user-feedback-widget)
 to the JavaScript SDK. It allows adding more information, for example tags,
 release, url, etc.
 
-`USER_REPORT_ENVELOPE`: [The older format](https://develop.sentry.dev/sdk/envelopes/#user-feedback) with name/email/comments, that requires
+`USER_REPORT_ENVELOPE`: [The older format](https://develop.sentry.dev/sdk/data-model/envelope-items/#user-feedback) with name/email/comments, that requires
 `event_id` to link a Sentry error event.
 
 `USER_REPORT_DJANGO_ENDPOINT`: [The deprecated Web API](https://docs.sentry.io/api/projects/submit-user-feedback/)
@@ -41,7 +42,7 @@ which
 
 ## Feedback events
 
-The new and preferred way to send feedback from the SDK is in an [event envelope](https://develop.sentry.dev/sdk/envelopes/#full-examples).
+The new and preferred way to send feedback from the SDK is in an [event envelope](https://develop.sentry.dev/sdk/data-model/envelopes/#full-examples).
 The format is the same as error events, except the `type` header = `"feedback"`. While
 user reports have an associated event, **new feedback _is_ an event**. This
 offers 2 improvements:
@@ -51,17 +52,18 @@ offers 2 improvements:
 
 The user's submission is wrapped in a context object:
 
-```Python/Javascript
+```Pseudo-code
 event[”contexts”][”feedback”] = {
 	"name": <user-provided>,
 	"contact_email": <user-provided>,
 	"message": <user-provided>,
 	"url": <referring web page>,
-	"source": <developer-provided, ex: "widget">
+	"source": <developer-provided, ex: "widget">,
+	"associated_event_id": <developer-provided, should be a valid error event in the same project>
 }
 
-// all fields are technically optional, but recommended
-// the widget can be configured to require a non-empty email and/or name
+// All fields are optional except message.
+// The widget can be configured to require a non-empty email and/or name.
 ```
 
 - This doc refers to the payload format (`event` in the pseudo-code above) as a “**feedback event”**.
@@ -72,8 +74,15 @@ event[”contexts”][”feedback”] = {
 
 ### Ingest diagram
 
-![](https://mermaid.ink/svg/pako:eNptkc1qwzAQhF9F7MmGmN59KJSmx_ZQ91IsYxR5YwvbkqqfgEny7l05NW0hOg3a0erb2TNI0yGU0DthB_ax55rREdbWnyY69mTtpKQIyuiGFcUju3BAfcLJWORwYe84iYVrHlaxOo6tNNrHGV1WK92jD8URsTsIORZ4Qh18k6cXv76t8VfEiJ4JzyRO6BYWhB_TL9KhCNhubVrlfcTU425hbWf-UHD44TBSRudQS_QcbhTmP4WmNHwwDuvsbZN5c8dIuC9pmCoQwpwgvY4HUWccqiQenim3cTDRU055Azugl7NQHWV9TiFzCAPOVCxJTqofAgeur2QUMZhq0RLK4CLuINqOhtwrQTuat0vsFLG93pa37vD6DRJvo7g)
-[diagram source](https://mermaid.live/edit#pako:eNptkc1qwzAQhF9F7MmGmN59KJSmx_ZQ91IsYxR5YwvbkqqfgEny7l05NW0hOg3a0erb2TNI0yGU0DthB_ax55rREdbWnyY69mTtpKQIyuiGFcUju3BAfcLJWORwYe84iYVrHlaxOo6tNNrHGV1WK92jD8URsTsIORZ4Qh18k6cXv76t8VfEiJ4JzyRO6BYWhB_TL9KhCNhubVrlfcTU425hbWf-UHD44TBSRudQS_QcbhTmP4WmNHwwDuvsbZN5c8dIuC9pmCoQwpwgvY4HUWccqiQenim3cTDRU055Azugl7NQHWV9TiFzCAPOVCxJTqofAgeur2QUMZhq0RLK4CLuINqOhtwrQTuat0vsFLG93pa37vD6DRJvo7g)
+```mermaid
+graph TD
+  app[Your Application] --> |"envelope"| Relay
+  Relay --> f_consumer([ingest-feedback-events])
+  f_consumer --> |"queues as celery task"| create_feedback_issue
+  create_feedback_issue --> o_consumer(["ingest-occurrences"])
+  o_consumer --> nodestore[(Nodestore)]
+  o_consumer --> |"EventStream"| snuba[("Snuba/Clickhouse")]
+```
 
 In Relay v24.5.1, we migrated feedback to its own kafka topic + consumer,
 `ingest-feedback-events`. This decouples risk and ownership from errors
@@ -84,7 +93,7 @@ In Relay v24.5.1, we migrated feedback to its own kafka topic + consumer,
 ### Attachments
 
 We only use attachments for the widget’s screenshot feature, which allows users
-to submit **at most 1 screenshot per feedback**. Attachments are another [item type](https://develop.sentry.dev/sdk/envelopes/#attachment)
+to submit **at most 1 screenshot per feedback**. Attachments are another [item type](https://develop.sentry.dev/sdk/data-model/envelopes/#attachment)
 in an envelope.
 
 - SDK v8.0.0+, Relay v24.5.1+: Sends the feedback and attachment items in the same envelope.
@@ -99,7 +108,7 @@ a separate topic and storage, and the UI makes a separate request for them.
 
 The deprecated way of sending feedback is as a **user report**. This is a simple typed dict:
 
-```Python/Javascript
+```Pseudo-code
 user_report = {
 	"event_id": <required UUID str>,
 	"email": <optional str>,
@@ -112,8 +121,39 @@ user_report = {
 
 ### Ingest diagram
 
-![](https://mermaid.ink/svg/pako:eNp9VNtq3DAQ_ZVBEHAgy77vQ6EkDfShF7KhUKzFaOXZtYgtqbpsCUn-vaOxvWmT3frF4-HozJkzIz8J7VoUK7EPyndwfyOtTDFvx8812hQeS0qmgN6F1KBtvTM21VIsc8Sw2CG2W6UfpNiMQB1U7JoJPrhW9YS9Lkm44yT8MPh7ghMdvf6uuctWJ-NsrG_nCBYQsgVjIeAOQ8AwlYrqgE1RMVYrSaAndmZokmuO0iZdqBIek42JMeNJHlgsPsCzFJ9vAQ9kAfjgNMaIrRTPZ9jfZpnjbMlj2xcXgPaAvfMI3njsjWWA8r7-6XKAj973Rqviw2bWNZ8oau6wVzwhDhihSIc3uqqN3WNMC5WS0t1AjcTNJZOPAAa_t3BWNc4ZlG2BRwojIk7yZjHfv63vi5A3-3GG_NTJ9wvzX2VsYgTfq7RzYSjZkz4ziWs0LVAeMFS0hZMhTutMrJZmSmvIlrzi-JilSxGTC1hXX-fwcnMCSG18KiuypvuhBl4Pm7eqrtbltbym2T10jrrg02MDpafJLm4yLrNvST87e2oVvYtpHzDWFZk2xVKMerjcLOVXxmDIG95aFs2K_qUUV4LUD8q0dO2fpAWQInU4EHZFYW_2XZJC2hcCqpzc-tFqsUoh45UYhd4YRXd1EKud6iNlsTVU68v4I-H_ycsfwTWaqg)
-[diagram source](https://mermaid.live/edit#pako:eNp9VNtq3DAQ_ZVBEHAgy77vQ6EkDfShF7KhUKzFaOXZtYgtqbpsCUn-vaOxvWmT3frF4-HozJkzIz8J7VoUK7EPyndwfyOtTDFvx8812hQeS0qmgN6F1KBtvTM21VIsc8Sw2CG2W6UfpNiMQB1U7JoJPrhW9YS9Lkm44yT8MPh7ghMdvf6uuctWJ-NsrG_nCBYQsgVjIeAOQ8AwlYrqgE1RMVYrSaAndmZokmuO0iZdqBIek42JMeNJHlgsPsCzFJ9vAQ9kAfjgNMaIrRTPZ9jfZpnjbMlj2xcXgPaAvfMI3njsjWWA8r7-6XKAj973Rqviw2bWNZ8oau6wVzwhDhihSIc3uqqN3WNMC5WS0t1AjcTNJZOPAAa_t3BWNc4ZlG2BRwojIk7yZjHfv63vi5A3-3GG_NTJ9wvzX2VsYgTfq7RzYSjZkz4ziWs0LVAeMFS0hZMhTutMrJZmSmvIlrzi-JilSxGTC1hXX-fwcnMCSG18KiuypvuhBl4Pm7eqrtbltbym2T10jrrg02MDpafJLm4yLrNvST87e2oVvYtpHzDWFZk2xVKMerjcLOVXxmDIG95aFs2K_qUUV4LUD8q0dO2fpAWQInU4EHZFYW_2XZJC2hcCqpzc-tFqsUoh45UYhd4YRXd1EKud6iNlsTVU68v4I-H_ycsfwTWaqg)
+```mermaid
+graph TD
+  subgraph Sentry
+    report_endpoint["/user-feedback"]
+    crash_report_modal["Crash Report View"]
+  end
+
+  subgraph functions[Functions - run in referrer]
+    save_userreport
+    shim_to_feedback
+    create_feedback_issue
+    save_userreport --> |"IF event processed"| shim_to_feedback
+    shim_to_feedback --> create_feedback_issue
+  end
+
+  %% envelope pipeline
+  app[Your Application] --> |"envelope"| Relay
+  Relay --> a_topic([ingest-attachments])
+  a_topic --> save_userreport
+
+  %% endpoint and crash reports
+  app --> |"POST"| report_endpoint --> save_userreport
+  app --> |"POST"| crash_report_modal --> save_userreport
+
+  %% issues platform
+  create_feedback_issue --> o_consumer(["ingest-occurrences"])
+  o_consumer --> nodestore[(Nodestore)]
+  o_consumer --> |"EventStream"| snuba[(Snuba/Clickhouse)]
+
+  %% user report saves/updates
+  save_userreport --> postgres[("Postgres")]
+  snuba --> |"queries eventstore"| save_userreport
+```
 
 <br />
 
@@ -132,14 +172,20 @@ added a post process job to the errors pipeline: [`link_event_to_user_report()`]
 This is the 5th, automated way of creating feedback.
 
 Simplified diagram:
-![](https://mermaid.ink/svg/pako:eNpdULtuwzAM_BWBUwIkzm4UXZq1QIF0MwNDlllLTfSoKAUokvx7ZasZWi06kMfj8a6g_EjQwhRl0OJ9j06Ux9rYPvn-g2gcpDqJ7fZZ3BCapkG4CXZ5kN3qMH-7l7NRJ-0z0_qIDtPSfAx8ZYqGWNCFXOLkI83zIfSffqirKu4QKEYfWQTPSYToFTGLmQVH8fRXbZfDKBPxIlXoUyTuVghvvxihOqnSi5X_B9XdsAFL0UozlgSucw0habLFZFvg2Uw6IaC7F6LMyR--nYI2xUwbqB72Rpbk7KNIoyk3vtZIl2TvP_9DeX4)
-[diagram source](https://mermaid.live/edit#pako:eNpdULtuwzAM_BWBUwIkzm4UXZq1QIF0MwNDlllLTfSoKAUokvx7ZasZWi06kMfj8a6g_EjQwhRl0OJ9j06Ux9rYPvn-g2gcpDqJ7fZZ3BCapkG4CXZ5kN3qMH-7l7NRJ-0z0_qIDtPSfAx8ZYqGWNCFXOLkI83zIfSffqirKu4QKEYfWQTPSYToFTGLmQVH8fRXbZfDKBPxIlXoUyTuVghvvxihOqnSi5X_B9XdsAFL0UozlgSucw0habLFZFvg2Uw6IaC7F6LMyR--nYI2xUwbqB72Rpbk7KNIoyk3vtZIl2TvP_9DeX4)
+
+```mermaid
+graph TD
+  shim_to_feedback --> |"..."| snuba[(Snuba/Clickhouse)]
+  snuba --> |"queries eventstore"| pp_job
+  pp_job["errors post process job"] <--> |"queries/updates"| postgres[("Postgres")]
+  pp_job --> shim_to_feedback
+```
 
 <br />
 
 ### Envelopes
 
-User reports are also sent to Relay in [envelope format](https://develop.sentry.dev/sdk/envelopes/#user-feedback).
+User reports are also sent to Relay in [envelope format](https://develop.sentry.dev/sdk/data-model/envelope-items/#user-feedback).
 **This item type is misleadingly called “user feedback” in some of our docs, but the
 item header will read `"user_report"`.**
 
@@ -177,8 +223,24 @@ Crash reports are also shimmed to feedback. The pipeline is the same as the
 
 ## Sentry UI
 
-![](https://mermaid.ink/svg/pako:eNp9Uj1vwjAQ_SvWTUECsWdgKaViqFQVmDhUmeRILBI7tc8DAv577YRAG6F68fn53b37OkNmcoIUCiubUqznqEU4zu87YMXGyoJcB8fTGMeFJbdNED5utkg2juwnNcayGyGMdg--034vt8kqXtOXSmXH0nhHPYV03hmokR-ypNmeIoSsnPPkvgKxMUrzFmHaQQi7pwwxmczEBeHtdY1wEV4FlwVRvpfZUWyWIpkebq_RPYRtc_8jEpK0k57ZEvuSBuSB3u23lV3GzMScWKrKRe2ZiJ0Si2dh_y_jHvZX3zqzn0jv8O3JqtieyzDTtsdxEE-oA3UYQ022lioPy3GOQghcUk0IaTArVZSMgPoaiNKzWZ10BilbT2PwTS6Z5kqGYdaQHmTlAkq5Csv03q1bu3XXH4El2dU)
-[diagram source](https://mermaid.live/edit#pako:eNp9Uj1vwjAQ_SvWTUECsWdgKaViqFQVmDhUmeRILBI7tc8DAv577YRAG6F68fn53b37OkNmcoIUCiubUqznqEU4zu87YMXGyoJcB8fTGMeFJbdNED5utkg2juwnNcayGyGMdg--034vt8kqXtOXSmXH0nhHPYV03hmokR-ypNmeIoSsnPPkvgKxMUrzFmHaQQi7pwwxmczEBeHtdY1wEV4FlwVRvpfZUWyWIpkebq_RPYRtc_8jEpK0k57ZEvuSBuSB3u23lV3GzMScWKrKRe2ZiJ0Si2dh_y_jHvZX3zqzn0jv8O3JqtieyzDTtsdxEE-oA3UYQ022lioPy3GOQghcUk0IaTArVZSMgPoaiNKzWZ10BilbT2PwTS6Z5kqGYdaQHmTlAkq5Csv03q1bu3XXH4El2dU)
+```mermaid
+graph TD
+  subgraph Storages
+    postgres[("Postgres (UserReports)")]
+    snuba[(Snuba/Clickhouse)]
+  end
+
+  subgraph Sentry
+    issues_endpoint["/issues"]
+    issues_endpoint --> |"GET"| ui["Feedback UI (/feedback)"]
+    report_endpoint["/user-feedback"]
+    report_endpoint --> |"GET"| report_ui["Issue Details UI > User Feedback"]
+    issues_endpoint --> |"GET"| report_ui
+  end
+
+  postgres --> |"queries"| report_endpoint
+  snuba --> |"queries"| issues_endpoint
+```
 
 You can view the user reports related to a specific issue at the "User Feedback"
 tab of Issue Details. This excludes "new" feedback (anything sent from the widget).
@@ -207,11 +269,13 @@ This feature is available if you enable the following feature flags.
 - `organizations:user-feedback-ui`
 - `organizations:user-feedback-replay-clip` (v24.7.1+)
 
-Auto-registered flags for issue platform (you won't be able to grep these in the sentry repo, but you need to enable them too):
+Auto-registered flags for issue platform, for versions \<= v24.10.0 only:
 
 - `organizations:feedback-ingest`
 - `organizations:feedback-visible`
 - `organizations:feedback-post-process-group`
+
+(You won't be able to grep for these in the sentry repo, but you do need to enable them.)
 
 You need to have v24.4.2 or higher in order to use the latest functionality of User
 Feedback, such as adding screenshots. Also note that User Feedback is only available

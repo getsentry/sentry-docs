@@ -1,0 +1,26 @@
+```jsx {tabTitle: NextJS}
+function ToggleFeedbackButton() {
+  const [feedback, setFeedback] = useState();
+  // Read `getFeedback` on the client only, to avoid hydration errors during server rendering
+  useEffect(() => {
+    setFeedback(Sentry.getFeedback());
+  }, []);
+
+  const [widget, setWidget] = useState();
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        if (widget) {
+          widget.removeFromDom();
+          setWidget(null);
+        } else {
+          setWidget(feedback.createWidget());
+        }
+      }}
+    >
+      {widget ? "Remove Widget" : "Create Widget"}
+    </button>
+  );
+}
+```

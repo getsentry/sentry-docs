@@ -2715,7 +2715,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/clientdev/interfaces/http/',
-    to: 'https://develop.sentry.dev/sdk/event-payloads/request',
+    to: 'https://develop.sentry.dev/sdk/data-model/event-payloads/request',
   },
   {
     from: '/clients/csharp/',

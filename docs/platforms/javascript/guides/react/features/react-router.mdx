@@ -82,6 +82,57 @@ You can instrument [`createMemoryRouter`](https://reactrouter.com/en/main/router
 
 </Alert>
 
+### Custom Error Boundaries
+
+When using `react-router`, errors thrown inside route elements will only be re-thrown in **development mode** while using [`strict mode`](https://react.dev/reference/react/StrictMode). In production, these errors won't be surfaced unless manually captured. If you **don't** have a custom error boundary in place, `react-router` will create a default one that "swallows" all errors.
+
+<Note>
+Note, that this only applies to render method and lifecycle errors since React doesn't need error boundaries to handle errors in event handlers.
+</Note>
+
+To send errors to Sentry while using a custom error boundary, use the `Sentry.captureException` method:
+
+```jsx {11, 28}
+// router setup
+const sentryCreateBrowserRouter = wrapCreateBrowserRouter(createBrowserRouter);
+const router = sentryCreateBrowserRouter([
+  {
+    path: "/",
+    element: <YourLayout />,
+    children: [
+      {
+        path: "",
+        element: <Outlet />,
+        errorElement: <YourCustomRootErrorBoundary />,
+        children: [
+          // other routes ... 
+        ],
+      },
+    ],
+  },
+]);
+
+// error boundary
+import { useRouteError } from "react-router-dom";
+import * as Sentry from "@sentry/react";
+
+export function YourCustomRootErrorBoundary() {
+  const error = useRouteError() as Error;
+
+  React.useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
+  return (
+    <div>
+      <h1>Ouch!</h1>
+    </div>
+  );
+}
+
+```
+
+
 ### Usage With `<Routes />` Component
 
 If you're using the `<Routes />` component from `react-router-dom` to define your routes, wrap [`Routes`](https://reactrouter.com/en/main/components/routes) using `Sentry.withSentryReactRouterV6Routing`. This creates a higher order component, which will enable Sentry to reach your router context. You can also use `Sentry.withSentryReactRouterV6Routing` for `Routes` inside `BrowserRouter`. `MemoryRouter`, and `HashRouter` components:
