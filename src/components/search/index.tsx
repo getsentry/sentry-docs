@@ -288,7 +288,7 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
               style={{textWrap: 'nowrap'}}
               className="hidden md:flex"
             >
-              Ask A Bot
+              Ask AI
             </NavLink>
           </Fragment>
         )}
