@@ -4,180 +4,71 @@ title: Span API
 
 # Span API
 
-### `startSpan`
+Spans are measuring the duration of certain operations in an application.
+The topmost member of a span tree is called the root span. This span has no parent span and groups together its children with a representative name for the entire operation, such as `GET /` in case of a request to a backend application.
 
-Calling the global `startSpan` method always creates a root span.
+### Creating a root span
 
-```jsx
-span = sentry.tracing.startSpan({
-	name: 'GET /',
-	op: 'http.server'
-})
-```
+The SDK must expose a method for creating a root span. The user must be able to set certain properties on this root span, such as its name, the type of operation (`op`) and others.
 
-```jsx
-span = sentry().tracing().startSpan()
+```js
+span = sentry.tracing.startSpan()
 	->setName('GET /')
 	->setOp('http.server')
-```
-
-### `end`
-
-This method sets the end timestamp on the span. If the span is a root span, it emits the entire span tree to Sentry.
-
-```jsx
-span = sentry.tracing.startSpan({
-	name: 'GET /',
-	op: 'http.server'
-})
 
 span.end()
 ```
 
-```jsx
-span = sentry().tracing().startSpan()
-	->setName('GET /')
-	->setOp('http.server')
+### Creating nested spans
+
+To create nested spans, the SDK must expose an explicit way for a user to perform this task.
+
+Additionally, the SDK may expose alternative APIs to create nested spans, such as allowing a user to wrap an operation into a callback or apply a decorator to certain blocks. These alternative APIs must never create a root span and no-op if no parent span is present.
+
+```js
+childSpan = span.startChild()
+	->setName('authentication middleware')
+	->setOp('middleware.handle')
 	
-span.end()
+childSpan.end()
 ```
 
-### `continueTraceFrom`
+### Setting the span status
 
-Creates a new root span which continues the trace based on the provided trace and parent span id.
+A span has two statuses, `ok` and `error`. By default, the status of a span is set to `ok`.
+The SDK must allow a user to modify the status of a span.
 
-```jsx
-span = sentry.tracing.startSpan({
-	traceId: '',
-	parentSpanId: '',
-	sampled: true,
-	name: 'GET /'
-	op: 'http.server'
-})
+```js
+span.setStatus('error')
 ```
 
-```jsx
-span = sentry.tracing.startSpan({
-	continueTraceFrom: span,
-	name: 'GET /'
-	op: 'http.server'
-})
+### Setting span attributes
+
+The SDK must expose a method to allow a user to set data attributes onto a span.
+These attributes should use pre-defined keys whenever possible.
+
+```js
+span.setAttribute(SpanAttributes.HTTP_METHOD, 'GET')
+span.setAttribute(SpanAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
 ```
 
-```jsx
-span = sentry().tracing().continueTraceFrom({
-		traceId: '',
-		parentSpanId: '',
-		sampled: true,
-	})
-	->setName('GET /')
-	->setOp('http.server')
+### Receiving the trace parent
+
+The SDK must expose a method to receive the baggage string.
+
+```js
+traceparent = span.getTraceparent()
 ```
 
-```jsx
-span = sentry().tracing().continueTraceFrom(span)
-	->setName('GET /')
-	->setOp('http.server')
+### Receiving the baggage
+
+The SDK must expose a method to receive the baggage string.
+
+```js
+baggage = span.getBaggage()
 ```
 
-### Start a new root span
+### Additional, optional span APIs
 
-Calling the global `startSpan` method always creates a root span.
-
-```jsx
-span = sentry.tracing.startSpan({
-	name: 'GET /',
-	op: 'http.server',
-})
-```
-
-```jsx
-span = sentry().tracing().startSpan()
-	->setName('GET /')
-	->setOp('http.server')
-```
-
-### `setAttribute`
-
-```jsx
-span = sentry.tracing.startSpan({
-	name: 'GET /',
-	op: 'http.server',
-  attributes: {
-	  attr1: "value1",
-    attr2: 42,
-    attr3: true,
-  },
-})
-```
-
-```jsx
-span = sentry().tracing().startSpan()
-	->setName('GET /')
-	->setOp('http.server')
-	->setAtttribute(
-		key: 'attr1',
-		value: 'value1',
-	)
-```
-
-### Starting a child span
-
-To create nested spans, you must call `startSpan` on the parent span.
-
-```jsx
-span = sentry.tracing.startSpan({ ... })
-childSpan = span.startSpan({ ... })
-```
-
-```jsx
-span = sentry().tracing().startSpan()
-childSpan = span.startSpan()
-```
-
-### Get the current span
-
-```jsx
-span = scope.getSpan()
-```
-
-### Set the current span
-
-```jsx
-scope.setSpan(span)
-```
-
-### Get the root span
-
-```jsx
-rootSpan = scope.getRootSpan()
-```
-
-### Additional APIs
-
-span.`setStartTimestamp()` - overwrite the span’s start time
-
-span.`setEndTimestamp()` - overwrites the span’s end time
-
-span.`setStatus()` - success, error, unknown
-
-span.`getBaggage()` - returns the baggage string
-
-span.`getTraceparent()` - returns the sentry trace parent string
-
-### Examples
-
-```jsx
-rootSpan = sentry.tracing.startSpan({
-	name: 'GET /',
-	op: 'http.server',
-})
-
-span = rootSpan.startSpan({
-	name: 'middleware.handle',
-	op: 'http.middleware',
-})
-
-span.end()
-rootSpan.end()
-```
+`span.setStartTimestamp()` - overwrite the span's start time
+`span.setEndTimestamp()` - overwrites the span's end time
