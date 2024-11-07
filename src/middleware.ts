@@ -3405,10 +3405,6 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     to: '/development/analytics/',
   },
   {
-    from: '/architecture/',
-    to: '/application/architecture/',
-  },
-  {
     from: '/sentry-vs-getsentry/',
     to: '/application/sentry-vs-getsentry/',
   },

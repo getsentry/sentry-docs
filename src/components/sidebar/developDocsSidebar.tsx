@@ -11,8 +11,8 @@ import {docNodeToNavNode, getNavNodes} from './utils';
 const devDocsMenuItems: {root: string; title: string; hideChevron?: boolean}[] = [
   {root: 'getting-started', title: 'Getting Started', hideChevron: true},
   {root: 'engineering-practices', title: 'Engineering Practices'},
+  {root: 'architecture', title: 'Architecture'},
   {root: 'development', title: 'Development'},
-  {root: 'application', title: 'Application'},
   {root: 'frontend', title: 'Frontend'},
   {root: 'backend', title: 'Backend'},
   {root: 'sdk', title: 'SDK Development'},
