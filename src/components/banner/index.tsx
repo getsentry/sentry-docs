@@ -5,22 +5,21 @@ import {useEffect, useState} from 'react';
 import styles from './banner.module.scss';
 
 type BannerType = {
+  /** This is an array of strings or RegExps to feed into new RegExp() */
   appearsOn: (string | RegExp)[];
+  /** String that is the label for the call to action button */
   linkText: string;
+  /** String that is the destination url of the call to action button */
   linkURL: string;
+  /** String for the text of the banner */
   text: string;
+  /** Optional ISO Date string that will hide the banner after this date without the need for a rebuild */
+  expiresOn?: string;
 };
 
 // BANNERS is an array of banner objects. You can add as many as you like. If
 // you need to disable all banners, set BANNERS to an empty array. Each banner
 // is evaluated in order, and the first one that matches will be shown.
-//
-// Banner Object Properties:
-//
-//   - appearsOn: An array of RegExps or strings to feed into new RegExp()
-//   - text: String for the text of the banner
-//   - linkURL: String that is the destination url of the call to action button
-//   - linkText: String that is the label for the call to action button
 //
 // Example:
 //
@@ -67,6 +66,14 @@ const BANNERS: BannerType[] = [
     text: 'This banner appears on the Astro guide',
     linkURL: 'https://sentry.io/thought-leadership',
     linkText: 'Get webinarly',
+  },
+  // example with an expiration date
+  {
+    appearsOn: ['^/platforms/javascript/guides/aws-lambda/'],
+    text: "This banner should appear on the AWS Lambda guide, but won't because it's expired",
+    linkURL: 'https://sentry.io/thought-leadership',
+    linkText: 'Get webinarly',
+    expiresOn: '2024-01-01T00:00:00Z',
   },
   // generic javascript example
   {
@@ -120,8 +127,12 @@ export function Banner() {
       );
     });
 
-    // Bail if no banner matches this page
-    if (!matchingBanner) {
+    // Bail if no banner matches this page or if the banner has expired
+    if (
+      !matchingBanner ||
+      (matchingBanner.expiresOn &&
+        new Date() > new Date(matchingBanner.expiresOn ?? null))
+    ) {
       return;
     }
 
