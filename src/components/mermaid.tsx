@@ -30,9 +30,8 @@ export default function Mermaid() {
       if (mermaidBlocks.length === 0) {
         return;
       }
-      // @ts-ignore
       const {default: mermaid} = await import('mermaid');
-      mermaid.initialize({startOnLoad: false, theme: 'light'});
+      mermaid.initialize({startOnLoad: false});
       mermaidBlocks.forEach(lightModeblock => {
         // get rid of code highlighting
         const code = lightModeblock.textContent ?? '';
