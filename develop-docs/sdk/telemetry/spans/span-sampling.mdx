@@ -1,150 +1,20 @@
 ---
-title: Span Sampling
+title: Span Sampling & Filtering
 ---
 
-# Span Sampling
+Any APIs exposed to the user to sample or filter spans must adhere to the following design principles:
 
-With the metrics product shifting to a sampling based solution, extrapolation is of the utter most importance to being able to display reliable metrics to our users. We want to account for client sampling in addition to server sampling.
-This requires the SDKs to always report the correct sampling rates in each tracing related envelope send to Sentry.
-Directional, the goal is to create complete traces by default and wherever possible. We will not optimise for spent-control.
+- The APIs are optimized for trace completness
+- The APIs are optimized for conclusive sampling decisions
 
-We historically exposed many ways to our users to remove certain transactions or spans from being emitted  to Sentry. This resulted in convoluted SDK APIs, weird edge cases in the product and an overall bad user experience. More importantly, these sampling controls will contribute to vastly wrong metrics being extracted from span attributes, hence we need to rework those:
+## Sample root spans with `tracesSampleRate` & `tracesSampler`
 
-- `beforeSendTransaction` and `beforeSendSpan` will be replaced with `beforeSendSpans`, which encourages users to *mutate* spans, but they cannot be dropped through this callback.
-- All SDK integrations that create spans, need to be able to be turned off via a config flag for the purpose of noise reduction or via a new `ignoreSpans` options that accepts a glob pattern.
-- Sampling happens exclusively via `tracesSampleRate` or `tracesSampler`. We need to make sure to always prefer the parent sampling decision, either via explicit docs or a new argument for the `tracesSampler` or SDK option.
-- Trace propagation is aware of applications or at least organizations and prevents “leaking” traces across this boundary.
 
-## `beforeSendSpans`
 
-The primary use-case for this hook will be data scrubbing or mutating certain properties of spans.
+## Filter spans with `ignoreSpans` & integration config
 
-We are likely only allow to mutate the span’s name, timestamps, status and most attributes. Trace ID, span ID, parent span ID are immutable, as well as certain span attributes, such as segment ID.
 
-It is yet to be defined which arguments will be passed into the callback or how the hook behaves with transaction envelopes.
 
-## Span configuration
+## Sanitize span attributes with `beforeSendSpans`
 
-To reduce noise, users might want to disable certain integrations creating spans. This should ideally be exposed as a global config or at an integration level. Additionally, a new `ignoreSpans` option will allow users to not emit certain spans based on their name & attributes.
 
-```jsx
-Sentry.init({
-	dsn: 'foo@bar',
-	ignoreSpans: [
-		'GET /about',
-		'events.signal *',
-	],
-	ignoreSpans: (name, attributes) {
-		if (
-			name === 'server.request' &&
-			attributes['server.address'] === 'https://sentry.io'
-		) {
-			return true
-		}
-	},
-	integrations: [
-		fsIntegration: {
-			ignoreSpans: [
-				'fs.read',
-			],
-			readSpans: true,
-			writeSpans: false,
-		}
-	]
-})
-```
-
-## Parent Sampling Decision
-
-In today's SDKs, a parent sampling decision received via a `sentry-trace` header or similar can be overruled by setting a `tracesSampler`.
-As we need to optimize for trace completeness, we need to explicitly call out the impact of the sampler or change the behaviour to always use the parent’s decision unless explicitly opted-out.
-
-```jsx
-// Explict docs
-Sentry.init({
-  tracesSampler: ({ name, attributes, parentSampled }) => {
-    // Continue trace decision, if there is any parentSampled information
-		// This is crucial for complete traces
-    if (typeof parentSampled === "boolean") {
-      return parentSampled;
-    }
-
-    // Else, use default sample rate (replacing tracesSampleRate)
-    return 0.5;
-  },
-})
-
-// Not chosen - New top level option
-Sentry.init({
-	ignoreParentSamplingDecision: true,
-  tracesSampler: ({ name, attributes, parentSampled }) => {
-    // Do not sample health checks ever
-    if (name.includes("healthcheck")) {
-      // Drop this transaction, by setting its sample rate to 0%
-      return 0.0;
-    }
-
-    // Else, use default sample rate (replacing tracesSampleRate)
-    return 0.2;
-  },
-})
-```
-
-## Parent Sampling Origins
-
-In order to filter out unrelated 3rd party services that are making requests to a Sentry instrumented app containing a `sentry-trace` header, we’ll implement RFC https://github.com/getsentry/rfcs/pull/137. This feature might be enabled by default if the:
-
-- SDK knows its org
-- The incoming baggage header contains a `sentry-org` entry
-
-## Sampling Seed in DSC
-
-To increase the chance of capturing complete traces when users return a new sample rate `tracesSampler` in backend services, we propagate the random value used by the SDK for computing the sampling decision instead of creating a new random value in every service. Therefore, across a trace every SDK uses the *same* random value.
-
-### Behavior
-
-A user can also override the parent sample rate in traces sampler. For example, a backend service has a `tracesSampler` that overrides frontend traces. This leads to three scenarios:
-
-- The new (backend) sample rate is lower than the parent’s (frontend): All traces captured in the backend are complete. There are additional partial traces for the frontend.
-- The new (backend) sample rate is higher than the parent’s (fronted): All traces propagated from the frontend are complete. There are additional partial traces for the backend.
-- Both sample rates are equal: All traces are complete, the sampling decision is fully inherited.
-
-The behavior of the static `tracesSampleRate` without the use of `tracesSampler` does not change. We continue to fully inherit sampling decisions for propagated traces and create a new one for started traces. In the future, we might change the default behavior of `tracesSampleRate`, too. 
-
-### SDK Spec
-
-- sentry baggage gains a new field `sentry-sample_rand`
-    - when a new trace is started, `sentry-sample_rand` is filled with a truly random number. this also applies when the trace’s sample rate is 1.0
-    - for inbound traces without a `sentry-sample_rand` (from old SDKs), the SDK inserts a new truly random number on-the-fly.
-- sampling decisions in the SDK that currently compare `sentry-sample_rand` from the trace instead of `math.random()` with the sample rate.
-    - when traces sampler is invoked, this also applies to the return value of traces sampler. ie. `trace["sentry-sample_rand"] < tracesSampler(context)`
-    - otherwise, when the SDK is the head of a trace, this applies to sample decisions based on `tracesSampleRate` , i.e. ``trace["sentry-sample_rand"] < config.tracesSampleRate`
-    - There is no more `math.random()` directly involved in any sampling decision.
-- in traces sampler, the most correct way to inherit parent sampling decisions is now to return the parent’s sample **rate** instead of the **decision** as float (`1.0`). This way, we can still extrapolate counts correctly.
-    
-    ```jsx
-      tracesSampler: ({ name, parentSampleRate }) => {
-        // Inherit the trace parent's sample rate if there is one. Sampling is deterministic 
-        // for one trace, i.e. if the parent was sampled, we will be sampled too at the same 
-        // rate.
-        if (typeof parentSampleRate === "number") {
-          return parentSampleRate;
-        }
-    
-        // Else, use default sample rate (replacing tracesSampleRate).
-        return 0.5;
-      },
-    
-    ```
-    
-    - if the `sentry-sample_rate` (`parentSampleRate`) is not available for any reason for an inbound trace, but the trace has the sampled flag set to `true`, the SDK injects `parentSampleRate: 1.0` into the callback.
-
-## Baggage Freeze
-
----
-
-We accept partial traces under the assumption that the transaction name is mostly changed early in the request cycle.
-
-# External Resources
-
-https://opentelemetry.io/docs/specs/otel/trace/tracestate-probability-sampling-experimental/
