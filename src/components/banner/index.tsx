@@ -18,10 +18,8 @@ type BannerType = {
 };
 
 // BANNERS is an array of banner objects. You can add as many as you like. If
-// you need to disable all banners, set BANNERS to an empty array. Each banner
+// you need to disable all banners, simply delete them from the array. Each banner
 // is evaluated in order, and the first one that matches will be shown.
-//
-// Example:
 //
 // Examples:
 // appearsOn = [];              // This is disabled
