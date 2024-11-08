@@ -153,7 +153,9 @@ export function Banner() {
       <div className={styles['promo-banner-message']}>
         <span className="flex gap-4">
           {banner.text}
-          <a href={banner.linkURL}>{banner.linkText}</a>
+          <a href={banner.linkURL} className="min-w-max">
+            {banner.linkText}
+          </a>
         </span>
       </div>
       <button
