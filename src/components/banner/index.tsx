@@ -151,7 +151,7 @@ export function Banner() {
   return banner ? (
     <div className={[styles['promo-banner']].filter(Boolean).join(' ')}>
       <div className={styles['promo-banner-message']}>
-        <span className="flex gap-4">
+        <span className="flex flex-col md:flex-row gap-4">
           {banner.text}
           <a href={banner.linkURL} className="min-w-max">
             {banner.linkText}
