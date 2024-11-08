@@ -22,7 +22,7 @@ const productSidebarItems = [
     root: 'organization',
   },
   {
-    title: 'Product Walkthroughs',
+    title: 'What Is Sentry?',
     root: 'product',
   },
   {
