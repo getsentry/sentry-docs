@@ -32,10 +32,10 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({children}: {children: React.ReactNode}) {
-  const {hash: chngelogsHash} = await getChangelogs();
+  const {hash: changelogsHash} = await getChangelogs();
   return (
     <html lang="en">
-      <body className={`${rubik.variable}`} data-content-hash={chngelogsHash}>
+      <body className={`${rubik.variable}`} data-content-hash={changelogsHash}>
         <Theme accentColor="iris" grayColor="sand" radius="large" scaling="95%">
           {children}
         </Theme>
