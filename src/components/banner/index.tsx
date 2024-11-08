@@ -79,6 +79,15 @@ const BANNERS: BannerType[] = [
     linkURL: 'https://sentry.io/thought-leadership',
     linkText: 'Get webinarly',
   },
+
+  /// ⚠️ KEEP THIS LAST BANNER ACTIVE FOR DOCUMENTATION
+  // check it out on `/contributing/pages/banners/`
+  {
+    appearsOn: ['^/contributing/pages/banners/'],
+    text: 'Edit this banner on `/src/components/banner/index.tsx`',
+    linkURL: 'https://docs.sentry.io/contributing/pages/banners/',
+    linkText: 'CTA',
+  },
 ];
 
 const LOCALSTORAGE_NAMESPACE = 'banner-manifest';
