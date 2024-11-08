@@ -6,5 +6,55 @@ title: Scopes
 	This is work in progress and does not represent the final state.
 </Alert>
 
+The implementation in each SDK consists of three types of scopes:
+
+- The global scope
+- The isolation scope
+- The current scope
+
+Regardles of the scope type, data like tags, breadcrumbs, context, etc. can be added to each scope type by the user.
+
+### Global Scope
+
+The global scope acts as a global variable that stays the same for the entire execution of the application. Data applied to this scope will be applied to **all** events emitted by the SDK.
+This scope is used for application-wide data like the `release`, the `environment`, etc.
+
+### Isolation Scope
+
+The isolation scope holds data which is only applicable to the current request (on a server), tab (in a browser), or user (on mobile). Top-level SDK APIs like `sentry.setTag()`, `sentry.setContext()`, etc. write to the isolation scope.
+
+The isolation scope is stored in a context variable, thread local, async local, or similar depending on the platform.
+
+The isolation scope is forked by the SDK's integrations. Users should not need to think about isolation scopes or forking of one.
+
+### Current Scope
+
+This scope holds data for the current active span. Whenever a new span is started the current scope of the parent span is forked (read: duplicated), giving the new span all the data from the parent span and making it possible to add or mutate data that is just applied to the new span (see also "Copy-on-write").
+
+Changing the original scope after forking does not modify the forked scope.
+
+The current scope is stored in a context variable, thread local, async local, or similar depending on the platform.
+
+The current scope can be forked by the end user. Either explicitly, by using `sentry.withScope()` or implicitly, by starting a new span.
+
+### The Scope APIs
+
+```js
+...
+```
+
+### Applying the scope data to events
+
+The data held by all three scope types is merged before it is applied to an event.
+
+This is performed in the following order:
+
+1. Data from the global scope is...
+2. merged with data from the isolation scope, which is...
+3. merged with data from the current scope, which is ...
+4. applied to the event
+
+## Related Documents
+
 This is a more concise version of the [Hub & Scope Refactoring](/sdk/miscellaneous/hub_and_scope_refactoring/) document. It does focus on the actual implementation and expected features.
 The old document remains unchanged, and offers more historical context and migration strategies.
