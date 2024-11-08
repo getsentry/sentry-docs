@@ -7,11 +7,11 @@ import styles from './banner.module.scss';
 type BannerType = {
   /** This is an array of strings or RegExps to feed into new RegExp() */
   appearsOn: (string | RegExp)[];
-  /** String that is the label for the call to action button */
+  /** The label for the call to action button */
   linkText: string;
-  /** String that is the destination url of the call to action button */
+  /** The destination url of the call to action button */
   linkURL: string;
-  /** String for the text of the banner */
+  /** The main text of the banner */
   text: string;
   /** Optional ISO Date string that will hide the banner after this date without the need for a rebuild */
   expiresOn?: string;
@@ -24,14 +24,9 @@ type BannerType = {
 // Example:
 //
 // Examples:
-// const SHOW_BANNER_ON = [];              // This is disabled
-// const SHOW_BANNER_ON = ['^/$'];         // This is enabled on the home page
-// const SHOW_BANNER_ON = ['^/welcome/'];  // This is enabled on the "/welcome" page
-// const BANNER_TEXT =
-//  'your message here';
-// const BANNER_LINK_URL =
-//  'link here';
-// const BANNER_LINK_TEXT = 'your cta here';
+// appearsOn = [];              // This is disabled
+// appearsOn = ['^/$'];         // This is enabled on the home page
+// appearsOn = ['^/welcome/'];  // This is enabled on the "/welcome" page
 // const BANNERS = [
 //
 //   This one will take precedence over the last banner in the array
