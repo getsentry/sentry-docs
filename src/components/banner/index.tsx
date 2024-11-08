@@ -46,38 +46,6 @@ type BannerType = {
 // ];
 
 const BANNERS: BannerType[] = [
-  {
-    // Match the homepage
-    appearsOn: ['^/$'],
-    text: 'This is a banner for the homepage',
-    linkURL: 'https://sentry.io/',
-    linkText: 'RSVP',
-  },
-  // javascript -> Astro example
-  {
-    appearsOn: ['^/platforms/javascript/guides/astro/'],
-    text: 'This banner appears on the Astro guide',
-    linkURL: 'https://sentry.io/thought-leadership',
-    linkText: 'Get webinarly',
-  },
-  // example with an expiration date
-  {
-    appearsOn: ['^/platforms/javascript/guides/aws-lambda/'],
-    text: "This banner should appear on the AWS Lambda guide, but won't because it's expired",
-    linkURL: 'https://sentry.io/thought-leadership',
-    linkText: 'Get webinarly',
-    expiresOn: '2024-01-01T00:00:00Z',
-  },
-  // generic javascript example
-  {
-    // we can constrain it to the javascript platform page only
-    // by adding a more specific regex ie '^/platforms/javascript/$'
-    appearsOn: ['^/platforms/javascript/'],
-    text: 'This banner appears on the JavaScript platform page and all subpages',
-    linkURL: 'https://sentry.io/thought-leadership',
-    linkText: 'Get webinarly',
-  },
-
   /// ⚠️ KEEP THIS LAST BANNER ACTIVE FOR DOCUMENTATION
   // check it out on `/contributing/pages/banners/`
   {
