@@ -1,0 +1,162 @@
+---
+title: Metrics
+sidebar_order: 180
+---
+
+Sentry provides an abstraction called ‘metrics’ which is used for internal monitoring, generally timings and various counters.
+
+The default backend simply discards them (though some values are still kept in the internal time series database).
+
+## Sentry Metrics Abstraction
+
+In order to make metrics collection uniform across the entire `sentry` codebase, we have an abstraction which exposes metrics collection with three methods.
+
+- `incr` → emits a counter metric.
+- `timing` → emits a distribution metric (with the `second` unit on Sentry metrics).
+- `gauge` → emits a gauge metric (temporarily emits a counter, until the infra work is done).
+
+Each method has three main parameters:
+
+- `key` → the name that uniquely identifies the metric. You will use the name to specify the metric when you want to plot it.
+- `value` → the value of the value. You will plot the value of the metric.
+- `tags` → the tags of the metric. You will use the tags to attach metadata to the metric, which can be helpful for aggregations.
+
+To use the metrics abstraction you will first have to import it:
+
+```python
+from sentry.utils import metrics
+```
+
+Once imported, you can start emitting metrics:
+
+```python
+# Emit a counter.
+metrics.incr(
+	"counter_name",
+	tags={"platform": platform}
+)
+
+# Emit a distribution.
+metrics.distribution(
+	"gauge_name",
+	10,
+	tags={"nation": nation},
+	unit="second",
+)
+
+# Emit a gauge.
+metrics.gauge(
+	"gauge_name",
+	10,
+	tags={"nation": nation}
+)
+
+# Emit a distribution (with default time-based unit).
+metrics.timing(
+	"distribution_name",
+	100,
+	tags={"user_segment": user_segment}
+)
+```
+
+If you want to measure how much time a specific piece of code takes, you can use:
+
+```python
+# Emit a distribution metric of the execution time of the function.
+with metrics.timer("my_func"):
+	my_func()
+```
+
+## Statsd Backend
+
+```python
+SENTRY_METRICS_BACKEND = 'sentry.metrics.statsd.StatsdMetricsBackend'
+SENTRY_METRICS_OPTIONS = {
+    'host': 'localhost',
+    'port': 8125,
+}
+```
+
+## Datadog Backend
+
+Datadog will require you to install the `datadog` package into your Sentry environment:
+
+```bash
+$ pip install datadog
+```
+
+In your `sentry.conf.py`:
+
+```python
+SENTRY_METRICS_BACKEND = 'sentry.metrics.datadog.DatadogMetricsBackend'
+SENTRY_METRICS_OPTIONS = {
+    'api_key': '...',
+    'app_key': '...',
+    'tags': {},
+}
+```
+
+Once installed, the Sentry metrics will be emitted to the [Datadog REST API](https://docs.datadoghq.com/api/?lang=python#post-time-series-points) over HTTPS.
+
+## DogStatsD Backend
+
+Using the DogStatsD backend requires a [Datadog Agent](https://docs.datadoghq.com/agent/) to be running with the DogStatsD backend (on by default at port 8125).
+
+You must also install the `datadog` Python package into your Sentry environment:
+
+```bash
+$ pip install datadog
+```
+
+In your `sentry.conf.py`:
+
+```python
+SENTRY_METRICS_BACKEND = 'sentry.metrics.dogstatsd.DogStatsdMetricsBackend'
+SENTRY_METRICS_OPTIONS = {
+    'statsd_host': 'localhost',
+    'statsd_port': 8125,
+    'tags': {},
+}
+```
+
+Once configured, the metrics backend will emit to the DogStatsD server and then flushed periodically to Datadog over HTTPS.
+
+## Logging Backend
+
+The `LoggingBackend` reports all operations to the `sentry.metrics` logger. In addition to the metric name and value, log messages also include extra data such as the `instance` and `tags` values which can be displayed using a custom formatter.
+
+```python
+SENTRY_METRICS_BACKEND = 'sentry.metrics.logging.LoggingBackend'
+
+LOGGING['loggers']['sentry.metrics'] = {
+    'level': 'DEBUG',
+    'handlers': ['console:metrics'],
+    'propagate': False,
+}
+
+LOGGING['formatters']['metrics'] = {
+    'format': '[%(levelname)s] %(message)s; instance=%(instance)r; tags=%(tags)r',
+}
+
+LOGGING['handlers']['console:metrics'] = {
+    'level': 'DEBUG',
+    'class': 'logging.StreamHandler',
+    'formatter': 'metrics',
+}
+```
+
+## Composit Experimental Backend
+
+The current implementation of the `MetricsBackend` is known as `CompositExperimentalMetricsBackend`. The `CompositeExperimentalMetricsBackend` reports all operations to both Datadog and Sentry. For this reason, you will be able to see your metrics on both platforms.
+
+```python
+SENTRY_METRICS_BACKEND = "sentry.metrics.composite_experimental.CompositeExperimentalMetricsBackend"
+SENTRY_METRICS_OPTIONS = {
+    "primary_backend": "sentry.metrics.dogstatsd.DogStatsdMetricsBackend",
+    "primary_backend_args": {"statsd_host": "127.0.0.1", "statsd_port": 8126},
+    "allow_list": {
+        # List of metrics sent to Sentry (used for gradual rollout of DDM feature)
+        "my_metric1",
+        "my_metric2",
+}
+```
