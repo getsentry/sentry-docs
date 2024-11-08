@@ -26,7 +26,11 @@ async function resolveOpenAPI(): Promise<DeRefedOpenAPI> {
     }
   }
   const response = await fetch(
-    `https://raw.githubusercontent.com/getsentry/sentry-api-schema/${SENTRY_API_SCHEMA_SHA}/openapi-derefed.json`
+    `https://raw.githubusercontent.com/getsentry/sentry-api-schema/${SENTRY_API_SCHEMA_SHA}/openapi-derefed.json`,
+    {
+      // this request is not getting cached due to size limit anyway and is printing noise to the build logs
+      cache: 'no-store',
+    }
   );
   return await response.json();
 }
