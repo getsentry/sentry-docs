@@ -148,7 +148,10 @@ export function Banner() {
     setBanner({...matchingBanner, hash});
   }, []);
 
-  return banner ? (
+  if (!banner) {
+    return null;
+  }
+  return (
     <div className={[styles['promo-banner']].filter(Boolean).join(' ')}>
       <div className={styles['promo-banner-message']}>
         <span className="flex flex-col md:flex-row gap-4">
@@ -171,5 +174,5 @@ export function Banner() {
         ×
       </button>
     </div>
-  ) : null;
+  );
 }
