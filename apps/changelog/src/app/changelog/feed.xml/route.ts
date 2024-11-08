@@ -14,7 +14,7 @@ export async function GET() {
     ttl: 60,
   });
 
-  const allChangelogs = await getChangelogs();
+  const {changelogs: allChangelogs} = await getChangelogs();
 
   if (allChangelogs) {
     allChangelogs

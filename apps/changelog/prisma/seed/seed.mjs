@@ -43,8 +43,10 @@ async function seed() {
         updatedAt: new Date('01/01/2020'),
         title: 'Changelog 3',
         slug: 'changelog-3',
-        content: 'Changelog 3 content with [markdown content](https://de.wikipedia.org/wiki/Markdown)',
-        summary: 'Changelog 3 summary with [markdown content](https://de.wikipedia.org/wiki/Markdown)',
+        content:
+          'Changelog 3 content with [markdown content](https://de.wikipedia.org/wiki/Markdown)',
+        summary:
+          'Changelog 3 summary with [markdown content](https://de.wikipedia.org/wiki/Markdown)',
         published: true,
         deleted: false,
       },

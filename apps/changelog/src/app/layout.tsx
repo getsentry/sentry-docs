@@ -1,3 +1,4 @@
+import {getChangelogs} from '@/server/utils';
 import './globals.css';
 
 import {Theme} from '@radix-ui/themes';
@@ -30,10 +31,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({children}: {children: React.ReactNode}) {
+export default async function RootLayout({children}: {children: React.ReactNode}) {
+  const {hash: chngelogsHash} = await getChangelogs();
   return (
     <html lang="en">
-      <body className={`${rubik.variable}`}>
+      <body className={`${rubik.variable}`} data-content-hash={chngelogsHash}>
         <Theme accentColor="iris" grayColor="sand" radius="large" scaling="95%">
           {children}
         </Theme>
