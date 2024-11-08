@@ -481,6 +481,28 @@ NOTE: The `openapi-diff` test is supposed to fail when CI runs on your pull requ
 
 **Solution**: You need to add the endpoint to a [sidebar tab](/backend/api/public/#3-sidebar-tab) with the decorator `@extend_schema(tags=['<section title>'])`.
 
+**Problem**: `drf_spectacular.plumbing.UnableToProceedError' <class 'serializer_parth.FooSerializer'> ... raise UnableToProceedError(hint)`
+
+**Solution**: Check that the response of your API documentation is using a TypedDict rather than a serializer.
+
+If the scheme looks something like this:
+```python
+...
+200: inline_sentry_response_serializer(
+                "ListDocIntegrationResponse", list[FooSerializer]
+            ),
+```
+
+Then you need to change it to use a TypedDict by first typing the serializer, then updating the schema to use the TypedDict:
+```python
+...
+200: inline_sentry_response_serializer(
+                "ListDocIntegrationResponse", list[FooSerializerResponse]
+            ),
+```
+
+Refer to the section above on [Success Responses](#success-responses) for more information.
+
 ---
 
 ## Requesting an API to be public
