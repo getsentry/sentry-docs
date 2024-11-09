@@ -3,6 +3,7 @@ import {getChangelogsUncached} from './src/server/utils';
 try {
   checkChanges();
 } catch (e) {
+  // eslint-disable-next-line no-console
   console.error(e);
   // build in case of errors
   process.exit(1);
@@ -20,16 +21,19 @@ async function checkChanges() {
     });
 
   if (prodHash === null) {
+    // eslint-disable-next-line no-console
     console.error('could not find changelogs hash on on live changelog page');
     // build anyway since we are not sure
     process.exit(1);
   }
 
   if (prodHash !== hash) {
+    // eslint-disable-next-line no-console
     console.info('⚠️  changelogs have changed since last deployment');
     // should build
     process.exit(1);
   }
+  // eslint-disable-next-line no-console
   console.info('changelogs are up to date');
   // skip build
   process.exit(0);
