@@ -1,5 +1,13 @@
 import {getChangelogsUncached} from './src/server/utils';
 
+try {
+  checkChanges();
+} catch (e) {
+  console.error(e);
+  // build in case of errors
+  process.exit(1);
+}
+
 async function checkChanges() {
   const {hash, changelogs} = await getChangelogsUncached();
   console.log({changelogs});
@@ -27,4 +35,3 @@ async function checkChanges() {
   // skip build
   process.exit(0);
 }
-checkChanges();
