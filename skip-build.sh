@@ -18,6 +18,10 @@ non_content_diff_status=$(git diff HEAD^ HEAD --name-only | grep -vE '^(docs/|pl
 changelog_diff_status=$(git diff HEAD^ HEAD --name-only | grep -vE '^(apps/changelog/|yarn.lock)' | wc -l)
 
 if [[ "$NEXT_PUBLIC_CHANGELOG" === "1" ]] ; then
+  if yarn tsx ./apps/changelog/has-content-changes.ts ; then
+    exit 1
+  fi
+
   if [[ $changelog_diff_status -gt 0 ]] ; then
     exit 1
   else
