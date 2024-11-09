@@ -19,7 +19,7 @@ By default, our Session Replay SDK masks all text content, images, and user inpu
 
 ## Pre-requisites
 
-Make sure your Sentry Flutter SDK version is at least 8.9.0, which is required for Session Replay. 
+Make sure your Sentry Flutter SDK version is at least 8.9.0, which is required for Session Replay.
 You can update your `pubspec.yaml` to the matching version:
 
 ```yaml
@@ -59,11 +59,23 @@ Sampling allows you to control how much of your website's traffic will result in
    up to a minute of events prior to the error and continue recording until the session
    ends.
 
-Sampling starts as soon as a session begins. The <PlatformIdentifier name="replays-session-sample-rate" /> is then evaluated. If the session is sampled, replay recording will start immediately. If not, <PlatformIdentifier name="replays-on-error-sample-rate" /> will be evaluated. If the session is sampled at this point, the replay will be buffered and will only be uploaded to Sentry if an error occurs. 
+Sampling starts as soon as a session begins. The <PlatformIdentifier name="replays-session-sample-rate" /> is then evaluated. If the session is sampled, replay recording will start immediately. If not, <PlatformIdentifier name="replays-on-error-sample-rate" /> will be evaluated. If the session is sampled at this point, the replay will be buffered and will only be uploaded to Sentry if an error occurs.
 
 ## Privacy
 
 The SDK is recording and aggressively redacting (masking) all text and images, according to the configuration in `options.experimental.replay`.
+
+<Alert level="warning">
+Masking in the Sentry Flutter SDK is based on Widget *types*, e.g. `Image`, not just their as strings (i.e. we check whether
+a `widgetInstance` should be masked by checking `if (widgetInstance is Image)` instead of `if (widgetInstance.runtimeType == 'Image')`).
+This means we can ensure masking works regardless of obfuscation in release builds and also works for subtclasses.
+However, it also means we can only mask widgets that are part of the Flutter SDK itself.
+We cannot mask widgets defined in various 3rd-party packages (because the type is not known in the Sentry Flutter SDK),
+even though many should be masked.
+Therefore, you need to consider the widgets your application uses and ensure they're masked correctly with custom masking rules.
+Examples of widgets that usually should be masked include (but are not limited to): VideoPlayer, WebView, Chart, Password, etc.
+</Alert>
+
 You can tune this and add custom masking rules to fit your needs. For example, you can explicitly mask or unmask widgets by type,
 or you can even have a callback to decide whether a specific widget instance should be masked:
 
