@@ -1,4 +1,4 @@
-#!/usr/bin/env yarn tsx
+#!/usr/bin/env tsx
 
 // This file used to lint for wizard errors. Wizard docs have been removed
 // (possibly permanently). If they come back, this should be ported from the
