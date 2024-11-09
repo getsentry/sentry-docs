@@ -128,10 +128,10 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
           slug: slugify(apiData.operationId),
           summary: apiData.summary,
           descriptionMarkdown: apiData.description,
-          pathParameters: apiData.parameters.filter(
+          pathParameters: (apiData.parameters || []).filter(
             p => p.in === 'path'
           ) as APIParameter[],
-          queryParameters: apiData.parameters.filter(
+          queryParameters: (apiData.parameters || []).filter(
             p => p.in === 'query'
           ) as APIParameter[],
           requestBodyContent: {
