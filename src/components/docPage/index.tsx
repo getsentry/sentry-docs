@@ -9,6 +9,7 @@ import {getUnversionedPath} from 'sentry-docs/versioning';
 
 import './type.scss';
 
+import {Banner} from '../banner';
 import {Breadcrumbs} from '../breadcrumbs';
 import {CodeContextProvider} from '../codeContext';
 import {GitHubCTA} from '../githubCTA';
@@ -75,6 +76,9 @@ export function DocPage({
               fullWidth ? 'max-w-none w-full' : 'w-[75ch] xl:max-w-[calc(100%-250px)]',
             ].join(' ')}
           >
+            <div className="mb-4">
+              <Banner />
+            </div>
             {leafNode && <Breadcrumbs leafNode={leafNode} />}
             <div>
               <hgroup>

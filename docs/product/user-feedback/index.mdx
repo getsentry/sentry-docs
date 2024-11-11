@@ -6,7 +6,7 @@ description: "Learn how you can view and triage user feedback submissions."
 
 Sentry automatically detects errors thrown by your application, such as performance issues and user experience problems like rage clicks. But there are other frustrations your users may encounter (broken permission flows, broken links, typos, misleading UX, business logic flaws, and so on).
 
-That’s where Sentry’s User Feedback Widget and Crash-Report Modal features come in. Setting up one or both, lets you collect feedback from your end-users when they run into bugs in your application. Sentry then links that feedback to available rich debugging context, including errors, replays, and tags such as URL, allowing you to get to the root of the problem faster.
+That’s where Sentry’s User Feedback Widget and Crash-Report Modal features come in. Setting up one or both lets you collect feedback from your end-users when they run into bugs in your application. Sentry then links that feedback to available rich debugging context, including errors, replays, and tags such as URL, allowing you to get to the root of the problem faster.
 
 For example, using [Session Replay](/product/explore/session-replay/) with the User Feedback Widget could save you time, helping you quickly understand the context of the user problem by seeing exactly what they experienced before submitting their feedback.
 
@@ -22,7 +22,7 @@ Feedback collected via the Feedback Widget may have some or all of the following
 - Screenshot from the user
 - User email
 - Associated replay event (with up to 60 seconds of replay recording before the user submitted the feedback)
-- Learn more about how to set up Session Replay [here](/product/explore/session-replay/getting-started/).
+    - Learn more about how to set up Session Replay [here](/product/explore/session-replay/getting-started/).
 - URL of the page the user was on when they submitted the feedback
 - Tags
 
@@ -53,7 +53,22 @@ You can either manually resolve user feedback submissions on the **User Feedback
 
 ![User Feedback List Triaging.](./img/user-feedback-triaging.png)
 
-You can also assign a team member to a specific user feedback submission on the **User Feedback Details** view. If you come across user feedback that you consider spam, select the feedback(s) and click "Mark as Spam". This feedback will then be filtered out and moved to the "Spam" heading. 
+You can also assign a team member to a specific user feedback submission on the **User Feedback Details** view. If you come across user feedback that you consider spam, select the feedback(s) and click "Mark as Spam". This feedback will then be filtered out and moved to the "Spam" heading.
+
+## Creating or Linking External Issues From User Feedback
+
+If you have GitHub, Jira, or any other [issue tracking integration](https://sentry.io/integrations/) set up with Sentry, you can create an external issue or link an existing issue from the User Feedback page. On the **User Feedback Details** view, you should see all of your integrations appear in the header, under the project name.
+
+![User Feedback Header.](./img/user-feedback-header.png)
+
+Clicking on an integration name will open up a modal, which will allow you to create a new external issue or link an existing issue.
+
+![User Feedback Linked Issue Modal.](./img/user-feedback-linked-issue-modal.png)
+
+The modal will be populated with a default title ("User Feedback") and description containing the basic details of the feedback, including a link to the feedback in Sentry and the user's message. You can edit the title and description, as well as configure the issue's repository, labels, and assignee.
+
+To create the issue, simply click the "Create Issue" button at the bottom of the modal. To link an existing issue, click on the "Link" tab in the modal, and then click "Link Issue".
+
 
 ## Searching for User Feedback
 
@@ -64,7 +79,7 @@ Example search: `url:*/payments/*`
 For a list of search fields, refer to the [search documentation](/concepts/search/searchable-properties/user-feedback/).
 
 ## Spam Detection for User Feedback
-By default, Sentry auto-detects user feedback submissions that are likely to be spam and puts them in the “Spam” folder on the **User Feedback** page. This improves the quality and actionability of the feedback that are in the main list. To improve the quality of your alerts, feedback that's labeled as spam will bypass any User Feedback Alert Rules you may have configured.
+By default, Sentry auto-detects user feedback submissions that are likely to be spam and puts them in the “Spam” folder on the **User Feedback** page. This improves the quality and actionability of the feedback that are in the main list. To improve the quality of your alerts, feedback that's labeled as spam will bypass any User Feedback Alert Rules you may have configured, and you will not receive alerts for spam.
 
 To make automatic spam detection possible, we use a Large Language Model that classifies messages. This language model is internal to Google Cloud Platform and no data is stored or persisted. This is part of our existing [sub-processor agreement](https://sentry.io/legal/dpa/#subprocessors).
 
@@ -86,3 +101,19 @@ If you don't have Sentry's default issue alert turned on, follow these steps to 
 ![User Feedback Alert Configuration.](./img/user-feedback-alert-configuration.png)
 
 To get notifications when crash-report feedback comes in, make sure to turn on "Enable Crash Report Notifications" in Settings > Projects > [Project Name] > User Feedback.
+
+## Automated Issue Creation for User Feedback
+
+If you'd like to automatically create an external issue (such as a GitHub or Jira issue) every time you receive user feedback, you can do so through the Alerts page in Sentry, similar to how you would create an issue alert for user feedback (illustrated in the section above).
+
+Follow these steps to set up automated GitHub or Jira issue creation for every new feedback:
+
+1. Create a [New Alert Rule](https://sentry.io/alerts/new/issue/) in Sentry.
+2. Scroll to the "Set conditions" section and set the "IF" filter to `The issue's category is equal to… "Feedback"`.
+3. Under the "THEN" filter actions, scroll to the "Create new..." section and select the integration you'd like to use.
+4. Default issue link settings, such as the repository, labels, and assignees, can be configured by clicking the "Issue Link Settings" button.
+5. Add an alert name and owner.
+
+Once this alert is configured, you should see a GitHub or Jira issue automatically created every time user feedback is submitted.
+
+![User Feedback Auto Issue Alert Configuration.](./img/user-feedback-auto-issue-creation-configuration.png)
