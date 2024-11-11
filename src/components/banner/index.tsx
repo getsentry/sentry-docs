@@ -49,6 +49,12 @@ const BANNERS: BannerType[] = [
   /// ⚠️ KEEP THIS LAST BANNER ACTIVE FOR DOCUMENTATION
   // check it out on `/contributing/pages/banners/`
   {
+    appearsOn: ['^/$', '^/platforms/'],
+    text: 'New products are coming. Join us for Sentry Launch Week, Nov 18-21.',
+    linkURL: 'https://sentry.io/events/launch-week/?promo_name=launchweekQ4FY2024',
+    linkText: `See what's coming`,
+  },
+  {
     appearsOn: ['^/contributing/pages/banners/'],
     text: 'Edit this banner on `/src/components/banner/index.tsx`',
     linkURL: 'https://docs.sentry.io/contributing/pages/banners/',
