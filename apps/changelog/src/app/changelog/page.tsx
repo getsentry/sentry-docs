@@ -13,7 +13,7 @@ import {Element} from 'hast';
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
-  const {changelogs} = await getChangelogs();
+  const changelogs = await getChangelogs();
 
   const changelogsWithPublishedAt = changelogs.filter(changelog => {
     return changelog.publishedAt !== null;
