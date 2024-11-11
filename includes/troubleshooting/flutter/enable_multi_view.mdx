@@ -1,0 +1,200 @@
+```dart {filename:main.dart}{tabTitle: lib/main.dart}
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:sentry_flutter/src/integrations/widgets_binding_integration.dart';
+import 'dart:ui' show FlutterView;
+
+const String exampleDsn = '___DSN___';
+
+Future<void> main() async {
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = exampleDsn;
+      final integration = options.integrations
+        .firstWhere((element) => element is WidgetsBindingIntegration);
+      options.removeIntegration(integration);
+    },
+    // Init your App.
+    appRunner: () => runWidget(
+      MultiViewApp(
+        viewBuilder: (BuildContext context) => DefaultAssetBundle(
+          bundle: SentryAssetBundle(),
+          child: const MyApp(),
+        ),
+      ),
+    ),
+  );
+}
+
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      navigatorObservers: [
+        SentryNavigatorObserver(),
+      ],
+      home: Scaffold(
+        body: Center(
+          child: Text(
+              'Sentry Flutter Example (ViewId:${View.of(context).viewId})'),
+        ),
+      ),
+    );
+  }
+}
+
+// multi_view_app.dart
+
+// Copyright 2014 The Flutter Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+/// Calls [viewBuilder] for every view added to the app to obtain the widget to
+/// render into that view. The current view can be looked up with [View.of].
+class MultiViewApp extends StatefulWidget {
+  const MultiViewApp({super.key, required this.viewBuilder});
+
+  final WidgetBuilder viewBuilder;
+
+  @override
+  State<MultiViewApp> createState() => _MultiViewAppState();
+}
+
+class _MultiViewAppState extends State<MultiViewApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _updateViews();
+  }
+
+  @override
+  void didUpdateWidget(MultiViewApp oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Need to re-evaluate the viewBuilder callback for all views.
+    _views.clear();
+    _updateViews();
+  }
+
+  @override
+  void didChangeMetrics() {
+    _updateViews();
+  }
+
+  Map<Object, Widget> _views = <Object, Widget>{};
+
+  void _updateViews() {
+    final Map<Object, Widget> newViews = <Object, Widget>{};
+    for (final FlutterView view
+        in WidgetsBinding.instance.platformDispatcher.views) {
+      final Widget viewWidget = _views[view.viewId] ?? _createViewWidget(view);
+      newViews[view.viewId] = viewWidget;
+    }
+    setState(() {
+      _views = newViews;
+    });
+  }
+
+  Widget _createViewWidget(FlutterView view) {
+    return View(
+      view: view,
+      child: Builder(
+        builder: widget.viewBuilder,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ViewCollection(views: _views.values.toList(growable: false));
+  }
+}
+```
+
+```js {filename:flutter_bootstrap.js}{tabTitle: web/flutter_bootstrap.js}
+// flutter_bootstrap.js
+{{ flutter_js; }}
+{{ flutter_build_config; }}
+
+_flutter.loader.load({
+  onEntrypointLoaded: async function onEntrypointLoaded(engineInitializer) {
+    let engine = await engineInitializer.initializeEngine({
+      multiViewEnabled: true, // Enables embedded mode.
+    });
+    let app = await engine.runApp();
+    // Make this `app` object available to your JS app.
+    app.addView({ hostElement: document.querySelector("#left") });
+    app.addView({ hostElement: document.querySelector("#right") });
+  },
+});
+```
+
+```html {filename:index.html}{tabTitle: web/index.html}
+<!doctype html>
+<html>
+  <head>
+    <!--
+          If you're serving your web app in a path other than the root, change the
+          href value below to reflect the base path you're serving from.
+
+          The path provided below has to start and end with a slash "/" in order for
+          it to work correctly.
+
+          For more details:
+          * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+          This is a placeholder for base href that will be replaced by the value of
+          the `--base-href` argument provided to `flutter build`.
+        -->
+    <base href="$FLUTTER_BASE_HREF" />
+
+    <meta charset="UTF-8" />
+    <meta content="IE=Edge" http-equiv="X-UA-Compatible" />
+    <meta
+      name="description"
+      content="Demonstrates how to use the multiview feature with the sentry plugin."
+    />
+
+    <!-- iOS meta tags & icons -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta
+      name="apple-mobile-web-app-title"
+      content="sentry multiview example"
+    />
+    <link rel="apple-touch-icon" href="icons/Icon-192.png" />
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" type="image/png" href="favicon.png" />
+
+    <title>sentry multiview example</title>
+    <link rel="manifest" href="manifest.json" />
+  </head>
+  <body>
+    <div style="width: 100%; height: 100%; position: absolute;">
+      <div id="left" style="width: 50%; height: 100%; float: left;"></div>
+      <div id="right" style="width: 50%; height: 100%; float: left;"></div>
+    </div>
+    <script
+      src="flutter_bootstrap.js"
+      type="application/javascript"
+      async
+    ></script>
+  </body>
+</html>
+```
