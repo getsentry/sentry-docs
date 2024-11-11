@@ -1,4 +1,4 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env ts-node
 
 // This file used to lint for wizard errors. Wizard docs have been removed
 // (possibly permanently). If they come back, this should be ported from the
