@@ -14,33 +14,33 @@ This document serves as an introduction to extrapolation, informing how extrapol
 
 ### Introduction to Extrapolation
 
-Sentry’s system uses sampling to reduce the amount of data ingested, for reasons of both performance and cost. This means that beyond a certain volume, Sentry only ingests a fraction of the data according to the specified sample rate of a project: if you sample at 10% and initially have a 1000 requests to your site in a given timeframe, you will only see 100 spans in Sentry. Of course, without making up for the sample rate, this misrepresents the volume of an application, and when different parts of the application have different sample rates, there is even an unfair bias, skewing the total volume towards parts with higher sample rates. This effect is exacerbated for numerical attributes like latency.
+Sentry’s system uses sampling to reduce the amount of data ingested, for reasons of both performance and cost. This means that beyond a certain volume, Sentry only ingests a fraction of the data according to the specified sample rate of a project: if you sample at 10% and initially have 1000 requests to your site in a given timeframe, you will only see 100 spans in Sentry. Of course, without making up for the sample rate, this misrepresents the volume of an application, and when different parts of the application have different sample rates, there is even an unfair bias, skewing the total volume towards parts with higher sample rates. This effect is exacerbated for numerical attributes like latency.
 
-To account for this fact, Sentry offers a feature called Extrapolation. Extrapolation smartly combines the data that was ingested to account for different sample rates in different parts of the application. However, low sample rates may cause the extrapolated data to be less accurate than if there was no sampling at all.
+To account for this fact, Sentry offers a feature called Extrapolation. Extrapolation smartly combines the data that was ingested to account for different sample rates in different parts of the application. However, low sample rates will cause the extrapolated data to be less accurate than if there was no sampling at all.
 
 So how does one handle this type of data, and when is extrapolated data accurate and expressive? Let’s start with some definitions: 
 
-- Accuracy refers to data being correct. For example, the measured number of spans corresponds to the actual number of spans that were executed. As sample rates decrease, accuracy also goes down, because minute random decisions can influence the result in major ways, in absolute numbers. Also, when traffic is low and 100% of data is sampled, the system is fully accurate despite aggregates being affected by inherent statistical uncertainty.
-- Expressiveness refers to data being able to express something about the state of the observed system. For example, a single sample with specific tags and a full trace can be very expressive, and a large amount of spans can have very misleading characteristics. Expressiveness therefore depends on the use case for the data.
+- **Accuracy** refers to data being correct. For example, the measured number of spans corresponds to the actual number of spans that were executed. As sample rates decrease, accuracy also goes down, because minute random decisions can influence the result in major ways, in absolute numbers. 
+- **Expressiveness** refers to data being able to express something about the state of the observed system. For example, a single sample with specific tags and a full trace can be very expressive, and a large amount of spans can have very misleading characteristics. Expressiveness therefore depends on the use case for the data. Also, when traffic is low and 100% of data is sampled, the system is fully accurate despite aggregates being affected by inherent statistical uncertainty that reduce expressiveness.
 
-Affected Product Surface
+At first glance, extrapolation may seem unnecessarily complicated. However, for high-volume organizations, sampling is a way to control costs and egress volume, and reduce the amount of redundant data sent to Sentry. Why don’t we just show the user the data they send? We don’t just extrapolate for fun, it actually has some major benefits to the user:
 
-1. Explore
-2. Alerts
-3. Dashboards
-4. Requests
-5. Profiles
+1. **Steady data when the sample rate changes**: Whenever you change sample rates, both the count and possibly the distribution of the values will change in some way. When you switch the sample rate from 10% to 1% for whatever reason, suddenly you have a drop in all associated metrics. Extrapolation corrects for this, so your graphs are steady, and your alerts don’t fire on a change of sample rate. 
+2. **Combining different sample rates**: When your endpoints don’t have the same sample rate, how are you supposed to know the true p90 when one of your endpoints is sampled at 1% and another at 100%, but all you get is the aggregate of the samples?
+
+
+
 
 ### **Modes**
 
-There are two modes that can be used to view data in Sentry: extrapolated mode and sample mode.
+There are two modes that can be used to view data in Sentry: default mode and sample mode.
 
-- Extrapolated mode extrapolates the ingested data as outlined above.
+- Default mode extrapolates the ingested data as outlined below.
 - Sample mode does not extrapolate and presents exactly the data that was ingested.
 
 Depending on the context and the use case, one mode may be more useful than the other. 
 
-There is currently no way for Sentry to automatically switch from the extrapolated mode into sample mode based on query attributes, therefore the transition needs to be triggered by the user. However, Sentry can nudge the user, based on observed characteristics of a query, to switch from one mode to another. One example for this is when an ID column is detected: extrapolated aggregates for high-cardinality and low-volume ID columns are usually not very useful, because they may refer to a highly exaggerated volume of data that is not extrapolated correctly due to the high-cardinality nature of the column in question.
+There is currently no way for Sentry to automatically switch from the default mode into sample mode based on query attributes, therefore the transition needs to be triggered by the user. However, Sentry can nudge the user, based on observed characteristics of a query, to switch from one mode to another. One example for this is when an ID column is detected: extrapolated aggregates for high-cardinality and low-volume ID columns are usually not very useful, because they may refer to a highly exaggerated volume of data that is not extrapolated correctly due to the high-cardinality nature of the column in question.
 
 ## Aggregates
 
@@ -48,7 +48,7 @@ Sentry allows the user to aggregate data in different ways - the following aggre
 
 | **Aggregate** | **Can be extrapolated?** |
 | --- | --- |
-| mean | yes |
+| avg | yes |
 | min | no |
 | count | yes |
 | sum | yes |
@@ -62,12 +62,6 @@ Each of these aggregates has their own way of dealing with extrapolation, due to
 
 As long as there are sufficient samples, the sample rate itself does not matter as much, but due to the extrapolation mechanism, what would be a fluctuation of a few samples, may turn into a much larger absolute impact e.g. in terms of the view count. Of course, when a site gets billions of visits, a fluctation of 100.000 via the noise introduced by a sample rate of 0.00001 is not as salient. 
 
-## Why do we even extrapolate?
-
-At first glance, extrapolation may seem unnecessarily complicated. However, for high-volume organizations, sampling is a way to control costs and egress volume, and reduce the amount of redundant data sent to Sentry. Why don’t we just show the user the data they send? We don’t just extrapolate for fun, it actually has some major benefits to the user:
-
-1. **Steady data when the sample rate changes**: Whenever you change sample rates, both the count and possibly the distribution of the values will change in some way. When you switch the sample rate from 10% to 1% for whatever reason, suddenly you have a drop in all associated metrics. Extrapolation corrects for this, so your graphs are steady, and your alerts don’t fire on a change of sample rate. 
-2. **Combining different sample rates**: When your endpoints don’t have the same sample rate, how are you supposed to know the true p90 when one of your endpoints is sampled at 1% and another at 100%, but all you get is the aggregate of the samples?
 
 ## How to deal with extrapolation in the product?
 
@@ -86,7 +80,7 @@ In new product surfaces, the question of whether or not to use extrapolated vs n
 
 ### Confidence
 
-When users filter on data that has a very low count but also a low sample rate, yielding a highly extrapolated but low-sample dataset, developers and users should be careful with the conclusions they draw from the data. The storage platform provides confidence intervals along with the extrapolated estimates for the different aggregation types to indicate when there is elevated uncertainty in the data. These types of datasets are inherently noisy and may contain misleading information. When this is discovered, the user should either be very careful with the conclusions they draw from the aggregate data, or switch to non-extrapolated mode for investigation of the individual samples. 
+When users filter on data that has a very low count but also a low sample rate, yielding a highly extrapolated but low-sample dataset, developers and users should be careful with the conclusions they draw from the data. The storage platform provides confidence intervals along with the extrapolated estimates for the different aggregation types to indicate when there is elevated uncertainty in the data. These types of datasets are inherently noisy and may contain misleading information. When this is discovered, the user should either be very careful with the conclusions they draw from the aggregate data, or switch to non-default mode for investigation of the individual samples. 
 
 ## **Conclusion**
 
