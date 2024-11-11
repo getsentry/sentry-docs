@@ -45,7 +45,7 @@ There are two modes that can be used to view data in Sentry: default mode and sa
 
 Depending on the context and the use case, one mode may be more useful than the other. 
 
-There is currently no way for Sentry to automatically switch from the default mode into sample mode based on query attributes, therefore the transition needs to be triggered by the user. However, Sentry can nudge the user, based on observed characteristics of a query, to switch from one mode to another. One example for this is when an ID column is detected: extrapolated aggregates for high-cardinality and low-volume ID columns are usually not very useful, because they may refer to a highly exaggerated volume of data that is not extrapolated correctly due to the high-cardinality nature of the column in question.
+Generally, default makes sense for all queries that aggregate on a dataset of sufficient volume. As absolute sample size decreases below a certain limit, default mode becomes less and less useful. There may be scenarios where the user will want to switch between modes, for example to examine the aggregate numbers first, and dive into single samples for investigation, therefore the sample mode settings should be a transient view option that resets to default mode when the user opens the page the next time.
 
 ## Aggregates
 
@@ -82,6 +82,10 @@ In new product surfaces, the question of whether or not to use extrapolated vs n
     1. In alerts, for example, consistency is very important, because noise affects the trust users have in the alerting system. A system that alerts everytime users switch sample rates is not very convenient to use, especially in larger teams.
 4. Does the user care more about a truthful estimate of the aggregate data or about the actual events that happened?
     1. Some scenarios, like visualizing metrics over time, are based on aggregates, whereas a case of debugging a specific user’s problem hinges on actually seeing the specific events. The best mode depends on the intended usage of the product. 
+
+
+### Opting Out of Extrapolation
+Users may want to opt out of extrapolation for different reasons. It is always possible to set the sample rate to 100% and therefore send all data to Sentry, implicitly opting out of extrapolation and behaving in the same way as sample mode. 
 
 ### Confidence
 
