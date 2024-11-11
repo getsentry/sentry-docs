@@ -9,7 +9,8 @@ try {
 }
 
 async function checkChanges() {
-  const {hash} = await getChangelogsUncached();
+  const {hash, changelogs} = await getChangelogsUncached();
+  console.log({changelogs});
   // extract the hash from the body tag of the live site
   // example: <body data-content-hash="055114ed2b57063a941b3433ea44074b53e795891fe603cc87cf24b96b32f3bd">
   const prodHash = await fetch('https://sentry.io/changelog/')
