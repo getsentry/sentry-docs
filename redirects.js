@@ -167,6 +167,10 @@ const developerDocsRedirects = [
     destination: '/getting-started/philosophy/',
   },
   {
+    source: '/development/database-migrations/',
+    destination: '/backend/database-migrations/',
+  },
+  {
     source: '/services/metrics/',
     destination: '/backend/metrics/',
   },
