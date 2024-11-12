@@ -12,7 +12,7 @@ dev_docs_diff_status=$(git diff HEAD^ HEAD --quiet -- develop-docs; echo $?)
 docs_diff_status=$(git diff HEAD^ HEAD --quiet -- docs includes platform-includes ; echo $?)
 
 # have changes occurred outside of the content directories
-non_content_diff_status=$(git diff HEAD^ HEAD --name-only | grep -vE '^(docs/|platform-includes/|includes/|develop-docs/)' | wc -l)
+non_content_diff_status=$(git diff HEAD^ HEAD --name-only | grep -vE '^(docs/|platform-includes/|includes/|develop-docs/|apps/)' | wc -l)
 
 # apps/changelog changes or workspace deps changes (yarn.lock)
 changelog_diff_status=$(git diff HEAD^ HEAD --name-only | grep -E '^(apps/changelog/|yarn.lock)' | wc -l)
