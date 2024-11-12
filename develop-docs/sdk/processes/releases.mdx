@@ -105,16 +105,16 @@ jobs:
     runs-on: ubuntu-latest
     name: "Release a new version"
     steps:
-      - uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.GH_RELEASE_PAT }}
-          fetch-depth: 0
       - name: Get auth token
         id: token
         uses: actions/create-github-app-token@3378cda945da322a8db4b193e19d46352ebe2de5 #v.1.10.4
         with:
           app-id: ${{ vars.SENTRY_RELEASE_BOT_CLIENT_ID }}
           private-key: ${{ secrets.SENTRY_RELEASE_BOT_PRIVATE_KEY }}
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ steps.token.outputs.token }}
+          fetch-depth: 0
       - name: Prepare release
         uses: getsentry/action-prepare-release@v1
         env:
@@ -138,10 +138,17 @@ Here's [an example PR] and the [follow-up to fix `fetch-depth`].
 Give the following teams access to your repository:
 
 - `engineering` -> `write`
-- `release-bot` -> `elevated bot`
 
 You can do this self-service via the settings page of your repository:
 `https://github.com/getsentry/REPONAME_HERE/settings/access`
+
+## Create ruleset for the repo
+
+Download the [default ruleset template]:/Default_ruleset.json , and save it as a JSON file.
+
+Go to the ruleset setting page of your repository: `https://github.com/getsentry/REPONAME_HERE/settings/rules`, click on the green `New ruleset` button and choose `Import a ruleset`, select the JSON file that you just downloaded. You can tweak the ruleset settings as you need, but make sure not to remove the App in Bypass List.
+
+Remember to click save before you leave the page.
 
 ## Making Your First Release!
 
