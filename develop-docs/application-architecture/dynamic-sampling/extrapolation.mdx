@@ -44,9 +44,19 @@ Sentry allows the user to aggregate data in different ways - the following aggre
 | percentiles | yes |
 | count_unique | no |
 
-Each of these aggregates has their own way of dealing with extrapolation, due to the fact that e.g. counts have to be extrapolated in a slightly different way from percentiles. 
+Each of these aggregates has their own way of dealing with extrapolation, due to the fact that e.g. counts have to be extrapolated in a slightly different way from percentiles. To extrapolate, the sampling weights have to be used in the following ways:
 
-[Insert text about how different extrapolation mechanisms work]
+- **Count**: Calculate a sum of the sampling weight
+Example: the query `count()` becomes `round(sum(sampling weight))`.
+- **Sum**: Multiply each value with `sampling weight`.
+Example: the query `sum(foo)` becomes `sum(foo * sampling weight)`
+- **Average**: Use avgWeighted with sampling weight.
+Example: the query `avg(foo)` becomes `avgWeighted(foo, sampling weight)`
+- **Percentiles**: Use `*TDigestWeighted` with `sampling_weight_2`.
+We use the integer weight column since weighted functions in Clickhouse do not support floating point weights. Furthermore, performance and accuracy tests have shown that the t-digest function provides best runtime performance (see Resources below). 
+Example: the query `quantile(0.95)(foo)` becomes `quantileTDigestWeighted(0.95)(foo, sampling_weight_2)`.
+- **Max / Min**: No extrapolation.
+There will be investigation into possible extrapolation for these values.
 
 As long as there are sufficient samples, the sample rate itself does not matter as much, but due to the extrapolation mechanism, what would be a fluctuation of a few samples, may turn into a much larger absolute impact e.g. in terms of the view count. Of course, when a site gets billions of visits, a fluctation of 100.000 via the noise introduced by a sample rate of 0.00001 is not as salient. 
 
