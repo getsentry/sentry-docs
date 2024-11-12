@@ -47,8 +47,8 @@ We're just interested in making a GitHub release and a PyPI release so our
 ```yaml
 minVersion: 0.28.1
 targets:
-- name: pypi
-- name: github
+  - name: pypi
+  - name: github
 ```
 
 ### `scripts/bump-version.sh`
@@ -147,6 +147,64 @@ add a label to.
 
 [issue in `publish`]: https://github.com/getsentry/publish/issues
 
+## Version name conventions
+
+To keep versioning consistent across SDKs, we generally follow [semantic versioning (semver)](https://semver.org/), with language- or platform-specific conventions around semver (if applicable).
+Craft has some precautionary checks to ensure we only publish valid, semver-like versions.
+Specifically, craft expects versions following this format:
+
+```txt
+<major>.<minor>.<patch>(-<prerelease>)?(-<build>)?
+```
+
+While the major, minor and patch versions are required, prerelease and build properties are optional but can also be combined.
+
+### Prereleases (`<prerelease>`)
+
+If you want to create a preview release of your SDK, you can append a prerelease identifier, as well as an optional incremental prerelease number to your version.
+This will ensure that various Craft publishing targets will treat the release as a prerelease, meaning for example that it will not get assigned a `latest` in package repositories.
+Likewise, prereleases will not be inserted into our internal release-registry, which is used by the Sentry product as well as our docs and other tools to query the latest or specific releases of our packages.
+
+However, we have strict rules around which identifiers we accept as a prerelease. Therefore, the `<prerelease>` part of your version has to be one of the following: `preview|pre|rc|dev|alpha|beta|unstable|a|b`
+As a consequence, we **do not accept** arbitrary strings as prerelease identifiers. Using any other identifiers will result in a release being considered stable instead.
+
+Examples:
+
+```txt
+// valid
+1.0.0-preview
+1.0.0-alpha.0
+1.0.0-beta.1
+1.0.0-rc.20
+1.0.0-a
+
+// invalid or incorrectly treated
+1.0.0-foo
+1.0.0-canary.0
+```
+
+#### Special Case: Post Releases
+
+Python has the concept of post releases, which Craft handles implicitly. A post release is indicated by a `-\d+` suffix to the semver version, for example: `1.0.0-1`.
+Given that we only consider certain identifiers as [valid prerelease identifiers](#prereleases-prerelease), post releases are considered stable releases.
+
+### Build identifiers (`<build>`)
+
+In some cases, you can append a build identifier to your version, for example if you release the same package version for different platforms or architectures.
+You can also combine build and prerelease identifiers but in this case, the prerelease identifier has to come first.
+
+Examples:
+
+```txt
+// valid
+1.0.0+x86_64
+1.0.0-rc.1+x86_64
+
+// invalid or incorrectly treated
+1.0.0+rc.1+x86_64
+1.0.0+x86_64-beta.0
+```
+
 ## [Optional] Using Multiple Craft Configs in a Repo
 
 In some cases, we need to maintain multiple or diverging publishing configs in a repository.
@@ -165,7 +223,7 @@ Add `craft_config_from_merge_target: true` when calling `getsentry/action-prepar
 jobs:
   release:
     runs-on: ubuntu-latest
-    name: 'Release a new version'
+    name: "Release a new version"
     steps:
       # ...
       - name: Prepare release
