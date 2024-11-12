@@ -167,6 +167,10 @@ const developerDocsRedirects = [
     destination: '/getting-started/philosophy/',
   },
   {
+    source: '/development/database-migrations/',
+    destination: '/backend/database-migrations/',
+  },
+  {
     source: '/services/metrics/',
     destination: '/backend/metrics/',
   },
@@ -797,10 +801,6 @@ const userDocsRedirects = [
     source:
       '/platforms/react-native/data-management/debug-files/source-context/data-management/debug-files/upload/',
     destination: '/platforms/react-native/data-management/debug-files/upload/',
-  },
-  {
-    source: '/development/database-migrations/',
-    destination: '/backend/database-migrations/',
   },
 ];
 
