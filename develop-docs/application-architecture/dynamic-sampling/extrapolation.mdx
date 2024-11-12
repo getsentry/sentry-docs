@@ -3,38 +3,21 @@ title: Extrapolation
 sidebar_order: 5
 ---
 
-### Purpose of this document & outline
+Sentry’s system uses sampling to reduce the amount of data ingested, for reasons of both performance and cost. This means that when configured, Sentry only ingests a fraction of the data according to the specified sample rate of a project: if you sample at 10% and initially have 1000 requests to your site in a given timeframe, you will only see 100 spans in Sentry. Of course, without making up for the sample rate, this misrepresents the true volume of an application, and when different parts of the application have different sample rates, there is even an unfair bias, skewing the total volume towards parts with higher sample rates. This effect is exacerbated for numerical attributes like latency.
 
-This document serves as an introduction to extrapolation, informing how extrapolation will interact with different product surfaces and how to integrate it into the product for the users’ benefit. The document covers:
-
-- How data is extrapolated using samples and the connected sample rate for different aggregations & which aggregations cannot be extrapolated
-- The effect of extrapolation on data accuracy
-- What extrapolation means for the stability of aggregations
-- The benefit of extrapolation for the user
-    - Sample rate changes do not break alerts
-    - Numbers correspond to the real occurrences when looking at sufficiently large groups
-- Which use cases are better served by
-    - extrapolated data
-    - sample data
-
-### Introduction to Extrapolation
-
-Sentry’s system uses sampling to reduce the amount of data ingested, for reasons of both performance and cost. This means that beyond a certain volume, Sentry only ingests a fraction of the data according to the specified sample rate of a project: if you sample at 10% and initially have 1000 requests to your site in a given timeframe, you will only see 100 spans in Sentry. Of course, without making up for the sample rate, this misrepresents the volume of an application, and when different parts of the application have different sample rates, there is even an unfair bias, skewing the total volume towards parts with higher sample rates. This effect is exacerbated for numerical attributes like latency.
-
-To account for this fact, Sentry offers a feature called Extrapolation. Extrapolation smartly combines the data that was ingested to account for different sample rates in different parts of the application. However, low sample rates will cause the extrapolated data to be less accurate than if there was no sampling at all.
+To account for this fact, Sentry uses extrapolation  to smartly combine the data that was ingested to account for sample rates in the application. However, low sample rates will cause the extrapolated data to be less accurate than if there was no sampling at all and the application was sampled at 100%.
 
 So how does one handle this type of data, and when is extrapolated data accurate and expressive? Let’s start with some definitions: 
 
-- **Accuracy** refers to data being correct. For example, the measured number of spans corresponds to the actual number of spans that were executed. As sample rates decrease, accuracy also goes down, because minute random decisions can influence the result in major ways, in absolute numbers. 
-- **Expressiveness** refers to data being able to express something about the state of the observed system. For example, a single sample with specific tags and a full trace can be very expressive, and a large amount of spans can have very misleading characteristics. Expressiveness therefore depends on the use case for the data. Also, when traffic is low and 100% of data is sampled, the system is fully accurate despite aggregates being affected by inherent statistical uncertainty that reduce expressiveness.
+- **Accuracy** refers to data being correct. For example, the measured number of spans corresponds to the actual number of spans that were executed. As sample rates decrease, accuracy also goes down, because minor random decisions can influence the result in major ways.
+- **Expressiveness** refers to data being able to express something about the state of the observed system. Expressiveness refers to the usefulness of the data for the user in a specific use case. 
+
+Data can be any combination of accurate and expressive. To illustrate these properties, let's look at some examples. A single sample with specific tags and a full trace can be very expressive, and a large amount of spans can have very misleading characteristics that are not very expressive. When traffic is low and 100% of data is sampled, the system is fully accurate despite aggregates being affected by inherent statistical uncertainty that reduce expressiveness.
 
 At first glance, extrapolation may seem unnecessarily complicated. However, for high-volume organizations, sampling is a way to control costs and egress volume, and reduce the amount of redundant data sent to Sentry. Why don’t we just show the user the data they send? We don’t just extrapolate for fun, it actually has some major benefits to the user:
 
-1. **Steady data when the sample rate changes**: Whenever you change sample rates, both the count and possibly the distribution of the values will change in some way. When you switch the sample rate from 10% to 1% for whatever reason, suddenly you have a drop in all associated metrics. Extrapolation corrects for this, so your graphs are steady, and your alerts don’t fire on a change of sample rate. 
-2. **Combining different sample rates**: When your endpoints don’t have the same sample rate, how are you supposed to know the true p90 when one of your endpoints is sampled at 1% and another at 100%, but all you get is the aggregate of the samples?
-
-
-
+- **Steady data when the sample rate changes**: Whenever you change sample rates, both the count and possibly the distribution of the values will change in some way. When you switch the sample rate from 10% to 1% for whatever reason, suddenly you have a drop in all associated metrics. Extrapolation corrects for this, so your graphs are steady, and your alerts don’t fire on a change of sample rate. 
+- **Combining different sample rates**: When your endpoints don’t have the same sample rate, how are you supposed to know the true p90 when one of your endpoints is sampled at 1% and another at 100%, but all you get is the aggregate of the samples?
 
 ### **Modes**
 
@@ -45,7 +28,7 @@ There are two modes that can be used to view data in Sentry: default mode and sa
 
 Depending on the context and the use case, one mode may be more useful than the other. 
 
-Generally, default makes sense for all queries that aggregate on a dataset of sufficient volume. As absolute sample size decreases below a certain limit, default mode becomes less and less useful. There may be scenarios where the user will want to switch between modes, for example to examine the aggregate numbers first, and dive into single samples for investigation, therefore the sample mode settings should be a transient view option that resets to default mode when the user opens the page the next time.
+Generally, default mose is useful for all queries that aggregate on a dataset of sufficient volume. As absolute sample size decreases below a certain limit, default mode becomes less and less expressive. There may be scenarios where the user will want to switch between modes, for example to examine the aggregate numbers first, and dive into single samples for investigation, therefore the extrapolation mode setting should be a transient view option that resets to default mode when the user opens the page the next time.
 
 ## Aggregates
 
@@ -74,14 +57,14 @@ As long as there are sufficient samples, the sample rate itself does not matter 
 
 In new product surfaces, the question of whether or not to use extrapolated vs non-extrapolated data is a delicate one, and it needs to be deliberated with care. In the end, it’s a judgement call on the person implementing the feature, but these questions may be a guide on the way to a decision:
 
-1. What should be the default, and how should the switch between modes work?
-    1. In most scenarios, extrapolation should be on by default when looking at aggregates, and off when looking at samples. Switching, in most cases, should be a very conscious operations that users should be aware they are taking, and not an implicit switch that just happens to trigger when users navigate the UI.
-2. Does it make sense to mix extrapolated data with non-extrapolated data?
-    1. In most cases, mixing the two will be recipe for confusion. For example, offering two functions to compute an aggregate, like p90_raw and p90_extrapolated in a query interface will be very confusing to most users. Therefore, in most cases we should refrain from mixing this data implicitly. 
-3. When sample rates change over time, is consistency of data points over time important?
-    1. In alerts, for example, consistency is very important, because noise affects the trust users have in the alerting system. A system that alerts everytime users switch sample rates is not very convenient to use, especially in larger teams.
-4. Does the user care more about a truthful estimate of the aggregate data or about the actual events that happened?
-    1. Some scenarios, like visualizing metrics over time, are based on aggregates, whereas a case of debugging a specific user’s problem hinges on actually seeing the specific events. The best mode depends on the intended usage of the product. 
+- What should be the default, and how should the switch between modes work?
+    - In most scenarios, extrapolation should be on by default when looking at aggregates, and off when looking at samples. Switching, in most cases, should be a very conscious operations that users should be aware they are taking, and not an implicit switch that just happens to trigger when users navigate the UI.
+- Does it make sense to mix extrapolated data with non-extrapolated data?
+    - In most cases, mixing the two will be recipe for confusion. For example, offering two functions to compute an aggregate, like p90_raw and p90_extrapolated in a query interface will be very confusing to most users. Therefore, in most cases we should refrain from mixing this data implicitly. 
+- When sample rates change over time, is consistency of data points over time important?
+    - In alerts, for example, consistency is very important, because noise affects the trust users have in the alerting system. A system that alerts everytime users switch sample rates is not very convenient to use, especially in larger teams.
+- Does the user care more about a truthful estimate of the aggregate data or about the actual events that happened?
+    - Some scenarios, like visualizing metrics over time, are based on aggregates, whereas a case of debugging a specific user’s problem hinges on actually seeing the specific events. The best mode depends on the intended usage of the product. 
 
 
 ### Opting Out of Extrapolation
