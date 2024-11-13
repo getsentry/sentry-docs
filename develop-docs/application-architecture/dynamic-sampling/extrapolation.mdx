@@ -3,18 +3,20 @@ title: Extrapolation
 sidebar_order: 5
 ---
 
-Sentry’s system uses sampling to reduce the amount of data ingested, for reasons of both performance and cost. When configured, Sentry only ingests a fraction of the data according to the specified sample rate of a project: if you sample at 10% and initially have 1000 requests to your site in a given timeframe, you will only see 100 spans in Sentry. Of course, without making up for the sample rate, any metrics attached to these spans will misrepresent the true volume of the application. When different parts of the application have different sample rates, there will even be a bias towards some of them, skewing the total volume towards parts with higher sample rates. This effect is exacerbated for numerical attributes like latency, whose accuracy will be negatively affected by such a bias.To account for this fact, Sentry uses extrapolation to smartly combine the data to account for sample rates. 
+Sentry’s system uses sampling to reduce the amount of data ingested, for reasons of both performance and cost. When configured, Sentry only ingests a fraction of the data according to the specified sample rate of a project: if you sample at 10% and initially have 1000 requests to your site in a given timeframe, you will only see 100 spans in Sentry. Without making up for the sample rate, any metrics attached to these spans will misrepresent the true volume of the application. When different parts of the application have different sample rates, there will even be a bias towards some of them, skewing the total volume towards parts with higher sample rates. This effect is exacerbated for numerical attributes like latency, whose accuracy will be negatively affected by such a bias. To account for this fact, Sentry uses extrapolation to smartly combine the data to account for sample rates. 
 
-So what happens during extrapolation, how does one handle this type of data, and when is extrapolated data accurate and expressive? Let’s start with some definitions: 
+### Accuracy & Expressiveness
+What happens during extrapolation, how does one handle this type of data, and when is extrapolated data accurate and expressive? Let’s start with some definitions: 
 
 - **Accuracy** refers to data being correct. For example, the measured number of spans corresponds to the actual number of spans that were executed. As sample rates decrease, accuracy also goes down, because minor random decisions can influence the result in major ways.
 - **Expressiveness** refers to data being able to express something about the state of the observed system. Expressiveness refers to the usefulness of the data for the user in a specific use case. 
 
 Data can be any combination of accurate and expressive. To illustrate these properties, let's look at some examples. A single sample with specific tags and a full trace can be very expressive, and a large amount of spans can have very misleading characteristics that are not very expressive. When traffic is low and 100% of data is sampled, the system is fully accurate despite aggregates being affected by inherent statistical uncertainty that reduce expressiveness.
 
+### Benefits of Extrapolation
 At first glance, extrapolation may seem unnecessarily complicated. However, for high-volume organizations, sampling is a way to control costs and egress volume, as well as reduce the amount of redundant data sent to Sentry. Why don’t we just show the user the data they send? We don’t just extrapolate for fun, it actually has some major benefits to the user:
 
-- **Steady data when sample rates change**: Whenever you change sample rates, both the count and possibly the distribution of the values will change in some way. When you switch the sample rate from 10% to 1% for whatever reason, there will be a sudden change in all associated metrics. Extrapolation corrects for this, so your graphs are steady, and your alerts don’t fire when this happens. 
+- **Steady timeseries when sample rates change**: Whenever you change sample rates, both the count and possibly the distribution of the values will change in some way. When you switch the sample rate from 10% to 1% for whatever reason, there will be a sudden change in all associated metrics. Extrapolation corrects for this, so your graphs are steady, and your alerts don’t fire when this happens. 
 - **Combining different sample rates**: When your endpoints don’t have the same sample rate, how are you supposed to know the true p90 when one of your endpoints is sampled at 1% and another at 100%, but all you get is the aggregate of the samples?
 
 ## How does extrapolation work?
