@@ -23,6 +23,18 @@ CSRF_TRUSTED_ORIGINS = ["https://sentry.example.com", "http://10.100.10.10", "ht
 
 See [Django's documentation on CSRF](https://docs.djangoproject.com/en/4.2/ref/settings/#std-setting-CSRF_TRUSTED_ORIGINS) for further detail.
 
+## Snuba
+
+### No event showing on the dashboard
+
+Snuba handles processing events (erros, transactions, etc) and moving them from Kafka to ClickHouse. Since version 24.3.0, we've migrated to using the new rust-snuba for most consumers. In some cases, the consumers may not correctly process events, therefore there is nothing seen on the dashboard UI. To tackle this, you can try to revert to the old Python consumers by replacing every occurrence of `rust-consumer` to just `consumer` on the `docker-compose.yml` file.
+
+```bash
+sed -i 's/rust-consumer/consumer/g' docker-compose.yml
+```
+
+After modifying the `docker-compose.yml` file, make sure to re-run `./install.sh` script.
+
 ## Kafka
 
 One of the most likely things to cause issues is Kafka. The most commonly reported error is
