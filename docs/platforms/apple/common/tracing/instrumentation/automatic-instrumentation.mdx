@@ -29,6 +29,8 @@ The SDK creates spans to provide insight into the time consumed by each of the m
 
 ![`UIViewController` Transaction](./img/ui-view-controller-transaction.png)
 
+For nested UIViewControllers, the SDK creates a parent-child relationship in the transaction based on which UIViewController your app loads first. The SDK starts a new UIViewController transaction and binds it to the scope when there is no active transaction on the scope yet, except for [user interaction](#user-interaction-tracing) transactions, which the SDK finishes and removes from the scope when starting a new UIViewController transaction. As long as the UIViewController transaction is on the scope, the SDK starts new UIViewController spans as child spans of the UIViewController on the scope so that you can see all UIViewControllers of a screen in one transaction. When the SDK wants to start a new UIViewController transaction, and there is already a transaction bound to the scope, which can be the case if you do that manually, the SDK doesn't bind the transaction to the scope. So, the UIViewController transaction will function normally, but it will miss other auto-generated performance spans, such as HTTP, file IO, or core data spans because the SDK adds these to the transaction bound to the scope.
+
 To disable the `UIViewController` Tracing:
 
 
