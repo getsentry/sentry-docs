@@ -1,5 +1,11 @@
 Sentry requires dSYMs (debug information files) to symbolicate your stack traces. The symbolication process unscrambles the stack traces to reveal the function, file names, and line numbers of the crash.
 
+You can also upload your code for source context. This feature allows Sentry to display snippets of your code next to the event stack traces.
+
+<OnboardingOptionButtons
+  options={[{ id:"source-context", checked: false }]}
+/> 
+
 Every solution requires a **Sentry Auth Token**. You can create tokens on the [Organization Auth Tokens](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/) settings page.
 
 To view uploaded dSYMs in your project, select an existing project from the "Projects" page, then go to **Settings > Debug Files**. You can upload dSYMs using:
@@ -25,7 +31,7 @@ For this to work, your project settings for `DEBUG_INFORMATION_FORMAT` must be s
 
 <OrgAuthTokenNote />
 
-```bash
+```bash {"onboardingOptions": {"source-context": "1"}}
 sentry-cli debug-files upload --auth-token ___ORG_AUTH_TOKEN___ \
   --include-sources \
   --org ___ORG_SLUG___ \
@@ -44,7 +50,7 @@ Sentry can display snippets of your code next to event stack traces. This featur
 
 <OrgAuthTokenNote />
 
-```ruby {tabTitle:Current Fastlane plugin}
+```ruby {tabTitle:"Current Fastlane plugin", "onboardingOptions": {"source-context": "4"}}
 sentry_debug_files_upload(
   auth_token: '___ORG_AUTH_TOKEN___',
   org_slug: '___ORG_SLUG___',
@@ -53,7 +59,7 @@ sentry_debug_files_upload(
 )
 ```
 
-```ruby {tabTitle:Fastlane plugin before 1.20.0}
+```ruby {tabTitle:"Fastlane plugin before 1.20.0", "onboardingOptions": {"source-context": "4"}}
 sentry_upload_dif(
   auth_token: '___ORG_AUTH_TOKEN___',
   org_slug: '___ORG_SLUG___',
@@ -94,7 +100,7 @@ Another option is to use warnings, and then set `GCC_TREAT_WARNINGS_AS_ERRORS` t
 
 <OrgAuthTokenNote />
 
-```bash {tabTitle:Warn on failures - nonblocking}
+```bash {tabTitle:"Warn on failures - nonblocking", "onboardingOptions": {"source-context": "9"}}
 if [[ "$(uname -m)" == arm64 ]]; then
     export PATH="/opt/homebrew/bin:$PATH"
 fi
@@ -103,7 +109,9 @@ if which sentry-cli >/dev/null; then
 export SENTRY_ORG=___ORG_SLUG___
 export SENTRY_PROJECT=___PROJECT_SLUG___
 export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
-ERROR=$(sentry-cli debug-files upload --include-sources "$DWARF_DSYM_FOLDER_PATH" 2>&1 >/dev/null)
+ERROR=$(sentry-cli debug-files upload \ 
+--include-sources \
+"$DWARF_DSYM_FOLDER_PATH" 2>&1 >/dev/null)
 if [ ! $? -eq 0 ]; then
 echo "warning: sentry-cli - $ERROR"
 fi
@@ -112,7 +120,7 @@ echo "warning: sentry-cli not installed, download from https://github.com/getsen
 fi
 ```
 
-```bash {tabTitle:Error on failures - blocking}
+```bash {tabTitle:"Error on failures - blocking", "onboardingOptions": {"source-context": "9"}}
 if [[ "$(uname -m)" == arm64 ]]; then
     export PATH="/opt/homebrew/bin:$PATH"
 fi
@@ -121,7 +129,9 @@ if which sentry-cli >/dev/null; then
 export SENTRY_ORG=___ORG_SLUG___
 export SENTRY_PROJECT=___PROJECT_SLUG___
 export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
-ERROR=$(sentry-cli debug-files upload --include-sources "$DWARF_DSYM_FOLDER_PATH" --force-foreground 2>&1 >/dev/null)
+ERROR=$(sentry-cli debug-files upload \
+--include-sources \ 
+"$DWARF_DSYM_FOLDER_PATH" --force-foreground 2>&1 >/dev/null)
 if [ ! $? -eq 0 ]; then
 echo "error: sentry-cli - $ERROR"
 fi
