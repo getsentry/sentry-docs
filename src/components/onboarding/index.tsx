@@ -52,7 +52,8 @@ const optionDetails: Record<
     name: 'Source context',
     description: (
       <span>
-       Upload your source code to allow Sentry to display snippets of your code next to the event stack traces.
+        Upload your source code to allow Sentry to display snippets of your code next to
+        the event stack traces.
       </span>
     ),
   },
