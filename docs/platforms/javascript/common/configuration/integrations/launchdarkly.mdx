@@ -1,0 +1,54 @@
+---
+title: LaunchDarkly
+description: "Attaches recent LaunchDarkly feature flag evaluations to error event context."
+notSupported:
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.bun
+  - javascript.capacitor
+  - javascript.cloudflare
+  - javascript.connect
+  - javascript.cordova
+  - javascript.deno
+  - javascript.electron
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.nodejs
+  - javascript.wasm
+---
+
+<Alert level="info">
+
+This integration only works inside a browser environment.
+
+</Alert>
+
+_Import name: `Sentry.launchDarklyIntegration` and `Sentry.buildLaunchDarklyFlagUsedHandler`_
+
+The [LaunchDarkly](https://launchdarkly.com/) integration tracks feature flag evaluations produced by the LaunchDarkly SDK. These evaluations are held in memory and, in the event an error occurs, sent to Sentry for review and analysis. **At the moment, we only support boolean flag evaluations.**
+
+```JavaScript
+import * as Sentry from '@sentry/browser';
+import * as LaunchDarkly from 'launchdarkly-js-client-sdk';
+
+Sentry.init({integrations: [Sentry.launchDarklyIntegration()]});
+
+const ldClient = LaunchDarkly.initialize(
+    'my-client-ID',
+    {kind: 'user', key: 'my-user-context-key'},
+    {inspectors: [Sentry.buildLaunchDarklyFlagUsedHandler()]}
+);
+const flagVal = ldClient.variation('my-flag', false); // evaluates a flag
+```
+
+Learn more about the LaunchDarkly SDK at https://docs.launchdarkly.com/sdk/client-side/javascript.
+At the moment, **we do not officially support framework-specific LaunchDarkly
+SDKs.** However, you may reuse this setup code for React and client-side Node.js.
+
+## Options
+
+There are no setup options for this integration.
