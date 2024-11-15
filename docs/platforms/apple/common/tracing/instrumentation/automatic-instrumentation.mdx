@@ -29,7 +29,13 @@ The SDK creates spans to provide insight into the time consumed by each of the m
 
 ![`UIViewController` Transaction](./img/ui-view-controller-transaction.png)
 
-For nested UIViewControllers, the SDK creates a parent-child relationship in the transaction based on which UIViewController your app loads first. The SDK starts a new UIViewController transaction and binds it to the scope when there is no active transaction on the scope yet, except for [user interaction](#user-interaction-tracing) transactions, which the SDK finishes and removes from the scope when starting a new UIViewController transaction. As long as the UIViewController transaction is on the scope, the SDK starts new UIViewController spans as child spans of the UIViewController on the scope so that you can see all UIViewControllers of a screen in one transaction. When the SDK wants to start a new UIViewController transaction, and there is already a transaction bound to the scope, which can be the case if you do that manually, the SDK doesn't bind the transaction to the scope. So, the UIViewController transaction will function normally, but it will miss other auto-generated performance spans, such as HTTP, file IO, or core data spans because the SDK adds these to the transaction bound to the scope.
+### Nested View Controllers
+
+The SDK sets up a parent-child relationship for nested UIViewControllers, starting with the first UIViewController that your app loads. If there's no active transaction on the scope, the SDK will start a new UIViewController transaction and bind it to the scope unless there's a [user interaction](#user-interaction-tracing) transaction already on the scope, in which case this will be closed and removed first.
+
+While a UIViewController transaction is active on the scope, the SDK will add any new UIViewController spans as child spans of that active transaction. This creates a unified view of all UIViewControllers on a screen in a single transaction.
+
+If another transaction is already bound to the scope (if it's been set manually, for example) the SDK won't be able to bind a new UIViewController transaction to the scope. This means that the new transaction will work, but won’t capture other auto-generated spans, like HTTP, file IO, or Core Data, which can only be added to transactions that are bound to the scope.
 
 To disable the `UIViewController` Tracing:
 
