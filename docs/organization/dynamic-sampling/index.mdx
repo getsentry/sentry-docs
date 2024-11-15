@@ -12,6 +12,10 @@ With high-volume projects, you'll often see many similar events, which can be re
 
 When you use Dynamic Sampling, projects in your organization are sampled based on their recent event volumes. High-volume projects are sampled at lower rates while lower-volume projects are sampled at higher rates or not sampled at all, based on your recent event data. This makes it possible for each project to retain a meaningful set of key events, improving visibility into all projects regardless of their size.
 
+The sample rate is dynamically (re-)calibrated in regular intervals to ensure that the sample rate is always optimized generated traffic, hence the name Dynamic Sampling.
+
+For the recalibration, a short sliding window algorithm is used to help with seasonal traffic patterns. Weekends, holidays, night times will likely reduce the event volume, and thus different sample rates are needed to keep the same visibility.
+
 ![The dynamic sampling mode and target sample rate setting.](./img/mode-and-target-sample-rate.png)
 
 ## Modes
@@ -37,6 +41,16 @@ Please note that these Dynamic Sampling modes are only available for customers o
 Dynamic Sampling is different from the sampling that you can configure in the Sentry SDKs. The SDK sampling rate is applied before events are sent to Sentry, while Dynamic Sampling is applied after events are received by Sentry. This means that Dynamic Sampling can be used to adjust the sample rate for events that have already been sent to Sentry and only take into account the volume of events that have been received by Sentry.
 
 Also in contrast to the Dynamic Sampling, the SDK sample rate is never dynamically adjusted.
+
+### When to Use Dynamic Sampling vs. SDK Sampling
+
+The biggest benefit of Dynamic Sampling is that, as the name implies, it's dynamic. This means that the sample rate is adjusted based on the volume of events that have been received by Sentry. This makes it a great choice for organizations that have a mix of high- and low-volume projects, as it allows you to maximize your quota by adjusting the sample rate based on each project’s event volume.
+
+On the other hand, the SDK sample rate is static and set by you in the SDK configuration. This makes it a good choice for organizations that have a consistent event volume and want to ensure that only a certain percentage of events are sent to Sentry.
+
+### Combine Dynamic Sampling with SDK Sampling
+
+You can use both Dynamic Sampling and SDK Sampling together to further optimize your event volume for your specific use case. For example, you can set a low SDK sample rate to ensure that only a certain percentage of events are sent to Sentry, and then use Dynamic Sampling to adjust the sample rate based on the volume of events that have been received by Sentry.
 
 ## Dynamic Sampling Priorities
 
