@@ -3409,6 +3409,10 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     to: '/development/analytics/',
   },
   {
+    from: '/architecture/',
+    to: '/application-architecture/',
+  },
+  {
     from: '/sentry-vs-getsentry/',
     to: '/application/sentry-vs-getsentry/',
   },
@@ -3519,6 +3523,143 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/sdk/distributed-tracing/',
     to: '/sdk/telemetry/traces/distributed-tracing/',
+  },
+  {
+    from: '/development/',
+    to: '/development-infrastructure/',
+  },
+  {
+    from: '/development/commit-messages/',
+    to: '/engineering-practices/commit-messages/',
+  },
+  {
+    from: '/development/code-review/',
+    to: '/engineering-practices/code-review/',
+  },
+  {
+    from: '/development/documentation/',
+    to: '/engineering-practices/documentation/',
+  },
+  {
+    from: '/development/rust/',
+    to: '/engineering-practices/rust/',
+  },
+  {
+    from: '/application/',
+    to: '/application-architecture/',
+  },
+  {
+    from: '/application/control-silo/',
+    to: '/application-architecture/multi-region-deployment/control-silo/',
+  },
+  {
+    from: '/application/cross-region-replication/',
+    to: '/application-architecture/multi-region-deployment/cross-region-replication/',
+  },
+  {
+    from: '/application/cross-region-rpc/',
+    to: '/application-architecture/multi-region-deployment/cross-region-rpc/',
+  },
+  {
+    from: '/frontend/development-server/',
+    to: '/developement-infrastructure/frontend-development-server/',
+  },
+  {
+    from: '/backend/',
+    to: '/api-server/',
+  },
+  {
+    from: '/backend/api/',
+    to: '/api-server/api/',
+  },
+  {
+    from: '/backend/development-server/',
+    to: '/development-infrastructure/backend-development-server/',
+  },
+  {
+    from: '/backend/python-dependencies/',
+    to: '/development-infrastructure/python-dependencies/',
+  },
+  {
+    from: '/backend/database-migrations/',
+    to: '/api-server/application-domains/database-migrations/',
+  },
+
+  {
+    from: '/backend/feature-flags/',
+    to: '/api-server/application-domains/feature-flags/',
+  },
+  {
+    from: '/backend/options/',
+    to: '/api-server/application-domains/options/',
+  },
+  {
+    from: '/backend/transaction-clustering/',
+    to: '/api-server/application-domains/transaction-clustering/',
+  },
+  {
+    from: '/backend/grouping/',
+    to: '/api-server/application-domains/grouping/',
+  },
+  {
+    from: '/backend/outboxes/',
+    to: '/api-server/application-domains/outboxes/',
+  },
+  {
+    from: '/backend/issue-platform/',
+    to: '/api-server/issue-platform/',
+  },
+  {
+    from: '/backend/issue-platform-detectors/',
+    to: '/api-server/issue-platform/writing-detectors/',
+  },
+  {
+    from: '/backend/queue/',
+    to: '/api-server/application-domains/asynchronous-workers/',
+  },
+  {
+    from: '/backend/email/',
+    to: '/api-server/application-domains/email/',
+  },
+  {
+    from: '/backend/kafka/',
+    to: '/api-server/application-domains/kafka/',
+  },
+  {
+    from: '/backend/metrics/',
+    to: '/api-server/application-domains/metrics/',
+  },
+  {
+    from: '/backend/nodestore/',
+    to: '/api-server/application-domains/nodestore/',
+  },
+  {
+    from: '/backend/digests/',
+    to: '/api-server/application-domains/digests/',
+  },
+  {
+    from: '/backend/quotas/',
+    to: '/api-server/application-domains/quotas/',
+  },
+  {
+    from: '/backend/tsdb/',
+    to: '/api-server/application-domains/tsdb/',
+  },
+  {
+    from: '/backend/pii/',
+    to: '/api-server/application-domains/pii/',
+  },
+  {
+    from: '/backend/buffers/',
+    to: '/api-server/application-domains/buffers/',
+  },
+  {
+    from: '/backend/translations/',
+    to: '/api-server/application-domains/translations/',
+  },
+  {
+    from: '/backend/ab-testing/',
+    to: '/api-server/application-domains/ab-testing/',
   },
 ];
 
