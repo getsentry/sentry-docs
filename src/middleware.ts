@@ -3524,9 +3524,26 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     from: '/sdk/distributed-tracing/',
     to: '/sdk/telemetry/traces/distributed-tracing/',
   },
+  // New Sidebar structure
   {
     from: '/development/',
     to: '/development-infrastructure/',
+  },
+  {
+    from: '/development/environment/',
+    to: '/development-infrastructure/environment/',
+  },
+  {
+    from: '/development/environment/ports/',
+    to: '/development-infrastructure/environment/ports/',
+  },
+  {
+    from: '/development/environment/u2f/',
+    to: '/development-infrastructure/environment/u2f/',
+  },
+  {
+    from: '/development/environment/pycharm/',
+    to: '/development-infrastructure/environment/pycharm/',
   },
   {
     from: '/development/commit-messages/',
@@ -3541,12 +3558,64 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     to: '/engineering-practices/documentation/',
   },
   {
+    from: '/development/workflow/',
+    to: '/development-infrastructure/workflow/',
+  },
+  {
+    from: '/development/testing/',
+    to: '/development-infrastructure/testing/',
+  },
+  {
+    from: '/development/continuous-integration/',
+    to: '/development-infrastructure/continuous-integration/',
+  },
+  {
+    from: '/development/ngrok/',
+    to: '/development-infrastructure/ngrok/',
+  },
+  {
+    from: '/development/devservices/',
+    to: '/development-infrastructure/devservices/',
+  },
+  {
     from: '/development/rust/',
     to: '/engineering-practices/rust/',
   },
   {
+    from: '/development/analytics/',
+    to: '/development-infrastructure/analytics/',
+  },
+  {
     from: '/application/',
     to: '/application-architecture/',
+  },
+  {
+    from: '/application/architecture/',
+    to: '/application-architecture/overview/',
+  },
+  {
+    from: '/application/dynamic-sampling/',
+    to: '/application-architecture/dynamic-sampling/',
+  },
+  {
+    from: '/application/dynamic-sampling/the-big-picture/',
+    to: '/application-architecture/dynamic-sampling/the-big-picture/',
+  },
+  {
+    from: '/application/dynamic-sampling/fidelity-and-biases/',
+    to: '/application-architecture/dynamic-sampling/fidelity-and-biases/',
+  },
+  {
+    from: '/application/dynamic-sampling/architecture/',
+    to: '/application-architecture/dynamic-sampling/architecture/',
+  },
+  {
+    from: '/application/dynamic-sampling/outcomes/',
+    to: '/application-architecture/dynamic-sampling/outcomes/',
+  },
+  {
+    from: '/application/feedback-architecture/',
+    to: '/application-architecture/feedback-architecture/',
   },
   {
     from: '/application/control-silo/',
@@ -3561,8 +3630,17 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     to: '/application-architecture/multi-region-deployment/cross-region-rpc/',
   },
   {
+    from: '/application/config/',
+    to: '/application-architecture/config/',
+  },
+  {
+    from: '/application/sentry-vs-getsentry/',
+    to: '/application-architecture/sentry-vs-getsentry/',
+  },
+
+  {
     from: '/frontend/development-server/',
-    to: '/developement-infrastructure/frontend-development-server/',
+    to: '/development-infrastructure/frontend-development-server/',
   },
   {
     from: '/backend/',
@@ -3571,6 +3649,30 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/backend/api/',
     to: '/api-server/api/',
+  },
+  {
+    from: '/backend/api/basics/',
+    to: '/api-server/api/basics/',
+  },
+  {
+    from: '/backend/api/design/',
+    to: '/api-server/api/design/',
+  },
+  {
+    from: '/backend/api/concepts/',
+    to: '/api-server/api/concepts/',
+  },
+  {
+    from: '/backend/api/public/',
+    to: '/api-server/api/public/',
+  },
+  {
+    from: '/backend/api/checklist/',
+    to: '/api-server/api/checklist/',
+  },
+  {
+    from: '/backend/api/serializers/',
+    to: '/api-server/api/serializers/',
   },
   {
     from: '/backend/development-server/',
@@ -3650,8 +3752,20 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     to: '/api-server/application-domains/pii/',
   },
   {
+    from: '/backend/pii/methods/',
+    to: '/api-server/application-domains/pii/methods/',
+  },
+  {
+    from: '/backend/pii/types/',
+    to: '/api-server/application-domains/pii/types/',
+  },
+  {
+    from: '/backend/pii/selectors/',
+    to: '/api-server/application-domains/pii/selectors/',
+  },
+  {
     from: '/backend/buffers/',
-    to: '/api-server/application-domains/buffers/',
+    to: '/api-server/application-domains/write-buffers/',
   },
   {
     from: '/backend/translations/',
@@ -3660,6 +3774,18 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/backend/ab-testing/',
     to: '/api-server/application-domains/ab-testing/',
+  },
+  {
+    from: '/relay/',
+    to: '/ingestion/',
+  },
+  {
+    from: '/relay/projectconfig-versioning/',
+    to: '/ingestion/projectconfig-versioning/',
+  },
+  {
+    from: '/relay/transaction-span-ratelimits/',
+    to: '/ingestion/transaction-span-ratelimits/',
   },
 ];
 
