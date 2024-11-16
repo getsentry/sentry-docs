@@ -3686,10 +3686,17 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     from: '/backend/database-migrations/',
     to: '/api-server/application-domains/database-migrations/',
   },
-
   {
     from: '/backend/feature-flags/',
     to: '/api-server/application-domains/feature-flags/',
+  },
+  {
+    from: '/backend/feature-flags/flagpole/',
+    to: '/api-server/application-domains/feature-flags/flagpole/',
+  },
+  {
+    from: '/backend/feature-flags/options-backed-features/',
+    to: '/api-server/application-domains/feature-flags/options-backed-features/',
   },
   {
     from: '/backend/options/',
