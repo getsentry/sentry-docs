@@ -2587,7 +2587,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/issues/issue-details/suggested-fix/',
-    to: '/product/issues/issue-details/ai-suggested-solution/',
+    to: '/product/issues/issue-details/sentry-ai/',
+  },
+  {
+    from: '/product/issues/issue-details/ai-suggested-solution/',
+    to: '/product/issues/issue-details/sentry-ai/',
   },
   {
     from: '/guides/grouping-and-fingerprints/',

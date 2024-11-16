@@ -33,7 +33,9 @@ export async function Home() {
   return (
     <div className="tw-app">
       <Header pathname="/" searchPlatforms={[]} />
-      <Banner />
+      <div className="mt-[var(--header-height)]">
+        <Banner />
+      </div>
       <div className="hero max-w-screen-xl mx-auto px-6 lg:px-8 py-2">
         <div className="flex flex-col md:flex-row gap-4 mx-auto justify-between pt-20">
           <div className="flex flex-col justify-center items-start">
@@ -58,7 +60,7 @@ export async function Home() {
         <PlatformFilter platforms={sortedPlatforms} />
         <h2 className="text-2xl mt-16 mb-6 font-medium">Get to know us</h2>
         <div className="flex flex-wrap gap-6">
-          <Link href="/product/sentry-basics/" className="w-full">
+          <Link href="/product/" className="w-full">
             <div className="flex flex-col md:flex-row shadow dark:bg-[var(--gray-4)] p-6 rounded gap-4">
               <Image src={RocketImage} height={64} alt="Rocket image" />
               <div className="space-y-2">

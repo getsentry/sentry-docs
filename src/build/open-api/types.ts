@@ -41,7 +41,7 @@ export type DeRefedOpenAPI = {
     [key: string]: {
       [key: string]: {
         operationId: string;
-        parameters: Parameter[];
+        parameters: Parameter[] | undefined;
         requestBody: {
           content: {
             'application/json': {
