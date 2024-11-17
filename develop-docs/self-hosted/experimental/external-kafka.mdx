@@ -1,0 +1,113 @@
+---
+title: Self Hosted External Kafka
+sidebar_title: External Kafka
+sidebar_order: 91
+---
+
+<Alert title="Important" level="warning">
+    These are community-contributed docs. Sentry does not officially provide support for self-hosted configurations beyond the default install.
+</Alert>
+
+Kafka plays a very significant role on Sentry's infrastructure, from ingesting to processing events until they end up on ClickHouse or filesystem for permanent storage (which also depends on your event retention days). Since Kafka requires very heavy resources on the server host, and some infrastructure already have a Kafka cluster set up, it is possible to use an external Kafka cluster for Sentry.
+
+Sentry (the company) itself uses a Kafka cluster on production with a very tailored setup, especially for authentication. Some Kafka configuration options (such as `SASL_SSL` security protocol) might not be available for some services, but since everything is open source, you are encouraged to contribute to implement those missing things.
+
+If you are using authentication, make sure that the user is able to create new topics. As of now, there is no support for prefixed topic name.
+
+<Alert title="Note" level="info">
+    After changing configuration files, re-run the <code>./install.sh</code> script, to rebuild and restart the containers. See the <Link to="/self-hosted/#configuration">configuration section</Link> for more information.
+</Alert>
+
+## Sentry
+
+Sentry uses the confluent-kafka library, which leverages the [default Kafka config from librdkafka](https://github.com/confluentinc/librdkafka/blob/master/CONFIGURATION.md). Modify your `sentry.conf.py` file like so:
+
+```python
+# DEFAULT_KAFKA_OPTIONS variable is already defined in sentry.conf.py
+# Make sure you don't have a duplicate variable declaration.
+DEFAULT_KAFKA_OPTIONS = {
+    "bootstrap.servers": "kafka-node1:9092,kafka-node2:9092,kafka-node3:9092",
+    "message.max.bytes": 50000000,
+    "socket.timeout.ms": 1000,
+    "security.protocol": "PLAINTEXT", # Valid options are PLAINTEXT, SSL, SASL_PLAINTEXT, SASL_SSL
+    # If you don't use any of these options below, you can remove them or set them to `None`.
+    "sasl.mechanism": "PLAIN", # Valid options are PLAIN, SCRAM-SHA-256, SCRAM-SHA-512. Other mechanism might be unavailable.
+    "sasl.username": "username",
+    "sasl.password": "password",
+    "ssl.ca.location": "/path/to/ca.pem",
+    "ssl.certificate.location": "/path/to/client.pem",
+    "ssl.key.location": "/path/to/client.key",
+}
+```
+
+## Snuba
+
+Although Snuba also uses confluent-kafka under the hood, not every configuration option is available. Modify your `docker-compose.yml` file like so:
+
+```yaml
+x-snuba-defaults: &snuba_defaults
+  # ...
+  environment:
+    # ...
+    DEFAULT_BROKERS: "kafka-node1:9092,kafka-node2:9092,kafka-node3:9092"
+    KAFKA_SECURITY_PROTOCOL: "plaintext" # Valid options are PLAINTEXT, SSL, SASL_PLAINTEXT, SASL_SSL. SSL is not supported for rust-consumer.
+    KAFKA_SSL_CA_PATH:
+    KAFKA_SSL_CERT_PATH:
+    KAFKA_SSL_KEY_PATH:
+    KAFKA_SASL_MECHANISM: "PLAIN" # Valid options are PLAIN, SCRAM-SHA-256, SCRAM-SHA-512.
+    KAFKA_SASL_USERNAME: "username"
+    KAFKA_SASL_PASSWORD: "password"
+```
+
+If you encounter any failing startup, try to use `consumer` instead of `rust-consumer`.
+
+## Relay
+
+Modify your `relay/config.yml` file like so:
+
+```yaml
+processing:
+  kafka_config:
+    - {name: "bootstrap.servers", value: "kafka-node1:9092,kafka-node2:9092,kafka-node3:9092"}
+    - {name: "message.max.bytes", value: 50000000} # 50MB
+    - {name: "security.protocol", value: "PLAINTEXT"}
+    - {name: "sasl.mechanism", value: "PLAIN"}
+    - {name: "sasl.username", value: "username"}
+    - {name: "sasl.password", value: "password"}
+    - {name: "ssl.ca.location", value: "/path/to/ca.pem"}
+    - {name: "ssl.certificate.location", value: "/path/to/client.pem"}
+    - {name: "ssl.key.location", value: "/path/to/client.key"}
+```
+
+## Vroom
+
+As of the time of writing, Vroom does not support any kind of authentication.
+
+Modify your `docker-compose.yml` file like so:
+
+```yaml
+vroom:
+  # ...
+  environment:
+    # ...
+    SENTRY_KAFKA_BROKERS_PROFILING: "kafka-node1:9092,kafka-node2:9092,kafka-node3:9092"
+    SENTRY_KAFKA_BROKERS_OCCURRENCES: "kafka-node1:9092,kafka-node2:9092,kafka-node3:9092"
+```
+
+When [vroom#530](https://github.com/getsentry/vroom/pull/530) is merged, you can use authentication. You will need to modify your `docker-compose.yml` file like so:
+
+```yaml
+vroom:
+  # ...
+  environment:
+    # ...
+    SENTRY_KAFKA_BROKERS_PROFILING: "kafka-node1:9092,kafka-node2:9092,kafka-node3:9092"
+    SENTRY_KAFKA_BROKERS_OCCURRENCES: "kafka-node1:9092,kafka-node2:9092,kafka-node3:9092"
+    SENTRY_KAFKA_SECURITY_PROTOCOL: "plaintext" # Valid options are PLAINTEXT, SSL, SASL_PLAINTEXT, SASL_SSL
+    SENTRY_KAFKA_SSL_CA_PATH: ""
+    SENTRY_KAFKA_SSL_CERT_PATH: ""
+    SENTRY_KAFKA_SSL_KEY_PATH: ""
+    SENTRY_KAFKA_SASL_MECHANISM: "PLAIN" # Valid options are PLAIN, SCRAM-SHA-256, SCRAM-SHA-512.
+    SENTRY_KAFKA_SASL_USERNAME: "username"
+    SENTRY_KAFKA_SASL_PASSWORD: "password"
+```
