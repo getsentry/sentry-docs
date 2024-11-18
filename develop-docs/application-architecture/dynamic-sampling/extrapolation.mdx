@@ -3,7 +3,7 @@ title: Extrapolation
 sidebar_order: 5
 ---
 
-Dynamic sampling reduces the amount of data ingested, for reasons of both performance and cost. When configured, on a fraction of the data is ingested, according to the specified sample rate of a project: if you sample at 10% and initially have 1000 requests to your site in a given timeframe, you will only see 100 spans in Sentry. Without making up for the sample rate, any metrics derived from these spans will misrepresent the true volume of the application. When different parts of the application have different sample rates, there will even be a bias towards some of them, skewing the total volume towards parts with higher sample rates. This bias especially impacts numerical attributes like latency, reducing their accuracy. To account for this fact, Sentry uses extrapolation to smartly combine the data to account for sample rates. 
+Dynamic sampling reduces the amount of data ingested, for reasons of both performance and cost. When configured, a fraction of the data is ingested, according to the specified sample rate of a project: if you sample at 10% and initially have 1000 requests to your site in a given timeframe, you will only see 100 spans in Sentry. Without making up for the sample rate, any metrics derived from these spans will misrepresent the true volume of the application. When different parts of the application have different sample rates, there will even be a bias towards some of them, skewing the total volume towards parts with higher sample rates. This bias especially impacts numerical attributes like latency, reducing their accuracy. To account for this fact, Sentry uses extrapolation to smartly combine the data to account for sample rates. 
 
 ### Accuracy & Expressiveness
 What happens during extrapolation, how does one handle this type of data, and when is extrapolated data accurate and expressive? Let’s start with some definitions: 
@@ -54,7 +54,7 @@ Example: the query `sum(foo)` becomes `sum(foo * sampling_weight)`
 - **Average**: Calculate the weighted average with sampling weight.
 Example: the query `avg(foo)` becomes `avgWeighted(foo, sampling_weight)`
 - **Percentiles**: Calculate the weighted percentiles with sampling weight.
-Example: the query `quantile(0.95)(foo)` becomes `weightedPercentile(0.95)(foo, sampling_weight)`.
+Example: the query `percentile(0.95)(foo)` becomes `weightedPercentile(0.95)(foo, sampling_weight)`.
 
 As long as there are sufficient samples, the sample rate itself does not matter as much, but due to the extrapolation mechanism, what would be a fluctuation of a few samples, may turn into a much larger absolute impact e.g. in terms of the view count. Of course, when a site gets billions of visits, a fluctation of 100.000 via the noise introduced by a sample rate of 0.00001 is not as critical. 
 
@@ -72,12 +72,10 @@ In new product surfaces, the question of whether or not to use extrapolated vs n
 - Does the user care more about a truthful estimate of the aggregate data or about the actual events that happened?
     - Some scenarios, like visualizing metrics over time, are based on aggregates, whereas a case of debugging a specific user’s problem hinges on actually seeing the specific events. The best mode depends on the intended usage of the product. 
 
-
 ### Opting Out of Extrapolation
-Users may want to opt out of extrapolation for different reasons. It is always possible to set the sample rate to 100% and therefore send all data to Sentry, implicitly opting out of extrapolation and behaving in the same way as sample mode. 
+Users may want to opt out of extrapolation for different reasons. It is always possible to set the sample rate for specific events to 100% and therefore send all data to Sentry, implicitly opting out of extrapolation and behaving in the same way as sample mode. Depending on their configuration, users may need to change Dynamic Sampling settings or their SDK's traces sampler callback for this.
 
 ### Confidence
-
 When users filter on data that has a very low count but also a low sample rate, yielding a highly extrapolated but low-sample dataset, developers and users should be careful with the conclusions they draw from the data. The storage platform provides confidence intervals along with the extrapolated estimates for the different aggregation types to indicate when there is elevated uncertainty in the data. These types of datasets are inherently noisy and may contain misleading information. When this is discovered, the user should either be very careful with the conclusions they draw from the aggregate data, or switch to non-default mode for investigation of the individual samples. 
 
 ## **Conclusion**
