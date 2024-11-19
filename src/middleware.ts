@@ -3502,7 +3502,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sdk/features/data-handling/',
-    to: '/sdk/data-handling/',
+    to: '/sdk/expected-features/data-handling/',
   },
   {
     from: '/sdk/craft-quick-start/',
