@@ -71,8 +71,6 @@ Configuration is done via the application `AndroidManifest.xml`. Here's an examp
   <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
   <!-- enable the performance API by setting a sample-rate, adjust in production env -->
   <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
-  <!-- enable profiling when starting transactions, adjust in production env -->
-  <meta-data android:name="io.sentry.traces.profiling.sample-rate" android:value="1.0" />
 </application>
 ```
 
@@ -89,11 +87,14 @@ import io.sentry.Sentry;
 public class MyActivity extends AppCompatActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    // Any code running after this line will be profiled until Sentry.stopProfiler() is called.
+    Sentry.startProfiler();
     try {
       throw new Exception("This is a test.");
     } catch (Exception e) {
       Sentry.captureException(e);
     }
+    Sentry.stopProfiler();
   }
 }
 ```
@@ -106,11 +107,14 @@ import io.sentry.Sentry
 class MyActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    // Any code running after this line will be profiled until Sentry.stopProfiler() is called.
+    Sentry.startProfiler()
     try {
       throw Exception("This is a test.")
     } catch (e: Exception) {
       Sentry.captureException(e)
     }
+    Sentry.stopProfiler()
   }
 }
 ```
