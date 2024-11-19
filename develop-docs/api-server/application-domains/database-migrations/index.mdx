@@ -313,36 +313,9 @@ creating new columns they should either be:
 
 ### Adding Columns With a Default
 
-We run Postgres 14 in production. This means that we can now safely add columns with a default without worrying about rewriting the table. We still need to be careful though.
+Since we run Postgres >= 14 in production we are able to add columns with a default. To do so, instead of using `default=<your_default>`, use `db_default=<your_default>`. This tells Django to set a default at the database level and manage it there, rather than managing it in application code.
 
-Django's default behaviour for creating a new not null column with a default is dangerous. When adding a default, in the migrations Django will add the default to backfill all fields, then immediately remove it so that it can handle them in the app layer. This means that during a deploy, the column is sitting in production without a default until all code rolls out. This means that inserts will fail for this table until the deploy completes.
-
-To work around this, you can tell your migration to leave the default in place in Postgres.
-
-```python
-    operations = [
-        migrations.SeparateDatabaseAndState(
-            database_operations=[
-                migrations.RunSQL(
-                    """
-                    ALTER TABLE "sentry_groupedmessage" ADD COLUMN "type" integer NOT NULL DEFAULT 1;
-                    """,
-                    reverse_sql="""
-                    ALTER TABLE "sentry_groupedmessage" DROP COLUMN "type";
-                    """,
-                    hints={"tables": ["sentry_groupedmessage"]},
-                ),
-            ],
-            state_operations=[
-                migrations.AddField(
-                    model_name="group",
-                    name="type",
-                    field=sentry.db.models.fields.bounded.BoundedPositiveIntegerField(default=1),
-                ),
-            ],
-        )
-    ]
-```
+We can't use `default` because Django's default behaviour for creating a new not null column with a default is dangerous. When using default, in the migration Django will add the default to backfill all fields, then immediately remove it so that it can handle them in the app layer. This means that during a deploy, the column is sitting in production without a default until all code rolls out, which means that inserts will fail for this table until the deploy completes.
 
 ### Adding Not Null To Columns
 
