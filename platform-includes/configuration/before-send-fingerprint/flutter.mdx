@@ -1,11 +1,12 @@
-```dart {9}
+```dart {10}
 FutureOr<SentryEvent?> beforeSend(SentryEvent event, Hint hint) async {
-  // Modify the event here:
-  event = event.copyWith(serverName: null); // Don't send server names.
+  if (event.throwable is DatabaseException) {
+    event = event.copyWith(fingerprint: ['database-connection-error']);
+  }
   return event;
 }
 
-await SentryFlutter.init(
+await Sentry.init(
   (options) {
     options.beforeSend = beforeSend;
   },
