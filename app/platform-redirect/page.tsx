@@ -1,10 +1,19 @@
+import {Metadata} from 'next';
 import {redirect} from 'next/navigation';
 
+import {Alert} from 'sentry-docs/components/alert';
 import {DocPage} from 'sentry-docs/components/docPage';
 import {PlatformIcon} from 'sentry-docs/components/platformIcon';
 import {SmartLink} from 'sentry-docs/components/smartLink';
 import {extractPlatforms, getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
 import {setServerContext} from 'sentry-docs/serverContext';
+
+export const metadata: Metadata = {
+  robots: 'noindex',
+  title: 'Platform Specific Content',
+  description:
+    'The page you are looking for is customized for each platform. Select your platform below and we’ll direct you to the most specific documentation on it.',
+};
 
 export default async function Page({
   searchParams: {next = '', platform},
@@ -14,16 +23,31 @@ export default async function Page({
   if (Array.isArray(next)) {
     next = next[0];
   }
+
   // discard the hash
   const [pathname, _] = next.split('#');
   const rootNode = await getDocsRootNode();
+  const defaultTitle = 'Platform Specific Content';
+  let description = '';
+  const platformInfo =
+    "The page you are looking for is customized for each platform. Select your platform below and we'll direct you to the most specific documentation on it.";
+  let title = defaultTitle;
+
   // get rid of irrelevant platforms for the `next` path
   const platformList = extractPlatforms(rootNode).filter(platform_ => {
-    return !!nodeForPath(rootNode, [
+    const node = nodeForPath(rootNode, [
       'platforms',
       platform_.key,
       ...pathname.split('/').filter(Boolean),
     ]);
+
+    // extract title and description for displaying it on page
+    if (node && title === defaultTitle && pathname.length > 0) {
+      title = node.frontmatter.title ?? title;
+      description = node.frontmatter.description || '';
+    }
+
+    return !!node;
   });
 
   if (platformList.length === 0) {
@@ -42,7 +66,8 @@ export default async function Page({
   }
 
   const frontMatter = {
-    title: 'Platform Specific Content',
+    title,
+    description,
   };
 
   // make the Sidebar aware of the current path
@@ -50,10 +75,7 @@ export default async function Page({
 
   return (
     <DocPage frontMatter={frontMatter}>
-      <p>
-        The page you are looking for is customized for each platform. Select your platform
-        below and we&apos;ll direct you to the most specific documentation on it.
-      </p>
+      <Alert level="info">{platformInfo}</Alert>
 
       <ul>
         {platformList.map(p => (

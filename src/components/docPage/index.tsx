@@ -3,14 +3,19 @@ import {ReactNode} from 'react';
 import {getCurrentGuide, getCurrentPlatform, nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 import {FrontMatter} from 'sentry-docs/types';
+import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
 import {isTruthy} from 'sentry-docs/utils';
+import {getUnversionedPath} from 'sentry-docs/versioning';
 
 import './type.scss';
 
+import {Banner} from '../banner';
 import {Breadcrumbs} from '../breadcrumbs';
 import {CodeContextProvider} from '../codeContext';
 import {GitHubCTA} from '../githubCTA';
 import {Header} from '../header';
+import Mermaid from '../mermaid';
+import {PaginationNav} from '../paginationNav';
 import {PlatformSdkDetail} from '../platformSdkDetail';
 import {Sidebar} from '../sidebar';
 import {TableOfContents} from '../tableOfContents';
@@ -20,8 +25,10 @@ type Props = {
   frontMatter: Omit<FrontMatter, 'slug'>;
   /** Whether to take all the available width */
   fullWidth?: boolean;
+  nextPage?: PaginationNavNode;
   /** Whether to hide the table of contents & sdk details */
   notoc?: boolean;
+  previousPage?: PaginationNavNode;
   sidebar?: ReactNode;
 };
 
@@ -31,6 +38,8 @@ export function DocPage({
   notoc = false,
   fullWidth = false,
   sidebar,
+  nextPage,
+  previousPage,
 }: Props) {
   const {rootNode, path} = serverContext();
   const currentPlatform = getCurrentPlatform(rootNode, path);
@@ -43,14 +52,18 @@ export function DocPage({
 
   const searchPlatforms = [currentPlatform?.name, currentGuide?.name].filter(isTruthy);
 
-  const leafNode = nodeForPath(rootNode, path);
+  const unversionedPath = getUnversionedPath(path, false);
+
+  const leafNode = nodeForPath(rootNode, unversionedPath);
 
   return (
     <div className="tw-app">
       <Header pathname={pathname} searchPlatforms={searchPlatforms} />
 
       <section className="px-0 flex relative">
-        {sidebar ?? <Sidebar path={path} />}
+        {sidebar ?? (
+          <Sidebar path={unversionedPath.split('/')} versions={frontMatter.versions} />
+        )}
         <main className="main-content flex w-full mt-[var(--header-height)] flex-1 mx-auto">
           <div
             className={[
@@ -63,6 +76,9 @@ export function DocPage({
               fullWidth ? 'max-w-none w-full' : 'w-[75ch] xl:max-w-[calc(100%-250px)]',
             ].join(' ')}
           >
+            <div className="mb-4">
+              <Banner />
+            </div>
             {leafNode && <Breadcrumbs leafNode={leafNode} />}
             <div>
               <hgroup>
@@ -73,6 +89,16 @@ export function DocPage({
               <div id="main">
                 <CodeContextProvider>{children}</CodeContextProvider>
               </div>
+
+              <div className="grid grid-cols-2 gap-4 not-prose mt-16">
+                <div className="col-span-1">
+                  {previousPage && <PaginationNav node={previousPage} title="Previous" />}
+                </div>
+                <div className="col-span-1">
+                  {nextPage && <PaginationNav node={nextPage} title="Next" />}
+                </div>
+              </div>
+
               {hasGithub && <GitHubCTA />}
             </div>
           </div>
@@ -87,6 +113,7 @@ export function DocPage({
           )}
         </main>
       </section>
+      <Mermaid />
     </div>
   );
 }

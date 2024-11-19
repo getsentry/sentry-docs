@@ -38,11 +38,15 @@ export function PlatformFilter({platforms}: {platforms: Platform[]}) {
     uniqByReference(matches.map(x => (x.type === 'platform' ? x : x.platform))).map(p => {
       return {
         ...p,
-        guides: p.guides.filter(g => matches.some(m => m.key === g.key)),
+        guides: matches
+          .filter(m => m.type === 'guide' && m.platform.key === p.key)
+          .map(m => p.guides.find(g => g.key === m.key)!)
+          .filter(Boolean),
         integrations: p.integrations.filter(i => matches.some(m => m.key === i.key)),
       };
     })
   );
+
   return (
     <div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-8 md:items-end">
@@ -112,17 +116,15 @@ function PlatformWithGuides({
     >
       <Collapsible.Trigger asChild className={classNames(styles.CollapsibleTrigger)}>
         <div>
-          <Link href={platform.url} key={platform.key}>
-            <div className={styles.PlatformTitle}>
-              <PlatformIcon
-                size={20}
-                platform={platform.icon ?? platform.key}
-                format="lg"
-                className={styles.PlatformIcon}
-              />
-              {platform.title}
-            </div>
-          </Link>
+          <div className={styles.PlatformTitle} key={platform.key}>
+            <PlatformIcon
+              size={20}
+              platform={platform.icon ?? platform.key}
+              format="lg"
+              className={styles.PlatformIcon}
+            />
+            {platform.title}
+          </div>
           <button className={styles.ChevronButton}>
             <TriangleRightIcon
               className={styles.CollapsibleChevron}
@@ -138,7 +140,7 @@ function PlatformWithGuides({
         // scrollable if there are more than 8 (arbitrary limit) guides
         data-scrollable={platform.guides.length >= 8 || platform.integrations.length >= 8}
       >
-        {platform.guides.map((guide, i) => (
+        {[platform, ...platform.guides].map((guide, i) => (
           <Link href={guide.url} key={guide.key}>
             <div
               className={styles.Guide}

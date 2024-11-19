@@ -8,7 +8,7 @@ When you add Sentry to your app, you get a lot of valuable information about err
 
 The Sentry SDKs have several configuration options to help you filter out events.
 
-We also offer [Inbound Filters](/concepts/data-management/filtering/) to filter events in sentry.io. We recommend filtering at the client level though, because it removes the overhead of sending events you don't actually want. Learn more about the [fields available in an event](https://develop.sentry.dev/sdk/event-payloads/).
+We also offer [Inbound Filters](/concepts/data-management/filtering/) to filter events in sentry.io. We recommend filtering at the client level though, because it removes the overhead of sending events you don't actually want. Learn more about the [fields available in an event](https://develop.sentry.dev/sdk/data-model/event-payloads/).
 
 ## Filtering Error Events
 
@@ -16,9 +16,41 @@ Configure your SDK to filter error events by using the <PlatformIdentifier name=
 
 ### Using <PlatformIdentifier name="before-send" />
 
-All Sentry SDKs support the <PlatformIdentifier name="before-send" /> callback method. Because it's called immediately before the event is sent to the server, this is your last chance to decide not to send data or to edit it. <PlatformIdentifier name="before-send" /> receives the event object as a parameter, which you can use to either modify the event’s data or drop it completely by returning `null`, based on custom logic and the data available on the event.
+The `before_send` callback allows you to modify the event payload before the SDK sends the event to Sentry. You can also stop the event from being sent by returning `None`.
 
-<PlatformContent includePath="configuration/before-send/" />
+The callback receives two arguments: the event payload and a [hint](#event-hints). The callback can return either the event payload to send to Sentry or `None` if the event should be dropped.
+
+Any modifications to the event payload done in the callback, including adding data to the event and modifying or deleting existing event fields, will be reflected in Sentry.
+
+#### Example `before_send`
+
+Suppose that you wish prevent all errors of type `ZeroDivisionError` from being sent to Sentry and that you want to set an additional data attribute called `"foo"` to `"bar"` on all other events. You can achieve this behavior with the following `before_send` callback.
+
+```python
+import sentry_sdk
+from sentry_sdk.types import Event, Hint
+
+def my_before_send(event: Event, hint: Hint) -> Event | None:
+    # Filter out all ZeroDivisionError events.
+    # Note that the exception type is available in the hint,
+    # but we should handle the case where the exception info
+    # is missing.
+    if hint.get("exc_info", [None])[0] == ZeroDivisionError:
+        return None
+
+    # We can set extra data on the event's "extra" field.
+    event["extra"]["foo"] = "bar"
+
+    # We have modified the event as desired, so return the event.
+    # The SDK will then send the returned event to Sentry.
+    return event
+
+sentry_sdk.init(
+    # ...
+
+    before_send=my_before_send,
+)
+```
 
 Note also that breadcrumbs can be filtered, as discussed in [our Breadcrumbs documentation](/product/error-monitoring/breadcrumbs/).
 

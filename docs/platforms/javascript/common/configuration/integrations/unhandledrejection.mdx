@@ -36,6 +36,43 @@ This integration is enabled by default. If you'd like to modify your default int
 
 The `onUnhandledRejectionIntegration` registers handlers to capture global unhandled promise rejections.
 
+```JavaScript
+Sentry.init({
+  integrations: [Sentry.onUnhandledRejectionIntegration()],
+});
+```
+
+<PlatformSection supported={["javascript.aws-lambda"]}>
+
+## On AWS Lambda
+
+AWS adds their own `unhandledRejection` handlers to a lambda function which results in Sentry not being able to pick these up.
+As a workaround, remove all handlers before initializing Sentry.
+
+Unfortunately, this means the AWS Lambda handler has to be <PlatformLink to="/install/cjs-layer/#alternative-initialize-the-sdk-in-code">manually wrapped</PlatformLink>.
+
+```JavaScript
+const Sentry = require("@sentry/aws-serverless");
+
+// Remove `unhandledRejection` handlers set up by AWS so the
+// Sentry SDK can capture these
+process.removeAllListeners("unhandledRejection");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___"
+  // Add Tracing by setting tracesSampleRate and adding integration
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
+
+exports.handler = Sentry.wrapHandler(async (event, context) => {
+  // Your handler code
+});
+```
+
+</PlatformSection>
+
 ## Options
 
 ### `mode`

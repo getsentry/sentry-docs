@@ -12,17 +12,7 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         'develop-docs/**/*',
         'node_modules/@esbuild/darwin-arm64',
       ],
-      '/platform-redirect': [
-        'docs/organization/integrations/**/*',
-        'docs/product/**/*',
-        'docs/concepts/**/*',
-        'docs/api/**/*',
-        'docs/pricing/**/*',
-        'docs/account/**/*',
-        '**/*.gif',
-        'public/mdx-images/**/*',
-        '*.pdf',
-      ],
+      '/platform-redirect': ['**/*.gif', 'public/mdx-images/**/*', '*.pdf'],
       '\\[\\[\\.\\.\\.path\\]\\]': [
         'docs/**/*',
         'node_modules/prettier/plugins',
@@ -59,6 +49,10 @@ const nextConfig = {
     DEVELOPER_DOCS_: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
   },
   redirects,
+  // https://github.com/vercel/next.js/discussions/48324#discussioncomment-10748690
+  cacheHandler: require.resolve(
+    'next/dist/server/lib/incremental-cache/file-system-cache.js'
+  ),
 };
 
 module.exports = withSentryConfig(nextConfig, {
