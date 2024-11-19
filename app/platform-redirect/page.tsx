@@ -1,3 +1,4 @@
+import {Metadata} from 'next';
 import {redirect} from 'next/navigation';
 
 import {Alert} from 'sentry-docs/components/alert';
@@ -6,6 +7,13 @@ import {PlatformIcon} from 'sentry-docs/components/platformIcon';
 import {SmartLink} from 'sentry-docs/components/smartLink';
 import {extractPlatforms, getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
 import {setServerContext} from 'sentry-docs/serverContext';
+
+export const metadata: Metadata = {
+  robots: 'noindex',
+  title: 'Platform Specific Content',
+  description:
+    'The page you are looking for is customized for each platform. Select your platform below and we’ll direct you to the most specific documentation on it.',
+};
 
 export default async function Page({
   searchParams: {next = '', platform},
