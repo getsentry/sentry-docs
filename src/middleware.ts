@@ -1589,6 +1589,28 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/platforms/javascript/guides/:guide/tracing/instrumentation/opentelemetry/',
     to: '/platforms/javascript/guides/:guide/opentelemetry/',
   },
+  // START  bandaid fix for #11870
+  {
+    from: '/platforms/java/performance/instrumentation/opentelemetry/',
+    to: '/platforms/java/tracing/instrumentation/opentelemetry/',
+  },
+  {
+    from: '/platforms/go/performance/instrumentation/opentelemetry/',
+    to: '/platforms/go/tracing/instrumentation/opentelemetry/',
+  },
+  {
+    from: '/platforms/javascript/guides/node/performance/instrumentation/opentelemetry/',
+    to: '/platforms/javascript/guides/node/opentelemetry/',
+  },
+  {
+    from: '/platforms/python/performance/instrumentation/opentelemetry/',
+    to: '/platforms/python/tracing/instrumentation/opentelemetry/',
+  },
+  {
+    from: '/platforms/ruby/performance/instrumentation/opentelemetry/',
+    to: '/platforms/ruby/tracing/instrumentation/opentelemetry/',
+  },
+  // END  bandaid fix for #11870
   {
     from: '/learn/cli/configuration/',
     to: '/cli/configuration/',
