@@ -1608,7 +1608,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/ruby/performance/instrumentation/opentelemetry/',
-    to: '/platforms/ruby/tracing/instrumentation/opentelemetry//',
+    to: '/platforms/ruby/tracing/instrumentation/opentelemetry/',
   },
   // END  bandaid fix for #11870
   {
