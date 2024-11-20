@@ -15,11 +15,14 @@ export const metadata: Metadata = {
     'The page you are looking for is customized for each platform. Select your platform below and we’ll direct you to the most specific documentation on it.',
 };
 
-export default async function Page({
-  searchParams: {next = '', platform},
-}: {
-  searchParams: {[key: string]: string | string[] | undefined};
+export default async function Page(props: {
+  searchParams: Promise<{[key: string]: string | string[] | undefined}>;
 }) {
+  const searchParams = await props.searchParams;
+
+  let next = searchParams.next || '';
+  const platform = searchParams.platform;
+
   if (Array.isArray(next)) {
     next = next[0];
   }
