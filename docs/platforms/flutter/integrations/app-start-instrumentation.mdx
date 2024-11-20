@@ -20,15 +20,16 @@ App start instrumentation is available on **iOS** and **Android**.
 
 Before diving into the configuration, it's important to understand how app start instrumentation behaves:
 
-- It tracks the length of time from the **earliest native process initialization** until the very first frame rendered that is reported by [addTimingsCallback](https://api.flutter.dev/flutter/scheduler/SchedulerBinding/addTimingsCallback.html). Once the app start is processed, the SDK removes the callback in order to avoid additional overhead.
-- After receiving information about the start and end times of the app launch, the SDK does the following:
-  - creates a transaction with the name `ui.load`
-  - in the transaction attaches a span with the operation `app.start.cold` or `app.start.warm`
-  - attaches the app start metrics to the transaction
+App start instrumentation tracks the duration between the earliest native process initialization and the first frame rendered (as reported by [addTimingsCallback](https://api.flutter.dev/flutter/scheduler/SchedulerBinding/addTimingsCallback.html)). Once the app start is processed, we remove the callback to avoid additional overhead.
+
+When the SDK receives the start and end times of the app launch, we:
+- Create a transaction named `ui.load`
+- Attach a span with either `app.start.cold` or `app.start.warm` operation
+- Add app start metrics to the transaction
 
 <Note>
 
-The SDK differentiates between a cold and a warm start, but doesn't track hot starts/resumes.
+While we differentiate between cold and warm starts, we don't track hot starts/resumes.
 
 </Note>
 
@@ -45,13 +46,13 @@ This instrumentation is automatically enabled. There is no need for further conf
 
 ## Verify
 
-### 1. Launch your app:
+### 1. Launch Your App:
 
 Launch your Sentry configured app.
 
 ### 2. Locate Your Transaction:
 
-Open the [sentry.io](https://sentry.io/) performance dashboard, find, and select the 'root /' transaction.
+Open the [sentry.io](https://sentry.io/) performance dashboard, find, and select the 'root /' transaction and navigate to the trace view of a sampled event.
 
 ### 3. View App Start Metrics:
 
