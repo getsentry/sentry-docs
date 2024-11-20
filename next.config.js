@@ -24,13 +24,9 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
-
   trailingSlash: true,
-
-  experimental: {
-    serverComponentsExternalPackages: ['rehype-preset-minify'],
-    outputFileTracingExcludes,
-  },
+  serverExternalPackages: ['rehype-preset-minify'],
+  outputFileTracingExcludes,
 
   webpack: (config, options) => {
     config.plugins.push(
