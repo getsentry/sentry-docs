@@ -4,7 +4,9 @@ const {codecovNextJSWebpackPlugin} = require('@codecov/nextjs-webpack-plugin');
 const {withSentryConfig} = require('@sentry/nextjs');
 
 const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
-  ? {}
+  ? {
+      '/**/*': ['./.git/**/*', './apps/**/*', 'docs/**/*'],
+    }
   : {
       '/**/*': [
         './.git/**/*',
@@ -27,7 +29,6 @@ const nextConfig = {
   trailingSlash: true,
   serverExternalPackages: ['rehype-preset-minify'],
   outputFileTracingExcludes,
-
   webpack: (config, options) => {
     config.plugins.push(
       codecovNextJSWebpackPlugin({
