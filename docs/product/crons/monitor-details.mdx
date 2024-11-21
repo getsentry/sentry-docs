@@ -8,11 +8,11 @@ The **Monitor Details** page is where you'll find a daily historical bar chart s
 
 The "Issues" section shows the issues created from this Cron Monitor. Issues are created when a cron monitor job execution is missed or failed. If you have configured the Sentry SDK for your job, any errors thrown during the job runtime will be shown here as well.
 
-The table of recent check-ins lists previously scheduled jobs and their statuses.
+The table of recent check-ins lists previously run jobs and their statuses.
 
 <Arcade src="https://demo.arcade.software/7XmPfL0l2pp6KmBUXwMc?embed" />
 
-## Check-in Statuses
+## Check-in Status
 
 Sentry's Cron Monitoring service can notify you and store a timeline of the following check-in events:
 
@@ -27,30 +27,84 @@ Sentry's Cron Monitoring service can notify you and store a timeline of the foll
 
 To see information about your cron monitor, select "Crons" from the sidebar menu and click on your cron monitor's name.
 
+## Monitor State
+
+A monitor can have three states: active, muted, and disabled. Only disabled monitors do not count towards your plan's monitor limit.
+
+- **Active:** The monitor is currently accepting and processing check-ins. New Cron Monitor issues will be created for failed or missed check-ins according to your monitor configuration.
+- **Muted:** The monitor and it's environments are accepting check-ins but will not create any Cron Monitor issues for failed or missed check-ins. This is useful when you want to temporarily disable alerting for a monitor.
+- **Disabled:** The monitor and it's environments are not accepting check-ins, with any check-ins sent to a disabled monitor will be dropped. Disabled monitors do not count towards your plan's monitor limit.
+
+<Alert level="info" title="Note">
+  The monitor state supercedes the [environment state](#environment-state). If a
+  monitor is disabled or muted, so will all environments of it's environments,
+  regardless of their individual state.
+</Alert>
+
+### Muting Monitors
+
+You can mute job monitoring in the header of your cron monitor:
+
+![Muting a Cron Monitor](./img/muting-monitor.png)
+
+### Disabling Monitors
+
+You can disable job monitoring in the header of your cron monitor:
+
+![Disabling a Cron Monitor](./img/disabling-monitor.png)
+
+### Deleting Monitors
+
+You can delete a monitor from the monitor details page.
+
+![Deleting a Cron Monitor](./img/deleting-monitor.png)
+
+<Alert level="danger" title="Caution">
+  Deleting a monitor will remove all of its environments and check-in history.
+  This action is irreversible.
+</Alert>
+
 ## Multiple Environments
 
-To monitor the same job in different environments, use a shared schedule to send check-ins for multiple environments to one monitor. Each environment will have its own status and set of check-ins.
+A monitor can be configured with multiple environments, with all environments running with the same schedule. Only environments with at least one check-in will be displayed and made available for alerting and filtering.
 
-### Alerting on Specific Environments
+Although the schedule of check-ins of all environments are the same, the environment state and check-ins are independent of each other. This means that a missed or failed check-in in one environment will not affect the state of other environments.
 
-To only receive failing or missed monitor alerts for a specific environment or set of environments, [configure the
-environment](/product/alerts/create-alerts/issue-alert-config/#environment) for
-your monitor alert.
+If you're using one of Crons' [supported SDKs](/product/crons/getting-started/), the check-in environment will be automatically set to the environment configured in the SDK. If you're using the API, you can set the environment in the check-in payload.
 
-### Existing Limitations:
+## Environment State
 
-- It's not currently possible to pause an individual monitor environment.
+Indepent of the monitor state, each environment can have one of the following states:
 
-- It's not currently possible to see an aggregate view of a monitors' status
-  across all environments. Each environment will appear as its own row in the
-  monitor list.
+- **Healthy:** The environment's latest check-in was successful.
+- **Unhealthy:** The environment's latest check-in was a failure or a miss.
+- **Waiting for check-in:** The environment has not had any check-ins.
+- **Muted:** The environment is muted and will not create any Cron Monitor issues.
+- **Broken:** The environment has multiple failed or missed check-ins in a row.
 
-## Ownership
+### Broken Environments
 
-Cron monitors can be assigned an owner as either a Team or specific Organization Member. When an owner is assigned to a monitor, new issues produced by failures of that monitor will be assigned to that owner.
+Monitor environments that have been consistenly unhealthy for 14 days will be marked as broken. If no action is taken, Sentry will automatically mute the environment after 30 days of being broken. To recover a broken environment, a new healthy check-in must be sent.
 
-## Pausing Your Cron Monitor
+### Muting Environments
 
-You can pause job monitoring in the header of your cron monitor. When you pause, your monitor will stop recording check-ins and will no longer notify you of any failed or missed check-ins.
+To mute an environment, you can do so from the monitor list or the monitor details page.
 
-Note: Pausing your cron monitor won't pause the execution of your job or change the configuration of your job scheduler.
+1. Hover the environment state.
+2. Select "Mute Environment".
+
+![Muting a Cron Monitor environment](./img/muting-environment.png)
+
+### Deleting Environments
+
+To delete an environment, you can do so from the monitor list or the monitor details page.
+
+1. Hover the environment state.
+2. Select "Delete Environment".
+
+![Muting a Cron Monitor environment](./img/deleting-environment.png)
+
+<Alert level="danger" title="Caution">
+  Deleting an environment will remove all check-in history associated with that
+  environment.
+</Alert>
