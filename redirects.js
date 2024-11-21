@@ -864,6 +864,23 @@ const userDocsRedirects = [
     destination: '/product/insights/ai/llm-monitoring/getting-started/the-dashboard/',
   },
   // End of Insights reduirects.
+  // Redirects for discontinued metrics beta:
+  {
+    source: '/platforms/android/metrics/',
+    destination:
+      'https://sentry.zendesk.com/hc/en-us/articles/26369339769883-Metrics-Beta-Ended-on-October-7th',
+  },
+  {
+    source: '/platforms/java/metrics/',
+    destination:
+      'https://sentry.zendesk.com/hc/en-us/articles/26369339769883-Metrics-Beta-Ended-on-October-7th',
+  },
+  {
+    source: '/platforms/java/guides/:guide/metrics/',
+    destination:
+      'https://sentry.zendesk.com/hc/en-us/articles/26369339769883-Metrics-Beta-Ended-on-October-7th',
+  },
+  // End of discontinued metrics beta redirects.
 ];
 
 /**
