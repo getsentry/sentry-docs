@@ -49,7 +49,8 @@ To align DSC propagation over all our SDKs, we defined a [unified propagation me
 All of the attributes in the table below are required (non-optional) in a sense, that when they are known to an SDK at the time an envelope with an event (transaction or error) is sent to Sentry, or at the time a baggage header is propagated, they must also be included in said envelope or baggage.
 
 At the moment, only `release`, `environment` and `transaction` are used by the product for dynamic sampling functionality.
-The rest of the context attributes, `trace_id`, `public_key`, and `sample_rate`, are used by Relay for internal decisions (like transaction sample rate smoothing).
+The rest of the context attributes, `trace_id`, `public_key`, `sampled` and `sample_rate`, are used by Relay for internal decisions (like transaction sample rate smoothing).
+Additional entries such as `replay_id`, `org` and `sample_rand` are only using the DSC as a mean of transport.
 
 | Attribute                   | Type   | Description                                                                                                                  | Example                              | Required Level                       |
 | --------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ | ------------------------------------ |
@@ -60,6 +61,8 @@ The rest of the context attributes, `trace_id`, `public_key`, and `sample_rate`,
 | `release`                   | string | The release name as specified in client options.                                                                             | `myapp@1.2.3`, `1.2.3`, `2025.4.107` | required                             |
 | `environment`               | string | The environment name as specified in client options.                                                                         | `production`, `staging`              | required                             |
 | `transaction`               | string | The transaction name set on the scope. **Only include** if name has [good quality](#note-on-good-quality-transaction-names). | `/login`, `myApp.myController.login` | required (if known and good quality) |
+| `org`                       | string | The org ID parsed from the DSN or received by a downstream SDK.                                                              | `1`                                  | required                             |
+| `sample_rand`               | string | A trully random number originating from the head of trace SDK.                                                               | `0.5`                                | required                             |
 | `user_segment` [DEPRECATED] | string | User segment as set by the user with `scope.set_user()`.                                                                     |                                      | deprecated                           |
 
 0: In any case, `trace_id`, `public_key`, and `sample_rate` should always be known to an SDK, so these values are strictly required.
