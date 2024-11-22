@@ -71,7 +71,8 @@ This option disables trace continuation from unknown 3rd party services that hap
 
 If the SDK can parse an org ID from the configured DSN, this value must be propagated as a baggage entry with the key `sentry-org`. Given a DSN of `https://1234@o1.ingest.us.sentry.io/1`, the org ID is `1`, based on `o1`.
 
-On incoming traces, the SDK must compare the `sentry-org` baggage value against its own parsed value from the DSN. Only if both match, the parent sampling decisions applies.
+On incoming traces, the SDK must compare the `sentry-org` baggage value against its own parsed value from the DSN. Only if both match, the trace is continued. If there is no match, neither the trace ID, the parent sampling decision nor the baggage should be taken into account.
+The SDK should behave like it is the head of trace in this case.
 
 This behavior can be disabled by setting `strictTracePropagation: false` in the SDK init call.
 Initially, SDKs should introduce the this option with a default values of `false`.
