@@ -7,24 +7,24 @@ sidebar_order: 1
 ![Sequencing](./images/sequencing.png)
 
 
-<Alert title="💡 Info" level="info">
+<Alert title="💡 Note" level="info">
 
-Dynamic Sampling currently operates on spans or transactions, based on the feature flag `dynamic-sampling-spans`. The logic between the two event types is similar, so most of this documentation is kept at a generic level and important differences are pointed explicitly. 
+Dynamic Sampling currently operates on either spans or transactions, based on the feature flag `dynamic-sampling-spans`. The logic between the two event types is similar, so most of this documentation is kept at a generic level and important differences are pointed out explicitly. 
 
 </Alert>
 
 
 ## Sequencing
 
-Dynamic Sampling occurs at the edge of our ingestion pipeline, precisely in [Relay](https://github.com/getsentry/relay). If the feature flag `dynamic-sampling-spans` is activated, the logic applies to spans, otherwise it applies to transactions. As we go on, everything will be moving to spans and the transactions model will be phased out. 
+Dynamic Sampling occurs at the edge of our ingestion pipeline, precisely in [Relay](https://github.com/getsentry/relay).
 
 When events arrive, in a simplified model, they go through the following steps (some of which won't apply if you self-host Sentry):
 
 1. **Inbound data filters**: every event runs through inbound data filters as configured in project settings, such as legacy browsers or denied releases. Events dropped here are not counted towards quota and are not included in "total events" data.
 2. **Quota enforcement**: Sentry charges for all further events sent in, before they are passed on to dynamic sampling.
-3. **Metrics extraction**: after passing quotas, Sentry extracts metrics from the total incoming events. These metrics provide granular numbers for the performance and frequency of every application event.
-4. **Dynamic Sampling**: based on an internal set of rules, Relay determines a sample rate for every incoming event. A random number generator finally decides whether this payload should be kept or dropped.
-5. **Rate limiting**: events that are sampled by Dynamic Sampling will be stored and indexed. To protect the infrastructure, internal rate limits apply at this point. Under normal operation, this **rate limit is never reached** since dynamic sampling already reduces the volume of stored events.
+3. **Metrics extraction**: after passing quotas, Sentry extracts metrics from the total incoming events. These metrics provide granular numbers for the performance and frequency of every event.
+4. **Dynamic Sampling**: based on an internal set of rules, Relay determines a sample rate for every incoming event. A random number generator finally decides whether a payload should be kept or dropped.
+5. **Rate limiting**: events that are sampled by Dynamic Sampling will be stored and indexed. To protect the infrastructure, internal rate limits apply at this point. Under normal operation, this **rate limit is never reached** since dynamic sampling already reduces the volume of events stored.
 
 <Alert title="💡 Example" level="info">
 
@@ -53,7 +53,7 @@ There is a dedicated rate limit for stored events after inbound filters and dyna
 
 Dynamic sampling ensures complete traces by retaining all events associated with a trace if the head event is preserved.
 
-Despite dynamic sampling providing trace completeness, events or other items (errors, replays, ...) may still be missing from a trace when rate limiting drops one or more events. Rate limiting drops items without regard for the trace, making each decision independently and potentially resulting in broken traces.
+Despite dynamic sampling providing trace completeness, events or other items (errors, replays, ...) may still be missing from a trace when rate limiting drops one or more of them. Rate limiting drops items without regard for the trace, making each decision independently and potentially resulting in broken traces.
 
 <Alert title="💡 Example" level="info">
 
@@ -65,7 +65,7 @@ For example, if there is a trace from `Project A` to `Project B` and `Project B`
 
 Clients have their own [traces sample rate](https://docs.sentry.io/platforms/javascript/tracing/#configure). The client sample rate is a number in the range `[0.0, 1.0]` (from 0% to 100%) that controls **how many events arrive at Sentry**. While documentation will generally suggest a sample rate of `1.0`, for some use cases it might be better to reduce it.
 
-Dynamic Sampling further reduces how many events get stored internally. **While many-to-most graphs and numbers in Sentry are based on total events**, accessing spans and tags requires stored events. The sample rates apply on top of each other.
+Dynamic Sampling further reduces how many events get stored internally. **While most graphs and numbers in Sentry are based on total events**, accessing spans and tags requires stored events. The sample rates apply on top of each other.
 
 An example of client side sampling and Dynamic Sampling starting from 100k events which results in 15k stored events is shown below:
 
@@ -75,13 +75,13 @@ An example of client side sampling and Dynamic Sampling starting from 100k event
 
 To collect unsampled information for “total” transactions in Performance, Alerts, and Dashboards, Relay extracts [metrics](https://getsentry.github.io/relay/relay_metrics/index.html) from spans and transactions. In short, these metrics comprise:
 
-- Counts and durations for all transactions.
+- Counts and durations for all events.
 - A distribution (histogram) for all measurements, most notably the web vitals.
 - The number of unique users (set).
 
 Each of these metrics can be filtered and grouped by a number of predefined tags, [implemented in Relay](https://github.com/getsentry/relay/blob/master/relay-server/src/metrics_extraction/transactions/types.rs#L142-L157).
 
-For more granular queries, **stored events are needed**. _The purpose of dynamic sampling here is to ensure that enough representatives are always available._
+For more granular queries, **stored events are needed**. _The purpose of dynamic sampling here is to ensure that there are always sufficient representative sample events._
 
 <Alert title="💡 Example" level="info">
 
