@@ -170,7 +170,53 @@ class TestModel(Model):
         db_table = "uptime_testmodel"
 ```
 
-First we remove the constraint and make the column nullable:
+First, we remove all references to this field from the codebase. This is best done as a separate pr to keep things clean.
+
+Next we produce two migrations, in individual prs that we will deploy separately.
+
+First PR
+```python
+# <Field removed from model and code completely>
+
+# First migration
+# ... Migration boilerplate ...
+operations = [
+    migrations.AlterField(
+        model_name="testmodel",
+        name="project",
+        field=sentry.db.models.fields.foreignkey.FlexibleForeignKey(
+            db_constraint=False,
+            null=True,
+            on_delete=django.db.models.deletion.CASCADE,
+            to="sentry.project",
+        ),
+    ),
+    SafeRemoveField(model_name="testmodel", name="project", deletion_action=DeletionAction.MOVE_TO_PENDING),
+]
+# ... Migration boilerplate ...
+```
+
+Second PR:
+```python
+# Second migration
+# ... Migration boilerplate ...
+operations = [
+    SafeRemoveField(model_name="testmodel", name="project", deletion_action=DeletionAction.DELETE),
+]
+# ... Migration boilerplate ...
+```
+
+So once we have these two prs, we merge/deploy the first, and then the second and then the table is fully removed.
+
+So to recap the steps here:
+ - Remove all references to the column in the code in a separate pull request and merge. Doesn't matter if this deploys before the next step or not.
+ - If the column has a foreign key constraint them remove it. If it's not null and has no `db_default` then mark it as nullable. Then delete the column using `SafeRemoveField(..., deletion_action=DeletionAction.MOVE_TO_PENDING)`. These operations can be in the same migration to save time.
+ - Deploy all previous before continuing.
+ - Remove the column from the table in from Postgres using `SafeRemoveField(..., deletion_action=DeletionAction.DELETE),`
+
+If you're comfortable producing these prs and deploying them, then stop here. Otherwise, this next section covers how to produce them in more detail.
+
+To produce the first migration, we need to remove the db level foreign key constraint, make the column nullable and remove the column from the codebase. To remove the db level foreign key constraints and mark the column nullable we add `db_constraint=False, null=True` to this column and generate a migration:
 
 ```python
 # Model change
@@ -201,7 +247,7 @@ operations = [
 ]
 ```
 
-Deleting this way is unsafe, so we want to replace this with `SafeDeleteModel` instead. So this becomes
+Django doesn't know about the `SafeRemoveField` operation, so we replace it with that instead. This allows us to remove all state related to the column, but defer deleting it until a later migration. So this becomes
 
 ```python
 operations = [
@@ -209,7 +255,7 @@ operations = [
 ]
 ```
 
-Using `SafeRemoveField` allows us to remove all the state related to the column, but defer deleting it until a later migration. So now, we can combine the migration to remove the constraints and delete the column state together like so
+So now as a final step, we can combine these operations into a single migration, which is the first migration we want to deploy.
 
 ```python
 operations = [
@@ -227,21 +273,13 @@ operations = [
 ]
 ```
 
-So now we deploy this migration and move onto the final step.
-
-In this last step, we will use `SafeRemoveField` again to finally remove the column from the table in Postgres. First, we generate an empty migration using `sentry django makemigrations <your_app> --empty` to produce an empty migration, and then modify the operations to be like:
+To produce the second migration we generate an empty migration (`sentry django makemigrations <your_app> --empty`), then use the same `SafeRemoveField` command from the previous migration, but change the deletion_action to `DeletionAction.DELETE`. This operation will remove the column from the table in Postgres:
 
 ```python
 operations = [
     SafeRemoveField(model_name="testmodel", name="project", deletion_action=DeletionAction.DELETE),
 ]
 ```
-
-Then we deploy this and we're done. So to recap the steps here:
- - Remove all references to the column in the code in a separate pull request and merge. Doesn't matter if this deploys before the next step or not.
- - If the column has an foreign key constraint them remove it. If it's not null and has no `db_default` then mark it as nullable. Then delete the column using `SafeRemoveField(..., deletion_action=DeletionAction.MOVE_TO_PENDING)`. These operations can be in the same migration to save time.
- - Deploy all previous before continuing.
- - Remove the column from the table in from Postgres using `SafeRemoveField(..., deletion_action=DeletionAction.DELETE),`
 
 ### Deleting Tables
 
@@ -315,7 +353,7 @@ So to recap the steps here:
 
 If you're comfortable producing these prs and deploying them, then stop here. Otherwise, this next section covers how to produce them in more detail.
 
-To produce the first migration, we need to remove any db level foreign key constraints and remove the table from the codebase. To remove the db level foreign key constraints we add `db_constraint` to this column and generate a migration:
+To produce the first migration, we need to remove any db level foreign key constraints and remove the table from the codebase. To remove the db level foreign key constraints we add `db_constraint=False` to this column and generate a migration:
 
 ```python
 project = FlexibleForeignKey("sentry.Project", db_constraint=False)
