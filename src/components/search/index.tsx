@@ -8,7 +8,7 @@ import {
   SentryGlobalSearch,
   standardSDKSlug,
 } from '@sentry-internal/global-search';
-import * as DOMPurify from 'dompurify';
+import DOMPurify from 'dompurify';
 import Link from 'next/link';
 import {usePathname, useRouter} from 'next/navigation';
 import algoliaInsights from 'search-insights';
