@@ -1,0 +1,107 @@
+---
+title: Distributed Tracing with Uptime
+sidebar_order: 52
+description: "Learn how to leverage distributed tracing to troubleshoot downtime efficiently."
+---
+
+Sentry's Uptime Monitoring provides a connected view of related errors and spans during uptime checks by capturing the timing and flow of requests and operations through [distributed tracing](/product/tracing/#whats-distributed-tracing). This feature is a valuable triaging tool, enabling you to identify the root cause of downtime more quickly.
+
+Distributed tracing for related errors during an uptime check is automatically enabled for all Uptime Alerts. However, tracing spans is disabled by default and can be enabled by configuring the sampling behavior for an uptime check.
+
+## How Uptime Tracing Works
+
+Sentry Uptime Tracing automatically appends a `sentry-trace` header to every outgoing request made to the configured URL in your Uptime Alert settings. This header propagates trace information.
+
+If the application handling the incoming uptime check request is configured with one of Sentry's supported backend SDKs, the SDK will use the header to continue the trace. Learn more about [how distributed tracing works](/product/tracing/).
+
+Here's an example of an outgoing Uptime check request:
+
+```HTTP
+GET /example-uptime-endpoint HTTP/1.1
+Host: sentry.io
+User-Agent: SentryUptimeBot/1.0 (+http://docs.sentry.io/product/alerts/uptime-monitoring/)
+Sentry-Trace: 32d4011600324838afcd666edadc1d09-8d5ca7419a02ca36
+```
+
+## Tracing Errors
+
+Tracing errors during uptime checks is enabled by default. When downtime is detected, a new [Uptime Issue](/product/issues/issue-details/uptime-issues/) is created, allowing you to use the trace explorer to view any related errors.
+
+Sentry automatically adds a `sentry-trace` header to every outgoing uptime check request. The SDK continues the trace and captures errors within the trace context.
+
+<Alert level="warning" title="Important">
+
+Uptime check requests do not override your SDK's error sampling rate. If your SDK’s error sample rate is set below 1, some errors from uptime check requests may not appear in the trace.
+
+</Alert>
+
+### Disabling Uptime Tracing of Errors
+
+To disable error tracing for uptime checks, configure a [before send](/platform-redirect/?next=/configuration/filtering/) filter in your SDK to ignore errors from Sentry's `User-Agent`. Here's an example:
+
+```typescript {tabTitle: Node.js Express} {filename: instrument.mjs}
+import * as Sentry from "@sentry/node";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // Filtering example for a Node.js Express app
+  beforeSend(event) {
+    const userAgent = event.request?.headers?.["user-agent"];
+
+    // Ignore events captured in a request from SentryUptimeBot
+    if (userAgent && userAgent.includes("SentryUptimeBot")) {
+      return null;
+    }
+
+    // Process other events
+    return event;
+  },
+});
+```
+
+## Tracing Spans
+
+By default, uptime tracing for spans is disabled. Enabling span tracing provides a detailed view of the timing and flow of requests and operations during uptime checks, which is especially useful for diagnosing timeouts or performance issues.
+
+### Enabling Uptime Tracing of Spans
+
+To enable span tracing, modify your Uptime Alert settings to allow sampling by enabling the "Allow Sampling" option:
+
+![Uptime Alert Allow Sampling Configuration](./img/uptime-allow-sampling.png)
+
+When sampling is allowed, Sentry defers the sampling decision to your SDK, which follows the trace sample rate configured in your SDK.
+
+<Alert level="warning" title="Important">
+
+Uptime check requests do not override your SDK's trace sampling rate. If your SDK's trace sample rate is set below 1, some spans from uptime check requests may not appear in the trace.
+
+</Alert>
+
+To ensure all spans from uptime checks are sampled, even if your SDK's trace sampling rate is below 1, you can configure a [sampling function](/platform-redirect/?next=/configuration/sampling/). Here's an example:
+
+```typescript {tabTitle: Node.js Express} {filename: instrument.mjs}
+import * as Sentry from "@sentry/node";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // Custom tracer function for a Node.js Express app
+  tracesSampler: ({ name, attributes, parentSampled }) => {
+    const userAgent = attributes?.["http.user_agent"];
+
+    if (
+      typeof userAgent === "string" &&
+      userAgent.includes("SentryUptimeBot")
+    ) {
+      // Sample 100% of spans from SentryUptimeBot
+      return 1;
+    }
+
+    // Sample 50% of other spans
+    return 0.5;
+  },
+});
+```
+
+## Billing Considerations
+
+Captured errors and spans from uptime check requests are billed as regular events in Sentry.
