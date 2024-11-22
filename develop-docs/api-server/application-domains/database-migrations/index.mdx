@@ -145,9 +145,9 @@ This is complicated due to our deploy process. When we deploy, we run migrations
 
 To avoid this, follow these steps:
 
-- (Optional, but ideal) Make a PR to remove all uses of the column in the codebase in a separate PR. This mostly helps with code cleanliness. This should be merged ahead of the migration prs, but we don't need to worry about whether it is deployed first.
+- Make a PR to remove all uses of the column in the codebase in a separate PR. This mostly helps with code cleanliness. This should be merged ahead of the migration prs, but we don't need to worry about whether it is deployed first.
 - Make another PR that:
-    - Checks if the column is either not nullable, or doesn't have a db_default set. If either of these is true, then make it nullable via `null=True`.
+    - Checks if the column is either not nullable, or doesn't have a `db_default` set. If either of these is true, then make it nullable via `null=True`.
     - If the column is a foreign key, remove the database level foreign key constraint it by setting `db_constraint=False`.
     - Remove the column and in the generated migration use `SafeRemoveField(..., deletion_action=DeletionAction.MOVE_TO_PENDING)` to replace `RemoveField(...)`. This only marks the state for the column as removed.
     - Combine these migrations together to save making multiple deploys
@@ -239,7 +239,7 @@ operations = [
 
 Then we deploy this and we're done. So to recap the steps here:
  - Remove all references to the column in the code in a separate pull request and merge. Doesn't matter if this deploys before the next step or not.
- - If the column has an foreign key constraint them remove it. If it's not null and has no db_default then mark it as nullable. Then delete the column using `SafeRemoveField(..., deletion_action=DeletionAction.MOVE_TO_PENDING)`. These operations can be in the same migration to save time.
+ - If the column has an foreign key constraint them remove it. If it's not null and has no `db_default` then mark it as nullable. Then delete the column using `SafeRemoveField(..., deletion_action=DeletionAction.MOVE_TO_PENDING)`. These operations can be in the same migration to save time.
  - Deploy all previous before continuing.
  - Remove the column from the table in from Postgres using `SafeRemoveField(..., deletion_action=DeletionAction.DELETE),`
 
@@ -247,7 +247,7 @@ Then we deploy this and we're done. So to recap the steps here:
 
 Extra care is needed here if the table is referenced as a foreign key in other tables. In that case, first remove the foreign key columns in the other tables, then come back to this step.
 
-- (Optional, but ideal) Make a pull request to remove all uses of the model in the codebase in a separate pull request. This mostly helps with code cleanliness. This should be merged ahead of the migration pull requests, but we don't need to worry about whether it is deployed first.
+- Make a pull request to remove all uses of the model in the codebase in a separate pull request. This mostly helps with code cleanliness. This should be merged ahead of the migration pull requests, but we don't need to worry about whether it is deployed first.
 - Make another pull request to:
     - Remove any database level foreign key constraints from this table to other tables by setting `db_constraint=False` on the columns.
     - Remove the model and in the generated migration use `SafeDeleteModel(..., deletion_action=DeletionAction.MOVE_TO_PENDING)` to replace `DeleteModel(...)`. This only marks the state for the model as removed.
