@@ -88,3 +88,11 @@ module.exports = withSentryConfig(nextConfig, {
     applicationKey: 'sentry-docs',
   },
 });
+
+process.on('warning', warning => {
+  if (warning.code === 'DEP0040') {
+    // Ignore punnycode deprecation warning, we don't control its usage
+    return;
+  }
+  console.warn(warning); // Log other warnings
+});
