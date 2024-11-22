@@ -969,6 +969,7 @@ export const PLATFORM_TO_ICON = {
   'python-quart': 'quart',
   'python-redis': 'redis',
   'python-rq': 'redis',
+  'python-rust_tracing': 'rust',
   'python-sanic': 'sanic',
   'python-serverless': 'serverless',
   'python-starlette': 'starlette',
