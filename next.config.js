@@ -50,6 +50,9 @@ const nextConfig = {
   cacheHandler: require.resolve(
     'next/dist/server/lib/incremental-cache/file-system-cache.js'
   ),
+  sassOptions: {
+    silenceDeprecations: ['legacy-js-api'],
+  },
 };
 
 module.exports = withSentryConfig(nextConfig, {
