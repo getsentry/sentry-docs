@@ -3,7 +3,7 @@ title: Fidelity and Biases
 sidebar_order: 2
 ---
 
-Dynamic Sampling is a feature that allows Sentry to automatically adjust the amount of data retained based on the value of the data. This is technically achieved by applying a **sample rate** to every event, which is determined by a **set of rules** that are evaluated for each event.
+Dynamic Sampling allows Sentry to automatically adjust the amount of data retained based on how valuable the data is to the user. This is technically achieved by applying a **sample rate** to every event, which is determined by a **set of rules** that are evaluated for each event.
 
 <Alert title="✨ Note" level="info">
 
@@ -15,7 +15,10 @@ A sample rate is a number in the interval `[0.0, 1.0]` that will determine the l
 
 At the core of Dynamic Sampling there is the concept of **fidelity**, which translates to an overall **target sample rate** that should be applied across all events of an organization.
 
-In automatic mode, the target sample rate is computed for each project based on the volume of events in a time window of 24 hours. In manual mode, the user can set a constant sample rate for each project that will not be automatically adjusted.
+### Target Sample Rate Adjustment: Automatic Mode and Manual Mode
+There are two available modes to govern the target sample rates for Dynamic Sampling: Automatic Mode and Manual Mode.
+- **Automatic mode** dynamically manages the target sample rate for each project based on the target sample rate for the organization, prioritizing lower volume projects to increase visibility.
+- **Manual mode** allows the user to set static target sample rates on a per-project basis that serve as the baseline sample rate before applying the dynamic biases outlined below. Target sample rates are not adjusted by the system. 
 
 Within this target sample rate, Dynamic Sampling can create a **bias toward more meaningful data**. This is achieved by constantly updating and communicating special rules to Relay, via a project configuration, which then applies targeted sampling to every event.
 
@@ -39,12 +42,11 @@ Sentry supports **two fundamentally different types of sampling**. While this is
 
 ### Trace Sampling
 
-A trace is a **collection of events that are related to each other**. For example a trace could contain events started from your frontend that are then generating events in your backend.
+A trace is a **collection of events that are related to each other**. For example, a trace could contain events started from your frontend that are then generating events in your backend.
 
-TODO: have the fields usable for sampling changed?
 Trace sampling ensures that **either all events of a trace are sampled, or none**. That is, these rules **always yield the same sampling decision** for every event in the same trace. This requires the cooperation of SDKs and thus allows sampling only by `project`, `release`, `environment`, and `transaction` name.
 
-To achieve trace sampling, SDKs pass all fields that can be sampled by [Dynamic Sampling Context (DSC)](/sdk/performance/dynamic-sampling-context/) (defined [here](https://getsentry.github.io/relay/relay_sampling/dsc/struct.DynamicSamplingContext.html)) as they propagate traces. _This ensures that every transaction from the same trace comes with the same DSC._
+To achieve trace sampling, SDKs pass all fields that can be sampled by [Dynamic Sampling Context (DSC)](/sdk/performance/dynamic-sampling-context/) (defined [here](https://getsentry.github.io/relay/relay_sampling/dsc/struct.DynamicSamplingContext.html)) as they propagate traces. _This ensures that every event from the same trace comes with the same DSC._
 
 ![Trace Sampling](./images/traceSampling.png)
 
@@ -56,17 +58,11 @@ In order to achieve full trace sampling, the random number generator used by Rel
 
 ### Transaction Sampling
 
-Transaction Sampling **does not guarantee complete traces** and instead **applies to individual transactions** by looking at the incoming transaction's body. It can be used to remove unwanted transactions from traces, or to individually boost transactions at the expense of incomplete contextual traces
-
-## Sample Rate Adjustment: Automatic Mode and Manual Mode
-There are two modes of operation for Dynamic Sampling: Automatic Mode and Manual Mode.
-Automatic mode manages the sample rate for each project based on the target sample rate for the organization. 
-Manual mode allows the user to set sample rates on a per-project basis. 
-
+Transaction Sampling **does not guarantee complete traces** and instead **applies to individual transactions** by looking at the incoming transaction's body. It can be used to remove unwanted transactions from traces, or to individually boost transactions at the expense of incomplete contextual traces.
 
 ## Biases for Sampling
 
-A bias is a set of one or more rules that are evaluated for each event. More specifically, when we define a bias, we want to achieve a specific objective, which **can be expressed as a set of rules**. To learn more about rules, check out the architecture page [here](/dynamic-sampling/architecture/).
+A bias is a set of one or more rules that are evaluated for each event. More specifically, when we define a bias, we want to achieve a specific objective, which **can be expressed as a set of rules**. You learn more about rules on the architecture page [here](/dynamic-sampling/architecture/).
 
 Sentry has already defined a set of biases that are available to all customers. These biases have different goals, but they can be combined to express more complex semantics.
 
