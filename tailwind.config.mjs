@@ -1,12 +1,14 @@
-const defaultTheme = require('tailwindcss/defaultTheme');
+import defaultTheme from 'tailwindcss/defaultTheme';
 
+import Typography from '@tailwindcss/typography';
+import Forms from '@tailwindcss/forms';
 import {
   isolateInsideOfContainer,
   scopedPreflightStyles,
 } from 'tailwindcss-scoped-preflight';
 
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   darkMode: ['selector', '.dark'],
   content: ['./app/**/*.{js,ts,jsx,tsx}', './src/components/**/*.{js,ts,jsx,tsx,mdx}'],
   theme: {
@@ -60,10 +62,8 @@ module.exports = {
     },
   },
   plugins: [
-    require('@tailwindcss/typography'),
-    require('@tailwindcss/forms')({
-      strategy: 'class',
-    }),
+    Typography,
+    Forms({strategy: 'class'}),
     scopedPreflightStyles({
       // pretty minimalistic example. Same options as in the previous example are available
       isolationStrategy: isolateInsideOfContainer('.tw-app'),
