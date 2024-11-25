@@ -1,24 +1,25 @@
 ---
 title: Dynamic Sampling
 sidebar_order: 30
-description: "Learn how to prioritize meaningful events and increase visibility in lower-volume projects with Dynamic Sampling."
+description: "Learn how to prioritize important events and increase visibility in lower-volume projects with Dynamic Sampling."
 ---
 
 ## Overview
 
-High-volume projects that generate many events can quickly consume a large portion of your billing quota, leaving less room for other projects and decreasing visibility across them.
+ Projects that generate many events can quickly consume a large portion of your billing quota. This may create an imbalance where high-volume projects get more visibility, leaving insufficient quota for monitoring your other projects. That's where dynamic sampling comes in.
 
-{/* Dynamic Sampling is a set of smart sampling techniques that retain a sample of the data you send to Sentry. These algorithms are biased to be more likely to keep samples valuable for debugging and analysis while being less likely to keep common or redundant data. 
 
-Dynamic Sampling is applied on Sentry servers, allowing you to set and adjust sampling rates for the spans you store in Sentry directly in the UI, without needing to modify your SDK. This flexibility enables instant changes, eliminating the need to wait for code freezes, app store approvals, or redeployments. 
+{/* Dynamic Sampling is a set of smart sampling techniques(algorithms?) that retain a sample of the data that you send to Sentry. These algorithms are biased toward keeping samples that are valuable for debugging and analysis, while discardingcommon or redundant data.
 
-Dynamic Sampling looks at the incoming traffic patterns and adjusts sampling decisions tailored to the both the actual traffic volume and the content of the accepted spans. You can read more about the sampling priorities in the [Dynamic Sampling Priorities](#dynamic-sampling-priorities) section. */}
+Dynamic Sampling is applied on Sentry servers. This allows you to set and adjust sampling rates for the spans you store in Sentry directly in the UI, without needing to modify your SDK. This makes it possible for you to make instantchanges, eliminating the need to wait for code freezes, app store approvals, or redeployments.
 
-Dynamic Sampling employs advanced sampling techniques to retain a representative sample of the data you send. Its algorithms are designed to prioritize keeping samples that are valuable for debugging and analysis while reducing the retention of common or redundant data.
+Dynamic Sampling looks at incoming traffic patterns and tailors sampling decisions to both the actual traffic volume and the content of the accepted spans. You can read more about sampling priorities in the [Dynamic Sampling Priorities](#dynamic-sampling-priorities) section. */}
 
-This process is applied directly on Sentry's servers, allowing you to configure and adjust sampling rates for stored spans right from the UI. There’s no need to modify your SDK, enabling instant updates without waiting for code freezes, app store approvals, or redeployments.
+Dynamic Sampling employs advanced sampling techniques to retain a representative sample of the data you send. Its algorithms are designed to prioritize keeping samples that are valuable for debugging and analysis, while reducing the retention of common or redundant data.
 
-By analyzing incoming traffic patterns, Dynamic Sampling tailors its decisions based on actual traffic volume and the content of the accepted spans. For more details, check out the [Dynamic Sampling Priorities](#dynamic-sampling-priorities) section.
+This process is applied directly on Sentry's servers, which allows you to configure and adjust sampling rates for stored spans right from the UI without needing to modify your SDK. This makes it possible for you to make instant updates without waiting for code freezes, app store approvals, or redeployments.
+
+By analyzing incoming traffic patterns, Dynamic Sampling is able to tailor its decisions to both the actual traffic volume as well as the content of accepted spans. For more details, check out the [Dynamic Sampling Priorities](#dynamic-sampling-priorities) section.
 
 ## Prerequisites
 
@@ -40,91 +41,100 @@ By analyzing incoming traffic patterns, Dynamic Sampling tailors its decisions b
 
 ## Configuration
 
-Next we will discuss on how you can use Dynamic Sampling in your organization.
+In this section you'll learn how to use Dynamic Sampling in your organization.
 
 ![The dynamic sampling mode and target sample rate setting.](./img/mode-and-target-sample-rate.png)
 
 ### Modes
 
-If you don't want to worry about manually setting sample rates, Sentry can do it for you—just apply a global sample rate for your organization and we’ll automatically balance projects and prioritize things like low-volume endpoints or new releases. For those who need more control, you can set individual sample rates for specific projects, customizing data retention at the project level.
+If you prefer not to set sample rates manually, Sentry can do it for you. You just have to set a global sample rate for your organization and Sentry will then automatically balance the sample rates across projects, giving priority to factors like low-volume endpoints and new releases. If you want more fine-grainedcontrol, you can customize data retention by setting individual sample rates for specific projects.
+
+We recommend using automatic mode in most cases for its convenience, because it automatically adjusts projects based on their traffic.
 
 <Note>
 
-Please note that these Dynamic Sampling modes are only available for customers on our latest plans starting June 2024.
+Dynamic Sampling modes are only available for customers on our latest plans, starting June, 2024.
 
 </Note>
 
-In most of the cases we recommend automatic mode. It is more convenient as it automatically adjusts projects according to their traffic volume.
+### Automatic Mode
 
-### Automatic mode
+In automatic mode, you set a global target sample rate for your entire organization, which determines how much incoming traffic should be stored across all your projects. Dynamic Sampling then distributes this sample rate across your projects automatically. Sample rates are adjusted continuously to account for changes in event volume over time.
 
-When set to "automatic" mode, you can configure the target sample rate for your organization. This value will specify how much of the incoming traffic should be stored across all your projects. Underneath, Dynamic Sampling determines how this sample rate is distributed across all projects in your organization. You can see in the project list a preview of the project-specific rates.
+**In automatic mode:**
 
-Automatic mode boosts the sample rate of lower-volume projects while simoultaneously reducing the sample rate of higher-volume projects. Sample rates are adjusted continuously to account for changes in event volume over time. This process operates in a short sliding window which helps with seasonal traffic patterns like Weekends, holidays, and night times.
+- Low-Volume Projects get a higher sample rate, ensuring important data isn’t missed.
+- High-Volume Projects have reduced sample rates to balance overall storage.
+- Sample rates are continuously adjusted based on recent traffic patterns, using a short sliding window to adapt to seasonal changes like holidays, weekends, and nighttime traffic.
 
-Within the sample rates determined for each project, Dynamic Sampling applies additional sampling priorities to further prioritize the most valuable data. You can read more about the sampling priorities in the [Dynamic Sampling Priorities](#dynamic-sampling-priorities) section.
+Dynamic Sampling also prioritizes the most valuable data within each project's allocated sample rate. You can learn more about this in the [Dynamic Sampling Priorities](#dynamic-sampling-priorities) section. This dynamic system ensures your sampling adapts to changing traffic and maintains balance across projects.
 
-The project preview is based on the last 24 hours or 30 days of traffic, depending on the preview setting. This will show the dynamically allocated rates for the project taking into account the last 24 hours or 30 days of traffic. As the rates of the projects continuously change, choose 24 hours to have a more accurate view on your current sample rates and 30 days to see the averaged sample rates in your billing cycle.
+**Project Preview**
+
+The [project preview](https://sentry.io/orgredirect/organizations/:orgslug/settings/dynamic-sampling/) table on the Dynamic Sampling settings page shows you how your project might be affected by the sample rate you've chosen. The preview shows the dynamically allocated rates for your projects based on either the last 24 hours or the last 30 days of traffic.
 
 ![The dynamic sampling mode and target sample rate setting.](./img/project-sample-rate-preview.png)
 
-Switching back to automatic mode from manual mode will start the recalibration process immediatly and resets the sample rates of each project in the organization to the calculated values. There is no way to restore the manually configured project sample rates after the switch.
+Because project rates continuously change, we recommend that you choose the 24-hour preview to get a more accurate view of your current sample rates for real-time analysis. We recommend the 30-day preview for seeing average sample rates in your billing cycle for long-term planning.
 
-### Manual mode
+<Note>
+If you switch from manual to automatic mode, the recalibration process will start immediatly and the per-project sample rates will be reset to the calculated values. There's no way to restore the manually configured project sample rates once you've switched to automatic mode.
+</Note>
 
-In the "manual" mode, you can configure a fixed sample rate for each project in your organization. This value will specify how much of the incoming traffic should be stored for the respective project. The sample rate for each project can be set between 0% and 100% and it defaults to 100% and are not adjusted by Dynamic Sampling.
+### Manual Mode
 
-When the sample rates of each project is edited, an estimated overall organization sample rate is calculated as a weighted average across all projects. This value is always an estimation and changes according to volume within projects.
+In manual mode, you can configure a fixed sample rate for each project in your organization. This value will specify the percentage of incoming traffic that should be stored for each respective project. The sample rate can be between 0% and 100%, defaulting to 100% if not adjusted.
 
-If you want to change the sample rates for all projects at once, you an edit the overall organization sample rate. This will proportionally adjust the sample rates of all projects to achieve the estimate rate. The maximum value is 100% and other projects will be adjusted accordingly to achieve the estimate rate. You can make final changes to the updated sample rates before saving all projects at once.
+When you edit the sample rates for individual projects, an estimated overall sample rate for your organization will also be calculated. This is a weighted average based on the volume of traffic for each project. Keep in mind that this value is an estimate and may change as the volume of traffic fluctuates.
 
-In order to apply the changes, you need to click the "Apply changes" button, otherwise, the changes will not be saved.
+To adjust the sample rates of all your projects at once, edit the overall sample rate for your organization by going to the [Dynamic Sampling settings page](https://sentry.io/orgredirect/organizations/:orgslug/settings/dynamic-sampling/). This will proportionally update each project's sample rate to meet your chosen target. The maximum rate is 100%, and adjustments will be made to balance the rates across projects. You'll be able to review and finalize the updated sample rates before saving. Make sure to click the "Apply changes" button to save the new sample rates.
 
-Like in automatic mode, [Dynamic Sampling Priorities](#dynamic-sampling-priorities) apply within each project, which boosts certain spans and deprioritizes others.
+In both manual and automatic mode,[Dynamic Sampling Priorities](#dynamic-sampling-priorities) will be applied within each project, boosting certain spans and deprioritizes others.
 
 ## Sample Rates for Distributed Traces
 
-It is important to understand how sample rates affect projects connected through distributed traces. Traces can originate in one project and include spans in one ore more other projects. Sentry **always applies the sample rate of the origin project**. For example, the sample rate of your frontend will also affect spans in a connected backend application. At the same time, the backend may start its own traces where the sample rate of the backend project applies.
+ Because [distributed traces](/product/tracing/#whats-distributed-tracing) can originate in one project and have spans going across multiple other projects, it's important to note that Sentry **always applies the sample rate of the project where the trace originated** to every project that's part of that trace.
 
-The numbers shown in the project preview and span breakdowns are always accumulated to the origin project, including all span counts from propagated traces in connected other projects. This gives you a direct view on how many spans will be affected by the sample rates you configure. To see the span counts broken down by the project they belong to click the expand icon to the left of each project in the preview.
+ For example, if a trace stars in your frontend application, the sample rate you've set there will apply to a connected backend application that's part of the same trace. The same rule applies if the trace starts in a backend application.
+
+If you navigate to the [project preview](https://sentry.io/orgredirect/organizations/:orgslug/settings/dynamic-sampling/) table, you'll see the number of sent spans next to the origin project where the trace started. This includes any spans from propogated traces in other projects that are connected to the origin project. This gives you a direct view of how many spans will be affected by the sample rates you configure. To see the span counts broken down by the project they belong to, click the expand icon to the left of each project in the preview.
+
 
 {/* TODO: replace with custom graphic */}
 
 {/* ![Diagram showing the effect of sampling on distriubuted traces.](/develop-docs/application/dynamic-sampling/images/clientAndDynamicSampling.png) */}
 
 
-## Differences to Sampling in the Sentry SDKs
+## SDK Versus Dynamic Sampling
 
-Sampling in the SDKs is a way to reduce the number of events sent to Sentry by only sending a percentage of events. Dynamic Sampling, on the other hand, is a way to adjust the sample rate for events that have already been sent to Sentry based on the volume of events that have been received by Sentry.
+SDK sampling happens at the application level, before events are sent to Sentry. It filters events by sending only a set percentage, reducing data volume and instrumentation overhead. This helps with managing high event volumes directly at the source.
 
-So using sampling in the SDKs may be necessary for very high volumes of events and may be necessary to reduce instrumentation overheads.
+Dynamic sampling, on the other hand, happens at the server level after events are sent to Sentry. Sample rates are adjusted dynamically based on the volume of events received by Sentry, without requiring any changes to the application.
 
-The sample rate used in the SDK can usually only be changed by a rollout of a new version of the application using the SDK, unless a custom mechanism is implemented to change the sample rate dynamically.
+SDK sample rates can usually only be changed when a new version of the application is deployed, unless a custom mechanism has been implemented making it possibleto change the sample rate dynamically. But with Dynamic Sampling, it's possible to configure the sampling rate for each project in your organization dynamically, without requiring any changes to the application.
 
-With Dynamic Sampling, however, it is possible to configure the sampling rate for each project in your organization dynamically, without requiring any changes to the applications themselves.
+Addiontally, with automatic mode, Dynamic Sampling continuously monitors the traffic for each project and adjusts the sample rate of each to prioritize the most relevant data.
 
-Addiontally, with the automatic mode, Dynamic Sampling continuously monitors the traffic for each project and adjusts the sample rate of each project to prioritize the most relevant data.
+### When to Use Dynamic Versus SDK Sampling
 
-### When to Use Dynamic Sampling vs. SDK Sampling
+The biggest benefit of Dynamic Sampling is its flexibility. It adjusts the sample rate based on the volume of events received by Sentry. This makes it a great choice for organizations with both high and low-volume projects, as it helps maximize your quota by tailoring the sample rate to each project's event volume.
 
-The biggest benefit of Dynamic Sampling is that, as the name implies, it's dynamic. This means that the sample rate is adjusted based on the volume of events that have been received by Sentry. This makes it a great choice for organizations that have a mix of high- and low-volume projects, as it allows you to maximize your quota by adjusting the sample rate based on each project’s event volume.
+Dynamic Sampling can prioritize spans based on their content, offering more insight than SDKs. For example, it can focus on spans from the latest release or low-volume projects, giving you better visibility into the most important parts of your application.
 
-A big advantage of Dynamic Sampling is that it can prioritize certain spans based on the content of the spans as it has more insight than the SDKs. For example, it can prioritize spans from the latest release or from low-volume projects. This can help you get more visibility into the most important parts of your application.
-
-On the other hand, the SDK sample rate is static and set by you in the SDK configuration. This makes it a good choice for organizations that have a consistent event volume and want to ensure that only a certain percentage of events are sent to Sentry. You might want to reduce the numer of spans sent to Sentry to reduce the instrumentation overheads, lower bandwidth usage especially for mobile applications or to reduce the number of accepted spans.
+SDK sampling uses a static rate set in the SDK configuration. It’s ideal for organizations with consistent event volumes that want to limit the percentage of events sent to Sentry. This helps reduce spans to lower overhead, save bandwidth (especially for mobile apps), or decrease the number of accepted spans.
 
 ### Deciding on Your SDK Sample Rate
 
-To give Sentry the fullest, most accurate picture of your application’s health, we recommend that you send us 100% of your transactions. You can do this by setting your [tracesSampleRate](/platform-redirect/?next=/performance/) to 1.0. If this isn't feasible for your organization, set a lower value, or switch to sampling selectively by using the [tracesSampler](/platform-redirect/?next=/performance/) to filter your transactions based on contextual data. Note that when calculating throughput, transaction metering is based on received transactions not stored transactions.
+To give Sentry the fullest, most accurate picture of your application’s health, we recommend sending us 100% of your transactions. You can do this by setting your [tracesSampleRate](/platform-redirect/?next=/performance/) to 1.0. If this isn't feasible for your organization, set a lower value, or switch to sampling selectively by using the [tracesSampler](/platform-redirect/?next=/performance/) to filter your transactions based on contextual data. Note, that when calculating throughput, transaction-metering is based on received, not stored transactions.
 
 <Note>
-  Please note that changes to your SDK sampling configuration may affect your
+  Changes to your SDK sampling configuration may affect your
   quota. If you increase your SDK sampling rate, you'll also be increasing the
   volume of transactions you send to Sentry. This may require that you adjust
   your transaction quota.
 </Note>
 
-You can use both Dynamic Sampling and SDK Sampling together to further optimize your event volume for your specific use case. For example, you can set a low SDK sample rate to ensure that only a certain percentage of events are sent to Sentry, and then use Dynamic Sampling to adjust the sample rate based on the volume of events that have been received by Sentry.
+You can use both Dynamic and SDK Sampling together to further optimize your event volume for your specific use case. For example, you can set a low SDK sample rate to ensure that only a certain percentage of events are sent to Sentry, and then use Dynamic Sampling to adjust the sample rate based on the event volume received by Sentry.
 
 ## Dynamic Sampling Priorities
 
@@ -157,16 +167,16 @@ You won't be able to disable the Low Volume Projects dynamic sampling priority b
 
 </Note>
 
-Some projects within your organization are very high volume compared to others. This means that low-volume projects might get drowned out if we treat all projects equally. To ensure that you have enough samples regardless of project scale, we prioritize low-volume projects.
+Some projects within your organization are very high-volume compared to others. This means that low-volume projects might get drowned out if we treat all projects equally. To ensure that you have enough samples regardless of project scale, we prioritize low-volume projects.
 
 #### Low Volume Transactions
 
 Transactions can be logically grouped by their name within a project. This means that transactions with the same name most likely indicate the same operation or code path, while transactions with different names usually indicate different operations.
-We prioritize low-volume transactions for the same reason we prioritize low-volume projects – so they don't get drowned out by high-volume transactions. We want to make sure that transactions representing low-volume code paths are sampled in enough quantities to generate a complete view of your application.
+We prioritize low-volume transactions for the same reason we prioritize low-volume projects: – so they don't get drowned out by high-volume transactions. We want to make sure that transactions representing low-volume code paths are sampled in enough quantities to generate a complete view of your application.
 
 ### Investigation Mode
 
-Our automated dynamic sampling priorities work well in a generic manner to collect a baseline of samples because they prioritize retaining data that is valuable for any customer at any given time. However, there are certain scenarios, such as investigating a particular issue, when very specific data becomes temporarily more important. In such cases, sometimes the automated sampling priorities do not provide enough samples, so you may want to create investigation rules.
+Our automated dynamic sampling priorities work well in a generic manner to collect a baseline of samples because they prioritize retaining data that's valuable for any customer at any given time. However, there are certain scenarios, such as investigating a particular issue, when very specific data becomes temporarily more important. In such cases, the automated sampling priorities may not provide enough samples, so you may want to create investigation rules.
 
 Investigation rules are sampling rules that can be created through the Sentry UI to temporarily boost the number of transactions collected for a particular scenario (for example, transactions with specific tag values). These rules can be created to retain more samples when too few (less than 5) are available. Once created, a rule will be active for up to 48 hours or until 100 samples are collected. You'll be notified via email when enough transactions have been collected.
 
@@ -174,23 +184,23 @@ Investigation sampling rules only apply to transactions and don't guarantee that
 
 #### Creating a New Investigation Rule
 
-When you perform a query on transactions either in [Discover](/product/explore/discover-queries/) or in [Transaction Summary](/product/performance/transaction-summary/) and receive fewer than 5 samples, you can click "Get Samples" to create a new investigation rule to retain more samples of transactions for the respective query.
+When you query a transactions either in [Discover](/product/explore/discover-queries/) or in [Transaction Summary](/product/performance/transaction-summary/) and receive fewer than 5 samples, you can click "Get Samples" to create a new investigation rule and retain more samples of transactions for the respective query.
 
 ![Investigation Mode in Discover](./img/investigation-bias-discover.png)
 
 <Note>
 
-Please note that this feature only applies to transactions. Therefore, in Discover, you have to specify `event.type:transaction` in the query to access the feature, whereas in Performance the event type is implicit.
+This feature only applies to transactions. Therefore, in Discover, you have to specify `event.type:transaction` in the query to access the feature, whereas in Performance the event type is implicit.
 
 </Note>
 
-Clicking this button triggers the creation of an investigation rule for the respective query. After the successful creation of the rule, a notification will appear and the button for creating the investigation rule will be replaced by a message specifying that the investigation is in progress and the amount of time since it has been active.
+Clicking this button creates an investigation rule for the query. Once the rule is successfully created, a notification appears, and the button is replaced with a message showing the investigation is in progress and the amount of time it's been active.
 
 ![Rule successfully created](./img/investigation-bias-rule-created.png)
 
-If a user performs the same search later and the investigation is still active, the notification will indicate that there is an active rule collecting data for the query.
+If a user performs the same search later and the investigation is still active, the notification will indicate that there's an active rule already collecting data for the query.
 
-Creating a rule is also possible from the Transaction Summary page in Performance.
+It's also possible to create a rule from the Transaction Summary page in Performance.
 
 ![Investigation Mode in Transaction Summary](./img/investigation-bias-tx-summary.png)
 
