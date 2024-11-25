@@ -1,10 +1,12 @@
-```dart
-FutureOr<SentryEvent?> beforeSend(SentryEvent event, Hint hint) async {
-  if (event.throwable is DatabaseException) {
-    event = event.copyWith(fingerprint: ['database-connection-error']);
-  }
-  return event;
-}
-
-await SentryFlutter.init((options) => options.beforeSend = beforeSend);
+```dart {4-7}
+await SentryFlutter.init(
+  (options) {
+    options.beforeSend = (event, hint) {
+      if (event.throwable is DatabaseException) {
+        event = event.copyWith(fingerprint: ['database-connection-error']);
+      }
+      return event;
+    };
+  },
+);
 ```
