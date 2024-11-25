@@ -20,43 +20,7 @@ The `tracesSampler` callback must receive sufficient arguments from users to def
 This can include but is not limited to certain attributes from the root span, such as HTTP headers.
 The return value of the `tracesSampler` is a float between `0.0` and `1.0`.
 
-```js
-Sentry.init({
-  tracesSampler: ({ name, attributes, parentSampleRate }) => {
-    // Inherit the trace parent's sample rate if there is one. Sampling is deterministic 
-    // for one trace, e.g. if the parent was sampled, all children will be sampled at the same rate.
-    if (typeof parentSampleRate === "number") {
-      return parentSampleRate;
-    }
-    
-    // Else, use a default sample rate (replacing tracesSampleRate).
-    return 0.5;
-  }
-})
-```
-
-The `parentSampleRate` is a propagated value inside the baggage, using key `sentry-sample_rand`.
-The value stems from a truly random number between 0 and 1, generated when a new trace is started. If the SDK does not receive such a number in an incoming trace, a new, truly random number between 0 and 1 is generated.
-
-In the following cases, the SDK must compare sample rates against this `parentSampleRate` instead of `math.random()`:
-  
-  - When a `tracesSampler` is configured, i.e. `trace["sentry-sample_rand"] < tracesSampler()`
-  
-  - When the SDK is the head of trace, this applies to sample decisions based on `tracesSampleRate`, e.g. `trace['sentry-sample_rand'] < config.tracesSampleRate`
-
-If the `sentry-sample_rate` (`parentSampleRate`) is not available for any reason for an inbound trace, but the trace has the sampled flag set to true, the SDK injects `parentSampleRate: 1.0` into the `tracesSampler`.
-
 If no `tracesSampler` is configured, a propagated sampling decision via the traceparent takes precedence over the `tracesSampleRate`. This behavior can be disabled by defining a `tracesSampler`.
- 
-## Parent Sampling Origins
-
-If the SDK can parse an org ID from the configured DSN, this value must be propagated as a baggage entry with the key `sentry-org`. Given a DSN of `https://1234@o1.ingest.us.sentry.io/1`, the org ID is 1, based on `o1`.
-
-On incoming traces, the SDK must compare the `sentry-org` baggage value against its own parsed value from the DSN. Only if both match, the parent sampling decisions applies.
-
-This behavior can be disabled by setting `strictTracePropagation: false` in the SDK init call.
-
-The SDK must be configurable with an optional `org: <org-id>` setting that takes precedence over the parsed value from the DSN.
 
 ## Filter spans with `ignoreSpans` & integration config
 
