@@ -16,18 +16,18 @@ A sample rate is a number in the interval `[0.0, 1.0]` that will determine the l
 At the core of Dynamic Sampling there is the concept of **fidelity**, which translates to an overall **target sample rate** that should be applied across all events of an organization.
 
 ### Dynamic Sampling Modes
-There are two available modes to govern the target sample rates for Dynamic Sampling: Automatic Mode and Manual Mode.
+There are two available modes to govern the target sample rates for Dynamic Sampling. The settings around the mode and the sample rates are implemented using organization and project options. The [DynamicSamplingMode object](https://github.com/getsentry/sentry/blob/9b98be6b97323a78809a829e06dcbef26a16365c/src/sentry/dynamic_sampling/types.py#L7-L12) defines the available modes and their string representations to be set in the options:
+
 - **Automatic mode** dynamically manages the target sample rate for each project based on the target sample rate for the organization, prioritizing lower volume projects to increase visibility.
+    - Automatic mode is called Organization mode internally. If activated, i.e. `sentry:sampling_mode` == `organization`, the **organization** option `sentry:target_sample_rate` defines the organization target sample rate.
 - **Manual mode** allows the user to set static target sample rates on a per-project basis that serve as the baseline sample rate before applying the dynamic biases outlined below. Target sample rates are not adjusted by the system. 
+    - Manual mode is called Project mode internally. If activated, i.e. `sentry:sampling_mode` == `project`, the **project** option `sentry:target_sample_rate` defines the project target sample rate for each project.
 
-Internally, Automatic Mode is called Organization Mode, while Manual Mode is called Project Mode. The settings around the mode and the sample rates are implemented using organization and project options. The [DynamicSamplingMode object](https://github.com/getsentry/sentry/blob/9b98be6b97323a78809a829e06dcbef26a16365c/src/sentry/dynamic_sampling/types.py#L7-L12) defines the available modes and their string representations to be set in the options. The dynamic sampling mode is set using the organization option `sentry:sampling_mode`. 
-
-If `sentry:sampling_mode` == `organization`, the **organization** option `sentry:target_sample_rate` defines the organization target sample rate.
-If `sentry:sampling_mode` == `project`, the **project** option `sentry:target_sample_rate` defines the project target sample rate for each project.
+The dynamic sampling mode is set using the organization option `sentry:sampling_mode`, and all functionality defaults to Automatic Mode if the option is not set. 
 
 On switching between modes, the current target sample rates are preserved unless changed by the user explicitly. For example, if the user switches from Automatic Mode to Manual Mode, the current target sample rate for the organization is preserved by setting the project options `project:target_sample_rate` to the project target sample rates calculated during automatic mode. Conversely, if the user switches from Manual Mode to Automatic Mode, the project target sample rates are recalculated based on the overall organization target sample rate.
 
-The [target sample rates are periodically recalibrated](https://github.com/getsentry/sentry/blob/9b98be6b97323a78809a829e06dcbef26a16365c/src/sentry/dynamic_sampling/rules/biases/recalibration_bias.py#L11-L44) to ensure that the overall target sample rate is met. This recalibration is done on a project level or organization level, depending on the dynamic sampling mode. Within the target sample rate, Dynamic Sampling **biases towards more meaningful data**. This is achieved by constantly updating and communicating special rules to Relay, via a project configuration, which then applies targeted sampling to every event. 
+The [sample rates are periodically recalibrated](https://github.com/getsentry/sentry/blob/9b98be6b97323a78809a829e06dcbef26a16365c/src/sentry/dynamic_sampling/rules/biases/recalibration_bias.py#L11-L44) to ensure that the overall target sample rate is met. This recalibration is done on a project level or organization level, depending on the dynamic sampling mode. Within the target sample rate, Dynamic Sampling **biases towards more meaningful data**. This is achieved by constantly updating and communicating special rules to Relay, via a project configuration, which then applies targeted sampling to every event. 
 
 ![Concept of Fidelity](./images/fidelityAndPriorities.png)
 
