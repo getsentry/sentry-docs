@@ -13,12 +13,12 @@ A sample rate is a number in the interval `[0.0, 1.0]` that will determine the l
 
 ## The Concept of Fidelity
 
-At the core of Dynamic Sampling there is the concept of **fidelity**, which translates to an overall **target sample rate** that should be applied across all events of an organization.
+At the core of Dynamic Sampling there is the concept of **fidelity**, which translates to an overall **target sample rate** that should be applied across all spans and transactions of an organization.
 
 ### Dynamic Sampling Modes
-There are two available modes to govern the target sample rates for Dynamic Sampling. The settings around the mode and the sample rates are implemented using organization and project options.
+There are two available modes to govern the target sample rates for Dynamic Sampling. The definition of both the mode and the target sample rates are implemented using the organization options `sentry:sampling_mode` and `sentry:target_sample_rate` as well as the project options `sentry:target_sample_rate`.
 
-- **Automatic mode** dynamically manages the target sample rate for each project based on the target sample rate for the organization, prioritizing lower volume projects to increase visibility. Internally, it is active if the organization option `sentry:sampling_mode` is set to `organization`. The target sample rate for the organization is stored in the **organization** option `sentry:target_sample_rate`.
+- **Automatic mode** dynamically manages the target sample rate for each project based on the target sample rate for the organization, prioritizing lower volume projects to increase visibility. Internally, it is active if the organization option `sentry:sampling_mode` is set to `organization`. The target sample rate for the organization is stored in the **organization** option `sentry:target_sample_rate`, and project target sample rates are calculated based on the organization target sample rate.
 - **Manual mode** allows the user to set static target sample rates on a per-project basis that serve as the baseline sample rate before applying the dynamic biases outlined below. Target sample rates are not adjusted by the system. Interally, it is active if the organization option `sentry:sampling_mode` is set to `project`. The target sample rates for projects are stored in the **project** option `sentry:target_sample_rate`.
 
 All functionality defaults to Automatic Mode if the option is not set.
@@ -81,7 +81,7 @@ An example of how the UI looks is shown in the following screenshot (the content
 
 ### Prioritize New Releases
 
-This bias is used to prioritize traces that are coming from a new release. The goal is to increase the sample rate in the time window that occurs between the creation of a release and its adoption by users. _The identification of a new release is done in the `event_manager` defined [here](https://github.com/getsentry/sentry/blob/master/src/sentry/event_manager.py#L937-L937)._
+This bias is used to prioritize traces that are coming from a new release. The goal is to increase the sample rate in the time window that occurs between the creation of a release and its adoption by users. _The identification of a new release is done in the `event_manager` defined [here](https://github.com/getsentry/sentry/blob/43d7c41aee2b22ca9f51916afac40f6cbdcd2b15/src/sentry/event_manager.py#L739-L773)._
 
 Since the adoption of a release is not constant, we created a system of _decaying_ rules which can interpolate between two sample rates in a given time window with a given function (e.g. `linear`). The idea being that we want to reduce the sample rate since the amount of samples will increase as the release gets adopted by users.
 
