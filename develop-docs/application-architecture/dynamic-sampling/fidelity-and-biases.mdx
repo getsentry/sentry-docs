@@ -15,12 +15,19 @@ A sample rate is a number in the interval `[0.0, 1.0]` that will determine the l
 
 At the core of Dynamic Sampling there is the concept of **fidelity**, which translates to an overall **target sample rate** that should be applied across all events of an organization.
 
-### Target Sample Rate Adjustment: Automatic Mode and Manual Mode
+### Dynamic Sampling Modes
 There are two available modes to govern the target sample rates for Dynamic Sampling: Automatic Mode and Manual Mode.
 - **Automatic mode** dynamically manages the target sample rate for each project based on the target sample rate for the organization, prioritizing lower volume projects to increase visibility.
 - **Manual mode** allows the user to set static target sample rates on a per-project basis that serve as the baseline sample rate before applying the dynamic biases outlined below. Target sample rates are not adjusted by the system. 
 
-Within this target sample rate, Dynamic Sampling can create a **bias toward more meaningful data**. This is achieved by constantly updating and communicating special rules to Relay, via a project configuration, which then applies targeted sampling to every event.
+Internally, Automatic Mode is called Organization Mode, while Manual Mode is called Project Mode. The settings around the mode and the sample rates are implemented using organization and project options. The [DynamicSamplingMode object](https://github.com/getsentry/sentry/blob/9b98be6b97323a78809a829e06dcbef26a16365c/src/sentry/dynamic_sampling/types.py#L7-L12) defines the available modes and their string representations to be set in the options. The dynamic sampling mode is set using the organization option `sentry:sampling_mode`. 
+
+If `sentry:sampling_mode` == `organization`, the **organization** option `sentry:target_sample_rate` defines the organization target sample rate.
+If `sentry:sampling_mode` == `project`, the **project** option `sentry:target_sample_rate` defines the project target sample rate for each project.
+
+On switching between modes, the current target sample rates are preserved unless changed by the user explicitly. For example, if the user switches from Automatic Mode to Manual Mode, the current target sample rate for the organization is preserved by setting the project options `project:target_sample_rate` to the project target sample rates calculated during automatic mode. Conversely, if the user switches from Manual Mode to Automatic Mode, the project target sample rates are recalculated based on the overall organization target sample rate.
+
+The [target sample rates are periodically recalibrated](https://github.com/getsentry/sentry/blob/9b98be6b97323a78809a829e06dcbef26a16365c/src/sentry/dynamic_sampling/rules/biases/recalibration_bias.py#L11-L44) to ensure that the overall target sample rate is met. This recalibration is done on a project level or organization level, depending on the dynamic sampling mode. Within the target sample rate, Dynamic Sampling **biases towards more meaningful data**. This is achieved by constantly updating and communicating special rules to Relay, via a project configuration, which then applies targeted sampling to every event. 
 
 ![Concept of Fidelity](./images/fidelityAndPriorities.png)
 
@@ -82,7 +89,7 @@ Since the adoption of a release is not constant, we created a system of _decayin
 
 ![Sample Rate and Adoption](./images/sampleRateAndAdoption.png)
 
-The latest release bias uses a decaying rule to interpolate between a starting sample rate and an ending sample rate over a time window that is statically defined for each platform (the list of time to adoptions is define [here](https://github.com/getsentry/sentry/blob/master/src/sentry/dynamic_sampling/rules/helpers/time_to_adoptions.py#L26-L26). For example, Android has a bigger time window than Javascript because on average Android apps take more time to get adopted by users.
+The latest release bias uses a decaying rule to interpolate between a starting sample rate and an ending sample rate over a time window that is statically defined for each platform (the list of time to adoptions is define [here](https://github.com/getsentry/sentry/blob/9b98be6b97323a78809a829e06dcbef26a16365c/src/sentry/dynamic_sampling/rules/helpers/time_to_adoptions.py#L25). For example, Android has a bigger time window than Javascript because on average Android apps take more time to get adopted by users.
 
 ### Prioritize Dev Environments
 
@@ -109,7 +116,11 @@ For prioritizing dev environments, we use a sample rate of `1.0` (100%), which r
 ### Prioritize Low Volume Transactions
 This bias is used to prioritize low-volume transactions that can be drowned out by high-volume transactions. The goal is to rebalance sample rates of the individual transactions so that low-volume transactions are more likely to have representative samples. The bias is of type trace, which means that the transaction considered for rebalancing will be the root transaction of the trace.
 
-In order to rebalance transactions, the system computes the counts of the transactions for each project and runs an algorithm that, given the sample rate of the organization and the counts of each transaction, computes a new sample rate for each transaction assuming an ideal distribution of the counts.
+Prioritization of low volume projects works slightly differently depending on the dynamic sampling mode: 
+- In **Automatic Mode** (`sentry:sampling_mode` == `organization`), the organization target sample rate is used as the base sample rate for the balancing algorithm.
+- In **Manual Mode** (`sentry:sampling_mode` == `project`), the project target sample rate is used as the base sample rate for the balancing algorithm.
+
+In order to rebalance transactions, the system retrieves the counts of the transactions for each project and calculates a new sample rate for each transaction. 
 
 <Alert title="✨ Note" level="info">
 
