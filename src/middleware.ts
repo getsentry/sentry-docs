@@ -3351,6 +3351,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/clients/cordova/',
     to: '/platforms/javascript/guides/cordova/',
   },
+  {
+    from: '/product/crons/job-monitoring/',
+    to: '/product/crons/monitor-details/',
+  },
 ];
 
 const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
