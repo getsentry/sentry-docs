@@ -233,12 +233,11 @@ Without a `tracesSampler` callback, an SDK fully inherits sampling decisions for
 The random value is set according to the following rules:
 
 1. When an SDK starts a new trace, `sample_rand` is always set to a random number in range `[0, 1]`. This explicitly includes traces that are not sampled, as well as when the `tracesSampleRate` is set to `0.0` or `1.0`.
-2. It is _recommended_ to generate the random number deterministically using the trace ID as seed or source of randomness. The exact method by which the random number is created is implementation defined and may vary between SDK implementations.
+2. It is _recommended_ to generate the random number deterministically using the trace ID as seed or source of randomness. The exact method by which the random number is created is implementation defined and may vary between SDK implementations. See 4. on why this behaviour is desirable.
 3. On incoming traces, an SDK assumes the `sample_rand` value along with the rest of the DSC, overriding an existing value if needed.
 4. If `sample_rand` is missing on an incoming trace, the SDK creates and from now on propagates a new random number on-the-fly, based on the following rules:
    1. If `sample_rate` and `sampled` are propgated, create `sample_rand` so that it adheres to the invariant. This means, for a decision of `True` generate a random number in half-open range `[0, rate)` and for a decision of `False` generate a random number in range `[rate, 1]`.
-   2. If only `sampled` is propagated, apply the same strategy above using the output of the `tracesSampler` + `tracesSampleRate` cascade as cutoff point for the intervals.
-   3. If the `sampled` is missing `sample_rate`, generate a random number in the range `[0, 1]` like for a new trace.
+   2. If the `sampled` is missing `sample_rate`, generate a random number in the range `[0, 1]` like for a new trace.
 
 The SDK should exclusively use the stored random number and no longer use `math.random()` or similar anywhere else in the tracing related code base:
 
