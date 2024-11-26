@@ -219,6 +219,10 @@ const userDocsRedirects = [
     destination: '/organization/integrations/feature-flag/launchdarkly/',
   },
   {
+    source: '/organization/integrations/vercel/',
+    destination: '/organization/integrations/deployment/vercel/',
+  },
+  {
     source: '/internal/:path*',
     destination: 'https://develop.sentry.dev',
   },
