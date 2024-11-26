@@ -54,6 +54,12 @@ const BANNERS: BannerType[] = [
     linkURL: 'https://docs.sentry.io/contributing/pages/banners/',
     linkText: 'CTA',
   },
+  {
+    appearsOn: ['^/$'],
+    text: 'Discover all our latest product releases from Sentry Launch Week.',
+    linkURL: 'https://sentry.io/events/launch-week/?promo_name=launchweekQ4FY2024',
+    linkText: 'See what’s new.',
+  },
 ];
 
 const LOCALSTORAGE_NAMESPACE = 'banner-manifest';
