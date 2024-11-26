@@ -56,7 +56,7 @@ const BANNERS: BannerType[] = [
   },
   {
     appearsOn: ['^/$'],
-    text: 'Discover all our latest product releases from Sentry Launch Week.',
+    text: 'Check out Sentry Launch Week for our latest product releases.',
     linkURL: 'https://sentry.io/events/launch-week/?promo_name=launchweekQ4FY2024',
     linkText: 'See what’s new.',
   },
