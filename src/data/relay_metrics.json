@@ -32,13 +32,13 @@
   {
     "type": "Histogram",
     "name": "buffer.envelope_size",
-    "description": "Size of a serialized envelope pushed to the envelope buffer (sampled).",
+    "description": "Size of a serialized envelope pushed to the envelope buffer.",
     "features": []
   },
   {
     "type": "Histogram",
     "name": "buffer.envelope_size.compressed",
-    "description": "Size of a compressed envelope pushed to the envelope buffer (sampled).",
+    "description": "Size of a compressed envelope pushed to the envelope buffer.",
     "features": []
   },
   {
@@ -50,13 +50,19 @@
   {
     "type": "Timer",
     "name": "buffer.envelopes_compression",
-    "description": "Timing in milliseconds for the time it takes for the envelopes to be compressed (sampled).",
+    "description": "Timing in milliseconds for the time it takes for an envelope to be compressed.",
     "features": []
   },
   {
     "type": "Histogram",
     "name": "buffer.envelopes_count",
     "description": "Number of elements in the envelope buffer across all the stacks.\n\nThis metric is tagged with:\n- `storage_type`: The type of storage used in the envelope buffer.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.envelopes_decompression",
+    "description": "Timing in milliseconds for the time it takes for an envelope to be decompressed.",
     "features": []
   },
   {
@@ -92,7 +98,7 @@
   {
     "type": "Timer",
     "name": "buffer.envelopes_serialization",
-    "description": "Timing in milliseconds for the time it takes for the envelopes to be serialized.",
+    "description": "Timing in milliseconds for the time it takes for an envelope to be serialized.",
     "features": []
   },
   {
@@ -201,6 +207,12 @@
     "type": "Counter",
     "name": "cogs.usage",
     "description": "All COGS tracked values.\n\nThis metric is tagged with:\n- `resource_id`: The COGS resource id.\n- `app_feature`: The COGS app feature.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "envelope.check_nested_spans",
+    "description": "Timing in milliseconds to count spans in a serialized transaction payload.",
     "features": []
   },
   {
@@ -429,6 +441,12 @@
   },
   {
     "type": "Timer",
+    "name": "legacy_project_cache.task.duration",
+    "description": "Timing in milliseconds for processing a task in the legacy project cache service.\n\nA task is a unit of work the service does. Each branch of the\n`tokio::select` is a different task type.\n\nThis metric is tagged with:\n- `task`: The type of the task the project cache does.",
+    "features": []
+  },
+  {
+    "type": "Timer",
     "name": "metrics.aggregator.message.duration",
     "description": "Timing in milliseconds for processing a message in the aggregator service.\n\nThis metric is tagged with:\n- `message`: The type of message that was processed.",
     "features": []
@@ -530,32 +548,6 @@
     "features": []
   },
   {
-    "type": "Counter",
-    "name": "metrics.meta.agg.items",
-    "description": "Incremnted for every metric meta item added to the metric meta aggregator.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "metrics.meta.agg.update",
-    "description": "Incremented every time the meta aggregator emitted an update that needs to be stored or\nsent upstream.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "metrics.meta.parsing_failed",
-    "description": "Number of times that parsing a metric meta item from an envelope failed.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "metrics.meta.redis.update",
-    "description": "Incremented every time a redis key is updated to store or update metadata.",
-    "features": [
-      "redis"
-    ]
-  },
-  {
     "type": "Histogram",
     "name": "metrics.partitions.flushed",
     "description": "The number of metric partitions flushed in a cycle.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).",
@@ -633,20 +625,14 @@
   },
   {
     "type": "Gauge",
-    "name": "project_cache.garbage.queue_size",
-    "description": "The number of items currently in the garbage disposal queue.",
+    "name": "project_cache.fetches.size",
+    "description": "The number of scheduled and in progress fetches in the project cache.",
     "features": []
   },
   {
     "type": "Counter",
     "name": "project_cache.hit",
     "description": "Number of times a project is looked up from the cache.\n\nThe cache may contain and outdated or expired project state. In that case, the project state\nis updated even after a cache hit.",
-    "features": []
-  },
-  {
-    "type": "Timer",
-    "name": "project_cache.message.duration",
-    "description": "Timing in milliseconds for handling a project cache message.\n\nThis metric is tagged with:\n- `message`: The type of message that was processed.",
     "features": []
   },
   {
@@ -664,7 +650,7 @@
   {
     "type": "Timer",
     "name": "project_cache.task.duration",
-    "description": "Timing in milliseconds for processing a task in the project cache service.\n\nA task is a unit of work the service does. Each branch of the\n`tokio::select` is a different task type.\n\nThis metric is tagged with:\n- `task`: The type of the task the processor does.",
+    "description": "Timing in milliseconds for processing a task in the project cache service.\n\nThis metric is tagged with:\n- `task`: The type of the task the project cache does.",
     "features": []
   },
   {
@@ -682,33 +668,9 @@
     ]
   },
   {
-    "type": "Timer",
-    "name": "project_state.eviction.duration",
-    "description": "Total time in milliseconds spent evicting outdated and unused projects happens.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "project_state.flush_all_metric_meta",
-    "description": "Number of full metric data flushes.\n\nA full flush takes all contained items of the aggregator and flushes them upstream,\nat best this happens once per freshly loaded project.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "project_state.get",
-    "description": "Number of times a project state is looked up from the cache.\n\nThis includes lookups for both cached and new projects. As part of this, updates for\noutdated or expired project caches are triggered.\n\nRelated metrics:\n- `project_cache.hit`: For successful cache lookups, even for outdated projects.\n- `project_cache.miss`: For failed lookups resulting in an update.",
-    "features": []
-  },
-  {
     "type": "Counter",
     "name": "project_state.metrics.no_project",
     "description": "The amount of times metrics of a project have been flushed without the project being\nfetched/available.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "project_state.no_cache",
-    "description": "Number of times a project config was requested with `.no-cache`.\n\nThis effectively counts the number of envelopes or events that have been sent with a\ncorresponding DSN. Actual queries to the upstream may still be deduplicated for these\nproject state requests.\n\nA maximum of 1 such requests per second is allowed per project key. This metric counts only\npermitted requests.",
     "features": []
   },
   {
@@ -797,6 +759,12 @@
   },
   {
     "type": "Timer",
+    "name": "requests.body_read.duration",
+    "description": "Timing in milliseconds to the time it takes to read an HTTP body.",
+    "features": []
+  },
+  {
+    "type": "Timer",
     "name": "requests.duration",
     "description": "Total duration in milliseconds for handling inbound web requests until the HTTP response is\nreturned to the client.\n\nThis does **not** correspond to the full event ingestion time. Requests for events that are\nnot immediately rejected due to bad data or cached rate limits always return `200 OK`. Full\nvalidation and normalization occur asynchronously, which is reported by\n`event.processing_time`.\n\nThis metric is tagged with:\n- `method`: The HTTP method of the request.\n- `route`: Unique dashed identifier of the endpoint.",
     "features": []
@@ -823,6 +791,18 @@
     "type": "Timer",
     "name": "scrubbing.minidumps.duration",
     "description": "Time spent on minidump scrubbing.\n\nThis is the total time spent on parsing and scrubbing the minidump.  Even if no PII\nscrubbing rules applied the minidump will still be parsed and the rules evaluated on\nthe parsed minidump, this duration is reported here with status of \"n/a\".\n\nThis metric is tagged with:\n\n- `status`: Scrubbing status: \"ok\" means successful scrubbed, \"error\" means there\nwas an error during scrubbing and finally \"n/a\" means scrubbing was successful\nbut no scurbbing rules applied.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "server.http.accepted",
+    "description": "Incremented every time the server accepts a new connection.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "server.http.connections",
+    "description": "Exposes the amount of currently open and handled connections by the server.",
     "features": []
   },
   {

@@ -97,26 +97,55 @@ do {
 
 ## Capturing Uncaught Exceptions
 
-By default, macOS applications do not crash whenever an uncaught exception occurs. To enable this with Sentry:
+<Note>
+
+The SDK can't install the uncaught exception handler if a debugger is attached. To test these locally, ensure you've unchecked the "Debug executable" option in your app's Xcode scheme's Run action.
+
+</Note>
+
+By default, macOS applications don't crash whenever an uncaught exception occurs. As the Cocoa Frameworks are generally not [exception-safe on macOS](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Exceptions/Articles/ExceptionsAndCocoaFrameworks.html), the application could end up in a corrupted state when an uncaught exception occurs. Therefore, we recommend changing your application configuration so it crashes on uncaught NSExceptions. To achieve this, you can use the `SentryCrashExceptionApplication`, or enable the option `enableUncaughtNSExceptionReporting`, available as of version [8.40.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#8400). Both options set the `NSApplicationCrashOnExceptions` on the `NSUserDefaults` so your application crashes on uncaught NSExceptions and send the crash report to Sentry.
+
+Once you have configured your application to crash whenever an uncaught exception occurs, the Apple SDK will capture those automatically. You don't need to manually call `captureException`.
+
+### SentryCrashExceptionApplication
+
+<Alert level="warning">
+
+Don't use this option together with the `enableUncaughtNSExceptionReporting` option. Enabling both features can lead to duplicated reports.
+
+</Alert>
+
+To enable this with Sentry:
 
 1. Open the application's `Info.plist` file
 2. Search for `Principal class` (the entry is expected to be `NSApplication`)
 3. Replace `NSApplication` with `SentryCrashExceptionApplication`
 
-Alternatively, you can set the `NSApplicationCrashOnExceptions` flag:
+### Uncaught NSException Reporting Option
 
-```swift {tabTitle:Swift} {4-4}
+<Alert level="warning">
+
+Don't use this option together with the `SentryCrashExceptionApplication`. Enabling both features can lead to duplicated reports.
+
+</Alert>
+
+As of version [8.40.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#8400), you can enable uncaught NSException reporting by setting the `enableUncaughtNSExceptionReporting` option to `true`. This is especially useful for applications using the SwiftUI lifecycle in combination with the [`NSApplicationDelegateAdaptor`](https://developer.apple.com/documentation/swiftui/nsapplicationdelegateadaptor), for which you can't easily use the `SentryCrashExceptionApplication` class.
+
+```swift {tabTitle:Swift}
 import Sentry
 
-func applicationDidFinishLaunching(_ aNotification: Notification) {
-    UserDefaults.standard.register(defaults: ["NSApplicationCrashOnExceptions": true])
-
-    SentrySDK.start { options in
-        // ...
-    }
-
-    return true
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableUncaughtNSExceptionReporting = true
 }
+```
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableUncaughtNSExceptionReporting = YES;
+}];
 ```
 
 </PlatformSection>

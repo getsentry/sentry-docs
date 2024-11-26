@@ -1,0 +1,19 @@
+On this page you will learn how to manually propagate trace information into and out of your Unreal Engine game.
+
+Continuing a trace from an upstream service requires using `ContinueTrace()`, which will create a transaction context with the provided `sentry-trace` header. This transaction starts with the transaction context will contain everything needed to continue the trace.
+
+```cpp
+// Get incoming tracing information
+const FString inTrace = ...
+TArray<FString>() inBaggage = ...
+
+USentryTransactionContext* transactionContext =
+    SentrySubsystem->ContinueTrace(inTrace, inBaggage);
+
+USentryTransaction* transaction =
+    SentrySubsystem->StartTransactionWithContext(transactionContext);
+```
+
+To obtain trace header from a transaction or span, use `GetTrace()`. Pass the returned value to the downstream service. If communication happens over HTTP, we recommend you attach this header to the outgoing HTTP request.
+
+The format of the `sentry-trace` header should follow the one defined in [the telemetry docs](https://develop.sentry.dev/sdk/telemetry/traces/#header-sentry-trace). It should consist of a 32 character hexadecimal string for the `traceId`, followed by a 16 character hexadecimal string for the `spanId` and an optional single character for the `sampled` flag. If the given string doesn't match this format, the update is ignored and the values in the transaction context will remain unchanged.

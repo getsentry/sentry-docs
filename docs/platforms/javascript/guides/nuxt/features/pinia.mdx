@@ -3,12 +3,12 @@ title: Pinia
 description: "Learn about enabling Sentry's Pinia plugin in Nuxt."
 ---
 
-To capture [Pinia](https://pinia.vuejs.org/) state data, add `trackPinia` to your client-side Sentry configuration:
+To capture [Pinia](https://pinia.vuejs.org/) state data, add the `piniaIntegration` with `usePinia()` to the integrations array of your client-side Sentry configuration:
 
 ```javascript {3} {filename:sentry.client.config.ts}
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  trackPinia: true // `true` will apply default options
+  integrations: [Sentry.piniaIntegration(usePinia())],
 });
 ```
 
@@ -19,14 +19,14 @@ By default, Sentry SDKs normalize any context to a depth of 3. You may want to i
 ```javascript {4} {filename:sentry.client.config.ts}
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  trackPinia: true,
+  integrations: [Sentry.piniaIntegration(usePinia())],
   normalizeDepth: 10, // Or however deep you want your state context to be.
 });
 ```
 
 ## Options
 
-When enabling `trackPinia` with `true`, all default options are automatically applied. To configure the Pinia plugin manually, pass an options object to `trackPinia`.
+When not providing a second argument to the `piniaIntegration`, all default options are automatically applied. To configure the Pinia plugin manually, pass an options object as a second argument to `piniaIntegration`.
 
 <Alert level="warning" title="Note">
 
@@ -40,9 +40,9 @@ While we try our best to filter out Personally Identifiable Information (PII) su
 This is used to attach Pinia state to Sentry events. By default, this is set to `true`. If you don't want to attach Pinia state to events being sent to Sentry, set this to `false`:
 
 ```javascript {2} {filename:sentry.client.config.ts}
-trackPinia: {
+Sentry.piniaIntegration(usePinia(), {
   attachPiniaState: false
-}
+})
 ```
 
 ### `addBreadcrumbs` (Boolean)
@@ -50,9 +50,9 @@ trackPinia: {
 This is used to add breadcrumbs to Sentry events. By default, this is set to `true`. If you don't want to add breadcrumbs to events being sent to Sentry, set this to `false`:
 
 ```javascript {2} {filename:sentry.client.config.ts}
-trackPinia: {
+Sentry.piniaIntegration(usePinia(), {
   addBreadcrumbs: false
-}
+})
 ```
 
 ### `actionTransformer` (Function)
@@ -60,7 +60,7 @@ trackPinia: {
 This can be used to remove sensitive information from Pinia actions. The first parameter passed to the function is the Pinia action name. We send all actions by default, if you don't want an action name sent to Sentry, use `return null`:
 
 ```javascript {2-9} {filename:sentry.client.config.ts}
-trackPinia: {
+Sentry.piniaIntegration(usePinia(), {
   actionTransformer: (action) => {
     if (action === "GOVERNMENT_SECRETS") {
       // Return null to not log the action to Sentry
@@ -69,7 +69,7 @@ trackPinia: {
 
     return action;
   },
-}
+})
 ```
 
 ### `stateTransformer` (Function)
@@ -77,7 +77,7 @@ trackPinia: {
 This is used to remove sensitive information from a Pinia state. The first parameter passed to the function is the Pinia state. We attach all state changes by default. If you don't want to attach state changes to events being sent to Sentry, use `return null`. Note, that if you choose not to send state to Sentry, your errors might not have the latest version attached:
 
 ```javascript {2-23} {filename:sentry.client.config.ts}
-trackPinia: {
+Sentry.piniaIntegration(usePinia(), {
   stateTransformer: (state) => {
     if (state.topSecret.doNotSend) {
       // Return null to not send this version of the state.
@@ -100,5 +100,5 @@ trackPinia: {
 
     return transformedState;
   },
-}
+})
 ```

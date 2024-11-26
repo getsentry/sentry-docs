@@ -1,4 +1,5 @@
 import {Alert, Note} from './components/alert';
+import {Arcade} from './components/arcade';
 import {Break} from './components/break';
 import {CliChecksumTable} from './components/cliChecksumTable';
 import {CodeBlock} from './components/codeBlock';
@@ -38,6 +39,7 @@ export function mdxComponents(
 ) {
   return {
     Alert,
+    Arcade,
     Break,
     CliChecksumTable,
     CodeBlock,

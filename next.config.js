@@ -49,6 +49,10 @@ const nextConfig = {
     DEVELOPER_DOCS_: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
   },
   redirects,
+  // https://github.com/vercel/next.js/discussions/48324#discussioncomment-10748690
+  cacheHandler: require.resolve(
+    'next/dist/server/lib/incremental-cache/file-system-cache.js'
+  ),
 };
 
 module.exports = withSentryConfig(nextConfig, {

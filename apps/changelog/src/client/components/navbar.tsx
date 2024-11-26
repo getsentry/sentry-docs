@@ -508,7 +508,7 @@ const NAV_ITEMS: NavItemsProps[] = [
   },
   {
     id: 'siginIn',
-    title: 'Sign In',
+    title: 'Go to Sentry',
     type: 'a',
     to: 'https://sentry.io/auth/login',
     variant: 'ghost',

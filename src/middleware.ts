@@ -3282,6 +3282,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/api/projects/register-a-new-service-hook/',
   },
   {
+    from: '/api/organizations/list-your-organizations/',
+    to: '/api/users/list-your-organizations/',
+  },
+  {
     from: '/clients/cocoa/',
     to: '/platforms/apple/',
   },
