@@ -1,34 +1,35 @@
 ---
 title: Span Sampling & Filtering
 ---
+
 <Alert level="info">
   This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement levels.
 </Alert>
 
-Any APIs exposed to the user to sample or filter spans must adhere to the following design principles:
+Any APIs exposed to the user to sample or filter spans MUST adhere to the following design principles:
 
 - The APIs are optimized for trace completeness
 - The APIs are optimized for conclusive sampling decisions
 
 ## Sample root spans with `tracesSampleRate` & `tracesSampler`
 
-The SDK is automatically initialized with a `tracesSampleRate` of `0`.
-When starting a root span, the configured rate is compared against a random number between 0 and 1 to decide if this root span will be sampled or not.
+The SDK is automatically initialized with a `tracesSampleRate` of `0.0`.
+When starting a root span, the configured rate is compared against a random number between `0.0` and `1.0` to decide if this root span will be sampled or not.
 
 If the SDK is configured with a `tracesSampler`, the `tracesSampleRate` no longer applies.
-The `tracesSampler` callback must receive sufficient arguments from users to define their own sampling rules.
-This can include but is not limited to certain attributes from the root span, such as HTTP headers.
+The `tracesSampler` callback MUST receive sufficient arguments from users to define their own sampling rules.
+This MAY include but is not limited to certain attributes from the root span, such as HTTP headers.
 The return value of the `tracesSampler` is a float between `0.0` and `1.0`.
 
-If no `tracesSampler` is configured, a propagated sampling decision via the traceparent takes precedence over the `tracesSampleRate`. This behavior can be disabled by defining a `tracesSampler`.
+If no `tracesSampler` is configured, a propagated sampling decision via the traceparent takes precedence over the `tracesSampleRate`. This behavior MAY be disabled by defining a `tracesSampler`.
 
 ## Filter spans with `ignoreSpans` & integration config
 
-The SDK must implement a mechanism for users to filter out spans. The result must be binary (true/false).
+The SDK MUST implement a mechanism for users to filter out spans. The result MUST be binary (true/false).
 The `ignoreSpans` option accepts a glob pattern or string.
-The `integrations` option can perform in similar fashion or make explicit opt-out possible via a bool flag.
+The `integrations` option MAY perform in similar fashion or make explicit opt-out possible via a bool flag.
 
-If both options are not feasible to be implemented in certain SDKs, other approaches must be explored that have the same outcome.
+If both options are not feasible to be implemented in certain SDKs, other approaches MUST be explored that have the same outcome.
 
 ```js
 Sentry.init({
@@ -50,7 +51,7 @@ Sentry.init({
 
 ## Sanitize span attributes with `beforeSendSpans`
 
-This callback must not allow the removal of any spans from the span tree.
+This callback MUST NOT allow the removal of any spans from the span tree.
 It receives a deep copy of all spans in the span tree and their attributes.
 
 ```
@@ -65,5 +66,5 @@ It receives a deep copy of all spans in the span tree and their attributes.
 ]
 ```
 
-Users can mutate any exposed properties to perform sanitation on sensitive data or Pii.
-The return value `beforeSendSpans` should be merged with the original span tree prior to emission.
+Users MAY mutate any exposed properties to perform sanitation on sensitive data or PII.
+The return value of `beforeSendSpans` MUST be merged with the original span tree prior to emission.
