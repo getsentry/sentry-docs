@@ -868,6 +868,10 @@ const userDocsRedirects = [
     destination: '/product/insights/ai/llm-monitoring/getting-started/the-dashboard/',
   },
   // End of Insights reduirects.
+  {
+    source: '/platforms/javascript/guides/astro/manual-setup/',
+    destination: '/platforms/javascript/guides/astro/',
+  },
 ];
 
 /**
