@@ -10,8 +10,15 @@ This should give an overview of the APIs that SDKs need to implement, without
 mandating internal implementation details.
 
 Reference implementations:
+
 - [JavaScript SDK](https://github.com/getsentry/sentry-javascript/tree/master/packages/core/src/tracing)
 - [Python SDK](https://github.com/getsentry/sentry-python/blob/master/sentry_sdk/tracing.py)
+
+<Note>
+
+This document uses standard interval notation, where `[` and `]` denote closed intervals which include the endpoints of the interval, while `(` and `)` denote open intervals which exclude the endpoints of the interval. An interval `[x, y)` covers all values starting from `x` up to but excluding `y`.
+
+</Note>
 
 ## SDK Configuration
 
@@ -25,13 +32,13 @@ This option is **deprecated** and should be removed from all SDKs.
 
 ### `tracesSampleRate`
 
-This should be a float/double between `0.0` and `1.0` (inclusive) and represents the percentage chance that any given transaction will be sent to Sentry. So, barring [outside influence](#sampling), `0.0` is a 0% chance (none will be sent) and `1.0` is a 100% chance (all will be sent). This rate applies equally to all transactions; in other words, each transaction should have the same random chance of ending up with `sampled = true`, equal to the `tracesSampleRate`.
+This should be a float point number in the range `[0, 1]` and represents the percentage chance that any given transaction will be sent to Sentry. So, barring [outside influence](#sampling), `0.0` is a guaranteed 0% chance (none will be sent) and `1.0` is a guaranteed 100% chance (all will be sent). This rate applies equally to all transactions; in other words, each transaction should have the same random chance of ending up with `sampled = true`, equal to the `tracesSampleRate`.
 
 See more about how sampling should be performed [below](#sampling).
 
 ### `tracesSampler`
 
-This should be a callback, called when a transaction is started, which will be given a `samplingContext` object and which should return a sample rate between `0.0` and `1.0` _for the transaction in question_. This sample rate should behave the same way as the `tracesSampleRate` above, with the difference that it only applies to the newly-created transaction, such that different transactions can be sampled at different rates. Returning `0.0` should force the transaction to be dropped (set to `sampled = false`) and returning `1.0` should force the transaction to be sent (set `sampled = true`).
+This should be a callback, called when a transaction is started, which will be given a `samplingContext` object and which should return a sample rate in range `[0, 1]` _for the transaction in question_. This sample rate should behave the same way as the `tracesSampleRate` above, with the difference that it only applies to the newly-created transaction, such that different transactions can be sampled at different rates. Returning `0.0` should force the transaction to be dropped (set to `sampled = false`) and returning `1.0` should force the transaction to be sent (set `sampled = true`).
 
 Historically, the `tracesSampler` callback could have also returned a boolean to force a sampling decision (with `false` equivalent to `0.0` and `true` equivalent to `1.0`). This behavior is now **deprecated** and should be removed from all SDKs.
 
@@ -161,7 +168,7 @@ tree as well as the unit of reporting to Sentry.
 
 ## Sampling
 
-Each transaction has a "sampling decision," that is, a boolean which dictates whether or not it should be sent to Sentry. This should be set exactly once during a transaction's lifetime, and should be stored in an internal `sampled` boolean.
+Each transaction has a _sampling decision_, that is, a boolean which declares whether or not it should be sent to Sentry. This should be set exactly once during a transaction's lifetime, and should be stored in an internal `sampled` boolean.
 
 There are multiple ways a transaction can end up with a sampling decision:
 
@@ -171,7 +178,7 @@ There are multiple ways a transaction can end up with a sampling decision:
 - If the transaction has a parent, inheriting its parent's sampling decision
 - Absolute decision passed to `startTransaction`
 
-When there's the potential for more than one of these to come into play, the following precedence rules should apply:
+When there's the potential for more than one of these to apply, the following precedence rules should apply:
 
 1. If a sampling decision is passed to `startTransaction` (`startTransaction({name: "my transaction", sampled: true})`), that decision will be used, regardlesss of anything else
 2. If `tracesSampler` is defined, its decision will be used. It can choose to keep or ignore any parent sampling decision, or use the sampling context data to make its own decision or choose a sample rate for the transaction.
@@ -201,25 +208,34 @@ Depending on the platform, other default data may be included. (For example, for
 
 A transaction's sampling decision should be passed to all of its children, including across service boundaries. This can be accomplished in the `startChild` method for same-service children and using the `senry-trace` header for children in a different service.
 
-### Propagated Sampling Rates
+### Propagated Random Value
 
-To increase the chance of capturing complete traces when users return a new sample rate from the `tracesSampler` in backend services, we propagate the generated random value used by the SDK for computing the sampling decision instead of creating a new random value in every service. Therefore, across a trace every SDK uses the same random value.
+To increase the chance of capturing complete traces when users return a new sample rate from the `tracesSampler` in backend services, we propagate the generated random value used by the SDK for computing the sampling decision instead of sampling with a different random value in every service. Therefore, across a trace every SDK uses the same random value.
 
-The behavior of the static `tracesSampleRate` without the use of `tracesSampler` does not change. We continue to fully inherit sampling decisions for propagated traces and create a new one for started traces. In the future, we might change the default behavior of `tracesSampleRate`, too.
+Without a `tracesSampler` callback, an SDK fully inherits sampling decisions for propagated traces. In this case, the presence of `sample_rand` in the DSC has no effect on the sampling decision. However, this behavior is subject to change in the future.
 
-Once the SDK starts a new trace, `sentry-sample_rand` is filled with a truly random number. This also applies when the `tracesSampleRate` is set to `1.0`. If the SDK receives an incoming trace, containing a `sentry-sample_rand` entry in the baggage, this value should overwrite the currently stored number. For incoming traces without a `sentry-sample_rand` baggage entry (from old SDKs), the SDK inserts a new truly random number on the fly.
+The random value is set according to the following rules:
 
-The SDK should exclusively use the stored random number and no longer use `math.random()` or similar anywhere else in the tracing related code base.
+1. When an SDK starts a new trace, `sample_rand` is always set to a truly random number in range `[0, 1]`. This explicitly includes traces that are not sampled, as well as when the `tracesSampleRate` is set to `0.0` or `1.0`.
+2. It is _recommended_ to generate the random number deterministically using the trace ID as seed or source of randomness. The exact method by which the random number is created is implementation defined and may vary between SDK implementations.
+3. On incoming traces, an SDK assumes the `sample_rand` value along with the rest of the DSC, overriding an existing value if needed.
+4. If `sample_rand` is missing on an incoming trace, the SDK creates and from now on propagates a new random number on-the-fly, based on the following rules:
+   1. If `sample_rate` and `sampled` are propgated, create `sample_rand` so that it adheres to the invariant. This means, for a decision of `True` generate a random number in half-open range `[0, rate)` and for a decision of `False` generate a random number in range `[rate, 1]`.
+   2. If only `sampled` is propagated, apply the same strategy above using the output of the `tracesSampler` + `tracesSampleRate` cascade as cutoff point for the intervals.
+   3. If the `sampled` is missing `sample_rate`, generate a random number in the range `[0, 1]` like for a new trace.
 
-- When the `tracesSampler` is invoked, this also applies to the return value of traces sampler. i.e. `trace["sentry-sample_rand"] < tracesSampler(context)`
-- Otherwise, when the SDK is the head of a trace, this applies to sample decisions based on `tracesSampleRate` , i.e. `trace["sentry-sample_rand"] < config.tracesSampleRate`
+The SDK should exclusively use the stored random number and no longer use `math.random()` or similar anywhere else in the tracing related code base:
 
-When using a `tracesSampler`, the correct way to inherit parent sampling decisions is now to return the parent's sample rate instead of the decision as float (1.0). This way, we can still extrapolate counts correctly.
+1. When the `tracesSampler` is invoked, this also applies to the return value of traces sampler. That is, `trace["sentry-sample_rand"] < tracesSampler(context)`
+2. Otherwise, when the SDK is the head of a trace, this also applies to sample decisions based on `tracesSampleRate`. That is, `trace["sentry-sample_rand"] < config.tracesSampleRate`
+3. There is no more direct comparison with `math.random()` during the sampling process.
+
+When using a `tracesSampler`, the correct way to inherit parent sampling decisions is now to return the parent's sample rate instead of the decision as float (1.0). This way, Sentry can still extrapolate counts correctly.
 
 ```js
 tracesSampler: ({ name, parentSampleRate }) => {
-  // Inherit the trace parent's sample rate if there is one. Sampling is deterministic 
-  // for one trace, i.e. if the parent was sampled, we will be sampled too at the same 
+  // Inherit the trace parent's sample rate if there is one. Sampling is deterministic
+  // for one trace, i.e. if the parent was sampled, we will be sampled too at the same
   // rate.
   if (typeof parentSampleRate === "number") {
     return parentSampleRate;
