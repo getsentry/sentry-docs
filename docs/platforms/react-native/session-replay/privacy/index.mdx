@@ -1,0 +1,114 @@
+---
+title: Privacy
+sidebar_order: 5501
+notSupported:
+description: "Learn how to mask sensitive data that may appear in your app in Session Replay."
+---
+
+<Alert>
+
+Using custom masking in your Session Replays instead of our default settings, may accidentally expose sensitive customer data. Make sure to test your app thoroughly to ensure that no sensitive data is exposed before publishing it.
+
+</Alert>
+
+The Session Replay SDK masks all text content, images, webviews, and user input by default. This helps ensure that no sensitive data is exposed. You can also manually choose which parts of your app to mask by using the options listed below.
+
+If your app doesn't contain any sensitive date, you can disable the default masking behavior with:
+
+```javascript
+Sentry.mobileReplayIntegration({
+  maskAllText: false,
+  maskAllImages: false,
+  maskAllVectors: false,
+}),
+```
+
+_Make sure your Sentry React Native SDK version is 5.36.0, 6.3.0 and up_
+
+## Mask and Unmask Components
+
+You can choose which views you want to mask or unmask by using the `Mask` or `Unmask` components.
+
+```jsx
+import * as Sentry from '@sentry/react-native';
+
+const Example = () => {
+  return (
+    <View>
+      <Sentry.Unmask>
+        <Text>This will be unmasked</Text>
+      </Sentry.Unmask>
+      <Sentry.Mask>
+        <Text>This will be masked</Text>
+      </Sentry.Mask>
+    </View>
+  );
+}
+```
+
+_Make sure your Sentry React Native SDK version is 6.4.0-beta.1 and up to use the masking components_
+
+## General Masking Rules
+
+When components are wrapped by `Unmask`, **only direct children will be unmasked**. You'll need to explicitly wrap any indirect children that you want to appear in the replay.
+
+```jsx
+<Sentry.Unmask>
+  <Text>
+    This will be unmasked
+    <Text>
+      This will be masked
+    </Text>
+  </Text>
+  <Text>
+    This will be unmasked
+  </Text>
+</Sentry.Unmask>
+```
+
+When components are wrapped by `Mask`, **all children will be masked**.
+
+```jsx
+<Sentry.Mask>
+  <Text>
+    This will be masked
+    <Text>
+      This will be masked
+    </Text>
+  </Text>
+  <Text>
+    This will be masked
+  </Text>
+</Sentry.Mask>
+```
+
+### Masking Priority
+
+If a view is marked as masked, it will always be masked, even if it's a child of an unmasked view.
+
+```jsx
+<Sentry.Mask>
+  <Text>This will be masked</Text>
+  <Sentry.Unmask>
+    <Text>This will be masked</Text>
+  </Sentry.Unmask>
+</Sentry.Mask>
+```
+
+The `Mask` component can't be unmasked.
+
+```jsx
+<Sentry.Unmask>
+  <Sentry.Mask>
+    <Text>This will be masked</Text>
+  </Sentry.Mask>
+</Sentry.Unmask>
+```
+
+## Troubleshooting
+
+The `Mask` and `Unmask` components are native on iOS and Android and are compatible with both the New and the Legacy Architecture.
+
+The masking components behave as standard React Native `View` components.
+
+If you're experiencing issues with unmasking that are more than one level deep, check if the wrapped components are present in the native views hierarchy. If not, it means that your view was evaluated by React Native as `Layout Only` and flattened. Read more about [flattening views](https://reactnative.dev/architecture/view-flattening) in the React Native documentation.

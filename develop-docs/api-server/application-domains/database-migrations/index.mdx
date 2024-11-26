@@ -145,49 +145,139 @@ This is complicated due to our deploy process. When we deploy, we run migrations
 
 To avoid this, follow these steps:
 
-- Mark the column as nullable if it isn't, and create a migration. (ex. `BoundedIntegerField(null=True)`)
-- Deploy.
-- Remove the column from the model, but in the migration make sure we only mark the state as removed.
-- Deploy.
-- Finally, create a migration that deletes the column.
+- Make a PR to remove all uses of the column in the codebase in a separate PR. This mostly helps with code cleanliness. This should be merged ahead of the migration prs, but we don't need to worry about whether it is deployed first.
+- Make another PR that:
+    - Checks if the column is either not nullable, or doesn't have a `db_default` set. If either of these is true, then make it nullable via `null=True`.
+    - If the column is a foreign key, remove the database level foreign key constraint it by setting `db_constraint=False`.
+    - Remove the column and in the generated migration use `SafeRemoveField(..., deletion_action=DeletionAction.MOVE_TO_PENDING)` to replace `RemoveField(...)`. This only marks the state for the column as removed.
+    - Combine these migrations together to save making multiple deploys
+- Deploy your migration changes. It's important that all previous pull requests are in production before we remove the actual column from the table.
+- Make a pull request that create a new migration that has the same `SafeRemoveField` operation as before, but set `deletion_action=DeletionAction.DELETE` instead. This deletes the actual column from the table in Postgres.
+- Deploy the drop column migration.
 
-Here's an example of removing columns that were already nullable. First we remove the columns from the model, and then modify the migration to only update the state and make no database operations.
+Here's an example of removing the `project` column from this model. It is both a foreign key and not null:
 
 ```python
+@region_silo_model
+class TestModel(Model):
+    __relocation_scope__ = RelocationScope.Excluded
+
+    project = FlexibleForeignKey("sentry.Project")
+    name = models.TextField()
+
+    class Meta:
+        app_label = "uptime"
+        db_table = "uptime_testmodel"
+```
+
+First, we remove all references to this field from the codebase. This is best done as a separate pr to keep things clean.
+
+Next we produce two migrations, in individual prs that we will deploy separately.
+
+First PR
+```python
+# <Field removed from model and code completely>
+
+# First migration
+# ... Migration boilerplate ...
 operations = [
-    migrations.SeparateDatabaseAndState(
-        database_operations=[],
-        state_operations=[
-            migrations.RemoveField(model_name="alertrule", name="alert_threshold"),
-            migrations.RemoveField(model_name="alertrule", name="resolve_threshold"),
-            migrations.RemoveField(model_name="alertrule", name="threshold_type"),
-        ],
-    )
+    migrations.AlterField(
+        model_name="testmodel",
+        name="project",
+        field=sentry.db.models.fields.foreignkey.FlexibleForeignKey(
+            db_constraint=False,
+            null=True,
+            on_delete=django.db.models.deletion.CASCADE,
+            to="sentry.project",
+        ),
+    ),
+    SafeRemoveField(model_name="testmodel", name="project", deletion_action=DeletionAction.MOVE_TO_PENDING),
+]
+# ... Migration boilerplate ...
+```
+
+Second PR:
+```python
+# Second migration
+# ... Migration boilerplate ...
+operations = [
+    SafeRemoveField(model_name="testmodel", name="project", deletion_action=DeletionAction.DELETE),
+]
+# ... Migration boilerplate ...
+```
+
+So once we have these two prs, we merge/deploy the first, and then the second and then the table is fully removed.
+
+So to recap the steps here:
+ - Remove all references to the column in the code in a separate pull request and merge. Doesn't matter if this deploys before the next step or not.
+ - If the column has a foreign key constraint them remove it. If it's not null and has no `db_default` then mark it as nullable. Then delete the column using `SafeRemoveField(..., deletion_action=DeletionAction.MOVE_TO_PENDING)`. These operations can be in the same migration to save time.
+ - Deploy all previous before continuing.
+ - Remove the column from the table in from Postgres using `SafeRemoveField(..., deletion_action=DeletionAction.DELETE),`
+
+If you're comfortable producing these prs and deploying them, then stop here. Otherwise, this next section covers how to produce them in more detail.
+
+To produce the first migration, we need to remove the db level foreign key constraint, make the column nullable and remove the column from the codebase. To remove the db level foreign key constraints and mark the column nullable we add `db_constraint=False, null=True` to this column and generate a migration:
+
+```python
+# Model change
+...
+project = FlexibleForeignKey("sentry.Project", db_constraint=False, null=True)
+...
+
+# Migration operations
+operations = [
+    migrations.AlterField(
+        model_name="testmodel",
+        name="project",
+        field=sentry.db.models.fields.foreignkey.FlexibleForeignKey(
+            db_constraint=False,
+            null=True,
+            on_delete=django.db.models.deletion.CASCADE,
+            to="sentry.project",
+        ),
+    ),
 ]
 ```
 
-Once this is deployed, we can then deploy the actual column deletion. This pr will have only a migration, since Django no longer knows about these fields. Note that the reverse SQL is only for dev, so it's fine to not assign a default or do any sort of backfill:
+Once we've done this, we can now remove the column from the model and generate the migration to remove it. The generated migration looks like this:
 
 ```python
 operations = [
-    migrations.SeparateDatabaseAndState(
-        database_operations=[
-            migrations.RunSQL(
-                """
-                ALTER TABLE "sentry_alertrule" DROP COLUMN "alert_threshold";
-                ALTER TABLE "sentry_alertrule" DROP COLUMN "resolve_threshold";
-                ALTER TABLE "sentry_alertrule" DROP COLUMN "threshold_type";
-                """,
-                reverse_sql="""
-                ALTER TABLE "sentry_alertrule" ADD COLUMN "alert_threshold" smallint NULL;
-                ALTER TABLE "sentry_alertrule" ADD COLUMN "resolve_threshold" int NULL;
-                ALTER TABLE "sentry_alertrule" ADD COLUMN "threshold_type" int NULL;
-                """,
-                hints={"tables": ["sentry_alertrule"]},
-            )
-        ],
-        state_operations=[],
-    )
+    migrations.RemoveField(model_name="testmodel", name="project"),
+]
+```
+
+Django doesn't know about the `SafeRemoveField` operation, so we replace it with that instead. This allows us to remove all state related to the column, but defer deleting it until a later migration. So this becomes
+
+```python
+operations = [
+    SafeRemoveField(model_name="testmodel", name="project", deletion_action=DeletionAction.MOVE_TO_PENDING),
+]
+```
+
+So now as a final step, we can combine these operations into a single migration, which is the first migration we want to deploy.
+
+```python
+operations = [
+    migrations.AlterField(
+        model_name="testmodel",
+        name="project",
+        field=sentry.db.models.fields.foreignkey.FlexibleForeignKey(
+            db_constraint=False,
+            null=True,
+            on_delete=django.db.models.deletion.CASCADE,
+            to="sentry.project",
+        ),
+    ),
+    SafeRemoveField(model_name="testmodel", name="project", deletion_action=DeletionAction.MOVE_TO_PENDING),
+]
+```
+
+To produce the second migration we generate an empty migration (`sentry django makemigrations <your_app> --empty`), then use the same `SafeRemoveField` command from the previous migration, but change the deletion_action to `DeletionAction.DELETE`. This operation will remove the column from the table in Postgres:
+
+```python
+operations = [
+    SafeRemoveField(model_name="testmodel", name="project", deletion_action=DeletionAction.DELETE),
 ]
 ```
 
@@ -195,94 +285,136 @@ operations = [
 
 Extra care is needed here if the table is referenced as a foreign key in other tables. In that case, first remove the foreign key columns in the other tables, then come back to this step.
 
-- Remove any database level foreign key constraints from this table to other tables by setting `db_constraint=False` on the columns.
-- Deploy
-- Remove the model and all references from the sentry codebase. Make sure that the migration only marks the state as removed.
-- Deploy.
-- Create a migrations that deletes the table.
+- Make a pull request to remove all uses of the model in the codebase in a separate pull request. This mostly helps with code cleanliness. This should be merged ahead of the migration pull requests, but we don't need to worry about whether it is deployed first.
+- Make another pull request to:
+    - Remove any database level foreign key constraints from this table to other tables by setting `db_constraint=False` on the columns.
+    - Remove the model and in the generated migration use `SafeDeleteModel(..., deletion_action=DeletionAction.MOVE_TO_PENDING)` to replace `DeleteModel(...)`. This only marks the state for the model as removed.
+- Deploy. It's important that all previous pull requests are in production before we remove the actual table.
+- Make a pull request that creates a new migration that has the same `SafeDeleteModel` operation as before, but set `deletion_action=DeletionAction.DELETE` instead. This deletes the actual table from Postgres.
 - Deploy
 
 Here's an example of removing this model:
 
 ```python
-class AlertRuleTriggerAction(Model):
-    alert_rule_trigger = FlexibleForeignKey("sentry.AlertRuleTrigger")
-    integration = FlexibleForeignKey("sentry.Integration", null=True)
-    type = models.SmallIntegerField()
-    target_type = models.SmallIntegerField()
-    # Identifier used to perform the action on a given target
-    target_identifier = models.TextField(null=True)
-    # Human readable name to display in the UI
-    target_display = models.TextField(null=True)
-    date_added = models.DateTimeField(default=timezone.now)
+@region_silo_model
+class TestModel(Model):
+    __relocation_scope__ = RelocationScope.Excluded
+
+    project = FlexibleForeignKey("sentry.Project")
+    name = models.TextField()
 
     class Meta:
-        app_label = "sentry"
-        db_table = "sentry_alertruletriggeraction"
+        app_label = "uptime"
+        db_table = "uptime_testmodel"
 ```
 
-First we checked that it's not referenced by any other models, and it's not. Next we need to remove and db level foreign key constraints. To do this, we change these two columns and generate a migration:
+First, we remove all references to this model from the codebase, including making sure that it's not referenced by any other models. This is best done as a separate pr to keep things clean.
+
+Next we produce two migrations, in individual prs that we will deploy separately.
+
+First PR
+```python
+# <Model removed from code completely>
+
+# First migration
+# ... Migration boilerplate ...
+operations = [
+    migrations.AlterField(
+        model_name="testmodel",
+        name="project",
+        field=sentry.db.models.fields.foreignkey.FlexibleForeignKey(
+            db_constraint=False,
+            on_delete=django.db.models.deletion.CASCADE,
+            to="sentry.project",
+        ),
+    ),
+    SafeDeleteModel(name="TestModel", deletion_action=DeletionAction.MOVE_TO_PENDING),
+]
+# ... Migration boilerplate ...
+```
+
+Second PR:
+```python
+# Second migration
+# ... Migration boilerplate ...
+operations = [
+    SafeDeleteModel(name="TestModel", deletion_action=DeletionAction.DELETE),
+]
+# ... Migration boilerplate ...
+```
+
+So once we have these two prs, we merge/deploy the first, and then the second and then the table is fully removed.
+
+So to recap the steps here:
+ - Remove all references to the model in the code in a separate pull request and merge. Doesn't matter if this deploys before the next step or not.
+ - Remove any foreign key constraints and delete the model using `SafeDeleteModel(..., deletion_action=DeletionAction.MOVE_TO_PENDING)`. These operations can be in the same migration to save time.
+ - Deploy all previous before continuing.
+ - Remove the table from Postgres using `SafeDeleteModel(..., deletion_action=DeletionAction.DELETE),`
+
+If you're comfortable producing these prs and deploying them, then stop here. Otherwise, this next section covers how to produce them in more detail.
+
+To produce the first migration, we need to remove any db level foreign key constraints and remove the table from the codebase. To remove the db level foreign key constraints we add `db_constraint=False` to this column and generate a migration:
 
 ```python
-alert_rule_trigger = FlexibleForeignKey("sentry.AlertRuleTrigger", db_constraint=False)
-integration = FlexibleForeignKey("sentry.Integration", null=True, db_constraint=False)
+project = FlexibleForeignKey("sentry.Project", db_constraint=False)
 ```
 
-The operations in the migration look like
-
+This produces a migration with operations like:
 ```python
 operations = [
     migrations.AlterField(
-        model_name='alertruletriggeraction',
-        name='alert_rule_trigger',
-        field=sentry.db.models.fields.foreignkey.FlexibleForeignKey(db_constraint=False, on_delete=django.db.models.deletion.CASCADE, to='sentry.AlertRuleTrigger'),
+        model_name="testmodel",
+        name="project",
+        field=sentry.db.models.fields.foreignkey.FlexibleForeignKey(
+            db_constraint=False,
+            on_delete=django.db.models.deletion.CASCADE,
+            to="sentry.project",
+        ),
     ),
+]
+```
+
+Next, we remove the model from code and generate the migration to remove it. The generated migration looks like this:
+
+```python
+operations = [
+    migrations.DeleteModel(name="TestModel"),
+]
+```
+
+Django doesn't know about the `SafeDeleteModel` operation, so we replace it with that instead. This allows us to remove all state related to the model, but defer deleting it until a later migration. So this becomes
+
+```python
+operations = [
+    SafeDeleteModel(name="TestModel", deletion_action=DeletionAction.MOVE_TO_PENDING),
+]
+```
+
+So now as a final step, we can combine these operations into a single migration, which is the first migration we want to deploy.
+```python
+operations = [
     migrations.AlterField(
-        model_name='alertruletriggeraction',
-        name='integration',
-        field=sentry.db.models.fields.foreignkey.FlexibleForeignKey(db_constraint=False, null=True, on_delete=django.db.models.deletion.CASCADE, to='sentry.Integration'),
+        model_name="testmodel",
+        name="project",
+        field=sentry.db.models.fields.foreignkey.FlexibleForeignKey(
+            db_constraint=False,
+            on_delete=django.db.models.deletion.CASCADE,
+            to="sentry.project",
+        ),
     ),
+    SafeDeleteModel(name="TestModel", deletion_action=DeletionAction.MOVE_TO_PENDING),
 ]
 ```
 
-And we can see the sql it generates just drops the FK constaints
-
-```python
-BEGIN;
-SET CONSTRAINTS "a875987ae7debe6be88869cb2eebcdc5" IMMEDIATE; ALTER TABLE "sentry_alertruletriggeraction" DROP CONSTRAINT "a875987ae7debe6be88869cb2eebcdc5";
-SET CONSTRAINTS "sentry_integration_id_14286d876e86361c_fk_sentry_integration_id" IMMEDIATE; ALTER TABLE "sentry_alertruletriggeraction" DROP CONSTRAINT "sentry_integration_id_14286d876e86361c_fk_sentry_integration_id";
-COMMIT;
-```
-
-So now we deploy this and move onto the next stage.
-
-The next stage involves removing all references to the model from the codebase. So we do that, and then we generate a migration that removes the model from the migration state, but not the database. The operations in this migration look like
+To produce the second migration we generate an empty migration (`sentry django makemigrations <your_app> --empty`), then use the same `SafeDeleteModel` command from the previous migration, but change the deletion_action to `DeletionAction.DELETE`. This operation will remove the table from Postgres:
 
 ```python
 operations = [
-    migrations.SeparateDatabaseAndState(
-        state_operations=[migrations.DeleteModel(name="AlertRuleTriggerAction")],
-        database_operations=[],
-    )
+    SafeDeleteModel(name="TestModel", deletion_action=DeletionAction.DELETE),
 ]
 ```
 
-and the generated SQL shows no database changes occurring. So now we deploy this and move into the final step.
-
-In this last step, we just want to manually write DDL to remove the table. So we use `sentry django makemigrations --empty` to produce an empty migration, and then modify the operations to be like:
-
-```python
-operations = [
-    migrations.RunSQL(
-        """
-        DROP TABLE "sentry_alertruletriggeraction";
-        """,
-        reverse_sql="CREATE TABLE sentry_alertruletriggeraction (fake_col int)", # We just create a fake table here so that the DROP will work if we roll back the migration.
-    )
-]
-```
-
-Then we deploy this and we're done.
+This second PR will contain only the migration and related boilerplate.
 
 ### Foreign Keys
 
