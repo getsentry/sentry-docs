@@ -30,8 +30,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
-    <html lang="en">
-      <body className={`${rubik.variable}`}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={rubik.variable} suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

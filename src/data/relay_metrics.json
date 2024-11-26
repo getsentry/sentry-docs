@@ -1,5 +1,11 @@
 [
   {
+    "type": "Timer",
+    "name": "buffer.busy",
+    "description": "Timing in milliseconds for the time the buffer service spends handling input.\n\nThis metric is tagged with:\n- `input`: The type of input that the service is handling.",
+    "features": []
+  },
+  {
     "type": "Histogram",
     "name": "buffer.dequeue_attempts",
     "description": "Number of attempts needed to dequeue spooled envelopes from disk.",
@@ -109,6 +115,12 @@
   },
   {
     "type": "Timer",
+    "name": "buffer.idle",
+    "description": "Timing in milliseconds for the time the buffer service is waiting for input.\n\nThis metric is tagged with:\n- `input`: The type of input that broke the idling.",
+    "features": []
+  },
+  {
+    "type": "Timer",
     "name": "buffer.initialization.duration",
     "description": "Timing in milliseconds for the time it takes for initialize the buffer.",
     "features": []
@@ -152,7 +164,7 @@
   {
     "type": "Timer",
     "name": "buffer.spool.duration",
-    "description": "Timing in milliseconds for the time it takes for the buffer to spool data to disk.",
+    "description": "Timing in milliseconds for the time it takes for the buffer to pack & spool a batch.\n\nContains the time it takes to pack multiple envelopes into a single memory blob.",
     "features": []
   },
   {
@@ -195,6 +207,12 @@
     "type": "Counter",
     "name": "buffer.unspooled_envelopes",
     "description": "Number of envelopes unspooled from disk.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.write.duration",
+    "description": "Timing in milliseconds for the time it takes for the buffer to spool data to SQLite.",
     "features": []
   },
   {
@@ -631,14 +649,8 @@
   },
   {
     "type": "Counter",
-    "name": "project_cache.hit",
-    "description": "Number of times a project is looked up from the cache.\n\nThe cache may contain and outdated or expired project state. In that case, the project state\nis updated even after a cache hit.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "project_cache.miss",
-    "description": "Number of times a project lookup failed.\n\nA cache entry is created immediately and the project state requested from the upstream.",
+    "name": "project_cache.schedule",
+    "description": "Number of times a project had a fetch scheduled.",
     "features": []
   },
   {
@@ -782,6 +794,18 @@
     "features": []
   },
   {
+    "type": "Counter",
+    "name": "runtime.task.spawn.created",
+    "description": "Number of runtime tasks created/spawned.\n\nEvery call to [`spawn`](`crate::spawn()`) increases this counter by one.\n\nThis metric is tagged with:\n- `id`: A unique identifier for the task, derived from its location in code.\n- `file`: The source filename where the task is created.\n- `line`: The source line where the task is created within the file.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "runtime.task.spawn.terminated",
+    "description": "Number of runtime tasks terminated.\n\nThis metric is tagged with:\n- `id`: A unique identifier for the task, derived from its location in code.\n- `file`: The source filename where the task is created.\n- `line`: The source line where the task is created within the file.",
+    "features": []
+  },
+  {
     "type": "Timer",
     "name": "scrubbing.attachments.duration",
     "description": "Time spend on attachment scrubbing.\n\nThis represents the total time spent on evaluating the scrubbing rules for an\nattachment and the attachment scrubbing itself, regardless of whether any rules were\napplied.  Note that minidumps which failed to be parsed (status=\"error\" in\nscrubbing.minidumps.duration) will be scrubbed as plain attachments and count\ntowards this.",
@@ -807,6 +831,12 @@
   },
   {
     "type": "Counter",
+    "name": "server.http.idle_timeout",
+    "description": "Incremented every time the server aborts a connection because of an idle timeout.",
+    "features": []
+  },
+  {
+    "type": "Counter",
     "name": "server.starting",
     "description": "Number of Relay server starts.\n\nThis can be used to track unwanted restarts due to crashes or termination.",
     "features": []
@@ -815,12 +845,6 @@
     "type": "Gauge",
     "name": "service.back_pressure",
     "description": "A number of messages queued in a services inbound message channel.\n\nThis metric is emitted once per second for every running service. Without backlogs, this\nnumber should be close to `0`. If this number is monotonically increasing, the service is\nnot able to process the inbound message volume.\n\nThis metric is tagged with:\n- `service`: The fully qualified type name of the service implementation.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "service.idle_time_nanos",
-    "description": "The amount of time a service spends waiting for new messages.\n\nThis is an indicator of how much more load a service can take on.\n\nCaveat: Some services circumvent the service framework by using custom incoming queues.\nFor these, we cannot fully rely on this metric.\n\nThis metric is tagged with:\n- `service`: The fully qualified type name of the service implementation.",
     "features": []
   },
   {
