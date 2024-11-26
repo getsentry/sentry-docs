@@ -69,16 +69,16 @@ This Option replaces the non-standardized `tracingOrigins` option which was prev
 
 This option disables trace continuation from unknown 3rd party services that happen to be instrumented by a Sentry SDK.
 
-If the SDK can parse an org ID from the configured DSN, this value must be propagated as a baggage entry with the key `sentry-org`. Given a DSN of `https://1234@o1.ingest.us.sentry.io/1`, the org ID is `1`, based on `o1`.
+If the SDK can parse an org ID from the configured DSN, it must be propagated as a baggage entry with the key `sentry-org`. Given a DSN of `https://1234@o1.ingest.us.sentry.io/1`, the org ID is `1`, based on `o1`.
 
 On incoming traces, the SDK must compare the `sentry-org` baggage value against its own parsed value from the DSN. Only if both match, the trace is continued. If there is no match, neither the trace ID, the parent sampling decision nor the baggage should be taken into account.
 The SDK should behave like it is the head of trace in this case.
 
 This behavior can be disabled by setting `strictTracePropagation: false` in the SDK init call.
-Initially, SDKs should introduce the this option with a default values of `false`.
-Once the majority of SDKs introduced this option, we will make it opt-out in a major version.
+Initially, SDKs should introduce the this option with a default value of `false`.
+Once the majority of SDKs introduced this option, we will change the default value to `true` (in a major version bump) making it opt-out.
 
-The SDK must be configurable with an optional `org: <org-id>` setting that takes precedence over the parsed value from the DSN. This option should be set when running a self-hosted version of Sentry or if a none standard Sentry DSN is used, such as when using a local Relay.
+The SDK must be configurable with an optional `org: <org-id>` setting that takes precedence over the parsed value from the DSN. This option should be set when running a self-hosted version of Sentry or if a non-standard Sentry DSN is used, such as when using a local Relay.
 
 ### `traceOptionsRequests`
 
@@ -207,14 +207,14 @@ To increase the chance of capturing complete traces when users return a new samp
 
 The behavior of the static `tracesSampleRate` without the use of `tracesSampler` does not change. We continue to fully inherit sampling decisions for propagated traces and create a new one for started traces. In the future, we might change the default behavior of `tracesSampleRate`, too.
 
-Once the SDK starts a new trace, `sentry-sample_rand` is filled with a truly random number. This also applies when the `tracesSampleRate` is set to `1.0`. If the SDK receives an incoming trace, containing a `sentry-sample_rand` entry in the baggage, this value should overwrite the currently stored number. For incoming traces without a `sentry-sample_rand` baggage entry (from old SDKs), the SDK inserts a new truly random number on-the-fly.
+Once the SDK starts a new trace, `sentry-sample_rand` is filled with a truly random number. This also applies when the `tracesSampleRate` is set to `1.0`. If the SDK receives an incoming trace, containing a `sentry-sample_rand` entry in the baggage, this value should overwrite the currently stored number. For incoming traces without a `sentry-sample_rand` baggage entry (from old SDKs), the SDK inserts a new truly random number on the fly.
 
 The SDK should exclusively use the stored random number and no longer use `math.random()` or similar anywhere else in the tracing related code base.
 
 - When the `tracesSampler` is invoked, this also applies to the return value of traces sampler. i.e. `trace["sentry-sample_rand"] < tracesSampler(context)`
 - Otherwise, when the SDK is the head of a trace, this applies to sample decisions based on `tracesSampleRate` , i.e. `trace["sentry-sample_rand"] < config.tracesSampleRate`
 
-When using a `tracesSampler`, the most correct way to inherit parent sampling decisions is now to return the parent's sample rate instead of the decision as float (1.0). This way, we can still extrapolate counts correctly.
+When using a `tracesSampler`, the correct way to inherit parent sampling decisions is now to return the parent's sample rate instead of the decision as float (1.0). This way, we can still extrapolate counts correctly.
 
 ```js
 tracesSampler: ({ name, parentSampleRate }) => {
