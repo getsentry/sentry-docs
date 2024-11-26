@@ -74,18 +74,34 @@ This Option replaces the non-standardized `tracingOrigins` option which was prev
 
 ### `strictTracePropagation`
 
-This should be a boolean value. Default is `false`. This option controls trace continuation from unknown 3rd party services that happen to be instrumented by a Sentry SDK.
+This must be a boolean value. Default is `false`. This option controls trace continuation from unknown 3rd party services that happen to be instrumented by a Sentry SDK.
 
-If the SDK can parse an org ID from the configured DSN, it must be propagated as a baggage entry with the key `sentry-org`. Given a DSN of `https://1234@o1.ingest.us.sentry.io/1`, the org ID is `1`, based on `o1`.
+If the SDK is able parse an org ID from the configured DSN, it must be propagated as a baggage entry with the key `sentry-org`. Given a DSN of `https://1234@o1.ingest.us.sentry.io/1`, the org ID is `1`, based on `o1`.
 
-On incoming traces, the SDK must compare the `sentry-org` baggage value against its own parsed value from the DSN. Only if both match, the trace is continued. If there is no match, neither the trace ID, the parent sampling decision nor the baggage should be taken into account.
-The SDK should behave like it is the head of trace in this case.
+Addiotnally, the SDK must be configurable with an optional `org: <org-id>` setting that takes precedence over the parsed value from the DSN. This option should be set when running a self-hosted version of Sentry or if a non-standard Sentry DSN is used, such as when using a local Relay.
+
+On incoming traces, the SDK must compare the `sentry-org` baggage value against its own parsed value from the DSN or org setting. Only if both match, the trace is continued. If there is no match, neither the trace ID, the parent sampling decision nor the baggage should be taken into account.
+The SDK should behave like it is the head of trace in this case, and not consider any propagted values.
 
 This behavior can be disabled by setting `strictTracePropagation: false` in the SDK init call.
-Initially, SDKs should introduce the this option with a default value of `false`.
+Initially, SDKs must introduce the this option with a default value of `false`.
 Once the majority of SDKs introduced this option, we will change the default value to `true` (in a major version bump) making it opt-out.
 
-The SDK must be configurable with an optional `org: <org-id>` setting that takes precedence over the parsed value from the DSN. This option should be set when running a self-hosted version of Sentry or if a non-standard Sentry DSN is used, such as when using a local Relay.
+Regardless of `strictTracePropagation` being set to `true` or `false`, if the SDK is either configured with a `org` or was able to parse the value from the DSN, incoming traces containing an `org` value in the baggage that does not match the one from the receiving SDK, the trace is not continuned.
+
+Examples:
+
+baggage: `sentry-org: 1`, SDK config: `org: 1, strictTracePropagation: false` -> continue trace
+baggage: `sentry-org: none`, SDK config: `org: 1, strictTracePropagation: false` -> continue trace
+baggage: `sentry-org: 1`, SDK config: `org: none, strictTracePropagation: false` -> continue trace
+baggage: `sentry-org: none`, SDK config: `org: none, strictTracePropagation: false` -> continue trace
+baggage: `sentry-org: 1`, SDK config: `org: 2, strictTracePropagation: false` -> drop trace
+
+baggage: `sentry-org: 1`, SDK config: `org: 1, strictTracePropagation: true` -> continue trace
+baggage: `sentry-org: none`, SDK config: `org: 1, strictTracePropagation: true` -> drop trace
+baggage: `sentry-org: 1`, SDK config: `org: none, strictTracePropagation: true` -> drop trace
+baggage: `sentry-org: none`, SDK config: `org: none, strictTracePropagation: true` -> continue trace
+baggage: `sentry-org: 1`, SDK config: `org: 2, strictTracePropagation: true` -> drop trace
 
 ### `traceOptionsRequests`
 
