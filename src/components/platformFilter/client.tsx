@@ -82,7 +82,7 @@ export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
                         size={20}
                         platform={platform.icon ?? platform.key}
                         format="lg"
-                        className={styles.PlatformIcon}
+                        className={`${styles.PlatformIcon} !border-none !shadow-none`}
                       />
                       {platform.title}
                     </div>
@@ -128,7 +128,7 @@ function PlatformWithGuides({
               size={20}
               platform={platform.icon ?? platform.key}
               format="lg"
-              className={styles.PlatformIcon}
+              className={`${styles.PlatformIcon} !border-none !shadow-none`}
             />
             {platform.title}
           </div>
