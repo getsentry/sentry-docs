@@ -1,14 +1,54 @@
-```html {tabTitle:Vue} {filename:ErrorButton.vue}
+On the client-side:
+
+```html {tabTitle:Vue} {filename:pages/example-error.vue}
 <script setup>
-  const triggerError = () => {
-  throw new Error("Nuxt Button Error");
-};
+  import * as Sentry from '@sentry/nuxt';
+  import { useFetch} from '#imports'
+
+  function triggerClientError() {
+    throw new Error("Nuxt Button Error");
+  };
+
+  function getSentryData() {
+    Sentry.startSpan(
+      {
+        name: 'Example Frontend Span',
+        op: 'test'
+      },
+      async () => {
+        await useFetch('/sentry-example-api');
+      }
+    )
+  }
 </script>
 
 <template>
-  <button id="errorBtn" @click="triggerError">Trigger Error</button>
+  <button id="errorBtn" @click="triggerClientError">
+    Throw Client Error
+  </button>
+  <button type="button" @click="getSentryData">
+    Throw Server Error
+  </button>
 </template>
 ```
 
+On the server-side:
 
+```js {tabTitle:Nitro} {filename:server/sentry-example-api.ts}
+import { defineEventHandler } from '#imports';
 
+export default defineEventHandler(event => {
+  throw new Error("Sentry Example API Route Error");
+});
+
+```
+
+<Alert level="warning">
+  Keep in mind, that the server-side monitoring **does not work in development mode!**
+
+  If you want to test server-side monitoring locally, build your project and run:
+  ```
+  # Start your app after building your project with `nuxi build`
+  node .output/server/index.mjs
+  ```
+</Alert>
