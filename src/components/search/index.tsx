@@ -22,17 +22,6 @@ import styles from './search.module.scss';
 import {Logo} from '../logo';
 import {NavLink} from '../navlink';
 
-// https://stackoverflow.com/a/2117523/115146
-function uuidv4() {
-  let dt = new Date().getTime();
-  const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-    const r = (dt + Math.random() * 16) % 16 | 0;
-    dt = Math.floor(dt / 16);
-    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
-  });
-  return uuid;
-}
-
 // Initialize Algolia Insights
 algoliaInsights('init', {
   appId: process.env.NEXT_PUBLIC_ALGOLIA_APP_ID,
@@ -42,7 +31,7 @@ algoliaInsights('init', {
 // We dont want to track anyone cross page/sessions or use cookies
 // so just generate a random token each time the page is loaded and
 // treat it as a random user.
-const randomUserToken = uuidv4();
+const randomUserToken = crypto.randomUUID();
 
 const MAX_HITS = 10;
 
