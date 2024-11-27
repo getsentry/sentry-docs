@@ -1,0 +1,75 @@
+---
+title: --import CLI flag
+sidebar_order: 2
+description: "Learn about using the node `--import` CLI flag."
+---
+
+## Understanding the `--import` CLI Flag
+
+The [`--import` CLI flag](https://nodejs.org/api/cli.html#--importmodule) in Node.js allows you to preload modules before your application starts.
+This flag is crucial for ensuring proper server-side initialization, as Sentry needs to be initialized before the rest of the application runs.
+
+## Scenarios where `--import` does not work
+
+
+
+## Initializing Sentry with `--import`
+
+To successfully use the `--import` flag, follow these steps:
+
+### 1. Disable Dynamic Import
+
+First, you have to first disable the dynamic import.
+This can be done by setting `dynamicImportForServerEntry` to `false`:
+
+```javascript {filename: nuxt.config.ts} {5}
+export default defineNuxtConfig({
+  modules: ["@sentry/nuxt/module"],
+
+  sentry: {
+    dynamicImportForServerEntry: false,
+  },
+});
+```
+
+By disabling the dynamic import, the SDK will add the Sentry server config to the build output (typically `.output/server/sentry.server.config.mjs`).
+
+### 2. Adding `--import` to `node` command
+
+After building your Nuxt app with `nuxi build`, add the `--import` flag followed by the Sentry server config path to the `node` command.
+With the default Nitro Node preset, this typically looks like this:
+
+```bash
+node --import ./.output/server/sentry.server.config.mjs .output/server/index.mjs
+```
+
+Check the log at the very end of the console output after building the application.
+This will print the node command with the server entry path for your application (`node .output/server/index.mjs` with the Node preset).
+Make sure to update the paths accordingly, especially when using a different Nitro preset.
+
+To make things easier, add a script in the `package.json`:
+
+```json {filename:package.json}
+{
+  "scripts": {
+    "preview": "NODE_OPTIONS='--import .//server/sentry.server.config.mjs' nuxt preview",
+    "start": "node --import ./.output/server/sentry.server.config.mjs .output/server/index.mjs"
+  }
+}
+```
+
+### 3. Adding the CLI flag in production
+
+To be able to set up Sentry in production, the `--import` flag needs to be added wherever you run your application's production build output.
+Consult your hosting provider's documentation for specific implementation details.
+Most deployment platforms support this through two primary methods:
+
+#### Option 1: Direct CLI Flag
+```bash
+node --import .output/server/sentry.server.config.mjs your-server-entry.mjs
+```
+
+#### Option 2: Environment Variable
+```bash
+NODE_OPTIONS='--import .output/server/sentry.server.config.mjs'
+```
