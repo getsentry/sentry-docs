@@ -29,6 +29,10 @@ The [sample rates are periodically recalibrated](https://github.com/getsentry/se
 
 ![Concept of Fidelity](./images/fidelityAndPriorities.png)
 
+<Alert title="✨ Note" level="info">
+For orgs under AM2, Dynamic sampling uses a [sliding window function](https://github.com/getsentry/sentry/blob/cc8cc38c8a108719d068e5622b24a8d0c744e84c/src/sentry/dynamic_sampling/tasks/sliding_window_org.py#L37-L61) over the incoming volume to calculate the target sample rate.
+</Alert>
+
 ### Approximate Fidelity
 
 It is important to note that fidelity only determines an **approximate target sample rate**, so there is flexibility in creating exact sample rates. The ingestion pipeline, composed of [Relay](https://docs.sentry.io/product/relay/) and other components, does not have the infrastructure to track volume, so it cannot create an actual weighted distribution within the target sample rate.
@@ -110,12 +114,20 @@ The list of development environments is available [here](https://github.com/gets
 
 For prioritizing dev environments, we use a sample rate of `1.0` (100%), which results in all traces being sampled.
 
+### Prioritize Low Volume Projects
+<Alert title="✨ Note" level="info">
+This bias is only active in Automatic Mode (and not in Manual Mode). It applies to any incoming trace and is defined on a per-project basis.
+</Alert>
+
+Some projects have more data, some have less - this bias ensures that, in Automatic Mode, projects with lower volume are sampled with a higher sample rate. The sample rate of the boost low volume projects bias is computed using an algorithm that leverages a dynamic sample rate obtained by measuring the incoming volume of transactions in a sliding time window, known as the target fidelity rate. This rate is obtained by calling, at fixed intervals, the `get_sampling_tier_for_volume` function (defined [here](https://github.com/getsentry/sentry/blob/f3a2220ccd3a2118a1255a4c96a9ec2010dab0d8/src/sentry/quotas/base.py#L481)).
+
+The algorithm used in this bias computes a new sample rate with the goal of prioritizing low-volume projects, which can be drowned out by high-volume projects. The mechanism used for prioritizing is similar to the low-volume transactions bias in which given the sample rate of the organization and the counts of each project, it computes a new sample rate for each project, assuming an ideal distribution of the counts.
 
 ### Prioritize Low Volume Transactions
 This bias is used to prioritize low-volume transactions that can be drowned out by high-volume transactions. The goal is to rebalance sample rates of the individual transactions so that low-volume transactions are more likely to have representative samples. The bias is of type trace, which means that the transaction considered for rebalancing will be the root transaction of the trace.
 
 Prioritization of low volume transactions works slightly differently depending on the dynamic sampling mode: 
-- In **Automatic Mode** (`sentry:sampling_mode` == `organization`), the organization target sample rate is used as the base sample rate for the balancing algorithm.
+- In **Automatic Mode** (`sentry:sampling_mode` == `organization`), the output of the [boost_low_volume_projects](https://github.com/getsentry/sentry/blob/dee539472e999bf590cfc4e99b9b12981963defb/src/sentry/dynamic_sampling/tasks/boost_low_volume_transactions.py#L183) task is used as the base sample rate for the balancing algorithm. 
 - In **Manual Mode** (`sentry:sampling_mode` == `project`), the project target sample rate is used as the base sample rate for the balancing algorithm.
 
 In order to rebalance transactions, the system retrieves the counts of the transactions for each project and calculates a new sample rate for each transaction. 
