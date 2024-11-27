@@ -4,6 +4,7 @@ import {Break} from './components/break';
 import {CliChecksumTable} from './components/cliChecksumTable';
 import {CodeBlock} from './components/codeBlock';
 import {CodeTabs} from './components/codeTabs';
+import {CommunitySupportedPlatforms} from './components/communitySupportedPlatforms';
 import {ConfigKey} from './components/configKey';
 import {ConfigValue} from './components/configValue';
 import {CreateGitHubAppForm} from './components/createGitHubAppForm';
@@ -43,6 +44,7 @@ export function mdxComponents(
     Arcade,
     Break,
     CliChecksumTable,
+    CommunitySupportedPlatforms,
     PlatformFilter,
     CodeBlock,
     CodeTabs,
