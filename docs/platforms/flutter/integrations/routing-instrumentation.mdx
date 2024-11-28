@@ -30,7 +30,7 @@ Before starting, ensure:
 
 Add an instance of `SentryNavigationObserver` to your application's `navigatorObservers`.
 
-```dart {tabTitle: Flutter Routing}
+```dart {8} {tabTitle: Flutter Routing}
 import 'package:flutter/material.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -43,7 +43,7 @@ return MaterialApp(
 );
 ```
 
-```dart {tabTitle: GoRouter}
+```dart {6} {tabTitle: GoRouter}
 import 'package:go_router/go_router.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -62,10 +62,7 @@ For transactions to be created when navigation changes, you need to provide rout
 - Flutter routing: use `RouteSettings` and set the name in the constructor.
 - GoRouter: use the `name` parameter to set the route name.
 
-```dart {tabTitle: Flutter Routing}
-import 'package:flutter/material.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
-
+```dart {4} {tabTitle: Flutter Routing}
 /// Setting the route name is required
 MaterialPageRoute(
   builder: (BuildContext context) => MyWidget(),
@@ -73,10 +70,7 @@ MaterialPageRoute(
 )
 ```
 
-```dart {tabTitle: GoRouter}
-import 'package:go_router/go_router.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
-
+```dart {13} {tabTitle: GoRouter}
 final GoRouter _router = GoRouter(
   observers: [SentryNavigatorObserver()],
   routes: <RouteBase>[
@@ -110,8 +104,6 @@ There are two ways to set up TTID:
 The default setup is enabled automatically, but only provides an approximation of TTID. To set a more accurate TTID, manually wrap the desired widget with `SentryDisplayWidget`, as shown below:
 
 ```dart
-import 'package:sentry_flutter/sentry_flutter.dart';
-
 SentryDisplayWidget(
   child: MyWidget(),
 )
@@ -129,24 +121,18 @@ TTFD is disabled by default. To enable TTFD measurements, follow these steps:
 
 1. Enable the `enableTimeToFullDisplayTracing` option in the SDK configuration:
 
-```dart
-import 'package:flutter/widgets.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
-
-Future<void> main() async {
-  await SentryFlutter.init(
-    (options) => options.enableTimeToFullDisplayTracing = true,
-    appRunner: () => runApp(MyApp()),
-  );
-}
+```dart {3}
+await SentryFlutter.init(
+  (options) {
+    options.enableTimeToFullDisplayTracing = true;
+  }, appRunner: () => runApp(MyApp()),
+);
 ```
 
 2. Report the span manually:
 
 ```dart
-import 'package:sentry_flutter/sentry_flutter.dart';
-
-SentryFlutter.reportFullyDisplayed();
+await SentryFlutter.reportFullyDisplayed();
 ```
 
 If the span finishes through the API, its status will be set to `SpanStatus.OK`.
@@ -231,9 +217,6 @@ Log into [sentry.io](https://sentry.io) and open your project's performance page
 Adjust the duration before a routing transaction automatically finishes. The default is 3 seconds.
 
 ```dart
-import 'package:sentry_flutter/sentry_flutter.dart';
-
-/// Change how long navigation transactions idle before being finished
 SentryNavigatorObserver(
   autoFinishAfter: Duration(seconds: 5)
 )
@@ -251,9 +234,6 @@ Set `enableAutoTransactions` to `false` if you only want to track navigation bre
 Enabled by default.
 
 ```dart
-import 'package:sentry_flutter/sentry_flutter.dart';
-
-/// Only track navigation breadcrumbs
 SentryNavigatorObserver(
   enableAutoTransactions: false,
 )
@@ -265,9 +245,6 @@ Set `ignoreRoutes` if you want routes to be ignored and not processed by the nav
 Empty by default.
 
 ```dart
-import 'package:sentry_flutter/sentry_flutter.dart';
-
-/// Ignore matching routes
 SentryNavigatorObserver(
   ignoreRoutes: ["/ignoreThisRoute", "/my/ignored/route"],
 )
@@ -280,9 +257,6 @@ An existing transaction in the scope 'CustomTransaction' will be renamed to 'MyW
 Disabled by default.
 
 ```dart
-import 'package:sentry_flutter/sentry_flutter.dart';
-
-/// Override transaction name with route name
 SentryNavigatorObserver(
   setRouteNameAsTransaction: true,
 )

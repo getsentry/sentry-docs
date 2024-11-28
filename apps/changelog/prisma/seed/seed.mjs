@@ -76,6 +76,7 @@ async function seed() {
     console.log('Seed data created successfully!');
   } catch (error) {
     console.error('Error seeding data:', error);
+    process.exit(1);
   } finally {
     await prisma.$disconnect();
   }

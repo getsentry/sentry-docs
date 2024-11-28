@@ -6,6 +6,20 @@ notSupported: ["javascript.capacitor"]
 sidebar_order: 9000
 ---
 
+<Expandable permalink title="The SDK is not sending any data">
+
+If you set up the Sentry SDK and it's not sending any data to Sentry:
+
+- Check that you have configured a DSN and that you are passing it to the `dsn` option in `Sentry.init()`.
+
+  If you are using environment variables to pass the DSN, make sure the environment variables are set in all relevant environments. Additionally, if you are using environment variables inside a framework, check that the framework will include the environment variables in your bundle. Often this means you will have to prefix your environment variables with special prefixes defined by your framework (`NEXT_PUBLIC_` in Next.js, `NUXT_` in Nuxt, `VITE_` for Vite projects, `REACT_APP_` for Create React App, ...).
+
+- Check that you have disabled any ad-blockers.
+- Set `debug: true` in the `Sentry.init()` options and observe your console output when you start your application. The SDK may tell you why it is not sending any data.
+- Check the [Stats](https://sentry.io/orgredirect/organizations/:orgslug/stats/) and [Suscription](https://sentry.io/orgredirect/organizations/:orgslug/settings/billing/overview/) pages in Sentry. You may have ran out of quota.
+
+</Expandable>
+
 <Expandable permalink title="Updating to a new Sentry SDK version">
 
 If you update your Sentry SDK to a new major version, you might encounter breaking changes that need some adaption on your end.
@@ -417,6 +431,76 @@ Learn more about fixing these caching issues in the <PlatformLink to="/sourcemap
 
 </Expandable>
 
+
+</PlatformSection>
+
+<PlatformSection notSupported={['javascript.nuxt']}>
+  <Expandable permalink title="pnpm: Resolving 'import-in-the-middle' external package errors">
+
+  When using pnpm, you might encounter errors related to packages that can't be external, particularly with packages like `import-in-the-middle` and `require-in-the-middle`. These errors typically occur due to pnpm's strict dependency management and hoisting behavior.
+
+  While adding these packages as direct dependencies might remove the warning messages, it often doesn't resolve the underlying functionality issues:
+
+  ```bash
+  pnpm add import-in-the-middle require-in-the-middle
+  ```
+
+  As a workaround, create or modify `.npmrc` in your project root:
+
+  ```npmrc
+  shamefully-hoist=true
+  ```
+  <Alert level="warning">
+  **Note**: While `shamefully-hoist=true` usually isn't the ideal solution from a dependency management perspective, it's sometimes necessary for compatibility with certain packages that expect Node.js module resolution behavior similar to npm or yarn.
+  </Alert>
+
+
+  </Expandable>
+</PlatformSection>
+
+<PlatformSection supported={['javascript.nuxt']}>
+  <Expandable title="'import-in-the-middle' error during startup">
+    After adding `sentry.server.config.ts` and building the project, you might get an error like this:
+    `Failed to register ESM hook import-in-the-middle/hook.mjs`. You can add an override (npm/pnpm) or a resolution (yarn)
+    for `@vercel/nft` to fix this. This will add the `hook.mjs` file to your build output. See the [underlying issue in the UnJS Nitro project](https://github.com/unjs/nitro/issues/2703).
+
+
+    Nitro updated `@vercel/nft` in Nitro version `2.10.0`, so you might not get this error anymore, and you don't need to
+    add this override/resolution.
+
+    ```json {tabTitle:npm} {filename:package.json}
+    "overrides": {
+    "@vercel/nft": "^0.27.4"
+  }
+    ```
+
+    ```json {tabTitle:yarn} {filename:package.json}
+    "resolutions": {
+    "@vercel/nft": "^0.27.4"
+  }
+    ```
+
+    ```json {tabTitle:pnpm} {filename:package.json}
+    "pnpm": {
+    "overrides": {
+    "@vercel/nft": "^0.27.4"
+  }
+  }
+    ```
+
+  </Expandable>
+
+  <Expandable permalink title="pnpm: Resolving 'import-in-the-middle' external package errors">
+
+    Sentry injects `import "import-in-the-middle/hook.mjs"` in your server entry. This import acts as a hint for node bundlers to really include this file.
+    As pnpm implements a strict dependency isolation, this import might cause problems.
+    Per default, `shamefully-hoist` is `false` ([pnpm docs here](https://pnpm.io/next/npmrc#shamefully-hoist)) and this prevents accessing non-declared dependencies.
+    You probably don't want to change this setting, so you have to explicitly add the dependency `import-in-the-middle`:
+
+    ```bash
+    pnpm add import-in-the-middle
+    ```
+  </Expandable>
 </PlatformSection>
 
 If you need additional help, you can [ask on GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose). Customers on a paid plan may also contact support.

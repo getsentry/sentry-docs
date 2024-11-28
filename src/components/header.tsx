@@ -3,6 +3,7 @@
 import {Fragment} from 'react';
 import {HamburgerMenuIcon} from '@radix-ui/react-icons';
 import Image from 'next/image';
+import Link from 'next/link';
 
 import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
 
@@ -44,7 +45,7 @@ export function Header({pathname, searchPlatforms, noSearch}: Props) {
             </label>
           </button>
         )}
-        <a
+        <Link
           href="/"
           title="Sentry error monitoring"
           className="flex flex-shrink-0 items-center lg:w-[calc(var(--sidebar-width,300px)-2rem)] text-2xl font-medium text-[var(--foreground)]"
@@ -58,7 +59,7 @@ export function Header({pathname, searchPlatforms, noSearch}: Props) {
             />
           </div>
           Docs
-        </a>
+        </Link>
         {!noSearch && (
           <div className="hidden md:flex justify-center lg:justify-start w-full px-6">
             <Search path={pathname} searchPlatforms={searchPlatforms} showChatBot />
