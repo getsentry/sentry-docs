@@ -1,0 +1,57 @@
+---
+title: "Replay Performance Overhead"
+sidebar_order: 30
+description: "Learn more about how enabling Session Replay impacts the performance of your application."
+---
+
+Session Replay for mobile works by taking snapshots of the view hierarchy as well as a screenshot within the same frame, at the rate of one per second. These screenshots are then compressed into a video file representing a segment of the user’s session. All these small segments are then streamed into Sentry with additional trace identifiers, breadcrumbs, and other useful debugging information to compose the full user session.
+
+In order to perform this work without negatively impacting the host application's performance, the mobile SDKs take care to introduce minimal additional CPU and memory overhead, record screenshots and view hierarchy in a non-intrusive way and only when necessary, send the absolute minimum number of bytes required, and use low-latency ingestion endpoints geographically close to your end-users.
+
+**For most mobile applications, the performance overhead of our mobile SDKs will be imperceptible to end-users.**
+
+## How Is Session Replay Optimized?
+
+Sentry's Session Replay SDK takes several measures to avoid negatively impacting the performance of the screen on which it's running:
+
+- The Session Replay SDK works by capturing screenshots, encoding them into small video segments and transmitting the content to Sentry’s servers. To reduce the amount of data transferred, multiple optimization strategies are employed:
+  - The SDK captures at most one screenshot per second at a 1:1 pixel density (commonly referred to as `@1x` on iOS and `mdpi` on Android). This significantly speeds up the screenshot screenshot capture process while maintaining acceptable quality.
+  - Screenshots are compressed into lossy `jpeg` files to reduce disk space usage and enable replay recovery in the event of a crash or an ANR.
+  - When sending a replay segment, the screenshots are further compressed into an `mp4` video file using `h.264` compression with a 75 kbps bitrate (the default behavior). This ensures a small payload size while preserving a perceivable replay quality. We observed nearly a 5x reduction in size when compressing five screenshots into a video segment.
+  - The video segment, alogn with other debugging information (such as breadcrumbs) is gzip-compressed on the client before transmission over HTTP. This compression is performed on a background thread, ensuring the application's main thread remains unaffected.
+  - To minimize disk space usage, screenshots and video segment files are deleted from the disk upon successful upload.
+- Sentry’s event ingestion infrastructure uses [distributed Points-of-Presence (PoPs)](https://blog.sentry.io/2022/03/31/sentry-points-of-presence-how-we-built-a-distributed-ingestion/) which place ingestion servers around the world and close to your users. When a Session Replay event is transmitted, the user’s device connects and transmits the event payload to the closest PoP available for their region. This greatly reduces end-to-end latency and minimizes the amount of networking overhead placed on the browser.
+- The SDK is built to gracefully downgrade when needed. In the event of sending too many replay events and hitting Sentry's rate limit, the SDK will disable recording to make sure the rate limit is respected. Once the rate limit is lifted, the SDK will continue recording.
+
+## Factors in Performance Overhead
+
+While the performance overhead of our mobile replay SDKs will be imperceptible to end-users most of the time, it can vary based on the complexity of your application. If an application has screens with a deeply-nested view tree, there will be higher overhead compared to simpler (e.g. Settings) screens.
+
+If masking is enabled (the default behavior), network overhead is further reduced because the screenshots have fewer pixels, resulting in smaller file sizes.
+
+There are different stages in the lifecycle of a mobile application, each with different performance characteristics. Here is a list of stages in the lifecycle, and the most important performance metrics to be aware of.
+
+### App Start
+
+There is virtually no overhead from the SDK during application startup. It performs only a few lightweight tasks, such as registering the necessary listeners for system events and scheduling a background thread for capturing.
+
+### Main Thread
+
+The SDK performs only the bare minimum on the main thread to capture a new frame for the replay (a screenshot and a view hierarchy snapshot) before immediately switching to a background thread for post-processing tasks. These tasks include masking screenshots, storing them in the disk cache, or encoding a video segment. This process occurs at most once per secondk, and it can be even less frequent depending on the frame rate setting.
+
+The SDK also monitors view tree changes, and if no changes have occurred since the last frame capture, it reuses the previously captured data, completely avoiding any work on the main thread.
+
+### Capturing touch events
+
+- Click/touch, swipe and scroll events are incredibly small and fast to log; overhead is negligible.
+- We debounce touch events and use smoothing for move events to balance the detail you see while debugging, with the amount of redundant data captured.
+
+## Measuring Performance Overhead
+
+The only way to get accurate metrics is to measure performance overhead yourself. You can apply realistic access patterns against your own application, and correlate that to your own topline business metrics.
+
+We measured the overhead of the Replay SDK on various open-source apps that have millions of users in production (i.e. real-world apps that have a big set of different components and features), such as [Bluesky](https://github.com/bluesky-social/social-app) or [Pocket Casts](https://github.com/Automattic/pocket-casts-android). You can check the results on the respective SDK's docs:
+
+- [iOS](/platforms/apple/guides/ios/session-replay/)
+- [Android](/platforms/android/session-replay/)
+- [React Native](/platforms/react-native/session-replay/)
