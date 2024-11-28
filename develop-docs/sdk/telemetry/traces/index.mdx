@@ -72,7 +72,7 @@ This Option replaces the non-standardized `tracingOrigins` option which was prev
 
 </Alert>
 
-### `strictTracePropagation`
+### `strictTraceContinuation`
 
 This must be a boolean value. Default is `false`. This option controls trace continuation from unknown 3rd party services that happen to be instrumented by a Sentry SDK.
 
@@ -83,25 +83,25 @@ Addiotnally, the SDK must be configurable with an optional `org: <org-id>` setti
 On incoming traces, the SDK must compare the `sentry-org` baggage value against its own parsed value from the DSN or org setting. Only if both match, the trace is continued. If there is no match, neither the trace ID, the parent sampling decision nor the baggage should be taken into account.
 The SDK should behave like it is the head of trace in this case, and not consider any propagted values.
 
-This behavior can be disabled by setting `strictTracePropagation: false` in the SDK init call.
+This behavior can be disabled by setting `strictTraceContinuation: false` in the SDK init call.
 Initially, SDKs must introduce the this option with a default value of `false`.
 Once the majority of SDKs have introduced this option, we'll change the default value to `true` (in a major version bump), making it opt-out.
 
-Regardless of `strictTracePropagation` being set to `true` or `false`, if the SDK is either configured with a `org` or was able to parse the value from the DSN, incoming traces containing an `org` value in the baggage that does not match the one from the receiving SDK, the trace is not continuned.
+Regardless of `strictTraceContinuation` being set to `true` or `false`, if the SDK is either configured with a `org` or was able to parse the value from the DSN, incoming traces containing an `org` value in the  baggage that does not match the one from the receiving SDK, the trace is not continuned.
 
 Examples:
 
-baggage: `sentry-org: 1`, SDK config: `org: 1, strictTracePropagation: false` -> continue trace
-baggage: `sentry-org: none`, SDK config: `org: 1, strictTracePropagation: false` -> continue trace
-baggage: `sentry-org: 1`, SDK config: `org: none, strictTracePropagation: false` -> continue trace
-baggage: `sentry-org: none`, SDK config: `org: none, strictTracePropagation: false` -> continue trace
-baggage: `sentry-org: 1`, SDK config: `org: 2, strictTracePropagation: false` -> start new trace
+baggage: `sentry-org: 1`, SDK config: `org: 1, strictTraceContinuation: false` -> continue trace
+baggage: `sentry-org: none`, SDK config: `org: 1, strictTraceContinuation: false` -> continue trace
+baggage: `sentry-org: 1`, SDK config: `org: none, strictTraceContinuation: false` -> continue trace
+baggage: `sentry-org: none`, SDK config: `org: none, strictTraceContinuation: false` -> continue trace
+baggage: `sentry-org: 1`, SDK config: `org: 2, strictTraceContinuation: false` -> start new trace
 
-baggage: `sentry-org: 1`, SDK config: `org: 1, strictTracePropagation: true` -> continue trace
-baggage: `sentry-org: none`, SDK config: `org: 1, strictTracePropagation: true` -> start new trace
-baggage: `sentry-org: 1`, SDK config: `org: none, strictTracePropagation: true` -> start new trace
-baggage: `sentry-org: none`, SDK config: `org: none, strictTracePropagation: true` -> continue trace
-baggage: `sentry-org: 1`, SDK config: `org: 2, strictTracePropagation: true` -> start new trace
+baggage: `sentry-org: 1`, SDK config: `org: 1, strictTraceContinuation: true` -> continue trace
+baggage: `sentry-org: none`, SDK config: `org: 1, strictTraceContinuation: true` -> start new trace
+baggage: `sentry-org: 1`, SDK config: `org: none, strictTraceContinuation: true` -> start new trace
+baggage: `sentry-org: none`, SDK config: `org: none, strictTraceContinuation: true` -> continue trace
+baggage: `sentry-org: 1`, SDK config: `org: 2, strictTraceContinuation: true` -> start new trace
 
 ### `traceOptionsRequests`
 
@@ -226,26 +226,26 @@ A transaction's sampling decision should be passed to all of its children, inclu
 
 ### Propagated Random Value
 
-To increase the chance of capturing complete traces when users return a new sample rate from the `tracesSampler` in backend services, we propagate the generated random value used by the SDK for computing the sampling decision instead of sampling with a different random value in every service. Therefore, across a trace every SDK uses the same random value.
+To improve the likelihood of capturing complete traces when backend services use a custom sample rate via `tracesSampler`, the SDK propagates the same random value used for sampling decisions across all services in a trace. This ensures consistent sampling decisions across a trace instead of generating a new random value for each service.
 
-Without a `tracesSampler` callback, an SDK fully inherits sampling decisions for propagated traces. In this case, the presence of `sample_rand` in the DSC has no effect on the sampling decision. However, this behavior is subject to change in the future.
+If no `tracesSampler` callback is used, the SDK fully inherits sampling decisions for propagated traces, and the presence of `sample_rand` in the DSC doesn't affect the decision. However, this behavior may change in the future.
 
 The random value is set according to the following rules:
 
-1. When an SDK starts a new trace, `sample_rand` is always set to a random number in range `[0, 1]`. This explicitly includes traces that are not sampled, as well as when the `tracesSampleRate` is set to `0.0` or `1.0`.
+1. When an SDK starts a new trace, `sample_rand` is always set to a random number in the range of `[0, 1]`. This explicitly includes traces that aren't sampled, as well as when the `tracesSampleRate` is set to `0.0` or `1.0`.
 2. It is _recommended_ to generate the random number deterministically using the trace ID as seed or source of randomness. The exact method by which the random number is created is implementation defined and may vary between SDK implementations. See 4. on why this behaviour is desirable.
 3. On incoming traces, an SDK assumes the `sample_rand` value along with the rest of the DSC, overriding an existing value if needed.
 4. If `sample_rand` is missing on an incoming trace, the SDK creates and from now on propagates a new random number on-the-fly, based on the following rules:
    1. If `sample_rate` and `sampled` are propgated, create `sample_rand` so that it adheres to the invariant. This means, for a decision of `True` generate a random number in half-open range `[0, rate)` and for a decision of `False` generate a random number in range `[rate, 1]`.
-   2. If the `sampled` is missing `sample_rate`, generate a random number in the range `[0, 1]` like for a new trace.
+   2. If the sampling decision is missing, generate a random number in range of `[0, 1]`, like for a new trace.
 
-The SDK should exclusively use the stored random number and no longer use `math.random()` or similar anywhere else in the tracing related code base:
+The SDK should always use the stored random number (`sentry-sample_rand`) for sampling decisions and should no longer rely on `math.random()` or similar functions in tracing code:
 
 1. When the `tracesSampler` is invoked, this also applies to the return value of traces sampler. That is, `trace["sentry-sample_rand"] < tracesSampler(context)`
 2. Otherwise, when the SDK is the head of a trace, this also applies to sample decisions based on `tracesSampleRate`. That is, `trace["sentry-sample_rand"] < config.tracesSampleRate`
 3. There is no more direct comparison with `math.random()` during the sampling process.
 
-When using a `tracesSampler`, the correct way to inherit parent sampling decisions is now to return the parent's sample rate instead of the decision as float (1.0). This way, Sentry can still extrapolate counts correctly.
+When using a `tracesSampler`, the proper way to inherit a parent's sampling decision is to return the parent's sample rate, instead of leaving the decision as a float (for example, 1.0). This way, Sentry can still extrapolate counts correctly.
 
 ```js
 tracesSampler: ({ name, parentSampleRate }) => {
