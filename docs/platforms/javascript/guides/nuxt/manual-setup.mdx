@@ -82,8 +82,8 @@ Add a `sentry.client.config.ts` file to the root of your project (this is probab
 import * as Sentry from '@sentry/nuxt';
 
 Sentry.init({
-  // If set up, you can use your runtime config here
-  // dsn: useRuntimeConfig().public.sentry.dsn,
+  // If set up, you can use the Nuxt runtime config here
+  // dsn: useRuntimeConfig().public.sentry.dsn, // modify, depending on your custom runtime config
   dsn: "___PUBLIC_DSN___",
 
   // We recommend adjusting this value in production, or using tracesSampler
@@ -162,15 +162,18 @@ export default defineNuxtConfig({
 ```
 
 To upload source maps, the Sentry Nuxt Module will automatically enable source map generation in your project if it is not already enabled.
-However, you need to explicitly enable source map generation on the client-side. To do this, add the following code to your Nuxt configuration:
+However, you need to explicitly enable source map generation on the client-side.
+To do this, add the following code to your Nuxt configuration:
 
 ```javascript {filename:nuxt.config.ts} {2}
 export default defineNuxtConfig({
-    sourcemap: { client: true }
+    sourcemap: { client: 'hidden' }
 });
 ```
 
-This step is necessary because Nuxt sets default values for source maps ([Nuxt docs](https://nuxt.com/docs/api/nuxt-config#sourcemap)), and the Sentry Nuxt Module keeps these settings when they are explicitly defined.
+The option `'hidden'` works like `true`, but suppresses the source map reference comments that would be added to the end of each generated file in the build output.
+
+Explicitly enabling client source maps is necessary because Nuxt sets default values for source maps ([Nuxt docs](https://nuxt.com/docs/api/nuxt-config#sourcemap)), and the Sentry Nuxt Module keeps these settings when they are explicitly defined.
 
 ## Verify
 
