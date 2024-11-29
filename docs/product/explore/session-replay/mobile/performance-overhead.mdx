@@ -6,9 +6,9 @@ description: "Learn more about how enabling Session Replay impacts the performan
 
 Session Replay for mobile works by taking snapshots of the view hierarchy as well as a screenshot within the same frame, at the rate of one per second. These screenshots are then compressed into a video file representing a segment of the user’s session. All these small segments are then streamed into Sentry with additional trace identifiers, breadcrumbs, and other useful debugging information to compose the full user session.
 
-In order to perform this work without negatively impacting the host application's performance, the mobile SDKs take care to introduce minimal additional CPU and memory overhead, record screenshots and view hierarchy in a non-intrusive way and only when necessary, send the absolute minimum number of bytes required, and use low-latency ingestion endpoints geographically close to your end-users.
+In order to perform this work without negatively impacting the host application's performance, Sentry employs a number of measures to minimize additional CPU and memory overhead, record screenshots and view hierarchy in a non-intrusive way and only when necessary, send the absolute minimum number of bytes required, and use low-latency ingestion endpoints geographically close to your end-users.
 
-**For most mobile applications, the performance overhead of our mobile SDKs will be imperceptible to end-users.**
+**For most mobile applications, the performance overhead of our Session Replay SDK will be imperceptible to end-users.**
 
 ## How Is Session Replay Optimized?
 
@@ -16,7 +16,7 @@ Sentry's Session Replay SDK takes several measures to avoid negatively impacting
 
 - The Session Replay SDK works by capturing screenshots, encoding them into small video segments and transmitting the content to Sentry’s servers. To reduce the amount of data transferred, multiple optimization strategies are employed:
   - The SDK captures at most one screenshot per second at a 1:1 pixel density (commonly referred to as `@1x` on iOS and `mdpi` on Android). This significantly speeds up the screenshot capture process while maintaining acceptable quality.
-  - Screenshots are compressed into lossy `jpeg` files to reduce disk space usage and enable replay recovery in the event of a crash or an ANR.
+  - Screenshots are compressed into lossy `jpeg` files to reduce disk space usage and enable recovering of the last frames of a replay in the event of a crash or an ANR.
   - When sending a replay segment, the screenshots are further compressed into an `mp4` video file using `h.264` compression with a 75 kbps bitrate (the default behavior). This ensures a small payload size while preserving the replay video quality. We observed nearly a 5x reduction in size when compressing five screenshots into a video segment.
   - The video segment, along with other debugging information (such as breadcrumbs), is gzip-compressed on the client before transmission over HTTP. This compression is performed on a background thread, ensuring the application's main thread remains unaffected.
   - To minimize disk space usage, screenshots and video segment files are deleted from the disk upon successful upload.
@@ -25,7 +25,7 @@ Sentry's Session Replay SDK takes several measures to avoid negatively impacting
 
 ## Factors in Performance Overhead
 
-While the performance overhead of our mobile replay SDKs will be imperceptible to end-users most of the time, it can vary based on the complexity of your application. If an application has screens with a deeply-nested view tree, there will be higher overhead compared to simpler (e.g., Settings) screens.
+While the performance overhead of our Session Replay SDK will be imperceptible to end-users most of the time, it can vary based on the complexity of your application. If an application has screens with a deeply-nested view tree, there will be higher overhead compared to simpler (e.g., Settings) screens.
 
 If masking is enabled (the default behavior), network overhead is further reduced because the screenshots have fewer pixels, resulting in smaller file sizes.
 
