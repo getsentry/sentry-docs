@@ -3656,6 +3656,10 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     to: '/application-architecture/config/',
   },
   {
+    from: '/application-architecture/config/',
+    to: '/api-server/config/',
+  },
+  {
     from: '/application/sentry-vs-getsentry/',
     to: '/application-architecture/sentry-vs-getsentry/',
   },

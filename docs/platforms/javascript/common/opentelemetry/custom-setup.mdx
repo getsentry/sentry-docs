@@ -102,6 +102,52 @@ In order for the Sentry SDK to work as expected, and for it to be in sync with O
   </PlatformLink>
 </Note>
 
+The following code snippet shows how to set up Sentry for error monitoring only:
+
+```javascript
+const { NodeTracerProvider } = require("@opentelemetry/sdk-trace-node");
+const Sentry = require("@sentry/node");
+const { SentryPropagator, SentrySampler } = require("@sentry/opentelemetry");
+const { registerInstrumentations } = require("@opentelemetry/instrumentation");
+
+const sentryClient = Sentry.init({
+  dsn: "___DSN___",
+  skipOpenTelemetrySetup: true,
+
+  // Important: We do not define a tracesSampleRate here at all!
+  // This leads to tracing being disabled
+
+  // Disable emitting of spans in the httpIntegration
+  integrations: [Sentry.httpIntegration({ spans: false })],
+});
+
+// Create and configure e.g. NodeTracerProvider
+const provider = new NodeTracerProvider({
+  // This ensures trace propagation works as expected
+  sampler: sentryClient ? new SentrySampler(sentryClient) : undefined,
+});
+
+provider.addSpanProcessor(
+  new BatchSpanProcessor(
+    new OTLPTraceExporter({
+      url: "http://OTLP-ENDPOINT.com/api",
+    })
+  )
+);
+
+// Initialize the provider
+provider.register({
+  propagator: new SentryPropagator(),
+  contextManager: new Sentry.SentryContextManager(),
+});
+
+registerInstrumentations({
+  instrumentations: [
+    // Add OTEL instrumentation here
+  ],
+});
+```
+
 ## Required Instrumentation
 
 By default, Sentry will register OpenTelemetry instrumentation to automatically capture spans for traces spanning incoming and outgoing HTTP requests, DB queries, and more.
@@ -110,8 +156,8 @@ If tracing is not enabled (no `tracesSampleRate` is defined in the SDK configura
 
 {/* prettier-ignore-start */}
 
-- <PlatformLink to="/configuration/integrations/http/">httpIntegration</PlatformLink> registers [@opentelemetry/instrumentation-http](https://www.npmjs.com/package/@opentelemetry/instrumentation-http)
-- <PlatformLink to="/configuration/integrations/nodefetch/">nativeNodeFetchIntegration</PlatformLink> registers [opentelemetry-instrumentation-fetch-node](https://www.npmjs.com/package/opentelemetry-instrumentation-fetch-node)
+- A Sentry-specific HTTP instrumentation that handles request isolation and trace propagation. This can work in parallel with [@opentelemetry/instrumentation-http](https://www.npmjs.com/package/@opentelemetry/instrumentation-http), if you register it.
+- <PlatformLink to="/configuration/integrations/nodefetch/">nativeNodeFetchIntegration</PlatformLink> registers [opentelemetry-instrumentation-fetch-node](https://www.npmjs.com/package/opentelemetry-instrumentation-fetch-node) which is needed for trace propagation.
 
 {/* prettier-ignore-end */}
 
@@ -125,7 +171,6 @@ If tracing is not enabled (no `tracesSampleRate` is defined in the SDK configura
     <PlatformLink to="/configuration/tree-shaking/#setting-up-sentry-without-performance-integrations">
       Set up Sentry without Performance Integrations
     </PlatformLink>
-    .
   </Note>
 </PlatformSection>
 
@@ -215,6 +260,7 @@ You can do so by setting `registerEsmLoaderHooks` to `false` and [setting up ESM
 
 ```javascript
 Sentry.init({
+  dsn: "___DSN___",
   skipOpenTelemetrySetup: true,
   registerEsmLoaderHooks: false,
 });
