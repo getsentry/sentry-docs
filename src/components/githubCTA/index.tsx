@@ -26,9 +26,7 @@ export function GitHubCTA() {
         <div>
           <Link href="https://docs.sentry.io/contributing/">How to contribute</Link>{' '}
           &nbsp;&nbsp;|&nbsp;&nbsp;
-          <Link href={sourceUrl}>
-            Edit this page
-          </Link> &nbsp;&nbsp;|&nbsp;&nbsp;
+          <Link href={sourceUrl}>Edit this page</Link> &nbsp;&nbsp;|&nbsp;&nbsp;
           <Link href="https://github.com/getsentry/sentry-docs/issues/new/choose">
             Create a docs issue
           </Link>{' '}
