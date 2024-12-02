@@ -219,6 +219,10 @@ const userDocsRedirects = [
     destination: '/organization/integrations/feature-flag/launchdarkly/',
   },
   {
+    source: '/platforms/javascript/guides/nextjs/sourcemaps/uploading/',
+    destination: '/platforms/javascript/guides/nextjs/sourcemaps/',
+  },
+  {
     source: '/organization/integrations/vercel/',
     destination: '/organization/integrations/deployment/vercel/',
   },
