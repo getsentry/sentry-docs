@@ -219,6 +219,10 @@ const userDocsRedirects = [
     destination: '/organization/integrations/feature-flag/launchdarkly/',
   },
   {
+    source: '/organization/integrations/vercel/',
+    destination: '/organization/integrations/deployment/vercel/',
+  },
+  {
     source: '/product/accounts/quotas/org-stats/',
     destination: '/product/stats/',
   },
@@ -868,6 +872,10 @@ const userDocsRedirects = [
     destination: '/product/insights/ai/llm-monitoring/getting-started/the-dashboard/',
   },
   // End of Insights reduirects.
+  {
+    source: '/platforms/javascript/guides/astro/manual-setup/',
+    destination: '/platforms/javascript/guides/astro/',
+  },
 ];
 
 /**

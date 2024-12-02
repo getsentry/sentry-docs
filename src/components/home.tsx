@@ -2,7 +2,6 @@ import Image from 'next/image';
 
 import {Banner} from 'sentry-docs/components/banner';
 import {SentryWordmarkLogo} from 'sentry-docs/components/wordmarkLogo';
-import {extractPlatforms, getDocsRootNode} from 'sentry-docs/docTree';
 import PlugImage from 'sentry-docs/imgs/api.png';
 import ChatBubble from 'sentry-docs/imgs/chat-bubble.png';
 import TerminalImage from 'sentry-docs/imgs/cli.png';
@@ -19,17 +18,7 @@ import {Header} from './header';
 import {NavLink, NavLinkProps} from './navlink';
 import {PlatformFilter} from './platformFilter';
 
-export async function Home() {
-  const rootNode = await getDocsRootNode();
-  // this regex deals with names like .NET that would otherwise be sorted at the top
-  const leadingNonAlphaRegex = /^[^\w]/;
-  // sort the platforms alphabetically
-  const sortedPlatforms = extractPlatforms(rootNode).sort((a, b) =>
-    (a.title ?? a.name)
-      .replace(leadingNonAlphaRegex, '')
-      .localeCompare((b.title ?? b.name).replace(leadingNonAlphaRegex, ''))
-  );
-
+export function Home() {
   return (
     <div className="tw-app">
       <Header pathname="/" searchPlatforms={[]} />
@@ -57,7 +46,7 @@ export async function Home() {
           </div>
         </div>
 
-        <PlatformFilter platforms={sortedPlatforms} />
+        <PlatformFilter />
         <h2 className="text-2xl mt-16 mb-6 font-medium">Get to know us</h2>
         <div className="flex flex-wrap gap-6">
           <Card

@@ -148,38 +148,28 @@ The example below uses a `feature` tag to determine which Sentry project to
 send the event to. If the event does not have a `feature` tag, we send it to the
 fallback DSN defined in `Sentry.init`.
 
-```typescript
-import { captureException, init, makeFetchTransport } from "@sentry/browser";
-import { makeMultiplexedTransport } from "@sentry/core";
-import { Envelope, EnvelopeItemType } from "@sentry/types";
-
-interface MatchParam {
-  /** The envelope to be sent */
-  envelope: Envelope;
-  /**
-   * A function that returns an event from the envelope if one exists. You can optionally pass an array of envelope item
-   * types to filter by - only envelopes matching the given types will be returned.
-   *
-   * @param types Defaults to ['event'] (only error events will be returned)
-   */
-  getEvent(types?: EnvelopeItemType[]): Event | undefined;
-}
-
-function dsnFromFeature({ getEvent }: MatchParam) {
-  const event = getEvent();
-  switch (event?.tags?.feature) {
-    case "cart":
-      return [{ dsn: "__CART_DSN__", release: "cart@1.0.0" }];
-    case "gallery":
-      return [{ dsn: "__GALLERY_DSN__", release: "gallery@1.2.0" }];
-    default:
-      return [];
-  }
-}
+```js
+import {
+  captureException,
+  init,
+  makeFetchTransport,
+  makeMultiplexedTransport,
+} from "@sentry/browser";
 
 init({
   dsn: "__FALLBACK_DSN__",
-  transport: makeMultiplexedTransport(makeFetchTransport, dsnFromFeature),
+  transport: makeMultiplexedTransport(makeFetchTransport, ({ getEvent }) => {
+    const event = getEvent();
+
+    // Send to different DSNs, based on the event payload
+    if (event?.tags?.feature === "cart") {
+      return [{ dsn: "__CART_DSN__", release: "cart@1.0.0" }];
+    } else if (event?.tags?.feature === "gallery") {
+      return [{ dsn: "__GALLERY_DSN__", release: "gallery@1.2.0" }];
+    } else {
+      return [];
+    }
+  }),
 });
 ```
 
@@ -191,8 +181,9 @@ You can then set tags/contexts on events in individual micro-frontends to decide
   <PlatformLink to="/enriching-events/scopes/#local-scopes">
     withScope documentation
   </PlatformLink>
-  ). Using a global scope e.g. through `Sentry.setTag()` will result in all subsequent
-  events being routed to the same DSN regardless of where they originate.
+  ). Using a global scope e.g. through `Sentry.setTag()` will result in all
+  subsequent events being routed to the same DSN regardless of where they
+  originate.
 </Note>
 
 ```typescript

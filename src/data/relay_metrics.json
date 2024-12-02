@@ -6,18 +6,6 @@
     "features": []
   },
   {
-    "type": "Histogram",
-    "name": "buffer.dequeue_attempts",
-    "description": "Number of attempts needed to dequeue spooled envelopes from disk.",
-    "features": []
-  },
-  {
-    "type": "Histogram",
-    "name": "buffer.disk_size",
-    "description": "The file size of the buffer db on disk, in bytes.\n\nThis metric is computed by multiplying `page_count * page_size`.",
-    "features": []
-  },
-  {
     "type": "Gauge",
     "name": "buffer.disk_used",
     "description": "The used disk for the buffer.",
@@ -72,24 +60,6 @@
     "features": []
   },
   {
-    "type": "Gauge",
-    "name": "buffer.envelopes_disk_count",
-    "description": "The number of envelopes waiting for project states on disk.\n\nNote this metric *will not be logged* when we encounter envelopes in the database on startup,\nbecause counting those envelopes reliably would risk locking the db for multiple seconds.\n\nThe disk buffer size can be configured with `spool.envelopes.max_disk_size`.",
-    "features": []
-  },
-  {
-    "type": "Histogram",
-    "name": "buffer.envelopes_mem",
-    "description": "The estimated number of envelope bytes buffered in memory.\n\nThe memory buffer size can be configured with `spool.envelopes.max_memory_size`.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "buffer.envelopes_mem_count",
-    "description": "The number of envelopes waiting for project states in memory.\n\nThis number is always <= `EnvelopeQueueSize`.\n\nThe memory buffer size can be configured with `spool.envelopes.max_memory_size`.",
-    "features": []
-  },
-  {
     "type": "Counter",
     "name": "buffer.envelopes_read",
     "description": "Number of _envelopes_ the envelope buffer produces.",
@@ -127,12 +97,6 @@
   },
   {
     "type": "Timer",
-    "name": "buffer.message.duration",
-    "description": "Timing in milliseconds for processing a message in the buffer service.\n\nThis metric is tagged with:\n\n- `message`: The type of message that was processed.",
-    "features": []
-  },
-  {
-    "type": "Timer",
     "name": "buffer.peek.duration",
     "description": "Timing in milliseconds for the time it takes for the buffer to peek.",
     "features": []
@@ -147,12 +111,6 @@
     "type": "Timer",
     "name": "buffer.push.duration",
     "description": "Timing in milliseconds for the time it takes for the buffer to push.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "buffer.reads",
-    "description": "Number of times the envelope buffer reads back from disk.",
     "features": []
   },
   {
@@ -181,12 +139,6 @@
   },
   {
     "type": "Counter",
-    "name": "buffer.state.transition",
-    "description": "Number of state changes in the envelope buffer.\nThis metric is tagged with:\n- `state_in`: The previous state. `memory`, `memory_file_standby`, or `disk`.\n- `state_out`: The new state. `memory`, `memory_file_standby`, or `disk`.\n- `reason`: Why a transition was made (or not made).",
-    "features": []
-  },
-  {
-    "type": "Counter",
     "name": "buffer.try_pop",
     "description": "Number of times an envelope from the buffer is trying to be popped.",
     "features": []
@@ -195,12 +147,6 @@
     "type": "Timer",
     "name": "buffer.unspool.duration",
     "description": "Timing in milliseconds for the time it takes for the buffer to unspool data from disk.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "buffer.unspool.periodic",
-    "description": "Number of queue keys (project key pairs) unspooled during proactive unspool.\nThis metric is tagged with:\n- `reason`: Why keys are / are not unspooled.",
     "features": []
   },
   {
@@ -213,12 +159,6 @@
     "type": "Timer",
     "name": "buffer.write.duration",
     "description": "Timing in milliseconds for the time it takes for the buffer to spool data to SQLite.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "buffer.writes",
-    "description": "Number of times the envelope buffer spools to disk.",
     "features": []
   },
   {
@@ -794,6 +734,48 @@
     "features": []
   },
   {
+    "type": "Gauge",
+    "name": "runtime.alive_tasks",
+    "description": "Exposes [`RuntimeMetrics::num_alive_tasks`].",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "runtime.blocking_queue_depth",
+    "description": "Exposes [`RuntimeMetrics::blocking_queue_depth`].",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "runtime.budget_forced_yield_count",
+    "description": "Exposes [`RuntimeMetrics::budget_forced_yield_count`].",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "runtime.idle_threads",
+    "description": "Exposes [`RuntimeMetrics::num_idle_threads`].",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "runtime.num_blocking_threads",
+    "description": "Exposes [`RuntimeMetrics::num_blocking_threads`].",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "runtime.num_idle_blocking_threads",
+    "description": "Exposes [`RuntimeMetrics::num_idle_blocking_threads`].",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "runtime.num_workers",
+    "description": "Exposes [`RuntimeMetrics::num_workers`].",
+    "features": []
+  },
+  {
     "type": "Counter",
     "name": "runtime.task.spawn.created",
     "description": "Number of runtime tasks created/spawned.\n\nEvery call to [`spawn`](`crate::spawn()`) increases this counter by one.\n\nThis metric is tagged with:\n- `id`: A unique identifier for the task, derived from its location in code.\n- `file`: The source filename where the task is created.\n- `line`: The source line where the task is created within the file.",
@@ -803,6 +785,66 @@
     "type": "Counter",
     "name": "runtime.task.spawn.terminated",
     "description": "Number of runtime tasks terminated.\n\nThis metric is tagged with:\n- `id`: A unique identifier for the task, derived from its location in code.\n- `file`: The source filename where the task is created.\n- `line`: The source line where the task is created within the file.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "runtime.worker_local_queue_depth",
+    "description": "Exposes [`RuntimeMetrics::worker_local_queue_depth`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "runtime.worker_local_schedule_count",
+    "description": "Exposes [`RuntimeMetrics::worker_local_schedule_count`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "runtime.worker_mean_poll_time",
+    "description": "Exposes [`RuntimeMetrics::worker_mean_poll_time`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "runtime.worker_noop_count",
+    "description": "Exposes [`RuntimeMetrics::worker_noop_count`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "runtime.worker_overflow_count",
+    "description": "Exposes [`RuntimeMetrics::worker_overflow_count`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "runtime.worker_park_count",
+    "description": "Exposes [`RuntimeMetrics::worker_park_count`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "runtime.worker_poll_count",
+    "description": "Exposes [`RuntimeMetrics::worker_poll_count`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "runtime.worker_steal_count",
+    "description": "Exposes [`RuntimeMetrics::worker_steal_count`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "runtime.worker_steal_operations",
+    "description": "Exposes [`RuntimeMetrics::worker_steal_operations`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "runtime.worker_total_busy_duration",
+    "description": "Exposes [`RuntimeMetrics::worker_total_busy_duration`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
     "features": []
   },
   {
@@ -854,102 +896,6 @@
     "features": [
       "processing"
     ]
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.active_task_count",
-    "description": "Exposes [`RuntimeMetrics::active_tasks_count`].",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.blocking_queue_depth",
-    "description": "Exposes [`RuntimeMetrics::blocking_queue_depth`].",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.budget_forced_yield_count",
-    "description": "Exposes [`RuntimeMetrics::budget_forced_yield_count`].",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.num_blocking_threads",
-    "description": "Exposes [`RuntimeMetrics::num_blocking_threads`].",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.num_idle_blocking_threads",
-    "description": "Exposes [`RuntimeMetrics::num_idle_blocking_threads`].",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.num_workers",
-    "description": "Exposes [`RuntimeMetrics::num_workers`].",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.worker_local_queue_depth",
-    "description": "Exposes [`RuntimeMetrics::worker_local_queue_depth`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.worker_local_schedule_count",
-    "description": "Exposes [`RuntimeMetrics::worker_local_schedule_count`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.worker_mean_poll_time",
-    "description": "Exposes [`RuntimeMetrics::worker_mean_poll_time`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.worker_noop_count",
-    "description": "Exposes [`RuntimeMetrics::worker_noop_count`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.worker_overflow_count",
-    "description": "Exposes [`RuntimeMetrics::worker_overflow_count`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.worker_park_count",
-    "description": "Exposes [`RuntimeMetrics::worker_park_count`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.worker_poll_count",
-    "description": "Exposes [`RuntimeMetrics::worker_poll_count`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.worker_steal_count",
-    "description": "Exposes [`RuntimeMetrics::worker_steal_count`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.worker_steal_operations",
-    "description": "Exposes [`RuntimeMetrics::worker_steal_operations`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.worker_total_busy_duration",
-    "description": "Exposes [`RuntimeMetrics::worker_total_busy_duration`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
-    "features": []
   },
   {
     "type": "Histogram",
