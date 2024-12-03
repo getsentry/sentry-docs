@@ -234,6 +234,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/go/guides/zerolog/',
   },
   {
+    from: '/platforms/go/slog/',
+    to: '/platforms/go/guides/slog/',
+  },
+  {
     from: '/platforms/go/logrus/',
     to: '/platforms/go/guides/logrus/',
   },
@@ -1593,6 +1597,28 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/platforms/javascript/guides/:guide/tracing/instrumentation/opentelemetry/',
     to: '/platforms/javascript/guides/:guide/opentelemetry/',
   },
+  // START  bandaid fix for #11870
+  {
+    from: '/platforms/java/performance/instrumentation/opentelemetry/',
+    to: '/platforms/java/tracing/instrumentation/opentelemetry/',
+  },
+  {
+    from: '/platforms/go/performance/instrumentation/opentelemetry/',
+    to: '/platforms/go/tracing/instrumentation/opentelemetry/',
+  },
+  {
+    from: '/platforms/javascript/guides/node/performance/instrumentation/opentelemetry/',
+    to: '/platforms/javascript/guides/node/opentelemetry/',
+  },
+  {
+    from: '/platforms/python/performance/instrumentation/opentelemetry/',
+    to: '/platforms/python/tracing/instrumentation/opentelemetry/',
+  },
+  {
+    from: '/platforms/ruby/performance/instrumentation/opentelemetry/',
+    to: '/platforms/ruby/tracing/instrumentation/opentelemetry/',
+  },
+  // END  bandaid fix for #11870
   {
     from: '/learn/cli/configuration/',
     to: '/cli/configuration/',
@@ -2591,7 +2617,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/issues/issue-details/suggested-fix/',
-    to: '/product/issues/issue-details/ai-suggested-solution/',
+    to: '/product/issues/issue-details/sentry-ai/',
+  },
+  {
+    from: '/product/issues/issue-details/ai-suggested-solution/',
+    to: '/product/issues/issue-details/sentry-ai/',
   },
   {
     from: '/guides/grouping-and-fingerprints/',
@@ -3286,6 +3316,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/api/projects/register-a-new-service-hook/',
   },
   {
+    from: '/api/organizations/list-your-organizations/',
+    to: '/api/users/list-your-organizations/',
+  },
+  {
     from: '/clients/cocoa/',
     to: '/platforms/apple/',
   },
@@ -3406,7 +3440,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/architecture/',
-    to: '/application/architecture/',
+    to: '/application-architecture/',
   },
   {
     from: '/sentry-vs-getsentry/',
@@ -3498,7 +3532,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sdk/features/data-handling/',
-    to: '/sdk/data-handling/',
+    to: '/sdk/expected-features/data-handling/',
   },
   {
     from: '/sdk/craft-quick-start/',
@@ -3519,6 +3553,280 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/sdk/distributed-tracing/',
     to: '/sdk/telemetry/traces/distributed-tracing/',
+  },
+  // New Sidebar structure
+  {
+    from: '/development/',
+    to: '/development-infrastructure/',
+  },
+  {
+    from: '/development/environment/',
+    to: '/development-infrastructure/environment/',
+  },
+  {
+    from: '/development/environment/ports/',
+    to: '/development-infrastructure/environment/ports/',
+  },
+  {
+    from: '/development/environment/u2f/',
+    to: '/development-infrastructure/environment/u2f/',
+  },
+  {
+    from: '/development/environment/pycharm/',
+    to: '/development-infrastructure/environment/pycharm/',
+  },
+  {
+    from: '/development/commit-messages/',
+    to: '/engineering-practices/commit-messages/',
+  },
+  {
+    from: '/development/code-review/',
+    to: '/engineering-practices/code-review/',
+  },
+  {
+    from: '/development/documentation/',
+    to: '/engineering-practices/documentation/',
+  },
+  {
+    from: '/development/workflow/',
+    to: '/development-infrastructure/workflow/',
+  },
+  {
+    from: '/development/testing/',
+    to: '/development-infrastructure/testing/',
+  },
+  {
+    from: '/development/continuous-integration/',
+    to: '/development-infrastructure/continuous-integration/',
+  },
+  {
+    from: '/development/ngrok/',
+    to: '/development-infrastructure/ngrok/',
+  },
+  {
+    from: '/development/devservices/',
+    to: '/development-infrastructure/devservices/',
+  },
+  {
+    from: '/development/rust/',
+    to: '/engineering-practices/rust/',
+  },
+  {
+    from: '/development/analytics/',
+    to: '/development-infrastructure/analytics/',
+  },
+  {
+    from: '/application/',
+    to: '/application-architecture/',
+  },
+  {
+    from: '/application/architecture/',
+    to: '/application-architecture/overview/',
+  },
+  {
+    from: '/application/dynamic-sampling/',
+    to: '/application-architecture/dynamic-sampling/',
+  },
+  {
+    from: '/application/dynamic-sampling/the-big-picture/',
+    to: '/application-architecture/dynamic-sampling/the-big-picture/',
+  },
+  {
+    from: '/application/dynamic-sampling/fidelity-and-biases/',
+    to: '/application-architecture/dynamic-sampling/fidelity-and-biases/',
+  },
+  {
+    from: '/application/dynamic-sampling/architecture/',
+    to: '/application-architecture/dynamic-sampling/architecture/',
+  },
+  {
+    from: '/application/dynamic-sampling/outcomes/',
+    to: '/application-architecture/dynamic-sampling/outcomes/',
+  },
+  {
+    from: '/application/feedback-architecture/',
+    to: '/application-architecture/feedback-architecture/',
+  },
+  {
+    from: '/application/control-silo/',
+    to: '/application-architecture/multi-region-deployment/control-silo/',
+  },
+  {
+    from: '/application/cross-region-replication/',
+    to: '/application-architecture/multi-region-deployment/cross-region-replication/',
+  },
+  {
+    from: '/application/cross-region-rpc/',
+    to: '/application-architecture/multi-region-deployment/cross-region-rpc/',
+  },
+  {
+    from: '/application/config/',
+    to: '/application-architecture/config/',
+  },
+  {
+    from: '/application-architecture/config/',
+    to: '/api-server/config/',
+  },
+  {
+    from: '/application/sentry-vs-getsentry/',
+    to: '/application-architecture/sentry-vs-getsentry/',
+  },
+
+  {
+    from: '/frontend/development-server/',
+    to: '/development-infrastructure/frontend-development-server/',
+  },
+  {
+    from: '/backend/',
+    to: '/api-server/',
+  },
+  {
+    from: '/backend/api/',
+    to: '/api-server/api/',
+  },
+  {
+    from: '/backend/api/basics/',
+    to: '/api-server/api/basics/',
+  },
+  {
+    from: '/backend/api/design/',
+    to: '/api-server/api/design/',
+  },
+  {
+    from: '/backend/api/concepts/',
+    to: '/api-server/api/concepts/',
+  },
+  {
+    from: '/backend/api/public/',
+    to: '/api-server/api/public/',
+  },
+  {
+    from: '/backend/api/checklist/',
+    to: '/api-server/api/checklist/',
+  },
+  {
+    from: '/backend/api/serializers/',
+    to: '/api-server/api/serializers/',
+  },
+  {
+    from: '/backend/development-server/',
+    to: '/development-infrastructure/backend-development-server/',
+  },
+  {
+    from: '/backend/python-dependencies/',
+    to: '/development-infrastructure/python-dependencies/',
+  },
+  {
+    from: '/backend/database-migrations/',
+    to: '/api-server/application-domains/database-migrations/',
+  },
+  {
+    from: '/backend/feature-flags/',
+    to: '/api-server/application-domains/feature-flags/',
+  },
+  {
+    from: '/backend/feature-flags/flagpole/',
+    to: '/api-server/application-domains/feature-flags/flagpole/',
+  },
+  {
+    from: '/backend/feature-flags/options-backed-features/',
+    to: '/api-server/application-domains/feature-flags/options-backed-features/',
+  },
+  {
+    from: '/backend/options/',
+    to: '/api-server/application-domains/options/',
+  },
+  {
+    from: '/backend/transaction-clustering/',
+    to: '/api-server/application-domains/transaction-clustering/',
+  },
+  {
+    from: '/backend/grouping/',
+    to: '/api-server/application-domains/grouping/',
+  },
+  {
+    from: '/backend/outboxes/',
+    to: '/api-server/application-domains/outboxes/',
+  },
+  {
+    from: '/backend/issue-platform/',
+    to: '/api-server/issue-platform/',
+  },
+  {
+    from: '/backend/issue-platform-detectors/',
+    to: '/api-server/issue-platform/writing-detectors/',
+  },
+  {
+    from: '/backend/queue/',
+    to: '/api-server/application-domains/asynchronous-workers/',
+  },
+  {
+    from: '/backend/email/',
+    to: '/api-server/application-domains/email/',
+  },
+  {
+    from: '/backend/kafka/',
+    to: '/api-server/application-domains/kafka/',
+  },
+  {
+    from: '/backend/metrics/',
+    to: '/api-server/application-domains/metrics/',
+  },
+  {
+    from: '/backend/nodestore/',
+    to: '/api-server/application-domains/nodestore/',
+  },
+  {
+    from: '/backend/digests/',
+    to: '/api-server/application-domains/digests/',
+  },
+  {
+    from: '/backend/quotas/',
+    to: '/api-server/application-domains/quotas/',
+  },
+  {
+    from: '/backend/tsdb/',
+    to: '/api-server/application-domains/tsdb/',
+  },
+  {
+    from: '/backend/pii/',
+    to: '/api-server/application-domains/pii/',
+  },
+  {
+    from: '/backend/pii/methods/',
+    to: '/api-server/application-domains/pii/methods/',
+  },
+  {
+    from: '/backend/pii/types/',
+    to: '/api-server/application-domains/pii/types/',
+  },
+  {
+    from: '/backend/pii/selectors/',
+    to: '/api-server/application-domains/pii/selectors/',
+  },
+  {
+    from: '/backend/buffers/',
+    to: '/api-server/application-domains/write-buffers/',
+  },
+  {
+    from: '/backend/translations/',
+    to: '/api-server/application-domains/translations/',
+  },
+  {
+    from: '/backend/ab-testing/',
+    to: '/api-server/application-domains/ab-testing/',
+  },
+  {
+    from: '/relay/',
+    to: '/ingestion/',
+  },
+  {
+    from: '/relay/projectconfig-versioning/',
+    to: '/ingestion/projectconfig-versioning/',
+  },
+  {
+    from: '/relay/transaction-span-ratelimits/',
+    to: '/ingestion/transaction-span-ratelimits/',
   },
 ];
 

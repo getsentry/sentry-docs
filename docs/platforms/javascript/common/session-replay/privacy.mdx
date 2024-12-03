@@ -150,32 +150,6 @@ Sentry.addEventProcessor((event) => {
 });
 ```
 
-```typescript
-import { Event, ReplayEvent } from "@sentry/types";
-
-Sentry.addEventProcessor((event) => {
-  // Ensure that we specifically look at replay events
-  if (!isReplayEvent(event)) {
-    // Return the event, otherwise the event will be dropped
-    return event;
-  }
-
-  // Your URL scrubbing function
-  function urlScrubber(url: string): string {
-    return url.replace(/([a-z0-9]{3}\.[a-z]{5}\.[a-z]{7})/, "[Filtered]");
-  }
-
-  // Scrub all URLs with your scrubbing function
-  event.urls = event.urls && event.urls.map(urlScrubber);
-
-  return event;
-});
-
-function isReplayEvent(event: Event): event is ReplayEvent {
-  return event.type === "replay_event";
-}
-```
-
 ### Deprecated Options
 
 Note that the privacy API prior to version 7.35.0 has been deprecated and replaced with the options above. Please see the [Replay migration guide](https://github.com/getsentry/sentry-javascript/blob/master/packages/replay/MIGRATION.md#upgrading-replay-from-7340-to-7350---6645) for further information.

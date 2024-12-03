@@ -1,0 +1,74 @@
+---
+title: Shopify Hydrogen Guide
+description: "Learn how to use the Sentry Remix SDK to instrument your Shopify Hydrogen app."
+---
+
+If you're using the Shopify Hydrogen framework, you can use the Sentry Remix SDK to add Sentry instrumentation to your app.
+
+First, install the Sentry Remix SDK in your application. We recommend using the Sentry wizard to automatically install the SDK:
+
+```bash
+npx @sentry/wizard@latest -i remix
+```
+
+If the wizard doesn't work for you, you can also [set up the Remix SDK manually](/platforms/javascript/guides/remix/manual-setup/).
+
+After installing the Sentry Remix SDK, delete the newly generated `instrumentation.server.mjs` file and all newly generated code from `entry.server.tsx`. This instrumentation is not needed because you are going to use the Sentry Cloudflare SDK for server-side instrumentation.
+
+Now you can install the Sentry Cloudflare SDK. First, install the SDK with your package manager:
+
+<PlatformContent includePath="getting-started-install" />
+
+Then update your `server.ts` file to use the `wrapRequestHandler` method:
+
+```ts {filename:server.ts}
+import { wrapRequestHandler } from "@sentry/cloudflare";
+
+/**
+ * Export a fetch handler in module format.
+ */
+export default {
+  async fetch(
+    request: Request,
+    env: Env,
+    executionContext: ExecutionContext
+  ): Promise<Response> {
+    return wrapRequestHandler(
+      {
+        options: {
+          dsn: "YOUR_DSN_HERE",
+          tracesSampleRate: 1.0,
+        },
+        // Need to cast to any because this is not on cloudflare
+        request: request as any,
+        context: executionContext,
+      },
+      async () => {
+        // request handling logic
+      }
+    );
+  },
+};
+```
+
+To remove errors relating to `node:async_hooks` (which is included in the sdk, but not used by `wrapRequestHandler`), add a custom vite plugin to your `vite.config.ts` file that will alias it to an empty module:
+
+```ts {filename:vite.config.ts}
+export function removeAsyncHooksPlugin(): Plugin {
+  return {
+    name: "remove-async-hooks",
+    load: (id) => {
+      if (id === "node:async_hooks") {
+        return "export default {}";
+      }
+    },
+  };
+}
+
+export default defineConfig({
+  plugins: [
+    removeAsyncHooksPlugin(),
+    // rest of your plugins
+  ],
+});
+```

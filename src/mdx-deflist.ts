@@ -36,8 +36,8 @@ const isdeflist = (node: Node, i: number, parent: Parent) =>
 
 export default function deflist(): Transformer {
   return tree => {
-    visit(tree, ['paragraph'], (node, i, parent: Parent) => {
-      const isdef = isdeflist(node, i!, parent as Parent);
+    visit(tree, 'paragraph', (node: Node, i, parent: Parent) => {
+      const isdef = isdeflist(node, i!, parent);
       if (!isdef) {
         return;
       }

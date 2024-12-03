@@ -1,0 +1,45 @@
+---
+title: React Router v3
+description: "Learn about Sentry's React Router v3 integration."
+sidebar_order: 40
+---
+
+To use the router integration, import and set a custom routing instrumentation and pass it the history, your routes and a match function. React Router v3 support is maintained for React Router >= 3.2.0 and < 4.0.0.
+
+
+```javascript {18-23}
+import * as Router from "react-router";
+
+import * as Sentry from "@sentry/react";
+
+// Routes looks like this:
+const routes = (
+  <Route path="/">
+    <Route path="organizations/">
+      <Route path=":orgid" component={() => <div>OrgId</div>} />
+      <Route path=":orgid/v1/:teamid" component={() => <div>Team</div>} />
+    </Route>
+  </Route>
+);
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.reactRouterV3BrowserTracingIntegration({
+      history: Router.browserHistory,
+      // Must be Plain Routes.
+      routes: Router.createRoutes(routes),
+      match: Router.match,
+    }),
+  ],
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+});
+```
+
+## Next Steps:
+
+- [Return to **Getting Started**](../../)
+- [Return to the main integrations page](../)
