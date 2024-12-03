@@ -230,6 +230,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/go/guides/negroni/',
   },
   {
+    from: '/platforms/go/slog/',
+    to: '/platforms/go/guides/slog/',
+  },
+  {
     from: '/platforms/go/logrus/',
     to: '/platforms/go/guides/logrus/',
   },
