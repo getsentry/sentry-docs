@@ -1,5 +1,13 @@
 export const sanitizeNext = (next: string) => {
-  let sanitizedNext = next;
+  // Safely decode URI component
+  let sanitizedNext: string;
+  try {
+    sanitizedNext = decodeURIComponent(next);
+  } catch (e) {
+    // Return empty string if decoding fails
+    return '';
+  }
+
   // Validate that next is an internal path
   if (
     sanitizedNext.startsWith('//') ||
@@ -21,5 +29,5 @@ export const sanitizeNext = (next: string) => {
   // Only allow alphanumeric, hyphens
   sanitizedNext = pathname.replace(/[^\w\-\/]/g, '');
 
-  return sanitizedNext;
+  return sanitizedNext === '/' ? '' : sanitizedNext;
 };

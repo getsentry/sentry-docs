@@ -29,4 +29,18 @@ describe('sanitizeNext', () => {
   it('should return an empty string for paths with colons', () => {
     expect(sanitizeNext('/path:to/resource')).toBe('');
   });
+
+  it('should return an empty string for the root path', () => {
+    expect(sanitizeNext('/')).toBe('');
+  });
+
+  it('should decode URL encoded characters', () => {
+    expect(sanitizeNext('/path%2Fwith%2Fslashes')).toBe('/path/with/slashes');
+  });
+
+  it('should return an empty string for a malformed URI component', () => {
+    const input = '%E0%A4%A'; // Malformed URI
+    const expectedOutput = '';
+    expect(sanitizeNext(input)).toBe(expectedOutput);
+  });
 });
