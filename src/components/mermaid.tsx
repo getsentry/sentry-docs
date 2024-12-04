@@ -30,7 +30,8 @@ export default function Mermaid() {
       if (mermaidBlocks.length === 0) {
         return;
       }
-      const {default: mermaid} = await import('mermaid');
+      // we have to dig like this as the nomral import doesn't work
+      const {default: mermaid} = await import('mermaid/dist/mermaid.esm.min.mjs');
       mermaid.initialize({startOnLoad: false});
       mermaidBlocks.forEach(lightModeblock => {
         // get rid of code highlighting
