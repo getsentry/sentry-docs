@@ -8,6 +8,8 @@ import {SmartLink} from 'sentry-docs/components/smartLink';
 import {extractPlatforms, getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
 import {setServerContext} from 'sentry-docs/serverContext';
 
+import {sanitizeNext} from './utils';
+
 export const metadata: Metadata = {
   robots: 'noindex',
   title: 'Platform Specific Content',
@@ -27,8 +29,7 @@ export default async function Page(props: {
     next = next[0];
   }
 
-  // discard the hash
-  const [pathname, _] = next.split('#');
+  const pathname = sanitizeNext(next);
   const rootNode = await getDocsRootNode();
   const defaultTitle = 'Platform Specific Content';
   let description = '';
@@ -64,7 +65,7 @@ export default async function Page(props: {
       p => p.key === requestedPlatform?.toLowerCase()
     );
     if (isValidPlatform) {
-      return redirect(`/platforms/${requestedPlatform}${next}`);
+      return redirect(`/platforms/${requestedPlatform}${pathname}`);
     }
   }
 
@@ -83,7 +84,7 @@ export default async function Page(props: {
       <ul>
         {platformList.map(p => (
           <li key={p.key}>
-            <SmartLink to={`/platforms/${p.key}${next}`}>
+            <SmartLink to={`/platforms/${p.key}${pathname}`}>
               <PlatformIcon
                 size={16}
                 platform={p.icon ?? p.key}
