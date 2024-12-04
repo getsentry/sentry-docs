@@ -161,9 +161,8 @@ export default defineNuxtConfig({
 });
 ```
 
-To upload source maps, the Sentry Nuxt Module will automatically enable source map generation in your project if it is not already enabled.
-However, you need to explicitly enable source map generation on the client-side.
-To do this, add the following code to your Nuxt configuration:
+The Sentry Nuxt Module automatically enables source map generation for your project,
+but you'll need to enable it explicitly for the client-side. Add this code to your Nuxt configuration:
 
 ```javascript {filename:nuxt.config.ts} {2}
 export default defineNuxtConfig({
@@ -171,14 +170,15 @@ export default defineNuxtConfig({
 });
 ```
 
-The option `'hidden'` works like `true`, but suppresses the source map reference comments that would be added to the end of each generated file in the build output.
+The 'hidden' option functions the same as `true`, by enabling source map generation, but it also suppresses the source map reference comments that would
+normally appear at the end of each generated file in the build output. This keeps the source maps available without exposing their references in the files.
 
-When opening browser developer tools, browsers attempt to fetch source maps through reference comments at the end of bundled files.
-After those source maps are uploaded to Sentry during the build process and the SDK removes these client-side source maps, any reference to source maps would trigger 404 errors in the developer tools.
-The `'hidden'` option prevents these reference comments from being generated, stopping browsers from attempting to fetch non-existent map files.
-This approach eliminates unnecessary network errors in browser developer tools.
+When you open browser developer tools, browsers try to fetch source maps using reference comments in bundled files. If source maps are uploaded to Sentry and
+removed from the client-side, these references cause 404 errors in developer tools. The `'hidden'` option stops these comments from being generated, preventing browsers
+from trying to fetch missing files and avoiding unnecessary errors.
 
-Explicitly enabling client source maps is necessary because Nuxt sets default values for source maps ([Nuxt docs](https://nuxt.com/docs/api/nuxt-config#sourcemap)), and the Sentry Nuxt Module keeps these settings when they are explicitly defined.
+You need to explicitly enable client-side source maps because Nuxt applies default [source map settings](https://nuxt.com/docs/api/nuxt-config#sourcemap), and
+the Sentry Nuxt Module respects these when they are explicitly defined.
 
 ## Verify
 
