@@ -91,6 +91,7 @@ export async function Sidebar({path, versions}: SidebarProps) {
             <PlatformSelector
               platforms={platforms}
               currentPlatform={currentGuide || currentPlatform}
+              path={path}
             />
           </div>
           {versions && versions.length >= 1 && (
