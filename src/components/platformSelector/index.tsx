@@ -28,9 +28,9 @@ export function PlatformSelector({
   // do nothing with path for now
   path: _path,
 }: {
-  path: string;
   platforms: Array<Platform>;
   currentPlatform?: Platform | PlatformGuide;
+  path: string[];
 }) {
   // humanize the title for a more natural sorting
   const humanizeTitle = (title: string) =>
