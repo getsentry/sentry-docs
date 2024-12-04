@@ -380,7 +380,9 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
 
           {!loading && totalHits === 0 && (
             <div className={styles['sgs-hit-empty-state']}>
-              No results for <em>{query}</em>
+              <button className="kapa-ai-class font-bold">
+                Can't find what you're looking for? Ask our AI!
+              </button>
             </div>
           )}
 
