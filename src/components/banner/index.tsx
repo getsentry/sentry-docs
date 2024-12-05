@@ -61,7 +61,12 @@ const BANNERS: BannerType[] = [
     linkText: 'See what’s new.',
   },
   {
-    appearsOn: ['^/platforms/flutter/', '^/platforms/react-native/', '^/platforms/android/', '^/platforms/apple/guides/ios/'],
+    appearsOn: [
+      '^/platforms/flutter/',
+      '^/platforms/react-native/',
+      '^/platforms/android/',
+      '^/platforms/apple/guides/ios/',
+    ],
     text: 'Session Replay is now available for mobile.',
     linkURL: 'https://docs.sentry.io/product/explore/session-replay/mobile/',
     linkText: 'Try it in beta.',
