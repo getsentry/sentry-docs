@@ -13,6 +13,7 @@ import {CaretRightIcon, CaretSortIcon, MagnifyingGlassIcon} from '@radix-ui/reac
 import * as RadixSelect from '@radix-ui/react-select';
 import {matchSorter} from 'match-sorter';
 import {usePathname} from 'next/navigation';
+import {useRouter} from 'next/router';
 
 import {PlatformIcon} from 'sentry-docs/components/platformIcon';
 import {Platform, PlatformGuide, PlatformIntegration} from 'sentry-docs/types';
@@ -21,7 +22,6 @@ import {uniqByReference} from 'sentry-docs/utils';
 import styles from './style.module.scss';
 
 import {SidebarLink} from '../sidebarLink';
-import {useRouter} from 'next/router';
 
 export function PlatformSelector({
   platforms,
