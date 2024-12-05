@@ -27,9 +27,20 @@ To ensure that errors occuring in background tasks get reported to Sentry, we al
 
 The example below demonstrates the simplest recommended setup.
 
-<SignInNote />
 
-```python
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python {"onboardingOptions": {"performance": "11-13", "profiling": "14-17"}}
 from sanic import Sanic
 import sentry_sdk
 from sentry_sdk.integrations.asyncio import AsyncioIntegration
@@ -40,13 +51,20 @@ app = Sanic(__main__)
 async def init_sentry(_):
     sentry_sdk.init(
         dsn="___PUBLIC_DSN___",
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for tracing.
+        traces_sample_rate=1.0,
+        # Set profiles_sample_rate to 1.0 to profile 100%
+        # of sampled transactions.
+        # We recommend adjusting this value in production.
+        profiles_sample_rate=1.0,
         integrations=[AsyncioIntegration()],
     )
 ```
 
 ### Configuration options
 
-If you're using performance monitoring, you can configure the Sanic integration to not send transactions for requests that resulted in certain HTTP statuses using the `unsampled_statuses` option.
+If you're using tracing, you can configure the Sanic integration to not send transactions for requests that resulted in certain HTTP statuses using the `unsampled_statuses` option.
 
 By default, the Sanic integration generates transactions for all requests, except requests that result in a 404 HTTP status. To generate transactions for all HTTP statuses, including 404, or change which HTTP statuses don't generate transactions, you can manually instantiate the Sanic integration when initializing the Sentry SDK, like so:
 
@@ -59,8 +77,7 @@ from sentry_sdk.integrations.sanic import SanicIntegration
 @app.listener("before_server_start")
 async def init_sentry(_):
     sentry_sdk.init(
-        dsn="___PUBLIC_DSN___",
-        enable_tracing=True,
+        # ...
         integrations=[
             AsyncioIntegration(),
             SanicIntegration(

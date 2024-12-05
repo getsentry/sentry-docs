@@ -1,0 +1,349 @@
+---
+title: Envelope Items
+sidebar_order: 2
+---
+
+Each Envelope consists of headers and a potentially empty list of Items, each
+with their own headers. Which Headers are required depends on the Items in an
+Envelope. This section describes all Item types and their respective required
+headers. It is worth noting that the list of Item types doesn't match the data
+categories used for [rate limiting](/sdk/expected-features/rate-limiting/#definitions) and
+client reports.
+
+The type of an Item is declared in the `type` header, as well as the payload
+size in `length`. See Serialization Format for a list of common Item headers.
+The headers described in this section are **in addition to the common headers**.
+
+### Event
+
+Item type `"event"`. This Item contains an error or default event payload
+encoded in JSON.
+
+**Constraints:**
+
+- This Item may occur at most once per Envelope.
+- This Item is mutually exclusive with `"transaction"` Items.
+
+**Envelope Headers:**
+
+`event_id`
+
+: **UUID String, required.** Corresponds to the `event_id` field of the event
+  payload. Clients are required to generate an event identifier ahead of time
+  and set it at least in the Envelope headers. If the identifier mismatches
+  between the Envelope and payload, the Envelope header takes precedence.
+
+**Additional Item Headers:**
+
+*None*
+
+### Transaction
+
+Item type `"transaction"`. This Item contains a transaction payload encoded
+in JSON.
+
+**Constraints:**
+
+- This Item may occur at most once per Envelope.
+- This Item is mutually exclusive with `"event"` Items.
+
+**Envelope Headers:**
+
+`event_id`
+
+: **UUID String, required.** Corresponds to the `event_id` field of the
+  transaction payload. Clients are required to generate an event identifier
+  ahead of time and set it at least in the Envelope headers. If the identifier
+  mismatches between the Envelope and payload, the Envelope header takes
+  precedence.
+
+**Additional Item Headers:**
+
+*None*
+
+### Attachment
+
+Item type `"attachment"`. This Item contains a raw payload of an attachment
+file. It is always associated to an event or transaction.
+
+**Constraints:**
+
+- This Item may occur multiple times per Envelope.
+- For **minidump** and **apple crash report** attachments, the corresponding
+  `"event"` Item must be sent within the same Envelope.
+- Generic attachments can be ingested separately from their events. We recommend
+  sending them in the same Envelope, which allows for more efficient rate
+  limiting and filtering.
+- Generic attachments sent in separate Envelopes can be dropped independently of
+  an event. To ensure consistent handling, consider sending them in the same
+  request.
+- The Sentry server supports special attachments to ingest event payloads for
+  backwards compatibility. These are not part of the official public API and the
+  behavior should not be relied upon.
+
+**Envelope Headers:**
+
+`event_id`
+
+: **UUID String, required.** The identifier of the event or transaction.
+
+**Additional Item Headers:**
+
+`filename`
+
+: **String, required.**  The name of the uploaded file without a path component.
+
+`attachment_type`
+
+: *String, optional.* The special type of this attachment. Possible values are:
+
+  - **`event.attachment` (default)**: A standard attachment without special
+    meaning.
+  - `event.minidump`: A minidump file that creates an error event and is
+    symbolicated. The file should start with the `MDMP` magic bytes.
+  - `event.applecrashreport`: An Apple crash report file that creates an error
+    event and is symbolicated.
+  - `unreal.context`: An XML file containing UE4 crash meta data. During event
+    ingestion, event contexts and extra fields are extracted from this file.
+  - `unreal.logs`: A plain-text log file obtained from UE4 crashes. During
+    event ingestion, the last logs are extracted into event breadcrumbs.
+  - `event.view_hierarchy`: An JSON file with a predefined structure, see [RFC #33](https://github.com/getsentry/rfcs/blob/main/text/0033-view-hierarchy.md).
+
+`content_type`
+
+: *String, optional.* The content type of the attachment payload. Any [MIME type](https://www.iana.org/assignments/media-types/media-types.xhtml) may be used; the default is `application/octet-stream`.
+
+### Session
+
+Item type `"session"` contains a single session initialization or update to an
+existing session for Release Health.
+
+See the <Link to="/sdk/telemetry/sessions/">sessions</Link> documentation for the payload
+details.
+
+**Constraints:**
+
+- This Item may occur multiple times per Envelope.
+- Ingestion may limit the maximum number of Items per Envelope, see *Ingestion*.
+
+**Additional Item Headers:**
+
+*None*
+
+### Sessions
+
+Item type `"sessions"` contains buckets of pre-aggregated session counts.
+
+See the <Link to="/sdk/telemetry/sessions/">sessions</Link> documentation for the payload
+details.
+
+**Constraints:**
+
+- This Item may occur multiple times per Envelope.
+- Ingestion may limit the maximum number of Items per Envelope, see *Ingestion*.
+
+**Additional Item Headers:**
+
+*None*
+
+### Statsd
+
+Item type `"statsd"` contains metrics emissions in a superset of the statsd format.
+
+See the <Link to="/sdk/metrics/">metrics</Link> documentation for the payload
+details.
+
+**Constraints:**
+
+- This Item may occur multiple times per Envelope.
+- Ingestion may limit the maximum number of Items per Envelope, see *Ingestion*.
+
+**Additional Item Headers:**
+
+*None*
+
+### Metric Meta
+
+Item type `"metric_meta"` contains per-metric meta data which is persisted alongside
+metrics in the system.
+
+See the <Link to="/sdk/metrics/">metrics</Link> documentation for the payload
+details.
+
+**Constraints:**
+
+- This Item may occur multiple times per Envelope.
+- Ingestion may limit the maximum number of Items per Envelope, see *Ingestion*.
+
+**Additional Item Headers:**
+
+*None*
+
+### User Feedback
+
+User Feedback was called User Report in the beginning. Therefore the envelope item type is `"user_report"`.
+The item contains a user feedback / user report JSON payload:
+```json
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc","email":"john@me.com","name":"John Me","comments":"It broke."}\n
+```
+
+**Attributes**
+
+`event_id`
+
+: **UUID String, required.** The identifier of the event or transaction.
+
+
+`email`
+
+: *String, recommended.* The email of the user.
+
+`name`
+
+: *String, recommended.* The name of the user.
+
+`comments`
+
+: *String, recommended.* Comments of the user about what happened.
+
+**Constraints:**
+
+- This Item may occur once per Envelope.
+- User Feedbacks / Reports can be ingested separately from their events. We recommended to
+  send them in the same Envelope.
+
+**Envelope Headers:**
+
+`event_id`
+
+: **UUID String, required.** The identifier of the event or transaction.
+
+**Additional Item Headers:**
+
+*None*
+
+### Client Report
+
+Item type `"client_report"` contains a client report payload encoded in JSON.
+
+See the <Link to="/sdk/telemetry/client-reports/">client reports</Link> documentation for the payload
+details.
+
+**Constraints:**
+
+- This Item may occur multiple times per Envelope, but please avoid sending more client reports than necessary.
+- This Item can either be included in an Envelope with other Items, or it may be sent by itself.
+
+**Envelope Headers:**
+
+*None*
+
+**Additional Item Headers:**
+
+*None*
+
+### Replay Event
+
+Item type `"replay_event"` contains a replay payload encoded in JSON.
+
+See the <Link to="/sdk/telemetry/replays/">replays</Link> documentation for the payload
+details.
+
+**Constraints:**
+
+- This Item may occur at most once per Envelope.
+- This Item must be sent with a Replay Recording Item.
+
+**Envelope Headers:**
+
+*None*
+
+**Additional Item Headers:**
+
+*None*
+
+### Replay Recording
+
+Item type `"replay_recording"` contains a replay recording payload encoded in JSON *or* a gzipped JSON.
+
+See the <Link to="/sdk/telemetry/replays/">replays</Link> documentation for the payload
+details.
+
+**Constraints:**
+
+- This Item may occur at most once per Envelope.
+- This Item must be sent with a Replay Event Item.
+
+**Envelope Headers:**
+
+*None*
+
+**Additional Item Headers:**
+
+`length`
+
+: **integer, required.** The size of the Replay recording payload
+
+### Profile
+
+Item type `"profile"`. This Item contains a profile payload encoded
+in JSON.
+
+**Constraints:**
+
+- This Item may occur at most once per Envelope.
+- This Item needs to be in the same Envelope as the associated transaction.
+
+**Envelope Headers:**
+
+*None*
+
+**Additional Item Headers:**
+
+*None*
+
+### Profile Chunk
+
+Item type `"profile_chunk"`. This Item contains a profile_chunk (profile sample format V2) payload encoded
+in JSON.
+
+**Constraints:**
+
+*None*
+
+**Envelope Headers:**
+
+*None*
+
+**Additional Item Headers:**
+
+*None*
+
+### Check-Ins
+
+Item type `"check_in"` contains a check-in payload encoded as JSON.
+
+See the <Link to="/sdk/check-ins/">Check-Ins</Link> documentation for the payload
+details.
+
+**Constraints:**
+
+- This Item may occur at most once per Envelope.
+- This Item can either be included in an Envelope with other Items, or it may be sent by itself.
+
+**Envelope Headers:**
+
+*None*
+
+**Additional Item Headers:**
+
+*None*
+
+### Reserved Types
+
+Reserved types may not be written by any implementation. They are reserved for
+future or internal use. This is the exhaustive list of reserved Item types:
+
+- `security`
+- `unreal_report`
+- `form_data`

@@ -1,11 +1,23 @@
 ---
 title: UWP
-description: "Learn more about Sentry's .NET SDK works with Universal Windows Platform (UWP) applications."
+description: "Learn more about how Sentry's .NET SDK works with Universal Windows Platform (UWP) applications."
 ---
 
 Sentry's .NET SDK works with Universal Windows platform applications through the [Sentry NuGet package](https://www.nuget.org/packages/Sentry).
 
-## Configuration
+## Features
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+## Install
+
+<OnboardingOptionButtons options={['error-monitoring', 'performance']}/>
+
+<PlatformContent includePath="getting-started-install" />
+
+## Configure
 
 In addition to [initializing the SDK with `SentrySdk.Init`](/platforms/dotnet/), you must configure the UWP specific `Application.UnhandledException` and `Application.Suspending` events.
 
@@ -15,11 +27,8 @@ The SDK should be initialized in the constructor of your application class (usua
 
 </Note>
 
-<SignInNote />
 
-```csharp
-// Add these to your existing using statements.
-using Sentry;
+```csharp {"onboardingOptions": {"performance": "18-21"}}
 using Sentry.Protocol;
 using UnhandledExceptionEventArgs = Windows.UI.Xaml.UnhandledExceptionEventArgs;
 
@@ -28,20 +37,20 @@ sealed partial class App : Application
     public App()
     {
         // Initialize Sentry in the App constructor before any other code, to ensure you capture all possible exceptions.
-        SentrySdk.Init(o =>
+        SentrySdk.Init(options =>
         {
             // Tells which project in Sentry to send events to:
-            o.Dsn = "___PUBLIC_DSN___";
+            options.Dsn = "___PUBLIC_DSN___";
 
             // When configuring for the first time, to see what the SDK is doing:
-            o.Debug = true;
+            options.Debug = true;
 
-            // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
+            // Set traces_sample_rate to 1.0 to capture 100% of transactions for tracing.
             // We recommend adjusting this value in production.
-            o.TracesSampleRate = 1.0;
+            options.TracesSampleRate = 1.0;
 
             // Enable Global Mode since this is a client app.
-            o.IsGlobalModeEnabled = true;
+            options.IsGlobalModeEnabled = true;
 
             // TODO:Any other Sentry options you need go here.
         });
@@ -94,3 +103,9 @@ sealed partial class App : Application
     }
 }
 ```
+
+## Verify
+
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+
+<PlatformContent includePath="getting-started-verify" />

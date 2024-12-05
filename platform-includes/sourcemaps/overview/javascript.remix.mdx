@@ -13,16 +13,24 @@ If you use Vite to build your project, you can use the [Vite plugin](/platforms/
 
 First, install the plugin if you haven't already done so:
 
-```bash
-npm install --save-dev @sentry/vite-plugin
+```bash {tabTitle:npm}
+npm install @sentry/vite-plugin --save-dev
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/vite-plugin --dev
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/vite-plugin --save-dev
 ```
 
 Then, add the plugin to your Vite configuration:
 
 ```typescript {filename:vite.config.ts}
-import { defineConfig } from 'vite'
+import { defineConfig } from "vite";
 import { vitePlugin as remix } from "@remix-run/dev";
-import { sentryVitePlugin } from '@sentry/vite-plugin'
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 
 export default defineConfig({
   plugins: [
@@ -32,19 +40,27 @@ export default defineConfig({
     sentryVitePlugin({
       // If you use .sentryclirc or environment variables,
       // you don't need to specify these options
-      authToken: '___SENTRY_AUTH_TOKEN___',
-      org: '___SENTRY_ORG_SLUG___',
-      project: '___SENTRY_PROJECT_SLUG___',
-    })
+      authToken: "___SENTRY_AUTH_TOKEN___",
+      org: "___SENTRY_ORG_SLUG___",
+      project: "___SENTRY_PROJECT_SLUG___",
+    }),
   ],
   build: {
-    sourcemaps: true,
+    sourcemap: true,
     // ... rest of your Vite build options
-  }
+  },
 
   // ... rest of your Vite config
-})
+});
 ```
+
+<Alert>
+  Generating sourcemaps may expose them to the public, potentially causing your
+  source code to be leaked. You can prevent this by configuring your server to deny access to `.js.map` files, or by
+  using [Sentry Vite Plugin's
+  `sourcemaps.filesToDeleteAfterUpload`](https://www.npmjs.com/package/@sentry/vite-plugin#sourcemapsfilestodeleteafterupload)
+  option to delete source maps after they've been uploaded to Sentry.
+</Alert>
 
 To see the full list of options, refer to the [Vite plugin documentation](https://www.npmjs.com/package/@sentry/vite-plugin).
 
@@ -53,7 +69,7 @@ To see the full list of options, refer to the [Vite plugin documentation](https:
 If you're not using Vite to build your project, you can use the `sentry-upload-sourcemaps` script to upload source maps to Sentry.
 
 The Sentry Remix SDK provides a script to automatically create a release and upload source maps after you've built your project.
-Under the hood, it uses the [Sentry CLI](/product/cli/).
+Under the hood, it uses the [Sentry CLI](/cli/).
 
 This script requires setting an auth token, which can either be done through a `.sentryclirc` file in the root of your project or through environment variables:
 

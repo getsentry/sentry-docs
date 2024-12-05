@@ -39,7 +39,7 @@ Depending on what type of Jenkins project you're using to build and deploy, you 
 - [Pipeline (Jenkinsfile)](/product/releases/setup/release-automation/jenkins/#pipeline)
 - [Freestyle project](/product/releases/setup/release-automation/jenkins/#freestyle-project)
 
-For more details about the release management concepts below, see the full documentation on [release management](/product/cli/releases/).
+For more details about the release management concepts below, see the full documentation on [release management](/cli/releases/).
 
 ### Pipeline
 
@@ -67,9 +67,9 @@ pipeline {
                     export SENTRY_RELEASE=$(sentry-cli releases propose-version)
                     sentry-cli releases new -p $SENTRY_PROJECT $SENTRY_RELEASE
                     sentry-cli releases set-commits $SENTRY_RELEASE --auto
-                    sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps /path/to/sourcemaps
+                    sentry-cli sourcemaps upload --release $SENTRY_RELEASE /path/to/sourcemaps
                     sentry-cli releases finalize $SENTRY_RELEASE
-                    sentry-cli releases deploys $SENTRY_RELEASE new -e $SENTRY_ENVIRONMENT
+                    sentry-cli deploys new -e $SENTRY_ENVIRONMENT
                 '''
             }
         }
@@ -79,7 +79,7 @@ pipeline {
 
 **Notes**:
 
-- If you’re not deploying a project that requires source maps or you've sent source maps to Sentry using another method, omit the `upload-sourcemaps` line.
+- If you’re not deploying a project that requires source maps or you've sent source maps to Sentry using another method, omit the `sourcemaps upload` line.
 - If you can’t install a repository integration, send commit metadata using the [create release endpoint](/product/releases/associate-commits/#using-the-api) or omit the `set-commits` line.
 - `credentials('sentry-auth-token')` refers to the ID of the credentials just added to Jenkins.
 - `sentry-cli releases propose-version` defaults to the commit SHA of the commit being deployed. To set this to a different version, modify `SENTRY_RELEASE` to the preferred version.
@@ -106,13 +106,13 @@ If you're using Freestyle projects, you need to add another build step after dep
 
    sentry-cli releases new -p $SENTRY_PROJECT $SENTRY_RELEASE
    sentry-cli releases set-commits $SENTRY_RELEASE --auto
-   sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps path-to-sourcemaps-if-applicable
+   sentry-cli sourcemaps upload --release $SENTRY_RELEASE path-to-sourcemaps-if-applicable
    sentry-cli releases finalize $SENTRY_RELEASE
-   sentry-cli releases deploys $SENTRY_RELEASE new -e $SENTRY_ENVIRONMENT
+   sentry-cli deploys new -e $SENTRY_ENVIRONMENT
    ```
 
    **Notes**:
 
-   - If you’re not deploying a project that requires source maps or you've sent source maps to Sentry using another method, omit the `upload-sourcemaps` line.
+   - If you’re not deploying a project that requires source maps or you've sent source maps to Sentry using another method, omit the `sourcemaps upload` line.
    - If you can’t install a repository integration, send commit metadata using the [create release endpoint](/product/releases/associate-commits/#using-the-api) or omit the `set-commits` line.
    - `sentry-cli releases propose-version` defaults to the commit SHA of the commit being deployed. To set this to a different version, modify `SENTRY_RELEASE` to the preferred version.

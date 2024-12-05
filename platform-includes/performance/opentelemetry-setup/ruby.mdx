@@ -1,6 +1,5 @@
 Initialize Sentry for tracing and set the `instrumenter` to `:otel`:
 
-<SignInNote />
 
 ```ruby {filename:config/initializers/sentry.rb}
 Sentry.init do |config|
@@ -24,8 +23,7 @@ end
 OpenTelemetry.propagation = Sentry::OpenTelemetry::Propagator.new
 ```
 
-Note that if you need extra Sentry features such as tags / user, you will need to re-order the middleware as below to
-make sure Sentry's scope management works properly.
+Note that if you are using the Ruby OpenTelemetry gem [*pre-v0.24.0*](https://github.com/open-telemetry/opentelemetry-ruby-contrib/tree/main/instrumentation/rack#rack-middleware-vs-rack-events) along with extra Sentry features such as tags / user, you will need to re-order the middleware as below to make sure Sentry's scope management works properly. (After v0.24.0, the gem [uses Rack Events rather than a middleware.](https://github.com/open-telemetry/opentelemetry-ruby-contrib/tree/main/instrumentation/rack#rack-middleware-vs-rack-events))
 
 ```ruby {filename:config/initializers/otel.rb}
 Rails.application.config.middleware.move_after(

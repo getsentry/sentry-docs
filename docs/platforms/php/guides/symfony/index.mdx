@@ -1,10 +1,13 @@
 ---
 title: Symfony
 sdk: sentry.php.symfony
-description: "Learn about using Sentry with Symfony."
+description: "Symfony is a set of reusable PHP components and a PHP framework to build web applications and services. Learn how to set it up with Sentry."
 ---
 
-Symfony is supported via the [`sentry-symfony`](https://github.com/getsentry/sentry-symfony) package as a native bundle.
+## Prerequisites
+
+* You need a [Sentry account](https://sentry.io/signup/) and project
+* Your Symfony application needs to run on PHP 7.2 or later
 
 ## Install
 
@@ -14,11 +17,11 @@ Install the `sentry/sentry-symfony` bundle:
 composer require sentry/sentry-symfony
 ```
 
+If you are using [Monolog](https://github.com/Seldaek/monolog) to report events instead of the typical error listener approach, you need this [additional configuration](integrations/monolog/) to log the errors correctly.
+
 ## Configure
 
 Add your DSN to your `.env` file:
-
-<SignInNote />
 
 ```plain {filename:.env}
 ###> sentry/sentry-symfony ###
@@ -26,34 +29,11 @@ SENTRY_DSN="___PUBLIC_DSN___"
 ###< sentry/sentry-symfony ###
 ```
 
-### Monolog Integration
+<Alert level="warning">
+  In order to receive stack trace arguments in your errors, make sure to set `zend.exception_ignore_args: Off` in your php.ini
+</Alert>
 
-If you are using [Monolog](https://github.com/Seldaek/monolog) to report events instead of the typical error listener approach, you need this additional configuration to log the errors correctly:
-
-{/* <!-- prettier-ignore --> */}
-```yaml {filename:config/packages/sentry.yaml}
-sentry:
-    register_error_listener: false # Disables the ErrorListener to avoid duplicated log in sentry
-    register_error_handler: false # Disables the ErrorListener, ExceptionListener and FatalErrorListener integrations of the base PHP SDK
-
-monolog:
-    handlers:
-        sentry:
-            type: sentry
-            level: !php/const Monolog\Logger::ERROR
-            hub_id: Sentry\State\HubInterface
-```
-
-Additionally, you can register the `PsrLogMessageProcessor` to resolve PSR-3 placeholders in reported messages:
-
-{/* <!-- prettier-ignore --> */}
-```yaml {filename:config/packages/sentry.yaml}
-services:
-    Monolog\Processor\PsrLogMessageProcessor:
-        tags: { name: monolog.processor, handler: sentry }
-```
-
-## Test the implementation
+## Verify
 
 To test that both logger error and exception are correctly sent to sentry.io, you can create the following controller:
 
@@ -84,7 +64,7 @@ class SentryTestController extends AbstractController
     public function testLog()
     {
         // the following code will test if monolog integration logs to sentry
-        $this->logger->error('My custom logged error.');
+        $this->logger->error('My custom logged error.', ['some' => 'Context Data']);
 
         // the following code will test if an uncaught exception logs to sentry
         throw new \RuntimeException('Example exception.');

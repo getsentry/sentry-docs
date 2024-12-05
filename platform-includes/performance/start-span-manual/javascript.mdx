@@ -1,0 +1,13 @@
+```javascript
+// Start a span that tracks the duration of middleware
+function middleware(_req, res, next) {
+  return Sentry.startSpanManual({ name: "middleware" }, (span) => {
+    res.once("finish", () => {
+      span.setHttpStatus(res.status);
+      // manually tell the span when to end
+      span.end();
+    });
+    return next();
+  });
+}
+```

@@ -28,7 +28,7 @@ In your `pubspec.yaml`, add `sentry_dart_plugin` as a new dev dependency.
 
 ```yaml
 dev_dependencies:
-  sentry_dart_plugin: ^1.0.0
+  sentry_dart_plugin: ^2.0.0
 ```
 
 ### Build
@@ -61,6 +61,7 @@ sentry:
   wait_for_processing: false
   log_level: error
   release: ...
+  dist: ...
   web_build_path: ...
   commits: auto
   ignore_missing: true
@@ -106,7 +107,13 @@ Configures the log level for sentry-cli. This is a `string` type with default va
 
 `release`
 
-The release version for source maps, it should match the release set by the SDK. This is a `string` type with default value `name@version` from pubspec. The alternative environmental variable is `SENTRY_RELEASE`.
+The release version for source maps, which should match the release set by the SDK. This is a `string` type with default value `name@version` from pubspec. If a build number is included in the version, it is utilized as dist. The alternative environmental variable is `SENTRY_RELEASE`.
+
+Setting a custom release can be specified via an environment variable or plugin configuration. Once set, it is used as is without further modification.
+
+`dist`
+
+Custom dist can also be set via the environment variable `SENTRY_DIST` or via plugin configuration. It replaces or adds to the build number in the default release.
 
 `web_build_path`
 
@@ -119,6 +126,18 @@ Release commits integration. This is a `string` type with default value `auto`.
 `ignore_missing`
 
 Ignore missing commits previously used in the release. This is a boolean type with default value `false`.
+
+`bin_dir`
+
+The folder where the plugin downloads the sentry-cli binary. This is a `string` type with default value `.dart_tool/pub/bin/sentry_dart_plugin`.
+
+`bin_path`
+
+Path to the sentry-cli binary to use instead of downloading. Make sure to use the correct version. This is a `string` type and is empty by default.
+
+`sentry_cli_cdn_url`
+
+Alternative place to download sentry-cli. This is a `string` type with default value `https://downloads.sentry-cdn.com/sentry-cli`. Alternatively, this can also be set with the `SENTRYCLI_CDNURL` environment variable.
 
 ### Run
 
@@ -140,7 +159,7 @@ If you use the `split-debug-info` and `obfuscate` flags, you need to upload the 
 
 ### Uploading for Android NDK
 
-The Sentry Dart Plugin will also upload NDK symbols if `upload_debug_symbols` is enabled. Alternatively, see our docs on uploading [Debug Information Files](/product/cli/dif/#uploading-files) manually with the Sentry CLI.
+The Sentry Dart Plugin will also upload NDK symbols if `upload_debug_symbols` is enabled. Alternatively, see our docs on uploading [Debug Information Files](/cli/dif/#uploading-files) manually with the Sentry CLI.
 
 If you are using a version of `sentry_flutter` earlier than 5.1, native symbolication on Android requires a specific configuration. Refer to [Troubleshooting](/platforms/flutter/troubleshooting/#native-symbolication-on-android) for more information.
 
@@ -152,14 +171,14 @@ Sentry's Flutter SDK doesn't currently support the `uploadNativeSymbols` flag fr
 
 ### Uploading with ProGuard
 
-If you have ProGuard (`minifyEnabled`) enabled, you must upload the [Android Proguard/R8 mapping files](/platforms/android/enhance-errors/proguard/) to see complete stack traces. You can upload these files by either using our Gradle integration (recommended) or manually by using the [Sentry CLI](/product/cli/dif/#proguard-mapping-upload).
+If you have ProGuard (`minifyEnabled`) enabled, you must upload the [Android Proguard/R8 mapping files](/platforms/android/enhance-errors/proguard/) to see complete stack traces. You can upload these files by either using our Gradle integration (recommended) or manually by using the [Sentry CLI](/cli/dif/#proguard-mapping-upload).
 
 ### Uploading Source Maps for Flutter Web
 
-The Sentry Dart plugin also uploads source maps if `upload_source_maps` is enabled. Alternatively, you can use the Sentry CLI to upload your source maps for Flutter Web by following the docs on [Managing Release Artifacts](/product/cli/releases/#managing-release-artifacts). This will automatically enable Source Context as well.
+The Sentry Dart plugin also uploads source maps if `upload_source_maps` is enabled. Alternatively, you can use the Sentry CLI to upload your source maps for Flutter Web by following the docs on [Managing Release Artifacts](/cli/releases/#managing-release-artifacts).
 
-### Uploading Source Context for Flutter Android, iOS, and macOS
+### Uploading Source Context
 
-Use the [`upload_sources`](/platforms/flutter/upload-debug/#sentry-dart-plugin) option to enable [Source Context](/platforms/flutter/data-management/debug-files/source-context/).
+Use the [`upload_sources`](/platforms/flutter/upload-debug/#sentry-dart-plugin) option to enable [Source Context](/platforms/flutter/data-management/debug-files/source-context/). This is available for Flutter Android, iOS, macOS and Web.
 
 For more information, check out the [Native Symbolication on iOS/macOS](/platforms/flutter/troubleshooting/#native-symbolication-on-iosmacos) and [Source Context](/platforms/flutter/troubleshooting/#source-context) troubleshooting guides.

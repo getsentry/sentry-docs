@@ -1,0 +1,243 @@
+---
+title: 'Feature Flags'
+sidebar_order: 30
+---
+
+Feature flags are declared in Sentry's codebase (look for `SENTRY_FEATURES` in
+[`server.py`](https://github.com/getsentry/sentry/blob/master/src/sentry/conf/server.py)).
+For self-hosted users, those flags are then configured via `sentry.conf.py`.
+For Sentry's SaaS deployment, options automator is used to configure flags in production.
+
+You can find a list of features available by looking at two files:
+
+- `sentry/features/permanent.py` - Features typically managed by subscriptions for sentry.io
+- `sentry/features/temporary.py` - Features used during development intended to be removed
+
+They're declared on the `FeatureManager` like so:
+
+```python
+# pass FeatureHandlerStrategy.FLAGPOLE to use our options-backed feature flagging system:
+manager.add("organizations:onboarding", OrganizationFeature, FeatureHandlerStrategy.FLAGPOLE)
+
+# pass FeatureHandlerStrategy.INTERNAL if you don't plan to use options automator:
+manager.add("organizations:onboarding", OrganizationFeature, FeatureHandlerStrategy.INTERNAL)
+
+# [DEPRECATED] pass FeatureHandlerStrategy.OPTIONS to use options automator:
+manager.add("organizations:onboarding", OrganizationFeature, FeatureHandlerStrategy.OPTIONS)
+```
+
+The feature can be enabled with the following in your `sentry.conf.py`, usually located at `~/.sentry/`:
+
+```python
+SENTRY_FEATURES["organizations:onboarding"] = True
+```
+
+You can modify the state of [feature flags in tests](/development/testing/#setting-options-and-feature-flags) using a context manager.
+
+Generally you want your feature names to be unique to help in their
+[removal](#after-launch-graduation).  For example a feature flag like `trends`
+may prove difficult to find because `trends` may appear throughout the codebase.
+But a name like `performance-trends-view` is more likely to be unique and easier
+to remove later
+
+## Creating a new Feature Flag
+
+### Determine what scope the feature should have
+
+Features can be scoped by organization, and projects. If you're not confident
+you want a project feature, create an organization level one. In this example
+we'll build a feature called `test-feature` scoped at the _organization_ level.
+
+### Determine the permanency of your feature
+
+Typically we use feature flags for development. They are usually [intended to
+be graduated](#after-launch-graduation). The only exceptions to this are permanent
+flags which control [subscription plan-specific features](#plan-specific-features)
+in GetSentry.
+
+Most Sentry feature flags are placed in `temporary.py`, while permanent Sentry flags live in
+`permanent.py`.
+
+GetSentry only flags are typically placed in [`features.py`](https://github.com/getsentry/getsentry/blob/master/getsentry/features.py).
+
+### Determine whether your feature needs to be exposed in the API
+
+If you plan on using your feature in the frontend, you need to set
+`api_expose=True` when adding your feature. Features that have `api_expose` will
+be included in the results of the organization details response.
+
+### Add your feature to the FeatureManager
+
+If you want to back your feature flag via options, you can do so using the [Flagpole](/backend/feature-flags/flagpole/) library
+by adding the feature to the `FeatureManager` with the `FLAGPOLE` enum set as the feature strategy:
+
+```python
+default_manager.add('organizations:test-feature', OrganizationFeature, FeatureHandlerStrategy.FLAGPOLE, api_expose=True)
+```
+
+When defining a feature you can also set the default state of the feature flag.
+If no default is provided, `False` will be used.
+
+```python
+# Example of a feature set with a default value of True
+default_manager.add('organizations:test-feature', OrganizationFeature, FeatureHandlerStrategy.FLAGPOLE, default=True, api_expose=True)
+```
+
+If you don't plan to use Flagpole, use `FeatureHandlerStrategy.INTERNAL` with a custom feature handler instead, for example:
+
+```python
+default_manager.add('organizations:test-feature', OrganizationFeature, FeatureHandlerStrategy.INTERNAL)
+```
+
+### Add it to the Organization Model Serializer
+
+The Organization model serializer
+(`src/sentry/api/serializers/models/organization.py`) builds a list
+called `feature_list` that is given to the front-end to use. By default, all
+organization features are checked and those that are present are added into the list. If
+your feature requires additional custom logic, you will have to update the
+organization serializer to check and include it manually.
+
+### Using Model Flags (Less common)
+
+Sometimes a flag on the model is used to indicate a feature flag as shown
+below. This is not recommended unless there is a specific reason to make
+changes to the model. For example, the `require_2fa` flag affects behavior on
+the backend to enforce two-factor authentication.
+
+```python
+feature_list = []
+
+if getattr(obj.flags, 'allow_joinleave'):
+    feature_list.append('open-membership')
+if not getattr(obj.flags, 'disable_shared_issues'):
+    feature_list.append('shared-issues')
+if getattr(obj.flags, 'require_2fa'):
+    feature_list.append('require-2fa')
+```
+
+## Checking your feature
+
+### In Python code
+
+The FeatureManager's `has` method checks see if the feature exists. The `has`
+method takes in the feature's name, the objects that correspond to the scope of
+the feature *(i.e. an organization for an organization level feature or
+a project for a project level feature)*, and the actor (aka user). Here's an example
+Organization feature check:
+
+```python
+if features.has('organizations:test-feature', obj, actor=user):
+    feature_list.append('test-feature')
+```
+
+The example code only adds the feature to the `feature_list` if that feature is enabled for
+the organization and the type of user given. Note that when we give the feature
+to the frontend, we remove the scope prefix, and
+our `'organizations:test-feature'` becomes `'test-feature'`.
+
+### In JavaScript
+
+In order to check a feature flag in JavaScript, your feature flag will need
+`api_expose=True`.
+
+### Declarative features with the Feature component
+
+React uses a declarative programming paradigm. As such, we have a utility
+component that we use to hide components based on the feature flags available to
+a organization/project
+
+```jsx
+import Feature from 'sentry/components/acl/feature';
+
+const toRender = (
+  <Feature features={['test-feature']}>
+    <MyComponentToFlag />
+  </Feature>
+);
+```
+
+### Imperative feature flag checks
+
+There are some exceptions when React components are generated imperatively (e.g.
+headers/columns for Tables). In difficult times like these, the `Organization`
+/ `Project` object has a array of the feature flags, which you can use in this
+way:
+
+```jsx
+const {organization} = this.props;
+
+// Method 2
+organization.features.includes('test-feature'); // evals to True/False
+```
+
+## Enabling features in development
+
+In Sentry you can run `sentry devserver` to view your changes in development
+mode. If you would like to view a change behind a feature flag, you will need to
+open the file `~/.sentry/sentry.conf.py` on your local machine. This file
+contains your local settings for the sentry application, and can be viewed and
+edited. If you would like to toggle a flag on or off, add this to your
+configuration file:
+
+```python
+SENTRY_FEATURES['organizations:test-feature'] = True
+```
+
+Alternatively, you can test Flagpole features by setting custom options locally.
+See the [Flagpole Local Development](/backend/feature-flags/flagpole/#testing-a-flagpole-feature-locally) docs for more information on this.
+
+## Enabling your feature in production
+
+Feature flags are declared in Sentry's codebase. For self-hosted users, those
+flags are then configured via `sentry.conf.py`. For Sentry's SaaS deployment,
+you have the choice of using an option backed rollout via Options Automator with Flagpole,
+or by writing a custom feature flag handler.
+
+- [Flagpole](/backend/feature-flags/flagpole/) is Sentry's internal feature flagging library, allowing a feature
+  with multiple target segments and condition filters to be defined in YAML within Options Automator.
+
+- [Options based features](options-backed-features/) [DEPRECATED] allow a feature
+  to be rolled out to a specific subset of LA orgs, a percentage of EA orgs,
+  and/or a percentage of all orgs. These can be used in high scale situations, and are generally
+  preferred over customer feature handlers. This strategy predates Flagpole, which is the new standard
+  way to define an option-backed feature flag.
+
+## After launch (Graduation)
+
+After your feature has been mainlined and is available for all customers on
+sentry.io, you have a few potential paths:
+
+- If the feature cannot be disabled, or you don't need to conditionally disable
+  the feature, remove the feature flag and all related checks from the Sentry
+  code base. If necessary, also remove references to the feature from the
+  [self-hosted](https://github.com/getsentry/self-hosted), getsentry, and
+  options-automator repositories.
+- If the feature will only be available to SaaS customers on specific plans, you
+  need to add your feature flag to the appropriate plans and update feature
+  handlers (see below). You should also move the feature flag from
+  `temporary.py` to `permanent.py` and update the default value to enable the
+  feature in self-hosted instances.
+
+## Getsentry feature handlers
+
+Getsentry contains a variety of feature handlers that override the
+`SENTRY_FEATURES` map, which are defined in the [`features.py`](https://github.com/getsentry/getsentry/blob/master/getsentry/features.py) file.
+
+### Plan specific features
+
+If your feature is available for a subset of plans (eg. only on Business plans)
+you need to:
+
+1. Disable the feature in `getsentry/conf/settings/defaults.py` by updating `SENTRY_FEATURES`.
+2. Add your feature to the appropriate plan feature list.
+3. Update `SubscriptionPlanFeatureHandler` to handle your feature.
+
+### Custom handlers
+
+If your feature requires additional logic to become active, you can also
+implement a feature handler in getsentry. For example, you can create a feature flag that is backed by [options](/backend/options/). follow these steps:
+
+1. Disable the feature in `getsentry/conf/settings/defaults.py` by updating `SENTRY_FEATURES`.
+2. Add a new feature handler class in `getsentry/features.py` that determines availability of the feature based on the organization or actor.
+3. Register the handler at the bottom of `getsentry/features.py`.

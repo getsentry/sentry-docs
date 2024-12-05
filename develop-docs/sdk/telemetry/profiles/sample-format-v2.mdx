@@ -1,0 +1,362 @@
+---
+title: Sample Format V2
+description: Continuous profiling.
+sidebar_order: 2
+---
+
+The *Sample Format V2* is designed for use in continuous profiling. Therefore, a profile can exist independently and be sent in the envelope on its own.
+
+## Data Model
+
+### Example
+
+```json
+{
+  "debug_meta": {
+    "images": [
+      {
+        "debug_id": "5819FF25-01CB-3D32-B84F-0634B37D3BBC",
+        "image_addr": "0x00000001023a8000",
+        "type": "macho",
+        "image_size": 16384,
+        "code_file": "/Library/Developer/CoreSimulator/Volumes/iOS_21C62/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 17.2.simruntime/Contents/Resources/RuntimeRoot/usr/lib/libLogRedirect.dylib"
+      }
+    ]
+  },
+  "profiler_id": "71bba98d90b545c39f2ae73f702d7ef4",
+  "chunk_id": "3e11a5c9831f4e49939c0a81944ea2cb",
+  "client_sdk": {
+    "name": "sentry.cocoa",
+    "version": "8.36.0"
+  },
+  "measurements": { ... },
+  "platform": "cocoa",
+  "release": "io.sentry.sample.iOS-Swift@8.36.0+1",
+  "environment": "simulator",
+  "version": "2",
+  "profile": {
+    "samples": [
+      {
+        "thread_id": "259",
+        "stack_id": 0,
+        "timestamp": 1724777211.5037799
+      }
+    ],
+    "stacks": [
+      [ 0 ]
+    ],
+    "frames": [
+      {
+        "instruction_addr": "0x000000010232d144",
+        "function": "_ZNK5dyld311MachOLoaded17findClosestSymbolEyPPKcPy"
+      }
+    ],
+    "thread_metadata": {
+      "259": {
+        "name": "main"
+      }
+    }
+  }
+}
+```
+
+### Profile metadata
+
+`debug_meta`
+
+: *Object, required on native platforms.* This carries the same payload as the [`debug_meta` interface](/sdk/data-model/event-payloads/sdk/).
+  It is required to have it for native platforms in order to symbolicate, otherwise you can omit it.
+  For non-native platforms, you can omit this.
+
+`profiler_id`
+
+: *String, required.* Hexadecimal string representing a uuid4 value. The length must be exactly 32 characters. Dashes and uppercase letters are not allowed. Random UUID for each profiler session.
+
+`chunk_id`
+
+: *String, required.* Hexadecimal string representing a uuid4 value. The length must be exactly 32 characters. Dashes and uppercase letters are not allowed. This is a Random UUID identifying a chunk.
+
+`client_sdk`
+
+: *Object, optional.* Contains information about the client *SDK*.
+
+It can have the following attributes:
+- `name`
+- `version`
+
+`measurements`
+
+: *Object, optional.* This field contains various metrics measured during the profile collection.
+
+A measurement is a collection of measurement values and a unit for those values.
+It will only be shown in the UI if it's been integrated. Right now, we only
+support 2 metrics:
+- `frozen_frame_renders`: when a frozen frame was detected.
+- `slow_frame_renders`: when a slow frame was detected.
+
+A measurement value can contain the following attributes:
+- `timestamp`: UNIX timestamp in seconds with microseconds precision as a `float64`.
+- `value`: value for the measurement, as a `float64`. We accept `float64`
+  formatted as `string` as well.
+
+These are the values accepted for `unit`:
+- `nanosecond`
+- `ns`
+- `hertz`
+- `hz`
+- `byte`
+- `percent`
+
+```json
+{
+  "cpu_0": {
+    "unit": "percent",
+    "values": {
+      "timestamp": 1724777211.6403089,
+      "value": 12.64,
+    }
+  }
+}
+```
+
+`platform`
+
+: *String, required.* This value represents the platform the SDK is submitting from.
+
+`release`
+
+: *String, required.* The release version of the application.
+
+**Release versions must be unique across all projects in your organization**.
+This value can be the git SHA for the given project, or a product identifier
+with a semantic version (suggested format `my-project-name@1.0.0`).
+
+`environment`
+
+: *String, recommended.* The environment name, such as `production` or `staging`. The default value is `production`.
+
+`version`
+
+: *String, required.* Represents the version of the Sample format.
+
+Acceptable values are:
+- `"2"`
+
+`profile`
+
+: *Object, required.* It contains all the raw data collected when profiling. See [profile data](#profile-data).
+
+
+### Profile data
+
+The profile data consists of
+- sample, which specifies the start time, their corresponding thread and a stack,
+- stacks, which are lists of frames,
+- frames, which identify the function and/or line of code for each item in a stacktrace,
+- thread metadata, with info about threads.
+
+The selected format is trying to keep the amount of data we transfer to the server as limited as possible.
+
+```json
+{
+  "profile": {
+    "samples": [
+      { ... },
+      ...
+    ],
+    "stacks": [
+      [ ... ],
+      ...
+    ],
+    "frames": [
+      { ... },
+      ...
+    ],
+    "thread_metadata": {
+      "259": {
+        ...
+      }
+    }
+  }
+}
+```
+
+When collecting a stack trace, you will:
+1. Capture the stack trace.
+2. Capture an absolute timestamp of when the stack trace was "captured".
+3. Capture the thread ID where this stack trace was captured.
+4. Create a list of indices for each frames (add it to the frame list if needed
+or use the existing frame's index).
+5. Check if that stack exists in the list of stacks and if it doesn't, add it to the list of stacks
+6. Create a sample containing the thread ID, the timestamp and the
+stack ID.
+
+You should collect samples at a frequency of 101Hz, or roughly once every 10
+milliseconds.
+
+`samples`
+
+: *List, required* Contains a list of sample object captured during execution.
+Each sample can contain the following attributes:
+
+- `timestamp`: *64-bit floating point, required.* Contains the Unix timestamp in seconds with microseconds precision.
+  in seconds with millisecond precision when the sample was captured.
+- `stack_id`: *Integer, required.* Contains the stack index from the `stacks` list.
+- `thread_id`: *String, required.* Contains the thread ID on which the sample was captured.
+
+```json
+    {
+        "timestamp": 1724762625.5756555,
+        "thread_id": "6154596352",
+        "stack_id": 0
+    }
+```
+
+`stacks`
+
+: *List, required*. Contains a list of frame indices forming a stack trace.
+
+Frames in a stack should be ordered from leaf to root. It means your main frame
+should be at the end of the list.
+
+It's encouraged to deduplicate stacks by only storing it once and referring to
+the same `stack_id` for each sample that needs it.
+
+`frames`
+
+: *List, required*. Contains a list of frame objects (see [Frame Attributes](/sdk/data-model/event-payloads/stacktrace/#frame-attributes)).
+
+Each object should contain at least a `filename`, `function` or
+`instruction_addr` attribute. All values are optional, but recommended.
+
+For native platforms (`cocoa` for example), `instruction_addr` is
+required in order to be able to symbolicate and get more info about the frame.
+
+For the rest of the platforms, whatever is passed here will travel to the
+frontend and whatever is available can be used to show more or less information.
+
+We will use `module` or `package` (in that order) to group frames when needed.
+
+Some attributes are not used at the moment:
+- `raw_function`
+- `pre_context`
+- `post_context`
+- `stack_start`
+- `vars`
+- `addr_mode`
+- `platform`
+
+`thread_metadata`
+
+: *Object, required.* Contains an object with a field for each thread ID detected during runtime.
+
+This object can contain these attributes:
+- `name`: name of the thread.
+- `priority`: the priority of the thread.
+
+This information will be used on the flamechart to power the thread selector.
+
+```json
+{
+  "thread_metadata": {
+    "259": {
+      "name": "com.apple.main-thread",
+      "priority": 31
+    }
+  }
+}
+```
+
+## Validation
+
+We will reject a chunk (profile) in Relay for several reasons:
+- chunk data is missing (no frame, no sample, no stack)
+- any of the metadata required is missing
+- size of the chunk exceeds 50MB
+
+It is suggested to validate these conditions before sending the chunk.
+
+It's suggested to remove unnecessary data like thread data without samples from
+`thread_metadata`.
+
+## Ingestion
+
+After this payload is generated, serialize it as JSON, pack it into an
+
+[Envelope](/sdk/data-model/envelopes/) with the item type [`profile_chunk`](/sdk/data-model/envelope-items/#profile-chunk) and send
+
+it to Relay.
+
+This envelope should look like this:
+
+```json
+{"event_id":"a229377b82ad4898be7c3a6272d052d9"}
+{"type":"profile_chunk"}
+{ /* profile_chunk JSON payload */}
+````
+
+## Modifying Transactions Payload
+
+Additional context needs to be attached to the *transactions/spans* payloads for continuous profiling to be connected to tracing.
+
+1. Profile Context:
+
+The profile context for a transaction needs to be updated to contain the profiler id so it can be associated back to the transaction.
+The context at `.contexts.profile` should look like:
+
+```json
+{
+  "profiler_id": "42928c7ee9174231956f077581145489"
+}
+```
+
+2. Trace Context
+
+The trace context for a transaction needs to be updated to contain the active `thread id` so we know which thread is associated with the transaction. This is often implemented as the thread that the transaction was started in.
+
+The context at `.contexts.trace` should look like:
+
+```json
+{
+	"data": {
+		"thread.id": "thread id",
+		"thread.name": "thread name",
+	},
+	// existing trace context
+}
+```
+
+`thread.id`
+
+*String, required.* This should be a string that matches the thread id in the *thread_metadata* of the profile chunk.
+
+`thread.name`
+
+*String, optional.* This should be a string that matches the thread name in the *thread_metadata* of the profile chunk.
+
+3. Span Data
+
+Span data needs to be updated in order for a span to contain the active *thread id* so we know which thread is associated with the transaction.
+This is often implemented as the thread that the transaction was started in.
+
+The data at `.spans[].data` should look like:
+
+```json
+{
+  "thread.id": "thread id",
+	"thread.name": "thread name",
+	"profiler_id": "42928c7ee9174231956f077581145489"
+}
+```
+
+`thread.id`
+
+*String, required.* This should be a string that matches the thread id in the *thread_metadata* of the profile chunk.
+
+`thread.name`
+
+*String, optional.* This should be a string that matches the thread name in the *thread_metadata* of the profile chunk.
+
+`profiler_id`
+
+*String, optional.* To override the one from the trace context but should not be necessary.

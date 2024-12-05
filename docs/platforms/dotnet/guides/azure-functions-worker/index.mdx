@@ -1,13 +1,21 @@
 ---
-title: Azure Functions (Isolated Worker)
-sdk: sentry.dotnet.azurefunctions.worker
+title: Azure Functions
+sdk: sentry.dotnet.azure.functions.worker
 description: "Learn about Sentry's .NET integration with Azure Functions."
 ---
 
 Sentry provides an integration with Azure Functions through the [Sentry.Azure.Functions.Worker NuGet package](https://www.nuget.org/packages/Sentry.Azure.Functions.Worker).
 All triggers are supported.
 
+## Features
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
 ## Install
+
+<OnboardingOptionButtons options={['error-monitoring', 'performance']}/>
 
 Add the Sentry dependency to your Azure Functions application:
 
@@ -23,11 +31,16 @@ This package extends [Sentry.Extensions.Logging](/platforms/dotnet/guides/extens
 
 ## Configure
 
-Sentry integration with Azure Functions (when using the Isolated Worker Process execution mode) is done by calling `.UseSentry()` and specifying the options. E.g.:
+Sentry integration with Azure Functions is done by calling `.UseSentry()` and specifying the options, for example:
 
-<SignInNote />
 
-```csharp
+<Note>
+
+If using the ASP.NET Core integration add `UseSentry` to the `ConfigureFunctionsWebApplication` call instead.
+
+</Note>
+
+```csharp {"onboardingOptions": {"performance": "11-13"}}
 using Sentry.Azure.Functions.Worker;
 
 var host = new HostBuilder()
@@ -36,14 +49,22 @@ var host = new HostBuilder()
         builder.UseSentry(host, options =>
         {
             options.Dsn = "___PUBLIC_DSN___";
-            options.EnableTracing = true;
             // When configuring for the first time, to see what the SDK is doing:
-            // options.Debug = true;
+            options.Debug = true;
+            // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
+            // We recommend adjusting this value in production.
+            options.TracesSampleRate = 1.0;
         });
     })
     .Build();
 await host.RunAsync();
 ```
+
+## Verify
+
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+
+<PlatformContent includePath="getting-started-verify" />
 
 ## Samples
 

@@ -1,24 +1,21 @@
-This integration requires you to install `@sentry/integrations` next to your main SDK package.
-
-<SignInNote />
-
-```javascript {tabTitle: npm}
+```javascript {tabTitle:npm}
 import * as Sentry from "@sentry/browser";
-import { sessionTimingIntegration } from "@sentry/integrations";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [sessionTimingIntegration()],
+  integrations: [Sentry.sessionTimingIntegration()],
 });
 ```
 
-```html {tabTitle: Loader}
+```html {tabTitle: Loader (v7)}
 <script>
   // Configure sentryOnLoad before adding the Loader Script
   window.sentryOnLoad = function () {
-    Sentry.init({
-      integrations: [Sentry.sessionTimingIntegration()],
-    });
+    Sentry.init({});
+
+    if (Sentry.sessionTimingIntegration) {
+      Sentry.addIntegration(Sentry.sessionTimingIntegration());
+    }
   };
 </script>
 
@@ -27,8 +24,27 @@ Sentry.init({
   crossorigin="anonymous"
 ></script>
 <script
-  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/sessiontiming.min.js"
-  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'debug.min.js', 'sha384-base64') }}"
+  src="https://browser.sentry-cdn.com/7.118.0/sessiontiming.min.js"
+  integrity="sha384-MEd/W+JXejCi+jeBE7jBG5zX5+UkImpXByQO4GQ98ZQkRICxA+pkE2JbfJJPW7DB"
+  crossorigin="anonymous"
+></script>
+```
+
+```html {tabTitle: Loader (v8)}
+<script>
+  // Configure sentryOnLoad before adding the Loader Script
+  window.sentryOnLoad = function () {
+    Sentry.init({});
+    Sentry.lazyLoadIntegration("sessionTimingIntegration").then(
+      (integration) => {
+        Sentry.addIntegration(integration());
+      }
+    );
+  };
+</script>
+
+<script
+  src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js"
   crossorigin="anonymous"
 ></script>
 ```
@@ -41,7 +57,7 @@ Sentry.init({
 ></script>
 <script
   src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/sessiontiming.min.js"
-  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'debug.min.js', 'sha384-base64') }}"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'sessiontiming.min.js', 'sha384-base64') }}"
   crossorigin="anonymous"
 ></script>
 

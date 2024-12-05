@@ -9,7 +9,7 @@ The below system integrations are part of the standard library or the interprete
 
 ### InboundFilters
 
-_Import name: `Sentry.Integrations.InboundFilters`_
+_Import name: `Sentry.inboundFiltersIntegration`_
 
 This integration allows you to ignore specific errors based on the type,
 message, or URLs in a given exception.
@@ -22,23 +22,13 @@ only work for captured exceptions, not raw message events.
 
 ### FunctionToString
 
-_Import name: `Sentry.Integrations.FunctionToString`_
+_Import name: `Sentry.functionToStringIntegration`_
 
 This integration allows the SDK to provide original functions and method names, even when those functions or methods are wrapped by our error or breadcrumb handlers.
 
-<PlatformSection notSupported={["react-native"]}>
-
-### TryCatch
-
-_Import name: `Sentry.Integrations.TryCatch`_
-
-This integration wraps native time and events APIs (`setTimeout`, `setInterval`, `requestAnimationFrame`, `addEventListener/removeEventListener`) in `try/catch` blocks to handle async exceptions.
-
-</PlatformSection>
-
 ### Breadcrumbs
 
-_Import name: `Sentry.Integrations.Breadcrumbs`_
+_Import name: `Sentry.breadcrumbsIntegration`_
 
 This integration wraps native APIs to capture breadcrumbs. By default, the Sentry SDK wraps all APIs.
 
@@ -71,32 +61,11 @@ Available options:
 }
 ```
 
-<PlatformSection notSupported={["react-native"]}>
+### NativeLinkedErrors
 
-### GlobalHandlers
-
-_Import name: `Sentry.Integrations.GlobalHandlers`_
-
-This integration attaches global handlers to capture uncaught exceptions and unhandled rejections.
-
-Available options:
-
-```javascript
-{
-  onerror: boolean;
-  onunhandledrejection: boolean;
-}
-```
-
-</PlatformSection>
-
-### LinkedErrors
-
-_Import name: `Sentry.Integrations.LinkedErrors`_
+_Import name: `Sentry.nativeLinkedErrorsIntegration`_
 
 This integration allows you to configure linked errors which are recursively read up to a specified limit. A lookup by a specific key on the captured Error object is then performed. By default, the integration records up to five errors and the key used for recursion is `"cause"`.
-
-This integration also enhances captured error events with data from an [AggregateError](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AggregateError) where applicable, by recursively iterating over the `errors` property on Error objects.
 
 Available options:
 
@@ -109,74 +78,42 @@ Available options:
 
 Here's a code example of how this could be implemented:
 
-<PlatformContent includePath="configuration/linked-errors" />
+```javascript
+<Button
+  title="Get Reviews"
+  onPress={async () => {
+    const movie = event.target.dataset.title;
+    try {
+      await fetchMovieReviews(movie);
+    } catch (e) {
+      const fetchError = new Error(`Failed to fetch reviews for: ${movie}`);
+      // @ts-expect-error cause is not exposed on default error class.
+      fetchError.cause = e;
+      Sentry.captureException(fetchError);
+    }
+  }}
+/>
+```
 
 ### HttpContext
 
-_(Previously: `UserAgent`)_
-
-_Import name: `Sentry.Integrations.HttpContext`_
-
-<PlatformSection notSupported={["react-native"]}>
-
-<Note>
-
-Before version 7.0.0 of the Sentry SDK, this integration was called `UserAgent`.
-It was renamed because the integration handles more than user-agent data.
-
-_Import name: `Sentry.Integrations.UserAgent`_
-
-</Note>
-
-</PlatformSection>
+_Import name: `Sentry.httpContextIntegration`_
 
 This integration attaches HTTP request information, such as URL, user-agent, referrer, and other headers to the event.
 It allows us to correctly catalog and tag events with specific OS, browser, and version information.
 
 ### Dedupe
 
-_Import name: `Sentry.Integrations.Dedupe`_
+_Import name: `Sentry.dedupeIntegration`_
 
-This integration is enabled by default for Browser, but only deduplicates certain events. It can be helpful if you're receiving many duplicate errors. Note, that Sentry only compares stack traces and fingerprints.
-
-<PlatformContent includePath="configuration/dedupe" />
-
-<PlatformSection supported={["javascript.nextjs", "javascript.remix"]}>
-
-### RequestData
-
-_(New in version 7.17.1.)_
-
-_Import name: `Sentry.Integrations.RequestData`_
-
-This integration adds data from incoming requests to transaction and error events that occur during request handling done by the backend.
-
-Available options:
+This integration is enabled by default, but only deduplicates certain events. It can be helpful if you're receiving many duplicate errors. Note, that Sentry only compares stack traces and fingerprints.
 
 ```javascript
-{
-  // Controls what types of data are added to the event
-  include: {
-    cookies: boolean  // default: true,
-    data: boolean  // default: true,
-    headers: boolean  // default: true,
-    ip: boolean  // default: false,
-    query_string: boolean  // default: true,
-    url: boolean  // default: true,
-    user: boolean | {
-      id: boolean  // default: true,
-      username: boolean  // default: true,
-      email: boolean  // default: true,
-    },
-  },
-  // Controls how the transaction will be reported. Options are 'path' (`/some/route`),
-  // 'methodPath' (`GET /some/route`), and 'handler' (the name of the route handler
-  // function, if available)
-  transactionNamingScheme: string  // default: 'methodPath',
-};
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.dedupeIntegration()],
+});
 ```
-
-</PlatformSection>
 
 ## Modifying System Integrations
 
@@ -184,14 +121,13 @@ To disable system integrations, set `defaultIntegrations: false` when calling `i
 
 To override their settings, provide a new instance with your config to the `integrations` option. For example, to turn off browser capturing console calls:
 
-<SignInNote />
 
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
   integrations: [
-    new Sentry.Integrations.Breadcrumbs({
+    Sentry.breadcrumbsIntegration({
       console: false,
     }),
   ],
@@ -213,4 +149,3 @@ Sentry.init({
   },
 });
 ```
-

@@ -1,0 +1,22 @@
+```dart
+class MyRpcException implements Exception {
+  final String function;
+  final int httpStatusCode;
+
+  MyRpcException(this.function, this.httpStatusCode);
+}
+
+await SentryFlutter.init((options) {
+  options.beforeSend = (event, hint) {
+    if (event.throwable is MyRpcException) {
+      final exception = event.throwable as MyRpcException;
+      event = event.copyWith(fingerprint: [
+        '{{ default }}',
+        exception.function,
+        exception.httpStatusCode.toString(),
+      ]);
+    }
+    return event;
+  };
+});
+```

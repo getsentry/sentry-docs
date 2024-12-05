@@ -3,10 +3,9 @@
 import {Fragment, useContext} from 'react';
 import {usePathname} from 'next/navigation';
 
-import {Alert} from './alert';
+import {Alert, Note} from './alert';
 import {CodeContext} from './codeContext';
 import {ExternalLink} from './externalLink';
-import {Note} from './note';
 import {SignedInCheck} from './signedInCheck';
 
 export function OrgAuthTokenNote() {

@@ -1,0 +1,59 @@
+```cpp
+UCLASS()
+class USomeTraceSampler : public USentryTraceSampler
+{
+	GENERATED_BODY()
+
+public:
+	virtual bool Sample_Implementation(USentrySamplingContext* samplingContext, float& samplingValue) override
+    {
+        const FString& gameMode =
+            *samplingContext->GetCustomSamplingContext().Find("GameMode");
+
+        if (gameMode.Equals(TEXT("ranked")))
+        {
+            // Ranked matches are important - take a big sample
+            samplingValue = 0.5;
+        }
+        else if (gameMode.Equals(TEXT("quick_match")))
+        {
+            // Quick matches less important and happen more frequently - only take 20%
+            samplingValue = 0.2;
+        }
+        else if (gameMode.Equals(TEXT("training")))
+        {
+            // Training matches are just noise - drop all transactions
+            samplingValue = 0.0;
+        }
+        else
+        {
+            // Default sample rate for other game modes
+            samplingValue = 0.1;
+        }
+
+	    return true;
+
+        // Or return false to fallback to options.TracesSampleRate (1.0 in this case)
+    }
+};
+
+...
+
+FConfigureSettingsDelegate SettingsDelegate;
+SettingsDelegate.BindDynamic(this, &USomeClass::HandleSettingsDelegate);
+
+void USomeClass::HandleSettingsDelegate(USentrySettings* Settings)
+{
+    // Set a uniform sample rate
+    Settings->TracesSampleRate = 1.0f;
+
+    // OR: Determine traces sample rate based on the sampling context
+    Settings->TracesSampler = USomeTraceSampler::StaticCLass();
+}
+
+...
+
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+SentrySubsystem->InitializeWithSettings(SettingsDelegate);
+```

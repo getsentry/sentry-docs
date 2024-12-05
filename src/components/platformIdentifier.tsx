@@ -30,9 +30,6 @@ function formatCaseStyle(style: PlatformCaseStyle | undefined, value: string) {
 
 export function PlatformIdentifier({name, platform}: Props) {
   const {rootNode, path} = serverContext();
-  if (!rootNode) {
-    return null;
-  }
 
   let currentPlatformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
   if (!currentPlatformOrGuide && platform) {

@@ -1,0 +1,92 @@
+---
+title: NPM package - CJS
+description: "Learn how to set up Sentry manually for Lambda functions running in CommonJS (CJS) using Sentry's AWS Serverless SDK NPM package"
+sidebar_order: 2
+---
+
+In this guide you will learn how to set up the `@sentry/aws-serverless` SDK for AWS Lambda functions running in CommonJS (CJS) mode.
+This installation method allows you to fully customize your Sentry SDK setup while also being able to tree-shake, transpile and bundle the SDK Code. However, you need to modify your code and deploy the Sentry dependencies alongside your function code. If you're looking for the most simple way to set up Sentry, you might want to use the [Lambda Layer](../cjs-layer) instead.
+
+## 1. Prerequisites
+
+Before you begin, make sure you have the following:
+
+- You have a lambda function that is running in CommonJS (CJS) mode, using `require` syntax.
+- You're able to deploy dependencies (i.e. `node_modules`) alongside your function code to AWS Lambda.
+
+## 2. Install
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "profiling"]}
+/>
+
+Install the `@sentry/aws-serverless` SDK using a package manager of your choice:
+
+<OnboardingOption optionId="profiling" hideForThisOption>
+
+```bash {tabTitle:npm}
+npm install @sentry/aws-serverless
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/aws-serverless
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/aws-serverless
+```
+
+</OnboardingOption>
+
+<OnboardingOption optionId="profiling">
+
+```bash {tabTitle:npm}
+npm install @sentry/aws-serverless @sentry/profiling-node
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/aws-serverless @sentry/profiling-node
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/aws-serverless @sentry/profiling-node
+```
+
+</OnboardingOption>
+
+## 3. Configure
+
+Initialize and configure the SDK in your Lambda function Code. Call `Sentry.init` _outside_ of the handler function to avoid re-initializing the SDK on every invocation. Also, add the `Sentry.wrapHandler` wrapper around your function to automatically catch errors and performance data:
+
+```javascript {filename:index.js} {"onboardingOptions": {"performance": "7-10", "profiling": "2,6,11-12"}}
+const Sentry = require("@sentry/aws-serverless");
+const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [nodeProfilingIntegration()],
+  // Add Tracing by setting tracesSampleRate and adding integration
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  // Set sampling rate for profiling - this is relative to tracesSampleRate
+  profilesSampleRate: 1.0,
+});
+
+exports.handler = Sentry.wrapHandler(async (event, context) => {
+  // Your handler code
+});
+```
+
+That's it - make sure to re-deploy your function and you're all set!
+
+## Using the v7 SDK
+
+The instructions above are written for SDK version 8 (the most recent version).
+In SDK versions prior to version 8, the `@sentry/aws-serverless` package was called `@sentry/serverless`. If you are using an older version, you can follow this guide but replace the package with `@sentry/serverless`.

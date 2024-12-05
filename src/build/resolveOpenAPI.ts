@@ -8,7 +8,7 @@ import {DeRefedOpenAPI} from './open-api/types';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = '89c72ecc367ad7c69c6f640f34f61d36fb806a2b';
+const SENTRY_API_SCHEMA_SHA = '59108106d05c411329267f21a61933603d1ca6f5';
 
 const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
@@ -128,10 +128,10 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
           slug: slugify(apiData.operationId),
           summary: apiData.summary,
           descriptionMarkdown: apiData.description,
-          pathParameters: apiData.parameters.filter(
+          pathParameters: (apiData.parameters || []).filter(
             p => p.in === 'path'
           ) as APIParameter[],
-          queryParameters: apiData.parameters.filter(
+          queryParameters: (apiData.parameters || []).filter(
             p => p.in === 'query'
           ) as APIParameter[],
           requestBodyContent: {

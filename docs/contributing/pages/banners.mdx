@@ -1,0 +1,72 @@
+---
+title: Banners
+noindex: true
+sidebar_order: 80
+---
+
+You can add arbitrary banners to the top of a page by adding adding an entry to the `BANNERS` array on
+the `banner/index.tsx` file. The `BANNERS` array is an array of objects with the following properties:
+
+```typescript {filename:banner/index.tsx}
+type BannerType = {
+  /** This is an array of strings or RegExps to feed into new RegExp() */
+  appearsOn: (string | RegExp)[];
+  /** The label for the call to action button */
+  linkText: string;
+  /** The destination url of the call to action button */
+  linkURL: string;
+  /** The main text of the banner */
+  text: string;
+  /** Optional ISO Date string that will hide the banner after this date without the need for a rebuild */
+  expiresOn?: string;
+};
+```
+
+ You can add as many banners as you like. If you need to disable all banners, simply delete them from the array.
+
+ Each banner is evaluated in order, and the first one that matches will be shown.
+
+Examples:
+
+```typescript {filename:banner/index.tsx}
+// ...
+// appearsOn = [];              // This is disabled
+// appearsOn = ['^/$'];         // This is enabled on the home page
+// appearsOn = ['^/welcome/'];  // This is enabled on the "/welcome" page
+// ...
+
+const BANNERS = [
+  // This one will take precedence over the last banner in the array
+  // (which matches all /platforms pages), because it matches first.
+  {
+    appearsOn: ['^/platforms/javascript/guides/astro/'],
+    text: 'This banner appears on the Astro guide',
+    linkURL: 'https://sentry.io/thought-leadership',
+    linkText: 'Get webinarly',
+  },
+
+  // This one will match the /welcome page and all /for pages
+  {
+    appearsOn: ['^/$', '^/platforms/'],
+    text: 'This banner appears on the home page and all /platforms pages',
+    linkURL: 'https://sentry.io/thought-leadership',
+    linkText: 'Get webinarly',
+  },
+];
+
+```
+
+Optionally, you can add an `expiresOn` property to a banner to hide it after a certain date without requiring a rebuild or manual removeal.
+the ISO Date string should be in the format `YYYY-MM-DDTHH:MM:SSZ` to be parsed correctly and account for timezones.
+
+```typescript {filename:banner/index.tsx}
+const BANNERS = [
+  {
+    appearsOn: ['^/$'],
+    text: 'This home page banner will disappear after 2024-12-06',
+    linkURL: 'https://sentry.io/party',
+    linkText: 'RSVP',
+    expiresOn: '2024-12-06T00:00:00Z',
+  },
+];
+```

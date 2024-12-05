@@ -10,7 +10,7 @@ This page will guide you through the process of setting up the Metro Plugin for 
 ## Prerequisities
 
 - [Sign up for an account](https://sentry.io/signup/)
-- [Install Sentry React Native SDK](/platforms/react-native) version 5.11.0 or newer
+- [Install Sentry React Native SDK](/platforms/react-native) version 5.17.0 or newer
   - Expo is supported from SDK version 5.16.0-alpha.1
 
 ## Configuration
@@ -21,53 +21,32 @@ The Sentry React Native SDK allows multiple ways to configure the Sentry Metro S
 
 The example below shows how to use the Sentry Metro Serializer if you don't have any `customSerializers` (the default configuration).
 
-```javascript {tabTitle:React Native}
-const { getDefaultConfig, mergeConfig } = require("@react-native/metro-config");
-const {
-  createSentryMetroSerializer,
-} = require("@sentry/react-native/dist/js/tools/sentryMetroSerializer");
-
-const config = {
-  serializer: {
-    customSerializer: createSentryMetroSerializer(),
-  },
-};
-
-module.exports = mergeConfig(getDefaultConfig(__dirname), config);
-```
-
-```javascript {tabTitle:Expo}
-const { mergeConfig } = require("metro");
-const { getDefaultConfig } = require("expo/metro-config");
-const { createSentryMetroSerializer } = require("@sentry/react-native/metro");
-const {
-  withExpoSerializers,
-} = require("@expo/metro-config/build/serializer/withExpoSerializers");
+```javascript {tabTitle:React Native} {filename:metro.config.js}
+const { getDefaultConfig } = require("@react-native/metro-config");
+const { withSentryConfig } = require('@sentry/react-native/metro');
 
 const config = getDefaultConfig(__dirname);
+module.exports = withSentryConfig(config);
+```
 
-const sentryConfig = {
-  serializer: {
-    customSerializer: createSentryMetroSerializer(),
-  },
-};
+```javascript {tabTitle:Expo} {filename:metro.config.js}
+// const { getDefaultConfig } = require("expo/metro-config");
+const { getSentryExpoConfig } = require("@sentry/react-native/metro");
 
-const finalConfig = mergeConfig(config, sentryConfig);
-module.exports = withExpoSerializers(finalConfig);
+// const config = getDefaultConfig(__dirname);
+const config = getSentryExpoConfig(__dirname);
 ```
 
 ### Wrap Your Custom Serializer
 
 If you already have a custom serializer, you can wrap it with the Sentry Metro Serializer and call `options.sentryBundleCallback` before serializing the bundle content.
 
-```javascript {tabTitle:React Native}
+```javascript {tabTitle:React Native} {filename:metro.config.js}
 const { getDefaultConfig, mergeConfig } = require("@react-native/metro-config");
-const {
-  createSentryMetroSerializer,
-} = require("@sentry/react-native/dist/js/tools/sentryMetroSerializer");
+const { withSentryConfig } = require('@sentry/react-native/metro');
 
 const myCustomSerializer = (entryPoint, preModules, graph, options) => {
-  let bundle = perapreBundle(entryPoint, preModules, graph, options);
+  let bundle = prepareBundle(entryPoint, preModules, graph, options);
   if (options.sentryBundleCallback) {
     // Callback adds Sentry Debug IDs module to the bundle
     bundle = options.sentryBundleCallback(bundle);
@@ -79,11 +58,11 @@ const myCustomSerializer = (entryPoint, preModules, graph, options) => {
 
 const config = {
   serializer: {
-    customSerializer: createSentryMetroSerializer(myCustomSerializer),
+    customSerializer: myCustomSerializer,
   },
 };
 
-module.exports = mergeConfig(getDefaultConfig(__dirname), config);
+module.exports = withSentryConfig(mergeConfig(getDefaultConfig(__dirname), config));
 ```
 
 Expected bundle intermediate structure:
@@ -100,3 +79,4 @@ export type Bundle = {
 
 - Sentry Metro Serializer can't add Debug ID to the Hermes Composed Source Maps. Please see [Manual Upload With Hermes](/platforms/react-native/sourcemaps#manual-upload-with-hermes) guide on how to add Debug ID to the Hermes Composed Source Maps.
 - If you see `Debug ID was not found in the bundle.` error message the `sentryBundleCallback` was not called by your custom serializer.
+- If Metro configuration is missing in your Expo project, create it using `npx expo customize metro.config.js`. Read more about [Customizing Expo Metro Configuration](https://docs.expo.dev/guides/customizing-metro/).

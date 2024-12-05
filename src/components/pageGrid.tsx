@@ -4,17 +4,17 @@ import Link from 'next/link';
 
 import {DocNode, nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
-import {isTruthy} from 'sentry-docs/utils';
+
+import {sortPages} from 'sentry-docs/utils';
+
 
 type Props = {
   header?: string;
 };
 
-export function PageGrid({header}: Props) {
-  const {rootNode, path: nodePath} = serverContext();
-  if (!rootNode) {
-    return null;
-  }
+
+export function PageGrid({header, exclude}: Props) {
+  const {rootNode, path} = serverContext();
 
   const parentNode = nodeForPath(rootNode, nodePath);
   if (!parentNode || parentNode.children.length === 0) {
@@ -31,17 +31,23 @@ export function PageGrid({header}: Props) {
     <nav>
       {header && <h2>{header}</h2>}
       <ul>
-        {children
-          /* NOTE: temp fix while we figure out the reason why some nodes have empty front matter */
-          .filter(c => c.frontmatter.title)
-          .map(n => (
-            <li key={n.path} style={{marginBottom: '1rem'}}>
-              <h4 style={{marginBottom: '0px'}}>
-                <Link href={'/' + n.path}>{n.frontmatter.title}</Link>
-              </h4>
-              {n.frontmatter.description && <p>{n.frontmatter.description}</p>}
-            </li>
-          ))}
+        {sortPages(
+          parentNode.children.filter(
+            c =>
+              !c.frontmatter.sidebar_hidden &&
+              c.frontmatter.title &&
+              !exclude?.includes(c.slug)
+          ),
+          // a hacky adapter to reuse the same sidebar sorter
+          node => ({...node, context: node.frontmatter})
+        ).map(n => (
+          <li key={n.path} style={{marginBottom: '1rem'}}>
+            <h4 style={{marginBottom: '0px'}}>
+              <Link href={'/' + n.path}>{n.frontmatter.title}</Link>
+            </h4>
+            {n.frontmatter.description && <p>{n.frontmatter.description}</p>}
+          </li>
+        ))}
       </ul>
     </nav>
   );

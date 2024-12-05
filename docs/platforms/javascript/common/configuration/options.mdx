@@ -1,6 +1,7 @@
 ---
 title: Basic Options
 description: "Learn more about how to configure the SDK. These options are set when the SDK is first initialized, passed to the init function as an object."
+customCanonicalTag: "/platforms/javascript/configuration/options/"
 sidebar_order: 1
 ---
 
@@ -78,13 +79,13 @@ Sets the URL that will be used to transport captured events. This can be used to
 
 <ConfigKey name="sample-rate">
 
-Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0` which means that 100% of error events are sent. If set to `0.1` only 10% of error events will be sent. Events are picked randomly.
+Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly.
 
 </ConfigKey>
 
 <ConfigKey name="max-breadcrumbs">
 
-This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`, but you can set this to any number. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
+This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`, but you can set this to any number. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
 
 </ConfigKey>
 
@@ -106,11 +107,6 @@ Grouping in Sentry is different for events with stack traces and without. As a r
   Most SDKs will attempt to auto-discover this value.
 </ConfigKey>
 
-<ConfigKey name="ca-certs">
-
-A path to an alternative CA bundle file in PEM-format.
-
-</ConfigKey>
 </PlatformCategorySection>
 
 <ConfigKey name="ignore-errors">
@@ -143,7 +139,7 @@ A path to an alternative CA bundle file in PEM-format.
 
 <ConfigKey name="auto-session-tracking" notSupported={["javascript.electron"]}>
 
-When set to `true`, the SDK will send session events to Sentry. This is supported in all browser SDKs, emitting one session per pageload and page navigation to Sentry. In mobile SDKs, when the app goes to the background for longer than 30 seconds, sessions are ended.
+Defaults to `true`. When set to `true`, the SDK will send session events to Sentry. This is supported in all browser SDKs, emitting one session per pageload and page navigation to Sentry. In mobile SDKs, when the app goes to the background for longer than 30 seconds, sessions are ended.
 
 </ConfigKey>
 
@@ -153,23 +149,12 @@ When not set to `false`, the SDK tracks sessions linked to the lifetime of the E
 
 </ConfigKey>
 
-<PlatformCategorySection supported={['server', 'serverless']}>
-<ConfigKey name="frame-context-lines">
-The number of context lines for each frame when loading a file.
-
-#### Deprecated
-
-`frameContextLines` has moved to the <PlatformLink to="/configuration/integrations/default-integrations/#contextlines">`ContextLines` integration</PlatformLink>.
-</ConfigKey>
-</PlatformCategorySection>
-
 <ConfigKey name="initial-scope">
 
 Data to be set to the initial scope. Initial scope can be defined either as an object or a callback function, as shown below.
 
 Object:
 
-<SignInNote />
 
 ```javascript
 Sentry.init({
@@ -260,16 +245,9 @@ Set this boolean to `false` to disable sending of client reports. Client reports
 <PlatformCategorySection supported={['server', 'serverless']}>
 <ConfigKey name="include-local-variables">
 
-Set this boolean to `true` to add stack local variables to stack traces.
+Set this boolean to `true` to add stack local variables to stack traces. Defaults to `false`.
 
-<Alert level="warning">
-
-Due to an [open Node.js issue](https://github.com/nodejs/node/issues/38439), we are currently unable to capture local variables for unhandled errors when using
-JavaScript modules (ESM).
-
-See the <PlatformLink to="/configuration/integrations/localvariables">integration options</PlatformLink> for a workaround.
-
-</Alert>
+For more advanced configuration options, see the documentation on the <PlatformLink to="/configuration/integrations/localvariables">Local Variables integration options</PlatformLink>.
 
 </ConfigKey>
 </PlatformCategorySection>
@@ -308,13 +286,21 @@ This function is called with an SDK-specific transaction event object, and can r
 
 </ConfigKey>
 
+<ConfigKey name="before-send-span">
+
+<Include name="platforms/configuration/options/warn-before-send-span.mdx" />
+
+This function is called with a serialized span object, and can return a modified span object, or `null` to skip sending the span. This might be useful for manually stripping PII from spans or to remove individual spans from the span tree.
+This function is only called for child spans of the root span. If you want to modify or drop the root span, including all of its child spans, use [`beforeSendTransaction`](#before-send-transaction) instead.
+
+</ConfigKey>
+
 <ConfigKey name="before-breadcrumb">
 
 This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
 The callback typically gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
 
 </ConfigKey>
-
 
 ## Transport Options
 
@@ -345,8 +331,7 @@ Options used to configure the transport. This is an object with the following po
 
 </ConfigKey>
 
-<ConfigKey name="shutdown-timeout" supported={["javascript.capacitor", "javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.gcp-functions", "javascript.koa", "javascript.fastify"
-]}>
+<ConfigKey name="shutdown-timeout" supported={["javascript.capacitor", "javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.gcp-functions", "javascript.hapi", "javascript.koa", "javascript.fastify", "javascript.nestjs"]}>
 
 Controls how many seconds to wait before shutting down. Sentry SDKs send events from a background queue. This queue is given a certain amount to drain pending events. The default is SDK specific but typically around two seconds. Setting this value too low may cause problems for sending events from command line applications. Setting the value too high will cause the application to block for a long time for users experiencing network connectivity problems.
 
@@ -409,8 +394,6 @@ Set this boolean to `false` to disable the native SDK. This will disable all nat
 Set this boolean to `false` to disable the auto initialization of the native layer SDK. Doing so means you will need to initialize the native SDK manually. Do not use this to disable the native layer.
 
 To disable the native layer, use [enableNative](#enableNative).
-
-You should follow the [guide to native initialization](/platforms/react-native/manual-setup/native-init/) if you chose to use this option.
 
 </ConfigKey>
 

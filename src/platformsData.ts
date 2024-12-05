@@ -28,6 +28,7 @@ function platformsDataUncached(): {} {
     });
     return map;
   } catch (e) {
+    // eslint-disable-next-line no-console
     console.error('failed to read platforms.yml:', e);
     return {};
   }

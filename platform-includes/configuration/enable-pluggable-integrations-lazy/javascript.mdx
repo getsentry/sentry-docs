@@ -1,17 +1,14 @@
-<SignInNote />
-
-```javascript {tabTitle: npm}
+```javascript {tabTitle:npm}
 import * as Sentry from "@sentry/browser";
-import { reportingObserverIntegration } from "@sentry/integrations";
 
 Sentry.init({
   integrations: [],
 });
 
-Sentry.addIntegration(reportingObserverIntegration());
+Sentry.addIntegration(Sentry.reportingObserverIntegration());
 ```
 
-```html {tabTitle: Loader}
+```html {tabTitle: Loader (v7)}
 <script>
   // Configure sentryOnLoad before adding the Loader Script
   window.sentryOnLoad = function () {
@@ -36,7 +33,38 @@ Sentry.addIntegration(reportingObserverIntegration());
   // By calling this inside of `Sentry.onLoad()`, we can be sure the SDK has been initialized at this point.
   window.Sentry &&
     Sentry.onLoad(function () {
-      Sentry.addIntegration(Sentry.reportingObserverIntegration());
+      if (Sentry.reportingObserverIntegration) {
+        Sentry.addIntegration(Sentry.reportingObserverIntegration());
+      }
+    });
+</script>
+```
+
+```html {tabTitle: Loader (v8)}
+<script>
+  // Configure sentryOnLoad before adding the Loader Script
+  window.sentryOnLoad = function () {
+    Sentry.init({
+      integrations: [],
+    });
+  };
+</script>
+
+<script
+  src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js"
+  crossorigin="anonymous"
+></script>
+
+<script>
+  // Later in your application
+  // By calling this inside of `Sentry.onLoad()`, we can be sure the SDK has been initialized at this point.
+  window.Sentry &&
+    Sentry.onLoad(function () {
+      Sentry.lazyLoadIntegration("reportingObserverIntegration").then(
+        (integration) => {
+          Sentry.addIntegration(integration());
+        }
+      );
     });
 </script>
 ```
