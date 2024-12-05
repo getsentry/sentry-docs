@@ -2,7 +2,7 @@
 
 import {useEffect, useState} from 'react';
 
-import {isTruthy} from 'sentry-docs/utils';
+import {isNotNil} from 'sentry-docs/utils';
 
 import styles from './style.module.scss';
 
@@ -104,7 +104,7 @@ export function TableOfContents() {
           isActive: false,
         };
       })
-      .filter(isTruthy);
+      .filter(isNotNil);
     setTocItems(tocItems_);
   }, []);
 

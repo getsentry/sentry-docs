@@ -28,7 +28,7 @@ import remarkImageSize from './remark-image-size';
 import remarkTocHeadings, {TocNode} from './remark-toc-headings';
 import remarkVariables from './remark-variables';
 import {FrontMatter, Platform, PlatformConfig} from './types';
-import {isTruthy} from './utils';
+import {isNotNil} from './utils';
 import {isVersioned, VERSION_INDICATOR} from './versioning';
 
 const root = process.cwd();
@@ -145,7 +145,7 @@ export function getDevDocsFrontMatter(): FrontMatter[] {
         sourcePath: path.join(folder, fileName),
       };
     })
-    .filter(isTruthy);
+    .filter(isNotNil);
   return fmts;
 }
 
