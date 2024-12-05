@@ -25,10 +25,7 @@ import {SidebarLink} from '../sidebarLink';
 export function PlatformSelector({
   platforms,
   currentPlatform,
-  // do nothing with path for now
-  path: _path,
 }: {
-  path: string[];
   platforms: Array<Platform>;
   currentPlatform?: Platform | PlatformGuide;
 }) {
