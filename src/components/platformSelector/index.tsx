@@ -21,6 +21,7 @@ import {uniqByReference} from 'sentry-docs/utils';
 import styles from './style.module.scss';
 
 import {SidebarLink} from '../sidebarLink';
+import {useRouter} from 'next/router';
 
 export function PlatformSelector({
   platforms,
@@ -93,13 +94,12 @@ export function PlatformSelector({
     return matches_;
   }, [searchValue, currentPlatformKey, platformsAndGuides]);
 
+  const router = useRouter();
   const onPlatformChange = (platformKey: string) => {
     const platform_ = platformsAndGuides.find(platform => platform.key === platformKey);
     if (platform_) {
       localStorage.setItem('active-platform', platform_.key);
-      // feels wrong to use window.location here,
-      // but router.push is not working on mobile for some reason
-      window.location.href = platform_.url;
+      router.push(platform_.url);
     }
   };
 
