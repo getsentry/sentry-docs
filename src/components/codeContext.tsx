@@ -258,7 +258,10 @@ export async function createOrgAuthToken({
 }): Promise<string | null> {
   const url = `${getHost()}/api/0/organizations/${orgSlug}/org-auth-tokens/`;
 
-  const body = {name};
+  const body = {
+    name,
+    scopes: ['org:ci'],
+  };
 
   try {
     const resp = await fetch(url, {
