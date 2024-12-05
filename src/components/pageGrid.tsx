@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 import {DocNode, nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
-import {isTruthy, sortPages} from 'sentry-docs/utils';
+import {isNotNil, sortPages} from 'sentry-docs/utils';
 
 type Props = {
   exclude?: string[];
@@ -22,7 +22,7 @@ export function PageGrid({header, exclude}: Props) {
   const children: DocNode[] = parentNode.frontmatter.next_steps?.length
     ? (parentNode.frontmatter.next_steps
         .map(p => nodeForPath(rootNode, path.join(parentNode.path, p)))
-        .filter(isTruthy) ?? [])
+        .filter(isNotNil) ?? [])
     : parentNode.children;
 
   return (

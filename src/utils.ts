@@ -8,7 +8,7 @@ import qs from 'query-string';
  * let numbers: number[] = [1, undefined, 3, null, 5].filter(isTruthy);
  * ```
  */
-export const isTruthy = <T>(x?: T): x is Exclude<T, null | undefined> => {
+export const isNotNil = <T>(x?: T): x is Exclude<T, null | undefined> => {
   return x !== null && x !== undefined;
 };
 
