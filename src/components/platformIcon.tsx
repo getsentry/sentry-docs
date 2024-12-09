@@ -273,6 +273,8 @@ import VueSVGLarge from 'platformicons/svg_80x80/vue.svg';
 import WasmSVGLarge from 'platformicons/svg_80x80/wasm.svg';
 import WindowsSVGLarge from 'platformicons/svg_80x80/windows.svg';
 import XamarinSVGLarge from 'platformicons/svg_80x80/xamarin.svg';
+// TODO(cg): move to platformicons once available
+import ReactRouterSVGLarge from 'public/icon/rr.svg';
 
 const formatToSVG = {
   HTML5: {
@@ -687,6 +689,10 @@ const formatToSVG = {
     sm: ReactSVG,
     lg: ReactSVGLarge,
   },
+  'react-router': {
+    sm: ReactRouterSVGLarge,
+    lg: ReactRouterSVGLarge,
+  },
   redis: {
     sm: RedisSVG,
     lg: RedisSVGLarge,
@@ -912,6 +918,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-nuxt': 'nuxt',
   'javascript-node': 'nodejs',
   'javascript-react': 'react',
+  'javascript-react-router': 'react-router',
   'javascript-remix': 'remix',
   'javascript-solid': 'solid',
   'javascript-solidstart': 'solidstart',
