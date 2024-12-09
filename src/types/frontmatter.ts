@@ -33,9 +33,15 @@ export interface FrontMatter {
    */
   nextPage?: PaginationNavNode;
   /**
+   * relative links to use in the "next steps" section of the page grid
+   * takes precendence over children when present
+   */
+  next_steps?: string[];
+  /**
    * Set this to true to disable indexing (robots, algolia) of this content.
    */
   noindex?: boolean;
+
   /**
    * Specific guides that this page is not relevant to.
    */

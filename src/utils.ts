@@ -1,5 +1,17 @@
 import qs from 'query-string';
 
+/**
+ * This function is used to filter out any elements that are not truthy and plays nice with TypeScript.
+ * @param x - The value to check for truthiness.
+ * @example
+ * ```typeScript
+ * let numbers: number[] = [1, undefined, 3, null, 5].filter(isTruthy);
+ * ```
+ */
+export const isNotNil = <T>(x?: T): x is Exclude<T, null | undefined> => {
+  return x !== null && x !== undefined;
+};
+
 export function sortBy<A>(arr: A[], comp: (v: A) => number): A[] {
   return arr.sort((a, b) => {
     const aComp = comp(a);
@@ -87,10 +99,6 @@ export function captureException(exception: unknown): void {
   } catch {
     // ignore
   }
-}
-
-export function isTruthy<T>(value: T | undefined | null): value is T {
-  return value !== undefined && value !== null;
 }
 
 export const isLocalStorageAvailable = () => typeof localStorage !== 'undefined';
