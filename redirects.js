@@ -219,6 +219,14 @@ const userDocsRedirects = [
     destination: '/organization/integrations/feature-flag/launchdarkly/',
   },
   {
+    source: '/product/explore/session-replay/replay-details/',
+    destination: '/product/explore/session-replay/web/replay-details/',
+  },
+  {
+    source: '/platforms/javascript/guides/nextjs/sourcemaps/uploading/',
+    destination: '/platforms/javascript/guides/nextjs/sourcemaps/',
+  },
+  {
     source: '/organization/integrations/vercel/',
     destination: '/organization/integrations/deployment/vercel/',
   },
