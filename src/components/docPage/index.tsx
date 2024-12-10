@@ -19,6 +19,7 @@ import {PaginationNav} from '../paginationNav';
 import {PlatformSdkDetail} from '../platformSdkDetail';
 import {Sidebar} from '../sidebar';
 import {TableOfContents} from '../tableOfContents';
+import {ReaderDepthTracker} from '../track-reader-depth';
 
 type Props = {
   children: ReactNode;
@@ -114,6 +115,7 @@ export function DocPage({
         </main>
       </section>
       <Mermaid />
+      <ReaderDepthTracker />
     </div>
   );
 }

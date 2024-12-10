@@ -106,3 +106,27 @@ export const isLocalStorageAvailable = () => typeof localStorage !== 'undefined'
 export const stripTrailingSlash = (url: string) => {
   return url.replace(/\/$/, '');
 };
+
+/**
+ * Debounce function to limit the number of times a function is called.
+ * @param func The function to be debounced.
+ * @param wait The time to wait before calling the function.
+ * @param immediate Whether to call the function immediately.
+ * @returns A debounced function.
+ * @see https://davidwalsh.name/javascript-debounce-function
+ */
+export function debounce(func: Function, wait = 20, immediate = true) {
+  let timeout: ReturnType<typeof setTimeout> | null;
+  return function () {
+    const context = this;
+    const args = arguments;
+    const later = function () {
+      timeout = null;
+      if (!immediate) func.apply(context, args);
+    };
+    const callNow = immediate && !timeout;
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+    if (callNow) func.apply(context, args);
+  };
+}
