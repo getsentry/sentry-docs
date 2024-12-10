@@ -19,6 +19,8 @@ Being [Fair Source](https://fair.io/), Sentry offers all three for you to be abl
 
 ### Overview of SDK Versions
 
+The table below highlights some key differences between different versions of the plugin:
+
 | Feature                    | Fab                 | GitHub Releases | Build Yourself |
 |----------------------------|---------------------|-----------------|----------------|
 | Supported engine versions  | 5.1 and newer       | 4.27 and newer  | 4.27 and newer |
