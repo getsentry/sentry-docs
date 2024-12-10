@@ -29,7 +29,11 @@ export function ReaderDepthTracker() {
       // calculate the progress based on the scroll position
       const scrollPosition = window.scrollY;
       const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = Math.floor((scrollPosition / totalHeight) * 100);
+      let progress = Math.floor((scrollPosition / totalHeight) * 100);
+      // it's hard to trigger the 100% milestone, so we'll just assume beyond 95%
+      if (progress > 95) {
+        progress = 100;
+      }
 
       // find the biggest milestone that has not been reached yet
       const milestone = milestones.findLast(
@@ -51,11 +55,11 @@ export function ReaderDepthTracker() {
       sendProgressToPlausible(100);
       return () => {};
     }
-    const debouncedTrackProgress = debounce(trackProgress, 50);
+    const debouncedTrackProgress = debounce(trackProgress, 20);
 
-    window.addEventListener('scrollend', debouncedTrackProgress);
+    window.addEventListener('scroll', debouncedTrackProgress);
     return () => {
-      window.removeEventListener('scrollend', debouncedTrackProgress);
+      window.removeEventListener('scroll', debouncedTrackProgress);
     };
   });
   // do not render anything
