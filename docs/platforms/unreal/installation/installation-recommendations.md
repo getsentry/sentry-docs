@@ -15,7 +15,7 @@ There are three common ways to install an SDK to use with Unreal Engine:
 2. Download a pre-built SDK that you install (e.g. from a [GitHub Releases page](https://github.com/getsentry/sentry-unreal/releases))
 3. Clone and build the SDK yourself and install
 
-Being [Fair Source](https://fair.io/), Sentry offers all three for you to be able to get the insights only Sentry can provide. However, each has it's own limitations.
+Sentry offers all three for you to be able to get the insights only Sentry can provide. However, each has it's own limitations.
 
 ### Overview of SDK Versions
 
