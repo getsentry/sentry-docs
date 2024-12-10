@@ -188,3 +188,17 @@ captureException(new Error("oh no!"), (scope) => {
   return scope;
 });
 ```
+
+## SDK Version Alignment
+
+Starting with version 8, if you have multiple Sentry JavaScript SDKs on the same page, they will [only interact with each other](https://github.com/getsentry/sentry-javascript/pull/12206) if they're all using the same version. This prevents unwanted cross-SDK interactions, for example, from browser extensions or 3rd party scripts.
+
+However, for micro frontends, where you _want_ SDK interaction between multiple SDKs, you'll need to ensure that all SDKs are using the same version.
+
+Version alignment is important when you initialize the SDK in a host or skeleton application, but use Sentry SDK calls in micro frontend child applications. For example, if your individual micro frontends call `Sentry.captureException`.
+
+<Note>
+
+If you can't get all your SDKs to use the same version, you can [follow this workaround](https://github.com/getsentry/sentry-javascript/discussions/10576#discussioncomment-11446422), but interoperability isn't guaranteed and you could run into some unexpected behavior.
+
+</Note>
