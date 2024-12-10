@@ -27,7 +27,10 @@ The table below highlights some key differences between different versions of th
 | Supported UE project types | Blueprint and C++   | C++ only        | C++ only       |
 | Backend (Windows)          | Breakpad            | Crashpad        | Crashpad       |
 | `on_crash` hook (Windows)  | Not supported       | Supported       | Supported      |
-| Sentry CLI                 | Manual download     | Included        | Included       |
+| Sentry CLI *               | Manual download     | Included        | Included       |
+
+Legend:
+`*`: Sentry CLI is a standalone tool that the plugin uses under the hood to automatically upload debug information files upon game build completion.
 
 ### Installing from Fab
 
