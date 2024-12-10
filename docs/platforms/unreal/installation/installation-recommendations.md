@@ -19,30 +19,31 @@ Sentry offers all three for you to be able to get the insights only Sentry can p
 
 ### Overview of SDK Versions
 
-The table below highlights some key differences between different versions of the plugin:
+The table below highlights some key differences between different versions of the SDK:
 
-| Feature                    | Fab                 | GitHub Releases | Build Yourself |
-|----------------------------|---------------------|-----------------|----------------|
-| Supported engine versions  | 5.1 and newer       | 4.27 and newer  | 4.27 and newer |
-| Supported UE project types | Blueprint and C++   | C++ only        | C++ only       |
-| Backend (Windows)          | Breakpad            | Crashpad        | Crashpad       |
-| `on_crash` hook (Windows)  | Not supported       | Supported       | Supported      |
-| Sentry CLI *               | Manual download     | Included        | Included       |
+| Feature                    | __GitHub Releases__* | Fab                 | Build Yourself |
+|----------------------------|----------------------|---------------------|----------------|
+| Supported engine versions  | 4.27 and newer       | 5.1 and newer       | 4.27 and newer |
+| Supported UE project types | C++ only             | Blueprint and C++   | C++ only       |
+| Backend (Windows)          | Crashpad             | Breakpad            | Crashpad       |
+| `on_crash` hook (Windows)  | Supported            | Not supported       | Supported      |
+| Sentry CLI **              | Included             | Manual download     | Included       |
 
 Legend:
-`*`: Sentry CLI is a standalone tool that the plugin uses under the hood to automatically upload debug information files upon game build completion.
+`*`: Recommended version of the SDK
+`**`: Sentry CLI is a standalone tool that the plugin uses under the hood to automatically upload debug information files upon game build completion.
+
+### Installing from GitHub Releases (Recommended)
+
+The [GitHub Releases page](https://github.com/getsentry/sentry-unreal/releases) provides two plugin packages: `github` and `marketplace`. The key difference between the two is the crash capturing backend, which is used under the hood on Windows.
+
+We recommend using the `github` version which uses `Crashpad`, an out-of-proc handler that sends the crash report right away. The `marketplace` version relies on `Breakpad`, an in-proc handler which requires the UE application or game to be relaunched in order to send the crash reports to Sentry.
 
 ### Installing from Fab
 
 Sentry SDK can be downloaded via the [standard installation process](https://dev.epicgames.com/documentation/en-us/unreal-engine/working-with-plugins-in-unreal-engine#installingpluginsfromtheunrealenginemarketplace) from its [Epic Games Fab page](https://www.fab.com/listings/eaa89d9d-8d39-450c-b75f-acee010890a2).
 
 This method is recommended only for Blueprint UE projects. If you already have a C++ UE project or don't mind converting an existing Blueprint UE project to a C++ one, consider downloading the plugin from GitHub instead.
-
-### Installing from GitHub Releases
-
-The [GitHub Releases page](https://github.com/getsentry/sentry-unreal/releases) provides two plugin packages: `github` and `marketplace`. The key difference between the two is the crash capturing backend, which is used under the hood on Windows.
-
-We recommend using the `github` version which uses `Crashpad`, an out-of-proc handler that sends the crash report right away. The `marketplace` version relies on `Breakpad`, an in-proc handler which requires the UE application or game to be relaunched in order to send the crash reports to Sentry.
 
 ### Build yourself
 
