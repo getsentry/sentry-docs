@@ -49,10 +49,8 @@ export function ReaderDepthTracker() {
       }
     };
 
-    // if the totalHeight is zero, we can't calculate the progress, the user is alredy at 100%
-    // the early return prevents division by zero in the trackProgress function
+    // if the page is not scrollable, we don't need to track anything
     if (document.documentElement.scrollHeight - window.innerHeight === 0) {
-      sendProgressToPlausible(100);
       return () => {};
     }
     const debouncedTrackProgress = debounce(trackProgress, 20);
