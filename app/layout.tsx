@@ -32,11 +32,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <PlausibleProvider
-          enabled
-          trackLocalhost
-          domain="docs.sentry.io,rollup.sentry.io"
-        />
+        <PlausibleProvider domain="docs.sentry.io,rollup.sentry.io" />
       </head>
       <body className={rubik.variable} suppressHydrationWarning>
         <ThemeProvider
