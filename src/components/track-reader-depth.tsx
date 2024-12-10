@@ -7,7 +7,7 @@ import {debounce} from 'sentry-docs/utils';
 const EVENT = 'Read Progress';
 const milestones = [25, 50, 75, 100] as const;
 type Milestone = (typeof milestones)[number];
-type EVENT_PROPS = {page: string, readProgress: Milestone;};
+type EVENT_PROPS = {page: string; readProgress: Milestone};
 
 export function ReaderDepthTracker() {
   const plausible = usePlausible<{[EVENT]: EVENT_PROPS}>();
