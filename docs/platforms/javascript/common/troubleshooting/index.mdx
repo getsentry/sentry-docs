@@ -437,22 +437,22 @@ Learn more about fixing these caching issues in the <PlatformLink to="/sourcemap
 <PlatformSection notSupported={['javascript.nuxt']}>
   <Expandable permalink title="pnpm: Resolving 'import-in-the-middle' external package errors">
 
-  When using pnpm, you might encounter errors related to packages that can't be external, particularly with packages like `import-in-the-middle` and `require-in-the-middle`. These errors typically occur due to pnpm's strict dependency management and hoisting behavior.
+When using pnpm, you might encounter errors related to packages that can't be external, particularly with packages like `import-in-the-middle` and `require-in-the-middle`. These errors typically occur due to pnpm's strict dependency management and hoisting behavior.
 
-  While adding these packages as direct dependencies might remove the warning messages, it often doesn't resolve the underlying functionality issues:
+While adding these packages as direct dependencies might remove the warning messages, it often doesn't resolve the underlying functionality issues:
 
-  ```bash
-  pnpm add import-in-the-middle require-in-the-middle
-  ```
+```bash
+pnpm add import-in-the-middle require-in-the-middle
+```
 
-  As a workaround, create or modify `.npmrc` in your project root:
+As a workaround, create or modify `.npmrc` in your project root:
 
-  ```npmrc
-  shamefully-hoist=true
-  ```
-  <Alert level="warning">
+```npmrc
+shamefully-hoist=true
+```
+<Alert level="warning">
   **Note**: While `shamefully-hoist=true` usually isn't the ideal solution from a dependency management perspective, it's sometimes necessary for compatibility with certain packages that expect Node.js module resolution behavior similar to npm or yarn.
-  </Alert>
+</Alert>
 
 
   </Expandable>
@@ -542,7 +542,31 @@ Learn more about fixing these caching issues in the <PlatformLink to="/sourcemap
 
 <PlatformSection supported={['javascript.nextjs']}>
   <Expandable permalink title="Using the Sentry Next SDK in a Nx monorepo (using `@nx/next`)">
-    If you want to set up Sentry's Next.js SDK in an Nx monorepo context, please refer to [this guide](https://nx.dev/recipes/next/next-config-setup#manually-composing-plugins-nx-15-and-prior).
+    To set up Sentry's Next.js SDK in an Nx monorepo context, consider the following setup:
+
+    ```js {filename:next.config.js}
+      const nextConfig = {
+      // ...
+      };
+
+      const plugins = [
+      // Your plugins excluding withNx
+      ];
+
+      module.exports = async (phase, context) => {
+        let updatedConfig = plugins.reduce((acc, fn) => fn(acc), nextConfig);
+
+        // Apply the async function that `withNx` returns.
+        updatedConfig = await withNx(updatedConfig)(phase, context);
+
+        return updatedConfig;
+      };
+
+      // The Sentry plugin should always be applied last
+      const { withSentryConfig } = require('@sentry/nextjs');
+      module.exports = withSentryConfig(module.exports)
+    ```
+
   </Expandable>
 </PlatformSection>
 
