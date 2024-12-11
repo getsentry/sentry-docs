@@ -450,6 +450,10 @@ As a workaround, create or modify `.npmrc` in your project root:
 shamefully-hoist=true
 ```
 
+<Alert level="warning">
+  **Note**: While `shamefully-hoist=true` usually isn't the ideal solution from a dependency management perspective, it's sometimes necessary for compatibility with certain packages that expect Node.js module resolution behavior similar to npm or yarn.
+</Alert>
+
 {" "}
 <Alert level="warning">
   **Note**: While `shamefully-hoist=true` usually isn't the ideal solution from
@@ -557,6 +561,36 @@ shamefully-hoist=true
           disable: true,
         },
       }
+    ```
+
+  </Expandable>
+</PlatformSection>
+
+<PlatformSection supported={['javascript.nextjs']}>
+  <Expandable permalink title="Using the Sentry Next SDK in a Nx monorepo (using `@nx/next`)">
+    To set up Sentry's Next.js SDK in an Nx monorepo context, consider the following setup:
+
+    ```js {filename:next.config.js}
+      const nextConfig = {
+      // ...
+      };
+
+      const plugins = [
+      // Your plugins excluding withNx
+      ];
+
+      module.exports = async (phase, context) => {
+        let updatedConfig = plugins.reduce((acc, fn) => fn(acc), nextConfig);
+
+        // Apply the async function that `withNx` returns.
+        updatedConfig = await withNx(updatedConfig)(phase, context);
+
+        return updatedConfig;
+      };
+
+      // The Sentry plugin should always be applied last
+      const { withSentryConfig } = require('@sentry/nextjs');
+      module.exports = withSentryConfig(module.exports)
     ```
 
   </Expandable>
