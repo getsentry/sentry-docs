@@ -6,37 +6,17 @@ description: "Learn about how the Nuxt SDK leverages dynamic input() in the buil
 
 ## Understanding the `import()` expression
 
-The `import()` expression (also called "dynamic import") allows conditional and flexible module loading in ESM.
-For the Sentry Nuxt SDK, it provides an approach to initialize server-side configuration before application startup.
+<Alert level='warning'>
+  This installation method comes with restrictions when using more recent versions of Nuxt/Nitro.
+
+  We recommend the guide for installing the SDK with the <PlatformLink to="/install/cli-import">CLI flag `--import`</PlatformLink> or a <PlatformLink to="/install/top-level-import/">top-level import</PlatformLink>
+</Alert>
+
+The `import()` expression, or dynamic import, enables flexible, conditional module loading in ESM.
+For the Sentry Nuxt SDK, it provides an approach to initialize server-side Sentry configuration before application startup.
 
 The Sentry Nuxt SDK will be initialized before any other code runs and the Nitro server runtime code will be loaded later because of `import()`ing it.
 This early initialization is required to set up the SDK's instrumentation of various libraries correctly.
-
-## Initializing Sentry with Dynamic `import()`
-
-Enable the dynamic `import()` by setting `autoInjectServerSentry`:
-
-```typescript {filename:nuxt.config.ts} {3}
-export default defineNuxtConfig({
-  sentry: {
-    autoInjectServerSentry: 'experimental_dynamic-import'
-  },
-})
-```
-
-After setting this, the Sentry Nuxt SDK adds some build-time configuration to ensure your app is wrapped with `import()`.
-With this, Sentry can be initialized before all other modules of the application.
-
-The Nuxt server entry file will look something like this:
-
-```javascript {filename:.output/server/index.mjs}
-// Note: The file may have some imports and code, related to debug IDs
-Sentry.init({
-  dsn: "..."
-});
-
-import('./chunks/nitro/nitro.mjs').then(function (n) { return n.r; });
-```
 
 ## Scenarios where `import()` doesn't work
 
@@ -67,7 +47,34 @@ As a temporary workaround, you can add the following overrides in your applicati
 }
 ```
 
-You can also check out the guide for installing the SDK with a <PlatformLink to="/install/cli-import">CLI flag `--import`</PlatformLink> or a <PlatformLink to="/install/top-level-import/">top-level import</PlatformLink>.
+You can also check out the guide for installing the SDK with the <PlatformLink to="/install/cli-import">CLI flag `--import`</PlatformLink> or a <PlatformLink to="/install/top-level-import/">top-level import</PlatformLink>.
+
+
+## Initializing Sentry with Dynamic `import()`
+
+Enable the dynamic `import()` by setting `autoInjectServerSentry`:
+
+```typescript {filename:nuxt.config.ts} {3}
+export default defineNuxtConfig({
+  sentry: {
+    autoInjectServerSentry: 'experimental_dynamic-import'
+  },
+})
+```
+
+After setting this, the Sentry Nuxt SDK adds some build-time configuration to ensure your app is wrapped with `import()`.
+With this, Sentry can be initialized before all other modules of the application.
+
+The Nuxt server entry file will look something like this:
+
+```javascript {filename:.output/server/index.mjs}
+// Note: The file may have some imports and code, related to debug IDs
+Sentry.init({
+  dsn: "..."
+});
+
+import('./chunks/nitro/nitro.mjs').then(function (n) { return n.r; });
+```
 
 ## Re-exporting serverless handler functions
 
