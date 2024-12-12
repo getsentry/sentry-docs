@@ -20,9 +20,9 @@ export function PageGrid({header, exclude}: Props) {
   }
 
   const children: DocNode[] = parentNode.frontmatter.next_steps?.length
-    ? (parentNode.frontmatter.next_steps
+    ? parentNode.frontmatter.next_steps
         .map(p => nodeForPath(rootNode, path.join(parentNode.path, p)))
-        .filter(isNotNil) ?? [])
+        .filter(isNotNil) ?? []
     : parentNode.children;
 
   return (
