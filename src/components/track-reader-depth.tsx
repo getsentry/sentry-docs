@@ -13,13 +13,7 @@ export function ReaderDepthTracker() {
   const plausible = usePlausible<{[EVENT]: EVENT_PROPS}>();
 
   const sendProgressToPlausible = (progress: Milestone) => {
-    // TODO: remove this after PR review
-    const args = [
-      EVENT,
-      {props: {readProgress: progress, page: document.title}},
-    ] as const;
-    plausible(...args);
-    console.log('plausible event', ...args);
+    plausible(EVENT, {props: {readProgress: progress, page: document.title}});
   };
 
   useEffect(() => {
