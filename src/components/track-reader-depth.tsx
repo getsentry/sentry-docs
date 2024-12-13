@@ -53,7 +53,7 @@ export function ReaderDepthTracker() {
     if (document.documentElement.scrollHeight - window.innerHeight === 0) {
       return () => {};
     }
-    const debouncedTrackProgress = debounce(trackProgress, 20);
+    const debouncedTrackProgress = debounce(trackProgress, 50);
 
     window.addEventListener('scroll', debouncedTrackProgress);
     return () => {
