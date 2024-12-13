@@ -78,7 +78,7 @@ And you can include any additional fields from this list:
 
 ## Implement Feature Flag Adapter
 
-In order to integrate your Feature Flagging platform with the Dev Toolbar, you will need an adapter that can read flag data from your provider, and also store and retrieve a list of overrides to apply to your local browser session.
+In order to integrate your feature flagging platform with the Dev Toolbar, you will need an adapter that can read flag data from your provider, and also store and retrieve a list of overrides to apply to your local browser session.
 
 We plan to [create adapters for OpenFeature and LaunchDarkly](https://github.com/getsentry/sentry-toolbar/issues/150) soon.
 
@@ -125,7 +125,7 @@ In dev and staging environments, you might want to *unconditionally* include the
 
 In production however, it's strongly recommended to *conditionally* include the Dev Toolbar `<script>` tag so that only members of your Sentry organization can see it. The specific implementation for conditionally including the Dev Toolbar is something you'll need to write based on how your app works and how your dev team is set up.
 
-For example, if your web application requires authentication to access, you could add a conditional where the Dev Toolbar is shown always when deployed to development **and** staging and is shown only if an employee is logged in when deployed to production.
+For example, if your web application requires authentication to access, you could add a conditional where the Dev Toolbar is shown always when deployed to development **and** staging, but in production only show the toolbar **if** an employee is logged in.
 
 
 The code might look like this:
@@ -135,7 +135,7 @@ The code might look like this:
 const env = process.env.SENTRY_ENVIRONMENT || 'development';
 const isEmployee = user.email.endsWith('@joshys-pizza.com')
 
-const isDev = env === 'development' || env === staging;
+const isDev = env === 'development' || env === 'staging';
 const isEmployeeInProd = env === 'production' && isEmployee;
 if (isDev || isEmployeeInProd) {
   SentryToolbar.init({ ... });
