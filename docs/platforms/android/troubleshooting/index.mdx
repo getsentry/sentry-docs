@@ -194,7 +194,27 @@ With this information, it might be more clear what's happening. If not, please c
 
 The [Sentry Android Gradle plugin](/platforms/android/configuration/gradle/) uses bytecode manipulation to automatically measure the performance of your application. This process requires looking at the dependencies of the application, which can potentially break the build process if there are libraries which have been compiled/minified with a non-default java compiler, like R8/D8.
 
-The culprit is usually our [File I/O instrumentation](/platforms/android/integrations/file-io/), which can be disabled as follows:
+If you experience a "[sentry] Error while instrumenting MyClassName" error message, it could be that you are using a minified library that cannot be instrumented, as the bytecode is not compliant with the JVM spec. You can exclude such library from instrumentation as follows:
+
+```groovy
+sentry {
+  tracingInstrumentation {
+    enabled = true
+    excludes = ['com/example/donotinstrument/**']
+  }
+}
+```
+
+```kotlin
+sentry {
+  tracingInstrumentation {
+    enabled.set(true)
+    excludes.set(setOf("com/example/donotinstrument/**"))
+  }
+}
+```
+
+You may also disable one of our instrumentations, like our [File I/O instrumentation](/platforms/android/integrations/file-io/), which is usually the culprit, as follows:
 
 ```groovy
 import io.sentry.android.gradle.extensions.InstrumentationFeature
