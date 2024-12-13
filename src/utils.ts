@@ -111,9 +111,7 @@ export const stripTrailingSlash = (url: string) => {
  * Debounce function to limit the number of times a function is called.
  * @param func The function to be debounced.
  * @param wait The time to wait before calling the function.
- * @param immediate Whether to call the function immediately.
- * @returns A debounced function.
- * @see https://davidwalsh.name/javascript-debounce-function
+ * @returns A debounced function that only calls the original function after the wait time has passed.
  */
 export function debounce<T extends unknown[]>(func: (...args: T) => void, delay: number) {
   let timer: ReturnType<typeof setTimeout>;
