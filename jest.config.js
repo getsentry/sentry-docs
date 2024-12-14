@@ -22,4 +22,8 @@ module.exports = {
     url: `http://localhost`,
   },
   setupFilesAfterEnv: ['<rootDir>/setup-test-env.js'],
+  collectCoverage: true,
+  coverageDirectory: '<rootDir>/coverage',
+  coverageReporters: ['json', 'lcov', 'text', 'clover'],
+  testMatch: ['**/__tests__/**/*.[jt]s?(x)', '**/?(*.)+(spec|test).[tj]s?(x)'],
 };

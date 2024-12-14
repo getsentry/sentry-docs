@@ -2,7 +2,7 @@
 /* eslint import/no-nodejs-modules:0 */
 
 module.exports = {
-  extends: ['sentry-docs', 'plugin:@next/next/recommended'],
+  extends: ['sentry-docs', 'plugin:@next/next/recommended', 'prettier'],
   globals: {
     jest: true,
     Atomics: 'readonly',
@@ -10,6 +10,7 @@ module.exports = {
   },
   rules: {
     'import/no-nodejs-modules': 'off',
+    'prettier/prettier': 'error',
   },
   overrides: [
     {
