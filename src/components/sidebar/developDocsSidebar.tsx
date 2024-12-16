@@ -13,7 +13,7 @@ const devDocsMenuItems: {root: string; title: string; hideChevron?: boolean}[] =
   {root: 'engineering-practices', title: 'Engineering Practices'},
   {root: 'application-architecture', title: 'Application Architecture'},
   {root: 'development-infrastructure', title: 'Development Infrastructure'},
-  {root: 'backend', title: 'backend'},
+  {root: 'backend', title: 'Backend'},
   {root: 'frontend', title: 'Frontend'},
   {root: 'services', title: 'Services'},
   {root: 'integrations', title: 'Integrations'},
