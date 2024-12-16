@@ -3912,17 +3912,22 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     from: '/api-server/application-domains/ab-testing/',
     to: '/develop/application-domains/ab-testing/',
   },
+  /* Ingestion section rework */
   {
     from: '/relay/',
-    to: '/ingestion/',
+    to: '/ingestion/relay/',
   },
   {
     from: '/relay/projectconfig-versioning/',
-    to: '/ingestion/projectconfig-versioning/',
+    to: '/ingestion/relay/projectconfig-versioning/',
   },
   {
     from: '/relay/transaction-span-ratelimits/',
-    to: '/ingestion/transaction-span-ratelimits/',
+    to: '/ingestion/relay/transaction-span-ratelimits/',
+  },
+  {
+    from: '/relay/relay-best-practices/',
+    to: '/ingestion/relay/relay-best-practices/',
   },
 ];
 
