@@ -3801,7 +3801,6 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     from: '/relay/relay-best-practices/',
     to: '/ingestion/relay/relay-best-practices/',
   },
-
 ];
 
 const redirectMap = new Map(
