@@ -3665,7 +3665,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/application-architecture/config/',
-    to: '/api-server/config/',
+    to: '/backend/config/',
   },
   {
     from: '/application/sentry-vs-getsentry/',
@@ -3677,38 +3677,6 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     to: '/development-infrastructure/frontend-development-server/',
   },
   {
-    from: '/backend/',
-    to: '/api-server/',
-  },
-  {
-    from: '/backend/api/',
-    to: '/api-server/api/',
-  },
-  {
-    from: '/backend/api/basics/',
-    to: '/api-server/api/basics/',
-  },
-  {
-    from: '/backend/api/design/',
-    to: '/api-server/api/design/',
-  },
-  {
-    from: '/backend/api/concepts/',
-    to: '/api-server/api/concepts/',
-  },
-  {
-    from: '/backend/api/public/',
-    to: '/api-server/api/public/',
-  },
-  {
-    from: '/backend/api/checklist/',
-    to: '/api-server/api/checklist/',
-  },
-  {
-    from: '/backend/api/serializers/',
-    to: '/api-server/api/serializers/',
-  },
-  {
     from: '/backend/development-server/',
     to: '/development-infrastructure/backend-development-server/',
   },
@@ -3718,103 +3686,103 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/backend/database-migrations/',
-    to: '/api-server/application-domains/database-migrations/',
+    to: '/backend/application-domains/database-migrations/',
   },
   {
     from: '/backend/feature-flags/',
-    to: '/api-server/application-domains/feature-flags/',
+    to: '/backend/application-domains/feature-flags/',
   },
   {
     from: '/backend/feature-flags/flagpole/',
-    to: '/api-server/application-domains/feature-flags/flagpole/',
+    to: '/backend/application-domains/feature-flags/flagpole/',
   },
   {
     from: '/backend/feature-flags/options-backed-features/',
-    to: '/api-server/application-domains/feature-flags/options-backed-features/',
+    to: '/backend/application-domains/feature-flags/options-backed-features/',
   },
   {
     from: '/backend/options/',
-    to: '/api-server/application-domains/options/',
+    to: '/backend/application-domains/options/',
   },
   {
     from: '/backend/transaction-clustering/',
-    to: '/api-server/application-domains/transaction-clustering/',
+    to: '/backend/application-domains/transaction-clustering/',
   },
   {
     from: '/backend/grouping/',
-    to: '/api-server/application-domains/grouping/',
+    to: '/backend/application-domains/grouping/',
   },
   {
     from: '/backend/outboxes/',
-    to: '/api-server/application-domains/outboxes/',
+    to: '/backend/application-domains/outboxes/',
   },
   {
     from: '/backend/issue-platform/',
-    to: '/api-server/issue-platform/',
+    to: '/backend/issue-platform/',
   },
   {
     from: '/backend/issue-platform-detectors/',
-    to: '/api-server/issue-platform/writing-detectors/',
+    to: '/backend/issue-platform/writing-detectors/',
   },
   {
     from: '/backend/queue/',
-    to: '/api-server/application-domains/asynchronous-workers/',
+    to: '/backend/application-domains/asynchronous-workers/',
   },
   {
     from: '/backend/email/',
-    to: '/api-server/application-domains/email/',
+    to: '/backend/application-domains/email/',
   },
   {
     from: '/backend/kafka/',
-    to: '/api-server/application-domains/kafka/',
+    to: '/backend/application-domains/kafka/',
   },
   {
     from: '/backend/metrics/',
-    to: '/api-server/application-domains/metrics/',
+    to: '/backend/application-domains/metrics/',
   },
   {
     from: '/backend/nodestore/',
-    to: '/api-server/application-domains/nodestore/',
+    to: '/backend/application-domains/nodestore/',
   },
   {
     from: '/backend/digests/',
-    to: '/api-server/application-domains/digests/',
+    to: '/backend/application-domains/digests/',
   },
   {
     from: '/backend/quotas/',
-    to: '/api-server/application-domains/quotas/',
+    to: '/backend/application-domains/quotas/',
   },
   {
     from: '/backend/tsdb/',
-    to: '/api-server/application-domains/tsdb/',
+    to: '/backend/application-domains/tsdb/',
   },
   {
     from: '/backend/pii/',
-    to: '/api-server/application-domains/pii/',
+    to: '/backend/application-domains/pii/',
   },
   {
     from: '/backend/pii/methods/',
-    to: '/api-server/application-domains/pii/methods/',
+    to: '/backend/application-domains/pii/methods/',
   },
   {
     from: '/backend/pii/types/',
-    to: '/api-server/application-domains/pii/types/',
+    to: '/backend/application-domains/pii/types/',
   },
   {
     from: '/backend/pii/selectors/',
-    to: '/api-server/application-domains/pii/selectors/',
+    to: '/backend/application-domains/pii/selectors/',
   },
   {
     from: '/backend/buffers/',
-    to: '/api-server/application-domains/write-buffers/',
+    to: '/backend/application-domains/write-buffers/',
   },
   {
     from: '/backend/translations/',
-    to: '/api-server/application-domains/translations/',
+    to: '/backend/application-domains/translations/',
   },
   {
     from: '/backend/ab-testing/',
-    to: '/api-server/application-domains/ab-testing/',
+    to: '/backend/application-domains/ab-testing/',
   },
   {
     from: '/relay/',
