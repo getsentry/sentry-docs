@@ -1,16 +1,34 @@
-The User Feedback integration is **already included** in your browser or framework SDK NPM packages. If you're using CDN bundles instead of NPM packages, you need to load the User Feedback integration CDN bundle in addition to your browser bundle:
+The User Feedback integration is **already included** in your NPM packages. You can enable it by adding it to your `integrations` in your `init` config:
 
-```bash {tabTitle:npm}
-npm install @sentry/browser --save
+```javascript {tabTitle: NPM}
+import * as Sentry from "@sentry/browser";
+
+Sentry.init({
+  dsn: "___DSN___",
+  integrations: [Sentry.feedbackIntegration()],
+});
 ```
 
-```bash {tabTitle:yarn}
-yarn add @sentry/browser
+If you're using the Loader Script, you can lazy load the User Feedback integration like this:
+
+```javascript {tabTitle: Loader}
+window.sentryOnLoad = function () {
+  Sentry.init({
+    // add other configuration here
+  });
+
+  Sentry.lazyLoadIntegration("feedbackIntegration")
+    .then((feedbackIntegration) => {
+      Sentry.addIntegration(feedbackIntegration());
+    })
+    .catch(() => {
+      // this can happen if e.g. a network error occurs,
+      // in this case User Feedback will not be enabled
+    });
+};
 ```
 
-```bash {tabTitle:pnpm}
-pnpm add @sentry/browser
-```
+If you're using CDN bundles instead of NPM packages, you need to load the User Feedback integration CDN bundle in addition to your browser bundle:
 
 ```html {tabTitle: CDN}
 <!-- Recommended: Use this bundle for feedback, replay, error, and tracing -->
