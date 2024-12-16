@@ -3677,8 +3677,40 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     to: '/development-infrastructure/frontend-development-server/',
   },
   {
-    from: '/backend/development-server/',
+    from: '/api-server/',
+    to: '/backend/',
+  },
+  {
+    from: '/api-server/api/',
+    to: '/backend/api/',
+  },
+  {
+    from: '/api-server/api/basics/',
+    to: '/backend/api/basics/',
+  },
+  {
+    from: '/api-server/api/design/',
+    to: '/backend/api/design/',
+  },
+  {
+    from: '/api-server/api/concepts/',
+    to: '/backend/api/concepts/',
+  },
+  {
+    from: '/api-server/api/public/',
+    to: '/backend/api/public/',
+  },
+  {
+    from: '/api-server/api/checklist/',
+    to: '/backend/api/checklist/',
+  },
+  {
+    from: '/api-server/api/serializers/',
+    to: '/backend/api/serializers/',
+  },
+  {
     to: '/development-infrastructure/backend-development-server/',
+    from: '/backend/development-server/',
   },
   {
     from: '/backend/python-dependencies/',
