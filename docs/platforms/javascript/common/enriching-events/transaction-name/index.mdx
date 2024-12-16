@@ -8,8 +8,7 @@ notSupported:
   - javascript.nextjs
 ---
 
-The Sentry SDK sets a "transaction name" which is used to annotate error events with their point of failure.
-Furthermore, if you use <PlatformLink to="/tracing/">Tracing</PlatformLink>, Sentry refers to the root spans of your application as a "transaction" and groups traces based on the root span's "transaction" name.
+The Sentry SDK uses an _error transaction name_ to mark where something went wrong in an error event. If you use <PlatformLink to="/tracing/">Tracing</PlatformLink>, Sentry uses the name of your root span as the _root span transaction name_, which will group traces around that name.
 
 This means that there are in fact two transaction names:
 
@@ -20,11 +19,11 @@ Both are used to annotate and group error and trace events respectively and are 
 
 <PlatformCategorySection supported={['browser']}>
 
-You need to add `browserTracingIntegration` when initializing the SDK to automatically set a transaction name.
+To automatically set transaction names, add `browserTracingIntegration` when initializing the SDK.
 
 </PlatformCategorySection>
 
-Because automatically-determined names are a good grouping mechanism, unless you have a special use-case, **you won't need to set or override transaction names manually.** 
+Because automatically-determined names are a good grouping mechanism, unless you have a special use-case, **you won't need to set or override transaction names manually.**
 
 ## What's a "Good" Transaction Name?
 
@@ -35,7 +34,7 @@ For example:
 - `UserListView`
 - `myapp.tasks.renew_all_subscriptions`
 
-A good transaction name shouldn't have too many variables (such as user IDs), but should still be unique enough to  help you easily identify the piece of code you care about.
+A good transaction name shouldn't have too many variables (such as user IDs), but should still be unique enough to help you easily identify the piece of code you care about.
 For example, instead of naming a transaction`'GET /api/users/123/details'`, name it `'GET /api/users/:id/details'`.
 This will group all errors and traces for requests to the same route.
 
@@ -50,7 +49,7 @@ In a web app, you can set it when navigating to a new route, like in an SPA rout
 
 ## Setting the Error Transaction Name
 
-There are several ways to set the transaction name for error events sent to Sentry.
+There are several ways to set the transaction name for error events sent to Sentry. This name will show up as the location of the issue next to the issue title.
 
 ### Setting the Name on the Scope
 
@@ -117,15 +116,13 @@ Sentry.init({
 ```
 
 <Note>
-Only do this if you can't set the root span name earlier using other options.
+  Only do this if you can't set the root span name earlier using other options.
 </Note>
 
 ## Further Information
 
-
 You might wonder why there are two separate transaction names and why they're set independently. This is mainly due to Sentry's history and evolution. The error transaction name existed before Sentry offered tracing, and it was used solely to group error events. When tracing was introduced, the root span in a span tree was also called a "transaction," with its own name.
 
 In later iterations, Sentry shifted focus in the UI from "transactions" to "spans" and "traces," but the older concepts remain in parts of the UI. The SDKs adapted their APIs, moving away from transaction-based designs. For example, the `setTransactionName` API on the `Scope` refers to error transaction names, not spans. Similarly, a span name doesn’t automatically apply to error events, keeping the two concepts [separate](https://github.com/getsentry/sentry-javascript/issues/10846).
-
 
 As Sentry continues to evolve, the ambiguity between these terms is expected to decrease as the product moves away from associating "transactions" with tracing and spans.
