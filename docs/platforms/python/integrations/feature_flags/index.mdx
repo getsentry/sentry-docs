@@ -1,0 +1,50 @@
+---
+title: Feature Flags
+description: "Learn how to attach custom feature flag data to Sentry error events."
+---
+
+<PlatformContent includePath="feature-flags/prerelease-alert" />
+
+The Feature Flags integration allows you to manually track feature flag evaluations through an API. These evaluations are held in memory, and in the event an error occurs, sent to Sentry for review and analysis.
+**At the moment, we only support boolean flag evaluations.**
+
+## Install
+
+Install `sentry-sdk` from PyPI.
+
+```bash
+pip install --upgrade 'sentry-sdk'
+```
+
+## Configure
+
+Add `FeatureFlagsIntegration()` to your `integrations` list:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.feature_flags import FeatureFlagsIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    integrations=[
+        FeatureFlagsIntegration(),
+    ],
+)
+```
+
+## Verify
+
+The integration is tested by calling the `add_feature_flag` API before capturing an exception.
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.feature_flags import add_feature_flag
+
+add_feature_flag('hello', False)
+
+sentry_sdk.capture_exception(Exception("Something went wrong!"))
+```
+
+Visit the Sentry website and confirm that your error event has recorded the feature flag "hello" and its value "false".
+
+<PlatformContent includePath="feature-flags/next-steps" />
