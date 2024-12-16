@@ -3717,10 +3717,6 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     to: '/backend/application-domains/outboxes/',
   },
   {
-    from: '/backend/issue-platform/',
-    to: '/backend/issue-platform/',
-  },
-  {
     from: '/backend/issue-platform-detectors/',
     to: '/backend/issue-platform/writing-detectors/',
   },
