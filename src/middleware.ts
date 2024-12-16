@@ -3721,96 +3721,196 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     to: '/backend/application-domains/database-migrations/',
   },
   {
+    from: '/api-server/application-domains/database-migrations/',
+    to: '/backend/application-domains/database-migrations/',
+  },
+  {
     from: '/backend/feature-flags/',
     to: '/backend/application-domains/feature-flags/',
+  },
+  {
+    from: '/api-server/application-domains/feature-flags/',
+    to: '/develop/application-domains/feature-flags/',
   },
   {
     from: '/backend/feature-flags/flagpole/',
     to: '/backend/application-domains/feature-flags/flagpole/',
   },
   {
+    from: '/api-server/application-domains/feature-flags/flagpole/',
+    to: '/develop/application-domains/feature-flags/flagpole/',
+  },
+  {
     from: '/backend/feature-flags/options-backed-features/',
     to: '/backend/application-domains/feature-flags/options-backed-features/',
+  },
+  {
+    from: '/api-server/application-domains/feature-flags/options-backed-features/',
+    to: '/develop/application-domains/feature-flags/options-backed-features/',
   },
   {
     from: '/backend/options/',
     to: '/backend/application-domains/options/',
   },
   {
+    from: '/api-server/application-domains/options/',
+    to: '/develop/application-domains/options/',
+  },
+  {
     from: '/backend/transaction-clustering/',
     to: '/backend/application-domains/transaction-clustering/',
+  },
+  {
+    from: '/api-server/application-domains/transaction-clustering/',
+    to: '/develop/application-domains/transaction-clustering/',
   },
   {
     from: '/backend/grouping/',
     to: '/backend/application-domains/grouping/',
   },
   {
+    from: '/api-server/application-domains/grouping/',
+    to: '/develop/application-domains/grouping/',
+  },
+  {
     from: '/backend/outboxes/',
     to: '/backend/application-domains/outboxes/',
+  },
+  {
+    from: '/api-server/application-domains/outboxes/',
+    to: '/develop/application-domains/outboxes/',
   },
   {
     from: '/backend/issue-platform-detectors/',
     to: '/backend/issue-platform/writing-detectors/',
   },
   {
+    from: '/api-server/issue-platform/writing-detectors/',
+    to: '/develop/issue-platform/writing-detectors/',
+  },
+  {
+    from: '/api-server/issue-platform/',
+    to: '/develop/issue-platform/',
+  },
+  {
     from: '/backend/queue/',
     to: '/backend/application-domains/asynchronous-workers/',
+  },
+  {
+    from: '/api-server/application-domains/asynchronous-workers/',
+    to: '/develop/application-domains/asynchronous-workers/',
   },
   {
     from: '/backend/email/',
     to: '/backend/application-domains/email/',
   },
   {
+    from: '/api-server/application-domains/email/',
+    to: '/develop/application-domains/email/',
+  },
+  {
     from: '/backend/kafka/',
     to: '/backend/application-domains/kafka/',
+  },
+  {
+    from: '/api-server/application-domains/kafka/',
+    to: '/develop/application-domains/kafka/',
   },
   {
     from: '/backend/metrics/',
     to: '/backend/application-domains/metrics/',
   },
   {
+    from: '/api-server/application-domains/metrics/',
+    to: '/develop/application-domains/metrics/',
+  },
+  {
     from: '/backend/nodestore/',
     to: '/backend/application-domains/nodestore/',
+  },
+  {
+    from: '/api-server/application-domains/nodestore/',
+    to: '/develop/application-domains/nodestore/',
   },
   {
     from: '/backend/digests/',
     to: '/backend/application-domains/digests/',
   },
   {
+    from: '/api-server/application-domains/digests/',
+    to: '/develop/application-domains/digests/',
+  },
+  {
     from: '/backend/quotas/',
     to: '/backend/application-domains/quotas/',
+  },
+  {
+    from: '/api-server/application-domains/quotas/',
+    to: '/develop/application-domains/quotas/',
   },
   {
     from: '/backend/tsdb/',
     to: '/backend/application-domains/tsdb/',
   },
   {
+    from: '/api-server/application-domains/tsdb/',
+    to: '/develop/application-domains/tsdb/',
+  },
+  {
     from: '/backend/pii/',
     to: '/backend/application-domains/pii/',
+  },
+  {
+    from: '/api-server/application-domains/pii/',
+    to: '/develop/application-domains/pii/',
   },
   {
     from: '/backend/pii/methods/',
     to: '/backend/application-domains/pii/methods/',
   },
   {
+    from: '/api-server/application-domains/pii/methods/',
+    to: '/develop/application-domains/pii/methods/',
+  },
+  {
     from: '/backend/pii/types/',
     to: '/backend/application-domains/pii/types/',
+  },
+  {
+    from: '/api-server/application-domains/pii/types/',
+    to: '/develop/application-domains/pii/types/',
   },
   {
     from: '/backend/pii/selectors/',
     to: '/backend/application-domains/pii/selectors/',
   },
   {
+    from: '/api-server/application-domains/pii/selectors/',
+    to: '/develop/application-domains/pii/selectors/',
+  },
+  {
     from: '/backend/buffers/',
     to: '/backend/application-domains/write-buffers/',
+  },
+  {
+    from: '/api-server/application-domains/write-buffers/',
+    to: '/develop/application-domains/write-buffers/',
   },
   {
     from: '/backend/translations/',
     to: '/backend/application-domains/translations/',
   },
   {
+    from: '/api-server/application-domains/translations/',
+    to: '/develop/application-domains/translations/',
+  },
+  {
     from: '/backend/ab-testing/',
     to: '/backend/application-domains/ab-testing/',
+  },
+  {
+    from: '/api-server/application-domains/ab-testing/',
+    to: '/develop/application-domains/ab-testing/',
   },
   {
     from: '/relay/',
