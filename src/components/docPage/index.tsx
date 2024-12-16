@@ -4,7 +4,7 @@ import {getCurrentGuide, getCurrentPlatform, nodeForPath} from 'sentry-docs/docT
 import {serverContext} from 'sentry-docs/serverContext';
 import {FrontMatter} from 'sentry-docs/types';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
-import {isTruthy} from 'sentry-docs/utils';
+import {isNotNil} from 'sentry-docs/utils';
 import {getUnversionedPath} from 'sentry-docs/versioning';
 
 import './type.scss';
@@ -50,7 +50,7 @@ export function DocPage({
 
   const pathname = serverContext().path.join('/');
 
-  const searchPlatforms = [currentPlatform?.name, currentGuide?.name].filter(isTruthy);
+  const searchPlatforms = [currentPlatform?.name, currentGuide?.name].filter(isNotNil);
 
   const unversionedPath = getUnversionedPath(path, false);
 

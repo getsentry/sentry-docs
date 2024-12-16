@@ -84,7 +84,7 @@ Nice!
 
 This file is used to trigger the release from the GitHub UI.
 
-You'll notice it uses `secrets.GH_RELEASE_PAT` -- this should already be
+You'll notice it uses `vars.SENTRY_RELEASE_BOT_CLIENT_ID` and `secrets.SENTRY_RELEASE_BOT_PRIVATE_KEY` -- these should be
 available to your repository automatically!
 
 ```yaml
@@ -105,14 +105,20 @@ jobs:
     runs-on: ubuntu-latest
     name: "Release a new version"
     steps:
+      - name: Get auth token
+        id: token
+        uses: actions/create-github-app-token@5d869da34e18e7287c1daad50e0b8ea0f506ce69 # v1.11.0
+        with:
+          app-id: ${{ vars.SENTRY_RELEASE_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.SENTRY_RELEASE_BOT_PRIVATE_KEY }}
       - uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GH_RELEASE_PAT }}
+          token: ${{ steps.token.outputs.token }}
           fetch-depth: 0
       - name: Prepare release
         uses: getsentry/action-prepare-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_RELEASE_PAT }}
+          GITHUB_TOKEN: ${{ steps.token.outputs.token }}
         with:
           version: ${{ github.event.inputs.version }}
           force: ${{ github.event.inputs.force }}
@@ -132,10 +138,15 @@ Here's [an example PR] and the [follow-up to fix `fetch-depth`].
 Give the following teams access to your repository:
 
 - `engineering` -> `write`
-- `release-bot` -> `elevated bot`
 
 You can do this self-service via the settings page of your repository:
 `https://github.com/getsentry/REPONAME_HERE/settings/access`
+
+## Create Ruleset for the Repo
+
+Download and save the [default ruleset template](/json/Default_ruleset.json) as a JSON file.
+
+Visit the ruleset setting page of your repository: `https://github.com/getsentry/REPONAME_HERE/settings/rules`, click on the green **New ruleset** button, choose **Import a ruleset**, and select the JSON file you just downloaded. You can tweak the ruleset settings, but please don't remove the App in the Bypass List.
 
 ## Making Your First Release!
 

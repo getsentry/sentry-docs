@@ -219,6 +219,14 @@ const userDocsRedirects = [
     destination: '/organization/integrations/feature-flag/launchdarkly/',
   },
   {
+    source: '/product/explore/session-replay/replay-details/',
+    destination: '/product/explore/session-replay/web/replay-details/',
+  },
+  {
+    source: '/platforms/javascript/guides/nextjs/sourcemaps/uploading/',
+    destination: '/platforms/javascript/guides/nextjs/sourcemaps/',
+  },
+  {
     source: '/organization/integrations/vercel/',
     destination: '/organization/integrations/deployment/vercel/',
   },
@@ -872,6 +880,10 @@ const userDocsRedirects = [
     destination: '/product/insights/ai/llm-monitoring/getting-started/the-dashboard/',
   },
   // End of Insights reduirects.
+  {
+    source: '/platforms/javascript/guides/astro/manual-setup/',
+    destination: '/platforms/javascript/guides/astro/',
+  },
 ];
 
 /**

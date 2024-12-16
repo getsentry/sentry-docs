@@ -7,7 +7,7 @@ sidebar_order: 40
 ## Getting Started
 
 - A quick introduction into the Syntax for first-timers:
-  [A half-hour to learn Rust](https://fasterthanli.me/blog/2020/a-half-hour-to-learn-rust/)
+  [A half-hour to learn Rust](https://fasterthanli.me/articles/a-half-hour-to-learn-rust)
 - The Rust Book, comprehensively documenting the language:
   [The Rust Programming Language](https://doc.rust-lang.org/book/)
 - [The Async Book](https://rust-lang.github.io/async-book/)
@@ -50,26 +50,26 @@ During migration you may need normal functions which return futures, for their s
 
 ### Async Traits
 
-In **traits** you can not yet use `async fn` ([see this blog post](https://smallcultfollowing.com/babysteps/blog/2019/10/26/async-fn-in-traits-are-hard/)).
-In this case, functions should return `-> Pin<Box<dyn Future<Output = ...> + Send>>`:
+Support for async in **traits** has [landed in Rust](https://blog.rust-lang.org/2023/12/21/async-fn-rpit-in-traits.html)
+and should generally be preferred now.
 
 ```rust
-trait Database {
-    fn get_user(&self) -> Pin<Box<dyn Future<Output = User> + Send + '_>>;
+pub trait Database {
+    fn get_user(&self) -> impl Future<Output = User> + Send;
 }
 
-impl Database for MyDB {
-  fn get_user(&self) -> Pin<Box<dyn Future<Output = User> + Send + '_>> {
-    Box::pin(async {
-      // ...
-    })
-  }
+impl Database for MyDatabase {
+    async fn get_user(&self) -> User {
+        todo!()
+    }
 }
 ```
 
 Note that the returned future type is `Send`, to ensure that it can run on a multi-threaded runtime.
 
-This corresponds to what the [async-trait crate](https://crates.io/crates/async-trait) does.
+When you need dynamic dispatch or have to support Rust versions older than 1.75 consider using the
+[`async-trait`](https://docs.rs/async-trait/) crate.
+
 
 ### Avoid `.unwrap()`
 
