@@ -24,36 +24,29 @@ You need to add `browserTracingIntegration` when initializing the SDK to automat
 
 </PlatformCategorySection>
 
-Generally, **you don't need to set or override the transaction name manually.**
-In most cases, the automatically determined name is a good grouping mechanism.
-However, if this does not work for your use case, you can set both transaction names independently.
+Because automatically-determined names are a good grouping mechanism, unless you have a special use-case, **you won't need to set or override transaction names manually.** 
 
-## What is a "Good" Transaction Name?
+## What's a "Good" Transaction Name?
 
-The transaction name can reference the current web app or server route, mobile screen or activity, or the current task being executed.
+Your transaction name can reference the current web app or server route, mobile screen or activity, or the current task being executed.
 For example:
 
 - `GET /api/{version}/users/`
 - `UserListView`
 - `myapp.tasks.renew_all_subscriptions`
 
-Ideally, the transaction name does not contain variable values such as user
-IDs but has rather low cardinality while still uniquely identifying a piece of
-code you care about.
-For example, instead of `'GET /api/users/123/details'`, set `'GET /api/users/:id/details'`.
-This ensures that errors or traces for all requests made to this route are grouped together.
+A good transaction name shouldn't have too many variables (such as user IDs), but should still be unique enough to  help you easily identify the piece of code you care about.
+For example, instead of naming a transaction`'GET /api/users/123/details'`, name it `'GET /api/users/:id/details'`.
+This will group all errors and traces for requests to the same route.
 
-### When to set the Transaction Name
+### When to Set the Transaction Name
 
-We generally recommend to let the SDK set the transaction name automatically.
-However, in some cases, the SDK might not be able to set a name or the set name doesn't work for your use case.
+It's usually best to let the SDK set the transaction name automatically. However, if it can't or the name doesn't suit your needs, you can set it manually.
 
-If you need to set the transaction name manually, we recommend setting it _as early as possible_ in your application code, specifically when the operation you want to describe with the transaction name starts.
-This ensures that errors thrown early in the life cycle of your application are correctly annotated.
-Furthermore, it ensures consistency across a trace if you use [distributed tracing](/concepts/key-terms/tracing/distributed-tracing/).
+We recommend setting it _as early as possible_ in your application code, ideally when the operation you want to track starts. This ensures that errors thrown early in the application lifecycle are annotated correctly and keeps traces consistent if you're using [distributed tracing](/concepts/key-terms/tracing/distributed-tracing/).
 
-For example, in a server application, you might set the transaction name in a middleware that runs before the request is processed.
-In a web application, you might set the transaction name when you enter a new route (e.g. in an SPA Router).
+For example, in a server app, you can set the transaction name in middleware before handling a request.
+In a web app, you can set it when navigating to a new route, like in an SPA router.
 
 ## Setting the Error Transaction Name
 
@@ -67,8 +60,7 @@ Set the transaction name on the current scope when the operation you want to gro
 Sentry.getCurrentScope().setTransactionName("UserListView");
 ```
 
-Note that the transaction name on the scope is only applied to error events. It does not influence the name of a potentially active root span.
-Likewise, if a span is active while an error is thrown, its name will not be applied to the error event's transaction name.
+The transaction name on the scope only applies to error events, not the active root span. Similarly, if an error happens during an active span, the span's name won’t be applied to the error's transaction name.
 
 ### Setting the Name on the Event
 
@@ -85,22 +77,22 @@ Sentry.init({
 
 ## Setting the Root Span Name
 
-To override the name of the root span name (i.e. the trace name or transaction name in the Sentry UI), you have multiple options:
+There are multiple options for overriding the root span name (for example, the trace or transaction name in the Sentry UI):
 
 <PlatformCategorySection supported={['browser']}>
 
 ### At Root Span Start
 
 Sentry's `browserTracingIntegration` automatically sets the transaction name based on the current route or URL for all `pageload` and `navigation` transactions.
-If you want to override the transaction name, you can do so in the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#beforestartspan">`beforeStartSpan` callback</PlatformLink> of the integration.
+To override the transaction name, use the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#beforestartspan">`beforeStartSpan` callback</PlatformLink> of the integration.
 
 </PlatformCategorySection>
 
-### While the root span is active
+### While the Root Span Is Active
 
-_Available since: v8.44.0_
+_Available starting with: v8.44.0_
 
-Sometimes, for example if you have a router that only emits the route change after it occurred, you might not be able to set the final root span name at span start but a little bit later. In this case, you can update the root span name while the span is active:
+Sometimes, (for example if you have a router that only emits the route change after it occurred) you might not be able to set the final root span name at span start. In this case, you can update the root span name while the span is active:
 
 ```javascript
 const activeSpan = Sentry.getActiveSpan();
@@ -111,9 +103,9 @@ Sentry.updateSpanName(rootSpan, "UserListView");
 
 Learn more about <PlatformLink to="/tracing/instrumentation/custom-instrumentation/#updating-the-span-name">updating the span name</PlatformLink>.
 
-### After the root span finished
+### After the Root Span Has Finished
 
-If you cannot determine the root span name before the span finishes, you can retroactively change it in `beforeSendTransaction`:
+If you can't determine the root span name before the span finishes, you'll be able to change it retroactively in `beforeSendTransaction`:
 
 ```javascript
 Sentry.init({
@@ -124,20 +116,16 @@ Sentry.init({
 });
 ```
 
-We recommend to only do this, if you cannot use any of the other options to set the root span name earlier.
+<Note>
+Only do this if you can't set the root span name earlier using other options.
+</Note>
 
 ## Further Information
 
-You might be wondering why these two types of transaction names exist and why they are set independently.
-The reason is mostly historic evolvement of the Sentry product and the SDKs.
-The error transaction name existed long before Sentry provided tracing capabilities and where it was only applied to error events to better group issues.
 
-In the first iteration of Sentry's tracing or performance monitoring product, we decided to call the root span of a span tree within an application a "Transaction", which also had a name.
-In the second, now ongoing, tracing iteration, Sentry's new UI features no longer mention "Transactions" for root spans but rather just "spans" and "traces".
-However, the two concepts (error transaction name and root span name) are still ambiguous and used so throughout various older parts of the Sentry UI.
+You might wonder why there are two separate transaction names and why they're set independently. This is mainly due to Sentry's history and evolution. The error transaction name existed before Sentry offered tracing, and it was used solely to group error events. When tracing was introduced, the root span in a span tree was also called a "transaction," with its own name.
 
-With this product evolvement in mind, the SDKs also had to adapt their APIs around tracing, specifically moving away from transaction-based APIs in version 8.
-Consequently, the SDK exposes the `setTransactionName` API on the `Scope` which—although the name might suggest differently from historic context—has nothing to do with spans.
-Likewise, the span name is not automatically applied to error events either, meaning both concepts are completely [decoupled](https://github.com/getsentry/sentry-javascript/issues/10846) from each other.
+In later iterations, Sentry shifted focus in the UI from "transactions" to "spans" and "traces," but the older concepts remain in parts of the UI. The SDKs adapted their APIs, moving away from transaction-based designs. For example, the `setTransactionName` API on the `Scope` refers to error transaction names, not spans. Similarly, a span name doesn’t automatically apply to error events, keeping the two concepts [separate](https://github.com/getsentry/sentry-javascript/issues/10846).
 
-We believe that the ambiguity of these APIs will decrease over time as the Sentry product further moves away from associating the "Transaction" term with tracing and spans.
+
+As Sentry continues to evolve, the ambiguity between these terms is expected to decrease as the product moves away from associating "transactions" with tracing and spans.
