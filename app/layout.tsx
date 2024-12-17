@@ -3,7 +3,7 @@ import './globals.css';
 import {Theme} from '@radix-ui/themes';
 import type {Metadata} from 'next';
 import {Rubik} from 'next/font/google';
-import Script from 'next/script';
+import PlausibleProvider from 'next-plausible';
 
 import {ThemeProvider} from 'sentry-docs/components/theme-provider';
 
@@ -31,6 +31,9 @@ export const metadata: Metadata = {
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <PlausibleProvider domain="docs.sentry.io,rollup.sentry.io" />
+      </head>
       <body className={rubik.variable} suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
@@ -43,12 +46,6 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
           </Theme>
         </ThemeProvider>
       </body>
-      <Script
-        defer
-        data-domain="docs.sentry.io,rollup.sentry.io"
-        data-api="https://plausible.io/api/event"
-        src="https://plausible.io/js/script.tagged-events.js"
-      />
     </html>
   );
 }
