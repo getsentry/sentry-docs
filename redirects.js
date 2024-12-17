@@ -224,7 +224,7 @@ const userDocsRedirects = [
   },
   {
     source: '/product/error-monitoring/stacktrace/',
-    destination: '/product/issues/issue-details/error-issues/',
+    destination: '/product/issues/issue-details/#stack-trace',
   },
   {
     source: '/product/explore/session-replay/privacy/',
