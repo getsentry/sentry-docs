@@ -38,7 +38,7 @@ const codeToJsx = (code: string, lang = 'json') => {
 
 export function ApiExamples({api}: Props) {
   const apiExample = [
-    `curl https://sentry.io${api.apiPath}`,
+    `curl ${api.server}${api.apiPath}`,
     ` -H 'Authorization: Bearer <auth_token>'`,
   ];
   if (['put', 'options', 'delete'].includes(api.method.toLowerCase())) {

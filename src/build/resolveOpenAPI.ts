@@ -70,6 +70,7 @@ export type API = {
   pathParameters: APIParameter[];
   queryParameters: APIParameter[];
   responses: APIResponse[];
+  server: string;
   slug: string;
   bodyContentType?: string;
   descriptionMarkdown?: string;
@@ -120,11 +121,16 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
 
   Object.entries(data.paths).forEach(([apiPath, methods]) => {
     Object.entries(methods).forEach(([method, apiData]) => {
+      let server = 'https://sentry.io';
+      if (apiData.servers && apiData.servers[0]) {
+        server = apiData.servers[0].url;
+      }
       apiData.tags.forEach(tag => {
         categoryMap[tag].apis.push({
           apiPath,
           method,
           name: apiData.operationId,
+          server,
           slug: slugify(apiData.operationId),
           summary: apiData.summary,
           descriptionMarkdown: apiData.description,
