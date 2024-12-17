@@ -223,6 +223,10 @@ const userDocsRedirects = [
     destination: '/product/issues/issue-details/replay-issues/hydration-error/',
   },
   {
+    source: '/product/error-monitoring/stacktrace/',
+    destination: '/product/issues/issue-details/error-issues/',
+  },
+  {
     source: '/organization/integrations/launchdarkly/',
     destination: '/organization/integrations/feature-flag/launchdarkly/',
   },
