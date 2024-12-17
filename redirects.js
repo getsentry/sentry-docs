@@ -227,6 +227,10 @@ const userDocsRedirects = [
     destination: '/product/issues/issue-details/error-issues/',
   },
   {
+    source: '/product/explore/session-replay/privacy/',
+    destination: '/security-legal-pii/scrubbing/protecting-user-privacy/',
+  },
+  {
     source: '/product/explore/session-replay/rage-dead-clicks/',
     destination: '/product/issues/issue-details/replay-issues/rage-clicks/',
   },
