@@ -116,7 +116,7 @@ const developerDocsRedirects = [
   },
   {
     source: '/api-server/:path*',
-    destination: '/backend/:path*'
+    destination: '/backend/:path*',
   },
   {
     source: '/application/serializers/',
@@ -218,6 +218,18 @@ const developerDocsRedirects = [
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
+  {
+    source: '/product/explore/session-replay/hydration-errors/',
+    destination: '/product/issues/issue-details/replay-issues/hydration-error/',
+  },
+  {
+    source: '/product/error-monitoring/stacktrace/',
+    destination: '/product/issues/issue-details/error-issues/',
+  },
+  {
+    source: '/product/explore/session-replay/rage-dead-clicks/',
+    destination: '/product/issues/issue-details/replay-issues/rage-clicks/',
+  },
   {
     source: '/organization/integrations/launchdarkly/',
     destination: '/organization/integrations/feature-flag/launchdarkly/',
