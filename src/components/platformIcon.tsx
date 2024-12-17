@@ -102,6 +102,7 @@ import QuartSVG from 'platformicons/svg/quart.svg';
 import RailsSVG from 'platformicons/svg/rails.svg';
 import ReactSVG from 'platformicons/svg/react.svg';
 import ReactnativeSVG from 'platformicons/svg/react-native.svg';
+import ReactRouterSVG from 'platformicons/svg/react-router.svg';
 import RedisSVG from 'platformicons/svg/redis.svg';
 import ReduxSVG from 'platformicons/svg/redux.svg';
 import RemixSVG from 'platformicons/svg/remix.svg';
@@ -239,6 +240,7 @@ import QuartSVGLarge from 'platformicons/svg_80x80/quart.svg';
 import RailsSVGLarge from 'platformicons/svg_80x80/rails.svg';
 import ReactSVGLarge from 'platformicons/svg_80x80/react.svg';
 import ReactnativeSVGLarge from 'platformicons/svg_80x80/react-native.svg';
+import ReactRouterSVGLarge from 'platformicons/svg_80x80/react-router.svg';
 import RedisSVGLarge from 'platformicons/svg_80x80/redis.svg';
 import ReduxSVGLarge from 'platformicons/svg_80x80/redux.svg';
 import RemixSVGLarge from 'platformicons/svg_80x80/remix.svg';
@@ -273,8 +275,6 @@ import VueSVGLarge from 'platformicons/svg_80x80/vue.svg';
 import WasmSVGLarge from 'platformicons/svg_80x80/wasm.svg';
 import WindowsSVGLarge from 'platformicons/svg_80x80/windows.svg';
 import XamarinSVGLarge from 'platformicons/svg_80x80/xamarin.svg';
-// TODO(cg): move to platformicons once available
-import ReactRouterSVGLarge from 'public/icon/rr.svg';
 
 const formatToSVG = {
   HTML5: {
@@ -690,7 +690,7 @@ const formatToSVG = {
     lg: ReactSVGLarge,
   },
   'react-router': {
-    sm: ReactRouterSVGLarge,
+    sm: ReactRouterSVG,
     lg: ReactRouterSVGLarge,
   },
   redis: {
