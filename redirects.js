@@ -115,6 +115,10 @@ const developerDocsRedirects = [
     destination: '/backend/api/:path*',
   },
   {
+    source: '/api-server/:path*',
+    destination: '/backend/:path*'
+  },
+  {
     source: '/application/serializers/',
     destination: '/backend/serializers/',
   },
