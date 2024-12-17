@@ -25,7 +25,8 @@ notSupported:
 
 <Alert level="info">
 
-This integration only works inside a browser environment.
+This integration only works inside a browser environment, and you must install
+from npm.
 
 </Alert>
 
@@ -33,48 +34,7 @@ The [OpenFeature](https://openfeature.dev/) integration tracks feature flag eval
 
 _Import name: `Sentry.openFeatureIntegration` and `Sentry.OpenFeatureIntegrationHook`_
 
-## Install
-
-Install your platform's Sentry SDK and [`@openfeature/web-sdk`](https://www.npmjs.com/package/@openfeature/web-sdk) from npm.
-
-## Configure
-
-```JavaScript
-import * as Sentry from '@sentry/browser';
-import { OpenFeature } from '@openfeature/web-sdk';
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [Sentry.openFeatureIntegration()]
-});
-
-OpenFeature.setProvider(new MyProviderOfChoice());
-
-// Option 1: track all OpenFeature evaluations.
-OpenFeature.addHooks(new Sentry.OpenFeatureIntegrationHook());
-
-// Option 2: only track evaluations by a specific client.
-const client = OpenFeature.getClient();
-client.addHooks(new Sentry.OpenFeatureIntegrationHook());
-```
-
-Learn more about OpenFeature [providers](https://openfeature.dev/docs/reference/concepts/provider) and the [web SDK](https://openfeature.dev/docs/reference/technologies/client/web/).
-
-## Verify
-
-The integration is tested by evaluating a feature flag with your OpenFeature SDK before capturing an exception.
-
-```JavaScript
-import * as Sentry from '@sentry/browser';
-import { OpenFeature } from '@openfeature/web-sdk';
-
-// Evaluate a flag with a default value. If you added the hook to a client in
-// the Configure step, make sure to use the same client here.
-const client = OpenFeature.getClient();
-const result = client.getBooleanValue('hello', false);
-
-Sentry.captureException(new Error("Something went wrong!"))
-```
+<PlatformContent includePath="/configuration/openfeature" />
 
 Visit the Sentry website and confirm that your error event has recorded the feature flag "hello" and its value "false".
 
