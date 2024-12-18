@@ -114,29 +114,26 @@ interface FeatureFlagAdapter {
 [MockFeatureFlagAdapter.tsx](https://github.com/getsentry/sentry-toolbar/blob/main/src/env/demo/MockFeatureFlagAdapter.tsx) is an example adapter to use as a reference.
 
 
-## Deploying To Dev, Staging, and Production Environments
+## Deploying To Dev and Staging Environments
 Since the Dev Toolbar is deployed onto specific pages, it's strongly recommended that you consider which environments the toolbar should apply to.
 
 In dev and staging environments, you might want to *unconditionally* include the toolbar so that all developers and testers can use it and quickly go from the page they're looking at back to Sentry for further debugging.
 
-In production however, it's strongly recommended to *conditionally* include the Dev Toolbar `<script>` tag so that only members of your Sentry organization can see it. The specific implementation for conditionally including the Dev Toolbar is something you'll need to write based on how your app works and how your dev team is set up.
-
-For example, if your web application requires authentication to access, you could add a conditional where the Dev Toolbar is shown always when deployed to development **and** staging, but in production only show the toolbar **if** an employee is logged in.
-
-
 The code might look like this:
 ```javascript
-// example conditions to render the toolbar in different environments.
-
 const env = process.env.SENTRY_ENVIRONMENT || 'development';
-const isEmployee = user.email.endsWith('@joshys-pizza.com')
 
 const isDev = env === 'development' || env === 'staging';
-const isEmployeeInProd = env === 'production' && isEmployee;
-if (isDev || isEmployeeInProd) {
+if (isDev ) {
   SentryToolbar.init({ ... });
 }
 ```
+
+## Deploying to Production Environments
+
+In production, it's strongly recommended to *conditionally* include the Dev Toolbar `<script>` tag so that only members of your Sentry organization can see it. The specific implementation for conditionally including the Dev Toolbar is something you'll need to write based on how your app works and how your dev team is set up.
+
+For example, if your web application requires authentication to access, you could add a conditional where the Dev Toolbar is shown always when deployed to development **and** staging, but in production only show the toolbar **if** an employee is logged in.
 
 If the toolbar `<script>` is accidentally included on your site, and `SentryToolbar.init()` is called, then a "Login to Sentry" button will be visible to the public. This is not ideal, but your data in Sentry will still be safe as users outside of your Sentry organization will not be able to authenticate themselves.
 
