@@ -1,0 +1,37 @@
+Before using this integration, you need to install and instrument the OpenFeature SDK in your app. Learn more by reading OpenFeature's [SDK](https://openfeature.dev/docs/reference/technologies/client/web/) and [provider](https://openfeature.dev/docs/reference/concepts/provider) docs.
+
+npm package: [`@openfeature/web-sdk`](https://www.npmjs.com/package/@openfeature/web-sdk)
+
+```JavaScript {tabTitle: JavaScript (Track All Evals)}
+import * as Sentry from '@sentry/solidstart';
+import { OpenFeature } from '@openfeature/web-sdk';
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.openFeatureIntegration()]
+});
+
+OpenFeature.setProvider(new MyProviderOfChoice());
+OpenFeature.addHooks(new Sentry.OpenFeatureIntegrationHook());
+
+const client = OpenFeature.getClient();
+const result = client.getBooleanValue('hello', false); // evaluate with a default value
+Sentry.captureException(new Error("Something went wrong!"));
+```
+
+```JavaScript {tabTitle: JavaScript (Track One Client)}
+import * as Sentry from '@sentry/solidstart';
+import { OpenFeature } from '@openfeature/web-sdk';
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.openFeatureIntegration()]
+});
+
+OpenFeature.setProvider(new MyProviderOfChoice());
+const client = OpenFeature.getClient();
+client.addHooks(new Sentry.OpenFeatureIntegrationHook());
+
+const result = client.getBooleanValue('hello', false); // evaluate with a default value
+Sentry.captureException(new Error("Something went wrong!"));
+```
