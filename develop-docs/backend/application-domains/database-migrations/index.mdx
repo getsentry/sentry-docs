@@ -440,8 +440,11 @@ With postgres 14, columns can be added to tables of all sizes as deploy time
 migrations if you follow the guidelines on default values & allowing nulls. When
 creating new columns they should either be:
 
-- Not null with a default. https://develop.sentry.dev/database-migrations/#adding-not-null-to-columns
+- Not null with a default
 - Created as nullable. If no default value can be set on the column, then it's best just to make it nullable.
+
+For nullable columns with a constraint and not null columns with a default, see [Adding Constraints to Columns](#adding-constraints-to-columns-including-not-null). For bigger tables, these constraints can lock the table and cause downtime.
+
 
 ### Adding Columns With a Default
 
@@ -449,19 +452,18 @@ Since we run Postgres >= 14 in production we are able to add columns with a defa
 
 We can't use `default` because Django's default behaviour for creating a new not null column with a default is dangerous. When using default, in the migration Django will add the default to backfill all fields, then immediately remove it so that it can handle them in the app layer. This means that during a deploy, the column is sitting in production without a default until all code rolls out, which means that inserts will fail for this table until the deploy completes.
 
-### Adding Not Null To Columns
+### Adding Constraints to Columns (Including Not Null)
 
-It can be dangerous to add not null to columns, even if there is data in every row of the table for that column. This is because Postgres still needs to perform a not null check on all rows before it can add the constraint. On small tables this can be fine since
-the check will be quick, but on larger tables this can cause downtime. There are a few options here to make this safe:
+It can be dangerous to add constraints to columns, whether they are new or existing columns, even if the data in every row of the table does not violate the constraint. This is because Postgres still needs to perform a constraint check on all rows before it can add the constraint. On small tables this can be fine since the check will be quick, but on larger tables this can cause downtime. There are a few options here to make this safe:
 
 ```sql
-ALTER TABLE tbl ADD CONSTRAINT cnstr CHECK (col IS NOT NULL) NOT VALID;
+ALTER TABLE tbl ADD CONSTRAINT cnstr CHECK (col IS NOT NULL) NOT VALID;  -- example with a not null constraint
 ALTER TABLE tbl VALIDATE CONSTRAINT cnstr;
 ```
 
-One approach is to create the constraint as not valid. Then we validate it afterwards. We still need to scan the whole table to validate, but we only need to hold a `SHARE UPDATE EXCLUSIVE` lock, which only blocks other `ALTER TABLE` commands, but will allow reads/writes to continue. This works well, but has a slight performance penalty of 0.5-1%. After Postgres 12 we can extend this method to add a real `NOT NULL` constraint.
+One approach is to create the constraint as not valid. Then we validate it afterwards. We still need to scan the whole table to validate, but we only need to hold a `SHARE UPDATE EXCLUSIVE` lock, which only blocks other `ALTER TABLE` commands, but will allow reads/writes to continue. This works well, but has a slight performance penalty of 0.5-1%. After Postgres 12 we can extend this method to add the real constraint.
 
-Alternatively, if the table is small enough and has low enough volume it should be safe to just create a normal `NOT NULL` constraint. Small being a few million rows or less.
+Alternatively, if the table is small enough and has low enough volume it should be safe to just create the constraint as is. Small being a few million rows or less.
 
 ### Altering Column Types
 
