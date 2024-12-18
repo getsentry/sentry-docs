@@ -203,7 +203,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   let customCanonicalTag;
   let description =
     'Self-hosted and cloud-based application performance monitoring &amp; error tracking that helps software teams see clearer, solve quicker, &amp; learn continuously.';
-  const images = [{url: `${previewDomain ?? domain}/meta.jpg`, width: 1200, height: 822}];
+  const images = [{url: `${previewDomain ?? domain}/og.png`, width: 1200, height: 630}];
 
   const rootNode = await getDocsRootNode();
 
