@@ -78,6 +78,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/javascript/guides/node/performance/instrumentation/custom-instrumentation/caches-module/',
   },
   {
+    from: '/platforms/javascript/guides/nuxt/install/top-level-import/',
+    to: '/platforms/javascript/guides/nuxt/install/limited-server-tracing/',
+  },
+  {
     from: '/account/early-adopter-features/discord/',
     to: '/organization/integrations/notification-incidents/discord/',
   },
