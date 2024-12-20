@@ -1,0 +1,232 @@
+---
+title: Symbolicator
+description: A service for symbolicating native, JavaScript, and JVM events.
+---
+
+## Introduction
+
+Symbolicator is Sentry’s service for symbolicating native, JavaScript, and JVM events. When Sentry receives events for these platforms, exceptions and stacktraces are usually not in a form that is useful to the end user. The reasons for this vary by platform:
+
+- Native stack frames may only contain an instruction address and a module, but not function/file/line information. Moreover, there may not even be a stacktrace when Sentry receives the event—it’s possible to send minidumps to Sentry, from which the stacktrace is extracted in a process called *stackwalking*.
+- JavaScript code is usually minified by a bundler before it is deployed, and all the information in a stacktrace refers to the minified version of the code.
+- Likewise, JVM code may be obfuscated/minified by a program called [ProGuard](https://github.com/Guardsquare/proguard).
+
+Symbolication is the process of recovering useful stacktraces from the events we are sent, with the help of various kinds of debug information.
+
+- For native, this debug information is usually referred to as “debug information files” (DIFs) or just “debug files”. DIFs are artifacts of compilation that vary by platform (DWARF files on Unix, PDB files on Windows, &c.). Executables themselves can also contain debug information. We use the [symbolic](/ingestion/symbolic/) crate to process native debug files.
+- For JavaScript, the important debug information file format is the sourcemap. Briefly, a sourcemap is a JSON file that lets one resolve a line/column in a minified JS file to a line/column in one of the original source files. We use the [sourcemap](https://github.com/getsentry/rust-sourcemap) crate to process sourcemaps.
+- For the JVM, the aforementioned ProGuard emits so-called Proguard mapping files that can be used to resolve obfuscated class and method names back to the original names. We use the proguard crate to process [proguard](https://github.com/getsentry/rust-proguard) mapping files.
+
+## Making a Request to Symbolicator
+
+We mainly use Symbolicator as a HTTP service built on axum. It provides several endpoints for symbolication requests:
+
+- `/symbolicate` for native symbolication
+- `/minidump` for minidump stackwalking and symbolication
+- `/symbolicate-js` for JavaScript symbolication
+- `/symbolicate-jvm` for JVM symbolication
+- `/applecrashreport` for Apple crash report symbolication
+
+These endpoints all differ in the schema of requests that they expect. In all cases, we go through the function `RequestService::create_symbolication_request` , which does the following:
+
+1. Checks the number of currently running requests. If it’s at capacity (default 200), it returns a `MaxRequestsError` (a 503).
+2. Creates a random ID for the request.
+3. Spawns a future that performs the actual symbolication and eventually reports the result via a oneshot channel.
+4. Stores the rx end of the channel in an internal map of requests.
+5. Returns the request ID.
+
+Using the request ID, it is possible to check the status of the request using the `/requests` endpoint. Possible return values for the response are (in JSON)
+
+- `{ "status": "pending", "request_id": <ID>, "retry_after": 30}` if the request is running
+- `{ “status": "completed", <rest of response data> }` if symbolication was succesful
+- `{ "status": "failed", "message": <message> }` if symbolication failed
+- `{ "status": "timeout" }` if symbolication timed out (after 15min)
+- `{ "status": "internal_error" }` if the sender was dropped, i.e. something went very badly wrong
+
+When the request is first made, it is also immediately polled and probably returns `pending`.
+
+All of the above functionality is implemented in the `symbolicator` subcrate.
+
+## Native Symbolication
+
+A native symbolication request can take three forms:
+
+1. A list of stacktraces and modules sent to the `/symbolicate` endpoint
+2. An Apple crash report sent to the `/applecrashreport` endpoint
+3. A minidump file sent to the `/minidump` endpoint
+
+In the second case, the Apple crash report is parsed into a list of stacktraces and a list of modules, and then symbolicated like a `/symbolicate` request. In the third case, the minidump is stackwalked (see below) and then symbolicated.
+
+Symbolication itself works, briefly, like this:
+
+1. Fetch debug info for all modules in the request (ignoring those that aren’t referenced by any stack frame). Convert the debug info into SymCache / PpdbCache files (more on these later).
+2. Consider each stack frame in each of the stacktraces in the request in turn.
+3. Find the module belonging to this frame by comparing the frame’s instruction address to each module’s address range.
+4. Use the module’s cache file to obtain file, function, and line information for the frame (this is the actual symbolication!).
+
+It is common for a single native frame to be expanded into multiple frames during symbolication. This is because the compiler may inline functions. When a function is inlined, it doesn’t get its own stack frame, but uses that of the function it is inlined into. In the symbolicated stacktrace, we want to restore all the inlined functions and present them with their own frames.
+
+### Source Context
+
+Usually we also want to apply source context to symbolicated frames. If we have the source file available, we look up up to 5 lines on either side of the frame’s line and add them to the frame.
+
+Symbolicator can be told in the request not to bother with source context application. This is useful for profiles, for example.
+
+### Minidump Stackwalking
+
+A minidump file is a file, created at the moment a crash happens, that contains information about the contents of the stack, loaded modules, &c.
+
+When Symbolicator processes a minidump, there is initially only a single stack frame, namely the one in which the crash happened. *Stackwalking* or *stack unwinding* is the process of reconstructing the entire call stack from this frame. In order to do this, *unwind information* (aka *call frame info* or CFI) is needed.
+
+Unwind information is often contained in the compiled executable/library itself because the stack also needs to be unwound if e.g. an exception or a panic occurs. We convert all unwind info into `cficache` files, which use the Breakpad CFI format.
+
+We use the `minidump` crate (maintained by Mozilla) for stackwalking. The implementation is fully async and fetches CFI cache files on demand. The output of the stackwalking procedure is a vector of stacktraces and a vector of modules, which we can then symbolicate like any other native crash.
+
+### Native Debug Files and Debug File Sources
+
+Note: This section is only really relevant for native symbolication. For JavaScript and JVM, we only use sourcemaps/proguard mapping files that were uploaded to Sentry.
+
+#### Object Files
+
+In `symbolic` there is the notion of an “object file” (or just “object”). In this context, this is some artifact of native compilation that may contain debug information. Examples include ELF files, PE/PDB files, MachO files, sourcebundles, and Breakpad symbol files.
+
+Each object file can potentially contain *debug info*, *unwind info*, or *sources*. Debug info here means information that lets us resolve a stacktrace to a useful form, unwind info lets us stackwalk minidumps, and sources let us fill in source context. An object can in principle contain any combination of these types of information.
+
+#### Modules in Symbolication Requests
+
+Along with stacktraces, a native symbolication request contains a list of *modules*. For example:
+
+```json
+{
+    "type": "pe_dotnet",
+    "code_id": "efc9a199e000",
+    "code_file": "./TimeZoneConverter.dll",
+    "debug_id": "4e2ca887-825e-46f3-968f-25b41ae1b5f3-9e6d3fcc",
+    "debug_file": "./TimeZoneConverter.pdb",
+    "debug_checksum": "SHA256:87a82c4e5e82f386968f25b41ae1b5f3cc3f6d9e79cfb4464f8240400fc47dcd"
+}
+```
+
+A module can be associated with more than one debug file. For example, for the above Common Language Runtime module, Symbolicator might fetch the compiled library `"./TimeZoneConverter.dll"`, the Portable PDB file `"./TimeZoneConverter.pdb"`, and an associated sourcebundle.
+
+Symbolicator fetches debug files for different purposes—`Unwind`, `Debug`, or `Source`—in different situations. `Unwind` is used for minidump stackwalking, `Debug` for symbolicating stacktraces, and `Source` to apply source context.
+
+#### Debug File Sources
+
+*Debug file sources* are places from which Symbolicator can fetch debug files it needs to process a symbolication requests. We support these source types:
+
+- `Filesystem` for local disks
+- `Gcs` for GCS buckets
+- `Http` for HTTP servers implementing the Microsoft symbol server protocol
+- `S3` for Amazon S3 buckets
+- `Sentry` for debug files uploaded to Sentry
+
+Moreover, there are different directory layouts which determine how debug files are organized in the source and how it is possible to query them. They are documented in detail [here](https://docs.sentry.io/platforms/native/guides/qt/data-management/debug-files/symbol-servers/#directory-layouts).
+
+A native symbolication request contains configurations for all the debug file sources from which Symbolicator should try to fetch debug files. Typically these are the debug files that were uploaded to Sentry (that’s a `Sentry` type source), builtin sources that Sentry knows about (Electron, NVidia, Microsoft, Apple, …), and any other custom symbol sources a user might have configured (if they host all their debug files on their own server, for example).
+
+When native symbolication is done, Symbolicator returns a list of “candidates” for each module that was used during symbolication. This shows which sources were queried for which debug file and whether the fetching was successful.
+
+### SymCache / PpdbCache
+
+SymCache and PpdbCache were mentioned earlier. They are custom binary file formats for debug information.
+
+Let’s start with an explanation of SymCache. SymCache files can be generated from the typical native debug info files (DWARF, PDB). In principle, we could use object files directly for symbolication, but converting them to SymCache has the huge advantage that SymCache files don’t need to be loaded into memory or parsed in order to do symbolication. Only a tiny header structure that functions as an index into the various parts of the cache file needs to be kept in memory. This allows us to do symbolication directly from disk by memory-mapping SymCache files.
+
+The PpdbCache format is conceptually very similar to SymCache, but tailored to Microsoft’s Common Language Runtime (CLR). Its name comes from the fact that the debug file format for CLR executables is called “portable pdb”.
+
+## JavaScript Symbolication
+
+JavaScript symbolication differs from native symbolication primarily in how debug files (i.e. minified code and sourcemaps) are obtained.
+
+When users upload their JS files to Sentry, they do so in the form of *artifact bundles*. Structurally these are just ordinary sourcebundles containing minified sources and sourcemaps. In the best case, minified files and their sourcemaps are tied together with a debug ID; the Sentry plugins for various JS bundlers, as well as `sentry-cli`, can take care of that. However, users often upload bundles without debug IDs. In that case, the bundle must be associated with a *release* and *dist.*
+
+We have an API endpoint in Sentry, called `artifact-lookup`, that lets you query a project for artifact bundles. Bundles can be queried by debug IDs of files they contain, or else by a combination of file URL, release, and dist. The first case is much preferred on our end because debug IDs are unambiguous. With the release/dist method, it can happen that users upload multiple bundles with minor changes for the same release/dist pair, in which case there is no foolproof way to tell which of them contains the actual minified source file/sourcemap associated with an event.
+
+It is also possible that the sourcemap belonging to a minified source file isn’t uploaded to Sentry at all, but resides somewhere else on the web.
+
+The response from Symbolicator contains metadata on how each frame’s minified source file and sourcemap were obtained (from Sentry vs. from the web, release vs. debug ID, &c.).
+
+The JS symbolication procedure itself consists of mapping a location (line/column) in the minified code to a location/function/file in the original code. To this end, JS symbolication has its own cache format, SourcemapCache, that is analogous to SymCache and PpdbCache in the native case.
+
+## JVM Symbolication
+
+The JVM platform is the simplest in terms of symbolication procedures.
+
+In terms of debug files, ProGuard mapping files and source bundles are relevant for JVM symbolication. At the moment, we only support fetching them from Sentry sources—the intended use case is people uploading them to their Sentry project.
+
+The JVM symbolication procedure involves mapping from a class/method/line triple in the obfuscated code to a class/function/line triple in the original code. Like a native compiler, ProGuard may inline functions, so one frame may be expanded into multiple frames.
+
+In addition to stacktraces, a JVM symbolication request can also contain a list of exceptions and a list of extra class names. Exceptions will have their `module` and `type` fields remapped. The extra class names are also remapped and returned in the form of a map. This feature is currently used for deobfuscating view hierarchies.
+
+As with the other platforms, there is a specialized cache format for ProGuard mapping files. In this case it’s optimized for mapping between class and method names.
+
+## Caching
+
+Symbolicator contains sophisticated logic for caching files it downloads. The caches come in multiple layers:
+
+1. An in-memory LRU cache, powered by the `moka` crate.
+2. An on-disk cache.
+3. A shared cache, powered by GCS. The shared cache was originally implemented so that when new Symbolicator pods are added, they can start processing requests very quickly without having to download the entire world’s debug files first.
+
+That means that when a file is requested, Symbolicator first checks whether it has it in memory, then whether it’s already on disk, then whether it’s in the shared GCS cache, and only if it’s not in any of those places is it fetched.
+
+Caches exist for many different types of files. Some caches aren’t intended for files that are downloaded from the internet themselves, but generated from other previously downloaded and cached files. Examples of these include the metadata of object files and `symcache` files.
+
+### Implementation
+
+A cache for a given file type is implemented by creating a request type and implementing the `CacheItemRequest` trait for it. The trait has an associated type `Item` two required methods:
+
+- `compute<'a>(&'a self, temp_file: &'a mut NamedTempFile) -> BoxFuture<'a, CacheEntry>` computes an instance of `Self::Item` and writes it to the given tempfile;
+- `load(&self, data: ByteView<'static>) -> CacheEntry<Self::Item>` loads an instance of `Self::Item` from the given `data`.
+
+You can then add an instance of `Cacher<MyItemRequest>` to whichever service requires the cache and use its `compute_memoized` method to compute an instance of `Item`, automatically using the in-memory, on-disk, and shared caches.
+
+### `CacheError` / `CacheEntry`
+
+We only have one internal error type in Symbolicator: `CacheError`. This is its definition:
+
+```rust
+pub enum CacheError {
+    NotFound,
+    PermissionDenied(String),
+    Timeout(Duration),
+    DownloadError(String),
+    Malformed(String),
+    InternalError,
+}
+```
+
+Each of the cases represents something that can go wrong when fetching a file from somewhere. In addition, we have the type `pub type CacheEntry<T = ()> = Result<T, CacheError>` as an abbreviation.
+
+Once upon a time we had many individual error types for different parts of Symbolicator, but they were very hard to understand and we never really needed so many fine-grained distinctions, so we boiled them all down to common failure cases.
+
+### Expiry & Cleanup
+
+By default, we keep different kinds of cached files around for different lengths of time:
+
+- Downloaded and derived files are retained for 12 hours after their last use.
+- When a file can’t be downloaded, that fact is cached for 1 hour.
+- When a file is malformed (i.e. can’t be processed for some reason), that fact is cached for 12 hours.
+
+Cache cleanup is performed by the `symbolicator cleanup` command. We run this command periodically as part of Symbolicator’s kubernetes deployment.
+
+### Versioning
+
+All the caches are also versioned. Each cache has both a current version number and a list of compatible versions. The current version is always tried first, then the compatible versions in order. The idea behind this is that we may make improvements to a data format that still leave the previous version readable. If there is only an older (but still compatible) version available, we use it, but also spawn a computation to update it to the current version. If there are only incompatible versions available, that counts as not found.
+
+## Deployment
+
+In SaaS, we deploy 9 groups/environments of Symbolicator in total: for each platform (`native` , `js`, `jvm`) we have production, canary, and LPQ Symbolicators.
+
+We have separate deployments per platform so that we can scale them independently and e.g. the huge volume of JS requests doesn’t starve native requests. All platforms use the same build of Symbolicator; in principle, each of them could service any kind of request.
+
+
+## Symbolicli
+
+In addition to the main HTTP frontend, there is also a CLI frontend to Symbolicator, called `symbolicli`. It exists mainly so that one doesn’t have to set up a HTTP server to debug symbolication. It can symbolicate events and minidumps in the local file system or on a Sentry instance for which you have a valid auth token.
+
+`symbolicli` is convenient, but it has some drawbacks:
+
+- You can’t directly use it on customer events because there is no way to give it admin access.
+- It doesn’t support JVM symbolication yet—not because of any inherent limitation, but because it hasn’t been necessary.
