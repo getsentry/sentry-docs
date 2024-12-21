@@ -1,6 +1,7 @@
 import {Alert, Note} from './components/alert';
 import {Arcade} from './components/arcade';
 import {Break} from './components/break';
+import {Card} from './components/card';
 import {CliChecksumTable} from './components/cliChecksumTable';
 import {CodeBlock} from './components/codeBlock';
 import {CodeTabs} from './components/codeTabs';
@@ -43,6 +44,7 @@ export function mdxComponents(
     Alert,
     Arcade,
     Break,
+    Card,
     CliChecksumTable,
     CommunitySupportedPlatforms,
     PlatformFilter,
