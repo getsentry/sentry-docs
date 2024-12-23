@@ -1,75 +1,61 @@
 #### Initializing OpenTelemetry
 
-When manually initializing OpenTelemetry you have to add `SentrySpanProcessor` and `SentryPropagator` to your configuration.
+Our `sentry-opentelemetry-agentless` dependency also adds `opentelemetry-sdk-extension-autoconfigure` which takes care of configuring OpenTelemetry to work with Sentry. There's two ways to trigger it.
+
+1. Using a property on startup
+
+Add `-Dotel.java.global-autoconfigure.enabled=true` to the `java` command when starting your application.
+
+2. Using `AutoConfiguredOpenTelemetrySdk`
 
 ```java {tabTitle: Java}
-import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.context.propagation.ContextPropagators;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.trace.SdkTracerProvider;
+import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 
-import io.sentry.opentelemetry.SentryPropagator;
-import io.sentry.opentelemetry.SentrySpanProcessor;
-
-
-SdkTracerProvider sdkTracerProvider = SdkTracerProvider.builder()
-    .addSpanProcessor(new SentrySpanProcessor())
-    .build();
-
-OpenTelemetry openTelemetry = OpenTelemetrySdk.builder()
-    .setTracerProvider(sdkTracerProvider)
-    .setPropagators(ContextPropagators.create(new SentryPropagator()))
-    .buildAndRegisterGlobal();
+AutoConfiguredOpenTelemetrySdk.builder()
+  .setResultAsGlobal()
+  .addPropertiesSupplier(() -> {
+    final Map<String, String> properties = new HashMap<>();
+    properties.put("otel.logs.exporter", "none");
+    properties.put("otel.metrics.exporter", "none");
+    properties.put("otel.traces.exporter", "none");
+    return properties;
+  })
+  .build();
 ```
 
 ```kotlin {tabTitle: Kotlin}
-import io.opentelemetry.api.OpenTelemetry
-import io.opentelemetry.context.propagation.ContextPropagators
-import io.opentelemetry.sdk.OpenTelemetrySdk
-import io.opentelemetry.sdk.trace.SdkTracerProvider
+import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk
 
-import io.sentry.opentelemetry.SentryPropagator
-import io.sentry.opentelemetry.SentrySpanProcessor
-
-val sdkTracerProvider = SdkTracerProvider.builder()
-    .addSpanProcessor(SentrySpanProcessor())
-    .build()
-
-val openTelemetry = OpenTelemetrySdk.builder()
-    .setTracerProvider(sdkTracerProvider)
-    .setPropagators(ContextPropagators.create(SentryPropagator()))
-    .buildAndRegisterGlobal()
+AutoConfiguredOpenTelemetrySdk.builder()
+  .setResultAsGlobal()
+  .addPropertiesSupplier{
+    return mapOf(
+      "otel.logs.exporter" to "none",
+      "otel.metrics.exporter" to "none",
+      "otel.traces.exporter" to "none"
+    )
+  }
+  .build()
 ```
 
 #### Initializing Sentry
 
-You have to set the `instrumenter` option to `otel`. This disables all Sentry instrumentation and uses the chosen OpenTelemetry tracers for creating spans.
-
-To ensure errors are properly linked to transactions that were created by the OpenTelemetry integration, add the `OpenTelemetryLinkErrorEventProcessor`:
-
+You can initialize Sentry as usual, e.g. by calling `Sentry.init`:
 
 ```java {tabTitle: Java}
-import io.sentry.Instrumenter;
 import io.sentry.Sentry;
-import io.sentry.opentelemetry.OpenTelemetryLinkErrorEventProcessor;
 
 Sentry.init(options -> {
   options.setDsn("___PUBLIC_DSN___");
   options.setTracesSampleRate(1.0);
-  options.setInstrumenter(Instrumenter.OTEL);
-  options.addEventProcessor(new OpenTelemetryLinkErrorEventProcessor());
 });
 ```
 
 ```kotlin {tabTitle: Kotlin}
-import io.sentry.Instrumenter
 import io.sentry.Sentry
-import io.sentry.opentelemetry.OpenTelemetryLinkErrorEventProcessor
 
 Sentry.init { options ->
   options.dsn = "___PUBLIC_DSN___"
   options.tracesSampleRate = 1.0
-  options.instrumenter = Instrumenter.OTEL
-  options.addEventProcessor(OpenTelemetryLinkErrorEventProcessor())
 }
 ```
