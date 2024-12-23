@@ -4,9 +4,17 @@ sdk: sentry.dotnet
 description: "Learn about Sentry's .NET integration with ASP.NET."
 ---
 
-Sentry provides an integration with _ASP.NET_ through the [Sentry.AspNet NuGet package](https://www.nuget.org/packages/Sentry.AspNet).
+Sentry provides an integration with ASP.NET through the [Sentry.AspNet NuGet package](https://www.nuget.org/packages/Sentry.AspNet).
+
+## Features
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
 
 ## Install
+
+<OnboardingOptionButtons options={['error-monitoring', 'performance']}/>
 
 Add the Sentry dependency:
 
@@ -21,16 +29,14 @@ dotnet add package Sentry.AspNet  -v {{@inject packages.version('sentry.dotnet.a
 You can combine this integration with a logging library like `log4net`, `NLog` or `Serilog` to include both request data
 as well as your logs as breadcrumbs. The logging integrations also capture events when an error is logged.
 
-### Configuring
+## Configure
 
 You configure the SDK in the `Global.asax.cs`:
 
-<SignInNote />
 
-```csharp
+```csharp {"onboardingOptions": {"performance": "21-24, 34-43"}}
 using System;
 using System.Web;
-using Sentry;
 using Sentry.AspNet;
 using Sentry.EntityFramework; // If you also installed Sentry.EntityFramework
 using Sentry.Extensibility;
@@ -42,21 +48,19 @@ public class MvcApplication : HttpApplication
     protected void Application_Start()
     {
         // Initialize Sentry to capture AppDomain unhandled exceptions and more.
-        _sentry = SentrySdk.Init(o =>
+        _sentry = SentrySdk.Init(options =>
         {
-            o.Dsn = "___PUBLIC_DSN___";
+            options.Dsn = "___PUBLIC_DSN___";
             // When configuring for the first time, to see what the SDK is doing:
-            o.Debug = true;
+            options.Debug = true;
 
-            // This option will enable Sentry's tracing features. You still need to start transactions and spans.
-            o.EnableTracing = true;
-
-            // Example sample rate for your transactions: captures 10% of transactions
-            o.TracesSampleRate = 0.1;
+            // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
+            // We recommend adjusting this value in production.
+            options.TracesSampleRate = 1.0;
 
             // If you also installed the Sentry.EntityFramework package
-            o.AddEntityFramework();
-            o.AddAspNet();
+            options.AddEntityFramework();
+            options.AddAspNet();
         });
     }
 
@@ -85,7 +89,6 @@ public class MvcApplication : HttpApplication
 
 When opting-in to [SendDefaultPii](#senddefaultpii), the SDK will automatically read the user from the request by inspecting `HttpContext.User`. Default claim values like `NameIdentifier` for the _Id_ will be used.
 
-<SignInNote />
 
 ```csharp
 options.AddAspNet();
@@ -106,6 +109,12 @@ Opt-in to send the request body to Sentry:
 ```csharp
 options.AddAspNet(RequestSize.Always);
 ```
+
+## Verify
+
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+
+<PlatformContent includePath="getting-started-verify" />
 
 ## Troubleshooting
 

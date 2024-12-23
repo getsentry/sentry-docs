@@ -13,9 +13,6 @@ type Props = {
 
 export function GuideGrid({platform, className}: Props) {
   const {rootNode, path} = serverContext();
-  if (!rootNode) {
-    return null;
-  }
 
   const currentPlatform = platform
     ? getPlatform(rootNode, platform)

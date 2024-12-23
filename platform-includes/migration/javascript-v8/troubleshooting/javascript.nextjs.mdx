@@ -1,0 +1,43 @@
+### Removal of `sentry.server.config.js|ts` and `sentry.edge.config.js|ts`
+
+`8.x` of the Next.js SDK updates enforces usage of the `instrumentation.ts` file because it is a more flexible and powerful way to initialize the SDK, and allows us to use the Next.js built-in hooks and OpenTelemetry instrumentation. In addition it helps the SDK to be more compatible with the [Turbopack](https://turbo.build/pack) which is not supported in Next.js SDK `7.x`. The Next.js team recommends to use the `instrumentation.ts` file for SDK initialization, and we are working closely with them to ensure that the SDK works seamlessly with Next.js.
+
+### Next.js Custom server
+
+If you are using a [Next.js custom server](https://nextjs.org/docs/pages/building-your-application/configuring/custom-server), the `instrumentation.ts|js` hook is not called by Next.js so you need to manually call it yourself from within your server code. It is recommended to do so as early as possible in your application lifecycle.
+
+Here's an example of adding Sentry initialization code to the custom server example as per the [Next.js documentation](https://nextjs.org/docs/advanced-features/custom-server):
+
+```JavaScript diff {server.js} {1}
+// make sure that Sentry is imported and initialized before any other imports.
+
++ const Sentry = require('@sentry/nextjs');
++
++ Sentry.init({
++   dsn: '___PUBLIC_DSN___',
++   // Your Node.js Sentry configuration...
++ })
+
+const { createServer } = require('http')
+const { parse } = require('url')
+const next = require('next')
+
+const dev = process.env.NODE_ENV !== 'production'
+const hostname = 'localhost'
+const port = 3000
+
+const app = next({ dev, hostname, port })
+const handle = app.getRequestHandler()
+
+app.prepare().then(() => {
+  createServer(async (req, res) => {
+    // server code
+  })
+    .once('error', (err) => {
+      // error code
+    })
+    .listen(port, () => {
+      console.log(`> Ready on http://${hostname}:${port}`)
+    })
+})
+```

@@ -17,7 +17,7 @@ type PlatformSdkPackageNameProps = {
 export async function PlatformSdkPackageName({fallback}: PlatformSdkPackageNameProps) {
   const fallbackName = fallback || 'Sentry';
   const {rootNode, path} = serverContext();
-  const platformOrGuide = rootNode && getCurrentPlatformOrGuide(rootNode, path);
+  const platformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
   if (!platformOrGuide) {
     return <code>{fallbackName} </code>;
   }
@@ -25,7 +25,7 @@ export async function PlatformSdkPackageName({fallback}: PlatformSdkPackageNameP
   const packageRegistry = await getPackageRegistry();
   const allSdks = packageRegistry.data;
   const entries = Object.entries(allSdks || {});
-  const pair: any = entries.find(([sdkName]) => sdkName === platformOrGuide.sdk);
+  const pair = entries.find(([sdkName]) => sdkName === platformOrGuide.sdk);
   if (!pair) {
     return <code>{fallbackName} </code>;
   }

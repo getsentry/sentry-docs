@@ -3,50 +3,80 @@ title: PHP
 sdk: sentry.php
 caseStyle: snake_case
 supportLevel: production
+description: Learn how to set up Sentry in your PHP application.
 ---
 
-On this page, we get you up and running with Sentry's PHP SDK, automatically reporting errors and exceptions in your application.
+## Prerequisites
 
-<Note>
+* You need a [Sentry account](https://sentry.io/signup/) and project
+* Your application needs to run on PHP 7.2 or later
+* Read one of these other guides if you use <PlatformLink to="/guides/laravel">Laravel</PlatformLink> or <PlatformLink to="/guides/symfony">Symfony</PlatformLink>
 
-If you don't already have an account and Sentry project established, head over to [sentry.io](https://sentry.io/signup/), then return to this page.
+## Features
 
-</Note>
+<p className="mb-5">Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.</p>
 
-Using a framework? Take a look at our specific guides to get started.
-
-<GuideGrid platform="php" />
-
-This Sentry PHP SDK provides support for PHP 7.2 or later. If you are using our previous PHP SDK, you can access the <Link rel={`nofollow`} to={`/platforms/php/legacy-sdk/`}>legacy SDK documentation</Link>, until further notice.
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
 
 ## Install
 
-Sentry captures data by using an SDK within your application’s runtime. These are platform-specific and allow Sentry to have a deep understanding of how your application works.
-
-Install the SDK using [Composer](https://getcomposer.org/).
+Install the Sentry SDK using [Composer](https://getcomposer.org/):
 
 ```bash
 composer require sentry/sentry
 ```
 
-## Configure
+<OnboardingOption optionId="profiling">
 
-After you’ve completed setting up a project in Sentry, Sentry will give you a value which we call a DSN or Data Source Name. It looks a lot like a standard URL, but it’s just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
+To use Profiling, you'll also need to install the Excimer extension via PECL:
+
+```bash
+pecl install excimer
+```
+
+The Excimer PHP extension supports PHP 7.2 and up. Excimer requires Linux or macOS and doesn't support Windows. For additional ways to install Excimer, [see docs](/platforms/php/profiling/#installation).
+
+</OnboardingOption>
+
+## Configure
 
 To capture all errors, even the one during the startup of your application, you should initialize the Sentry PHP SDK as soon as possible.
 
-<SignInNote />
 
-```php
-\Sentry\init(['dsn' => '___PUBLIC_DSN___' ]);
+```php {"onboardingOptions": {"performance": "3-4", "profiling": "5-6"}}
+\Sentry\init([
+  'dsn' => '___PUBLIC_DSN___' ,
+  // Specify a fixed sample rate
+  'traces_sample_rate' => 1.0,
+  // Set a sampling rate for profiling - this is relative to traces_sample_rate
+  'profiles_sample_rate' => 1.0,
+]);
 ```
 
-## Usage
+<Alert level="warning">
+  In order to receive stack trace arguments in your errors, make sure to set `zend.exception_ignore_args: Off` in your php.ini
+</Alert>
+
+## Verify
+
+In PHP you can either capture a caught exception or capture the last error with captureLastError.
 
 ```php
 try {
-    $this->functionFailsForSure();
+  $this->functionFailsForSure();
 } catch (\Throwable $exception) {
-    \Sentry\captureException($exception);
+  \Sentry\captureException($exception);
 }
 ```
+
+## Set up Sentry through Forge
+
+If you're using Laravel's Forge platform to provision and deploy your PHP application, you can create a Sentry organization through [Forge](https://forge.laravel.com/docs/integrations/sentry.html).
+
+![Sentry and Forge](./img/forge-sentry.png)

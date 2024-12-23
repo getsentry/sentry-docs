@@ -1,7 +1,9 @@
 'use client';
 
-import {Children, useEffect, useState} from 'react';
+import {Children, useState} from 'react';
 import styled from '@emotion/styled';
+
+import {getUnversionedPath} from 'sentry-docs/versioning';
 
 import {SmartLink} from './smartLink';
 
@@ -19,6 +21,8 @@ interface SidebarLinkProps {
    * Children represent the additional links nested under this sidebar link
    */
   children?: React.ReactNode;
+  className?: string;
+
   /**
    * Indicates that the links are currently hidden. Overriden by isActive
    */
@@ -31,23 +35,20 @@ export function SidebarLink({
   children,
   path,
   collapsed = null,
+  className = '',
 }: SidebarLinkProps) {
-  const isActive = path.indexOf(to) === 0;
+  const isActive = path?.indexOf(to) === 0;
   const enableSubtree = isActive || collapsed === false;
   const hasSubtree = Children.count(children) > 0;
 
   const [showSubtree, setShowSubtree] = useState(enableSubtree);
 
-  useEffect(() => {
-    setShowSubtree(enableSubtree);
-  }, [enableSubtree]);
-
   return (
-    <li className="toc-item" data-sidebar-branch>
+    <li className={`toc-item ${className}`} data-sidebar-branch data-path={path}>
       <SidebarNavItem
         to={to}
         data-sidebar-link
-        isActive={to === path}
+        isActive={to === getUnversionedPath(path)}
         onClick={() => {
           // Allow toggling the sidebar subtree only if the item is selected
           if (path === to) {
@@ -58,11 +59,7 @@ export function SidebarLink({
         {title || children}
         {hasSubtree && <Chevron direction={showSubtree ? 'down' : 'right'} />}
       </SidebarNavItem>
-      {title && children && (
-        <ul className="list-unstyled" data-sidebar-tree>
-          {showSubtree && children}
-        </ul>
-      )}
+      {title && children && <ul data-sidebar-tree>{showSubtree && children}</ul>}
     </li>
   );
 }

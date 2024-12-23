@@ -1,0 +1,18 @@
+#### Continuous vs. Transaction-based Profiling
+
+Sentry's profiler offers two profiling modes: continuous (new) and transaction-based (old).
+In transaction-based profiling, the profiler integrates with the Sentry client to profile code executed during transaction start and stop calls. This approach has two main limitations:
+
+- Limited visibility into program runtime (only profiling instrumented code)
+- A maximum profile duration of 30 seconds (due to payload size constraints)
+
+These limitations make transaction-based profiling unsuitable for long-running tasks or profiling long-lived processes.
+Continuous profiling addresses these limitations by enabling profiling of long-running tasks. Since the profiler runs continuously and is not bound to the transaction model, it can provide visibility into non-instrumented code and surpass the 30-second profile duration limit.
+
+#### Impact on Product Experience
+
+We've worked to match the product experience between these two modes by inferring transaction events in continuous profiling mode. If you use both of our products, the experience remains largely the same. The main advantage of continuous profiling is the ability to escape the limitations of transaction-based profiling, and since profiles are no longer tied to transactions, it also means you can use profiling as a standalone product and are not forced to pay for transactions if you no longer wish to.
+
+#### Compatibility Between Modes in the SDK
+
+Continuous profiling mode is not compatible with transaction-based profiling, so you'll need to choose one or the other (you can switch between them at any time). To enable continuous profiling, ensure that the profiles sample rate and profiles sampler are not defined in the SDK. If they are defined, continuous profiling mode will be disabled.

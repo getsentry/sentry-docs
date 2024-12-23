@@ -1,19 +1,36 @@
 ---
 title: Gatsby
 sdk: "sentry.javascript.gatsby"
-description: "Learn how to use Sentry with Gatsby."
+description: "Learn how to use Sentry's Gatsby SDK."
+categories:
+  - browser
 ---
+
+
+## Features
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also get to the root of an error or performance issue faster, by watching a video-like reproduction of a user session with [session replay](/product/explore/session-replay/web/getting-started/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
 
 ## Install
 
-To use Sentry with your Gatsby application, you will need to use `@sentry/gatsby` (Sentry’s Gatsby SDK):
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "session-replay"]}
+/>
+
+To use Sentry with your Gatsby application, you will need to use `@sentry/gatsby` (Sentry's Gatsby SDK):
 
 ```bash {tabTitle:npm}
-npm install --save @sentry/gatsby
+npm install @sentry/gatsby --save
 ```
 
-```bash {tabTitle:Yarn}
+```bash {tabTitle:yarn}
 yarn add @sentry/gatsby
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/gatsby
 ```
 
 <Note>
@@ -38,22 +55,28 @@ module.exports = {
 
 Then, configure your `Sentry.init`:
 
-<SignInNote />
 
-```javascript {filename:sentry.config.(js|ts)}
+```javascript {filename:sentry.config.(js|ts)} {"onboardingOptions": {"performance": "6, 9-13", "session-replay": "7, 14-18"}}
 import * as Sentry from "@sentry/gatsby";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [Sentry.replayIntegration()],
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration(),
+  ],
 
   // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for performance monitoring.
+  // of transactions for tracing.
   // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
   tracesSampleRate: 1.0,
 
   // Capture Replay for 10% of all sessions,
   // plus for 100% of sessions with an error
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
 });

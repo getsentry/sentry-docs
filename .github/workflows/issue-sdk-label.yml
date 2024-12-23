@@ -1,0 +1,118 @@
+name: 'Tag issue with SDK label'
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  add_labels:
+    name: Add package label
+    runs-on: ubuntu-latest
+    if: ${{ !github.event.issue.pull_request }}
+    steps:
+      - name: Get SDK name from issue body
+        # https://github.com/actions-ecosystem/action-regex-match
+        uses: actions-ecosystem/action-regex-match@v2
+        id: packageName
+        with:
+          # Parse used package from issue body
+          text: ${{ github.event.issue.body }}
+          regex: '### SDK\n\n(.*)\n\n'
+
+      - name: Map package to issue label
+        # https://github.com/kanga333/variable-mapper
+        uses: kanga333/variable-mapper@v0.3.0
+        id: packageLabel
+        if: steps.packageName.outputs.match != ''
+        with:
+          key: '${{ steps.packageName.outputs.group1 }}'
+          # Note: Since this is handled as a regex, and JSON parse wrangles slashes /, we just use `.` instead
+          map: |
+            {
+              "Android.SDK": {
+                "label": "Platform: Android"
+              },
+              "Apple.SDK": {
+                "label": "Platform: Cocoa"
+              },
+              "Dart.SDK": {
+                "label": "Platform: Dart"
+              },
+              "Elixir.SDK": {
+                "label": "Platform: Elixir"
+              },
+              "Flutter.SDK": {
+                "label": "Platform: Flutter"
+              },
+              "Go.SDK": {
+                "label": "Platform: Go"
+              },
+              "Java.SDK": {
+                "label": "Platform: Java"
+              },
+              "JavaScript.SDK": {
+                "label": "Platform: JavaScript"
+              },
+              "Kotlin.Multiplatform.SDK": {
+                "label": "Platform: KMP"
+              },
+              "Native.SDK": {
+                "label": "Platform: Native"
+              },
+              ".NET.SDK": {
+                "label": "Platform: .NET"
+              },
+              "PHP.SDK": {
+                "label": "Platform: PHP"
+              },
+              "PowerShell.SDK": {
+                "label": "Platform: PowerShell"
+              },
+              "Python.SDK": {
+                "label": "Platform: Python"
+              },
+              "React.Native.SDK": {
+                "label": "Platform: React Native"
+              },
+              "Ruby.SDK": {
+                "label": "Platform: Ruby"
+              },
+              "Rust.SDK": {
+                "label": "Platform: Rust"
+              },
+              "Unity.SDK": {
+                "label": "Platform: Unity"
+              },
+              "Unreal.Engine.SDK": {
+                "label": "Platform: Unreal"
+              },
+              "Sentry.CLI": {
+                "label": "Platform: CLI"
+              },
+              "All.JavaScript.SDKs": {
+                "label": "Team: Web Frontend SDKs"
+              },
+              "All.Backend.SDKs": {
+                "label": "Team: Web Backend SDKs"
+              },
+              "All.Gaming.SDKs": {
+                "label": "Team: Web Backend SDKs"
+              },
+              "All.Mobile.SDKs": {
+                "label": "Team: Mobile Platform"
+              },
+              "All.SDKs": {
+                "label": "Team: SDKs"
+              },
+              "Other": {
+                "label": "Team: SDKs"
+              }
+            }
+          export_to: output
+
+      - name: Add package label if applicable
+        # Note: We only add the label if the issue is still open
+        if: steps.packageLabel.outputs.label != ''
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          labels: ${{ steps.packageLabel.outputs.label }}

@@ -5,7 +5,6 @@ import {unified} from 'unified';
 
 import {type APICategory} from 'sentry-docs/build/resolveOpenAPI';
 
-import {ApiSidebar} from './apiSidebar';
 import {DocPage} from './docPage';
 import {SmartLink} from './smartLink';
 
@@ -25,7 +24,7 @@ export async function ApiCategoryPage({category}: Props) {
   };
 
   return (
-    <DocPage frontMatter={frontMatter} notoc sidebar={<ApiSidebar />}>
+    <DocPage frontMatter={frontMatter} notoc>
       {descriptionHtml ? <p dangerouslySetInnerHTML={{__html: descriptionHtml}} /> : null}
       <ul data-noindex>
         {category.apis.map(api => (

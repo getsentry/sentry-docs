@@ -1,12 +1,25 @@
-<SignInNote />
+Sentry should be initialized as early in your app as possible. It is essential that you call `Sentry.init` before you require any other modules in your application—otherwise, auto-instrumentation of these modules will _not_ work.
 
-```javascript
+Once this is done, Sentry's Bun SDK captures unhandled exceptions as well as tracing data for your application.
+
+You need to create a file named `instrument.js` that imports and initializes Sentry:
+
+```javascript {filename: instrument.js} {"onboardingOptions": {"performance": "7-11"}}
 import * as Sentry from "@sentry/bun";
 
+// Ensure to call this before importing any other modules!
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+
+  // Add Performance Monitoring by setting tracesSampleRate
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
   tracesSampleRate: 1.0,
 });
 ```
 
-Once configured, you can capture exceptions manually, as the following example shows.
+Once you set a `tracesSampleRate`, performance instrumentation is automatically enabled for you. See <PlatformLink to="/tracing/instrumentation/automatic-instrumentation">Automatic Instrumentation</PlatformLink> to learn about all the things that the SDK automatically instruments for you.
+
+You can also manually capture performance data - see <PlatformLink to="/tracing/instrumentation/custom-instrumentation">Custom Instrumentation</PlatformLink> for details.

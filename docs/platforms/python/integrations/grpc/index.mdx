@@ -22,11 +22,22 @@ Add `GRPCIntegration()` to your `integrations` list, and enable tracing.
 
 This will add appropriate intercepters to your server/client to capture errors and performance data.
 
-<SignInNote />
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
 
 ### Server
 
-```python
+```python {"onboardingOptions": {"performance": "8-10", "profiling": "11-14"}}
 import grpc
 
 import sentry_sdk
@@ -34,7 +45,13 @@ from sentry_sdk.integrations.grpc import GRPCIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
     integrations=[
         GRPCIntegration(),
     ],
@@ -52,7 +69,7 @@ server = grpc.aio.server()
 
 ### Client
 
-```python
+```python {"onboardingOptions": {"performance": "8-10", "profiling": "11-14"}}
 import grpc
 
 import sentry_sdk
@@ -60,7 +77,13 @@ from sentry_sdk.integrations.grpc import GRPCIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
     integrations=[
         GRPCIntegration(),
     ],
@@ -98,13 +121,7 @@ It takes a couple of moments for the data to appear in [sentry.io](https://sentr
 ```python
 import grpc
 
-sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
-    integrations=[
-        GRPCIntegration(),
-    ],
-)
+sentry_sdk.init(...)  # same as above
 
 ...
 
@@ -125,5 +142,7 @@ It takes a couple of moments for the data to appear in [sentry.io](https://sentr
 
 ## Supported Versions
 
-- grpcio: 1.21.1+
-- Python: 3.5+
+- grpcio: 1.39+
+- Python: 3.7+
+
+<Include name="python-use-older-sdk-for-legacy-support.mdx" />

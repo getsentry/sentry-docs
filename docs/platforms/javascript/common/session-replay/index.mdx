@@ -1,19 +1,36 @@
 ---
 title: Set Up Session Replay
-sidebar_order: 4000
+sidebar_order: 5500
 notSupported:
   - javascript.cordova
   - javascript.wasm
   - javascript.bun
   - javascript.deno
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.cloudflare
 description: "Learn how to enable Session Replay in your app if it is not already set up."
 ---
 
-<Include name="feature-stage-beta-session-replay.mdx" />
+<Include name="session-replay-web-report-bug.mdx" />
 
-[Session Replay](/product/session-replay/) helps you get to the root cause of an error or latency issue faster by providing you with a video-like reproduction of what was happening in the user's browser before, during, and after the issue. You can rewind and replay your application's DOM state and see key user interactions, like mouse clicks, scrolls, network requests, and console entries, in a single combined UI inspired by your browser's DevTools.
+[Session Replay](/product/explore/session-replay/) helps you get to the root cause of an error or latency issue faster by providing you with a video-like reproduction of what was happening in the user's browser before, during, and after the issue. You can rewind and replay your application's DOM state and see key user interactions, like mouse clicks, scrolls, network requests, and console entries, in a single combined UI inspired by your browser's DevTools.
 
 By default, our Session Replay SDK masks all DOM text content, images, and user input, giving you heightened confidence that no sensitive data will leave the browser. To learn more, see <PlatformLink to="/session-replay/privacy">Session Replay Privacy</PlatformLink>.
+
+<PlatformSection supported={["javascript.angular"]}>
+  <Alert level="danger">
+    Angular's <a target="_blank" rel="noopener noreferrer" href="https://angular.dev/api/core/ChangeDetectionStrategy#Default">default "Change Detection" strategy</a> monkeypatches browser globals and can break or cause performance regressions in your application when using Session Replay. To avoid this, we recommend you use the `OnPush` strategy when using Angular.
+  </Alert>
+</PlatformSection>
 
 ## Pre-requisites
 
@@ -27,21 +44,20 @@ By default, our Session Replay SDK masks all DOM text content, images, and user 
 
 To set up the integration, add the following to your Sentry initialization. There are several options you can pass to the integration constructor. See the [configuration documentation](/platforms/javascript/session-replay/configuration/) for more details.
 
-<SignInNote />
 
-<PlatformContent includePath="session-replay/setup" fallbackPlatform="javascript" />
+<PlatformContent
+  includePath="session-replay/setup"
+  fallbackPlatform="javascript"
+/>
 
-<PlatformSection notSupported={["javascript.deno", "javascript.bun", "javascript.wasm", "javascript.capacitor", "javascript.electron"]}>
+<PlatformSection notSupported={["javascript.deno", "javascript.bun", "javascript.wasm", "javascript.capacitor", "javascript.electron", "javascript.cloudflare"]}>
+
 ### Canvas Recording
 
-<Alert level="">
-  Canvas recording is currently in beta. Please submit an issue on
-  [GitHub](https://github.com/getsentry/sentry-javascript) if you encounter any
-  bugs.
-</Alert>
-
 <Alert level="warning">
-  There is currently no PII scrubbing in canvas recordings!
+
+There is currently no PII scrubbing in canvas recordings!
+
 </Alert>
 
 If you want to record HTML canvas elements, you'll need to add an additional integration in your Sentry configuration. The canvas integration is exported from the browser SDK, so no additional package is required. Canvas recording is opt-in and will be tree-shaken from your bundle if it's not being used:
@@ -67,11 +83,12 @@ Sentry.replayCanvasIntegration({
 Call the the following `snapshot()` method inside your application's paint loop. `snapshot()` needs to be called in the same execution loop as the canvas draw commands, otherwise you may be snapshotting empty canvas buffers. This is due to how WebGL works when `preserveDrawingBuffer` is `false`.
 
 ```javascript
-  function paint() {
-    const canvasRef = document.querySelector("#my-canvas");
-    Sentry.getClient().getIntegrationByName("ReplayCanvas").snapshot(canvasRef);
-  }
+function paint() {
+  const canvasRef = document.querySelector("#my-canvas");
+  Sentry.getClient().getIntegrationByName("ReplayCanvas").snapshot(canvasRef);
+}
 ```
+
 </PlatformSection>
 
 ### Content Security Policy (CSP)
@@ -93,6 +110,15 @@ child-src 'self' blob:
 </PlatformSection>
 
 If you're unable to update your CSP policy to allow inline web workers, you can also [use a custom compression worker](./configuration#using-a-custom-compression-worker) instead.
+
+<PlatformSection supported={["javascript.react"]}>
+  ### React Component Names If you want to capture react component names in
+  Sentry, you'll need to configure [React component name
+  capturing](/platforms/javascript/guides/react/features/component-names). This
+  will allow you to identify elements by the component name instead of the
+  selector. The component names are searchable and will be surfaced in
+  breadcrumbs, rage clicks, and dead clicks.
+</PlatformSection>
 
 ## User Session
 

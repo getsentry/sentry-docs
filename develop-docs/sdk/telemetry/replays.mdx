@@ -1,0 +1,174 @@
+---
+title: Replays
+sidebar_order: 5
+---
+
+This document defines the format used by Sentry to ingest replays. This
+document is meant for Sentry SDK developers and maintainers of the Session Replay
+ingestion pipeline.
+
+A `"replay_event"` Item should always be sent with a `"replay_recording"` Item
+in the same envelope.
+
+## `"replay_event"` Item
+
+### Replay Attributes
+
+The following attributes are specific to the `"replay_event"` Item type.
+
+| Key                    | Type                      | Description                                                                                                                                                                                                                                                                        |
+| ---------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| type                   | `"replay_event"`          | Must be `"replay_event"`                                                                                                                                                                                                                                                           |
+| replay_id              | string                    | A unique ID for the replay. Follows the [same requirements](/sdk/data-model/event-payloads/#required-attributes) as an `event_id`: Hexadecimal string representing a uuid4 value. The length is exactly 32 characters. Dashes are not allowed. Has to be lowercase.                |
+| replay_type            | `"session"` \| `"buffer"` | Describes the type of replay. `buffer` means the replay is buffered while waiting for an error to occur or until a manual flush. `session` means the replay starts recording immediately and continues through the lifespan of the replay session.                                 |
+| segment_id             | number                    | The segment id.                                                                                                                                                                                                                                                                    |
+| replay_start_timestamp | number                    | UNIX timestamp of the start of the replay (in seconds). This is only required on the first segment.                                                                                                                                                                                |
+| urls                   | list[string]              | List of URLs in order of visitation.                                                                                                                                                                                                                                               |
+| trace_ids              | list[string]              | List of trace ids that occurred during the replay.                                                                                                                                                                                                                                 |
+| error_ids              | list[string]              | **DEPRECATED **                                                                                                                                                                                                                                                                    |
+
+### Event Attributes
+
+The following attributes are a subset of the [optional attributes](/sdk/data-model/event-payloads/#optional-attributes) of an Event.
+
+| Key                        | Type   | Description                                      |
+| -------------------------- | ------ | ------------------------------------------------ |
+| timestamp                  | number | UNIX timestamp of the current time (in seconds). |
+| event_id                   | string | This should be the same as `replay_id`           |
+| dist                       | string | -                                                |
+| platform                   | string | -                                                |
+| environment                | string | -                                                |
+| release                    | string | -                                                |
+| user.id                    | string | -                                                |
+| user.username              | string | -                                                |
+| user.email                 | string | -                                                |
+| user.ip_address            | string | -                                                |
+| sdk.name                   | string | -                                                |
+| sdk.version                | string | -                                                |
+| request.url                | string | -                                                |
+| request.headers.User-Agent | string | -                                                |
+
+### Example
+
+```json
+{
+  "type": "replay_event",
+  "replay_id": "36b75d9fa11f45459412a96c41bdf691",
+  "replay_start_timestamp": 1710861499.287,
+  "replay_type": "session",
+  "segment_id": 0,
+  "trace_ids": ["905aef2282af5fe2ab2c93aa7a340521"],
+  "urls": [
+    "https://sentry.io/issues/",
+    "https://sentry.io/issues/?project=0&statsPeriod=7d&utc=true"
+  ],
+
+  "request": {
+    "url": "https://sentry.io/issues/?project=0&statsPeriod=7d&utc=true",
+    "headers": {
+      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    }
+  },
+  "timestamp": 1710861507.579,
+  "event_id": "36b75d9fa11f45459412a96c41bdf691",
+  "environment": "prod",
+  "release": "frontend@f00",
+  "sdk": {
+    "integrations": ["BrowserTracing", "BrowserProfiling", "Replay", "ReplayCanvas"],
+    "name": "sentry.javascript.react",
+    "version": "7.105.0"
+  },
+  "tags": {
+    "sentry_version": "24.4.0.dev0"
+  },
+  "user": {
+    "ip_address": "127.0.0.1",
+    "email": "admin@sentry.io",
+    "id": 1,
+    "name": "Admin"
+  },
+  "contexts": {"organization": {"id": "0", "slug": "sentry"}},
+  "platform": "javascript"
+}
+```
+
+## `"replay_recording"` Item
+
+The `"replay_recording"` item consists of two sub-items that are delimited by newlines. The first is a JSON of the replay recording's metadata. Currently, only `segment_id` is required.
+
+```json
+{"segment_id": 0}
+```
+
+The other sub-item is the replay recording's instructions set. This payload should be gzipped, but uncompressed payloads are also accepted. Read more about <Link to="/sdk/data-model/event-payloads/replay-recording/">replay recording events here</Link>.
+
+```json
+[
+  {
+    "type": 5,
+    "timestamp": 1710861507579,
+    "data": {}
+  }
+]
+```
+
+### Example
+
+```
+{"segment_id": 0}
+\x00\x00\x00\x14ftypqt  \x00\x00\x00\x00qt  \x00\x00\x00\x08wide\x03\xbdd\x11mdat
+```
+
+## Full Envelope Example
+
+```json
+{"event_id":"36b75d9fa11f45459412a96c41bdf691","sent_at":"2024-03-19T15:18:27.581Z","sdk":{"name":"sentry.javascript.react","version":"7.105.0"}}
+{"type":"replay_event"}
+{
+  "type": "replay_event",
+  "replay_id": "36b75d9fa11f45459412a96c41bdf691",
+  "replay_start_timestamp": 1710861499.287,
+  "replay_type": "session",
+  "segment_id": 0,
+  "trace_ids": ["905aef2282af5fe2ab2c93aa7a340521"],
+  "urls": [
+    "https://sentry.io/issues/",
+    "https://sentry.io/issues/?project=0&statsPeriod=7d&utc=true"
+  ],
+
+  "request": {
+    "url": "https://sentry.io/issues/?project=0&statsPeriod=7d&utc=true",
+    "headers": {
+      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    }
+  },
+  "timestamp": 1710861507.579,
+  "event_id": "36b75d9fa11f45459412a96c41bdf691",
+  "environment": "prod",
+  "release": "frontend@f00",
+  "sdk": {
+    "integrations": [
+      "BrowserTracing",
+      "BrowserProfiling",
+      "Replay",
+      "ReplayCanvas"
+    ],
+    "name": "sentry.javascript.react",
+    "version": "7.105.0"
+  },
+  "tags": {
+    "sentry_version": "24.4.0.dev0",
+  },
+  "user": {
+    "ip_address": "127.0.0.1",
+    "email": "admin@sentry.io",
+    "id": 1,
+    "name": "Admin"
+  },
+  "contexts": { "organization": { "id": "0", "slug": "sentry" } },
+  "platform": "javascript"
+}
+{"type":"replay_recording","length":141666}
+{"segment_id":0}
+/* gzipped JSON payload */
+```

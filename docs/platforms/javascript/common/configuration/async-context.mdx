@@ -1,0 +1,53 @@
+---
+title: Async Context
+sidebar_order: 80
+description: "Learn more about how to isolate Sentry scope and breadcrumbs across requests."
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.koa
+  - javascript.nestjs
+---
+
+By default, the Sentry SDK will automatically isolate each request's scope and breadcrumbs. This means that any breadcrumbs or tags added will be isolated to the request. This is useful if you are finding that breadcrumbs and scope are leaking across requests. Take the following example:
+
+```js
+const Sentry = require("@sentry/node");
+
+app.get("/my-route", function () {
+  Sentry.addBreadcrumb({
+    message: "This breadcrumb should only be attached to this request",
+  });
+  // do something
+});
+
+app.get("/my-route-2", function () {
+  Sentry.addBreadcrumb({
+    message: "This breadcrumb should only be attached to this request",
+  });
+  // do something
+});
+```
+
+Each request will have its own breadcrumbs, and they will not be shared between requests.
+
+If you want to manually isolate some code, such as for a background job, you can use the `withIsolationScope` method. This will ensure that any breadcrumbs or tags added will be isolated inside of the provided callback:
+
+```js
+const Sentry = require("@sentry/node");
+
+async function backgroundJob() {
+  return await Sentry.withIsolationScope(async () => {
+    // Everything inside of this will be isolated
+    await doSomething();
+  });
+}
+```
+
+Under the hood, the SDK uses Node's [AsyncLocalStorage API](https://nodejs.org/api/async_context.html#class-asynclocalstorage) to perform the isolation.

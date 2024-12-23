@@ -17,6 +17,7 @@ export default function DocImage({
   // Next.js Image component only supports images from the public folder
   // or from a remote server with properly configured domain
   if (src.startsWith('http')) {
+    // eslint-disable-next-line @next/next/no-img-element
     return <img src={src} {...props} />;
   }
 
@@ -39,20 +40,18 @@ export default function DocImage({
     .map(s => parseInt(s, 10));
 
   return (
-    <div style={{textAlign: 'center'}}>
-      <a href={imgPath} target="_blank" rel="noreferrer">
-        <Image
-          {...props}
-          src={src}
-          width={width}
-          height={height}
-          style={{
-            width: '100%',
-            height: 'auto',
-          }}
-          alt={props.alt ?? ''}
-        />
-      </a>
-    </div>
+    <a href={imgPath} target="_blank" rel="noreferrer">
+      <Image
+        {...props}
+        src={src}
+        width={width}
+        height={height}
+        style={{
+          width: '100%',
+          height: 'auto',
+        }}
+        alt={props.alt ?? ''}
+      />
+    </a>
   );
 }

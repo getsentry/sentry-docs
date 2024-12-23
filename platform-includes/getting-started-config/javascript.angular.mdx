@@ -1,12 +1,11 @@
 Once this is done, Sentry's Angular SDK captures all unhandled exceptions and transactions.
 
-<SignInNote />
+```typescript {tabTitle: App Config} {filename: main.ts} {5-31} {"onboardingOptions": {"performance": "10-13, 18-25", "session-replay": "14-16, 26-30"}}
+import { bootstrapApplication } from "@angular/platform-browser";
+import { appConfig } from "./app/app.config";
+import { AppComponent } from "./app/app.component";
 
-```javascript {tabTitle: Angular 12+}{filename: main.ts}
-import { enableProdMode } from "@angular/core";
-import { platformBrowserDynamic } from "@angular/platform-browser-dynamic";
-import * as Sentry from "@sentry/angular-ivy";
-import { AppModule } from "./app/app.module";
+import * as Sentry from "@sentry/angular";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
@@ -21,30 +20,33 @@ Sentry.init({
   ],
 
   // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for performance monitoring.
+  // of transactions for tracing.
   // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
   tracesSampleRate: 1.0,
 
-  // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+  // Set `tracePropagationTargets` to control for which URLs trace propagation should be enabled
   tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
 
   // Capture Replay for 10% of all sessions,
   // plus for 100% of sessions with an error
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
 });
 
-platformBrowserDynamic()
-  .bootstrapModule(AppModule)
-  .then(success => console.log(`Bootstrap success`))
-  .catch(err => console.error(err));
+bootstrapApplication(AppComponent, appConfig).catch((err) =>
+  console.error(err)
+);
 ```
 
-```javascript {tabTitle: Angular 10/11}{filename: main.ts}
-import { enableProdMode } from "@angular/core";
+```typescript {tabTitle: NGModule Config} {filename: main.ts} {4-30} {"onboardingOptions": {"performance": "9-12, 17-24", "session-replay": "13-15, 25-29"}}
 import { platformBrowserDynamic } from "@angular/platform-browser-dynamic";
-import * as Sentry from "@sentry/angular";
 import { AppModule } from "./app/app.module";
+
+import * as Sentry from "@sentry/angular";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
@@ -52,49 +54,103 @@ Sentry.init({
     // Registers and configures the Tracing integration,
     // which automatically instruments your application to monitor its
     // performance, including custom Angular routing instrumentation
-    Sentry.browserTracingIntegration()
+    Sentry.browserTracingIntegration(),
+    // Registers the Replay integration,
+    // which automatically captures Session Replays
+    Sentry.replayIntegration(),
   ],
 
   // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for performance monitoring.
+  // of transactions for tracing.
   // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
   tracesSampleRate: 1.0,
 
-  // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+  // Set `tracePropagationTargets` to control for which URLs trace propagation should be enabled
   tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+
+  // Capture Replay for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
 });
 
 platformBrowserDynamic()
   .bootstrapModule(AppModule)
-  .then(success => console.log(`Bootstrap success`))
-  .catch(err => console.error(err));
+  .catch((err) => console.error(err));
 ```
 
-### Automatically Send Errors with `ErrorHandler`
+### Register Sentry Providers
 
-The Angular SDK exports a function to instantiate an `ErrorHandler` provider that will automatically send JavaScript errors captured by Angular's error handler.
+The Sentry Angular SDK exports a couple of Angular providers that are necessary to fully instrument your application. We recommend registering them in your `app.config.ts` or main `app.module.ts`:
 
-```javascript {tabTitle: Angular 12+}{filename: app.module.ts}
-import { NgModule, ErrorHandler } from "@angular/core";
-import * as Sentry from "@sentry/angular-ivy";
+```typescript {tabTitle: App Config (Angular 19+)} {filename: app.config.ts} {9, 14-24} {"onboardingOptions": {"performance": "18-24"}}
+import {
+  ApplicationConfig,
+  ErrorHandler,
+  inject,
+  provideAppInitializer,
+} from "@angular/core";
+import { Router } from "@angular/router";
 
-@NgModule({
-  // ...
+import * as Sentry from "@sentry/angular";
+
+export const appConfig: ApplicationConfig = {
   providers: [
+    // ...
     {
       provide: ErrorHandler,
-      useValue: Sentry.createErrorHandler({
-        showDialog: true,
-      }),
+      useValue: Sentry.createErrorHandler(),
     },
+    {
+      provide: Sentry.TraceService,
+      deps: [Router],
+    },
+    provideAppInitializer(() => {
+      inject(TraceService);
+    }),
   ],
-  // ...
-})
-export class AppModule {}
+};
 ```
 
-```javascript {tabTitle: Angular 10/11}{filename: app.module.ts}
-import { NgModule, ErrorHandler } from "@angular/core";
+```typescript {tabTitle: App Config (Angular <=18)} {filename: app.config.ts} {8, 13-26} {"onboardingOptions": {"performance": "17-26"}}
+import {
+  APP_INITIALIZER,
+  ApplicationConfig,
+  ErrorHandler,
+} from "@angular/core";
+import { Router } from "@angular/router";
+
+import * as Sentry from "@sentry/angular";
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    // ...
+    {
+      provide: ErrorHandler,
+      useValue: Sentry.createErrorHandler(),
+    },
+    {
+      provide: Sentry.TraceService,
+      deps: [Router],
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: () => () => {},
+      deps: [Sentry.TraceService],
+      multi: true,
+    },
+  ],
+};
+```
+
+```typescript {tabTitle: NGModule Config} {filename: app.module.ts} {4, 9-22} {"onboardingOptions": {"performance": "13-22"}}
+import { APP_INITIALIZER, ErrorHandler, NgModule } from "@angular/core";
+import { Router } from "@angular/router";
+
 import * as Sentry from "@sentry/angular";
 
 @NgModule({
@@ -102,76 +158,12 @@ import * as Sentry from "@sentry/angular";
   providers: [
     {
       provide: ErrorHandler,
-      useValue: Sentry.createErrorHandler({
-        showDialog: true,
-      }),
+      useValue: Sentry.createErrorHandler(),
     },
-  ],
-  // ...
-})
-export class AppModule {}
-```
-
-You can configure the behavior of `createErrorHandler`. For more details see the `ErrorHandlerOptions` interface in [our repository](https://github.com/getsentry/sentry-javascript/blob/master/packages/angular/src/errorhandler.ts).
-
-### Register `TraceService`
-
-For performance monitoring, register `TraceService` as a provider with a `Router` as its dependency:
-
-```javascript {tabTitle: Angular 12+}{filename: app.module.ts}
-import { NgModule } from "@angular/core";
-import { Router } from "@angular/router";
-import * as Sentry from "@sentry/angular-ivy";
-
-@NgModule({
-  // ...
-  providers: [
     {
       provide: Sentry.TraceService,
       deps: [Router],
     },
-  ],
-  // ...
-})
-export class AppModule {}
-```
-
-```javascript {tabTitle: Angular 10/11}{filename: app.module.ts}
-import { NgModule } from "@angular/core";
-import { Router } from "@angular/router";
-import * as Sentry from "@sentry/angular";
-
-@NgModule({
-  // ...
-  providers: [
-    {
-      provide: Sentry.TraceService,
-      deps: [Router],
-    },
-  ],
-  // ...
-})
-export class AppModule {}
-```
-
-Then, either require the `TraceService` from inside `AppModule` or use `APP_INITIALIZER` to force instantiate Tracing.
-
-```javascript {filename: app.module.ts}
-@NgModule({
-  // ...
-})
-export class AppModule {
-  constructor(trace: Sentry.TraceService) {}
-}
-```
-
-or
-
-```javascript {filename: app.module.ts}
-import { APP_INITIALIZER } from "@angular/core";
-@NgModule({
-  // ...
-  providers: [
     {
       provide: APP_INITIALIZER,
       useFactory: () => () => {},
@@ -183,3 +175,26 @@ import { APP_INITIALIZER } from "@angular/core";
 })
 export class AppModule {}
 ```
+
+The `Sentry.createErrorHandler` function initializes a Sentry-specific `ErrorHandler` that automatically sends errors caught by Angular to Sentry. Learn how to further configure Sentry's `ErrorHandler` behavior [here](./features/error-handler).
+
+<Alert>
+
+If your angular app is configured for SSR, make sure that the Sentry providers are not accidentally passed to the SSR config (`app.config.server.ts`). The Sentry Angular SDK can only be used in the browser.
+
+</Alert>
+
+<OnboardingOption optionId="performance">
+
+If you're using an NGModule-based application (`app.module.ts`), you can also dependency-inject the `TraceService` from inside your `AppModule` constructor, instead of providing `APP_INITIALIZER`:
+
+```javascript {tabTitle: NGModule Config} {filename: app.module.ts} {5}
+@NgModule({
+  // ...
+})
+export class AppModule {
+  constructor(trace: Sentry.TraceService) {}
+}
+```
+
+</OnboardingOption>

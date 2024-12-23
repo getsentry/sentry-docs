@@ -1,59 +1,37 @@
 ---
-title: Scopes and Hubs
+title: Scopes
 description: "SDKs will typically automatically manage the scopes for you in the framework integrations. Learn what a scope is and how you can use it to your advantage."
 ---
 
-When an event is captured and sent to Sentry, SDKs will merge that event data with extra
-information from the current scope. SDKs will typically automatically manage the scopes
-for you in the framework integrations and you don't need to think about them. However,
-you should know what a scope is and how you can use it for your advantage.
+Scopes store extra data that the SDK adds to your event when sending the event to Sentry. While the SDKs typically manage the scope automatically, understanding how scopes work and how you can manage them manually can be helpful.
 
-## What's a Scope, What's a Hub
+## What is a Scope?
 
-You can think of the hub as the central point that our SDKs use to route an
-event to Sentry. When you call `init()` a hub is created and a client and a
-blank scope are created on it. That hub is then associated with the current
-thread and will internally hold a stack of scopes.
+A scope manages an event's data. For instance, the SDK stores [contexts](../context/) and [breadcrumbs](../breadcrumbs/) on the scope.
 
-The scope will hold useful information that should be sent along with the
-event. For instance [contexts](../context/) or
-[breadcrumbs](../breadcrumbs/) are stored on
-the scope. When a scope is pushed, it inherits all data from the parent scope
-and when it pops all modifications are reverted.
+There are three types of scopes. Exactly one scope of each type will be active at a specific point in time.
 
-The default SDK integrations will push and pop scopes intelligently. For
-instance web framework integrations will create and destroy scopes around your
-routes or controllers.
+- *Global scope*: A single globally-shared scope storing data relevant for the whole app (such as the release).
+- *Isolation scope*: Thread-local scope created for each request-response lifecycle to store data relevant to the request.
+- *Current scope*: Thread-local scope created for each span to store data relevant to the span.
 
-## How the Scope and Hub Work
+The SDK and the SDK's built-in integrations automatically manage the scopes. For example, web framework integrations create an isolation scope for each request handled. When you call a top-level API function, such as <PlatformIdentifier name="set-tag" />, the SDK determines the correct scope on which to operate.
 
-As you start using an SDK, a scope and hub are automatically created for you out
-of the box. It's unlikely that you'll interact with the hub directly unless you're
-writing an integration or you want to create or destroy scopes. Scopes, on the
-other hand are more user facing. You can call <PlatformIdentifier name="configure-scope" /> at any point in
-time to modify data stored on the scope. This is useful for doing things like
-[modifying the context](../context/).
+When sending an event to Sentry, the final data applied to the event is the result of merging the three scopes, applying data from each in turn. The global scope is applied first, followed by the isolation scope, and then the current scope.
 
-<Alert>
-If you are very curious about how thread locality works: On platforms such as .NET
-or on Python 3.7 and later we will use "ambient data" to have either the hub flow
-with your code or the hub is already a singleton that internally manages the scope.
+## Changing the Scope
 
-Effectively this means that when you spawn a task in .NET and the execution flow is
-not suppressed all the context you have bound to the scope in Sentry will flow along.
-If however you suppress the flow, you get new scope data.
+We generally recommend using the top-level API to manage your scopes, since the SDK's automatic scope management handles most use cases.
 
-</Alert>
+However, if your use case requires direct access to the scope object, you can use the <PlatformIdentifier name="new-scope" /> context manager. <PlatformIdentifier name="new-scope" /> forks the current scope, allows you to modify the new scope while the context manager is active, and restores the original scope afterwards. Using <PlatformIdentifier name="new-scope" /> allows you to send data for only one specific event, such as [modifying the context](../context/). It is roughly equivalent to the <PlatformIdentifier name="push-scope" /> context manager in earlier (1.x) versions of the SDK.
 
-When you call a global function such as <PlatformIdentifier name="capture-event" /> internally Sentry
-discovers the current hub and asks it to capture an event. Internally the hub will
-then merge the event with the topmost scope's data.
+<Note>
 
-## Configuring the Scope
+Avoid calling top-level APIs inside the  <PlatformIdentifier name="new-scope" /> context manager. The top-level API might interact with a different scope from what <PlatformIdentifier name="new-scope" /> yields, causing unintended results. While within the <PlatformIdentifier name="new-scope" /> context manager, please call methods directly on the scope that <PlatformIdentifier name="new-scope" /> yields!
 
-The most useful operation when working with scopes is the <PlatformIdentifier name="configure-scope" /> function. It can be used to reconfigure the current scope.
+</Note>
 
-You can, for instance, add custom tags or inform Sentry about the currently authenticated user.
+Using <PlatformIdentifier name="new-scope" /> allows you to attach additional information, such as adding custom tags or informing Sentry about the currently authenticated user.
 
 <PlatformContent includePath="enriching-events/scopes/configure-scope" />
 
@@ -63,23 +41,3 @@ You can also apply this configuration when unsetting a user at logout:
 
 To learn what useful information can be associated with scopes see
 [the context documentation](../context/).
-
-## Local Scopes
-
-We also support pushing and configuring a scope within a single call. This is typically
-called <PlatformIdentifier name="push-scope" /> or implemented as a function parameter on the capture methods, depending on the SDK. It's very helpful if
-you only want to send data for one specific event.
-
-### Using <PlatformIdentifier name="push-scope" />
-
-In the following example we use <PlatformIdentifier name="push-scope" /> to attach a `level` and a `tag` to only one specific error:
-
-<PlatformContent includePath="enriching-events/scopes/with-scope" />
-
-While this example looks similar to <PlatformIdentifier name="configure-scope" />, it is actually very different.
-Calls to <PlatformIdentifier name="configure-scope" /> change the current active scope; all successive calls to <PlatformIdentifier name="configure-scope" /> will maintain previously set changes unless they are explicitly unset.
-
-On the other hand, <PlatformIdentifier name="push-scope" /> creates a clone of the current scope, and the changes
-made will stay isolated within the <PlatformIdentifier name="push-scope" /> callback function. This allows you to
-more easily isolate pieces of context information to specific locations in your code or
-even call <PlatformIdentifier name="clear" /> to briefly remove all context information.

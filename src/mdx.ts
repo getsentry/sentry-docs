@@ -9,9 +9,6 @@ import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypePresetMinify from 'rehype-preset-minify';
 import rehypePrismDiff from 'rehype-prism-diff';
 import rehypePrismPlus from 'rehype-prism-plus';
-// Rehype packages
-import rehypeSlug from 'rehype-slug';
-// Remark packages
 import remarkGfm from 'remark-gfm';
 import remarkMdxImages from 'remark-mdx-images';
 
@@ -19,13 +16,20 @@ import getAppRegistry from './build/appRegistry';
 import getPackageRegistry from './build/packageRegistry';
 import {apiCategories} from './build/resolveOpenAPI';
 import getAllFilesRecursively from './files';
+import remarkDefList from './mdx-deflist';
+import rehypeOnboardingLines from './rehype-onboarding-lines';
+import rehypeSlug from './rehype-slug.js';
 import remarkCodeTabs from './remark-code-tabs';
 import remarkCodeTitles from './remark-code-title';
 import remarkComponentSpacing from './remark-component-spacing';
 import remarkExtractFrontmatter from './remark-extract-frontmatter';
+import remarkFormatCodeBlocks from './remark-format-code';
 import remarkImageSize from './remark-image-size';
-import remarkTocHeadings from './remark-toc-headings';
+import remarkTocHeadings, {TocNode} from './remark-toc-headings';
 import remarkVariables from './remark-variables';
+import {FrontMatter, Platform, PlatformConfig} from './types';
+import {isNotNil} from './utils';
+import {isVersioned, VERSION_INDICATOR} from './versioning';
 
 const root = process.cwd();
 
@@ -33,7 +37,7 @@ function formatSlug(slug: string) {
   return slug.replace(/\.(mdx|md)/, '');
 }
 const isSupported = (
-  frontmatter: any,
+  frontmatter: FrontMatter,
   platformName: string,
   guideName?: string
 ): boolean => {
@@ -56,8 +60,6 @@ const isSupported = (
   return true;
 };
 
-export type FrontMatter = {[key: string]: any};
-
 let getDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
 
 export function getDocsFrontMatter(): Promise<FrontMatter[]> {
@@ -67,6 +69,26 @@ export function getDocsFrontMatter(): Promise<FrontMatter[]> {
   getDocsFrontMatterCache = getDocsFrontMatterUncached();
   return getDocsFrontMatterCache;
 }
+
+/**
+ * collect all available versions for a given document path
+ */
+export const getVersionsFromDoc = (frontMatter: FrontMatter[], docPath: string) => {
+  const versions = frontMatter
+    .filter(({slug}) => {
+      return (
+        slug.includes(VERSION_INDICATOR) &&
+        slug.split(VERSION_INDICATOR)[0] === docPath.split(VERSION_INDICATOR)[0]
+      );
+    })
+    .map(({slug}) => {
+      const segments = slug.split(VERSION_INDICATOR);
+      return segments[segments.length - 1];
+    });
+
+  // remove duplicates
+  return [...new Set(versions)];
+};
 
 async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
   const frontMatter = getAllFilesFrontMatter();
@@ -92,13 +114,43 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
     if (fm.slug.endsWith(trailingIndex)) {
       fm.slug = fm.slug.slice(0, fm.slug.length - trailingIndex.length);
     }
+
+    //  versioned index files get appended to the path (e.g. /path/index__v1 becomes /path__v1)
+    const versionedIndexFileIndicator = `${trailingIndex}${VERSION_INDICATOR}`;
+    if (fm.slug.includes(versionedIndexFileIndicator)) {
+      const segments = fm.slug.split(versionedIndexFileIndicator);
+      fm.slug = `${segments[0]}${VERSION_INDICATOR}${segments[1]}`;
+    }
   });
 
   return frontMatter;
 }
 
-export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
+export function getDevDocsFrontMatter(): FrontMatter[] {
+  const folder = 'develop-docs';
   const docsPath = path.join(root, folder);
+  const files = getAllFilesRecursively(docsPath);
+  const fmts = files
+    .map(file => {
+      const fileName = file.slice(docsPath.length + 1);
+      if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
+        return undefined;
+      }
+
+      const source = fs.readFileSync(file, 'utf8');
+      const {data: frontmatter} = matter(source);
+      return {
+        ...(frontmatter as FrontMatter),
+        slug: fileName.replace(/\/index.mdx?$/, '').replace(/\.mdx?$/, ''),
+        sourcePath: path.join(folder, fileName),
+      };
+    })
+    .filter(isNotNil);
+  return fmts;
+}
+
+function getAllFilesFrontMatter() {
+  const docsPath = path.join(root, 'docs');
   const files = getAllFilesRecursively(docsPath);
   const allFrontMatter: FrontMatter[] = [];
   files.forEach(file => {
@@ -114,16 +166,11 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
     const source = fs.readFileSync(file, 'utf8');
     const {data: frontmatter} = matter(source);
     allFrontMatter.push({
-      ...frontmatter,
+      ...(frontmatter as FrontMatter),
       slug: formatSlug(fileName),
-      sourcePath: path.join(folder, fileName),
+      sourcePath: path.join('docs', fileName),
     });
   });
-
-  if (folder !== 'docs') {
-    // We exit early if we're not in the docs folder. We use this for the changelog.
-    return allFrontMatter;
-  }
 
   // Add all `common` files in the right place.
   const platformsPath = path.join(docsPath, 'platforms');
@@ -131,11 +178,12 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
     .readdirSync(platformsPath)
     .filter(p => !fs.statSync(path.join(platformsPath, p)).isFile());
   platformNames.forEach(platformName => {
-    let platformFrontmatter: FrontMatter = {};
+    let platformFrontmatter: PlatformConfig = {};
     const configPath = path.join(platformsPath, platformName, 'config.yml');
     if (fs.existsSync(configPath)) {
-      // @ts-ignore
-      platformFrontmatter = yaml.load(fs.readFileSync(configPath, 'utf8'));
+      platformFrontmatter = yaml.load(
+        fs.readFileSync(configPath, 'utf8')
+      ) as PlatformConfig;
     }
 
     const commonPath = path.join(platformsPath, platformName, 'common');
@@ -143,13 +191,13 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
       return;
     }
 
-    const commonFileNames = getAllFilesRecursively(commonPath).filter(
+    const commonFileNames: string[] = getAllFilesRecursively(commonPath).filter(
       p => path.extname(p) === '.mdx'
     );
     const commonFiles = commonFileNames.map(commonFileName => {
       const source = fs.readFileSync(commonFileName, 'utf8');
       const {data: frontmatter} = matter(source);
-      return {commonFileName, frontmatter};
+      return {commonFileName, frontmatter: frontmatter as FrontMatter};
     });
 
     commonFiles.forEach(f => {
@@ -184,11 +232,12 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
       .readdirSync(guidesPath)
       .filter(g => !fs.statSync(path.join(guidesPath, g)).isFile());
     guideNames.forEach(guideName => {
-      let guideFrontmatter: FrontMatter = {};
+      let guideFrontmatter: FrontMatter | null = null;
       const guideConfigPath = path.join(guidesPath, guideName, 'config.yml');
       if (fs.existsSync(guideConfigPath)) {
-        // @ts-ignore
-        guideFrontmatter = yaml.load(fs.readFileSync(guideConfigPath, 'utf8'));
+        guideFrontmatter = yaml.load(
+          fs.readFileSync(guideConfigPath, 'utf8')
+        ) as FrontMatter;
       }
 
       commonFiles.forEach(f => {
@@ -216,23 +265,59 @@ export function getAllFilesFrontMatter(folder: string = 'docs'): FrontMatter[] {
   return allFrontMatter;
 }
 
+/**
+ *  Generate a file path for versioned content, or return an invalid one if the slug is not versioned
+ */
+export const getVersionedIndexPath = (
+  pathRoot: string,
+  slug: string,
+  fileExtension: string
+) => {
+  let versionedSlug = 'does/not/exist.mdx';
+  const segments = slug.split(VERSION_INDICATOR);
+  if (segments.length === 2) {
+    if (segments[1].includes('common')) {
+      const segmentWithoutCommon = segments[1].split('/common')[0];
+      versionedSlug = `${segments[0]}/common/index${VERSION_INDICATOR}${segmentWithoutCommon}${fileExtension}`;
+    } else {
+      versionedSlug = `${segments[0]}/index${VERSION_INDICATOR}${segments[1]}${fileExtension}`;
+    }
+  }
+
+  return path.join(pathRoot, versionedSlug);
+};
+
+export const addVersionToFilePath = (filePath: string, version: string) => {
+  const parts = filePath.split('.');
+  if (parts.length > 1) {
+    const extension = parts.pop();
+    return `${parts.join('.')}__v${version}.${extension}`;
+  }
+
+  // file has no extension
+  return `${filePath}__v${version}`;
+};
+
 export async function getFileBySlug(slug: string) {
-  const configPath = path.join(root, slug, 'config.yml');
-  let configFrontmatter: {[key: string]: any} | undefined;
+  // no versioning on a config file
+  const configPath = path.join(root, slug.split(VERSION_INDICATOR)[0], 'config.yml');
+
+  let configFrontmatter: PlatformConfig | undefined;
   if (fs.existsSync(configPath)) {
-    // @ts-ignore
-    configFrontmatter = yaml.load(fs.readFileSync(configPath, 'utf8'));
+    configFrontmatter = yaml.load(fs.readFileSync(configPath, 'utf8')) as PlatformConfig;
   }
 
   let mdxPath = path.join(root, `${slug}.mdx`);
   let mdxIndexPath = path.join(root, slug, 'index.mdx');
+  let versionedMdxIndexPath = getVersionedIndexPath(root, slug, '.mdx');
   let mdPath = path.join(root, `${slug}.md`);
   let mdIndexPath = path.join(root, slug, 'index.md');
 
   if (
     slug.indexOf('docs/platforms/') === 0 &&
-    [mdxPath, mdxIndexPath, mdPath, mdIndexPath].filter(p => fs.existsSync(p)).length ===
-      0
+    [mdxPath, mdxIndexPath, mdPath, mdIndexPath, versionedMdxIndexPath].filter(p =>
+      fs.existsSync(p)
+    ).length === 0
   ) {
     // Try the common folder.
     const slugParts = slug.split('/');
@@ -246,16 +331,26 @@ export async function getFileBySlug(slug: string) {
       commonFilePath = path.join(commonPath, slugParts.slice(5).join('/'));
     } else if (slugParts.length >= 3 && slugParts[1] === 'platforms') {
       commonFilePath = path.join(commonPath, slugParts.slice(3).join('/'));
+      versionedMdxIndexPath = getVersionedIndexPath(root, commonFilePath, '.mdx');
     }
     if (commonFilePath && fs.existsSync(commonPath)) {
       mdxPath = path.join(root, `${commonFilePath}.mdx`);
       mdxIndexPath = path.join(root, commonFilePath, 'index.mdx');
       mdPath = path.join(root, `${commonFilePath}.md`);
       mdIndexPath = path.join(root, commonFilePath, 'index.md');
+      versionedMdxIndexPath = getVersionedIndexPath(root, commonFilePath, '.mdx');
     }
   }
 
-  const sourcePath = [mdxPath, mdxIndexPath, mdPath].find(fs.existsSync) ?? mdIndexPath;
+  // check if a versioned index file exists
+  if (isVersioned(slug) && fs.existsSync(mdxIndexPath)) {
+    mdxIndexPath = addVersionToFilePath(mdxIndexPath, slug.split(VERSION_INDICATOR)[1]);
+  }
+
+  const sourcePath =
+    [mdxPath, mdxIndexPath, mdPath, versionedMdxIndexPath].find(fs.existsSync) ??
+    mdIndexPath;
+
   const source = fs.readFileSync(sourcePath, 'utf8');
 
   process.env.ESBUILD_BINARY_PATH = path.join(
@@ -266,12 +361,12 @@ export async function getFileBySlug(slug: string) {
     'esbuild'
   );
 
-  const toc = [];
+  const toc: TocNode[] = [];
 
   // cwd is how mdx-bundler knows how to resolve relative paths
   const cwd = path.dirname(sourcePath);
 
-  const result = await bundleMDX({
+  const result = await bundleMDX<Platform>({
     source,
     cwd,
     mdxOptions(options) {
@@ -283,6 +378,8 @@ export async function getFileBySlug(slug: string) {
         remarkExtractFrontmatter,
         [remarkTocHeadings, {exportRef: toc}],
         remarkGfm,
+        remarkDefList,
+        remarkFormatCodeBlocks,
         [remarkImageSize, {sourceFolder: cwd, publicFolder: path.join(root, 'public')}],
         remarkMdxImages,
         remarkCodeTitles,
@@ -316,7 +413,7 @@ export async function getFileBySlug(slug: string) {
             },
             content: [
               s(
-                'svg.anchor.before',
+                'svg.anchorlink.before',
                 {
                   xmlns: 'http://www.w3.org/2000/svg',
                   width: 16,
@@ -332,6 +429,7 @@ export async function getFileBySlug(slug: string) {
           },
         ],
         [rehypePrismPlus, {ignoreMissing: true}],
+        rehypeOnboardingLines,
         [rehypePrismDiff, {remove: true}],
         rehypePresetMinify,
       ];

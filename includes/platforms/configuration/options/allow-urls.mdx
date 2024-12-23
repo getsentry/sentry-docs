@@ -1,1 +1,16 @@
-A list of strings or regex patterns that match error URLs which should exclusively be sent to Sentry. If you use this option, only errors whose entire file URL contains (string) or matches (regex) at least one entry in the list will be sent. As a result, if you add `'foo.com'` to it, it will also match on `https://bar.com/myfile/foo.com`. Keep in mind that this only applies for captured exceptions, not raw message events. By default, all errors are sent.
+An array of strings or regex patterns that match the URLs of scripts where errors have been created.
+Only errors that have been created on these URLs will be sent to Sentry.
+If you use this option, errors will only be sent when the top stack frame file URL contains or matches at least one entry in the allowUrls array.
+All string entries in the array will be matched with `stackFrameUrl.contains(entry)`, while all RegEx entries will be matched with `stackFrameUrl.match(entry)`.
+
+For example, if you add `'foo.com'` to the array, errors created on `https://bar.com/myfile/foo.com` will be captured because URL will be matched with "contains" logic and the last segment of the URL contains `foo.com`.
+
+This matching logic applies for captured exceptions, not raw message events. By default, all errors are sent.
+
+If your scripts are loaded from `cdn.example.com` and your site is `example.com`, you can set `allowUrls` to the follwing to exclusively capture errors being created in scripts in these locations:
+
+```javascript
+Sentry.init({
+  allowUrls: [/https?:\/\/((cdn|www)\.)?example\.com/],
+});
+```

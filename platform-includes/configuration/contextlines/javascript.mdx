@@ -1,22 +1,21 @@
-<SignInNote />
-
-```javascript {tabTitle: npm}
+```javascript {tabTitle:npm}
 import * as Sentry from "@sentry/browser";
-import { contextLinesIntegration } from "@sentry/integrations";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [contextLinesIntegration()],
+  integrations: [Sentry.contextLinesIntegration()],
 });
 ```
 
-```html {tabTitle: Loader}
+```html {tabTitle: Loader (v7)}
 <script>
   // Configure sentryOnLoad before adding the Loader Script
   window.sentryOnLoad = function () {
-    Sentry.init({
-      integrations: [Sentry.contextLinesIntegration()],
-    });
+    Sentry.init({});
+
+    if (Sentry.contextLinesIntegration) {
+      Sentry.addIntegration(Sentry.contextLinesIntegration());
+    }
   };
 </script>
 
@@ -25,8 +24,27 @@ Sentry.init({
   crossorigin="anonymous"
 ></script>
 <script
-  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/contextlines.min.js"
-  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'contextlines.min.js', 'sha384-base64') }}"
+  src="https://browser.sentry-cdn.com/7.118.0/contextlines.min.js"
+  integrity="sha384-gEhhSwfS59ymyyW9I1NMvuFGgYTaNhdU5/fOAlxk3JWx0KMuf7SqsRQ4MiTMWcHU"
+  crossorigin="anonymous"
+></script>
+```
+
+```html {tabTitle: Loader (v8)}
+<script>
+  // Configure sentryOnLoad before adding the Loader Script
+  window.sentryOnLoad = function () {
+    Sentry.init({});
+    Sentry.lazyLoadIntegration("contextLinesIntegration").then(
+      (integration) => {
+        Sentry.addIntegration(integration());
+      }
+    );
+  };
+</script>
+
+<script
+  src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js"
   crossorigin="anonymous"
 ></script>
 ```

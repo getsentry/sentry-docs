@@ -1,0 +1,79 @@
+---
+title: Integrations
+description: "Sentry provides additional integrations designed to change configuration or add instrumentation to your application."
+sidebar_order: 40
+---
+
+The Sentry SDK uses integrations to hook into the functionality of popular frameworks and libraries to automatically instrument your application and give you the best data out of the box.
+
+Some of our integrations are available as separate gems while others are available as patches that can be enabled from the `sentry-ruby` gem. You can find an overview of all available integrations below.
+
+## Gems
+
+The following table lists all integrations available as gems.
+
+Simply add the relevant gems to your Gemfile and run `bundle install` to install them.
+
+|                     Integration                                                                                                               | `Gemfile`                    |
+| ---------------------------------------------------------------------------------------------------------------------                         | :--------------:             |
+| <LinkWithPlatformIcon platform="ruby.rails"            label="Rails"          url="/platforms/ruby/guides/rails" />                           | `gem "sentry-rails"`         |
+| <LinkWithPlatformIcon platform="ruby.sidekiq"          label="Sidekiq"        url="/platforms/ruby/guides/sidekiq" />                         | `gem "sentry-sidekiq"`       |
+| <LinkWithPlatformIcon platform="ruby.delayed_job"      label="Delayed Job"    url="/platforms/ruby/guides/delayed_job/" />                    | `gem "sentry-delayed_job"`   |
+| <LinkWithPlatformIcon platform="ruby.resque"           label="Resque"         url="/platforms/ruby/guides/resque" />                          | `gem "sentry-resque"`        |
+| <LinkWithPlatformIcon platform="ruby.opentelemetry"    label="OpenTelemetry"  url="/platforms/ruby/tracing/instrumentation/opentelemetry" />  | `gem "sentry-opentelemetry"` |
+
+## Patches
+
+The following table lists all integrations available as patches and which ones are enabled by default.
+
+You can use [`config.enabled_patches`](/platforms/ruby/configuration/options/#enabled-patches) to enable or disable them.
+
+```ruby
+# enable :faraday patch
+config.enabled_patches << :faraday
+
+# disable :puma patch
+config.enabled_patches.delete(:puma)
+```
+
+|                     Patch   | **Auto-enabled** |
+| ----------------------------|:----------------:|
+| `:http`                     |       ✓          |
+| `:redis`                    |       ✓          |
+| `:puma`                     |       ✓          |
+| `:faraday`                  |                  |
+| `:graphql`                  |                  |
+
+## Features
+
+### Rails
+
+The Rails integration is a feature rich integration that:
+
+* captures Errors anywhere in your Rails application
+* creates Transactions for incoming HTTP Requests
+* records Spans in those Transactions for various important operations like:
+  * database queries (performed with `activerecord`)
+  * view renders
+
+### Queues
+
+The various Queue integrations for Sidekiq, Delayed Job and Resque create distributed traces connecting tasks that are performed in the background asynchronously.
+
+The Rails integration also includes this functionality for `ActiveJob`.
+
+### OpenTelemetry
+
+The OpenTelemetry integration is used for exporting spans instrumented by an OpenTelemetry SDK into Sentry. See the [OpenTelemetry Setup](/platforms/ruby/tracing/instrumentation/opentelemetry) instructions for more details.
+
+### HTTP Requests
+
+Outgoing HTTP Requests are instrumented as Spans by the `:http` (for requests done with `Net::HTTP`) and `:faraday` patches.
+
+### GraphQL
+
+GraphQL operations are instrumented as Spans by the `:graphql` patch.
+
+### Puma
+
+The `:puma` patch captures low level exceptions outside your application stack.

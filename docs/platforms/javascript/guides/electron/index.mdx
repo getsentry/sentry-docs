@@ -1,14 +1,24 @@
 ---
 title: Electron
+description: "Electron is a framework for building desktop applications using JavaScript, HTML, and CSS. Learn how to set it up with Sentry."
 sdk: sentry.javascript.electron
 categories:
   - desktop
-description: "Learn how to use Sentry with Electron."
 ---
 
 `@sentry/electron` is the official Sentry SDK for Electron applications. It can capture JavaScript exceptions in the `main` and `renderer` processes, as well as collect native crash reports (Minidumps).
 
+## Features
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also get to the root of an error or performance issue faster, by watching a video-like reproduction of a user session with [session replay](/product/explore/session-replay/web/getting-started/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
 ## Install
+
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "session-replay"]}
+/>
 
 <PlatformContent includePath="getting-started-install" />
 
@@ -25,8 +35,7 @@ Once configured, all unhandled exceptions and native crashes are automatically c
 Our Sentry Wizard can help with the setup process. Make sure you have installed the `@sentry/wizard` npm package globally, then run:
 
 ```shell
-npm install -g @sentry/wizard
-sentry-wizard --integration electron
+npx @sentry/wizard@latest -i electron
 ```
 
 This will guide you through the installation and configuration process and suggest useful tools for development. If you instead prefer to setup manually, keep reading.
@@ -35,40 +44,21 @@ This will guide you through the installation and configuration process and sugge
 
 Start by configuring the SDK as described above. This will enable the [Electron CrashReporter](https://electronjs.org/docs/api/crash-reporter) for native app crashes and capture any uncaught JavaScript exceptions using the JavaScript SDKs under the hood. Be sure to call this function as early as possible in the `main` process and all `renderer` processes to also catch errors during startup.
 
-If you are using preload scripts, have `contextIsolation` enabled and want to capture errors from the isolated preload context, you should call `init` early in that context too.
+If you are using preload scripts, have `contextIsolation` enabled and want to
+capture errors from the isolated preload context, you should call the renderer `init`
+early in that context too.
 
 ### App `userData` Directory
 
 If you change the `userData` directory used by your app, ensure this change is made before you configure the SDK as this path is used to cache scope and events between application restarts.
 
-<SignInNote />
 
 ```javascript
 import { app } from "electron";
-import * as Sentry from "@sentry/electron";
+import * as Sentry from "@sentry/electron/main";
 
 app.setPath("userData", "~/.config/my-app");
 Sentry.init({ dsn: "___PUBLIC_DSN___" });
-```
-
-## Bundler Configuration
-
-The SDK attempts to ensure JavaScript bundlers pick up the correct entry point
-for the Electron process type, but this is not foolproof. If the incorrect entry
-point is selected, your bundler may throw an error or an error will be thrown at
-runtime. If this occurs there are process specific exports to ensure that the correct code
-is bundled for the process.
-
-In the main process:
-
-```javascript
-import * as Sentry from "@sentry/electron/main";
-```
-
-In the renderer processes:
-
-```javascript
-import * as Sentry from "@sentry/electron/renderer";
 ```
 
 ## Framework-Specific SDKs
@@ -94,7 +84,6 @@ The default transport automatically handles offline events caching from both the
 main and renderer processes. Following, are a number of options that allow you
 to customize queueing behavior:
 
-<SignInNote />
 
 ```javascript
 import * as Sentry from "@sentry/electron/main";
@@ -102,18 +91,40 @@ import * as Sentry from "@sentry/electron/main";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   transportOptions: {
-    // The maximum number of days to keep an event in the queue.
-    maxQueueAgeDays: 30,
-    // The maximum number of events to keep in the queue.
-    maxQueueCount: 30,
-    // Called every time the number of requests in the queue changes.
-    queuedLengthChanged: (length) => {},
-    // Called before attempting to send an event to Sentry. Used to override queuing behavior.
-    //
-    // Return 'send' to attempt to send the event.
-    // Return 'queue' to queue and persist the event for sending later.
-    // Return 'drop' to drop the event.
-    beforeSend: (request) => (isOnline() ? "send" : "queue"),
+    /* The maximum number of days to keep an envelope in the queue. */
+    maxAgeDays: 30,
+    /* The maximum number of envelopes to keep in the queue. */
+    maxQueueSize: 30,
+    /**
+     * Called before we attempt to send an envelope to Sentry.
+     *
+     * If this function returns false, `shouldStore` will be called to determine if the envelope should be stored.
+     *
+     * Default: () => true
+     *
+     * @param envelope The envelope that will be sent.
+     * @returns Whether we should attempt to send the envelope
+     */
+    shouldSend: (envelope: Envelope) => boolean | Promise<boolean>;
+    /**
+     * Called before an event is stored.
+     *
+     * Return false to drop the envelope rather than store it.
+     *
+     * Default: () => true
+     *
+     * @param envelope The envelope that failed to send.
+     * @param error The error that occurred.
+     * @param retryDelay The current retry delay in milliseconds.
+     * @returns Whether we should store the envelope in the queue
+     */
+    shouldStore: (envelope: Envelope, error: Error, retryDelay: number) => boolean | Promise<boolean>;
+    /**
+     * Should the offline store flush shortly after startup.
+     *
+     * Defaults: false
+     */
+    flushAtStartup: false;
   },
 });
 ```
@@ -124,10 +135,9 @@ To give the most detailed context for all events including native crashes, the S
 
 By default, the SDK attempts to establish communication from `renderer` to `main` via Electron IPC API's and if that fails, falls back to using a custom HTTP protocol. You can change this default via the `ipcMode` option which can be one of `Classic`, `Protocol` or `Both`.
 
-<SignInNote />
 
 ```javascript
-const { init, IPCMode } = require("@sentry/electron");
+const { init, IPCMode } = require("@sentry/electron/main");
 
 init({
   dsn: "___PUBLIC_DSN___",
@@ -140,7 +150,6 @@ init({
 
 The SDK attempts to inject a preload script via [`session.setPreloads(preloads)`](https://www.electronjs.org/docs/latest/api/session#sessetpreloadspreloads) and by default only does this for the `defaultSession`. If you are using other sessions, you can pass custom sessions via the `getSessions` option in the `main` process:
 
-<SignInNote />
 
 ```javascript
 import { session } from "electron";
@@ -193,7 +202,7 @@ The Electron SDK supports [Source Maps](https://www.html5rocks.com/en/tutorials/
 
 Sentry can process Minidumps created when any of the Electron processes crash. To do so, the SDK needs to upload those files once the application restarts (or immediately for renderer crashes). All event meta data including user information and breadcrumbs are included in these uploads.
 
-Due to restrictions of macOS app sandboxing, native crashes cannot be collected in Mac App Store builds. In this case, native crash handling will be disabled.
+Due to [restrictions of macOS app sandboxing](https://electronjs.org/docs/tutorial/mac-app-store-submission-guide#limitations-of-mas-build), native crashes cannot be collected in Mac App Store builds. In this case, native crash handling will be disabled.
 
 <Alert level="warning" title="A Word on Data Privacy">
 
@@ -216,7 +225,7 @@ If your application contains custom native extensions or you wish to symbolicate
 crashes from a spawned child process, upload their debug information manually
 during your build or release process. See [_Debug Information Files_](/platforms/javascript/guides/electron/data-management/debug-files/) for a detailed description of how to
 set up Sentry for native development. Additionally, see [_Uploading Debug
-Information_](/product/cli/dif/) for the upload process.
+Information_](/cli/dif/) for the upload process.
 
 ### Child Processes
 

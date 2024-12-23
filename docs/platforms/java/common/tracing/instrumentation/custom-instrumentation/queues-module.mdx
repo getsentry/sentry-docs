@@ -1,0 +1,127 @@
+---
+title: Instrument Queues
+sidebar_order: 3000
+description: "Learn how to manually instrument your code to use Sentry's Queues module. "
+---
+Sentry comes with automatic instrumentation for the most common messaging queue systems. In case yours isn't supported, you can still instrument custom spans and transactions around your queue producers and consumers to ensure that you have performance data about your messaging queues.
+
+## Producer Instrumentation
+
+To start capturing performance metrics, use the `startChild()` function to wrap your queue producer events. Your span `op` must be set to `queue.publish`. Include the following span data to enrich your producer spans with queue metrics:
+
+| Data Attribute | Type | Description |
+|:--|:--|:--|
+| `messaging.message.id ` | string | The message identifier |
+| `messaging.destination.name` | string | The queue or topic name |
+| `messaging.message.body.size` | int | Size of the message body in bytes |
+
+Your `queue.publish` span must exist inside a transaction in order to be recognized as a producer span. If you are using a supported framework, the transaction is created by the integration. If you are using plain Java, you can start a new one using `Sentry.startTransaction()`.
+
+You must also include trace headers in your message so that your consumers can continue your trace once your message is picked up.
+
+
+```java
+MyCustomQueue connection = MyCustomQueue.connect();
+
+// The message you want to send to the queue
+String queue = "messages";
+String message = "Hello World!";
+String messageId = "abc123";
+
+// Create transaction
+ITransaction transaction = Sentry.startTransaction("queue_producer_transaction", "function");
+
+try {
+    final SentryTraceHeader traceparent = Sentry.getTraceparent();
+    final BaggageHeader baggage = Sentry.getBaggage();
+
+    ISpan span = transaction.startChild("queue.publish", "queue_producer");
+    try {
+        // Set span data
+        span.setData("messaging.message.id", messageId);
+        span.setData("messaging.destination.name", queue);
+        span.setData("messaging.message.body.size", message.getBytes(StandardCharsets.UTF_8).length);
+
+        // Publish the message to the queue (including current time stamp)
+        long now = Instant.now().getEpochSecond();
+
+        connection.publish(queue, message, now, traceparent, baggage);
+    } catch (Exception e) {
+        span.setThrowable(e);
+        span.setStatus(SpanStatus.INTERNAL_ERROR);
+        throw e;
+    } finally {
+        span.finish();
+    }
+} catch (Exception e) {
+    transaction.setThrowable(e);
+    transaction.setStatus(SpanStatus.INTERNAL_ERROR);
+    throw e;
+} finally {
+    transaction.finish();
+}
+```
+
+
+## Consumer Instrumentation
+
+To start capturing performance metrics, use the `startChild()` function to wrap your queue consumers. Your span `op` must be set to `queue.process`. Include the following span data to enrich your consumer spans with queue metrics:
+
+| Data Attribute | Type | Description |
+|:--|:--|:--|
+| `messaging.message.id ` | string | The message identifier |
+| `messaging.destination.name` | string | The queue or topic name |
+| `messaging.message.body.size` | number | Size of the message body in bytes |
+| `messaging.message.retry.count ` | number | The number of times a message was attempted to be processed |
+| `messaging.message.receive.latency ` | number | The time in milliseconds that a message awaited processing in queue |
+
+Your `queue.process` span must exist inside a transaction in order to be recognized as a consumer span. If you are using a supported framework, the transaction is created by the integration. If you are using plain Java, you can start a new one using `Sentry.startTransaction()`.
+
+Use `Sentry.continueTrace()` to connect your consumer spans to their associated producer spans, and `setStatus()` to mark the trace of your message as success or failed.
+
+
+```java
+MyCustomQueue connection = MyCustomQueue.connect();
+
+// Pick up message from queues
+String queue = "messages";
+Message message = connection.consume(queue);
+
+// Calculate latency (optional, but valuable)
+Instant now = Instant.now();
+Instant messageTime = Instant.ofEpochSecond(message.getTimestamp());
+Duration latency = Duration.between(messageTime, now);
+
+// Create transaction
+final TransactionContext transactionContext = Sentry.continueTrace(sentryTraceHeader, baggageHeader);
+ITransaction transaction = Sentry.startTransaction(transactionContext, "queue_consumer_transaction", "function");
+
+try {
+    ISpan span = transaction.startChild("queue.process", "queue_consumer")
+
+    try {
+        // Set span data
+        span.setData("messaging.message.id", message.getMessageId());
+        span.setData("messaging.destination.name", queue);
+        //
+        span.setData("messaging.message.body.size", message.getBody().getBytes(StandardCharsets.UTF_8).length);
+        span.setData("messaging.message.receive.latency", latency.toMillis());
+        span.setData("messaging.message.retry.count", 0);
+
+        // Process the message
+        processMessage(message);
+    } catch (Exception e) {
+        span.setThrowable(e);
+        span.setStatus(SpanStatus.INTERNAL_ERROR);
+        throw e;
+    } finally {
+        span.finish();
+    }
+} catch (Exception e) {
+    transaction.setThrowable(e);
+    transaction.setStatus(SpanStatus.INTERNAL_ERROR);
+    throw e;
+} finally {
+    transaction.finish();
+}
+```

@@ -17,19 +17,7 @@ pip install --upgrade "sentry-sdk[flask]"
 
 If you have the `flask` package in your dependencies, the Flask integration will be enabled automatically when you initialize the Sentry SDK.
 
-<SignInNote />
-
-```python
-from flask import Flask
-import sentry_sdk
-
-sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
-)
-
-app = Flask(__name__)
-```
+<PlatformContent includePath="getting-started-config" />
 
 <Note>
 
@@ -48,7 +36,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def hello_world():
-    1/0  # raises an error
+    1 / 0  # raises an error
     return "<p>Hello, World!</p>"
 ```
 
@@ -75,11 +63,11 @@ import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 
 sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
+    # ...
     integrations = [
         FlaskIntegration(
             transaction_style="url",
+            http_methods_to_capture=("GET",),
         ),
     ],
 )
@@ -88,6 +76,9 @@ sentry_sdk.init(
 You can pass the following keyword arguments to `FlaskIntegration()`:
 
 - `transaction_style`:
+
+  Sets the format or style that transactions are named.
+  <br/>
 
   ```python
   @app.route("/myurl/<foo>")
@@ -98,11 +89,25 @@ You can pass the following keyword arguments to `FlaskIntegration()`:
   In the above code, you would set the transaction to:
 
   - `/myurl/<foo>` if you set `transaction_style="url"`.
-  - `myendpoint` if you set `transaction_style="endpoint"`
+  - `myendpoint` if you set `transaction_style="endpoint"`.
 
   The default is `"endpoint"`.
 
+- `http_methods_to_capture`:
+
+  A tuple containing all the HTTP methods that should create a transaction in Sentry.
+
+  The default is `("CONNECT", "DELETE", "GET", "PATCH", "POST", "PUT", "TRACE",)`.
+
+  (Note that `OPTIONS` and `HEAD` are missing by default.)
+
+  <Alert title="Added in 2.15.0" level="info">
+    The `http_methods_to_capture` option.
+  </Alert>
+
 ## Supported Versions
 
-- Flask: 0.11+
-- Python: 2.7+ (Flask 0.11+), 3.6 (Flask 2.0+)
+- Flask: 1.0+
+- Python: 3.6+
+
+<Include name="python-use-older-sdk-for-legacy-support.mdx" />

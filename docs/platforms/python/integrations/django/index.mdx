@@ -5,7 +5,7 @@ supportLevel: production
 description: "Learn about using Sentry with Django."
 ---
 
-Sentry's [Django](https://www.djangoproject.com/) integration adds support for the Django framework. It enables automatic reporting of errors and exceptions as well as performance monitoring. In order to get started using the integration, you should have a [Sentry account](https://sentry.io) and a project set up.
+Sentry's [Django](https://www.djangoproject.com/) integration adds support for the Django framework. It enables automatic reporting of errors and exceptions as well as tracing. In order to get started using the integration, you should have a [Sentry account](https://sentry.io) and a project set up.
 
 <Note>
 
@@ -25,14 +25,30 @@ pip install --upgrade 'sentry-sdk[django]'
 
 To configure the Sentry SDK, initialize it in your `settings.py` file:
 
-<SignInNote />
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
 
-```python {filename:settings.py}
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python {filename:settings.py} {"onboardingOptions": {"performance": "5-7", "profiling": "8-11"}}
 import sentry_sdk
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
 )
 ```
 
@@ -62,7 +78,7 @@ urlpatterns = [
 - Request data will be attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads.
 - Logs emitted by any logger will be recorded as breadcrumbs by the [Logging](/platforms/python/integrations/logging/) integration (this integration is enabled by default).
 
-### Performance Monitoring
+### Tracing
 
 The following parts of your Django project are monitored:
 
@@ -82,21 +98,25 @@ The parameter `enable_tracing` needs to be set when initializing the Sentry SDK 
 
 By adding `DjangoIntegration` explicitly to your `sentry_sdk.init()` call you can set options for `DjangoIntegration` to change its behavior:
 
-<SignInNote />
-
 ```python
+import django.db.models.signals
+
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
 sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
     # ...
     integrations=[
         DjangoIntegration(
             transaction_style='url',
             middleware_spans=True,
-            signals_spans=False,
+            signals_spans=True,
+            signals_denylist=[
+                django.db.models.signals.pre_init,
+                django.db.models.signals.post_init,
+            ],
             cache_spans=False,
+            http_methods_to_capture=("GET",),
         ),
     ],
 )
@@ -106,10 +126,10 @@ You can pass the following keyword arguments to `DjangoIntegration()`:
 
 - `transaction_style`:
 
-  How to name transactions showing up in Sentry performance monitoring.
+  How to name transactions that show up in Sentry tracing.
 
   - `"/myproject/myview/<foo>"` if you set `transaction_style="url"`.
-  - `"myproject.myview"` if you set `transaction_style="endpoint"`.
+  - `"myproject.myview"` if you set `transaction_style="function_name"`.
 
   The default is `"url"`.
 
@@ -125,16 +145,33 @@ You can pass the following keyword arguments to `DjangoIntegration()`:
 
   The default is `True`.
 
+- `signals_denylist`:
+
+  A list of signals to exclude from performance tracking. No spans will be created for these.
+
+  The default is `[]`.
+
 - `cache_spans`:
 
   Create spans and track performance of all read operations to configured caches. The spans also include information if the cache access was a hit or a miss. Set to `True` to enable.
 
   The default is `False`.
 
+- `http_methods_to_capture`:
+
+  A tuple containing all the HTTP methods that should create a transaction in Sentry.
+
+  The default is `("CONNECT", "DELETE", "GET", "PATCH", "POST", "PUT", "TRACE",)`.
+
+  (Note that `OPTIONS` and `HEAD` are missing by default.)
+
+  <Alert title="Added in 2.15.0" level="info">
+    The `http_methods_to_capture` option.
+  </Alert>
+
 ## Supported Versions
 
-- Django 1.8-1.11 (Python: 2.7+)
-- Django 2.x (Python: 3.5+)
-- Django 3.x (Python: 3.6+)
-- Django 4.x (Python: 3.8+)
-- Django 5.x (Python: 3.10+)
+- Django 1.11+
+- Python 3.6+
+
+<Include name="python-use-older-sdk-for-legacy-support.mdx" />

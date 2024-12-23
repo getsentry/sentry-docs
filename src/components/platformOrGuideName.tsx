@@ -16,7 +16,7 @@ type PlatformOrGuideNameProps = {
 export function PlatformOrGuideName({fallback}: PlatformOrGuideNameProps) {
   const fallbackName = fallback || 'Sentry';
   const {rootNode, path} = serverContext();
-  const platformOrGuide = rootNode && getCurrentPlatformOrGuide(rootNode, path);
+  const platformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
   if (!platformOrGuide) {
     return fallbackName;
   }

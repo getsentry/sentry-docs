@@ -1,10 +1,18 @@
+import fs from 'fs';
+
 import {useMemo} from 'react';
 import {getMDXComponent} from 'mdx-bundler/client';
 
-import {getDocsRootNode, getPlatform} from 'sentry-docs/docTree';
+import {getCurrentGuide, getDocsRootNode, getPlatform} from 'sentry-docs/docTree';
 import {getFileBySlug} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {serverContext} from 'sentry-docs/serverContext';
+import {
+  getVersion,
+  isVersioned,
+  stripVersion,
+  VERSION_INDICATOR,
+} from 'sentry-docs/versioning';
 
 import {Include} from './include';
 
@@ -14,6 +22,21 @@ type Props = {
   fallbackPlatform?: string;
   noGuides?: boolean;
   platform?: string;
+};
+
+const udpatePathIfVersionedFileDoesNotExist = (path: string): string => {
+  if (!isVersioned(path)) {
+    return path;
+  }
+  // Add .mdx extension if not present
+  const pathWithExtension =
+    path.endsWith('.mdx') || path.endsWith('.md') ? path : `${path}.mdx`;
+
+  if (isVersioned(pathWithExtension) && !fs.existsSync(pathWithExtension)) {
+    return stripVersion(path);
+  }
+
+  return path;
 };
 
 export async function PlatformContent({includePath, platform, noGuides}: Props) {
@@ -31,18 +54,15 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
     guide = `${platform}.${path[3]}`;
   }
 
-  let doc: any = null;
-  if (guide) {
-    try {
-      doc = await getFileBySlug(`platform-includes/${includePath}/${guide}`);
-    } catch (e) {
-      // It's fine - keep looking.
-    }
-  }
+  let doc: Awaited<ReturnType<typeof getFileBySlug>> | null = null;
 
-  if (!doc) {
+  if (guide) {
+    const guidePath = udpatePathIfVersionedFileDoesNotExist(
+      `platform-includes/${includePath}/${guide}`
+    );
+
     try {
-      doc = await getFileBySlug(`platform-includes/${includePath}/${platform}`);
+      doc = await getFileBySlug(guidePath);
     } catch (e) {
       // It's fine - keep looking.
     }
@@ -50,12 +70,44 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
 
   if (!doc) {
     const rootNode = await getDocsRootNode();
-    const platformObject = rootNode && getPlatform(rootNode, platform);
+    const guideObject = getCurrentGuide(rootNode, path);
+
+    const fallbackGuidePath = udpatePathIfVersionedFileDoesNotExist(
+      `platform-includes/${includePath}/${guideObject?.fallbackGuide}${VERSION_INDICATOR}${getVersion(guide || '')}`
+    );
+
+    if (guideObject?.fallbackGuide) {
+      try {
+        doc = await getFileBySlug(fallbackGuidePath);
+      } catch (e) {
+        // It's fine - keep looking.
+      }
+    }
+  }
+
+  if (!doc) {
+    try {
+      const platformPath = udpatePathIfVersionedFileDoesNotExist(
+        `platform-includes/${includePath}/${platform}`
+      );
+
+      doc = await getFileBySlug(platformPath);
+    } catch (e) {
+      // It's fine - keep looking.
+    }
+  }
+
+  if (!doc) {
+    const rootNode = await getDocsRootNode();
+    const platformObject = getPlatform(rootNode, platform);
+
+    const fallbackPlatformPath = udpatePathIfVersionedFileDoesNotExist(
+      `platform-includes/${includePath}/${platformObject?.fallbackPlatform}`
+    );
+
     if (platformObject?.fallbackPlatform) {
       try {
-        doc = await getFileBySlug(
-          `platform-includes/${includePath}/${platformObject.fallbackPlatform}`
-        );
+        doc = await getFileBySlug(fallbackPlatformPath);
       } catch (e) {
         // It's fine - keep looking.
       }

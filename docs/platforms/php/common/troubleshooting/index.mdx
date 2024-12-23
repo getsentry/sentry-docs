@@ -4,6 +4,34 @@ sidebar_order: 9000
 description: "Troubleshooting steps for PHP"
 ---
 
+## Log SDK internal events
+
+A good first step to debug SDK issues is using the `logger` option. For your convenience, the SDK ships with two implementations, `DebugFileLogger` and `DebugStdOutLogger`.
+
+```php
+\Sentry\init([
+    'logger' => new \Sentry\Logger\DebugFileLogger('/path/to/your/logfile.log'),
+]);
+
+// or
+
+\Sentry\init([
+    'logger' => new \Sentry\Logger\DebugStdOutLogger(),
+]);
+```
+
+The produced output will look something like this:
+
+```
+sentry/sentry: [debug] The "Sentry\Integration\ExceptionListenerIntegration, Sentry\Integration\ErrorListenerIntegration, Sentry\Integration\FatalErrorListenerIntegration, Sentry\Integration\RequestIntegration, Sentry\Integration\TransactionIntegration, Sentry\Integration\FrameContextifierIntegration, Sentry\Integration\EnvironmentIntegration, Sentry\Integration\ModulesIntegration" integration(s) have been installed.
+sentry/sentry: [info] Transaction [e2919a7b0f954478b6994c7282b060de] was started and sampled, decided by config:traces_sample_rate.
+sentry/sentry: [info] Transaction [e2919a7b0f954478b6994c7282b060de] started profiling because it was sampled.
+sentry/sentry: [info] Sending transaction [59390dc9dd934c0290d8cdc7a589da82] to o1.ingest.sentry.io [project:1].
+sentry/sentry: [warning] The profile does not contain enough samples, the profile will be discarded.
+sentry/sentry: [info] Sent transaction [59390dc9dd934c0290d8cdc7a589da82] to o1.ingest.sentry.io [project:1]. Result: "success" (status: 200).
+
+```
+
 ## Missing Variables in Stack Traces
 
 This is caused by the PHP configuration. PHP 7.4 introduced a new .ini setting, `zend.exception_ignore_args`, that will ignore stack trace arguments. Check your .ini file to ensure this setting is set to `Off` or `0`.

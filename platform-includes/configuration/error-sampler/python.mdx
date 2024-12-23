@@ -1,20 +1,23 @@
 ```python
 import sentry_sdk
+from sentry_sdk.types import Event, Hint
 
-def my_sampler(_, hint):
-    exception_sampler_values = {
-        MyException: 0.5,
-        MyIgnoredException: 0.0,  # or equivalently, False
-    }
 
-    try:
-        return exception_sampler_values[hint["exc_info"][0]]
-    except (IndexError, KeyError, TypeError):
-        return 1.0  # or equivalently, True
+def my_error_sampler(event: Event, hint: Hint) -> float:
+    error_class = hint["exc_info"][0]
+
+    if error_class == MyException:
+        return 0.5
+    elif error_class == MyIgnoredException:
+        return 0
+
+    # All the other errors
+    return 1.0
+
 
 sentry_sdk.init(
     # ...
 
-    error_sampler=my_sampler,
+    error_sampler=my_error_sampler,
 )
 ```

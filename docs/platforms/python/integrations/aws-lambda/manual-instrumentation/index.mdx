@@ -8,11 +8,11 @@ This guide walks you through how to manually add Sentry to your AWS Lambda funct
 
 
 
-You can also configure this function in one of the two ways described below: 
+You can also configure this function in one of the two ways described below:
 
 
 - **Without touching your code:**
-    This method can be instrumented from the Sentry product by those who have access to the AWS infrastructure and doesn't require that you make any direct updates to the code. See the [AWS Lambda guide](/product/integrations/cloud-monitoring/aws-lambda/).
+    This method can be instrumented from the Sentry product by those who have access to the AWS infrastructure and doesn't require that you make any direct updates to the code. See the [AWS Lambda guide](/organization/integrations/cloud-monitoring/aws-lambda/).
 - **By adding the Sentry Lambda Layer to your function manually:**
     While this is a quick way to add Sentry to your AWS Lambda function, it gives you limited configuration possibilities with environment vars. See <PlatformLink to="/integrations/aws-lambda/manual-layer/">AWS Lambda Layer</PlatformLink>.
 
@@ -31,29 +31,40 @@ pip install --target ./package --upgrade sentry-sdk
 
 Here's how to use the AWS Lambda integration for the Python SDK:
 
-<SignInNote />
 
-```python
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python {"onboardingOptions": {"performance": "6-8", "profiling": "9-12"}}
 import sentry_sdk
 from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
     integrations=[
         AwsLambdaIntegration(),
     ],
-
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    # We recommend adjusting this value in production,
-    traces_sample_rate=1.0,
 )
 
 def lambda_handler(event, context):
     # ...
 ```
-
-Check out Sentry's [AWS sample apps](https://github.com/getsentry/examples/tree/master/aws-lambda/python) for detailed examples.
 
 <Alert level="info" title="Note">
 
@@ -99,7 +110,7 @@ You can change the behavior of `AwsLambdaIntegration` by setting options for it:
 
   ```python
   sentry_sdk.init(
-      ...
+      # ...
       integrations=[
           AwsLambdaIntegration(timeout_warning=True),
       ],

@@ -1,15 +1,31 @@
-```javascript
+```typescript
+// The shape of samplingContext that is passed to the tracesSampler function
+interface SamplingContext {
+  // Name of the span
+  name: string;
+  // Initial attributes of the span
+  attributes: SpanAttributes | undefined;
+  // If the parent span was sampled - undefined if there is no parent span
+  parentSampled: boolean | undefined;
+}
+
 Sentry.init({
   // ...
 
-  tracesSampler: (samplingContext) => {
-    if ("...") {
+  tracesSampler: ({ name, attributes, parentSampled }) => {
+    // Do not sample health checks ever
+    if (name.includes("healthcheck")) {
       // Drop this transaction, by setting its sample rate to 0%
       return 0;
-    } else {
-      // Default sample rate for all others (replaces tracesSampleRate)
-      return 1;
     }
+
+    // Continue trace decision, if there is any parentSampled information
+    if (typeof parentSampled === "boolean") {
+      return parentSampled;
+    }
+
+    // Else, use default sample rate (replacing tracesSampleRate)
+    return 0.5;
   },
 });
 ```

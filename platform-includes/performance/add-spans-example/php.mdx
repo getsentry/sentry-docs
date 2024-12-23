@@ -1,8 +1,23 @@
 ## Add More Spans to the Transaction
 
-The next example contains the implementation of the hypothetical `expensive_operation` function called from the code snippet in the previous section. Keep in mind that each individual span also needs to be manually finished; otherwise, spans will not show up in the transaction.
+The next example contains the implementation of the hypothetical `expensive_operation` function called from the code snippet in the previous section. But this time we are using the `trace` function to create a new span and set it as the current span which removes a lot of boilerplate.
 
 You can choose the values of `op` and `description`.
+
+```php
+function expensive_operation(): void
+{
+    $spanContext = \Sentry\Tracing\SpanContext::make()
+        ->setOp('some_operation')
+        ->setDescription('This is a description');
+
+    \Sentry\trace(function () {
+        // Do the expensive operation...
+    }, $spanContext);
+}
+```
+
+You can also do this manually if you want to have more control over the span creation:
 
 ```php
 function expensive_operation(): void
@@ -21,14 +36,16 @@ function expensive_operation(): void
         \Sentry\SentrySdk::getCurrentHub()->setSpan($span);
     }
 
-    // Do the expensive operation...
+    try {
+        // Do the expensive operation...
+    } finally {
+        // We only have a span if we started a span earlier
+        if ($span !== null) {
+            $span->finish();
 
-    // We only have a span if we started a span earlier
-    if ($span !== null) {
-        $span->finish();
-
-        // Restore the current span back to the parent span
-        \Sentry\SentrySdk::getCurrentHub()->setSpan($parent);
+            // Restore the current span back to the parent span
+            \Sentry\SentrySdk::getCurrentHub()->setSpan($parent);
+        }
     }
 }
 ```

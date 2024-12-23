@@ -44,7 +44,8 @@ export function PlatformSection({
   children,
 }: Props) {
   const {rootNode, path} = serverContext();
-  const currentPlatformOrGuide = rootNode && getCurrentPlatformOrGuide(rootNode, path);
+  const currentPlatformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
+
   if (!currentPlatformOrGuide) {
     return null;
   }

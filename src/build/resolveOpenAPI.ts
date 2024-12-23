@@ -8,7 +8,7 @@ import {DeRefedOpenAPI} from './open-api/types';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = '9ca09adb03f20389762bf2e6ae1a22610ca8ce15';
+const SENTRY_API_SCHEMA_SHA = 'a2907d92817e43576c371270ca6854b472c3509c';
 
 const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
@@ -44,6 +44,24 @@ export type APIParameter = {
   };
 };
 
+type APIExample = {
+  summary: string;
+  value: any;
+};
+
+type APIResponse = {
+  description: string;
+  status_code: string;
+  content?: {
+    content_type: string;
+    schema: any;
+    example?: APIExample;
+    examples?: {[key: string]: APIExample};
+  };
+};
+
+type APIData = DeRefedOpenAPI['paths'][string][string];
+
 export type API = {
   apiPath: string;
   bodyParameters: APIParameter[];
@@ -51,7 +69,8 @@ export type API = {
   name: string;
   pathParameters: APIParameter[];
   queryParameters: APIParameter[];
-  responses: any;
+  responses: APIResponse[];
+  server: string;
   slug: string;
   bodyContentType?: string;
   descriptionMarkdown?: string;
@@ -102,18 +121,23 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
 
   Object.entries(data.paths).forEach(([apiPath, methods]) => {
     Object.entries(methods).forEach(([method, apiData]) => {
+      let server = 'https://sentry.io';
+      if (apiData.servers && apiData.servers[0]) {
+        server = apiData.servers[0].url;
+      }
       apiData.tags.forEach(tag => {
         categoryMap[tag].apis.push({
           apiPath,
           method,
           name: apiData.operationId,
+          server,
           slug: slugify(apiData.operationId),
           summary: apiData.summary,
           descriptionMarkdown: apiData.description,
-          pathParameters: apiData.parameters.filter(
+          pathParameters: (apiData.parameters || []).filter(
             p => p.in === 'path'
           ) as APIParameter[],
-          queryParameters: apiData.parameters.filter(
+          queryParameters: (apiData.parameters || []).filter(
             p => p.in === 'query'
           ) as APIParameter[],
           requestBodyContent: {
@@ -154,7 +178,7 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
   return categories;
 }
 
-function getBodyParameters(apiData): APIParameter[] {
+function getBodyParameters(apiData: APIData): APIParameter[] {
   const content = apiData.requestBody?.content;
   const contentType = content && Object.values(content)[0];
   const properties = contentType?.schema?.properties;
@@ -176,7 +200,7 @@ function getBodyParameters(apiData): APIParameter[] {
   }));
 }
 
-function getBodyContentType(apiData): string | undefined {
+function getBodyContentType(apiData: APIData): string | undefined {
   const content = apiData.requestBody?.content;
   const types = content && Object.keys(content);
   if (!types?.length) {

@@ -1,0 +1,30 @@
+Release health on the server side is tracked in two different modes:
+
+- Single sessions that represent a node process; for example, a CLI application. In single sessions mode, the SDK creates a session for every node process. A session is started on `init` of the SDK, and ends when the process is exited.
+- Session aggregates represent requests. In session aggregates mode, sessions will be recorded differently and will represent the lifetime of requests. Sessions will automatically be aggregated for HTTP requests in your application.
+
+We mark the session as crashed if an _unhandled error_ reached our `errorHandler` middleware.
+
+We mark the session as an error if the SDK captures an event that contains an exception (this includes manually captured exceptions).
+
+By default, the JavaScript SDKs are sending sessions, to disable this toggle the flag `autoSessionTracking` to `false`:
+
+```javascript
+Sentry.init({
+  autoSessionTracking: false, // default: true
+});
+```
+
+{/* TODO(v9): Remove this notice? */}
+
+<PlatformSection notSupported={["javacript.cordova", "javascript.capacitor", "javascript.electron"]}>
+
+<Alert title="Deprecation Notice">
+
+{/* We don't use platform links here because we always have to link to node and browser here and doing a conditional just for that feels overkill. */}
+
+Starting with SDK version 8.43.0 and up, the `autoSessionTracking` option has been deprecated. You can use the [BrowserSession integration](/platforms/javascript/configuration/integrations/browsersession/) in browser environments and the [Http integration](/platforms/javascript/guides/node/configuration/integrations/http/) (via the `trackIncomingRequestsAsSessions` option) in Node.js runtime.
+
+</Alert>
+
+</PlatformSection>

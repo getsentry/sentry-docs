@@ -3,9 +3,9 @@ title: AIOHTTP
 description: "Learn about using Sentry with AIOHTTP."
 ---
 
-The AIOHTTP integration adds support for the [AIOHTTP-Server Web Framework](https://docs.aiohttp.org/en/stable/web.html).
+The AIOHTTP integration adds support for the [AIOHTTP server web framework](https://docs.aiohttp.org/en/stable/web.html).
 
-If you use AIOHTTP as your HTTP client and want to instrument outgoing HTTP requests have a look at the <PlatformLink to="/integrations/aiohttp/aiohttp-client/">AIOHTTP Client documentation</PlatformLink>.
+If you use AIOHTTP as your HTTP client and want to instrument outgoing HTTP requests, have a look at the <PlatformLink to="/integrations/aiohttp/aiohttp-client/">AIOHTTP client documentation</PlatformLink>.
 
 ## Install
 
@@ -23,18 +23,9 @@ pip install --upgrade aiocontextvars
 
 ## Configure
 
-If you have the `aiohttp` package in your dependencies, the AIOHTTO integration will be enabled automatically when you initialize the Sentry SDK.
+If you have the `aiohttp` package in your dependencies, the AIOHTTP integration will be enabled automatically when you initialize the Sentry SDK.
 
-<SignInNote />
-
-```python
-import sentry_sdk
-
-sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True
-)
-```
+<PlatformContent includePath="getting-started-config" />
 
 ## Verify
 
@@ -44,7 +35,7 @@ from aiohttp import web
 sentry_sdk.init(...)  # same as above
 
 async def hello(request):
-    1/0  # raises an error
+    1 / 0  # raises an error
     return web.Response(text="Hello, world")
 
 app = web.Application()
@@ -73,11 +64,11 @@ import sentry_sdk
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 
 sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
+    # same as above
     integrations=[
         AioHttpIntegration(
-            transaction_style="method_and_path_pattern",
+            transaction_style="...",  # type: str
+            failed_request_status_codes={...}  # type: collections.abc.Set[int]
         ),
     ],
 )
@@ -93,6 +84,21 @@ Configure the way Sentry names transactions:
 - `<module_name>.hello` if you set `transaction_style="handler_name"`
 
 The default is `"handler_name"`.
+
+### `failed_request_status_codes`
+
+A `set` of integers that will determine when an `HTTPException` should be reported to Sentry. The `HTTPException` is reported to Sentry if its status code is contained in the `failed_request_status_codes` set.
+
+Examples of valid `failed_request_status_codes`:
+
+- `{500}` will only report `HTTPException` with status 500 (i.e. `HTTPInternalServerError`).
+- `{400, *range(500, 600)}` will report `HTTPException` with status 400 (i.e. `HTTPBadRequest`) as well as those in the 5xx range.
+- `set()` (the empty set) will not report any `HTTPException` to Sentry.
+
+The default is `{*range(500, 600)}`, meaning that any `HTTPException` with a status in the 5xx range is reported to Sentry.
+
+Regardless of how `failed_request_status_codes` is set, any exceptions raised by the handler, which are not of type `HTTPException` (or a subclass) are reported to Sentry. For example, if your request handler raises an unhandled `AttributeError`, the `AttributeError` gets reported to Sentry, even if you have set `failed_request_status_codes=set()`.
+
 
 ## Supported Versions
 

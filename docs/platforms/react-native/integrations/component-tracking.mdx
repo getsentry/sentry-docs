@@ -1,0 +1,77 @@
+---
+title: Component Tracking
+description: "Learn how Sentry's React Native SDK allows you to monitor your application's component lifecycle."
+sidebar_order: 55
+---
+
+Sentry's React Native SDK offers component tracking, a feature that lets you monitor the performance of your React components. The SDK exports a `withProfiler` higher-order component that attaches React-related spans to the most current active span on the scope. This allows you to get a drilled-down view into how your components are behaving so you can identify slow mounts or frequent updates, which might be having a negative impact on your app's performance.
+
+## Prerequisites
+
+- To set up component tracking, you need to configure tracing. For details on how to do this, check out our [Tracing documentation](/platforms/react-native/tracing/).
+
+## Add `withProfiler`
+
+In the example below, the `withProfiler` higher-order component is used to instrument an app component.
+
+```javascript
+import React from "react";
+import * as Sentry from "@sentry/react-native";
+
+class App extends React.Component {
+  render() {
+    return (
+      <FancyComponent>
+        <NestedComponent someProp={2} />
+        <AnotherComponent />
+      </FancyComponent>
+    );
+  }
+}
+
+export default Sentry.withProfiler(App);
+```
+
+The React Profiler currently generates spans with three different kinds of op-codes: `ui.react.mount`, `ui.react.render`, and `ui.react.update`, as defined below:
+
+`ui.react.mount`
+
+The span that represents how long it took for the profiled component to mount.
+
+`ui.react.render`
+
+The span that represents the amount of time the profiled component stays on a page. This span is only generated if the profiled component mounts and unmounts while a transaction is occurring.
+
+`ui.react.update`
+
+The span that represents when the profiled component was updated. This span is only generated if the profiled component has mounted.
+
+<Alert>
+
+In [React Strict Mode](https://react.dev/reference/react/StrictMode), certain component methods will be [invoked twice](https://react.dev/reference/react/StrictMode#fixing-bugs-found-by-double-rendering-in-development). This may lead to duplicate `ui.react.mount` spans. React Strict Mode only runs in development mode, so this will have no impact on your production traces.
+
+</Alert>
+
+### Profiler Options
+
+The `withProfiler` higher-order component has a variety of options for further customization. They can be passed in as the second argument to the `withProfiler` function.
+
+```javascript
+export default Sentry.withProfiler(App, { name: "CustomAppName" });
+```
+
+`name` (string)
+
+The name of the component being profiled. By default, the name is taken from the component `displayName` property or the component `name` property.
+
+`includeRender` (boolean)
+
+Option to have a `ui.react.render` span created by the Profiler. (Set as true by default.)
+
+`includeUpdates` (boolean)
+
+Option to have `react.update` spans created by the Profiler. (Set as true by default.) We recommend setting this prop as false for components that will be rerendered often, such as text input components. The resulting spans can be very noisy.
+
+## Next Steps:
+
+- To track your React Native application's time to initial display and time to full display, check out our [Time to Display guide](/platforms/react-native/tracing/instrumentation/time-to-display/).

@@ -3,14 +3,6 @@ title: Expo
 description: "Learn how to set up an Expo-managed project with the Sentry React Native SDK."
 ---
 
-<Alert level="info" title="Experimental Support">
-
-Expo support is currently experimental and available since Sentry React Native SDK version `5.16.0-alpha.4` and Expo SDK version 50.
-
-Experimental support means it may have bugs. We recognize the irony.
-
-</Alert>
-
 To set up the Sentry React Native SDK in your Expo project, follow the steps on this page.
 
 ## Prerequisities
@@ -20,20 +12,46 @@ To set up the Sentry React Native SDK in your Expo project, follow the steps on 
 - [Migrate from `sentry-expo` to `@sentry/react-native`](/platforms/react-native/migration/sentry-expo/).
 - [Sign up for an account](https://sentry.io/signup/).
 
-## Install the Sentry SDK
+## Automatic Install
 
-Install the `@sentry/react-native` package:
+Use the [Sentry Wizard](https://github.com/getsentry/sentry-wizard) to patch your project automatically, as shown below. Alternatively, you can follow the [Manual Install](./#manual-install) if you prefer. You only need to patch the project once. Then, you can add the patched files to your version control system.
+
+```bash {tabTitle:npm}
+npx @sentry/wizard@latest -i reactNative
+```
+
+<Expandable title="The following tasks will be performed by the Sentry Wizard">
+
+- Install the `@sentry/react-native` package.
+- Add the `@sentry/react-native/metro` to the _*metro.config.js*_ Metro configuration.
+- Add the `@sentry/react-native/expo` to the _*app.json*_ Expo configuration.
+- Enable the Sentry React Native Gradle build step for Android to auto-upload generated source maps and debug symbols.
+- Wrap the _Bundle React Native code and images_ Xcode project build phase script to upload generated source maps and collect bundled node modules.
+- Add _Upload Debug Symbols to Sentry_ Xcode project build phase.
+- Run `pod install`.
+- Store build credentials in _*ios/sentry.properties*_, _*android/sentry.properties*_ and _*env.local*_.
+- Configure Sentry for the supplied DSN in your _*layout.tsx*_ file.
+
+</Expandable>
+
+## Manual Install
+
+If you don't use the Wizard, install the `@sentry/react-native` package:
 
 ```bash {tabTitle:Expo}
 npx expo install @sentry/react-native
 ```
 
 ```bash {tabTitle:npm}
-npm install --save @sentry/react-native
+npm install @sentry/react-native --save
 ```
 
-```bash {tabTitle:Yarn}
+```bash {tabTitle:yarn}
 yarn add @sentry/react-native
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/react-native
 ```
 
 ### Intialize the SDK
@@ -48,8 +66,10 @@ Sentry.init({
   dsn: "___DSN___",
 
   // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for performance monitoring.
+  // of transactions for tracing.
   // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
   tracesSampleRate: 1.0,
 });
 
@@ -84,6 +104,10 @@ To ensure unique Debug IDs get assigned to the generated bundles and source maps
 
 <Include name="react-native-expo-metro-plugin-code-snippet.mdx" />
 
+### Add Privacy Manifest
+
+The SDK needs access to certain information about the device and the application for its essential functionality. Some of the APIs required for this are considered privacy-relevant. Add the privacy manifest to your Xcode project to ensure your app is compliant with Apple's guidelines. Read the [Apple Privacy Manifest](/platforms/react-native/data-management/apple-privacy-manifest/) guide for more info on how to add records required for the Sentry SDKs.
+
 ## Verify Setup
 
 To verify that everything is working as expected, build the `Release` version of your application and send a test event to Sentry by adding:
@@ -100,7 +124,7 @@ To verify that everything is working as expected, build the `Release` version of
 ## Next Steps
 
 - [Learn how to upload source maps for native builds and Expo Updates](/platforms/react-native/sourcemaps/uploading/expo/)
-- [Add automatic performance monitoring with Expo Router](/platforms/react-native/performance/instrumentation/expo-router/)
+- [Add automatic tracing with Expo Router](/platforms/react-native/tracing/instrumentation/expo-router/)
 
 ## Notes
 

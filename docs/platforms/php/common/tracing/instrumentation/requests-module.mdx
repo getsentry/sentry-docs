@@ -1,0 +1,60 @@
+---
+title: Instrument HTTP Requests
+sidebar_order: 2000
+description: "Learn how to manually instrument your code to use Sentry's Requests module."
+---
+Sentry offers a [requests monitoring dashboard](https://sentry.io/orgredirect/organizations/:orgslug/insights/backend/http/) that can be auto-instrumented by our [Laravel SDK](/platforms/php/guides/laravel/) and [Symfony SDK](/platforms/php/guides/symfony/).
+
+If you're using something else, you can manually instrument your requests and use Sentry to get a look into how your requests to APIs are performing by following the setup instructions below.
+
+Make sure that there's a transaction running when you create the spans. See <PlatformLink to="/tracing/">Tracing</PlatformLink> for more information.
+
+## Custom Instrumentation
+
+For detailed information about which data can be set, see the [Requests Module developer specifications](https://develop.sentry.dev/sdk/performance/modules/requests/) and [HTTP Span Data Conventions](https://develop.sentry.dev/sdk/performance/span-data-conventions/#http).
+
+### Using the `GuzzleTracingMiddleware`
+
+If you're using [Guzzle](https://github.com/guzzle/guzzle), you can inject Sentry's `GuzzleTracingMiddleware` into your `HandlerStack`.
+
+```php
+$stack = new \GuzzleHttp\HandlerStack();
+$stack->setHandler(new \GuzzleHttp\Handler\CurlHandler());
+$stack->push(\Sentry\Tracing\GuzzleTracingMiddleware::trace());
+
+$client = new \GuzzleHttp\Client(['handler' => $stack]);
+$response = $client->get('https://example.com/');
+```
+
+### Wrap HTTP Requests in a Span
+
+Here is an example of an instrumenting a HTTP request:
+
+```php
+$parentSpan = \Sentry\SentrySdk::getCurrentHub()->getSpan();
+
+if ($parentSpan !== null) {
+    $context = \Sentry\Tracing\SpanContext::make()
+        ->setOp('http.client');
+    $span = $parentSpan->startChild($context);
+
+    // Set the span we just started as the current span
+    \Sentry\SentrySdk::getCurrentHub()->setSpan($span);
+    
+    $client = new \Cake\Http\Client();
+    $response = $client->get('https://example.com/');
+    
+    $span
+        ->setDescription('GET https://example.com/')
+        ->setStatus(\Sentry\Tracing\SpanStatus::createFromHttpStatusCode($response->getStatusCode()))
+        ->setData([
+            'http.request.method' => 'GET',
+            'http.response.body.size' => $response->getBody()->getSize(),
+            'http.response.status_code' => $response->getStatusCode(),
+        ])
+        ->finish();
+
+    // Restore the span back to the parent span
+    \Sentry\SentrySdk::getCurrentHub()->setSpan($parentSpan);
+}
+```

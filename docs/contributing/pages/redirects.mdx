@@ -1,33 +1,70 @@
 ---
 title: Redirects
 noindex: true
+sidebar_order: 60
 ---
-
 
 Redirects allow you to automatically redirect an incoming request path to a new destination path. When you move or rename a file, you should make sure to set up a redirect from the old path to the new path, so that the old URL still takes users to the right place.
 
 ## Add a New Redirect
 
-Redirects are configured in [`next.config.js`](https://github.com/getsentry/sentry-docs/blob/master/next.config.js) and are checked before the filesystem (including pages and `/public` files ). The `redirects` function returns an array holding redirect objects.
+There are two ways to add redirects in the Sentry docs:
 
-To add a new redirect, add a new object in the redirects array with the following properties:
+- [Add a New Redirect in `middleware.ts` (Recommended)](#add-a-new-redirect-in-middlewarets-recommended)
+- [Add a New Redirect in `redirects.js`](#example-redirect-in-redirectsjs)
+
+<Note>
+  Both files make the distinction between SDK docs (ie. end user docs) and developer docs.
+</Note>
+
+Because Sentry has a limited number of `next.config.js` redirects, you should configure your redirects in `middleware.ts` whenever possible. You should only use `redirects.js` ie (`next.config.js`) if you need to use regular expressions and wildcard path segments in your redirects.
+
+<Alert level="warning">
+  It's no longer recommended to use `vercel.json` for redirects due to its limitations (doesn't work on localhost, requires a static file ...)
+</Alert>
+
+### Add a New Redirect in `middleware.ts` (Recommended)
+
+Set up all simple one-to-one redirects in `src/middleware.ts`.
+
+To add a new redirect in [`src/middleware.ts`](https://github.com/getsentry/sentry-docs/blob/master/src/middleware.ts), add a new object to `REDIRECTS` with the following properties:
+
+- `from`: The incoming request path.
+- `to`: The new destination path you want to route to.
+
+#### Example Redirect in `middleware.ts`
+
+The example below redirects `https://docs.sentry.io/performance/` to `https://docs.sentry.io/product/performance/`:
+
+```typescript {filename:middleware.ts} {2-5}
+const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
+  {
+    from: '/performance/',
+    to: '/product/performance/',
+  },
+];
+```
+
+### Add a New Redirect in `redirects.js`
+
+Sentry has a limited number of Vercel redirects, so you should only configure redirects in `vercel.json` if your redirects need to use regular expressions. Otherwise, use [`middleware.ts`](#add-a-new-redirect-in-middlewarets-recommended).
+
+To add a new redirect in `redirects.js` (which is consumed by `next.config.js`'s [`redirects`](https://nextjs.org/docs/app/api-reference/next-config-js/redirects)), add a new object to the corresponding redirects with the following properties:
 
 - `source`: The incoming request path pattern.
-- `destination`: The new destination path you want to route to instead.
-- `permanent`: Whether the redirect is permanent and should be cached forever (`true`) or is temporary (`false`).
+- `destination`: The new destination path you want to route to.
 
-### Example Redirect
+#### Example Redirect in `redirects.js`
 
-The example below adds a redirect for the alerts page after its parent folder was renamed from `alerts-notifications` to `alerts`.
+The example below redirects URLs like `https://docs.sentry.io/cli/:path*` to `https://docs.sentry.io/product/cli/:path*` with a [path pattern](https://nextjs.org/docs/app/api-reference/next-config-js/redirects#path-matching) or a [Regex](https://nextjs.org/docs/app/api-reference/next-config-js/redirects#regex-path-matching).
 
-```javascript {filename:next.config.js}
-redirects() {
-    return [
-      {
-        source: '/product/alerts-notifications/',
-        destination: '/product/alerts/',
-        permanent: true,
-      },
-    ]
-}
+For example, `https://docs.sentry.io/cli/installation/` would be redirected to `https://docs.sentry.io/product/cli/installation/`.
+
+```json {filename:redirects.js}
+ "redirects": [
+    {
+      "source": "/cli/:path*",
+      "destination": "/product/cli/:path*",
+    },
+ ]
 ```

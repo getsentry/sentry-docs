@@ -1,0 +1,61 @@
+---
+title: Signal Handling
+description: "Learn about error handling common to all POSIX platforms."
+sidebar_order: 1000
+---
+The Native SDK uses signal handling on all supported platforms. On Linux (and Android), it is the primary mechanism to detect errors. On macOS and Windows, signal handlers detect specific errors that other mechanisms do not detect.
+
+A (POSIX) signal is a way for an operating system kernel to inform an application about an exceptional event and provide a mechanism for the application to react to that event. The operating system delivers this information by interrupting the current execution of the affected  application with a "handler" function that the application registered before.
+
+This document provides guidance on signal handling in the Native SDK. If you'd like to learn more about signal handling in general, we recommend the following resources:
+
+* The [Signal (IPC) Wikipedia article](https://en.wikipedia.org/wiki/Signal_(IPC)) provides an overview of signals and describes many POSIX signals.
+* The [glibc-docs](https://www.gnu.org/software/libc/manual/html_node/Signal-Handling.html) and [the man pages](https://man7.org/linux/man-pages/man7/signal.7.html) offer reference details for the signal vocabulary.
+* If you want a book-length treatment, we recommend chapters 20-22 of Michael Kerrisk's [The Linux Programming Interface](https://man7.org/tlpi/).
+ 
+## Signal Handling Conflicts
+
+Sentry's Native SDK comes with its own set of signal handlers. There may be conflicts if your application currently installs handlers for any [signals of interest](#signals-of-interest) (listed below) that can result in a crash. To avoid this, do the following:
+
+* Refrain from registering a conflicting signal handler in your application.
+* If you have to, register your handler after `sentry_init()` and let it invoke Sentry's handler after it finishes, or you won't get a report.
+* If you or one of your dependencies register a handler for the signals listed below _before_ you call `sentry_init()`, Sentry will reinstall that handler as soon as you call `sentry_close()`. Only the `inproc` backend invokes your installed handler at the end of Sentry's handler.
+* If you want to act on any crash and not consider specific signals, [register an `on_crash()` hook](https://docs.sentry.io/platforms/native/configuration/filtering/#using-on_crash) instead of registering a signal handler.
+
+### Signals of Interest
+
+In the context of the Native SDK, we are only interested in signals that will result in the application's unexpected termination (crashes). These typically include:
+
+* `SIGSEGV`: The process tried to access an invalid virtual memory "segment".
+* `SIGBUS`: The process tried to access an invalid physical address or a VM page failed to "page-in".
+* `SIGABRT`: Raised when `abort()` was called. This is the only signal handled on Windows (and only by the `crashpad` backend) because calling `abort()` bypasses Structured Exception Handling ([`SEH`](https://learn.microsoft.com/en-us/windows/win32/debug/structured-exception-handling)).
+* `SIGFPE`: An erroneous arithmetic operation occurred in the CPU.
+* `SIGILL`: The process attempted to execute an illegal (often privileged) processor instruction.
+* `SIGTRAP`: This is typically used to inform debuggers when execution hits a breakpoint instruction (`int 3`, `brk`, etc.). Instrumentation tools and sanitizers also sometimes issue breakpoints.
+
+If you use the `crashpad` backend, in addition to the above, on Linux, you will also get crash reports for:
+
+* `SIGSYS`: The kernel received a system call with an invalid argument.
+* `SIGEMT`: An emulator trap occurred.
+* `SIGXCPU`: The process exceeded a previously specified CPU [rlimit](https://pubs.opengroup.org/onlinepubs/9699919799/functions/getrlimit.html).
+* `SIGXFSZ`: Raised when a process grows a file beyond a maximum allowed size ([`RLIMIT_FSIZE`](https://man7.org/linux/man-pages/man2/getrlimit.2.html)). 
+
+## What to Consider When Writing `on_crash` Hooks
+
+The callback that you register as an `on_crash` hook runs in the context of a signal handler. (`before_send` also runs in the context of a signal handler, unless you turned it off for crashes.)
+
+Since signal handlers can interrupt the running process (and even each other) at any time, take special care when writing them. 
+
+Our developer documentation provides [guidelines for writing signal handlers](https://develop.sentry.dev/sdk/signal-handlers/). If you run on Linux or Android, these guidelines also apply to hooks. Signal handlers are notoriously difficult to work with, so it is crucial to follow these guidelines in order to avoid causing severe faults (like crashes and deadlocks), which can prevent terminating programs and sending reports.```
+
+## Stack Size in the Signal Handler
+
+In addition to the above guidelines, you must consider the signal handler's stack usage. Because a stack overflow (where the process stack is exhausted) can be one reason to end up in a signal handler, we typically reserve a separate signal handler stack (`sigaltstack()`) so that we can continue to run the handler when it gets executed.
+
+This stack is 64KiB on Linux. On Android, it is 16KiB on 32-bit devices and 32KiB on 64-bit devices.
+
+Further, it is crucial to understand that this signal handler stack configuration affects only a single thread and that the Native SDK on Linux can only initialize the stack for the thread on which you called `sentry_init()`. No configuration provides an alternate signal stack if the kernel interrupts another thread to handle a signal.
+
+This differs from the situation on Android, where the `Bionic libc` `pthread` implementation initializes each thread with a separate signal handler stack. `Bionic` sets the Android stack sizes from above, and the Android Runtime Team recommends _not_ overwriting these settings.
+
+In this scenario, most of the above-defined stack sizes will be fully available to your defined `on_crash` hook. Still, be considerate of stack usage. If you need to fill any large data structures within the hook, we recommend pre-allocating them at initialization and only filling the values within the hook.

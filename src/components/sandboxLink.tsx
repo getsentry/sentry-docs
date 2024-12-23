@@ -81,7 +81,7 @@ export function SandboxLink({children, target, ...params}: Props) {
   }
 
   const {rootNode, path} = serverContext();
-  const currentPlatform = rootNode && getCurrentPlatform(rootNode, path);
+  const currentPlatform = getCurrentPlatform(rootNode, path);
 
   const currentPlatformkey = currentPlatform?.key ?? 'unknown';
 

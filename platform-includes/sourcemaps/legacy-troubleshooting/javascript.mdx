@@ -5,7 +5,7 @@ Setting up source maps can be tricky, but it's worth it to get it right. To trou
 
 ## Use the Sentry CLI
 
-To use the automated verification process, install and configure the Sentry [Command Line Interface](/product/cli/). Then, use the `sourcemaps explain` command, calling it with the relevant event ID, found in the top-left corner of the **Issue Details** page in [sentry.io](https://sentry.io).
+To use the automated verification process, install and configure the Sentry [Command Line Interface](/cli/). Then, use the `sourcemaps explain` command, calling it with the relevant event ID, found in the top-left corner of the **Issue Details** page in [sentry.io](https://sentry.io).
 
 For example, "Event ID: c2ad049f":
 
@@ -56,7 +56,7 @@ To verify that the distribution has been set correctly in the SDK, open an issue
 
 If you've uploaded source maps and they aren't applying to your code in an issue in Sentry, take a look at the JSON of the event and look for the `abs_path` to see exactly where we're attempting to resolve the file - for example, `http://localhost:8000/scripts/script.js` (`abs_path` will appear once for each frame in the stack trace - match this up with the file(s) that are not deminified.). A link to the JSON view can be found at the top of the issue page next to the date the event occurred. The uploaded artifact names must match these values.
 
-If you have **dynamic values in your path** (for example, `https://www.site.com/{some_value}/scripts/script.js`), you may want to use the <PlatformSection notSupported={["node"]}><PlatformLink to="/configuration/integrations/rewriteframes">`rewriteFrames` integration</PlatformLink></PlatformSection><PlatformSection supported={["node"]}><PlatformLink to="/configuration/integrations/pluggable-integrations/#rewriteframes">`rewriteFrames` integration</PlatformLink></PlatformSection> to change your `abs_path` values.
+If you have **dynamic values in your path** (for example, `https://www.site.com/{some_value}/scripts/script.js`), you may want to use the <PlatformSection notSupported={['javascript.node', 'javascript.aws-lambda', 'javascript.azure-functions', 'javascript.connect', 'javascript.express', 'javascript.fastify', 'javascript.gcp-functions', 'javascript.hapi', 'javascript.koa', 'javascript.nestjs']}><PlatformLink to="/configuration/integrations/rewriteframes">`rewriteFrames` integration</PlatformLink></PlatformSection><PlatformSection supported={['javascript.node', 'javascript.aws-lambda', 'javascript.azure-functions', 'javascript.connect', 'javascript.express', 'javascript.fastify', 'javascript.gcp-functions', 'javascript.hapi', 'javascript.koa', 'javascript.nestjs']}><PlatformLink to="/configuration/integrations/pluggable-integrations/#rewriteframes">`rewriteFrames` integration</PlatformLink></PlatformSection> to change your `abs_path` values.
 
 ### Using sentry-cli
 
@@ -70,7 +70,7 @@ If your `sourceMappingURL` comment is similar to:
 An example `sentry-cli` command to upload these files correctly would look like this (assuming you're in the `/scripts` directory, running your web server from one directory higher, which is why we're using the `--url-prefix` option):
 
 ```shell
-sentry-cli releases files VERSION upload-sourcemaps . --url-prefix '~/scripts'
+sentry-cli sourcemaps upload --url-prefix '~/scripts' .
 ```
 
 This command uploads all JavaScript files in the current directory. The Artifacts page in Sentry should now look like:
@@ -84,13 +84,13 @@ This command uploads all JavaScript files in the current directory. The Artifact
 Alternately you can specify which files to upload. For example:
 
 ```
-sentry-cli releases files VERSION upload-sourcemaps script.min.js script.min.js.map --url-prefix '~/scripts'
+sentry-cli sourcemaps upload --url-prefix '~/scripts' script.min.js script.min.js.map
 ```
 
 You can also upload it with the fully qualified URL. For example:
 
 ```
-sentry-cli releases files VERSION upload-sourcemaps . --url-prefix 'http://localhost:8000/scripts'
+sentry-cli sourcemaps upload --url-prefix 'http://localhost:8000/scripts' .
 ```
 
 ### Using the API
@@ -235,7 +235,15 @@ If you are using `sentry-cli` to upload your artifacts, starting with version `2
 
 Sometimes build scripts and plugins produce pre-compressed minified files (for example, webpack's [compression plugin](https://github.com/webpack/compression-webpack-plugin)). In these cases, you'll need to disable such plugins and perform the compression **after** the generated source maps/source files have been uploaded to Sentry.
 
-## Verify workers are sharing the same volume as web (if running self-hosted Sentry via Docker)
+### Verify Source Fetching is Enabled
+
+If you're <PlatformLink to="/sourcemaps/uploading/hosting-publicly/">hosting your source maps publicly</PlatformLink>, make sure you have the "Enable JavaScript source fetching" option activated under **[Settings] > Projects > Select your project > General Settings**.
+
+## (Self-Hosted Sentry) Verify the `symbolicator` service is operating normally
+
+If you're running a self-hosted version of Sentry, you can verify that the `symbolicator` service/container is operating normally by checking the container's logs.
+
+## (Self-Hosted Sentry via Docker) Verify workers are sharing the same volume as web
 
 Sentry does source map calculation in its workers. This means the workers need access to the files uploaded through the front end. Double check that the cron workers and web workers can read/write files from the same disk.
 

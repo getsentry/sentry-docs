@@ -17,9 +17,9 @@ The minimum supported OS versions have been bumped to macOS 10.13, iOS 11, tvOS 
 
 The following features are now enabled by default:
 
-- <PlatformLink to="/performance/instrumentation/automatic-instrumentation/#user-interaction-tracing"> The user interaction tracing integration </PlatformLink>
-- <PlatformLink to="/performance/instrumentation/automatic-instrumentation/#file-io-tracking"> The File I/O tracing integration </PlatformLink>
-- <PlatformLink to="/performance/instrumentation/automatic-instrumentation/#core-data-tracing"> Core Data tracing integration </PlatformLink>
+- <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#user-interaction-tracing"> The user interaction tracing integration </PlatformLink>
+- <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#file-io-tracking"> The File I/O tracing integration </PlatformLink>
+- <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#core-data-tracing"> Core Data tracing integration </PlatformLink>
 - <PlatformLink to="/configuration/http-client-errors/"> Capture failed requests </PlatformLink>
 - <PlatformLink to="/configuration/app-hangs/">App Hangs</PlatformLink> (not available
   for watchOS)
@@ -76,7 +76,6 @@ We cleaned up our public classes by removing a few functions and properties, tha
 
 We removed the version of `SentrySDK.startWithOptions` that took a dictionary, and renamed `SentrySDK.startWithOptionsObject` to `SentrySDK.startWithOptions`. The recommended way to initialize Sentry has not changed:
 
-<SignInNote />
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -104,7 +103,7 @@ SentrySDK.start { options in
 
 <Alert level="info" title="Important">
 
-We recommend updating to at least [7.5.3](https://github.com/getsentry/sentry-cocoa/releases/tag/7.5.3), because the HTTP instrumentation can lead to crashes. Alternatively, you can also <PlatformLink to="/performance/instrumentation/automatic-instrumentation/#network-tracking">disable the feature</PlatformLink>.
+We recommend updating to at least [7.5.3](https://github.com/getsentry/sentry-cocoa/releases/tag/7.5.3), because the HTTP instrumentation can lead to crashes. Alternatively, you can also <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#network-tracking">disable the feature</PlatformLink>.
 
 </Alert>
 
@@ -126,7 +125,7 @@ flag for frames originating from only the main executable using [CFBundleExecuta
 In previous versions, all frames originating from the application bundle were marked as `inApp`. This had the
 downside of marking frames of private frameworks inside the bundle as `inApp`. This problem is fixed now.
 Applications using static frameworks shouldn't be affected by this change.
-For more information read [mark in-app frames](/product/data-management-settings/event-grouping/stack-trace-rules/#mark-in-app-frames).
+For more information read [mark in-app frames](/concepts/data-management/event-grouping/stack-trace-rules/#mark-in-app-frames).
 
 #### Cleanup Public Classes
 
@@ -136,8 +135,8 @@ We cleaned up our public classes by removing a few functions and properties, tha
 - Remove `SentryClient.storeEnvelope`, which is reserved for Hybrid SDKs.
 - Make `closeCachedSessionWithTimestamp` private, which is reserved for internal use.
 - Remove deprecated `SentryHub.getScope`. Use `SentryHub.scope` instead.
-- Replace `SentryException.thread` with `SentryException.threadId` and `SentryException.stacktrace` to align with the [unified API](https://develop.sentry.dev/sdk/unified-api/).
-- Replace dict `SentryMechanism.meta` with new class `SentryMechanismMeta` and move `SenryNSError` to `SentryMechanismMeta` to align with the [unified API](https://develop.sentry.dev/sdk/unified-api/).
+- Replace `SentryException.thread` with `SentryException.threadId` and `SentryException.stacktrace` to align with the [unified API](https://develop.sentry.dev/sdk/miscellaneous/unified-api/).
+- Replace dict `SentryMechanism.meta` with new class `SentryMechanismMeta` and move `SenryNSError` to `SentryMechanismMeta` to align with the [unified API](https://develop.sentry.dev/sdk/miscellaneous/unified-api/).
 - Change `SentryEvent.timestamp` to `nullable`.
 
 ### SentryLogLevel
@@ -186,13 +185,12 @@ This version includes the following configuration changes:
 
 #### Store Endpoint
 
-This version uses the [envelope endpoint](https://develop.sentry.dev/sdk/envelopes/). If you are using self-hosted Sentry, you must use Sentry version `>= v20.6.0` or higher. If you are using sentry.io, there is no impact. For this change, we also now cache events in envelopes on the disk. We decided not to migrate the few cached events from 5.x to 6.x into envelopes. Instead, we remove them from the disk. As a result, you might lose a few cached events when upgrading.
+This version uses the [envelope endpoint](https://develop.sentry.dev/sdk/data-model/envelopes/). If you are using self-hosted Sentry, you must use Sentry version `>= v20.6.0` or higher. If you are using sentry.io, there is no impact. For this change, we also now cache events in envelopes on the disk. We decided not to migrate the few cached events from 5.x to 6.x into envelopes. Instead, we remove them from the disk. As a result, you might lose a few cached events when upgrading.
 
 #### SDK Inits
 
 We removed the [deprecated SDK inits](https://github.com/getsentry/sentry-cocoa/blob/5.2.2/Sources/Sentry/include/SentrySDK.h#L35-L47). The recommended way to initialize Sentry is now:
 
-<SignInNote />
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -270,7 +268,7 @@ if (eventId != SentryId.empty) {
 
 #### New type SentryMessage for Event.message
 
-In 6.x, we introduce a new type [SentryMessage](https://develop.sentry.dev/sdk/event-payloads/message/) for `event.message`. SentryMessage provides you the ability to pass a format string with parameters to Sentry, which can help group similar messages into the same issue.
+In 6.x, we introduce a new type [SentryMessage](https://develop.sentry.dev/sdk/data-model/event-payloads/message/) for `event.message`. SentryMessage provides you the ability to pass a format string with parameters to Sentry, which can help group similar messages into the same issue.
 
 Example in 5.x:
 
@@ -318,7 +316,6 @@ The samples below illustrate how the SDK works:
 
 Example in 4.x:
 
-<SignInNote />
 
 ```swift {tabTitle:Swift}
 do {
@@ -341,7 +338,6 @@ if (nil != error) {
 
 Example in 5.x:
 
-<SignInNote />
 
 ```swift {tabTitle:Swift}
 SentrySDK.start(options: [

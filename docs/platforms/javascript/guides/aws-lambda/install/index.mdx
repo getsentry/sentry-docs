@@ -1,0 +1,43 @@
+---
+title: Installation Methods
+sidebar_order: 1
+description: "Review all installation methods for using Sentry in AWS Lambda functions"
+---
+
+<PageGrid />
+
+## How To Decide Which Installation Method To Use
+
+Choosing the right installation method for using Sentry in your AWS Lambda functions depends on a couple of factors.
+
+Lambda functions can be written and executed either in CommonJS, using `require` syntax, or EcmaScript Modules (ESM), using `import` syntax.
+For Sentry to work correctly, you need to follow the guide for the format in which your functions are **executed**.
+
+### My Lambda function is written in TypeScript
+
+If you're using TypeScript, your lambda function is likely transpiled to CommonJS before running it. In this case, you should follow the CommonJS instructions.
+Note that TypeScript can also be configured to output ESM, in which case you should follow the ESM instructions.
+
+### My Lambda function uses `require`
+
+If you are using `require()` in your function, you should follow the CommonJS instructions. You can choose between manually setting up Sentry or using the Lambda Layer.
+
+### My Lambda function uses `import`
+
+If you're using `import` syntax in your function and you're _not_ transpiling the code to CommonJS, you should follow the ESM instructions.
+
+### Can I use the Lambda layer for ESM functions?
+
+At this time, the Lambda Layer is only available for CommonJS functions. If you're using ESM, you'll need to set up Sentry manually.
+We're working on an ESM lambda layer but need to solve several OpenTelemetry-related limitations first.
+
+### Should I use the Lambda Layer or the NPM package?
+
+First off, at this time, you can only use the layer in CommonJS functions. If you're using ESM, you'll need to set up Sentry manually with the NPM package.
+
+We generally recommend to use the Lambda layer as it doesn't require you to deploy any Sentry dependency alongside your function.
+With using the layer, you can achieve the same level of customization as with the NPM package.
+There are two reasons why you still might want to use the NPM package instead:
+
+1. You want to minimize lambda function size and tree-shake parts of the SDK code that you don't need. A related reason might be because you're transpiling your code and want to transpile your dependencies as well.
+2. You already use NPM packages and deploy `node_modules` with your function and you don't want to add a (or another) Lambda layer to your functions.

@@ -6,17 +6,23 @@ description: "Learn more about how to configure your SDK to filter events report
 
 When you add Sentry to your app, you get a lot of valuable information about errors and performance. And lots of information is good -- as long as it's the right information, at a reasonable volume.
 
-The Sentry SDKs have several configuration options to help you filter out events.
+Sentry offers [Inbound Filters](/concepts/data-management/filtering/) that you can enable per project to filter out various events in sentry.io. You can use our pre-defined inbound filters (e.g. filtering known browser extensions), as well as add your own message-based filters.
 
-We also offer [Inbound Filters](/product/data-management-settings/filtering/) to filter events in sentry.io. We recommend filtering at the client level though, because it removes the overhead of sending events you don't actually want. Learn more about the [fields available in an event](https://develop.sentry.dev/sdk/event-payloads/).
+However, we recommend filtering at the client-level, because it removes the overhead of sending events you don't actually want. The Sentry SDKs have several configuration options, which are described in this document, to help you filter out events. To learn more about the event fields you can use for filtering, see [Event Payloads](https://develop.sentry.dev/sdk/data-model/event-payloads/).
 
 ## Filtering Error Events
 
 Configure your SDK to filter error events by using the <PlatformIdentifier name="before-send" /> callback method and configuring, enabling, or disabling integrations.
 
+### Using <PlatformIdentifier name="ignore-errors" />
+
+You can use the <PlatformIdentifier name="ignore-errors" /> option to filter out errors that match a certain pattern. This option receives a list of strings and regular expressions to match against the error message. When using strings, partial matches will be filtered out. If you need to filter by exact match, use regex patterns instead.
+
+<PlatformContent includePath="configuration/ignore-errors" />
+
 ### Using <PlatformIdentifier name="before-send" />
 
-All Sentry SDKs support the <PlatformIdentifier name="before-send" /> callback method. Because it's called immediately before the event is sent to the server, this is your last chance to decide not to send data or to edit it. <PlatformIdentifier name="before-send" /> receives the event object as a parameter, which you can use to either modify the event’s data or drop it completely by returning `null`, based on custom logic and the data available on the event.
+You can configure a <PlatformIdentifier name="before-send" /> callback method to filter error events. Because it's called immediately before the event is sent to the server, this is your last chance to decide not to send data or to edit it. <PlatformIdentifier name="before-send" /> receives the event object as a parameter and, based on custom logic and the data available on the event, you can either modify the event’s data or drop it completely by returning `null`.
 
 <PlatformContent includePath="configuration/before-send/" />
 
@@ -65,21 +71,141 @@ When a string or a non-error object is raised, Sentry creates a synthetic except
 
 <PlatformContent includePath="configuration/breadcrumb-hints" />
 
-### Using <PlatformIdentifier name="ignore-errors" />
+### Using `allowUrls` and `denyUrls`
 
-You can use the <PlatformIdentifier name="ignore-errors" /> option to filter out errors that match a certain pattern. This option receives a list of strings and regular expressions to match against the error message. When using strings, partial matches will be filtered out, so if you need to filter by exact match, use regex patterns instead.
+You can construct an allowed list of domains for errors. Only errors created within these domains will be captured. For example, if your scripts are loaded from `cdn.example.com` and your site is `example.com`, you can set `allowUrls` to:
 
-<PlatformContent includePath="configuration/ignore-errors" />
+```javascript
+Sentry.init({
+  allowUrls: [/https?:\/\/((cdn|www)\.)?example\.com/],
+});
+```
 
-### Decluttering Sentry
+You can also use `denyUrls` if you want to block errors created on specific URLs from being sent to Sentry.
 
-<PlatformContent includePath="configuration/decluttering" />
+### Using `thirdPartyErrorFilterIntegration`
 
-<PlatformSection notSupported={["javascript.cordova"]}>
+_Available in browser-based SDKs from version 8.10.0_
+
+The `thirdPartyErrorFilterIntegration` allows you to filter out errors originating from third parties, such as browser extensions, code-injecting browsers, or widgets from third-party services that also use Sentry.
+This integration can be very helpful in reducing noise that's not related to your own application code.
+
+<Note>
+
+**Prerequisite**: To use the `thirdPartyErrorFilterIntegration`, ensure you are using a bundler and one of [Sentry's bundler plugins](https://github.com/getsentry/sentry-javascript-bundler-plugins).
+
+</Note>
+
+This integration works by "marking" your JavaScript files with an "application key" during the build process.
+At runtime, if an error occurs, this integration checks application keys for each stack frame in the stack trace.
+This allows you to filter out errors with "unmarked" stack frames, which would indicate third-party code.
+
+To set up this integration and to mark your JavaScript files with an application key, first pass an `applicationKey` option to your Sentry bundler plugin.
+This can be an arbitrary string that identifies your application code:
+
+```ts {tabTitle:Vite} {8}
+// vite.config.ts
+import { defineConfig } from "vite";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
+
+export default defineConfig({
+  plugins: [
+    sentryVitePlugin({
+      applicationKey: "your-custom-application-key",
+    }),
+  ],
+});
+```
+
+```js {tabTitle:Webpack} {7}
+// webpack.config.js
+const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
+
+module.exports = {
+  plugins: [
+    sentryWebpackPlugin({
+      applicationKey: "your-custom-application-key",
+    }),
+  ],
+};
+```
+
+```js {tabTitle:esbuild} {7}
+// esbuild.config.js
+const { sentryEsbuildPlugin } = require("@sentry/esbuild-plugin");
+
+require("esbuild").build({
+  plugins: [
+    sentryEsbuildPlugin({
+      applicationKey: "your-custom-application-key",
+    }),
+  ],
+});
+```
+
+```js {tabTitle:Rollup} {7}
+// rollup.config.mjs
+import { sentryRollupPlugin } from "@sentry/rollup-plugin";
+
+export default {
+  plugins: [
+    sentryRollupPlugin({
+      applicationKey: "your-custom-application-key",
+    }),
+  ],
+};
+```
+
+Next, add the `thirdPartyErrorFilterIntegration` to your Sentry initialization:
+
+```javascript {3-14}
+Sentry.init({
+  integrations: [
+    Sentry.thirdPartyErrorFilterIntegration({
+      // Specify the application keys that you specified in the Sentry bundler plugin
+      filterKeys: ["your-custom-application-key"],
+
+      // Defines how to handle errors that contain third party stack frames.
+      // Possible values are:
+      // - 'drop-error-if-contains-third-party-frames'
+      // - 'drop-error-if-exclusively-contains-third-party-frames'
+      // - 'apply-tag-if-contains-third-party-frames'
+      // - 'apply-tag-if-exclusively-contains-third-party-frames'
+      behaviour: "drop-error-if-contains-third-party-frames",
+    }),
+  ],
+});
+```
+
+The `filterKeys` option takes an array of strings that should be equal to the `applicationKey` value set in the bundler plugin options.
+Unless your website hosts files from more than one of your build-processes, this array should only contain one item.
+
+The `behaviour` option defines what should happen with errors that contain stack frames from third-party code.
+There are four modes you can choose from:
+
+- `"drop-error-if-contains-third-party-frames"`: Drop error events that contain at least one third-party stack frame.
+- `"drop-error-if-exclusively-contains-third-party-frames"`: Drop error events that exclusively contain third-party stack frames.
+- `"apply-tag-if-contains-third-party-frames"`: Keep all error events, but apply a `third_party_code: true` tag in case the error contains at least one third-party stack frame.
+- `"apply-tag-if-exclusively-contains-third-party-frames"`: Keep all error events, but apply a `third_party_code: true` tag in case the error contains exclusively third-party stack frames.
+
+If you choose a mode to only apply tags, the tags can then be used in Sentry to filter your issue stream with the `third_party_code` tag in the issue search bar.
+
+<Note>
+
+The `thirdPartyErrorFilterIntegration` will not work with the [Sentry Loader Script or CDN Bundles](https://docs.sentry.io/platforms/javascript/install/loader/).
+This is the case because the Sentry Loader Script and CDN Bundles are detected as "third party" by the integration. This makes it apply the chosen behavior to almost all events, since the Sentry SDK wraps many browser-native APIs.
+
+</Note>
 
 ## Filtering Transaction Events
 
 To prevent certain transactions from being reported to Sentry, use the <PlatformIdentifier name="traces-sampler" /> or <PlatformIdentifier name="before-send-transaction" /> configuration option, which allows you to provide a function to evaluate the current transaction and drop it if it's not one you want.
+
+### Using <PlatformIdentifier name="ignore-transactions" />
+
+You can use the <PlatformIdentifier name="ignore-transactions" /> option to filter out transactions that match a certain pattern. This option receives a list of strings and regular expressions to match against the transaction name. When using strings, partial matches will be filtered out. If you need to filter by exact match, use regex patterns instead.
+
+<PlatformContent includePath="configuration/ignore-transactions" />
 
 ### Using <PlatformIdentifier name="traces-sampler" />
 
@@ -95,14 +221,15 @@ If the transaction currently being processed has a parent transaction (from an u
 
 Learn more about <PlatformLink to="/configuration/sampling/">configuring the sample rate</PlatformLink>.
 
-### Using <PlatformIdentifier name="before-send-transaction" />
+### Using `beforeSendTransaction`
 
 <PlatformContent includePath="configuration/before-send-transaction" />
 
-</PlatformSection>
+## Filtering Spans
 
-### Using <PlatformIdentifier name="ignore-transactions" />
+Available since Javascript SDK version `8.2.0`.
 
-You can use the <PlatformIdentifier name="ignore-transactions" /> option to filter out transactions that match a certain pattern. This option receives a list of strings and regular expressions to match against the transaction name. When using strings, partial matches will be filtered out, so if you need to filter by exact match, use regex patterns instead.
+To prevent certain spans from being reported to Sentry, use the <PlatformIdentifier name="before-send-span" /> configuration option which allows you to provide a function to modify and drop a child span.
+This function is only called for child spans of the root span. If you want to modify or drop the root span, including its child spans, use [`beforeSendTransaction`](#using-beforesendtransaction) instead.
 
-<PlatformContent includePath="configuration/ignore-transactions" />
+<PlatformContent includePath="configuration/before-send-span" />

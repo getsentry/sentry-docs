@@ -1,7 +1,115 @@
 ---
 title: Custom Integrations
+sidebar_order: 200
 description: "Learn how to enable a custom integration."
-sidebar_order: 3
 ---
 
-<Include name="platforms/configuration/integrations/custom.mdx" />
+In addition to the integrations that come with the SDK, you can also write custom integrations.
+
+Custom integration must conform to the [Integration interface](https://github.com/getsentry/sentry-javascript/blob/master/packages/core/src/types-hoist/integration.ts).
+
+A custom integration can be created and added to the SDK as follows:
+
+```javascript
+function myAwesomeIntegration() {
+  return {
+    name: "MyAwesomeIntegration",
+    setup(client) {
+      // Do something when the SDK is initialized
+      // The client that is being setup is passed to the hook
+    },
+  };
+}
+
+Sentry.init({
+  // ...
+  integrations: [myAwesomeIntegration()],
+});
+```
+
+All hooks on an integration are optional. The only required field is the `name`. You can use one or multiple of the following hooks in a custom integration:
+
+### `setup`
+
+The `setup` hook is called when the SDK is initialized. It receives the client instance as an argument.
+You should use this if you want to run some code upon initialization.
+
+```javascript
+const integration = {
+  name: "MyAwesomeIntegration",
+  setup(client) {
+    setupCustomSentryListener(client);
+  },
+};
+```
+
+### `processEvent`
+
+This hook can be used to modify events before they're sent to Sentry. It receives the event as an argument and should return the modified event. The hook also receives a hint object that may hold additional event metadata, as well as the client that's sending the event. You can also return `null` to drop the event from being sent.
+
+```javascript
+const integration = {
+  name: "MyAwesomeIntegration",
+  processEvent(event, hint, client) {
+    event.extra = {
+      ...event.extra,
+      myCustomTag: "value",
+    };
+    // Return the modified event,
+    // or return `null` to drop the event
+    return event;
+  },
+};
+```
+
+You can also return a promise that resolves with an event or `null`. However, this is not recommended and should be avoided wherever possible, because it can delay event sending.
+
+### `preprocessEvent`
+
+This hook is similar to `processEvent`, but it's called before the event is passed to any other `processEvent` hook. It can be used in places where the order of processing is important.
+
+You can use `processEvent` for most cases, but only when you need to ensure that your hook is called before any other `processEvent` hook use `preprocessEvent`.
+
+Similar to `processEvent`, this hook receives the event, hint, and client as arguments. However, this hook won't allow the return of a modified event or `null` to drop the event. You can only mutate the passed in event in this hook:
+
+```javascript
+const integration = {
+  name: "MyAwesomeIntegration",
+  preprocessEvent(event, hint, client) {
+    event.extra = {
+      ...event.extra,
+      myCustomTag: "value",
+    };
+    // Nothing to return, just mutate the event
+  },
+};
+```
+
+### `setupOnce`
+
+This hook is similar to `setup`, but it's only run once, even if the SDK is re-initialized. It won't receive any arguments. We recommend that you use `setup` instead. The only reason to use `setupOnce` is when you may be calling `Sentry.init()` multiple times and you want to ensure a certain piece of code is only run once.
+
+```javascript
+const integration = {
+  name: "MyAwesomeIntegration",
+  setupOnce() {
+    wrapLibrary();
+  },
+};
+```
+
+### `afterAllSetup`
+
+While we recommend that you use the `setup` hook in most cases, `afterAllSetup` can be used to make sure that all other integrations have been run. This hook receives the `client` that is being set up as the first argument and is triggered after `setupOnce()` and `setup()` have been called for all integrations.
+
+
+```javascript
+const integration = {
+  name: "MyAwesomeIntegration",
+  afterAllSetup(client) {
+    // We can be sure that all other integrations
+    // have run their `setup` and `setupOnce` hooks now
+    startSomeThing(client);
+  },
+};
+```

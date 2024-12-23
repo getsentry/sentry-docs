@@ -13,21 +13,9 @@ pip install --upgrade 'sentry-sdk'
 
 ## Configure
 
-If you have the `redis` Python package in your dependencies, the Redis integration will be enabled automatically. There is nothing to do for you except initializing the Sentry SDK.
+If you have the `redis` Python package in your dependencies, the Redis integration will be enabled automatically.
 
-<SignInNote />
-
-```python
-import sentry_sdk
-from sentry_sdk.integrations.redis import RedisIntegration
-
-sentry_sdk.init(
-    dsn='___PUBLIC_DSN___',
-    enable_tracing=True,
-)
-```
-
-The Redis integration is enabled automatically if you have the `redis` package installed.
+<PlatformContent includePath="getting-started-config" />
 
 ## Verify
 
@@ -71,11 +59,11 @@ import redis.asyncio as redis
 
 async def main():
     sentry_sdk.init(...)  # same as above
-    rc = RedisCluster(host='localhost', port=16379)
+    r = redis.Redis(host='localhost', port=6379)
 
     with sentry_sdk.start_transaction(name="testing_sentry"):
-        rc.set("foo", "bar")
-        rc.get("foo")
+        await r.set("foo", "bar")
+        await r.get("foo")
 
 asyncio.run(main())
 ```
@@ -93,57 +81,43 @@ With Redis integration the following information will be available to you on Sen
 - If `send_default_pii` is set to `True` you will also see the data used in your redis commands.
 - Data of the `AUTH` command will never be collected.
 
-## Integration Options
+## Options
 
-If you want to change the default behavior of the Redis integration, you need to instantiate the integration manually to pass options to the integration and then pass it to Sentry's init function.
+By adding `RedisIntegration` explicitly to your `sentry_sdk.init()` call you can set options for `RedisIntegration` to change its behavior:
 
-<ConfigKey name="max_data_size">
+```python
+import sentry_sdk
+from sentry_sdk.integrations.redis import RedisIntegration
+
+sentry_sdk.init(
+    # ...
+    integrations=[
+        RedisIntegration(
+            max_data_size=None,
+            cache_prefixes=["mycache", "template.cache"],
+        ),
+    ],
+)
+```
+You can pass the following keyword arguments to `RedisIntegration()`:
+
+- `max_data_size`
 
 By default `RedisIntegration()` will trim data collected after `1024` characters. You can change this behavior with the `max_data_size` parameter:
 
-- When you set `max_data_size` to a value that evaluates to `False` (like `0` or `None`) no trimming will take place.
-- You can set `max_data_size` to an integer to control how many characters should be collected.
+You can set `max_data_size` to an integer to control how many characters should be collected.
 
-Example for disabling data trimming, the whole Redis command will be recorded:
+When you set `max_data_size` to a value that evaluates to `False` (like `0` or `None`), no trimming will take place. The whole Redis command will be recorded.
 
-<SignInNote />
+- `cache_prefixes`
 
-```python
-import sentry_sdk
-from sentry_sdk.integrations.redis import RedisIntegration
+You can specify a list of prefixes to Redis keys to define a key space that should be considered as cache. Cache keys will show up in the cache-monitoring dashboard, giving you more insight into your caching strategy.
 
-sentry_sdk.init(
-    dsn='___PUBLIC_DSN___',
-    enable_tracing=True,
-    integrations=[
-        RedisIntegration(
-            max_data_size=None
-        ),
-    ]
-)
-```
+For example, if you, set `cache_prefixes` to `["template.cache", "middleware.cache"]`, then access to all Redis keys starting with `template.cache` or `middleware.cache` will show up in your cache-monitoring dashboard.
 
-Example of keeping just a maximum of 50 characters of Redis commands:
-
-<SignInNote />
-
-```python
-import sentry_sdk
-from sentry_sdk.integrations.redis import RedisIntegration
-
-sentry_sdk.init(
-    dsn='___PUBLIC_DSN___',
-    enable_tracing=True,
-    integrations=[
-        RedisIntegration(
-            max_data_size=50
-        ),
-    ]
-)
-```
-
-</ConfigKey>
 
 ## Supported Versions
 
-- Python: 2.7+
+- Python: 3.6+
+
+<Include name="python-use-older-sdk-for-legacy-support.mdx" />

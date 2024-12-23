@@ -1,0 +1,123 @@
+---
+title: Instrument Caches
+sidebar_order: 1000
+description: "Learn how to manually instrument your code to use Sentry's Caches module. "
+---
+Sentry offers a [cache-monitoring dashboard](https://sentry.io/orgredirect/organizations/:orgslug/insights/backend/caches/) that can be auto-instrumented by our [Laravel SDK](/platforms/php/guides/laravel/).
+
+If you're using something else, you can manually instrument your cache operations and use Sentry to get a look into how your caching solution is performing by following the setup instructions below.
+
+To make it possible for Sentry to give you an overview of your cache performance, you'll need to create two spans - one indicating that something is being put into the cache, and a second one indicating that something is being fetched from the cache.
+
+Make sure that there's a transaction running when you create the spans. See <PlatformLink to="/tracing/">Tracing</PlatformLink> for more information.
+
+For detailed information about which data can be set, see the [Cache Module developer specification](https://develop.sentry.dev/sdk/performance/modules/caches/).
+
+## Custom Instrumentation
+
+If you're using anything other than our [Laravel SDK](/platforms/php/guides/laravel/), you'll need to manually instrument the [Cache Module](https://sentry.io/orgredirect/organizations/:orgslug/insights/backend/caches/) by following the steps below.
+
+### Add Span When Putting Data Into the Cache
+
+If the cache you're using isn't supported by auto instrumentation mentioned above, you can use the custom instrumentation instructions below to emit cache spans:
+
+1. Set the cache value with whatever cache library you happen to be using.
+2. Wrap the part of your application that uses the cached value into a span.
+3. Set `op` to `cache.put`.
+4. Set `cache.item_size` to an integer representing the size of the cached item.
+
+(The steps described above are documented in the snippet.)
+
+```php
+$key = 'cache_key';
+$value = 'cache_value';
+
+$parentSpan = \Sentry\SentrySdk::getCurrentHub()->getSpan();
+
+if ($parentSpan !== null) {
+    $context = \Sentry\Tracing\SpanContext::make()
+        ->setDescription($key)
+        ->setOp('cache.put');
+
+    $span = $parentSpan->startChild($context);
+
+    \Sentry\SentrySdk::getCurrentHub()->setSpan($span);
+
+    // Perform you cache operation
+    Cache::put($key, $value);
+    
+    $span
+        ->setData([
+            // Describe the cache server you are accessing
+            'network.peer.address' => '127.0.0.1',
+            'network.peer.port' => 9000,
+            // Add the key you used
+            'cache.key' => $key,
+            // Optionally, add the size of the value you set
+            'cache.item_size' => strlen($value),
+        ])
+        ->finish();
+
+    \Sentry\SentrySdk::getCurrentHub()->setSpan($parentSpan);
+}
+```
+
+
+### Add Span When Retrieving Data From the Cache
+
+If the cache you're using isn't supported by auto instrumentation mentioned above, you can use the custom instrumentation instructions below to emit cache spans:
+
+1. Fetch the cached value from whatever cache library you happen to be using.
+2. Wrap the part of your application that uses the cached value into a span.
+3. Set `op` to `cache.get`.
+4. Set `cache.hit` to a boolean value representing whether the value was successfully fetched from the cache or not.
+5. Set `cache.item_size` to an integer representing the size of the cached item.
+
+(The steps described above are documented in the snippet.)
+
+```php
+$key = 'cache_key';
+$value = null;
+
+$parentSpan = \Sentry\SentrySdk::getCurrentHub()->getSpan();
+
+if ($parentSpan !== null) {
+    $context = \Sentry\Tracing\SpanContext::make()
+        ->setOp('cache.get');
+
+    $span = $parentSpan->startChild($context);
+
+    \Sentry\SentrySdk::getCurrentHub()->setSpan($span);
+
+    // Perform you cache operation
+    $value = Cache::get($key);
+    
+    $span->setData([
+        // Describe the cache server you are accessing
+        'network.peer.address' => '127.0.0.1',
+        'network.peer.port' => 9000,
+        // Add the key you just retrieved from the cache
+        'cache.key' => $key
+    ]);
+
+    if ($value !== null) {
+        $span->setData([
+            // If you retrieved a value, the cache was hit
+            'cache.hit' => true,
+            // Optionally, add the size of the value you retrieved
+            'cache.item_size' => strlen($value),
+        ]);
+    } else {
+        $span->setData([
+            // If you could not retrieve a value, it was a miss
+            'cache.hit' => false,
+        ]);
+    }
+
+    $span->finish();
+
+    \Sentry\SentrySdk::getCurrentHub()->setSpan($parentSpan);
+}
+```
+
+You should now have the right spans in place. Head over to the [Cache dashboard](https://sentry.io/orgredirect/organizations/:orgslug/insights/backend/caches/) to see how your cache is performing.

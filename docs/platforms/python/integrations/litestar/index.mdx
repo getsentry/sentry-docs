@@ -1,0 +1,84 @@
+---
+title: Litestar
+description: "Learn about using Sentry with Litestar."
+---
+
+The Litestar integration adds support for the [Litestar framework](https://docs.litestar.dev/2/).
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `litestar` extra:
+
+```bash
+pip install --upgrade 'sentry-sdk[litestar]' uvicorn
+```
+
+## Configure
+
+Add `LitestarIntegration()` to your `integrations` list:
+
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python {"onboardingOptions": {"performance": "6-8", "profiling": "9-12"}}
+import sentry_sdk
+from sentry_sdk.integrations.litestar import LitestarIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
+    integrations=[
+        LitestarIntegration(),
+    ],
+)
+```
+
+## Verify
+
+```python
+from litestar import Litestar, get
+
+sentry_sdk.init(...)  # same as above
+
+@get("/hello")
+async def hello_world() -> str:
+    1 / 0
+    return "Hello!"
+
+app = Litestar(route_handlers=[hello_world])
+```
+
+Save the file above as `app.py` and start the development server with:
+
+```bash
+uvicorn app:app
+```
+
+When you point your browser to [http://localhost:8000/hello](http://localhost:8000/hello) a transaction will be created in the Performance section of [sentry.io](https://sentry.io). Additionally, the `ZeroDivisionError` we've snuck into our `hello_world` handler will be sent to [sentry.io](https://sentry.io) and will be connected to the transaction.
+
+It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Supported Versions
+
+<Alert level="warning" title="Note">
+
+Litestar was [renamed from Starlite](https://litestar.dev/about/organization.html#litestar-and-starlite)
+with the release of version 2.0. We support different integrations for each one. This guide applies to Litestar.
+See [Starlite integration](/platforms/python/integrations/starlite) for the guide that applies to Starlite.
+
+</Alert>
+
+- Litestar: 2.0.0+
+- Python: 3.8+

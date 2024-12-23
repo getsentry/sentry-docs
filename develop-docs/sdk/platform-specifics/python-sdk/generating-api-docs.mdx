@@ -1,0 +1,47 @@
+---
+title: Generating API Docs
+description: How to deal with issues generating our API docs.
+sidebar_order: 40
+---
+
+## Problem
+
+`sphinx` (run as part of `make apidocs`) sometimes has cryptic circular import errors and causes CI to fail. This is because we run it with `TYPE_CHECKING` and while `mypy` statically checks types, `sphinx`  is dynamic and thus introduces circularity into type checking which is normally ok.
+
+```python
+sphinx.errors.SphinxWarning: autodoc: failed to import function 'api.capture_event' from module 'sentry_sdk'; the following exception was raised:
+cannot import name 'logger' from partially initialized module 'sentry_sdk.utils' (most likely due to a circular import) (/home/runner/work/sentry-python/sentry-python/sentry_sdk/utils.py)
+```
+
+See https://github.com/tox-dev/sphinx-autodoc-typehints?tab=readme-ov-file#dealing-with-circular-imports
+
+These circular import issues may surface not just in our SDK code but also in built-in Sphinx extensions. You might get something like this:
+
+```
+Extension error:
+Could not import extension sphinx.domains.c (exception: cannot import name 'ASTDeclaration' from partially initialized module 'sphinx.domains.c._ast' (most likely due to a circular import) (.venv/lib/python3.11/site-packages/sphinx/domains/c/_ast.py))
+```
+
+## Solution
+
+To solve this in SDK code, just use forward references, so instead of:
+
+```python
+from sentry_sdk.integrations import Integration
+
+def foo(integration):
+    # type: (Integration) -> None
+    pass
+```
+
+just use:
+
+```python
+import sentry_sdk
+
+def foo(integration):
+    # type: (sentry_sdk.integrations.Integration) -> None
+    pass
+```
+
+If the circular import is coming from an extension, add it to the [imports in conf.py](https://github.com/getsentry/sentry-python/blob/302457dec22bd105beb849e98324f653d8c7b5f0/docs/conf.py#L6-L12).

@@ -1,20 +1,11 @@
 ---
 title: Stats
-description: "Learn about projects and teams across your organization."
+description: "Get an overview of how your organization and each project is using Sentry."
 sidebar_order: 130
 ---
 
-The **Stats** page has three tabs: [Usage](#usage-stats), [Issues](#issue-stats), and [Health](#health-stats).
-
-The "Usage" tab shows your organization’s event and attachments usage, while also providing a high-level overview of how different projects are using Sentry. The "Issues" tab shows a breakdown of the issues assigned to your team and how they triaged them, while the "Health" tab provides an overview of your team’s project health.
-
-## Usage Stats
-
-The "Usage" tab shows you the events (errors and transactions) and attachments Sentry has received across your entire organization along with a list of all projects and their consumption of each of those. Your usage falls into one of three categories: _Accepted_, _Filtered_, or _Dropped_. Filtered events and attachments are ones that were blocked due to your [inbound data filter](/product/data-management-settings/filtering/) rules. Dropped events and attachments are ones the system dropped or discarded due to rate limits, quotas, spike protection, or because of invalid data.
-
-You can see which projects have had a recent spike or are the most active and may need more attention. On this page, you can also control the date range that’s displayed, allowing you to focus on a smaller period of time or zoom out for a longer view. The page is designed for org admins, but is available to all team members. This is helpful if a team member who isn't an admin is tasked with reviewing these statistics. Also, this allows team members associated with specific projects to use this page to investigate why their events are being dropped.
-
-![Overview of Usage Stats page](./img/usage-stats.png)
+The [**Stats**](https://sentry.io/orgredirect/organizations/:orgslug/stats/) page is an overview of the usage data that Sentry receives across your entire organization. It allows you to spot projects that have experienced recent spikes in activity or are showing more errors than others and may require a closer look. You can also adjust the displayed date range, enabling you to narrow down to a specific time period or zoom out for a broader view.
+![Overview of Usage Stats page](./img/usage-stats-page-errors.png)
 
 With the dropdowns at the top of the page, you can set whether the page displays stats for errors, transactions, or attachments, as well as the date range. With the date selector, the time period can be set from an hour to a maximum of 90 days, and all of the page elements change dynamically when you update this setting.
 
@@ -23,9 +14,84 @@ With the dropdowns at the top of the page, you can set whether the page displays
   event type.
 </Note>
 
+
+There are three tabs available on the page: [Usage](#usage-stats), [Issues](#issue-stats), and [Health](#health-stats).
+
+The "Usage" tab shows your organization’s event and attachments usage, while also providing a high-level overview of how different projects are using Sentry. The "Issues" tab shows a breakdown of the issues assigned to your team and how they triaged them, while the "Health" tab provides an overview of your team’s project health.
+
+
+## Usage Stats
+
+The "Usage" tab provides an overview of the events (errors and transactions) and attachments that Sentry has received across your entire organization. It includes a detailed breakdown of each project's consumption categorized as _Accepted_, _Filtered_, _Rate Limited_, _Invalid_ or _Client Discard_.
+
+### Accepted
+
+Events and attachments that were successfully processed and stored.
+
+### Filtered
+
+Filtered events and attachments intentionally excluded based on defined settings. The following reasons are currently defined:
+
+- **Browser Extensions**: Filtered by browser extension.
+- **Error Message**: Filtered based on specific error messages.
+- **Filtered Transaction**: Filtered because it was a call to a filtered transaction.
+- **Invalid CSP**: Filtered due to an invalid Content Security Policy (CSP) policy.
+- **Ip Address**: Filtered by IP address.
+- **Legacy Browsers**: Filtered by certain legacy versions of browsers that are known to cause problems.
+- **Localhost**: Filtered due to localhost restriction.
+- **Release Version**: Filtered by release name (version).
+- **Web Crawlers**: Identified as a known web crawler.
+- **Other**: Filtered due to other generic filtering rules not specified above.
+
+For more details, please consult the [Inbound Filters](/concepts/data-management/filtering/) documentation.
+
+### Rate Limited
+Events and attachments discarded due to rate limits or quota. The following reasons are currently defined:
+
+- **Disabled**:  Data was received for a feature or function that is not available to your organization.
+- **DSN Limit**: Traffic exceeded a rate limit defined on the client key (DSN). See [Rate Limits](/pricing/quotas/#rate-limits) for more information.
+- **Global Limit**: Traffic exceeded an organization-wider or project-wide rate limit. This setting is no longer available to most organizations.
+- **Quota**: The monthly quota of your subscription was depleted and there is no pay-as-you-go budget left. See [Adjusting your Quota](/pricing/quotas/#adjusting-your-quota) for more information.
+- **Spike Protection**: Activated to protect from a sudden spike in event volume. See [Spike Protection](/pricing/quotas/spike-protection/) for more information.
+- **Internal Limit**: A rate limit for excessive volume was enforced by Sentry. These limits are not configurable.
+
+### Invalid
+Events and attachments might be discarded if they don't match the expected format or contain data that can't be processed. The following reasons are currently defined:
+
+- **Disallowed Domain**: A request from an unallowed origin was sent to Sentry. Check project settings to configure allowed domains.
+- **Duplicate**: An event with the same id has already been processed for this project. Sentry does not allow duplicate events and only stores the first one.
+- **Empty**: An empty request or a request missing its primary data component was submitted.
+- **Invalid Data**: Data sent by the SDK was invalid and does not meet the basic schema. This likely indicates an SDK implementation bug. Please report a bug if this issue persists.
+- **Invalid Request**: The HTTP submission was invalid or was missing required information. This is likely due to a problem in the SDK implementation. Please report a bug if this issue persists.
+- **Minidump**: The minidump in a minidump upload request was missing or invalid. See the [Minidumps documentation](/platforms/native/guides/minidumps/) for details on how to upload minidumps.
+- **Payload**: The HTTP submission was incomplete and could not be processed. This is likely due to a network failure.
+- **Project Missing**: The specified Sentry project is disabled or project information in the submitted request was inconclusive.
+- **Sampling**: Tracing data that is discarded during sampling.
+- **Security Report**: An invalid or unsupported security report was submitted. If this report originates from an up-to-date browser, please report a bug to Sentry. See [Security Policy Reporting](/security-legal-pii/security/security-policy-reporting/) for more information.
+- **Too Large**: The HTTP submission or its contained data exceeds size limits. See [this document](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) for the precise limits.
+- **Unreal**: An unsupported or invalid Unreal Engine crash report was submitted. If this request originates from a recent or development version of the Unreal Engine, please report a bug to Sentry. See [Unreal Engine](/platforms/unreal/) for more information.
+- **Internal**: An internal problem at Sentry prevented regular processing or storage of the submitted information.
+
+### Client Discard
+Events and attachments discarded by the SDK. The following reasons are currently defined:
+
+- **Queue Overflow**: An SDK internal queue (for example, a transport queue) overflowed.
+- **Cache Overflow**: An SDK internal cache (for example, an offline event cache) overflowed.
+- **Ratelimit Backoff**: The SDK dropped events because a previous rate limit instructed the SDK to back off.
+- **Network Error**: Events were dropped due to network errors, and were not retried.
+- **Sample Rate**: An event was dropped because of the configured sample rate.
+- **Before Send**: An event was dropped in `before_send`.
+- **Event Processor**: An event was dropped by an event processor; this may also be used for ignored exception/errors.
+- **Send Error**: An event was dropped because of an error when sending it (for example, a 400 response).
+- **Internal SDK Error**: An event was dropped due to an internal SDK error (for example, a web worker crash).
+- **Insufficient Data**: An event was dropped due to a lack of data in the event (for example, not enough samples in a profile).
+- **Backpressure**: An event was dropped due to downsampling caused by the system being under load.
+
+For more details, please consult the [Client Reports](https://develop.sentry.dev/sdk/telemetry/client-reports/#envelope-item-payload) documentation.
+
 ### Usage Cards
 
-The cards on the page provide high-level usage stats about events and attachments, including the total number of either for the period, as well as which ones were accepted, filtered, or dropped.
+The cards on the page provide high-level usage stats about events and attachments, including the total number of either for the time period specified. You can also see which ones were accepted, filtered, rate limited, or invalid.
 
 ### Summary Chart
 

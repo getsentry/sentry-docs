@@ -2,12 +2,15 @@
 title: Laravel
 sdk: sentry.php.laravel
 sidebar_order: 0
-description: "Learn about using Sentry with Laravel."
+description: "Laravel is a PHP web application framework with expressive, elegant syntax. Learn how to set it up with Sentry."
 ---
 
-Laravel is supported using a native package: [sentry-laravel](https://github.com/getsentry/sentry-laravel).
+## Prerequisites
 
-This guide is for Laravel 11.x. We also provide instructions for [other versions](/platforms/php/guides/laravel/other-versions/) as well as [Lumen-specific instructions](/platforms/php/guides/laravel/other-versions/lumen/).
+* You need a [Sentry account](https://sentry.io/signup/) and project
+* Your Laravel application needs to run on PHP 7.2 or later
+* Your Laravel version needs to be 11.x or higher
+* Read one of these guides if you use an [older version](/platforms/php/guides/laravel/other-versions/) or need [Lumen-specific instructions](/platforms/php/guides/laravel/other-versions/lumen/)
 
 ## Install
 
@@ -38,20 +41,15 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions) {
         Integration::handles($exceptions);
-    })->create();
+    })
+    ->create();
 ```
 
-<Note>
-
-Alternatively, you can configure Sentry in your [Laravel Log Channel](usage/#log-channels), allowing you to log `info` and `debug` as well.
-
-</Note>
+Alternatively, you can configure Sentry as a [Laravel Log Channel](usage/#log-channels).
 
 ## Configure
 
 Configure the Sentry DSN with this command:
-
-<SignInNote />
 
 ```shell
 php artisan sentry:publish --dsn=___PUBLIC_DSN___
@@ -59,11 +57,13 @@ php artisan sentry:publish --dsn=___PUBLIC_DSN___
 
 It creates the config file (`config/sentry.php`) and adds the `DSN` to your `.env` file.
 
-<SignInNote />
-
 ```shell {filename:.env}
 SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
 ```
+
+<Alert level="warning">
+  In order to receive stack trace arguments in your errors, make sure to set `zend.exception_ignore_args: Off` in your php.ini
+</Alert>
 
 ## Verify
 
@@ -87,9 +87,9 @@ Route::get('/debug-sentry', function () {
 
 Visiting this route will trigger an exception that will be captured by Sentry.
 
-## Performance Monitoring
+## Tracing
 
-Set `traces_sample_rate` in `config/sentry.php` or `SENTRY_TRACES_SAMPLE_RATE` in your `.env` to a value greater than `0.0`. Setting a value greater than `0.0` will enable Performance Monitoring, `null` (the default) will disable Performance Monitoring.
+Set `traces_sample_rate` in `config/sentry.php` or `SENTRY_TRACES_SAMPLE_RATE` in your `.env` to a value greater than `0.0`. Setting a value greater than `0.0` will enable Tracing, `null` (the default) will disable Tracing.
 
 ```shell {filename:.env}
 # Be sure to lower this value in production otherwise you could burn through your quota quickly.
@@ -111,3 +111,9 @@ You most likely don't want errors to be sent to Sentry when you are developing o
 You can also do this by not defining `SENTRY_LARAVEL_DSN` in your `.env` or by defining it as `SENTRY_LARAVEL_DSN=null`.
 
 If you do leave Sentry enabled when developing or running tests, it's possible for it to have a negative effect on the performance of your application or test suite.
+
+## Set up Sentry through Forge
+
+If you're using Laravel's Forge platform to provision and deploy your PHP application, you can create a Sentry organization through [Forge](https://forge.laravel.com/docs/integrations/sentry.html).
+
+![Sentry and Forge](./img/forge-sentry.png)

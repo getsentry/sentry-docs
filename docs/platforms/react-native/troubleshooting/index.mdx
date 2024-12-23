@@ -4,6 +4,10 @@ description: "Troubleshoot and resolve common issues with the React Native SDK."
 sidebar_order: 9000
 ---
 
+## "Missing API declaration" after App Store review
+
+Starting May 1, 2024, Apple requires all apps submitted to the App Store to provide a list of privacy-related APIs they use, including the reasons under which they use it. If you received an email from Apple with the message "ITMS-91053: Missing API declaration", your app doesn't fulfill the requirements. To solve this, follow our [Apple Privacy Manifest](/platforms/react-native/data-management/apple-privacy-manifest) guide.
+
 ## App Start Numbers Are Too High To Be Accurate
 
 iOS 15 introduced a feature called pre-warm that affected the calculations the Sentry SDK does.
@@ -29,7 +33,6 @@ By default we will patch the global `Promise` instance to ensure it matches exac
 
 If you use a polyfilling library that patches the global `Promise` instance, you'll need to make sure you run the polyfill **after** `Sentry.init` is called.
 
-<SignInNote />
 
 ```javascript
 import allSettled from "promise.allsettled";
@@ -181,6 +184,36 @@ The Xcode integration reads `dist` from `CFBundleVersion` but Xcode Cloud builds
 ```
 export SENTRY_DIST=$CI_BUILD_NUMBER
 ```
+
+## Unknown receiver '\<SomeReceiver\>', Use of undeclared identifier '\<SomeIdentifier\>'
+
+If you see an error like `Unknown receiver 'SwiftDescriptor'` or `Use of undeclared identifier 'SentryLog'` during the application build process, there's a conflict stemming from `APPLICATION_EXTENSION_API_ONLY`. By default, the Sentry Cocoapod is configured with `APPLICATION_EXTENSION_API_ONLY=YES`, but some `post_install` script likely changed it. To fix this error, add the following to the `Podfile`.```
+
+```ruby {filename:ios/Podfile}
+post_install do |installer|
+  react_native_post_install(
+    installer,
+    config[:reactNativePath],
+    :mac_catalyst_enabled => false,
+  )
+
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      if target.name == 'Sentry'
+        config.build_settings['APPLICATION_EXTENSION_API_ONLY'] = 'YES'
+      else
+        # configuration for other targets
+      end
+    end
+  end
+end
+```
+
+## Using Gradle `configureondemand`
+
+If you have enabled Gradle's `org.gradle.configureondemand` feature, you'll need a clean build, or you'll need to disable this feature to upload the source map on every build.
+
+To disable this feature, set `org.gradle.configureondemand=false` or remove it as its default value is disabled, do this in the `gradle.properties` file.
 
 ## Set Up SDK v4 With React Native 0.69 or Higher
 
@@ -356,9 +389,21 @@ Sentry.init({
 });
 ```
 
-You can also use [Advanced Data Scrubbing](/product/data-management-settings/scrubbing/advanced-datascrubbing/) to filter out sensitive data before it is stored on the server side:
+You can also use [Advanced Data Scrubbing](/security-legal-pii/scrubbing/advanced-datascrubbing/) to filter out sensitive data before it is stored on the server side:
 
 ```
 [Replace] [Anything] from [contexts.trace.data.route.params]
 [Replace] [Anything] from [contexts.trace.data.previousRoute.params]
 ```
+
+## Uninstalling the SDK
+
+To remove the SDK from your project, run the following commands:
+
+```bash
+npx @sentry/wizard -i reactNative -p ios android --uninstall
+yarn remove @sentry/react-native
+cd ios && pod install
+```
+
+Once that's done, remove the `ios/sentry.properties` and `android/sentry.properties` files. Finally, remove all the code using `@sentry/react-native` from your project.

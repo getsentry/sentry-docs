@@ -21,7 +21,10 @@ jobs:
           app_id: ${{ vars.SENTRY_INTERNAL_APP_ID }}
           private_key: ${{ secrets.SENTRY_INTERNAL_APP_PRIVATE_KEY }}
 
-      - uses: getsentry/action-setup-volta@c52be2ea13cfdc084edb806e81958c13e445941e # v1.2.0
+      - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4
+        id: setup-node
+        with:
+          node-version-file: 'package.json'
 
       - uses: actions/cache@v4
         id: cache
@@ -50,11 +53,10 @@ jobs:
       # If working tree is dirty, commit and update if we have a token
       - name: Commit any eslint fixed files
         if: steps.token.outcome == 'success' && github.ref != 'refs/heads/master'
-        uses: getsentry/action-github-commit@748c31dd78cffe76f51bef49a0be856b6effeda7 # main
+        uses: getsentry/action-github-commit@5972d5f578ad77306063449e718c0c2a6fbc4ae1 # main
         with:
           github-token: ${{ steps.token.outputs.token }}
 
-  # TODO(mjq): Bring this back once tests are working.
   job_test:
     name: Test
     runs-on: ubuntu-latest
@@ -69,5 +71,4 @@ jobs:
       - run: yarn install --frozen-lockfile
         if: steps.cache.outputs.cache-hit != 'true'
       - name: Run Tests
-        # run: yarn test
-        run: true
+        run: yarn test

@@ -14,7 +14,7 @@ export function PlatformLink({children, to}: Props) {
   }
 
   const {rootNode, path} = serverContext();
-  const currentPlatformOrGuide = rootNode && getCurrentPlatformOrGuide(rootNode, path);
+  const currentPlatformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
   let href: string;
   if (currentPlatformOrGuide) {
     href = currentPlatformOrGuide.url + to.slice(1);

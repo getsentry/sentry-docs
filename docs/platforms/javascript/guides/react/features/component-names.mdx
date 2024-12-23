@@ -1,0 +1,97 @@
+---
+title: React Component Names
+excerpt: ""
+description: "Learn how Sentry's React SDK allows you to monitor your components."
+---
+
+Sentry helps you capture your React components and unlock additional insights in your application. You can set it up to use React component names instead of selectors.
+
+So instead of looking at selectors like this:
+
+```html
+button.en302zp1.app-191aavw.e16hd6vm2[role="button"][data-test-id="common-options"]
+```
+
+You can also see exactly which React component was used, like:
+
+```html
+CommonOptions
+```
+
+## Component Name Capturing
+
+You can capture the names of React components in your application via a [Babel plugin](https://www.npmjs.com/package/@sentry/babel-plugin-component-annotate), which can unlock powerful workflows and decrease ambiguity. For example, you can search for replays where a specific React component was clicked on. You can also see the name of the component that was clicked on in breadcrumbs and spans on Sentry's **Performance** page. This significantly decreases the amount of ambiguity involved in figuring out which element was interacted with as compared to trying to figure it out by looking at the element's CSS selector alone (which becomes even more ambiguous after the minification process).
+
+We're working to release more features that will leverage component name capturing in the future and highly recommended that you configure your project to use it.
+
+### How to Install
+
+<Alert>
+
+Please note that your Sentry browser SDK must be at version `7.91.0` or higher before you can use these features.
+Only React components in `.jsx` or `.tsx` files can be tracked.
+
+</Alert>
+
+There are two different ways you can set up React component name capturing in your application:
+
+1. By installing [Sentry's bundler plugins](https://www.npmjs.com/package/@sentry/bundler-plugin-core)
+2. By directly installing [@sentry/babel-plugin-component-annotate](https://www.npmjs.com/package/@sentry/babel-plugin-component-annotate)
+
+We recommend that you use the first option because the Sentry bundler plugins come packed with additional useful features to enrich your Sentry workflows, including: automatic sourcemap upload,
+release creation, automatic release name discovery, and release injection.
+
+**Set up using bundler plugins**:
+
+Follow the instructions in the npm page for the bundler that your project uses:
+- [Rollup](https://www.npmjs.com/package/@sentry/rollup-plugin)
+- [Vite](https://www.npmjs.com/package/@sentry/vite-plugin)
+- [Webpack](https://www.npmjs.com/package/@sentry/webpack-plugin)
+
+Please note that although there is a Sentry bundler plugin for **esbuild**, React component name capturing is currently not supported.
+
+Once you've followed the instructions to install the bundler plugin and added it to your bundler's config, enable component name capturing by setting the flag for it to `true`:
+
+
+```javascript
+// Example specific to Vite, see documentation for other bundlers
+sentryVitePlugin({
+    // ... other options above
+    reactComponentAnnotation: { enabled: true }
+}),
+```
+
+<Alert>
+
+**If you're using Rollup as your bundler**, ensure that you place `sentryRollupPlugin` before any other plugins that transform your JSX.
+
+</Alert>
+
+Now, you will be able to see your component names in breadcrumbs, spans, and search for replays by component names.
+See [this page](/product/reference/search/searchable-properties/session-replay/#clickcomponent_name) for more information on searching for Replays by component name.
+
+
+### How It Works
+
+The Babel plugin parses your application's JSX source code at build time, and applies additional `data` attributes onto it. These attributes then appear on the DOM nodes of your application's built HTML, indicating the React component and file that each node is sourced from.
+
+For example, if you had a component named `MyAwesomeComponent` in the file `myAwesomeComponent.jsx`:
+
+```javascript
+function MyAwesomeComponent() {
+  return <div>This is a really cool and awesome component!</div>
+}
+```
+
+After your bundler applied the plugin and built your project, the resulting DOM node would look like this:
+
+```html
+<div data-sentry-component="MyAwesomeComponent" data-sentry-source-file="myAwesomeComponent.jsx">This is a really cool and awesome component!</div>
+```
+
+The Sentry browser SDK will pick off the value from these `data` attributes and collect them when your components are interacted with.
+
+## Next Steps:
+
+- [Return to **Getting Started**](../../)
+- [Return to **React Features**](../)

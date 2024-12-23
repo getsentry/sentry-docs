@@ -36,12 +36,15 @@ The Laravel SDK will create [breadcrumbs](../../enriching-events/breadcrumbs/) f
 
     // Capture HTTP client request information as breadcrumbs
     'http_client_requests' => env('SENTRY_BREADCRUMBS_HTTP_CLIENT_REQUESTS_ENABLED', true),
+
+    // Capture send notifications as breadcrumbs
+    'notifications' => env('SENTRY_BREADCRUMBS_NOTIFICATIONS_ENABLED', true),
 ],
 ```
 
-## Performance Monitoring
+## Tracing
 
-To enable performance monitoring, set `SENTRY_TRACES_SAMPLE_RATE` to a value greater than `0.0`:
+To enable tracing, set `SENTRY_TRACES_SAMPLE_RATE` to a value greater than `0.0`:
 
 ```bash {filename:.env}
 # You may need to adjust this value in your production environment to prevent quota issues
@@ -50,7 +53,7 @@ SENTRY_TRACES_SAMPLE_RATE=1.0
 
 ### Advanced Sample Rate
 
-If you want more control over which requests are monitored, you can use the `traces_sampler` option:
+If you want more control over which requests are monitored, you can use the [`traces_sampler`](/platforms/php/guides/laravel/configuration/options/#traces-sampler) option:
 
 ```php {filename:config/sentry.php}
 'traces_sampler' => function (\Sentry\Tracing\SamplingContext $context): float {
@@ -83,7 +86,7 @@ These settings have no effect if `SENTRY_TRACES_SAMPLE_RATE` is set to `0.0` or 
 ```php {filename:config/sentry.php}
 'tracing' => [
     // Trace queue jobs as their own transactions (this enables tracing for queue jobs)
-    'queue_job_transactions' => env('SENTRY_TRACE_QUEUE_ENABLED', false),
+    'queue_job_transactions' => env('SENTRY_TRACE_QUEUE_ENABLED', true),
 
     // Capture queue jobs as spans when executed on the sync driver
     'queue_jobs' => env('SENTRY_TRACE_QUEUE_JOBS_ENABLED', true),
@@ -97,6 +100,9 @@ These settings have no effect if `SENTRY_TRACES_SAMPLE_RATE` is set to `0.0` or 
     // Capture where the SQL query originated from on the SQL query spans
     'sql_origin' => env('SENTRY_TRACE_SQL_ORIGIN_ENABLED', true),
 
+    // Define a threshold in milliseconds for SQL queries to resolve their origin
+    'sql_origin_threshold_ms' => env('SENTRY_TRACE_SQL_ORIGIN_THRESHOLD_MS', 100),
+
     // Capture views rendered as spans
     'views' => env('SENTRY_TRACE_VIEWS_ENABLED', true),
 
@@ -106,11 +112,17 @@ These settings have no effect if `SENTRY_TRACES_SAMPLE_RATE` is set to `0.0` or 
     // Capture HTTP client requests as spans
     'http_client_requests' => env('SENTRY_TRACE_HTTP_CLIENT_REQUESTS_ENABLED', true),
 
+    // Capture Laravel cache events (hits, writes etc.) as spans
+    'cache' => env('SENTRY_TRACE_CACHE_ENABLED', true),
+
     // Capture Redis operations as spans (this enables Redis events in Laravel)
     'redis_commands' => env('SENTRY_TRACE_REDIS_COMMANDS', false),
 
     // Capture where the Redis command originated from on the Redis command spans
     'redis_origin' => env('SENTRY_TRACE_REDIS_ORIGIN_ENABLED', true),
+
+    // Capture send notifications as spans
+    'notifications' => env('SENTRY_TRACE_NOTIFICATIONS_ENABLED', true),
 
     // Enable tracing for requests without a matching route (404's)
     'missing_routes' => env('SENTRY_TRACE_MISSING_ROUTES_ENABLED', false),

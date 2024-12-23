@@ -11,7 +11,7 @@ type Props = {
 };
 
 export async function Include({name}: Props) {
-  let doc: any = null;
+  let doc: Awaited<ReturnType<typeof getFileBySlug>> | null = null;
   if (name.endsWith('.mdx')) {
     name = name.slice(0, name.length - '.mdx'.length);
   }

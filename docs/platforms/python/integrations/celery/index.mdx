@@ -17,45 +17,108 @@ pip install --upgrade 'sentry-sdk[celery]'
 
 If you have the `celery` package in your dependencies, the Celery integration will be enabled automatically when you initialize the Sentry SDK.
 
-Make sure that the **call to `init` is loaded on worker startup**, and not only in the module where your tasks are defined. Otherwise, the initialization happens too late and events might end up not being reported.
+<Alert>
+  Make sure that the call to `sentry_sdk.init()` is loaded on worker startup and
+  not only in the module where your tasks are defined. Otherwise, the
+  initialization may happen too late and events might not get reported.
+</Alert>
 
-<SignInNote />
+### Set up Celery Without Django
 
-```python
+When using Celery without Django, you'll need to initialize the Sentry SDK in both your application and the Celery worker processes spawned by the Celery daemon.
+
+In addition to capturing errors, you can use Sentry for [distributed tracing](/concepts/key-terms/tracing/) and [profiling](/product/explore/profiling/). Select what you'd like to install to get the corresponding installation and configuration instructions below.
+
+#### Set up Sentry in Celery Daemon or Worker Processes
+
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "profiling"]}
+/>
+
+```python {filename:tasks.py} {"onboardingOptions": {"performance": "12-14", "profiling": "15-18"}}
+from celery import Celery, signals
 import sentry_sdk
 
-sentry_sdk.init(
-    dsn='___PUBLIC_DSN___',
-    enable_tracing=True
-)
+# Initializing Celery
+app = Celery("tasks", broker="...")
+
+# Initialize Sentry SDK on Celery startup
+@signals.celeryd_init.connect
+def init_sentry(**_kwargs):
+    sentry_sdk.init(
+        dsn="___PUBLIC_DSN___",
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for tracing.
+        traces_sample_rate=1.0,
+        # Set profiles_sample_rate to 1.0 to profile 100%
+        # of sampled transactions.
+        # We recommend adjusting this value in production.
+        profiles_sample_rate=1.0,
+    )
+
+# Task definitions go here
+@app.task
+def add(x, y):
+    return x + y
 ```
 
-### Standalone Setup
+The [`celeryd_init`](https://docs.celeryq.dev/en/stable/userguide/signals.html?#celeryd-init) signal is triggered when the Celery daemon starts, before the worker processes are spawned. If you need to initialize Sentry for each individual worker process, us the [`worker_init`](https://docs.celeryq.dev/en/stable/userguide/signals.html?#worker-init) signal instead.
 
-If you're using Celery standalone, there are two ways to set this up:
+#### Set up Sentry in Your Application
 
-- Initializing the SDK in the configuration file loaded with Celery's `--config` parameter
-- Initializing the SDK by hooking it to either the [`celeryd_init`](https://docs.celeryq.dev/en/stable/userguide/signals.html?#celeryd-init) or [`worker_init`](https://docs.celeryq.dev/en/stable/userguide/signals.html?#worker-init) signals
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "profiling"]}
+/>
 
-  ```python
-  import sentry_sdk
-  from celery import Celery, signals
+```python {filename:main.py} {"onboardingOptions": {"performance": "8-10", "profiling": "11-14"}}
+from tasks import add
+import sentry_sdk
 
-  app = Celery("myapp")
+def main():
+    # Initializing Sentry SDK in our process
+    sentry_sdk.init(
+        dsn="___PUBLIC_DSN___",
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for tracing.
+        traces_sample_rate=1.0,
+        # Set profiles_sample_rate to 1.0 to profile 100%
+        # of sampled transactions.
+        # We recommend adjusting this value in production.
+        profiles_sample_rate=1.0,
+    )
 
-  #@signals.worker_init.connect
-  @signals.celeryd_init.connect
-  def init_sentry(**_kwargs):
-      sentry_sdk.init(...)  # same as above
-  ```
+    # Enqueueing a task to be processed by Celery
+    with sentry_sdk.start_transaction(name="calling-a-celery-task"):
+        result = add.delay(4, 4)
 
-### Setup With Django
+if __name__ == "__main__":
+    main()
+```
 
-If you're using Celery with Django in a conventional setup, have already initialized the SDK in [your `settings.py` file](/platforms/python/integrations/django/#configure), and have Celery using the same settings with [`config_from_object`](https://docs.celeryq.dev/en/stable/django/first-steps-with-django.html), you don't need to initialize the SDK separately for Celery.
+### Set up Celery With Django
+
+If you're using Celery with Django in a typical setup, have initialized the SDK in your `settings.py` file (as described in the [Django integration documentation](/platforms/python/integrations/django/#configure)), and have your Celery configured to use the same settings as [`config_from_object`](https://docs.celeryq.dev/en/stable/django/first-steps-with-django.html), there's no need to initialize the Celery SDK separately.
 
 ## Verify
 
-To verify if your SDK is initialized on worker start, you can pass `debug=True` to `sentry_sdk.init()` to see extra output when the SDK is initialized. If the output appears during worker startup and not only after a task has started, then it's working properly.
+To confirm that your SDK is initialized on worker start, pass `debug=True` to `sentry_sdk.init()`. This will add extra output to your Celery logs when the SDK is initialized. If you see the output during worker startup, and not just after a task has started, then it's working correctly.
+
+The snippet below includes an intentional `ZeroDivisionError` in the Celery task that will be captured by Sentry. To trigger the error call `debug_sentry.delay()`:
+
+```python {filename:tasks.py} {"onboardingOptions": {"performance": "12-14", "profiling": "15-18"}}
+from celery import Celery, signals
+import sentry_sdk
+
+app = Celery("tasks", broker="...")
+
+@signals.celeryd_init.connect
+def init_sentry(**_kwargs):
+    sentry_sdk.init(...)  # same as above
+
+@app.task
+def debug_sentry():
+    1/0
+```
 
 <Alert level="info" title="Note on distributed tracing">
 
@@ -74,9 +137,7 @@ import sentry_sdk
 from sentry_sdk.integrations.celery import CeleryIntegration
 
 sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
-    # ...
+    # same as above
     integrations=[
         CeleryIntegration(
             monitor_beat_tasks=True,
@@ -93,14 +154,16 @@ You can pass the following keyword arguments to `CeleryIntegration()`:
 
 - `propagate_traces`
 
-Propagate Sentry tracing information to the Celery task. This makes it possible to link Celery task errors to the function that triggered the task.
+  Propagate Sentry tracing information to the Celery task. This makes it possible to link Celery task errors to the function that triggered the task.
 
-If this is set to `False`:
+  If this is set to `False`:
 
-- errors in Celery tasks won't be matched to the triggering function.
-- your Celery tasks will start a new trace and won't be connected to the trace in the calling function.
+  - errors in Celery tasks won't be matched to the triggering function.
+  - your Celery tasks will start a new trace and won't be connected to the trace in the calling function.
 
-The default is `True`.
+  The default is `True`.
+
+  See [Distributed Traces](#distributed-traces) below to learn how to get more fine grained control over distributed tracing in Celery tasks.
 
 - `monitor_beat_tasks`:
 
@@ -128,13 +191,14 @@ You can disable this globally with the `propagate_traces` parameter, documented 
 
 If you want to have more fine-grained control over trace distribution, you can override the `propagate_traces` option by passing the `sentry-propagate-traces` header when starting the Celery task:
 
+**Note:** The `CeleryIntegration` does not utilize the `traces_sample_rate` config option for deciding if a trace should be propagated into a Celery task.
+
 ```python
 import sentry_sdk
 
-# Enable global distributed traces (this is the default, just to be explicit.)
+# Enable global distributed traces (this is the default, just to be explicit)
 sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
+    # same as above
     integrations=[
         CeleryIntegration(
             propagate_traces=True
@@ -150,7 +214,7 @@ my_task_b.apply_async(
     args=("some_parameter", )
 )
 
-# This will NOT propagate the trace. (The task will start its own trace):
+# This will NOT propagate the trace. The task will start its own trace:
 my_task_b.apply_async(
     args=("some_parameter", ),
     headers={"sentry-propagate-traces": False},
@@ -161,5 +225,7 @@ my_task_b.apply_async(
 
 ## Supported Versions
 
-- Celery: 3.0+
-- Python: 2.7+ (Celery 3+), 3.6+ (Celery 5.0+), 3.7+ (Celery 5.1+)
+- Celery: 4.0+
+- Python: 3.6+
+
+<Include name="python-use-older-sdk-for-legacy-support.mdx" />

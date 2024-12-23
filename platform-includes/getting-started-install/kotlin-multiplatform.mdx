@@ -2,45 +2,8 @@ To install the Kotlin Multiplatform SDK, you need to add the following to your `
 
 ```kotlin {filename:shared/build.gradle.kts}
 plugins {
-    kotlin("multiplatform")
-    kotlin("native.cocoapods")
-    // .. your other plugins
-}
-
-kotlin {
-  android()
-  iosX64()
-  iosArm64()
-  iosSimulatorArm64()
-
-  sourceSets {
-    val commonMain by getting {
-      dependencies {
-        implementation("io.sentry:sentry-kotlin-multiplatform:{{@inject packages.version('sentry.kotlin.kmp', '0.0.1-alpha.2') }}")
-      }
-    }
-
-    // Android target
-    val androidMain by getting {
-      dependsOn(commonMain)
-    }
-
-    // Apple targets:
-    val iosMain by getting {
-      dependsOn(commonMain)
-    }
-  }
-
-  cocoapods {
-    summary = "Some description for the Shared Module"
-    homepage = "Link to the Shared Module homepage"
-    ios.deploymentTarget = "14.1"
-    podfile = project.file("../iosApp/Podfile")
-    // Make sure you use the proper version according to our Cocoa SDK Version Compatibility Table.
-    pod("Sentry", "~> 8.20.0")
-    framework {
-      baseName = "shared"
-    }
-  }
+  id("io.sentry.kotlin.multiplatform.gradle") version "{{@inject packages.version('sentry.kotlin.kmp', '0.9.0') }}"
 }
 ```
+
+The plugin installs the Sentry KMP dependency. If you're using the Cocoapods plugin, it will also install the Sentry Cocoa dependency.

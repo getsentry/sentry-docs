@@ -49,14 +49,31 @@ The transport is invoked in the same thread as the call to
 `sentry_capture_event`. Consider to offload network communication to a
 background thread or thread pool to avoid blocking execution.
 
-## Using an HTTP Proxy
+## Using a Proxy
 
-The Native SDK allows the configuration of an HTTP proxy through which requests can be tunneled to our backend. This proxy must allow `CONNECT` requests to establish a proxy connection. It can be configured via the following option interface:
+The Native SDK allows the configuration of an `HTTP` (`CONNECT`) or `SOCKS5` proxy through which requests can be tunneled to our backend. It can be configured via the following option interface:
 
 ```c
 sentry_options_t *options = sentry_options_new();
-sentry_options_set_http_proxy(options, "http://my.proxy:10010");
+sentry_options_set_proxy(options, "http://my.proxy:8080");
 sentry_init(options);
 
 /* ... */
 ```
+The same function can also be used for the `SOCKS5` proxy:
+```c
+sentry_options_t *options = sentry_options_new();
+sentry_options_set_proxy(options, "socks5://my.proxy:1080");
+sentry_init(options);
+
+/* ... */
+```
+
+
+We support `HTTP` proxies on all platforms, and `SOCKS5` proxies on Linux and macOS. Depending on the platform, the transport provides a fallback in case the proxy is not reachabled. The following table shows the expected behaviour.
+
+| Platform | http-proxy                                          | socks-proxy                                          |
+|----------|-----------------------------------------------------|------------------------------------------------------|
+| Windows  | Internal: fallback <br /> Crashpad: fallback        | N/A                                                  |
+| Linux    | Internal: fallback <br />  Crashpad: fallback       | Internal: no fallback <br />  Crashpad: no fallback  |
+| macOS    | Internal: no fallback <br />  Crashpad: no fallback | Internal: no fallback <br />  Crashpad: fallback     |

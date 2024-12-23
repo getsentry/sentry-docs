@@ -23,15 +23,31 @@ Limited Sentry support is available on newer Python runtimes by directly enablin
 
 You can use the Google Cloud Functions integration for the Python SDK like this:
 
-<SignInNote />
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
 
-```python
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python {"onboardingOptions": {"performance": "6-8", "profiling": "9-12"}}
 import sentry_sdk
 from sentry_sdk.integrations.gcp import GcpIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
     integrations=[
         GcpIntegration(),
     ],
@@ -40,8 +56,6 @@ sentry_sdk.init(
 def http_function_entrypoint(request):
     # ...
 ```
-
-Check out Sentry's [GCP sample apps](https://github.com/getsentry/examples/tree/master/gcp-cloud-functions) for detailed examples.
 
 <Alert level="info" title="Note">
 
@@ -57,12 +71,9 @@ the [configured timeout](https://cloud.google.com/functions/docs/concepts/exec#t
 To enable the warning, update the SDK initialization to set `timeout_warning` to
 `true`:
 
-<SignInNote />
-
 ```python
 sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    enable_tracing=True,
+    # ...
     integrations=[
         GcpIntegration(
             timeout_warning=True

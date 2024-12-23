@@ -1,0 +1,58 @@
+name: Lint Docs for 404s
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4
+        id: setup-node
+        with:
+          node-version-file: 'package.json'
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            docs:
+              - 'docs/**'
+              - 'includes/**'
+              - 'platform-includes/**'
+            dev-docs:
+              - 'develop-docs/**'
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: actions/cache@v4
+        id: cache
+        with:
+          path: ${{ github.workspace }}/node_modules
+          key: node-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+
+      - run: yarn install --frozen-lockfile
+        if: steps.cache.outputs.cache-hit != 'true'
+
+      - run: yarn build
+        if: steps.filter.outputs.docs == 'true'
+
+      - run: yarn build:developer-docs
+        if: steps.filter.outputs.dev-docs == 'true'
+
+      - name: Start Http Server
+        run: yarn start &
+        if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
+
+      - name: Lint 404s
+        run: bun ./scripts/lint-404s/main.ts
+        if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
+
+      - name: Kill Http Server
+        run: kill $(lsof -t -i:3000) || true
+        if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
+        continue-on-error: true

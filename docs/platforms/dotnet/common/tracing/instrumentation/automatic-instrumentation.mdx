@@ -1,0 +1,51 @@
+---
+title: Automatic Instrumentation
+description: "Learn what transactions are captured after tracing is enabled."
+sidebar_order: 20
+---
+
+## Propagating a Trace
+
+<Note>
+
+If you are using Sentry's ASP.NET Core integration, trace propagation is enabled automatically on all clients created by an HTTP client factory. Read more about it <Link to="/platforms/dotnet/guides/aspnetcore/tracing/instrumentation/automatic-instrumentation">here</Link>.
+
+</Note>
+
+Sentry SDK provides a custom HTTP handler, `SentryHttpMessageHandler`. This handler can be used inside `HttpClient` to automatically propagate traces and create spans to track outgoing requests.
+
+To use it, create an instance of `HttpClient` by passing an instance of `SentryHttpMessageHandler` as a constructor parameter:
+
+```csharp
+var httpHandler = new SentryHttpMessageHandler();
+var httpClient = new HttpClient(httpHandler);
+
+var response = await httpClient.GetStringAsync("https://example.com");
+```
+
+Upon sending a request to `https://example.com`, the instrumented HTTP client will:
+
+- Populate the `sentry-trace` header on the request. This allows peer service to start a transaction by linking it to the current (assuming it's also instrumented with Sentry).
+- Start a span named `GET https://example.com` which will track the corresponding HTTP operation on the current transaction.
+
+To avoid depleting performance quota, Sentry will only create request spans if there's an active transaction on the scope. If there's no active transaction, you'll need to create one before making an HTTP request for request tracing to work:
+
+```csharp
+  var transaction = SentrySdk.StartTransaction("tutorial", "example");
+  SentrySdk.ConfigureScope(scope => scope.Transaction = transaction);
+
+  // The SentryHttpMessageHandler will automatically create a span for the request
+  var response = await httpClient.GetStringAsync("https://example.com");
+
+  transaction.Finish();
+```
+
+Additionally, `SentryHttpMessageHandler` also inherits from `DelegatingHandler` which allows you to chain it together with other handlers. For example:
+
+```csharp
+var innerHttpHandler = new HttpClientHandler();
+var sentryHttpHandler = new SentryHttpMessageHandler(innerHttpHandler);
+var httpClient = new HttpClient(sentryHttpHandler);
+```
+
+<PlatformContent includePath="performance/automatic-instrumentation-integrations" />

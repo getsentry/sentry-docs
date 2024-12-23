@@ -1,20 +1,26 @@
 ---
 title: net/http
-description: "Learn how to add Sentry instrumentation to programs using the net/http package."
+description: "The net/http package provides HTTP client and server implementations. Learn how to add Sentry to programs using this package."
 ---
 
-This page shows how to add Sentry instrumentation to programs using the net/http
-package.
+For a quick reference, there is a [complete example](https://github.com/getsentry/sentry-go/tree/master/_examples/http) at the Go SDK source code repository.
 
-For a quick reference, there is a [complete
-example](https://github.com/getsentry/sentry-go/tree/master/_examples/http) at the
-Go SDK source code repository.
+[Go Dev-style API documentation](https://pkg.go.dev/github.com/getsentry/sentry-go/http) is also available.
 
-[GoDoc-style API
-documentation](https://godoc.org/github.com/getsentry/sentry-go/http) is also
-available.
+## Features
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
 
 ## Install
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+  ]}
+/>
 
 ```bash
 go get github.com/getsentry/sentry-go/http
@@ -22,9 +28,8 @@ go get github.com/getsentry/sentry-go/http
 
 <Break />
 
-<SignInNote />
 
-```go
+```go {"onboardingOptions": {"performance": "12-16"}}
 import (
 	"fmt"
 	"net/http"
@@ -38,7 +43,7 @@ if err := sentry.Init(sentry.ClientOptions{
 	Dsn: "___PUBLIC_DSN___",
 	EnableTracing: true,
 	// Set TracesSampleRate to 1.0 to capture 100%
-	// of transactions for performance monitoring.
+	// of transactions for tracing.
 	// We recommend adjusting this value in production,
 	TracesSampleRate: 1.0,
 }); err != nil {
@@ -81,7 +86,7 @@ Timeout time.Duration
 
 ## Usage
 
-`sentryhttp` attaches an instance of `*sentry.Hub` (https://godoc.org/github.com/getsentry/sentry-go#Hub) to the request's context, which makes it available throughout the rest of the request's lifetime.
+`sentryhttp` attaches an instance of `*sentry.Hub` (https://pkg.go.dev/github.com/getsentry/sentry-go#Hub) to the request's context, which makes it available throughout the rest of the request's lifetime.
 You can access it by using the `sentry.GetHubFromContext()` method on the request itself in any of your proceeding middleware and routes.
 And it should be used instead of the global `sentry.CaptureMessage`, `sentry.CaptureException`, or any other calls, as it keeps the separation of data between the requests.
 
@@ -131,7 +136,6 @@ if err := http.ListenAndServe(":3000", nil); err != nil {
 
 ### Accessing Request in `BeforeSend` callback
 
-<SignInNote />
 
 ```go
 sentry.Init(sentry.ClientOptions{

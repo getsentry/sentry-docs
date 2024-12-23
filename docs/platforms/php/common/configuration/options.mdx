@@ -23,7 +23,7 @@ Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-uti
 
 </ConfigKey>
 
-<ConfigKey name="logger" supported={["php", "php.laravel"]} notSupported={["php.symfony"]}>
+<ConfigKey name="logger">
 
 If enabled, the SDK prints out debug information about if something went wrong while sending events.
 It isn't recommended to use this in production.
@@ -58,13 +58,13 @@ By default all types of errors are be reported (equivalent to `E_ALL`).
 
 <ConfigKey name="sample-rate">
 
-Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0` which means that 100% of error events are sent. If set to `0.1` only 10% of error events will be sent. Events are picked randomly.
+Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly.
 
 </ConfigKey>
 
 <ConfigKey name="max-breadcrumbs">
 
-This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`, but you can set this to any number. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
+This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`, but you can set this to any number. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
 
 </ConfigKey>
 
@@ -84,7 +84,7 @@ If this flag is enabled, certain personally identifiable information (PII) is ad
 
 <Note>
 
-If you are using Sentry in your mobile app, read our [frequently asked questions about mobile data privacy](/product/security/mobile-privacy/) to assist with Apple App Store and Google Play app privacy details.
+If you are using Sentry in your mobile app, read our [frequently asked questions about mobile data privacy](/security-legal-pii/security/mobile-privacy/) to assist with Apple App Store and Google Play app privacy details.
 
 </Note>
 
@@ -177,6 +177,12 @@ This function is called with an SDK-specific transaction event object, and can r
 
 </ConfigKey>
 
+<ConfigKey name="before-send-check-in">
+
+This function is called with an SDK-specific check-in event object, and can return a modified check-in event object, or `null` to skip reporting the event.
+
+</ConfigKey>
+
 <ConfigKey name="before-breadcrumb">
 
 This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
@@ -235,5 +241,17 @@ A number between 0 and 1, controlling the percentage chance a given transaction 
 <ConfigKey name="traces-sampler">
 
 A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="traces-sample-rate" /> must be defined to enable tracing.
+
+</ConfigKey>
+
+<ConfigKey name="trace-propagation-targets">
+
+An optional property that controls which downstream services receive tracing data, in the form of a `sentry-trace` and a `baggage` header attached to any outgoing HTTP requests.
+
+The option may contain a list of strings against which the hosts of outgoing requests are matched.
+If one of the entries in the list matches the host of an outgoing request, trace data will be attached to that request.
+
+If <PlatformIdentifier name="trace-propagation-targets" /> is not provided, trace data is attached to every outgoing request from the [instrumented client](../../tracing/instrumentation/requests-module/).
+To disable sending trace data to any downstream service, set this option to an empty array (`[]`).
 
 </ConfigKey>

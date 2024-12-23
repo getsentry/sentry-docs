@@ -19,7 +19,7 @@ export function ParamTable({fields}: Props) {
             <strong>{name}</strong>
           </td>
           <td className="content-flush-bottom">
-            <ul className="api-params">
+            <ul className="p-0">
               {paramList.map(param => (
                 <li key={param.name}>
                   <code>{param.name}</code>

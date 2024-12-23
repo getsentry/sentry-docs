@@ -2,6 +2,49 @@
 title: Sentry CLI
 description: "Upload your source maps using Sentry CLI."
 sidebar_order: 6
+notSupported:
+  - javascript.nextjs
+  - javascript.remix
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.astro
+  - javascript.nuxt
 ---
 
-<PlatformContent includePath="sourcemaps/upload/cli" />
+In this guide, you'll learn how to successfully upload source maps using our `sentry-cli` tool.
+
+<Include name="debug-id-requirement.mdx" />
+
+## Automatic Setup
+
+The easiest way to configure source map uploading using the Sentry CLI is with Sentry's Wizard:
+
+<Include name="sourcemaps-wizard-instructions.mdx" />
+
+If you want to configure source map uploading using the CLI, follow the steps below.
+
+## Manual Setup
+
+### 1. Generate Source Maps
+
+You can generate source maps using the tooling of your choice. See examples from other guides linked under <PlatformLink to="/sourcemaps/uploading/">Uploading Source Maps</PlatformLink>.
+
+<Include name="sentry-cli-sourcemaps.mdx" />
+
+<PlatformSection supported={['javascript.angular']}>
+
+## Fixing Angular Service Worker caching issues
+
+If you use the [Angular service worker](https://angular.dev/ecosystem/service-workers), you might encounter caching issues when uploading source maps with Sentry CLI.
+This happens because Sentry CLI injects debugIds into the generated JavaScript chunks after the build process.
+This means that the file hashes in `ngsw.json` for these chunks become invalid.
+To resolve the invalid hashes, regenerate `ngsw.json` after the debugIds have been injected using the following command:
+
+```bash
+node_modules/.bin/ngsw-config <dist> <config>
+```
+
+- `dist` Path to the built chunk files. The `ngsw.json` with the old hashes should be located there.
+- `config` Location of `ngsw-config.json` (should be in project root)
+
+</PlatformSection>
