@@ -12,7 +12,7 @@ import {Combobox, ComboboxItem, ComboboxList, ComboboxProvider} from '@ariakit/r
 import {CaretRightIcon, CaretSortIcon, MagnifyingGlassIcon} from '@radix-ui/react-icons';
 import * as RadixSelect from '@radix-ui/react-select';
 import {matchSorter} from 'match-sorter';
-import {usePathname} from 'next/navigation';
+import {usePathname, useRouter} from 'next/navigation';
 
 import {PlatformIcon} from 'sentry-docs/components/platformIcon';
 import {Platform, PlatformGuide, PlatformIntegration} from 'sentry-docs/types';
@@ -90,13 +90,12 @@ export function PlatformSelector({
     return matches_;
   }, [searchValue, currentPlatformKey, platformsAndGuides]);
 
+  const router = useRouter();
   const onPlatformChange = (platformKey: string) => {
     const platform_ = platformsAndGuides.find(platform => platform.key === platformKey);
     if (platform_) {
       localStorage.setItem('active-platform', platform_.key);
-      // feels wrong to use window.location here,
-      // but router.push is not working on mobile for some reason
-      window.location.href = platform_.url;
+      router.push(platform_.url);
     }
   };
 

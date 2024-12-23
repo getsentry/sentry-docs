@@ -433,4 +433,159 @@ Learn more about fixing these caching issues in the <PlatformLink to="/sourcemap
 
 </PlatformSection>
 
+<PlatformSection notSupported={['javascript.nuxt']}>
+  <Expandable permalink title="pnpm: Resolving 'import-in-the-middle' external package errors">
+
+When using pnpm, you might encounter errors related to packages that can't be external, particularly with packages like `import-in-the-middle` and `require-in-the-middle`. These errors typically occur due to pnpm's strict dependency management and hoisting behavior.
+
+While adding these packages as direct dependencies might remove the warning messages, it often doesn't resolve the underlying functionality issues:
+
+```bash
+pnpm add import-in-the-middle require-in-the-middle
+```
+
+As a workaround, create or modify `.npmrc` in your project root:
+
+```npmrc
+shamefully-hoist=true
+```
+
+<Alert level="warning">
+  **Note**: While `shamefully-hoist=true` usually isn't the ideal solution from a dependency management perspective, it's sometimes necessary for compatibility with certain packages that expect Node.js module resolution behavior similar to npm or yarn.
+</Alert>
+
+  </Expandable>
+</PlatformSection>
+
+<PlatformSection supported={['javascript.nuxt']}>
+  <Expandable permalink title="Failed to register 'import-in-the-middle' during build time">
+    After adding `sentry.server.config.ts` and building the project, you might get an error like this:
+    `Failed to register ESM hook import-in-the-middle/hook.mjs`. You can add an override (npm/pnpm) or a resolution (yarn)
+    for `@vercel/nft` to fix this. This will add the `hook.mjs` file to your build output. See the [underlying issue in the UnJS Nitro project](https://github.com/unjs/nitro/issues/2703).
+
+    Nitro updated `@vercel/nft` in Nitro version `2.10.0`, so you might not get this error anymore, and you don't need to
+    add this override/resolution.
+
+    ```json {tabTitle:npm} {filename:package.json}
+    "overrides": {
+      "@vercel/nft": "^0.27.4"
+    }
+    ```
+
+    ```json {tabTitle:yarn} {filename:package.json}
+    "resolutions": {
+      "@vercel/nft": "^0.27.4"
+    }
+    ```
+
+    ```json {tabTitle:pnpm} {filename:package.json}
+    "pnpm": {
+      "overrides": {
+        "@vercel/nft": "^0.27.4"
+      }
+    }
+    ```
+
+  </Expandable>
+
+  <Expandable permalink title="pnpm dev: Cannot find package 'import-in-the-middle'">
+
+    Sentry injects `import "import-in-the-middle/hook.mjs"` in your server entry. This import acts as a hint for node bundlers to really include this file.
+    As pnpm implements a strict dependency isolation, this import might cause problems.
+    Per default, `shamefully-hoist` is `false` ([pnpm docs here](https://pnpm.io/next/npmrc#shamefully-hoist)) and this prevents accessing non-declared dependencies.
+    You probably don't want to change this setting, so you have to explicitly add the dependency `import-in-the-middle`:
+
+    ```bash
+    pnpm add import-in-the-middle
+    ```
+
+  </Expandable>
+
+  <Expandable permalink title="Nuxt: Server-side Nitro is not sending events">
+    Nuxt builds the server-side Nitro application as ES Modules, which introduces limitations for server-side tracing during development.
+    Currently, trace collection is only supported when building and running the application. Development mode (`nuxt dev`) is currently not supported.
+
+    When running the build output, Sentry needs to be initialized before running the rest of the application. This is done automatically, but might not work for your use case.
+    Read more about this in <PlatformLink to="/install">installation methods</PlatformLink>.
+
+    ---
+
+    We are currently investigating an issue where the server-side is not correctly initialized with a recent update of Nitro (the server-side toolkit in Nuxt).
+
+    We are working on figuring this out ([see issue here](https://github.com/getsentry/sentry-javascript/issues/14514)). For the time being, you can add the following overrides to your application:
+
+    ```json {tabTitle:npm} {filename:package.json}
+    "overrides": {
+      "nitropack": "~2.9.7",
+      "@vercel/nft": "^0.27.4"
+    }
+    ```
+
+    ```json {tabTitle:yarn} {filename:package.json}
+    "resolutions": {
+      "nitropack": "~2.9.7",
+      "@vercel/nft": "^0.27.4"
+    }
+    ```
+
+    ```json {tabTitle:pnpm} {filename:package.json}
+    "pnpm": {
+      "overrides": {
+        "nitropack": "~2.9.7",
+        "@vercel/nft": "^0.27.4"
+      }
+    }
+    ```
+
+  </Expandable>
+</PlatformSection>
+
+<PlatformSection supported={['javascript.nextjs']}>
+  <Expandable permalink title="Out of Memory (OOM) errors during build">
+    The problem here is related to memory consumption during the build process, especially when generating source maps. Here are some potential solutions and workarounds:
+    
+    - Update your `@sentry/nextjs` package to the latest version.
+    - Increase Node.js memory limit: You can try increasing the memory limit for Node.js during the build process. Add this to your build command: `NODE_OPTIONS="--max-old-space-size=8192" next build`. This flag will increase the memory available to the node process to 8 GB. We have found that Next.js consumes around 4 GB in most cases. Decrease the size depending on your memory availability.
+    - Disable source maps entirely: As a last resort, you can disable source map generation completely:
+    ```js {filename:next.config.js}
+      module.exports = withSentryConfig(module.exports, {
+        sourcemaps: {
+          disable: true,
+        },
+      }
+    ```
+
+  </Expandable>
+</PlatformSection>
+
+<PlatformSection supported={['javascript.nextjs']}>
+  <Expandable permalink title="Using the Sentry Next SDK in a Nx monorepo (using `@nx/next`)">
+    To set up Sentry's Next.js SDK in an Nx monorepo context, consider the following setup:
+
+    ```js {filename:next.config.js}
+      const nextConfig = {
+      // ...
+      };
+
+      const plugins = [
+      // Your plugins excluding withNx
+      ];
+
+      module.exports = async (phase, context) => {
+        let updatedConfig = plugins.reduce((acc, fn) => fn(acc), nextConfig);
+
+        // Apply the async function that `withNx` returns.
+        updatedConfig = await withNx(updatedConfig)(phase, context);
+
+        return updatedConfig;
+      };
+
+      // The Sentry plugin should always be applied last
+      const { withSentryConfig } = require('@sentry/nextjs');
+      module.exports = withSentryConfig(module.exports)
+    ```
+
+  </Expandable>
+</PlatformSection>
+
 If you need additional help, you can [ask on GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose). Customers on a paid plan may also contact support.

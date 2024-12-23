@@ -49,16 +49,27 @@ const BANNERS: BannerType[] = [
   /// ⚠️ KEEP THIS LAST BANNER ACTIVE FOR DOCUMENTATION
   // check it out on `/contributing/pages/banners/`
   {
-    appearsOn: ['^/$', '^/platforms/'],
-    text: 'New products are coming. Join us for Sentry Launch Week, Nov 18-21.',
-    linkURL: 'https://sentry.io/events/launch-week/?promo_name=launchweekQ4FY2024',
-    linkText: `See what's coming`,
-  },
-  {
     appearsOn: ['^/contributing/pages/banners/'],
     text: 'Edit this banner on `/src/components/banner/index.tsx`',
     linkURL: 'https://docs.sentry.io/contributing/pages/banners/',
     linkText: 'CTA',
+  },
+  {
+    appearsOn: ['^/$'],
+    text: 'Check out Sentry Launch Week for our latest product releases.',
+    linkURL: 'https://sentry.io/events/launch-week/?promo_name=launchweekQ4FY2024',
+    linkText: 'See what’s new.',
+  },
+  {
+    appearsOn: [
+      '^/platforms/flutter/',
+      '^/platforms/react-native/',
+      '^/platforms/android/',
+      '^/platforms/apple/guides/ios/',
+    ],
+    text: 'Session Replay for Mobile beta ends January 6, 2025.',
+    linkURL: 'https://docs.sentry.io/product/explore/session-replay/mobile/',
+    linkText: 'Try beta for free now.',
   },
 ];
 

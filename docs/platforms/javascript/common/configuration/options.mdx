@@ -41,12 +41,14 @@ Turns debug mode on or off. If debug is enabled SDK will attempt to print out us
 
 Sets the release. Some SDKs will try to automatically configure a release out of the box but it's a better idea to manually set it to guarantee that the release is in sync with your deploy integrations or source map uploads. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
 
-<PlatformCategorySection supported={['server', 'serverless']}>
-By default the SDK will try to read this value from the `SENTRY_RELEASE` environment variable.
+<PlatformCategorySection supported={["server", "serverless"]}>
+  By default, the SDK will try to read this value from the `SENTRY_RELEASE`
+  environment variable.
 </PlatformCategorySection>
 
-<PlatformCategorySection supported={['browser']}>
-By default the SDK will try to read this value from `window.SENTRY_RELEASE.id` if available.
+<PlatformCategorySection supported={["browser"]}>
+  By default, the SDK will try to read this value from `window.SENTRY_RELEASE.id`
+  if available.
 </PlatformCategorySection>
 
 <PlatformSection supported={["javascript.electron"]}>
@@ -102,9 +104,10 @@ Grouping in Sentry is different for events with stack traces and without. As a r
 <PlatformCategorySection supported={['server', 'serverless']}>
 <ConfigKey name="server-name">
 
-  This option can be used to supply a "server name." When provided, the name of the server is sent along and persisted in the event. For many integrations, the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server.
+This option can be used to supply a "server name." When provided, the name of the server is sent along and persisted in the event. For many integrations, the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server.
 
-  Most SDKs will attempt to auto-discover this value.
+Most SDKs will attempt to auto-discover this value.
+
 </ConfigKey>
 
 </PlatformCategorySection>
@@ -141,6 +144,13 @@ Grouping in Sentry is different for events with stack traces and without. As a r
 
 Defaults to `true`. When set to `true`, the SDK will send session events to Sentry. This is supported in all browser SDKs, emitting one session per pageload and page navigation to Sentry. In mobile SDKs, when the app goes to the background for longer than 30 seconds, sessions are ended.
 
+<Alert title="Deprecation Notice">
+
+{/* We don't use platform links here because we always have to link to node and browser here and doing a conditional just for that feels overkill. */}
+Starting with SDK version 8.43.0 and up, the `autoSessionTracking` option has been deprecated. You can use the [BrowserSession integration](/platforms/javascript/configuration/integrations/browsersession/) in browser environments and the [Http integration](/platforms/javascript/guides/node/configuration/integrations/http/) (via the `trackIncomingRequestsAsSessions` option) in Node.js runtime.
+
+</Alert>
+
 </ConfigKey>
 
 <ConfigKey name="auto-session-tracking" supported={["javascript.electron"]} >
@@ -154,7 +164,6 @@ When not set to `false`, the SDK tracks sessions linked to the lifetime of the E
 Data to be set to the initial scope. Initial scope can be defined either as an object or a callback function, as shown below.
 
 Object:
-
 
 ```javascript
 Sentry.init({
@@ -288,6 +297,8 @@ This function is called with an SDK-specific transaction event object, and can r
 
 <ConfigKey name="before-send-span">
 
+<Include name="platforms/configuration/options/warn-before-send-span.mdx" />
+
 This function is called with a serialized span object, and can return a modified span object, or `null` to skip sending the span. This might be useful for manually stripping PII from spans or to remove individual spans from the span tree.
 This function is only called for child spans of the root span. If you want to modify or drop the root span, including all of its child spans, use [`beforeSendTransaction`](#before-send-transaction) instead.
 
@@ -314,17 +325,20 @@ Switches out the transport used to send events. How this works depends on the SD
 
 Options used to configure the transport. This is an object with the following possible optional keys:
 
-<PlatformCategorySection supported={['server', 'serverless']}>
-- `headers`: An object containing headers to be sent with every request.
-- `proxy`: A proxy used for outbound requests. Can be http or https.
-- `caCerts`: A path or list of paths to a CA certificate, or a buffer of CA certificates.
-- `httpModule`: A custom HTTP module to use for requests. Defaults to the the native `http` and `https` modules.
-- `keepAlive`: Determines whether to keep the socket alive between requests. Defaults to `false`.
+<PlatformCategorySection supported={["server", "serverless"]}>
+  - `headers`: An object containing headers to be sent with every request. -
+  `proxy`: A proxy used for outbound requests. Can be http or https. -
+  `caCerts`: A path or list of paths to a CA certificate, or a buffer of CA
+  certificates. - `httpModule`: A custom HTTP module to use for requests.
+  Defaults to the the native `http` and `https` modules. - `keepAlive`:
+  Determines whether to keep the socket alive between requests. Defaults to
+  `false`.
 </PlatformCategorySection>
 
-<PlatformCategorySection supported={['browser', 'desktop']}>
-- `headers`: An object containing headers to be sent with every request. Used by the SDK's fetch and XHR transports.
-- `fetchOptions`: An object containing options to be passed to the `fetch` call. Used by the SDK's fetch transport.
+<PlatformCategorySection supported={["browser", "desktop"]}>
+  - `headers`: An object containing headers to be sent with every request. Used
+  by the SDK's fetch and XHR transports. - `fetchOptions`: An object containing
+  options to be passed to the `fetch` call. Used by the SDK's fetch transport.
 </PlatformCategorySection>
 
 </ConfigKey>
