@@ -19,7 +19,34 @@ pip install --upgrade 'sentry-sdk'
 
 Add `OpenFeatureIntegration()` to your `integrations` list:
 
-```python
+```python {tabTitle: sentry-sdk >= v2.TODO: (Track One Client)}
+import sentry_sdk
+from sentry_sdk.integrations.openfeature import OpenFeatureIntegration
+from openfeature import api
+
+client = api.get_client()
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    integrations=[
+        OpenFeatureIntegration(client=client),
+    ],
+)
+```
+
+```python {tabTitle: sentry-sdk >= v2.TODO: (Track All Clients)}
+import sentry_sdk
+from sentry_sdk.integrations.openfeature import OpenFeatureIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    integrations=[
+        OpenFeatureIntegration(),
+    ],
+)
+```
+
+```python {tabTitle: sentry-sdk <= v2.TODO: (Track All Clients)}
 import sentry_sdk
 from sentry_sdk.integrations.openfeature import OpenFeatureIntegration
 
@@ -35,7 +62,27 @@ sentry_sdk.init(
 
 The integration is tested by evaluating a feature flag using your OpenFeature SDK before capturing an exception.
 
-```python
+```python {tabTitle: sentry-sdk >= v2.TODO: (Track One Client)}
+from openfeature import api
+import sentry_sdk
+
+# Reference `client` from the Configure step.
+client.get_boolean_value("hello", default_value=False)
+
+sentry_sdk.capture_exception(Exception("Something went wrong!"))
+```
+
+```python {tabTitle: sentry-sdk >= v2.TODO: (Track All Clients)}
+from openfeature import api
+import sentry_sdk
+
+client = api.get_client()
+client.get_boolean_value("hello", default_value=False)
+
+sentry_sdk.capture_exception(Exception("Something went wrong!"))
+```
+
+```python {tabTitle: sentry-sdk <= v2.TODO: (Track All Clients)}
 from openfeature import api
 import sentry_sdk
 
