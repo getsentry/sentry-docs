@@ -46,7 +46,7 @@ For more information on how to use Unleash, read Unleash's [Python reference](ht
 
 The integration is tested by evaluating a feature flag using your Unleash SDK before capturing an exception.
 
-```python
+```python {tabTitle: Python, using is_enabled}
 import sentry_sdk
 
 # Re-use `unleash_client` from the previous step.
@@ -55,9 +55,17 @@ test_flag_enabled = unleash_client.is_enabled("test-flag")
 sentry_sdk.capture_exception(Exception("Something went wrong!"))
 ```
 
-Visit the Sentry website and confirm that your error event has recorded the feature flag "test-flag" and its value
-is equal to `test_flag_enabled`.
+```python {tabTitle: Python, using get_variant}
+import sentry_sdk
 
-Note that we also track the `"enabled"` field in the results of [`get_variant()`](https://docs.getunleash.io/reference/sdks/python#getting-a-variant) calls.
+# Re-use `unleash_client` from the previous step.
+test_flag_variant = unleash_client.get_variant("test-flag")
+test_flag_enabled = test_flag_variant["enabled"]
+
+sentry_sdk.capture_exception(Exception("Something went wrong!"))
+```
+
+Visit the Sentry website and confirm that your error event has recorded the feature flag "test-flag", and its value
+is equal to `test_flag_enabled`.
 
 <PlatformContent includePath="feature-flags/next-steps" />
