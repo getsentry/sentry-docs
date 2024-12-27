@@ -1,0 +1,61 @@
+---
+title: Unleash
+description: "Learn how to use Sentry with Unleash."
+---
+
+<PlatformContent includePath="feature-flags/prerelease-alert" />
+
+The [Unleash](https://www.getunleash.io/) integration tracks feature flag evaluations produced by the Unleash SDK. These evaluations are held in memory and sent to Sentry for review and analysis if an error occurs. **At the moment, we only support boolean flag evaluations.**
+
+## Install
+
+Install `sentry-sdk` and `UnleashClient` from PyPI. The minimum versions to use this integration are TODO: and 6.0.1, respectively.
+
+```bash
+pip install --upgrade sentry-sdk UnleashClient
+```
+
+## Configure
+
+Add a `UnleashIntegration` to your `integrations` list:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.unleash import UnleashIntegration
+from UnleashClient import UnleashClient
+
+unleash_client = UnleashClient(
+    url="<Unleash server URL>/api/",  # "http://localhost:4242/api/" if you are self-hosting Unleash.
+    app_name="my-app",                # Identifies your app in the Unleash UI.
+    custom_headers={"Authorization": os.environ["UNLEASH_CLIENT_API_TOKEN"]}
+)
+
+unleash_integration = UnleashIntegration(unleash_client)
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    integrations=[
+        unleash_integration,
+    ],
+)
+```
+
+For more information on how to use Unleash, read Unleash's [Python reference](https://docs.getunleash.io/reference/sdks/python) and [quickstart guide](https://docs.getunleash.io/quickstart).
+
+## Verify
+
+The integration is tested by evaluating a feature flag using your Unleash SDK before capturing an exception.
+
+```python
+import sentry_sdk
+
+# Re-use `unleash_client` from the previous step.
+test_flag_enabled = unleash_client.is_enabled("test-flag")
+
+sentry_sdk.capture_exception(Exception("Something went wrong!"))
+```
+
+Visit the Sentry website and confirm that your error event has recorded the feature flag "test-flag" and its value
+is equal to `test_flag_enabled`. Note we also track the `"enabled"` field in the result of [`get_variant()`](https://docs.getunleash.io/reference/sdks/python#getting-a-variant).
+
+<PlatformContent includePath="feature-flags/next-steps" />
