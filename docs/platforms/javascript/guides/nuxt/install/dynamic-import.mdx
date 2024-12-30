@@ -7,16 +7,17 @@ description: "Learn about how the Nuxt SDK leverages dynamic input() in the buil
 ## Understanding the `import()` expression
 
 <Alert level='warning'>
-  This installation method does not work with more recent versions of Nuxt/Nitro.
+  This installation method doesn't work with more recent versions of Nuxt/Nitro.
 
-  We recommend the guide for installing the SDK with the <PlatformLink to="/install/cli-import">CLI flag `--import`</PlatformLink> or <PlatformLink to="/install/limited-server-tracing">limited server tracing</PlatformLink>
+  We recommend reading the guide for installing the SDK with the <PlatformLink to="/install/cli-import">CLI flag `--import`</PlatformLink> or <PlatformLink to="/install/limited-server-tracing">limited server tracing</PlatformLink>
 </Alert>
 
 The `import()` expression, or dynamic import, enables flexible, conditional module loading in ESM.
-For the Sentry Nuxt SDK, it provides an approach to initialize server-side Sentry configuration before application startup.
+Node.js will generate a separate module graph for any code wrapped in a dynamic `import()`. This separate graph is evaluated **after** all modules, which are statically `import`ed.
 
-The Sentry Nuxt SDK will be initialized before any other code runs and the Nitro server runtime code will be loaded later because of `import()`ing it.
-This early initialization is required to set up the SDK's instrumentation of various libraries correctly.
+By using the Sentry Nuxt SDK, the server-side application will be wrapped in a dynamic `import()`, while the Sentry configuration will be imported with a static `import`.
+This makes it possible to initialize the Sentry Nuxt SDK at startup, while the Nitro server runtime loads later because it is `import()`ed.
+This early initialization of Sentry is required to correctly set up the SDK's instrumentation of various libraries.
 
 ## Scenarios where `import()` doesn't work
 
@@ -61,8 +62,8 @@ export default defineNuxtConfig({
 })
 ```
 
-After setting this, the Sentry Nuxt SDK adds some build-time configuration to ensure your app is wrapped with `import()`.
-With this, Sentry can be initialized before all other modules of the application.
+After setting this, the Sentry Nuxt SDK will add build-time configuration so that your app will be wrapped with `import()`,
+ensuring that Sentry can be initialized before any other modules.
 
 The Nuxt server entry file will look something like this:
 
