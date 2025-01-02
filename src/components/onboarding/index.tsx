@@ -57,6 +57,14 @@ const optionDetails: Record<
       </span>
     ),
   },
+  'opentelemetry': {
+    name: 'OpenTelemetry',
+    description: (
+      <span>
+        Combine Sentry with OpenTelemetry.
+      </span>
+    ),
+  },
 };
 
 const OPTION_IDS = [
@@ -65,6 +73,7 @@ const OPTION_IDS = [
   'profiling',
   'session-replay',
   'source-context',
+  'opentelemetry',
 ] as const;
 
 type OptionId = (typeof OPTION_IDS)[number];
