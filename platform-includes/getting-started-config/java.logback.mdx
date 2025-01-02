@@ -1,3 +1,5 @@
+Configuration should happen as early as possible in your application's lifecycle.
+
 The following example configures a `ConsoleAppender` that logs to standard out at the `INFO` level, and a `SentryAppender` that logs to the Sentry server at the `ERROR` level.
 
 <Note>
@@ -6,7 +8,7 @@ The `ConsoleAppender` is provided only as an example of a non-Sentry appender se
 
 </Note>
 
-
+<OnboardingOption optionId="opentelemetry" hideForThisOption>
 ```xml
 <configuration>
     <!-- Configure the Console appender -->
@@ -32,7 +34,32 @@ The `ConsoleAppender` is provided only as an example of a non-Sentry appender se
     </root>
 </configuration>
 ```
+</OnboardingOption>
 
+<OnboardingOption optionId="opentelemetry">
+```xml
+<configuration>
+    <!-- Configure the Console appender -->
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Configure the Sentry appender, overriding the logging threshold to the WARN level -->
+    <appender name="Sentry" class="io.sentry.logback.SentryAppender"></appender>
+
+    <!-- Enable the Console and Sentry appenders, Console is provided as an example
+ of a non-Sentry logger that is set to a different logging threshold -->
+    <root level="INFO">
+        <appender-ref ref="Console" />
+        <appender-ref ref="Sentry" />
+    </root>
+</configuration>
+```
+</OnboardingOption>
+
+<OnboardingOption optionId="opentelemetry" hideForThisOption>
 ### DSN Configuration
 
 Note that **you need to configure your DSN** (client key).
@@ -48,6 +75,7 @@ Note that **you need to configure your DSN** (client key).
 ```
 
 If the DSN is not present in the `logback.xml` configuration, Sentry will attempt to read it from the system property `sentry.dsn`, environment variable `SENTRY_DSN` or the `dsn` property in `sentry.properties` file. [See the configuration page](/platforms/java/configuration/) for more details on external configuration.
+</OnboardingOption>
 
 ### Minimum Log Level
 
@@ -65,6 +93,7 @@ Setting `minimumEventLevel` or `minimumBreadcrumbLevel` in `logback.xml` only af
 Breadcrumbs are kept in memory (by default the last 100 records) and are sent with events. For example, by default, if you log 100 entries with `logger.info` or `logger.warn`, no event is sent to Sentry. If you then log with `logger.error`, an event is sent to Sentry which includes those 100 `info` or `warn` messages. For this to work, `SentryAppender` needs to receive **all** log entries to decide what to keep as breadcrumb or sent as event. Set the `SentryAppender` log level configuration to a value lower than what is set for the `minimumBreadcrumbLevel` and `minimumEventLevel` so that `SentryAppender` receives these log messages.
 
 
+<OnboardingOption optionId="opentelemetry" hideForThisOption>
 ```xml
 <appender name="Sentry" class="io.sentry.logback.SentryAppender">
     <options>
@@ -77,3 +106,17 @@ Breadcrumbs are kept in memory (by default the last 100 records) and are sent wi
     <minimumBreadcrumbLevel>DEBUG</minimumBreadcrumbLevel>
 </appender>
 ```
+</OnboardingOption>
+
+<OnboardingOption optionId="opentelemetry">
+```xml
+<appender name="Sentry" class="io.sentry.logback.SentryAppender">
+    <!-- Optionally change minimum Event level. Default for Events is ERROR -->
+    <minimumEventLevel>WARN</minimumEventLevel>
+    <!-- Optionally change minimum Breadcrumbs level. Default for Breadcrumbs is INFO -->
+    <minimumBreadcrumbLevel>DEBUG</minimumBreadcrumbLevel>
+</appender>
+```
+</OnboardingOption>
+
+<PlatformContent includePath="getting-started-config/opentelemetry" />
