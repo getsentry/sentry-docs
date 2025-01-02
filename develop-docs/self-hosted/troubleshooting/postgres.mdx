@@ -1,0 +1,32 @@
+---
+title: Troubleshooting Postgres
+sidebar_title: Postgres
+sidebar_order: 4
+---
+
+## Nodestore table growing rapidly
+
+[Nodestore](https://develop.sentry.dev/backend/application-domains/nodestore/) is used to store key/value data. The `nodestore_node` table can grow rapidly, especially when heavily utilising the Performance Monitoring feature as trace data is stored in this table.
+
+The `nodestore_node` table is cleaned up as part of the `cleanup` task, however Postgres may not get a chance to vacuum the table (especially under heavy load), so even the rows may be deleted, they're still taking up space on disk.
+
+You can use `pg-repack` which repacks a table live by creating a new table and copying data across, before dropping the old one. You'll want to run this after the clean up script, and note that as it creates a table, **disk usage will spike before going back down**.
+
+An example script below:
+
+```shell
+# Only keep the last 7 days of nodestore data. We heavily use performance monitoring.
+docker compose run --rm -T web cleanup --days 7 -m nodestore -l debug
+# This ensures pg-repack exists before running as the container gets recreated on upgrades
+docker compose run --rm -T postgres bash -c "apt update && apt install -y --no-install-recommends postgresql-14-repack && su postgres -c 'pg_repack -E info -t nodestore_node'"
+```
+
+If the script above still does not clear up enough disk space, you can try the following in Postgres. This will lead to data loss in event details. _SENTRY_RETENTION_DAYS_ will need to be filled in manually.
+```sql
+DELETE FROM public.nodestore_node WHERE "timestamp" < NOW() - INTERVAL '[SENTRY_RETENTION_DAYS] DAY';
+VACUUM FULL public.nodestore_node;
+```
+
+`VACUUM FULL` actively compacts tables by writing a complete new version of the table file with no dead space. This minimizes the size of the table, but can take a long time. It also requires extra disk space for the new copy of the table, until the operation completes.
+
+For higher throughput events, it is recommended to use community implementation of Nodestore that's backed by blob storage such as S3 or similar.

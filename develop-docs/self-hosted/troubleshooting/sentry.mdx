@@ -1,0 +1,53 @@
+---
+title: Troubleshooting Sentry
+sidebar_title: Sentry
+sidebar_order: 1
+---
+
+## CSRF verification failed
+
+Since version 24.1.0, Sentry migrated to Django 4 which contains stricter CSRF protection. By default, the trusted CSRF origins is set to your `system.url-prefix`, but in some cases where your Sentry deployment can be accessed from multiple domains, you will need to configure `CSRF_TRUSTED_ORIGINS` on your `sentry.conf.py` file.
+
+```python
+# Assuming your Sentry instance can be accessed from sentry.example.com, 10.100.10.10 and 127.0.0.1.
+CSRF_TRUSTED_ORIGINS = ["https://sentry.example.com", "http://10.100.10.10", "http://127.0.0.1:9000"]
+```
+
+See [Django's documentation on CSRF](https://docs.djangoproject.com/en/4.2/ref/settings/#std-setting-CSRF_TRUSTED_ORIGINS) for further detail.
+
+## `sentry-data` volume not being cleaned up
+
+You may see the `sentry-data` taking too much disk space. You can clean it manually (or putting the cleanup cronjob in place).
+
+Find the Docker mountpoint for the volume by executing:
+```bash
+docker volume inspect sentry-data
+
+# Or if you prefer to do it directly (assuming you have `jq` on your system):
+docker volume inspect sentry-data | jq -r .[0].Mountpoint
+```
+
+Then run the following command to remove the contents of the volume for the last 30 days (change the `30` to whatever you want, it's in days):
+```bash
+# `/var/lib/docker/volumes/sentry-data/_data` refers to the mountpoint of the volume
+# from the output of the previous command. Change it if it's different.
+find /var/lib/docker/volumes/sentry-data/_data -type f -mtime +30 -delete
+```
+
+## Background workers haven't checked in recently
+
+If you are seeing an error such as
+
+```
+Background workers haven’t checked in recently. It seems that you have a backlog of 200 tasks. Either your workers aren’t running or you need more capacity.
+```
+
+you may benefit from using additional, dedicated workers. This is achieved by creating new `worker` services in `docker-compose.override.yml` and tying them to specific queues using the `-Q queue_name` argument. An example would be:
+
+```yaml
+worker1:
+    << : *sentry_defaults
+    command: run worker -Q events.process_event
+```
+
+To see a more complete example, please see [a sample solution on our community forum](https://forum.sentry.io/t/how-to-clear-backlog-and-monitor-it/10715/14?u=byk).
