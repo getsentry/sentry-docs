@@ -11,17 +11,17 @@ It will:
 
 ## Creation sources
 
-When broken down, there are **4** ways to create feedback in our system, with
-3 sharing the same data model. A good reference is the
+When broken down, there are **5** ways to create feedback in our system 😵‍💫.
+(But 4 of them, related to user reports, are quite similar!) A good reference is the
 `FeedbackCreationSource(Enum)` in [create_feedback.py](https://github.com/getsentry/sentry/blob/2b642e149c79b251e1c2f4339fc73d656347d74e/src/sentry/feedback/usecases/create_feedback.py#L33-L33).
 The 4 ways _clients_ can create feedback are:
 
-`NEW_FEEDBACK_ENVELOPE`: [The new format](/sdk/data-model/envelope-items/#user-feedback) created by the Replay team when adding
+`NEW_FEEDBACK_ENVELOPE`: [The new format](https://develop.sentry.dev/sdk/data-model/envelopes/#full-examples) created by the Replay team when adding
 the [User Feedback Widget](https://docs.sentry.io/product/user-feedback/#user-feedback-widget)
 to the JavaScript SDK. It allows adding more information, for example tags,
 release, url, etc.
 
-`USER_REPORT_ENVELOPE`: [The older format](/sdk/data-model/envelope-items/#user-report) with name/email/comments, that requires
+`USER_REPORT_ENVELOPE`: [The older format](https://develop.sentry.dev/sdk/data-model/envelope-items/#user-feedback) with name/email/comments, that requires
 `event_id` to link a Sentry error event.
 
 `USER_REPORT_DJANGO_ENDPOINT`: [The deprecated Web API](https://docs.sentry.io/api/projects/submit-user-feedback/)
@@ -31,7 +31,7 @@ release, url, etc.
 ## How feedback is stored
 
 On the backend, each feedback submission in Sentry's UI is **an un-grouped issue occurrence**,
-saved via the [issues platform](/issue-platform/).
+saved via the [issues platform](https://develop.sentry.dev/issue-platform/).
 The entrypoint is [**`create_feedback_issue()`**](https://github.com/getsentry/sentry/blob/2b642e149c79b251e1c2f4339fc73d656347d74e/src/sentry/feedback/usecases/create_feedback.py#L184-L184),
 which
 
@@ -42,7 +42,7 @@ which
 
 ## Feedback events
 
-The preferred way of sending feedback from the SDK is in [feedback envelope](/sdk/data-model/envelope-items/#user-feedback).
+The new and preferred way to send feedback from the SDK is in an [event envelope](https://develop.sentry.dev/sdk/data-model/envelopes/#full-examples).
 The format is the same as error events, except the `type` header = `"feedback"`. While
 user reports have an associated event, **new feedback _is_ an event**. This
 offers 2 improvements:
@@ -94,7 +94,7 @@ In Relay v24.5.1, we migrated feedback to its own kafka topic + consumer,
 ### Attachments
 
 We only use attachments for the widget’s screenshot feature, which allows users
-to submit **at most 1 screenshot per feedback**. Attachments are another [item type](/sdk/data-model/envelopes/#attachment)
+to submit **at most 1 screenshot per feedback**. Attachments are another [item type](https://develop.sentry.dev/sdk/data-model/envelopes/#attachment)
 in an envelope.
 
 - SDK v8.0.0+, Relay v24.5.1+: Sends the feedback and attachment items in the same envelope.
@@ -186,7 +186,9 @@ graph TD
 
 ### Envelopes
 
-User reports are also sent to Relay in envelope format, item type [user_report](/sdk/data-model/envelope-items/#user-report).
+User reports are also sent to Relay in [envelope format](https://develop.sentry.dev/sdk/data-model/envelope-items/#user-feedback).
+**This item type is misleadingly called “user feedback” in some of our docs, but the
+item header will read `"user_report"`.**
 
 The SDK function that sends these is `captureUserFeedback`.
 
