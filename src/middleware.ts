@@ -107,7 +107,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/organization/integrations/split/',
-    to: '/organization/integrations/feature-flag/split/',
+    to: '/organization/integrations/feature-flags/split/',
   },
   {
     from: '/organization/integrations/teamwork/',
@@ -1977,19 +1977,19 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/workflow/integrations/split/',
-    to: '/product/integrations/feature-flag/split/',
+    to: '/product/integrations/feature-flags/split/',
   },
   {
     from: '/workflow/integrations/global-integrations/split/',
-    to: '/product/integrations/feature-flag/split/',
+    to: '/product/integrations/feature-flags/split/',
   },
   {
     from: '/product/integrations/split/',
-    to: '/product/integrations/feature-flag/split/',
+    to: '/product/integrations/feature-flags/split/',
   },
   {
     from: '/product/integrations/launchdarkly/',
-    to: '/product/integrations/feature-flag/launchdarkly/',
+    to: '/product/integrations/feature-flags/launchdarkly/',
   },
   {
     from: '/workflow/integrations/vercel/',

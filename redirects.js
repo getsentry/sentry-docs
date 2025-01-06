@@ -236,7 +236,7 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/launchdarkly/',
-    destination: '/organization/integrations/feature-flag/launchdarkly/',
+    destination: '/organization/integrations/feature-flags/launchdarkly/',
   },
   {
     source: '/product/explore/session-replay/replay-details/',
@@ -831,7 +831,7 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/launchdarkly/',
-    destination: '/organization/integrations/feature-flag/launchdarkly/',
+    destination: '/organization/integrations/feature-flags/launchdarkly/',
   },
   {
     source:
