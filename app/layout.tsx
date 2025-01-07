@@ -3,10 +3,10 @@ import './globals.css';
 import {Theme} from '@radix-ui/themes';
 import type {Metadata} from 'next';
 import {Rubik} from 'next/font/google';
+import Script from 'next/script';
 import PlausibleProvider from 'next-plausible';
 
 import {ThemeProvider} from 'sentry-docs/components/theme-provider';
-import Script from 'next/script';
 
 const rubik = Rubik({
   weight: ['400', '500', '700'],
