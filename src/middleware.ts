@@ -107,7 +107,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/organization/integrations/split/',
-    to: '/organization/integrations/feature-flags/split/',
+    to: '/organization/integrations/feature-flag/split/',
   },
   {
     from: '/organization/integrations/teamwork/',
