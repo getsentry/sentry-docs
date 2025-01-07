@@ -219,6 +219,10 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/organization/integrations/msteams/',
+    destination: '/organization/integrations/notification-incidents/msteams/',
+  },
+  {
     source: '/product/explore/session-replay/hydration-errors/',
     destination: '/product/issues/issue-details/replay-issues/hydration-error/',
   },
