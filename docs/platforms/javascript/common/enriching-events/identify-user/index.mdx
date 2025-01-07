@@ -26,22 +26,31 @@ Serverside SDKs that instrument incoming requests will attempt to pull the IP ad
 
 If the user's `ip_address` is set to `"{{auto}}"`, Sentry will infer the IP address from the connection between your app and Sentry's server.
 
-If the field is omitted, the default value is `null`. However, due to backwards compatibility concerns, certain platforms (in particular JavaScript) have a different default value for `"{{auto}}"`. SDKs and other clients should not rely on this behavior and should set IP addresses or `"{{auto}}"` explicitly.
+If the field is omitted, the default value is `"{{auto}}"`. SDKs and other clients should not rely on this behavior and should set IP addresses or `"{{auto}}"` explicitly.
 
-To opt out of storing users' IP addresses in your event data, you can go to your project settings, click on "Security & Privacy", and enable "Prevent Storing of IP Addresses" or use Sentry's [server-side data](/security-legal-pii/scrubbing/) scrubbing to remove `$user.ip_address`. Adding such a rule ultimately overrules any other logic.
+To ensure your users' IP addresses are never stored in your event data, you can go to your project settings, click on "Security & Privacy", and enable "Prevent Storing of IP Addresses" or use Sentry's [server-side data scrubbing](/security-legal-pii/scrubbing/) to remove `$user.ip_address`. Adding such a rule ultimately overrules any other logic.
 
 </DefinitionList>
 
 Additionally, you can provide arbitrary key/value pairs beyond the reserved names, and the Sentry SDK will store those with the user.
 
-You'll first need to import the SDK, as usual:
+## Setting the User
 
-<PlatformContent includePath="enriching-events/import" />
-
-To identify the user:
+You can set the user by calling the `setUser` method on the Sentry SDK:
 
 <PlatformContent includePath="enriching-events/set-user" />
 
 You can also clear the currently set user:
 
 <PlatformContent includePath="enriching-events/unset-user" />
+
+<PlatformCategorySection supported={["server"]}>
+<PlatformSection notSupported={['javascript.bun', 'javascript.cloudflare', 'javascript.deno', 'javascript.react-router']}>
+`Sentry.setUser()` will set the user for the currently active request - see <PlatformLink to="/enriching-events/request-isolation">Request Isolation</PlatformLink> for more information. For example, if you want to set the user for a single request, you can do this like this:
+</PlatformSection>
+<PlatformContent includePath="enriching-events/set-user-request" />
+
+Or if you want to set the user for all requests, you could use a middleware like this:
+
+<PlatformContent includePath="enriching-events/set-user-middleware" />
+</PlatformCategorySection>
