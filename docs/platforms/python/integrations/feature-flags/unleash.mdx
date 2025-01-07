@@ -9,7 +9,7 @@ The [Unleash](https://www.getunleash.io/) integration tracks feature flag evalua
 
 ## Install
 
-Install `sentry-sdk` (>=TODO:) and `UnleashClient` (>=6.0.1) from PyPI.
+Install `sentry-sdk` (>=2.19.3) and `UnleashClient` (>=6.0.1) from PyPI.
 
 ```bash
 pip install --upgrade sentry-sdk UnleashClient
@@ -24,18 +24,6 @@ import sentry_sdk
 import os
 
 from sentry_sdk.integrations.unleash import UnleashIntegration
-from UnleashClient import UnleashClient
-
-unleash_client = UnleashClient(
-    url="<Unleash server URL>/api/",  # "http://localhost:4242/api/" if you are self-hosting Unleash.
-    app_name="my-app",                # Identifies your app in the Unleash UI.
-    custom_headers={
-        # See https://docs.getunleash.io/how-to/how-to-create-api-tokens
-        "Authorization": os.environ["UNLEASH_CLIENT_API_TOKEN"]
-    }
-)
-
-unleash_integration = UnleashIntegration(unleash_client)
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
@@ -52,7 +40,6 @@ Test the integration by evaluating a feature flag using your Unleash SDK before 
 ```python {tabTitle: Python, using is_enabled}
 import sentry_sdk
 
-# Re-use `unleash_client` from the previous step.
 test_flag_enabled = unleash_client.is_enabled("test-flag")
 
 sentry_sdk.capture_exception(Exception("Something went wrong!"))
@@ -61,7 +48,6 @@ sentry_sdk.capture_exception(Exception("Something went wrong!"))
 ```python {tabTitle: Python, using get_variant}
 import sentry_sdk
 
-# Re-use `unleash_client` from the previous step.
 test_flag_variant = unleash_client.get_variant("test-flag")
 test_flag_enabled = test_flag_variant["enabled"]
 
