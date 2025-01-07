@@ -67,9 +67,9 @@ const BANNERS: BannerType[] = [
       '^/platforms/android/',
       '^/platforms/apple/guides/ios/',
     ],
-    text: 'Session Replay for Mobile beta ends January 6, 2025.',
+    text: 'Session Replay is now generally available for mobile.',
     linkURL: 'https://docs.sentry.io/product/explore/session-replay/mobile/',
-    linkText: 'Try beta for free now.',
+    linkText: 'Get started today.',
   },
 ];
 
