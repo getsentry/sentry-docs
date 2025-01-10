@@ -24,8 +24,8 @@ const remarkComponentSpacing: Plugin<void[], Root> = function () {
         node.type === 'mdxJsxTextElement' &&
         affectedComponents.includes(node.name ?? '')
       ) {
-        componentNode = node;
-        componentNodeParent = parent;
+        componentNode = node as Node;
+        componentNodeParent = parent as Node;
       }
     });
   };

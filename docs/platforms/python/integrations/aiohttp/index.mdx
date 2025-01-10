@@ -67,7 +67,8 @@ sentry_sdk.init(
     # same as above
     integrations=[
         AioHttpIntegration(
-            transaction_style="method_and_path_pattern",
+            transaction_style="...",  # type: str
+            failed_request_status_codes={...}  # type: collections.abc.Set[int]
         ),
     ],
 )
@@ -83,6 +84,21 @@ Configure the way Sentry names transactions:
 - `<module_name>.hello` if you set `transaction_style="handler_name"`
 
 The default is `"handler_name"`.
+
+### `failed_request_status_codes`
+
+A `set` of integers that will determine when an `HTTPException` should be reported to Sentry. The `HTTPException` is reported to Sentry if its status code is contained in the `failed_request_status_codes` set.
+
+Examples of valid `failed_request_status_codes`:
+
+- `{500}` will only report `HTTPException` with status 500 (i.e. `HTTPInternalServerError`).
+- `{400, *range(500, 600)}` will report `HTTPException` with status 400 (i.e. `HTTPBadRequest`) as well as those in the 5xx range.
+- `set()` (the empty set) will not report any `HTTPException` to Sentry.
+
+The default is `{*range(500, 600)}`, meaning that any `HTTPException` with a status in the 5xx range is reported to Sentry.
+
+Regardless of how `failed_request_status_codes` is set, any exceptions raised by the handler, which are not of type `HTTPException` (or a subclass) are reported to Sentry. For example, if your request handler raises an unhandled `AttributeError`, the `AttributeError` gets reported to Sentry, even if you have set `failed_request_status_codes=set()`.
+
 
 ## Supported Versions
 

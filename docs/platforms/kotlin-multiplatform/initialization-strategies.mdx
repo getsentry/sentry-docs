@@ -1,10 +1,10 @@
 ---
-title: Initialization Strategies
-description: "Strategies for initializing the Kotlin Multiplatform SDK."
-sidebar_order: 3
+title: Initialization Options
+description: "Different options for initializing the Kotlin Multiplatform SDK."
+sidebar_order: 2
 ---
 
-When it comes to initializing a Kotlin Multiplatform SDK, there are multiple strategies to consider:
+When it comes to initializing a Kotlin Multiplatform SDK, there are multiple options to consider:
 
 - [Use native platform options directly](#native-platform-options)
 - [Shared initializer](#shared-initializer)
@@ -13,12 +13,10 @@ When it comes to initializing a Kotlin Multiplatform SDK, there are multiple str
 
 ## Where to Place Initialization Code
 
-Regardless of the initialization strategy you choose, it's important to place the initialization code at an early lifecycle stage of your application to ensure the SDK is set up correctly before it is used.
+Regardless of the initialization option you choose, it's important to place the initialization code at an early lifecycle stage of your application to ensure the SDK is set up correctly before it is used.
 Here are general guidelines for placing the initialization code for different platforms:
 
-### Android
-
-```kotlin {filename:MainActivity.kt}
+```kotlin {filename:MainActivity.kt}{tabTitle: androidApp}
 import your.kmp.app.initializeSentry
 
 class YourApplication : Application() {
@@ -28,18 +26,24 @@ class YourApplication : Application() {
    }
 }
 ```
-
-### iOS
-
-```swift {filename:AppDelegate.swift}
+```swift {tabTitle: iosApp}
 import shared
 
 func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil
 ) -> Bool {
-    AppSetupKt.initializeSentry()
+    SentrySetupKt.initializeSentry()
     return true
+}
+
+// OR if you're using SwiftUI:
+
+@main
+struct SwiftUIApp: App {
+    init() {
+        SentrySetupKt.initializeSentry()
+    }
 }
 ```
 
@@ -47,6 +51,10 @@ func application(
 
 <Note>
 Requires Sentry SDK version `0.7.1` or higher.
+</Note>
+<Note>
+Available options are determined by the native SDK versions used in the build.
+For example, Kotlin Multiplatform SDK `0.10.0` uses Sentry Android `7.16.0` and Sentry Cocoa `8.38.0`, so it supports all options from these versions.
 </Note>
 
 This approach involves initializing the SDK with the platform's specific options directly, using `PlatformOptionsConfiguration`. This strategy is ideal for projects that require configuring options that are not yet supported by the KMP SDK, such as experimental options.
@@ -102,11 +110,10 @@ The shared initializer approach involves initializing the SDK in your shared cod
 
 Using a shared initializer provides a single source of truth for your SDK's configuration options. This can simplify maintenance and debugging efforts, as you only need to update one codebase for all platforms.
 
-To initialize the SDK, create a Kotlin file in your `commonMain` (such as `AppSetup.kt` or whatever you decide to call it), and write an initialization function. You'll then be able to call it in an early lifecycle stage in your platforms.
+To initialize the SDK, create a Kotlin file in your `commonMain` (such as `SentrySetup.kt` or whatever you decide to call it), and write an initialization function. You'll then be able to call it in an early lifecycle stage in your platforms.
 
-<SignInNote />
 
-```kotlin {filename:AppSetup.kt}
+```kotlin {filename:SentrySetup.kt}
 import io.sentry.kotlin.multiplatform.Sentry
 import io.sentry.kotlin.multiplatform.SentryOptions
 
@@ -130,7 +137,7 @@ If you need to use the respective platform's options directly, you should use th
 
 ### Common
 
-```kotlin {filename:commonMain/AppSetup.kt}
+```kotlin {filename:commonMain/SentrySetup.kt}
 import io.sentry.kotlin.multiplatform.Context
 
 expect fun initializeSentry()
@@ -138,9 +145,8 @@ expect fun initializeSentry()
 
 ### androidMain
 
-<SignInNote />
 
-```kotlin {filename:androidMain/AppSetup.kt}
+```kotlin {filename:androidMain/SentrySetup.kt}
 import io.sentry.kotlin.multiplatform.Sentry
 import io.sentry.kotlin.multiplatform.Context
 
@@ -154,9 +160,8 @@ actual fun initializeSentry() {
 
 ### iosMain
 
-<SignInNote />
 
-```kotlin {filename:iosMain/AppSetup.kt}
+```kotlin {filename:iosMain/SentrySetup.kt}
 import io.sentry.kotlin.multiplatform.Sentry
 import io.sentry.kotlin.multiplatform.Context
 

@@ -1,4 +1,32 @@
 <PlatformContent includePath="capture-error/dart.mdx" />
 
-- Flutter-specific errors, such as using `FlutterError.onError`, are captured automatically
-- The SDK already runs your init `callback` on an error handler, such as [`runZonedGuarded`](https://api.flutter.dev/flutter/dart-async/runZonedGuarded.html) on Flutter versions prior to `3.3`, or [`PlatformDispatcher.onError`](https://api.flutter.dev/flutter/dart-ui/PlatformDispatcher/onError.html) on Flutter versions 3.3 and higher, so that errors are automatically captured.
+### FlutterError.onError
+
+Flutter-specific errors, such as using `FlutterError.onError`, are captured automatically.
+
+### PlatformDispatcher.onError / runZonedGuarded
+
+The SDK already runs your init `callback` on an error handler, such as [`runZonedGuarded`](https://api.flutter.dev/flutter/dart-async/runZonedGuarded.html) on Flutter versions prior to `3.3`, or [`PlatformDispatcher.onError`](https://api.flutter.dev/flutter/dart-ui/PlatformDispatcher/onError.html) on Flutter versions 3.3 and higher, so that errors are automatically captured.
+
+If you need a custom error handling zone which also provides automatic error reporting and breadcrumb tracking, use `Sentry.runZonedGuarded`. It wraps Dart's native [`runZonedGuarded`](https://api.flutter.dev/flutter/dart-async/runZonedGuarded.html) function with Sentry-specific functionality.
+
+This function automatically records calls to `print()` as `Breadcrumbs` and can be configured using `SentryOptions.enablePrintBreadcrumbs`.
+
+```dart
+Sentry.runZonedGuarded(() async {
+  WidgetsBinding.ensureInitialized();
+
+  // Errors before init will not be handled by Sentry
+
+  await SentryFlutter.init(
+    (options) {
+    ...
+    },
+    appRunner: () => runApp(MyApp()),
+  );
+} (error, stackTrace) {
+  // Automatically sends errors to Sentry, no need to do any
+  // captureException calls on your part.
+  // On top of that, you can do your own custom stuff in this callback.
+});
+```

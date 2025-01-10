@@ -18,8 +18,10 @@ supported:
   - javascript.nextjs
   - javascript.nuxt
   - javascript.astro
+  - javascript.solidstart
   - javascript.sveltekit
   - javascript.remix
+  - javascript.cloudflare
 ---
 
 To ensure that you have performance data about your messaging queues, you'll need to instrument custom spans and transactions around your queue producers and consumers.
@@ -55,14 +57,14 @@ app.post("/publish", async (req, res) => {
         "messaging.message.body.size": messageBodySize,
       },
     },
-    async (span) => {
-      const traceHeader = Sentry.spanToTraceHeader(span);
-      const baggageHeader = Sentry.spanToBaggageHeader(span);
+    async () => {
+      const { "sentry-trace": sentryTrace, baggage: sentryBaggage } =
+        Sentry.getTraceData();
       await redisClient.lPush(
         "messages",
         JSON.stringify({
-          traceHeader,
-          baggageHeader,
+          sentryTrace,
+          sentryBaggage,
           timestamp: Date.now(),
           messageId,
         })
@@ -97,7 +99,7 @@ const message = JSON.parse(await redisClient.lPop(QUEUE_KEY));
 const latency = Date.now() - message.timestamp;
 
 Sentry.continueTrace(
-    { sentryTrace: message.traceHeader, baggage: message.baggageHeader },
+    { sentryTrace: message.sentryTrace, baggage: message.sentryBaggage },
     () => {
         Sentry.startSpan({
                 name: 'queue_consumer_transaction',

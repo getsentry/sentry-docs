@@ -29,9 +29,16 @@ The SDK creates spans to provide insight into the time consumed by each of the m
 
 ![`UIViewController` Transaction](./img/ui-view-controller-transaction.png)
 
+### Nested View Controllers
+
+The SDK sets up a parent-child relationship for nested UIViewControllers, starting with the first UIViewController that your app loads. If there's no active transaction on the scope, the SDK will start a new UIViewController transaction and bind it to the scope unless there's a [user interaction](#user-interaction-tracing) transaction already on the scope, in which case this will be closed and removed first.
+
+While a UIViewController transaction is active on the scope, the SDK will add any new UIViewController spans as child spans of that active transaction. This creates a unified view of all UIViewControllers on a screen in a single transaction.
+
+If another transaction is already bound to the scope (if it's been set manually, for example) the SDK won't be able to bind a new UIViewController transaction to the scope. This means that the new transaction will work, but won’t capture other auto-generated spans, like HTTP, file IO, or Core Data, which can only be added to transactions that are bound to the scope.
+
 To disable the `UIViewController` Tracing:
 
-<SignInNote />
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -134,7 +141,6 @@ You can filter for different app start types in [Discover](/product/explore/disc
 
 To enable prewarmed app start tracing:
 
-<SignInNote />
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -172,7 +178,6 @@ Network Tracking is enabled by default once you <PlatformLink to="/tracing/">set
 
 To disable the HTTP instrumentation:
 
-<SignInNote />
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -202,7 +207,6 @@ Sentry adds an extra header with the trace id in the outgoing HTTP requests to c
 You can set the `tracePropagationTarget` option to filter which requests Sentry adds the extra header to.
 For example, to ensure that only your app backend will receive the trace id.
 
-<SignInNote />
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -232,7 +236,6 @@ The Sentry SDK adds spans for file I/O operations to ongoing transactions bound 
 
 Since 8.0.0, this feature has been enabled by default. To disable it:
 
-<SignInNote />
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -268,7 +271,6 @@ SentrySDK.start { options in
 The Sentry SDK adds spans for Core Data operations to ongoing transactions bound to the scope. Currently, the SDK supports fetch and save operations with [NSManagedObjectContext](https://developer.apple.com/documentation/coredata/nsmanagedobjectcontext).
 Since 8.0.0, this feature has been enabled by default. To disable it:
 
-<SignInNote />
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -298,7 +300,6 @@ SentrySDK.start { options in
 
 User interaction tracing, once enabled, captures transactions for clicks. This feature is unavailable for SwiftUI. Since 8.0.0, this feature has been enabled by default. To disable it:
 
-<SignInNote />
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -356,7 +357,7 @@ When the user interaction transaction is not finished yet, but the user makes a 
 
 <Note>
 
-This feature is available starting in SDK version `8.4.0`.
+This feature only works for UIViewControllers and not for SwiftUI.
 
 </Note>
 
@@ -372,7 +373,7 @@ Since Cocoa SDK version 8.33.0, the SDK doesn't create time to initial display (
 
 <Note>
 
-This feature is available starting in SDK version `8.4.0`.
+This feature only works for UIViewControllers and not for SwiftUI.
 
 </Note>
 
@@ -383,7 +384,6 @@ Since Cocoa SDK version 8.33.0, the SDK doesn't create [time to initial display 
 
 _Time to full display is disabled by default, but you can enable it by setting:_
 
-<SignInNote />
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -423,13 +423,7 @@ If a call to `reportFullyDisplayed()` happens before the view controller appears
 
 ## Performance V2
 
-<Note>
-
-This feature is experimental and may have bugs.
-
-</Note>
-
-_(New in version 8.18.0)_
+_(New in version 8.18.0), stable since 8.42.0._
 
 We're working to update our **Performance** product offering in order to be able to provide better insights and highlight specific actions you can take to improve your mobile app's overall performance. The `performanceV2` option changes the following behavior:
 
@@ -441,7 +435,6 @@ This change will be the default in the next major version.
 
 You can opt out of all automatic instrumentations using the options:
 
-<SignInNote />
 
 ```swift {tabTitle:Swift}
 import Sentry

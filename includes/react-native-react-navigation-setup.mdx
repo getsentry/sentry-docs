@@ -1,56 +1,52 @@
-```jsx {tabTitle: Functional Components}
+```jsx {5, 20} {tabTitle: Functional Components}
 import * as Sentry from "@sentry/react-native";
 import { NavigationContainer } from "@react-navigation/native";
 
-const routingInstrumentation = new Sentry.ReactNavigationInstrumentation({
+const navigationIntegration = Sentry.reactNavigationIntegration({
   enableTimeToInitialDisplay: true,
 });
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [
-    new Sentry.ReactNativeTracing({ routingInstrumentation }),
-  ],
+  integrations: [navigationIntegration],
 })
 
 function App = () => {
-  const navigation = React.useRef();
+  const containerRef = React.useRef();
 
   return (
     <NavigationContainer
-      ref={navigation}
+      ref={containerRef}
       onReady={() => {
-        routingInstrumentation.registerNavigationContainer(navigation);
+        navigationIntegration.registerNavigationContainer(containerRef);
       }}>
     </NavigationContainer>
   );
 };
 ```
 
-```jsx {tabTitle: Class Components}
+```jsx {5, 21} {tabTitle: Class Components}
 import * as Sentry from "@sentry/react-native";
 import { NavigationContainer } from "@react-navigation/native";
 
-const routingInstrumentation = new Sentry.ReactNavigationInstrumentation({
+const navigationIntegration = Sentry.reactNavigationIntegration({
   enableTimeToInitialDisplay: true,
 });
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [
-    new Sentry.ReactNativeTracing({ routingInstrumentation }),
-  ],
+  integrations: [navigationIntegration],
 })
 
 class App extends React.Component {
-  navigation = React.createRef();
+  containerRef = React.createRef();
 
   render() {
     return (
       <NavigationContainer
-        ref={this.navigation}
+        ref={this.containerRef}
         onReady={() => {
-          routingInstrumentation.registerNavigationContainer(this.navigation);
+          navigationIntegration.registerNavigationContainer(this.containerRef);
         }}>
       </NavigationContainer>
     );

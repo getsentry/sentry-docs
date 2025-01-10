@@ -1,0 +1,91 @@
+---
+title: Extrapolation
+sidebar_order: 5
+---
+
+Dynamic sampling reduces the amount of data ingested, for reasons of both performance and cost. When configured, a fraction of the data is ingested according to the specified sample rate of a project: if you sample at 10% and initially have 1000 requests to your site in a given timeframe, you will only see 100 spans in Sentry. Without making up for the sample rate, any metrics derived from these spans will misrepresent the true volume of the application. When different parts of the application have different sample rates, there will even be a bias towards some of them, skewing the total volume towards parts with higher sample rates. This bias especially impacts numerical attributes like latency, reducing their accuracy. To account for this fact, Sentry uses extrapolation to smartly combine the data to account for sample rates.
+
+### Accuracy & Expressiveness
+What happens during extrapolation, how does one handle this type of data, and when is extrapolated data accurate and expressive? Let's start with some definitions:
+
+- **Accuracy** refers to data being correct. For example, the measured number of spans corresponds to the actual number of spans that were executed. As sample rates decrease, accuracy also goes down because minor random decisions can influence the result in major ways.
+- **Expressiveness** refers to data being able to express something about the state of the observed system. Expressiveness refers to the usefulness of the data for the user in a specific use case.
+
+### Modes
+Given these properties, there are two modes that can be used to view data in Sentry: default mode and sample mode.
+
+- **Default mode** extrapolates the ingested data as outlined below.
+- **Sample mode** does not extrapolate and presents exactly the data that was ingested.
+
+Depending on the context and the use case, one mode may be more useful than the other. Generally, default mode is useful for all queries that aggregate on a dataset of sufficient volume. As absolute sample size decreases below a certain limit, default mode becomes less and less expressive. There are scenarios where the user needs to temporarily switch between modes, for example, to examine the aggregate numbers first and dive into the number of samples for investigation. In both modes, the user may investigate single samples to dig deeper into the details.
+
+### Benefits of Extrapolation
+At first glance, extrapolation may seem unnecessarily complicated. However, for high-volume organizations, sampling is a way to control costs and egress volume, as well as reduce the amount of redundant data sent to Sentry. Why don't we just show the user the data they send? We don't just extrapolate for fun; it actually has some major benefits for the user:
+
+- **The numbers correspond to the real world**: When data is sampled, there is some math you need to do to infer what the real numbers are, e.g., when you have 1000 samples at 10% sample rate, there are 10000 requests to your application. With extrapolation, you don't have to know your sample rate to understand what your application is actually doing. Instead, you get a view of the real behavior without additional knowledge or math required on your end.
+
+- **Steady timeseries when sample rates change**: Whenever you change sample rates, both the count and possibly the distribution of the values will change in some way. When you switch the sample rate from 10% to 1% for whatever reason, there will be a sudden change in all associated metrics. Extrapolation corrects for this, so your graphs are steady, and your alerts don't fire when this happens.
+- **Combining different sample rates**: When your endpoints don't have the same sample rate, how are you supposed to know the true p90 when one of your endpoints is sampled at 1% and another at 100%, but all you get is the aggregate of the samples?
+
+## How Does Extrapolation Work?
+### Aggregates
+
+Sentry allows the user to aggregate data in different ways - the following aggregates are generally available, along with whether they are extrapolatable or not:
+
+| **Aggregate** | **Can be extrapolated?** |
+| --- | --- |
+| count | yes |
+| avg | yes |
+| sum | yes |
+| percentiles | yes |
+| min | no |
+| max | no |
+| count_unique | no |
+
+Each of these aggregates has its own way of dealing with extrapolation, due to the fact that e.g., counts have to be extrapolated in a slightly different way from percentiles. While `min` and `max` are technically percentiles, we currently do not offer extrapolation due to the decreased stability of extreme aggregates when sampling. For example, the `p50` will also be more stable than the `p99`; the `min` and `max` are just extreme cases.
+
+### Extrapolation for different aggregates
+To extrapolate, sampling weights are calculated as `1/sample rate`. The sampling weights of each row are then used in the following ways:
+
+- **Count**: Calculate a sum of the sampling weight
+Example: the query `count()` becomes `round(sum(sampling_weight))`.
+- **Sum**: Multiply each value with `sampling_weight`.
+Example: the query `sum(foo)` becomes `sum(foo * sampling_weight)`
+- **Average**: Calculate the weighted average with sampling weight.
+Example: the query `avg(foo)` becomes `avgWeighted(foo, sampling_weight)`
+- **Percentiles**: Calculate the weighted percentiles with sampling weight.
+Example: the query `percentile(0.95)(foo)` becomes `weightedPercentile(0.95)(foo, sampling_weight)`.
+
+As long as there are sufficient samples, the sample rate itself does not matter as much, but due to the extrapolation mechanism, what would be a fluctuation of a few samples may turn into a much larger absolute impact, e.g., in terms of the view count. Of course, when a site gets billions of visits, a fluctuation of 100,000 via the noise introduced by a sample rate of 0.00001 is not as critical.
+
+## How to deal with extrapolation in the product?
+
+### General Approach
+In new product surfaces, the question of whether to use extrapolated vs. non-extrapolated data is a delicate one, and it needs to be deliberated with care. The extrapolation mode setting should generally be a transient view option that resets to default mode when the user opens the page the next time. In the end, it's a judgment call on the person implementing the feature, but these questions may be a guide on the way to a decision:
+
+- What should be the default, and how should the switch between modes work?
+    - In most scenarios, extrapolation should be on by default when looking at aggregates, and off when looking at samples. Switching, in most cases, should be a very conscious operation that users should be aware they are taking, and not an implicit switch that just happens to trigger when users navigate the UI.
+- Does it make sense to mix extrapolated data with non-extrapolated data?
+    - In most cases, mixing the two will be a recipe for confusion. For example, offering two functions to compute an aggregate, like p90_raw and p90_extrapolated in a query interface, will be very confusing to most users. Therefore, in most cases, we should refrain from mixing this data implicitly.
+- When sample rates change over time, is consistency of data points over time important?
+    - In alerts, for example, consistency is very important because noise affects the trust users have in the alerting system. A system that alerts every time users switch sample rates is not very convenient to use, especially in larger teams.
+- Does the user care more about a truthful estimate of the aggregate data or about the actual events that happened?
+    - Some scenarios, like visualizing metrics over time, are based on aggregates, whereas a case of debugging a specific user's problem hinges on actually seeing the specific events. The best mode depends on the intended usage of the product.
+
+### Switching to Sample Mode
+Sample mode is designed to help users investigate specific events. Here are two common scenarios where it makes the most sense:
+
+1. **When both sample rate and event volume are low**: Extrapolation becomes less reliable in these cases. You can either increase your sample rate to improve accuracy, or switch to sample mode to examine the actual events - both are valid approaches depending on the user's needs.
+2. **When you have a high sample rate but still see low event volumes**: In this case, increasing the sample rate won't help capture more data, and sample mode will give you a clearer picture of the events you do have.
+
+### Opting Out of Extrapolation
+Users may want to opt out of extrapolation for different reasons. It is always possible to set the sample rate for specific events to 100% and therefore send all data to Sentry, implicitly opting out of extrapolation and behaving in the same way as sample mode. Depending on their configuration, users may need to change Dynamic Sampling settings or their SDK's traces sampler callback for this.
+
+### Confidence
+When users filter on data that has a very low count but also a low sample rate, yielding a highly extrapolated but low-sample dataset, developers and users should be careful with the conclusions they draw from the data. The storage platform provides confidence intervals along with the extrapolated estimates for the different aggregation types to indicate when there is elevated uncertainty in the data. These types of datasets are inherently noisy and may contain misleading information. When this is discovered, the user should either be very careful with the conclusions they draw from the aggregate data or switch to non-default mode for investigation of the individual samples.
+
+## **Conclusion**
+
+- Extrapolation offers benefits in many parts of the product but brings some inherent complexity.
+- Some aggregates can be extrapolated, others cannot - we may add the capability to additional aggregates in the future.
+- A lot of care should be taken about how to expose extrapolation and especially switching of the modes to the user.

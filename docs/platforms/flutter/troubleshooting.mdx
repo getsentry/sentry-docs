@@ -6,6 +6,14 @@ sidebar_order: 9000
 
 If you need help solving issues with Sentry's Flutter SDK, you can read the edge cases documented here. If you need additional help, you can [ask on GitHub](https://github.com/getsentry/sentry-dart/issues/new/choose). Customers on a paid plan may also contact support.
 
+## Support 16 KB Page Sizes on Android
+
+Starting with Android 15, AOSP supports devices with a 16 KB page size. If your app uses NDK libraries (directly or via an SDK), you’ll need to rebuild it for compatibility with these devices.
+
+Update to Sentry Flutter SDK version `8.11.0` and above order to support 16 KB page sizes on Android devices. 
+
+Please read the [Android developer documentation](https://developer.android.com/guide/practices/page-sizes) to update and test your app with 16 KB page size support.
+
 ## "Missing API declaration" after App Store review
 
 Starting May 1, 2024, Apple requires all apps submitted to the App Store to provide a list of privacy-related APIs they use, including the reasons under which they use it. If you received an email from Apple with the message "ITMS-91053: Missing API declaration", your app doesn't fulfill the requirements. To solve this, follow our [Apple Privacy Manifest](/platforms/flutter/data-management/apple-privacy-manifest) guide.
@@ -60,3 +68,43 @@ There is an [issue with the Sentry Flutter SDK](https://github.com/getsentry/sen
 This is an [issue](https://github.com/flutter/flutter/issues/135245) with Flutter itself and should be fixed in [Flutter 3.15](https://github.com/flutter/flutter/labels/found%20in%20release%3A%203.15).
 
 For prior versions, you can work around this by configuring the SDK only to take screenshots when the app is in the `resumed` state. To do this, set `SentryFlutterOptions.attachScreenshotOnlyWhenResumed` to `true`.
+
+## Using Flutter Multi-view for Web
+
+Multi-view embedding was introduced in Flutter 3.24. You'll find a detailed guide about it in the [Flutter docs](https://docs.flutter.dev/platform-integration/web/embedding-flutter-web) .
+
+Using Sentry in a multi-view application is possible, but there are some limitations you should be aware of.
+The following features don't currently support multi-view:
+
+- Screenshots via the `SentryScreenshotWidget` (which is part of the `SentryWidget`)
+- User interaction integration via the `SentryUserInteractionWidget` (which is part of the `SentryWidget`)
+- Window and Device events via the `WidgetsBindingIntegration`
+
+To prevent the `WidgetsBindingIntegration` from loading by default, you'll need to remove the integration as shown below:
+
+```dart
+// ignore: implementation_imports
+import 'package:sentry_flutter/src/integrations/widgets_binding_integration.dart';
+...
+SentryFlutter.init(
+  (options) {
+    ...
+    final integration = options.integrations
+        .firstWhere((element) => element is WidgetsBindingIntegration);
+    options.removeIntegration(integration);
+  },
+  // Init your App.
+  appRunner: appRunner,
+);
+```
+
+### Example Application
+
+Copy the `main.dart` file into the `lib` folder of your existing project. This file already contains the code of the `multi_view_app.dart` from the [`flutter documentation`](https://docs.flutter.dev/platform-integration/web/embedding-flutter-web#handling-view-changes-from-dart).
+Next, copy the `flutter_bootstrap.js` file and the `index.html` file into the `web` folder.
+
+Make sure you're using **Flutter 3.24** or newer and run the application.
+
+Now you should be able to see **two** instances of the same application side by side, with different **ViewIds** in the `body`.
+
+<Include name="troubleshooting/flutter/enable_multi_view.mdx" />

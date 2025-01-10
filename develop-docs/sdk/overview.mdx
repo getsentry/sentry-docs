@@ -1,9 +1,8 @@
 ---
 title: Overview
+description: The following is a guide for implementing a new Sentry SDK. It covers the protocol for event submission as well as guidelines for how clients should typically look and behave.
 sidebar_order: 1
 ---
-
-The following is a guide for implementing a new Sentry SDK. It covers the protocol for event submission as well as guidelines for how clients should typically look and behave.
 
 ## Writing an SDK
 
@@ -28,12 +27,12 @@ Additionally, the following features are highly encouraged:
 -   Non-blocking event submission
 -   Context data helpers (e.g. setting the current user, recording breadcrumbs)
 -   Event sampling
--   Honor Sentry’s <Link to="/sdk/rate-limiting/">Rate Limiting</Link> HTTP headers
+-   Honor Sentry’s <Link to="/sdk/expected-features/rate-limiting/">Rate Limiting</Link> HTTP headers
 -   Pre and Post event send hooks
 -   Local variable values in stack trace (on platforms where this is possible)
 -   Send an `environment` on each event. If none was detected or set by the user, `production` should be used.
 
-<Link to="/sdk/features#features">Please see the features page</Link> for descriptions of commonly expected Sentry SDK features.
+Please see the <Link to="/sdk/expected-features#features">expected features page</Link> for descriptions of commonly Sentry SDK features.
 
 ## Usage for End-users
 
@@ -119,8 +118,7 @@ All segments, including PROJECT_ID, are of type String.
 
 Sentry provides the following endpoints:
 
-- <Link to="/sdk/envelopes">/envelope/</Link> for any submission using Envelopes.
-- <Link to="/sdk/store">/store/</Link> for plain JSON event submission.
+- <Link to="/sdk/data-model/envelopes">/envelope/</Link> for any submission using Envelopes.
 - [`/minidump/`](https://docs.sentry.io/platforms/native/minidump/) for multipart requests containing Minidumps.
 - [`/unreal/`](https://docs.sentry.io/platforms/unreal/configuration/setup-crashreporter/) for Unreal
   Engine 4 crash reports.
@@ -183,32 +181,29 @@ it’s possible to send these values via the querystring:
 
 `sentry_key`
 
-**Required.** The public key which should be provided as part of the SDK
+: **Required.** The public key which should be provided as part of the SDK
   configuration.
 
 `sentry_version`
 
-**Required.** The protocol version. The current version of the protocol is
+: **Required.** The protocol version. The current version of the protocol is
   `7`.
 
 `sentry_client`
 
-
-**Recommended.** An arbitrary string that identifies your SDK, including its version. The
-  typical pattern for this is `client_name/client_version`.<br/>  
+: **Recommended.** An arbitrary string that identifies your SDK, including its version. The
+  typical pattern for this is `client_name/client_version`.
   For example, the Python SDK might send this as `sentry.python/1.0`.
 
 `sentry_timestamp`
 
-: The unix timestamp representing the time at which this event was generated.<br/>
-  *This key is effectively deprecated, and it is ignored on the receiving side.
-  Use the [`sent_at` envelope header](/sdk/envelopes/#envelope-headers) instead.*
+: The unix timestamp representing the time at which this event was generated.
+  *This key is effectively deprecated, and it is ignored on the receiving side. Use the [`sent_at` envelope header](/sdk/data-model/envelopes/#envelope-headers) instead.*
 
 `sentry_secret`
 
-: The secret key which should be provided as part of the SDK configuration.<br/>
-  *This key is effectively deprecated, and no longer needs to be set. However, since it was required in older versions,
-  it should still be allowed and passed through to Sentry if set.*
+: The secret key which should be provided as part of the SDK configuration.
+  *This key is effectively deprecated, and no longer needs to be set. However, since it was required in older versions, it should still be allowed and passed through to Sentry if set.*
 
 ## HTTP Headers
 
@@ -267,6 +262,7 @@ and Sentry:
 - `deflate`: Using [zlib](http://tools.ietf.org/html/rfc1950) structure with the
   [deflate](http://tools.ietf.org/html/rfc1951) compression algorithm.
 - `br`: Using the [Brotli](https://en.wikipedia.org/wiki/Brotli) algorithm.
+- `zstd`: Using the [zstd](https://datatracker.ietf.org/doc/html/rfc8878) algorithm.
 
 ## Transfer Encoding
 
@@ -336,7 +332,7 @@ server.
 
 SDKs are supposed to provide standardized concurrency handling through the
 concept of hubs and scopes.  This is explained in more details in the
-<Link to="/sdk/unified-api#concurrency">Concurrency</Link> chapter of the unified API docs.
+<Link to="/sdk/miscellaneous/unified-api#concurrency">Concurrency</Link> chapter of the unified API docs.
 
 ## Layer of Integration
 

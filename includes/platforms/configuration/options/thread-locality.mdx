@@ -1,0 +1,16 @@
+<Alert>
+
+Read on if you're curious to know how thread locality works for scope data. In .NET, there
+are two modes for managing ambient data (which is data that's available in different parts of an application and doesn't need to be passed explicitly through method arguments): a disabled global mode and an enabled global mode. Usually, Sentry will automatically choose the most appropriate mode for your application type. However, this can be overridden by setting [`SentryOptions.IsGlobalModeEnabled`](../../configuration/options/#is-global-mode-enabled) manually.
+
+If global mode is disabled (appropriate for most server-based applications), the
+ambient scope data will be stored as an `AsyncLocal` and will flow with the execution
+context. Stephen Toub's blog post on [ExecutionContext vs SynchronizationContext](https://devblogs.microsoft.com/pfxteam/executioncontext-vs-synchronizationcontext/)
+explains that concept in more detail.
+
+If global mode is enabled (appropriate for desktop applications), ambient scope data will be
+stored as a Singleton and available globally. This means you can set context (such as
+the user logged into the application) once and it will be sent with all events, regardless
+of whether the event was captured on the UI thread or a background thread.
+
+</Alert>

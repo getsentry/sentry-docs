@@ -16,7 +16,9 @@ notSupported:
   - javascript.hapi
   - javascript.koa
   - javascript.nestjs
+  - javascript.cloudflare
 description: "Configuring Session Replay to maintain user and data privacy."
+customCanonicalTag: "/platforms/javascript/session-replay/privacy/"
 ---
 
 <Include name="session-replay-web-report-bug.mdx" />
@@ -129,20 +131,20 @@ To scrub the URL in a recording event, use the above `beforeAddRecordingEvent`.
 To scrub the URL in a replay event, use `addEventProcessor`:
 
 ```javascript
-Sentry.addEventProcessor(event) => {
+Sentry.addEventProcessor((event) => {
   // Ensure that we specifically look at replay events
-  if (event.type !== 'replay_event') {
+  if (event.type !== "replay_event") {
     // Return the event, otherwise the event will be dropped
     return event;
   }
 
   // Your URL scrubbing function
-  function urlScrubber(url: string) {
-    return url.replace(/([a-z0-9]{3}\.[a-z]{5}\.[a-z]{7})/, '[Filtered]');
+  function urlScrubber(url) {
+    return url.replace(/([a-z0-9]{3}\.[a-z]{5}\.[a-z]{7})/, "[Filtered]");
   }
 
   // Scrub all URLs with your scrubbing function
-  event.urls = event.urls.map(urlScrubber);
+  event.urls = event.urls && event.urls.map(urlScrubber);
 
   return event;
 });

@@ -10,13 +10,15 @@ import {docNodeToNavNode, getNavNodes} from './utils';
 
 const devDocsMenuItems: {root: string; title: string; hideChevron?: boolean}[] = [
   {root: 'getting-started', title: 'Getting Started', hideChevron: true},
-  {root: 'development', title: 'Development'},
-  {root: 'application', title: 'Application'},
-  {root: 'frontend', title: 'Frontend'},
+  {root: 'engineering-practices', title: 'Engineering Practices'},
+  {root: 'application-architecture', title: 'Application Architecture'},
+  {root: 'development-infrastructure', title: 'Development Infrastructure'},
   {root: 'backend', title: 'Backend'},
-  {root: 'sdk', title: 'SDK Development'},
+  {root: 'frontend', title: 'Frontend'},
   {root: 'services', title: 'Services'},
   {root: 'integrations', title: 'Integrations'},
+  {root: 'ingestion', title: 'Ingestion'},
+  {root: 'sdk', title: 'SDKs'},
   {root: 'self-hosted', title: 'Self-Hosted Sentry'},
 ];
 

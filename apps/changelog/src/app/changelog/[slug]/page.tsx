@@ -16,9 +16,10 @@ import {mdxOptions} from '@/server/mdxOptions';
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(
-  {params}: {params: {slug: string}},
+  props: {params: Promise<{slug: string}>},
   parent: ResolvingMetadata
 ): Promise<Metadata> {
+  const params = await props.params;
   let changelog: Changelog | null = null;
   try {
     changelog = await getChangelog(params.slug);
@@ -57,7 +58,8 @@ const getChangelog = unstable_cache(
   {tags: ['changelog-detail']}
 );
 
-export default async function ChangelogEntry({params}: {params: {slug: string}}) {
+export default async function ChangelogEntry(props: {params: Promise<{slug: string}>}) {
+  const params = await props.params;
   const changelog = await getChangelog(params.slug);
 
   if (!changelog) {

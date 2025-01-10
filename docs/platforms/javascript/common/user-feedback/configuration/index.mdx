@@ -30,45 +30,7 @@ The following options can be configured for the integration in `feedbackIntegrat
 
 If you have `autoInject: true` a button will be inserted into the page that triggers the form to pop up so the user can enter their feedback. If instead you want to control when this injection happens, call the `feedback.createWidget()` method to get a reference to an `Actor` object, and then call `appendToDom()` to insert it into the page.
 
-```javascript
-const feedback = feedbackIntegration({
-  // Disable injecting the default widget
-  autoInject: false,
-});
-
-// Create and render the button
-const widget = feedback.createWidget();
-
-// Later, when it's time to clean up:
-widget.removeFromDom();
-```
-```typescript {tabTitle: NextJS}
-function ToggleFeedbackButton() {
-  const [feedback, setFeedback] = useState();
-  // Read `getFeedback` on the client only, to avoid hydration errors when server rendering
-  useEffect(() => {
-    setFeedback(Sentry.getFeedback());
-  }, []);
-
-  const [widget, setWidget] = useState();
-  return (
-    <button
-      type="button"
-      onClick={async () => {
-        if (widget) {
-          widget.removeFromDom();
-          setWidget(null);
-        } else {
-          setWidget(feedback.createWidget());
-        }
-      }}
-    >
-      {widget ? "Remove Widget" : "Create Widget"}
-    </button>
-  );
-}
-```
-
+<PlatformContent includePath="user-feedback/manual-injection" />
 
 Read more about how to [use your own UI](#bring-your-own-button) below.
 
@@ -180,7 +142,7 @@ The following values are only available as CSS variables, and apply to both dark
 | `--font-size`   | `14px`                                             | The font size.                                                                |
 | `--z-index`     | `100000`                                           | The z-index of the widget.                                                    |
 | `--inset`       | `auto 0 0 auto`                                    | By default, the widget has fixed position, and is in the bottom right corner. |
-| `--page-margin` | `16px`                                             | The margin from the edge of the screen that the widget should be positioned.  |
+| `--page-margin` | `16px`                                             | The margin from the edge of the screen that the widget should be positioned. This also accepts shorthand values like `10px 20px 30px 10px` for top/right/bottom/left margins.   |
 
 Colors can be customized by by defining CSS variables that override the default values, or by passing `themeLight` and/or `themeDark` to `feedbackIntegration({})`.
 
@@ -257,7 +219,7 @@ You can use your own button instead of the default injected button to trigger th
 
 ```javascript
 const feedback = feedbackIntegration({
-  // Disable injecting the default widget
+  // Disable the injection of the default widget
   autoInject: false,
 });
 
@@ -268,7 +230,7 @@ feedback.attachTo(document.querySelector("#your-button"), {
 ```typescript {tabTitle: NextJs}
 function AttachToFeedbackButton() {
   const [feedback, setFeedback] = useState();
-  // Read `getFeedback` on the client only, to avoid hydration errors when server rendering
+  // Read `getFeedback` on the client only, to avoid hydration errors during server rendering
   useEffect(() => {
     setFeedback(Sentry.getFeedback());
   }, []);
@@ -294,7 +256,7 @@ Alternatively, you can call `feedback.createForm()` and have full control over w
 
 ```javascript
 const feedback = feedbackIntegration({
-  // Disable injecting the default widget
+  // Disable the injection of the default widget
   autoInject: false,
 });
 
@@ -305,7 +267,7 @@ form.open();
 ```typescript {tabTitle: NextJS}
 function CreateFeedbackFromButton() {
   const [feedback, setFeedback] = useState();
-  // Read `getFeedback` on the client only, to avoid hydration errors when server rendering
+  // Read `getFeedback` on the client only, to avoid hydration errors during server rendering
   useEffect(() => {
     setFeedback(Sentry.getFeedback());
   }, []);

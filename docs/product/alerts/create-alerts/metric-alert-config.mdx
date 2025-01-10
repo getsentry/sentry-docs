@@ -85,7 +85,6 @@ For some metric alerts, you can set the event type that you want to be alerted a
 - `event.type:error` OR `event.type:default`
 - `event.type:default`
 - `event.type:error`
-- `event.type:transaction`
 
 ### Tags & Properties
 
@@ -93,7 +92,6 @@ Add filters in the provided input to narrow down what you'll be alerted about, s
 
 - For **error** events, all error properties are available. See [Searchable Properties](/concepts/search/searchable-properties/events/#searchable-properties) for a full list.
 - For **transaction** events, the following basic properties are generally available: `release`, `transaction`, `transaction.status`, `transaction.op`, `http.method`, `http.status_code`, `os.name`, `browser.name`, and `geo.country_code`.
-- For **metrics**, all [Metric tags](/product/explore/metrics/#augmenting-metrics-with-tags) are available.
 
 #### Advanced filters for Transactions
 
@@ -113,10 +111,11 @@ While Sentry won’t allow you to create new alerts with invalid or unavailable 
 
 ## Thresholds
 
-There are two threshold types:
+There are three threshold types:
 
-- **Static**: A fixed threshold, such as when there are 100 errors in a period of time.
-- **Percent change**: A dynamic threshold, such as when there are 10% more errors in a time period compared to a previous period. These are also referred to as [Change Alerts](#change-alerts-percent-change).
+- **Static**: A fixed numerical threshold set by you. (For example, if there are 100 errors in a set period of time.)
+- **Percent change**: A percent based threshold, such as when there are 10% more errors in a time period compared to a previous period. These are also referred to as [Change Alerts](#change-alerts-percent-change).
+- **Anomaly**: A dynamic threshold maintained by Sentry that detects anomalies whenever values fall outside of expected bounds.
 
 By default, metric alerts use a fixed threshold.
 
@@ -128,6 +127,19 @@ Change alerts, or alerts that use a percent change threshold, are useful when yo
 
 ![When the percent change option is selected.](./img/percent-change.png)
 
+### Anomaly Alerts
+
+<Include name="feature-available-for-plan-trial-business.mdx" />
+<Include name="feature-available-for-user-group-early-adopter.mdx" />
+
+Anomaly alerts automatically detect trends outside expected values. They can be especially helpful for spiky or seasonal data that are too noisy for static or percentage based thresholds. Sentry will look at historical data for the given metric and determine if the current data is anomalous. Certain metrics, like Apdex, are currently not supported for anomaly alerts.
+
+There are three options for alert responsiveness: low, medium, and high. If you choose low responsiveness, then your alert will fire less frequently but with higher confidence. If you choose high responsiveness, then your alert will fire more frequently with a greater chance of false positives. Our recommendation is to start with medium responsiveness, our default, and adjust the responsiveness based on the results you see.
+
+Another setting is to set the direction of the alert: above and/or below the expected bounds. This setting can help increase the signal of your alert rule. 
+
+![When the dynamic threshold is selected.](./img/dynamic-threshold.png)
+
 ### Set Threshold to Trigger Alert
 
 You can set the status of an alert rule when a threshold is met using the labels:
@@ -137,6 +149,12 @@ You can set the status of an alert rule when a threshold is met using the labels
 - Resolved
 
 You must set the “Warning” threshold so that it’s triggered before the “Critical” threshold. When Sentry evaluates an alert, the alert’s status is updated to the highest severity trigger that matches. If you don’t set a “Resolved” threshold, the alert automatically resolves when it's no longer breaching the “Critical” or “Warning” conditions. You can also resolve alerts manually.
+
+<Note>
+
+Note: Anomaly alert thresholds are controlled by Sentry and cannot be manually configured. 
+
+</Note>
 
 ### Auto-Resolve
 

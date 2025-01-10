@@ -8,6 +8,8 @@ import {Search} from 'sentry-docs/components/search';
 
 import styles from './styles.module.scss';
 
+import {ThemeToggle} from '../theme-toggle';
+
 type Props = {
   pathname: string;
   searchPlatforms: string[];
@@ -15,54 +17,53 @@ type Props = {
 
 export function MobileMenu({pathname, searchPlatforms}: Props) {
   return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild>
-        <Button
-          variant="ghost"
-          size="4"
-          color="gray"
-          radius="medium"
-          className="font-medium text-darkPurple"
-        >
-          Menu
-          <TriangleRightIcon />
-        </Button>
-      </DropdownMenu.Trigger>
+    <div className="flex gap-6 items-center">
+      <ThemeToggle />
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild>
+          <Button
+            variant="ghost"
+            size="4"
+            color="gray"
+            radius="medium"
+            className="font-medium text-[var(--foreground)]"
+          >
+            Menu
+            <TriangleRightIcon />
+          </Button>
+        </DropdownMenu.Trigger>
 
-      <DropdownMenu.Portal>
-        <Theme accentColor="iris">
-          <DropdownMenu.Content className={styles.DropdownMenuContent} sideOffset={5}>
-            <Box display={{xs: 'block', sm: 'none'}}>
-              <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
-                <Search path={pathname} searchPlatforms={searchPlatforms} showChatBot />
-              </DropdownMenu.Item>
+        <DropdownMenu.Portal>
+          <Theme accentColor="iris">
+            <DropdownMenu.Content className={styles.DropdownMenuContent} sideOffset={5}>
+              <Box display={{xs: 'block', sm: 'none'}}>
+                <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
+                  <Search path={pathname} searchPlatforms={searchPlatforms} showChatBot />
+                </DropdownMenu.Item>
 
+                <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
+                  <Link href="#" className="mt-2 kapa-ai-class md:hidden">
+                    Ask AI
+                  </Link>
+                </DropdownMenu.Item>
+                <DropdownMenu.Separator className={styles.DropdownMenuSeparator} />
+              </Box>
               <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
-                <Link
-                  href="https://docsbot.ai/chat/skFEy0qDC01GrRrZ7Crs/EPqsd8nu2XmKzWnd45tL"
-                  target="_blank"
-                  className="mt-2 md:hidden"
-                >
-                  Ask A Bot
-                </Link>
+                <Link href="https://sentry.io/changelog/">Changelog</Link>
               </DropdownMenu.Item>
-              <DropdownMenu.Separator className={styles.DropdownMenuSeparator} />
-            </Box>
-            <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
-              <Link href="https://sentry.io/changelog/">Changelog</Link>
-            </DropdownMenu.Item>
-            <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
-              <Link href="https://try.sentry-demo.com/demo/start/">Sandbox</Link>
-            </DropdownMenu.Item>
-            <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
-              <Link href="https://sentry.io/">Sign In</Link>
-            </DropdownMenu.Item>
-            <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
-              <Link href="https://sentry.io/signup/">Get Started</Link>
-            </DropdownMenu.Item>
-          </DropdownMenu.Content>
-        </Theme>
-      </DropdownMenu.Portal>
-    </DropdownMenu.Root>
+              <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
+                <Link href="https://try.sentry-demo.com/demo/start/">Sandbox</Link>
+              </DropdownMenu.Item>
+              <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
+                <Link href="https://sentry.io/">Go to Sentry</Link>
+              </DropdownMenu.Item>
+              <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
+                <Link href="https://sentry.io/signup/">Get Started</Link>
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </Theme>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
+    </div>
   );
 }

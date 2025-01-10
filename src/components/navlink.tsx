@@ -14,7 +14,7 @@ export function NavLink({children, ...props}: NavLinkProps) {
       color="gray"
       size="3"
       radius="medium"
-      className="font-medium text-darkPurple py-2 px-3 uppercase"
+      className="font-medium text-[var(--foreground)] py-2 px-3 uppercase"
     >
       <Link {...props}>{children}</Link>
     </Button>

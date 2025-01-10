@@ -1,0 +1,92 @@
+---
+title: Logrus
+description: "Logrus is a structured logger for Go, used to log messages in different formats and levels. This guide demonstrates how to integrate Logrus with Sentry to capture and send logs to Sentry."
+---
+
+For a quick reference, there is a [complete example](https://github.com/getsentry/sentry-go/tree/master/_examples/logrus) at the Go SDK source code repository.
+
+Go API documentation for the [`sentrylogrus` package](https://pkg.go.dev/github.com/getsentry/sentry-go/logrus) is also available.
+
+## Install
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+  ]}
+/>
+
+```bash
+go get github.com/getsentry/sentry-go/logrus
+```
+
+<Break />
+
+<SignInNote />
+
+```go {"onboardingOptions": {"performance": "14-17"}}
+import (
+	"fmt"
+	"net/http"
+	"os"
+	"time"
+
+	"github.com/sirupsen/logrus"
+
+	"github.com/getsentry/sentry-go"
+	sentrylogrus "github.com/getsentry/sentry-go/logrus"
+)
+
+    logger := logrus.New()
+
+	// Log DEBUG and higher level logs to STDERR
+	logger.Level = logrus.DebugLevel
+	logger.Out = os.Stderr
+
+	// Send only ERROR and higher level logs to Sentry
+	sentryLevels := []logrus.Level{logrus.ErrorLevel, logrus.FatalLevel, logrus.PanicLevel}
+
+	// Initialize Sentry
+	sentryHook, err := sentrylogrus.New(sentryLevels, sentry.ClientOptions{
+		Dsn: "___PUBLIC_DSN___",
+		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+			if hint.Context != nil {
+				if req, ok := hint.Context.Value(sentry.RequestContextKey).(*http.Request); ok {
+					// Access the original Request here
+					fmt.Println(req)
+				}
+			}
+			fmt.Println(event)
+			return event
+		},
+		Debug:            true,
+		AttachStacktrace: true,
+	})
+	if err != nil {
+		panic(err)
+	}
+	defer sentryHook.Flush(5 * time.Second)
+	logger.AddHook(sentryHook)
+
+	// Flushes before calling os.Exit(1) when using logger.Fatal
+	// (else all defers are not called, and Sentry does not have time to send the event)
+	logrus.RegisterExitHandler(func() { sentryHook.Flush(5 * time.Second) })
+
+	// Log an InfoLevel entry to STDERR (not sent to Sentry)
+	logger.Infof("Application has started")
+
+	// Log an ErrorLevel entry to STDERR and Sentry
+	logger.Errorf("oh no!")
+
+	// Log a FatalLevel entry to STDERR, send to Sentry, and terminate the application
+	logger.Fatalf("can't continue...")
+
+```
+
+## Configure
+
+`sentrylogrus` allows configuration via the `New` function, which accepts the levels to log and `sentry.ClientOptions`. The levels to log are the logrus levels that should be sent to Sentry. The `sentry.ClientOptions` are the same as the ones used in the `sentry.Init` function.
+
+## Usage
+
+Use `logrus` as you normally would, and it will automatically send logs at or above the specified levels to Sentry.
+

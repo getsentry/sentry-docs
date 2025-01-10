@@ -3,6 +3,8 @@
 import {Children, useState} from 'react';
 import styled from '@emotion/styled';
 
+import {getUnversionedPath} from 'sentry-docs/versioning';
+
 import {SmartLink} from './smartLink';
 
 interface SidebarLinkProps {
@@ -46,7 +48,7 @@ export function SidebarLink({
       <SidebarNavItem
         to={to}
         data-sidebar-link
-        isActive={to === path}
+        isActive={to === getUnversionedPath(path)}
         onClick={() => {
           // Allow toggling the sidebar subtree only if the item is selected
           if (path === to) {

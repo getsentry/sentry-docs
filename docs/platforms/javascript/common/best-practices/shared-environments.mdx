@@ -39,17 +39,18 @@ These best practices are relevant for you if you set up Sentry in one of the fol
 - Libraries
 - Any other scenario where you might have multiple Sentry instances running in the same environment
 
-<Note>
+<Alert level="danger">
 
 When setting up Sentry in a shared environment where multiple Sentry instances may run, you should **not use `Sentry.init()`**, as this will pollute the global state. If your browser extension uses `Sentry.init()`, and a website also uses Sentry, the extension may send events to the website's Sentry project, or vice versa.
 
-</ Note>
+</ Alert>
 
-For such scenarios, you have to set up a client manually as seen in the example below.
-In addition, you should also avoid adding any integrations that use global state, like `Breadcrumbs` or `GlobalHandlers`. Furthermore, some default integrations that use the global state have to be filtered as in the example below.
-As a rule of thumb, it's best to avoid using any integrations and to rely on manual capture of errors only in such scenarios.
+## Shared Environment Setup
 
-<SignInNote />
+For the use cases listed above, set up a client manually as seen in the example below.
+In addition, avoid adding any integrations that use global state, like `Breadcrumbs` or `GlobalHandlers`.
+Furthermore, some default integrations that use the global state have to be filtered as in the example below.
+In these scenarios, it's a best practice to avoid using any integrations and to rely on manually capturing errors.
 
 ```javascript
 import {
@@ -62,11 +63,9 @@ import {
 
 // filter integrations that use the global variable
 const integrations = getDefaultIntegrations({}).filter((defaultIntegration) => {
-  return ![
-    "BrowserApiErrors",
-    "Breadcrumbs",
-    "GlobalHandlers",
-  ].includes(defaultIntegration.name);
+  return !["BrowserApiErrors", "Breadcrumbs", "GlobalHandlers"].includes(
+    defaultIntegration.name
+  );
 });
 
 const client = new BrowserClient({
@@ -99,6 +98,36 @@ try {
 }
 ```
 
-If you notice that Sentry is not capturing error events from the browser extension,
-try disabling the Browser extension errors option in the Inbound Filters of your Sentry configuration.
+## Browser Extension Filter
+
+If you notice that Sentry is not capturing error events from the browser extension, an Inbound Filter might be active.
+You can disable that by going to your **Project Settings > Inbound Filters** and disabling filtering out errors known to be caused by browser extensions.
+
 Read more about Inbound Filters in the product documentation under [Inbound filters](/concepts/data-management/filtering/#inbound-data-filters).
+
+## Skipping the Browser Extension Check
+
+_Available in all browser-based SDKs since version `8.37.0`_
+
+If for some reason, the SDK wrongfully detects that it's initialized in a browser extension, you can skip the check by specifying the `skipBrowserExtensionCheck` option when initializing the SDK:
+
+```javascript
+import * as Sentry from "@sentry/browser";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  skipBrowserExtensionCheck: true,
+  // ...
+});
+```
+
+<Alert level="danger">
+
+You shouldn't use this option if you're in fact using the SDK in a browser extension or another shared environment.
+Initializing the SDK via `Sentry.init` has no advantages over manually setting up the client and scope as described on this page.
+You'd risk quota increases with unactionable issues, interference with other Sentry SDKs, and data leakage by doing so.
+
+</Alert>
+
+This option is purely meant as an escape hatch if our browser extension check is incorrectly detecting a browser extension.
+An example for this might be a cross-platform application framework that exposes similar global APIs like browser extensions.

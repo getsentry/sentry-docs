@@ -1,6 +1,6 @@
 ---
 title: Automatic Instrumentation
-description: "Learn what transactions are captured after tracing is enabled."
+description: "Learn what spans are captured after tracing is enabled."
 sidebar_order: 10
 notSupported:
   - javascript.cordova
@@ -8,7 +8,7 @@ notSupported:
 
 <Note>
 
-Capturing transactions requires that you first <PlatformLink to="/tracing/">set up tracing in your app</PlatformLink> if you haven't already.
+Capturing spans requires that you first <PlatformLink to="/tracing/">set up tracing in your app</PlatformLink> if you haven't already.
 
 </Note>
 
@@ -28,7 +28,6 @@ Capturing transactions requires that you first <PlatformLink to="/tracing/">set 
 
 Though the `BrowserTracing` integration is automatically enabled in `@sentry/nextjs`, in order to customize its options you must include it in your `Sentry.init` in `sentry.client.config.js`:
 
-<SignInNote />
 
 ```javascript
 import * as Sentry from "@sentry/nextjs";
@@ -60,7 +59,7 @@ The `tracingOrigins` option was renamed `tracePropagationTargets` and deprecated
 
 </Note>
 
-A list of strings and regular expressions. The JavaScript SDK will attach the `sentry-trace` and `baggage` headers to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you'll need to add it there to propagate the `sentry-trace` and `baggage` headers to the backend services, which is required to link transactions together as part of a single trace.
+A list of strings and regular expressions. The JavaScript SDK will attach the `sentry-trace` and `baggage` headers to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you'll need to add it there to propagate the `sentry-trace` and `baggage` headers to the backend services, which is required to link spans together as part of a single trace.
 
 **The `tracePropagationTargets` option matches the entire request URL, not just the domain. Using stricter regex to match certain parts of the URL ensures that requests don't unnecessarily have additional headers attached.**
 
@@ -72,7 +71,7 @@ You will need to configure your web server [CORS](https://developer.mozilla.org/
 
 ### beforeStartSpan
 
-`beforeStartSpan` is called at the start of every `pageload` or `navigation` span, and is passed an object containing data about the span which will be started. With `beforeStartSpan` you can modify that data or drop the transaction entirely by returning `undefined`.
+`beforeStartSpan` is called at the start of every `pageload` or `navigation` span, and is passed an object containing data about the span which will be started. With `beforeStartSpan` you can modify that data.
 
 <PlatformContent includePath="performance/beforeNavigate-example" />
 
@@ -91,37 +90,37 @@ will be created for all requests.
 
 ### idleTimeout
 
-The idle time, measured in ms, to wait until the transaction will be finished, if there are no unfinished spans. The transaction will use the end timestamp of the last finished span as the endtime for the transaction.
+The idle time, measured in ms, to wait until the pageload/navigation span will be finished, if there are no unfinished spans. The pageload/navigation span will use the end timestamp of the last finished span as the endtime.
 
 The default is `1000`.
 
 ### finalTimeout
 
-The maximum duration of the transaction, measured in ms. If the transaction duration hits the `finalTimeout` value, it will be finished.
+The maximum duration of the pageload/naivgation span, measured in ms. If the duration exceeds the `finalTimeout` value, it will be finished.
 
 The default is `30000`.
 
-### heartbeatInterval
+### childSpanTimeout
 
-The time, measured in ms, one heartbeat takes. If no new spans were started or no open spans finished within **three heartbeats**, the transaction will be finished. The heartbeat count restarts whenever a new span is created or an open span is finished.
+The time, measured in ms, that a child span may run. If the last started child span is still running for more than this time, the pageload/navigation span will be finished.
 
-The default is `5000`.
+The default is `15000`.
 
 ### instrumentNavigation
 
-This flag enables or disables creation of `navigation` transaction on history changes.
+This flag enables or disables creation of `navigation` span on history changes.
 
 The default is `true`.
 
 ### instrumentPageLoad
 
-This flag enables or disables creation of `pageload` transaction on first pageload.
+This flag enables or disables creation of `pageload` span on first pageload.
 
 The default is `true`.
 
 ### markBackgroundSpans
 
-This option flags transactions when tabs are moved to the background with "cancelled". Because browser background tab timing is not suited for precise measurements of operations and can affect your statistics in nondeterministic ways, we recommend that this option be enabled.
+This option flags pageload/navigation spans when tabs are moved to the background with "cancelled". Because browser background tab timing is not suited for precise measurements of operations and can affect your statistics in nondeterministic ways, we recommend that this option be enabled.
 
 The default is `true`.
 

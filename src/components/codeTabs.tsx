@@ -1,10 +1,20 @@
 'use client';
 
-import {useContext, useEffect, useRef, useState} from 'react';
+import {
+  Children,
+  ReactElement,
+  ReactNode,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import styled from '@emotion/styled';
 
 import {CodeBlockProps} from './codeBlock';
 import {CodeContext} from './codeContext';
+import {KEYWORDS_REGEX, ORG_AUTH_TOKEN_REGEX} from './codeKeywords';
+import {SignInNote} from './signInNote';
 
 // human readable versions of names
 const HUMAN_LANGUAGE_NAMES = {
@@ -28,6 +38,15 @@ const HUMAN_LANGUAGE_NAMES = {
 interface CodeTabProps {
   children: React.ReactElement<CodeBlockProps> | React.ReactElement<CodeBlockProps>[];
 }
+
+const showSigninNote = (children: ReactNode) => {
+  return Children.toArray(children).some(node => {
+    if (typeof node === 'string') {
+      return KEYWORDS_REGEX.test(node) || ORG_AUTH_TOKEN_REGEX.test(node);
+    }
+    return showSigninNote((node as ReactElement).props.children);
+  });
+};
 
 export function CodeTabs({children}: CodeTabProps) {
   const codeBlocks = Array.isArray(children) ? [...children] : [children];
@@ -98,6 +117,7 @@ export function CodeTabs({children}: CodeTabProps) {
 
   return (
     <Container ref={containerRef}>
+      {showSigninNote(codeBlocks[selectedTabIndex]) && <SignInNote />}
       <TabBar>{buttons}</TabBar>
       <div className="relative" data-sentry-mask>
         {codeBlocks[selectedTabIndex]}
@@ -116,7 +136,7 @@ const Container = styled('div')`
 `;
 
 const TabBar = styled('div')`
-  background: #251f3d;
+  background: var(--code-background);
   border-bottom: 1px solid #40364a;
   height: 36px;
   display: flex;

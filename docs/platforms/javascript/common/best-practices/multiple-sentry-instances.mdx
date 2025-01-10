@@ -13,13 +13,7 @@ notSupported:
   - javascript.hapi
   - javascript.koa
   - javascript.nestjs
-keywords:
-  [
-    "multiple clients",
-    "BrowserClient",
-    "NodeClient",
-    "monorepo",
-  ]
+keywords: ["multiple clients", "BrowserClient", "NodeClient", "monorepo"]
 ---
 
 <Note>
@@ -34,8 +28,6 @@ inside of it. To ensure you don't conflict with your parent application, you sho
 
 In this example we use `BrowserClient` from `@sentry/browser` but it's also applicable to `NodeClient` from `@sentry/node`.
 
-<SignInNote />
-
 ```javascript
 import {
   BrowserClient,
@@ -47,11 +39,9 @@ import {
 
 // filter integrations that use the global variable
 const integrations = getDefaultIntegrations({}).filter((defaultIntegration) => {
-  return ![
-    "BrowserApiErrors",
-    "Breadcrumbs",
-    "GlobalHandlers",
-  ].includes(defaultIntegration.name);
+  return !["BrowserApiErrors", "Breadcrumbs", "GlobalHandlers"].includes(
+    defaultIntegration.name
+  );
 });
 
 const client = new BrowserClient({
@@ -72,14 +62,12 @@ scope.captureException(new Error("example"));
 
 You can now customize the scope to your liking, without affecting other clients.
 
-### Dealing with Integrations
+## Dealing With Integrations
 
 Integrations are set up on the `Client`. If you need to deal with multiple clients, you'll have to make sure the integration handling is set up correctly.
 
 We do not recommend doing this if you are using Sentry in a browser extension or in similar scenarios.
 If you can't avoid using global integrations (e.g. in a micro frontend application), here is a working example of how to use multiple clients with multiple scopes running global integrations.
-
-<SignInNote />
 
 ```javascript
 import * as Sentry from "@sentry/browser";
@@ -104,11 +92,9 @@ function happyIntegration() {
 // filter integrations that use the global variable
 const integrations = Sentry.getDefaultIntegrations({}).filter(
   (defaultIntegration) => {
-    return ![
-      "BrowserApiErrors",
-      "Breadcrumbs",
-      "GlobalHandlers",
-    ].includes(defaultIntegration.name);
+    return !["BrowserApiErrors", "Breadcrumbs", "GlobalHandlers"].includes(
+      defaultIntegration.name
+    );
   }
 );
 
@@ -143,4 +129,28 @@ scope1.setTag("a", "b");
 
 scope2.captureMessage("x");
 scope2.setTag("c", "d");
+```
+
+## Using `withScope` With Multiple Clients
+
+By default, `Sentry.withScope()` will fork the current scope and allow you to add data that is only applied inside of the provided callback. If you want to leverage this in a multi-client setup, you can use `withScope` like this:
+
+```javascript
+import * as Sentry from "@sentry/browser";
+
+// Multiple clients setup as described above
+const scopeA = new Sentry.Scope();
+const clientA = new Sentry.BrowserClient(clientOptions);
+scopeA.setClient(clientA);
+clientA.init();
+
+// Want to fork scopeA?
+const scopeA2 = scopeA.clone();
+Sentry.withScope(scopeA2, () => {
+  // scopeA2 is active in this callback
+  // it is still attached to clientA
+  scopeA2.setTag("key", "value");
+  scopeA2.captureMessage("message");
+  // Any event captured inside of this callback will have scopeA2 applied to it
+});
 ```

@@ -9,6 +9,7 @@ export type SidebarNode = {
 
 export type SidebarProps = {
   path: string[];
+  versions?: string[];
 };
 
 export type DefaultSidebarProps = SidebarProps & {

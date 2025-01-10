@@ -1,6 +1,7 @@
-Get started by adding your DSN to your Astro config file (`astro.config.mjs`):
+To set up the Sentry SDK, register the Sentry integration and initialize the SDK for client and server in the root directory of your project:
 
-<SignInNote />
+### Astro Integration Setup
+
 
 ```javascript {filename:astro.config.mjs}
 import { defineConfig } from "astro/config";
@@ -9,7 +10,6 @@ import sentry from "@sentry/astro";
 export default defineConfig({
   integrations: [
     sentry({
-      dsn: "___PUBLIC_DSN___",
       sourceMapsUploadOptions: {
         project: "___PROJECT_SLUG___",
         authToken: process.env.SENTRY_AUTH_TOKEN,
@@ -19,4 +19,57 @@ export default defineConfig({
 });
 ```
 
-Once you've added your `dsn`, the SDK will automatically capture and send errors and performance events to Sentry.
+<Alert level="warning">
+  Passing runtime-specific configuration options (`dsn`, `release`, `environment`, `sampleRate`, `tracesSampleRate`, `replaysSessionSampleRate`, `replaysOnErrorSampleRate`) to the Sentry integration will be deprecated in future versions.
+  We recommend passing your configuration directly to the respective `Sentry.init()` calls in `sentry.client.config.js` and `sentry.server.config.js` instead.
+</Alert>
+
+### Client-Side Setup
+
+```javascript {filename:sentry.client.config.js} {"onboardingOptions": {"performance": "7,11-13", "session-replay": "8,14-21"}}
+import * as Sentry from "@sentry/astro";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration(),
+  ],
+
+  // Define how likely traces are sampled. Adjust this value in production,
+  // or use tracesSampler for greater control.
+  tracesSampleRate: 1.0,
+  
+  // This sets the sample rate to be 10%. You may want this to be 100% while
+  // in development and sample at a lower rate in production
+  replaysSessionSampleRate: 0.1,
+
+  // If the entire session is not sampled, use the below sample rate to sample
+  // sessions when an error occurs.
+  replaysOnErrorSampleRate: 1.0,
+});
+```
+
+### Server-side Setup
+
+```javascript {filename:sentry.server.config.js} {"onboardingOptions": {"performance": "10-13", "profiling": "2,6-9,14-17"}}
+import * as Sentry from "@sentry/astro";
+import { nodeProfilingIntegration } from '@sentry/profiling-node';
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    // Add our Profiling integration
+    nodeProfilingIntegration(),
+  ],
+
+  // Define how likely traces are sampled. Adjust this value in production,
+  // or use tracesSampler for greater control.
+  tracesSampleRate: 1.0,
+  
+  // Set sampling rate for profiling
+  // This is relative to tracesSampleRate
+  profilesSampleRate: 1.0
+});
+```

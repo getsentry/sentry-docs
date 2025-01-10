@@ -1,62 +1,116 @@
 [
   {
-    "type": "Histogram",
-    "name": "buffer.dequeue_attempts",
-    "description": "Number of attempts needed to dequeue spooled envelopes from disk.",
-    "features": []
-  },
-  {
-    "type": "Histogram",
-    "name": "buffer.disk_size",
-    "description": "The file size of the buffer db on disk, in bytes.\n\nThis metric is computed by multiplying `page_count * page_size`.",
+    "type": "Timer",
+    "name": "buffer.busy",
+    "description": "Timing in milliseconds for the time the buffer service spends handling input.\n\nThis metric is tagged with:\n- `input`: The type of input that the service is handling.",
     "features": []
   },
   {
     "type": "Gauge",
-    "name": "buffer.envelopes_disk_count",
-    "description": "The number of envelopes waiting for project states on disk.\n\nNote this metric *will not be logged* when we encounter envelopes in the database on startup,\nbecause counting those envelopes reliably would risk locking the db for multiple seconds.\n\nThe disk buffer size can be configured with `spool.envelopes.max_disk_size`.",
-    "features": []
-  },
-  {
-    "type": "Histogram",
-    "name": "buffer.envelopes_mem",
-    "description": "The estimated number of envelope bytes buffered in memory.\n\nThe memory buffer size can be configured with `spool.envelopes.max_memory_size`.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "buffer.envelopes_mem_count",
-    "description": "The number of envelopes waiting for project states in memory.\n\nThis number is always <= `EnvelopeQueueSize`.\n\nThe memory buffer size can be configured with `spool.envelopes.max_memory_size`.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "buffer.envelopes_read",
-    "description": "Number of _envelopes_ the envelope buffer produces.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "buffer.envelopes_written",
-    "description": "Number of _envelopes_ the envelope buffer ingests.",
+    "name": "buffer.disk_used",
+    "description": "The used disk for the buffer.",
     "features": []
   },
   {
     "type": "Timer",
-    "name": "buffer.message.duration",
-    "description": "Timing in milliseconds for processing a message in the buffer service.\n\nThis metric is tagged with:\n\n- `message`: The type of message that was processed.",
+    "name": "buffer.drain.duration",
+    "description": "Timing in milliseconds for the time it takes for the buffer to drain its envelopes.",
     "features": []
   },
   {
-    "type": "Gauge",
-    "name": "buffer.push_inflight",
-    "description": "Number of envelopes currently waiting to be buffered.\n\nThis corresponds to the number of corresponding tokio tasks currently scheduled or running.",
+    "type": "Histogram",
+    "name": "buffer.envelope_body_size",
+    "description": "The amount of bytes in the item payloads of an envelope pushed to the envelope buffer.\n\nThis is not quite the same as the actual size of a serialized envelope, because it ignores\nthe envelope header and item headers.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "buffer.envelope_size",
+    "description": "Size of a serialized envelope pushed to the envelope buffer.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "buffer.envelope_size.compressed",
+    "description": "Size of a compressed envelope pushed to the envelope buffer.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.envelopes_compression",
+    "description": "Timing in milliseconds for the time it takes for an envelope to be compressed.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "buffer.envelopes_count",
+    "description": "Number of elements in the envelope buffer across all the stacks.\n\nThis metric is tagged with:\n- `storage_type`: The type of storage used in the envelope buffer.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.envelopes_decompression",
+    "description": "Timing in milliseconds for the time it takes for an envelope to be decompressed.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.envelopes_serialization",
+    "description": "Timing in milliseconds for the time it takes for an envelope to be serialized.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.idle",
+    "description": "Timing in milliseconds for the time the buffer service is waiting for input.\n\nThis metric is tagged with:\n- `input`: The type of input that broke the idling.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.initialization.duration",
+    "description": "Timing in milliseconds for the time it takes for initialize the buffer.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.peek.duration",
+    "description": "Timing in milliseconds for the time it takes for the buffer to peek.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.pop.duration",
+    "description": "Timing in milliseconds for the time it takes for the buffer to pop.",
     "features": []
   },
   {
     "type": "Counter",
-    "name": "buffer.reads",
-    "description": "Number of times the envelope buffer reads back from disk.",
+    "name": "buffer.project_changed_event",
+    "description": "Number of project changed updates received by the buffer.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "buffer.project_pending",
+    "description": "Number of times one or more projects of an envelope were pending when trying to pop\ntheir envelope.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.push.duration",
+    "description": "Timing in milliseconds for the time it takes for the buffer to push.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.spool.duration",
+    "description": "Timing in milliseconds for the time it takes for the buffer to pack & spool a batch.\n\nContains the time it takes to pack multiple envelopes into a single memory blob.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "buffer.spooled_envelopes",
+    "description": "Number of envelopes spool to disk.",
     "features": []
   },
   {
@@ -67,26 +121,38 @@
   },
   {
     "type": "Counter",
-    "name": "buffer.state.transition",
-    "description": "Number of state changes in the envelope buffer.\nThis metric is tagged with:\n- `state_in`: The previous state. `memory`, `memory_file_standby`, or `disk`.\n- `state_out`: The new state. `memory`, `memory_file_standby`, or `disk`.\n- `reason`: Why a transition was made (or not made).",
+    "name": "buffer.try_pop",
+    "description": "Number of times an envelope from the buffer is trying to be popped.",
     "features": []
   },
   {
-    "type": "Gauge",
-    "name": "buffer.unspool.periodic",
-    "description": "Number of queue keys (project key pairs) unspooled during proactive unspool.\nThis metric is tagged with:\n- `reason`: Why keys are / are not unspooled.",
+    "type": "Timer",
+    "name": "buffer.unspool.duration",
+    "description": "Timing in milliseconds for the time it takes for the buffer to unspool data from disk.",
     "features": []
   },
   {
     "type": "Counter",
-    "name": "buffer.writes",
-    "description": "Number of times the envelope buffer spools to disk.",
+    "name": "buffer.unspooled_envelopes",
+    "description": "Number of envelopes unspooled from disk.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "buffer.write.duration",
+    "description": "Timing in milliseconds for the time it takes for the buffer to spool data to SQLite.",
     "features": []
   },
   {
     "type": "Counter",
     "name": "cogs.usage",
     "description": "All COGS tracked values.\n\nThis metric is tagged with:\n- `resource_id`: The COGS resource id.\n- `app_feature`: The COGS app feature.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "envelope.check_nested_spans",
+    "description": "Timing in milliseconds to count spans in a serialized transaction payload.",
     "features": []
   },
   {
@@ -102,9 +168,21 @@
     "features": []
   },
   {
+    "type": "Counter",
+    "name": "event.item_bytes",
+    "description": "Number of bytes we processed per envelope item.",
+    "features": []
+  },
+  {
     "type": "Histogram",
     "name": "event.item_size",
     "description": "The number of bytes received by Relay for each individual envelope item type.\n\nMetric is tagged by the item type.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "event.items",
+    "description": "Number of items we processed per envelope.",
     "features": []
   },
   {
@@ -316,13 +394,13 @@
   {
     "type": "Timer",
     "name": "metrics.aggregator.message.duration",
-    "description": "Timing in milliseconds for processing a message in the aggregator service.\n\nThis metric is tagged with:\n- `message`: The type of message that was processed.",
+    "description": "Timing in milliseconds for processing a task in the aggregator service.\n\nThis metric is tagged with:\n- `task`: The task being executed by the aggregator.\n- `aggregator`: The name of the aggregator.",
     "features": []
   },
   {
     "type": "Gauge",
     "name": "metrics.buckets",
-    "description": "The total number of metric buckets in Relay's metrics aggregator.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).",
+    "description": "The total number of metric buckets in Relay's metrics aggregator.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).\n- `namespace`: The namespace of the metric.",
     "features": []
   },
   {
@@ -334,19 +412,7 @@
   {
     "type": "Gauge",
     "name": "metrics.buckets.cost",
-    "description": "The total storage cost of metric buckets in Relay's metrics aggregator.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).",
-    "features": []
-  },
-  {
-    "type": "Set",
-    "name": "metrics.buckets.created.unique",
-    "description": "Count the number of unique buckets created.\n\nThis is a set of bucketing keys. The metric is basically equivalent to\n`metrics.buckets.merge.miss` for a single Relay, but could be useful to determine how much\nduplicate buckets there are when multiple instances are running.\n\nThe hashing is platform-dependent at the moment, so all your relays that send this metric\nshould run on the same CPU architecture, otherwise this metric is not reliable.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).\n- `namespace`: The namespace of the metric for which the bucket was created.",
-    "features": []
-  },
-  {
-    "type": "Histogram",
-    "name": "metrics.buckets.delay",
-    "description": "The reporting delay at which a bucket arrives in Relay.\n\nA positive delay indicates the bucket arrives after its stated timestamp. Large delays\nindicate backdating, particularly all delays larger than `bucket_interval + initial_delay`.\nNegative delays indicate that the bucket is dated into the future, likely due to clock drift\non the client.\n\nThis metric is tagged with:\n- `backdated`: A flag indicating whether the metric was reported within the `initial_delay`\ntime period (`false`) or after the initial delay has expired (`true`).",
+    "description": "The total storage cost of metric buckets in Relay's metrics aggregator.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).\n- `namespace`: The namespace of the metric.",
     "features": []
   },
   {
@@ -356,21 +422,15 @@
     "features": []
   },
   {
-    "type": "Histogram",
-    "name": "metrics.buckets.flushed",
-    "description": "The total number of metric buckets flushed in a cycle across all projects.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).",
+    "type": "Counter",
+    "name": "metrics.buckets.flush.cost",
+    "description": "Incremented with the cost of a partition for every aggregator flush.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).\n- `namespace`: The namespace of the metric.",
     "features": []
   },
   {
-    "type": "Histogram",
-    "name": "metrics.buckets.flushed_per_project",
-    "description": "The number of metric buckets flushed in a cycle for each project.\n\nRelay scans metric buckets in regular intervals and flushes expired buckets. This histogram\nis logged for each project that is being flushed. The count of the histogram values is\nequivalent to the number of projects being flushed.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).",
-    "features": []
-  },
-  {
-    "type": "Histogram",
-    "name": "metrics.buckets.invalid_timestamp",
-    "description": "Distribution of invalid bucket timestamps observed, relative to the time of observation.\n\nThis is a temporary metric to better understand why we see so many invalid timestamp errors.",
+    "type": "Counter",
+    "name": "metrics.buckets.flush.count",
+    "description": "Incremented for every aggregator flush.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).",
     "features": []
   },
   {
@@ -404,48 +464,28 @@
     "features": []
   },
   {
-    "type": "Timer",
-    "name": "metrics.buckets.scan_duration",
-    "description": "Time in milliseconds spent scanning metric buckets to flush.\n\nRelay scans metric buckets in regular intervals and flushes expired buckets. This timer\nshows the time it takes to perform this scan and remove the buckets from the internal cache.\nSending the metric buckets to upstream is outside of this timer.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "metrics.buckets.size",
-    "description": "The average number of elements in a bucket when flushed.\n\nThis metric is tagged with:\n- `metric_type`: \"c\", \"d\", \"g\" or \"s\".\n- `namespace`: The namespace of the metric.",
-    "features": []
-  },
-  {
     "type": "Counter",
-    "name": "metrics.meta.agg.items",
-    "description": "Incremnted for every metric meta item added to the metric meta aggregator.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "metrics.meta.agg.update",
-    "description": "Incremented every time the meta aggregator emitted an update that needs to be stored or\nsent upstream.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "metrics.meta.parsing_failed",
-    "description": "Number of times that parsing a metric meta item from an envelope failed.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "metrics.meta.redis.update",
-    "description": "Incremented every time a redis key is updated to store or update metadata.",
+    "name": "metrics.delay.count",
+    "description": "The amount of buckets counted for the [`Self::MetricDelaySum`] metric.\n\nThis metric is tagged with:\n- `namespace`: the metric namespace.",
     "features": [
-      "redis"
+      "processing"
     ]
   },
   {
-    "type": "Histogram",
-    "name": "metrics.partitions.flushed",
-    "description": "The number of metric partitions flushed in a cycle.\n\nThis metric is tagged with:\n- `aggregator`: The name of the metrics aggregator (usually `\"default\"`).",
-    "features": []
+    "type": "Gauge",
+    "name": "metrics.delay.max",
+    "description": "Maximum delay of a metric bucket in seconds.\n\nThe maximum is measured from initial creation of the bucket in an internal Relay\nuntil it is produced to Kafka.\n\nThis metric is tagged with:\n- `namespace`: the metric namespace.",
+    "features": [
+      "processing"
+    ]
+  },
+  {
+    "type": "Counter",
+    "name": "metrics.delay.sum",
+    "description": "The total delay of metric buckets in seconds.\n\nThe delay is measured from initial creation of the bucket in an internal Relay\nuntil it is produced to Kafka.\n\nUse [`Self::MetricDelayCount`] to calculate the average delay.\n\nThis metric is tagged with:\n- `namespace`: the metric namespace.",
+    "features": [
+      "processing"
+    ]
   },
   {
     "type": "Timer",
@@ -519,26 +559,14 @@
   },
   {
     "type": "Gauge",
-    "name": "project_cache.garbage.queue_size",
-    "description": "The number of items currently in the garbage disposal queue.",
+    "name": "project_cache.fetches.size",
+    "description": "The number of scheduled and in progress fetches in the project cache.",
     "features": []
   },
   {
     "type": "Counter",
-    "name": "project_cache.hit",
-    "description": "Number of times a project is looked up from the cache.\n\nThe cache may contain and outdated or expired project state. In that case, the project state\nis updated even after a cache hit.",
-    "features": []
-  },
-  {
-    "type": "Timer",
-    "name": "project_cache.message.duration",
-    "description": "Timing in milliseconds for handling a project cache message.\n\nThis metric is tagged with:\n- `message`: The type of message that was processed.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "project_cache.miss",
-    "description": "Number of times a project lookup failed.\n\nA cache entry is created immediately and the project state requested from the upstream.",
+    "name": "project_cache.schedule",
+    "description": "Number of times a project had a fetch scheduled.",
     "features": []
   },
   {
@@ -550,7 +578,7 @@
   {
     "type": "Timer",
     "name": "project_cache.task.duration",
-    "description": "Timing in milliseconds for processing a task in the project cache service.\n\nA task is a unit of work the service does. Each branch of the\n`tokio::select` is a different task type.\n\nThis metric is tagged with:\n- `task`: The type of the task the processor does.",
+    "description": "Timing in milliseconds for processing a task in the project cache service.\n\nThis metric is tagged with:\n- `task`: The type of the task the project cache does.",
     "features": []
   },
   {
@@ -568,33 +596,9 @@
     ]
   },
   {
-    "type": "Timer",
-    "name": "project_state.eviction.duration",
-    "description": "Total time in milliseconds spent evicting outdated and unused projects happens.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "project_state.flush_all_metric_meta",
-    "description": "Number of full metric data flushes.\n\nA full flush takes all contained items of the aggregator and flushes them upstream,\nat best this happens once per freshly loaded project.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "project_state.get",
-    "description": "Number of times a project state is looked up from the cache.\n\nThis includes lookups for both cached and new projects. As part of this, updates for\noutdated or expired project caches are triggered.\n\nRelated metrics:\n- `project_cache.hit`: For successful cache lookups, even for outdated projects.\n- `project_cache.miss`: For failed lookups resulting in an update.",
-    "features": []
-  },
-  {
     "type": "Counter",
     "name": "project_state.metrics.no_project",
     "description": "The amount of times metrics of a project have been flushed without the project being\nfetched/available.",
-    "features": []
-  },
-  {
-    "type": "Counter",
-    "name": "project_state.no_cache",
-    "description": "Number of times a project config was requested with `.no-cache`.\n\nThis effectively counts the number of envelopes or events that have been sent with a\ncorresponding DSN. Actual queries to the upstream may still be deduplicated for these\nproject state requests.\n\nA maximum of 1 such requests per second is allowed per project key. This metric counts only\npermitted requests.",
     "features": []
   },
   {
@@ -671,8 +675,20 @@
   },
   {
     "type": "Counter",
+    "name": "replay.segment_limit_exceeded",
+    "description": "Incremented every time a segment exceeds the expected limit.",
+    "features": []
+  },
+  {
+    "type": "Counter",
     "name": "requests",
     "description": "Number of HTTP requests reaching Relay.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "requests.body_read.duration",
+    "description": "Timing in milliseconds to the time it takes to read an HTTP body.",
     "features": []
   },
   {
@@ -694,15 +710,147 @@
     "features": []
   },
   {
+    "type": "Gauge",
+    "name": "runtime.alive_tasks",
+    "description": "Exposes [`RuntimeMetrics::num_alive_tasks`].",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "runtime.blocking_queue_depth",
+    "description": "Exposes [`RuntimeMetrics::blocking_queue_depth`].",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "runtime.budget_forced_yield_count",
+    "description": "Exposes [`RuntimeMetrics::budget_forced_yield_count`].",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "runtime.idle_threads",
+    "description": "Exposes [`RuntimeMetrics::num_idle_threads`].",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "runtime.num_blocking_threads",
+    "description": "Exposes [`RuntimeMetrics::num_blocking_threads`].",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "runtime.num_idle_blocking_threads",
+    "description": "Exposes [`RuntimeMetrics::num_idle_blocking_threads`].",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "runtime.num_workers",
+    "description": "Exposes [`RuntimeMetrics::num_workers`].",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "runtime.task.spawn.created",
+    "description": "Number of runtime tasks created/spawned.\n\nEvery call to [`spawn`](`crate::spawn()`) increases this counter by one.\n\nThis metric is tagged with:\n- `id`: A unique identifier for the task, derived from its location in code.\n- `file`: The source filename where the task is created.\n- `line`: The source line where the task is created within the file.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "runtime.task.spawn.terminated",
+    "description": "Number of runtime tasks terminated.\n\nThis metric is tagged with:\n- `id`: A unique identifier for the task, derived from its location in code.\n- `file`: The source filename where the task is created.\n- `line`: The source line where the task is created within the file.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "runtime.worker_local_queue_depth",
+    "description": "Exposes [`RuntimeMetrics::worker_local_queue_depth`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "runtime.worker_local_schedule_count",
+    "description": "Exposes [`RuntimeMetrics::worker_local_schedule_count`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "runtime.worker_mean_poll_time",
+    "description": "Exposes [`RuntimeMetrics::worker_mean_poll_time`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "runtime.worker_noop_count",
+    "description": "Exposes [`RuntimeMetrics::worker_noop_count`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "runtime.worker_overflow_count",
+    "description": "Exposes [`RuntimeMetrics::worker_overflow_count`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "runtime.worker_park_count",
+    "description": "Exposes [`RuntimeMetrics::worker_park_count`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "runtime.worker_poll_count",
+    "description": "Exposes [`RuntimeMetrics::worker_poll_count`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "runtime.worker_steal_count",
+    "description": "Exposes [`RuntimeMetrics::worker_steal_count`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "runtime.worker_steal_operations",
+    "description": "Exposes [`RuntimeMetrics::worker_steal_operations`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "runtime.worker_total_busy_duration",
+    "description": "Exposes [`RuntimeMetrics::worker_total_busy_duration`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
+    "features": []
+  },
+  {
     "type": "Timer",
     "name": "scrubbing.attachments.duration",
-    "description": "Time spend on attachment scrubbing.\n\nThis represents the total time spent on evaluating the scrubbing rules for an\nattachment and the attachment scrubbing itself, regardless of whether any rules were\napplied.  Note that minidumps which failed to be parsed (status=\"error\" in\nscrubbing.minidumps.duration) will be scrubbed as plain attachments and count\ntowards this.",
+    "description": "Time spend on attachment scrubbing.\n\nThis represents the total time spent on evaluating the scrubbing rules for an\nattachment and the attachment scrubbing itself, regardless of whether any rules were\napplied.  Note that minidumps which failed to be parsed (status=\"error\" in\nscrubbing.minidumps.duration) will be scrubbed as plain attachments and count\ntowards this.\n\nThis metric is tagged with:\n\n- `attachment_type`: The type of attachment, e.g. \"minidump\".",
     "features": []
   },
   {
     "type": "Timer",
     "name": "scrubbing.minidumps.duration",
     "description": "Time spent on minidump scrubbing.\n\nThis is the total time spent on parsing and scrubbing the minidump.  Even if no PII\nscrubbing rules applied the minidump will still be parsed and the rules evaluated on\nthe parsed minidump, this duration is reported here with status of \"n/a\".\n\nThis metric is tagged with:\n\n- `status`: Scrubbing status: \"ok\" means successful scrubbed, \"error\" means there\nwas an error during scrubbing and finally \"n/a\" means scrubbing was successful\nbut no scurbbing rules applied.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "server.http.accepted",
+    "description": "Incremented every time the server accepts a new connection.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "server.http.connections",
+    "description": "Exposes the amount of currently open and handled connections by the server.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "server.http.idle_timeout",
+    "description": "Incremented every time the server aborts a connection because of an idle timeout.",
     "features": []
   },
   {
@@ -724,102 +872,6 @@
     "features": [
       "processing"
     ]
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.active_task_count",
-    "description": "Exposes [`RuntimeMetrics::active_tasks_count`].",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.blocking_queue_depth",
-    "description": "Exposes [`RuntimeMetrics::blocking_queue_depth`].",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.budget_forced_yield_count",
-    "description": "Exposes [`RuntimeMetrics::budget_forced_yield_count`].",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.num_blocking_threads",
-    "description": "Exposes [`RuntimeMetrics::num_blocking_threads`].",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.num_idle_blocking_threads",
-    "description": "Exposes [`RuntimeMetrics::num_idle_blocking_threads`].",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.num_workers",
-    "description": "Exposes [`RuntimeMetrics::num_workers`].",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.worker_local_queue_depth",
-    "description": "Exposes [`RuntimeMetrics::worker_local_queue_depth`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.worker_local_schedule_count",
-    "description": "Exposes [`RuntimeMetrics::worker_local_schedule_count`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.worker_mean_poll_time",
-    "description": "Exposes [`RuntimeMetrics::worker_mean_poll_time`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.worker_noop_count",
-    "description": "Exposes [`RuntimeMetrics::worker_noop_count`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.worker_overflow_count",
-    "description": "Exposes [`RuntimeMetrics::worker_overflow_count`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.worker_park_count",
-    "description": "Exposes [`RuntimeMetrics::worker_park_count`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.worker_poll_count",
-    "description": "Exposes [`RuntimeMetrics::worker_poll_count`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.worker_steal_count",
-    "description": "Exposes [`RuntimeMetrics::worker_steal_count`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.worker_steal_operations",
-    "description": "Exposes [`RuntimeMetrics::worker_steal_operations`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
-    "features": []
-  },
-  {
-    "type": "Gauge",
-    "name": "tokio.worker_total_busy_duration",
-    "description": "Exposes [`RuntimeMetrics::worker_total_busy_duration`].\n\nThis metric is tagged with:\n- `worker`: the worker id.",
-    "features": []
   },
   {
     "type": "Histogram",

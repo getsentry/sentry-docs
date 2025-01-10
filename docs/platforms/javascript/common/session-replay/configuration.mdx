@@ -16,6 +16,7 @@ notSupported:
   - javascript.hapi
   - javascript.koa
   - javascript.nestjs
+  - javascript.cloudflare
 description: "Learn about the general Session Replay configuration fields."
 ---
 
@@ -134,7 +135,7 @@ replayIntegration({
 });
 ```
 
-4. You can now <PlatformLink to="/configuration/tree-shaking/">Tree Shake</PlatformLink> the default included worker script. If you are using our bundler plugins (version 2.10.0 or later), you can do:
+4. (optional) To reduce bundle size, you can now <PlatformLink to="/configuration/tree-shaking/">Tree Shake</PlatformLink> the default included worker script. If you are using one of the [Sentry Bundler Plugins](https://github.com/getsentry/sentry-javascript-bundler-plugins) (version 2.10.0 or later):
 
 ```javascript
 sentryPlugin({
@@ -157,3 +158,19 @@ replayIntegration({
   mutationLimit: 1500,
 });
 ```
+
+## Custom breadcrumbs
+
+Our SDKs allow you to send custom breadcrumbs, which will appear in the Replay Details UI alongside existing breadcrumbs. To learn how to send custom breadcrumbs, [read the docs here](/platforms/javascript/enriching-events/breadcrumbs/#customize-breadcrumbs). Note that any custom breadcrumbs you send will be reflected in both the Issue Details breadcrumbs UI and the Replay Details breadcrumbs tab.
+
+All custom breadcrumbs in the Replay Details will appear grey, and can be identified by the terminal logo.
+
+In Replay Details, the breadcrumb `message` will take precedence over the `data` property. If the `message` property is set, then the string will be displayed like this:
+
+![Custom breadcrumb example with message](./img/message-custom-breadcrumb.png)
+
+If `message` is not set, then the breadcrumb will display the `data` property by default. For example:
+
+![Custom breadcrumb example with data](./img/data-custom-breadcrumb.png)
+
+The title of the breadcrumb will be the breadcrumb `category` that you set. If no `category` is set, then we will use the breadcrumb `message`. If that doesn't exist, we'll use the `description`. The last fallback with be a default title of "Custom".

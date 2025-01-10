@@ -12,7 +12,7 @@ import {Combobox, ComboboxItem, ComboboxList, ComboboxProvider} from '@ariakit/r
 import {CaretRightIcon, CaretSortIcon, MagnifyingGlassIcon} from '@radix-ui/react-icons';
 import * as RadixSelect from '@radix-ui/react-select';
 import {matchSorter} from 'match-sorter';
-import {usePathname} from 'next/navigation';
+import {usePathname, useRouter} from 'next/navigation';
 
 import {PlatformIcon} from 'sentry-docs/components/platformIcon';
 import {Platform, PlatformGuide, PlatformIntegration} from 'sentry-docs/types';
@@ -90,13 +90,12 @@ export function PlatformSelector({
     return matches_;
   }, [searchValue, currentPlatformKey, platformsAndGuides]);
 
+  const router = useRouter();
   const onPlatformChange = (platformKey: string) => {
     const platform_ = platformsAndGuides.find(platform => platform.key === platformKey);
     if (platform_) {
       localStorage.setItem('active-platform', platform_.key);
-      // feels wrong to use window.location here,
-      // but router.push is not working on mobile for some reason
-      window.location.href = platform_.url;
+      router.push(platform_.url);
     }
   };
 
@@ -195,9 +194,15 @@ export function PlatformSelector({
                     platform={{
                       ...platform,
                       // only keep guides that are in the matches list
-                      guides: platform.guides.filter(g =>
-                        matches.some(m => m.key === g.key)
-                      ),
+                      guides: platform.guides
+                        .filter(g =>
+                          matches.some(m => m.key === g.key && m.type === 'guide')
+                        )
+                        .sort((a, b) => {
+                          const indexA = matches.findIndex(m => m.key === a.key);
+                          const indexB = matches.findIndex(m => m.key === b.key);
+                          return indexA - indexB;
+                        }),
 
                       integrations: platform.integrations.filter(i =>
                         matches.some(m => m.key === i.key)

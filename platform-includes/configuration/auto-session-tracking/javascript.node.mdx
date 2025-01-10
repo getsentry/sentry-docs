@@ -1,14 +1,7 @@
 Release health on the server side is tracked in two different modes:
 
 - Single sessions that represent a node process; for example, a CLI application. In single sessions mode, the SDK creates a session for every node process. A session is started on `init` of the SDK, and ends when the process is exited.
-- Session aggregates represent requests. In session aggregates mode, sessions will be recorded differently and will represent the lifetime of requests. For the SDK to be able to capture request mode sessions, you must enable the `requestHandler` of the [Express middleware](/platforms/javascript/guides/express).
-
-```javascript
-// The Sentry request handler middleware must be added before any other handlers
-app.use(Sentry.Handlers.requestHandler());
-```
-
-The SDK automatically determines which mode release health will operate in. By default, the SDK runs in single sessions mode. However, if the `requestHandler` Express middleware is enabled, release health is automatically toggled to session aggregates mode. If the `requestHandler` Express middleware is not enabled, session aggregates mode will not be enabled and sessions will represent the health of the web server application process if, for example, a web server application is being run.
+- Session aggregates represent requests. In session aggregates mode, sessions will be recorded differently and will represent the lifetime of requests. Sessions will automatically be aggregated for HTTP requests in your application.
 
 We mark the session as crashed if an _unhandled error_ reached our `errorHandler` middleware.
 
@@ -21,3 +14,17 @@ Sentry.init({
   autoSessionTracking: false, // default: true
 });
 ```
+
+{/* TODO(v9): Remove this notice? */}
+
+<PlatformSection notSupported={["javacript.cordova", "javascript.capacitor", "javascript.electron"]}>
+
+<Alert title="Deprecation Notice">
+
+{/* We don't use platform links here because we always have to link to node and browser here and doing a conditional just for that feels overkill. */}
+
+Starting with SDK version 8.43.0 and up, the `autoSessionTracking` option has been deprecated. You can use the [BrowserSession integration](/platforms/javascript/configuration/integrations/browsersession/) in browser environments and the [Http integration](/platforms/javascript/guides/node/configuration/integrations/http/) (via the `trackIncomingRequestsAsSessions` option) in Node.js runtime.
+
+</Alert>
+
+</PlatformSection>

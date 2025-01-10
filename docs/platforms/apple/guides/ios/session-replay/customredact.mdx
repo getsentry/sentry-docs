@@ -1,0 +1,77 @@
+---
+title: Using Custom Masking for Session Replay
+sidebar_order: 5501
+notSupported:
+description: "Learn how to mask parts of your app's data in Session Replay."
+---
+
+<Alert>
+Before publising an App with Session Replay enabled, make sure to test it thoroughly to ensure that no sensitive data is exposed.
+
+If you choose to use custom masking in your Session Replays, you may accidentally expose sensitive customer data. Be sure to double-check what you choose to expose.
+
+</Alert>
+
+By default, our Session Replay SDK masks all text content, images, and user input. This helps ensure that no sensitive data will be exposed. You can also manually choose which parts of your app's data you want to mask by using the different options listed below.
+
+
+## Mask by View Class
+
+You can choose which type of view you want to mask or unmask by using the `maskedViewClasses` or `unmaskedViewClasses` options.
+
+Let's say you have a custom view that you want to mask and a `UILabel` subclass (which normally would be masked) that you don't want to mask. You can set the options like this:
+
+```swift
+  options.sessionReplay.maskedViewClasses = [MyCustomView.self]
+  options.sessionReplay.unmaskedViewClasses = [MyCustomLabel.self]
+```
+
+## Mask by View Instance
+
+You can also choose to mask or unmask a specific view instance by using the replay API (`SentrySDK.replay`) or view extensions like this:
+
+```swift
+  SentrySDK.replay.maskView(view: view)
+  SentrySDK.replay.unmaskView(view: label)
+```
+or
+
+```swift
+  view.sentryReplayMask()
+  label.sentryReplayUnmask()
+```
+
+## SwiftUI
+
+Because of the way SwiftUI is transformed into UIKit, it will often be over-masked. A modifier like `background` uses the same element as an `Image`.
+In order to control the SwiftUI masking process, you need to use the `sentryReplayUnmask` and/or `sentryReplayMask` modifiers. 
+
+In this example we want to show the message, but not the user name.
+```swift
+  @Binding var user: String
+
+  var body: some View {
+    VStack {
+      Text("Hello")
+        .sentryReplayUnmask()
+      Text("\(user)")
+    }
+  }
+```
+
+In this example, we need to unmask the VStack because its background element will be masked by default.
+To hide the username, we need to mask it.
+
+```swift
+  @Binding var user: String
+
+  var body: some View {
+    VStack {
+      Text("Hello")
+      Text("\(user)")
+        .sentryReplayMask()
+    }
+    .background(.blue)
+    .sentryReplayUnmask() 
+  }
+```

@@ -10,15 +10,14 @@ description: "Profiling offers a deeper level of visibility on top of traditiona
 
 - [Android (Java and Kotlin only)](/platforms/android/profiling/)
 - [iOS and macOS (Swift and Objective-C only)](/platforms/apple/profiling/)
-- [Flutter [experimental, iOS and macOS only]](/platforms/flutter/profiling/)
 - [Python](/platforms/python/profiling/)
-- [.NET [experimental]](/platforms/dotnet/profiling/)
 - [Node.js](/platforms/javascript/guides/node/profiling/)
 - [PHP (including Laravel and Symfony)](/platforms/php/profiling/)
 - [Browser JavaScript [beta]](/platforms/javascript/profiling/)
-- [Go [experimental]](/platforms/go/profiling/)
 - [Ruby [beta]](/platforms/ruby/profiling/)
 - [React Native [beta]](/platforms/react-native/profiling/)
+- [Flutter [experimental, iOS and macOS only]](/platforms/flutter/profiling/)
+- [.NET [experimental]](/platforms/dotnet/profiling/)
 
 </Note>
 
@@ -51,15 +50,29 @@ From this view, you can also click "View Profile" to zoom in on the flame graph.
 
 ## Profiling Page
 
-The **Profiling** page shows a list of transactions in descending order of execution time for your selected project(s).
+On the [**Profiling**](https://sentry.io/orgredirect/organizations/:orgslug/profiling/) page, you'll find two tabs:  "transactions" and "flamegraph". The transactions tab lists transactions in descending order of execution-time for your selected project(s), while the flamegraph tab shows an aggregate flamegraph that spans across transactions. Depending on how profiling has been set up, you might be interested more in one than the other.
 
-![Profiling page](./img/profiling-page-view.png)
+Using the Profiling page is typically an advanced workflow where you can select transactions of interest directly and closely examine profiling data.
 
-The "Profiles by Percentiles" timeline chart can be used to filter the transaction data by highlighting the desired time period. Below that, there are three widgets to choose from.
+### Transactions Tab
 
-The "Slowest Functions" widget shows you a list of the functions that took the most time in your application. It lists the transactions the function was called from. Clicking on a transaction will take you to an example profile. The "Most Regressed Functions" and "Most Improved Functions" widgets show you a list of the functions that have gotten slower/faster over time. Clicking on the timings will take you to an example from either before/after the detected regression/improvement.
+This page shows a list of transactions in descending order of execution-time for your selected project(s).
 
-Using the Profiling page is typically an advanced workflow, enabling you to directly select transactions of interest and examine detailed profiling data.
+![Transactions View](./img/profiling-page-transactions-view.png)
+
+The "Profiles by Percentiles" timeline chart can be used to filter transaction data by highlighting a desired time period.
+
+The "Slowest Functions" widget lists the functions that took the most time in your application, including the transactions each function was called from. Clicking on a transaction will take you to an example profile.
+
+### Flamegraph Tab
+
+The flamegraph tab shows an aggregate flamegraph based on the query you selected. You can use this tab to visualize a flamegraph across transaction boundaries so you can better understand bottlenecks that might be affecting the system as a whole. The aggregate flamegraph is a more advanced workflow that's relevant to users who've set up continuous profiling and are interested in looking at system-wide performance.
+
+![Flamegraph View](./img/profiling-page-flamegraph-view.png)
+
+The function width in an aggregate flamegraph represents the number of times a particular function has been sampled. This view shows you where your system is spending the majority of its time. We recommend that you look for functions with a large sample count and optimize them, as they're the ones most frequently occupying the program's stack.
+
+You can right click on a function to open some example profiles and see the function executing. This is useful for gaining context into how and why that function might be running.
 
 ## Profiling Summary Page
 
@@ -71,17 +84,13 @@ While the **Profiling** page can be used to view information about the profiles 
 
 This information allows you to dive deeper into what your code was executing during this transaction and may get you closer to the root of the problem.
 
-The top of the page has a percentile chart with profile durations and a search bar. It helps you visually identify possible performance regressions or changes. You can isolate the date-time ranges you want to investigate by clicking and dragging it. If you want to narrow down your investigation to profiles executed under a specific environment, use the search bar filters.
+If you want to narrow down your investigation to profiles executed in a specific environment, use the search bar filters.
 
-The bottom right side of the page has aggregated information about function regressions detected during your selected time range plus, a list of the slowest functions. There's also a list of general information about the profile including:
+The right side of the page has a list of the slowest functions. There's also a list of general information about the profile including:
 
 - When the profile was last seen
 - The total number of profiles collected for this transaction
 - p75, p95, and p99 values
-
-Below the general information is a list of regressions that Sentry may have detected. Clicking the before/after timings in the regressed function list will take you to example flamecharts of the before and after execution so that you can investigate what changed.
-
-There's also a list of the slowest functions which are consuming the most time in your application. These are good candidates for optimization.
 
 On the left side of the page is an aggregate flamegraph as well as a digest of the slowest and most regressed functions. We recommend looking for wide frames that have no children as a starting point. This will allow you to identify frames that are often occupying the stack and make good candidates for optimization. Read the [Flame Graphs and Aggregated Flame Graphs](/product/explore/profiling/flame-charts-graphs) docs if you'd like a deeper understanding of this data.
 

@@ -7,11 +7,11 @@ sidebar_order: 5000
 <PlatformContent includePath="profiling/index/preface" />
 <PlatformContent includePath="profiling/index/why-profiling" />
 
-## Enable Profiling
+## Enable Profiling using StackProf
 
 <Note>
 
-Ruby profiling beta is available starting in SDK version `5.9.0`.
+StackProf profiling beta is available starting in SDK version `5.9.0`.
 
 </Note>
 
@@ -28,7 +28,6 @@ gem 'sentry-ruby'
 
 Then, make sure both `traces_sample_rate` and `profiles_sample_rate` are set and non-zero in your Sentry initializer.
 
-<SignInNote />
 
 ```ruby
 # config/initializers/sentry.rb
@@ -47,3 +46,41 @@ The <PlatformIdentifier name="profiles_sample_rate" /> setting is _relative_ to 
 For Profiling to work, you have to first enable Sentry’s tracing via `traces_sample_rate` (like in the example above). Read our <PlatformLink to="/tracing/">tracing setup documentation</PlatformLink> to learn how to configure sampling. If you set your sample rate to 1.0, all transactions will be captured.
 
 </Note>
+
+## Enable Profiling using Vernier
+
+<Note>
+
+Vernier profiling beta is available starting in SDK version `5.21.0`.
+
+</Note>
+
+<Note>
+
+Vernier requires Ruby 3.2.1+
+
+</Note>
+
+You can have much better profiles if you're using multi-threaded servers like Puma now by leveraging Vernier.
+
+First, add `vernier` to your `Gemfile` and make sure it is loaded before `sentry-ruby`.
+
+```ruby
+# Gemfile
+
+gem 'vernier'
+gem 'sentry-ruby'
+```
+
+Then, set a `profiles_sample_rate` and the new `profiler_class` configuration in your sentry initializer to use the new profiler.
+
+```ruby
+# config/initializers/sentry.rb
+
+Sentry.init do |config|
+  config.dsn = "___PUBLIC_DSN___"
+  config.profiles_sample_rate = 1.0
+  config.traces_sample_rate = 1.0
+  config.profiler_class = Sentry::Vernier::Profiler
+end
+```

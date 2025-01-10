@@ -8,24 +8,21 @@ To obtain headers from a transaction so it can be continued from a downstream se
 
 ```c
 static void
-copy_headers_to(const char *key, const char *value, void *userdata)
-{
-    sentry_value_t *headers
-        = (sentry_value_t *)userdata;
-    sentry_value_set_by_key(*headers, key, value);
+copy_headers_to(const char *key, const char *value, void *userdata) {
+    sentry_value_t *headers = (sentry_value_t *)userdata;
+    sentry_value_set_by_key(*headers, key, sentry_value_new_string(value));
 }
 
 int main(int argc, char **argv) {
-  ...
-	// Transaction to continue off of
+    // Transaction to continue off of
 	sentry_transaction_context_t *tx_ctx = sentry_transaction_context_new(
         "honk",
-        NULL,
+        NULL
     );
     sentry_transaction_t *tx = sentry_transaction_start(tx_ctx, sentry_value_new_null());
 
-	sentry_value_t *headers = sentry_value_new_object();
-	sentry_transaction_iter_headers(tx, copy_headers_to, (void *)headers);
+	sentry_value_t headers = sentry_value_new_object();
+    sentry_transaction_iter_headers(tx, copy_headers_to, (void *) &headers);
 }
 ```
 
@@ -34,12 +31,14 @@ To create a transaction as a continuation of a trace retrieved from an upstream 
 ```c
 	sentry_transaction_context_t *tx_ctx = sentry_transaction_context_new(
         "honk",
-        NULL,
+        NULL
     );
     sentry_transaction_context_update_from_header(
         tx_ctx,
         "sentry-trace",
-        "atraceid-aspanid-issampled",
+        "41c74c2ea9f2bfb184f86939de5b97aa-399b3e5cc8b83494-1"
     );
 
 ```
+
+The format of the `sentry-trace` header should follow the one defined in [the telemetry docs](https://develop.sentry.dev/sdk/telemetry/traces/#header-sentry-trace). It should consist of a 32 character hexadecimal string for the `traceId`, followed by a 16 character hexadecimal string for the `spanId` and an optional single character for the `sampled` flag. If the given string doesn't match this format, the update is ignored and the values in the transaction context will remain unchanged.

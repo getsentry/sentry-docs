@@ -1,0 +1,42 @@
+For example, if you want to create a transaction for a user interaction in your application:
+
+```cpp
+// Let's say this method is called in a background thread when a user clicks on the checkout button.
+void perform_checkout() {
+    USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+    // This will create a new Transaction for you
+    USentryTransactionContext* transactionContext = NewObject<USentryTransactionContext>();
+    transactionContext->Initialize(
+        TEXT("checkout"),
+        TEXT("perform-checkout")
+    );
+
+    USentryTransaction* transaction =
+        SentrySubsystem->StartTransactionWithContext(transactionContext);
+
+    // Validate the cart
+    USentrySpan* validationSpan = transaction->StartChild(
+        TEXT("validation"),
+        TEXT("validating shopping cart")
+    );
+
+    validate_shopping_cart(); // Some long process, maybe a sync http request.
+
+    validationSpan->Finish();
+
+    // Process the order
+    SentrySpan* processSpan = transaction->StartChild(
+        TEXT("process"),
+        TEXT("processing shopping cart")
+    );
+
+    process_shopping_cart(); // Another time consuming process.
+
+    processSpan->Finish();
+
+    transaction->Finish();
+}
+```
+
+This example will send a transaction named `checkout` to Sentry. The transaction will contain a `validation` span that measures how long `validate_shopping_cart()` took and a `process` span that measures `process_shopping_cart()`. Finally, the `transaction->Finish()` call will finish the transaction and send it to Sentry.

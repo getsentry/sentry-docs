@@ -64,7 +64,7 @@ Configures the sample rate for error events, in the range of `0.0` to `1.0`. The
 
 <ConfigKey name="max-breadcrumbs">
 
-This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`, but you can set this to any number. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
+This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`, but you can set this to any number. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
 
 </ConfigKey>
 
@@ -241,5 +241,17 @@ A number between 0 and 1, controlling the percentage chance a given transaction 
 <ConfigKey name="traces-sampler">
 
 A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="traces-sample-rate" /> must be defined to enable tracing.
+
+</ConfigKey>
+
+<ConfigKey name="trace-propagation-targets">
+
+An optional property that controls which downstream services receive tracing data, in the form of a `sentry-trace` and a `baggage` header attached to any outgoing HTTP requests.
+
+The option may contain a list of strings against which the hosts of outgoing requests are matched.
+If one of the entries in the list matches the host of an outgoing request, trace data will be attached to that request.
+
+If <PlatformIdentifier name="trace-propagation-targets" /> is not provided, trace data is attached to every outgoing request from the [instrumented client](../../tracing/instrumentation/requests-module/).
+To disable sending trace data to any downstream service, set this option to an empty array (`[]`).
 
 </ConfigKey>
