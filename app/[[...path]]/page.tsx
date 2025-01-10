@@ -4,8 +4,7 @@ import {Metadata} from 'next';
 import {notFound} from 'next/navigation';
 
 import {apiCategories} from 'sentry-docs/build/resolveOpenAPI';
-import {ApiCategoryPage} from 'sentry-docs/components/apiCategoryPage';
-import {ApiPage} from 'sentry-docs/components/apiPage';
+import {ApiDocsPage} from 'sentry-docs/components/api-docs';
 import {DocPage} from 'sentry-docs/components/docPage';
 import {Home} from 'sentry-docs/components/home';
 import {Include} from 'sentry-docs/components/include';
@@ -129,16 +128,20 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
     );
   }
 
+  if (params.path?.[0] === 'api-docs' && params.path.length > 1) {
+    return <ApiDocsPage />;
+  }
+
   if (params.path?.[0] === 'api' && params.path.length > 1) {
     const categories = await apiCategories();
     const category = categories.find(c => c.slug === params?.path?.[1]);
     if (category) {
       if (params.path.length === 2) {
-        return <ApiCategoryPage category={category} />;
+        return <ApiDocsPage category={category} />;
       }
       const api = category.apis.find(a => a.slug === params.path?.[2]);
       if (api) {
-        return <ApiPage api={api} />;
+        return <ApiDocsPage api={api} />;
       }
     }
   }
