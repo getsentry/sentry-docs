@@ -25,7 +25,7 @@ Ensure that your project is set up with Sentry and that you have added the Sentr
 
 ### Set Up
 
-To start using the User Feedback widget in your Cocoa application, enable the feedback integration and provide an optional configuration in your SentryOptions when starting the SDK:
+To start using the User Feedback widget in your Cocoa application, enable the feedback integration and provide a configuration in your SentryOptions when starting the SDK:
 
 ```swift
  SentrySDK.start { options in
@@ -42,68 +42,22 @@ To start using the User Feedback widget in your Cocoa application, enable the fe
 
 This setup will insert the widget into your app's view hierarchy. By default, it appears in the bottom trailing corner of the screen, but you can fully customize its appearance and behavior.
 
-### Customization
-
-You can customize the widget by setting various properties in the instance of `SentryUserFeedbackConfiguration` provided by `SentryOptions.configureUserFeedback`:
-
-```swift
-let widgetConfig = SentryUserFeedbackWidgetConfiguration()
-widgetConfig.triggerLabel = "Feedback"
-widgetConfig.triggerAccessibilityLabel = "Submit Feedback"
-
-// Form customization
-let formConfig = SentryUserFeedbackFormConfiguration()
-formConfig.showName = false
-formConfig.isNameRequired = false
-formConfig.enableScreenshot = true
-formConfig.formTitle = "Report an Issue"
-formConfig.submitButtonLabel = "Submit"
-formConfig.cancelButtonLabel = "Cancel"
-
-let feedbackConfig = SentryUserFeedbackConfiguration { config in
-    config.widgetConfig = widgetConfig
-    config.uiFormConfig = formConfig
-}
-
-let feedbackIntegration = SentryUserFeedbackIntegration(configuration: feedbackConfig)
-feedbackIntegration.createWidget()
-```
-
-This configuration customizes the widget's button text, form fields, and whether the user can attach screenshots.
-
 ### Session Replay
 
 The User Feedback widget integrates seamlessly with Session Replay. When the widget is opened, the Replay SDK buffers up to 30 seconds of the user's session. If feedback is submitted, this replay is sent along with the feedback, allowing you to view both the feedback and the user's actions leading up to the feedback submission.
 
 ### User Feedback API
 
-The User Feedback API allows you to collect user feedback while using your own UI components. You can submit feedback directly using the `captureFeedback` method in the `SentryUserFeedbackIntegration` class:
+The User Feedback API allows you to collect user feedback while using your own UI components. You can submit feedback directly using the `SentrySDK.capture(feedback:)` method:
 
 ```swift
-feedbackIntegration.captureFeedback(
+SentrySDK.capture(feedback: .init(
     message: "I encountered a bug while using the app.",
     name: "John Doe",
-    email: "john.doe@example.com",
-    hints: ["page": "Settings"]
-)
+    email: "john.doe@example.com"
+))
 ```
 
 This method associates the feedback with the corresponding event in Sentry, giving you valuable insights into user issues.
 
 Alternatively, you can use the [User Feedback API endpoint](/api/projects/submit-user-feedback/) directly if you prefer to handle the HTTP request manually.
-
-## Crash-Report Modal
-
-The Cocoa-based Crash-Report Modal is a customizable feature that prompts users for feedback when an error occurs. This modal captures the user's name, email, and a description of the issue, pairing the feedback with the event in Sentry.
-
-### Integration
-
-To integrate the Crash-Report Modal in your Cocoa app, configure it in your Sentry initialization:
-
-```swift
-SentrySDK.showReportDialog(eventId: eventId) {
-    print("Crash report dialog shown")
-}
-```
-
-This will display a modal dialog where users can provide feedback related to a specific error event.
