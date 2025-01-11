@@ -1,0 +1,72 @@
+---
+title: Backend Tradeoffs
+description: "How to choose the right crash backend in the Native SDK."
+sidebar_order: 1000
+---
+The Native SDK lets users decide at compile-time between three crash backends:
+
+* `crashpad`
+* `breakpad`
+* `inproc`
+
+Currently, `crashpad` is the default on all desktop platforms because it
+
+* has an external `handler` process that allows for external snapshots and sending crash reports immediately (instead of on the next successful start of your application)
+* further, snapshotting, report management, and uploading outside the crashed process are safer because the `crashpad_handler` is not affected by any corruptions that led to a crash
+* supports more error types on [Linux](/platforms/native/advanced-usage/signal-handling/#signals-of-interest) and Windows (`abort()` and other `fast-fail` crashes, handling of heap corruptions)
+* is more maintained upstream (although most changes affect new platforms like Fuchsia)
+* is the primary target for Sentry-developed extensions to the upstream implementation of backend handlers (most of which aren't a particular upside vs. the other backends, but changes to reach parity), including
+  * client-side stack traces (this is currently not available on `breakpad`)
+  * attachment handling
+  * HTTP proxy support
+  * GCC and MinGW support
+  * `FirstChanceHandler` on Windows and extension of its synchronization to support Sentry hooks
+  * cooperation with Epic's Easy Anti Cheat
+  * CMake build scripts (some users use our backend handler forks solely because of this reason)
+
+### When shouldn't I use the `crashpad` backend?
+
+Sentry decided on `crashpad` as the default on all platforms because there are a lot of upsides. However, there are use cases where `crashpad` cannot be used or makes distribution or deployment much harder. We provide other backends for situations when
+
+* you cannot package or deploy an additional executable (the `crashpad_handler`)
+* you cannot allow a secondary process to connect via `ptrace` to your application (AWS Lambda, Flatpak-, Snap-Sandboxes)
+* IPC between your process and the `crashpad_handler` is inhibited by security settings or not available in your deployment target
+* your deployment scenario cannot wait for the `crashpad_handler` to finish its work before a shutdown-after-crash (systemd, Docker)
+* you want to distribute your application via the macOS App Store
+* you want to define crash hooks on macOS because there, error handling happens entirely in the `crashpad_handler`, whereas on Linux and Windows, at least the initial handling happens in your process, after which `crashpad_handler` takes over and snapshots the process to send a crash report
+
+In the above cases, if you cannot loosen the requirements of your environment, you have to choose an in-process backend (meaning either `breakpad` or `inproc`).
+
+### How do I decide between `breakpad` or `inproc`?
+
+Both backends are comparable in how they differ from `crashpad`. However, there are also considerable differences between the two: 
+
+* `inproc` only provides the backtrace of the crashing thread. `breakpad` records all threads in the minidump.
+* similar to `crashpad`, `breakpad` uses the lowest level error handling mechanism on each platform (macOS: mach exception ports, Windows: `UnhandledExceptionFilter`, Linux: signal handlers), it does cover a smaller range of errors, though as mentioned above.
+* `inproc` uses signal handling on macOS, meaning you only get a `POSIX` compatibility layer over mach exception ports. It relies on the same mechanisms as `breakpad` on Windows and Linux.
+* as a result of choosing signal handling on macOS, `inproc` is currently broken on macOS since Apple eliminated unwinding from signal handlers
+* `inproc` is exceptionally lightweight and written entirely in C, meaning it does not rely on a weighty C++ runtime library, which is also more often affected by ABI incompatibilities
+* `breakpad` generates minidumps (like `crashpad` does), whereas `inproc` follows the Sentry event structure and primarily defers to the OS-provided unwinder and symbolication capabilities. Sentry processing infrastructure can - potentially - extract more information from the provided minidump than from only a stack trace and registers. However, it also means that the crash context inside the minidump will be opaque until processed in the backend. In contrast, if required, a local `relay` instance (or another application-level proxy) could process an entire `inproc` event with only JSON parsing capabilities.
+
+### So when do I choose `inproc`?
+
+`inproc` is currently the backend of choice for `Android` because it allows us to bundle it with our fork of the platform unwinder `libunwindstack` that provides a complete interface for unwinding and symbolication (rather than relying on the minimal user-space interface). This enables us to support a broad range of Android versions. In addition, stack walking on-device on Android is preferred since we don't have all system symbols available for server-side symbolication. A [best-effort symbol collection exists](https://github.com/getsentry/symbol-collector), but that'll never be as reliable as stackwalking on-device.
+
+`inproc` is the right choice if you
+
+* want minimal dependencies
+* want the smallest footprint for the resulting artifact
+* don't need to support the latest macOS versions
+* find the minimal feature set compared to `breakpad` and `crashpad` sufficient for your scenario
+
+### Summary
+
+If you dive into the details, you will find many trade-offs in the selection of backends. The above merely provides a first overview. Further, the above is only a snapshot of the current capabilities, where some trade-offs are incidental and do not follow a particular strategy or technological necessity. The primary reason for providing multiple backends is to cover as many user scenarios as possible, which requires a bit of insight if you decide to deviate from the defaults.
+
+Sentry suggests the following sequence for your backend evaluations: 
+
+* `crashpad` (default)
+* `breakpad`
+* `inproc`
+
+from most feature-complete to least, where a step down should only be triggered by environmental inhibitors. With the above, you now have exemplary decision points that can help you before you start the evaluation of your error reporting scenario.

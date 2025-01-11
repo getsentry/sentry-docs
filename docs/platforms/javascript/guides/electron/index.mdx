@@ -91,10 +91,10 @@ import * as Sentry from "@sentry/electron/main";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   transportOptions: {
-    /* The maximum number of days to keep an event in the queue. */
-    maxQueueAgeDays: 30,
-    /* The maximum number of events to keep in the queue. */
-    maxQueueCount: 30,
+    /* The maximum number of days to keep an envelope in the queue. */
+    maxAgeDays: 30,
+    /* The maximum number of envelopes to keep in the queue. */
+    maxQueueSize: 30,
     /**
      * Called before we attempt to send an envelope to Sentry.
      *
@@ -119,6 +119,12 @@ Sentry.init({
      * @returns Whether we should store the envelope in the queue
      */
     shouldStore: (envelope: Envelope, error: Error, retryDelay: number) => boolean | Promise<boolean>;
+    /**
+     * Should the offline store flush shortly after startup.
+     *
+     * Defaults: false
+     */
+    flushAtStartup: false;
   },
 });
 ```
@@ -196,7 +202,7 @@ The Electron SDK supports [Source Maps](https://www.html5rocks.com/en/tutorials/
 
 Sentry can process Minidumps created when any of the Electron processes crash. To do so, the SDK needs to upload those files once the application restarts (or immediately for renderer crashes). All event meta data including user information and breadcrumbs are included in these uploads.
 
-Due to restrictions of macOS app sandboxing, native crashes cannot be collected in Mac App Store builds. In this case, native crash handling will be disabled.
+Due to [restrictions of macOS app sandboxing](https://electronjs.org/docs/tutorial/mac-app-store-submission-guide#limitations-of-mas-build), native crashes cannot be collected in Mac App Store builds. In this case, native crash handling will be disabled.
 
 <Alert level="warning" title="A Word on Data Privacy">
 
@@ -219,7 +225,7 @@ If your application contains custom native extensions or you wish to symbolicate
 crashes from a spawned child process, upload their debug information manually
 during your build or release process. See [_Debug Information Files_](/platforms/javascript/guides/electron/data-management/debug-files/) for a detailed description of how to
 set up Sentry for native development. Additionally, see [_Uploading Debug
-Information_](/product/cli/dif/) for the upload process.
+Information_](/cli/dif/) for the upload process.
 
 ### Child Processes
 

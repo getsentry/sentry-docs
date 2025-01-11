@@ -1,3 +1,6 @@
+'use client';
+
+import {useCallback} from 'react';
 import Link from 'next/link';
 
 import {ExternalLink} from './externalLink';
@@ -27,6 +30,13 @@ export function SmartLink({
 }: Props) {
   const realTo = to || href || '';
 
+  const handleAutolinkClick = useCallback((e: React.MouseEvent) => {
+    const link = e.currentTarget as HTMLAnchorElement;
+    if (link.classList.contains('autolink-heading')) {
+      navigator.clipboard.writeText(link.href);
+    }
+  }, []);
+
   if (remote || realTo?.indexOf('://') !== -1) {
     return (
       <ExternalLink href={realTo} className={className} {...props}>
@@ -38,6 +48,7 @@ export function SmartLink({
   return (
     <Link
       href={to || href || ''}
+      onClick={handleAutolinkClick}
       className={`${isActive ? activeClassName : ''} ${className}`}
       {...props}
     >

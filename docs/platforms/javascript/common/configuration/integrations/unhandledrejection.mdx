@@ -18,6 +18,7 @@ supported:
   - javascript.solidstart
   - javascript.sveltekit
   - javascript.remix
+  - javascript.react-router
   - javascript.astro
   - javascript.bun
   - javascript.deno
@@ -36,16 +37,56 @@ This integration is enabled by default. If you'd like to modify your default int
 
 The `onUnhandledRejectionIntegration` registers handlers to capture global unhandled promise rejections.
 
+```JavaScript
+Sentry.init({
+  integrations: [Sentry.onUnhandledRejectionIntegration()],
+});
+```
+
+<PlatformSection supported={["javascript.aws-lambda"]}>
+
+## On AWS Lambda
+
+AWS adds their own `unhandledRejection` handlers to a lambda function which results in Sentry not being able to pick these up.
+As a workaround, remove all handlers before initializing Sentry.
+
+Unfortunately, this means the AWS Lambda handler has to be <PlatformLink to="/install/cjs-layer/#alternative-initialize-the-sdk-in-code">manually wrapped</PlatformLink>.
+
+```JavaScript
+const Sentry = require("@sentry/aws-serverless");
+
+// Remove `unhandledRejection` handlers set up by AWS so the
+// Sentry SDK can capture these
+process.removeAllListeners("unhandledRejection");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___"
+  // Add Tracing by setting tracesSampleRate and adding integration
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+});
+
+exports.handler = Sentry.wrapHandler(async (event, context) => {
+  // Your handler code
+});
+```
+
+</PlatformSection>
+
 ## Options
 
-### `exitEvenIfOtherHandlersAreRegistered`
+### `mode`
 
-_Type: `boolean`_
+_Type: `'none' | 'warn' | 'strict'`_
 
-If set to false, the SDK will _not_ exit if we detect that another uncaught exception handler is registered.
+This option defines what to do after capturing an unhandled rejection and
+mimics the behavior of [node's](https://nodejs.org/api/cli.html#--unhandled-rejectionsmode) `--unhandled-rejection` flag:
 
-### `onFatalError`
+- `strict`: Raise the unhandled rejection as an uncaught exception. If the exception is handled, unhandledRejection is emitted.
+- `warn`: Always trigger a warning, no matter if the unhandledRejection hook is set or not but do not print the deprecation warning.
+- `none`: Silence all warnings.
 
-_Type: `(firstError: Error, secondError: Error | undefined) => void`_
-
-This method is called when an uncaught error would cause the process to exit. `secondError` will be set if the handler was called multiple times. This can happen either because `onFatalError` itself threw, or because an independent error happened somewhere else while `onFatalError` was running.
+Defaults to `none`.

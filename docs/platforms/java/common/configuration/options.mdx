@@ -57,9 +57,9 @@ By default the SDK will try to read this value from the `SENTRY_RELEASE` environ
 
 <ConfigKey name="environment">
 
-Sets the environment. This string is freeform and not set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
+Sets the environment. This string is freeform and is set to `production` by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
 
-By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable (except for the browser SDK where this is not applicable).
+By default, the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable (except for the browser SDK where this isn't applicable). If this value isn't set, it will use the default `production`.
 
 </ConfigKey>
 
@@ -71,13 +71,13 @@ Configures the sample rate for error events, in the range of `0.0` to `1.0`. The
 
 <ConfigKey name="max-breadcrumbs">
 
-This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`, but you can set this to any number. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
+This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`, but you can set this to any number. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
 
 </ConfigKey>
 
 <ConfigKey name="max-cache-items">
 
-The maximum number of [envelopes](https://develop.sentry.dev/sdk/envelopes/) to keep in cache. The SDKs use envelopes to send data, such as events, attachments, user feedback, and sessions to sentry.io. An envelope can contain multiple items, such as an event with a session and two attachments. Depending on the usage of the SDK, the size of an envelope can differ. If the number of envelopes in the local cache exceeds `max-cache-items`, the SDK deletes the oldest envelope and migrates the sessions to the next envelope to maintain the integrity of your release health stats. The default is `30`.
+The maximum number of [envelopes](https://develop.sentry.dev/sdk/data-model/envelopes/) to keep in cache. The SDKs use envelopes to send data, such as events, attachments, user feedback, and sessions to sentry.io. An envelope can contain multiple items, such as an event with a session and two attachments. Depending on the usage of the SDK, the size of an envelope can differ. If the number of envelopes in the local cache exceeds `max-cache-items`, the SDK deletes the oldest envelope and migrates the sessions to the next envelope to maintain the integrity of your release health stats. The default is `30`.
 
 </ConfigKey>
 
@@ -159,6 +159,14 @@ Specifies whether this SDK should send events to Sentry. Defaults to `true`. Set
 Set this boolean to `false` to disable sending of client reports. Client reports are a protocol feature that let clients send status reports about themselves to Sentry. They are currently mainly used to emit outcomes for events that were never sent.
 
 _(New in version 6.0.0)_
+
+</ConfigKey>
+
+<ConfigKey name="enable-backpressure-handling">
+
+Set this boolean to `false` to disable automatic downsampling of transactions while the system is under load. The `tracesSampleRate` is halved for every failing health check up to 10 times, (roughly 0.001% of the original `tracesSampleRate`). Any positive health check will reset `tracesSampleRate` to its original value. Health checks run in the background every 10 seconds, checking for queue drops and rate limiting. Note: Starting with version 7.8.0 backpressure handling has changed from opt-in to opt-out.
+
+_(New in version 7.1.0)_
 
 </ConfigKey>
 

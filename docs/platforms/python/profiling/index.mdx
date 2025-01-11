@@ -49,3 +49,52 @@ For Profiling to work, you have to first enable Sentry’s tracing via `traces_s
 ### Upgrading from older SDK versions
 
 Profiling was experimental in SDK versions `1.17.0` and older. Learn how to upgrade <PlatformLink to="/profiling/troubleshooting/#ipgrading-from-older-sdk-versions">here</PlatformLink>.
+
+## Enable Continuous Profiling
+
+<Include name="feature-stage-beta.mdx" />
+
+_(New in version 2.13.0)_
+
+The current profiling implementation stops the profiler automatically after 30 seconds (unless you manually stop it earlier). Naturally, this limitation makes it difficult to get full coverage of your app's execution. We now offer an experimental continuous mode, where profiling data is periodically uploaded while running, with no limit on how long the profiler may run.
+
+To get started with continuous profiling, you can start and stop the profiler directly with `sentry_sdk.profiler.start_profiler` and `sentry_sdk.profiler.stop_profiler`.
+
+<Note>
+
+If you previously set `profiles_sample_rate` or `profilers_sampler` to use transaction-based profiling, you must remove those lines of code from your configuration in order to use continuous profiling.
+
+</Note>
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    traces_sample_rate=1.0,
+)
+
+sentry_sdk.profiler.start_profiler()
+
+# run some code here
+
+sentry_sdk.profiler.stop_profiler()
+```
+
+For some applications such as web servers, it may be difficult to call `sentry_sdk.profiler.start_profiler` in every process. Instead, you can use the `continuous_profiling_auto_start` option to automatically start the continuous profiler when a transaction is started.
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    traces_sample_rate=1.0,
+    _experiments={
+      "continuous_profiling_auto_start": True,
+    },
+)
+```
+
+These new APIs do not offer any sampling functionality—every call to start the profiler will start it, and the same goes for launch profiles if you've configured that. If you are interested in reducing the amount of profiles that run, you must take care to do it at the callsites.
+
+Continuous profiling has implications for your org's billing structure. This feature is only available for subscription plans that enrolled after June 5, 2024.

@@ -1,28 +1,36 @@
-Attachments live on the `Scope` and will be sent with all events.
+Because attachments live on the <PlatformLink to="/enriching-events/scopes/">Scope</PlatformLink>, the SDK sends all attachments on a given `Scope` with every non-transaction event captured within the `Scope`. It's also possible to send an attachment with all events, including transactions by setting the `add_to_transactions` option to `True`.
 
-```python
+```python {tabTitle:Python (SDK 2.x)}
 # Add an attachment
-from sentry_sdk import configure_scope
+import sentry_sdk
 
-with configure_scope() as scope:
-    scope.add_attachment(bytes=b"Hello World!", filename="attachment.txt")
-    scope.add_attachment(path="/path/to/attachment/file.txt")
+scope = sentry_sdk.get_current_scope()
+scope.add_attachment(bytes=b"Hello World!", filename="attachment.txt")
+scope.add_attachment(path="/path/to/attachment/file.txt")
 ```
 
-An attachment has the following fields:
+```python {tabTitle:Python (SDK 1.x)}
+# Add an attachment
+from sentry_sdk import Scope
 
-`path`
+# Scope.get_current_scope() or Scope.get_global_scope() can also be used.
+# Read about the different scopes on our Scope docs page.
+scope = Scope.get_isolation_scope()
 
-The path to the attachment file. The `filename` and `content_type` will be inferred if not explicitly provided when using this mode.
+# Add attachment titled "attachment.txt" with content "Hello World!"
+scope.add_attachment(bytes=b"Hello World!", filename="attachment.txt")
 
-`bytes`
+# Attach the file located at /path/to/attachment/file.txt
+scope.add_attachment(path="/path/to/attachment/file.txt")
 
-The content of the attachment as bytes.
+# This attachment will also be sent with transactions
+scope.add_attachment(path="/other/attachment.txt", add_to_transactions=True)
+```
 
-`filename`
 
-The filename is required if using `bytes` and will be displayed in [sentry.io](https://sentry.io).
-
-`content_type`
-
-The type of content stored in this attachment. Any [MIME type](https://www.iana.org/assignments/media-types/media-types.xhtml) may be used; the default is `application/octet-stream`.
+The `add_attachment` method has the following parameters:
+  - `bytes`: Raw bytes of the attachment, or a function that returns the raw bytes. Must be provided unless a `path` to the attachment file is provided.
+  - `filename`: The filename of the attachment which we display in Sentry. Optional only if a `path` is provided, since we can infer the `filename` from the `path`.
+  - `path`: Path to a file to attach. Must be provided unless `bytes` is provided.
+  - `content_type`: The attachment's [MIME type](https://www.iana.org/assignments/media-types/media-types.xhtml). If not provided, it will be guessed from the attachment's file name provided via `filename` or inferred from `path`.
+  - `add_to_transactions`: Whether to add this attachment to transactions. Defaults to `False`.

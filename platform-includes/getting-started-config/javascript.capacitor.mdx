@@ -1,7 +1,7 @@
 Then forward the `init` method from the sibling Sentry SDK for the framework you use, such as Angular in this example:
 
 
-```typescript {tabTitle: Angular} {filename: app.module.ts} {"onboardingOptions": {"performance": "13-16, 21-28, 46-55", "session-replay": "17-19, 29-33"}}
+```typescript {tabTitle: Angular 14+} {filename: app.module.ts} {"onboardingOptions": {"performance": "13-16, 21-28, 46-55", "session-replay": "17-19, 29-33"}}
 import * as Sentry from "@sentry/capacitor";
 import * as SentryAngular from "@sentry/angular";
 
@@ -17,7 +17,7 @@ Sentry.init(
       // Registers and configures the Tracing integration,
       // which automatically instruments your application to monitor its
       // performance, including custom Angular routing instrumentation
-      SentryAngular.browserTracingIntegration(),
+      Sentry.browserTracingIntegration(),
       // Registers the Replay integration,
       // which automatically captures Session Replays
       Sentry.replayIntegration(),
@@ -26,6 +26,8 @@ Sentry.init(
     // Set tracesSampleRate to 1.0 to capture 100%
     // of transactions for tracing.
     // We recommend adjusting this value in production
+    // Learn more at
+    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
     tracesSampleRate: 1.0,
 
     // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
@@ -33,6 +35,8 @@ Sentry.init(
 
     // Capture Replay for 10% of all sessions,
     // plus for 100% of sessions with an error
+    // Learn more at
+    // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
     replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1.0,
   },
@@ -61,17 +65,161 @@ Sentry.init(
 })
 ```
 
-```javascript {tabTitle: Other Frameworks}
+```typescript {tabTitle: Angular 12, 13} {filename: app.module.ts} {"onboardingOptions": {"performance": "14-17, 22-29, 47-56", "session-replay": "18-20, 30-34"}}
+// Requires @sentry/capacitor V0.
 import * as Sentry from "@sentry/capacitor";
+import * as SentryAngular from "@sentry/angular-ivy";
 
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
+Sentry.init(
+  {
+    dsn: "___PUBLIC_DSN___",
 
-  // Set your release version, such as "getsentry@1.0.0"
-  release: "my-project-name@<release-name>",
-  // Set your dist version, such as "1"
-  dist: "<dist>",
-});
+    // Set your release version, such as "getsentry@1.0.0"
+    release: "my-project-name@<release-name>",
+    // Set your dist version, such as "1"
+    dist: "<dist>",
+    integrations: [
+      // Registers and configures the Tracing integration,
+      // which automatically instruments your application to monitor its
+      // performance, including custom Angular routing instrumentation
+      new Sentry.BrowserTracing(),
+      // Registers the Replay integration,
+      // which automatically captures Session Replays
+      new Sentry.Replay(),
+    ],
+
+    // Set tracesSampleRate to 1.0 to capture 100%
+    // of transactions for tracing.
+    // We recommend adjusting this value in production
+    // Learn more at
+    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+    tracesSampleRate: 1.0,
+
+    // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+    tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+
+    // Capture Replay for 10% of all sessions,
+    // plus for 100% of sessions with an error
+    // Learn more at
+    // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+  },
+  // Forward the init method from @sentry/angular
+  SentryAngular.init
+);
+
+@NgModule({
+  providers: [
+    {
+      provide: ErrorHandler,
+      // Attach the Sentry ErrorHandler
+      useValue: SentryAngular.createErrorHandler(),
+    },
+    {
+      provide: SentryAngular.TraceService,
+      deps: [Router],
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: () => () => {},
+      deps: [SentryAngular.TraceService],
+      multi: true,
+    },
+  ],
+})
+```
+
+```typescript {tabTitle: React} {filename: index.tsx} {"onboardingOptions": {"performance": "13-16, 21-28, 46-55", "session-replay": "17-19, 29-33"}}
+import * as Sentry from "@sentry/capacitor";
+import * as SentryReact from "@sentry/react";
+
+Sentry.init(
+  {
+    dsn: "___PUBLIC_DSN___",
+
+    // Set your release version, such as "getsentry@1.0.0"
+    release: "my-project-name@<release-name>",
+    // Set your dist version, such as "1"
+    dist: "<dist>",
+    integrations: [
+      // Registers and configures the Tracing integration,
+      // which automatically instruments your application to monitor its
+      // performance, including custom Angular routing instrumentation
+      Sentry.browserTracingIntegration(),
+      // Registers the Replay integration,
+      // which automatically captures Session Replays
+      Sentry.replayIntegration(),
+    ],
+
+    // Set tracesSampleRate to 1.0 to capture 100%
+    // of transactions for tracing.
+    // We recommend adjusting this value in production
+    // Learn more at
+    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+    tracesSampleRate: 1.0,
+
+    // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+    tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+
+    // Capture Replay for 10% of all sessions,
+    // plus for 100% of sessions with an error
+    // Learn more at
+    // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+  },
+  // Forward the init method from @sentry/angular
+  SentryReact.init
+);
+```
+
+```typescript {tabTitle: Vue} {filename: main.ts} {"onboardingOptions": {"performance": "17-20, 25-32, 50-59", "session-replay": "21-23, 33-37  "}}
+import * as Sentry from "@sentry/capacitor";
+import * as SentryVue from "@sentry/vue";
+import { createApp } from 'vue'
+
+const app = createApp(App)
+
+Sentry.init(
+  {
+    app,
+    dsn: "___PUBLIC_DSN___",
+
+    // Set your release version, such as "getsentry@1.0.0"
+    release: "my-project-name@<release-name>",
+    // Set your dist version, such as "1"
+    dist: "<dist>",
+    integrations: [
+      // Registers and configures the Tracing integration,
+      // which automatically instruments your application to monitor its
+      // performance, including custom Angular routing instrumentation
+      Sentry.browserTracingIntegration(),
+      // Registers the Replay integration,
+      // which automatically captures Session Replays
+      Sentry.replayIntegration(),
+    ],
+
+    // Set tracesSampleRate to 1.0 to capture 100%
+    // of transactions for tracing.
+    // We recommend adjusting this value in production
+    // Learn more at
+    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+    tracesSampleRate: 1.0,
+
+    // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+    tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+
+    // Capture Replay for 10% of all sessions,
+    // plus for 100% of sessions with an error
+    // Learn more at
+    // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+  },
+  // Forward the init method from @sentry/angular
+  SentryVue.init
+);
 ```
 
 You can also use the features available with the Sentry SDK for the framework you use, such as [Angular](/platforms/javascript/guides/angular/).

@@ -18,6 +18,7 @@ supported:
   - javascript.solidstart
   - javascript.sveltekit
   - javascript.remix
+  - javascript.react-router
   - javascript.astro
   - javascript.bun
   - javascript.cloudflare
@@ -43,6 +44,22 @@ Sentry.init({
 ```
 
 The local variables integration only captures local variables from application code (`in_app = true`). Frames of a stacktrace originating from `node_modules` will not have local variables attached to them.
+
+<Alert level="warning" title="Issues with ESM">
+
+Due to an [open Node.js issue](https://github.com/nodejs/node/issues/38439), we are currently unable to capture local variables for unhandled errors when using JavaScript modules (ESM).
+
+To work around this, wrap relevant code in a try-catch block and call `captureException` with the error so that Sentry can capture local variables.
+
+```javascript
+try {
+  // Your code here
+} catch (error) {
+  Sentry.captureException(error);
+}
+```
+
+</Alert>
 
 <Alert level="warning" title="Minified Variables">
 

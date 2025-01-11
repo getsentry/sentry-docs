@@ -136,7 +136,7 @@ const Container = styled('div')`
 `;
 
 const TabBar = styled('div')`
-  background: #251f3d;
+  background: var(--code-background);
   border-bottom: 1px solid #40364a;
   height: 36px;
   display: flex;

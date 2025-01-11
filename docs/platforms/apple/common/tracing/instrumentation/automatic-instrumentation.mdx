@@ -29,6 +29,14 @@ The SDK creates spans to provide insight into the time consumed by each of the m
 
 ![`UIViewController` Transaction](./img/ui-view-controller-transaction.png)
 
+### Nested View Controllers
+
+The SDK sets up a parent-child relationship for nested UIViewControllers, starting with the first UIViewController that your app loads. If there's no active transaction on the scope, the SDK will start a new UIViewController transaction and bind it to the scope unless there's a [user interaction](#user-interaction-tracing) transaction already on the scope, in which case this will be closed and removed first.
+
+While a UIViewController transaction is active on the scope, the SDK will add any new UIViewController spans as child spans of that active transaction. This creates a unified view of all UIViewControllers on a screen in a single transaction.
+
+If another transaction is already bound to the scope (if it's been set manually, for example) the SDK won't be able to bind a new UIViewController transaction to the scope. This means that the new transaction will work, but won’t capture other auto-generated spans, like HTTP, file IO, or Core Data, which can only be added to transactions that are bound to the scope.
+
 To disable the `UIViewController` Tracing:
 
 
@@ -349,7 +357,7 @@ When the user interaction transaction is not finished yet, but the user makes a 
 
 <Note>
 
-This feature is available starting in SDK version `8.4.0`.
+This feature only works for UIViewControllers and not for SwiftUI.
 
 </Note>
 
@@ -365,7 +373,7 @@ Since Cocoa SDK version 8.33.0, the SDK doesn't create time to initial display (
 
 <Note>
 
-This feature is available starting in SDK version `8.4.0`.
+This feature only works for UIViewControllers and not for SwiftUI.
 
 </Note>
 
@@ -415,13 +423,7 @@ If a call to `reportFullyDisplayed()` happens before the view controller appears
 
 ## Performance V2
 
-<Note>
-
-This feature is experimental and may have bugs.
-
-</Note>
-
-_(New in version 8.18.0)_
+_(New in version 8.18.0), stable since 8.42.0._
 
 We're working to update our **Performance** product offering in order to be able to provide better insights and highlight specific actions you can take to improve your mobile app's overall performance. The `performanceV2` option changes the following behavior:
 

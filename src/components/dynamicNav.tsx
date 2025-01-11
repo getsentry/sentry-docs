@@ -2,6 +2,7 @@ import {Fragment} from 'react';
 
 import {serverContext} from 'sentry-docs/serverContext';
 import {sortPages} from 'sentry-docs/utils';
+import {getUnversionedPath, VERSION_INDICATOR} from 'sentry-docs/versioning';
 
 import {NavChevron} from './sidebar/navChevron';
 import {SidebarLink} from './sidebarLink';
@@ -30,28 +31,30 @@ export interface EntityTree extends Entity<EntityTree> {}
 export const toTree = (nodeList: Node[]): EntityTree[] => {
   const result: EntityTree[] = [];
   const level = {result};
-
   nodeList
     .sort((a, b) => a.path.localeCompare(b.path))
     .forEach(node => {
       let curPath = '';
-      node.path.split('/').reduce((r, name: string) => {
-        curPath += `${name}/`;
-        if (!r[name]) {
-          r[name] = {result: []};
-          r.result.push({
-            name,
-            children: r[name].result,
-            node: curPath === node.path ? node : null,
-          });
-        }
 
-        return r[name];
-      }, level);
+      // hide versioned pages in sidebar
+      if (!node.path.includes(VERSION_INDICATOR)) {
+        node.path.split('/').reduce((r, name: string) => {
+          curPath += `${name}/`;
+          if (!r[name]) {
+            r[name] = {result: []};
+            r.result.push({
+              name,
+              children: r[name].result,
+              node: curPath === node.path ? node : null,
+            });
+          }
+
+          return r[name];
+        }, level);
+      }
     });
 
-  result.length; // result[0] is undefined without this. wat
-  return result[0].children;
+  return result.length > 0 ? result[0].children : [];
 };
 
 export const renderChildren = (
@@ -164,7 +167,7 @@ export function DynamicNav({
     parentNode && !noHeadingLink ? (
       <SmartLink
         to={`/${root}/`}
-        className={`${headerClassName} ${path.join('/') === root ? 'active' : ''} justify-between`}
+        className={`${headerClassName} ${getUnversionedPath(path, false) === root ? 'active' : ''} justify-between`}
         activeClassName="active"
         data-sidebar-link
       >

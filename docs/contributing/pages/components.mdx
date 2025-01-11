@@ -1,6 +1,7 @@
 ---
 title: MDX Components
 noindex: true
+sidebar_order: 40
 ---
 
 ## Alert
@@ -37,13 +38,23 @@ An Alert component with no level setting will render as a Note component.
 
 See also the [Note component](#note).
 
+## Arcade embeds
+
+Render an [Arcade](https://arcade.software) embed.
+<Arcade src="https://demo.arcade.software/v7uhzmdV6Q5PDzoVPAE6?embed&show_copy_link=true" />
+```markdown {tabTitle:Example}
+<Arcade src="https://demo.arcade.software/v7uhzmdV6Q5PDzoVPAE6?embed&show_copy_link=true" />
+```
+
+Attributes:
+
+- `src` (string) - the URL of the Arcade embed
+
 ## Expandable
 
 Render an expandable section.
 
-<Expandable title="This is a title">
-This is some content
-</Expandable>
+<Expandable title="This is a title">This is some content</Expandable>
 
 ```markdown {tabTitle:Example}
 <Expandable title="This is a title">
@@ -110,6 +121,7 @@ You can also highlight diffs using the `diff` language:
 + plus one
 ```
 ````
+
 If you want to preserve syntax highlighting, you can add `diff` metadata to any code block
 then annotate the diff with `+` and `-`:
 
@@ -183,16 +195,29 @@ See also the [Alert component](#alert).
 
 ## PageGrid
 
-Render all child pages of this document, including their `description` if available.
+Render all `next_steps` of this document or default child pages, including their `description` if available.
+
+You can specify `next_steps` in the frontmatter of a page to include them in the grid. It supports relative paths and will automatically resolve them.
 
 ```markdown {tabTitle:Example}
+---
+# in the frontmatter of a page:
+next_steps:
+  - ./child-one
+  - ./child-two
+  - ../parent/child-three
+---
+
 <PageGrid />
 ```
 
 Attributes:
 
 - `header` (string) - optional header value to include, rendered as an H2
+
 - `nextPages` (boolean) - only render pages which come next based on sidebar ordering
+
+- `exclude` (string[]) - an array of pages to exclude from the grid. Specify the file name of the page, for example, `"index"` for `index.mdx`.
 
 ## PlatformContent
 
@@ -281,15 +306,11 @@ You can specify multiple features by separating them with a comma:
 
 The range visibility will be controlled by the `OnboardingOptionButtons` component:
 
-````jsx diff
+```jsx diff
 <OnboardingOptionButtons
-  options={[
-    'error-monitoring',
-    "profiling",
-    "performance",
-  ]}
+  options={["error-monitoring", "profiling", "performance"]}
 />
-````
+```
 
 - `options` can either be either an object of this shape:
 
@@ -300,10 +321,12 @@ The range visibility will be controlled by the `OnboardingOptionButtons` compone
   checked: boolean
 }
 ```
+
 or a string (one of these `id`s 👆) for convenience when using defaults.
 
 <Alert level="warning" title="Important">
-  The underlying implementation relies on the `onboardingOptions` metadata in the code blocks to be valid JSON syntax.
+  The underlying implementation relies on the `onboardingOptions` metadata in
+  the code blocks to be valid JSON syntax.
 </Alert>
 
 - default values: `checked: false` and `disabled: false` (`true` for `error-monitoring`).
@@ -311,11 +334,7 @@ or a string (one of these `id`s 👆) for convenience when using defaults.
 Example (output of the above):
 
 <OnboardingOptionButtons
-  options={[
-    "error-monitoring",
-    "performance",
-    "profiling",
-  ]}
+  options={["error-monitoring", "performance", "profiling"]}
   dontStick
 />
 
@@ -367,29 +386,32 @@ Or you can use the `hideForThisOption` prop to hide the content for the selected
   Hide this section for `profiling` option.
 </OnboardingOption>
 ```
-``````
+````
 
 Example:
+
 - toggle the `performance` option above to see the effect:
 
     <OnboardingOption optionId="performance">
 
-    ```jsx
-    <OnboardingOption optionId="performance">
-      This code block is wrapped in a `OnboardingOption` component and will only
-      be rendered when the `performance` option is selected.
-    </OnboardingOption>
-    ```
+  ```jsx
+  <OnboardingOption optionId="performance">
+    This code block is wrapped in a `OnboardingOption` component and will only
+    be rendered when the `performance` option is selected.
+  </OnboardingOption>
+  ```
+
     </OnboardingOption>
 
 - toggle the `profiling` option above to see the effect:
 
     <OnboardingOption optionId="profiling" hideForThisOption>
 
-    ```jsx
-    <OnboardingOption optionId="profiling" hideForThisOption>
-      This code block is wrapped in a `OnboardingOption` component and will only
-      be rendered when the `profiling` option is NOT selected.
-    </OnboardingOption>
-    ```
+  ```jsx
+  <OnboardingOption optionId="profiling" hideForThisOption>
+    This code block is wrapped in a `OnboardingOption` component and will only
+    be rendered when the `profiling` option is NOT selected.
+  </OnboardingOption>
+  ```
+
     </OnboardingOption>

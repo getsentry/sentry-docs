@@ -9,10 +9,11 @@ SDKs provide a <PlatformIdentifier name="before-send" /> hook, which is invoked 
 Sensitive data may appear in the following areas:
 
 - Stack-locals → Some SDKs (Python, PHP and Node) will pick up variable values within the stack trace. These can be scrubbed, or this behavior can be disabled altogether if necessary.
-- Breadcrumbs → Some SDKs (JavaScript and the Java logging integrations, for example) will pick up previously executed log statements. **Do not log PII** if using this feature and including log statements as breadcrumbs in the event. Some backend SDKs will also record database queries, which may need to be scrubbed.
+- Breadcrumbs → Some SDKs (JavaScript and the Java logging integrations, for example) will pick up previously executed log statements. **Do not log PII** if using this feature and including log statements as breadcrumbs in the event. Some backend SDKs will also record database queries, which may need to be scrubbed. Most SDKs will add the HTTP query string and fragment as a data attribute to the breadcrumb, which may need to be scrubbed.
 - User context → Automated behavior is controlled via <PlatformIdentifier name="send-default-pii" />.
 - HTTP context → Query strings may be picked up in some frameworks as part of the HTTP request context.
 - Transaction Names → In certain situations, transaction names might contain sensitive data. For example, a browser's pageload transaction might have a raw URL like `/users/1234/details` as its name (where `1234` is a user id, which may be considered PII). In most cases, our SDKs can parameterize URLs and routes successfully, that is, turn `/users/1234/details` into `/users/:userid/details`. However, depending on the framework, your routing configuration, race conditions, and a few other factors, the SDKs might not be able to completely parameterize all of your URLs.
+- HTTP Spans → Most SDKs will include the HTTP query string and fragment as a data attribute, which means the HTTP span may need to be scrubbed.
 
 For more details and data filtering instructions, see <PlatformLink to="/configuration/filtering/">Filtering Events</PlatformLink>.
 

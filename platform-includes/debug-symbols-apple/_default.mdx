@@ -25,7 +25,13 @@ For this to work, your project settings for `DEBUG_INFORMATION_FORMAT` must be s
 
 <OrgAuthTokenNote />
 
-```bash
+You can also upload your code for source context. This feature allows Sentry to display snippets of your code next to the event stack traces.
+
+<OnboardingOptionButtons
+  options={[{ id:"source-context", checked: false }]}
+/> 
+
+```bash {"onboardingOptions": {"source-context": "2"}}
 sentry-cli debug-files upload --auth-token ___ORG_AUTH_TOKEN___ \
   --include-sources \
   --org ___ORG_SLUG___ \
@@ -33,7 +39,13 @@ sentry-cli debug-files upload --auth-token ___ORG_AUTH_TOKEN___ \
   PATH_TO_DSYMS
 ```
 
-Visit the [sentry-cli docs](/cli/dif/#uploading-files) for more information.
+<Note>
+
+You can find installation instructions for Sentry CLI https://docs.sentry.io/cli/installation/.
+
+For more info on `sentry-cli` configuration visit the [Sentry CLI configuration docs](/cli/configuration/).
+
+</Note>
 
 ## Sentry Fastlane Plugin
 
@@ -44,7 +56,7 @@ Sentry can display snippets of your code next to event stack traces. This featur
 
 <OrgAuthTokenNote />
 
-```ruby {tabTitle:Current Fastlane plugin}
+```ruby {tabTitle:Current Fastlane plugin} {"onboardingOptions": {"source-context": "5"}}
 sentry_debug_files_upload(
   auth_token: '___ORG_AUTH_TOKEN___',
   org_slug: '___ORG_SLUG___',
@@ -53,7 +65,7 @@ sentry_debug_files_upload(
 )
 ```
 
-```ruby {tabTitle:Fastlane plugin before 1.20.0}
+```ruby {tabTitle:Fastlane plugin before 1.20.0} {"onboardingOptions": {"source-context": "5"}}
 sentry_upload_dif(
   auth_token: '___ORG_AUTH_TOKEN___',
   org_slug: '___ORG_SLUG___',
@@ -78,7 +90,7 @@ Your project's dSYM can be uploaded during Xcode's build phase as a _Run Script_
 
 Follow these steps to upload the debug symbols:
 
-1.  Download and install [sentry-cli](/product/cli/installation/).
+1.  Download and install [sentry-cli](/cli/installation/).
 2.  Copy the script below into a new _Run Script_ and set your _AUTH_TOKEN_, _ORG_SLUG_, and _PROJECT_SLUG_.
 Sentry can display snippets of your code next to the event stack traces. This feature is called <PlatformLink to="/data-management/debug-files/source-context/">source context</PlatformLink>. When setting the `--include-sources` option, sentry-cli will scan your debug files to find references to the source code files, resolve them in the local file system, bundle them up, and upload them to Sentry.
 
@@ -94,12 +106,18 @@ Another option is to use warnings, and then set `GCC_TREAT_WARNINGS_AS_ERRORS` t
 
 <OrgAuthTokenNote />
 
-```bash {tabTitle:Warn on failures - nonblocking}
+```bash {tabTitle:Warn on failures - nonblocking} {"onboardingOptions": {"source-context": "10"}}
+if [[ "$(uname -m)" == arm64 ]]; then
+    export PATH="/opt/homebrew/bin:$PATH"
+fi
+
 if which sentry-cli >/dev/null; then
 export SENTRY_ORG=___ORG_SLUG___
 export SENTRY_PROJECT=___PROJECT_SLUG___
 export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
-ERROR=$(sentry-cli debug-files upload --include-sources "$DWARF_DSYM_FOLDER_PATH" 2>&1 >/dev/null)
+ERROR=$(sentry-cli debug-files upload \ 
+--include-sources \
+"$DWARF_DSYM_FOLDER_PATH" 2>&1 >/dev/null)
 if [ ! $? -eq 0 ]; then
 echo "warning: sentry-cli - $ERROR"
 fi
@@ -108,12 +126,18 @@ echo "warning: sentry-cli not installed, download from https://github.com/getsen
 fi
 ```
 
-```bash {tabTitle:Error on failures - blocking}
+```bash {tabTitle:Error on failures - blocking} {"onboardingOptions": {"source-context": "10"}}
+if [[ "$(uname -m)" == arm64 ]]; then
+    export PATH="/opt/homebrew/bin:$PATH"
+fi
+
 if which sentry-cli >/dev/null; then
 export SENTRY_ORG=___ORG_SLUG___
 export SENTRY_PROJECT=___PROJECT_SLUG___
 export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
-ERROR=$(sentry-cli debug-files upload --include-sources "$DWARF_DSYM_FOLDER_PATH" --force-foreground 2>&1 >/dev/null)
+ERROR=$(sentry-cli debug-files upload \
+--include-sources \ 
+"$DWARF_DSYM_FOLDER_PATH" --force-foreground 2>&1 >/dev/null)
 if [ ! $? -eq 0 ]; then
 echo "error: sentry-cli - $ERROR"
 fi
@@ -135,7 +159,8 @@ ${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TAR
 ```
 
 4.  Set `ENABLE_USER_SCRIPT_SANDBOXING` in your Xcode project settings to `NO`.
-[enable-user-script-sandboxing](./img/enable_user_script_sandboxing.png
+
+![enable-user-script-sandboxing](./img/enable_user_script_sandboxing.png)
 
 <Alert level="" title="Self Hosted">
 

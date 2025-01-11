@@ -1,27 +1,41 @@
 const {redirects} = require('./redirects.js');
 
-const {codecovWebpackPlugin} = require('@codecov/webpack-plugin');
+const {codecovNextJSWebpackPlugin} = require('@codecov/nextjs-webpack-plugin');
 const {withSentryConfig} = require('@sentry/nextjs');
+
+const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
+  ? {
+      '/**/*': ['./.git/**/*', './apps/**/*', 'docs/**/*'],
+    }
+  : {
+      '/**/*': [
+        './.git/**/*',
+        './apps/**/*',
+        'develop-docs/**/*',
+        'node_modules/@esbuild/darwin-arm64',
+      ],
+      '/platform-redirect': ['**/*.gif', 'public/mdx-images/**/*', '*.pdf'],
+      '\\[\\[\\.\\.\\.path\\]\\]': [
+        'docs/**/*',
+        'node_modules/prettier/plugins',
+        'node_modules/rollup/dist',
+      ],
+      'sitemap.xml': ['docs/**/*', 'public/mdx-images/**/*', '*.gif', '*.pdf', '*.png'],
+    };
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
-
   trailingSlash: true,
-
-  experimental: {
-    serverComponentsExternalPackages: ['rehype-preset-minify'],
-    outputFileTracingExcludes: {
-      '/**/*': ['./.git/**/*', './apps/**/*'],
-    },
-  },
-
-  webpack: (config, _options) => {
+  serverExternalPackages: ['rehype-preset-minify'],
+  outputFileTracingExcludes,
+  webpack: (config, options) => {
     config.plugins.push(
-      codecovWebpackPlugin({
+      codecovNextJSWebpackPlugin({
         enableBundleAnalysis: typeof process.env.CODECOV_TOKEN === 'string',
         bundleName: 'sentry-docs',
         uploadToken: process.env.CODECOV_TOKEN,
+        webpack: options.webpack,
       })
     );
 
@@ -32,6 +46,13 @@ const nextConfig = {
     DEVELOPER_DOCS_: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
   },
   redirects,
+  // https://github.com/vercel/next.js/discussions/48324#discussioncomment-10748690
+  cacheHandler: require.resolve(
+    'next/dist/server/lib/incremental-cache/file-system-cache.js'
+  ),
+  sassOptions: {
+    silenceDeprecations: ['legacy-js-api'],
+  },
 };
 
 module.exports = withSentryConfig(nextConfig, {
@@ -66,4 +87,12 @@ module.exports = withSentryConfig(nextConfig, {
   unstable_sentryWebpackPluginOptions: {
     applicationKey: 'sentry-docs',
   },
+});
+
+process.on('warning', warning => {
+  if (warning.code === 'DEP0040') {
+    // Ignore punnycode deprecation warning, we don't control its usage
+    return;
+  }
+  console.warn(warning); // Log other warnings
 });

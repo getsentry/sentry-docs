@@ -1,6 +1,8 @@
 'use client';
 
 import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
+import {Button} from '@radix-ui/themes';
+import {captureException} from '@sentry/nextjs';
 import {
   Hit,
   Result,
@@ -9,7 +11,7 @@ import {
 } from '@sentry-internal/global-search';
 import DOMPurify from 'dompurify';
 import Link from 'next/link';
-import {useRouter} from 'next/navigation';
+import {usePathname, useRouter} from 'next/navigation';
 import algoliaInsights from 'search-insights';
 
 import {useOnClickOutside} from 'sentry-docs/clientUtils';
@@ -19,18 +21,6 @@ import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import styles from './search.module.scss';
 
 import {Logo} from '../logo';
-import {NavLink} from '../navlink';
-
-// https://stackoverflow.com/a/2117523/115146
-function uuidv4() {
-  let dt = new Date().getTime();
-  const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-    const r = (dt + Math.random() * 16) % 16 | 0;
-    dt = Math.floor(dt / 16);
-    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
-  });
-  return uuid;
-}
 
 // Initialize Algolia Insights
 algoliaInsights('init', {
@@ -41,7 +31,7 @@ algoliaInsights('init', {
 // We dont want to track anyone cross page/sessions or use cookies
 // so just generate a random token each time the page is loaded and
 // treat it as a random user.
-const randomUserToken = uuidv4();
+const randomUserToken = crypto.randomUUID();
 
 const MAX_HITS = 10;
 
@@ -70,7 +60,9 @@ const config = isDeveloperDocs ? developerDocsSites : userDocsSites;
 const search = new SentryGlobalSearch(config);
 
 function relativizeUrl(url: string) {
-  return url.replace(/^(https?:\/\/docs\.sentry\.io)(?=\/|$)/, '');
+  return isDeveloperDocs
+    ? url
+    : url.replace(/^(https?:\/\/docs\.sentry\.io)(?=\/|$)/, '');
 }
 
 type Props = {
@@ -88,6 +80,7 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
   const [showOffsiteResults, setShowOffsiteResults] = useState(false);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleClickOutside = useCallback((ev: MouseEvent) => {
     // don't close the search results if the user is clicking the expand button
@@ -194,20 +187,65 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
   });
 
   const trackSearchResultClick = useCallback((hit: Hit, position: number): void => {
-    if (hit.id === undefined) {
-      return;
+    try {
+      algoliaInsights('clickedObjectIDsAfterSearch', {
+        eventName: 'documentation_search_result_click',
+        userToken: randomUserToken,
+        index: hit.index,
+        objectIDs: [hit.id],
+        // Positions in Algolia are 1 indexed
+        queryID: hit.queryID ?? '',
+        positions: [position + 1],
+      });
+    } catch (error) {
+      captureException(error);
     }
-
-    algoliaInsights('clickedObjectIDsAfterSearch', {
-      eventName: 'documentation_search_result_click',
-      userToken: randomUserToken,
-      index: hit.index,
-      objectIDs: [hit.id],
-      // Positions in Algolia are 1 indexed
-      queryID: hit.queryID ?? '',
-      positions: [position + 1],
-    });
   }, []);
+
+  const removeTags = useCallback((str: string) => {
+    return str.replace(/<\/?[^>]+(>|$)/g, '');
+  }, []);
+
+  const handleSearchResultClick = useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement>, hit: Hit, position: number): void => {
+      if (hit.id === undefined) {
+        return;
+      }
+
+      trackSearchResultClick(hit, position);
+
+      // edge case when the clicked search result is the currently visited paged
+      if (relativizeUrl(hit.url) === pathname) {
+        // do not navigate to the search result page in this case
+        event.preventDefault();
+
+        // sanitize the title to remove any html tags
+        const title = hit?.title && removeTags(hit.title);
+
+        if (!title) {
+          return;
+        }
+
+        // check for heading with the same text as the title
+        const headings =
+          document
+            .querySelector('main > div.prose')
+            ?.querySelectorAll('h1, h2, h3, h4, h5, h6') ?? [];
+        const foundHeading = Array.from(headings).find(heading =>
+          heading.textContent?.toLowerCase().includes(title.toLowerCase())
+        );
+
+        // close the search results and scroll to the heading if it exists
+        setInputFocus(false);
+        if (foundHeading) {
+          foundHeading.scrollIntoView({
+            behavior: 'smooth',
+          });
+        }
+      }
+    },
+    [pathname, removeTags, trackSearchResultClick]
+  );
 
   return (
     <div className={styles.search} ref={ref}>
@@ -233,14 +271,32 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
         {showChatBot && (
           <Fragment>
             <span className="text-[var(--desatPurple10)] hidden md:inline">or</span>
-            <NavLink
-              href="https://docsbot.ai/chat/skFEy0qDC01GrRrZ7Crs/EPqsd8nu2XmKzWnd45tL"
-              target="_blank"
-              style={{textWrap: 'nowrap'}}
-              className="hidden md:flex"
+            <Button
+              asChild
+              variant="ghost"
+              color="gray"
+              size="3"
+              radius="medium"
+              className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer kapa-ai-class hidden md:flex"
             >
-              Ask A Bot
-            </NavLink>
+              <div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="size-5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"
+                  />
+                </svg>
+                <span>Ask AI</span>
+              </div>
+            </Button>
           </Fragment>
         )}
       </div>
@@ -269,7 +325,7 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
                             focused?.id === hit.id ? styles['sgs-hit-focused'] : ''
                           }`}
                           ref={
-                            // Scroll to eleemnt on focus
+                            // Scroll to element on focus
                             hit.id === focused?.id
                               ? el => el?.scrollIntoView({block: 'nearest'})
                               : undefined
@@ -277,7 +333,7 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
                         >
                           <Link
                             href={relativizeUrl(hit.url)}
-                            onClick={() => trackSearchResultClick(hit, index)}
+                            onClick={e => handleSearchResultClick(e, hit, index)}
                           >
                             {hit.title && (
                               <h6>
@@ -324,7 +380,9 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
 
           {!loading && totalHits === 0 && (
             <div className={styles['sgs-hit-empty-state']}>
-              No results for <em>{query}</em>
+              <button className="kapa-ai-class font-bold">
+                Can't find what you're looking for? Ask our AI!
+              </button>
             </div>
           )}
 

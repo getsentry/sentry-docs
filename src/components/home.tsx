@@ -1,9 +1,7 @@
 import Image from 'next/image';
-import Link from 'next/link';
 
 import {Banner} from 'sentry-docs/components/banner';
 import {SentryWordmarkLogo} from 'sentry-docs/components/wordmarkLogo';
-import {extractPlatforms, getDocsRootNode} from 'sentry-docs/docTree';
 import PlugImage from 'sentry-docs/imgs/api.png';
 import ChatBubble from 'sentry-docs/imgs/chat-bubble.png';
 import TerminalImage from 'sentry-docs/imgs/cli.png';
@@ -15,25 +13,18 @@ import RocketImage from 'sentry-docs/imgs/rocket.png';
 import SecurityImage from 'sentry-docs/imgs/security.png';
 import SupportImage from 'sentry-docs/imgs/support.png';
 
+import {Card} from './card';
 import {Header} from './header';
 import {NavLink, NavLinkProps} from './navlink';
 import {PlatformFilter} from './platformFilter';
 
-export async function Home() {
-  const rootNode = await getDocsRootNode();
-  // this regex deals with names like .NET that would otherwise be sorted at the top
-  const leadingNonAlphaRegex = /^[^\w]/;
-  // sort the platforms alphabetically
-  const sortedPlatforms = extractPlatforms(rootNode).sort((a, b) =>
-    (a.title ?? a.name)
-      .replace(leadingNonAlphaRegex, '')
-      .localeCompare((b.title ?? b.name).replace(leadingNonAlphaRegex, ''))
-  );
-
+export function Home() {
   return (
     <div className="tw-app">
       <Header pathname="/" searchPlatforms={[]} />
-      <Banner />
+      <div className="mt-[var(--header-height)]">
+        <Banner />
+      </div>
       <div className="hero max-w-screen-xl mx-auto px-6 lg:px-8 py-2">
         <div className="flex flex-col md:flex-row gap-4 mx-auto justify-between pt-20">
           <div className="flex flex-col justify-center items-start">
@@ -50,131 +41,96 @@ export async function Home() {
             <Image
               src={HeroImage}
               alt="Sentry's hero image"
-              className="max-h-[200px] w-full md:max-h-[390px]"
+              className="max-h-[200px] w-auto md:max-h-[390px]"
             />
           </div>
         </div>
 
-        <PlatformFilter platforms={sortedPlatforms} />
+        <PlatformFilter />
         <h2 className="text-2xl mt-16 mb-6 font-medium">Get to know us</h2>
         <div className="flex flex-wrap gap-6">
-          <Link href="/product/sentry-basics/" className="w-full">
-            <div className="flex flex-col md:flex-row shadow dark:bg-[var(--gray-4)] p-6 rounded gap-4">
-              <Image src={RocketImage} height={64} alt="Rocket image" />
-              <div className="space-y-2">
-                <h3 className="text-xl font-medium">What is Sentry?</h3>
-                <p>
-                  Application monitoring and debugging software considered “not bad” by 4
-                  million developers.
-                </p>
-              </div>
-            </div>
-          </Link>
-          <Link href="/organization" className="w-full md:w-[calc(50%-12px)]">
-            <div className="flex flex-col md:flex-row shadow dark:bg-[var(--gray-4)] p-6 rounded gap-4 h-full">
-              <Image
-                src={OrganizationImage}
-                height={64}
-                alt="Organization image"
-                className="object-contain"
-              />
-              <div className="flex flex-col justify-center space-y-2">
-                <h3 className="text-xl font-medium">Organization settings</h3>
-                <p>Information for setting up your organization’s Sentry account.</p>
-              </div>
-            </div>
-          </Link>
-          <Link href="/pricing" className="w-full md:w-[calc(50%-12px)]">
-            <div className="flex flex-col md:flex-row shadow dark:bg-[var(--gray-4)] p-6 rounded gap-4 h-full">
-              <Image
-                src={CalculatorImage}
-                height={64}
-                alt="Calculator image"
-                className="object-contain"
-              />
-              <div className="flex flex-col justify-center space-y-2">
-                <h3 className="text-xl font-medium">Pricing & Billing</h3>
-                <p>All about our pricing and billing structure.</p>
-              </div>
-            </div>
-          </Link>
-          <Link href="/api" className="w-full md:w-[calc(50%-12px)]">
-            <div className="flex flex-col md:flex-row shadow dark:bg-[var(--gray-4)] p-6 rounded gap-4 h-full">
-              <Image
-                src={PlugImage}
-                height={64}
-                alt="Plug image"
-                className="object-contain"
-              />
-              <div className="flex flex-col justify-center space-y-2">
-                <h3 className="text-xl font-medium">API</h3>
-                <p>APIs for accessing Sentry programmatically.</p>
-              </div>
-            </div>
-          </Link>
-          <Link href="/cli" className="w-full md:w-[calc(50%-12px)]">
-            <div className="flex flex-col md:flex-row shadow dark:bg-[var(--gray-4)] p-6 rounded gap-4 h-full">
-              <Image
-                src={TerminalImage}
-                height={64}
-                alt="Terminal image"
-                className="object-contain"
-              />
-              <div className="flex flex-col justify-center space-y-2">
-                <h3 className="text-xl font-medium">CLI</h3>
-                <p>How to use ‘sentry-cli’ on the command line.</p>
-              </div>
-            </div>
-          </Link>
-          <Link href="/security-legal-pii" className="w-full md:w-[calc(50%-12px)]">
-            <div className="flex flex-col md:flex-row shadow dark:bg-[var(--gray-4)] p-6 rounded gap-4 h-full">
-              <Image
-                src={SecurityImage}
-                height={64}
-                alt="Stamped paper image"
-                className="object-contain"
-              />
-              <div className="flex flex-col justify-center space-y-2">
-                <h3 className="text-xl font-medium">Security, Legal & PII</h3>
-                <p>Security, compliance, and data-scrubbing processes.</p>
-              </div>
-            </div>
-          </Link>
-          <Link href="/concepts" className="w-full md:w-[calc(50%-12px)]">
-            <div className="flex flex-col md:flex-row shadow dark:bg-[var(--gray-4)] p-6 rounded gap-4 h-full">
-              <Image
-                src={ConceptsImage}
-                height={64}
-                alt="Concept and references image"
-                className="object-contain"
-              />
-              <div className="flex flex-col justify-center space-y-2">
-                <h3 className="text-xl font-medium">Concepts & Reference</h3>
-                <p>Core concepts that make Sentry, Sentry.</p>
-              </div>
-            </div>
-          </Link>
+          <Card
+            className="w-full"
+            href="/product/"
+            image={RocketImage}
+            imageAlt="Rocket image"
+            title="What is Sentry?"
+            description="Application monitoring and debugging software considered “not bad” by 4 million developers."
+          />
+
+          <Card
+            className="w-full md:w-[calc(50%-12px)]"
+            href="/organization"
+            image={OrganizationImage}
+            imageAlt="Organization image"
+            title="Organization settings"
+            description="Information for setting up your organization's Sentry account."
+          />
+
+          <Card
+            className="w-full md:w-[calc(50%-12px)]"
+            href="/pricing"
+            image={CalculatorImage}
+            imageAlt="Calculator image"
+            title="Pricing & Billing"
+            description="All about our pricing and billing structure."
+          />
+
+          <Card
+            className="w-full md:w-[calc(50%-12px)]"
+            href="/api"
+            image={PlugImage}
+            imageAlt="Plug image"
+            title="API"
+            description="APIs for accessing Sentry programmatically."
+          />
+
+          <Card
+            className="w-full md:w-[calc(50%-12px)]"
+            href="/cli"
+            image={TerminalImage}
+            imageAlt="Terminal image"
+            title="CLI"
+            description="How to use ‘sentry-cli’ on the command line."
+          />
+
+          <Card
+            className="w-full md:w-[calc(50%-12px)]"
+            href="/security-legal-pii"
+            image={SecurityImage}
+            imageAlt="Stamped paper image"
+            title="Security, Legal & PII"
+            description="Security, compliance, and data-scrubbing processes."
+          />
+
+          <Card
+            className="w-full md:w-[calc(50%-12px)]"
+            href="/concepts"
+            image={ConceptsImage}
+            imageAlt="Concept and references image"
+            title="Concepts & Reference"
+            description="Core concepts that make Sentry, Sentry."
+          />
         </div>
         <h2 className="text-2xl mt-10 mb-6 font-medium">Talk to us</h2>
         <div className="flex flex-col md:flex-row gap-6">
-          <Link href="https://discord.com/invite/sentry" className="w-full">
-            <div className="flex flex-col md:flex-row shadow dark:bg-[var(--gray-4)] p-6 rounded gap-4 h-full">
-              <Image src={ChatBubble} height={64} alt="Chat bubble image" />
-              <div className="space-y-2">
-                <h3 className="text-xl font-medium">Sentry Discord</h3>
-                <p>Real talk in real time. Get in it.</p>
-              </div>
-            </div>
-          </Link>
-          <Link href="https://sentry.zendesk.com/hc/en-us/" className="w-full">
-            <div className="flex flex-col md:flex-row shadow dark:bg-[var(--gray-4)] p-6 rounded gap-4 h-full">
-              <Image src={SupportImage} height={64} alt="Support image" />
-              <div className="space-y-2">
-                <h3 className="text-xl font-medium">Support</h3>
-                <p>See how we can help.</p>
-              </div>
-            </div>
-          </Link>
+          <Card
+            className="w-full"
+            href="https://discord.com/invite/sentry"
+            image={ChatBubble}
+            imageAlt="Chat bubble image"
+            title="Sentry Discord"
+            description="Real talk in real time. Get in it."
+          />
+
+          <Card
+            className="w-full"
+            href="https://sentry.zendesk.com/hc/en-us/"
+            image={SupportImage}
+            imageAlt="Support image"
+            title="Support"
+            description="See how we can help."
+          />
         </div>
       </div>
       <footer className="mt-12 pb-10 w-full z-50 max-w-7xl mx-auto md:px-6 space-y-4 px-6 lg:px-8">

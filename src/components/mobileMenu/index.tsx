@@ -42,12 +42,8 @@ export function MobileMenu({pathname, searchPlatforms}: Props) {
                 </DropdownMenu.Item>
 
                 <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
-                  <Link
-                    href="https://docsbot.ai/chat/skFEy0qDC01GrRrZ7Crs/EPqsd8nu2XmKzWnd45tL"
-                    target="_blank"
-                    className="mt-2 md:hidden"
-                  >
-                    Ask A Bot
+                  <Link href="#" className="mt-2 kapa-ai-class md:hidden">
+                    Ask AI
                   </Link>
                 </DropdownMenu.Item>
                 <DropdownMenu.Separator className={styles.DropdownMenuSeparator} />
@@ -59,7 +55,7 @@ export function MobileMenu({pathname, searchPlatforms}: Props) {
                 <Link href="https://try.sentry-demo.com/demo/start/">Sandbox</Link>
               </DropdownMenu.Item>
               <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
-                <Link href="https://sentry.io/">Sign In</Link>
+                <Link href="https://sentry.io/">Go to Sentry</Link>
               </DropdownMenu.Item>
               <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
                 <Link href="https://sentry.io/signup/">Get Started</Link>

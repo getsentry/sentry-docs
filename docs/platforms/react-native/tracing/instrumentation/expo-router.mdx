@@ -10,32 +10,32 @@ Sentry's React Native SDK package ships with instrumentation for Expo Router. Th
 
 The code snippet below shows how to initialize the instrumentation.
 
-```javascript { filename: 'app/_layout.tsx' }
+```javascript {6-8, 15-16, 20-25} {filename: app/_layout.tsx}
 import React from 'react';
 import { Slot, useNavigationContainerRef } from 'expo-router';
-import Constants from 'expo-constants';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as Sentry from '@sentry/react-native';
 
-const routingInstrumentation = new Sentry.ReactNavigationInstrumentation({
-  enableTimeToInitialDisplay: Constants.appOwnership !== 'expo', // Only in native builds, not in Expo Go.
+const navigationIntegration = Sentry.reactNavigationIntegration({
+  enableTimeToInitialDisplay: Constants.executionEnvironment === ExecutionEnvironment.StoreClient, // Only in native builds, not in Expo Go.
 });
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
-  integrations: [
-    new Sentry.ReactNativeTracing({
-      routingInstrumentation,
-      enableNativeFramesTracking: Constants.appOwnership !== 'expo', // Only in native builds, not in Expo Go.
-    }),
-  ],
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
+  // We recommend adjusting this value in production.
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  integrations: [navigationIntegration],
+  enableNativeFramesTracking: Constants.executionEnvironment === ExecutionEnvironment.StoreClient, // Only in native builds, not in Expo Go.
 });
 
 function RootLayout() {
   const ref = useNavigationContainerRef();
-
   React.useEffect(() => {
     if (ref) {
-      routingInstrumentation.registerNavigationContainer(ref);
+      navigationIntegration.registerNavigationContainer(ref);
     }
   }, [ref]);
 
@@ -50,19 +50,24 @@ export default Sentry.wrap(RootLayout);
 You can configure the instrumentation by passing an options object to the constructor:
 
 ```javascript
-new Sentry.ReactNavigationInstrumentation({
+Sentry.reactNavigationIntegration({
   enableTimeToInitialDisplay: true, // default: false
   routeChangeTimeoutMs: 1000, // default: 1000
+  ignoreEmptyBackNavigationTransactions: true, // default: true
 });
 ```
 
 ### routeChangeTimeoutMs
 
-This option specifies how long the instrumentation will wait for the route to mount after a change has been initiated before the transaction is discarded. The default value is 1000ms.
+This option specifies how long the instrumentation will wait for the route to mount after a change has been initiated before the transaction is discarded. The default value is `1_000`.
 
 ### enableTimeToInitialDisplay
 
-This option will enable automatic measuring of the time to initial display for each route. To learn more see [Time to Initial Display](/platforms/react-native/tracing/instrumentation/time-to-display).
+This option will enable automatic measuring of the time to initial display for each route. To learn more see [Time to Initial Display](/platforms/react-native/tracing/instrumentation/time-to-display). The default value is `false`.
+
+### ignoreEmptyBackNavigationTransactions
+
+This ensures that transactions that are from routes that've been seen and don't have any spans, are not being sampled. This removes a lot of clutter, making it so that most back navigation transactions are now ignored. The default value is `true`.
 
 ## Notes
 

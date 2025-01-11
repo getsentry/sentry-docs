@@ -71,13 +71,7 @@ Configures the sample rate for error events, in the range of `0.0` to `1.0`. The
 
 <ConfigKey name="max-breadcrumbs">
 
-This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`, but you can set this to any number. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
-
-</ConfigKey>
-
-<ConfigKey name="max-cache-items">
-
-The maximum number of [envelopes](https://develop.sentry.dev/sdk/envelopes/) to keep in cache. The SDKs use envelopes to send data, such as events, attachments, user feedback, and sessions to sentry.io. An envelope can contain multiple items, such as an event with a session and two attachments. Depending on the usage of the SDK, the size of an envelope can differ. If the number of envelopes in the local cache exceeds `max-cache-items`, the SDK deletes the oldest envelope and migrates the sessions to the next envelope to maintain the integrity of your release health stats. The default is `30`.
+This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`, but you can set this to any number. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
 
 </ConfigKey>
 
@@ -90,93 +84,6 @@ This option is turned on by default.
 Grouping in Sentry is different for events with stack traces and without. As a result, you will get new groups as you enable or disable this flag for certain events.
 
 </ConfigKey>
-
-<ConfigKey name="send-default-pii">
-
-If this flag is enabled, certain personally identifiable information (PII) is added by active integrations. By default, no such data is sent.
-
-<Note>
-
-If you are using Sentry in your mobile app, read our [frequently asked questions about mobile data privacy](/security-legal-pii/security/mobile-privacy/) to assist with Apple App Store and Google Play app privacy details.
-
-</Note>
-
-This option is turned off by default.
-
-If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
-
-</ConfigKey>
-
-<ConfigKey name="server-name">
-
-This option can be used to supply a "server name." When provided, the name of the server is sent along and persisted in the event. For many integrations, the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server.
-
-Most SDKs will attempt to auto-discover this value.
-
-</ConfigKey>
-
-<ConfigKey name="in-app-include">
-
-A list of string prefixes of module names that belong to the app. This option takes precedence over `in-app-exclude`.
-
-Sentry differentiates stack frames that are directly related to your application ("in application") from stack frames that come from other packages such as the standard library, frameworks, or other dependencies. The application package is automatically marked as `inApp`. The difference is visible in [sentry.io](https://sentry.io), where only the "in application" frames are displayed by default.
-
-</ConfigKey>
-
-<ConfigKey name="in-app-exclude">
-
-A list of string prefixes of module names that do not belong to the app, but rather to third-party packages. Modules considered not part of the app will be hidden from stack traces by default.
-
-This option can be overridden using <PlatformIdentifier name="in-app-include" />.
-
-</ConfigKey>
-
-<ConfigKey name="ignored-exceptions-for-type">
-
-A list of exception types that will be filtered out before sending to Sentry.
-
-</ConfigKey>
-
-<ConfigKey name="max-request-body-size">
-
-This parameter controls whether integrations should capture HTTP request bodies. It can be set to one of the following values:
-
-- `never`: Request bodies are never sent.
-- `small`: Only small request bodies will be captured. The cutoff for small depends on the SDK (typically 4KB).
-- `medium`: Medium and small requests will be captured (typically 10KB).
-- `always`: The SDK will always capture the request body as long as Sentry can make sense of it.
-
-</ConfigKey>
-
-<ConfigKey name="enabled">
-
-Specifies whether this SDK should send events to Sentry. Defaults to `true`. Setting this to `enabled: false` doesn't prevent all overhead from Sentry instrumentation. To disable Sentry completely, depending on environment, call `Sentry.init` conditionally.
-
-</ConfigKey>
-
-<ConfigKey name="send-client-reports">
-
-Set this boolean to `false` to disable sending of client reports. Client reports are a protocol feature that let clients send status reports about themselves to Sentry. They are currently mainly used to emit outcomes for events that were never sent.
-
-_(New in version 6.0.0)_
-
-</ConfigKey>
-
-## Integration Configuration
-
-For many platform SDKs integrations can be configured alongside it. On some platforms that happen as part of the `init()` call, in some others, different patterns apply.
-
-<ConfigKey name="integrations" />
-
-In some SDKs, the integrations are configured through this parameter on library initialization. For more information, please see our documentation for a specific integration.
-
-<ConfigKey name="default-integrations" notSupported={["java", "dart"]} />
-
-This can be used to disable integrations that are added by default. When set to `false`, no default integrations are added.
-
-<ConfigKey name="auto-enabling-integrations" supported={["python"]} />
-
-This can be used to disable integrations that are enabled by default if the SDK detects that the corresponding framework or library is installed. When set to `false`, none of these integrations will be enabled by default, even if the corresponding framework/library is detected.
 
 ## Hooks
 
@@ -203,35 +110,7 @@ The callback typically gets a second argument (called a "hint") which contains t
 
 </ConfigKey>
 
-## Transport Options
-
-Transports are used to send events to Sentry. Transports can be customized to some degree to better support highly specific deployments.
-
-<ConfigKey name="transport">
-
-Switches out the transport used to send events. How this works depends on the SDK. It can, for instance, be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication.
-
-</ConfigKey>
-
-<ConfigKey name="http-proxy">
-
-When set, a proxy can be configured that should be used for outbound requests. This is also used for HTTPS requests unless a separate `https-proxy` is configured. However, not all SDKs support a separate HTTPS proxy. SDKs will attempt to default to the system-wide configured proxy, if possible. For instance, on Unix systems, the `http_proxy` environment variable will be picked up.
-
-</ConfigKey>
-
-<ConfigKey name="shutdown-timeout">
-
-Controls how many seconds to wait before shutting down. Sentry SDKs send events from a background queue. This queue is given a certain amount to drain pending events. The default is SDK specific but typically around two seconds. Setting this value too low may cause problems for sending events from command line applications. Setting the value too high will cause the application to block for a long time for users experiencing network connectivity problems.
-
-</ConfigKey>
-
 ## Tracing Options
-
-<ConfigKey name="enable-tracing">
-
-A boolean value, if true, transactions and trace data will be generated and captured. This will set the <PlatformIdentifier name="traces-sample-rate" /> to the recommended default of 1.0 if <PlatformIdentifier name="traces-sample-rate" /> is not defined. Note that <PlatformIdentifier name="traces-sample-rate" /> and <PlatformIdentifier name="traces-sampler" /> take precedence over this option.
-
-</ConfigKey>
 
 <ConfigKey name="traces-sample-rate">
 
@@ -254,11 +133,5 @@ If one of the entries in the list matches the URL of an outgoing request, trace 
 String entries do not have to be full matches, meaning the URL of a request is matched when it _contains_ a string provided through the option.
 
 If <PlatformIdentifier name="trace-propagation-targets" /> is not provided, trace data is attached to every outgoing request from the instrumented client.
-
-</ConfigKey>
-
-<ConfigKey name="trace-options-requests">
-
-Set this boolean to `false` to disable tracing for `OPTIONS` requests. This options default value will likely be changed in the next major version, meaning you will have to set it to `true` if you want to keep tracing `OPTIONS` requests.
 
 </ConfigKey>

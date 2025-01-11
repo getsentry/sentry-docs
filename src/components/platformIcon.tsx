@@ -49,6 +49,7 @@ import FalconSVG from 'platformicons/svg/falcon.svg';
 import FastapiSVG from 'platformicons/svg/fastapi.svg';
 import FasthttpSVG from 'platformicons/svg/fasthttp.svg';
 import FastifySVG from 'platformicons/svg/fastify.svg';
+import FiberSVG from 'platformicons/svg/fiber.svg';
 import FlaskSVG from 'platformicons/svg/flask.svg';
 import FlutterSVG from 'platformicons/svg/flutter.svg';
 import FontSVG from 'platformicons/svg/font.svg';
@@ -79,9 +80,9 @@ import KotlinSVG from 'platformicons/svg/kotlin.svg';
 import LangchainSVG from 'platformicons/svg/langchain.svg';
 import LaravelSVG from 'platformicons/svg/laravel.svg';
 import LinuxSVG from 'platformicons/svg/linux.svg';
+import LitestarSVG from 'platformicons/svg/litestar.svg';
 import LogbackSVG from 'platformicons/svg/logback.svg';
 import LoguruSVG from 'platformicons/svg/loguru.svg';
-import MartiniSVG from 'platformicons/svg/martini.svg';
 import MauiSVG from 'platformicons/svg/maui.svg';
 import MongodbSVG from 'platformicons/svg/mongodb.svg';
 import NativecSVG from 'platformicons/svg/nativec.svg';
@@ -101,6 +102,7 @@ import QuartSVG from 'platformicons/svg/quart.svg';
 import RailsSVG from 'platformicons/svg/rails.svg';
 import ReactSVG from 'platformicons/svg/react.svg';
 import ReactnativeSVG from 'platformicons/svg/react-native.svg';
+import ReactRouterSVG from 'platformicons/svg/react-router.svg';
 import RedisSVG from 'platformicons/svg/redis.svg';
 import ReduxSVG from 'platformicons/svg/redux.svg';
 import RemixSVG from 'platformicons/svg/remix.svg';
@@ -185,6 +187,7 @@ import FalconSVGLarge from 'platformicons/svg_80x80/falcon.svg';
 import FastapiSVGLarge from 'platformicons/svg_80x80/fastapi.svg';
 import FasthttpSVGLarge from 'platformicons/svg_80x80/fasthttp.svg';
 import FastifySVGLarge from 'platformicons/svg_80x80/fastify.svg';
+import FiberSVGLarge from 'platformicons/svg_80x80/fiber.svg';
 import FlaskSVGLarge from 'platformicons/svg_80x80/flask.svg';
 import FlutterSVGLarge from 'platformicons/svg_80x80/flutter.svg';
 import FontSVGLarge from 'platformicons/svg_80x80/font.svg';
@@ -215,9 +218,9 @@ import KotlinSVGLarge from 'platformicons/svg_80x80/kotlin.svg';
 import LangchainSVGLarge from 'platformicons/svg_80x80/langchain.svg';
 import LaravelSVGLarge from 'platformicons/svg_80x80/laravel.svg';
 import LinuxSVGLarge from 'platformicons/svg_80x80/linux.svg';
+import LitestarSVGLarge from 'platformicons/svg_80x80/litestar.svg';
 import LogbackSVGLarge from 'platformicons/svg_80x80/logback.svg';
 import LoguruSVGLarge from 'platformicons/svg_80x80/loguru.svg';
-import MartiniSVGLarge from 'platformicons/svg_80x80/martini.svg';
 import MauiSVGLarge from 'platformicons/svg_80x80/maui.svg';
 import MongodbSVGLarge from 'platformicons/svg_80x80/mongodb.svg';
 import NativecSVGLarge from 'platformicons/svg_80x80/nativec.svg';
@@ -237,6 +240,7 @@ import QuartSVGLarge from 'platformicons/svg_80x80/quart.svg';
 import RailsSVGLarge from 'platformicons/svg_80x80/rails.svg';
 import ReactSVGLarge from 'platformicons/svg_80x80/react.svg';
 import ReactnativeSVGLarge from 'platformicons/svg_80x80/react-native.svg';
+import ReactRouterSVGLarge from 'platformicons/svg_80x80/react-router.svg';
 import RedisSVGLarge from 'platformicons/svg_80x80/redis.svg';
 import ReduxSVGLarge from 'platformicons/svg_80x80/redux.svg';
 import RemixSVGLarge from 'platformicons/svg_80x80/remix.svg';
@@ -473,6 +477,10 @@ const formatToSVG = {
     sm: FasthttpSVG,
     lg: FasthttpSVGLarge,
   },
+  fiber: {
+    sm: FiberSVG,
+    lg: FiberSVGLarge,
+  },
   flask: {
     sm: FlaskSVG,
     lg: FlaskSVGLarge,
@@ -593,6 +601,10 @@ const formatToSVG = {
     sm: LinuxSVG,
     lg: LinuxSVGLarge,
   },
+  litestar: {
+    sm: LitestarSVG,
+    lg: LitestarSVGLarge,
+  },
   logback: {
     sm: LogbackSVG,
     lg: LogbackSVGLarge,
@@ -600,10 +612,6 @@ const formatToSVG = {
   loguru: {
     sm: LoguruSVG,
     lg: LoguruSVGLarge,
-  },
-  martini: {
-    sm: MartiniSVG,
-    lg: MartiniSVGLarge,
   },
   maui: {
     sm: MauiSVG,
@@ -680,6 +688,10 @@ const formatToSVG = {
   react: {
     sm: ReactSVG,
     lg: ReactSVGLarge,
+  },
+  'react-router': {
+    sm: ReactRouterSVG,
+    lg: ReactRouterSVGLarge,
   },
   redis: {
     sm: RedisSVG,
@@ -860,10 +872,13 @@ export const PLATFORM_TO_ICON = {
   go: 'go',
   'go-echo': 'echo',
   'go-fasthttp': 'fasthttp',
+  'go-fiber': 'fiber',
   'go-gin': 'gin',
   'go-iris': 'iris',
-  'go-martini': 'martini',
   'go-negroni': 'go',
+  'go-zerolog': 'go',
+  'go-slog': 'go',
+  'go-logrus': 'go',
   godot: 'godot',
   huggingface: 'huggingface',
   java: 'java',
@@ -903,6 +918,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-nuxt': 'nuxt',
   'javascript-node': 'nodejs',
   'javascript-react': 'react',
+  'javascript-react-router': 'react-router',
   'javascript-remix': 'remix',
   'javascript-solid': 'solid',
   'javascript-solidstart': 'solidstart',
@@ -953,6 +969,7 @@ export const PLATFORM_TO_ICON = {
   'python-huey': 'huey',
   'python-huggingface_hub': 'huggingface',
   'python-langchain': 'langchain',
+  'python-litestar': 'litestar',
   'python-loguru': 'loguru',
   'python-openai': 'openai',
   'python-pylons': 'python',
@@ -961,9 +978,11 @@ export const PLATFORM_TO_ICON = {
   'python-quart': 'quart',
   'python-redis': 'redis',
   'python-rq': 'redis',
+  'python-rust_tracing': 'rust',
   'python-sanic': 'sanic',
   'python-serverless': 'serverless',
   'python-starlette': 'starlette',
+  'python-starlite': 'litestar',
   'python-strawberry': 'strawberry',
   'python-spark': 'apache-spark',
   'python-sqlalchemy': 'sqlalchemy',

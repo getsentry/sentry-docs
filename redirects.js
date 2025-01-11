@@ -3,7 +3,7 @@ const isDeveloperDocs = !!process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const developerDocsRedirects = [
   {
-    source: '/sdk/unified-api/tracing/:path*',
+    source: '/sdk/miscellaneous/unified-api/tracing/:path*',
     destination: '/sdk/performance/:path*',
   },
   {
@@ -26,10 +26,238 @@ const developerDocsRedirects = [
     source: '/sdk/performance/:path*',
     destination: '/sdk/telemetry/traces/:path*',
   },
+  {
+    source: '/sdk/data-model/event-payloads/types/',
+    destination: '/sdk/data-model/event-payloads/',
+  },
+  {
+    source: '/sdk/basics/:path*',
+    destination: '/sdk/processes/basics/:path*',
+  },
+  {
+    source: '/sdk/data-handling/:path*',
+    destination: '/sdk/expected-features/data-handling/:path*',
+  },
+  {
+    source: '/sdk/features/:path*',
+    destination: '/sdk/expected-features/:path*',
+  },
+  {
+    source: '/sdk/rate-limiting/:path*',
+    destination: '/sdk/expected-features/rate-limiting/:path*',
+  },
+  {
+    source: '/sdk/envelopes/:path*',
+    destination: '/sdk/data-model/envelopes/:path*',
+  },
+  {
+    source: '/sdk/event-payloads/:path*',
+    destination: '/sdk/data-model/event-payloads/:path*',
+  },
+  {
+    source: '/sdk/hub_and_scope_refactoring/:path*',
+    destination: '/sdk/miscellaneous/hub_and_scope_refactoring/:path*',
+  },
+  {
+    source: '/sdk/unified-api/:path*',
+    destination: '/sdk/miscellaneous/unified-api/:path*',
+  },
+  {
+    source: '/sdk/sessions/:path*',
+    destination: '/sdk/telemetry/sessions/:path*',
+  },
+  {
+    source: '/sdk/client-reports/:path*',
+    destination: '/sdk/telemetry/client-reports/:path*',
+  },
+  {
+    source: '/sdk/replays/:path*',
+    destination: '/sdk/telemetry/replays/:path*',
+  },
+  {
+    source: '/sdk/setup-wizards/:path*',
+    destination: '/sdk/expected-features/setup-wizards/:path*',
+  },
+  {
+    source: '/sdk/serverless/:path*',
+    destination: '/sdk/platform-specifics/serverless-sdks/:path*',
+  },
+  {
+    source: '/sdk/serverless-sdks/:path*',
+    destination: '/sdk/platform-specifics/serverless-sdks/:path*',
+  },
+  {
+    source: '/sdk/native-sdks/:path*',
+    destination: '/sdk/platform-specifics/native-sdks/:path*',
+  },
+  {
+    source: '/sdk/javascript-sdks/:path*',
+    destination: '/sdk/platform-specifics/javascript-sdks/:path*',
+  },
+  {
+    source: '/sdk/signal-handlers/:path*',
+    destination: '/sdk/platform-specifics/native-sdks/signal-handlers/:path*',
+  },
+  {
+    source: '/sdk/store/:path*',
+    destination: '/sdk/miscellaneous/store/:path*',
+  },
+  {
+    source: '/sdk/development-process/:path*',
+    destination: '/sdk/processes/:path*',
+  },
+  {
+    source: '/application/ab-testing/',
+    destination: '/backend/ab-testing/',
+  },
+  {
+    source: '/application/api/:path*',
+    destination: '/backend/api/:path*',
+  },
+  {
+    source: '/api-server/:path*',
+    destination: '/backend/:path*',
+  },
+  {
+    source: '/application/serializers/',
+    destination: '/backend/serializers/',
+  },
+  {
+    source: '/application/feature-flags/:path*',
+    destination: '/backend/feature-flags/:path*',
+  },
+  {
+    source: '/application/grouping/',
+    destination: '/backend/grouping/',
+  },
+  {
+    source: '/application/issue-platform/',
+    destination: '/backend/issue-platform/',
+  },
+  {
+    source: '/application/transaction-clustering/',
+    destination: '/backend/transaction-clustering/',
+  },
+  {
+    source: '/application/translations/',
+    destination: '/backend/translations/',
+  },
+  {
+    source: '/application/pii/:path*',
+    destination: '/backend/pii/:path*',
+  },
+  {
+    source: '/backend/control-silo/',
+    destination: '/application/control-silo/',
+  },
+  {
+    source: '/backend/cross-region-replication/',
+    destination: '/application/cross-region-replication/',
+  },
+  {
+    source: '/backend/cross-region-rpc/',
+    destination: '/application/cross-region-rpc/',
+  },
+  {
+    source: '/development/python-dependencies/',
+    destination: '/backend/python-dependencies/',
+  },
+  {
+    source: '/development/docs/',
+    destination: '/development/documentation/',
+  },
+  {
+    source: '/development/philosophy/',
+    destination: '/getting-started/philosophy/',
+  },
+  {
+    source: '/development/database-migrations/',
+    destination: '/backend/database-migrations/',
+  },
+  {
+    source: '/services/metrics/',
+    destination: '/backend/metrics/',
+  },
+  {
+    source: '/services/nodestore/',
+    destination: '/backend/nodestore/',
+  },
+  {
+    source: '/services/devservices/',
+    destination: '/development/devservices/',
+  },
+  {
+    source: '/services/queue/',
+    destination: '/backend/queue/',
+  },
+  {
+    source: '/services/quotas/',
+    destination: '/backend/quotas/',
+  },
+  {
+    source: '/services/tsdb/',
+    destination: '/services/tsdb/',
+  },
+  {
+    source: '/services/ports/',
+    destination: '/development/environment/ports/',
+  },
+  {
+    source: '/services/buffers/',
+    destination: '/backend/buffers/',
+  },
+  {
+    source: '/services/digests/',
+    destination: '/backend/digests/',
+  },
+  {
+    source: '/services/emails/',
+    destination: '/backend/emails/',
+  },
 ];
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
+  {
+    source: '/organization/integrations/msteams/',
+    destination: '/organization/integrations/notification-incidents/msteams/',
+  },
+  {
+    source: '/product/explore/session-replay/hydration-errors/',
+    destination: '/product/issues/issue-details/replay-issues/hydration-error/',
+  },
+  {
+    source: '/product/error-monitoring/stacktrace/',
+    destination: '/product/issues/issue-details/#stack-trace',
+  },
+  {
+    source: '/product/explore/session-replay/privacy/',
+    destination: '/security-legal-pii/scrubbing/protecting-user-privacy/',
+  },
+  {
+    source: '/product/explore/session-replay/rage-dead-clicks/',
+    destination: '/product/issues/issue-details/replay-issues/rage-clicks/',
+  },
+  {
+    source: '/organization/integrations/launchdarkly/',
+    destination: '/organization/integrations/feature-flag/launchdarkly/',
+  },
+  {
+    source: '/product/explore/session-replay/replay-details/',
+    destination: '/product/explore/session-replay/web/replay-details/',
+  },
+  {
+    source: '/platforms/javascript/guides/nextjs/sourcemaps/uploading/',
+    destination: '/platforms/javascript/guides/nextjs/sourcemaps/',
+  },
+  {
+    source: '/organization/integrations/vercel/',
+    destination: '/organization/integrations/deployment/vercel/',
+  },
+  {
+    source: '/product/accounts/quotas/org-stats/',
+    destination: '/product/stats/',
+  },
   {
     source: '/internal/:path*',
     destination: 'https://develop.sentry.dev',
@@ -37,6 +265,14 @@ const userDocsRedirects = [
   {
     source: '/development/(contribute|server)/:path*',
     destination: 'https://develop.sentry.dev',
+  },
+  {
+    source: '/organization/integrations/goastai/',
+    destination: '/organization/integrations/issue-tracking/goast/',
+  },
+  {
+    source: '/organization/integrations/github-deployment-gates/',
+    destination: '/product/releases/setup/release-automation/github-deployment-gates/',
   },
   {
     source: '/development/sdk-dev/:path*',
@@ -592,6 +828,85 @@ const userDocsRedirects = [
   {
     source: '/api/rate-limits/',
     destination: '/api/ratelimits/',
+  },
+  {
+    source: '/platforms/react-native/manual-setup/codepush/',
+    destination: '/platforms/react-native/sourcemaps/uploading/codepush/',
+  },
+  {
+    source: '/organization/integrations/launchdarkly/',
+    destination: '/organization/integrations/feature-flag/launchdarkly/',
+  },
+  {
+    source:
+      '/platforms/react-native/data-management/debug-files/source-context/data-management/debug-files/upload/',
+    destination: '/platforms/react-native/data-management/debug-files/upload/',
+  },
+  // Redirects for prior Insights information architecture:
+  {
+    source: '/product/insights/requests/',
+    destination: '/product/insights/backend/requests/',
+  },
+  {
+    source: '/product/insights/queries/',
+    destination: '/product/insights/backend/queries/',
+  },
+  {
+    source: '/product/insights/assets/',
+    destination: '/product/insights/frontend/assets/',
+  },
+  {
+    source: '/product/insights/mobile-vitals/',
+    destination: '/product/insights/mobile/',
+  },
+  {
+    source: '/product/insights/mobile-vitals/app-starts/',
+    destination: '/product/insights/mobile/app-starts/',
+  },
+  {
+    source: '/product/insights/mobile-vitals/screen-loads/',
+    destination: '/product/insights/mobile/screen-loads/',
+  },
+  {
+    source: '/product/insights/web-vitals/',
+    destination: '/product/insights/frontend/web-vitals/',
+  },
+  {
+    source: '/product/insights/web-vitals/web-vitals-concepts/',
+    destination: '/product/insights/frontend/web-vitals/web-vitals-concepts/',
+  },
+  {
+    source: '/product/insights/caches/',
+    destination: '/product/insights/backend/caches/',
+  },
+  {
+    source: '/product/insights/caches/cache-page/',
+    destination: '/product/insights/backend/caches/cache-page/',
+  },
+  {
+    source: '/product/insights/queue-monitoring/',
+    destination: '/product/insights/backend/queue-monitoring/',
+  },
+  {
+    source: '/product/insights/queue-monitoring/queues-page/',
+    destination: '/product/insights/backend/queue-monitoring/queues-page/',
+  },
+  {
+    source: '/product/insights/llm-monitoring/',
+    destination: '/product/insights/ai/llm-monitoring/',
+  },
+  {
+    source: '/product/insights/llm-monitoring/getting-started/',
+    destination: '/product/insights/ai/llm-monitoring/getting-started/',
+  },
+  {
+    source: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
+    destination: '/product/insights/ai/llm-monitoring/getting-started/the-dashboard/',
+  },
+  // End of Insights reduirects.
+  {
+    source: '/platforms/javascript/guides/astro/manual-setup/',
+    destination: '/platforms/javascript/guides/astro/',
   },
 ];
 

@@ -26,6 +26,18 @@ will not be sent to Sentry. If Sentry cannot locate symbols, then it cannot perf
 This means that for some types of projects (depending on configuration), you may not see filenames and line numbers
 to help you locate the source of an exception.
 
+## Updating to 4.12.0 broke my .NET iOS App
+
+Support for Xcode 16.0 was added on version 4.12.0 of the Sentry SDK for .NET
+If you are using Xcode 16.0, you will need to update the SDK version 4.12.0 or later.
+If you are still using Xcode 15.4 or earlier, you need to continue to use version 4.11.0 or earlier.
+
+Using Xcode 16 to build .NET applications targeting iOS and Mac Catalyst requires .NET workload for iOS SDK version 18.0.8303. We built the SDK version 4.12.0 using Xcode 16 in order to support this scenario. That, unfortunately, breaks folks using older version of Xcode.
+
+As such, if you are using SDK version 4.12.x and targeting iOS or Mac Catalyst, you will need to install and use Xcode 16 and workload iOS SDK 18.0.8303
+
+Note that .NET 9 will also support Xcode 16, when it is released next month (Nov 2024).
+
 ## The event is dropped by Sentry because it's too large
 
 > Sentry: (Error) Sentry rejected the envelope 5bfe4129cb2446c08768b16479865035. Status code: RequestEntityTooLarge. Error detail: failed to read request body. Error causes: A payload reached size limit..
@@ -51,5 +63,20 @@ Additionally, if you were using an async main, associated transactions might not
 
 These issues have been fully resolved as of version 3.31.0 of the Sentry .NET SDK. To safely use an async main, update your version to the newest release.
 It's no longer required to dispose of the result of calling `SentrySdk.Init`.
+
+## Obfuscated Code and Stack Traces
+
+
+It's important to define what obfuscation means. If you're getting illegible stack traces because of missing [debug files](/platforms/dotnet/data-management/debug-files/), all you need to do is enabling debug file upload, which is done automatically by the [Sentry SDK via MSBuild](/platforms/dotnet/guides/aspnet/configuration/msbuild/).
+
+Some custom tools obfuscate .NET Intermediate Language (IL) in order to make apps harder to reverse-engineer; Sentry does not currently support these tools. This is because each obfuscator uses its own custom logic when dealing with deobfuscation, making it impractical to implement universal support.
+
+If you're working with obfuscated code, you have several options:
+
+1. **Use a proxy service**: You can route exceptions through your own web service proxy where you can deobfuscate the stack traces before sending them to Sentry. This gives you full control over the deobfuscation process.
+
+2. **Preserve method names**: Many obfuscation tools allow you to disable method name obfuscation while still obfuscating the code inside methods. This approach results in more readable stack traces while maintaining code protection. Configure your obfuscator to preserve method names if this balance of readability and security meets your needs.
+
+3. **Contribute to Symbolic**: [Our symbolication library is open source](https://github.com/getsentry/symbolic). You could create a ticket to discuss adding support to it with the maintainers.
 
 <PlatformContent includePath="troubleshooting" />

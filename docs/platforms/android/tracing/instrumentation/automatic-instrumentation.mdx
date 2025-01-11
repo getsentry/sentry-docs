@@ -26,7 +26,7 @@ _The Activity's instrumentation is enabled by default, but you may disable it by
 </application>
 ```
 
-The transaction finishes after each Activity's `onResume` method is executed.
+The transaction finishes after each Activity's first frame is drawn.
 
 _The transaction finishes automatically, but you may disable it by setting:_
 
@@ -131,7 +131,7 @@ The SDK differentiates between a cold and a warm start, but doesn't track hot st
 
 The SDK sets the Span operation to `app.start.cold` for _Cold start_ and `app.start.warm` for _Warm start_.
 
-The SDK uses the `SentryPerformanceProvider` (ContentProvider) creation time as the beginning of the app start and the first `Activity#onResume` call as the end.
+The SDK uses the `SentryPerformanceProvider` (ContentProvider) creation time as the beginning of the app start and the first frame drawn as the end.
 
 <Note>
 
@@ -278,7 +278,7 @@ If the view doesn't have the `id` assigned, the transaction won't be captured be
 
 _(New in version 6.10.0)_
 
-The SDK composes the transaction name out of the host `Activity` and the `tag` set by way of the `Modifier.sentryTag("<tag>")` of the `Composable` (for example, `LoginActivity.login_button`). 
+The SDK composes the transaction name out of the host `Activity` and the `tag` set by way of the `Modifier.sentryTag("<tag>")` of the `Composable` (for example, `LoginActivity.login_button`).
 The transaction operation is set to `ui.action` plus the interaction type (one of `click`, `scroll`, or `swipe`).
 
 ```kotlin
@@ -299,7 +299,7 @@ fun LoginScreen() {
 
 <Note>
 
-If the `@Composable` doesn't have a `sentryTag` modifier applied, the transaction won't be captured because it can't be uniquely identified. 
+If the `@Composable` doesn't have a `sentryTag` modifier applied, the transaction won't be captured because it can't be uniquely identified.
 To capture a transaction for the `@Composable`, you must either add a `sentryTag` modifier or enable automatic `@Composable` tagging.
 
 </Note>
@@ -312,8 +312,8 @@ The Sentry Kotlin Compiler plugin is considered _experimental_. Give it a try an
 
 </Note>
 
-The <PlatformLink to="/enhance-errors/kotlin-compiler-plugin/">Sentry Kotlin Compiler Plugin</PlatformLink> can automatically enrich your `@Composable` functions during compilation with a tag name, 
-based on the function name of your `@Composable`. 
+The <PlatformLink to="/enhance-errors/kotlin-compiler-plugin/">Sentry Kotlin Compiler Plugin</PlatformLink> can automatically enrich your `@Composable` functions during compilation with a tag name,
+based on the function name of your `@Composable`.
 In order to use this feature, the Sentry Kotlin Compiler plugin needs to be applied to all modules, which contain `@Composable` elements.
 
 ```groovy {filename:app/build.gradle}
@@ -443,5 +443,5 @@ Sentry.reportFullyDisplayed()
 
 Time to full display is dependent on having an active transaction bound to the scope. Ideally, it should be used along with [Activity Instrumentation](/platforms/android/tracing/instrumentation/automatic-instrumentation/#activity-instrumentation), which starts a transaction and binds it to the scope automatically.
 
-If the span finishes through the API, its `status` is set to `SpanStatus.OK`. If the span doesn't finish after 30 seconds, it is finished by the SDK automatically, and its `status` is set to `SpanStatus.DEADLINE_EXCEEDED`.
+If the span finishes through the API, its `status` is set to `SpanStatus.OK`. If the span doesn't finish after 25 seconds, it is finished by the SDK automatically, and its `status` is set to `SpanStatus.DEADLINE_EXCEEDED`.
 If the span finishes before the Activity is first drawn and displayed as measured by the `Time to initial display`, the reported time will be shifted to `Time to initial display` measured time.

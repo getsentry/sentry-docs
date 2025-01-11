@@ -23,6 +23,25 @@ CSRF_TRUSTED_ORIGINS = ["https://sentry.example.com", "http://10.100.10.10", "ht
 
 See [Django's documentation on CSRF](https://docs.djangoproject.com/en/4.2/ref/settings/#std-setting-CSRF_TRUSTED_ORIGINS) for further detail.
 
+### `sentry-data` volume not being cleaned up
+
+You may see the `sentry-data` taking too much disk space. You can clean it manually (or putting the cleanup cronjob in place).
+
+Find the Docker mountpoint for the volume by executing:
+```bash
+docker volume inspect sentry-data
+
+# Or if you prefer to do it directly (assuming you have `jq` on your system):
+docker volume inspect sentry-data | jq -r .[0].Mountpoint
+```
+
+Then run the following command to remove the contents of the volume for the last 30 days (change the `30` to whatever you want, it's in days):
+```bash
+# `/var/lib/docker/volumes/sentry-data/_data` refers to the mountpoint of the volume
+# from the output of the previous command. Change it if it's different.
+find /var/lib/docker/volumes/sentry-data/_data -type f -mtime +30 -delete
+```
+
 ## Kafka
 
 One of the most likely things to cause issues is Kafka. The most commonly reported error is
@@ -144,7 +163,7 @@ docker compose run --rm -T postgres bash -c "apt update && apt install -y --no-i
 
 If the script above still does not clear up enough disk space, you can try the following in Postgres. This will lead to data loss in event details. _SENTRY_RETENTION_DAYS_ will need to be filled in manually.
 ```sql
-DELETE FROM public.nodestore_node WHERE "timestamp" < NOW() - INTERVAL '[SENTRY_RETENTION_DAYS]';
+DELETE FROM public.nodestore_node WHERE "timestamp" < NOW() - INTERVAL '[SENTRY_RETENTION_DAYS] DAY';
 VACUUM FULL public.nodestore_node;
 ```
 

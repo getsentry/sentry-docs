@@ -1,48 +1,51 @@
-```dart
-import 'package:flutter/widgets.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
+Enable screenshots by setting the `attachScreenshot` option to `true` and wrap your root widget with `SentryWidget`.
 
-Future<void> main() async {
-  await SentryFlutter.init(
-    (options) {
-      options.dsn = '___PUBLIC_DSN___';
-      options.attachScreenshot = true;
-    },
-    appRunner: () => runApp(
-      // Wrap your app widget with the [SentryWidget] widget.
-      SentryWidget(
-        child: MyApp(),
-      ),
+```dart {3, 6-8}
+await SentryFlutter.init(
+  (options) {
+    options.attachScreenshot = true;
+  },
+  appRunner: () => runApp(
+    SentryWidget(
+      child: MyApp(),
     ),
-  );
-}
+  ),
+);
 ```
 
-### Filtering Screenshots
+## Redact Screenshots via `masking`
 
-You can filter your screenshots by using the `beforeScreenshot` callback.
-It is called before taking a screenshot and if the callback returns `false`, the screenshot will not be attached.
+The masking feature is by default disabled for Screenshots. To enable masking, use the `options.experimental.privacy` parameter.
 
-```dart
-import 'package:flutter/widgets.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
+<Alert level="warning">
+  Modifying this parameter will also affect `masking` for{" "}
+  <PlatformLink to="/session-replay/">`Session Replay`</PlatformLink>.
+</Alert>
 
-Future<void> main() async {
-  await SentryFlutter.init(
-    (options) {
-      options.dsn = '___PUBLIC_DSN___';
-      options.attachScreenshot = true;
-      options.beforeScreenshot = (event, {hint}) {
-        // Return false if you don't want to attach the screenshot based on some condition.
-        return true;
-      };
-    },
-    appRunner: () => runApp(
-      // Wrap your app widget with the [SentryWidget] widget.
-      SentryWidget(
-        child: MyApp(),
-      ),
+<PlatformContent includePath="replay/privacy-configuration" />
+
+## Filtering Screenshots
+
+You can filter your screenshots by using the `beforeScreenshot` callback, which is called before attaching a screenshot to an event. By default, the callback returns `true` which means that all screenshots are attached.
+
+If the callback returns `false`, the screenshot will not be attached.
+
+```dart {4-10}
+await SentryFlutter.init(
+  (options) {
+    options.attachScreenshot = true;
+    options.beforeScreenshot = (event, {hint}) {
+    // Based on some condition you can decide to attach the screenshot or drop it
+    if (event.throwable is MyImportantException) {
+      return true;
+    }
+      return false;
+    };
+  },
+  appRunner: () => runApp(
+    SentryWidget(
+      child: MyApp(),
     ),
-  );
-}
+  ),
+);
 ```

@@ -73,15 +73,14 @@ export default defineConfig({
   ],
 });
 ```
-</PlatformSection>
 
+</PlatformSection>
 
 ## Uploading using Sentry Webpack Plugin Version 1.x
 
 Assuming you have the `@sentry/webpack` package installed on version `1.x`, you can learn more on how to configure the plugin in the [Sentry webpack plugin v1 documentation](https://github.com/getsentry/sentry-webpack-plugin#readme).
 
 Example:
-
 
 ```javascript {filename:webpack.config.js}
 const SentryWebpackPlugin = require("@sentry/webpack-plugin");
@@ -111,7 +110,6 @@ module.exports = {
 
 The Sentry webpack plugin will automatically inject a release value into the SDK so you must either omit the `release` option from `Sentry.init` or make sure `Sentry.init`'s `release` option matches the plugin's `release` option exactly:
 
-
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
@@ -125,7 +123,12 @@ Sentry.init({
 
 ## Uploading using Sentry Bundler Plugins on Version `2.x`
 
-If you are using a Sentry self-hosted or single-tenant on version `23.6.1` or lower, or you are using the Sentry JavaScript SDK on version `7.46.0` you will need to configure the bundler plugins with the `release.uploadLegacySourcemaps` option.
+If you're using
+- Sentry self-hosted or single-tenant on version `23.6.1` or lower
+- or the Sentry JavaScript SDK on version `7.46.0`
+- or esbuild with `splitting: true`
+
+you'll need to configure the bundler plugins with the `release.uploadLegacySourcemaps` option.
 
 This applies when using the following packages on version `2.x` and above:
 
@@ -135,7 +138,6 @@ This applies when using the following packages on version `2.x` and above:
 - `@sentry/rollup-plugin`
 
 Example of using the `release.uploadLegacySourcemaps` option:
-
 
 ```javascript {filename:webpack.config.js} {tabTitle:Webpack}
 const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
@@ -251,7 +253,6 @@ export default {
 
 The Sentry bundler plugins will automatically inject a release value into the SDK so you must either omit the `release` option from `Sentry.init` or make sure `Sentry.init`'s `release` option matches the plugin's `release.name` option exactly:
 
-
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
@@ -274,7 +275,7 @@ To troubleshoot your source maps set up, you can either:
 
 ### Use the Sentry CLI
 
-To use the automated verification process, install and configure the Sentry [Command Line Interface](/product/cli/). Then, use the `sourcemaps explain` command, calling it with the relevant event ID, found in the top-left corner of the **Issue Details** page in [sentry.io](https://sentry.io).
+To use the automated verification process, install and configure the Sentry [Command Line Interface](/cli/). Then, use the `sourcemaps explain` command, calling it with the relevant event ID, found in the top-left corner of the **Issue Details** page in [sentry.io](https://sentry.io).
 
 <Alert title="Note" level="warning">
 
@@ -506,7 +507,11 @@ If you are using `sentry-cli` to upload your artifacts, starting with version `2
 
 Sometimes build scripts and plugins produce pre-compressed minified files (for example, webpack's [compression plugin](https://github.com/webpack/compression-webpack-plugin)). In these cases, you'll need to disable such plugins and perform the compression **after** the generated source maps/source files have been uploaded to Sentry.
 
-### Verify workers are sharing the same volume as web (if running self-hosted Sentry via Docker)
+### (Self-Hosted Sentry) Verify the `symbolicator` service is operating normally
+
+If you're running a self-hosted version of Sentry, you can verify that the `symbolicator` service/container is operating normally by checking the container's logs.
+
+### (Self-Hosted Sentry via Docker) Verify workers are sharing the same volume as web
 
 Sentry does source map calculation in its workers. This means the workers need access to the files uploaded through the front end. Double check that the cron workers and web workers can read/write files from the same disk.
 
