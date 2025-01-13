@@ -3363,6 +3363,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/clients/cordova/',
     to: '/platforms/javascript/guides/cordova/',
   },
+  {
+    from: '/organization/integrations/incidentio/',
+    to: '/organization/integrations/issue-tracking/incidentio/',
+  },
 ];
 
 const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
