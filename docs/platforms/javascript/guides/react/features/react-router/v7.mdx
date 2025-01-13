@@ -20,14 +20,21 @@ Update your `Sentry.browserTracingIntegration` to `Sentry.reactRouterV7BrowserTr
 To ensure proper routing instrumentation, initialize Sentry by calling `Sentry.init` **before**:
 - Wrapping your `<Routes />` component
 - Using `useRoutes`
-- Using `createBrowserRouterV7`
+- Using `wrapCreateBrowserRouterV7` or `wrapCreateMemoryRouterV7`
 
 </Alert>
 
-### Usage with `createBrowserRouter`
+### Usage with `createBrowserRouter` or `createMemoryRouter`
 
-If you choose to create your router instance with [`createBrowserRouter`](https://reactrouter.com/en/main/routers/create-browser-router) from the `react-router` package, you can use `Sentry.wrapCreateBrowserRouterV7` to wrap it with the instrumentation:
+If you choose to create your router instance with [`createBrowserRouter`](https://reactrouter.com/en/main/routers/create-browser-router) or [`createMemoryRouter`](https://reactrouter.com/en/main/routers/create-memory-router), you can use `Sentry.wrapCreateBrowserRouterV7` or `Sentry.wrapCreateMemoryRouterV7` to wrap it with the instrumentation:
 
+<Alert level="warning" title="Note">
+
+`wrapCreateMemoryRouterV7` is available from `@sentry/react` version `8.49.0`. For versions prior to `8.49.0`, you can use `wrapCreateBrowserRouterV7` with `createMemoryRouter`.
+
+You can instrument [`createHashRouter`](https://reactrouter.com/en/main/routers/create-hash-router) using the `wrapCreateBrowserRouterV7` function.
+
+</Alert>
 
 ```javascript {2-8, 15-21, 26-33}
 import React from "react";
@@ -62,13 +69,6 @@ const router = sentryCreateBrowserRouter([
   // your routes...
 ]);
 ```
-
-<Alert level="warning" title="Note">
-
-You can instrument [`createMemoryRouter`](https://reactrouter.com/en/main/routers/create-memory-router) and [`createHashRouter`](https://reactrouter.com/en/main/routers/create-hash-router) using the `wrapCreateBrowserRouter` function.
-
-</Alert>
-
 
 ### Usage With `<Routes />` Component
 
@@ -197,7 +197,7 @@ const router = sentryCreateBrowserRouter([
         element: <Outlet />,
         errorElement: <YourCustomRootErrorBoundary />,
         children: [
-          // other routes ... 
+          // other routes ...
         ],
       },
     ],

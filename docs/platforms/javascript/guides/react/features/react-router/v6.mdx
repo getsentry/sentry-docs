@@ -19,18 +19,21 @@ Update your `Sentry.browserTracingIntegration` to `Sentry.reactRouterV6BrowserTr
 To ensure proper routing instrumentation, initialize Sentry by calling `Sentry.init` **before**:
 - Wrapping your `<Routes />` component
 - Using `useRoutes`
-- Using `createBrowserRouterV6`
+- Using `wrapCreateBrowserRouterV6` or `wrapCreateMemoryRouterV6`
 
 </Alert>
 
-### Usage with `createBrowserRouter`
+### Usage with `createBrowserRouter` or `createMemoryRouter`
 
-<Alert level="info">
-Available in `@sentry/react` version `7.21.0` and above.
+If you choose to create your router instance with [`createBrowserRouter`](https://reactrouter.com/en/main/routers/create-browser-router) or [`createMemoryRouter`](https://reactrouter.com/en/main/routers/create-memory-router), you can use `Sentry.wrapCreateBrowserRouterV6` or `Sentry.wrapCreateMemoryRouterV6` to wrap it with the instrumentation:
+
+<Alert level="warning" title="Note">
+
+`wrapCreateMemoryRouterV6` is available from `@sentry/react` version `8.49.0`. For versions prior to `8.49.0`, you can use `wrapCreateBrowserRouterV6` with `createMemoryRouter`.
+
+You can instrument [`createHashRouter`](https://reactrouter.com/en/main/routers/create-hash-router) using the `wrapCreateBrowserRouterV6` function.
+
 </Alert>
-
-If you choose to create your router instance with [`createBrowserRouter`](https://reactrouter.com/en/main/routers/create-browser-router) from the `react-router-dom` package, you can use `Sentry.wrapCreateBrowserRouterV6` to wrap it with the instrumentation:
-
 
 ```javascript {2-8, 15-21, 26-33}
 import React from "react";
@@ -65,13 +68,6 @@ const router = sentryCreateBrowserRouter([
   // your routes...
 ]);
 ```
-
-<Alert level="warning" title="Note">
-
-You can instrument [`createMemoryRouter`](https://reactrouter.com/en/main/routers/create-memory-router) and [`createHashRouter`](https://reactrouter.com/en/main/routers/create-hash-router) using the `wrapCreateBrowserRouterV6` function.
-
-</Alert>
-
 
 ### Usage With `<Routes />` Component
 
@@ -203,7 +199,7 @@ const router = sentryCreateBrowserRouter([
         element: <Outlet />,
         errorElement: <YourCustomRootErrorBoundary />,
         children: [
-          // other routes ... 
+          // other routes ...
         ],
       },
     ],
