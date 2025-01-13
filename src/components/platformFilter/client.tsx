@@ -52,7 +52,7 @@ export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
       url: '/platforms/javascript/guides/nextjs/',
       key: 'javascript-nextjs',
       icon: 'javascript-nextjs',
-      title: 'Next.JS',
+      title: 'Next.js',
     },
     {
       url: '/platforms/javascript/guides/react/',
@@ -67,10 +67,10 @@ export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
       title: 'Laravel',
     },
     {
-      url: '/platforms/javascript/',
-      key: 'javascript',
-      icon: 'javascript',
-      title: 'JavaScript',
+      url: '/platforms/javascript/guides/node/',
+      key: 'node',
+      icon: 'javascript-node',
+      title: 'Node.js',
     },
     {url: '/platforms/python/', key: 'python', icon: 'python', title: 'Python'},
     {
