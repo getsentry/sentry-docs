@@ -57,13 +57,9 @@ const optionDetails: Record<
       </span>
     ),
   },
-  'opentelemetry': {
+  opentelemetry: {
     name: 'OpenTelemetry',
-    description: (
-      <span>
-        Combine Sentry with OpenTelemetry.
-      </span>
-    ),
+    description: <span>Combine Sentry with OpenTelemetry.</span>,
   },
 };
 
