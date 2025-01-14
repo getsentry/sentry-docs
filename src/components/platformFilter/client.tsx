@@ -92,24 +92,26 @@ export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {mostViewedPlatforms.map(platform => (
-            <Link
-              href={platform.url}
-              key={platform.key}
-              style={{
-                textDecoration: 'none',
-                color: 'var(--foreground) !important',
-              }}
-            >
-              <div className={styles.StandalonePlatform}>
-                <PlatformIcon
-                  size={20}
-                  platform={platform.icon ?? platform.key}
-                  format="lg"
-                  className={`${styles.PlatformIcon} !border-none !shadow-none`}
-                />
-                {platform.title}
-              </div>
-            </Link>
+            <div className={`flex flex-col gap-4 ${styles.platform}`} key={platform.key}>
+              <Link
+                href={platform.url}
+                key={platform.key}
+                style={{
+                  textDecoration: 'none',
+                  color: 'var(--foreground) !important',
+                }}
+              >
+                <div className={styles.StandalonePlatform}>
+                  <PlatformIcon
+                    size={20}
+                    platform={platform.icon ?? platform.key}
+                    format="lg"
+                    className={`${styles.PlatformIcon} !border-none !shadow-none`}
+                  />
+                  {platform.title}
+                </div>
+              </Link>
+            </div>
           ))}
         </div>
       </div>
