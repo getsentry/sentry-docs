@@ -56,7 +56,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
           data-project-color="#6A5FC1"
           data-project-logo="https://avatars.githubusercontent.com/u/1396951?s=280&v=4"
           data-font-family="var(--font-rubik)"
-          data-modal-disclaimer="Disclaimer: Welcome to our knowledge search bot! While we'd love to be able to answer all your questions, please remember this is a tool for searching our publicly available sources and not a support forum. Don't include any sensitive or personal information in your queries. For more on how Sentry handles your data, see our [Privacy Policy](https://sentry.io/privacy/). This form is protected by reCAPTCHA. Google's Privacy Policy and Google's Terms of Service apply."
+          data-modal-disclaimer="Don't include any sensitive or personal information in your queries. For more on how Sentry handles your data, see our [Privacy Policy](https://sentry.io/privacy/). This form is protected by reCAPTCHA. Google's Privacy Policy and Google's Terms of Service apply."
           data-modal-example-questions="How to set up Sentry for Next.js?,What are tracePropagationTargets?"
         />
       </body>
