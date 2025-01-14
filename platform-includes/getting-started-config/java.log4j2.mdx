@@ -1,3 +1,5 @@
+Configuration should happen as early as possible in your application's lifecycle.
+
 The following example using the `log4j2.xml` format to configure a `ConsoleAppender` that logs to standard out at the `INFO` level, and a `SentryAppender` that logs to the Sentry server at the `ERROR` level.
 
 <Note>
@@ -6,6 +8,7 @@ The `ConsoleAppender` is provided only as an example of a non-Sentry appender se
 
 </Note>
 
+<OnboardingOption optionId="opentelemetry" hideForThisOption>
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
@@ -26,9 +29,34 @@ The `ConsoleAppender` is provided only as an example of a non-Sentry appender se
 
 </Configuration>
 ```
+</OnboardingOption>
+
+<OnboardingOption optionId="opentelemetry">
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+
+  <Appenders>
+    <Console name="CONSOLE" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+    </Console>
+    <Sentry name="SENTRY"/>
+  </Appenders>
+
+  <Loggers>
+    <Root level="INFO">
+      <AppenderRef ref="CONSOLE"/>
+      <AppenderRef ref="SENTRY" level="ERROR"/>
+    </Root>
+  </Loggers>
+
+</Configuration>
+```
+</OnboardingOption>
 
 `SentryAppender` does not support [Log4j's asynchronous loggers](https://logging.apache.org/log4j/2.x/manual/async.html). The Sentry Java SDK itself is already asynchronous and does not perform any blocking operation on the calling thread.
 
+<OnboardingOption optionId="opentelemetry" hideForThisOption>
 ### DSN Configuration
 
 Note that **you need to configure your DSN** (client key) only if you wish to initialize the SDK through the Log4j 2 integration. If you're planning to use `Sentry.init` to provide configuration, such as by using the `beforeSend` callback, you **should not** provide the DSN in both `Sentry.init` and the appender configuration; just leave it out of the appender configuration in this case.
@@ -38,6 +66,7 @@ Note that **you need to configure your DSN** (client key) only if you wish to in
 ```
 
 If the DSN is not present in the `log4j2.xml` configuration, Sentry will attempt to read it from the system property `sentry.dsn`, environment variable `SENTRY_DSN` or the `dsn` property in `sentry.properties` file. [See the configuration page](/platforms/java/configuration/) for more details on external configuration.
+</OnboardingOption>
 
 ### Minimum Log Level
 
@@ -54,7 +83,7 @@ Setting `minimumEventLevel` or `minimumBreadcrumbLevel` in `log4j2.xml` only aff
 
 Breadcrumbs are kept in memory (by default the last 100 records) and are sent with events. For example, by default, if you log 100 entries with `logger.info` or `logger.warn`, no event is sent to Sentry. If you then log with `logger.error`, an event is sent to Sentry that includes those 100 `info` or `warn` messages. For this to work, `SentryAppender` needs to receive **all** log entries to decide what to keep as breadcrumb or send as event. Set the `SentryAppender` log level configuration to a value lower than what is set for the `minimumBreadcrumbLevel` and `minimumEventLevel` so that `SentryAppender` receives these log messages.
 
-
+<OnboardingOption optionId="opentelemetry" hideForThisOption>
 ```xml
 <!-- Setting minimumBreadcrumbLevel modifies the default minimum level to add breadcrumbs from INFO to DEBUG  -->
 <!-- Setting minimumEventLevel the default minimum level to capture an event from ERROR to WARN  -->
@@ -63,3 +92,13 @@ Breadcrumbs are kept in memory (by default the last 100 records) and are sent wi
         minimumBreadcrumbLevel="DEBUG"
         minimumEventLevel="WARN"/>
 ```
+</OnboardingOption>
+<OnboardingOption optionId="opentelemetry">
+```xml
+<!-- Setting minimumBreadcrumbLevel modifies the default minimum level to add breadcrumbs from INFO to DEBUG  -->
+<!-- Setting minimumEventLevel the default minimum level to capture an event from ERROR to WARN  -->
+<Sentry name="SENTRY"
+        minimumBreadcrumbLevel="DEBUG"
+        minimumEventLevel="WARN"/>
+```
+</OnboardingOption>
