@@ -506,6 +506,18 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/python/integrations/tryton/',
   },
   {
+    from: '/platforms/python/integrations/feature-flags/launchdarkly/',
+    to: '/platforms/python/integrations/launchdarkly/',
+  },
+  {
+    from: '/platforms/python/integrations/feature-flags/openfeature/',
+    to: '/platforms/python/integrations/openfeature/',
+  },
+  {
+    from: '/platforms/python/integrations/feature-flags/unleash/',
+    to: '/platforms/python/integrations/unleash/',
+  },
+  {
     from: '/clients/python/breadcrumbs/',
     to: '/platforms/python/legacy-sdk/breadcrumbs/',
   },
