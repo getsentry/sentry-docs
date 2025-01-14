@@ -77,7 +77,7 @@ export function Expandable({title, children, permalink}: Props) {
   return (
     <Details open={isExpanded}>
       <summary className="m-0 font-medium cursor-pointer relative pr-8 select-none appearance-none list-none">
-        {header(title, true)}
+        {header(title, permalink)}
         <Arrow className="expandable-arrow" />
       </summary>
       {children}
