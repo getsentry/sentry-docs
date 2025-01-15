@@ -3363,10 +3363,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/clients/cordova/',
     to: '/platforms/javascript/guides/cordova/',
   },
-  {
-    from: '/platforms/kotlin-multiplatform/',
-    to: '/platforms/kotlin/guides/kotlin-multiplatform/',
-  },
 ];
 
 const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
