@@ -1,0 +1,22 @@
+Before using this integration, you need to install and instrument the [LaunchDarkly SDK](https://www.npmjs.com/package/launchdarkly-js-client-sdk) in your app. Learn more by reading [LaunchDarkly's docs](https://docs.launchdarkly.com/sdk/client-side/javascript).
+
+```javascript
+import * as Sentry from '@sentry/solid';
+import * as LaunchDarkly from 'launchdarkly-js-client-sdk';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  integrations: [Sentry.launchDarklyIntegration()]
+});
+
+const ldClient = LaunchDarkly.initialize(
+    'my-client-ID',
+    {kind: 'user', key: 'my-user-context-key'},
+    {inspectors: [Sentry.buildLaunchDarklyFlagUsedHandler()]}
+);
+
+// Evaluate a flag with a default value. You may have to wait for your client to initialize first.
+ldClient?.variation('test-flag', false);
+
+Sentry.captureException(new Error('Something went wrong!'))
+```

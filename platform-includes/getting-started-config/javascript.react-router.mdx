@@ -1,0 +1,131 @@
+### Expose Hooks
+React Router exposes two hooks in your `app` folder (`entry.client.tsx` and `entry.server.tsx`).
+If you do not see these two files, expose them with the following command:
+
+```bash
+npx react-router reveal
+```
+
+### Client-Side Setup
+
+Initialize the Sentry React SDK in your `entry.client.tsx` file:
+
+```tsx {filename: entry.client.tsx} {"onboardingOptions": {"performance": "9, 12-16", "session-replay": "10, 17-21"}}
+import * as Sentry from "@sentry/react";
+import { startTransition, StrictMode } from "react";
+import { hydrateRoot } from "react-dom/client";
+import { HydratedRouter } from "react-router/dom";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration(),
+  ],
+
+  tracesSampleRate: 1.0, //  Capture 100% of the transactions
+
+  // Set `tracePropagationTargets` to declare which URL(s) should have trace propagation enabled
+  tracePropagationTargets: [/^\//, /^https:\/\/yourserver\.io\/api/],
+
+  // Capture Replay for 10% of all sessions,
+  // plus 100% of sessions with an error
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
+
+startTransition(() => {
+  hydrateRoot(
+    document,
+    <StrictMode>
+      <HydratedRouter />
+    </StrictMode>
+  );
+});
+```
+
+Now, update your `app/root.tsx` file to report any unhandled errors from your error boundary:
+
+```tsx {diff} {filename: app/root.tsx}
+import * as Sentry from "@sentry/react";
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  let message = "Oops!";
+  let details = "An unexpected error occurred.";
+  let stack: string | undefined;
+
+  if (isRouteErrorResponse(error)) {
+    message = error.status === 404 ? "404" : "Error";
+    details =
+      error.status === 404
+        ? "The requested page could not be found."
+        : error.statusText || details;
+  } else if (error && error instanceof Error) {
+    // you only want to capture non 404-errors that reach the boundary
++   Sentry.captureException(error);
+    if (import.meta.env.DEV) {
+      details = error.message;
+      stack = error.stack;
+    }
+  }
+
+  return (
+    <main>
+      <h1>{message}</h1>
+      <p>{details}</p>
+      {stack && (
+        <pre>
+          <code>{stack}</code>
+        </pre>
+      )}
+    </main>
+  );
+}
+// ...
+```
+
+### Server-Side Setup
+
+Create an `instrument.server.mjs` file in the root of your app:
+
+```js {filename: instrument.server.mjs} {"onboardingOptions": {"performance": "7", "profiling": "2, 6, 8"}}
+import * as Sentry from "@sentry/node";
+import { nodeProfilingIntegration } from '@sentry/profiling-node';
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [nodeProfilingIntegration()],
+  tracesSampleRate: 1.0, // Capture 100% of the transactions
+  profilesSampleRate: 1.0, // profile every transaction
+});
+```
+
+In your `entry.server.tsx` file, export the `handleError` function:
+
+```tsx {diff} {filename: entry.server.tsx}
+import * as Sentry from "@sentry/node";
+import { type HandleErrorFunction } from "react-router";
+
+export const handleError: HandleErrorFunction = (error, { request }) => {
+  // React Router may abort some interrupted requests, report those
+  if (!request.signal.aborted) {
++   Sentry.captureException(error);
+
+    // make sure to still log the error so you can see it
+    console.error(error);
+  }
+};
+// ... rest of your server entry
+```
+
+### Update Scripts
+
+Since React Router is running in ESM mode, you need to use the `--import` command line options to load our server-side instrumentation module before the application starts.
+Update the `start` and `dev` script to include the instrumentation file:
+
+```json {filename: package.json}
+"scripts": {
+  "dev": "NODE_OPTIONS='--import ./instrument.server.mjs' react-router dev",
+  "start": "NODE_OPTIONS='--import ./instrument.server.mjs' react-router-serve ./build/server/index.js",
+}
+```

@@ -137,7 +137,7 @@ This SDK version is compatible with a self-hosted version of Sentry `22.12.0` or
   - `SentrySdk.CaptureMessage(string message, Action<Scope> scopeCallback)`
   - `SentrySdk.CaptureException(Exception exception, Action<Scope> scopeCallback)`
 
-  ```c#
+  ```csharp
   // Before
   SentrySdk.WithScope(scope =>
   {
@@ -171,7 +171,7 @@ The format of the stack traces were greatly improved with the help of Ben Adam's
 
 However, this will **affect grouping**. If you prefer to stay with the original stack trace format, you can opt-out of this feature with:
 
-```
+```csharp
 options.StackTraceMode = StackTraceMode.Original;
 ```
 
@@ -199,7 +199,7 @@ Setting an instance of `Exception` that was caught in a `catch` block could fail
 
 To avoid this issue, pass a serializable object into Sentry. For example, map the instance of `Exception` to an anonymous object:
 
-```
+```csharp
 try
 {
     throw new ArgumentNullException("test");
@@ -229,7 +229,7 @@ ASP.NET (**not Core**) users need to install an additional package, `Sentry.AspN
 
 You can plug the package into the `Init` as follows:
 
-```
+```csharp
 options.AddAspNet();
 ```
 
@@ -262,8 +262,8 @@ To align with other SDKs, the option is now named: `DiagnosticLogger`
 
 `SentryOptions` now take a string for `Dsn`:
 
-Before: `o.Dsn = new Dsn("..");`
-After: `o.Dsn = "..";`
+Before: `options.Dsn = new Dsn("..");`  
+After: `options.Dsn = "..";`
 
 #### `LogEntry` Became `Message`
 
@@ -402,23 +402,23 @@ Changed how to initialize Sentry:
 SentrySdk.Init("___PUBLIC_DSN___");
 
 // Initialize with options
-SentrySdk.Init(o =>
+SentrySdk.Init(options =>
 {
-    o.Dsn = "___PUBLIC_DSN___";
+    options.Dsn = "___PUBLIC_DSN___";
 });
 ```
 
-For ASP.NET (classic) integration, add `Sentry.AspNet` package and initialize it by calling `o.AddAspNet()`:
+For ASP.NET (classic) integration, add `Sentry.AspNet` package and initialize it by calling `options.AddAspNet()`:
 
 
 ```csharp
 using Sentry.AspNet;
 
-SentrySdk.Init(o =>
+SentrySdk.Init(options =>
 {
-    o.Dsn = "___PUBLIC_DSN___";
+    options.Dsn = "___PUBLIC_DSN___";
 
-    o.AddAspNet();
+    options.AddAspNet();
 });
 ```
 
@@ -472,9 +472,9 @@ ravenClient.BeforeSend = requester =>
 };
 
 // After
-SentrySdk.Init(o =>
+SentrySdk.Init(options =>
 {
-    o.BeforeSend = e =>
+    options.BeforeSend = e =>
     {
         // Mutate the event or return null to drop it altogether
         return e;
