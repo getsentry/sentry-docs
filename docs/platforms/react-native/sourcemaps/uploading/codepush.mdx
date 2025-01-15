@@ -26,21 +26,23 @@ export default codePush(Sentry.wrap(App));
 To ensure Sentry can symbolicate events from your CodePush releases, you need to generate and upload the necessary assets. When creating a CodePush release, include the `--sourcemap-output-dir` flag to generate source maps. This allows you to upload these files to Sentry in the next step.
 
 ```bash {tabTitle:JSC}
-appcenter codepush release-react \
-  --app "${APP_NAME}" \
-  --deployment-name "${DEPLOYMENT_NAME}" \
-  --output-dir ./build \
-  --sourcemap-output-dir ./build
+code-push-standalone release-react \
+  "${APP_NAME}" \
+  "${PLATFORM}" \
+  --deploymentName "${DEPLOYMENT_NAME}" --useHermes \
+  --outputDir ./build \
+  --sourcemapOutput ./build
 ```
 
 ```bash {tabTitle:Hermes}
 rm -rf ./build
-CODEPUSH_COMMAND="appcenter codepush release-react \
-  --app \"${APP_NAME}\" \
-  --deployment-name \"${DEPLOYMENT_NAME}\" \
-  --use-hermes \
-  --output-dir ./build \
-  --sourcemap-output-dir ./build"
+CODEPUSH_COMMAND="code-push-standalone release-react \
+  \"${APP_NAME}\" \
+  \"${PLATFORM}\" \
+  --deploymentName \"${DEPLOYMENT_NAME}\" \
+  --useHermes \
+  --outputDir ./build \
+  --sourcemapOutput ./build"
 
 DEBUG_ID=$(eval "$CODEPUSH_COMMAND" | tee /dev/tty | grep -o 'Bundle Debug ID: [0-9a-f-]*' | sed 's/Bundle Debug ID: //')
 
