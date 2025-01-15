@@ -136,3 +136,27 @@ sentry_sdk.init(
 
 If you need more fine-grained control over the behavior of the socket, check out
 <PlatformLink to="/configuration/options/#socket-options">socket-options</PlatformLink>.
+
+## Multiprocessing deprecation after Python 3.12
+
+If you're on Python greater than 3.12, you might see the following deprecation warning on Linux environments since the SDK spawns several threads.
+
+```
+DeprecationWarning: This process is multi-threaded, use of fork() may lead to deadlocks in the child.
+```
+
+To remove this deprecation warning, set the [multiprocessing start method to `spawn` or `forkserver`](https://docs.python.org/3.14/library/multiprocessing.html#contexts-and-start-methods).
+Remember to do this only in the `__main__` block.
+
+```python
+import sentry_sdk
+import multiprocessing
+import concurrent.futures
+
+sentry_sdk.init()
+
+if __name__ == "__main__":
+    multiprocessing.set_start_method("spawn")
+    pool = concurrent.futures.ProcessPoolExecutor()
+    pool.submit(sentry_sdk.capture_message, "world")
+```
