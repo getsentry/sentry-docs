@@ -33,7 +33,6 @@ If you don't already have a [client hooks](https://kit.svelte.dev/docs/hooks#sha
 At the top of your client hooks file, import and initialize the Sentry SDK as shown in the snippet below. See the [Basic Options](../configuration/options/) page to view other SDK configuration options.
 Also, add the `handleErrorWithSentry` function to the [`handleError` hook](https://kit.svelte.dev/docs/hooks#shared-hooks-handleerror):
 
-
 ```javascript {filename:hooks.client.(js|ts)} {1, 3-14, 20}
 import * as Sentry from "@sentry/sveltekit";
 
@@ -67,7 +66,6 @@ If you don't already have a [server hooks](https://kit.svelte.dev/docs/hooks#ser
 At the top of your server hooks file, import and initialize the Sentry SDK as shown in the snippet below. See the [Basic Options](../configuration/options/) page to view other SDK configuration options.
 Add the `handleErrorWithSentry` function to the [`handleError` hook](https://kit.svelte.dev/docs/hooks#shared-hooks-handleerror) and add the Sentry request handler to the [`handle` hook](https://kit.svelte.dev/docs/hooks#server-hooks-handle).
 If you're already using your own handler(s), use SvelteKit's [`sequence`](https://kit.svelte.dev/docs/modules#sveltejs-kit-hooks-sequence) function to add the Sentry handler _before_ your handler(s).
-
 
 ```javascript {filename:hooks.server.(js|ts)} {1, 3-9, 15, 19}
 import * as Sentry from "@sentry/sveltekit";
@@ -133,7 +131,6 @@ Or, you can set them by passing a `sourceMapsUploadOptions` object to `sentrySve
 ```bash {filename:.env}
 SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
-
 
 ```javascript {filename:vite.config.(js|ts)} {7-16}
 import { sveltekit } from "@sveltejs/kit/vite";
@@ -260,7 +257,7 @@ export default {
 };
 ```
 
-#### Configure Client-side `fetch` Instrumentation
+#### Configure CSP for Client-side `fetch` Instrumentation
 
 <Note>
 
@@ -271,32 +268,42 @@ Available since version `7.91.0`
 The `sentryHandle` function you added to your `handle` hook in `hooks.server.ts` during [server-side setup](#server-side-setup) injects an inline `<script>` tag into the HTML response of the server.
 This script attempts to proxy all client-side `fetch` calls, so that `fetch` calls inside your `load` functions are captured by the SDK.
 However, if you configured CSP rules to block inline fetch scripts by default, this script will be [blocked by the browser](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src#unsafe_inline_script).
-To enable the script, you need to add an exception for the `sentryHandle` script:
 
-First, specify your nonce in the `fetchProxyScriptNonce` option in your `sentryHandle` call:
+To enable the script, you need to add an exception for the `sentryHandle` script by adding a hash to your CSP script source rules.
 
-```javascript {filename:hooks.server.(js|ts)}
-// Add the nonce to the <script> tag:
-export const handle = sentryHandle({ fetchProxyScriptNonce: "<your-nonce>" });
-```
+If your CSP is defined in `svelte.config.js`, you can add the hash to the `csp.directives.script-src` array:
 
-Then, adjust your [SvelteKit CSP configuration](https://kit.svelte.dev/docs/configuration#csp):
-
-```javascript {filename: svelte.config.js} {5}
+```javascript {filename:svelte.config.js} {5-7}
 const config = {
   kit: {
     csp: {
       directives: {
-        "script-src": ["nonce-<your-nonce>"],
+        "script-src": ["sha256-G1hFVvgk25rc5WZBnUFUiRzXWk1UpKviM/ShtacW9vA="], // + rest of your values
       },
     },
   },
 };
 ```
 
+For external CSP configurations, add the following hash to your `script-src` directive:
+
+```txt
+sha256-G1hFVvgk25rc5WZBnUFUiRzXWk1UpKviM/ShtacW9vA=
+```
+
+We will not make changes to this script any time soon (in fact, this script will be removed in version 9 of the SDK).
+
+<Note>
+
+Previous versions of this documentation recommended setting a nonce in your `sentryHandle` options.
+We no longer recommend this approach due to security concerns with re-using nonces.
+Instead, we recommend setting the hash as outlined above.
+
+</Note>
+
 ##### Disable Client-side `fetch` Proxy Script
 
-If you do not want to inject the script responsible for instrumenting client-side `load` calls, you can disable injection by passing `injectFetchProxyScript: false` to `sentryHandle`:
+If you don't want to inject the script responsible for instrumenting client-side `fetch` calls, you can disable injection by passing `injectFetchProxyScript: false` to `sentryHandle`:
 
 ```javascript {filename:hooks.server.(js|ts)}
 export const handle = sentryHandle({ injectFetchProxyScript: false });
