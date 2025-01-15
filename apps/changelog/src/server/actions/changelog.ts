@@ -76,7 +76,6 @@ export async function createChangelog(
   if (!session) {
     return unauthorizedPayload;
   }
-  console.log({formData});
   const categories = formData.getAll('categories');
   await prismaClient.category.createMany({
     data: categories.map(category => ({name: category as string})),

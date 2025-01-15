@@ -3,7 +3,7 @@ title: Custom Instrumentation
 description: "Learn how to capture performance data on any action in your app."
 ---
 
-The Sentry SDK for Python does a very good job of auto instrumenting your application. If you use one of the popular frameworks, we've got you covered because everything is instrumented out of the box. The Sentry SDK will check your installed Python packages and auto enable the matching SDK integrations.
+The Sentry SDK for Python does a very good job of auto instrumenting your application. If you use one of the popular frameworks, we've got you covered because well-known operations like HTTP calls and database queries will be instrumented out of the box. The Sentry SDK will also check your installed Python packages and auto enable the matching SDK integrations. If you want to enable tracing in a piece of code that performs some other operations, add the @sentry_sdk.trace decorator"
 
 ## Add a Transaction
 
@@ -98,6 +98,7 @@ def eat_pizza(pizza):
             eat_slice(pizza.slices.pop())
             span.finish()
 ```
+
 <Alert title="Changed in 2.15.0" level="info">
 
 The parameter `name` in `start_span()` used to be called `description`. In version 2.15.0 `description` was deprecated and from 2.15.0 on, only `name` should be used. `description` will be removed in `3.0.0`.
@@ -129,7 +130,6 @@ def eat_slice(slice):
 The parameter `name` in `start_span()` used to be called `description`. In version 2.15.0 `description` was deprecated and from 2.15.0 on, only `name` should be used. `description` will be removed in `3.0.0`.
 
 </Alert>
-
 
 ### Using a Decorator
 
@@ -176,7 +176,6 @@ When you create your span manually, make sure to call `span.finish()` after the 
 ## Define Span Creation in a Central Place
 
 To avoid having custom performance instrumentation code scattered all over your code base, pass a parameter <PlatformIdentifier name="functions-to-trace" /> to your `sentry_sdk.init()` call.
-
 
 ```python
 import sentry_sdk
@@ -235,4 +234,36 @@ def eat_slice(slice):
 
     if span is not None:
         span.set_tag("slice_id", slice.id)
+```
+
+## Improving Data on Transactions and Spans
+
+### Adding Data Attributes to Transactions
+
+You can add data attributes to your transactions. This data is visible in the trace explorer in Sentry. Data attributes can be of type `string`, `number` or `boolean`, as well as (non-mixed) arrays of these types:
+
+```python
+with sentry_sdk.start_transaction(name="my-transaction") as transaction:
+    transaction.set_data("my-data-attribute-1", "value1")
+    transaction.set_data("my-data-attribute-2", 42)
+    transaction.set_data("my-data-attribute-3", True)
+
+    transaction.set_data("my-data-attribute-4", ["value1", "value2", "value3"])
+    transaction.set_data("my-data-attribute-5", [42, 43, 44])
+    transaction.set_data("my-data-attribute-6", [True, False, True])
+```
+
+### Adding Data Attributes to Spans
+
+You can add data attributes to your spans. This data is visible in the trace explorer in Sentry. Data attributes can be of type `string`, `number` or `boolean`, as well as (non-mixed) arrays of these types:
+
+```python
+with sentry_sdk.start_span(name="my-span") as span:
+    span.set_data("my-data-attribute-1", "value1")
+    span.set_data("my-data-attribute-2", 42)
+    span.set_data("my-data-attribute-3", True)
+
+    span.set_data("my-data-attribute-4", ["value1", "value2", "value3"])
+    span.set_data("my-data-attribute-5", [42, 43, 44])
+    span.set_data("my-data-attribute-6", [True, False, True])
 ```

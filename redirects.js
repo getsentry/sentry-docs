@@ -115,6 +115,10 @@ const developerDocsRedirects = [
     destination: '/backend/api/:path*',
   },
   {
+    source: '/api-server/:path*',
+    destination: '/backend/:path*',
+  },
+  {
     source: '/application/serializers/',
     destination: '/backend/serializers/',
   },
@@ -215,8 +219,40 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/organization/integrations/msteams/',
+    destination: '/organization/integrations/notification-incidents/msteams/',
+  },
+  {
+    source: '/product/explore/session-replay/hydration-errors/',
+    destination: '/product/issues/issue-details/replay-issues/hydration-error/',
+  },
+  {
+    source: '/product/error-monitoring/stacktrace/',
+    destination: '/product/issues/issue-details/#stack-trace',
+  },
+  {
+    source: '/product/explore/session-replay/privacy/',
+    destination: '/security-legal-pii/scrubbing/protecting-user-privacy/',
+  },
+  {
+    source: '/product/explore/session-replay/rage-dead-clicks/',
+    destination: '/product/issues/issue-details/replay-issues/rage-clicks/',
+  },
+  {
     source: '/organization/integrations/launchdarkly/',
     destination: '/organization/integrations/feature-flag/launchdarkly/',
+  },
+  {
+    source: '/product/explore/session-replay/replay-details/',
+    destination: '/product/explore/session-replay/web/replay-details/',
+  },
+  {
+    source: '/platforms/javascript/guides/nextjs/sourcemaps/uploading/',
+    destination: '/platforms/javascript/guides/nextjs/sourcemaps/',
+  },
+  {
+    source: '/organization/integrations/vercel/',
+    destination: '/organization/integrations/deployment/vercel/',
   },
   {
     source: '/product/accounts/quotas/org-stats/',
@@ -868,6 +904,10 @@ const userDocsRedirects = [
     destination: '/product/insights/ai/llm-monitoring/getting-started/the-dashboard/',
   },
   // End of Insights reduirects.
+  {
+    source: '/platforms/javascript/guides/astro/manual-setup/',
+    destination: '/platforms/javascript/guides/astro/',
+  },
 ];
 
 /**

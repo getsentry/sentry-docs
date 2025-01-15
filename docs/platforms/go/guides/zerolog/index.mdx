@@ -1,0 +1,116 @@
+---
+title: Zerolog
+description: "Zerolog is a fast and efficient logging library for Go, designed for structured logging. This guide demonstrates how to integrate Zerolog with Sentry."
+---
+
+For a complete example, visit the [Go SDK source code repository](https://github.com/getsentry/sentry-go/tree/master/_examples/zerolog).
+
+[Go Dev-style API documentation](https://pkg.go.dev/github.com/getsentry/sentry-go/zerolog) is also available.
+
+## Install
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+  ]}
+/>
+
+```bash
+go get github.com/getsentry/sentry-go/zerolog
+```
+
+<Break />
+
+<SignInNote />
+
+To integrate Sentry with Zerolog, you need to set up a custom writer that sends logs to Sentry based on the configured levels.
+
+
+```go {"onboardingOptions": {"performance": "12-16"}}
+import (
+	"errors"
+	"time"
+	"os"
+
+	"github.com/getsentry/sentry-go"
+	sentryzerolog "github.com/getsentry/sentry-go/zerolog"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+)
+
+func main() {
+	// Initialize Sentry
+	err := sentry.Init(sentry.ClientOptions{
+		Dsn: "___PUBLIC_DSN___",
+		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+			// Modify or filter events before sending them to Sentry
+			return event
+		},
+		Debug:            true,
+		AttachStacktrace: true,
+	})
+	if err != nil {
+		log.Fatal().Err(err).Msg("sentry initialization failed")
+	}
+	defer sentry.Flush(2 * time.Second)
+
+	// Configure Zerolog to use Sentry as a writer
+	sentryWriter, err := sentryzerolog.New(sentryzerolog.Config{
+		ClientOptions: sentry.ClientOptions{
+			Dsn: "___PUBLIC_DSN___",
+		},
+		Options: sentryzerolog.Options{
+			Levels:          []zerolog.Level{zerolog.ErrorLevel, zerolog.FatalLevel, zerolog.PanicLevel},
+			WithBreadcrumbs: true,
+			FlushTimeout:    3 * time.Second,
+		},
+	})
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to create sentry writer")
+	}
+	defer sentryWriter.Close()
+
+	// Use Sentry writer in Zerolog
+	log.Logger = log.Output(zerolog.MultiLevelWriter(zerolog.ConsoleWriter{Out: os.Stderr}, sentryWriter))
+
+	// Log an InfoLevel entry to STDERR (not sent to Sentry)
+	log.Info().Msg("Application has started")
+
+	// Log an ErrorLevel entry to STDERR and Sentry
+	log.Error().Msg("oh no!")
+
+	// Log a FatalLevel entry to STDERR, send to Sentry, and terminate the application
+	log.Fatal().Err(errors.New("can't continue")).Msg("fatal error occurred")
+}
+```
+
+## Configure
+
+sentryzerolog provides options to configure the integration with Sentry. It expects a `sentryzerolog.Config` that has `sentry.ClientOptions` and `sentryzerolog.Options`. The `sentry.ClientOptions` are used to initialize the Sentry client, and the `sentryzerolog.Options` are used to configure the Zerolog integration.
+
+The sentryzerolog.Options struct has the following fields:
+
+
+```go
+// Levels specifies the log levels that will trigger event sending to Sentry.
+// Only log messages at these levels will be sent. By default, the levels are
+// Error, Fatal, and Panic.
+Levels []zerolog.Level
+
+// WithBreadcrumbs, when enabled, adds log entries as breadcrumbs in Sentry.
+// Breadcrumbs provide a trail of events leading up to an error, which can
+// be invaluable for understanding the context of issues.
+WithBreadcrumbs bool
+
+// FlushTimeout sets the maximum duration allowed for flushing events to Sentry.
+// This is the time limit within which all pending events must be sent to Sentry
+// before the application exits. A typical use is ensuring all logs are sent before
+// application shutdown. The default timeout is usually 3 seconds.
+FlushTimeout time.Duration
+```
+
+## Usage
+
+Use Zerolog as you normally would, and it will automatically send logs at or above the specified levels to Sentry.
+
+Note: Ensure Sentry is flushed before the application exits to avoid losing any pending events.

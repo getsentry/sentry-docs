@@ -102,6 +102,7 @@ import QuartSVG from 'platformicons/svg/quart.svg';
 import RailsSVG from 'platformicons/svg/rails.svg';
 import ReactSVG from 'platformicons/svg/react.svg';
 import ReactnativeSVG from 'platformicons/svg/react-native.svg';
+import ReactRouterSVG from 'platformicons/svg/react-router.svg';
 import RedisSVG from 'platformicons/svg/redis.svg';
 import ReduxSVG from 'platformicons/svg/redux.svg';
 import RemixSVG from 'platformicons/svg/remix.svg';
@@ -239,6 +240,7 @@ import QuartSVGLarge from 'platformicons/svg_80x80/quart.svg';
 import RailsSVGLarge from 'platformicons/svg_80x80/rails.svg';
 import ReactSVGLarge from 'platformicons/svg_80x80/react.svg';
 import ReactnativeSVGLarge from 'platformicons/svg_80x80/react-native.svg';
+import ReactRouterSVGLarge from 'platformicons/svg_80x80/react-router.svg';
 import RedisSVGLarge from 'platformicons/svg_80x80/redis.svg';
 import ReduxSVGLarge from 'platformicons/svg_80x80/redux.svg';
 import RemixSVGLarge from 'platformicons/svg_80x80/remix.svg';
@@ -687,6 +689,10 @@ const formatToSVG = {
     sm: ReactSVG,
     lg: ReactSVGLarge,
   },
+  'react-router': {
+    sm: ReactRouterSVG,
+    lg: ReactRouterSVGLarge,
+  },
   redis: {
     sm: RedisSVG,
     lg: RedisSVGLarge,
@@ -870,6 +876,8 @@ export const PLATFORM_TO_ICON = {
   'go-gin': 'gin',
   'go-iris': 'iris',
   'go-negroni': 'go',
+  'go-zerolog': 'go',
+  'go-slog': 'go',
   'go-logrus': 'go',
   godot: 'godot',
   huggingface: 'huggingface',
@@ -910,6 +918,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-nuxt': 'nuxt',
   'javascript-node': 'nodejs',
   'javascript-react': 'react',
+  'javascript-react-router': 'react-router',
   'javascript-remix': 'remix',
   'javascript-solid': 'solid',
   'javascript-solidstart': 'solidstart',

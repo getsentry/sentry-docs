@@ -13,7 +13,7 @@ After naming your app and connecting your workspace, navigate to __Basic Informa
 
 Here’s where you’ll connect your self-hosted Sentry instance to your newly created Slack app.
 
-Copy your Client ID, Client Secret, and Signing Secret and paste them into <code>config.yml</code>.
+Copy your Client ID, Client Secret, and Signing Secret and paste them into `~/.sentry/config.yml` or `~/.sentry/sentry.conf.py`.
 
 ```yaml
 slack.client-id: <client id>
@@ -21,11 +21,13 @@ slack.client-secret: <client secret>
 slack.signing-secret: <signing secret>
 ```
 
-**NOTE**: If you're doing local Sentry development, you should use a tool like Ngrok and add `system.url-prefix: "https://<your_subdomain>.ngrok.io"` to your `~/.sentry/config.yml`, otherwise, installing the Slack APP will complain because the redirect URI points to `localhost:8000`. Also, install the Slack integration from the ngrok subdomain or it will fail to install.
+If you're a Sentry employee, you can set the `slack.client-id` and `slack.client-secret` in `devlocal.py` inside `getsentry` instead.
 
-After you update the <code>config.yml</code> you need to restart your Sentry server to continue configuring the Slack app.
+**NOTE**: If you're doing local Sentry development, you should usse ngrok and install the Slack integration from the ngrok subdomain or it will fail to install. Refer to [Developing with Ngrok](https://develop.sentry.dev/development-infrastructure/ngrok/) for more information.
 
-<Alert title="Note" level="info">
+After you update the `config.yml`, `sentry.conf.py`, or `devlocal.py` you need to restart your Sentry server to continue configuring the Slack app.
+
+<Alert title="Note (for self-hosted users)" level="info">
     After changing configuration files, re-run the <code>./install.sh</code> script, to rebuild and restart the containers. See the <Link to="/self-hosted/#configuration">configuration section</Link> for more information.
 </Alert>
 
@@ -112,8 +114,13 @@ Navigate to __Slash Commands__ under __Features__. Click __Create New Command__ 
 
 | Setting                         | Value                                         |
 | ------------------------------- | --------------------------------------------- |
-| Command                         | `/sentry`                                     |
-| Request URL                     | `{YOUR_DOMAIN}/extensions/slack/commands/` |
+| Command                         | `/{yourname}-sentry`                          |
+| Request URL                     | `{YOUR_DOMAIN}/extensions/slack/commands/`    |
+
+
+<Alert title="Note" level="info">
+    When creating the slash command, don’t use `/sentry`. Do something like `/{your_name}-sentry`. If multiple apps are installed with the same slash command, the most recently installed one takes over.
+</Alert>
 
 At the bottom of the page, click __Save__.
 

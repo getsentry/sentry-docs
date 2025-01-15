@@ -2,16 +2,12 @@
 title: Set Up Session Replay
 sidebar_order: 5500
 notSupported:
-description: "Learn how to enable the Mobile Session Replay Beta in your app."
+description: "Learn how to enable Session Replay in your mobile app."
 ---
 
 <Note>
 
-Flutter Session Replay is available on **iOS** and **Android**.
-
-Mobile support for Session Replay is in Beta. Features available in Beta are still work-in-progress and may have bugs. We recognize the irony.
-
-If you have any questions, feedback or would like to report a bug, please open a [GitHub issue](https://github.com/getsentry/sentry-dart/issues/new?template=BUG_REPORT.yml) with a link to a relevant replay in Sentry if possible.
+Flutter Session Replay is available on **iOS** and **Android**. This SDK support is still experimental as we iron out any bugs that are reported. If you encounter any issues please let us know via a GitHub ticket.
 
 </Note>
 
@@ -34,14 +30,11 @@ dependencies:
 To set up the integration, add the following to your Sentry initialization:
 
 ```dart
-await SentryFlutter.init(
-  (options) {
-    ...
-    options.experimental.replay.sessionSampleRate = 1.0;
-    options.experimental.replay.onErrorSampleRate = 1.0;
-  },
-  appRunner: () => runApp(MyApp()),
-);
+await SentryFlutter.init((options) {
+  ...
+  options.experimental.replay.sessionSampleRate = 1.0;
+  options.experimental.replay.onErrorSampleRate = 1.0;
+});
 ```
 
 ## Verify
@@ -60,50 +53,17 @@ Sampling allows you to control how much of your website's traffic will result in
 
 Sampling starts as soon as a session begins. The `sessionSampleRate` is then evaluated. If the session is sampled, replay recording will start immediately. If not, `onErrorSampleRate` will be evaluated. If the session is sampled at this point, the replay will be buffered and will only be uploaded to Sentry if an error occurs.
 
-## Privacy
+## Redact Session Replay via `masking`
 
-The SDK is recording and aggressively redacting (masking) all `Text`, `EditableText`, and `Image` widgets.
-Masking in the Sentry Flutter SDK is based on Widget *types*, e.g. `Image`, not the string representation of the type (i.e. we check whether
-a `widgetInstance` should be masked by checking `if (widgetInstance is Image)` instead of `if (widgetInstance.runtimeType == 'Image')`).
-This means we can ensure masking works regardless of obfuscation in release builds and also works for subclasses.
-However, it also means we can only automatically mask widgets that are part of the Flutter SDK itself.
+By default, the SDK is recording and aggressively redacting (masking) all `Text`, `EditableText`, and `Image` widgets for <PlatformLink to="/session-replay/">`Session Replay`</PlatformLink>. To modify or disable this behavior, use the `options.experimental.privacy` parameter.
 
 <Alert level="warning">
-We cannot mask widgets defined in various 3rd-party packages (because the type is not known in the Sentry Flutter SDK),
-even though many should be masked.
-
-Therefore, you need to consider the widgets your application uses and ensure they're masked correctly with custom masking rules.
-Examples of widgets that usually should be masked include (but are not limited to): VideoPlayer, WebView, Chart, etc.
+  Modifying this parameter will also affect `masking` for
+  <PlatformLink to="/enriching-events/screenshots/">`Screenshots`</PlatformLink>
+  .
 </Alert>
 
-You can tune this and add custom masking rules to fit your needs by adjusting the configuration in `options.experimental.replay`.
-For example, you can explicitly mask or unmask widgets by type,
-or you can even have a callback to decide whether a specific widget instance should be masked:
-
-```dart
-  options.experimental.replay.mask<IconButton>();
-  options.experimental.replay.unmask<Image>();
-  options.experimental.replay.maskCallback<Text>(
-      (Element element, Text widget) =>
-          (widget.data?.contains('secret') ?? false)
-              ? SentryMaskingDecision.mask
-              : SentryMaskingDecision.continueProcessing);
-```
-
-You can find more details in the documentation for each method.
-
-<Note>
-
-If you find that data isn't being redacted with the default settings, please let us know by creating a [GitHub issue](https://github.com/getsentry/sentry-dart/issues/new?template=BUG_REPORT.yml).
-
-</Note>
-
-To disable redaction altogether (not to be used on applications with sensitive data):
-
-```dart
-  options.experimental.replay.maskAllText = false;
-  options.experimental.replay.maskAllImages = false;
-```
+<PlatformContent includePath="replay/privacy-configuration" />
 
 ## Error Linking
 

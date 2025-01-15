@@ -77,6 +77,31 @@ Backend SDKs (typically used in server applications) should have backpressure ma
 
 See <Link to="/sdk/telemetry/traces/backpressure/">Backpressure Management</Link> for details.
 
+## Debug Mode
+
+Every SDK must implement a debug mode, which is disabled by default. Users can enable it by setting the option `debug` to `true`. If the debug mode is enabled, the SDK prints out useful debugging information for two main purposes:
+
+	1. It helps users identify and fix SDK problems, such as misconfigurations or something going wrong with sending data to Sentry.
+	2. It can help Sentry SDK engineers investigate issues in Sentry SDKs, which can be done while developing or by asking a user to enable the debug mode and share the debug logs.
+
+As the log output can add unnecessary overhead, we advise users to refrain from enabling the debug mode in production. Still, SDKs may log fatal error messages even when the debug mode is disabled. When using debug mode extensively for the second use case, we recommend adding the diagnostic level because users could easily miss error or fatal log messages.
+
+### Diagnostic Level
+
+SDKs may offer an optional diagnostic level, which controls the verbosity of the debug mode. There are five different levels:
+
+- `debug`: The most verbose mode
+- `info`: Informational messages
+- `warning`: Warning that something might not be right
+- `error`: Only SDK internal errors are printed
+- `fatal`: Only critical errors are printed
+
+The default level can be **debug** or **error** depending on the SDK's usage of log messages. When the volume of log message is low, the default can be debug. When it is high, users might easily miss errors or fatal messages. In that case, the SDK should set the default level to **error**. This choice must be clearly documented in the user-facing docs.
+
+### Auto Debug Mode
+
+So users can easily spot errors during development, the SDK can automatically enable debug mode when it reliably detects it's running in a debug build. When doing so, the SDK must communicate this in the docs and with a log message when initializing the SDK. When the user explicitly sets the `debug` option to `false`, the SDK must disable the debug mode.
+
 ## In-App frames
 
 Stack parsing can tell which frames should be identified as part of the user’s application (as opposed to part of the language, a library, or a framework), either automatically or by user configuration at startup, often declared as a package/module prefix.
@@ -122,7 +147,7 @@ Ability to get the ID of the last event sent. Event IDs are useful for correlati
 
 ## User Feedback
 
-For all SDKs, it is strongly recommended to send the `User Feedback` as an [envelope item](/sdk/data-model/envelope-items/#user-feedback). Alternatively, the SDKs can
+For all SDKs, it is strongly recommended to send the `User Feedback` as an [envelope item](/sdk/data-model/envelope-items/#user-report). Alternatively, the SDKs can
 use the [User Feedback endpoint](https://docs.sentry.io/api/projects/submit-user-feedback/), which is not recommended.
 
 ### User Facing Platforms
@@ -200,7 +225,7 @@ Whenever possible, avoid adding the attachment altogether if taking the screensh
 
 ## Before-Send Hook
 
-Hook called with the event (and on some platforms the hint) that allows the user to decide whether an event should be sent or not.  This can also be used to further modify the event. This only works for `error` events. For `transactions` it is recommended to have `beforeSendTransaction` implemented in SDKs.
+Hook called with the event (and on some platforms the hint) that allows the user to decide whether an event should be sent or not.  This can also be used to further modify the event. This only works for `error` events. For `transactions` it is recommended to have `beforeSendTransaction` implemented in SDKs. To understand when you should call this in your SDK, please refer to the [error filter ordering of sessions](/sdk/telemetry/sessions/#filter-order).
 
 ## Before-Breadcrumb Hook
 

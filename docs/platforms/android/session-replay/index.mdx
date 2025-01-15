@@ -2,16 +2,8 @@
 title: Set Up Session Replay
 sidebar_order: 5500
 notSupported:
-description: "Learn how to enable the Beta of Mobile Session Replay in your app."
+description: "Learn how to enable Session Replay in your mobile app."
 ---
-
-<Note>
-
-Mobile support for Session Replay is in Beta. Features available in Beta are still work-in-progress and may have bugs. We recognize the irony.
-
-If you have any questions, feedback or would like to report a bug, please open a [GitHub issue](https://github.com/getsentry/sentry-java/issues/new?assignees=&labels=Platform%3A+Android%2CType%3A+Bug&projects=&template=bug_report_android.yml) with a link to a relevant replay in Sentry if possible.
-
-</Note>
 
 [Session Replay](/product/explore/session-replay/) helps you get to the root cause of an error or latency issue faster by providing you with a reproduction of what was happening in the user's device before, during, and after the issue. You can rewind and replay your application's state and see key user interactions, like taps, swipes, network requests, and console entries, in a single UI.
 
@@ -62,15 +54,14 @@ SentryAndroid.init(context) { options ->
   options.dsn = "___PUBLIC_DSN___"
   options.isDebug = true
 
-  // Currently under experimental options:
-  options.experimental.sessionReplay.onErrorSampleRate = 1.0
-  options.experimental.sessionReplay.sessionSampleRate = 1.0
+  options.sessionReplay.onErrorSampleRate = 1.0
+  options.sessionReplay.sessionSampleRate = 0.1
 }
 ```
 
 ```XML {filename:AndroidManifest.xml}
-  <meta-data android:name="io.sentry.session-replay.on-error-sample-rate" android:value="1.0" />
-  <meta-data android:name="io.sentry.session-replay.session-sample-rate" android:value="1.0" />
+<meta-data android:name="io.sentry.session-replay.on-error-sample-rate" android:value="1.0" />
+<meta-data android:name="io.sentry.session-replay.session-sample-rate" android:value="0.1" />
 ```
 
 ## Verify
@@ -94,7 +85,7 @@ Sampling begins as soon as a session starts. `sessionSampleRate` is evaluated fi
 
 ## Privacy
 
-The SDK is recording and aggressively masking all text, images and webviews. Please don’t turn it off if you have sensitive data in your app.
+The SDK is recording and aggressively masking all text, images, and webviews by default. If your app has any sensitive data, you should only turn the default masking off after explicitly masking out the sensitive data, using the APIs described below.
 However, if you're working on a mobile app that's free of PII or other types of private data, you can opt out of the default text and image masking settings. To learn more about Session Replay privacy, [read our docs](/platforms/android/session-replay/privacy/).
 
 <Note>
@@ -106,11 +97,13 @@ If you find that any other data isn't being masked with the default settings, pl
 To disable masking altogether (not to be used on applications with sensitive data):
 
 ```kotlin
-options.experimental.sessionReplay.maskAllText = false
-options.experimental.sessionReplay.maskAllImages = false
-// if you're on version < 7.15.0
-// options.experimental.sessionReplay.redactAllText = false
-// options.experimental.sessionReplay.redactAllImages = false
+options.sessionReplay.maskAllText = false
+options.sessionReplay.maskAllImages = false
+```
+
+```XML {filename:AndroidManifest.xml}
+<meta-data android:name="io.sentry.session-replay.mask-all-text" android:value="false" />
+<meta-data android:name="io.sentry.session-replay.mask-all-images" android:value="false" />
 ```
 
 ## Error Linking

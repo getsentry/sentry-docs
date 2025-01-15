@@ -87,7 +87,36 @@ platformBrowserDynamic()
 
 The Sentry Angular SDK exports a couple of Angular providers that are necessary to fully instrument your application. We recommend registering them in your `app.config.ts` or main `app.module.ts`:
 
-```typescript {tabTitle: App Config} {filename: app.config.ts} {8, 13-26} {"onboardingOptions": {"performance": "17-26"}}
+```typescript {tabTitle: App Config (Angular 19+)} {filename: app.config.ts} {9, 14-24} {"onboardingOptions": {"performance": "18-24"}}
+import {
+  ApplicationConfig,
+  ErrorHandler,
+  inject,
+  provideAppInitializer,
+} from "@angular/core";
+import { Router } from "@angular/router";
+
+import * as Sentry from "@sentry/angular";
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    // ...
+    {
+      provide: ErrorHandler,
+      useValue: Sentry.createErrorHandler(),
+    },
+    {
+      provide: Sentry.TraceService,
+      deps: [Router],
+    },
+    provideAppInitializer(() => {
+      inject(TraceService);
+    }),
+  ],
+};
+```
+
+```typescript {tabTitle: App Config (Angular <=18)} {filename: app.config.ts} {8, 13-26} {"onboardingOptions": {"performance": "17-26"}}
 import {
   APP_INITIALIZER,
   ApplicationConfig,

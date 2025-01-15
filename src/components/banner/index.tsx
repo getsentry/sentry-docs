@@ -54,6 +54,23 @@ const BANNERS: BannerType[] = [
     linkURL: 'https://docs.sentry.io/contributing/pages/banners/',
     linkText: 'CTA',
   },
+  {
+    appearsOn: ['^/$'],
+    text: 'Check out Sentry Launch Week for our latest product releases.',
+    linkURL: 'https://sentry.io/events/launch-week/?promo_name=launchweekQ4FY2024',
+    linkText: 'See what’s new.',
+  },
+  {
+    appearsOn: [
+      '^/platforms/flutter/',
+      '^/platforms/react-native/',
+      '^/platforms/android/',
+      '^/platforms/apple/guides/ios/',
+    ],
+    text: 'Session Replay is now generally available for mobile.',
+    linkURL: 'https://docs.sentry.io/product/explore/session-replay/mobile/',
+    linkText: 'Get started today.',
+  },
 ];
 
 const LOCALSTORAGE_NAMESPACE = 'banner-manifest';
