@@ -200,7 +200,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     : domain;
   let title =
     'Sentry Docs | Application Performance Monitoring &amp; Error Tracking Software';
-  let customCanonicalTag: string;
+  let customCanonicalTag: string = '';
   let description =
     'Self-hosted and cloud-based application performance monitoring &amp; error tracking that helps software teams see clearer, solve quicker, &amp; learn continuously.';
   // show og image on the home page only
