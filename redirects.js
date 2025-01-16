@@ -908,6 +908,10 @@ const userDocsRedirects = [
     source: '/platforms/javascript/guides/astro/manual-setup/',
     destination: '/platforms/javascript/guides/astro/',
   },
+  {
+    source: '/platforms/kotlin-multiplatform/:path*',
+    destination: '/platforms/kotlin/guides/kotlin-multiplatform/:path*',
+  },
 ];
 
 /**
