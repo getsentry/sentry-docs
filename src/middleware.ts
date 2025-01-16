@@ -2248,10 +2248,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/dashboards/',
   },
   {
-    from: '/product/error-monitoring/dashboards/',
-    to: '/product/dashboards/',
-  },
-  {
     from: '/profiling/',
     to: '/product/explore/profiling/',
   },
@@ -2275,10 +2271,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/profiling/mobile-app-profiling/metrics/',
     to: '/product/explore/profiling/mobile-app-profiling/metrics/',
   },
-  {
-    from: '/product/error-monitoring/filtering/',
-    to: '/concepts/data-management/filtering/',
-  },
+
   {
     from: '/data-management/rollups/',
     to: '/concepts/data-management/event-grouping/',
@@ -2536,20 +2529,8 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/issues/ownership-rules/',
   },
   {
-    from: '/product/error-monitoring/issue-owners/',
-    to: '/product/issues/ownership-rules/',
-  },
-  {
     from: '/product/releases/suspect-commits/',
     to: '/product/issues/suspect-commits/',
-  },
-  {
-    from: '/product/error-monitoring/',
-    to: '/product/issues/',
-  },
-  {
-    from: '/product/error-monitoring/reprocessing/',
-    to: '/product/issues/reprocessing/',
   },
   {
     from: '/product/accounts/early-adopter-features/issue-archiving/',
@@ -2611,10 +2592,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/product/issues/performance-issues/large-http-payload/',
     to: '/product/issues/issue-details/performance-issues/large-http-payload/',
   },
-  {
-    from: '/product/error-monitoring/breadcrumbs/',
-    to: '/product/issues/issue-details/breadcrumbs/',
-  },
+
   {
     from: '/learn/breadcrumbs/',
     to: '/product/issues/issue-details/breadcrumbs/',
@@ -3362,14 +3340,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/clients/cordova/',
     to: '/platforms/javascript/guides/cordova/',
-  },
-  {
-    from: '/product/error-monitoring/user-impact/',
-    to: '/product/issues/issue-details/',
-  },
-  {
-    from: '/product/error-monitoring/stacktrace/',
-    to: '/product/issues/issue-details/#stack-trace',
   },
 ];
 
