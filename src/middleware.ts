@@ -3357,6 +3357,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/organization/integrations/incidentio/',
     to: '/organization/integrations/issue-tracking/incidentio/',
   },
+  {
+    from: '/contributing/onboarding-wizard/',
+    to: '/contributing/',
+  },
 ];
 
 const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
