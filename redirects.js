@@ -936,6 +936,10 @@ const userDocsRedirects = [
     source: '/product/error-monitoring/:path*',
     destination: '/product/issues',
   },
+  {
+    source: '/platforms/kotlin-multiplatform/:path*',
+    destination: '/platforms/kotlin/guides/kotlin-multiplatform/:path*',
+  },
 ];
 
 /**
