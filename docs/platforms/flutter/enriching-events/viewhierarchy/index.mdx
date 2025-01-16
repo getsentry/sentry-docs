@@ -21,6 +21,31 @@ View hierarchy debugging is an opt-in feature. You can enable it as shown below:
 
 <PlatformContent includePath="enriching-events/attach-viewhierarchy" />
 
+### Customize View Hierarchy Capturing
+
+<Note>
+
+Requires SDK version `8.13.0` or higher.
+
+</Note>
+
+Capturing view hierarchies on Flutter is limited to once every 2 seconds by default to minimize performance impact. While this debounce interval is fixed, you can override individual capture decisions by implementing the `beforeCaptureViewHierarchy` option in your `SentryFlutterOptions`.
+
+The `beforeCaptureViewHierarchy` option allows you to customize behavior based on event data so you can decide when to capture view hierarchy and when not to. For example, you can decide to only capture view hierarchy for fatal events:
+
+```flutter {2-9}
+await SentryFlutter.init((options) {
+  options.beforeCaptureViewHierarchy = (event, hint, debounce) async {
+    // If debounce is active, skip capturing
+    if (debounce) {
+      return false;
+    }
+    // Capture if it's a fatal event
+    return event.level == SentryLevel.fatal;
+  };
+});
+```
+
 ## Viewing View Hierarchy Attachments
 
 View hierarchies appear in the "Attachments" tab, where you can view all attachments, as well as associated events. Click the event ID to open the [Issue Details](/product/issues/issue-details) page of that specific event.
