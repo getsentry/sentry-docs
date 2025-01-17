@@ -25,7 +25,33 @@ export default codePush(Sentry.wrap(App));
 
 To ensure Sentry can symbolicate events from your CodePush releases, you need to generate and upload the necessary assets. When creating a CodePush release, include the `--sourcemap-output-dir` flag to generate source maps. This allows you to upload these files to Sentry in the next step.
 
-```bash {tabTitle:JSC}
+```bash {tabTitle:JSC (Standalone)}
+code-push-standalone release-react \
+  "${APP_NAME}" \
+  "${PLATFORM}" \
+  --deploymentName "${DEPLOYMENT_NAME}" \
+  --outputDir ./build \
+  --sourcemapOutput ./build
+```
+
+```bash {tabTitle:Hermes (Standalone)}
+rm -rf ./build
+CODEPUSH_COMMAND="code-push-standalone release-react \
+  \"${APP_NAME}\" \
+  \"${PLATFORM}\" \
+  --deploymentName \"${DEPLOYMENT_NAME}\" \
+  --useHermes \
+  --outputDir ./build \
+  --sourcemapOutput ./build"
+
+DEBUG_ID=$(eval "$CODEPUSH_COMMAND" | tee /dev/tty | grep -o 'Bundle Debug ID: [0-9a-f-]*' | sed 's/Bundle Debug ID: //')
+
+MAP_FILE=$(find ./build -name "*.map" -type f)
+jq -c ". + {\"debug_id\": \"${DEBUG_ID}\"}" "${MAP_FILE}" > "${MAP_FILE}.tmp"
+mv "${MAP_FILE}.tmp" "${MAP_FILE}"
+```
+
+```bash {tabTitle:JSC (AppCenter)}
 appcenter codepush release-react \
   --app "${APP_NAME}" \
   --deployment-name "${DEPLOYMENT_NAME}" \
@@ -33,7 +59,7 @@ appcenter codepush release-react \
   --sourcemap-output-dir ./build
 ```
 
-```bash {tabTitle:Hermes}
+```bash {tabTitle:Hermes (AppCenter)}
 rm -rf ./build
 CODEPUSH_COMMAND="appcenter codepush release-react \
   --app \"${APP_NAME}\" \
@@ -44,7 +70,6 @@ CODEPUSH_COMMAND="appcenter codepush release-react \
 
 DEBUG_ID=$(eval "$CODEPUSH_COMMAND" | tee /dev/tty | grep -o 'Bundle Debug ID: [0-9a-f-]*' | sed 's/Bundle Debug ID: //')
 
-# Find the .map file and add the debug_id to it
 MAP_FILE=$(find ./build -name "*.map" -type f)
 jq -c ". + {\"debug_id\": \"${DEBUG_ID}\"}" "${MAP_FILE}" > "${MAP_FILE}.tmp"
 mv "${MAP_FILE}.tmp" "${MAP_FILE}"
