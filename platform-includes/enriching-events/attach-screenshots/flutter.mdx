@@ -13,6 +13,31 @@ await SentryFlutter.init(
 );
 ```
 
+### Customize Screenshot Capturing
+
+<Note>
+
+Requires SDK version `8.11.0` or higher.
+
+</Note>
+
+Capturing screenshots on Flutter is limited to once every 2 seconds by default to minimize performance impact. While this debounce interval is fixed, you can override individual capture decisions by implementing the `beforeCaptureScreenshot` option in your `SentryFlutterOptions`.
+
+The `BeforeCaptureCallback` also allows you to customize the behavior based on event data, so you can decide when to capture a screenshot and when not to. For example, you can decide to only capture screenshots of fatal events:
+
+```flutter {2-9}
+await SentryFlutter.init((options) {
+  options.beforeCaptureScreenshot = (event, hint, debounce) async {
+    // If debounce is active, skip capturing
+    if (debounce) {
+      return false;
+    }
+    // Capture if it's a fatal event
+    return event.level == SentryLevel.fatal;
+  };
+});
+```
+
 ## Redact Screenshots via `masking`
 
 The masking feature is by default disabled for Screenshots. To enable masking, use the `options.experimental.privacy` parameter.
@@ -26,7 +51,7 @@ The masking feature is by default disabled for Screenshots. To enable masking, u
 
 ## Filtering Screenshots
 
-You can filter your screenshots by using the `beforeScreenshot` callback, which is called before attaching a screenshot to an event. By default, the callback returns `true` which means that all screenshots are attached.
+You can filter your screenshots by using the `beforeCaptureScreenshot` callback, which is called before attaching a screenshot to an event. By default, the callback returns `true` which means that all screenshots are attached.
 
 If the callback returns `false`, the screenshot will not be attached.
 

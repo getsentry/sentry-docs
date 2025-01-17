@@ -1,0 +1,60 @@
+---
+title: Generic
+sidebar_order: 3
+description: Learn about Sentry's generic feature-flag integrations.
+---
+
+## Evaluation Tracking
+
+Sentry can track flag evaluations as they happen within your application.  Flag evaluations will appear in the "Feature Flag" section of the Issue Details page as a table, with "suspect" flag predictions highlighted in yellow. Learn more about how to interact with feature flag insights within the Sentry UI by reading the [Issue Details page documentation](/product/issues/issue-details/#feature-flags).
+
+### Set Up Evaluation Tracking
+
+To set up evaluation tracking, visit the [explore page](/product/explore/feature-flags/) and select the language and SDK of your choice. Not using a supported SDK? That's okay. We support generic solutions for your existing system.
+
+To set up generic evaluation tracking, visit one of our supported languages' pages:
+* [JavaScript](/platforms/javascript/configuration/integrations/featureflags/)
+* [Python](/platforms/python/feature-flags/#generic-api)
+
+## Change Tracking
+
+Sentry can track changes to feature flag definitions and report suspicious feature flag edits.
+
+For the generic case, you need to write a webhook that conforms to our API. You can find instructions on how to do this below.
+
+### Set Up Change Tracking
+
+Enabling Change Tracking is a four step process. To get started visit the [feature-flags settings page](https://sentry.io/orgredirect/organizations/:orgslug/settings/feature-flags) in a new tab. Then follow the steps listed below.
+
+1. **Click the "Add New Provider" button.**
+    - One webhook secret can be registered per provider type.
+    - Select Generic in the dropdown that says "Select a provider".
+2. **Save the webhook URL**.
+    - Copy the provided Sentry webhook URL and save it for step 4.
+3. **Set the Signing Secret**.
+    - In your feature flagging system's UI, find the "Signing Secret".
+    - Copy the signing secret and paste it into the input box next to "Secret" in Sentry settings.
+    - Save the secret by clicking "Add Provider" in Sentry settings.
+4. **Write your own webhook**.
+    - Configure your system to POST to the webhook URL, whenever a feature flag definition changes.
+    - Sign your webhook payloads with the Signing Secret from step 3.
+    - See [#api-documentation](/organization/integrations/feature-flag/generic/#api-documentation) for more details.
+
+### API Documentation
+
+This section documents our authentication procedures as well as the resource's fields and structure.
+
+#### Authentication
+
+Authentication is performed using a "signing secret". The "signing secret" must be used to sign the webhook payload in your feature flagging system. Signing the payload with your secret produces a "signature". Sentry needs this signature so it can compare the results of our signing function to yours. Both sides must use the same signing function. Sentry uses a HMAC SHA256 hex-digest of the web hook payload. In Python this function looks like:
+
+```python
+def hmac_sha256_hex_digest(secret: str, message: bytes):
+    return hmac.new(secret.encode(), message, hashlib.sha256).hexdigest()
+```
+
+The result of this function must be sent as a header to Sentry: `X-Sentry-Signature signature_result`.
+
+#### API Blueprint
+
+[An API blueprint is available at this permalink](https://github.com/getsentry/sentry/blob/ed324708947ca26392d6579ed76b93fc94a61ab6/src/sentry/flags/docs/api.md#create-generic-flag-log-post). We strive to keep this page updated. Be sure to check the latest master branch for new protocol versions. We will always maintain backwards compatibility so there is no harm in implementing an old version. However, new versions might introduce new features.

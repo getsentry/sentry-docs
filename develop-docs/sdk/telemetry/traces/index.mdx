@@ -228,24 +228,23 @@ A transaction's sampling decision should be passed to all of its children, inclu
 
 To improve the likelihood of capturing complete traces when backend services use a custom sample rate via `tracesSampler`, the SDK propagates the same random value used for sampling decisions across all services in a trace. This ensures consistent sampling decisions across a trace instead of generating a new random value for each service.
 
-If no `tracesSampler` callback is used, the SDK fully inherits sampling decisions for propagated traces, and the presence of `sample_rand` in the DSC doesn't affect the decision. However, this behavior may change in the future.
+The random value (`sample_rand`) is set according to the following rules:
 
-The random value is set according to the following rules:
+1. When tracing is enabled and a new trace is started, the SDK generates a `sample_rand` value for the current execution context. A `sample_rand` is a float (`0.1234` notation) in the range of `[0, 1)` (including 0.0, excluding 1.0).
+1. It is _recommended_ to generate the random number deterministically using the trace ID as seed or source of randomness. The exact method by which the random number is created is implementation defined and may vary between SDK implementations.
+1. The `sample_rand` is part of the DSC (Dynamic Sampling Context) and as with other values on the `baggage` header, the `sample_rand` value from the current execution context should be propagated to downstream SDKs.
+1. On incoming traces, an SDK takes the incoming `sentry-sample_rand` value in the `baggage` header and uses it for the rest of the current execution context (e.g. request).
+1. If `sample_rand` is missing on an incoming trace, the SDK creates a new one applying **special rules** and uses it for the current execution context:
+   1. If `sample_rate` (inside `baggage`) and the sampling decision (trailing `-1` or `-0` from the `sentry-trace` header) are present in the incoming trace, create `sample_rand` so that when compared to the incoming `sample_rate` it would lead to the same sampling decision that is in the `sentry-trace` header. This means, for a decision of `True` generate a random number in half-open range `[0, rate)` and for a decision of `False` generate a random number in range `[rate, 1)`.
+   1. If the sampling decision is missing on the incoming trace, generate a random number in range of `[0, 1)` (including 0.0, excluding 1.0), like for a new trace.
 
-1. When an SDK starts a new trace, `sample_rand` is always set to a random number in the range of `[0, 1]`. This explicitly includes traces that aren't sampled, as well as when the `tracesSampleRate` is set to `0.0` or `1.0`.
-2. It is _recommended_ to generate the random number deterministically using the trace ID as seed or source of randomness. The exact method by which the random number is created is implementation defined and may vary between SDK implementations. See 4. on why this behaviour is desirable.
-3. On incoming traces, an SDK assumes the `sample_rand` value along with the rest of the DSC, overriding an existing value if needed.
-4. If `sample_rand` is missing on an incoming trace, the SDK creates and from now on propagates a new random number on-the-fly, based on the following rules:
-   1. If `sample_rate` and `sampled` are propgated, create `sample_rand` so that it adheres to the invariant. This means, for a decision of `True` generate a random number in half-open range `[0, rate)` and for a decision of `False` generate a random number in range `[rate, 1]`.
-   2. If the sampling decision is missing, generate a random number in range of `[0, 1]`, like for a new trace.
+The SDK should always use the stored random number (`sentry-sample_rand`) for sampling decisions and should not directly rely on `math.random()` when deciding to sample or not:
 
-The SDK should always use the stored random number (`sentry-sample_rand`) for sampling decisions and should no longer rely on `math.random()` or similar functions in tracing code:
+1. When the `tracesSampler` is invoked, the return value should be compared with `sample_rand`: `trace["sentry-sample_rand"] < tracesSampler(context)`
+1. When there is an incoming trace, the SDK fully inherits incoming sampling decisions from the `sentry-trace` header.
+1. Otherwise, when the SDK is the head of a trace (and `tracesSampleRate` is defined), the sampling is done comparing the `tracesSampleRate` with the `sample_rand`: `trace["sentry-sample_rand"] < config.tracesSampleRate`
 
-1. When the `tracesSampler` is invoked, this also applies to the return value of traces sampler. That is, `trace["sentry-sample_rand"] < tracesSampler(context)`
-2. Otherwise, when the SDK is the head of a trace, this also applies to sample decisions based on `tracesSampleRate`. That is, `trace["sentry-sample_rand"] < config.tracesSampleRate`
-3. There is no more direct comparison with `math.random()` during the sampling process.
-
-When using a `tracesSampler`, the proper way to inherit a parent's sampling decision is to return the parent's sample rate, instead of leaving the decision as a float (for example, 1.0). This way, Sentry can still extrapolate counts correctly.
+Something that should be documented for every SDK is the recommended way to use a `tracesSampler` to inherit the parent's sampling decision using the `parentSampleRate`. This way, Sentry can still extrapolate counts correctly:
 
 ```js
 tracesSampler: ({ name, parentSampleRate }) => {

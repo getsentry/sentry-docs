@@ -1,4 +1,35 @@
-On the client-side:
+### Server-side
+
+Sentry can only be loaded on the server-side by being explicitly added via `--import`.
+Check out the <PlatformLink to="/install/cli-import">`--import` CLI flag</PlatformLink> docs for setup instructions.
+
+To verify that Sentry works on the server-side, add the following snippet on the server-side:
+
+```js {tabTitle:Nitro} {filename:server/sentry-example-api.ts}
+import { defineEventHandler } from '#imports';
+
+export default defineEventHandler(event => {
+  throw new Error("Sentry Example API Route Error");
+});
+
+```
+
+If you want to test server-side monitoring locally, build your project and run:
+  ```
+  # Start your app after building your project with `nuxi build`
+  node --import ./.output/server/sentry.server.config.mjs .output/server/index.mjs
+  ```
+
+<Alert level="warning">
+  Sentry server-side monitoring **doesn't work in development mode!**
+
+  If you experience any issues with the server-side setup, check out <PlatformLink to="/troubleshooting">Troubleshooting</PlatformLink>
+  or read through the different <PlatformLink to="/install">installation methods</PlatformLink>.
+</Alert>
+
+### Client-side
+
+Add the following snippet on the client-side:
 
 ```html {tabTitle:Vue} {filename:pages/example-error.vue}
 <script setup>
@@ -32,26 +63,4 @@ On the client-side:
 </template>
 ```
 
-On the server-side:
 
-```js {tabTitle:Nitro} {filename:server/sentry-example-api.ts}
-import { defineEventHandler } from '#imports';
-
-export default defineEventHandler(event => {
-  throw new Error("Sentry Example API Route Error");
-});
-
-```
-
-<Alert level="warning">
-  Keep in mind, that the server-side monitoring **does not work in development mode!**
-
-  If you want to test server-side monitoring locally, build your project and run:
-  ```
-  # Start your app after building your project with `nuxi build`
-  node .output/server/index.mjs
-  ```
-
-  In case you experience any issues with the server-side setup, check out <PlatformLink to="/troubleshooting">Troubleshooting</PlatformLink>
-  or read through the different <PlatformLink to="/install">installation methods</PlatformLink>.
-</Alert>
