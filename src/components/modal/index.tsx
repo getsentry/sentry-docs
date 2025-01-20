@@ -42,8 +42,8 @@ export function Modal({isOpen, onClose, children, title}: Props) {
       onClick={handleBackdropClick}
     >
       <div className="bg-[var(--gray-1)] rounded-lg shadow-lg border border-[var(--gray-6)] motion-safe:animate-modal-enter px-4">
-        <div className="flex items-center justify-between py-4 border-b border-[var(--gray-6)] px-4">
-          <h2 className="text-lg font-medium">{title}</h2>
+        <div className="flex items-center justify-between py-5 border-b border-[var(--gray-6)] px-4">
+          <h2 className="text-lg font-medium p!-0 !m-0">{title}</h2>
           <button
             onClick={handleClose}
             className="p-2 hover:bg-[var(--gray-3)] rounded-full transition-colors"
