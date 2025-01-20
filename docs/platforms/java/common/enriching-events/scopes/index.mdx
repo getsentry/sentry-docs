@@ -21,11 +21,11 @@ routes or request handlers.
 
 ## How Scopes Work
 
-Scopes are basically a stack of data that is attached to events. When an event is captured, the SDK will merge the data from the active scopes into the event. This allows you to attach data to events that is relevant to the context in which the event was captured.
+Scopes are basically a stacks of data that are attached to events. When an event is captured, the SDK will merge the data from the active scopes into the event. This allows you to attach data to events that is relevant to the context in which the event was captured.
 
 A scope is generally valid inside of a callback or an execution context. This means that multiple parts of your application may have different scopes active at the same time. For instance, a web server might handle multiple requests at the same time, and each request may have different scope data to apply to its events.
 
-When you call a global function such as `Sentry.captureException`, internally Sentry discovers the active scopes and uses them when capturing the event.
+When you call a global function such as `Sentry.captureException`, Sentry automatically discovers the active scopes and applies them when capturing the event.
 
 ## Different Kinds of Scopes
 
@@ -75,7 +75,7 @@ You can modify the current scope via `Sentry.configureScope(ScopeType.CURRENT, s
 
 ## How Scope Data is Applied to Events
 
-Global scope, isolation scope and current scope are combined before an event (like an error or transaction) is sent to Sentry.
+Global scope, isolation scope, and current scope are combined before an event (like an error or transaction) gets sent to Sentry.
 In most cases, setting something on current scope replaces the same thing that may have been set on isolation or global scope. If it hasn't been set on current scope, the value on isolation scope takes precedence over the one from global scope. If there also isn't any value on isolation scope, the one from global scope is used if present.
 
 Note, there are exceptions to this, where values from all scopes are merged. This is the case for breadcrumbs, tags, extras, contexts, attachments and event processors.
@@ -134,7 +134,7 @@ even call <PlatformIdentifier name="clear" /> to briefly remove all context info
 
 `withIsolationScope` works fundamentally the same as `withScope`, but it will fork the isolation scope instead of the current scope. Generally, the isolation scope is meant to be forked less frequently than the current scope, and in most cases the SDK will handle this automatically for you.
 
-But in cases where you e.g. want to isolate a non-request process (e.g. a background job), you can use `withIsolationScope` to create a new isolation scope that is only active for the duration of the callback:
+But in cases where you want to isolate a non-request process (for example, a background job), you can use `withIsolationScope` to create a new isolation scope that is only active for the duration of the callback:
 
 <PlatformContent includePath="enriching-events/scopes/with-isolation-scope" />
 
