@@ -674,6 +674,10 @@ const userDocsRedirects = [
     destination: '/platforms/:platform/guides/:guide/user-feedback/',
   },
   {
+    source: '/platforms/javascript/guides/:guide/user-feedback/v7/',
+    destination: '/platforms/javascript/guides/:guide/user-feedback/configuration__v7.x',
+  },
+  {
     source: '/platforms/:platform/enriching-events/user-feedback/',
     destination: '/platforms/:platform/user-feedback/',
   },
