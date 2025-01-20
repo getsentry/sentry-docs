@@ -12,6 +12,7 @@ import './type.scss';
 import {Banner} from '../banner';
 import {Breadcrumbs} from '../breadcrumbs';
 import {CodeContextProvider} from '../codeContext';
+import {DocFeedback} from '../docFeedback';
 import {GitHubCTA} from '../githubCTA';
 import {Header} from '../header';
 import Mermaid from '../mermaid';
@@ -90,6 +91,8 @@ export function DocPage({
               <div id="main">
                 <CodeContextProvider>{children}</CodeContextProvider>
               </div>
+
+              <DocFeedback pathname={pathname} />
 
               <div className="grid grid-cols-2 gap-4 not-prose mt-16">
                 <div className="col-span-1">
