@@ -38,7 +38,7 @@ export function Modal({isOpen, onClose, children, title}: Props) {
   return (
     <dialog
       ref={modalRef}
-      className="backdrop:bg-[var(--gray-12)]/50 backdrop:backdrop-blur-sm p-0 bg-transparent w-full max-w-lg m-auto data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-top-[2%] data-[state=open]:slide-in-from-top-[2%] duration-200 p-4"
+      className="backdrop:bg-[var(--gray-12)]/50 backdrop:backdrop-blur-sm p-0 bg-transparent w-full max-w-lg m-auto data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-top-[2%] data-[state=open]:slide-in-from-top-[2%] duration-200"
       onClick={handleBackdropClick}
     >
       <div className="bg-[var(--gray-1)] rounded-lg shadow-lg border border-[var(--gray-6)] motion-safe:animate-modal-enter px-4">
