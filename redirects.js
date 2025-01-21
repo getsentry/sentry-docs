@@ -227,10 +227,6 @@ const userDocsRedirects = [
     destination: '/product/issues/issue-details/replay-issues/hydration-error/',
   },
   {
-    source: '/product/error-monitoring/stacktrace/',
-    destination: '/product/issues/issue-details/#stack-trace',
-  },
-  {
     source: '/product/explore/session-replay/privacy/',
     destination: '/security-legal-pii/scrubbing/protecting-user-privacy/',
   },
@@ -678,6 +674,10 @@ const userDocsRedirects = [
     destination: '/platforms/:platform/guides/:guide/user-feedback/',
   },
   {
+    source: '/platforms/javascript/guides/:guide/user-feedback/v7/',
+    destination: '/platforms/javascript/guides/:guide/user-feedback/configuration__v7.x',
+  },
+  {
     source: '/platforms/:platform/enriching-events/user-feedback/',
     destination: '/platforms/:platform/user-feedback/',
   },
@@ -907,6 +907,42 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/astro/manual-setup/',
     destination: '/platforms/javascript/guides/astro/',
+  },
+  {
+    source: '/product/error-monitoring/dashboards/',
+    destination: '/product/dashboards/',
+  },
+  {
+    source: '/product/error-monitoring/filtering/',
+    destination: '/concepts/data-management/filtering/',
+  },
+  {
+    source: '/product/error-monitoring/issue-owners/',
+    destination: '/product/issues/ownership-rules/',
+  },
+  {
+    source: '/product/error-monitoring/reprocessing/',
+    destination: '/product/issues/reprocessing/',
+  },
+  {
+    source: '/product/error-monitoring/breadcrumbs/',
+    destination: '/product/issues/issue-details/breadcrumbs/',
+  },
+  {
+    source: '/product/error-monitoring/user-impact/',
+    destination: '/product/issues/issue-details/',
+  },
+  {
+    source: '/product/error-monitoring/stacktrace/',
+    destination: '/product/issues/issue-details/#stack-trace',
+  },
+  {
+    source: '/product/error-monitoring/:path*',
+    destination: '/product/issues',
+  },
+  {
+    source: '/platforms/kotlin-multiplatform/:path*',
+    destination: '/platforms/kotlin/guides/kotlin-multiplatform/:path*',
   },
 ];
 
