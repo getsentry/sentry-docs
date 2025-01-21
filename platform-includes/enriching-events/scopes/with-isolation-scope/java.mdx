@@ -4,8 +4,8 @@
 import io.sentry.Sentry;
 import io.sentry.SentryLevel;
 
-Sentry.withScope(scope -> {
-  scope.setTag("my-tag", "my value");
+Sentry.withIsolationScope(scope -> {
+  Sentry.setTag("my-tag", "my value");
   scope.setLevel(SentryLevel.WARNING);
 
   // will be tagged with my-tag="my value"
@@ -13,15 +13,15 @@ Sentry.withScope(scope -> {
 });
 
 // will not be tagged with my-tag
-Sentry.captureException(new Exception("my error"));
+Sentry.captureException(new Exception("my other error"));
 ```
 
 ```kotlin {tabTitle: Kotlin}
 import io.sentry.Sentry
 import io.sentry.SentryLevel
 
-Sentry.withScope { scope ->
-  scope.setTag("my-tag", "my value")
+Sentry.withIsolationScope { scope ->
+  Sentry.setTag("my-tag", "my value")
   scope.level = SentryLevel.WARNING
 
   // will be tagged with my-tag="my value"
@@ -29,12 +29,12 @@ Sentry.withScope { scope ->
 }
 
 // will not be tagged with my-tag
-Sentry.captureException(Exception("my error"))
+Sentry.captureException(Exception("my other error"))
 ```
 
 <Alert level="info" title="Important">
 
-In the Java SDK `withScope` does **not** work reliably in `globalHubMode` as the SDK always uses the global root scopes unless you call the `captureXXX` methods directly on `Scopes`.
+In the Java SDK `withIsolationScope` does **not** work reliably in `globalHubMode`, as the SDK always uses the global root scopes unless you call the `captureXXX` methods directly on `Scopes`.
 
 </Alert>
 
