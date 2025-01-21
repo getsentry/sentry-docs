@@ -3,52 +3,54 @@ title: Service Manager (devservices)
 sidebar_order: 40
 ---
 
-Sentry provides an abstraction to Docker to run required services within development called `devservices`.
+A standalone CLI tool called [`devservices`](https://github.com/getsentry/devservices) is used to bring up and manage service dependencies. The tool reads from a `config.yml` file within a repository's `devservices` directory. It is an abstraction built on top of Docker Compose and Docker.
 
 ```shell
-Usage: sentry devservices [OPTIONS] COMMAND [ARGS]...
+usage: devservices [-h] [--version] COMMAND ...
 
-  Manage dependent development services required for Sentry.
+CLI tool for managing service dependencies.
 
-  Do not use in production!
+options:
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
 
-Options:
-  --help  Show this message and exit.
-
-Commands:
-  attach  Run a single devservice in foreground, as...
-  down    Shut down all services.
-  rm      Delete all services and associated data.
-  up      Run/update dependent services.
+commands:
+  up                  Bring up a service and its dependencies
+  down                Bring down a service and its dependencies
+  list-dependencies   List the dependencies of a service
+  list-services (ls)  List the services installed locally
+  status              View status of a service
+  logs                View logs for a service
+  update              update devservices to the latest version
+  purge               Purge the local devservices cache
 ```
 
 ## Viewing logs for a service
 
 ```shell
-# Follow snuba logs
-docker logs -f sentry_snuba
+devservices logs
 ```
 
 ## Running CLI clients for redis, postgres and clickhouse
 
 ```shell
 # redis
-docker exec -it sentry_redis redis-cli
+docker exec -it redis-redis-1 redis-cli
 
 # clickhouse
-docker exec -it sentry_clickhouse clickhouse-client
+docker exec -it snuba-clickhouse-1 clickhouse-client
 
 # psql
-docker exec -it sentry_postgres psql -U postgres
+docker exec -it sentry-postgres-1 psql -U postgres
 ```
 
 ## Removing container state
 
-Should you really bamboozle your containers or volumes, you can use `devservices rm` to start over.
+Should you really bamboozle your containers or volumes, you can use `devservices purge` to start over.
 
 ```shell
 # Remove all data (containers, volumes, and networks) associated with ALL services
-sentry devservices rm
+devservices purge
 ```
 
 As an example, let's say we've managed to corrupt our postgres
@@ -57,5 +59,6 @@ your postgres data you can do:
 
 ```shell
 # Remove all data (containers, volumes, and networks) associated with a single service
-sentry devservices rm postgres
+docker container rm sentry-postgres-1
+docker volume rm sentry_postgres-data
 ```
