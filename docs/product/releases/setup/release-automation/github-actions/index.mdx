@@ -1,14 +1,63 @@
 ---
 title: GitHub Actions
-description: "Learn how Sentry and GitHub Actions automate release management and help identify suspect commits."
+description: "Learn how Sentry and GitHub Actions automate release management, upload source maps and help identify suspect commits."
 ---
 
-<Alert level="warning">
+The [Sentry Release GitHub Action](https://github.com/marketplace/actions/sentry-release) automates Sentry release management in GitHub with just one step. After sending Sentry release information, you’ll be able to associate commits with releases. Additionally, releases are used for applying source maps to view original, un-minified source code.
 
-If you make changes to your organization slug, you'll need to update your configuration for this integration. Learn more in our [troubleshooting guide](/organization/integrations/troubleshooting).
+For more details about Sentry release management concepts, see the full documentation on [releases](/product/releases/).
+
+## Releases
+
+You can create a new Sentry release by setting the `version` option. By default, the Sentry Release GitHub action will use the GitHub sha that triggered the GitHub workflow.
+
+```yml
+- uses: actions/checkout@v4
+  with:
+    fetch-depth: 0
+
+- name: Create Sentry release
+  uses: getsentry/action-release@v1
+  env:
+    SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+    SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+    SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+  with:
+    environment: production
+    version: 'v1.3.4'
+```
+
+## Source Maps
+
+If your application is written in JavaScript you probably deploy minified application code. To enable readable
+stack traces in your Sentry errors, you need to upload source maps to Sentry.
+
+Provide the path(s) to your source maps via the `sourcemaps` option and set the `inject` flag to allow the GitHub
+action to inject Debug IDs into your source files and source maps to ensure proper un-minification of your stack traces.
+
+```yml
+- uses: actions/checkout@v4
+  with:
+    fetch-depth: 0
+
+- name: Create Sentry release
+  uses: getsentry/action-release@v1
+  env:
+    SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+    SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+    SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+  with:
+    environment: production
+    inject: true
+    sourcemaps: './dist'
+```
+
+<Alert>
+
+  It's important that you deploy the files that have been built on your CI after the Sentry Release GitHub Action
+  runs so that Sentry can properly un-minify stack traces for you.
 
 </Alert>
 
-The [Sentry Release GitHub Action](https://github.com/marketplace/actions/sentry-release) automates Sentry release management in GitHub with just one step. After sending Sentry release information, you’ll be able to associate commits with releases. Additionally, releases are used for applying source maps to view original, untransformed source code.
-
-For more details about Sentry release management concepts, see the full documentation on [releases](/product/releases/).
+Debug IDs are used to match the stack frame of an event with its corresponding minified source and source map file.
+Visit [What are Artifact Bundles](/platforms/javascript/sourcemaps/troubleshooting_js/artifact-bundles/) if you want to learn more about Artifact Bundles and Debug IDs.
