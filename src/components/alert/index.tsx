@@ -1,5 +1,9 @@
 import {ReactNode} from 'react';
-import {ExclamationTriangleIcon, InfoCircledIcon} from '@radix-ui/react-icons';
+import {
+  CheckCircledIcon,
+  ExclamationTriangleIcon,
+  InfoCircledIcon,
+} from '@radix-ui/react-icons';
 
 // explicitly not usig CSS modules here
 // because there's some prerendered content that depends on these exact class names
@@ -7,12 +11,18 @@ import './styles.scss';
 
 type AlertProps = {
   children?: ReactNode;
-  level?: 'info' | 'warning';
+  level?: 'info' | 'warning' | 'success';
   title?: string;
 };
 
+const ICON_MAP = {
+  info: InfoCircledIcon,
+  warning: ExclamationTriangleIcon,
+  success: CheckCircledIcon,
+} as const;
+
 export function Alert({title, children, level = 'info'}: AlertProps) {
-  const Icon = level === 'warning' ? ExclamationTriangleIcon : InfoCircledIcon;
+  const Icon = ICON_MAP[level];
 
   return (
     <div className={`alert ${'alert-' + level}`} role="alert">
