@@ -1,4 +1,5 @@
 import {ReactNode} from 'react';
+import {ExclamationTriangleIcon, InfoCircledIcon} from '@radix-ui/react-icons';
 
 // explicitly not usig CSS modules here
 // because there's some prerendered content that depends on these exact class names
@@ -11,10 +12,15 @@ type AlertProps = {
 };
 
 export function Alert({title, children, level = 'info'}: AlertProps) {
+  const Icon = level === 'warning' ? ExclamationTriangleIcon : InfoCircledIcon;
+
   return (
     <div className={`alert ${'alert-' + level}`} role="alert">
-      {title && <h5 className="alert-header">{title}</h5>}
-      <div className="alert-body content-flush-bottom">{children}</div>
+      <Icon className='alert-icon' />
+      <div className="alert-content">
+        {title && <h5 className="alert-header">{title}</h5>}
+        <div className="alert-body content-flush-bottom">{children}</div>
+      </div>
     </div>
   );
 }
