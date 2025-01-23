@@ -2,13 +2,13 @@
 title: Client Reports
 sidebar_order: 2
 ---
-## Scope and Intent
 
+## Scope and Intent
 
 Client reports (not to be confused with [User Feedback](https://docs.sentry.io/product/user-feedback/))
 are a protocol feature that let clients send status reports
-about themselves to Sentry.  They are currently mainly used to emit outcomes
-for events that were never sent.  Chained relays are also able to emit these
+about themselves to Sentry. They are currently mainly used to emit outcomes
+for events that were never sent. Chained relays are also able to emit these
 client reports to inform the next relay in chain about _some_ outcomes.
 
 Due to a bug in Relay, which discards envelopes containing unknown envelope
@@ -17,21 +17,20 @@ items, the minimum required version of Sentry for client reports is
 
 Before client reports were added there were no insights into the full number of events generated within applications instrumented with Sentry SDKs. It was always clear to track the number of events dropped on Sentry server side for any number of reason, but there was a gap in knowing just how many events were never sent from the SDKs at all. Are there patterns in different platforms? Are there problems we are not aware of? If a customer were to call Sentry and ask where there events are, we would have no answer, and no way to find out if there are truly missing events from their SDKs. Client reports removes some of this doubt. That being said we are not looking to perfectly measure every nuance and edge case of events being discarded in SDKs. It is more important to have a best effort and be able to gain insights to our SDKs and their host applications.
 
-As seen here, we communicate *Accepted*, *filtered* and *dropped*, and now we can send a new type *discarded* (not displayed in product yet).
+As seen here, we communicate _Accepted_, _filtered_ and _dropped_, and now we can send a new type _discarded_ (not displayed in product yet).
 ![image](https://user-images.githubusercontent.com/47563310/166436813-8c92e6b2-acf0-4a81-9413-b94c9a178fbf.png)
-
 
 ## Basic Operation
 
 Client reports are sent as envelope items to Sentry, typically as separate
-envelopes or with one of the already scheduled envelopes.  They should not
-be sent too frequently but not too infrequently either.  Their main purpose
+envelopes or with one of the already scheduled envelopes. They should not
+be sent too frequently but not too infrequently either. Their main purpose
 is to bring visibility into what is happening on the SDK side which affects
 the user experience.
 
 For instance SDKs might drop events in a few places in the SDK and this loss
-of events can be invisible to a customer.  Client reports let an SDK emit
-such event outcomes to provide data about how often this is happening.  For
+of events can be invisible to a customer. Client reports let an SDK emit
+such event outcomes to provide data about how often this is happening. For
 instance SDKs might drop events if the transports hit their maximum internal
 queue size, because rate limits instruct the SDK to drop events as they are
 over quota etc.
@@ -89,6 +88,7 @@ The following discard reasons are currently defined for `discarded_events`:
 
 - `queue_overflow`: a SDK internal queue (eg: transport queue) overflowed
 - `cache_overflow`: an SDK internal cache (eg: offline event cache) overflowed
+- `buffer_overflow`: an SDK internal buffer (eg. breadcrumbs buffer) overflowed
 - `ratelimit_backoff`: the SDK dropped events because an earlier rate limit
   instructed the SDK to back off.
 - `network_error`: events were dropped because of network errors and were not retried.
@@ -101,7 +101,7 @@ The following discard reasons are currently defined for `discarded_events`:
 - `backpressure`: an event was dropped due to downsampling caused by the system being under load
 
 In case a reason needs to be added,
-it also has to be added to the allowlist in [snuba](https://github.com/getsentry/snuba/blob/4e7cfdddcf7b93eacb762bc74ca2461cec9464e5/snuba/datasets/outcomes_processor.py#L24-L34).
+it also has to be added to the allowlist in [snuba](https://github.com/getsentry/snuba/blob/1a2528dacaf7415f71866bf2602ce473832d938c/rust_snuba/src/processors/outcomes.rs#L15-L27).
 
 Additionally the following discard reasons are reserved but there is no expectation
 that SDKs send these under normal operation:
@@ -112,7 +112,7 @@ that SDKs send these under normal operation:
 
 These function like `discarded_events` but identify events that were rate limited,
 filtered or filtered by by dynamic sampling _at a relay_. Client SDKs must never
-emit these _unless_ they are operating as a relay.  The reason codes for these
+emit these _unless_ they are operating as a relay. The reason codes for these
 need to match the reason codes that relay would emit directly to Sentry.
 
 ### Special Case for Span Outcomes
@@ -123,18 +123,18 @@ If certain spans are dropped in `beforeSendTransaction`, an event processor etc.
 
 ```json
 {
-	"discarded_events": [
-		{
-			"reason": "queue_overflow",
-			"category": "transaction",
-			"quantity": 1
-		},
-		{
-			"reason": "queue_overflow",
-			"category": "span",
-			"quantity": 3 // 2 spans + 1 span (the transaction itself should be counted)
-		}
-	]
+  "discarded_events": [
+    {
+      "reason": "queue_overflow",
+      "category": "transaction",
+      "quantity": 1
+    },
+    {
+      "reason": "queue_overflow",
+      "category": "span",
+      "quantity": 3 // 2 spans + 1 span (the transaction itself should be counted)
+    }
+  ]
 }
 ```
 
@@ -144,8 +144,9 @@ The client reports feature doesn't expect 100 percent correct numbers, and it is
 acceptable for the SDKs to lose a small number of client reports. The expectation of
 this feature is to give the users an approximation of specific outcomes. Of course,
 the SDKs should ensure not dropping too many reports. It is not required, for example:
- - to persist the data when an application crashes.
- - to move an envelope item with a client report to the next envelope when the cache for envelopes is full.
+
+- to persist the data when an application crashes.
+- to move an envelope item with a client report to the next envelope when the cache for envelopes is full.
 
 SDKs are encouraged to reduce needless communication. They shall not send an envelope
 everytime they record a discarded event. The following approaches are recommendations
@@ -172,10 +173,12 @@ this feature is best-effort.
 SDKs should provide a way to turn sending of client reports on and off. This option is called `send_client_reports` or `sendClientReports` on SDKs that have already implemented it.
 
 ### Legacy Events
+
 For SDKs still sending legacy events instead of envelopes for backward compatibility with
 older Sentry servers, the recommendation is to send the client report as a separate
 envelope or attach it to pending session envelopes.
 
 ### Custom Transports
+
 There is no expectation that such bookkeeping can work transparently for custom transports.
 Consequently, it's acceptable if client reports are optional for custom transports.

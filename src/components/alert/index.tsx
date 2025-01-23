@@ -6,7 +6,7 @@ import './styles.scss';
 
 type AlertProps = {
   children?: ReactNode;
-  level?: 'info' | 'warning' | 'danger' | 'success' | '';
+  level?: 'info' | 'warning';
   title?: string;
 };
 
