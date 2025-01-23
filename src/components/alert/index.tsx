@@ -24,6 +24,10 @@ const ICON_MAP = {
 export function Alert({title, children, level = 'info'}: AlertProps) {
   const Icon = ICON_MAP[level];
 
+  if (!Icon) {
+    throw new Error(`Invalid alert level: "${level}" passed to Alert component`);
+  }
+
   return (
     <div className={`alert ${'alert-' + level}`} role="alert">
       <Icon className="alert-icon" />
