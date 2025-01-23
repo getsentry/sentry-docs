@@ -76,3 +76,32 @@ Common modes:
 ```shell
 devservices up --mode symbolicator
 ```
+
+## Migrating data from `sentry devservices`
+
+<Alert level="warning" title="Important">
+  These instructions can result in data loss. Please proceed with caution. This is an example with postgres, but can be done with other docker volumes as well.
+</Alert>
+
+Volume names are different for each service.
+
+Clickhouse: `snuba_clickhouse-data`
+Postgres: `sentry_postgres-data`
+Kafka: `kafka_kafka-data`
+Redis: `redis_redis-data`
+
+```shell
+# Create a new postgres volume
+docker volume create sentry_postgres-data
+
+# Copy over the data from the old volume
+docker run --rm \                                                                                         
+  -v sentry_postgres:/old_volume \
+  -v sentry_postgres-data:/new_volume \
+  ubuntu \
+  bash -c "cd /old_volume && cp -a . /new_volume"
+
+# Validate that data has been copied over
+docker run --rm -v sentry_postgres-data:/data ubuntu ls -l /data
+```
+
