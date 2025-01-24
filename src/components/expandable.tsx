@@ -26,7 +26,11 @@ export function Expandable({title, level, children, permalink}: Props) {
 
   // Ensure we scroll to the element if the URL hash matches
   useEffect(() => {
-    if (id && window.location.hash === `#${id}`) {
+    if (!id) {
+      return () => {};
+    }
+
+    if (window.location.hash === `#${id}`) {
       document.querySelector(`#${id}`)?.scrollIntoView();
       setIsExpanded(true);
     }
