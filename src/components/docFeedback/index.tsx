@@ -1,5 +1,6 @@
 'use client';
-import {Fragment, useState} from 'react';
+import {Fragment, useEffect, useState} from 'react';
+import {CheckIcon as Check} from '@radix-ui/react-icons';
 import * as Sentry from '@sentry/browser';
 
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
@@ -15,10 +16,21 @@ export function DocFeedback({pathname}: Props) {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
 
+  // Initialize feedback state from sessionStorage
+  useEffect(() => {
+    const storedFeedback = sessionStorage.getItem(`feedback_${pathname}`);
+    if (storedFeedback === 'submitted') {
+      setFeedbackSubmitted(true);
+    }
+  }, [pathname]);
+
   const handleFeedback = (helpful: boolean) => {
     emit('Doc Feedback', {props: {page: pathname, helpful}});
 
-    if (!helpful) {
+    if (helpful) {
+      setFeedbackSubmitted(true);
+      sessionStorage.setItem(`feedback_${pathname}`, 'submitted');
+    } else {
       setShowFeedbackModal(true);
     }
   };
@@ -34,6 +46,7 @@ export function DocFeedback({pathname}: Props) {
         {captureContext: {tags: {page: pathname}}}
       );
       setFeedbackSubmitted(true);
+      sessionStorage.setItem(`feedback_${pathname}`, 'submitted');
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Failed to submit feedback:', error);
@@ -43,21 +56,31 @@ export function DocFeedback({pathname}: Props) {
   return (
     <Fragment>
       <div className="flex items-center gap-2 py-4 border-t border-[var(--gray-6)]">
-        <span className="text-sm">Was this helpful?</span>
-        <button
-          onClick={() => handleFeedback(true)}
-          className="py-2 px-4 gap-4 hover:bg-[var(--gray-3)] rounded-full flex items-center justify-center"
-          aria-label="Yes, this was helpful"
-        >
-          Yes 👍
-        </button>
-        <button
-          onClick={() => handleFeedback(false)}
-          className="py-2 px-4 gap-4 hover:bg-[var(--gray-3)] rounded-full flex items-center justify-center"
-          aria-label="No, this wasn't helpful"
-        >
-          No 👎
-        </button>
+        {feedbackSubmitted ? (
+          <div className="flex items-center gap-2 text-sm text-[var(--gray-11)]">
+            <Check className="w-4 h-4" /> Thanks for your feedback
+          </div>
+        ) : (
+          <Fragment>
+            <span className="text-sm">Was this helpful?</span>
+            <button
+              onClick={() => {
+                handleFeedback(true);
+              }}
+              className="py-2 px-4 gap-4 hover:bg-[var(--gray-3)] rounded-full flex items-center justify-center"
+              aria-label="Yes, this was helpful"
+            >
+              Yes 👍
+            </button>
+            <button
+              onClick={() => handleFeedback(false)}
+              className="py-2 px-4 gap-4 hover:bg-[var(--gray-3)] rounded-full flex items-center justify-center"
+              aria-label="No, this wasn't helpful"
+            >
+              No 👎
+            </button>
+          </Fragment>
+        )}
       </div>
 
       <Modal
