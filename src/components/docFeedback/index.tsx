@@ -24,6 +24,17 @@ export function DocFeedback({pathname}: Props) {
     }
   }, [pathname]);
 
+  // Auto-close modal after feedback submission
+  useEffect(() => {
+    if (feedbackSubmitted && showFeedbackModal) {
+      const timer = setTimeout(() => {
+        setShowFeedbackModal(false);
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [feedbackSubmitted, showFeedbackModal]);
+
   const handleFeedback = (helpful: boolean) => {
     emit('Doc Feedback', {props: {page: pathname, helpful}});
 
