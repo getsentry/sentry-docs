@@ -5,6 +5,7 @@ type Props<T> = {
    * The list of values to navigate through
    */
   list: T[];
+
   /**
    * Callback triggered when the item is selected
    */
@@ -14,7 +15,7 @@ type Props<T> = {
 /**
  * Navigate a list of items using the up/down arrow and ^j/^k keys
  */
-function useKeyboardNavigate<T>({list, onSelect}: Props<T>) {
+function useListKeyboardNavigate<T>({list, onSelect}: Props<T>) {
   const [focused, setFocus] = useState<T | null>(null);
 
   const setFocusIndex = useCallback(
@@ -92,4 +93,4 @@ function useKeyboardNavigate<T>({list, onSelect}: Props<T>) {
   return {focused, setFocus};
 }
 
-export {useKeyboardNavigate};
+export {useListKeyboardNavigate};
