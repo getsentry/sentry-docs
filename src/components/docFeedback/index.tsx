@@ -84,14 +84,14 @@ export function DocFeedback({pathname}: Props) {
               className="py-2 px-4 gap-4 hover:bg-[var(--gray-3)] rounded-full flex items-center justify-center"
               aria-label="Yes, this was helpful"
             >
-              Yes 👍
+              Yes 🙂
             </button>
             <button
               onClick={() => handleFeedback(false)}
               className="py-2 px-4 gap-4 hover:bg-[var(--gray-3)] rounded-full flex items-center justify-center"
               aria-label="No, this wasn't helpful"
             >
-              No 👎
+              No 🙁
             </button>
           </Fragment>
         )}
