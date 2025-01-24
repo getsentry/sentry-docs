@@ -89,11 +89,10 @@ export function DocFeedback({pathname}: Props) {
           setShowFeedbackModal(false);
           setFeedbackSubmitted(false);
         }}
-        title="Help us improve"
+        title={feedbackSubmitted ? 'Thanks for your feedback!' : 'Help us improve'}
       >
         {feedbackSubmitted ? (
           <div className="text-center">
-            <h3 className="text-lg font-medium mb-2">Thank you for your feedback!</h3>
             <p className="text-[var(--gray-11)] p-0 m-0">
               We appreciate your help in making our documentation better.
             </p>
