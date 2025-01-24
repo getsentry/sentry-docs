@@ -59,8 +59,11 @@ export function DocFeedback({pathname}: Props) {
       setFeedbackSubmitted(true);
       sessionStorage.setItem(`feedback_${pathname}`, 'submitted');
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Failed to submit feedback:', error);
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Failed to submit feedback:', error);
+      }
+      Sentry.captureException(error);
     }
   };
 
