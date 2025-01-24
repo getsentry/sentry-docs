@@ -225,6 +225,34 @@ if (span) {
 }
 ```
 
+### Adding attributes to all spans
+
+To add an attribute to all spans, use the `beforeSendTransaction` callback:
+
+```javascript
+Sentry.init({
+  // dsn, ...
+  beforeSendTransaction(event) {
+
+    // set the attribute on the root span
+    event.contexts.trace.data = {
+      ...event.contexts.trace.data,
+      myAttribute: "myValue",
+    }
+
+    // and on all child spans
+    event.spans.forEach(span => {
+      span.data = {
+        ...span.data,
+        myAttribute: "myValue",
+      }
+    });
+  }
+});
+```
+
+
+
 ### Adding Span Operations ("op")
 
 Spans can have an operation associated with them, which help activate Sentry identify additional context about the span. For example database related spans have the `db` span operation associated with them. The Sentry product offers additional controls, visualizations and filters for spans with known operations.
