@@ -253,7 +253,7 @@ export function Search({path, autoFocus, searchPlatforms = []}: Props) {
         <div className={styles['input-wrapper']}>
           <input
             type="text"
-            placeholder="Search Docs"
+            placeholder="Search or ask a question"
             aria-label="Search"
             className={styles['search-input']}
             value={query}
