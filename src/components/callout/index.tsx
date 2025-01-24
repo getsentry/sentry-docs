@@ -1,4 +1,9 @@
-import {ForwardRefExoticComponent, MouseEventHandler, ReactNode} from 'react';
+import {
+  ForwardRefExoticComponent,
+  MouseEventHandler,
+  ReactNode,
+  useCallback,
+} from 'react';
 
 // explicitly not usig CSS modules here
 // because there's some prerendered content that depends on these exact class names
@@ -24,6 +29,19 @@ function Header({
   id?: string;
   onClick?: MouseEventHandler;
 }) {
+  // We want to avoid actually triggering the link
+  const preventDefaultOnClick = useCallback(
+    (event: React.MouseEvent) => {
+      if (!onClick) {
+        return;
+      }
+
+      event.preventDefault();
+      onClick(event);
+    },
+    [onClick]
+  );
+
   if (!id) {
     return (
       <h5
@@ -36,17 +54,9 @@ function Header({
     );
   }
 
-  // We want to avoid actually triggering the link
-  const wrappedOnClick = onClick
-    ? (event: React.MouseEvent) => {
-        event.preventDefault();
-        onClick(event);
-      }
-    : undefined;
-
   return (
     <h5 className="callout-header" id={id}>
-      <a href={'#' + id} onClick={wrappedOnClick}>
+      <a href={'#' + id} onClick={preventDefaultOnClick}>
         {title}
       </a>
     </h5>

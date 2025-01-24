@@ -22,13 +22,13 @@ function slugify(str: string) {
 export function Expandable({title, level, children, permalink}: Props) {
   const id = permalink ? slugify(title) : undefined;
 
-  const defaultIsExpanded = id && window.location.hash === `#${id}`;
-  const [isExpanded, setIsExpanded] = useState(defaultIsExpanded);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Ensure we scroll to the element if the URL hash matches
   useEffect(() => {
     if (id && window.location.hash === `#${id}`) {
       document.querySelector(`#${id}`)?.scrollIntoView();
+      setIsExpanded(true);
     }
 
     // When the hash changes (e.g. when the back/forward browser buttons are used),

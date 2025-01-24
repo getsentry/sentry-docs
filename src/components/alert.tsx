@@ -5,7 +5,7 @@ import {
   InfoCircledIcon,
 } from '@radix-ui/react-icons';
 
-import {Callout} from '../callout';
+import {Callout} from './callout';
 
 type AlertProps = {
   children?: ReactNode;
