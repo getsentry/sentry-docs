@@ -2,10 +2,6 @@ import {useCallback, useEffect, useMemo, useState} from 'react';
 
 type Props<T> = {
   /**
-   * Whether to disable the keyboard event listeners conditionally
-   */
-  disableEventListeners: boolean;
-  /**
    * The list of values to navigate through
    */
   list: T[];
@@ -19,7 +15,7 @@ type Props<T> = {
 /**
  * Navigate a list of items using the up/down arrow and ^j/^k keys
  */
-function useListKeyboardNavigate<T>({list, onSelect, disableEventListeners}: Props<T>) {
+function useListKeyboardNavigate<T>({list, onSelect}: Props<T>) {
   const [focused, setFocus] = useState<T | null>(null);
 
   const setFocusIndex = useCallback(
@@ -90,13 +86,9 @@ function useListKeyboardNavigate<T>({list, onSelect, disableEventListeners}: Pro
   );
 
   useEffect(() => {
-    if (!disableEventListeners) {
-      document.addEventListener('keydown', handleNavigate);
-      return () => document.removeEventListener('keydown', handleNavigate);
-    }
-
-    return undefined;
-  }, [disableEventListeners, handleNavigate]);
+    document.addEventListener('keydown', handleNavigate);
+    return () => document.removeEventListener('keydown', handleNavigate);
+  }, [handleNavigate]);
 
   return {focused, setFocus};
 }
