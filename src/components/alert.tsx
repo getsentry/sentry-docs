@@ -5,9 +5,7 @@ import {
   InfoCircledIcon,
 } from '@radix-ui/react-icons';
 
-// explicitly not usig CSS modules here
-// because there's some prerendered content that depends on these exact class names
-import './styles.scss';
+import {Callout} from './callout';
 
 type AlertProps = {
   children?: ReactNode;
@@ -29,13 +27,9 @@ export function Alert({title, children, level = 'info'}: AlertProps) {
   }
 
   return (
-    <div className={`alert ${'alert-' + level}`} role="alert">
-      <Icon className="alert-icon" />
-      <div className="alert-content">
-        {title && <h5 className="alert-header">{title}</h5>}
-        <div className="alert-body content-flush-bottom">{children}</div>
-      </div>
-    </div>
+    <Callout role="alert" level={level} Icon={Icon} title={title}>
+      {children}
+    </Callout>
   );
 }
 
