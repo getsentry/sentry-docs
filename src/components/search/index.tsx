@@ -15,7 +15,7 @@ import {usePathname, useRouter} from 'next/navigation';
 import algoliaInsights from 'search-insights';
 
 import {useOnClickOutside} from 'sentry-docs/clientUtils';
-import {useKeyboardNavigate} from 'sentry-docs/hooks/useKeyboardNavigate';
+import {useListKeyboardNavigate} from 'sentry-docs/hooks/useListKeyboardNavigate';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 
 import styles from './search.module.scss';
@@ -181,9 +181,10 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
     []
   );
 
-  const {focused} = useKeyboardNavigate({
+  const {focused} = useListKeyboardNavigate({
     list: flatHits,
     onSelect: hit => router.push(relativizeUrl(hit.url)),
+    disableEventListeners: !inputFocus,
   });
 
   const trackSearchResultClick = useCallback((hit: Hit, position: number): void => {
