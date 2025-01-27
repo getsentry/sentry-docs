@@ -64,22 +64,24 @@ export function DocFeedback({pathname}: Props) {
           </div>
         ) : (
           <Fragment>
-            <div className="flex items-center gap-2">
-              <span className="text-sm">Was this helpful?</span>
-              <button
-                onClick={() => handleFeedback(true)}
-                className="py-2 px-4 gap-4 hover:bg-[var(--gray-3)] rounded-full flex items-center justify-center"
-                aria-label="Yes, this was helpful"
-              >
-                Yes 🙂
-              </button>
-              <button
-                onClick={() => handleFeedback(false)}
-                className="py-2 px-4 gap-4 hover:bg-[var(--gray-3)] rounded-full flex items-center justify-center"
-                aria-label="No, this wasn't helpful"
-              >
-                No 🙁
-              </button>
+            <div className="flex items-center gap-4 text-sm mt-8">
+              <span className="font-medium">Was this helpful?</span>
+              <div className="flex">
+                <button
+                  onClick={() => handleFeedback(true)}
+                  className="py-1 px-2 gap-4 hover:bg-[var(--gray-3)] rounded flex items-center justify-center"
+                  aria-label="Yes, this was helpful"
+                >
+                  Yes 👍
+                </button>
+                <button
+                  onClick={() => handleFeedback(false)}
+                  className="py-1 px-2 gap-4 hover:bg-[var(--gray-3)] rounded flex items-center justify-center"
+                  aria-label="No, this wasn't helpful"
+                >
+                  No 👎
+                </button>
+              </div>
             </div>
 
             <div
