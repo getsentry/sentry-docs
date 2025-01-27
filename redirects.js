@@ -861,11 +861,11 @@ const userDocsRedirects = [
   },
   {
     source: '/product/insights/mobile-vitals/app-starts/',
-    destination: '/product/insights/mobile/app-starts/',
+    destination: '/product/insights/mobile/mobile-screens/app-starts/',
   },
   {
     source: '/product/insights/mobile-vitals/screen-loads/',
-    destination: '/product/insights/mobile/screen-loads/',
+    destination: '/product/insights/mobile/mobile-screens/screen-loads/',
   },
   {
     source: '/product/insights/web-vitals/',
