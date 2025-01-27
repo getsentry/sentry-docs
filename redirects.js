@@ -944,6 +944,10 @@ const userDocsRedirects = [
     source: '/platforms/kotlin-multiplatform/:path*',
     destination: '/platforms/kotlin/guides/kotlin-multiplatform/:path*',
   },
+  {
+    source: '/product/explore/feature-flags/:path*',
+    destination: '/product/issues/issue-details/feature-flags/:path*',
+  },
 ];
 
 /**
