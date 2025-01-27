@@ -175,10 +175,9 @@ export function Search({
         inputQuery,
         {
           path,
-          platforms: currentSearchPlatforms.map(platform => {
-            const slug = standardSDKSlug(platform)?.slug ?? '';
-            return slug;
-          }),
+          platforms: currentSearchPlatforms.map(
+            platform => standardSDKSlug(platform)?.slug ?? ''
+          ),
           searchAllIndexes: showOffsiteResults,
           ...args,
         },
