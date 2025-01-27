@@ -62,17 +62,49 @@ type Props = {
   path?: string;
   searchPlatforms?: string[];
   showChatBot?: boolean;
+  useStoredSearchPlatforms?: boolean;
 };
 
-export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Props) {
+const STORAGE_KEY = 'sentry-docs-search-platforms';
+
+export function Search({
+  path,
+  autoFocus,
+  searchPlatforms = [],
+  showChatBot,
+  useStoredSearchPlatforms = true,
+}: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState(``);
   const [results, setResults] = useState([] as Result[]);
   const [inputFocus, setInputFocus] = useState(false);
   const [showOffsiteResults, setShowOffsiteResults] = useState(false);
   const [loading, setLoading] = useState(true);
-
+  const [currentSearchPlatforms, setCurrentSearchPlatforms] = useState(searchPlatforms);
   const pathname = usePathname();
+
+  // Load stored platforms on mount
+  useEffect(() => {
+    const storedPlatforms = localStorage.getItem(STORAGE_KEY) ?? '[]';
+    if (!storedPlatforms) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(searchPlatforms));
+    } else if (
+      storedPlatforms &&
+      searchPlatforms.length === 0 &&
+      useStoredSearchPlatforms
+    ) {
+      const platforms = JSON.parse(storedPlatforms);
+      setCurrentSearchPlatforms(platforms);
+    }
+  }, [useStoredSearchPlatforms, searchPlatforms]);
+
+  // Update stored platforms when they change
+  useEffect(() => {
+    if (searchPlatforms.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(searchPlatforms));
+      setCurrentSearchPlatforms(searchPlatforms);
+    }
+  }, [searchPlatforms]);
 
   const handleClickOutside = useCallback((ev: MouseEvent) => {
     // don't close the search results if the user is clicking the expand button
@@ -143,9 +175,10 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
         inputQuery,
         {
           path,
-          platforms: searchPlatforms.map(
-            platform => standardSDKSlug(platform)?.slug ?? ''
-          ),
+          platforms: currentSearchPlatforms.map(platform => {
+            const slug = standardSDKSlug(platform)?.slug ?? '';
+            return slug;
+          }),
           searchAllIndexes: showOffsiteResults,
           ...args,
         },
@@ -163,7 +196,7 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
         setResults(queryResults);
       }
     },
-    [path, searchPlatforms, showOffsiteResults, loading]
+    [path, currentSearchPlatforms, showOffsiteResults, loading]
   );
 
   const totalHits = results.reduce((a, x) => a + x.hits.length, 0);
