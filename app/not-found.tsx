@@ -24,7 +24,7 @@ export default function NotFound() {
 
         <div className="max-w-md pt-8">
           <p className="pb-4">Let's give it another shot:</p>
-          <Search autoFocus path={pathname} searchPlatforms={[]} showChatBot={false} />
+          <Search autoFocus path={pathname} searchPlatforms={[]} />
         </div>
         <div className="pt-8 flex gap-4">
           <Button variant="solid" size="3" asChild>

@@ -38,13 +38,7 @@ export function MobileMenu({pathname, searchPlatforms}: Props) {
             <DropdownMenu.Content className={styles.DropdownMenuContent} sideOffset={5}>
               <Box display={{xs: 'block', sm: 'none'}}>
                 <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
-                  <Search path={pathname} searchPlatforms={searchPlatforms} showChatBot />
-                </DropdownMenu.Item>
-
-                <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
-                  <Link href="#" className="mt-2 kapa-ai-class md:hidden">
-                    Ask AI
-                  </Link>
+                  <Search path={pathname} searchPlatforms={searchPlatforms} />
                 </DropdownMenu.Item>
                 <DropdownMenu.Separator className={styles.DropdownMenuSeparator} />
               </Box>
