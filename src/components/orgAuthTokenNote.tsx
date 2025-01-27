@@ -17,7 +17,7 @@ export function OrgAuthTokenNote() {
   return (
     <Fragment>
       <SignedInCheck isUserAuthenticated={false}>
-        <Note>
+        <Alert>
           You can{' '}
           <ExternalLink href={orgAuthTokenUrl} target="_blank">
             manually create an Auth Token
@@ -27,7 +27,7 @@ export function OrgAuthTokenNote() {
             sign in
           </ExternalLink>{' '}
           to create a token directly from this page.
-        </Note>
+        </Alert>>
       </SignedInCheck>
 
       <SignedInCheck isUserAuthenticated>
