@@ -1,6 +1,6 @@
 'use client';
 
-import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import {ArrowRightIcon} from '@radix-ui/react-icons';
 import {captureException} from '@sentry/nextjs';
 import {
@@ -256,9 +256,7 @@ export function Search({path, autoFocus, searchPlatforms = []}: Props) {
           <div className={styles['sgs-ai']}>
             <button
               id="ai-list-entry"
-              className={`${styles['sgs-ai-button']} ${
-                focused?.id === 'ai-list-entry' ? styles['sgs-ai-focused'] : ''
-              }`}
+              className={styles['sgs-ai-button']}
               onClick={() => {
                 if (window.Kapa?.open) {
                   // close search results
