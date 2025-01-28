@@ -32,11 +32,3 @@ export function Alert({title, children, level = 'info'}: AlertProps) {
     </Callout>
   );
 }
-
-type NoteProps = {
-  children: ReactNode;
-};
-
-export function Note({children}: NoteProps) {
-  return <Alert>{children}</Alert>;
-}
