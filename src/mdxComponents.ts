@@ -1,4 +1,4 @@
-import {Alert, Note} from './components/alert';
+import {Alert} from './components/alert';
 import {Arcade} from './components/arcade';
 import {Break} from './components/break';
 import {CliChecksumTable} from './components/cliChecksumTable';
@@ -58,7 +58,6 @@ export function mdxComponents(
     LambdaLayerDetail,
     Link: SmartLink,
     LinkWithPlatformIcon,
-    Note,
     OrgAuthTokenNote,
     PageGrid,
     ParamTable,
