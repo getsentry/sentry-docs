@@ -20,9 +20,15 @@ type Props = {
   pathname: string;
   searchPlatforms: string[];
   noSearch?: boolean;
+  useStoredSearchPlatforms?: boolean;
 };
 
-export function Header({pathname, searchPlatforms, noSearch}: Props) {
+export function Header({
+  pathname,
+  searchPlatforms,
+  noSearch,
+  useStoredSearchPlatforms,
+}: Props) {
   return (
     <header className="bg-[var(--gray-1)] h-[var(--header-height)] w-full z-50 border-b border-[var(--gray-a3)] fixed top-0">
       {/* define a header-height variable for consumption by other components */}
@@ -62,7 +68,12 @@ export function Header({pathname, searchPlatforms, noSearch}: Props) {
         </Link>
         {!noSearch && (
           <div className="hidden md:flex justify-center lg:justify-start w-full px-6">
-            <Search path={pathname} searchPlatforms={searchPlatforms} showChatBot />
+            <Search
+              path={pathname}
+              searchPlatforms={searchPlatforms}
+              showChatBot
+              useStoredSearchPlatforms={useStoredSearchPlatforms}
+            />
           </div>
         )}
         <div className="hidden lg-xl:flex justify-end flex-1 space-x-2 items-center min-w-fit">
