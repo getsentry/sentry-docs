@@ -1,26 +1,16 @@
-
 Distributed tracing will be set up automatically if you've <PlatformLink to="/tracing/">set up tracing</PlatformLink>.
+
+<Expandable title="What is Distributed Tracing?">
+  <PlatformContent includePath="distributed-tracing/explanation" />
+</Expandable>
 
 When tracing is enabled, the Sentry SDK will not only create spans for pageloads and transactions but also propagate trace information to other systems. This allows you to connect multiple systems and see how they interact with each other.
 
-If you have not enabled tracing, or you need to propagate traces in places other than outgoing HTTP requests (e.g. when working with websockers), you can manually set up your application for distributed tracing to work.
+By default, outgoing HTTP requests will automatically be instrumented for you. For other cases where you may want to continue traces (for example when working with websockets), you can manually extract and inject tracing information.
 
 ## Enabling Automatic Distributed Tracing
 
 To enable distributed tracing for your frontend, add `browserTracingIntegration` to your `Sentry.init()` options as described in the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/">Automatic Instrumentation</PlatformLink> docs.
-
-If you want to use distributed tracing without creating spans, set the `tracesSampleRate` option to `0`.
-
-```javascript
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [Sentry.browserTracingIntegration()],
-
-  // If this is 0, tracing is disabled
-  // but distributed tracing is not
-  tracesSampleRate: 0,
-});
-```
 
 ### Continuing a Trace Manually
 
@@ -53,7 +43,7 @@ Sentry.startBrowserTracingPageLoadSpan(
 
 ## Configuring Distributed Tracing Without `browserTracingIntegration`
 
-If you don't want to use the `browserTracingIntegration` integration, you can manually extract and inject tracing data in your application to connect multiple systems. For this, you must:
+If you don't want to use the `browserTracingIntegration` integration, or you want to propagate traces in other places than HTTP requests (for example, with websockets), you can manually extract and inject tracing data in your application to connect multiple systems. For this, you must:
 
 - Extract and store incoming tracing information from HTML `<meta>` tags when loading the page.
 - Inject tracing information to any outgoing requests.
