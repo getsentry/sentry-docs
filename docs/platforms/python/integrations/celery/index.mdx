@@ -35,7 +35,7 @@ In addition to capturing errors, you can use Sentry for [distributed tracing](/c
   options={["error-monitoring", "performance", "profiling"]}
 />
 
-```python {filename:tasks.py} {"onboardingOptions": {"performance": "12-14", "profiling": "15-18"}}
+```python {filename:tasks.py} {"onboardingOptions": {"performance": "15-17", "profiling": "18-21"}}
 from celery import Celery, signals
 import sentry_sdk
 
@@ -47,6 +47,9 @@ app = Celery("tasks", broker="...")
 def init_sentry(**_kwargs):
     sentry_sdk.init(
         dsn="___PUBLIC_DSN___",
+        # Add request headers and IP for users,
+        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+        send_default_pii=True,
         # Set traces_sample_rate to 1.0 to capture 100%
         # of transactions for tracing.
         traces_sample_rate=1.0,
@@ -70,7 +73,7 @@ The [`celeryd_init`](https://docs.celeryq.dev/en/stable/userguide/signals.html?#
   options={["error-monitoring", "performance", "profiling"]}
 />
 
-```python {filename:main.py} {"onboardingOptions": {"performance": "8-10", "profiling": "11-14"}}
+```python {filename:main.py} {"onboardingOptions": {"performance": "11-13", "profiling": "14-17"}}
 from tasks import add
 import sentry_sdk
 
@@ -78,6 +81,9 @@ def main():
     # Initializing Sentry SDK in our process
     sentry_sdk.init(
         dsn="___PUBLIC_DSN___",
+        # Add data like request headers and IP for users, if applicable;
+        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+        send_default_pii=True,
         # Set traces_sample_rate to 1.0 to capture 100%
         # of transactions for tracing.
         traces_sample_rate=1.0,
