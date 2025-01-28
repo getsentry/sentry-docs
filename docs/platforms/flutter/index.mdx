@@ -13,11 +13,11 @@ categories:
 
 On this page, we get you up and running with Sentry's Flutter SDK.
 
-<Note>
+<Alert>
 
 If you don't already have an account and Sentry project established, head over to [sentry.io](https://sentry.io/signup/), then return to this page.
 
-</Note>
+</Alert>
 
 ## Features
 
@@ -46,7 +46,6 @@ dependencies:
 
 Configuration should happen as early as possible in your application's lifecycle.
 
-
 ```dart {"onboardingOptions": {"performance": "8-10", "profiling": "11-14"}}
 import 'package:flutter/widgets.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -63,8 +62,53 @@ Future<void> main() async {
       // Note: Profiling alpha is available for iOS and macOS since SDK version 7.12.0
       options.profilesSampleRate = 1.0;
     },
-    appRunner: () => runApp(MyApp()),
+    appRunner: () => runApp(
+      SentryWidget(
+        child: MyApp(),
+      ),
+    ),
   );
+
+  // you can also configure SENTRY_DSN, SENTRY_RELEASE, SENTRY_DIST, and
+  // SENTRY_ENVIRONMENT via Dart environment variable (--dart-define)
+}
+```
+
+```dart {tabTitle:With custom zone}  {"onboardingOptions": {"performance": "16-18", "profiling": "19-22"}}
+import 'package:flutter/widgets.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+Future<void> main() async {
+  // The SDK creates it's own custom zone on web for automatic error and breadcrumb tracking on web.
+  // This could lead to zone mismatch errors if you needed to call `WidgetsBinding.ensureInitialized()` before Sentry in a cusom zone.
+  // With `Sentry.runZonedGuarded` you still get convenient auto error and breadcrumb tracking and can also call `WidgetsBinding.ensureInitialized()` before Sentry.
+  Sentry.runZonedGuarded(() async {
+    WidgetsBinding.ensureInitialized();
+
+    // Errors before init will not be handled by Sentry
+
+    await SentryFlutter.init(
+      (options) {
+        options.dsn = '___PUBLIC_DSN___';
+        // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
+        // We recommend adjusting this value in production.
+        options.tracesSampleRate = 1.0;
+        // The sampling rate for profiling is relative to tracesSampleRate
+        // Setting to 1.0 will profile 100% of sampled transactions:
+        // Note: Profiling alpha is available for iOS and macOS since SDK version 7.12.0
+        options.profilesSampleRate = 1.0;
+      },
+      appRunner: () => runApp(
+        SentryWidget(
+          child: MyApp(),
+        ),
+      ),
+    );
+  } (error, stackTrace) {
+    // Automatically sends errors to Sentry, no need to do any
+    // captureException calls on your part.
+    // On top of that, you can do your own custom stuff in this callback.
+  });
 
   // you can also configure SENTRY_DSN, SENTRY_RELEASE, SENTRY_DIST, and
   // SENTRY_ENVIRONMENT via Dart environment variable (--dart-define)
@@ -79,7 +123,7 @@ Verify that your app is sending events to Sentry by adding the following snippet
 import 'package:sentry/sentry.dart';
 
 try {
-  aMethodThatMightFail();
+  throw Exception('Sentry Test Exception');
 } catch (exception, stackTrace) {
   await Sentry.captureException(
     exception,

@@ -1,0 +1,32 @@
+---
+title: Sampling
+---
+
+<Alert level="warning">
+  🚧 This document is work in progress.
+</Alert>
+
+<Alert>
+  This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement levels.
+</Alert>
+
+Any APIs exposed to the user to sample spans MUST adhere to the following design principles:
+
+- Sampling MUST only happen to a root span
+- The APIs are optimized for trace completeness
+- The APIs are optimized for conclusive sampling decisions
+
+## Sample with `tracesSampleRate`
+
+The SDK is automatically initialized with a `tracesSampleRate` of `0.0`.
+When starting a root span, the configured rate is compared against a random number between `0.0` and `1.0` to decide if this root span will be sampled or not.
+
+## Sample with `tracesSampler`
+
+If the SDK is configured with a `tracesSampler`, the `tracesSampleRate` no longer applies.
+
+The `tracesSampler` callback MUST receive sufficient arguments from users to define their own sampling rules.
+This MAY include but is not limited to certain attributes from the root span, such as HTTP headers.
+The return value of the `tracesSampler` is a float between `0.0` and `1.0`.
+
+If no `tracesSampler` is configured, a propagated sampling decision via the traceparent takes precedence over the `tracesSampleRate`. This behavior MAY be disabled by defining a `tracesSampler`.

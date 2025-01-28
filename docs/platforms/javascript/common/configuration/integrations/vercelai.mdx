@@ -1,0 +1,75 @@
+---
+title: Vercel AI
+description: "Adds instrumentation for Vercel AI SDK."
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.electron
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.astro
+  - javascript.bun
+---
+
+<Alert>
+
+This integration only works in the Node.js and Bun runtimes. Requires SDK version `8.43.0` or higher.
+
+</Alert>
+
+_Import name: `Sentry.vercelAIIntegration`_
+
+The `vercelAIIntegration` adds instrumentation for the [`ai`](https://www.npmjs.com/package/ai) library by Vercel to capture spans using the [`AI SDK's built-in Telemetry`](https://sdk.vercel.ai/docs/ai-sdk-core/telemetry).
+
+```javascript
+Sentry.init({
+  integrations: [new Sentry.vercelAIIntegration()],
+});
+```
+
+To enhance the spans collected by this integration, we recommend providing a `functionId` to identify the function that the telemetry data is for. For more details, see the [AI SDK Telemetry Metadata docs](https://sdk.vercel.ai/docs/ai-sdk-core/telemetry#telemetry-metadata).
+
+```javascript
+const result = await generateText({
+  model: openai("gpt-4-turbo"),
+  experimental_telemetry: { functionId: "my-awesome-function" },
+});
+```
+
+## Configuration
+
+By default this integration adds tracing support to all `ai` function callsites. If you need to disable span collection for a specific call, you can do so by setting `experimental_telemetry.isEnabled` to `false` in the first argument of the function call.
+
+```javascript
+const result = await generateText({
+  model: openai("gpt-4-turbo"),
+  experimental_telemetry: { isEnabled: false },
+});
+```
+
+If you want to collect inputs and outputs for a specific call, you must specifically opt-in to each function call by setting `experimental_telemetry.recordInputs` and `experimental_telemetry.recordOutputs` to `true`.
+
+```javascript
+const result = await generateText({
+  model: openai("gpt-4-turbo"),
+  experimental_telemetry: {
+    isEnabled: true,
+    recordInputs: true,
+    recordOutputs: true,
+  },
+});
+```
+
+## Supported Versions
+
+- `ai`: `>=3.0.0 <5`

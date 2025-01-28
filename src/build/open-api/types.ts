@@ -36,6 +36,11 @@ type Tag = {
   'x-sidebar-name': string;
 };
 
+type ServerMeta = {
+  description: string;
+  url: string;
+};
+
 export type DeRefedOpenAPI = {
   paths: {
     [key: string]: {
@@ -66,6 +71,7 @@ export type DeRefedOpenAPI = {
         tags: string[];
         description?: string;
         security?: any;
+        servers?: ServerMeta[];
       };
     };
   };

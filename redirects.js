@@ -115,6 +115,10 @@ const developerDocsRedirects = [
     destination: '/backend/api/:path*',
   },
   {
+    source: '/api-server/:path*',
+    destination: '/backend/:path*',
+  },
+  {
     source: '/application/serializers/',
     destination: '/backend/serializers/',
   },
@@ -215,8 +219,40 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/organization/integrations/msteams/',
+    destination: '/organization/integrations/notification-incidents/msteams/',
+  },
+  {
+    source: '/product/explore/session-replay/hydration-errors/',
+    destination: '/product/issues/issue-details/replay-issues/hydration-error/',
+  },
+  {
+    source: '/product/explore/session-replay/privacy/',
+    destination: '/security-legal-pii/scrubbing/protecting-user-privacy/',
+  },
+  {
+    source: '/product/explore/session-replay/rage-dead-clicks/',
+    destination: '/product/issues/issue-details/replay-issues/rage-clicks/',
+  },
+  {
     source: '/organization/integrations/launchdarkly/',
     destination: '/organization/integrations/feature-flag/launchdarkly/',
+  },
+  {
+    source: '/product/explore/session-replay/replay-details/',
+    destination: '/product/explore/session-replay/web/replay-details/',
+  },
+  {
+    source: '/platforms/javascript/guides/nextjs/sourcemaps/uploading/',
+    destination: '/platforms/javascript/guides/nextjs/sourcemaps/',
+  },
+  {
+    source: '/organization/integrations/vercel/',
+    destination: '/organization/integrations/deployment/vercel/',
+  },
+  {
+    source: '/product/accounts/quotas/org-stats/',
+    destination: '/product/stats/',
   },
   {
     source: '/internal/:path*',
@@ -638,6 +674,10 @@ const userDocsRedirects = [
     destination: '/platforms/:platform/guides/:guide/user-feedback/',
   },
   {
+    source: '/platforms/javascript/guides/:guide/user-feedback/v7/',
+    destination: '/platforms/javascript/guides/:guide/user-feedback/configuration__v7.x',
+  },
+  {
     source: '/platforms/:platform/enriching-events/user-feedback/',
     destination: '/platforms/:platform/user-feedback/',
   },
@@ -801,6 +841,112 @@ const userDocsRedirects = [
     source:
       '/platforms/react-native/data-management/debug-files/source-context/data-management/debug-files/upload/',
     destination: '/platforms/react-native/data-management/debug-files/upload/',
+  },
+  // Redirects for prior Insights information architecture:
+  {
+    source: '/product/insights/requests/',
+    destination: '/product/insights/backend/requests/',
+  },
+  {
+    source: '/product/insights/queries/',
+    destination: '/product/insights/backend/queries/',
+  },
+  {
+    source: '/product/insights/assets/',
+    destination: '/product/insights/frontend/assets/',
+  },
+  {
+    source: '/product/insights/mobile-vitals/',
+    destination: '/product/insights/mobile/',
+  },
+  {
+    source: '/product/insights/mobile-vitals/app-starts/',
+    destination: '/product/insights/mobile/app-starts/',
+  },
+  {
+    source: '/product/insights/mobile-vitals/screen-loads/',
+    destination: '/product/insights/mobile/screen-loads/',
+  },
+  {
+    source: '/product/insights/web-vitals/',
+    destination: '/product/insights/frontend/web-vitals/',
+  },
+  {
+    source: '/product/insights/web-vitals/web-vitals-concepts/',
+    destination: '/product/insights/frontend/web-vitals/web-vitals-concepts/',
+  },
+  {
+    source: '/product/insights/caches/',
+    destination: '/product/insights/backend/caches/',
+  },
+  {
+    source: '/product/insights/caches/cache-page/',
+    destination: '/product/insights/backend/caches/cache-page/',
+  },
+  {
+    source: '/product/insights/queue-monitoring/',
+    destination: '/product/insights/backend/queue-monitoring/',
+  },
+  {
+    source: '/product/insights/queue-monitoring/queues-page/',
+    destination: '/product/insights/backend/queue-monitoring/queues-page/',
+  },
+  {
+    source: '/product/insights/llm-monitoring/',
+    destination: '/product/insights/ai/llm-monitoring/',
+  },
+  {
+    source: '/product/insights/llm-monitoring/getting-started/',
+    destination: '/product/insights/ai/llm-monitoring/getting-started/',
+  },
+  {
+    source: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
+    destination: '/product/insights/ai/llm-monitoring/getting-started/the-dashboard/',
+  },
+  // End of Insights reduirects.
+  {
+    source: '/platforms/javascript/guides/astro/manual-setup/',
+    destination: '/platforms/javascript/guides/astro/',
+  },
+  {
+    source: '/product/error-monitoring/dashboards/',
+    destination: '/product/dashboards/',
+  },
+  {
+    source: '/product/error-monitoring/filtering/',
+    destination: '/concepts/data-management/filtering/',
+  },
+  {
+    source: '/product/error-monitoring/issue-owners/',
+    destination: '/product/issues/ownership-rules/',
+  },
+  {
+    source: '/product/error-monitoring/reprocessing/',
+    destination: '/product/issues/reprocessing/',
+  },
+  {
+    source: '/product/error-monitoring/breadcrumbs/',
+    destination: '/product/issues/issue-details/breadcrumbs/',
+  },
+  {
+    source: '/product/error-monitoring/user-impact/',
+    destination: '/product/issues/issue-details/',
+  },
+  {
+    source: '/product/error-monitoring/stacktrace/',
+    destination: '/product/issues/issue-details/#stack-trace',
+  },
+  {
+    source: '/product/error-monitoring/:path*',
+    destination: '/product/issues',
+  },
+  {
+    source: '/platforms/kotlin-multiplatform/:path*',
+    destination: '/platforms/kotlin/guides/kotlin-multiplatform/:path*',
+  },
+  {
+    source: '/product/explore/feature-flags/:path*',
+    destination: '/product/issues/issue-details/feature-flags/:path*',
   },
 ];
 

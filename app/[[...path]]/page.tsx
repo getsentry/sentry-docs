@@ -58,7 +58,8 @@ function MDXLayoutRenderer({mdxSource, ...rest}) {
   return <MDXLayout components={mdxComponentsWithWrapper} {...rest} />;
 }
 
-export default async function Page({params}: {params: {path?: string[]}}) {
+export default async function Page(props: {params: Promise<{path?: string[]}>}) {
+  const params = await props.params;
   // get frontmatter of all docs in tree
   const rootNode = await getDocsRootNode();
 
@@ -172,9 +173,9 @@ export default async function Page({params}: {params: {path?: string[]}}) {
 }
 
 type MetadataProps = {
-  params: {
+  params: Promise<{
     path?: string[];
-  };
+  }>;
 };
 
 // Helper function to clean up canonical tags missing leading or trailing slash
@@ -188,7 +189,8 @@ function formatCanonicalTag(tag: string) {
   return tag;
 }
 
-export async function generateMetadata({params}: MetadataProps): Promise<Metadata> {
+export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
+  const params = await props.params;
   const domain = isDeveloperDocs
     ? 'https://develop.sentry.dev'
     : 'https://docs.sentry.io';
@@ -198,10 +200,14 @@ export async function generateMetadata({params}: MetadataProps): Promise<Metadat
     : domain;
   let title =
     'Sentry Docs | Application Performance Monitoring &amp; Error Tracking Software';
-  let customCanonicalTag;
+  let customCanonicalTag: string = '';
   let description =
     'Self-hosted and cloud-based application performance monitoring &amp; error tracking that helps software teams see clearer, solve quicker, &amp; learn continuously.';
-  const images = [{url: `${previewDomain ?? domain}/meta.jpg`, width: 1200, height: 822}];
+  // show og image on the home page only
+  const images =
+    ((await props.params).path ?? []).length === 0
+      ? [{url: `${previewDomain ?? domain}/og.png`, width: 1200, height: 630}]
+      : [];
 
   const rootNode = await getDocsRootNode();
 

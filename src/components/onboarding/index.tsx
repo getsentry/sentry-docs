@@ -48,6 +48,19 @@ const optionDetails: Record<
       </span>
     ),
   },
+  'source-context': {
+    name: 'Source context',
+    description: (
+      <span>
+        Upload your source code to allow Sentry to display snippets of your code next to
+        the event stack traces.
+      </span>
+    ),
+  },
+  opentelemetry: {
+    name: 'OpenTelemetry',
+    description: <span>Combine Sentry with OpenTelemetry.</span>,
+  },
 };
 
 const OPTION_IDS = [
@@ -55,6 +68,8 @@ const OPTION_IDS = [
   'performance',
   'profiling',
   'session-replay',
+  'source-context',
+  'opentelemetry',
 ] as const;
 
 type OptionId = (typeof OPTION_IDS)[number];

@@ -2,16 +2,8 @@
 title: Set Up Session Replay
 sidebar_order: 5500
 notSupported:
-description: "Learn how to enable the Beta of Mobile Session Replay in your app."
+description: "Learn how to enable Session Replay in your mobile app."
 ---
-
-<Note>
-
-Mobile support for Session Replay is in Beta. Features available in Beta are still work-in-progress and may have bugs. We recognize the irony.
-
-If you have any questions, feedback or would like to report a bug, please open a [GitHub issue](https://github.com/getsentry/sentry-react-native/issues/new?assignees=&labels=Platform%3A+React-Native%2CType%3A+%F0%9F%AA%B2+Bug&projects=&template=BUG_REPORT.md) with a link to a relevant replay in Sentry if possible.
-
-</Note>
 
 [Session Replay](/product/explore/session-replay/) helps you get to the root cause of an error or latency issue faster by providing you with a reproduction of what was happening in the user's device before, during, and after the issue. You can rewind and replay your application's state and see key user interactions, like taps, swipes, network requests, and console entries, in a single UI.
 
@@ -19,7 +11,7 @@ By default, our Session Replay SDK masks all text content, images, and user inpu
 
 ## Pre-requisites
 
-Make sure your Sentry React Native SDK version is at least 5.26.0.
+Make sure your Sentry React Native SDK version is at least 6.5.0.
 
 ## Install
 
@@ -46,10 +38,8 @@ import * as Sentry from "@sentry/react-native";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  _experiments: {
-    replaysSessionSampleRate: 1.0,
-    replaysOnErrorSampleRate: 1.0,
-  },
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
   integrations: [Sentry.mobileReplayIntegration()],
 });
 ```
@@ -75,22 +65,26 @@ Sampling begins as soon as a session starts. <PlatformIdentifier name="replays-s
 
 ## Privacy
 
-The SDK is recording and aggressively redacting all text and images. We plan to add fine controls for redacting, but in this version, we just allow either on or off. The default is on. Please don’t turn it off if you have sensitive data in your app. Before the Beta is complete, we'll give you the controls you need.
+The SDK is recording and aggressively masking all text, images, and webviews by default. If your app has any sensitive data, you should only turn the default masking off after explicitly masking out any sensitive data, using the APIs described below.
+However, if you're working on a mobile app that doesn't contain any PII or private data, you can opt out of the default text and image-masking settings. To learn more about Session Replay privacy, [read our docs](/platforms/react-native/session-replay/privacy/).
 
-<Note>
+<Alert>
 
 If you encounter any data not being redacted with the default settings, please let us know through a [GitHub issue](https://github.com/getsentry/sentry-react-native/issues/new?assignees=&labels=Platform%3A+React-Native%2CType%3A+%F0%9F%AA%B2+Bug&projects=&template=BUG_REPORT.md).
 
-</Note>
+</Alert>
 
 To disable redaction altogether (not to be used on applications with sensitive data):
 
 ```javascript
-Sentry.mobileReplayIntegration({
-  maskAllText: false,
-  maskAllImages: false,
-  maskAllVectors: false,
-}),
+// You can pass options to the mobileReplayIntegration function during init:
+integrations: [
+  Sentry.mobileReplayIntegration({
+    maskAllText: false,
+    maskAllImages: false,
+    maskAllVectors: false,
+  }),
+]
 ```
 
 ## React Component Names

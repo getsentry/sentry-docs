@@ -1,10 +1,10 @@
 ```javascript {filename: main.ts}
 // Import this first!
-import './instrument';
+import "./instrument";
 
 // Now import other modules
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { NestFactory } from "@nestjs/core";
+import { AppModule } from "./app.module";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -17,15 +17,15 @@ bootstrap();
 Afterwards, add the `SentryModule` as a root module to your main module:
 
 ```javascript {filename: app.module.ts} {2, 8}
-import { Module } from '@nestjs/common';
-import { SentryModule } from '@sentry/nestjs/setup';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { Module } from "@nestjs/common";
+import { SentryModule } from "@sentry/nestjs/setup";
+import { AppController } from "./app.controller";
+import { AppService } from "./app.service";
 
 @Module({
   imports: [
-      SentryModule.forRoot(),
-      // ...other modules
+    SentryModule.forRoot(),
+    // ...other modules
   ],
   controllers: [AppController],
   providers: [AppService],
@@ -33,32 +33,36 @@ import { AppService } from './app.service';
 export class AppModule {}
 ```
 
-In case you are using a global catch-all exception filter (which is either a filter registered with
-`app.useGlobalFilters()` or a filter registered in your app module providers annotated with a `@Catch()` decorator
-without arguments), add a `@WithSentry()` decorator to the `catch()` method of this global error filter. This decorator
-will report all unexpected errors that are received by your global error filter to Sentry:
+If you're using a global catch-all exception filter (which is either a filter registered with `app.useGlobalFilters()` or a filter registered in your app module providers annotated with a `@Catch()` decorator without arguments), add a `@SentryExceptionCaptured()` decorator to the filter's `catch()` method.
+This decorator will report all unexpected errors that are received by your global error filter to Sentry:
 
 ```javascript {2, 6}
 import { Catch, ExceptionFilter } from '@nestjs/common';
-import { WithSentry } from '@sentry/nestjs';
+import { SentryExceptionCaptured } from '@sentry/nestjs';
 
 @Catch()
 export class YourCatchAllExceptionFilter implements ExceptionFilter {
-  @WithSentry()
+  @SentryExceptionCaptured()
   catch(exception, host): void {
     // your implementation here
   }
 }
 ```
 
-In case you do not have a global catch-all exception filter, add the `SentryGlobalFilter` to the providers of your main
-module. This filter will report all unhandled errors to Sentry that are not caught by any other error filter.
+By default, only unhandled exceptions that are not caught by an error filter are reported to Sentry.
+`HttpException`s (including [derivatives](https://docs.nestjs.com/exception-filters#built-in-http-exceptions)) are also not captured by default because they mostly act as control flow vehicles.
+
+{/* TODO(v9): Remove this note */}
+_Note that `@SentryExceptionCaptured()` was called `@WithSentry` in SDK versions `8.38.0` and prior._
+
+If you don't have a global catch-all exception filter, add the `SentryGlobalFilter` to the providers of your main module.
+This filter will report any unhandled errors that aren't caught by other error filters to Sentry.
 **Important:** The `SentryGlobalFilter` needs to be registered before any other exception filters.
 
 ```javascript {3, 9}
-import { Module } from '@nestjs/common';
-import { APP_FILTER } from '@nestjs/core';
-import { SentryGlobalFilter } from '@sentry/nestjs/setup';
+import { Module } from "@nestjs/common";
+import { APP_FILTER } from "@nestjs/core";
+import { SentryGlobalFilter } from "@sentry/nestjs/setup";
 
 @Module({
   providers: [
@@ -72,9 +76,12 @@ import { SentryGlobalFilter } from '@sentry/nestjs/setup';
 export class AppModule {}
 ```
 
-**Note:** In NestJS + GraphQL applications replace the `SentryGlobalFilter` with the `SentryGlobalGraphQLFilter`.
+{/* TODO(v9): Remove this note. */}
 
-By default, exceptions with status code 4xx are not sent to Sentry. If you still want to capture these exceptions, you can do so manually with `Sentry.captureException()`:
+**Note:** If you have a NestJS + GraphQL application and you are using the `@sentry/nestjs` SDK version `8.38.0` or earlier, replace the `SentryGlobalFilter` with the `SentryGlobalGenericFilter`.
+In SDK versions `8.39.0` and above, the `SentryGlobalGenericFilter` is deprecated because the `SentryGlobalFilter` will handle GraphQL contexts automatically.
+
+If you have error filters for specific types of exceptions (for example `@Catch(HttpException)`, or any other `@Catch(...)` with arguments) and you want to capture errors caught by these filters, capture the errors in the `catch()` handler with `Sentry.captureException()`:
 
 ```javascript {9}
 import { ArgumentsHost, BadRequestException, Catch } from '@nestjs/common';

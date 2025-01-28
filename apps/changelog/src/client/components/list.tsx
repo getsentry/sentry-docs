@@ -4,7 +4,7 @@ import type {Category} from '@prisma/client';
 import {MDXRemote, MDXRemoteSerializeResult} from 'next-mdx-remote';
 import Link from 'next/link';
 import {parseAsArrayOf, parseAsInteger, parseAsString, useQueryState} from 'nuqs';
-import {Fragment} from 'react';
+import {Fragment, useState} from 'react';
 import {Article} from './article';
 import {Pagination} from './pagination';
 import {CategoryTag} from './tag';
@@ -35,7 +35,8 @@ function changelogEntryPublishDateToAddressableTag(date: Date) {
 }
 
 export function ChangelogList({changelogs}: {changelogs: ChangelogEntry[]}) {
-  const [searchValue, setSearchValue] = useQueryState('search', parseAsString);
+  const [searchValue, setSearchValue] = useState<string | null>('');
+  const [, setQuerySearchValue] = useQueryState('search', parseAsString);
 
   const [monthAndYearParam, setMonthParam] = useQueryState('month');
   const [selectedCategoriesIds, setSelectedCategoriesIds] = useQueryState(
@@ -207,7 +208,9 @@ export function ChangelogList({changelogs}: {changelogs: ChangelogEntry[]}) {
               value={searchValue ?? ''}
               onChange={e => {
                 setPageParam(null);
-                setSearchValue(e.target.value ? e.target.value : null);
+                const newSearchValue = e.target.value ? e.target.value : null;
+                setSearchValue(newSearchValue);
+                setQuerySearchValue(newSearchValue);
               }}
               placeholder="Search..."
               className="form-input flex-1 rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-primary-500 focus:ring-primary-500"
@@ -217,6 +220,7 @@ export function ChangelogList({changelogs}: {changelogs: ChangelogEntry[]}) {
                 className={`${someFilterIsActive ? 'text-purple font-medium cursor-pointer' : 'text-gray-500 cursor-not-allowed'} hover:text-gray-700`}
                 onClick={() => {
                   setSearchValue(null);
+                  setQuerySearchValue(null);
                   setSelectedCategoriesIds(null);
                   setMonthParam(null);
                   setPageParam(null);

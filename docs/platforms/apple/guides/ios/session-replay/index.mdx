@@ -2,16 +2,8 @@
 title: Set Up Session Replay
 sidebar_order: 5500
 notSupported:
-description: "Learn how to enable the Beta of Mobile Session Replay in your app."
+description: "Learn how to enable Session Replay in your mobile app."
 ---
-
-<Note>
-
-Mobile support for Session Replay is in Beta. Features available in Beta are still work-in-progress and may have bugs. We recognize the irony.
-
-If you have any questions, feedback or would like to report a bug, please open a [GitHub issue](https://github.com/getsentry/sentry-cocoa/issues/new?assignees=&labels=Platform%3A+Cocoa%2CType%3A+Bug&projects=&template=bug.yml) with a link to a relevant replay in Sentry if possible.
-
-</Note>
 
 [Session Replay](/product/explore/session-replay/) helps you get to the root cause of an error or latency issue faster by providing you with a reproduction of what was happening in the user's device before, during, and after the issue. You can rewind and replay your application's state and see key user interactions, like taps, swipes, network requests, and console entries, in a single UI.
 
@@ -46,9 +38,8 @@ SentrySDK.start(configureOptions: { options in
   options.dsn = "___PUBLIC_DSN___"
   options.debug = true
 
-  // Currently under experimental options:
-  options.experimental.sessionReplay.onErrorSampleRate = 1.0
-  options.experimental.sessionReplay.sessionSampleRate = 1.0
+  options.sessionReplay.onErrorSampleRate = 1.0
+  options.sessionReplay.sessionSampleRate = 0.1
 })
 ```
 
@@ -73,21 +64,20 @@ Sampling begins as soon as a session starts. `sessionSampleRate` is evaluated fi
 
 ## Privacy
 
-The SDK aggressively records the app and masks all text and images. 
-Please don't turn it off if you have sensitive data in your app. 
+The SDK is recording and aggressively masking all text, images, and webviews by default. If your app has any sensitive data, you should only turn the default masking off after explicitly masking out the sensitive data, using the APIs described below.
 If you want to manually mask parts of your app's data, read our guide on [custom masking](/platforms/apple/guides/ios/session-replay/customredact).
 
-<Note>
+<Alert>
 
 If you encounter any data not being redacted with the default settings, please let us know through a [GitHub issue](https://github.com/getsentry/sentry-cocoa/issues/new?assignees=&labels=Platform%3A+Cocoa%2CType%3A+Bug&projects=&template=bug.yml).
 
-</Note>
+</Alert>
 
 To disable redaction altogether (not to be used on applications with sensitive data):
 
 ```swift
-options.experimental.sessionReplay.redactAllText = false
-options.experimental.sessionReplay.redactAllImages = false
+options.sessionReplay.redactAllText = false
+options.sessionReplay.redactAllImages = false
 ```
 
 ## Error Linking
@@ -100,14 +90,18 @@ Errors that happen while a replay is running will be linked to the replay, makin
 
 ### FAQ
 
-Q: Does Session Replay work with SwiftUI?
+Q: **Does Session Replay work with SwiftUI?**
 
 A: Yes. It works with both UIKit and SwiftUI.
 
-Q: Why are parts of my replay not masked?
+Q: **Why are parts of my replay not masked?**
 
 A: Text views, input views, images, video players and webviews are all masked by default. Images with bundled assets aren't masked because the likelihood of these assets containing PII is low. If you encounter a view that should be masked by default, consider opening a [GitHub issue](https://github.com/getsentry/sentry-cocoa/issues).
 
-Q: What's the lowest version of iOS supported?
+Q: **What's the lowest version of iOS supported?**
 
 A: Session Replay recording happens even on the lowest version supported by the Sentry SDK, which is aligend with appstore support.
+
+Q: **Why is my issue missing a replay?**
+
+A: An issue may be missing a replay because the user's device was [offline](/product/explore/session-replay/mobile#frequently-asked-questions) while `sessionSampleRate` was specified, your project/organization was rate-limited, or (in rare cases) the device failed to capture the replay video.

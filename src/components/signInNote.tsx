@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
 
-import {Note} from './alert';
+import {Alert} from './alert';
 import {SignedInCheck} from './signedInCheck';
 
 export function SignInNote() {
@@ -13,11 +13,11 @@ export function SignInNote() {
 
   return (
     <SignedInCheck isUserAuthenticated={false}>
-      <Note>
+      <Alert>
         The following code sample will let you choose your personal config from the
         dropdown, once you're{' '}
         <Link href={`https://sentry.io/auth/login/?next=${url}`}>logged in</Link>.
-      </Note>
+      </Alert>
     </SignedInCheck>
   );
 }

@@ -1,0 +1,232 @@
+---
+title: React Router v6
+description: "Learn about Sentry's React Router v6 integration."
+sidebar_order: 20
+---
+
+<Alert>
+  - React Router v6 support is included in the `@sentry/react` package since
+  version `7`.
+</Alert>
+
+Update your `Sentry.browserTracingIntegration` to `Sentry.reactRouterV6BrowserTracingIntegration` and provide the required React hooks and router functions:
+
+    - `useEffect` hook from `react`
+    - `useLocation` and `useNavigationType` hooks from `react-router-dom` or `react-router`
+    - `createRoutesFromChildren` and `matchRoutes` functions from `react-router-dom` or `react-router`
+
+<Alert level="warning">
+
+To ensure proper routing instrumentation, initialize Sentry by calling `Sentry.init` **before**:
+
+- Wrapping your `<Routes />` component
+- Using `useRoutes`
+- Using `wrapCreateBrowserRouterV6` or `wrapCreateMemoryRouterV6`
+
+</Alert>
+
+### Usage with `createBrowserRouter` or `createMemoryRouter`
+
+If you choose to create your router instance with [`createBrowserRouter`](https://reactrouter.com/en/main/routers/create-browser-router) or [`createMemoryRouter`](https://reactrouter.com/en/main/routers/create-memory-router), you can use `Sentry.wrapCreateBrowserRouterV6` or `Sentry.wrapCreateMemoryRouterV6` to wrap it with the instrumentation:
+
+<Alert level="warning" title="Note">
+
+`wrapCreateMemoryRouterV6` was introduced in SDK version 8.50.0. Prior to that version, we suggested using `wrapCreateBrowserRouterV6` with `createMemoryRouter`. If you are currently using `wrapCreateBrowserRouterV6` to wrap `createMemoryRouter`, it is recommended that you use `wrapCreateMemoryRouterV6` instead.
+
+You can instrument [`createHashRouter`](https://reactrouter.com/en/main/routers/create-hash-router) using the `wrapCreateBrowserRouterV6` function.
+
+</Alert>
+
+```javascript {2-8, 15-21, 26-33}
+import React from "react";
+import {
+  createBrowserRouter,
+  createRoutesFromChildren,
+  matchRoutes,
+  useLocation,
+  useNavigationType,
+} from "react-router-dom";
+
+import * as Sentry from "@sentry/react";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.reactRouterV6BrowserTracingIntegration({
+      useEffect: React.useEffect,
+      useLocation,
+      useNavigationType,
+      createRoutesFromChildren,
+      matchRoutes,
+    }),
+  ],
+  tracesSampleRate: 1.0,
+});
+
+const sentryCreateBrowserRouter =
+  Sentry.wrapCreateBrowserRouterV6(createBrowserRouter);
+
+const router = sentryCreateBrowserRouter([
+  // your routes...
+]);
+```
+
+### Usage With `<Routes />` Component
+
+If you're using the `<Routes />` component to define your routes, wrap [`Routes`](https://reactrouter.com/en/main/components/routes) using `Sentry.withSentryReactRouterV6Routing`. This creates a higher order component, which will enable Sentry to reach your router context. You can also use `Sentry.withSentryReactRouterV6Routing` for `Routes` inside `BrowserRouter`. `MemoryRouter`, and `HashRouter` components:
+
+```javascript {3-11, 18-24, 29, 33-35}
+import React from "react";
+import ReactDOM from "react-dom";
+import {
+  Routes,
+  Route,
+  BrowserRouter,
+  useLocation,
+  useNavigationType,
+  createRoutesFromChildren,
+  matchRoutes,
+} from "react-router-dom";
+
+import * as Sentry from "@sentry/react";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.reactRouterV6BrowserTracingIntegration({
+      useEffect: React.useEffect,
+      useLocation,
+      useNavigationType,
+      createRoutesFromChildren,
+      matchRoutes,
+    }),
+  ],
+  tracesSampleRate: 1.0,
+});
+
+const SentryRoutes = Sentry.withSentryReactRouterV6Routing(Routes);
+
+ReactDOM.render(
+  <BrowserRouter>
+    <SentryRoutes>
+      <Route path="/" element={<div>Home</div>} />
+    </SentryRoutes>
+  </BrowserRouter>
+);
+```
+
+This is only needed at the top level of your app, rather than how v4/v5 required wrapping every `<Route/>` you wanted parametrized.
+
+### Usage With `useRoutes` Hook
+
+<Alert>
+  Available in `@sentry/react` version `7.12.1` and above.
+</Alert>
+
+If you specify your route definitions as an object to the [`useRoutes` hook](https://reactrouter.com/en/main/hooks/use-routes), use `Sentry.wrapUseRoutesV6` to create a patched `useRoutes` hook that instruments your routes with Sentry.
+
+<Alert level="warning">
+
+`wrapUseRoutesV6` should be called outside of a React component, as in the example below. It's also recommended that you assign the wrapped hook to a variable name starting with `use`, as per the [React documentation](https://reactjs.org/docs/hooks-custom.html#extracting-a-custom-hook).
+
+</Alert>
+
+```javascript {2-10, 15-21, 26, 29-31}
+import React from "react";
+import {
+  createRoutesFromChildren,
+  matchRoutes,
+  useLocation,
+  useNavigationType,
+  useRoutes,
+} from "react-router-dom";
+
+import { wrapUseRoutes } from "@sentry/react";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.reactRouterV6BrowserTracingIntegration({
+      useEffect: React.useEffect,
+      useLocation,
+      useNavigationType,
+      createRoutesFromChildren,
+      matchRoutes,
+    }),
+  ],
+  tracesSampleRate: 1.0,
+});
+
+const useSentryRoutes = wrapUseRoutesV6(useRoutes);
+
+function App() {
+  return useSentryRoutes([
+    // your routes...
+  ]);
+}
+
+ReactDOM.render(
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>,
+  document.getElementById("root")
+);
+```
+
+Now, Sentry should generate `pageload`/`navigation` transactions with parameterized transaction names (for example, `/teams/:teamid/user/:userid`), where applicable. This is only needed at the top level of your app, rather than how v4/v5 required wrapping every `<Route/>` you wanted parametrized.
+
+### Custom Error Boundaries
+
+When using `react-router`, errors thrown inside route elements will only be re-thrown in **development mode** while using [`strict mode`](https://react.dev/reference/react/StrictMode). In production, these errors won't be surfaced unless manually captured. If you **don't** have a custom error boundary in place, `react-router` will create a default one that "swallows" all errors.
+
+<Alert>
+  Note, that this only applies to render method and lifecycle errors since React
+  doesn't need error boundaries to handle errors in event handlers.
+</Alert>
+
+To send errors to Sentry while using a custom error boundary, use the `Sentry.captureException` method:
+
+```jsx {11, 28}
+// router setup
+const sentryCreateBrowserRouter = wrapCreateBrowserRouterV6(createBrowserRouter);
+const router = sentryCreateBrowserRouter([
+  {
+    path: "/",
+    element: <YourLayout />,
+    children: [
+      {
+        path: "",
+        element: <Outlet />,
+        errorElement: <YourCustomRootErrorBoundary />,
+        children: [
+          // other routes ...
+        ],
+      },
+    ],
+  },
+]);
+
+// error boundary
+import { useRouteError } from "react-router-dom";
+import * as Sentry from "@sentry/react";
+
+export function YourCustomRootErrorBoundary() {
+  const error = useRouteError() as Error;
+
+  React.useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
+  return (
+    <div>
+      <h1>Ouch!</h1>
+    </div>
+  );
+}
+
+```
+
+## Next Steps:
+
+- [Return to **Getting Started**](../../)
+- [Return to the main integrations page](../)

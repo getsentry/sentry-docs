@@ -1,9 +1,10 @@
-import {Alert, Note} from './components/alert';
+import {Alert} from './components/alert';
 import {Arcade} from './components/arcade';
 import {Break} from './components/break';
 import {CliChecksumTable} from './components/cliChecksumTable';
 import {CodeBlock} from './components/codeBlock';
 import {CodeTabs} from './components/codeTabs';
+import {CommunitySupportedPlatforms} from './components/communitySupportedPlatforms';
 import {ConfigKey} from './components/configKey';
 import {ConfigValue} from './components/configValue';
 import {CreateGitHubAppForm} from './components/createGitHubAppForm';
@@ -20,6 +21,7 @@ import {PageGrid} from './components/pageGrid';
 import {ParamTable} from './components/paramTable';
 import {PiiFields} from './components/piiFields';
 import {PlatformCategorySection} from './components/platformCategorySection';
+import {PlatformFilter} from './components/platformFilter';
 import {PlatformGrid} from './components/platformGrid';
 import {PlatformIdentifier} from './components/platformIdentifier';
 import {PlatformLink} from './components/platformLink';
@@ -42,6 +44,8 @@ export function mdxComponents(
     Arcade,
     Break,
     CliChecksumTable,
+    CommunitySupportedPlatforms,
+    PlatformFilter,
     CodeBlock,
     CodeTabs,
     ConfigKey,
@@ -54,7 +58,6 @@ export function mdxComponents(
     LambdaLayerDetail,
     Link: SmartLink,
     LinkWithPlatformIcon,
-    Note,
     OrgAuthTokenNote,
     PageGrid,
     ParamTable,
