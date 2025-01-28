@@ -70,6 +70,26 @@ Sentry.captureException(new Exception("my error"));
 // --> Will have the following extra:
 // { shared: 'current', global: 'data', isolation: 'data', current: 'data' }
 ```
+```kotlin
+Sentry.configureScope(ScopeType.GLOBAL) { scope ->
+  scope.setExtra("shared", "global")
+  scope.setExtra("global", "data")
+}
+
+Sentry.configureScope(ScopeType.ISOLATION) { scope ->
+  scope.setExtra("shared", "isolation")
+  scope.setExtra("isolation", "data")
+}
+
+Sentry.configureScope(ScopeType.CURRENT) { scope ->
+  scope.setExtra("shared", "current")
+  scope.setExtra("current", "data")
+}
+
+Sentry.captureException(Exception("my error"))
+// --> Will have the following extra:
+// { shared: 'current', global: 'data', isolation: 'data', current: 'data' }
+```
 
 ## Configuring the Scope
 
@@ -105,7 +125,7 @@ made will stay isolated within the callback function. This allows you to
 more easily isolate pieces of context information to specific locations in your code or
 even call `clear` to briefly remove all context information.
 
-<Alert level="info" title="Important">
+<Alert title="Important">
 
 Any exceptions that occur within the callback function for configuring a local scope will not be
 caught, and all errors that occur will be silently ignored and **not** reported.

@@ -7,7 +7,7 @@ sidebar_order: 1
 ![Sequencing](./images/sequencing.png)
 
 
-<Alert title="💡 Note" level="info">
+<Alert title="💡 Note">
 
 Dynamic Sampling currently operates on either spans or transactions to measure data throughput. This is controlled by the feature flag `organizations:dynamic-sampling-spans` and usually set to what the organization's subscription is metered by. In development, this currently defaults to transactions.
 The logic between the two data categories is identical, so most of this documentation is kept at a generic level and important differences are pointed out explicitly.
@@ -27,7 +27,7 @@ When events arrive, in a simplified model, they go through the following steps:
 4. **Dynamic Sampling**: based on an internal set of rules, Relay determines a sample rate for every incoming event. A random number generator finally decides whether a payload should be kept or dropped.
 5. **Rate limiting**: events that are sampled by Dynamic Sampling will be stored and indexed. To protect the infrastructure, internal rate limits apply at this point. Under normal operation, this **rate limit is never reached** since dynamic sampling already reduces the volume of events stored.
 
-<Alert title="💡 Example" level="info">
+<Alert title="💡 Example">
 
 A client is sending 1000 events per second to Sentry:
 1. 100 events per second are from old browsers and get dropped through an inbound data filter.
@@ -44,7 +44,7 @@ The ingestion pipeline has two kinds of rate limits that  behave differently com
 1. **High-level request limits on load balancers**: these limits do not differentiate which data is sent by clients and drop requests as soon as the throughput from clients reaches the limit.
 2. **Specific limits per data category in Relay**: these limits apply once requests have been parsed and have gone through basic handling (see [Sequencing](#sequencing) above).
 
-<Alert title="✨️ Note" level="info">
+<Alert title="✨️ Note">
 
 There is a dedicated rate limit for stored events after inbound filters and dynamic sampling. However, it does not affect total events since the fidelity decreases with higher total event volumes and this rate limit is not expected to trigger since Dynamic Sampling already reduces the stored event throughput.
 
@@ -56,7 +56,7 @@ Dynamic sampling ensures complete traces by retaining all events associated with
 
 Despite dynamic sampling providing trace completeness, events or other items (errors, replays, ...) may still be missing from a trace when rate limiting drops one or more of them. Rate limiting drops items without regard for the trace, making each decision independently and potentially resulting in broken traces.
 
-<Alert title="💡 Example" level="info">
+<Alert title="💡 Example">
 
 For example, if there is a trace from `Project A` to `Project B` and `Project B` is subject to rate limiting or quota enforcement, events of `Project B` from the trace initiated by `Project A` are lost.
 
@@ -84,7 +84,7 @@ Each of these metrics can be filtered and grouped by a number of predefined tags
 
 For more granular queries, **stored events are needed**. _The purpose of dynamic sampling here is to ensure that there are always sufficient representative sample events._
 
-<Alert title="💡 Example" level="info">
+<Alert title="💡 Example">
 
 If Sentry applies a 1% dynamic sample rate, you can still receive accurate events per minute (SPM or TPM, depending on event type) and web vital quantiles through total event data backed by metrics. There is also a listing of each of these numbers by the transaction.
 

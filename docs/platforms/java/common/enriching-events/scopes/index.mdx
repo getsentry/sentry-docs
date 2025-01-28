@@ -21,7 +21,7 @@ routes or request handlers.
 
 ## How Scopes Work
 
-Scopes are basically a stacks of data that are attached to events. When an event is captured, the SDK will merge the data from the active scopes into the event. This allows you to attach data to events that is relevant to the context in which the event was captured.
+Scopes are basically stacks of data that are attached to events. When an event is captured, the SDK will merge the data from the active scopes into the event. This allows you to attach data to events that is relevant to the context in which the event was captured.
 
 A scope is generally valid inside of a callback or an execution context. This means that multiple parts of your application may have different scopes active at the same time. For instance, a web server might handle multiple requests at the same time, and each request may have different scope data to apply to its events.
 
@@ -54,6 +54,13 @@ Sentry.configureScope(ScopeType.ISOLATION, scope -> {
   scope.setTag("my-tag", "my value");
 });
 ```
+```kotlin
+Sentry.setTag("my-tag", "my value")
+// Is identical to:
+Sentry.configureScope(ScopeType.ISOLATION) { scope ->
+  scope.setTag("my-tag", "my value")
+}
+```
 
 ### Current Scope
 
@@ -69,6 +76,17 @@ Sentry.withScope(scope -> {
 });
 // this event will not have the tag:
 Sentry.captureException(new Exception("my other error"));
+```
+```kotlin
+Sentry.withScope { scope ->
+  // scope is the current scope inside of this callback!
+  scope.setTag("my-tag", "my value")
+  // this tag will only be applied to events captured inside of this callback
+  // the following event will have the tag:
+  Sentry.captureException(Exception("my error"))
+}
+// this event will not have the tag:
+Sentry.captureException(Exception("my other error"))
 ```
 
 You can modify the current scope via `Sentry.configureScope(ScopeType.CURRENT, scope -> { ... })`, but usually you should use `Sentry.withScope()` to interact with local scopes instead.
@@ -97,6 +115,26 @@ Sentry.configureScope(ScopeType.CURRENT, scope -> {
 });
 
 Sentry.captureException(new Exception("my error"));
+// --> Will have the following extra:
+// { shared: 'current', global: 'data', isolation: 'data', current: 'data' }
+```
+```kotlin
+Sentry.configureScope(ScopeType.GLOBAL) { scope ->
+  scope.setExtra("shared", "global")
+  scope.setExtra("global", "data")
+}
+
+Sentry.configureScope(ScopeType.ISOLATION) { scope ->
+  scope.setExtra("shared", "isolation")
+  scope.setExtra("isolation", "data")
+}
+
+Sentry.configureScope(ScopeType.CURRENT) { scope ->
+  scope.setExtra("shared", "current")
+  scope.setExtra("current", "data")
+}
+
+Sentry.captureException(Exception("my error"))
 // --> Will have the following extra:
 // { shared: 'current', global: 'data', isolation: 'data', current: 'data' }
 ```
@@ -149,7 +187,7 @@ made will stay isolated within the callback function. This allows you to
 more easily isolate pieces of context information to specific locations in your code or
 even call `clear` to briefly remove all context information.
 
-<Alert level="info" title="Important">
+<Alert title="Important">
 
 Any exceptions that occur within the callback function for configuring a local scope will not be
 caught, and all errors that occur will be silently ignored and **not** reported.
