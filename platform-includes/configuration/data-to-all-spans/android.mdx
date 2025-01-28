@@ -1,0 +1,38 @@
+```java
+Sentry.init(options -> {
+    options.setBeforeSendTransaction((transaction, hint) -> {
+        // set the attribute on the root span
+        if (transaction.getContexts().getTrace() == null) {
+            transaction.getContexts().getTrace().getData().put("myAttribute", "myValue");
+        }
+
+        // and on all child spans
+        transaction.getSpans().forEach(span -> {
+            if (span.getData() != null) {
+            span.getData().put("myAttribute", "myValue");
+            }
+        });
+
+        return transaction;
+    });
+});
+```
+```kotlin
+Sentry.init(options -> {
+    options.setBeforeSendTransaction((transaction, hint) -> {
+        // set the attribute on the root span
+        transaction.contexts.trace?.data?.let { data ->
+            data["myAttribute"] = "myValue"
+        }
+
+        // and on all child spans
+        transaction.spans.forEach(Consumer { span: SentrySpan ->
+            span.data?.let { data ->
+                data["myAttribute"] = "myValue"
+            }
+        })
+
+        transaction
+    });
+});
+```

@@ -1,0 +1,54 @@
+```java
+io.sentry.protocol.SentryTransaction;
+import io.sentry.SentryOptions;
+import io.sentry.Hint;
+import org.springframework.stereotype.Component;
+
+@Component
+public class CustomBeforeSendTransactionCallback implements SentryOptions.BeforeSendTransactionCallback {
+    @Override
+    public SentryTransaction execute(SentryTransaction transaction, Hint hint) {
+
+        // set the attribute on the root span
+        if (transaction.getContexts().getTrace() != null) {
+            transaction.getContexts().getTrace().getData().put("myAttribute", "myValue");
+        }
+
+        // and on all child spans
+        transaction.getSpans().forEach(span -> {
+            if (span.getData() != null) {
+                span.getData().put("myAttribute", "myValue");
+            }
+        });
+
+        return transaction;
+    }
+}
+```
+
+```kotlin
+import io.sentry.protocol.SentryTransaction
+import io.sentry.SentryOptions
+import io.sentry.Hint
+import org.springframework.stereotype.Component
+
+@Component
+class CustomBeforeSendTransactionCallback : SentryOptions.BeforeSendTransactionCallback {
+    override fun execute(transaction: SentryTransaction, hint: Hint): SentryTransaction? {
+        
+        // set the attribute on the root span
+        transaction.contexts.trace?.data?.let { data ->
+            data["myAttribute"] = "myValue"
+        }
+
+        // and on all child spans
+        transaction.spans.forEach { span ->
+            span.data?.let { data ->
+                data["myAttribute"] = "myValue"
+            }
+        }
+
+        transaction
+    }
+}
+```
