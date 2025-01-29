@@ -19,7 +19,8 @@ const isSupported = (
     return false;
   }
 
-  const categories = (platformOrGuide.categories || []) as string[];
+  const categories = (platformOrGuide.categories ||
+    []) as unknown as `${PlatformCategory}`;
 
   if (supported.length && !supported.some(v => categories.includes(v))) {
     return false;

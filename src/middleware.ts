@@ -931,6 +931,22 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/javascript/session-replay/',
   },
   {
+    from: '/platforms/javascript/configuration/options/',
+    to: '/platforms/javascript/options/',
+  },
+  {
+    from: '/platforms/javascript/guides/:guide/configuration/options/',
+    to: '/platforms/javascript/guides/:guide/options/',
+  },
+  {
+    from: '/platforms/javascript/configuration/environments/',
+    to: '/platforms/javascript/options/#environment',
+  },
+  {
+    from: '/platforms/javascript/guides/:guide/configuration/environments/',
+    to: '/platforms/javascript/guides/:guide/options/#environment',
+  },
+  {
     from: '/platforms/javascript/guides/angular/configuration/integrations/rrweb/',
     to: '/platforms/javascript/session-replay/',
   },
