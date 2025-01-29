@@ -9,18 +9,18 @@ import {
   SentryGlobalSearch,
   standardSDKSlug,
 } from '@sentry-internal/global-search';
-import DOMPurify from 'dompurify';
-import Link from 'next/link';
-import {usePathname, useRouter} from 'next/navigation';
+import {usePathname} from 'next/navigation';
 import algoliaInsights from 'search-insights';
 
 import {useOnClickOutside} from 'sentry-docs/clientUtils';
-import {useKeyboardNavigate} from 'sentry-docs/hooks/useKeyboardNavigate';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 
 import styles from './search.module.scss';
 
 import {Logo} from '../logo';
+
+import {SearchResultItems} from './searchResultItems';
+import {relativizeUrl} from './util';
 
 // Initialize Algolia Insights
 algoliaInsights('init', {
@@ -32,8 +32,6 @@ algoliaInsights('init', {
 // so just generate a random token each time the page is loaded and
 // treat it as a random user.
 const randomUserToken = crypto.randomUUID();
-
-const MAX_HITS = 10;
 
 // this type is not exported from the global-search package
 type SentryGlobalSearchConfig = ConstructorParameters<typeof SentryGlobalSearch>[0];
@@ -59,12 +57,6 @@ const userDocsSites: SentryGlobalSearchConfig = [
 const config = isDeveloperDocs ? developerDocsSites : userDocsSites;
 const search = new SentryGlobalSearch(config);
 
-function relativizeUrl(url: string) {
-  return isDeveloperDocs
-    ? url
-    : url.replace(/^(https?:\/\/docs\.sentry\.io)(?=\/|$)/, '');
-}
-
 type Props = {
   autoFocus?: boolean;
   path?: string;
@@ -79,7 +71,7 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
   const [inputFocus, setInputFocus] = useState(false);
   const [showOffsiteResults, setShowOffsiteResults] = useState(false);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+
   const pathname = usePathname();
 
   const handleClickOutside = useCallback((ev: MouseEvent) => {
@@ -175,16 +167,6 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
   );
 
   const totalHits = results.reduce((a, x) => a + x.hits.length, 0);
-
-  const flatHits = results.reduce<Hit[]>(
-    (items, item) => [...items, ...item.hits.slice(0, MAX_HITS)],
-    []
-  );
-
-  const {focused} = useKeyboardNavigate({
-    list: flatHits,
-    onSelect: hit => router.push(relativizeUrl(hit.url)),
-  });
 
   const trackSearchResultClick = useCallback((hit: Hit, position: number): void => {
     try {
@@ -305,77 +287,13 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
           {loading && <Logo loading />}
 
           {!loading && totalHits > 0 && (
-            <div className={styles['sgs-search-results-scroll-container']}>
-              {results
-                .filter(x => x.hits.length > 0)
-                .map((result, i) => (
-                  <Fragment key={result.site}>
-                    {showOffsiteResults && (
-                      <h4 className={styles['sgs-site-result-heading']}>
-                        From {result.name}
-                      </h4>
-                    )}
-                    <ul
-                      className={`${styles['sgs-hit-list']} ${i === 0 ? '' : styles['sgs-offsite']}`}
-                    >
-                      {result.hits.slice(0, MAX_HITS).map((hit, index) => (
-                        <li
-                          key={hit.id}
-                          className={`${styles['sgs-hit-item']} ${
-                            focused?.id === hit.id ? styles['sgs-hit-focused'] : ''
-                          }`}
-                          ref={
-                            // Scroll to element on focus
-                            hit.id === focused?.id
-                              ? el => el?.scrollIntoView({block: 'nearest'})
-                              : undefined
-                          }
-                        >
-                          <Link
-                            href={relativizeUrl(hit.url)}
-                            onClick={e => handleSearchResultClick(e, hit, index)}
-                          >
-                            {hit.title && (
-                              <h6>
-                                <span
-                                  dangerouslySetInnerHTML={{
-                                    __html: DOMPurify.sanitize(hit.title, {
-                                      ALLOWED_TAGS: ['mark'],
-                                    }),
-                                  }}
-                                />
-                              </h6>
-                            )}
-                            {hit.text && (
-                              <span
-                                dangerouslySetInnerHTML={{
-                                  __html: DOMPurify.sanitize(hit.text, {
-                                    ALLOWED_TAGS: ['mark'],
-                                  }),
-                                }}
-                              />
-                            )}
-                            {hit.context && (
-                              <div className={styles['sgs-hit-context']}>
-                                {hit.context.context1 && (
-                                  <div className={styles['sgs-hit-context-left']}>
-                                    {hit.context.context1}
-                                  </div>
-                                )}
-                                {hit.context.context2 && (
-                                  <div className={styles['sgs-hit-context-right']}>
-                                    {hit.context.context2}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </Fragment>
-                ))}
-            </div>
+            <SearchResultItems
+              results={results}
+              onSearchResultClick={({event, hit, position}) =>
+                handleSearchResultClick(event, hit, position)
+              }
+              showOffsiteResults={showOffsiteResults}
+            />
           )}
 
           {!loading && totalHits === 0 && (

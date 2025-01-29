@@ -22,9 +22,9 @@ supported:
   - javascript.bun
 ---
 
-<Alert level="info">
+<Alert>
 
-This integration only works in the Node.js and Bun runtimes. This integration only supports Prisma v5 at the current time. If you're interested in Prisma v6 support, please leave your thoughts on the [Prisma v6 tracking issue for the Sentry SDK](https://github.com/getsentry/sentry-javascript/issues/14793).
+This integration only works in the Node.js and Bun runtimes.
 
 </Alert>
 
@@ -34,7 +34,31 @@ Sentry supports tracing [Prisma ORM](https://www.prisma.io/) queries with the Pr
 
 The Prisma Integrations creates a spans for each query and reports to Sentry with relevant details inside `description` if available.
 
-To install the integration, first enable the `tracing` feature flag in the `generator` block of your Prisma schema:
+## Prisma Version 6
+
+The Sentry Prisma Integration comes with Prisma version 5 support by default. For Prisma version 6 compatibility we need to pass a specific version of the Prisma instrumentation to the Sentry Prisma integration.
+
+To use the integration with Prisma version 6, first install the `@prisma/instrumentation` package on version 6 (ideally the exact same version as your `prisma` and `@prisma/client` packages).
+
+Then, add the `prismaIntegration` to your Sentry initialization as follows:
+
+```javascript {1,6-9}
+import { PrismaInstrumentation } from "@prisma/instrumentation";
+
+Sentry.init({
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.prismaIntegration({
+      // Override the default instrumentation that Sentry uses
+      prismaInstrumentation: new PrismaInstrumentation(),
+    }),
+  ],
+});
+```
+
+## Prisma Version 5
+
+To install the integration for Prisma version 5, first enable the `tracing` feature flag in the `generator` block of your Prisma schema:
 
 ```txt {tabTitle: Prisma Schema} {filename: schema.prisma} {3}
 generator client {
@@ -52,7 +76,14 @@ Sentry.init({
 });
 ```
 
+## Options
+
+### `prismaInstrumentation`
+
+_Type: `Instrumentation`_ (An OpenTelemetry type)
+
+Overrides the instrumentation used by the Sentry SDK with the passed in instrumentation instance.
 
 ## Supported Versions
 
-- `prisma`: `>=5 <6`
+- `prisma`: `>=5`
