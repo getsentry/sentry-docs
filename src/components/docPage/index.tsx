@@ -12,6 +12,7 @@ import './type.scss';
 import {Banner} from '../banner';
 import {Breadcrumbs} from '../breadcrumbs';
 import {CodeContextProvider} from '../codeContext';
+import {DocFeedback} from '../docFeedback';
 import {GitHubCTA} from '../githubCTA';
 import {Header} from '../header';
 import Mermaid from '../mermaid';
@@ -99,6 +100,8 @@ export function DocPage({
                   {nextPage && <PaginationNav node={nextPage} title="Next" />}
                 </div>
               </div>
+
+              <DocFeedback pathname={pathname} />
 
               {hasGithub && <GitHubCTA />}
             </div>
