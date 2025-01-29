@@ -126,7 +126,40 @@ The following callbacks can be configured for the integration in `feedbackIntegr
 | ----------------- | ---------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------ |
 | `onFormOpen`      |                                                            |                        | Callback when form is opened.                                                                                |
 | `onFormClose`     |                                                            | The form is unmounted. | Callback when form is closed and not submitted.                                                              |
-| `onAddScreenshot` | `attachFile: (filename: string, data: Uint8Array) => void` |                        | Callback when a screenshot is added.                                                                         |
 | `onSubmitSuccess` | `data: FeedbackFormData`                                   |                        | Callback when feedback is successfully submitted.                                                            |
 | `onSubmitError`   | `error: Error`                                             |                        | Callback when feedback is unsuccessfully submitted.                                                          |
 | `onFormSubmitted` |                                                            | The form is unmounted. | Callback when the feedback form is submitted successfully, and the SuccessMessage is complete, or dismissed. |
+| `onAddScreenshot` | `attachFile: (filename: string, data: Uint8Array) => void` |                        | Callback when a screenshot is added.                                                                         |
+
+#### Attaching a screenshots
+
+To attach a screenshot to the feedback form, you should implement the `onAddScreenshot` callback. The callback receives a filename and a `Uint8Array` of the image data.
+
+An example of how to attach a screenshot using the [`react-native-image-picker`](https://www.npmjs.com/package/react-native-image-picker) and the [`react-native-quick-base64`](https://www.npmjs.com/package/react-native-quick-base64) libraries is the following:
+
+```javascript
+import * as Sentry from '@sentry/react-native';
+import { toByteArray } from 'react-native-quick-base64';
+import { launchImageLibrary } from 'react-native-image-picker';
+
+const handleChooseImage = (attachFile: (filename: string, data: Uint8Array) => void): void => {
+  launchImageLibrary({ mediaType: 'photo', includeBase64: true }, (response) => {
+    if (response.didCancel) {
+      console.log('User cancelled image picker');
+    } else if (response.errorCode) {
+      console.log('ImagePicker Error: ', response.errorMessage);
+    } else if (response.assets && response.assets.length > 0) {
+      const filename = response.assets[0].fileName;
+      const base64String = response.assets[0].base64;
+      const screenShotUint8Array = toByteArray(base64String);
+      if (filename && screenShotUint8Array) {
+        attachFile(filename, screenShotUint8Array);
+      }
+    }
+  });
+};
+
+Sentry.feedbackIntegration({
+    onAddScreenshot={handleChooseImage}
+});
+```
