@@ -162,6 +162,8 @@ export function DynamicNav({
   const {path} = serverContext();
   const isActive = path.join('/').indexOf(root) === 0;
   const linkPath = `/${path.join('/')}/`;
+  console.log('path', path);
+  console.log('linkpath', linkPath);
 
   const header =
     parentNode && !noHeadingLink ? (
@@ -195,6 +197,13 @@ export function DynamicNav({
             showDepth={showDepth}
             path={linkPath}
           />
+          {/* see GH issue 12481 */}
+          {linkPath != '/security-legal-pii/security/security-policy-reporting/' && <SidebarLink
+            to={'/security-legal-pii/security/security-policy-reporting/'}
+            title={'Set Up Security Policy Reporting'}
+            key={'security-policy'}
+            path={linkPath}
+          />}
         </ul>
       )}
     </li>
