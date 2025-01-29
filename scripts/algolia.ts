@@ -129,6 +129,39 @@ async function generateAlogliaRecords(pageFrontMatters: FrontMatter[]) {
   return records.flat();
 }
 
+/**
+ * Framework popularity ranking map - frameworks listed in order of priority
+ */
+const frameworkPopularity: Record<string, number> = {
+  nextjs: 1,
+  react: 2,
+  'react-native': 3,
+  python: 4,
+  laravel: 5,
+  node: 6,
+  vue: 7,
+  ios: 8,
+  angular: 9,
+  nestjs: 10,
+  django: 11,
+  spring: 12,
+  go: 13,
+  ruby: 14,
+  kotlin: 15,
+  dart: 16,
+  unity: 17,
+};
+
+const getPopularity = (sdk: string | undefined, framework: string | undefined) => {
+  if (sdk && frameworkPopularity[sdk]) {
+    return frameworkPopularity[sdk];
+  }
+  if (framework && frameworkPopularity[framework]) {
+    return frameworkPopularity[framework];
+  }
+  return Number.MAX_SAFE_INTEGER;
+};
+
 async function getRecords(pageFm: FrontMatter) {
   console.log('processing:', pageFm.slug);
 
@@ -155,6 +188,8 @@ async function getRecords(pageFm: FrontMatter) {
         keywords: pageFm.keywords,
         sdk,
         framework,
+        // @ts-ignore
+        popularity: getPopularity(sdk, framework),
       },
       '#main'
     );

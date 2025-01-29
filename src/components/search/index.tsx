@@ -320,3 +320,80 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
     </div>
   );
 }
+
+// const exampleDocsHit = {
+//   id: 'f2274542a8fefa5e95bae958c36b97bd',
+//   site: 'docs',
+//   url: 'https://docs.sentry.io/platforms/javascript/guides/koa/troubleshooting/',
+//   index: 'sentry-docs-v2',
+//   context: {
+//     context1: 'Platforms > JavaScript > Guides > Koa > Troubleshooting',
+//   },
+//   title: 'Troubleshooting',
+//   text: 'If you need additional help, you can ask on GitHub . Customers on a paid plan …',
+//   queryID: '021f95330896bc64cb93b22741badb26',
+// };
+
+// const platformsByTraffic = [
+//   'nextjs',
+//   'react',
+//   'react-native',
+//   'python',
+//   'laravel',
+//   'node',
+//   'vue',
+//   'ios',
+//   'angular',
+//   'nestjs',
+//   'django',
+//   'spring',
+//   'go',
+//   'ruby',
+//   'kotlin',
+//   'dart',
+//   'unity',
+// ];
+
+// function sortPlatforms(hits: Hit[]) {
+//   console.log('👉 unsorted hits', hits);
+
+//   const getPlatform = (hit: Hit) => {
+//     const url = new URL(hit.url);
+//     const pathname = url.pathname.slice(1);
+//     let sdkOrFramework: string | undefined;
+//     if (pathname.includes('/guides/')) {
+//       sdkOrFramework = pathname.split('/')[3];
+//     } else if (pathname.includes('platforms/')) {
+//       sdkOrFramework = pathname.split('/')[1];
+//     }
+//     return sdkOrFramework;
+//   };
+
+//   const hitsWithPlatform = hits.map(h => ({...h, platform: getPlatform(h)}));
+
+//   const nonPlatformHits = hitsWithPlatform.filter(hit => !hit.platform);
+//   const platformHits = hitsWithPlatform.filter(hit => !!hit.platform);
+
+//   const sortedPlatformHits = platformHits.slice().sort((a, b) => {
+//     const aPlatform = a.platform ?? '';
+//     const bPlatform = b.platform ?? '';
+//     // some platforms are missing, we should prioritize the ones in the platformsByTraffic array
+//     const aIndex = platformsByTraffic.indexOf(aPlatform);
+//     const bIndex = platformsByTraffic.indexOf(bPlatform);
+//     debugger;
+//     let tie = 0;
+//     if (aIndex === -1 && bIndex !== -1) {
+//       tie = -1;
+//     }
+//     if (bIndex === -1 && aIndex !== -1) {
+//       tie = 1;
+//     }
+//     // smaller index has more weight
+//     const diff = bIndex - aIndex;
+//     tie = diff < 0 ? -1 : diff > 0 ? 1 : 0;
+//     console.log('👉 comparing', a.platform, b.platform, 'diff', diff, 'tie', tie);
+//     return tie;
+//   });
+//   console.log('👉 sorted hits', sortedPlatformHits.concat(nonPlatformHits));
+//   return sortedPlatformHits;
+// }
