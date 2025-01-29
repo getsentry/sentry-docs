@@ -162,8 +162,6 @@ export function DynamicNav({
   const {path} = serverContext();
   const isActive = path.join('/').indexOf(root) === 0;
   const linkPath = `/${path.join('/')}/`;
-  console.log('path', path);
-  console.log('linkpath', linkPath);
 
   const header =
     parentNode && !noHeadingLink ? (
