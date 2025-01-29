@@ -196,12 +196,14 @@ export function DynamicNav({
             path={linkPath}
           />
           {/* see GH issue 12481 */}
-          {linkPath != '/security-legal-pii/security/security-policy-reporting/' && <SidebarLink
-            to={'/security-legal-pii/security/security-policy-reporting/'}
-            title={'Set Up Security Policy Reporting'}
-            key={'security-policy'}
-            path={linkPath}
-          />}
+          {linkPath != '/security-legal-pii/security/security-policy-reporting/' && (
+            <SidebarLink
+              to={'/security-legal-pii/security/security-policy-reporting/'}
+              title={'Set Up Security Policy Reporting'}
+              key={'security-policy'}
+              path={linkPath}
+            />
+          )}
         </ul>
       )}
     </li>
