@@ -86,14 +86,14 @@ export function SdkOption({
 
             {showBrowserOnly && (
               <tr>
-                <th>Only available in</th>
+                <th>Only available on</th>
                 <td>Client</td>
               </tr>
             )}
 
             {showServerLikeOnly && (
               <tr>
-                <th>Only available in</th>
+                <th>Only available on</th>
                 <td>Server</td>
               </tr>
             )}
