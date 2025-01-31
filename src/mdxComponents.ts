@@ -1,6 +1,7 @@
 import {Alert} from './components/alert';
 import {Arcade} from './components/arcade';
 import {Break} from './components/break';
+import {Card} from './components/card';
 import {CliChecksumTable} from './components/cliChecksumTable';
 import {CodeBlock} from './components/codeBlock';
 import {CodeTabs} from './components/codeTabs';
@@ -9,6 +10,7 @@ import {ConfigKey} from './components/configKey';
 import {ConfigValue} from './components/configValue';
 import {CreateGitHubAppForm} from './components/createGitHubAppForm';
 import {DefinitionList} from './components/definitionList';
+import {DevDocsCardGrid} from './components/devDocsCardGrid';
 import DocImage from './components/docImage';
 import {Expandable} from './components/expandable';
 import {GuideGrid} from './components/guideGrid';
@@ -43,8 +45,10 @@ export function mdxComponents(
     Alert,
     Arcade,
     Break,
+    Card,
     CliChecksumTable,
     CommunitySupportedPlatforms,
+    DevDocsCardGrid,
     PlatformFilter,
     CodeBlock,
     CodeTabs,
