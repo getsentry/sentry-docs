@@ -15,7 +15,11 @@ type TreeNode = {
   name: string;
 };
 
-export function SdkOptionsOverview() {
+interface Props {
+  ignoreIds?: string[];
+}
+
+export function TableOfContents({ignoreIds = []}: Props) {
   const [treeItems, setTreeItems] = useState<TreeItem[]>([]);
 
   // gather the sdk option items on mount
@@ -25,13 +29,13 @@ export function SdkOptionsOverview() {
     }
     const main = document.getElementById('main');
     if (!main) {
-      throw new Error('#main element not found');
+      return;
     }
     const nodes = Array.from(main.querySelectorAll('h2, h3'))
       .map(el => {
         const name = el.textContent?.trim() ?? '';
         const id = el.id;
-        if (!id || !name) {
+        if (!id || !name || ignoreIds.includes(id)) {
           return null;
         }
         return {
@@ -56,7 +60,7 @@ export function SdkOptionsOverview() {
           children: [],
         };
         _tocItems.push(currentItem);
-      } else if (node.element.hasAttribute('data-sdk-option')) {
+      } else {
         currentItem.children.push({
           id: node.id,
           name: node.name,
@@ -67,7 +71,7 @@ export function SdkOptionsOverview() {
 
     // Remove groups without children
     setTreeItems(_tocItems.filter(item => item.children.length > 0));
-  }, []);
+  }, [ignoreIds]);
 
   return (
     <ul>
