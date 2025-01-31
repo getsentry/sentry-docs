@@ -2,8 +2,10 @@ import {getCurrentPlatformOrGuide} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 import {PlatformCategory} from 'sentry-docs/types';
 
-import {PlatformCategorySection} from './platformCategorySection';
-import {PlatformSection} from './platformSection';
+import styles from './style.module.scss';
+
+import {PlatformCategorySection} from '../platformCategorySection';
+import {PlatformSection} from '../platformSection';
 
 type Props = {
   name: string;
@@ -53,7 +55,7 @@ export function SdkOption({
           </a>
         </h3>
 
-        <table className="w-auto">
+        <table className={styles['sdk-option-table']}>
           <tbody>
             {type && (
               <tr>
