@@ -10,6 +10,7 @@ import {ConfigKey} from './components/configKey';
 import {ConfigValue} from './components/configValue';
 import {CreateGitHubAppForm} from './components/createGitHubAppForm';
 import {DefinitionList} from './components/definitionList';
+import {DevDocsCardGrid} from './components/devDocsCardGrid';
 import DocImage from './components/docImage';
 import {Expandable} from './components/expandable';
 import {GuideGrid} from './components/guideGrid';
@@ -47,6 +48,7 @@ export function mdxComponents(
     Card,
     CliChecksumTable,
     CommunitySupportedPlatforms,
+    DevDocsCardGrid,
     PlatformFilter,
     CodeBlock,
     CodeTabs,
