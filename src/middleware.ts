@@ -22,12 +22,15 @@ export function middleware(request: NextRequest) {
   return handleRedirects(request);
 }
 
+// don't send Permanent Redirects (301) in dev mode - it gets cached for "localhost" by the browser
+const redirectStatusCode = process.env.NODE_ENV === 'development' ? 302 : 301
+
 const handleRedirects = (request: NextRequest) => {
   const urlPath = request.nextUrl.pathname;
 
   const redirectTo = redirectMap.get(urlPath);
   if (redirectTo) {
-    return NextResponse.redirect(new URL(redirectTo, request.url), {status: 301});
+    return NextResponse.redirect(new URL(redirectTo, request.url), {status: redirectStatusCode});
   }
 
   // If we don't find an exact match, we try to look for a :guide placeholder
@@ -50,7 +53,7 @@ const handleRedirects = (request: NextRequest) => {
     );
 
     return NextResponse.redirect(new URL(finalRedirectToPath, request.url), {
-      status: 301,
+      status: redirectStatusCode,
     });
   }
 
