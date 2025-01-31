@@ -41,7 +41,7 @@ export function DevDocsCardGrid() {
         className="w-full md:w-[calc(50%-12px)]"
         href="/services/"
         title="Services"
-        description="Running besides the monolith."
+        description="Running alongside the monolith."
         image={ServicesImg}
         imageAlt="Services"
       />
@@ -66,7 +66,7 @@ export function DevDocsCardGrid() {
         href="/sdk/"
         title="SDKs"
         imageAlt="SDKs"
-        description="Instrumenting users code."
+        description="Instrumenting user code."
         image={SkdsImg}
       />
       <Card
