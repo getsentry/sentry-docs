@@ -95,6 +95,8 @@ export function ApiDocs({api}: Props) {
     ? filteredSpecByEndpoint(apiSpec, api?.apiPath, api?.method)
     : apiSpec;
 
+  console.log('rendered', renderedSpec);
+
   removeUnrenderedInfo(renderedSpec);
 
   // const specUrl = `https://raw.githubusercontent.com/getsentry/sentry-api-schema/${SENTRY_API_SCHEMA_SHA}/openapi-derefed.json`;

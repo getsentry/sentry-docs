@@ -1,4 +1,6 @@
 import {Fragment} from 'react';
+import {cookies} from 'next/headers';
+import {useParams} from 'next/navigation';
 
 import {getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
 
@@ -59,14 +61,20 @@ export async function SidebarLinks({
   path: string[];
 }) {
   const rootNode = await getDocsRootNode();
+  const renderApiDocs = path[0] === 'api-docs';
+
+  const filteredSidebarItems = renderApiDocs
+    ? productSidebarItems
+    : productSidebarItems.filter(item => item.root !== 'api-docs');
+
   if (
-    productSidebarItems.some(el => el.root === path[0]) ||
+    filteredSidebarItems.some(el => el.root === path[0]) ||
     path[0] === 'platform-redirect'
   ) {
     return (
       <ProductSidebar
         rootNode={rootNode}
-        items={productSidebarItems}
+        items={filteredSidebarItems}
         headerClassName={headerClassName}
       />
     );
@@ -90,7 +98,7 @@ export async function SidebarLinks({
         )}
         <ProductSidebar
           rootNode={rootNode}
-          items={productSidebarItems}
+          items={filteredSidebarItems}
           headerClassName={headerClassName}
         />
       </Fragment>

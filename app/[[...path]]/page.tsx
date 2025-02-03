@@ -128,8 +128,22 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
     );
   }
 
-  if (params.path?.[0] === 'api-docs' && params.path.length > 1) {
+  if (params.path?.[0] === 'api-docs' && params.path.length === 1) {
     return <ApiDocsPage />;
+  }
+  
+  if (params.path?.[0] === 'api-docs' && params.path.length > 1) {
+    const categories = await apiCategories();
+    const category = categories.find(c => c.slug === params?.path?.[1]);
+    if (category) {
+      if (params.path.length === 2) {
+        return <ApiDocsPage category={category} />;
+      }
+      const api = category.apis.find(a => a.slug === params.path?.[2]);
+      if (api) {
+        return <ApiDocsPage api={api} />;
+      }
+    }
   }
 
   if (params.path?.[0] === 'api' && params.path.length > 1) {
