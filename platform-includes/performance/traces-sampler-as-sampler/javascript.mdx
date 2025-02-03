@@ -14,7 +14,7 @@ interface SamplingContext {
 Sentry.init({
   // ...
 
-  tracesSampler: ({ name, attributes, parentSampled }) => {
+  tracesSampler: ({ name, attributes, inheritOrSampleWith }) => {
     // Do not sample health checks ever
     if (name.includes("healthcheck")) {
       return 0;
@@ -30,24 +30,17 @@ Sentry.init({
       return 0.01;
     }
 
-    // Inherit the samle rate of the incoming trace if there is one. Sampling is deterministic
-    // for one entire trace, i.e. if the parent was sampled, we will be sampled too at the same
-    // rate.
-    if (typeof parentSampleRate === "number") {
-      return parentSampleRate;
-    }
-
-    // Else, use default sample rate
-    return 0.5;
+    // Otherwise, inherit the sample sampling decision of the incoming trace, or use a fallback sampling rate.
+    return inheritOrSampleWith(0.5);
   },
 });
 ```
 
 <Alert title="parentSampleRate">
 
-The `parentSampleRate` sampling context was introduced in version 9 of the SDK.
-To inherit sampling decisions in earlier versions of the SDK, us the `parentSampled` sampling context.
+The `inheritOrSampleWith` sampling context utility was introduced in version 9 of the SDK.
+To inherit sampling decisions in earlier versions of the SDK, use the `parentSampled` sampling context.
 
-Going forward, using `parentSampleRate` is strongly encouraged over using `parentSampled`, because it allows for deterministic sampling and metric extrapolation for downstream traces.
+Going forward, using `inheritOrSampleWith()` is strongly encouraged over using `parentSampled`, because it allows for deterministic sampling and metric extrapolation for downstream traces.
 
 </Alert>
