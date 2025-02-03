@@ -189,7 +189,7 @@ async function getRecords(pageFm: FrontMatter) {
         sdk,
         framework,
         // @ts-ignore
-        popularity: getPopularity(sdk, framework),
+        ...(!isDeveloperDocs && {popularity: getPopularity(sdk, framework)}),
       },
       '#main'
     );
