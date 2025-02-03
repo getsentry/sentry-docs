@@ -3361,6 +3361,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/contributing/onboarding-wizard/',
     to: '/contributing/',
   },
+  {
+    from: '/security-legal-pii/security/security-policy-reporting/',
+    to: '/platform-redirect/?next=/content-security-policy-reporting/',
+  },
 ];
 
 const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
