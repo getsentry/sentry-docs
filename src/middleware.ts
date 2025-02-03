@@ -3363,7 +3363,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/security-legal-pii/security/security-policy-reporting/',
-    to: '/platform-redirect/?next=/content-security-policy-reporting/',
+    to: '/platform-redirect/?next=/security-policy-reporting/',
   },
 ];
 
