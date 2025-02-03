@@ -5,8 +5,10 @@ interface SamplingContext {
   name: string;
   // Initial attributes of the span
   attributes: SpanAttributes | undefined;
-  // If the parent span was sampled - undefined if there is no parent span
+  // If the parent span was sampled - undefined if there is no incoming trace
   parentSampled: boolean | undefined;
+  // Sample rate that is coming from the incoming trace - undefined if there is no incoming trace
+  parentSampleRate: number | undefined;
 }
 
 Sentry.init({
@@ -15,7 +17,6 @@ Sentry.init({
   tracesSampler: ({ name, attributes, parentSampled }) => {
     // Do not sample health checks ever
     if (name.includes("healthcheck")) {
-      // Drop this completely by setting its sample rate to 0%
       return 0;
     }
 
@@ -29,9 +30,11 @@ Sentry.init({
       return 0.01;
     }
 
-    // Continue trace decision, if there is any parentSampled information
-    if (typeof parentSampled === "boolean") {
-      return parentSampled;
+    // Inherit the samle rate of the incoming trace if there is one. Sampling is deterministic
+    // for one entire trace, i.e. if the parent was sampled, we will be sampled too at the same
+    // rate.
+    if (typeof parentSampleRate === "number") {
+      return parentSampleRate;
     }
 
     // Else, use default sample rate
@@ -39,3 +42,12 @@ Sentry.init({
   },
 });
 ```
+
+<Alert title="parentSampleRate">
+
+The `parentSampleRate` sampling context was introduced in version 9 of the SDK.
+To inherit sampling decisions in earlier versions of the SDK, us the `parentSampled` sampling context.
+
+Going forward, using `parentSampleRate` is strongly encouraged over using `parentSampled`, because it allows for deterministic sampling and metric extrapolation for downstream traces.
+
+</Alert>
