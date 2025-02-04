@@ -188,7 +188,6 @@ async function getRecords(pageFm: FrontMatter) {
         keywords: pageFm.keywords,
         sdk,
         framework,
-        // @ts-ignore
         ...(!isDeveloperDocs && {popularity: getPopularity(sdk, framework)}),
       },
       '#main'
