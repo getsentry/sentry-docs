@@ -13,11 +13,38 @@ description: "Get started with Sentry's Dev Toolbar, bringing critical Sentry in
 
 For the Sentry Toolbar to work best, [enable tracing](/platforms/javascript/tracing/) in your app. With tracing enabled, the Dev Toolbar will be able to associate issues and feedback with the current URL in the browser location.
 
-## 1. Install
+## 1. Choose Deploy Environments
 
-The first step is to include the Toolbar code in your app.
+Since the Dev Toolbar will be visible to users within your app, it's important to consider which environments the Toolbar should apply to.
 
-Since the Dev Toolbar will be visible to users within your app, it's strongly recommended that you consider which environments the Toolbar should apply to. See [Deploying to Different Environments](#deploying-to-different-environments) below for more.
+In dev & staging environments, include the Toolbar so that all developers and testers can use it and quickly go from the page they're looking at back to Sentry for further debugging.
+
+In production environments, the Dev Toolbar can make it easier to reproduce real issues your users are having. However the Toolbar should not be rendered for all users of the site -- only when an employee/engineer/etc visits.
+
+Once you decide where and when you want the Toolbar to appear, you'll write those conditions into your codebase. The specific implementation is something you'll need to write based on how your app works and how your dev team is set up.
+
+For example, the conditions to show show the Toolbar in dev and staging might look like this:
+
+```typescript
+const env = process.env.SENTRY_ENVIRONMENT || 'development';
+
+const isDev = env === 'development' || env === 'staging';
+if (isDev) {
+  // Enable the Dev Toolbar here...
+}
+```
+
+Or if your web application requires authentication to access, you could add a conditional where the Dev Toolbar is shown always when deployed to development **and** staging, but in production only show the Toolbar **if** an employee is logged in.
+
+## 2. Allow Domains
+
+You will need to edit the [Project Settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/) page to allow the Toolbar to connect to Sentry by configuring your dev, staging, and production domains. Only add domains to this list that you trust and control.
+
+![Sentry's Dev Toolbar Settings Page](./img/sentry-project-settings-toolbar.png)
+
+## 3. Install
+
+Next you must include the Toolbar code in your app.
 
 ```html {tabTitle: CDN}
 <!--
@@ -32,13 +59,9 @@ so it doesn’t block other critical JavaScript.
 //   https://github.com/getsentry/sentry-toolbar/blob/main/docs/conditional-script.md
 ```
 
-## 2. Allow Domains
+Remember to conditionally include the Toolbar code only in environments that need it. This will help reduce network traffic for your users who do not have the credentials needed to login.
 
-Next you will need to edit the [Project Settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/) page to allow the Toolbar to connect to Sentry by configuring your dev, staging, and production domains. Only add domains to this list that you trust and control.
-
-![Sentry's Dev Toolbar Settings Page](./img/sentry-project-settings-toolbar.png)
-
-## 3. Configure
+## 4. Configure
 
 Finally, call `SentryToolbar.init(initConfig)` to render a Toolbar instance on each page where you want to see the Dev Toolbar. This will prompt any visitor to the page to login to your Sentry organization.
 
@@ -59,6 +82,9 @@ Finally, call `SentryToolbar.init(initConfig)` to render a Toolbar instance on e
 // In the meantime, go here for instructions to create a React hook manually:
 //   https://github.com/getsentry/sentry-toolbar/blob/main/docs/conditional-script.md
 ```
+
+If the toolbar `<script>` ([step #3 Install](3-install)) is included on your site, and `SentryToolbar.init()` is called, then a "Login to Sentry" button will be visible to the public. This is not ideal, but your data in Sentry will still be safe as users outside of your Sentry organization will not be able to login.
+
 
 ### Init Configuration Options
 
@@ -94,32 +120,6 @@ const unmountToolbar = window.SentryToolbar.init({ ... });
 // sometime later...
 unmountToolbar();
 ```
-
-## Deploying to Different Environments
-
-Since the Dev Toolbar will be visible to users within your app, it's strongly recommended that you consider which environments the Toolbar should apply to.
-
-In dev and staging environments, include the Toolbar so that all developers and testers can use it and quickly go from the page they're looking at back to Sentry for further debugging.
-
-In production environments, the Dev Toolbar can make it easier to reproduce real issues your users are having, but the Toolbar should not be rendered for all users of the site -- only when an employee/engineer/etc visits.
-
-
-It's possible to dynamically insert the script tag inside a single-page app, prior to calling `SentryToolbar.init()`, so that it’s only visible to authorized users, or in specific stages. See [`docs/conditional-script.md`](https://github.com/getsentry/sentry-toolbar/blob/main/docs/conditional-script.md) for example code. This will help reduce network traffic for your users because they do not have the credentials needed to login.
-
-The specific implementation for conditionally including the Dev Toolbar is something you'll need to write based on how your app works and how your dev team is set up. For example, the conditions to show show the Toolbar in dev and staging might look like this:
-```typescript
-const env = process.env.SENTRY_ENVIRONMENT || 'development';
-
-const isDev = env === 'development' || env === 'staging';
-if (isDev) {
-  window.SentryToolbar.init({ ... });
-}
-```
-
-Or if your web application requires authentication to access, you could add a conditional where the Dev Toolbar is shown always when deployed to development **and** staging, but in production only show the Toolbar **if** an employee is logged in.
-
-If the toolbar `<script>` is accidentally included on your site, and `SentryToolbar.init()` is called, then a "Login to Sentry" button will be visible to the public. This is not ideal, but your data in Sentry will still be safe as users outside of your Sentry organization will not be able to authenticate themselves.
-
 
 ## Feature Flag Panel
 
