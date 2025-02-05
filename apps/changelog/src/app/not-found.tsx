@@ -17,7 +17,7 @@ export default function NotFound() {
             target="_blank"
             rel="noreferrer"
           >
-            Report 404 on Github
+            Report 404 on GitHub
           </a>
         </Button>
       </div>

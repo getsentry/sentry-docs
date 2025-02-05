@@ -35,7 +35,7 @@ export default function NotFound() {
         <div className="pt-8 flex gap-4">
           <Button variant="solid" size="3" asChild>
             <a href={reportUrl} target="_blank" rel="noreferrer">
-              Report 404 on Github
+              Report 404 on GitHub
             </a>
           </Button>
           <Button variant="soft" size="3" asChild>
