@@ -65,12 +65,6 @@ Sets the URL that will be used to transport captured events. This can be used to
 
 </SdkOption>
 
-<SdkOption name="sampleRate" type='number' defaultValue='1.0'>
-
-Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly.
-
-</SdkOption>
-
 <SdkOption name="maxBreadcrumbs" type='number' defaultValue="100">
 
 This variable controls the total amount of breadcrumbs that should be captured. You should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
@@ -90,30 +84,6 @@ Grouping in Sentry is different for events with stack traces and without. As a r
 This option can be used to supply a "server name." When provided, the name of the server is sent along and persisted in the event. For many integrations, the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server.
 
 Most SDKs will attempt to auto-discover this value.
-
-</SdkOption>
-
-<SdkOption name="ignoreErrors" type='Array<string | RegExp>' defaultValue='[]'>
-
-<Include name="platforms/configuration/options/ignore-errors.mdx" />
-
-</SdkOption>
-
-<SdkOption name="ignoreTransactions" type='Array<string | RegExp>' defaultValue='[]'>
-
-<Include name="platforms/configuration/options/ignore-transactions.mdx" />
-
-</SdkOption>
-
-<SdkOption name="denyUrls" type='Array<string | RegExp>' defaultValue='[]' categorySupported={['browser']}>
-
-<Include name="platforms/configuration/options/deny-urls.mdx" />
-
-</SdkOption>
-
-<SdkOption name="allowUrls" type='Array<string | RegExp>' defaultValue='[]'  categorySupported={['browser']}>
-
-<Include name="platforms/configuration/options/allow-urls.mdx" />
 
 </SdkOption>
 
@@ -205,6 +175,13 @@ See <PlatformLink to="/configuration/integrations/#modifying-default-integration
 
 </SdkOption>
 
+<SdkOption name="beforeBreadcrumb" type='(breadcrumb: Breadcrumb, hint?: BreadcrumbHint) => Breadcrumb | null'>
+
+This function is called with a breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
+The callback gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
+
+</SdkOption>
+
 <SdkOption name="transport" type="(transportOptions: TransportOptions) => Transport">
 
 The JavaScript SDK uses a transport to send events to Sentry. On modern browsers, most transports use the browsers' fetch API to send events. Transports will drop an event if it fails to send due to a lack of connection.
@@ -283,7 +260,13 @@ If the callback is not set, or it returns `undefined`, the default naming scheme
 </SdkOption>
 </PlatformSection>
 
-## Hooks
+## Error Monitoring Options
+
+<SdkOption name="sampleRate" type='number' defaultValue='1.0'>
+
+Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly.
+
+</SdkOption>
 
 <SdkOption name="beforeSend" type='(event: Event, hint: EventHint) => Event | null'>
 
@@ -293,25 +276,21 @@ By the time `beforeSend` is executed, all scope data has already been applied to
 
 </SdkOption>
 
-<SdkOption name="beforeSendTransaction" type='(event: TransactionEvent, hint: EventHint) => TransactionEvent | null'>
+<SdkOption name="ignoreErrors" type='Array<string | RegExp>' defaultValue='[]'>
 
-This function is called with a transaction event object, and can return a modified transaction event object, or `null` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
-
-</SdkOption>
-
-<SdkOption name="beforeSendSpan" type='(span: SpanJSON) => SpanJSON | null'>
-
-<Include name="platforms/configuration/options/warn-before-send-span.mdx" />
-
-This function is called with a serialized span object, and can return a modified span object, or `null` to skip sending the span. This might be useful for manually stripping PII from spans or to remove individual spans from the span tree.
-This function is only called for child spans of the root span. If you want to modify or drop the root span, including all of its child spans, use [`beforeSendTransaction`](#beforeSendTransaction) instead.
+<Include name="platforms/configuration/options/ignore-errors.mdx" />
 
 </SdkOption>
 
-<SdkOption name="beforeBreadcrumb" type='(breadcrumb: Breadcrumb, hint?: BreadcrumbHint) => Breadcrumb | null'>
+<SdkOption name="denyUrls" type='Array<string | RegExp>' defaultValue='[]' categorySupported={['browser']}>
 
-This function is called with a breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
-The callback gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
+<Include name="platforms/configuration/options/deny-urls.mdx" />
+
+</SdkOption>
+
+<SdkOption name="allowUrls" type='Array<string | RegExp>' defaultValue='[]'  categorySupported={['browser']}>
+
+<Include name="platforms/configuration/options/allow-urls.mdx" />
 
 </SdkOption>
 
@@ -362,7 +341,28 @@ If you want to disable trace propagation, you can set this option to `[]`.
 
 <PlatformCategorySection supported={['browser']}>
 
-## Replay Options
+<SdkOption name="beforeSendTransaction" type='(event: TransactionEvent, hint: EventHint) => TransactionEvent | null'>
+
+This function is called with a transaction event object, and can return a modified transaction event object, or `null` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
+
+</SdkOption>
+
+<SdkOption name="beforeSendSpan" type='(span: SpanJSON) => SpanJSON | null'>
+
+<Include name="platforms/configuration/options/warn-before-send-span.mdx" />
+
+This function is called with a serialized span object, and can return a modified span object, or `null` to skip sending the span. This might be useful for manually stripping PII from spans or to remove individual spans from the span tree.
+This function is only called for child spans of the root span. If you want to modify or drop the root span, including all of its child spans, use [`beforeSendTransaction`](#beforeSendTransaction) instead.
+
+</SdkOption>
+
+<SdkOption name="ignoreTransactions" type='Array<string | RegExp>' defaultValue='[]'>
+
+<Include name="platforms/configuration/options/ignore-transactions.mdx" />
+
+</SdkOption>
+
+## Session Replay Options
 
 <SdkOption name="replaysSessionSampleRate" type='number' categorySupported={['browser']}>
 
