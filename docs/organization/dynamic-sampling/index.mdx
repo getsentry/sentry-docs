@@ -115,13 +115,12 @@ SDK sampling uses a static rate set in the SDK configuration. It’s ideal for o
 
 ### Deciding on Your SDK Sample Rate
 
-To give Sentry the fullest, most accurate picture of your application’s health, we recommend sending us 100% of your transactions. You can do this by setting your [tracesSampleRate](/platform-redirect/?next=/performance/) to 1.0. If this isn't feasible for your organization, set a lower value, or switch to sampling selectively by using the [tracesSampler](/platform-redirect/?next=/performance/) to filter your transactions based on contextual data. Note, that when calculating throughput, transaction-metering is based on received, not stored transactions.
+To give Sentry the fullest, most accurate picture of your application’s health, we recommend sending us 100% of your events. You can do this by setting your [tracesSampleRate](/platform-redirect/?next=/performance/) to 1.0. If this isn't feasible for your organization, set a lower value, or switch to sampling selectively by using the [tracesSampler](/platform-redirect/?next=/performance/) to filter your events based on contextual data. Note, that when calculating throughput, metering is based on received, not stored events.
 
 <Alert>
   Changes to your SDK sampling configuration may affect your quota. If you
   increase your SDK sampling rate, you'll also be increasing the volume of
-  transactions you send to Sentry. This may require that you adjust your
-  transaction quota.
+  events you send to Sentry. This may require that you adjust your quota.
 </Alert>
 
 You can use both Dynamic and SDK Sampling together to further optimize your event volume for your specific use case. For example, you can set a low SDK sample rate to ensure that only a certain percentage of events are sent to Sentry, and then use Dynamic Sampling to adjust the sample rate based on the event volume received by Sentry.
@@ -130,18 +129,24 @@ You can use both Dynamic and SDK Sampling together to further optimize your even
 
 Below is a list of the strategies Dynamic Sampling employs to prioritize and deprioritize data. They are enabled by default, but can be updated on a per-project basis to better fit your organization's needs. To customize this behavior, go to Project Settings > Performance.
 
-### Prioritized Transactions
+### How to Change Dynamic Sampling Priorities
 
-Sentry automatically prioritizes and retains the following types of transactions:
+To make changes to a project's dynamic sampling priorities in Sentry, go to **Settings > Projects**, select the project you're interested in, then scroll down to "Performance" in the "PROCESSING" section and make any updates under "DYNAMIC SAMPLING PRIORITIES" using the toggles. Each of your projects can have an individual set of dynamic sampling priorities.
+
+<Arcade src="https://demo.arcade.software/bEv0SO2UEmqbVJVok99o?embed" />
+
+### Automatic Priorities
+
+Sentry automatically prioritizes or deprioritizes based on the following rules:
 
 #### Latest Release
 
 Latest releases are a dynamic sampling priority because when you create a new release, we assume you'll want to have more visibility during the early adoption phase, which improves your ability to catch new issues as your release is gaining traction.
-Because you may want to deploy the same release in different environments, we'll also take your environment into account and prioritize those transactions.
+Because you may want to deploy the same release in different environments, we'll also take your environment into account and prioritize those traces.
 
 #### Dev Environments
 
-Since dev environments usually generate a small number of transactions as compared to prod environments, we prioritize them during your testing phase so you can get meaningful insights. We consider an environment to be a dev environment if its name matches one of the following glob pattterns:
+Since dev environments usually generate a small number of events as compared to prod environments, we prioritize them during your testing phase so you can get meaningful insights. We consider an environment to be a dev environment if its name matches one of the following glob patterns:
 
 - `*debug*`
 - `*dev*`
@@ -152,29 +157,43 @@ Since dev environments usually generate a small number of transactions as compar
 #### Low Volume Projects
 
 <Alert>
-
-You won't be able to disable the Low Volume Projects dynamic sampling priority because it's set on an organization-wide level, not on a per-project basis.
-
+  You won't be able to disable the Low Volume Projects dynamic sampling priority
+  because it's set on an organization-wide level, not on a per-project basis.
 </Alert>
 
 Some projects within your organization are very high-volume compared to others. This means that low-volume projects might get drowned out if we treat all projects equally. To ensure that you have enough samples regardless of project scale, we prioritize low-volume projects.
 
 #### Low Volume Transactions
 
-Transactions can be logically grouped by their name within a project. This means that transactions with the same name most likely indicate the same operation or code path, while transactions with different names usually indicate different operations.
-We prioritize low-volume transactions for the same reason we prioritize low-volume projects: – so they don't get drowned out by high-volume transactions. We want to make sure that transactions representing low-volume code paths are sampled in enough quantities to generate a complete view of your application.
+Spans can be logically grouped by their transaction name within a project. This means that spans with the same transaction name most likely indicate the same operation or code path, while spans with different transaction names usually indicate different operations.
+We prioritize low-volume transactions for the same reason we prioritize low-volume projects: so they don't get drowned out by high-volume transactions. We want to make sure that low-volume code paths are sampled in enough quantities to generate a complete view of your application.
 
-### Investigation Mode
+#### Health Checks
+
+We deprioritize health check type transactions because while they're important for checking the stability of your application, they don't have any value beyond the task associated with them. We consider a transaction to be a health check if its name matches one of the following glob patterns:
+
+- `*healthcheck*`
+- `*heartbeat*`
+- `*/health`
+- `*/healthy`
+- `*/healthz`
+- `*/live`
+- `*/livez`
+- `*/ready`
+- `*/readyz`
+- `*/ping`
+
+### Get Samples
 
 Our automated dynamic sampling priorities work well in a generic manner to collect a baseline of samples because they prioritize retaining data that's valuable for any customer at any given time. However, there are certain scenarios, such as investigating a particular issue, when very specific data becomes temporarily more important. In such cases, the automated sampling priorities may not provide enough samples, so you may want to create investigation rules.
 
-Investigation rules are sampling rules that can be created through the Sentry UI to temporarily boost the number of transactions collected for a particular scenario (for example, transactions with specific tag values). These rules can be created to retain more samples when too few (less than 5) are available. Once created, a rule will be active for up to 48 hours or until 100 samples are collected. You'll be notified via email when enough transactions have been collected.
+Investigation rules are sampling rules that can be created through the Sentry UI to temporarily boost the number of events collected for a particular scenario (for example, events with specific tag values). These rules can be created to retain more samples when too few (less than 5) are available. Once created, a rule will be active for up to 48 hours or until 100 samples are collected. You'll be notified via email when enough events have been collected.
 
 Investigation sampling rules only apply to transactions and don't guarantee that full traces will be sampled. The maximum number of sampling rules that can exist at the same time is 50.
 
-#### Creating a New Investigation Rule
+#### Creating a New Rule
 
-When you query a transactions either in [Discover](/product/explore/discover-queries/) or in [Transaction Summary](/product/performance/transaction-summary/) and receive fewer than 5 samples, you can click "Get Samples" to create a new investigation rule and retain more samples of transactions for the respective query.
+When you query transactions either in [Discover](/product/explore/discover-queries/) or in [Transaction Summary](/product/performance/transaction-summary/) and receive fewer than 5 samples, you can click "Get Samples" to create a new investigation rule and retain more samples of transactions for the respective query.
 
 ![Investigation Mode in Discover](./img/investigation-bias-discover.png)
 
@@ -193,28 +212,3 @@ If a user performs the same search later and the investigation is still active, 
 It's also possible to create a rule from the Transaction Summary page in Performance.
 
 ![Investigation Mode in Transaction Summary](./img/investigation-bias-tx-summary.png)
-
-### Deprioritized Transactions
-
-Sentry automatically deprioritizes the following transactions:
-
-#### Health Checks
-
-We deprioritize health check type transactions because while they're important for checking the stability of your application, they don't have any value beyond the task associated with them. We consider a transaction to be a health check if its name matches one of the following glob patterns:
-
-- `*healthcheck*`
-- `*heartbeat*`
-- `*/health`
-- `*/healthy`
-- `*/healthz`
-- `*/live`
-- `*/livez`
-- `*/ready`
-- `*/readyz`
-- `*/ping`
-
-### How to Change Dynamic Sampling Priorities
-
-To make changes to a project's dynamic sampling priorities in Sentry, go to **Settings > Projects**, select the project you're interested in, then scroll down to "Performance" in the "PROCESSING" section and make any updates under "DYNAMIC SAMPLING PRIORITIES" using the toggles. Each of your projects can have an individual set of dynamic sampling priorities.
-
-<Arcade src="https://demo.arcade.software/bEv0SO2UEmqbVJVok99o?embed" />
