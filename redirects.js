@@ -471,20 +471,12 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/:guide/configuration/integrations/plugin/',
   },
   {
-    source: '/platforms/javascript/configuration/options/',
-    destination: '/platforms/javascript/options/',
-  },
-  {
-    source: '/platforms/javascript/guides/:guide/configuration/options/',
-    destination: '/platforms/javascript/guides/:guide/options/',
-  },
-  {
     source: '/platforms/javascript/configuration/environments/',
-    destination: '/platforms/javascript/options/#environment',
+    destination: '/platforms/javascript/configuration/options/#environment',
   },
   {
     source: '/platforms/javascript/guides/:guide/configuration/environments/',
-    destination: '/platforms/javascript/guides/:guide/options/#environment',
+    destination: '/platforms/javascript/guides/:guide/configuration/options/#environment',
   },
   {
     source: '/platforms/:platform/context/',
