@@ -25,12 +25,6 @@ export function SdkOption({
   envVar,
   categorySupported = [],
 }: Props) {
-  // This is a literal copypaste of the HTML Gatsby outputs for regular
-  // Markdown headings because we can't figure out how to make Gatsby
-  // render component content like regular markdown/MDX content. We tried
-  // MDXRenderer but that one needs "compiled MDX" which we are unable to
-  // obtain. We might get one if we inserted a graphql node somewhere but
-  // who knows at this point.
 
   const {showBrowserOnly, showServerLikeOnly} = getPlatformHints(categorySupported);
 
