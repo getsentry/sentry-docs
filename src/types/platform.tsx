@@ -104,7 +104,7 @@ export interface PlatformConfig {
   /**
    * The categories the platform belongs to.
    */
-  categories?: `${PlatformCategory}`[];
+  categories?: PlatformCategory[];
   /**
    * Useful to define the "parent" platform. When specified the Platform will
    * inherit configuration values from the parent platform.

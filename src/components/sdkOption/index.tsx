@@ -10,7 +10,7 @@ import {PlatformSection} from '../platformSection';
 type Props = {
   name: string;
   type: string;
-  categorySupported?: `${PlatformCategory}`[];
+  categorySupported?: PlatformCategory[];
   children?: React.ReactNode;
   defaultValue?: string;
   envVar?: string;
@@ -25,7 +25,6 @@ export function SdkOption({
   envVar,
   categorySupported = [],
 }: Props) {
-
   const {showBrowserOnly, showServerLikeOnly} = getPlatformHints(categorySupported);
 
   return (
@@ -102,7 +101,7 @@ export function SdkOption({
   );
 }
 
-function getPlatformHints(categorySupported: `${PlatformCategory}`[]) {
+function getPlatformHints(categorySupported: PlatformCategory[]) {
   const {rootNode, path} = serverContext();
   const currentPlatformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
   const currentCategories = currentPlatformOrGuide?.categories || [];
