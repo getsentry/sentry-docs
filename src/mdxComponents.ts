@@ -33,8 +33,10 @@ import {PlatformSdkPackageName} from './components/platformSdkPackageName';
 import {PlatformSection} from './components/platformSection';
 import {RelayMetrics} from './components/relayMetrics';
 import {SandboxLink} from './components/sandboxLink';
+import {SdkOption} from './components/sdkOption';
 import {SignInNote} from './components/signInNote';
 import {SmartLink} from './components/smartLink';
+import {TableOfContents} from './components/tableOfContents';
 import {VimeoEmbed} from './components/video';
 
 export function mdxComponents(
@@ -53,6 +55,8 @@ export function mdxComponents(
     CodeBlock,
     CodeTabs,
     ConfigKey,
+    SdkOption,
+    TableOfContents,
     CreateGitHubAppForm,
     ConfigValue,
     DefinitionList,

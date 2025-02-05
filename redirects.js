@@ -471,6 +471,14 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/:guide/configuration/integrations/plugin/',
   },
   {
+    source: '/platforms/javascript/configuration/environments/',
+    destination: '/platforms/javascript/configuration/options/#environment',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/configuration/environments/',
+    destination: '/platforms/javascript/guides/:guide/configuration/options/#environment',
+  },
+  {
     source: '/platforms/:platform/context/',
     destination: '/platforms/:platform/enriching-events/context/',
   },
