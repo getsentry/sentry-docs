@@ -29,7 +29,8 @@ export function SdkOption({
 
   return (
     <PlatformCategorySection supported={categorySupported}>
-      <div>
+
+      <div className={styles["sdk-config-option"]}>
         <h3 id={name} aria-label={name} data-sdk-option>
           <a href={`#${name}`}>
             <svg
@@ -47,9 +48,9 @@ export function SdkOption({
             {name}
           </a>
         </h3>
-
-        <table className={styles['sdk-option-table']}>
-          <tbody>
+        <div className={styles["sdk-config-option-details"]}>
+          <table className={styles["sdk-option-table"]}>
+            <tbody>
             {type && (
               <tr>
                 <th>Type</th>
@@ -92,10 +93,11 @@ export function SdkOption({
                 <td>Server</td>
               </tr>
             )}
-          </tbody>
-        </table>
+            </tbody>
+          </table>
 
-        {children}
+          {children}
+        </div>
       </div>
     </PlatformCategorySection>
   );
