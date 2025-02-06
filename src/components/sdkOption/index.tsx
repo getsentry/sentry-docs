@@ -29,8 +29,7 @@ export function SdkOption({
 
   return (
     <PlatformCategorySection supported={categorySupported}>
-
-      <div className={styles["sdk-config-option"]}>
+      <div className={styles['sdk-config-option']}>
         <h3 id={name} aria-label={name} data-sdk-option>
           <a href={`#${name}`}>
             <svg
@@ -48,51 +47,51 @@ export function SdkOption({
             {name}
           </a>
         </h3>
-        <div className={styles["sdk-config-option-details"]}>
-          <table className={styles["sdk-option-table"]}>
+        <div className={styles['sdk-config-option-details']}>
+          <table className={styles['sdk-option-table']}>
             <tbody>
-            {type && (
-              <tr>
-                <th>Type</th>
-                <td>
-                  <code>{type}</code>
-                </td>
-              </tr>
-            )}
-            {defaultValue && (
-              <tr>
-                <th>Default</th>
-                <td>
-                  <code>{defaultValue}</code>
-                </td>
-              </tr>
-            )}
-            <PlatformCategorySection supported={['server', 'serverless']}>
-              <PlatformSection notSupported={['javascript.nextjs']}>
-                {envVar && (
-                  <tr>
-                    <th>ENV Variable</th>
-                    <td>
-                      <code>{envVar}</code>
-                    </td>
-                  </tr>
-                )}
-              </PlatformSection>
-            </PlatformCategorySection>
+              {type && (
+                <tr>
+                  <th>Type</th>
+                  <td>
+                    <code>{type}</code>
+                  </td>
+                </tr>
+              )}
+              {defaultValue && (
+                <tr>
+                  <th>Default</th>
+                  <td>
+                    <code>{defaultValue}</code>
+                  </td>
+                </tr>
+              )}
+              <PlatformCategorySection supported={['server', 'serverless']}>
+                <PlatformSection notSupported={['javascript.nextjs']}>
+                  {envVar && (
+                    <tr>
+                      <th>ENV Variable</th>
+                      <td>
+                        <code>{envVar}</code>
+                      </td>
+                    </tr>
+                  )}
+                </PlatformSection>
+              </PlatformCategorySection>
 
-            {showBrowserOnly && (
-              <tr>
-                <th>Only available on</th>
-                <td>Client</td>
-              </tr>
-            )}
+              {showBrowserOnly && (
+                <tr>
+                  <th>Only available on</th>
+                  <td>Client</td>
+                </tr>
+              )}
 
-            {showServerLikeOnly && (
-              <tr>
-                <th>Only available on</th>
-                <td>Server</td>
-              </tr>
-            )}
+              {showServerLikeOnly && (
+                <tr>
+                  <th>Only available on</th>
+                  <td>Server</td>
+                </tr>
+              )}
             </tbody>
           </table>
 
