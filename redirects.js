@@ -219,6 +219,10 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/account/require-2fa/',
+    destination: '/organization/authentication/two-factor-authentication/',
+  },
+  {
     source: '/organization/integrations/msteams/',
     destination: '/organization/integrations/notification-incidents/msteams/',
   },
@@ -469,6 +473,14 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/:guide/integrations/plugin/',
     destination: '/platforms/javascript/guides/:guide/configuration/integrations/plugin/',
+  },
+  {
+    source: '/platforms/javascript/configuration/environments/',
+    destination: '/platforms/javascript/configuration/options/#environment',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/configuration/environments/',
+    destination: '/platforms/javascript/guides/:guide/configuration/options/#environment',
   },
   {
     source: '/platforms/:platform/context/',
