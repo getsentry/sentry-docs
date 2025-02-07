@@ -1,25 +1,25 @@
 import {getCurrentPlatformOrGuide} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
-import {Platform, PlatformGuide} from 'sentry-docs/types';
+import {Platform, PlatformCategory, PlatformGuide} from 'sentry-docs/types';
 
 type Props = {
   children?: React.ReactNode;
   noGuides?: boolean;
-  notSupported?: string[];
+  notSupported?: PlatformCategory[];
   platform?: string;
-  supported?: string[];
+  supported?: PlatformCategory[];
 };
 
 const isSupported = (
   platformOrGuide: Platform | PlatformGuide,
-  supported: string[],
-  notSupported: string[]
+  supported: PlatformCategory[],
+  notSupported: PlatformCategory[]
 ): boolean => {
   if (platformOrGuide.categories === null) {
     return false;
   }
 
-  const categories = (platformOrGuide.categories || []) as string[];
+  const categories = platformOrGuide.categories || [];
 
   if (supported.length && !supported.some(v => categories.includes(v))) {
     return false;

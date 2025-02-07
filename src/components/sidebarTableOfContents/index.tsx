@@ -78,7 +78,7 @@ function buildTocTree(toc: TocItem[]): TocItem[] {
 // https://github.com/vercel/next.js/discussions/57631
 //
 // For now, calculate the table of contents on the client.
-export function TableOfContents() {
+export function SidebarTableOfContents() {
   const [tocItems, setTocItems] = useState<TocItem[]>([]);
 
   // gather the toc items on mount
