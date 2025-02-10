@@ -1,15 +1,15 @@
 ---
-title: Strict TypeScript settings guide
+title: Strict TypeScript Settings Guide
 sidebar_order: 75
 ---
 
 ## Introduction
 
-We have recently turned on more strict compiler settings in the TypeScript compiler, including [noUncheckedIndexedAccess](https://www.typescriptlang.org/tsconfig/#noUncheckedIndexedAccess) and [noImplicitAny](https://www.typescriptlang.org/tsconfig/#noImplicitAny). While those settings should make it easier to write safe code in the future, it's not always clear how to proceed with existing code.
+We have recently turned on stricter settings in the TypeScript compiler, including [noUncheckedIndexedAccess](https://www.typescriptlang.org/tsconfig/#noUncheckedIndexedAccess) and [noImplicitAny](https://www.typescriptlang.org/tsconfig/#noImplicitAny). While those settings should make it easier to write safe code in the future, it's not always clear how to proceed with existing code.
 
-This guide aims at explaining the most common situations & pitfalls and how to fix & avoid them.
+This guide aims at explaining the most common situations and pitfalls, as well as how to fix and avoid them.
 
-## Missing type annotations
+## Missing Type Annotations
 
 `noImplicitAny` has surfaced a lot of missing type annotations, where the compiler has automatically filled in an `any` type for us. Simple example from a react component:
 
@@ -21,13 +21,13 @@ const handleClick = (e) => {
 }
 ```
 
-Here, we didn't see any error without this compiler setting, but now we get:
+Here, we didn't see any errors with the old compiler settings, but now we get:
 
 <Alert level="warning">
   Parameter 'e' implicitly has an 'any' type.
 </Alert>
 
-In the migration, we addressed many of those problems by just adding an explicit any:
+In the migration, we addressed many of those problems by just adding an explicit `any`:
 
 ```tsx {2}
 // ⚠️
@@ -37,9 +37,9 @@ const handleClick = (e: any) => {
 }
 ```
 
-This is obviously not great, but since we had 3k+ errors, this was the fastest way to get this setting to be turned on. So there's a good chance you'll see many explicit any type annotations now.
+This obviously isn't great, but since we had 3k+ errors, this was the fastest way to get this setting up and running. So there's a good chance you'll see many explicit `any` type annotations now.
 
-### Recommended approaches
+### Recommended Approaches
 
 - Sometimes, it's enough to change `any` to `unknown` (given that enough type narrowing happens inside the function). `unknown` is totally safe to use, and if you have no errors, this is a good way forward. The above example is not one of them though.
 - Look at the usages of the function and potentially inline it into one of those usages while removing the manual `:any`. You can then check via type inference what the type of e would be in that usage. You can then give it an explicit type, in this case: `React.MouseEvent<HTMLButtonElement>`
@@ -53,11 +53,11 @@ This is obviously not great, but since we had 3k+ errors, this was the fastest w
 }
 ```
 
-## Missing handling for array indexed access
+## Missing Handling for Array Indexed Access
 
 `noUncheckedIndexedAccess` has revealed many cases where we "know" an element exists in an Array, but TypeScript does not know it.
 
-### for loops
+### For Loops
 
 Inside of for loops, the access of elements is usually safe, because the index is checked. However, TypeScript doesn't know that, so we need the `!` operator:
 
@@ -82,7 +82,7 @@ for (const child of collection) {
 
 There is also a stylistic [typescript-eslint](https://typescript-eslint.io/rules/prefer-for-of/) rule that can catch those cases, as this arguably easier to read, too.
 
-#### functional access
+#### Functional Access
 
 Another approach would be to switch to a more functional style, like `collection.map` or `collection.forEach`:
 
@@ -93,11 +93,11 @@ collection.forEach(child => {
 })
 ```
 
-If this is a good approach depends on what's actually happening in the body of the function, and if performance is a concern and the collection itself is large, the loop might be the better approach.
+Whether or not this is a good approach depends on what's actually happening in the body of the function, as well as the size of the collection and how much you're concerned bout performance.
 
-### Accessing a specific element of an array
+### Accessing a Specific Element of an Array
 
-Oftentimes, we need to access a specific element, mostly the first element, of an array after we've checked the length:
+Oftentimes, we need to access a specific element, usually the first element, of an array after we've checked the length:
 
 ```ts
 // ❌
@@ -109,7 +109,7 @@ if (collection.length > 0) {
 
 There are various ways to address this:
 
-#### Explicit item check
+#### Explicit Item Check
 
 We could check for existence of the item itself instead of checking for the length:
 
@@ -123,7 +123,7 @@ if (first) {
 
 `first` will be properly narrowed here, but note that the `if` check is not 100% identical to a length check. If the array contains `[null]` or `[undefined]` at the first index, we would pass the length check, but not the "existence check".
 
-#### Optional chaining
+#### Optional Chaining
 
 We could not check the length at all and just embrace that `first` is potentially `undefined` and just continue with optional chaining:
 
@@ -133,7 +133,7 @@ const first = collection[0]
 first?.toUpperCase()
 ```
 
-#### use `as const` for static elements
+#### Use `as const` for Static Elements
 
 Sometimes, we know that `collection[0]` exists because we have manually defined it:
 
@@ -153,7 +153,7 @@ The fix is to add `as const` to the definition. Const assertions are very powerf
 const first = collection[0]
 ```
 
-#### use a type-narrowing length check
+#### Use a Type-Narrowing Length Check
 
 Especially for checking the first element, which is arguably the most common case, having a descriptive helper function that checks if lists are "non empty" is possible to implement at runtime and on type level with a user-defined type-guard:
 
@@ -176,9 +176,9 @@ if (isNonEmpty(collection)) {
 }
 ```
 
-## Iterating over indexed objects
+## Iterating Over Indexed Objects
 
-Iterating over every item in an object has similar drawbacks of a for loop. Traditionally, code may look like this:
+Iterating over every item in an object has similar drawbacks to a for loop. Traditionally, code may look like this:
 
 ```
 // ❌
@@ -252,7 +252,7 @@ While this is similar to the error before, it can't easily be solved with a non-
 
 How we address this problem depends on our intent:
 
-### Strict lookups
+### Strict Lookups
 
 The easiest way is to disallow lookups by `string`. If we change our `printKey` function to accept a more narrow index type:
 
@@ -265,7 +265,7 @@ function printKey(person: Person, key: keyof Person) {
 
 Of course, this might lead to errors on the call-sides if we have strings there that might potentially not be a valid key.
 
-### Fallback lookups
+### Fallback Lookups
 
 Sometimes, we want to allow arbitrary strings to be passed in, e.g. because we get them from an endpoint that is typed as `string`. In those cases, we might want to just leverage that JavaScript will return `undefined` at runtime:
 
@@ -299,7 +299,7 @@ function printKey(person: Person, key: string) {
 so I don't think we want that littered in our code-base.
 
 
-### Narrowing with the `in` operator
+### Narrowing With the `in` Operator
 
 The `in` operator is good for checks at runtime, and it also narrows the type correctly if we check for a hard-coded field. However, it can't narrow for arbitrary strings like `key:string` , so this also won't work:
 
@@ -341,7 +341,7 @@ function printKey(person: Person, key: string) {
 
 Which isn't terrible.
 
-## Partial object lookup
+## Partial Object Lookup
 
 Another common issue revolves around defining mapping objects with a finite set of keys that aren't exhaustive. As a real-life example, let's look at [this `PRODUCTS` mapping](https://github.com/getsentry/getsentry/blob/ee6c3b24603ca244767e78bcc9471c0238ddf328/static/getsentry/gsApp/components/productTrial/productTrialAlert.tsx#L26-L34):
 
@@ -381,7 +381,7 @@ TS7053: Element implicitly has an any type because expression of type DataCatego
 Property '[DataCategory. PROFILE_DURATION]' does not exist on type ...
 </Alert>
 
-### Solution 1: Make the mapping exhaustive
+### Solution 1: Make the Mapping Exhaustive
 
 If our intention was to have an exhaustive mapping - every `DataCategory` should be in the `PRODUCTS`, we should ensure this with `satisfies`:
 
@@ -406,7 +406,7 @@ TS1360: Type ... does not satisfy the expected type `Record<DataCategory, string
 Type ... is missing the following properties from type `Record<DataCategory, string>`: profileDuration, spansIndexed, profileChunks
 </Alert>
 
-### Solution 2: Define the object as `Partial`
+### Solution 2: Define the Object as `Partial`
 
 If our intention was to not have all `DataCategories` mapped, we have to define our mapping object as `Partial`:
 
@@ -426,7 +426,7 @@ const errorProduct = PRODUCTS[DataCategory.ERRORS].toUpperCase()
 
 This won't work because we might be accessing `.toUpperCase()` on `undefined` , e.g. if we remove `DataCategory.ERRORS` from our Partial mapping.
 
-For tests, `!` might be good enough, but for runtime code, just embracing the fact that no category is guaranteed to be in the mapping is likely best, so let's use optional chaining then:
+For tests, `!` might be good enough, but for runtime code, just embracing the fact that no category is guaranteed to be in the mapping is likely best, so we recommend optional chaining:
 
 ```tsx
 // ✅
