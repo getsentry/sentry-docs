@@ -1,5 +1,5 @@
 ---
-title: "Set Up"
+title: "Set Up Dev Toolbar"
 sidebar_order: 10
 description: "Get started with Sentry's Dev Toolbar, bringing critical Sentry insights and tools into your web app to help your team troubleshoot more effectively."
 ---
@@ -9,50 +9,84 @@ description: "Get started with Sentry's Dev Toolbar, bringing critical Sentry in
   [GitHub](https://github.com/getsentry/sentry-toolbar/issues) if you have any feedback or concerns.
 </Alert>
 
-## Set Up Your Web App
+## Pre-Requisites
 
-<Alert level="warning">
-    [Enabling tracing](/platforms/javascript/tracing/) is a prerequisite to using the Dev Toolbar. Tracing is used to collect page-specific issues and feedback through transactions.
-</Alert>
+For the Sentry Dev Toolbar to work best, [enable tracing](/platforms/javascript/tracing/) in your app. With tracing enabled, the Dev Toolbar will be able to associate issues and feedback with the current URL in the browser location.
 
-You need to complete two steps to get the toolbar rendered on the page:
-1. Add or dynamically inject the following script into your web app:
-    ```html
-    <script src="https://browser.sentry-cdn.com/sentry-toolbar/latest/toolbar.min.js"></script>
-    ```
-    It is recommended that you add the script tag at the bottom of the page so it doesn’t block other critical JavaScript.
+## 1. Choose Deploy Environments
 
-2. Call `window.SentryToolbar.init(initConfig)` to set up a toolbar instance on each page where you want to see the Dev Toolbar. Take care to also [conditionally load the toolbar in your production environment](#deploying-to-production-environments).
-    ```html
-    <html>
-    <head>...</head>
-    <body>
-        ...
-        <script src="https://browser.sentry-cdn.com/sentry-toolbar/latest/toolbar.min.js"></script>
-        <script>
-        window.SentryToolbar.init({ ... });
-        </script>
-    </body>
-    </html>
-    ```
+Since the Dev Toolbar will be visible to users within your app, it's important to consider which environments should render it.
 
-3. Edit [Project Settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/) in Sentry so the Toolbar is allowed to connect from your dev, staging, and production domains.
-  ![Sentry's Dev Toolbar Settings Page](./img/sentry-project-settings-toolbar.png)
+In dev and staging environments, include the Toolbar so that all developers and testers can use it and quickly go from the page they're looking at back to Sentry for further debugging.
 
+In production environments, the Dev Toolbar can make it easier to reproduce real issues your users are having. However the Toolbar should not be rendered for all users of the site -- only when an employee/engineer/etc visits.
 
-### Unmounting The Toolbar
+Once you decide where and when you want the Toolbar to appear, you'll write those conditions into your codebase. The specific implementation is something you'll need to write based on how your app works and how your dev team is set up.
 
-If you have called `SentryToolbar.init({...})` to render the toolbar, but now want to manually remove or unmount it from the page, you can call the cleanup function that is returned from `init()`. This will unmount all the injected HTML and CSS. Login credentials will not be removed, so you can re-insert the toolbar and still be authenticated.
-```javascript
-const unmountToolbar = window.SentryToolbar.init({ ... });
+For example, the conditions to show show the Toolbar in dev and staging might look like this:
 
-// sometime later...
-unmountToolbar();
+```typescript
+const env = process.env.SENTRY_ENVIRONMENT || 'development';
+
+const isDev = env === 'development' || env === 'staging';
+if (isDev) {
+  // Enable the Dev Toolbar here...
+}
 ```
 
-## Init Configuration Options
+Or if your web application requires authentication to access, you could add a conditional where the Dev Toolbar is shown always when deployed to development **and** staging, but in production only show the Toolbar **if** an employee is logged in.
 
-The following options can be passed into the `.init()` function.
+## 2. Allow Domains
+
+You will need to edit the [Project Settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/) page to allow the Toolbar to connect to Sentry by configuring your dev, staging, and production domains. Only add domains that you trust and control to this list.
+
+![Sentry's Dev Toolbar Settings Page](./img/sentry-project-settings-toolbar.png)
+
+## 3. Install
+
+Next you must include the Toolbar code in your app:
+
+```html {tabTitle: CDN}
+<!--
+Put this at the bottom of your page
+so it doesn’t block other critical JavaScript.
+-->
+<script src="https://browser.sentry-cdn.com/sentry-toolbar/latest/toolbar.min.js"></script>
+```
+```typescript {tabTitle: React}
+// An NPM package is under development
+// In the meantime, go here for instructions to create a React hook manually:
+//   https://github.com/getsentry/sentry-toolbar/blob/main/docs/conditional-script.md
+```
+
+Remember to conditionally include the Toolbar code only in environments that need it. This will help reduce network traffic for your users who do not have the credentials needed to login.
+
+## 4. Configure
+
+Finally, call `SentryToolbar.init(initConfig)` to render a Toolbar instance on each page where you want to see the Dev Toolbar. This will prompt any visitor to the page to login to your Sentry organization.
+
+```html {tabTitle: CDN}
+<html>
+<head>...</head>
+<body>
+    ...
+    <script src="https://browser.sentry-cdn.com/sentry-toolbar/latest/toolbar.min.js"></script>
+    <script>
+    window.SentryToolbar.init({ ... });
+    </script>
+</body>
+</html>
+```
+```typescript {tabTitle:React}
+// An NPM package is under development
+// In the meantime, go here for instructions to create a React hook manually:
+//   https://github.com/getsentry/sentry-toolbar/blob/main/docs/conditional-script.md
+```
+
+If the toolbar `<script>` is included on your site, and `SentryToolbar.init()` is called, then a "Login to Sentry" button will be visible to the public. This is not ideal, but your data in Sentry will still be safe as users outside of your Sentry organization will not be able to login.
+
+
+### Init Configuration Options
 
 At minimum, you should be calling `.init()` with these two options:
 ```javascript
@@ -61,29 +95,78 @@ window.SentryToolbar.init({
   projectIdOrSlug: 'website',
 });
 ```
-And you can include any additional options from this list:
+
+And you can also include any additional options from this list:
 
 | Option | Type | Description | Default Value |
 | ----- | ----- | ----- | ----- |
 | `organizationSlug` | `string` | The organization that users should login to. For example \'acme\' | *Required Value* |
 | `projectIdOrSlug` | `string \| number` | The project for which this website/webapp is associated. | *Required Value* |
 | `environment (optional)` | `string \| string[] \| undefined` | The environment of this deployment. Used to narrow search results in the Toolbar UI. Set to `undefined` or `""` or `[]` if you want to see results from all environments. | `undefined` |
-| `placement (optional)` | `'right-edge' \| 'bottom-right-corner'` | Where to render the toolbar on the screen. | `'right-edge'` |
+| `placement (optional)` | `'right-edge' \| 'bottom-right-corner'` | Where to render the Toolbar on the screen. | `'right-edge'` |
 | `theme (optional)` | `'system' \| 'dark' \| 'light'` | Whether to use dark or light mode. | `'system'` |
-| `featureFlags (optional)` | `FeatureFlagAdapter \| undefined` | See [Implement FeatureFlagAdapter](/product/dev-toolbar/setup//#implement-feature-flag-adapter) below | `undefined` |
+| `featureFlags (optional)` | `FeatureFlagAdapter \| undefined` | See [Feature Flag Panel](/product/dev-toolbar/setup//#feature-flag-Panel) below | `undefined` |
 | `sentryOrigin (optional)` | `string \| undefined` | The origin where Sentry can be found. Used for loading the connection to Sentry, and generating links to the website. For example: `'https://acme.sentry.io'` | `'https://sentry.io'` |
-| `domId (optional)` | `string \| undefined` | The `id` given to the \<div\> that is created to contain the toolbar html. | `'sentry-toolbar'` |
+| `domId (optional)` | `string \| undefined` | The `id` given to the \<div\> that is created to contain the Toolbar html. | `'sentry-toolbar'` |
 | `debug (optional)` | `string \| undefined` | A comma separated string of debug targets to enable. Example: `'logging,state'`. If the list contains 'all' or 'true' then all targets will be enabled. Valid targets: `'logging' 'login-success' 'settings' 'state'` | `undefined` |
-| `mountPoint (optional)` | `HTMLElement \| () => HTMLElement \| undefined` | Where to mount the toolbar in the DOM. | `document.body` |
+| `mountPoint (optional)` | `HTMLElement \| () => HTMLElement \| undefined` | Where to mount the Toolbar in the DOM. | `document.body` |
 
-## Implement Feature Flag Adapter
+### Unmounting the Toolbar
 
-In order to integrate your feature flagging platform with the Dev Toolbar, you will need an adapter that can read flag data from your provider, and also store and retrieve a list of overrides to apply to your local browser session.
+If you have called `SentryToolbar.init({...})` to render the Toolbar, but now want to manually remove or unmount it from the page, you can call the cleanup function that is returned from `init()`. This will unmount all the injected HTML and CSS. Login credentials will not be removed, so you can re-insert the toolbar and still be authenticated.
+```javascript
+const unmountToolbar = window.SentryToolbar.init({ ... });
 
-We plan to [create adapters for OpenFeature and LaunchDarkly](https://github.com/getsentry/sentry-toolbar/issues/150) soon.
+// sometime later...
+unmountToolbar();
+```
+
+## Feature Flag Panel
+
+<Alert>
+  If you're using feature flags inside your product then also setup [Feature Flag Evaluation and Change Tracking](/platforms/javascript/feature-flags/) within your SDK.
+</Alert>
+
+In order to integrate your feature flagging platform with the Dev Toolbar, you will need an adapter that can read flag data from your provider. It will also store and retrieve a list of overrides to apply to your local browser session.
+
+There is a built-in `OpenFeatureAdapter` that is compatible with the [open-feature/js-sdk-contrib](https://github.com/open-feature/js-sdk-contrib). To use it, call the `SentryToolbar.OpenFeatureAdapter` implementation.
+
+```html {tabTitle: CDN}
+<script>
+// Define your provider
+const provider = new FlagdWebProvider({...});
+
+// Set the provider into the OpenFeature SDK
+OpenFeature.setProvider(provider);
+
+window.SentryToolbar.init({
+  ...
+  // Set the provider into the OpenFeatureAdapter
+  featureFlags: window.SentryToolbar.OpenFeatureAdapter({provider})
+});
+</script>
+```
+```typescript {tabTitle: React}
+import {OpenFeature} from '@openfeature/web-sdk';
+import {FlagdWebProvider} from '@openfeature/flagd-web-provider';
+
+// Define your provider
+const provider = new FlagdWebProvider({...});
+
+// Set the provider into the OpenFeature SDK
+OpenFeature.setProvider(provider);
+
+window.SentryToolbar.init({
+  ...
+  // Set the provider into the OpenFeatureAdapter
+  featureFlags: window.SentryToolbar.OpenFeatureAdapter({provider})
+});
+```
+
+You can also create your own adapter by implementing the [`FeatureFlagAdapter` interface](https://github.com/getsentry/sentry-toolbar/blob/main/src/lib/types/featureFlags.ts).
 
 The adapter interface is:
-```javascript
+```typescript
 type FlagValue = boolean | string | number | undefined;
 type FlagMap = Record<string, FlagValue>;
 interface FeatureFlagAdapter {
@@ -116,32 +199,3 @@ interface FeatureFlagAdapter {
 ```
 
 [MockFeatureFlagAdapter.tsx](https://github.com/getsentry/sentry-toolbar/blob/main/src/env/demo/MockFeatureFlagAdapter.tsx) is an example adapter to use as a reference.
-
-
-## Deploying To Dev and Staging Environments
-Since the Dev Toolbar is deployed onto specific pages, it's strongly recommended that you consider which environments the toolbar should apply to.
-
-In dev and staging environments, you might want to *unconditionally* include the toolbar so that all developers and testers can use it and quickly go from the page they're looking at back to Sentry for further debugging.
-
-The code might look like this:
-```javascript
-const env = process.env.SENTRY_ENVIRONMENT || 'development';
-
-const isDev = env === 'development' || env === 'staging';
-if (isDev ) {
-  SentryToolbar.init({ ... });
-}
-```
-
-## Deploying to Production Environments
-
-In production, it's strongly recommended to *conditionally* include the Dev Toolbar `<script>` tag so that only members of your Sentry organization can see it. The specific implementation for conditionally including the Dev Toolbar is something you'll need to write based on how your app works and how your dev team is set up.
-
-For example, if your web application requires authentication to access, you could add a conditional where the Dev Toolbar is shown always when deployed to development **and** staging, but in production only show the toolbar **if** an employee is logged in.
-
-If the toolbar `<script>` is accidentally included on your site, and `SentryToolbar.init()` is called, then a "Login to Sentry" button will be visible to the public. This is not ideal, but your data in Sentry will still be safe as users outside of your Sentry organization will not be able to authenticate themselves.
-
-## Conditionally Inserting Script Tag
-
-It's possible to dynamically insert the script tag inside a single-page app, prior to calling `SentryToolbar.init()`, so that it’s only visible to authorized users. See [`docs/conditional-script.md`](https://github.com/getsentry/sentry-toolbar/blob/main/docs/conditional-script.md) for example code. This will help reduce network traffic for your users because they do not have the credentials needed to login.
-This example code will be eventually implemented as an NPM package, but for now it can be done manually.
