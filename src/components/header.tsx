@@ -1,6 +1,5 @@
 'use client';
 
-import {Fragment} from 'react';
 import {HamburgerMenuIcon} from '@radix-ui/react-icons';
 import Image from 'next/image';
 import Link from 'next/link';
