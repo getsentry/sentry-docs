@@ -231,16 +231,16 @@ To improve the likelihood of capturing complete traces when backend services use
 SDKs must set and propagate the `sample_rand` as follows:
 
 1. Whenever a new trace is started, including in the Tracing without Performance case, the SDK generates a `sample_rand` value for the **entire trace**.
-   1. SDKs must generate the `sample_rand` by pseudo-randomly sampling a floating-point number from the uniform distribution over the range `[0.0, 1.0)` (including `0.0`, excluding `1.0`).
-   1. The exact method for pseudo-random sampling is implementation-defined, and may therefore vary between SDK implementations.
+   1. SDKs must generate the `sample_rand` by randomly picking a floating-point number in the range `[0.0, 1.0)` (including `0.0`, excluding `1.0`).
    1. We _recommend_ that SDKs generate the random number deterministically by using the trace ID to seed the random number generator. If multiple threads share the same random instance, seed the random number generator atomically, so that seeds do not get shared accross threads.
-1. The `sample_rand` is part of the Dynamic Sampling Context (DSC). Therefore, SDKs must propagate the `sample_rand` to downstream SDKs by adding it to the `baggage` header.
+   1. The exact method for (pseudo-)random sampling is implementation-defined, and may therefore vary between SDK implementations.
+1. The `sample_rand` is part of the Dynamic Sampling Context (DSC), which is propagated to downstream SDKs.
    1. In particular, SDKs must propagate `sample_rand` even when the sampling decision is deferred, e.g. in the Tracing without Performance case.
-   1. The `sample_rand` value must be sent in the baggage header's `sentry-sample_rand` field. The value must be expressed in decimal notation (e.g. `0.1234`).
-1. On incoming traces, SDKs must use the incoming `sentry-sample_rand` value. They also must propagate the incoming `sample_rand` value to any downstream SDKs.
+   1. The `sample_rand` value must be expressed in decimal notation (e.g. `0.1234`) when propagating to downstream SDKs.
+1. On incoming traces, SDKs must use the incoming `sample_rand` value. They also must propagate the incoming `sample_rand` value to any downstream SDKs.
    1. Prior to using the incoming `sample_rand` value, SDKs must validate that the value is a floating-point number within the range `[0.0, 1.0)`. If the value is invaild, the SDK should ignore the incoming `sample_rand` value and generate a new one according to the rules described below.
 1. If `sample_rand` is missing or invalid on an incoming trace, the SDK generates a new `sample_rand` value using the following **special rules**. The SDK must then use the new `sample_rand` value and propagate it to any downstream SDKs.
-   1. If `sample_rate` (inside `baggage`) **and** the sampling decision (trailing `-1` or `-0` from the `sentry-trace` header) are present in the incoming trace, generate a new `sample_rand` value by pseudo-randomly selecting a floating-point number from the appropriate range:
+   1. If `sample_rate` **and** the sampling decision are present in the incoming trace, generate a new `sample_rand` value by pseudo-randomly selecting a floating-point number from the appropriate range:
       1. If the trace is sampled, select from the range `[0.0, sample_rate)`.
       1. If the trace is not sampled, select from the range `[sample_rate, 1.0)`.
    1. Otherwise, generate a random number in range of `[0.0, 1.0)`, like for a new trace.
