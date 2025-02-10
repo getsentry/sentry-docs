@@ -1,7 +1,7 @@
 import Image from 'next/image';
 
-import {Banner} from 'sentry-docs/components/banner';
-import {SentryWordmarkLogo} from 'sentry-docs/components/wordmarkLogo';
+import { Banner } from 'sentry-docs/components/banner';
+import { SentryWordmarkLogo } from 'sentry-docs/components/wordmarkLogo';
 import PlugImage from 'sentry-docs/imgs/api.png';
 import ChatBubble from 'sentry-docs/imgs/chat-bubble.png';
 import TerminalImage from 'sentry-docs/imgs/cli.png';
@@ -13,10 +13,12 @@ import RocketImage from 'sentry-docs/imgs/rocket.png';
 import SecurityImage from 'sentry-docs/imgs/security.png';
 import SupportImage from 'sentry-docs/imgs/support.png';
 
-import {Card} from './card';
-import {Header} from './header';
-import {NavLink, NavLinkProps} from './navlink';
-import {PlatformFilter} from './platformFilter';
+import { Card } from './card';
+import { Header } from './header';
+import { NavLink, NavLinkProps } from './navlink';
+import { PlatformFilter } from './platformFilter';
+import { Search } from './search';
+import { PlatformCard } from './platformcard';
 
 export function Home() {
   return (
@@ -26,24 +28,57 @@ export function Home() {
         <Banner />
       </div>
       <div className="hero max-w-screen-xl mx-auto px-6 lg:px-8 py-2">
-        <div className="flex flex-col md:flex-row gap-4 mx-auto justify-between pt-20">
-          <div className="flex flex-col justify-center items-start">
-            <h1 className="text-[40px] font-medium mb-2 leading-[1.2]">
+        <div className="flex flex-col md:flex-row gap-4 mx-auto pt-20">
+          <div className="flex flex-col justify-center mx-auto text-center">
+            <h1 className="text-[58px] font-medium mb-2 leading-[1.2]">
               Welcome to Sentry Docs
             </h1>
-            <p className="max-w-[55ch]">
+            <p className="max-w-[55ch] text-[18px] mx-auto">
               Sentry provides end-to-end distributed tracing, enabling developers to
               identify and debug performance issues and errors across their systems and
               services.
             </p>
+            <div className="w-full my-4">
+              <Search path="/" searchPlatforms={[]} useStoredSearchPlatforms={false} />
+            </div>
+            <div className='flex flex-row gap-4 my-4'>
+              <PlatformCard
+                className="w-1/4"
+                href="/product/issues"
+                image={OrganizationImage}
+                imageAlt="Organization image"
+                title="Error Monitoring"
+              />
+              <PlatformCard
+                className="w-1/4"
+                href="/product/tracing"
+                image={OrganizationImage}
+                imageAlt="Tracing Image"
+                title="Distributed Tracing"
+              />
+              <PlatformCard
+                className="w-1/4"
+                href="/product/performance"
+                image={OrganizationImage}
+                imageAlt="Traces Image"
+                title="Performance Monitoring"
+              />
+              <PlatformCard
+                className="w-1/4"
+                href="/product/explore/session-replay"
+                image={OrganizationImage}
+                imageAlt="Tracing Image"
+                title="Session Replay"
+              />
+            </div>
           </div>
-          <div className="self-center">
+          {/* <div className="self-center">
             <Image
               src={HeroImage}
               alt="Sentry's hero image"
               className="max-h-[200px] w-auto md:max-h-[390px]"
             />
-          </div>
+          </div> */}
         </div>
 
         <PlatformFilter />
@@ -175,7 +210,7 @@ function FooterLink({
   children,
   external,
   ...props
-}: NavLinkProps & {href: string; external?: boolean}) {
+}: NavLinkProps & { href: string; external?: boolean }) {
   const target = props.target ?? (props.href?.startsWith('http') ? '_blank' : undefined);
 
   return (
