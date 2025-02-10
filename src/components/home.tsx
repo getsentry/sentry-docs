@@ -43,28 +43,28 @@ export function Home() {
             </div>
             <div className='flex flex-row gap-4 my-4'>
               <PlatformCard
-                className="w-1/4"
+                className=""
                 href="/product/issues"
                 image={OrganizationImage}
                 imageAlt="Organization image"
                 title="Error Monitoring"
               />
               <PlatformCard
-                className="w-1/4"
+                className=""
                 href="/product/tracing"
                 image={OrganizationImage}
                 imageAlt="Tracing Image"
-                title="Distributed Tracing"
+                title="Tracing and Spans"
               />
               <PlatformCard
-                className="w-1/4"
+                className=""
                 href="/product/performance"
                 image={OrganizationImage}
                 imageAlt="Traces Image"
                 title="Performance Monitoring"
               />
               <PlatformCard
-                className="w-1/4"
+                className=""
                 href="/product/explore/session-replay"
                 image={OrganizationImage}
                 imageAlt="Tracing Image"
