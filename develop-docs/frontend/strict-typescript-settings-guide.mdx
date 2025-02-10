@@ -1,0 +1,437 @@
+---
+title: Strict TypeScript Settings Guide
+sidebar_order: 75
+---
+
+## Introduction
+
+We have recently turned on stricter settings in the TypeScript compiler, including [noUncheckedIndexedAccess](https://www.typescriptlang.org/tsconfig/#noUncheckedIndexedAccess) and [noImplicitAny](https://www.typescriptlang.org/tsconfig/#noImplicitAny). While those settings should make it easier to write safe code in the future, it's not always clear how to proceed with existing code.
+
+This guide aims at explaining the most common situations and pitfalls, as well as how to fix and avoid them.
+
+## Missing Type Annotations
+
+`noImplicitAny` has surfaced a lot of missing type annotations, where the compiler has automatically filled in an `any` type for us. Simple example from a react component:
+
+```tsx
+// ❌
+const handleClick = (e) => {
+  e.stopPropagation()
+  props.onClick()
+}
+```
+
+Here, we didn't see any errors with the old compiler settings, but now we get:
+
+<Alert level="warning">
+  Parameter 'e' implicitly has an 'any' type.
+</Alert>
+
+In the migration, we addressed many of those problems by just adding an explicit `any`:
+
+```tsx {2}
+// ⚠️
+const handleClick = (event: any) => {
+  event.stopPropagation()
+  props.onClick()
+}
+```
+
+This obviously isn't great, but since we had 3k+ errors, this was the fastest way to get this setting up and running. So there's a good chance you'll see many explicit `any` type annotations now.
+
+### Recommended Approaches
+
+- Sometimes, it's enough to change `any` to `unknown` (given that enough type narrowing happens inside the function). `unknown` is [the type-safe counterpart](https://www.typescriptlang.org/docs/handbook/2/functions.html#unknown) of `any`, because it isn't assignable to anything but itself and `any` without a type assertion or a control flow based narrowing. If you have no errors, this is a good way forward. The above example is not one of them though, because we want to call the `stopPropagation` function on the `event` variable.
+- Look at the usages of the function and potentially inline it into one of those usages while removing the manual `:any`. You can then check via type inference what the type of `event` would be in that usage. You can then give it an explicit type, in this case: `React.MouseEvent<HTMLButtonElement>`
+
+```tsx {diff} {2}
+// ✅
+- const handleClick = (event: any) => {
++ const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  e.stopPropagation()
+  props.onClick()
+}
+```
+
+## Missing Handling for Array Indexed Access
+
+`noUncheckedIndexedAccess` has revealed many cases where we "know" an element exists in an Array, but TypeScript does not know it.
+
+### For Loops
+
+Inside of for loops, the access of elements is usually safe, because the index is checked. However, TypeScript doesn't know that, so we need the `!` operator:
+
+```ts {3}
+// ❌
+for (let i = 0; i < collection.length; i++) {
+  const child = collection[i]!;
+  // ...
+}
+```
+
+#### `for..of`
+
+The easiest fix is to convert this to a `for..of` loop:
+
+```ts
+// ✅
+for (const child of collection) {
+  // ...
+}
+```
+
+There is also a stylistic [typescript-eslint](https://typescript-eslint.io/rules/prefer-for-of/) rule that can catch those cases, as this arguably easier to read, too.
+
+#### Functional Access
+
+Another approach would be to switch to a more functional style, like `collection.map` or `collection.forEach`:
+
+```ts
+// ✅
+collection.forEach(child => {
+ // ...
+})
+```
+
+Whether or not this is a good approach depends on what's actually happening in the body of the function, as well as the size of the collection and how much you're concerned bout performance.
+
+### Accessing a Specific Element of an Array
+
+Oftentimes, we need to access a specific element, usually the first element, of an array after we've checked the length:
+
+```ts
+// ❌
+if (collection.length > 0) {
+  const first = collection[0]!;
+  // ...
+}
+```
+
+There are various ways to address this:
+
+#### Explicit Item Check
+
+We could check for existence of the item itself instead of checking for the length:
+
+```ts {3}
+// ✅
+const first = collection[0]
+if (first) {
+  // ...
+}
+```
+
+`first` will be properly narrowed here, but note that the `if` check is not 100% identical to a length check. If the array contains `[null]` or `[undefined]` at the first index, we would pass the length check, but not the "existence check".
+
+#### Optional Chaining
+
+We could not check the length at all and just embrace that `first` is potentially `undefined` and just continue with optional chaining:
+
+```ts
+// ✅
+const first = collection[0]
+first?.toUpperCase()
+```
+
+#### Use `as const` for Static Elements
+
+Sometimes, we know that `collection[0]` exists because we have manually defined it:
+
+```ts
+// ❌
+const collection = ['hello', 'world']
+const first = collection[0]!
+```
+
+In this case, accessing `collection[0]` is likely safe, but TypeScript doesn't know that. Arrays can be mutated later, so an `Array<string>` is not guaranteed to have those two elements.
+
+The fix is to add `as const` to the definition. Const assertions are very powerful - they make sure that the most narrow type possible is inferred, and they also make the collection `readonly` (immutable):
+
+```ts {diff}
+- const collection = ['hello', 'world']
++ const collection = ['hello', 'world'] as const
+const first = collection[0]
+```
+
+#### Use a Type-Narrowing Length Check
+
+Especially for checking the first element, which is arguably the most common case, having a descriptive helper function that checks if lists are "non empty" is possible to implement at runtime and on type level with a user-defined type-guard:
+
+```ts
+
+type NonEmptyArray<T> = readonly [T, ...ReadonlyArray<T>]
+
+export const isNonEmpty = <T,>(
+  array: ReadonlyArray<T> | undefined,
+): array is NonEmptyArray<T> => !!array && array.length > 0;
+```
+
+Since this user-defined type-guard will narrow our array to be a NonEmptyArray, we can now continue to use a length check as before:
+
+```ts
+// ✅
+if (isNonEmpty(collection)) {
+  const first = collection[0];
+  // ...
+}
+```
+
+## Iterating Over Indexed Objects
+
+Iterating over every item in an object has similar drawbacks to a for loop. Traditionally, code may look like this:
+
+```
+// ❌
+function doSomething(input: Record<string, unknown>) {
+  Object.keys(input).forEach(key => {
+    const item = input[key]!
+    // ...
+  }
+}
+```
+
+We'd expect `item` to never be `undefined` here, but with `noUncheckedIndexedAccess`, Typescript won't know that, as `key` is not narrowed to `keyof typeof input`.
+
+The best solution here would be to switch to `Object.entries` or `Object.values` to get access to the `item` directly:
+
+```
+// ✅
+function doSomething(input: Record<string, unknown>) {
+  Object.entries(input).forEach(([key, item]) => {
+    // ...
+  }
+}
+```
+
+## Expression ... can't be used to index type ...
+
+A very common error we had to disable with `ts-expect-error` during the migration is:
+
+<Alert level="warning">
+TS7053: Element implicitly has an any type because expression of type ... can't be used to index type ...
+</Alert>
+
+This most commonly happens because we have a structure without an index signature - an object with a "fixed" set of fields:
+
+```ts
+interface Person {
+  firstName: string,
+  lastName: string
+}
+```
+
+Similar to the error seen when [Iterating over indexed objects](#iterating-over-indexed-objects), iterating over those objects with `Object.keys` won't work:
+
+```ts
+// ❌
+function print(person: Person) {
+  Object.keys(person).forEach(key => {
+    console.log(person[key])
+  })
+}
+```
+
+And we also can't do lookups with arbitrary string keys:
+
+```
+// ❌
+function printKey(person: Person, key: string) {
+  console.log(person[key])
+}
+```
+
+The error we are getting in these situations is:
+
+<Alert level="warning">
+TS7053: Element implicitly has an any type because expression of type string can't be used to index type Person
+
+No index signature with a parameter of type string was found on type Person
+</Alert>
+
+While this is similar to the error before, it can't easily be solved with a non-null assertion - it's not even solvable with `key as any`. Typescript simply won't allow accessing a seemingly random key on an object that doesn't have an index signature.
+
+How we address this problem depends on our intent:
+
+### Strict Lookups
+
+The easiest way is to disallow lookups by `string`. If we change our `printKey` function to accept a more narrow index type:
+
+```ts
+// ✅
+function printKey(person: Person, key: keyof Person) {
+  console.log(person[key]);
+}
+```
+
+Of course, this might lead to errors on the call-sides if we have strings there that might potentially not be a valid key.
+
+### Fallback Lookups
+
+Sometimes, we want to allow arbitrary strings to be passed in, e.g. because we get them from an endpoint that is typed as `string`. In those cases, we might want to just leverage that JavaScript will return `undefined` at runtime:
+
+```ts
+// ❌
+function printKey(person: Person, key: string) {
+  console.log(person[key]?.toUpperCase() ?? 'N/A');
+}
+```
+
+While this works fine at runtime and is also quite easy to read and understand, TypeScript doesn't like it, and there is no easy way to narrow `key`. A type assertion might help:
+
+```ts
+// ⚠️
+function printKey(person: Person, key: string) {
+  console.log(person[key as keyof Person]?.toUpperCase() ?? 'N/A');
+}
+```
+
+But it has the drawback that the optional chaining might be seen as unnecessary by tools like `eslint`. That's because `person[key as keyof Person]` returns `string`, not `string | undefined`. The correct type assertion would be quite verbose:
+
+```tsx
+// ✅
+function printKey(person: Person, key: string) {
+  console.log(
+    (person[key as keyof Person] as string | undefined)?.toUpperCase() ?? 'N/A'
+  );
+}
+```
+
+so I don't think we want that littered in our code-base.
+
+
+### Narrowing With the `in` Operator
+
+The `in` operator is good for checks at runtime, and it also narrows the type correctly if we check for a hard-coded field. However, it can't narrow for arbitrary strings like `key:string` , so this also won't work:
+
+```ts
+// ❌
+function printKey(person: Person, key: string) {
+  console.log(key in person ? person[key].toUpperCase() : 'N/A');
+}
+```
+
+We need to assert the key here again, but at least this time, the assertion would be safe:
+
+```ts
+// ✅
+function printKey(person: Person, key: string) {
+  console.log(key in person ? person[key as keyof Person].toUpperCase() : 'N/A');
+}
+```
+
+This pattern seems like the best approach, if we apply it sparingly. If we need it more often, a `hasKey` helper function to narrow keys might be a good idea:
+
+```ts
+ const hasKey = <T extends Record<PropertyKey, any>>(
+    obj: T,
+    key: PropertyKey
+  ): key is keyof typeof obj => {
+    return key in obj;
+  };
+```
+
+With this, we could do:
+
+```ts
+// ✅
+function printKey(person: Person, key: string) {
+  console.log(hasKey(person, key) ? person[key].toUpperCase() : 'N/A');
+}
+```
+
+Which isn't terrible.
+
+## Partial Object Lookup
+
+Another common issue revolves around defining mapping objects with a finite set of keys that aren't exhaustive. As a real-life example, let's look at [this `PRODUCTS` mapping](https://github.com/getsentry/getsentry/blob/ee6c3b24603ca244767e78bcc9471c0238ddf328/static/getsentry/gsApp/components/productTrial/productTrialAlert.tsx#L26-L34):
+
+```ts
+const PRODUCTS = {
+  [DataCategory.ERRORS]: 'Error Monitoring',
+  [DataCategory.TRANSACTIONS]: 'Performance Monitoring',
+  [DataCategory.REPLAYS]: 'Session Replay',
+  [DataCategory.PROFILES]: 'Profiling',
+  [DataCategory.MONITOR_SEATS]: 'Crons',
+  [DataCategory.ATTACHMENTS]: 'Attachments',
+  [DataCategory.SPANS]: 'Spans',
+};
+```
+
+We then might reasonably accept that we could access `Products` with a variable that is of type `DataCategory`
+
+```ts
+// ❌
+function getProduct(category: DataCategory) {
+  return PRODUCTS[category];
+}
+```
+
+But `PRODUCTS` doesn't contain all DataCategories - it's not exhaustive. We're getting the following error:
+
+```ts
+// ❌
+function getProduct(category: DataCategory) {
+  return PRODUCTS[category];
+}
+```
+
+<Alert level="warning">
+TS7053: Element implicitly has an any type because expression of type DataCategory can't be used to index type
+
+Property '[DataCategory. PROFILE_DURATION]' does not exist on type ...
+</Alert>
+
+### Solution 1: Make the Mapping Exhaustive
+
+If our intention was to have an exhaustive mapping - every `DataCategory` should be in the `PRODUCTS`, we should ensure this with `satisfies`:
+
+```tsx {10}
+// ✅
+const PRODUCTS = {
+  [DataCategory.ERRORS]: 'Error Monitoring',
+  [DataCategory.TRANSACTIONS]: 'Performance Monitoring',
+  [DataCategory.REPLAYS]: 'Session Replay',
+  [DataCategory.PROFILES]: 'Profiling',
+  [DataCategory.MONITOR_SEATS]: 'Crons',
+  [DataCategory.ATTACHMENTS]: 'Attachments',
+  [DataCategory.SPANS]: 'Spans',
+} satisfies Record<DataCategory, string>;
+```
+
+This will give us a good error in the right place if our enum grows:
+
+<Alert level="warning">
+TS1360: Type ... does not satisfy the expected type `Record<DataCategory, string>`
+
+Type ... is missing the following properties from type `Record<DataCategory, string>`: profileDuration, spansIndexed, profileChunks
+</Alert>
+
+### Solution 2: Define the Object as `Partial`
+
+If our intention was to not have all `DataCategories` mapped, we have to define our mapping object as `Partial`:
+
+```tsx
+// ✅
+const PRODUCTS: Partial<Record<DataCategory, string>> = {
+ // ...
+}
+```
+
+Accessing with a `DataCategory` will then be possible, however, accessing *any field* will return `string | undefined`. This isn't great if we know that we've put a certain key into our mapping and we're accessing it statically, e.g. in tests:
+
+```tsx
+// ❌
+const errorProduct = PRODUCTS[DataCategory.ERRORS].toUpperCase()
+```
+
+This won't work because we might be accessing `.toUpperCase()` on `undefined` , e.g. if we remove `DataCategory.ERRORS` from our Partial mapping.
+
+For tests, `!` might be good enough, but for runtime code, just embracing the fact that no category is guaranteed to be in the mapping is likely best, so we recommend optional chaining:
+
+```tsx
+// ✅
+const errorProduct = PRODUCTS[DataCategory.ERRORS]?.toUpperCase()
+
+// ⚠️
+const errorProduct = PRODUCTS[DataCategory.ERRORS]!.toUpperCase()
+```
