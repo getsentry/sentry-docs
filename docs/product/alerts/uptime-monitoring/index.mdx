@@ -4,8 +4,6 @@ sidebar_order: 50
 description: "Learn how to help maintain uptime for your web services by monitoring relevant URLs with Sentry's Uptime Monitoring."
 ---
 
-<Include name="feature-stage-beta-uptime.mdx" />
-
 Sentry's Uptime Monitoring lets you monitor the availability and reliability of your web services effortlessly. Once enabled, it continuously tracks configured URLs, delivering instant alerts and insights to quickly identify downtime and troubleshoot issues.
 
 By leveraging [distributed tracing](/concepts/key-terms/tracing/distributed-tracing/), Sentry enables you to pinpoint any errors that occur during an uptime check, simplifying triage and accelerating root cause analysis. This helps you enhance both the reliability and uptime of your web services.
@@ -30,10 +28,16 @@ Our uptime monitoring system verifies the availability of your URLs by performin
    If a DNS issue is detected, the check will be marked as a failure,
    allowing you to address the underlying connectivity problems.
 
-## Notifications
+### Uptime Check Failures
 
-An uptime alert continuously monitors the configured URL with the criteria defined above. If a failure is detected,
-a new [uptime issue](/product/issues/issue-details/uptime-issues/) with the failed check and related error details will be created. To avoid triggering false alerts due to transient issues like network glitches, new issues will only be created after a minimum of three consecutive failures have been detected, following the initial downtime detection.
+An uptime alert continuously monitors the configured URL with the criteria defined above. If a failure occurs,
+a new [uptime issue](/product/issues/issue-details/uptime-issues/) is created, including details about the failed check and related errors.
+
+To prevent false alerts caused by temporary network issues, **an issue is only generated after three consecutive failures** following the initial detection of downtime. Additionally, uptime checks are performed from a variety of geographical locations in a round-robin fashion. This ensures that each failed check comes from a different region, reducing the likelihood of false positives due to localized network failures.
+
+_In rare cases where Sentry is unable to perform a scheduled uptime check—such as during outages—the check status will be marked as "Unknown"._
+
+## Notifications
 
 To start getting notifications for a new downtime issue, [configure an issue alert](/product/alerts/create-alerts/issue-alert-config/) and choose the issue category "uptime". Then choose how you'd like to be notified (via email, Slack, and so on).
 

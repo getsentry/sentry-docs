@@ -219,6 +219,14 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/organization/integrations/cloudflare-workers/',
+    destination: '/organization/integrations/cloud-monitoring/cloudflare-workers/',
+  },
+  {
+    source: '/account/require-2fa/',
+    destination: '/organization/authentication/two-factor-authentication/',
+  },
+  {
     source: '/organization/integrations/msteams/',
     destination: '/organization/integrations/notification-incidents/msteams/',
   },
