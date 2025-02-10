@@ -31,8 +31,8 @@ In the migration, we addressed many of those problems by just adding an explicit
 
 ```tsx {2}
 // ⚠️
-const handleClick = (e: any) => {
-  e.stopPropagation()
+const handleClick = (event: any) => {
+  event.stopPropagation()
   props.onClick()
 }
 ```
@@ -41,13 +41,13 @@ This obviously isn't great, but since we had 3k+ errors, this was the fastest wa
 
 ### Recommended Approaches
 
-- Sometimes, it's enough to change `any` to `unknown` (given that enough type narrowing happens inside the function). `unknown` is totally safe to use, and if you have no errors, this is a good way forward. The above example is not one of them though.
-- Look at the usages of the function and potentially inline it into one of those usages while removing the manual `:any`. You can then check via type inference what the type of `e` would be in that usage. You can then give it an explicit type, in this case: `React.MouseEvent<HTMLButtonElement>`
+- Sometimes, it's enough to change `any` to `unknown` (given that enough type narrowing happens inside the function). `unknown` is [the type-safe counterpart](https://www.typescriptlang.org/docs/handbook/2/functions.html#unknown) of `any`, because it isn't assignable to anything but itself and `any` without a type assertion or a control flow based narrowing. If you have no errors, this is a good way forward. The above example is not one of them though, because we want to call the `stopPropagation` function on the `event` variable.
+- Look at the usages of the function and potentially inline it into one of those usages while removing the manual `:any`. You can then check via type inference what the type of `event` would be in that usage. You can then give it an explicit type, in this case: `React.MouseEvent<HTMLButtonElement>`
 
 ```tsx {diff} {2}
 // ✅
-- const handleClick = (e: any) => {
-+ const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+- const handleClick = (event: any) => {
++ const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
   e.stopPropagation()
   props.onClick()
 }
