@@ -1,7 +1,7 @@
 ```java
 import io.sentry.protocol.SentryTransaction;
 import io.sentry.SentryOptions;
-import io.sentry.Hint
+import io.sentry.Hint;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -11,7 +11,7 @@ public class CustomBeforeSendTransactionCallback implements SentryOptions.Before
 
         // set the attribute on the root span
         if (transaction.getContexts().getTrace() != null) {
-            transaction.getContexts().getTrace().getData().put("myAttribute", "myValue");
+            transaction.getContexts().getTrace().setData("myAttribute", "myValue");
         }
 
         // and on all child spans
@@ -37,8 +37,8 @@ class CustomBeforeSendTransactionCallback : SentryOptions.BeforeSendTransactionC
     override fun execute(transaction: SentryTransaction, hint: Hint): SentryTransaction? {
         
         // set the attribute on the root span
-        transaction.contexts.trace?.data?.let { data ->
-            data["myAttribute"] = "myValue"
+        transaction.contexts.trace?.let { trace ->
+            trace.setData("myAttribute", "myValue")
         }
 
         // and on all child spans
