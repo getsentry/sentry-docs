@@ -172,18 +172,42 @@ export function Search({
         return;
       }
 
-      const queryResults = await search.query(
-        inputQuery,
-        {
-          path,
-          platforms: currentSearchPlatforms.map(
-            platform => standardSDKSlug(platform)?.slug ?? ''
-          ),
-          searchAllIndexes: showOffsiteResults,
-          ...args,
-        },
-        {clickAnalytics: true, analyticsTags: ['source:documentation']}
-      );
+      const queryResults = await search
+        .query(
+          inputQuery,
+          {
+            path,
+            platforms: currentSearchPlatforms.map(
+              platform => standardSDKSlug(platform)?.slug ?? ''
+            ),
+            searchAllIndexes: showOffsiteResults,
+            ...args,
+          },
+          {clickAnalytics: true, analyticsTags: ['source:documentation']}
+        )
+        .then(siteResults => {
+          if(isDeveloperDocs) {
+            return siteResults;
+          }
+          return siteResults.map(site => {
+            if (site.site !== 'docs') {
+              return site;
+            }
+            return {
+              ...site,
+              // put API results last
+              hits: site.hits.sort((a, b) => {
+                if (a.url.includes('/api/') && !b.url.includes('/api/')) {
+                  return 1;
+                }
+                if (b.url.includes('/api/') && !a.url.includes('/api/')) {
+                  return -1;
+                }
+                return 0;
+              }),
+            };
+          });
+        });
 
       if (loading) {
         setLoading(false);
