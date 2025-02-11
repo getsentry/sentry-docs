@@ -311,7 +311,7 @@ export function Search({
                   // close search results
                   setInputFocus(false);
                   // open kapa modal
-                  window.Kapa.open({query: `Explain ${query}`, submit: true});
+                  window.Kapa.open({query, submit: true});
                 }
               }}
             >
