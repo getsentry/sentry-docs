@@ -1,6 +1,5 @@
 'use client';
 
-import {Fragment} from 'react';
 import {HamburgerMenuIcon} from '@radix-ui/react-icons';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -76,18 +75,16 @@ export function Header({
             />
           </div>
         )}
-        <div className="hidden lg-xl:flex justify-end flex-1 space-x-2 items-center min-w-fit">
+        <div className="hidden lg-xl:flex justify-end flex-1 gap-6 items-center min-w-fit">
           <NavLink href="https://sentry.io/changelog/">Changelog</NavLink>
           <NavLink href="https://try.sentry-demo.com/demo/start/">Sandbox</NavLink>
-          <Fragment>
-            <NavLink href="https://sentry.io/">Go to Sentry</NavLink>
-            <NavLink
-              href="https://sentry.io/signup/"
-              className="transition-all duration-300 ease-in-out hover:bg-gradient-to-r hover:from-[#fa7faa] hover:via-[#ff9691] hover:to-[#ffb287]"
-            >
-              Get Started
-            </NavLink>
-          </Fragment>
+          <NavLink href="https://sentry.io/">Go to Sentry</NavLink>
+          <NavLink
+            href="https://sentry.io/signup/"
+            className="transition-all duration-300 ease-in-out hover:bg-gradient-to-r hover:from-[#fa7faa] hover:via-[#ff9691] hover:to-[#ffb287]"
+          >
+            Get Started
+          </NavLink>
           <ThemeToggle />
         </div>
         <div className="lg-xl:hidden ml-auto">
