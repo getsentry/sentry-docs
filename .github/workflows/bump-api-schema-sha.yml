@@ -12,13 +12,19 @@ jobs:
     name: 'Bump API Schema SHA'
     steps:
       - uses: actions/checkout@v4.1.1
+      - name: Get auth token
+        id: token
+        uses: actions/create-github-app-token@67e27a7eb7db372a1c61a7f9bdab8699e9ee57f7 # v1.11.3
+        with:
+          app-id: ${{ vars.SENTRY_INTERNAL_APP_ID }}
+          private-key: ${{ secrets.SENTRY_INTERNAL_APP_PRIVATE_KEY }}
       - name: 'Bump API Schema SHA'
         shell: bash
         env:
           # An elevated token is necessary because with plain github.token
           # GitHub does not recursively call workflows, which means CI does not
           # kick off for the PR we're about to create.
-          GITHUB_TOKEN: ${{ secrets.GH_RELEASE_PAT }}
+          GITHUB_TOKEN: ${{ steps.token.outputs.token }}
         run: |
           set -euo pipefail
 

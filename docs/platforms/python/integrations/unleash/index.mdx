@@ -1,0 +1,61 @@
+---
+title: Unleash
+description: "Learn how to use Sentry with Unleash."
+---
+
+<PlatformContent includePath="feature-flags/prerelease-alert" />
+
+The [Unleash](https://www.getunleash.io/) integration tracks feature flag evaluations produced by the Unleash SDK. These evaluations are held in memory and sent to Sentry for review and analysis if an error occurs. **At the moment, we only support boolean flag evaluations.**
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `unleash` extra.
+
+```bash
+pip install --upgrade 'sentry-sdk[unleash]'
+```
+
+## Configure
+
+Add `UnleashIntegration` to your `integrations` list:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.unleash import UnleashIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Add data like request headers and IP for users, if applicable;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    integrations=[UnleashIntegration()],
+)
+```
+
+For more information on how to use Unleash, read Unleash's [Python reference](https://docs.getunleash.io/reference/sdks/python) and [quickstart guide](https://docs.getunleash.io/quickstart).
+
+## Verify
+
+Test the integration by evaluating a feature flag using your Unleash SDK before capturing an exception.
+
+```python {tabTitle: Python, using is_enabled}
+import sentry_sdk
+from UnleashClient import UnleashClient
+
+unleash = UnleashClient(...)  # See Unleash quickstart.
+unleash.initialize_client()
+
+test_flag_enabled = unleash.is_enabled("test-flag")
+sentry_sdk.capture_exception(Exception("Something went wrong!"))
+```
+
+Visit the [Sentry website](https://sentry.io/issues/) and confirm that your error
+event has recorded the feature flag "test-flag", and its value is equal to `test_flag_enabled`.
+
+## Supported Versions
+
+- UnleashClient >= 6.0.1
+- sentry-sdk >= 2.20.0
+- python >= 3.8
+
+<PlatformContent includePath="feature-flags/next-steps" />

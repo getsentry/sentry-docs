@@ -1,0 +1,41 @@
+---
+title: Set Up Feature Flags
+sidebar_order: 7000
+description: With Feature Flags, Sentry tracks feature flag evaluations in your application, keeps an audit log of feature flag changes, and reports any suspicious updates that may have caused an error.
+---
+
+<PlatformContent includePath="feature-flags/prerelease-alert" />
+
+## Prerequisites
+
+* You have the <PlatformLink to="/">Python SDK installed</PlatformLink>.
+
+## Enable Evaluation Tracking
+
+Evaluation tracking typically requires enabling an SDK integration. Integrations are provider specific. Documentation for supported providers is listed below.
+
+- [Generic (API)](/platforms/python/feature-flags/#generic-api)
+- [LaunchDarkly](/platforms/python/integrations/launchdarkly/)
+- [OpenFeature](/platforms/python/integrations/openfeature/)
+- [Unleash](/platforms/python/integrations/unleash/)
+
+### Generic API
+The generic API allows you to manually track feature flag evaluations. These
+evaluations are held in memory, and in the event an error occurs, sent to
+Sentry for review and analysis. Specifically, the generic integration enables
+users to integrate with proprietary (or otherwise unsupported) feature flagging
+solutions.  **At the moment, we only support boolean flag evaluations.**
+
+```python
+from sentry_sdk.feature_flags import add_feature_flag
+
+add_feature_flag('test-flag', False)  # Records an evaluation and its result.
+
+sentry_sdk.capture_exception(Exception("Something went wrong!"))
+```
+
+Go to your Sentry project and confirm that your error event has recorded the feature flag "test-flag" and its value "false".
+
+## Enable Change Tracking
+
+<PlatformContent includePath="feature-flags/change-tracking-list" />

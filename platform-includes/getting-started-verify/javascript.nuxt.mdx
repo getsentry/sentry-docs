@@ -1,14 +1,60 @@
-```html {tabTitle:Vue} {filename:ErrorButton.vue}
+### Server-side
+
+Sentry can only be loaded on the server-side by being explicitly added via `--import`.
+Check out the <PlatformLink to="/install/cli-import">`--import` CLI flag</PlatformLink> docs for setup instructions.
+
+To verify that Sentry works on the server-side, add the following snippet on the server-side:
+
+```js {tabTitle:Nitro} {filename:server/api/sentry-example.get.ts}
+export default defineEventHandler(event => {
+  throw new Error("Sentry Example API Route Error");
+});
+```
+
+If you want to test server-side monitoring locally, build your project and run:
+  ```
+  # Start your app after building your project with `nuxi build`
+  node --import ./.output/server/sentry.server.config.mjs .output/server/index.mjs
+  ```
+
+<Alert level="warning">
+  Sentry server-side monitoring **doesn't work in development mode!**
+
+  If you experience any issues with the server-side setup, check out <PlatformLink to="/troubleshooting">Troubleshooting</PlatformLink>
+  or read through the different <PlatformLink to="/install">installation methods</PlatformLink>.
+</Alert>
+
+### Client-side
+
+Add the following snippet on the client-side:
+
+```html {tabTitle:Vue} {filename:pages/example-error.vue}
 <script setup>
-  const triggerError = () => {
-  throw new Error("Nuxt Button Error");
-};
+  import * as Sentry from '@sentry/nuxt';
+
+  function triggerClientError() {
+    throw new Error("Nuxt Button Error");
+  };
+
+  function getSentryData() {
+    Sentry.startSpan(
+      {
+        name: 'Example Frontend Span',
+        op: 'test'
+      },
+      async () => {
+        await $fetch('/api/sentry-example');
+      }
+    )
+  }
 </script>
 
 <template>
-  <button id="errorBtn" @click="triggerError">Trigger Error</button>
+  <button id="errorBtn" @click="triggerClientError">
+    Throw Client Error
+  </button>
+  <button type="button" @click="getSentryData">
+    Throw Server Error
+  </button>
 </template>
 ```
-
-
-

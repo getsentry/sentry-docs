@@ -6,9 +6,27 @@ description: "Learn how to use stack trace rules to group incoming events based 
 
 <Include name="only-error-issues-note.mdx" />
 
-If you use stack traces for grouping, the stack trace rules (previously known as _grouping enhancements_) influence the data that's fed into the grouping algorithm. These rules can be configured on a per-project basis in **[Project] > Settings > Issue Grouping > Stack Trace Rules**.
+Stack trace rules improve issue tracking by ensuring accurate grouping and better classification of stack frames as in-app or system. This helps focus on relevant code, reduces noise, and minimizes false positives. By tailoring rules to your project, you can streamline debugging and maintain consistency across teams or multiple applications.
 
-Each line is a single rule; one or multiple match expressions are followed by one or multiple actions to be executed when all expressions match. All rules are executed from top to bottom on all frames in the stack trace.
+When you set stack trace rules (previously known as _grouping enhancements_) for grouping in Sentry, they influence the data that's fed into the grouping algorithm. These rules can be configured on a per-project basis by going to your project settings and then clicking on "Issue Grouping".
+
+Here are a few things to note about stack trace rules:
+
+- Each rule is written on a single line.
+- Rules consist of one or more match expressions followed by one or more actions triggered when all expressions match.
+- Rules are applied sequentially, from top to bottom, across all frames in the stack trace.
+
+In addition, the stack trace rules using the below matchers and actions can also be applied to incoming profiles to improve frame classification (in-app vs system, for example).
+
+Allowed Matchers:
+  * `stack.abs_path`
+  * `stack.module`
+  * `stack.function`
+  * `stack.package`
+
+Allowed Actions:
+  * `+app`
+  * `-app`
 
 The syntax for stack trace rules is similar to:
 
@@ -217,11 +235,11 @@ stack.function:std::*    -app
 stack.function:boost::*  -app
 ```
 
-<Note>
+<Alert>
 
 You need to force all frames to be in-app first because there might already have been some defaults set by the client SDK or earlier processing.
 
-</Note>
+</Alert>
 
 If you're using the `sentry-cocoa` SDK, you can also achieve the same result by marking other frames `not inApp`. The following sample marks functions from the classes `DataRequest` and `DownloadRequest` as `not inApp`.
 

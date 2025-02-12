@@ -1,0 +1,228 @@
+---
+title: Transaction and Span Rate Limiting
+sidebar_order: 30
+---
+
+<Alert level="warning" title="Important">
+This document describes a desired state, it is not yet fully implemented in Relay.
+</Alert>
+
+
+Relay enforces quotas defined in Sentry and propagates them as rate limits to clients. In most cases,
+this is a simple one-to-one mapping of data category to envelope item.
+
+The transaction and span rate limits are more complicated. Spans and Transactions both
+have a "total" and an additional "indexed" category. They are also closely related, a transaction is a container for spans.
+A dropped transaction results in dropped spans.
+
+The following document describes how transaction and span quotas interact with each other within Relay.
+
+<Alert title="Important">
+This section describes how Relay has to interpret quotas, SDKs and other consumers
+should read [SDK Development / Rate Limiting](/sdk/rate-limiting/).
+</Alert>
+
+
+Related Documentation:
+- [The Indexed Outcome Category](/application/dynamic-sampling/outcomes/)
+
+
+
+## Enforcement
+
+The following rules hold true:
+- A quota for the transaction category is also enforced for the span category.
+- A quota for the span category is also enforced for the transaction category.
+- When a transaction is dropped, all the contained spans should be reported in outcomes.
+- If either transactions or spans are rate limited, clients should receive a limit for both categories.
+- Indexed quotas only affect the payload for their respective category.
+
+These rules can be visualized using this table:
+
+| Rate Limit / Item       | Transaction Payload | Transaction Metric | Span Payload | Span Metric |
+| ----------------------- | ------------------- | ------------------ | ------------ | ----------- |
+| **Transaction**         | ❌                  | ❌                 | ❌           | ❌          |
+| **Transaction Indexed** | ❌                  | ✅                 | ✅           | ✅          |
+| **Span**                | ❌                  | ❌                 | ❌           | ❌          |
+| **Span Indexed**        | ✅                  | ✅                 | ❌           | ✅          |
+
+- ❌: Item rejected.
+- ✅: Item accepted.
+
+## Outcomes
+
+Outcomes must be generated in Relay for every span and transaction which is dropped. Usually a dropped
+span/transaction results in outcomes for their respective total and indexed category, refer to
+[The Indexed Outcome Category](/application/dynamic-sampling/outcomes/) for details.
+
+This is straight forward for all indexed rate limits, they only drop the payload which results in a single
+negative outcome in the indexed category of the item. A `transaction_indexed` rate limit does not
+cause any spans to be dropped and vice versa.
+
+A span quota and the resulting span rate limit is also trivial for standalone spans received by Relay,
+the standalone span is dropped, and a single outcome is generated.
+
+### Transaction Outcomes
+
+Transactions are containers for spans until they are extracted in Relay. This span extraction can happen at any
+Relay stage: customer managed, PoP-Relay or Processing-Relay. Until spans are extracted from Relay, a dropped transaction
+should count the contained spans and generate an outcome with the contained span quantity + 1, for the segment span
+which would be generated from the transaction itself.
+
+<Alert>
+While it is desirable to have span counts correctly extracted from dropped transactions, it may not be feasible
+to do so at any stage of the processing pipeline. For example, it may not be possible to do so (malformed transactions)
+or simply too expensive to compute.
+</Alert>
+
+After spans have been extracted, the transaction is no longer a container of span items and just represents itself,
+thus, a dropped transaction with spans already extracted only generates outcomes for the total transactions and
+indexed transaction categories.
+
+<Alert>
+Span quotas are equivalent to transactions quotas, so all the above also applies for a span quota.
+</Alert>
+
+
+## Examples
+
+### Example: Span Indexed Quota
+
+**Quota**:
+
+```json
+{
+  "categories": ["span_indexed"],
+  "limit": 0
+  // ...
+}
+```
+
+**Transaction**:
+
+```json
+{
+  "type": "transaction",
+  "spans": [
+      { .. },
+      { .. },
+      { .. }
+  ],
+  // ...
+}
+```
+
+An envelope containing a transaction with 3 child spans generates 4 outcomes for rate limited spans in the
+`spans_indexed` category. 1 count for the generated segment span from the transaction and 3 counts for the
+contained spans. The transaction itself will still be ingested.
+
+**Ingestion**:
+
+| Transaction Payload | Transaction Metrics | Span Payload | Span Metrics |
+| ------------------- | ------------------- | ------------ | ------------ |
+| ✅                  | ✅                  | ❌           | ✅           |
+
+**Negative Outcomes**:
+
+| `transaction` | `transaction_indexed` | `span` | `span_indexed` |
+| ------------- | --------------------- | ------ | -------------- |
+| 0             | 0                     | 0      | 4              |
+
+**Rate Limits propagated to SDKs:** None.
+
+
+### Example: Transaction Quota
+
+**Quota**:
+
+```json
+{
+  "categories": ["transaction"],
+  "limit": 0
+  // ...
+}
+```
+
+**Transaction**:
+
+```json
+{
+  "type": "transaction",
+  "spans": [
+      { .. },
+      { .. },
+      { .. }
+  ],
+  // ...
+}
+```
+
+**Ingestion**:
+
+| Transaction Payload | Transaction Metrics | Span Payload | Span Metrics |
+| ------------------- | ------------------- | ------------ | ------------ |
+| ❌                  | ❌                  | ❌           | ❌           |
+
+**Negative Outcomes**:
+
+| `transaction` | `transaction_indexed` | `span` | `span_indexed` |
+| ------------- | --------------------- | ------ | -------------- |
+| 1             | 1                     | 4      | 4              |
+
+**Rate Limits propagated to SDKs:** Transaction, Span.
+
+
+## FAQ / Reasoning
+
+### Why do transaction limits need to be propagated as span limits and vice versa?
+
+At first glance this is non-obvious, spans can exist without transactions
+and also transactions can exist without (standalone) spans, so why can the quotas
+be used interchangeably?
+
+The reasoning lies in the Sentry product and how the information is used within Sentry.
+Because of Relay, Sentry can safely assume spans exist if the user/SDK sends transactions
+and more and more of the product is built on the basis of spans. From this point of view
+transactions and spans convey the same information, it is just represented differently.
+
+The logical conclusion and simplification is, to treat span and transaction rate limits
+equally (important: treat the limits the same, the quotas are still tracked separately).
+Enforcing these limits on SDKs then does not require extra logic, it is all contained
+within Relay and works for any SDK version, future and present.
+
+### Why can span outcomes and transaction outcomes become inconsistent?
+
+There can be multiple reasons for this in the entire pipeline, these are just some reasons why there
+can be differences caused by Relay:
+
+- Parsing the span count from a transaction is too expensive and may be omitted. This is an extremely
+important property of Relay, abuse cases must be handled as fast as possible with as little cost ($ and resources)
+as possible. In some cases, it may not be feasible to JSON parse the transaction to extract a span count.
+- A envelope item may be malformed, there will be outcomes generated for the inferred data category (span or transaction),
+but the span count cannot be recovered from an invalid transaction.
+
+
+### I want Relay to enforce a quota, which category should I use?
+
+From top to bottom:
+
+- Do you completely disable ingestion? Configure the limit for the `span` and `transaction` data categories.
+- Is it billing related? For example, spike protection operates on the category of the billing unit,
+use the respective data category for the limit.
+- Use the total category (not indexed) which makes most sense to you. When in doubt, ask the Relay team.
+
+### Should I ever use an indexed category in a Quota?
+
+No, unless the intention is to protect infrastructure (abuse limits).
+
+Indexed quotas are only useful to protect downstream infrastructure through abuse quotas.
+They are inherently more expensive to enforce, cannot be propagated to clients and are generally a sign
+of misconfiguration.
+
+Dynamic-, smart- or client side-sampling should prevent any indexed quota from being enforced.
+
+### What does this mean for standalone spans?
+
+They are not treated differently from extracted spans. After metrics extraction, which may happen in customer
+Relays, there is no more distinction. Having no special treatment for standalone spans also means we do not
+need any special logic in the SDKs.

@@ -155,12 +155,12 @@ If you're using [Android App Bundle](https://developer.android.com/guide/app-bun
 In addition, `sentry-native` uses [tagged pointers](https://source.android.com/devices/tech/debug/tagged-pointers)
 internally. As a result, the Android SDK won't work out of the box on devices with a newer Android OS because they have their own conflicting pointer tagging.
 
-<Note>
+<Alert>
 
 If you're using a version of `sentry-android` before 3.1, you must manually disable the [`allowNativeHeapPointerTagging`](https://developer.android.com/guide/topics/manifest/application-element#allowNativeHeapPointerTagging) configuration option because `sentry-native` uses [tagged pointers](https://source.android.com/devices/tech/debug/tagged-pointers)
 internally. As a result, this option won't work out of the box on devices with a newer Android OS because they have their own conflicting pointer tagging. This is fixed in `sentry-android` versions 3.1 and above.
 
-</Note>
+</Alert>
 
 **Example AndroidManifest.xml**:
 
@@ -181,7 +181,7 @@ android.bundle.enableUncompressedNativeLibs=false
 
 ### Proguard Mapping Upload Issues
 
-You can set the debug log flag as an environment variable, which is picked up by the [Sentry CLI](/product/cli/).
+You can set the debug log flag as an environment variable, which is picked up by the [Sentry CLI](/cli/).
 In addition, set the `--stacktrace` flag:
 
 ```
@@ -194,7 +194,27 @@ With this information, it might be more clear what's happening. If not, please c
 
 The [Sentry Android Gradle plugin](/platforms/android/configuration/gradle/) uses bytecode manipulation to automatically measure the performance of your application. This process requires looking at the dependencies of the application, which can potentially break the build process if there are libraries which have been compiled/minified with a non-default java compiler, like R8/D8.
 
-The culprit is usually our [File I/O instrumentation](/platforms/android/integrations/file-io/), which can be disabled as follows:
+If you experience a "[sentry] Error while instrumenting MyClassName" error message, it could be that you are using a minified library that cannot be instrumented, as the bytecode is not compliant with the JVM spec. You can exclude such library from instrumentation as follows:
+
+```groovy
+sentry {
+  tracingInstrumentation {
+    enabled = true
+    excludes = ['com/example/donotinstrument/**']
+  }
+}
+```
+
+```kotlin
+sentry {
+  tracingInstrumentation {
+    enabled.set(true)
+    excludes.set(setOf("com/example/donotinstrument/**"))
+  }
+}
+```
+
+You may also disable one of our instrumentations, like our [File I/O instrumentation](/platforms/android/integrations/file-io/), which is usually the culprit, as follows:
 
 ```groovy
 import io.sentry.android.gradle.extensions.InstrumentationFeature
@@ -291,10 +311,10 @@ sentry {
 }
 ```
 
-<Note>
+<Alert>
 
 This problem is only relevant to these specific versions: `sentry-android-core` version `6.+` and `sentry-android-gradle-plugin` version `3.1.0`.
 
-</Note>
+</Alert>
 
 Check [this issue](https://github.com/getsentry/sentry-android-gradle-plugin/issues/329) for more details.

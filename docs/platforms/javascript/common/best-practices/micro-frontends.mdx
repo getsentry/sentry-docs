@@ -22,23 +22,26 @@ keywords:
   ]
 ---
 
-If your frontend includes JavaScript bundles from multiple sources with
-different release cycles, you may want to identify these or route events to specific projects. This is especially useful if you've set up [module federation](https://module-federation.github.io/) or a similar frontend architecture.
+<Alert>
+  To ensure the Sentry JavaScript SDK works with your micro frontends, make sure
+  all micro frontends that import from a `@sentry/*` package are [using the same
+  version of the Sentry SDK](#sdk-version-alignment).
+</Alert>
 
-Below we offer two approaches.
+If your app uses micro frontends, it's very useful to be able to track which one an error is coming from. To do this with Sentry, you can create either an automatic or a manual setup where you send events to separate Sentry projects representing each of your micro frontends. This makes it easier to see what's going wrong and where, helping you track issues and fix them faster, especially in complex frontend architectures.
 
-<Note>
+Below you'll find setup instructions for both an automatic and a manual way to route errors to different Sentry projects.
+
+<Alert>
   In all cases `Sentry.init()` must never be called more than once, doing so
   will result in undefined behavior.
-</Note>
+</Alert>
 
-## Automatically Route Errors to Different Projects Depending on Module
+## Automatically Route Errors to Different Projects
 
-`ModuleMetadata` and `makeMultiplexedTransport` can be used together to automatically route
-events to different Sentry projects based on the module where the error
-occurred.
+`ModuleMetadata` and `makeMultiplexedTransport` can be used together to automatically route events to specific Sentry projects that represent your micro frontend services. Events will be routed once the service where the error occurred has been identified, ensuring errors are tracked in the correct project.
 
-<Note>
+<Alert>
   <ul>
     <li>
       Requires version `2.18.0` or higher of `@sentry/webpack-plugin`,
@@ -47,12 +50,14 @@ occurred.
     </li>
     <li>Requires SDK version `7.59.0` or higher.</li>
   </ul>
-</Note>
+</Alert>
 
-First, to identify the source of an error, you must inject metadata that helps identify
+To identify the source of an error, you must first inject metadata that helps identify
 which bundles were responsible for the error. You can do this with any of the
 Sentry bundler plugins by enabling the `moduleMetadata` option. The example
 below is for Webpack, but this is also supported in Vite, Rollup, and esbuild.
+
+**Install the below code snippet in your micro frontend:**
 
 ```javascript
 // webpack.config.js
@@ -76,9 +81,9 @@ which bundles may be responsible for an error. Once the destination is determine
 store it as a list of DSN-release pairs in `event.extra[MULTIPLEXED_TRANSPORT_EXTRA_KEY]`
 for the multiplexed transport to reference for routing.
 
-In practice, here is what your Sentry initialization should look like:
+**Install the below code snippet in your host:**
 
-```javascript
+```javascript {tabTitle:NPM}{index.js}
 import {
   init,
   makeFetchTransport,
@@ -126,74 +131,126 @@ init({
   },
 });
 ```
+```html {tabTitle:CDN/Loader Bundle}{filename:index.html}
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/bundle.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'bundle.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/multiplexedtransport.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'multiplexedtransport.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/modulemetadata.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'modulemetadata.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+
+
+<script>
+  const EXTRA_KEY = "ROUTE_TO";
+
+  const transport = Sentry.makeMultiplexedTransport(Sentry.makeFetchTransport, (args) => {
+    const event = args.getEvent();
+    if (
+      event &&
+      event.extra &&
+      EXTRA_KEY in event.extra &&
+      Array.isArray(event.extra[EXTRA_KEY])
+    ) {
+      return event.extra[EXTRA_KEY];
+    }
+    return [];
+  });
+
+  Sentry.init({
+    dsn: "__DEFAULT_DSN__",
+    integrations: [Sentry.moduleMetadataIntegration()],
+    transport,
+    beforeSend: (event) => {
+      if (event?.exception?.values?.[0].stacktrace.frames) {
+        const frames = event.exception.values[0].stacktrace.frames;
+        // Find the last frame with module metadata containing a DSN
+        const routeTo = frames
+          .filter((frame) => frame.module_metadata && frame.module_metadata.dsn)
+          .map((v) => v.module_metadata)
+          .slice(-1); // using top frame only - you may want to customize this according to your needs
+
+        if (routeTo.length) {
+          event.extra = {
+            ...event.extra,
+            [EXTRA_KEY]: routeTo,
+          };
+        }
+      }
+
+      return event;
+    },
+  });
+</script>
+```
 
 Once this is set up, errors - both handled and unhandled - will be automatically routed to the right project.
 
-<Note>
+<Alert>
 
 By default, `args.getEvent` returns only error events. You can match against other event types like so: `args.getEvent(['event', 'transaction', 'replay_event'])`. This `getEvent` snippet
 will return matches for errors, transactions, and replays.
 
-</Note>
+</Alert>
 
 ## Manually Route Errors to Different Projects
 
-If, however, you would like to have more control over the routing of errors to the point
-where you explicitly specify the destination for each individual `captureException`,
-you can do that with the more advanced interface multiplexed transport offers.
+If you want more control to be able to explicitly specify the destination for each individual `captureException`,
+you can use the more advanced interface multiplexed transport offers.
 
-<Note>Requires SDK version `7.59.0` or higher.</Note>
+<Alert>equires SDK version `7.59.0` or higher.</Alert>
 
 The example below uses a `feature` tag to determine which Sentry project to
-send the event to. If the event does not have a `feature` tag, we send it to the
+send the event to. If the event doesn't have a `feature` tag, we send it to the
 fallback DSN defined in `Sentry.init`.
 
-```typescript
-import { captureException, init, makeFetchTransport } from "@sentry/browser";
-import { makeMultiplexedTransport } from "@sentry/core";
-import { Envelope, EnvelopeItemType } from "@sentry/types";
-
-interface MatchParam {
-  /** The envelope to be sent */
-  envelope: Envelope;
-  /**
-   * A function that returns an event from the envelope if one exists. You can optionally pass an array of envelope item
-   * types to filter by - only envelopes matching the given types will be returned.
-   *
-   * @param types Defaults to ['event'] (only error events will be returned)
-   */
-  getEvent(types?: EnvelopeItemType[]): Event | undefined;
-}
-
-function dsnFromFeature({ getEvent }: MatchParam) {
-  const event = getEvent();
-  switch (event?.tags?.feature) {
-    case "cart":
-      return [{ dsn: "__CART_DSN__", release: "cart@1.0.0" }];
-    case "gallery":
-      return [{ dsn: "__GALLERY_DSN__", release: "gallery@1.2.0" }];
-    default:
-      return [];
-  }
-}
+```js
+import {
+  captureException,
+  init,
+  makeFetchTransport,
+  makeMultiplexedTransport,
+} from "@sentry/browser";
 
 init({
   dsn: "__FALLBACK_DSN__",
-  transport: makeMultiplexedTransport(makeFetchTransport, dsnFromFeature),
+  transport: makeMultiplexedTransport(makeFetchTransport, ({ getEvent }) => {
+    const event = getEvent();
+
+    // Send to different DSNs, based on the event payload
+    if (event?.tags?.feature === "cart") {
+      return [{ dsn: "__CART_DSN__", release: "cart@1.0.0" }];
+    } else if (event?.tags?.feature === "gallery") {
+      return [{ dsn: "__GALLERY_DSN__", release: "gallery@1.2.0" }];
+    } else {
+      return [];
+    }
+  }),
 });
 ```
 
 You can then set tags/contexts on events in individual micro-frontends to decide which Sentry project to send the event to as follows:
 
-<Note>
-  It is important to always use a local scope when setting the tag (either as
+<Alert>
+  It's important to always use a local scope when setting the tag (either as
   shown below or using{" "}
   <PlatformLink to="/enriching-events/scopes/#local-scopes">
-    withScope documentation
+    withScope documentation{" "}
   </PlatformLink>
-  ). Using a global scope e.g. through `Sentry.setTag()` will result in all subsequent
-  events being routed to the same DSN regardless of where they originate.
-</Note>
+  ). Using a global scope, for example, through `Sentry.setTag()` will result in
+  all subsequent events being routed to the same DSN regardless of where they
+  originated.
+</Alert>
 
 ```typescript
 captureException(new Error("oh no!"), (scope) => {
@@ -201,3 +258,17 @@ captureException(new Error("oh no!"), (scope) => {
   return scope;
 });
 ```
+
+## SDK Version Alignment
+
+Starting with version [8.7.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.7.0), if you have multiple Sentry JavaScript SDKs on the same page, they [only interact with each other](https://github.com/getsentry/sentry-javascript/pull/12206) if they're using the same version. This prevents unwanted cross-SDK interactions, where calls or accesses to recently added or no longer existing SDK APIs would lead to errors. A classic example for this are browser extensions or 3rd party scripts using Sentry when the host app also uses Sentry.
+
+However, for use cases like micro frontends, where you might _want_ SDK interaction across multiple micro frontends or child applications, you'll need to ensure that all SDKs are using the same version.
+For example, if you initialize the SDK in a host or skeleton application, but make Sentry SDK calls (like `Sentry.captureException` or `Sentry.setTag`) in micro frontend child applications, you need to ensure that the SDK packages in the host and child applications are aligned to the same version.
+
+<Alert>
+
+If you can't get all your micro frontends aligned on the same SDK version, you can [follow this workaround](https://github.com/getsentry/sentry-javascript/discussions/10576#discussioncomment-11446422).
+However, interoperability isn't guaranteed and you could run into some unexpected behavior.
+
+</Alert>

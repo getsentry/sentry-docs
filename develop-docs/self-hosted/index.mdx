@@ -1,6 +1,7 @@
 ---
 title: Self-Hosted Sentry
-sidebar_order: 100
+description: How you can run all of Sentry on your own server, without paying anything.
+sidebar_order: 110
 ---
 
 In addition to making its source code available publicly, Sentry offers and maintains a minimal setup that works out-of-the-box for simple use cases. This version comes with no guarantees or dedicated support. Sentry engineers will do their best to answer questions and are dedicated to making sure self-hosted is running, but that's where our involvement ends. For anything else, we expect users to rely on the [Sentry Self-Hosted community](https://discord.gg/sentry) on Discord. The self-hosted repository should serve as a blueprint for how various Sentry services connect for a complete setup. This will be useful for folks willing to maintain larger installations with custom infrastructure.
@@ -18,12 +19,13 @@ The difference only resides on a few things that are impossible to be hosted by 
 - [Spend Allocation](https://docs.sentry.io/pricing/quotas/spend-allocation/), as it is tightly coupled with Billing Quotas.
 - AI & ML features (such as autofix), although the code is open at [getsentry/seer](https://github.com/getsentry/seer).
 - [Data Storage Location](https://docs.sentry.io/organization/data-storage-location/), because you own your data.
+- [iOS Symbolication](https://docs.sentry.io/platforms/apple/data-management/debug-files/symbol-servers#built-in-repositories), because Apple does not provide a public symbol server, nor do they allow us to distribute the Debug Information Files (DIFs) ourselves.
 
 To put things simply, consider self-hosted as the Business plan without any software limitations and no paid tier.
 
 ## Getting Started
 
-Our recommendation is to download the [latest release of the self-hosted repository](https://github.com/getsentry/self-hosted/releases/latest), and then run `./install.sh` inside this directory. This script will take care of all the things you need to get started, including a base-line configuration, and then will tell you to run `docker compose up -d` to start Sentry. Sentry binds to port `9000` by default. You should be able to reach the login page at [http://127.0.0.1:9000](http://127.0.0.1:9000/).
+Our recommendation is to download the [latest release of the self-hosted repository](https://github.com/getsentry/self-hosted/releases/latest), and then run `./install.sh` inside this directory. This script will take care of all the things you need to get started, including a base-line configuration, and then will tell you to run `docker compose up --wait` to start Sentry. Sentry binds to port `9000` by default. You should be able to reach the login page at [http://127.0.0.1:9000](http://127.0.0.1:9000/).
 
 To have easy maintainability for future upgrades, it is recommended to use Git workflow by cloning the self-hosted repository and check out to a specific CalVer tag. More about this on [Releases & Upgrading](/self-hosted/releases/).
 
@@ -39,7 +41,7 @@ sudo ./install.sh
 
 ## Required Minimum System Resources
 
-We require at least Docker 19.03.6 and Compose 2.19.0.
+We require at least Docker 19.03.6 and Compose 2.23.2.
 
 These are the minimum requirements:
 - 4 CPU Cores
@@ -119,9 +121,9 @@ By default Sentry sends anonymous usage statistics to the Sentry team. It helps 
 
 To apply new Docker daemon configuration, restart your Docker service with `systemctl restart docker.service`.
 
-<Alert title="Note" level="info">
+<Alert title="Note">
   The value `172.17.0.0/16` is the default IP pools for Docker. If you are customizing your Docker default IP pools, please modify the value accordingly.
-  Further information regarding Docker default IP pools can be found on the [Troubleshooting guide](/self-hosted/troubleshooting/#docker-network-conflicting-ip-address).
+  Further information regarding Docker default IP pools can be found on the [Troubleshooting guide](/self-hosted/troubleshooting/docker/#docker-network-conflicting-ip-address).
 </Alert>
 
 ## Configuration
@@ -140,13 +142,13 @@ You very likely will want to adjust the default configuration for your Sentry in
 
 1. **`sentry/enhance-image.sh`**—To install plugins and their dependencies or make other modifications to the Sentry base image, copy `sentry/enhance-image.example.sh` to `sentry/enhance-image.sh` and add necessary steps there. For example, you can use `apt-get` to install dependencies and use `pip` to install plugins. After making modifications to `sentry/enhance-image.sh`, run `./install.sh` again to apply them.
 
-1. **Environment variables**—The available keys are defined in [.env](https://github.com/getsentry/self-hosted/blob/master/.env). Use some system-dependent means of setting environment variables if you need to override any of them. To avoid Git changes, simply create a file called `.env.custom` and insert your system-dependent environment variables there. In order to use this, please use `docker compose --env-file /path/to/.env.custom up -d`.
+1. **Environment variables**—The available keys are defined in [.env](https://github.com/getsentry/self-hosted/blob/master/.env). Use some system-dependent means of setting environment variables if you need to override any of them. To avoid Git changes, simply create a file called `.env.custom` and insert your system-dependent environment variables there. In order to use this, please use `docker compose --env-file /path/to/.env.custom up --wait`.
 
 1. [Geolocation](/self-hosted/geolocation/) uses **a custom configuration file** to conform to the underlying technology.
 
 You can find more about configuring Sentry at [the configuration section of our developer documentation](/config/).
 
-<Alert title="Note" level="info">
+<Alert title="Note">
   Once you change your configuration, it's highly recommended to re-run <code>./install.sh</code> script rather than restarting all services using <code>docker compose restart</code>. This ensures no other configuration or migrations that might be missing when something is toggled on.
 </Alert>
 
@@ -177,6 +179,16 @@ Environment specific configurations can be done in the `.env.custom` file. It wi
 By default, there exists no `.env.custom` file. In this case, you can manually add this file by copying the `.env` file to a new `.env.custom` file and adjust your settings in the `.env.custom` file.
 
 Please keep in mind to check the `.env` file for changes, when you perform an upgrade of Sentry, so that you can adjust your `.env.custom` accordingly, if required, as `.env` is ignored entirely if `.env.custom` is present.
+
+For all Docker Compose commands, you should specify your `.env.custom`, otherwise the default `.env` file will be used. Some examples are:
+
+```bash
+docker compose --env-file .env.custom up --wait
+
+# You can also specify the original `.env` file as a fallback if the
+# environment variable doesn't exists on the `.env.custom` file.
+docker compose --env-file .env --env-file .env.custom up --wait
+```
 
 ### Enhance Sentry image
 

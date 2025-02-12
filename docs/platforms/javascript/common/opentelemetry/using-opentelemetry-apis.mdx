@@ -18,6 +18,7 @@ supported:
   - javascript.sveltekit
   - javascript.astro
   - javascript.remix
+  - javascript.react-router
 notSupported:
   - javascript
 sidebar_order: 1
@@ -29,7 +30,7 @@ Sentry supports OpenTelemetry APIs out of the box. Any spans started using OpenT
 
 While the Sentry SDK includes some OpenTelemetry instrumentation out of the box, you may want to add additional instrumentation to your application. This can be done by registering the instrumentation through OpenTelemetry like the example below:
 
-```javascript
+```javascript {12-13}
 const Sentry = require("@sentry/node");
 const {
   GenericPoolInstrumentation,
@@ -40,13 +41,21 @@ Sentry.init({
 
   // The SentrySampler will use this to determine which traces to sample
   tracesSampleRate: 1.0,
-});
 
-// Afterwards, you can add additional instrumentation:
-Sentry.addOpenTelemetryInstrumentation(new GenericPoolInstrumentation());
+  // Add additional OpenTelemetry instrumentation:
+  openTelemetryInstrumentations: [new GenericPoolInstrumentation()],
+});
 ```
 
-Any instrumentation added like this or via `registerInstrumentations()` from `@opentelemetry/instrumentation` will be picked up by Sentry.
+<Alert>
+  It is possible to add instrumentations via `registerInstrumentations()` from
+  `@opentelemetry/instrumentation`. However, with ESM (`import`/`export` syntax)
+  you need to be careful to do so before importing any modules that should be
+  instrumented.
+
+As a rule of thumb, `registerInstrumentations()` should be called right after, and in the same context as registering <PlatformLink to="/opentelemetry/custom-setup/#esm-loaders">ESM Loaders</PlatformLink>.
+
+</Alert>
 
 ## Using an OpenTelemetry Tracer
 

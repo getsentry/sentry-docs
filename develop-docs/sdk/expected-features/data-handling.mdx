@@ -23,11 +23,11 @@ Some examples of data guarded by this flag:
 - On desktop applications
   - The username logged in the device is not included. This is often a person's name.
   - The machine name is not included, for example `Bruno's laptop`
-- SDKs don't set `{{auto}}` as `user.ip`. This instructs the server to keep the connection's IP address.
+- SDKs don't set `{{auto}}` as `user.ip_address`. This instructs the server to keep the connection's IP address.
 - Server SDKs remove the IP address of incoming HTTP requests.
 
 Sentry server is always aware of the connecting IP address and can use it for logging in some platforms. Namely JavaScript and iOS/macOS/tvOS.
-All other platforms require the event to include `user.ip={{auto}}` which happens if `sendDefaultPii` is set to true.
+All other platforms require the event to include `user.ip_address={{auto}}` which happens if `sendDefaultPii` is set to true.
 
 Before sending events to Sentry, the SDKs should invokes callbacks. That allows users to remove any sensitive data client-side.
 
@@ -63,10 +63,14 @@ This helps Relay to know what kind of data it receives and this helps with scrub
   If query strings are present in the URL or fragments (Browser SDKs only) are present in the URI, both are set into the data attribute of the span.
 
   ```js
-  span.setData({
+  span.setAttributes({
     "http.query": url.getQuery(),
     "http.fragment": uri.getFragment(),
   });
+  ```
+
+  ```python
+  span.set_data("http.query", query)
   ```
 
   Additionally all semantic conventions of OpenTelementry for http spans should be set in the `span.data` if applicable:
@@ -86,7 +90,7 @@ If the `message` in a breadcrumb contains an URL it should be formatted the same
 If query strings are present in the URL or fragments (Browser SDKs only) are present in the URI, both should also be set in the data attribute like with `http` spans.
 
 ```js
-getCurrentHub().addBreadcrumb({
+Sentry.addBreadcrumb({
   type: "http",
   category: "xhr",
   data: {
@@ -107,6 +111,8 @@ Fields in the event payload that allow user-specified or dynamic values are rest
 
 - Mappings of values (such as HTTP data, extra data, etc) are limited to 50 item pairs.
 - Event IDs are limited to 36 characters and must be valid UUIDs.
+- Flag keys are limited to 32 characters.
+- Flag values are limited to 200 characters.
 - Tag keys are limited to 32 characters.
 - Tag values are limited to 200 characters.
 - Culprits are limited to 200 characters.

@@ -38,17 +38,7 @@ export function MobileMenu({pathname, searchPlatforms}: Props) {
             <DropdownMenu.Content className={styles.DropdownMenuContent} sideOffset={5}>
               <Box display={{xs: 'block', sm: 'none'}}>
                 <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
-                  <Search path={pathname} searchPlatforms={searchPlatforms} showChatBot />
-                </DropdownMenu.Item>
-
-                <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
-                  <Link
-                    href="https://docsbot.ai/chat/skFEy0qDC01GrRrZ7Crs/EPqsd8nu2XmKzWnd45tL"
-                    target="_blank"
-                    className="mt-2 md:hidden"
-                  >
-                    Ask A Bot
-                  </Link>
+                  <Search path={pathname} searchPlatforms={searchPlatforms} />
                 </DropdownMenu.Item>
                 <DropdownMenu.Separator className={styles.DropdownMenuSeparator} />
               </Box>

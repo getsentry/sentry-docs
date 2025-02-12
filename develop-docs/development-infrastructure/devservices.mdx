@@ -1,0 +1,117 @@
+---
+title: Service Manager (devservices)
+sidebar_order: 40
+---
+
+A standalone CLI tool called [`devservices`](https://github.com/getsentry/devservices) is used to bring up and manage service dependencies. The tool reads from a `config.yml` file within a repository's `devservices` directory. It is an abstraction built on top of Docker Compose and Docker.
+
+```shell
+usage: devservices [-h] [--version] COMMAND ...
+
+CLI tool for managing service dependencies.
+
+options:
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
+
+commands:
+  up                  Bring up a service and its dependencies
+  down                Bring down a service and its dependencies
+  list-dependencies   List the dependencies of a service
+  list-services (ls)  List the services installed locally
+  status              View status of a service
+  logs                View logs for a service
+  update              Update devservices to the latest version
+  purge               Purge the local devservices cache
+```
+
+## Viewing logs for a service
+
+```shell
+devservices logs
+```
+
+## Running CLI clients for redis, postgres and clickhouse
+
+```shell
+# redis
+docker exec -it redis-redis-1 redis-cli
+
+# clickhouse
+docker exec -it snuba-clickhouse-1 clickhouse-client
+
+# psql
+docker exec -it sentry-postgres-1 psql -U postgres
+```
+
+## Removing container state
+
+Should you really bamboozle your containers or volumes, you can use `devservices purge` to start over.
+
+```shell
+# Remove all data (containers, volumes, and networks) associated with ALL services
+devservices purge
+```
+
+As an example, let's say we've managed to corrupt our postgres
+database while working on a migration, and you want to reset
+your postgres data you can do:
+
+```shell
+# Remove all data (containers, volumes, and networks) associated with a single service
+docker container rm sentry-postgres-1
+docker volume rm sentry_postgres-data
+```
+
+## Running devservices with a specific mode
+
+Common modes:
+
+- `symbolicator`: Bring up sentry dependencies and symbolicator
+- `chartcuterie`: Bring up sentry dependencies and chartcuterie
+- `minimal`: Bring up minimal services for local development
+- `profiling`: Bring up sentry dependencies and vroom
+- `full`: Bring up all services (symbolicator, taskbroker, snuba, vroom, etc)
+
+```shell
+devservices up --mode symbolicator
+```
+
+## Migrating data from the deprecated `sentry devservices`
+
+<Alert level="warning" title="Important">
+  These instructions can result in data loss. Please proceed with caution. This is an example with postgres, but can be done with other docker volumes as well.
+</Alert>
+
+Volume names are different for each service.
+
+Clickhouse:
+  - old: `sentry_clickhouse`
+  - new: `snuba_clickhouse-data`
+
+Postgres:
+  - old: `sentry_postgres`
+  - new: `sentry_postgres-data`
+
+Kafka:
+  - old: `sentry_kafka`
+  - new: `kafka_kafka-data`
+
+Redis:
+  - old: `sentry_redis`
+  - new: `redis_redis-data`
+
+```shell
+# Create a new postgres volume
+docker volume create sentry_postgres-data
+
+# Copy over the data from the old volume
+docker run --rm \
+  -v sentry_postgres:/old_volume \
+  -v sentry_postgres-data:/new_volume \
+  ubuntu \
+  bash -c "cd /old_volume && cp -a . /new_volume"
+
+# Validate that data has been copied over
+docker run --rm -v sentry_postgres-data:/data ubuntu ls -l /data
+```

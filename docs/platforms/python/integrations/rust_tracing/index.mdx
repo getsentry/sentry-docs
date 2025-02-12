@@ -1,0 +1,190 @@
+---
+title: Rust Tracing
+description: "Learn about the Rust Tracing integration and how to get performance data for Rust native extensions."
+---
+
+`RustTracingIntegration` acts as a bridge between the Sentry Python SDK and Rust's [`tracing` framework](https://tracing.rs/). With this integration, traces that begin in Python can extend into Rust seamlessly.
+
+<Alert level="warning">
+
+This integration assumes that your Rust native extension runs synchronously on the current thread. Emitting tracing data from other threads or Rust code that uses `async`/`.await` may corrupt the current trace.
+
+</Alert>
+
+## Install
+
+`RustTracingIntegration` requires setup in both Python and Rust to work.
+
+### Rust
+In your Rust native extension, you'll need three crates as dependencies in `Cargo.toml`:
+- [`tracing-subscriber`](https://crates.io/crates/tracing_subscriber)
+- [`pyo3`](https://crates.io/crates/pyo3)
+- [`pyo3-python-tracing-subscriber`](https://crates.io/crates/pyo3_python_tracing_subscriber)
+
+### Python
+In your Python project, you'll need to install the Sentry SDK from PyPI.
+```bash
+pip install --upgrade sentry-sdk
+```
+
+## Configure
+
+As with installing, configuring `RustTracingIntegration` requires some work in both Python and Rust.
+
+### Rust
+
+In your Rust native extension, you need to expose a way for `RustTracingIntegration` to subscribe to `tracing` updates. A simple setup may look like this:
+```rust
+#[pyfunction]
+pub fn initialize_tracing(py_impl: Bound<'_, PyAny>) {
+    tracing_subscriber::registry()
+        .with(pyo3_python_tracing_subscriber::PythonCallbackLayerBridge::new(py_impl))
+        .init();
+}
+
+#[pymodule]
+fn my_rust_extension(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(initialize_tracing, m)?)?;
+
+    Ok(())
+}
+```
+
+### Python
+
+Create an instance of `RustTracingIntegration` and add it to your list of integrations when initializing the Sentry SDK.
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python {filename:main.py} {"onboardingOptions": {"performance": "12-14", "profiling": "15-18"}}
+import sentry_sdk
+from sentry_sdk.integrations.rust_tracing import RustTracingIntegration
+
+import my_rust_extension
+
+async def main():
+    sentry_sdk.init(
+        dsn="___PUBLIC_DSN___",
+        # Add data like request headers and IP for users, if applicable;
+        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+        send_default_pii=True,
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for tracing.
+        traces_sample_rate=1.0,
+        # Set profiles_sample_rate to 1.0 to profile 100%
+        # of sampled transactions.
+        # We recommend adjusting this value in production.
+        profiles_sample_rate=1.0,
+        integrations=[
+            RustTracingIntegration(
+                "my_rust_extension",
+                my_rust_extension.initialize_tracing,
+                include_tracing_fields=True,
+            ),
+        ],
+    )
+
+    # your code goes here.
+    ...
+
+asyncio.run(main())
+```
+
+
+## Verify
+
+A simple way to check if the integration is hooked up correctly is to set a custom `event_type_mapping` and `span_filter` that prints or logs `tracing` event metadata and then call a Python function that uses your Rust native extension.
+```python
+from sentry_sdk.integrations.rust_tracing import (
+    default_event_type_mapping,
+    default_span_filter,
+    EventTypeMapping,
+    RustTracingIntegration,
+)
+
+import my_rust_extension
+
+def custom_event_type_mapping(metadata: dict) -> EventTypeMapping:
+    print(metadata)
+    return default_event_type_mapping(metadata)
+
+def custom_span_filter(metadata: dict) -> bool:
+    print(metadata)
+    return default_span_filter(metadata)
+
+sentry_sdk.init(
+    # ...
+    integrations=[
+        RustTracingIntegration(
+            "my_rust_extension",
+            my_rust_extension.initialize_tracing,
+            event_type_mapping=custom_event_type_mapping,
+            span_filter=custom_span_filter,
+        ),
+    ],
+)
+```
+
+To see the results on [sentry.io](https://sentry.io), go to the Traces section for your project and search for a Python span that calls a function from your Rust native extension. If the integration is working and the Rust function is instrumented with the Rust `tracing` framework, then the Python span will have a Rust child, and the Rust child may have a whole tree of Rust spans beneath it.
+
+The `pyo3-python-tracing-subscriber` crate has [a working example of a Sentry integration](https://github.com/getsentry/pyo3-python-tracing-subscriber/tree/main/demo).
+
+## Options
+
+`RustTracingIntegration` accepts a few arguments:
+- `identifier` (required)
+
+  A unique identifier for this native extension. If your project uses more than one Rust native extension, each of them needs its own `RustTracingIntegration`.
+
+- `initializer` (required)
+
+  A function from your native extension that `RustTracingIntegration` can call to subscribe to `tracing` events.
+
+  See the `initialize_tracing` example in [the _Configure_ section above](#configure)
+
+- `event_type_mapping` (optional)
+
+  A function that decides what type of Sentry event to create for a given `tracing` event.
+
+  It takes a single argument: a dictionary containing data from [`tracing::Metadata`](https://docs.rs/tracing/latest/tracing/struct.Metadata.html).
+
+  It returns a `sentry_sdk.integrations.rust_tracing.EventTypeMapping`.
+
+  Uses `sentry_sdk.integrations.rust_tracing.default_event_type_mapping` by default.
+
+- `span_filter` (optional)
+
+  A function that decides whether to drop a given `tracing` span.
+
+  It takes a single argument: a dictionary containing data from [`tracing::Metadata`](https://docs.rs/tracing/latest/tracing/struct.Metadata.html).
+
+  It returns `True` if a span should be processed and `False` if it should be dropped.
+
+  Uses `sentry_sdk.integrations.rust_tracing.default_span_filter` by default.
+
+- `include_tracing_fields` (optional)
+
+  A boolean controlling whether the values of a `tracing` span's key-value fields will be attached to the corresponding Sentry span.
+
+  If it is `None`, this behavior will be controlled by <PlatformLink to="/configuration/options/#send-default-pii">the `send_default_pii` option</PlatformLink> set during SDK initialization. If it is `False`, field values will be redacted on Sentry spans. If it is `True`, field values will be included on Sentry spans.
+
+  The default value of this option is `None`.
+
+  <Alert level="warning">
+
+  When the `tracing::instrument` attribute is applied to a Rust function, `tracing` will set all of the function's arguments as span fields by default. This behavior can cause a function argument that contains sensitive data to unintentionally be sent to Sentry. To avoid that, `include_tracing_fields` by default will defer to the <PlatformLink to="/configuration/options/#send-default-pii">`send_default_pii`</PlatformLink> option which can be set during SDK initialization.
+
+  If you want to set `include_tracing_fields` or <PlatformLink to="/configuration/options/#send-default-pii">`send_default_pii`</PlatformLink> to `True`, see our documentation for <PlatformLink to="/data-management/sensitive-data/">managing sensitive data</PlatformLink> for ways to keep sensitive data from leaking.
+
+  </Alert>
+
+## Supported Versions
+
+- Python: 3.7+
+- Rust: 1.63+
