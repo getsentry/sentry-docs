@@ -48,8 +48,9 @@ export function SdkOption({
           </a>
         </h3>
         <div className={styles['sdk-config-option-details']}>
-          <table className={styles['sdk-option-table']}>
-            <tbody>
+          {(type || defaultValue || envVar || showBrowserOnly || showServerLikeOnly) && (
+            <table className={styles['sdk-option-table']}>
+              <tbody>
               {type && (
                 <tr>
                   <th>Type</th>
@@ -92,8 +93,9 @@ export function SdkOption({
                   <td>Server</td>
                 </tr>
               )}
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          )}
 
           {children}
         </div>
@@ -103,7 +105,7 @@ export function SdkOption({
 }
 
 function getPlatformHints(categorySupported: PlatformCategory[]) {
-  const {rootNode, path} = serverContext();
+  const { rootNode, path } = serverContext();
   const currentPlatformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
   const currentCategories = currentPlatformOrGuide?.categories || [];
 
@@ -127,5 +129,5 @@ function getPlatformHints(categorySupported: PlatformCategory[]) {
   const showServerLikeOnly =
     hasCategorySupported && supportedServerLikeOnly && currentIsBrowser;
 
-  return {showBrowserOnly, showServerLikeOnly};
+  return { showBrowserOnly, showServerLikeOnly };
 }
