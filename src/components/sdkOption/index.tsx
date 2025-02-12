@@ -51,48 +51,48 @@ export function SdkOption({
           {(type || defaultValue || envVar || showBrowserOnly || showServerLikeOnly) && (
             <table className={styles['sdk-option-table']}>
               <tbody>
-              {type && (
-                <tr>
-                  <th>Type</th>
-                  <td>
-                    <code>{type}</code>
-                  </td>
-                </tr>
-              )}
-              {defaultValue && (
-                <tr>
-                  <th>Default</th>
-                  <td>
-                    <code>{defaultValue}</code>
-                  </td>
-                </tr>
-              )}
-              <PlatformCategorySection supported={['server', 'serverless']}>
-                <PlatformSection notSupported={['javascript.nextjs']}>
-                  {envVar && (
-                    <tr>
-                      <th>ENV Variable</th>
-                      <td>
-                        <code>{envVar}</code>
-                      </td>
-                    </tr>
-                  )}
-                </PlatformSection>
-              </PlatformCategorySection>
+                {type && (
+                  <tr>
+                    <th>Type</th>
+                    <td>
+                      <code>{type}</code>
+                    </td>
+                  </tr>
+                )}
+                {defaultValue && (
+                  <tr>
+                    <th>Default</th>
+                    <td>
+                      <code>{defaultValue}</code>
+                    </td>
+                  </tr>
+                )}
+                <PlatformCategorySection supported={['server', 'serverless']}>
+                  <PlatformSection notSupported={['javascript.nextjs']}>
+                    {envVar && (
+                      <tr>
+                        <th>ENV Variable</th>
+                        <td>
+                          <code>{envVar}</code>
+                        </td>
+                      </tr>
+                    )}
+                  </PlatformSection>
+                </PlatformCategorySection>
 
-              {showBrowserOnly && (
-                <tr>
-                  <th>Only available on</th>
-                  <td>Client</td>
-                </tr>
-              )}
+                {showBrowserOnly && (
+                  <tr>
+                    <th>Only available on</th>
+                    <td>Client</td>
+                  </tr>
+                )}
 
-              {showServerLikeOnly && (
-                <tr>
-                  <th>Only available on</th>
-                  <td>Server</td>
-                </tr>
-              )}
+                {showServerLikeOnly && (
+                  <tr>
+                    <th>Only available on</th>
+                    <td>Server</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           )}
@@ -105,7 +105,7 @@ export function SdkOption({
 }
 
 function getPlatformHints(categorySupported: PlatformCategory[]) {
-  const { rootNode, path } = serverContext();
+  const {rootNode, path} = serverContext();
   const currentPlatformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
   const currentCategories = currentPlatformOrGuide?.categories || [];
 
@@ -129,5 +129,5 @@ function getPlatformHints(categorySupported: PlatformCategory[]) {
   const showServerLikeOnly =
     hasCategorySupported && supportedServerLikeOnly && currentIsBrowser;
 
-  return { showBrowserOnly, showServerLikeOnly };
+  return {showBrowserOnly, showServerLikeOnly};
 }
