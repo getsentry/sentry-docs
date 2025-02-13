@@ -64,7 +64,7 @@ Configures the sample rate for error events, in the range of `0.0` to `1.0`. The
 
 Dynamically configures the sample rate for error events on a per-event basis. This configuration option accepts a function, which takes two parameters (the `event` and the `hint`), and which returns a boolean (indicating whether the event should be sent to Sentry) or a floating-point number between `0.0` and `1.0`, inclusive (where the number indicates the probability the event is sent to Sentry; the SDK will randomly decide whether to send the event with the given probability).
 
-If this configuration option is specified, the <PlatformIdentifier name="sample_rate" /> option is ignored.
+If this configuration option is specified, the `sample_rate` option is ignored.
 
 </SdkOption>
 
@@ -99,7 +99,7 @@ If you enable this option, be sure to manually remove what you don't want to sen
 
 <SdkOption name="event_scrubber" type='sentry_sdk.scrubber.EventScrubber' defaultValue='None'>
 
-Scrubs the event payload for sensitive information such as cookies, sessions, and passwords from a `denylist`. It can additionally be used to scrub from another `pii_denylist` if <PlatformIdentifier name="send_default_pii" /> is disabled. See how to [configure the scrubber here](../../data-management/sensitive-data/#event-scrubber).
+Scrubs the event payload for sensitive information such as cookies, sessions, and passwords from a `denylist`. It can additionally be used to scrub from another `pii_denylist` if `send_default_pii` is disabled. See how to [configure the scrubber here](../../data-management/sensitive-data/#event-scrubber).
 
 </SdkOption>
 
@@ -141,7 +141,7 @@ The `project_root` is used to mark frames in a stack trace either as being in yo
 
 </SdkOption>
 
-<SdkOption name="in_app_include" type='list' defaultValue='[]'>
+<SdkOption name="in_app_include" type='list[str]' defaultValue='[]'>
 
 A list of string prefixes of module names that belong to the app. This option takes precedence over `in_app_exclude`.
 
@@ -149,15 +149,15 @@ Sentry differentiates stack frames that are directly related to your application
 
 </SdkOption>
 
-<SdkOption name="in_app_exclude" type='list' defaultValue='[]'>
+<SdkOption name="in_app_exclude" type='list[str]' defaultValue='[]'>
 
 A list of string prefixes of module names that do not belong to the app, but rather to third-party packages. Modules considered not part of the app will be hidden from stack traces by default.
 
-This option can be overridden using <PlatformIdentifier name="in_app_include" />.
+This option can be overridden using `in_app_include`.
 
 </SdkOption>
 
-<SdkOption name="max_request_body_size" type='string' defaultValue='medium'>
+<SdkOption name="max_request_body_size" type='str' defaultValue='medium'>
 
 This parameter controls whether integrations should capture HTTP request bodies. It can be set to one of the following values:
 
@@ -195,13 +195,13 @@ Set this boolean to `False` to disable sending of client reports. Client reports
 
 ## Integration Configuration
 
-<SdkOption name="integrations" defaultValue='[]'>
+<SdkOption name="integrations" type='list[sentry_sdk.integrations.Integration]' defaultValue='[]'>
 
 List of integrations to enable in addition to [auto-enabling integrations](/platforms/python/integrations). This setting can be used to override the default config options for a specific auto-enabling integration or to add an integration that is not auto-enabled.
 
 </SdkOption>
 
-<SdkOption name="disabled_integrations" defaultValue='None'>
+<SdkOption name="disabled_integrations" type='list[sentry_sdk.integrations.Integration]' defaultValue='[]'>
 
 List of integrations that will be disabled. This setting can be used to explicitly turn off specific [auto-enabling](/platforms/python/integrations/#available-integrations) or [default](/platforms/python/integrations/default-integrations/) integrations.
 </SdkOption>
@@ -250,7 +250,7 @@ The callback typically gets a second argument (called a "hint") which contains t
 
 Transports are used to send events to Sentry. Transports can be customized to some degree to better support highly specific deployments.
 
-<SdkOption name="transport" defaultValue='None'>
+<SdkOption name="transport" type='sentry_sdk.transport.Transport' defaultValue='None'>
 
   Switches out the transport used to send events. How this works depends on the SDK. It can, for instance, be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication.
 
@@ -272,7 +272,7 @@ Configures a separate proxy for outgoing HTTPS requests. This value might not be
 
 </SdkOption>
 
-<SdkOption name="proxy_headers" type='dict' defaultValue='None'>
+<SdkOption name="proxy_headers" type='dict[str, str]' defaultValue='None'>
 
 A dict containing additional proxy headers (usually for authentication) to be forwarded to `urllib3`'s [`ProxyManager`](https://urllib3.readthedocs.io/en/1.24.3/reference/index.html#urllib3.poolmanager.ProxyManager).
 
@@ -323,17 +323,17 @@ sentry_sdk.init(
 
 <SdkOption name="traces_sample_rate" type='float' defaultValue='None'>
 
-A number between `0` and `1`, controlling the percentage chance a given transaction will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Applies equally to all transactions created in the app. Either this or <PlatformIdentifier name="traces_sampler" /> must be defined to enable tracing.
+A number between `0` and `1`, controlling the percentage chance a given transaction will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Applies equally to all transactions created in the app. Either this or `traces_sampler` must be defined to enable tracing.
 
-If <PlatformIdentifier name="traces_sample_rate" /> is `0`, this means that no new traces will be created. However, if you have another service (for example a JS frontend) that makes requests to your service that include trace information, those traces will be continued and thus transactions will be sent to Sentry.
+If `traces_sample_rate` is `0`, this means that no new traces will be created. However, if you have another service (for example a JS frontend) that makes requests to your service that include trace information, those traces will be continued and thus transactions will be sent to Sentry.
 
-If you want to disable all tracing you need to set <PlatformIdentifier name="traces_sample_rate" />`=None`. In this case, no new traces will be started and no incoming traces will be continued.
+If you want to disable all tracing you need to set `traces_sample_rate=None`. In this case, no new traces will be started and no incoming traces will be continued.
 
 </SdkOption>
 
 <SdkOption name="traces_sampler" type='function' defaultValue='None'>
 
-A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning `0` for those that are unwanted. Either this or <PlatformIdentifier name="traces_sample_rate" /> must be defined to enable tracing.
+A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning `0` for those that are unwanted. Either this or `traces_sample_rate` must be defined to enable tracing.
 
 </SdkOption>
 
@@ -345,11 +345,11 @@ The option may contain a list of strings or regex against which the URLs of outg
 If one of the entries in the list matches the URL of an outgoing request, trace data will be attached to that request.
 String entries do not have to be full matches, meaning the URL of a request is matched when it _contains_ a string provided through the option.
 
-If <PlatformIdentifier name="trace_propagation_targets" /> is not provided, trace data is attached to every outgoing request from the instrumented client.
+If `trace_propagation_targets` is not provided, trace data is attached to every outgoing request from the instrumented client.
 
 </SdkOption>
 
-<SdkOption name="functions_to_trace" type='list' defaultValue='[]'>
+<SdkOption name="functions_to_trace" type='list[str]' defaultValue='[]'>
 
 An optional list of functions that should be set up for tracing. For each function in the list, a span will be created when the function is executed.
 Functions in the list are represented as strings containing the fully qualified name of the function.

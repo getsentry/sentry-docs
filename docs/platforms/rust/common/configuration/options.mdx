@@ -6,55 +6,50 @@ description: "Learn more about how the SDK can be configured via options. These 
 
 <PlatformContent includePath="configuration/config-intro" />
 
+## Available Options
+
+<TableOfContents ignoreIds={["available-options"]} />
+
 ## Core Options
 
 Options that can be read from an environment variable (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically.
 
-<ConfigKey name="dsn">
+<SdkOption name="dsn" type='string' envVar='SENTRY_DSN'>
 
 The DSN tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable also does not exist, the SDK will just not send any events.
 
-In runtimes without a process environment (such as the browser) that fallback does not apply.
-
 Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="debug">
+<SdkOption name="debug" type='bool' defaultValue='false'>
 
-Turns debug mode on or off. If debug is enabled SDK will attempt to print out useful debugging information if something goes wrong with sending the event. The default is always `false`. It's generally not recommended to turn it on in production, though turning `debug` mode on will not cause any safety concerns.
+Turns debug mode on or off. If debug is enabled, the SDK will attempt to print out useful debugging information if something goes wrong while sending the event. While it's generally not recommended to turn debug mode on in production, it won't create any security concerns.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="release">
+<SdkOption name="release" type='string' envVar='SENTRY_RELEASE'>
 
-Sets the release. Some SDKs will try to automatically configure a release out of the box but it's a better idea to manually set it to guarantee that the release is in sync with your deploy integrations or source map uploads. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
+Sets the release. This string is freeform and not set by default. Some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
 
-By default the SDK will try to read this value from the `SENTRY_RELEASE` environment variable (in the browser SDK, this will be read off of the `window.SENTRY_RELEASE.id` if available).
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="environment">
+<SdkOption name="environment" type='string' envVar='SENTRY_ENVIRONMENT'>
 
 Sets the environment. This string is freeform and not set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
 
-By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable (except for the browser SDK where this is not applicable).
+By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable. If that is not present, this value will be set to `development` if debug assertions are enabled, otherwise to `production`.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="sample-rate">
-
-Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly.
-
-</ConfigKey>
-
-<ConfigKey name="max-breadcrumbs">
+<SdkOption name="max_breadcrumbs" type='usize' defaultValue='100'>
 
 This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`, but you can set this to any number. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="attach-stacktrace">
+<SdkOption name="attach_stacktrace" type='bool' defaultValue='false'>
 
 When enabled, stack traces are automatically attached to all messages logged. Stack traces are always attached to exceptions; however, when this option is set, stack traces are also sent with messages. This option, for instance, means that stack traces appear next to all log messages.
 
@@ -62,63 +57,80 @@ This option is turned off by default.
 
 Grouping in Sentry is different for events with stack traces and without. As a result, you will get new groups as you enable or disable this flag for certain events.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="send-default-pii">
+<SdkOption name="send_default_pii" type='bool' defaultValue='false'>
 
 If this flag is enabled, certain personally identifiable information (PII) is added by active integrations. By default, no such data is sent.
 
-<Alert>
-
-If you are using Sentry in your mobile app, read our [frequently asked questions about mobile data privacy](/security-legal-pii/security/mobile-privacy/) to assist with Apple App Store and Google Play app privacy details.
-
-</Alert>
-
-This option is turned off by default.
-
 If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="in-app-include">
+<SdkOption name="in_app_include" type="Vec<&'static str>">
 
-A list of string prefixes of module names that belong to the app. This option takes precedence over `in-app-exclude`.
+A list of string prefixes of module names that belong to the app. This option takes precedence over `in_app_exclude`.
 
 Sentry differentiates stack frames that are directly related to your application ("in application") from stack frames that come from other packages such as the standard library, frameworks, or other dependencies. The application package is automatically marked as `inApp`. The difference is visible in [sentry.io](https://sentry.io), where only the "in application" frames are displayed by default.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="in-app-exclude">
+<SdkOption name="in_app_exclude" type="Vec<&'static str>">
 
 A list of string prefixes of module names that do not belong to the app, but rather to third-party packages. Modules considered not part of the app will be hidden from stack traces by default.
 
-This option can be overridden using <PlatformIdentifier name="in-app-include" />.
+This option can be overridden using `in_app_include`.
 
-</ConfigKey>
+</SdkOption>
 
-## Hooks
+<SdkOption name="before_breadcrumb" type='Fn'>
 
-These options can be used to hook the SDK in various ways to customize the reporting of events.
+This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When `None` is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
+The callback typically gets a second argument (called a "hint"), which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
 
-<ConfigKey name="before-send">
+</SdkOption>
 
-This function is called with an SDK-specific message or error event object, and can return a modified event object, or `null` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
+## Error Monitoring Options
 
-By the time <PlatformIdentifier name="before-send" /> is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
+<SdkOption name="sample_rate" type='f32' defaultValue='1.0'>
 
-</ConfigKey>
+  Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly.
 
-<ConfigKey name="before-breadcrumb">
+</SdkOption>
 
-This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
-The callback typically gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
+<SdkOption name="before_send" type='Fn'>
 
-</ConfigKey>
+  This function is called with an SDK-specific message or error event object, and can return a modified event object, or `None` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
+
+  By the time `before_send` is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
+
+</SdkOption>
+
 
 ## Tracing Options
 
-<ConfigKey name="traces-sample-rate">
+<SdkOption name="traces_sample_rate" type='f32' defaultValue='0.0'>
 
-A number between `0.0` and `1.0`, controlling the percentage chance a given transaction will be sent to Sentry. (`0.0` represents 0% while `1.0` represents 100%.) Applies equally to all transactions created in the app. Either this or <PlatformIdentifier name="traces-sampler" /> must be defined to enable tracing.
+A number between `0.0` and `1.0`, controlling the percentage chance a given transaction will be sent to Sentry (`0.0` represents 0% while `1.0` represents 100%.) Applies equally to all transactions created in the app.
 
-</ConfigKey>
+</SdkOption>
+
+
+## Transport Options
+
+<SdkOption name="http_proxy" type='string' envVar='HTTP_PROXY'>
+
+  When set, a proxy can be configured that should be used for outbound requests. This is also used for HTTPS requests unless a separate `https_proxy` is configured. However, not all SDKs support a separate HTTPS proxy. SDKs will attempt to default to the system-wide configured proxy, if possible. For instance, on Unix systems, the `HTTP_PROXY` environment variable will be picked up.
+
+</SdkOption>
+
+<SdkOption name="https_proxy" type='string' envVar='HTTPS_PROXY'>
+
+  Configures a separate proxy for outgoing HTTPS requests. If this option is not provided but `http_proxy` is, then `http_proxy` is used for HTTPS requests too.
+
+</SdkOption>
+
+<SdkOption name="accept_invalid_certs" type='bool' envVar='SSL_VERIFY'>
+Setting this to `true` disables SSL certificate validation when sending outbound requests to Sentry. This should never be enabled when using the SDK in your real codebase or otherwise handling any kind of sensitive or personally identifiable information, as it could be exposed to potential attackers.
+
+</SdkOption>
