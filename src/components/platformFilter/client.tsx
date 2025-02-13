@@ -3,7 +3,7 @@ import {useMemo, useState} from 'react';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import {TriangleRightIcon} from '@radix-ui/react-icons';
 import classNames from 'classnames';
-import {matchSorter} from 'match-sorter';
+import {matchSorter, rankings} from 'match-sorter';
 import Link from 'next/link';
 
 import {type Platform} from 'sentry-docs/types';
@@ -63,7 +63,10 @@ export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
     }
     // any of these fields can be used to match the search value
     const keys = ['title', 'aliases', 'name', 'sdk', 'keywords'];
-    const matches_ = matchSorter(platformsAndGuides, filter, {keys});
+    const matches_ = matchSorter(platformsAndGuides, filter, {
+      keys,
+      threshold: rankings.CONTAINS,
+    });
     return matches_;
   }, [filter, platformsAndGuides]);
 

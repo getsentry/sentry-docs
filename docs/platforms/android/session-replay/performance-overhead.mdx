@@ -29,7 +29,7 @@ Below are the results of the benchmarking tests, presented as median values to r
 | CPU                              | 36%             | 42%                 |
 | App Startup Time (Cold)          | 1533.35 ms      | 1539.55 ms          |
 | Main Thread Time                 | n/a             | 20ms                |
-| Network Bandwidth                | n/a             | 35 KB               |
+| Network Bandwidth                | n/a             | 7 KB/s of recording |
 
 
 
@@ -38,3 +38,32 @@ Below are the results of the benchmarking tests, presented as median values to r
 Jetpack Compose view hierarchies may be slower to snapshot initially due to ART optimizations, compared to the traditional Android View System. But their performance improves as execution progresses.
 
 </Alert>
+
+## Reducing Performance Overhead
+
+To minimize the performance impact of the Replay SDK, consider the following steps:
+
+### Change Replay quality
+
+Lowering the quality of captured screenshots and videos can significantly reduce CPU, memory, and network bandwidth usage. Here's how you can do it:
+
+```kotlin
+SentryAndroid.init(context) { options ->
+  // this will reduce screenshot compression to 10 and bitrate to 50kbps
+  options.sessionReplay.quality = SentryReplayQuality.LOW // defaults to MEDIUM
+}
+```
+
+### Disable Replay for Low-End Devices
+
+If the Replay SDK causes performance issues on lower-end devices (for example, [this](https://github.com/getsentry/relay/blob/695b459e03481f7d799f07b2b901b140e5d5753d/relay-event-schema/src/protocol/device_class.rs#L21-L37) is how Sentry determines the device class), you can disable it specifically for those devices:
+
+```kotlin
+SentryAndroid.init(context) { options ->
+  options.dsn = "___PUBLIC_DSN___"
+  options.isDebug = true
+
+  options.sessionReplay.onErrorSampleRate = if (isLowEnd()) 0.0 else 1.0
+  options.sessionReplay.sessionSampleRate = if (isLowEnd()) 0.0 else 0.1
+}
+```

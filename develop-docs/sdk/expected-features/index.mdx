@@ -30,7 +30,7 @@ What scope means depends on the application, for a web framework it is most like
 
 ## Automatic Context Data
 
-Automatic addition of useful attributes such as `tags` or `extra` or specific `contexts`. Typically means the SDK hooks into a framework so that it can set attributes that are known to be useful for most users. Please check [Data Handling](/sdk/expected-features/data-handling) for considerations.
+Automatic addition of useful attributes such as `flags` or `tags` or `extra` or specific `contexts`. Typically means the SDK hooks into a framework so that it can set attributes that are known to be useful for most users. Please check [Data Handling](/sdk/expected-features/data-handling) for considerations.
 
 ## Breadcrumbs
 
@@ -118,24 +118,15 @@ This functionality should be gated behind the `includeLocalVariables` option, wh
 
 ## Feature Flags
 
-An SDK may expose a Scope property for tracking feature flag evaluations. When the scope forks, it's important to clone the feature flags property. Leaking flag evaluations between threads could lead to inaccurate feature flag evaluation logs.
+An SDK may optionally support feature flag collection. Feature flags are collected on evaluation, stored on the scope, and submitted to Sentry on error obeying the schema specified in the <Link to="/sdk/data-model/event-payloads/contexts/#feature-flag-context">Feature Flag Context</Link> protocol documentation.
 
-The Scope's flag property should have a capped capacity and should prefer recently-evaluated flags over less-recently-evaluated flags. The recommended data structure is a LRU-cache but it is not required so long as the data structure behaves similarly. Serious deviations from the behavior of an LRU-cache should be documented for your language.
+If an SDK supports feature flags it must expose a function `set_flag` which has identical behavior to the `set_tag` function. It must accept a key of type string and a value which is a union of string, boolean, integer, float, and structure. An SDK may hold up to 100 evaluations. Evaluations are ordered based on their evaluation time. Typically, an LRU cache is used to store feature flags. When the capacity of the cache is exceeded the oldest flag is dropped. Any (or multiple) data structure(s) may be chosen by the SDK to store feature flags as long as the evaluation order of the flags is maintained.
 
-The Scope's flag property should expose two methods: `get/0` and `set/2`. `set/2` takes two arguments. The first argument is the name of the flag. It is of type string. The second argument is the evaluation result. It is of type boolean. `set/2` should remove all entries from the LRU-cache which match the provided flag's name and append the new evaluation result to the end of the queue. `get/0` accepts zero arguments. The `get/0` method must return a list of serialized flag evaluation results in order of evaluation. Oldest values first, newest values last. See the <Link to="/sdk/data-model/event-payloads/contexts/#feature-flag-context">Feature Flag Context</Link> protocol documentation for details.
+Because flags are stored on the scope, when a scope forks the flags data structure must be cloned. Failure to clone the data structure appropriately will lead to flags leaking across thread boundaries and lead to unexpected results.
 
 ### Integrations
 
-Integrations automate the work of tracking feature flag evaluations and serializing them on error context. An integration should hook into third-party SDK and record feature flag evaluations using the current scope. For example, in Python an integration would call `sentry_sdk.get_current_scope().flags.set(...)` on each flag evaluation.
-
-An integration is also responsible for registering an "on error" hook with the Sentry SDK. When an error occurs the integration should request the current scope and serialize the flags property. For example, in Python an integration might define this callback function:
-
-```python
-def flag_error_processor(event, exc_info):
-    scope = sentry_sdk.get_current_scope()
-    event["contexts"]["flags"] = {"values": scope.flags.get()}
-    return event
-```
+Integrations automate the work of tracking feature flag evaluations. An integration should hook into a third-party SDK and record feature flag evaluations using the current scope.
 
 ## Desymbolication
 
@@ -147,7 +138,7 @@ Ability to get the ID of the last event sent. Event IDs are useful for correlati
 
 ## User Feedback
 
-For all SDKs, it is strongly recommended to send the `User Feedback` as an [envelope item](/sdk/data-model/envelope-items/#user-report). Alternatively, the SDKs can
+For all SDKs, it is strongly recommended to send the `User Feedback` as an [envelope item](/sdk/data-model/envelope-items/#user-report---deprecated). Alternatively, the SDKs can
 use the [User Feedback endpoint](https://docs.sentry.io/api/projects/submit-user-feedback/), which is not recommended.
 
 ### User Facing Platforms

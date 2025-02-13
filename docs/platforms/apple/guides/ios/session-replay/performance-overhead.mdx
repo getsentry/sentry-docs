@@ -29,4 +29,33 @@ Below are the results of the benchmarking tests, presented as median values to r
 | CPU                              | 4%              | 13%                 |
 | App Startup Time (Cold)          | 1264.80 ms      | 1265 ms             |
 | Main Thread Time                 | n/a             | 43ms                |
-| Network Bandwidth                | n/a             | 50 KB               |
+| Network Bandwidth                | n/a             | 10 KB/s of recording|
+
+## Reducing Performance Overhead
+
+To minimize the performance impact of the Replay SDK, consider the following steps:
+
+### Change Replay quality
+
+Lowering the quality of captured screenshots and videos can significantly reduce CPU, memory, and network bandwidth usage. Here's how you can do it:
+
+```swift
+SentrySDK.start(configureOptions: { options in
+  // this will reduce screenshot compression to 10 and bitrate to 50kbps
+  options.sessionReplay.quality = .low // defaults to .medium
+})
+```
+
+### Disable Replay for Low-End Devices
+
+If the Replay SDK causes performance issues on lower-end devices (for example, [this](https://github.com/getsentry/relay/blob/695b459e03481f7d799f07b2b901b140e5d5753d/relay-event-schema/src/protocol/device_class.rs#L21-L37) is how Sentry determines the device class), you can disable it specifically for those devices:
+
+```kotlin
+SentrySDK.start(configureOptions: { options in
+  options.dsn = "___PUBLIC_DSN___"
+  options.debug = true
+
+  options.sessionReplay.onErrorSampleRate = if isLowEnd() { 0.0 } else { 1.0 }
+  options.sessionReplay.sessionSampleRate = if isLowEnd() { 0.0 } else { 0.1 }
+})
+```

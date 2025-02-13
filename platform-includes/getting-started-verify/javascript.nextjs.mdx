@@ -1,46 +1,42 @@
-Add a button to a frontend component that throws an error:
+## Step 2: Verify Your Setup
 
-```javascript {filename:pages/index.js}
-<button
-  type="button"
-  onClick={() => {
-    throw new Error("Sentry Frontend Error");
-  }}
->
-  Throw error
-</button>
-```
+<Expandable level="warning" title="Are you developing with Turbopack?">
 
-And throw an error in an API route:
+The Sentry SDK doesn't fully support `next dev --turbo` as Turbopack is still under development. This means that the Sentry SDK will not capture any data from your frontend. Other than that, your dev server should be fully operational.
 
-```javascript {filename:pages/api/error.js}
-export default (req, res) => {
-  throw new Error("API throw error test");
-  res.status(200).json({ name: "John Doe" });
-};
-```
+Check the latest information on [Sentry's support for Turbopack on GitHub](https://github.com/getsentry/sentry-javascript/issues/8105).
 
-```typescript {filename:pages/api/error.ts}
-import type { NextApiRequest, NextApiResponse } from "next";
+</Expandable>
 
-export default (req: NextApiRequest, res: NextApiResponse) => {
-  throw new Error("API throw error test");
-  res.status(200).json({ name: "John Doe" });
-};
-```
+If you haven't tested your Sentry configuration yet, let's do it now. You can confirm that Sentry is working properly and sending data to your Sentry project by using the example page and route created by the installation wizard:
 
-<Alert>
+1. Open the example page `/sentry-example-page` in your browser. For most Next.js applications, this will be at localhost.
+2. Click the "Throw error" button. This triggers two errors:
+   - a frontend error
+   - an error within the API route
 
-Errors triggered from within Browser DevTools are sandboxed, so they will not trigger error monitoring. Keep this in mind when verifying your Sentry SDK installation.
+Sentry captures both of these errors for you. Additionally, the button click starts a performance trace to measure the time it takes for the API request to complete.
+
+<Alert level="success" title="Tip">
+
+Don't forget to explore the example files' code in your project to understand what's happening after your button click.
 
 </Alert>
 
-<Alert title="Nested React Server Components" level="warning">
+### View Captured Data in Sentry
 
-Prior to Next.js version 15, errors thrown in nested React Server Components were not exposed by the framework, preventing the SDK from capturing them.
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
 
-Next.js 15 introduced an `onRequestError` hook in `instrumentation.ts` that allows capturing and reporting these errors.
+<Alert level="warning" title="Important">
 
-Refer to <PlatformLink to="/manual-setup/#errors-from-nested-react-server-components">Capturing Errors From Nested React Server Components</PlatformLink> for detailed setup instructions.
+Errors triggered from within your browser's developer tools (i.e., the browser console) are sandboxed, so they will not trigger Sentry's error monitoring.
 
 </Alert>
+
+<Expandable title="Need help locating the captured errors in your Sentry project?">
+
+1. Open the [**Issues**](https://sentry.io/orgredirect/organizations/:orgslug/issues) page and select an error from the issues list to view the full details and context of this error. For an interactive UI walkthrough, click [here](/product/sentry-basics/integrate-frontend/generate-first-error/#ui-walkthrough).
+2. Open the [**Traces**](https://sentry.io/orgredirect/organizations/:orgslug/traces) page and select a trace to reveal more information about each span, its duration, and any errors. For an interactive UI walkthrough, click [here](/product/sentry-basics/distributed-tracing/generate-first-error/#ui-walkthrough).
+3. Open the [**Replays**](https://sentry.io/orgredirect/organizations/:orgslug/replays) page and select an entry from the list to get a detailed view where you can replay the interaction and get more information to help you troubleshoot.
+
+</Expandable>

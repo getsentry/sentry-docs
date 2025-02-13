@@ -1,0 +1,89 @@
+Trace propagation is set up automatically in this SDK. By default, outgoing HTTP requests will automatically be instrumented for you.
+For other cases where you may want to continue traces (for example, in a job queue or when working with websockets), you can manually extract and inject tracing information.
+
+<Expandable title="What is Distributed Tracing?">
+  <PlatformContent includePath="distributed-tracing/explanation" />
+</Expandable>
+
+## Manually Extracting and Injecting Distributed Tracing Information
+
+You can also manually extract and inject tracing data into your application. For this, you must:
+
+- Extract and store incoming tracing information from incoming request headers or similar.
+- Inject tracing information to any outgoing requests.
+
+To learn more about distributed tracing, see our <PlatformLink to="/tracing/trace-propagation/">Distributed Tracing</PlatformLink> docs.
+
+### Extracting Incoming Tracing Information
+
+You must extract and store incoming tracing information in memory for later use. Sentry provides the `continueTrace()` function to help you with this. Incoming tracing information can come from different places:
+
+- In a web environment, it's sent with HTTP headers, for example, by another Sentry SDK used in your frontend project.
+- In a job queue, it can be retrieved from meta or header variables.
+- You also can pick up tracing information from environment variables.
+
+Here's an example of how to extract and store incoming tracing information using `continueTrace()`:
+
+```javascript
+const http = require("http");
+
+http.createServer((request, response) => {
+  const sentryTrace = request.headers["sentry-trace"];
+  const baggage = request.headers["baggage"];
+
+  Sentry.continueTrace({ sentryTrace, baggage }, () => {
+    Sentry.startSpan(
+      {,
+        name: "my request",
+        op: "http.server",
+      },
+      () => {
+        // Your API code...
+      }
+    );
+  });
+});
+```
+
+In this example, we create a new transaction that is attached to the trace specified in the `sentry-trace` and `baggage` headers.
+
+### Injecting Tracing Information Into HTML
+
+If you're server-side rendering HTML and you use a Sentry SDK in your browser application, you can connect the backend and frontend traces by injecting your server's tracing information as `<meta>` tags into the HTML that's initially served to the browser. When the frontend SDK is initialized, it will automatically pick up the tracing information from the `<meta>` tags and continue the trace. Note, that your browser SDK needs to register `browserTracingIntegration` for this to work.
+
+The easiest and recommended way to do this is to use the `Sentry.getTraceMetaTags()`:
+
+```javascript {5} {filename:index.js}
+function renderHtml() {
+  return `
+    <html>
+      <head>
+        ${Sentry.getTraceMetaTags()}
+      </head>
+      <body>
+        <!-- Your HTML content -->
+      </body>
+    </html>
+  `;
+}
+```
+
+Alternatively, if you need more control over how meta tags are generated, you can use `Sentry.getTraceData()` to get only the meta tag values and generate the meta tags yourself:
+
+```javascript {2, 7-8} {filename:index.js}
+function renderHtml() {
+  const metaTagValues = Sentry.getTraceData();
+
+  return `
+    <html>
+      <head>
+        <meta name="sentry-trace" content="${metaTagValues["sentry-trace"]}">
+        <meta name="baggage" content="${metaTagValues.baggage}">
+      </head>
+      <body>
+        <!-- Your HTML content -->
+      </body>
+    </html>
+  `;
+}
+```

@@ -5,17 +5,18 @@ interface SamplingContext {
   name: string;
   // Initial attributes of the span
   attributes: SpanAttributes | undefined;
-  // If the parent span was sampled - undefined if there is no parent span
+  // If the parent span was sampled - undefined if there is no incoming trace
   parentSampled: boolean | undefined;
+  // Sample rate that is coming from the incoming trace - undefined if there is no incoming trace
+  parentSampleRate: number | undefined;
 }
 
 Sentry.init({
   // ...
 
-  tracesSampler: ({ name, attributes, parentSampled }) => {
+  tracesSampler: ({ name, attributes, inheritOrSampleWith }) => {
     // Do not sample health checks ever
     if (name.includes("healthcheck")) {
-      // Drop this completely by setting its sample rate to 0%
       return 0;
     }
 
@@ -29,13 +30,17 @@ Sentry.init({
       return 0.01;
     }
 
-    // Continue trace decision, if there is any parentSampled information
-    if (typeof parentSampled === "boolean") {
-      return parentSampled;
-    }
-
-    // Else, use default sample rate
-    return 0.5;
+    // Otherwise, inherit the sample sampling decision of the incoming trace, or use a fallback sampling rate.
+    return inheritOrSampleWith(0.5);
   },
 });
 ```
+
+<Alert title="parentSampleRate">
+
+The `inheritOrSampleWith` sampling context utility was introduced in version 9 of the SDK.
+To inherit sampling decisions in earlier versions of the SDK, use the `parentSampled` sampling context.
+
+Going forward, using `inheritOrSampleWith()` is strongly encouraged over using `parentSampled`, because it allows for deterministic sampling and metric extrapolation for downstream traces.
+
+</Alert>
