@@ -972,6 +972,14 @@ const userDocsRedirects = [
     source: '/platforms/ruby/:productfeature/troubleshooting/:path*',
     destination: '/platforms/ruby/troubleshooting/:path*',
   },
+  {
+    source: '/platforms/php/guides/:guide/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/php/guides/:guide/troubleshooting/:path*',
+  },
+  {
+    source: '/platforms/php/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/php/troubleshooting/:path*',
+  },
 ];
 
 /**
