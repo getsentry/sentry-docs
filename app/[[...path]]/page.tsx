@@ -209,6 +209,8 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
       ? [{url: `${previewDomain ?? domain}/og.png`, width: 1200, height: 630}]
       : [];
 
+  let noindex: undefined | boolean = undefined;
+
   const rootNode = await getDocsRootNode();
 
   if (params.path) {
@@ -227,6 +229,8 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
       if (pageNode.frontmatter.customCanonicalTag) {
         customCanonicalTag = formatCanonicalTag(pageNode.frontmatter.customCanonicalTag);
       }
+
+      noindex = pageNode.frontmatter.noindex;
     }
   }
 
@@ -253,5 +257,6 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     alternates: {
       canonical,
     },
+    robots: noindex ? 'noindex' : undefined,
   };
 }

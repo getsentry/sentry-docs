@@ -238,8 +238,6 @@ def eat_slice(slice):
 
 ## Improving Data on Transactions and Spans
 
-### Adding Data Attributes to Transactions
-
 You can add data attributes to your transactions. This data is visible in the trace explorer in Sentry. Data attributes can be of type `string`, `number` or `boolean`, as well as (non-mixed) arrays of these types:
 
 ```python
@@ -253,9 +251,7 @@ with sentry_sdk.start_transaction(name="my-transaction") as transaction:
     transaction.set_data("my-data-attribute-6", [True, False, True])
 ```
 
-### Adding Data Attributes to Spans
-
-You can add data attributes to your spans. This data is visible in the trace explorer in Sentry. Data attributes can be of type `string`, `number` or `boolean`, as well as (non-mixed) arrays of these types:
+You can add data attributes to your spans the same way, with the same type restrictions as described above.
 
 ```python
 with sentry_sdk.start_span(name="my-span") as span:
@@ -266,4 +262,25 @@ with sentry_sdk.start_span(name="my-span") as span:
     span.set_data("my-data-attribute-4", ["value1", "value2", "value3"])
     span.set_data("my-data-attribute-5", [42, 43, 44])
     span.set_data("my-data-attribute-6", [True, False, True])
+```
+
+To attach data attributes to the transaction and all its spans, you can use <PlatformLink to="/configuration/filtering/#using-before-send-transaction">`before_send_transaction`</PlatformLink>:
+
+```python
+def my_before_send_transaction(event, hint):
+    # Set the data attribute "foo" to "bar" on every span belonging to this
+    # transaction event
+    for span in event["spans"]:
+        span["data"]["foo"] = "bar"
+
+    # Set the data on the transaction itself, too
+    event["contexts"]["trace"]["data"]["foo"] = "bar"
+
+    return event
+
+
+sentry_sdk.init(
+    traces_sample_rate=1.0,
+    before_send_transaction=my_before_send_transaction,
+)
 ```
