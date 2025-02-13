@@ -138,30 +138,18 @@ export interface PlatformConfig {
 }
 
 /**
- * @see PlatformConfig.caseStyle
+ * The case style of a platform defines the casing used for sentry SDK
+ * functions / keywords. For example `before-send` would become `BeforeSend`
+ * if the caseStyle is configured as PascalCase.
  */
-export enum PlatformCaseStyle {
-  CANONICAL = 'canonical',
-  CAMEL_CASE = 'camelCase',
-  PASCAL_CASE = 'PascalCase',
-  SNAKE_CASE = 'snake_case',
-}
+export type PlatformCaseStyle = 'canonical' | 'camelCase' | 'PascalCase' | 'snake_case';
 
 /**
- * @see PlatformConfig.supportLevel
+ * Is this a first-party or third-party SDK?
  */
-export enum PlatformSupportLevel {
-  PRODUCTION = 'production',
-  COMMUNITY = 'community',
-}
+export type PlatformSupportLevel = 'production' | 'community';
 
 /**
- * @see PlatformConfig.categories
+ * Possible types of categories.
  */
-export enum PlatformCategory {
-  BROWSER = 'browser',
-  DESKTOP = 'desktop',
-  MOBILE = 'mobile',
-  SERVER = 'server',
-  SERVERLESS = 'serverless',
-}
+export type PlatformCategory = 'browser' | 'desktop' | 'mobile' | 'server' | 'serverless';
