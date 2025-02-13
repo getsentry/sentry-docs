@@ -964,6 +964,10 @@ const userDocsRedirects = [
     source: '/product/explore/feature-flags/:path*',
     destination: '/product/issues/issue-details/feature-flags/:path*',
   },
+  {
+    source: '/platforms/python/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/python/troubleshooting/:path*',
+  },
 ];
 
 /**
