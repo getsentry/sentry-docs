@@ -131,11 +131,39 @@ The following callbacks can be configured for the integration in `feedbackIntegr
 | `onFormSubmitted` |                                                            | The form is unmounted. | Callback when the feedback form is submitted successfully, and the SuccessMessage is complete, or dismissed. |
 | `onAddScreenshot` | `attachFile: (filename: string, data: Uint8Array) => void` |                        | Callback when a screenshot is added.                                                                         |
 
-#### Attaching a screenshots
+#### Screenshots
 
-To attach a screenshot to the feedback form, you should implement the `onAddScreenshot` callback. The callback receives a filename and a `Uint8Array` of the image data.
+The screenshot functionality is disabled by default. To enable it, pass an `imagePicker` integration library or set the `enableScreenshot` option to `true` and implement the `onAddScreenshot` callback.
 
-An example of how to attach a screenshot using the [`react-native-image-picker`](https://www.npmjs.com/package/react-native-image-picker) and the [`react-native-quick-base64`](https://www.npmjs.com/package/react-native-quick-base64) libraries is the following:
+##### Integrating with an Image Picker Library 
+
+Currently the supported libraries are:
+- [expo-image-picker](https://docs.expo.dev/versions/latest/sdk/imagepicker/) (tested with version `16.0`)
+- [react-native-image-picker](https://github.com/react-native-image-picker/react-native-image-picker) (tested with version `7.2` and `8.0`)
+
+You just need to import the library and pass it to the `feedbackIntegration` method.
+
+```javascript
+import * as ImagePicker from 'expo-image-picker';
+```
+
+```javascript
+import * as ImagePicker from 'react-native-image-picker';
+```
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.feedbackIntegration({
+      imagePicker: ImagePicker,
+    }),
+  ],
+});
+```
+
+##### Implementing the `onAddScreenshot` Callback
+
+If the above libraries do not cover your use case you can manually integrate screenshots by implementing the `onAddScreenshot` callback. The callback receives a filename and a `Uint8Array` of the image data like in the example below.
 
 ```javascript
 import * as Sentry from '@sentry/react-native';
