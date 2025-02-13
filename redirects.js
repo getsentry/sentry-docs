@@ -965,6 +965,10 @@ const userDocsRedirects = [
     destination: '/product/issues/issue-details/feature-flags/:path*',
   },
   {
+    source: '/platforms/python/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/python/troubleshooting/:path*',
+  },
+  {
     source: '/platforms/ruby/guides/:guide/:productfeature/troubleshooting/:path*',
     destination: '/platforms/ruby/guides/:guide/troubleshooting/:path*',
   },
