@@ -176,24 +176,17 @@ If the above libraries do not cover your use case you can manually integrate scr
 
 ```javascript
 import * as Sentry from '@sentry/react-native';
-import { toByteArray } from 'react-native-quick-base64';
-import { launchImageLibrary } from 'react-native-image-picker';
+import { getImage } from 'custom-image-picker';
 
 const handleChooseImage = (attachFile: (filename: string, data: Uint8Array) => void): void => {
-  launchImageLibrary({ mediaType: 'photo', includeBase64: true }, (response) => {
-    if (response.didCancel) {
-      console.log('User cancelled image picker');
-    } else if (response.errorCode) {
-      console.log('ImagePicker Error: ', response.errorMessage);
-    } else if (response.assets && response.assets.length > 0) {
-      const filename = response.assets[0].fileName;
-      const base64String = response.assets[0].base64;
-      const screenShotUint8Array = toByteArray(base64String);
-      if (filename && screenShotUint8Array) {
-        attachFile(filename, screenShotUint8Array);
-      }
-    }
-  });
+  const { filename, bytes, error, canceled } = getImage();
+  if (canceled) {
+  	console.log('User canceled image choice.');
+  } else if (error) {
+    console.log('Error during image loading', error);
+  } else {
+    attachFile(filename, bytes);
+  }
 };
 
 Sentry.feedbackIntegration({
