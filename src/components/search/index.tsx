@@ -186,7 +186,7 @@ export function Search({
           {clickAnalytics: true, analyticsTags: ['source:documentation']}
         )
         .then(siteResults => {
-          if(isDeveloperDocs) {
+          if (isDeveloperDocs) {
             return siteResults;
           }
           return siteResults.map(site => {
