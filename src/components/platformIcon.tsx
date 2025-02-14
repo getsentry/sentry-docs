@@ -66,6 +66,7 @@ import GrapheneSVG from 'platformicons/svg/graphene.svg';
 import GraphqlSVG from 'platformicons/svg/graphql.svg';
 import GrpcSVG from 'platformicons/svg/grpc.svg';
 import HapiSVG from 'platformicons/svg/hapi.svg';
+import HonoSVG from 'platformicons/svg/hono.svg';
 import Html5SVG from 'platformicons/svg/HTML5.svg';
 import HttpxSVG from 'platformicons/svg/httpx.svg';
 import HueySVG from 'platformicons/svg/huey.svg';
@@ -203,6 +204,7 @@ import GrapheneSVGLarge from 'platformicons/svg_80x80/graphene.svg';
 import GraphqlSVGLarge from 'platformicons/svg_80x80/graphql.svg';
 import GrpcSVGLarge from 'platformicons/svg_80x80/grpc.svg';
 import HapiSVGLarge from 'platformicons/svg_80x80/hapi.svg';
+import HonoSVGLarge from 'platformicons/svg_80x80/hono.svg';
 import Html5SVGLarge from 'platformicons/svg_80x80/HTML5.svg';
 import HttpxSVGLarge from 'platformicons/svg_80x80/httpx.svg';
 import HueySVGLarge from 'platformicons/svg_80x80/huey.svg';
@@ -584,6 +586,10 @@ const formatToSVG = {
     sm: HapiSVG,
     lg: HapiSVGLarge,
   },
+  hono: {
+    sm: HonoSVG,
+    lg: HonoSVGLarge,
+  },
   kotlin: {
     sm: KotlinSVG,
     lg: KotlinSVGLarge,
@@ -911,6 +917,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-gcp-functions': 'gcp-functions',
   'javascript-ionic': 'ionic',
   'javascript-hapi': 'hapi',
+  'javascript-hono': 'hono',
   'javascript-koa': 'koa',
   'javascript-fastify': 'fastify',
   'javascript-nestjs': 'nestjs',
