@@ -1,0 +1,182 @@
+---
+title: Self-Hosted Monitoring
+sidebar_title: Monitoring
+sidebar_order: 10
+---
+
+<Alert title="Important" level="warning">
+    These are community-contributed docs. Sentry does not officially provide support for self-hosted configurations beyond the default install.
+</Alert>
+
+This page is considered experimental because everyone will have different setup and requirements for their monitoring system. It is also best to use your existing monitoring system, and try to integrate Sentry's with it, instead of spinning up a new one.
+
+Most containers have Statsd client that you can ingest to your monitoring system. If you have a native Statsd server instance, you can directly use it. If you don't, you might want to add some kind of converter that converts the ingested Statsd format into your own. For example, if you are using Prometheus, you can use [prometheus-statsd-exporter](https://github.com/prometheus/statsd_exporter) to bridge the gap.
+
+If you are using DataDog as your monitoring system, it is recommended to use [DogStatsD](https://docs.datadoghq.com/developers/dogstatsd/?tab=hostagent) as the collector.
+
+Recommended native Statsd server are [the original Statsd server made by Etsy](https://github.com/statsd/statsd) and some others on the [server re-implementations](https://github.com/statsd/statsd/blob/master/docs/server_implementations.md).
+
+Other than service monitoring, you should also monitor your own host instance by using [Prometheus Node Exporter](https://github.com/prometheus/node_exporter), and your Docker daemon by using [built-in Prometheus exporter](https://docs.docker.com/engine/daemon/prometheus/) or similar tools. Sentry does not provides any alerts if your host instance has low available remaining RAM or low remaining disk space.
+
+<Alert title="Note">
+    After changing configuration files, re-run the <code>./install.sh</code> script, to rebuild and restart the containers. See the <Link to="/self-hosted/#configuration">configuration section</Link> for more information.
+</Alert>
+
+## Sentry-related configurations
+
+### Sentry
+
+You can configure Sentry to send metrics to Statsd server by configuring your `sentry/sentry.conf.py` file:
+
+```python
+SENTRY_METRICS_BACKEND = 'sentry.metrics.statsd.StatsdMetricsBackend'
+SENTRY_METRICS_OPTIONS: dict[str, Any] = {
+    'host': 'statsd.yourcompany.com',
+    'port': 8125,
+}
+# SENTRY_METRICS_SAMPLE_RATE = 1.0   # Adjust this to your needs, default is 1.0
+# SENTRY_METRICS_PREFIX = "sentry."  # Adjust this to your needs, default is "sentry."
+```
+
+### Snuba
+
+You can configure Snuba to send metrics to Statsd server by configuring your `docker-compose.yml` file:
+
+```yaml
+# The rest of your Docker Compose file
+
+x-snuba-defaults: &snuba_defaults
+  <<: *restart_policy
+  depends_on:
+    clickhouse:
+      <<: *depends_on-healthy
+    kafka:
+      <<: *depends_on-healthy
+    redis:
+      <<: *depends_on-healthy
+  image: "$SNUBA_IMAGE"
+  environment:
+    SNUBA_SETTINGS: self_hosted
+    CLICKHOUSE_HOST: clickhouse
+    DEFAULT_BROKERS: "kafka:9092"
+    REDIS_HOST: redis
+    UWSGI_MAX_REQUESTS: "10000"
+    UWSGI_DISABLE_LOGGING: "true"
+    # Leaving the value empty to just pass whatever is set
+    # on the host system (or in the .env file)
+    SENTRY_EVENT_RETENTION_DAYS:
+    DOGSTATSD_HOST: "statsd.yourcompany.com"
+    DOGSTATSD_PORT: 8125
+
+# The rest of your Docker Compose file
+```
+
+### Relay
+
+You can configure Relay to send metrics to Statsd server by configuring your `relay/config.yml` file:
+
+```yaml
+# The rest of your config.yml file
+metrics:
+  statsd: "statsd.yourcompany.com:8125"
+  # prefix: "sentry.relay" # Adjust this to your needs, default is "sentry.relay"
+  # sample_rate: 1.0 # Adjust this to your needs, default is 1.0
+  # `periodic_secs` is the interval for periodic metrics emitted from Relay.
+  # Setting it to `0` seconds disables the periodic metrics.
+  # periodic_secs: 5
+```
+
+### Symbolicator
+
+You can configure Symbolicator to send metrics to Statsd server by configuring your `symbolicator/config.yml` file:
+
+```yaml
+# The rest of your config.yml file
+metrics:
+  statsd: "statsd.yourcompany.com:8125"
+  prefix: "sentry.symbolicator" # Adjust this to your needs, default is "symbolicator"
+```
+
+## Sentry dependencies
+
+Sentry and its' surrounding services have some dependencies like Redis, ClickHouse, Kafka, etc, that you can monitor with your monitoring system. The easiest way to do so is through Prometheus exporters. Although there are many exporters available, for reference purposes, you can use this setup below.
+
+Modify your `docker-compose.yml` file to add the following:
+
+```yaml
+services:
+  # The rest of your Docker Compose file
+  prometheus-postgresql-exporter:
+    <<: *restart_policy
+    image: quay.io/prometheuscommunity/postgres-exporter
+    ports:
+      - "127.0.0.1:9187:9187"
+    environment:
+      DATA_SOURCE_URI: "postgres:5432/postgres?sslmode=disable"
+      DATA_SOURCE_USER: "postgres"
+  prometheus-redis-exporter:
+    <<: *restart_policy
+    image: oliver006/redis_exporter
+    ports:
+      - "127.0.0.1:9121:9121"
+    environment:
+      REDIS_ADDR: "redis:6379"
+  prometheus-kafka-exporter:
+    <<: *restart_policy
+    image: danielqsj/kafka-exporter
+    ports:
+      - "127.0.0.1:9308:9308"
+    command: ["--kafka.server=kafka:9092"]
+  prometheus-memcached-exporter:
+    <<: *restart_policy
+    image: quay.io/prometheus/memcached-exporter
+    ports:
+      - "127.0.0.1:9150:9150"
+    command: ["--memcached.address=memcached:11211"]
+```
+
+Modify your `clickhouse/config.xml` file to add the following:
+
+```xml
+<clickhouse>
+    <!-- The rest of your ClickHouse configuration -->
+    <prometheus>
+        <endpoint>/metrics</endpoint>
+        <port>9363</port>
+        <metrics>true</metrics>
+        <events>true</events>
+        <asynchronous_metrics>true</asynchronous_metrics>
+        <errors>true</errors>
+    </prometheus>
+</clickhouse>
+```
+
+Up to this point, all metrics are exposed only on `localhost`. If you don't want your Sentry installation to expose any other ports, you can remove every `ports` directive on the `docker-compose.yml` file and route everything through the `nginx` container, by modifying your `nginx.conf` file to the following:
+
+```nginx
+# The rest of your Nginx configuration
+http {
+    # The rest of your HTTP configuration
+    server {
+      # The rest of your server configuration
+      location = /_metrics/postgresql {
+        proxy_pass http://prometheus-postgresql-exporter:9187;
+      }
+
+      location = /_metrics/redis {
+        proxy_pass http://prometheus-redis-exporter:9121;
+      }
+
+      location = /_metrics/kafka {
+        proxy_pass http://prometheus-kafka-exporter:9308;
+      }
+
+      location = /_metrics/memcached {
+        proxy_pass http://prometheus-memcached-exporter:9150;
+      }
+
+      location = /_metrics/clickhouse {
+        proxy_pass http://clickhouse:9363;
+    }
+}
+```
