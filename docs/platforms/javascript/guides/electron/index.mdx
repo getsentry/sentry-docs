@@ -231,17 +231,20 @@ Information_](/cli/dif/) for the upload process.
 
 ### Child Processes
 
-The SDK relies on the [Electron CrashReporter](https://electronjs.org/docs/api/crash-reporter) to generate the crash dumps. To receive crash reports for child processes, you need to make sure the crash reporter is activated by either the SDK or manually (see [below](/platforms/javascript/guides/electron/#electron-native-manual)).
+The SDK relies on the [Electron crashReporter](https://electronjs.org/docs/api/crash-reporter) to capture crash dumps. To receive crash reports for child processes, you need to make sure the crash reporter is activated by either the SDK or manually (see [below](/platforms/javascript/guides/electron/#manual-crash-reporting)).
 
-An exception to this is _macOS_, where the crash reporter only needs to be started in the `main` process and watches all its child processes. The SDK already takes care of this difference, so there is no need to manually disable `enableNative`.
+Once the crash reporter is active, the SDK will automatically capture native
+crashes for the following processes:
 
-For custom child processes, especially ones not written in JavaScript, you need to integrate a library that can generate Minidumps. These are most notably [Crashpad](https://chromium.googlesource.com/crashpad/crashpad/) and [Breakpad](https://chromium.googlesource.com/breakpad/breakpad). Please refer to their respective documentation on how to build and integrate them. Configure them with the following upload URL:
+|                    | `event.process` tag|macOS | Windows | Linux | 
+|--------------------|-------|---------|-------|---|
+| Electron `main` process    |`browser` |✅     | ✅       | ✅     |
+| Electron `renderer` process    |`renderer` |✅     | ✅       | ✅     |
+| Electron `utilityProcess`|`utility`|✅|✅|✅ <sup>1</sup>|
+| `child_process.fork` | `node`|✅     | ✅       | ❌     |  
+| `child_process.exec/spawn` | `unknown`|✅     | ❌       | ❌     |  
 
-```text
-___MINIDUMP_URL___
-```
-
-It currently not possible create breadcrumbs or other event meta data from native code. This has to happen in JavaScript. Support for this is planned in future releases.
+<sup>1</sup> Not working with Electron v29.4.6.
 
 ### Manual Crash Reporting
 
