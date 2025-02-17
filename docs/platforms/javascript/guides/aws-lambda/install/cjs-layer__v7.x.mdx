@@ -4,13 +4,13 @@ description: "Learn how to add the Sentry Node Lambda Layer to use Sentry in you
 sidebar_order: 1
 ---
 
-The easiest way to get started with Sentry is to use the Sentry [Lambda Layer](https://docs.aws.amazon.com/Lambda/latest/dg/configuration-layers.html) instead of adding `@sentry/aws-serverless` with `npm` or `yarn` [manually](../cjs-npm).
+The easiest way to get started with Sentry is to use the Sentry [Lambda Layer](https://docs.aws.amazon.com/Lambda/latest/dg/configuration-layers.html) instead of adding `@sentry/serverless` with `npm` or `yarn` manually.
 If you follow this guide, you don't have to worry about deploying Sentry dependencies alongside your function code.
 To actually start the SDK, you can decide between setting up the SDK using environment variables or in your Lambda function code. We recommend using environment variables as it's the easiest way to get started. [Initializing the SDK in code](#alternative-initialize-the-sdk-in-code) instead of setting environment variables gives you more control over the SDK setup if you need it.
 
 <Alert>
 
-This installation method **does not** work with Lambda functions running in EcmaScript Modules (ESM) mode, using `import` syntax. If you're running your function in ESM, follow the [ESM guide](../esm-npm).
+This installation method **does not** work with Lambda functions running in EcmaScript Modules (ESM) mode, using `import` syntax.
 
 </Alert>
 
@@ -31,9 +31,11 @@ Add the Sentry Layer by navigating to your Lambda function. Select **Layers**, t
 
 ![](./img/add_layer.png)
 
-Finally, set the region and copy the provided ARN value into the input.
+Modify and copy the ARN value for your region into the input, e.g. for region `us-west-1` and the current v7 Lambda layer version `10`:
 
-<LambdaLayerDetail canonical="aws-layer:node" />
+```
+arn:aws:Lambda:us-west-1:943013980633:layer:SentryNodeServerlessSDKv7:10
+```
 
 <br />
 
@@ -50,14 +52,12 @@ Select which Sentry features you'd like to install in addition to Error Monitori
 Set the following environment variables in your Lambda function configuration:
 
 ```bash {"onboardingOptions": {"performance": "3"}}
-NODE_OPTIONS="-r @sentry/aws-serverless/awslambda-auto"
+NODE_OPTIONS="-r @sentry/serverless/dist/awslambda-auto"
 SENTRY_DSN="___PUBLIC_DSN___"
 SENTRY_TRACES_SAMPLE_RATE="1.0"
 ```
 
-To set environment variables, navigate to your Lambda function, select **Configuration**, then **Environment variables**:
-
-![](./img/cjs_env_vars.png)
+To set environment variables, navigate to your Lambda function, select **Configuration**, then **Environment variables**.
 
 ## Alternative: Initialize the SDK in Code
 
@@ -68,7 +68,7 @@ Note that you don't have to actually install an NPM package for this to work, as
 Make sure you completed [step 1](#1-prerequisites) and [step 2](#2-add-the-sentry-lambda-layer) before proceeding.
 
 ```javascript {filename:index.js} {"onboardingOptions": {"performance": "5-8"}}
-const Sentry = require("@sentry/aws-serverless");
+const Sentry = require("@sentry/serverless");
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
