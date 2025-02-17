@@ -12,13 +12,14 @@ import './type.scss';
 import {Banner} from '../banner';
 import {Breadcrumbs} from '../breadcrumbs';
 import {CodeContextProvider} from '../codeContext';
+import {DocFeedback} from '../docFeedback';
 import {GitHubCTA} from '../githubCTA';
 import {Header} from '../header';
 import Mermaid from '../mermaid';
 import {PaginationNav} from '../paginationNav';
 import {PlatformSdkDetail} from '../platformSdkDetail';
 import {Sidebar} from '../sidebar';
-import {TableOfContents} from '../tableOfContents';
+import {SidebarTableOfContents} from '../sidebarTableOfContents';
 import {ReaderDepthTracker} from '../track-reader-depth';
 
 type Props = {
@@ -100,6 +101,8 @@ export function DocPage({
                 </div>
               </div>
 
+              <DocFeedback pathname={pathname} />
+
               {hasGithub && <GitHubCTA />}
             </div>
           </div>
@@ -107,7 +110,7 @@ export function DocPage({
           {hasToc && (
             <aside className="sticky h-[calc(100vh-var(--header-height))] top-[var(--header-height)] overflow-y-auto hidden xl:block w-[250px]">
               <div className="sidebar">
-                <TableOfContents />
+                <SidebarTableOfContents />
                 <PlatformSdkDetail />
               </div>
             </aside>

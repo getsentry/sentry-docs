@@ -1,0 +1,97 @@
+---
+title: Manual Setup
+sidebar_order: 3
+description: "Learn how to manually set up the SDK."
+---
+
+If you can't (or prefer not to) use the [gradle plugin](/platforms/kotlin/guides/kotlin-multiplatform/#install), you can follow the instructions below to configure your application manually.
+
+## Install
+
+Sentry captures data by using an SDK within your application’s runtime.
+
+To install the Kotlin Multiplatform SDK, you need to add the following to your `build.gradle.kts` file in your shared module:
+
+```kotlin {filename:shared/build.gradle.kts}
+plugins {
+    kotlin("multiplatform")
+    kotlin("native.cocoapods")
+    // .. your other plugins
+}
+
+kotlin {
+  android()
+  iosX64()
+  iosArm64()
+  iosSimulatorArm64()
+
+  sourceSets {
+    val commonMain by getting {
+      dependencies {
+        implementation("io.sentry:sentry-kotlin-multiplatform:{{@inject packages.version('sentry.kotlin.kmp', '0.0.1-alpha.2') }}")
+      }
+    }
+
+    // Android target
+    val androidMain by getting {
+      dependsOn(commonMain)
+    }
+
+    // Apple targets:
+    val iosMain by getting {
+      dependsOn(commonMain)
+    }
+  }
+
+  cocoapods {
+    // rest of configuration
+    summary = "Some description for the Shared Module"
+    homepage = "Link to the Shared Module homepage"
+    ios.deploymentTarget = "14.1"
+    podfile = project.file("../iosApp/Podfile")
+    // Make sure you use the proper version according to our Cocoa SDK Version Compatibility Table.
+    // TODO: link to table in sentry-kotlin-multiplatform gh repo
+    pod("Sentry") {
+      // Check the version compatibility table for the correct version
+      version = "8.36.0"
+      linkOnly = true
+      extraOpts += listOf("-compiler-option", "-fmodules")
+    }
+  }
+}
+```
+
+## Configure
+
+Configuration should happen as early as possible in your application's lifecycle.
+
+<PlatformContent includePath="getting-started-config" />
+
+## Verify
+
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+
+<PlatformContent includePath="getting-started-verify" />
+
+<Alert>
+
+Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+
+</Alert>
+
+To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+
+## Apple Installation Methods
+
+### Swift Package Manager (SPM)
+
+Swift Package Manager (SPM) is a powerful tool for managing dependencies in Swift that allows developers to enjoy a more native integration experience with Xcode.
+If you already use SPM or prefer it over other package managers on Apple platforms, this guide will show you how to install the Kotlin Multiplatform SDK while using Swift Package Manager.
+
+#### Install
+
+In order to install the Sentry Kotlin Multiplatform SDK, you need to use Cocoapods and Swift Package Manager simultaneously, which might seem unconventional at first, especially if you're accustomed to using SPM for all your dependencies. However, you can achieve a smooth integration by using the Kotlin Cocoapods plugin specifically for compiling and building the shared framework. You can then continue to manage all other dependencies with SPM as usual.
+
+Follow the steps for our primary installation method [Cocoapods](/platforms/kotlin/guides/kotlin-multiplatform/manual-setup/#install) to install the Sentry Kotlin Multiplatform SDK.
+
+After you've consumed the shared framework in your application via Cocoapods, you can continue with SPM for other dependencies without disrupting your existing workflow.

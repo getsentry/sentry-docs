@@ -148,34 +148,21 @@ Find more configuration options in the [Configuration](/platforms/java/configura
 
 ## Capture an Error
 
-To report an event manually you need to initialize a `Sentry` class. It is recommended that you use the static API via the `Sentry` class, but you can also construct and manage your own `IHub` instance. An example of each style is shown below:
+To report an event manually you need to initialize a `Sentry` class. It is recommended that you use the static API via the `Sentry` class. An example is shown below:
 
 
 ```java
-import io.sentry.IHub;
-import io.sentry.Hub;
 import io.sentry.Sentry;
 import io.sentry.protocol.User;
 
 public class MyClass {
-  private static IHub hub;
-
   public static void main(String... args) {
-    // NOTE: Replace the test DSN below with YOUR OWN DSN
     Sentry.init(options -> {
       options.setDsn("___PUBLIC_DSN___");
     });
 
-    // It is possible to go around the static Sentry API, which means
-    // you are responsible for making the IHub instance available
-    // to your code.
-    SentryOptions options = new SentryOptions();
-    options.setDsn("___PUBLIC_DSN___");
-    hub = new Hub(options);
-
     MyClass myClass = new MyClass();
     myClass.logWithStaticAPI();
-    myClass.logWithInstanceAPI();
   }
 
   /**
@@ -218,60 +205,23 @@ public class MyClass {
       Sentry.captureException(e);
     }
   }
-
-  /**
-   * Examples that use the SentryClient instance directly.
-   */
-  void logWithInstanceAPI() {
-
-    // Record a breadcrumb in the current scope. By default the last 100 breadcrumbs are kept.
-    hub.addBreadcrumb("User made an action");
-
-    // Set the user in the current scope.
-    User user = new User();
-    user.setEmail("hello@sentry.io");
-    hub.setUser(user);
-
-    // This sends a simple event to Sentry.
-    hub.captureMessage("This is a test");
-
-    try {
-      unsafeMethod();
-    } catch (Exception e) {
-      // This sends an exception event to Sentry.
-      hub.captureException(e);
-    }
-  }
 }
 ```
 
 ```kotlin
-import io.sentry.IHub
-import io.sentry.Hub
 import io.sentry.Sentry
 import io.sentry.SentryOptions
 import io.sentry.protocol.User
 
 class MyClass {
-  companion object {
-    private lateinit var hub: IHub
-  }
-
   fun main(args: Array<String>) {
     // NOTE: Replace the test DSN below with YOUR OWN DSN
     Sentry.init { options ->
       options.dsn = "___PUBLIC_DSN___"
     }
 
-    // It is possible to go around the static Sentry API, which means
-    // you are responsible for making the IHub instance available
-    // to your code.
-    val options = SentryOptions()
-    options.dsn = "___PUBLIC_DSN___"
-    hub = Hub(options)
     val myClass = MyClass()
     myClass.logWithStaticAPI()
-    myClass.logWithInstanceAPI()
   }
 
   /**
@@ -312,30 +262,6 @@ class MyClass {
       // This sends an exception event to Sentry using the statically stored instance
       // that was created in the ``main`` method.
       Sentry.captureException(e)
-    }
-  }
-
-  /**
-   * Examples that use the SentryClient instance directly.
-   */
-  fun logWithInstanceAPI() {
-
-    // Record a breadcrumb in the current scope. By default the last 100 breadcrumbs are kept.
-    hub.addBreadcrumb("User made an action")
-
-    // Set the user in the current scope.
-    val user = User().apply {
-      email = "hello@sentry.io"
-    }
-    hub.setUser(user)
-
-    // This sends a simple event to Sentry.
-    hub.captureMessage("This is a test")
-    try {
-      unsafeMethod()
-    } catch (e: Exception) {
-      // This sends an exception event to Sentry.
-      hub.captureException(e)
     }
   }
 }
@@ -451,7 +377,6 @@ You can also implement an `EventProcessor` that is able to automatically enhance
 
 ```java
 import io.sentry.EventProcessor;
-import io.sentry.IHub;
 import io.sentry.Sentry;
 import io.sentry.SentryEvent;
 import io.sentry.Hint

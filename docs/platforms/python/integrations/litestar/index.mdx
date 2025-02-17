@@ -26,12 +26,15 @@ Add `LitestarIntegration()` to your `integrations` list:
   ]}
 />
 
-```python {"onboardingOptions": {"performance": "6-8", "profiling": "9-12"}}
+```python {"onboardingOptions": {"performance": "9-11", "profiling": "12-15"}}
 import sentry_sdk
 from sentry_sdk.integrations.litestar import LitestarIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
+    # Add data like request headers and IP for users, if applicable;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for tracing.
     traces_sample_rate=1.0,
@@ -69,6 +72,40 @@ uvicorn app:app
 When you point your browser to [http://localhost:8000/hello](http://localhost:8000/hello) a transaction will be created in the Performance section of [sentry.io](https://sentry.io). Additionally, the `ZeroDivisionError` we've snuck into our `hello_world` handler will be sent to [sentry.io](https://sentry.io) and will be connected to the transaction.
 
 It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Options
+
+By adding `LitestarIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `LitestarIntegration` to change its behavior:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.litestar import LitestarIntegration
+
+sentry_sdk.init(
+    # ...
+    integrations=[
+        LitestarIntegration(
+            failed_request_status_codes={403, *range(500, 599)},
+        ),
+    ],
+)
+```
+
+You can pass the following keyword arguments to `LitestarIntegration()`:
+
+### `failed_request_status_codes`
+
+A `set` of integers that will determine when an `HTTPException` should be reported to Sentry. The `HTTPException` is reported to Sentry if its status code is contained in the `failed_request_status_codes` set.
+
+Examples of valid `failed_request_status_codes`:
+
+- `{500}` will only report `HTTPException` with status 500.
+- `{400, *range(500, 600)}` will report `HTTPException` with status 400 as well as those in the 5xx range.
+- `set()` (the empty set) will not report any `HTTPException` to Sentry.
+
+The default is `{*range(500, 600)}`, meaning that any `HTTPException` with a status in the 5xx range is reported to Sentry.
+
+Regardless of how `failed_request_status_codes` is set, any exceptions raised by the handler, which are not of type `HTTPException` (or a subclass) are reported to Sentry. For example, if your request handler raises an unhandled `AttributeError`, the `AttributeError` gets reported to Sentry, even if you have set `failed_request_status_codes=set()`.
 
 ## Supported Versions
 

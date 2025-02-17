@@ -6,6 +6,8 @@ description: "Learn about migrating from version 7.x to 8.0.0"
 
 ## Migrating from `io.sentry:sentry` `7.x` to `io.sentry:sentry` `8.0.0`
 
+Please make sure to use the same version for all Sentry dependencies, otherwise you might face an `AbstractMethodError` runtime error.
+
 ### Breaking Changes
 
 - `Contexts` no longer extends `ConcurrentHashMap`, instead we offer a selected set of methods.
@@ -109,16 +111,6 @@ If you've not been using the Sentry OpenTelemetry agent before, you can add `sen
 - Please use `sentry.properties` or environment variables to configure the SDK as the agent is now in charge of initializing the SDK and options coming from things like logging integrations or our Spring Boot integration will not take effect.
 - You may find the [docs page](https://docs.sentry.io/platforms/java/tracing/instrumentation/opentelemetry/#using-sentry-opentelemetry-agent-with-auto-initialization) useful.
 
-If you want to skip auto initialization of the SDK performed by the agent, please follow the steps above and set the environment variable `SENTRY_AUTO_INIT` to `false` then add the following to your `Sentry.init`:
-
-```
-Sentry.init(options -> {
-  options.setDsn(...);
-  OpenTelemetryUtil.applyOpenTelemetryOptions(options);
-  ...
-});
-```
-
-If you're using our Spring Boot integration, it will automatically detect our OpenTelemetry agent and take care of configuring the SDK for you.
+If you want to skip auto initialization of the SDK performed by the agent, please follow the steps above and set the environment variable `SENTRY_AUTO_INIT` to `false`, then use `Sentry.init` as usual.
 
 We've added more sample applications that showcase how to combine Sentry and OpenTelemetry (https://github.com/getsentry/sentry-java/tree/8.x.x/sentry-samples).

@@ -9,17 +9,42 @@ Sentry makes it possible to render a JSON representation of the view hierarchy o
 
 This feature only applies to SDKs with a user interface, such as the ones for mobile and desktop applications. In some environments like native iOS, rendering the view hierarchy requires the UI thread and in the event of a crash, that might not be available. Another example where the view hierarchy might not be available is when the event happens before the screen starts to load. So inherently, this feature is a best effort solution.
 
-<Note>
+<Alert>
 
 Deobfuscation for view hierarchies is fully supported for native SDKs, and React Native, but is currently not supported for Flutter.
 
-</Note>
+</Alert>
 
 ## Enabling View Hierarchy Attachments
 
 View hierarchy debugging is an opt-in feature. You can enable it as shown below:
 
 <PlatformContent includePath="enriching-events/attach-viewhierarchy" />
+
+### Customize View Hierarchy Capturing
+
+<Alert>
+
+Requires SDK version `8.13.0` or higher.
+
+</Alert>
+
+Capturing view hierarchies on Flutter is limited to once every 2 seconds by default to minimize performance impact. While this debounce interval is fixed, you can override individual capture decisions by implementing the `beforeCaptureViewHierarchy` option in your `SentryFlutterOptions`.
+
+The `beforeCaptureViewHierarchy` option allows you to customize behavior based on event data so you can decide when to capture view hierarchy and when not to. For example, you can decide to only capture view hierarchy for fatal events:
+
+```flutter {2-9}
+await SentryFlutter.init((options) {
+  options.beforeCaptureViewHierarchy = (event, hint, debounce) async {
+    // If debounce is active, skip capturing
+    if (debounce) {
+      return false;
+    }
+    // Capture if it's a fatal event
+    return event.level == SentryLevel.fatal;
+  };
+});
+```
 
 ## Viewing View Hierarchy Attachments
 

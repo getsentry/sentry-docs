@@ -1,6 +1,7 @@
 'use client';
 
 import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
+import {ArrowRightIcon} from '@radix-ui/react-icons';
 import {Button} from '@radix-ui/themes';
 import {captureException} from '@sentry/nextjs';
 import {
@@ -9,18 +10,19 @@ import {
   SentryGlobalSearch,
   standardSDKSlug,
 } from '@sentry-internal/global-search';
-import DOMPurify from 'dompurify';
-import Link from 'next/link';
-import {usePathname, useRouter} from 'next/navigation';
+import {usePathname} from 'next/navigation';
 import algoliaInsights from 'search-insights';
 
 import {useOnClickOutside} from 'sentry-docs/clientUtils';
-import {useKeyboardNavigate} from 'sentry-docs/hooks/useKeyboardNavigate';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 
 import styles from './search.module.scss';
 
+import {MagicIcon} from '../cutomIcons/magic';
 import {Logo} from '../logo';
+
+import {SearchResultItems} from './searchResultItems';
+import {relativizeUrl} from './util';
 
 // Initialize Algolia Insights
 algoliaInsights('init', {
@@ -32,8 +34,6 @@ algoliaInsights('init', {
 // so just generate a random token each time the page is loaded and
 // treat it as a random user.
 const randomUserToken = crypto.randomUUID();
-
-const MAX_HITS = 10;
 
 // this type is not exported from the global-search package
 type SentryGlobalSearchConfig = ConstructorParameters<typeof SentryGlobalSearch>[0];
@@ -59,28 +59,53 @@ const userDocsSites: SentryGlobalSearchConfig = [
 const config = isDeveloperDocs ? developerDocsSites : userDocsSites;
 const search = new SentryGlobalSearch(config);
 
-function relativizeUrl(url: string) {
-  return isDeveloperDocs
-    ? url
-    : url.replace(/^(https?:\/\/docs\.sentry\.io)(?=\/|$)/, '');
-}
-
 type Props = {
   autoFocus?: boolean;
   path?: string;
   searchPlatforms?: string[];
   showChatBot?: boolean;
+  useStoredSearchPlatforms?: boolean;
 };
 
-export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Props) {
+const STORAGE_KEY = 'sentry-docs-search-platforms';
+
+export function Search({
+  path,
+  autoFocus,
+  searchPlatforms = [],
+  useStoredSearchPlatforms = true,
+}: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState(``);
   const [results, setResults] = useState([] as Result[]);
   const [inputFocus, setInputFocus] = useState(false);
   const [showOffsiteResults, setShowOffsiteResults] = useState(false);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const [currentSearchPlatforms, setCurrentSearchPlatforms] = useState(searchPlatforms);
   const pathname = usePathname();
+
+  // Load stored platforms on mount
+  useEffect(() => {
+    const storedPlatforms = localStorage.getItem(STORAGE_KEY) ?? '[]';
+    if (!storedPlatforms) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(searchPlatforms));
+    } else if (
+      storedPlatforms &&
+      searchPlatforms.length === 0 &&
+      useStoredSearchPlatforms
+    ) {
+      const platforms = JSON.parse(storedPlatforms);
+      setCurrentSearchPlatforms(platforms);
+    }
+  }, [useStoredSearchPlatforms, searchPlatforms]);
+
+  // Update stored platforms when they change
+  useEffect(() => {
+    if (searchPlatforms.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(searchPlatforms));
+      setCurrentSearchPlatforms(searchPlatforms);
+    }
+  }, [searchPlatforms]);
 
   const handleClickOutside = useCallback((ev: MouseEvent) => {
     // don't close the search results if the user is clicking the expand button
@@ -147,18 +172,42 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
         return;
       }
 
-      const queryResults = await search.query(
-        inputQuery,
-        {
-          path,
-          platforms: searchPlatforms.map(
-            platform => standardSDKSlug(platform)?.slug ?? ''
-          ),
-          searchAllIndexes: showOffsiteResults,
-          ...args,
-        },
-        {clickAnalytics: true, analyticsTags: ['source:documentation']}
-      );
+      const queryResults = await search
+        .query(
+          inputQuery,
+          {
+            path,
+            platforms: currentSearchPlatforms.map(
+              platform => standardSDKSlug(platform)?.slug ?? ''
+            ),
+            searchAllIndexes: showOffsiteResults,
+            ...args,
+          },
+          {clickAnalytics: true, analyticsTags: ['source:documentation']}
+        )
+        .then(siteResults => {
+          if (isDeveloperDocs) {
+            return siteResults;
+          }
+          return siteResults.map(site => {
+            if (site.site !== 'docs') {
+              return site;
+            }
+            return {
+              ...site,
+              // put API results last
+              hits: site.hits.sort((a, b) => {
+                if (a.url.includes('/api/') && !b.url.includes('/api/')) {
+                  return 1;
+                }
+                if (b.url.includes('/api/') && !a.url.includes('/api/')) {
+                  return -1;
+                }
+                return 0;
+              }),
+            };
+          });
+        });
 
       if (loading) {
         setLoading(false);
@@ -171,20 +220,10 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
         setResults(queryResults);
       }
     },
-    [path, searchPlatforms, showOffsiteResults, loading]
+    [path, currentSearchPlatforms, showOffsiteResults, loading]
   );
 
   const totalHits = results.reduce((a, x) => a + x.hits.length, 0);
-
-  const flatHits = results.reduce<Hit[]>(
-    (items, item) => [...items, ...item.hits.slice(0, MAX_HITS)],
-    []
-  );
-
-  const {focused} = useKeyboardNavigate({
-    list: flatHits,
-    onSelect: hit => router.push(relativizeUrl(hit.url)),
-  });
 
   const trackSearchResultClick = useCallback((hit: Hit, position: number): void => {
     try {
@@ -268,122 +307,62 @@ export function Search({path, autoFocus, searchPlatforms = [], showChatBot}: Pro
             {inputFocus ? 'esc' : '⌘K'}
           </kbd>
         </div>
-        {showChatBot && (
-          <Fragment>
-            <span className="text-[var(--desatPurple10)] hidden md:inline">or</span>
-            <Button
-              asChild
-              variant="ghost"
-              color="gray"
-              size="3"
-              radius="medium"
-              className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer kapa-ai-class hidden md:flex"
-            >
-              <div>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="size-5"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"
-                  />
-                </svg>
-                <span>Ask AI</span>
-              </div>
-            </Button>
-          </Fragment>
-        )}
+        <Fragment>
+          <span className="text-[var(--desatPurple10)] hidden md:inline">or</span>
+          <Button
+            asChild
+            variant="ghost"
+            color="gray"
+            size="3"
+            radius="medium"
+            className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer kapa-ai-class hidden md:flex"
+          >
+            <div>
+              <MagicIcon />
+              <span>Ask AI</span>
+            </div>
+          </Button>
+        </Fragment>
       </div>
       {query.length >= 2 && inputFocus && (
         <div className={styles['sgs-search-results']}>
+          <div className={styles['sgs-ai']}>
+            <button
+              id="ai-list-entry"
+              className={styles['sgs-ai-button']}
+              onClick={() => {
+                if (window.Kapa?.open) {
+                  // close search results
+                  setInputFocus(false);
+                  // open kapa modal
+                  window.Kapa.open({query, submit: true});
+                }
+              }}
+            >
+              <MagicIcon className="size-6 text-[var(--sgs-color-hit-highlight)] flex-shrink-0" />
+              <div className={styles['sgs-ai-button-content']}>
+                <h6>
+                  Ask Sentry about{' '}
+                  <span>{query.length > 30 ? query.slice(0, 30) + '...' : query}</span>
+                </h6>
+                <div className={styles['sgs-ai-hint']}>
+                  Get an AI-powered answer to your question
+                </div>
+              </div>
+              <ArrowRightIcon className="size-5 text-[var(--sgs-color-hit-highlight)] ml-auto flex-shrink-0" />
+            </button>
+          </div>
+
           {loading && <Logo loading />}
 
           {!loading && totalHits > 0 && (
-            <div className={styles['sgs-search-results-scroll-container']}>
-              {results
-                .filter(x => x.hits.length > 0)
-                .map((result, i) => (
-                  <Fragment key={result.site}>
-                    {showOffsiteResults && (
-                      <h4 className={styles['sgs-site-result-heading']}>
-                        From {result.name}
-                      </h4>
-                    )}
-                    <ul
-                      className={`${styles['sgs-hit-list']} ${i === 0 ? '' : styles['sgs-offsite']}`}
-                    >
-                      {result.hits.slice(0, MAX_HITS).map((hit, index) => (
-                        <li
-                          key={hit.id}
-                          className={`${styles['sgs-hit-item']} ${
-                            focused?.id === hit.id ? styles['sgs-hit-focused'] : ''
-                          }`}
-                          ref={
-                            // Scroll to element on focus
-                            hit.id === focused?.id
-                              ? el => el?.scrollIntoView({block: 'nearest'})
-                              : undefined
-                          }
-                        >
-                          <Link
-                            href={relativizeUrl(hit.url)}
-                            onClick={e => handleSearchResultClick(e, hit, index)}
-                          >
-                            {hit.title && (
-                              <h6>
-                                <span
-                                  dangerouslySetInnerHTML={{
-                                    __html: DOMPurify.sanitize(hit.title, {
-                                      ALLOWED_TAGS: ['mark'],
-                                    }),
-                                  }}
-                                />
-                              </h6>
-                            )}
-                            {hit.text && (
-                              <span
-                                dangerouslySetInnerHTML={{
-                                  __html: DOMPurify.sanitize(hit.text, {
-                                    ALLOWED_TAGS: ['mark'],
-                                  }),
-                                }}
-                              />
-                            )}
-                            {hit.context && (
-                              <div className={styles['sgs-hit-context']}>
-                                {hit.context.context1 && (
-                                  <div className={styles['sgs-hit-context-left']}>
-                                    {hit.context.context1}
-                                  </div>
-                                )}
-                                {hit.context.context2 && (
-                                  <div className={styles['sgs-hit-context-right']}>
-                                    {hit.context.context2}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </Fragment>
-                ))}
-            </div>
-          )}
-
-          {!loading && totalHits === 0 && (
-            <div className={styles['sgs-hit-empty-state']}>
-              <button className="kapa-ai-class font-bold">
-                Can't find what you're looking for? Ask our AI!
-              </button>
-            </div>
+            <SearchResultItems
+              results={results}
+              onSearchResultClick={({event, hit, position}) =>
+                handleSearchResultClick(event, hit, position)
+              }
+              showOffsiteResults={showOffsiteResults}
+            />
           )}
 
           {!loading && !showOffsiteResults && (
