@@ -14,7 +14,6 @@ If you choose to use custom masking in your Session Replays, you may accidentall
 
 By default, our Session Replay SDK masks all text content, images, and user input. This helps ensure that no sensitive data will be exposed. You can also manually choose which parts of your app's data you want to mask by using the different options listed below.
 
-
 ## Mask by View Class
 
 You can choose which type of view you want to mask or unmask by using the `maskedViewClasses` or `unmaskedViewClasses` options.
@@ -34,6 +33,7 @@ You can also choose to mask or unmask a specific view instance by using the repl
   SentrySDK.replay.maskView(view: view)
   SentrySDK.replay.unmaskView(view: label)
 ```
+
 or
 
 ```swift
@@ -44,9 +44,10 @@ or
 ## SwiftUI
 
 Because of the way SwiftUI is transformed into UIKit, it will often be over-masked. A modifier like `background` uses the same element as an `Image`.
-In order to control the SwiftUI masking process, you need to use the `sentryReplayUnmask` and/or `sentryReplayMask` modifiers. 
+In order to control the SwiftUI masking process, you need to use the `sentryReplayUnmask` and/or `sentryReplayMask` modifiers.
 
 In this example we want to show the message, but not the user name.
+
 ```swift
   @Binding var user: String
 
@@ -72,23 +73,31 @@ To hide the username, we need to mask it.
         .sentryReplayMask()
     }
     .background(.blue)
-    .sentryReplayUnmask() 
+    .sentryReplayUnmask()
   }
 ```
 
-## Debugging session replay masking
+## Debugging Session Replay masking
 
-To visualize which elements are being masked, you can enable a masking overlay.
+To visualize which elements are being masked, you can enable a masking overlay, which will be displayed in a semi-transparent red overlay on top of the masked elements.
+This works for the simulator, device and Xcode Preview.
 
-Call the following method to display the red masking overlay on all masked views:
+Call the following method from anywhere in your app to display the red masking overlay on all masked views:
 
 ```swift
-  SentrySDK.replay.showMaskingOverlay()
+  SentrySDK.replay.showMaskPreview()
 ```
 
-You can preview masking during the design phase of your SwiftUI views using the `sentryReplayPreviewMask` modifier. This helps ensure proper masking without affecting the final release build.
+By default the overlay will be opaque. To configure the opacity of the overlay to be semi-transparent, you can pass a custom value as a parameter:
 
-To avoid accidentally including it in production, apply the modifier only in your preview code:
+```swift
+  SentrySDK.replay.showMaskPreview(0.5)
+```
+
+To preview masking during the design phase of your SwiftUI views, you can use the `sentryReplayPreviewMask` modifier.
+This helps ensure proper masking without affecting the final release build.
+
+This view modifier works on the simulator, device and Xcode Preview, therefore we recommend to apply the modifier only in your preview code:
 
 ```swift
 struct ContentView_Previews: PreviewProvider {
@@ -98,5 +107,3 @@ struct ContentView_Previews: PreviewProvider {
   }
 }
 ```
-
-This approach allows you to fine-tune masking behavior while designing your UI, ensuring sensitive information is properly protected in production.
