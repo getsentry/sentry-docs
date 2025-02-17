@@ -1,0 +1,41 @@
+<PlatformSection notSupported={["android"]}>
+
+```java {tabTitle: Java}
+import io.sentry.Sentry;
+import io.sentry.SentryLevel;
+
+Sentry.withIsolationScope(scope -> {
+  Sentry.setTag("my-tag", "my value");
+  scope.setLevel(SentryLevel.WARNING);
+
+  // will be tagged with my-tag="my value"
+  Sentry.captureException(new Exception("my error"));
+});
+
+// will not be tagged with my-tag
+Sentry.captureException(new Exception("my other error"));
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+import io.sentry.SentryLevel
+
+Sentry.withIsolationScope { scope ->
+  Sentry.setTag("my-tag", "my value")
+  scope.level = SentryLevel.WARNING
+
+  // will be tagged with my-tag="my value"
+  Sentry.captureException(Exception("my error"))
+}
+
+// will not be tagged with my-tag
+Sentry.captureException(Exception("my other error"))
+```
+
+<Alert title="Important">
+
+In the Java SDK `withIsolationScope` does **not** work reliably in `globalHubMode`, as the SDK always uses the global root scopes unless you call the `captureXXX` methods directly on `Scopes`.
+
+</Alert>
+
+</PlatformSection>

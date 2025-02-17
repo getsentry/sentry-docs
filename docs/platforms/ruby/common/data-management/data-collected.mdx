@@ -1,0 +1,57 @@
+---
+title: Data Collected
+description: "See what data is collected by the Sentry SDK."
+sidebar_order: 1
+---
+
+Sentry takes data privacy very seriously and has default settings in place that prioritize data safety, especially when it comes to personally identifiable information (PII) data. When you add the Sentry SDK to your application, you allow it to collect data and send it to Sentry during the runtime of your application.
+
+The category types and amount of data collected vary, depending on the integrations you've enabled in the Sentry SDK. Here's a list of data categories the Sentry Python SDK collects:
+
+## HTTP Headers
+
+By default, the Sentry SDK will include non-sensitive HTTP headers from a `Rack` request. Sensitive headers such as IP addresses and `HTTP_AUTHORIZATION` will be filtered out by default.
+
+To start sending all HTTP headers, set `send_default_pii = true` in the `Sentry.init` call.
+
+## Cookies
+
+By default, the Sentry SDK doesn't send cookies.
+
+If you want to send cookies, set `send_default_pii = true` in the `Sentry.init` call.
+
+## Users' IP Address
+
+By default, the Sentry SDK doesn't send the user's IP address.
+
+To enable sending the user's [IP addresses from the Rack environment](https://github.com/getsentry/sentry-ruby/blob/cc1dc53c0d60a21db7ad95cac05590ec23c82910/sentry-ruby/lib/sentry/interfaces/request.rb#L7-L12), set `send_default_pii = true` in the `Sentry.init` call.
+
+## Request URL
+
+The request URL (without query string) of outgoing and incoming HTTP requests is **always sent to Sentry**. Depending on your application, this could potentially contain PII data.
+
+## Request Query String
+
+The query string of outgoing and incoming HTTP requests is only sent to Sentry if `send_default_pii = true` since they could potentially contain PII data (such as auth tokens).
+
+## Request Body
+
+The request body of incoming HTTP requests is sent to Sentry only if `send_default_pii = true`.
+
+We try to decode JSON and form data bodies in UTF-8 encoding. Raw byte payloads will not be sent to Sentry.
+
+## Source Context
+
+When an unhandled exception is sent to Sentry, a snapshot of the source code surrounding the line where the error originates is sent with it.
+
+To opt out of sending this source context to Sentry, set `context_lines = nil`.
+
+## Local Variables In Stack Trace
+
+By default, Sentry for Ruby does not include local variables in the frames of captured exceptions, mainly due to performance overhead reasons.
+
+You can start sending local variables to Sentry by setting `include_local_variables = true` in the `Sentry.init` call.
+
+## SQL Queries
+
+While SQL queries are sent to Sentry, neither the full SQL query (`UPDATE app_user SET password='supersecret' WHERE id=1;`), nor the values of its parameters will ever be sent. A parameterized version of the query (`UPDATE app_user SET password='%s' WHERE id=%s;`) is sent instead.

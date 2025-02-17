@@ -79,7 +79,7 @@ export default async function Page(props: {
 
   return (
     <DocPage frontMatter={frontMatter}>
-      <Alert level="info">{platformInfo}</Alert>
+      <Alert>{platformInfo}</Alert>
 
       <ul>
         {platformList.map(p => (

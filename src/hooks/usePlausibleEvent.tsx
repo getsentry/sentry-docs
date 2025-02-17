@@ -4,6 +4,10 @@ import {ReadProgressMilestone} from 'sentry-docs/types/plausible';
 
 // Adding custom events here will make them available via the hook
 type PlausibleEventProps = {
+  ['Doc Feedback']: {
+    helpful: boolean;
+    page: string;
+  };
   ['Read Progress']: {
     page: string;
     readProgress: ReadProgressMilestone;

@@ -1,0 +1,24 @@
+Before using this integration, you need to install and instrument Unleash in your app. Learn more by reading [Unleash's SDK reference](https://docs.getunleash.io/reference/sdks/javascript-browser) and [quickstart](https://docs.getunleash.io/quickstart).
+
+```javascript
+import * as Sentry from '@sentry/gatsby';
+import { UnleashClient } from 'unleash-proxy-client';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  integrations: [Sentry.unleashIntegration({unleashClientClass: UnleashClient})],
+});
+
+const unleash = new UnleashClient({
+  url: 'https://<your-unleash-instance>/api/frontend',
+  clientKey: '<your-client-side-token>',
+  appName: 'my-webapp',
+});
+
+unleash.start();
+
+// Evaluate a flag with a default value. You may have to wait for your client to synchronize first.
+unleash.isEnabled('test-flag');
+
+Sentry.captureException(new Error('Something went wrong!'));
+```
