@@ -13,7 +13,7 @@ This will register Sentry's [loader hook](https://nodejs.org/api/module.html#cus
 ## Scenarios where `--import` does not work
 
 - You're unable to add Node CLI flags or environment variables scoped to the function runtime, meaning these variables aren't applied in other scopes, such as build time.
-- You don't know the path to the Nuxt server folder in the build output
+- You don't know the path to the SolidStart server folder in the build output
 - At this time, it isn't possible to properly configure `--import` in **Netlify**.
 - At this time, it isn't possible to properly configure `--import` in **Vercel**.
 
@@ -22,27 +22,27 @@ Check out the guide for using <PlatformLink to="/install/limited-server-tracing"
 
 ## Initializing Sentry with `--import`
 
-By default, the SDK will add the Sentry server config to the build output (typically, `.output/server/sentry.server.config.mjs`).
+By default, the SDK will add the Sentry server instrumentation file to the build output (typically, `.output/server/instrument.server.mjs`).
 
 ### 1. Adding `--import` to `node` command
 
-After building your Nuxt app with `nuxi build`, add the `--import` flag followed by the Sentry server config path to the `node` command.
-With the default Nitro Node preset, this typically looks like this:
+After building your SolidStart app with `vinxi build`, add the `--import` flag followed by the Sentry server instrumentation file path to the `node` command.
+With the default Vinxi Node preset, this typically looks like this:
 
 ```bash
-node --import ./.output/server/sentry.server.config.mjs .output/server/index.mjs
+node --import ./.output/server/instrument.server.mjs .output/server/index.mjs
 ```
 
 Check the log at the very end of the console output after building the application.
 This will print the node command with the server entry path for your application (`node .output/server/index.mjs` with the Node preset).
-Make sure to update the paths accordingly, especially when using a different Nitro preset.
+Make sure to update the paths accordingly, especially when using a different Vinxi preset.
 
 To make things easier, add a script in the `package.json`:
 
 ```json {filename:package.json}
 {
   "scripts": {
-    "start": "node --import ./.output/server/sentry.server.config.mjs .output/server/index.mjs"
+    "start": "node --import ./.output/server/instrument.server.mjs .output/server/index.mjs"
   }
 }
 ```
@@ -55,10 +55,10 @@ Most deployment platforms support this through two primary methods:
 
 #### Option 1: Direct CLI Flag
 ```bash
-node --import ./.output/server/sentry.server.config.mjs your-server-entry.mjs
+node --import ./.output/server/instrument.server.mjs your-server-entry.mjs
 ```
 
 #### Option 2: Environment Variable
 ```bash
-NODE_OPTIONS='--import .output/server/sentry.server.config.mjs'
+NODE_OPTIONS='--import ./.output/server/instrument.server.mjs'
 ```
