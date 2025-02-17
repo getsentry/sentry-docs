@@ -14,7 +14,7 @@ sidebar_order: 1
 
 Options that can be read from an environment variable (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically.
 
-<SdkOption name="dsn" type="String">
+<SdkOption name="dsn" type="String" envVar="SENTRY_DSN" propertiesName="dsn" applicationPropertiesName="sentry.dsn" applicationYmlName="sentry.dsn">
 
 The DSN tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable also does not exist, the SDK will just not send any events.
 
@@ -22,11 +22,37 @@ In runtimes without a process environment (such as the browser) that fallback do
 
 Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
 
+```java
+options.setDsn("___PUBLIC_DSN___");
+```
+```kotlin
+options.dsn = "___PUBLIC_DSN___"
+```
+```properties {tabTitle:sentry.properties}
+dsn=___PUBLIC_DSN___
+```
+```bash {tabTitle:Environment Variable}
+SENTRY_DSN="___PUBLIC_DSN___"
+```
+
 </SdkOption>
 
-<SdkOption name="debug" type="boolean" defaultValue="false">
+<SdkOption name="debug" type="boolean" defaultValue="false" envVar="SENTRY_DEBUG">
 
 Turns debug mode on or off. If debug is enabled SDK will attempt to print out useful debugging information if something goes wrong with sending the event. The default is always `false`. It's generally not recommended to turn it on in production, though turning `debug` mode on will not cause any safety concerns.
+
+```java
+options.setDebug(true);
+```
+```kotlin
+options.debug = true
+```
+```properties {tabTitle:sentry.properties}
+debug=true
+```
+```bash {tabTitle:Environment Variable}
+SENTRY_DEBUG=true
+```
 
 </SdkOption>
 
@@ -40,29 +66,75 @@ Enabling `debug` mode makes the SDK generate as much diagnostic data as possible
 - `error`: Only SDK internal errors are printed
 - `fatal`: Only critical errors are printed
 
+```java
+options.setDiagnosticLevel(SentryLevel.ERROR);
+```
+```kotlin
+options.diagnosticLevel = SentryLevel.ERROR
+```
+
 </SdkOption>
 
-<SdkOption name="dist" type="String">
+<SdkOption name="dist" type="String" envVar="SENTRY_DIST">
 
 Sets the distribution of the application. Distributions are used to disambiguate build or deployment variants of the same release of an application. For example, the dist can be the build number of an Xcode build or the version code of an Android build.
 
 The dist has a max length of 64 characters.
 
+```java
+options.setDist("123456");
+```
+```kotlin
+options.dist = "123456"
+```
+```properties {tabTitle:sentry.properties}
+dist=123456
+```
+```bash {tabTitle:Environment Variable}
+SENTRY_DIST="123456"
+```
+
 </SdkOption>
 
-<SdkOption name="release" type="String">
+<SdkOption name="release" type="String" envVar="SENTRY_RELEASE">
 
 Sets the release. Some SDKs will try to automatically configure a release out of the box but it's a better idea to manually set it to guarantee that the release is in sync with your deploy integrations or source map uploads. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
 
 By default the SDK will try to read this value from the `SENTRY_RELEASE` environment variable.
 
+```java
+options.setRelease("1.0.0");
+```
+```kotlin
+options.release = "1.0.0"
+```
+```properties {tabTitle:sentry.properties}
+release=1.0.0
+```
+```bash {tabTitle:Environment Variable}
+SENTRY_RELEASE="1.0.0
+```
+
 </SdkOption>
 
-<SdkOption name="environment" type="String" defaultValue="production">
+<SdkOption name="environment" type="String" defaultValue="production" envVar="SENTRY_ENVIRONMENT">
 
 Sets the environment. This string is freeform and is set to `production` by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
 
 By default, the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable. If this value isn't set, it will use the default `production`.
+
+```java
+options.setEnvironment("staging");
+```
+```kotlin
+options.environment = "staging"
+```
+```properties {tabTitle:sentry.properties}
+environment=staging
+```
+```bash {tabTitle:Environment Variable}
+SENTRY_ENVIRONMENT="staging"
+```
 
 </SdkOption>
 
@@ -70,17 +142,38 @@ By default, the SDK will try to read this value from the `SENTRY_ENVIRONMENT` en
 
 Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly.
 
+```java
+options.setSampleRate(1.0);
+```
+```kotlin
+options.sampleRate = 1.0
+```
+
 </SdkOption>
 
 <SdkOption name="maxBreadcrumbs" type="int" defaultValue="100">
 
 This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`, but you can set this to any number. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
 
+```java
+options.setMaxBreadcrumbs(50);
+```
+```kotlin
+options.maxBreadcrumbs = 50
+```
+
 </SdkOption>
 
 <SdkOption name="maxCacheItems" type="int" defaultValue="30">
 
 The maximum number of [envelopes](https://develop.sentry.dev/sdk/data-model/envelopes/) to keep in cache. The SDKs use envelopes to send data, such as events, attachments, user feedback, and sessions to sentry.io. An envelope can contain multiple items, such as an event with a session and two attachments. Depending on the usage of the SDK, the size of an envelope can differ. If the number of envelopes in the local cache exceeds `max-cache-items`, the SDK deletes the oldest envelope and migrates the sessions to the next envelope to maintain the integrity of your release health stats. The default is `30`.
+
+```java
+options.setMaxCacheItems(15);
+```
+```kotlin
+options.maxCacheItems = 15
+```
 
 </SdkOption>
 
@@ -90,9 +183,16 @@ When enabled, stack traces are automatically attached to all messages logged. St
 
 Grouping in Sentry is different for events with stack traces and without. As a result, you will get new groups as you enable or disable this flag for certain events.
 
+```java
+options.setAttachStacktrace(false);
+```
+```kotlin
+options.isAttachStacktrace = false
+```
+
 </SdkOption>
 
-<SdkOption name="sendDefaultPii" type="boolean" defaultValue="false">
+<SdkOption name="sendDefaultPii" type="boolean" defaultValue="false" envVar="SENTRY_SEND_DEFAULT_PII">
 
 If this flag is enabled, certain personally identifiable information (PII) is added by active integrations. By default, no such data is sent.
 
@@ -104,39 +204,104 @@ If you are using Sentry in your mobile app, read our [frequently asked questions
 
 If you enable this option, be sure to manually remove what you don't want to send using our features for managing [Sensitive Data](../../data-management/sensitive-data/).
 
+```java
+options.setSendDefaultPii(true);
+```
+```kotlin
+options.isSendDefaultPii = true
+```
+```properties {tabTitle:sentry.properties}
+send-default-pii=true
+```
+```bash {tabTitle:Environment Variable}
+SENTRY_SEND_DEFAULT_PII=true
+```
+
 </SdkOption>
 
-<SdkOption name="serverName" type="String">
+<SdkOption name="serverName" type="String" envVar="SENTRY_SERVER_NAME">
 
 This option can be used to supply a server name. When provided, the name of the server is sent along and persisted in the event. For many integrations, the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server.
 
 Most SDKs will attempt to auto-discover this value.
 
+```java
+options.setServerName("srv1");
+```
+```kotlin
+options.serverName = "srv1"
+```
+```properties {tabTitle:sentry.properties}
+servername=srv1
+```
+```bash {tabTitle:Environment Variable}
+SENTRY_SERVER_NAME="srv1"
+```
+
 </SdkOption>
 
-<SdkOption name="inAppInclude" type="List<String>">
+<SdkOption name="inAppInclude" type="List<String>" envVar="SENTRY_IN_APP_INCLUDES">
 
 A list of string prefixes of module names that belong to the app. This option takes precedence over `in-app-exclude`.
 
 Sentry differentiates stack frames that are directly related to your application ("in application") from stack frames that come from other packages such as the standard library, frameworks, or other dependencies. The application package is automatically marked as `inApp`. The difference is visible in [sentry.io](https://sentry.io), where only the "in application" frames are displayed by default.
 
+```java
+options.addInAppInclude("io.sentry.samples");
+```
+```kotlin
+options.addInAppInclude("io.sentry.samples")
+```
+```properties {tabTitle:sentry.properties}
+in-app-includes=io.sentry.samples,io.sentry.examples
+```
+```bash {tabTitle:Environment Variable}
+SENTRY_IN_APP_INCLUDES="io.sentry.samples,io.sentry.examples"
+```
+
 </SdkOption>
 
-<SdkOption name="inAppExclude" type="List<String>">
+<SdkOption name="inAppExclude" type="List<String>" envVar="SENTRY_IN_APP_EXCLUDES">
 
 A list of string prefixes of module names that do not belong to the app, but rather to third-party packages. Modules considered not part of the app will be hidden from stack traces by default.
 
 This option can be overridden using <PlatformIdentifier name="in-app-include" />.
 
+```java
+options.addInAppExclude("io.sentry.samples");
+```
+```kotlin
+options.addInAppExclude("io.sentry.samples")
+```
+```properties {tabTitle:sentry.properties}
+in-app-excludes=io.sentry.samples,io.sentry.examples
+```
+```bash {tabTitle:Environment Variable}
+SENTRY_IN_APP_EXCLUDES="io.sentry.samples,io.sentry.examples"
+```
+
 </SdkOption>
 
-<SdkOption name="ignoredExceptionsForType" type="Set<Class<? extends Throwable>>">
+<SdkOption name="ignoredExceptionsForType" type="Set<Class<? extends Throwable>>" envVar="SENTRY_IGNORED_EXCEPTIONS_FOR_TYPE">
 
 A list of exception types that will be filtered out before sending to Sentry.
 
+```java
+options.addIgnoredExceptionForType("java.lang.IllegalStateException");
+```
+```kotlin
+options.addIgnoredExceptionForType("java.lang.IllegalStateException")
+```
+```properties {tabTitle:sentry.properties}
+ignored-exceptions-for-type=io.sentry.SomeException,java.lang.IllegalStateException
+```
+```bash {tabTitle:Environment Variable}
+SENTRY_IGNORED_EXCEPTIONS_FOR_TYPE="io.sentry.SomeException,java.lang.IllegalStateException"
+```
+
 </SdkOption>
 
-<SdkOption name="maxRequestBodySize" type="RequestSize" defaultValue="RequestSize.NONE">
+<SdkOption name="maxRequestBodySize" type="RequestSize" defaultValue="RequestSize.NONE" envVar="SENTRY_MAX_REQUEST_BODY_SIZE">
 
 This parameter controls whether integrations should capture HTTP request bodies. It can be set to one of the following values:
 
@@ -145,31 +310,83 @@ This parameter controls whether integrations should capture HTTP request bodies.
 - `medium`: Medium and small requests will be captured (typically 10KB).
 - `always`: The SDK will always capture the request body as long as Sentry can make sense of it.
 
+```java
+options.setMaxRequestBodySize(RequestSize.MEDIUM);
+```
+```kotlin
+options.maxRequestBodySize = RequestSize.MEDIUM
+```
+```properties {tabTitle:sentry.properties}
+max-request-body-size=MEDIUM
+```
+```bash {tabTitle:Environment Variable}
+SENTRY_MAX_REQUEST_BODY_SIZE="MEDIUM"
+```
+
 </SdkOption>
 
-<SdkOption name="enabled" type="boolean" defaultValue="true">
+<SdkOption name="enabled" type="boolean" defaultValue="true" envVar="SENTRY_ENABLED">
 
 Specifies whether this SDK should send events to Sentry. Setting this to `false` doesn't prevent all overhead from Sentry instrumentation. To disable Sentry completely, depending on environment, call `Sentry.init` conditionally.
 
+```java
+options.setEnabled(false);
+```
+```kotlin
+options.isEnabled = false
+```
+```properties {tabTitle:sentry.properties}
+enabled=false
+```
+```bash {tabTitle:Environment Variable}
+SENTRY_ENABLED=false
+```
+
 </SdkOption>
 
-<SdkOption name="sendClientReports" type="boolean" defaultValue="true">
+<SdkOption name="sendClientReports" type="boolean" defaultValue="true" envVar="SENTRY_SEND_CLIENT_REPORTS">
 
 Set this boolean to `false` to disable sending of client reports. Client reports are a protocol feature that let clients send status reports about themselves to Sentry. They are currently mainly used to emit outcomes for events that were never sent.
 
 _(New in version 6.0.0)_
 
+```java
+options.setSendClientReports(false);
+```
+```kotlin
+options.isSendClientReports = false
+```
+```properties {tabTitle:sentry.properties}
+send-client-reports=false
+```
+```bash {tabTitle:Environment Variable}
+SENTRY_SEND_CLIENT_REPORTS=false
+```
+
 </SdkOption>
 
-<SdkOption name="forceInit" type="boolean" defaultValue="false">
+<SdkOption name="forceInit" type="boolean" defaultValue="false" envVar="SENTRY_FORCE_INIT">
 
 Set this boolean to `true` to force a call to `Sentry.init` to re-initialize the SDK, even if the SDK has already been initialized by a high priority integration.
 
 _(New in version 8.0.0)_
 
+```java
+options.setForceInit(true);
+```
+```kotlin
+options.isForceInit = true
+```
+```properties {tabTitle:sentry.properties}
+force-init=true
+```
+```bash {tabTitle:Environment Variable}
+SENTRY_FORCE_INIT=true
+```
+
 </SdkOption>
 
-<SdkOption name="enableBackpressureHandling" type="boolean" defaultValue="true">
+<SdkOption name="enableBackpressureHandling" type="boolean" defaultValue="true" envVar="SENTRY_ENABLE_BACKPRESSURE_HANDLING">
 
 Set this boolean to `false` to disable automatic downsampling of transactions while the system is under load. The `tracesSampleRate` is halved for every failing health check up to 10 times, (roughly 0.001% of the original `tracesSampleRate`). Any positive health check will reset `tracesSampleRate` to its original value. Health checks run in the background every 10 seconds, checking for queue drops and rate limiting.
 
@@ -177,15 +394,18 @@ Note: Starting with version 7.8.0 backpressure handling has changed from opt-in 
 
 _(New in version 7.1.0)_
 
-</SdkOption>
-
-## Integration Configuration
-
-For many platform SDKs integrations can be configured alongside it. On some platforms that happen as part of the `init()` call, in some others, different patterns apply.
-
-<SdkOption name="integrations" type="Set<String>">
-
-In some SDKs, the integrations are configured through this parameter on library initialization. For more information, please see our documentation for a specific integration.
+```java
+options.setEnableBackpressureHandling(false);
+```
+```kotlin
+options.isEnableBackpressureHandling = false
+```
+```properties {tabTitle:sentry.properties}
+enable-backpressure-handling=false
+```
+```bash {tabTitle:Environment Variable}
+SENTRY_ENABLE_BACKPRESSURE_HANDLING=false
+```
 
 </SdkOption>
 
@@ -199,11 +419,37 @@ This function is called with an SDK-specific message or error event object, and 
 
 By the time `beforeSend` is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
 
+Please see <PlatformLink to="/configuration/filtering/#using-before-send">our documentation on how to filter errors</PlatformLink> for more details.
+
+```java
+options.setBeforeSend((event, hint) -> {
+    return event;
+});
+```
+```kotlin
+options.beforeSend = SentryOptions.BeforeSendCallback { event, hint ->
+    event
+}
+```
+
 </SdkOption>
 
 <SdkOption name="beforeSendTransaction" type="BeforeSendTransactionCallback">
 
 This function is called with an SDK-specific transaction event object, and can return a modified transaction event object, or `null` to skip reporting the event. One way this might be used is for manual PII stripping before sending.
+
+Please see <PlatformLink to="/configuration/filtering/#using-before-send-transaction">our documentation on how to filter transaction events</PlatformLink> for more details.
+
+```java
+options.setBeforeSendTransaction((event, hint) -> {
+    return event;
+});
+```
+```kotlin
+options.beforeSendTransaction = SentryOptions.BeforeSendTransactionCallback { event, hint ->
+    event
+}
+```
 
 </SdkOption>
 
@@ -212,6 +458,17 @@ This function is called with an SDK-specific transaction event object, and can r
 This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
 
 The callback typically gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
+
+```java
+options.setBeforeBreadcrumb((breadcrumb, hint) -> {
+    return breadcrumb;
+});
+```
+```kotlin
+options.beforeBreadcrumb = SentryOptions.BeforeBreadcrumbCallback { breadcrumb, hint ->
+    breadcrumb
+}
+```
 
 </SdkOption>
 
@@ -229,29 +486,56 @@ Switches out the transport used to send events. How this works depends on the SD
 
 When set, a proxy can be configured that should be used for outbound requests. This is also used for HTTPS requests. SDKs will attempt to default to the system-wide configured proxy, if possible. For instance, on Unix systems, the `HTTP_PROXY` environment variable will be picked up.
 
+```java
+options.setProxy(new Proxy("sentry.io", "80"));
+```
+```kotlin
+options.proxy = Proxy("sentry.io", "80")
+```
+
 </SdkOption>
 
 <SdkOption name="shutdownTimeoutMillis" type="long" defaultValue="2000">
 
 Controls how many seconds to wait before shutting down. Sentry SDKs send events from a background queue. This queue is given a certain amount to drain pending events. The default is SDK specific but typically around two seconds. Setting this value too low may cause problems for sending events from command line applications. Setting the value too high will cause the application to block for a long time for users experiencing network connectivity problems.
 
+```java
+options.setShutdownTimeoutMillis(4000);
+```
+```kotlin
+options.shutdownTimeoutMillis = 4000
+```
+
 </SdkOption>
 
 ## Tracing Options
 
-<SdkOption name="tracesSampleRate" type="Double">
+<SdkOption name="tracesSampleRate" type="Double" envVar="SENTRY_TRACES_SAMPLE_RATE">
 
 A number between `0` and `1`, controlling the percentage chance a given transaction will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Applies equally to all transactions created in the app. Either this or `tracesSampler` must be defined to enable tracing.
+
+```java
+options.setTracesSampleRate(1.0);
+```
+```kotlin
+options.tracesSampleRate = 1.0
+```
+```properties {tabTitle:sentry.properties}
+traces-sample-rate=1.0
+```
+```bash {tabTitle:Environment Variable}
+SENTRY_TRACES_SAMPLE_RATE=1.0
+```
 
 </SdkOption>
 
 <SdkOption name="tracesSampler" type="TracesSamplerCallback">
 
-A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or `tracesSampleRate` must be defined to enable tracing.
+A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or `tracesSampleRate` must be defined to enable tracing. Please see <PlatformLink to="/configuration/filtering/#using-traces-sampler">our documentation on how to filter transaction events</PlatformLink> for more details.
 
 </SdkOption>
 
-<SdkOption name="tracePropagationTargets" type="List<String>">
+<SdkOption name="tracePropagationTargets" type="List<String>" defaultValue=".*" envVar="SENTRY_TRACE_PROPAGATION_TARGETS">
 
 An optional property that controls which downstream services receive tracing data, in the form of a `sentry-trace` and a `baggage` header attached to any outgoing HTTP requests.
 
@@ -261,10 +545,30 @@ String entries do not have to be full matches, meaning the URL of a request is m
 
 If `tracePropagationTargets` is not provided, trace data is attached to every outgoing request from the instrumented client.
 
+```java
+options.setTracePropagationTargets(Arrays.asList("sentry.io", "sentry.dev"));
+```
+```kotlin
+options.tracePropagationTargets = listOf("sentry.io", "sentry.dev")
+```
+```properties {tabTitle:sentry.properties}
+trace-propagation-targets=sentry.io,sentry.dev
+```
+```bash {tabTitle:Environment Variable}
+SENTRY_TRACE_PROPAGATION_TARGETS="sentry.io,sentry.dev"
+```
+
 </SdkOption>
 
 <SdkOption name="traceOptionsRequests" type="boolean" defaultValue="true">
 
 Set this boolean to `false` to disable tracing for `OPTIONS` requests. This options default value will likely be changed in the next major version, meaning you will have to set it to `true` if you want to keep tracing `OPTIONS` requests.
+
+```java
+options.setTraceOptionsRequests(false);
+```
+```kotlin
+options.isTraceOptionsRequests = false
+```
 
 </SdkOption>
