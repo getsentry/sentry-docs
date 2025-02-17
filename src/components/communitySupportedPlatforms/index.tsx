@@ -1,5 +1,4 @@
 import Image from 'next/image';
-import Link from 'next/link';
 
 import {ExternalLink} from '../externalLink';
 
@@ -110,17 +109,13 @@ const CommunityPlatforms = [
 
 export function CommunitySupportedPlatforms() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {CommunityPlatforms.map(platform => (
-        <Link
-          href={platform.url}
-          key={platform.name}
-          style={{
-            textDecoration: 'none',
-            color: 'var(--foreground) !important',
-          }}
-        >
-          <div className="flex gap-2 items-center">
+        <li key={platform.name} style={{listStyle: 'none', padding: '0', margin: '0'}}>
+          <ExternalLink
+            href={platform.url}
+            className="flex gap-2 items-center !no-underline"
+          >
             <Image
               src={platform.icon.src}
               width={20}
@@ -128,13 +123,10 @@ export function CommunitySupportedPlatforms() {
               alt={platform.name}
               className="!border-none !shadow-none"
             />
-            <div className="flex space-x-1">
-              <span className="text-[var(--accent)]">{platform.name}</span>
-              <ExternalLink href={platform.url} />
-            </div>
-          </div>
-        </Link>
+            <span className="text-[var(--accent)]">{platform.name}</span>
+          </ExternalLink>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }
