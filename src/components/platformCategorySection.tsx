@@ -32,6 +32,19 @@ const isSupported = (
   return true;
 };
 
+/**
+ * Conditionally renders children based on platform categories.
+ * It filters content by checking if the current platform
+ * or guide matches the specified supported/not supported categories.
+ *
+ * @param supported - Array of platform categories that should show this content
+ * @param notSupported - Array of platform categories that should not show this content
+ * @param noGuides - If true, content will not be shown for platform guides
+ * @param children - Content to be conditionally rendered
+ *
+ * For filtering by platform categories,
+ * use PlatformCategorySection instead of PlatformSection.
+ */
 export function PlatformCategorySection({
   supported = [],
   notSupported = [],

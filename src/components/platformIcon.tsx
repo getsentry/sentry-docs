@@ -1,7 +1,6 @@
 import Image from 'next/image';
 import ActixSVG from 'platformicons/svg/actix.svg';
 import AiohttpSVG from 'platformicons/svg/aiohttp.svg';
-import AndroidSVG from 'platformicons/svg/android.svg';
 import AngularjsSVG from 'platformicons/svg/angularjs.svg';
 import AnthropicSVG from 'platformicons/svg/anthropic.svg';
 import ApacheairflowSVG from 'platformicons/svg/apache-airflow.svg';
@@ -96,7 +95,6 @@ import PhpSVG from 'platformicons/svg/php.svg';
 import PostgresqlSVG from 'platformicons/svg/postgresql.svg';
 import PowershellSVG from 'platformicons/svg/powershell.svg';
 import PyramidSVG from 'platformicons/svg/pyramid.svg';
-import PythonSVG from 'platformicons/svg/python.svg';
 import QtSVG from 'platformicons/svg/qt.svg';
 import QuartSVG from 'platformicons/svg/quart.svg';
 import RailsSVG from 'platformicons/svg/rails.svg';
@@ -290,7 +288,8 @@ const formatToSVG = {
     lg: AiohttpSVGLarge,
   },
   android: {
-    sm: AndroidSVG,
+    // todo: switch to small icon https://github.com/getsentry/platformicons/issues/200
+    sm: AndroidSVGLarge,
     lg: AndroidSVGLarge,
   },
   angularjs: {
@@ -666,7 +665,8 @@ const formatToSVG = {
     lg: PyramidSVGLarge,
   },
   python: {
-    sm: PythonSVG,
+    // todo: switch to small icon https://github.com/getsentry/platformicons/issues/199
+    sm: PythonSVGLarge,
     lg: PythonSVGLarge,
   },
   qt: {

@@ -32,15 +32,31 @@ _Import name: `Sentry.prismaIntegration`_
 
 Sentry supports tracing [Prisma ORM](https://www.prisma.io/) queries with the Prisma integration.
 
-The Prisma Integrations creates a spans for each query and reports to Sentry with relevant details inside `description` if available.
+The Prisma Integrations creates a spans for each query and reports to Sentry with relevant details inside the`description` if available.
 
 ## Prisma Version 6
 
-The Sentry Prisma Integration comes with Prisma version 5 support by default. For Prisma version 6 compatibility we need to pass a specific version of the Prisma instrumentation to the Sentry Prisma integration.
+To use the integration with Prisma version 6, add the `prismaIntegration` to your Sentry initialization as follows:
 
-To use the integration with Prisma version 6, first install the `@prisma/instrumentation` package on version 6 (ideally the exact same version as your `prisma` and `@prisma/client` packages).
+```javascript {3}
+Sentry.init({
+  tracesSampleRate: 1.0,
+  integrations: [Sentry.prismaIntegration()],
+});
+```
 
-Then, add the `prismaIntegration` to your Sentry initialization as follows:
+## Prisma Version 5
+
+To configure the integration for Prisma version 5, first add the `tracing` feature flag to the `generator` block of your Prisma schema:
+
+```txt {tabTitle: Prisma Schema} {filename: schema.prisma} {3}
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["tracing"]
+}
+```
+
+For Prisma version 5 compatibility you must pass a specific version of the Prisma instrumentation to the Sentry Prisma integration. Add the `prismaIntegration` to your Sentry initialization as follows:
 
 ```javascript {1,6-9}
 import { PrismaInstrumentation } from "@prisma/instrumentation";
@@ -53,26 +69,6 @@ Sentry.init({
       prismaInstrumentation: new PrismaInstrumentation(),
     }),
   ],
-});
-```
-
-## Prisma Version 5
-
-To install the integration for Prisma version 5, first enable the `tracing` feature flag in the `generator` block of your Prisma schema:
-
-```txt {tabTitle: Prisma Schema} {filename: schema.prisma} {3}
-generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["tracing"]
-}
-```
-
-Then, add the `prismaIntegration` to your Sentry initialization as follows:
-
-```javascript {3}
-Sentry.init({
-  tracesSampleRate: 1.0,
-  integrations: [Sentry.prismaIntegration()],
 });
 ```
 
