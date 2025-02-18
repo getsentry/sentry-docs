@@ -133,7 +133,7 @@ The following callbacks can be configured for the integration in `feedbackIntegr
 | `onSubmitSuccess` | `data: FeedbackFormData`                                   |                         | Callback when feedback is successfully submitted.                                                             |
 | `onSubmitError`   | `error: Error`                                             |                         | Callback when feedback is unsuccessfully submitted.                                                           |
 | `onFormSubmitted` |                                                            | The widget is unmounted.| Callback when the feedback widget is submitted successfully, and the SuccessMessage is complete, or dismissed.|
-| `onAddScreenshot` | `attachFile: (filename: string, data: Uint8Array) => void` |                         | Callback when a screenshot is added.                                                                          |
+| `onAddScreenshot` | `addScreenshot: (uri: string) => void`                     |                         | Callback when a screenshot is added.                                                                          |
 
 ## Screenshots
 
@@ -171,20 +171,20 @@ Sentry.init({
 
 ### Implementing the `onAddScreenshot` Callback
 
-If the above libraries do not cover your use case you can manually integrate screenshots by implementing the `onAddScreenshot` callback. The callback receives a filename and a `Uint8Array` of the image data like in the example below.
+If the above libraries do not cover your use case you can manually integrate screenshots by implementing the `onAddScreenshot` callback. The callback receives the `uri` of the image like in the example below.
 
 ```javascript
 import * as Sentry from '@sentry/react-native';
 import { getImage } from 'custom-image-picker';
 
-const handleChooseImage = (attachFile: (filename: string, data: Uint8Array) => void): void => {
-  const { filename, bytes, error, canceled } = getImage();
+const handleChooseImage = (addScreenshot: (uri: string) => void): void => {
+  const { uri, error, canceled } = getImage();
   if (canceled) {
   	console.log('User canceled image choice.');
   } else if (error) {
     console.log('Error during image loading', error);
   } else {
-    attachFile(filename, bytes);
+    addScreenshot(uri);
   }
 };
 
