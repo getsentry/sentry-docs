@@ -964,6 +964,26 @@ const userDocsRedirects = [
     source: '/product/explore/feature-flags/:path*',
     destination: '/product/issues/issue-details/feature-flags/:path*',
   },
+  {
+    source: '/platforms/python/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/python/troubleshooting/:path*',
+  },
+  {
+    source: '/platforms/ruby/guides/:guide/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/ruby/guides/:guide/troubleshooting/:path*',
+  },
+  {
+    source: '/platforms/ruby/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/ruby/troubleshooting/:path*',
+  },
+  {
+    source: '/platforms/php/guides/:guide/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/php/guides/:guide/troubleshooting/:path*',
+  },
+  {
+    source: '/platforms/php/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/php/troubleshooting/:path*',
+  },
 ];
 
 /**
