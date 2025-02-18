@@ -1,16 +1,35 @@
 ```typescript
 import * as Sentry from "@sentry/react-native";
-import { UserFeedback } from "@sentry/react-native";
+import { SendFeedbackParams } from "@sentry/react-native";
 
 const sentryId = Sentry.captureMessage("My Message");
 // OR: const sentryId = Sentry.lastEventId();
 
-const userFeedback: UserFeedback = {
-  event_id: sentryId,
+const userFeedback: SendFeedbackParams = {
   name: "John Doe",
   email: "john@doe.com",
-  comments: "Hello World!",
+  message: "Hello World!",
+  associatedEventId: eventId, // Optional
 };
 
-Sentry.captureUserFeedback(userFeedback);
+Sentry.captureFeedback(userFeedback);
+```
+
+You can also attach further data to the feedback event by passing a hint as a second argument. This is similar to other `capture` methods:
+
+```javascript
+Sentry.captureFeedback(
+  { message: "I really like your App, thanks!" },
+  {
+    captureContext: {
+      tags: { key: "value" },
+    },
+    attachments: [
+      {
+        filename: 'hello.txt',
+        data: 'Hello, World!',
+      },
+    ],
+  }
+);
 ```

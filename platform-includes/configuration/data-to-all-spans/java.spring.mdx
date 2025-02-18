@@ -1,0 +1,59 @@
+```java
+import io.sentry.protocol.SentryTransaction;
+import io.sentry.SentryOptions;
+import io.sentry.Hint;
+import org.springframework.stereotype.Component;
+
+@Component
+public class CustomBeforeSendTransactionCallback implements SentryOptions.BeforeSendTransactionCallback {
+    @Override
+    public SentryTransaction execute(SentryTransaction transaction, Hint hint) {
+
+        // set the attribute on the root span
+        if (transaction.getContexts().getTrace() == null) {
+            SpanContext spanContext = new SpanContext("op");
+            transaction.getContexts().setTrace(spanContext);
+        }
+        transaction.getContexts().getTrace().setData("myAttribute", "myValue");
+
+        // and on all child spans
+        transaction.getSpans().forEach(span -> {
+            if (span.getData() == null) {
+                span.setData(new HashMap<>());
+            }
+            span.getData().put("myAttribute", "myValue");
+        });
+
+        return transaction;
+    }
+}
+```
+
+```kotlin
+import io.sentry.protocol.SentryTransaction
+import io.sentry.SentryOptions
+import io.sentry.Hint
+import org.springframework.stereotype.Component
+
+@Component
+class CustomBeforeSendTransactionCallback : SentryOptions.BeforeSendTransactionCallback {
+    override fun execute(transaction: SentryTransaction, hint: Hint): SentryTransaction? {
+        
+        // set the attribute on the root span
+        if (transaction.contexts.trace == null) {
+            transaction.contexts.setTrace(SpanContext("op"))
+        }
+        transaction.contexts.trace?.setData("myAttribute", "myValue")
+
+        // and on all child spans
+        transaction.spans.forEach { span ->
+            if (span.data == null) {
+                span.data = HashMap()
+            }
+            span.data?.set("myAttribute", "myValue")
+        }
+
+        transaction
+    }
+}
+```

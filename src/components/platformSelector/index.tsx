@@ -127,7 +127,11 @@ export function PlatformSelector({
       path.length > '/platforms/'.length
   );
   const showStoredPlatform =
-    !isPlatformPage && storedPlatformKey && storedPlatform && path !== '/platforms/';
+    !open &&
+    !isPlatformPage &&
+    storedPlatformKey &&
+    storedPlatform &&
+    path !== '/platforms/';
 
   return (
     <div>

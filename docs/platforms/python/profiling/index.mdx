@@ -59,11 +59,17 @@ Profiling was experimental in SDK versions `1.17.0` and older. Learn how to upgr
 
 <Include name="feature-stage-beta.mdx" />
 
-_(New in version 2.13.0)_
+_(New in version 2.21.0)_
 
 The current profiling implementation stops the profiler automatically after 30 seconds (unless you manually stop it earlier). Naturally, this limitation makes it difficult to get full coverage of your app's execution. We now offer an experimental continuous mode, where profiling data is periodically uploaded while running, with no limit on how long the profiler may run.
 
 To get started with continuous profiling, you can start and stop the profiler directly with `sentry_sdk.profiler.start_profiler` and `sentry_sdk.profiler.stop_profiler`.
+
+### Sampling
+
+Sampling for continuous profiling is determined only once when the SDK is configured. That sampling decision is used to decide if the profiles will be collected or not for the entirety of the process.
+
+Set `profile_session_sample_rate=1.0` to collect continuous profiles for 100% of profile sessions.
 
 <Alert>
 
@@ -78,6 +84,9 @@ sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     send_default_pii=True,
     traces_sample_rate=1.0,
+
+    # To collect profiles for all profile sessions, set `profile_session_sample_rate` to 1.0.
+    profile_session_sample_rate=1.0,
 )
 
 sentry_sdk.profiler.start_profiler()
