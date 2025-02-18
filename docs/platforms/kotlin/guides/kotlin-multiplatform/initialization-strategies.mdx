@@ -1,0 +1,180 @@
+---
+title: Initialization Options
+description: "Different options for initializing the Kotlin Multiplatform SDK."
+sidebar_order: 2
+---
+
+When it comes to initializing a Kotlin Multiplatform SDK, there are multiple options to consider:
+
+- [Use native platform options directly](#native-platform-options)
+- [Shared initializer](#shared-initializer)
+- [Platform specific initializers](#platform-specific-initializers)
+- [Hybrid approach](#hybrid-approach)
+
+## Where to Place Initialization Code
+
+Regardless of the initialization option you choose, it's important to place the initialization code at an early lifecycle stage of your application to ensure the SDK is set up correctly before it is used.
+Here are general guidelines for placing the initialization code for different platforms:
+
+```kotlin {filename:MainActivity.kt}{tabTitle: androidApp}
+import your.kmp.app.initializeSentry
+
+class YourApplication : Application() {
+  override fun onCreate() {
+    super.onCreate()
+      initializeSentry()
+   }
+}
+```
+```swift {tabTitle: iosApp}
+import shared
+
+func application(
+    _ application: UIApplication,
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil
+) -> Bool {
+    SentrySetupKt.initializeSentry()
+    return true
+}
+
+// OR if you're using SwiftUI:
+
+@main
+struct SwiftUIApp: App {
+    init() {
+        SentrySetupKt.initializeSentry()
+    }
+}
+```
+
+## Native Platform Options
+
+<Alert>
+Requires Sentry SDK version `0.7.1` or higher.
+</Alert>
+<Alert>
+Available options are determined by the native SDK versions used in the build.
+For example, Kotlin Multiplatform SDK `0.10.0` uses Sentry Android `7.16.0` and Sentry Cocoa `8.38.0`, so it supports all options from these versions.
+</Alert>
+
+This approach involves initializing the SDK with the platform's specific options directly, using `PlatformOptionsConfiguration`. This strategy is ideal for projects that require configuring options that are not yet supported by the KMP SDK, such as experimental options.
+For example, if you configure your KMP application for Android, you will have access to every option that the Android SDK provides.
+
+### Apple Target Requirements
+
+In order to be able to use the native platform options with Apple targets, you need to opt-in to `ExperimentalForeignApi`.
+
+```kotlin {filename:build.gradle.kts}
+kotlin {
+    // other configuration ...
+  sourceSets {
+    all {
+        languageSettings.optIn("kotlinx.cinterop.ExperimentalForeignApi")
+    }
+  }
+}
+```
+
+### Usage
+
+```kotlin {filename:SentrySetup.kt}{tabTitle: commonMain}
+import io.sentry.kotlin.multiplatform.Sentry
+import io.sentry.kotlin.multiplatform.PlatformOptionsConfiguration
+
+fun initializeSentry() {
+  Sentry.initWithPlatformOptions(platformOptionsConfiguration())
+}
+
+expect fun platformOptionsConfiguration(): PlatformOptionsConfiguration
+```
+
+```kotlin {filename:SentrySetup.ios.kt}{tabTitle: iosMain}
+import io.sentry.kotlin.multiplatform.PlatformOptionsConfiguration
+
+actual fun platformOptionsConfiguration(): PlatformOptionsConfiguration = {
+    it.dsn = "___PUBLIC_DSN___"
+}
+```
+
+```kotlin {filename:SentrySetup.android.kt}{tabTitle: androidMain}
+import io.sentry.kotlin.multiplatform.PlatformOptionsConfiguration
+
+actual fun platformOptionsConfiguration(): PlatformOptionsConfiguration = {
+    it.dsn = "___PUBLIC_DSN___"
+}
+```
+
+## Shared Initializer
+
+The shared initializer approach involves initializing the SDK in your shared codebase, using the same configuration options for all platforms. This approach is ideal for projects that prioritize consistency across platforms and do not require platform-specific customizations.
+
+Using a shared initializer provides a single source of truth for your SDK's configuration options. This can simplify maintenance and debugging efforts, as you only need to update one codebase for all platforms.
+
+To initialize the SDK, create a Kotlin file in your `commonMain` (such as `SentrySetup.kt` or whatever you decide to call it), and write an initialization function. You'll then be able to call it in an early lifecycle stage in your platforms.
+
+
+```kotlin {filename:SentrySetup.kt}
+import io.sentry.kotlin.multiplatform.Sentry
+import io.sentry.kotlin.multiplatform.SentryOptions
+
+// Application context is only needed for Android targets
+fun initializeSentry() {
+  val configuration: (SentryOptions) -> Unit = {
+    it.dsn = "___PUBLIC_DSN___"
+    // Add common configuration here
+  }
+  Sentry.init(configuration)
+}
+```
+
+## Platform-Specific Initializers
+
+Platform-specific initializers allow for customization of the SDK's configuration options on a per-platform basis. This approach can be particularly useful when your SDK requires platform-specific functionality or performance optimizations.
+
+This approach gives you the flexibility to fine-tune the SDK's behavior to meet the unique needs of each platform.
+However, the available options are limited to what the KMP SDK has implemented.
+If you need to use the respective platform's options directly, you should use the [native platform options](#native-platform-options) approach.
+
+### Common
+
+```kotlin {filename:commonMain/SentrySetup.kt}
+import io.sentry.kotlin.multiplatform.Context
+
+expect fun initializeSentry()
+```
+
+### androidMain
+
+
+```kotlin {filename:androidMain/SentrySetup.kt}
+import io.sentry.kotlin.multiplatform.Sentry
+import io.sentry.kotlin.multiplatform.Context
+
+actual fun initializeSentry() {
+  Sentry.init {
+    it.dsn = "___PUBLIC_DSN___"
+    // Add Android-specific configuration here
+  }
+}
+```
+
+### iosMain
+
+
+```kotlin {filename:iosMain/SentrySetup.kt}
+import io.sentry.kotlin.multiplatform.Sentry
+import io.sentry.kotlin.multiplatform.Context
+
+actual fun initializeSentry() {
+  Sentry.init {
+    it.dsn = "___PUBLIC_DSN___"
+    // Add iOS-specific configuration here
+  }
+}
+```
+
+## Hybrid Approach
+
+It's also possible to mix the initialization strategies by creating [intermediate sourceSets](https://kotlinlang.org/docs/multiplatform-hierarchy.html) that target specific platforms. This allows you to use a shared initializer for some platforms, while utilizing platform-specific initializers for others.
+
+For example, you may choose to use a shared initializer for Android and iOS platforms, while using a platform-specific initializer for the watchOS and tvOS platforms. This approach provides a balance between consistency and customization.

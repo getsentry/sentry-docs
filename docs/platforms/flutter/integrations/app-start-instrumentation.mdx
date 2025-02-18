@@ -10,13 +10,28 @@ categories:
 
 Sentry's app start instrumentation provides insight into how long your application takes to launch.
 
+<Alert>
+
+App start instrumentation is available on **iOS** and **Android**.
+
+</Alert>
+
 ## Instrumentation Behaviour
 
 Before diving into the configuration, it's important to understand how app start instrumentation behaves:
 
-- The SDK attaches the app start metrics to the **first run transaction**.
-- It tracks the length of time from the **earliest native process initialization** until the very first [PostFrameCallback](https://api.flutter.dev/flutter/scheduler/SchedulerBinding/addPostFrameCallback.html) is triggered.
-- The SDK differentiates between a cold and a warm start, but doesn't track hot starts/resumes.
+App start instrumentation tracks the duration between the earliest native process initialization and the first frame rendered (as reported by [addTimingsCallback](https://api.flutter.dev/flutter/scheduler/SchedulerBinding/addTimingsCallback.html)). Once the app start is processed, the callback is removed to avoid additional overhead.
+
+When the SDK receives the start and end times of the app launch, the SDK:
+- Creates a transaction named `ui.load`
+- Attaches a span with either `app.start.cold` or `app.start.warm` operation
+- Adds app start metrics to the transaction
+
+<Alert>
+
+While the SDK differentiates between cold and warm starts, it doesn't track hot starts/resumes.
+
+</Alert>
 
 ## Prerequisites
 
@@ -27,49 +42,18 @@ Before starting, ensure:
 
 ## Configure
 
-This type of instrumentation is automatically enabled. There is no need for further configuration.
+This instrumentation is automatically enabled. There is no need for further configuration.
 
 ## Verify
 
-### 1. Execute the Transaction:
+### 1. Launch Your App:
 
-Initiate a transaction immediately after the app launches.
-
-```dart
-import 'package:sentry/sentry.dart';
-
-final transaction = Sentry.startTransaction("test test", "my operation");
-await Future.delayed(const Duration(milliseconds: 1000));
-transaction.finish();
-```
+Launch your Sentry configured app.
 
 ### 2. Locate Your Transaction:
 
-Open the [sentry.io](https://sentry.io/) performance dashboard, find, and select the transaction you executed.
+Open the [sentry.io performance page](https://sentry.io/performance), find, and select the 'root /' transaction and navigate to the trace view of a sampled event.
 
 ### 3. View App Start Metrics:
 
-Select the event within your transaction. Sentry.io displays the app start metrics on the right side of the screen.
-
-## Additional Configuration
-
-### Change App Start Tracking End
-
-1. Set `autoAppStart` to `false` in the Sentry options.
-2. Call `SentryFlutter.setAppStartEnd`.
-
-```dart
-import 'package:sentry_flutter/sentry_flutter.dart';
-
-// Run my App and do my things first
-
-// Initialize the Flutter SDK
-Future<void> main() async {
-  await SentryFlutter.init(
-    (options) => options.autoAppStart = false,
-  );
-}
-
-// End the App Start metric
-SentryFlutter.setAppStartEnd(DateTime.now().toUtc());
-```
+Select the event within your transaction. Sentry displays the app start metrics on the right side of the screen in the **Mobile Vitals** section.

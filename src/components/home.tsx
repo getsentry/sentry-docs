@@ -21,7 +21,7 @@ import {PlatformFilter} from './platformFilter';
 export function Home() {
   return (
     <div className="tw-app">
-      <Header pathname="/" searchPlatforms={[]} />
+      <Header pathname="/" searchPlatforms={[]} useStoredSearchPlatforms={false} />
       <div className="mt-[var(--header-height)]">
         <Banner />
       </div>

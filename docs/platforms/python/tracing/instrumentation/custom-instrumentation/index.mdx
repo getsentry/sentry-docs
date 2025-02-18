@@ -9,7 +9,7 @@ The Sentry SDK for Python does a very good job of auto instrumenting your applic
 
 Adding transactions will allow you to instrument and capture certain regions of your code.
 
-<Alert level="info">
+<Alert>
 
 If you're using one of Sentry's SDK integrations, transactions will be created for you automatically.
 
@@ -56,7 +56,7 @@ def eat_pizza(pizza):
                 eat_slice(pizza.slices.pop())
 ```
 
-<Alert title="Changed in 2.15.0" level="info">
+<Alert title="Changed in 2.15.0">
 
 The parameter `name` in `start_span()` used to be called `description`. In version 2.15.0 `description` was deprecated and from 2.15.0 on, only `name` should be used. `description` will be removed in `3.0.0`.
 
@@ -77,7 +77,7 @@ def eat_pizza(pizza):
             eat_slice(pizza.slices.pop())
 ```
 
-<Alert title="Static & Class Methods" level="info">
+<Alert title="Static & Class Methods">
 
 When tracing a static or class method, you **must** add the `@sentry_sdk.trace` decorator **after** the `@staticmethod` or `@classmethod` decorator (i.e., **closer** to the function definition). Otherwise, your function will break!
 
@@ -99,7 +99,7 @@ def eat_pizza(pizza):
             span.finish()
 ```
 
-<Alert title="Changed in 2.15.0" level="info">
+<Alert title="Changed in 2.15.0">
 
 The parameter `name` in `start_span()` used to be called `description`. In version 2.15.0 `description` was deprecated and from 2.15.0 on, only `name` should be used. `description` will be removed in `3.0.0`.
 
@@ -125,7 +125,7 @@ def eat_slice(slice):
             chew()
 ```
 
-<Alert title="Changed in 2.15.0" level="info">
+<Alert title="Changed in 2.15.0">
 
 The parameter `name` in `start_span()` used to be called `description`. In version 2.15.0 `description` was deprecated and from 2.15.0 on, only `name` should be used. `description` will be removed in `3.0.0`.
 
@@ -163,7 +163,7 @@ def eat_slice(slice):
     parent_span.finish()
 ```
 
-<Alert title="Changed in 2.15.0" level="info">
+<Alert title="Changed in 2.15.0">
 
 The parameter `name` in `start_span()` used to be called `description`. In version 2.15.0 `description` was deprecated and from 2.15.0 on, only `name` should be used. `description` will be removed in `3.0.0`.
 
@@ -196,7 +196,7 @@ sentry_sdk.init(
 
 Now, whenever a function specified in `functions_to_trace` will be executed, a span will be created and attached as a child to the currently running span.
 
-<Alert title="Important" level="info">
+<Alert title="Important">
 
 To enable performance monitoring for the functions specified in `functions_to_trace`, the SDK needs to load the function modules. Be aware, there may be code being executed in modules during module loading. To avoid this, use the method described above to trace your functions.
 
@@ -238,8 +238,6 @@ def eat_slice(slice):
 
 ## Improving Data on Transactions and Spans
 
-### Adding Data Attributes to Transactions
-
 You can add data attributes to your transactions. This data is visible in the trace explorer in Sentry. Data attributes can be of type `string`, `number` or `boolean`, as well as (non-mixed) arrays of these types:
 
 ```python
@@ -253,9 +251,7 @@ with sentry_sdk.start_transaction(name="my-transaction") as transaction:
     transaction.set_data("my-data-attribute-6", [True, False, True])
 ```
 
-### Adding Data Attributes to Spans
-
-You can add data attributes to your spans. This data is visible in the trace explorer in Sentry. Data attributes can be of type `string`, `number` or `boolean`, as well as (non-mixed) arrays of these types:
+You can add data attributes to your spans the same way, with the same type restrictions as described above.
 
 ```python
 with sentry_sdk.start_span(name="my-span") as span:
@@ -266,4 +262,25 @@ with sentry_sdk.start_span(name="my-span") as span:
     span.set_data("my-data-attribute-4", ["value1", "value2", "value3"])
     span.set_data("my-data-attribute-5", [42, 43, 44])
     span.set_data("my-data-attribute-6", [True, False, True])
+```
+
+To attach data attributes to the transaction and all its spans, you can use <PlatformLink to="/configuration/filtering/#using-before-send-transaction">`before_send_transaction`</PlatformLink>:
+
+```python
+def my_before_send_transaction(event, hint):
+    # Set the data attribute "foo" to "bar" on every span belonging to this
+    # transaction event
+    for span in event["spans"]:
+        span["data"]["foo"] = "bar"
+
+    # Set the data on the transaction itself, too
+    event["contexts"]["trace"]["data"]["foo"] = "bar"
+
+    return event
+
+
+sentry_sdk.init(
+    traces_sample_rate=1.0,
+    before_send_transaction=my_before_send_transaction,
+)
 ```

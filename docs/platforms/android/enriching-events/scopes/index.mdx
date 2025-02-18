@@ -1,46 +1,99 @@
 ---
-title: Scopes and Hubs
+title: Scopes
 description: "SDKs will typically automatically manage the scopes for you in the framework integrations. Learn what a scope is and how you can use it to your advantage."
 ---
 
 When an event is captured and sent to Sentry, SDKs will merge that event data with extra
 information from the current scope. SDKs will typically automatically manage the scopes
 for you in the framework integrations and you don't need to think about them. However,
-you should know what a scope is and how you can use it for your advantage.
+you should know what a scope is and how you can use it to your advantage.
 
-## What's a Scope, What's a Hub
+## What's a Scope?
 
-You can think of the hub as the central point that our SDKs use to route an
-event to Sentry. When you call `init()` a hub is created and a client and a
-blank scope are created on it. That hub is then associated with the current
-thread and will internally hold a stack of scopes.
-
-The scope will hold useful information that should be sent along with the
-event. For instance [contexts](../context/) or
+Scopes hold useful information that gets sent along with the
+event. For instance, [contexts](../context/) and
 [breadcrumbs](../breadcrumbs/) are stored on
-the scope. When a scope is pushed, it inherits all data from the parent scope
-and when it pops all modifications are reverted.
+the scope. When a scope is forked, it inherits all data from its parent scope.
 
-The default SDK integrations will push and pop scopes intelligently. For
-instance web framework integrations will create and destroy scopes around your
-routes or controllers.
+## How Scopes Work
 
-## How the Scope and Hub Work
+Scopes are basically stacks of data that are attached to events. When an event is captured, the SDK will merge the data from the active scopes into the event. This allows you to attach data to events that is relevant to the context in which the event was captured.
 
-As you start using an SDK, a scope and hub are automatically created for you out
-of the box. It's unlikely that you'll interact with the hub directly unless you're
-writing an integration or you want to create or destroy scopes. Scopes, on the
-other hand are more user facing. You can call <PlatformIdentifier name="configure-scope" /> at any point in
-time to modify data stored on the scope. This is useful for doing things like
-[modifying the context](../context/).
+When you call a global function such as `Sentry.captureException`, Sentry automatically discovers the active scopes and applies them when capturing the event.
 
-When you call a global function such as <PlatformIdentifier name="capture-event" /> internally Sentry
-discovers the current hub and asks it to capture an event. Internally the hub will
-then merge the event with the topmost scope's data.
+## Different Kinds of Scopes
+
+The Sentry SDK has three different kinds of scopes:
+
+- [Global scope](#global-scope)
+- [Isolation scope](#isolation-scope)
+- [Current scope](#current-scope)
+
+The Android SDK does not fork scopes on its own so you may set data on any of the scopes. The Android SDK writes to [current scope](#current-scope) by default when using top level API like `Sentry.setTag`.
+
+### Global Scope
+
+The global scope is applied to _all_ events, no matter where they originate. You can use it to store data that should apply to all events, such as environmental information.
+
+### Isolation Scope
+
+The isolation scope is used to isolate events from each other. For example, each request in a web server might get its own isolation scope, so that events from one request don't interfere with events from another request.
+
+### Current Scope
+
+The current scope is the local scope that is currently active. You can modify the current scope via `Sentry.configureScope(scope -> { ... })`.
+
+## How Scope Data is Applied to Events
+
+Global scope, isolation scope, and current scope are combined before an event (like an error or transaction) gets sent to Sentry.
+In most cases, setting something on current scope replaces the same thing that may have been set on isolation or global scope. If it hasn't been set on current scope, the value on isolation scope takes precedence over the one from global scope. If there also isn't any value on isolation scope, the one from global scope is used if present.
+
+Note, there are exceptions to this, where values from all scopes are merged. This is the case for breadcrumbs, tags, extras, contexts, attachments, and event processors.
+
+```java
+Sentry.configureScope(ScopeType.GLOBAL, scope -> {
+  scope.setExtra("shared", "global");
+  scope.setExtra("global", "data");
+});
+
+Sentry.configureScope(ScopeType.ISOLATION, scope -> {
+  scope.setExtra("shared", "isolation");
+  scope.setExtra("isolation", "data");
+});
+
+Sentry.configureScope(ScopeType.CURRENT, scope -> {
+  scope.setExtra("shared", "current");
+  scope.setExtra("current", "data");
+});
+
+Sentry.captureException(new Exception("my error"));
+// --> Will have the following extra:
+// { shared: 'current', global: 'data', isolation: 'data', current: 'data' }
+```
+```kotlin
+Sentry.configureScope(ScopeType.GLOBAL) { scope ->
+  scope.setExtra("shared", "global")
+  scope.setExtra("global", "data")
+}
+
+Sentry.configureScope(ScopeType.ISOLATION) { scope ->
+  scope.setExtra("shared", "isolation")
+  scope.setExtra("isolation", "data")
+}
+
+Sentry.configureScope(ScopeType.CURRENT) { scope ->
+  scope.setExtra("shared", "current")
+  scope.setExtra("current", "data")
+}
+
+Sentry.captureException(Exception("my error"))
+// --> Will have the following extra:
+// { shared: 'current', global: 'data', isolation: 'data', current: 'data' }
+```
 
 ## Configuring the Scope
 
-The most useful operation when working with scopes is the <PlatformIdentifier name="configure-scope" /> function. It can be used to reconfigure the current scope.
+There are two main ways to interact with the scope. You can modify the current scope via `Sentry.configureScope(scope -> { ... })` and use setters on the resulting scope, or you can use global methods like `Sentry.setTag()` directly, which will set on the respective scope under the hood (which will be the isolation scope).
 
 You can, for instance, add custom tags or inform Sentry about the currently authenticated user.
 
@@ -53,7 +106,7 @@ You can also apply this configuration when unsetting a user at logout:
 <PlatformContent includePath="enriching-events/scopes/scope-synchronization" />
 
 To learn what useful information can be associated with scopes see
-[the context documentation](../context/).
+[context](../context/), [tags](../tags), [users](../identify-user) and [breadcrumbs](../breadcrumbs/).
 
 ## Local Scopes
 
@@ -72,7 +125,7 @@ made will stay isolated within the callback function. This allows you to
 more easily isolate pieces of context information to specific locations in your code or
 even call `clear` to briefly remove all context information.
 
-<Alert level="info" title="Important">
+<Alert title="Important">
 
 Any exceptions that occur within the callback function for configuring a local scope will not be
 caught, and all errors that occur will be silently ignored and **not** reported.

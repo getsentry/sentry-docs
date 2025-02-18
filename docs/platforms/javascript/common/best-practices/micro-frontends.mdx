@@ -32,16 +32,16 @@ If your app uses micro frontends, it's very useful to be able to track which one
 
 Below you'll find setup instructions for both an automatic and a manual way to route errors to different Sentry projects.
 
-<Note>
+<Alert>
   In all cases `Sentry.init()` must never be called more than once, doing so
   will result in undefined behavior.
-</Note>
+</Alert>
 
 ## Automatically Route Errors to Different Projects
 
 `ModuleMetadata` and `makeMultiplexedTransport` can be used together to automatically route events to specific Sentry projects that represent your micro frontend services. Events will be routed once the service where the error occurred has been identified, ensuring errors are tracked in the correct project.
 
-<Note>
+<Alert>
   <ul>
     <li>
       Requires version `2.18.0` or higher of `@sentry/webpack-plugin`,
@@ -50,7 +50,7 @@ Below you'll find setup instructions for both an automatic and a manual way to r
     </li>
     <li>Requires SDK version `7.59.0` or higher.</li>
   </ul>
-</Note>
+</Alert>
 
 To identify the source of an error, you must first inject metadata that helps identify
 which bundles were responsible for the error. You can do this with any of the
@@ -83,7 +83,7 @@ for the multiplexed transport to reference for routing.
 
 **Install the below code snippet in your host:**
 
-```javascript
+```javascript {tabTitle:NPM}{index.js}
 import {
   init,
   makeFetchTransport,
@@ -131,22 +131,84 @@ init({
   },
 });
 ```
+```html {tabTitle:CDN/Loader Bundle}{filename:index.html}
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/bundle.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'bundle.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/multiplexedtransport.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'multiplexedtransport.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/modulemetadata.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'modulemetadata.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+
+
+<script>
+  const EXTRA_KEY = "ROUTE_TO";
+
+  const transport = Sentry.makeMultiplexedTransport(Sentry.makeFetchTransport, (args) => {
+    const event = args.getEvent();
+    if (
+      event &&
+      event.extra &&
+      EXTRA_KEY in event.extra &&
+      Array.isArray(event.extra[EXTRA_KEY])
+    ) {
+      return event.extra[EXTRA_KEY];
+    }
+    return [];
+  });
+
+  Sentry.init({
+    dsn: "__DEFAULT_DSN__",
+    integrations: [Sentry.moduleMetadataIntegration()],
+    transport,
+    beforeSend: (event) => {
+      if (event?.exception?.values?.[0].stacktrace.frames) {
+        const frames = event.exception.values[0].stacktrace.frames;
+        // Find the last frame with module metadata containing a DSN
+        const routeTo = frames
+          .filter((frame) => frame.module_metadata && frame.module_metadata.dsn)
+          .map((v) => v.module_metadata)
+          .slice(-1); // using top frame only - you may want to customize this according to your needs
+
+        if (routeTo.length) {
+          event.extra = {
+            ...event.extra,
+            [EXTRA_KEY]: routeTo,
+          };
+        }
+      }
+
+      return event;
+    },
+  });
+</script>
+```
 
 Once this is set up, errors - both handled and unhandled - will be automatically routed to the right project.
 
-<Note>
+<Alert>
 
 By default, `args.getEvent` returns only error events. You can match against other event types like so: `args.getEvent(['event', 'transaction', 'replay_event'])`. This `getEvent` snippet
 will return matches for errors, transactions, and replays.
 
-</Note>
+</Alert>
 
 ## Manually Route Errors to Different Projects
 
 If you want more control to be able to explicitly specify the destination for each individual `captureException`,
 you can use the more advanced interface multiplexed transport offers.
 
-<Note>Requires SDK version `7.59.0` or higher.</Note>
+<Alert>equires SDK version `7.59.0` or higher.</Alert>
 
 The example below uses a `feature` tag to determine which Sentry project to
 send the event to. If the event doesn't have a `feature` tag, we send it to the
@@ -179,7 +241,7 @@ init({
 
 You can then set tags/contexts on events in individual micro-frontends to decide which Sentry project to send the event to as follows:
 
-<Note>
+<Alert>
   It's important to always use a local scope when setting the tag (either as
   shown below or using{" "}
   <PlatformLink to="/enriching-events/scopes/#local-scopes">
@@ -188,7 +250,7 @@ You can then set tags/contexts on events in individual micro-frontends to decide
   ). Using a global scope, for example, through `Sentry.setTag()` will result in
   all subsequent events being routed to the same DSN regardless of where they
   originated.
-</Note>
+</Alert>
 
 ```typescript
 captureException(new Error("oh no!"), (scope) => {
@@ -204,9 +266,9 @@ Starting with version [8.7.0](https://github.com/getsentry/sentry-javascript/rel
 However, for use cases like micro frontends, where you might _want_ SDK interaction across multiple micro frontends or child applications, you'll need to ensure that all SDKs are using the same version.
 For example, if you initialize the SDK in a host or skeleton application, but make Sentry SDK calls (like `Sentry.captureException` or `Sentry.setTag`) in micro frontend child applications, you need to ensure that the SDK packages in the host and child applications are aligned to the same version.
 
-<Note>
+<Alert>
 
 If you can't get all your micro frontends aligned on the same SDK version, you can [follow this workaround](https://github.com/getsentry/sentry-javascript/discussions/10576#discussioncomment-11446422).
 However, interoperability isn't guaranteed and you could run into some unexpected behavior.
 
-</Note>
+</Alert>

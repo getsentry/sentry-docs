@@ -219,16 +219,20 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/organization/integrations/cloudflare-workers/',
+    destination: '/organization/integrations/cloud-monitoring/cloudflare-workers/',
+  },
+  {
+    source: '/account/require-2fa/',
+    destination: '/organization/authentication/two-factor-authentication/',
+  },
+  {
     source: '/organization/integrations/msteams/',
     destination: '/organization/integrations/notification-incidents/msteams/',
   },
   {
     source: '/product/explore/session-replay/hydration-errors/',
     destination: '/product/issues/issue-details/replay-issues/hydration-error/',
-  },
-  {
-    source: '/product/error-monitoring/stacktrace/',
-    destination: '/product/issues/issue-details/#stack-trace',
   },
   {
     source: '/product/explore/session-replay/privacy/',
@@ -475,6 +479,14 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/:guide/configuration/integrations/plugin/',
   },
   {
+    source: '/platforms/javascript/configuration/environments/',
+    destination: '/platforms/javascript/configuration/options/#environment',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/configuration/environments/',
+    destination: '/platforms/javascript/guides/:guide/configuration/options/#environment',
+  },
+  {
     source: '/platforms/:platform/context/',
     destination: '/platforms/:platform/enriching-events/context/',
   },
@@ -676,6 +688,10 @@ const userDocsRedirects = [
   {
     source: '/platforms/:platform/guides/:guide/enriching-events/user-feedback/',
     destination: '/platforms/:platform/guides/:guide/user-feedback/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/user-feedback/v7/',
+    destination: '/platforms/javascript/guides/:guide/user-feedback/configuration__v7.x',
   },
   {
     source: '/platforms/:platform/enriching-events/user-feedback/',
@@ -907,6 +923,66 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/astro/manual-setup/',
     destination: '/platforms/javascript/guides/astro/',
+  },
+  {
+    source: '/product/error-monitoring/dashboards/',
+    destination: '/product/dashboards/',
+  },
+  {
+    source: '/product/error-monitoring/filtering/',
+    destination: '/concepts/data-management/filtering/',
+  },
+  {
+    source: '/product/error-monitoring/issue-owners/',
+    destination: '/product/issues/ownership-rules/',
+  },
+  {
+    source: '/product/error-monitoring/reprocessing/',
+    destination: '/product/issues/reprocessing/',
+  },
+  {
+    source: '/product/error-monitoring/breadcrumbs/',
+    destination: '/product/issues/issue-details/breadcrumbs/',
+  },
+  {
+    source: '/product/error-monitoring/user-impact/',
+    destination: '/product/issues/issue-details/',
+  },
+  {
+    source: '/product/error-monitoring/stacktrace/',
+    destination: '/product/issues/issue-details/#stack-trace',
+  },
+  {
+    source: '/product/error-monitoring/:path*',
+    destination: '/product/issues',
+  },
+  {
+    source: '/platforms/kotlin-multiplatform/:path*',
+    destination: '/platforms/kotlin/guides/kotlin-multiplatform/:path*',
+  },
+  {
+    source: '/product/explore/feature-flags/:path*',
+    destination: '/product/issues/issue-details/feature-flags/:path*',
+  },
+  {
+    source: '/platforms/python/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/python/troubleshooting/:path*',
+  },
+  {
+    source: '/platforms/ruby/guides/:guide/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/ruby/guides/:guide/troubleshooting/:path*',
+  },
+  {
+    source: '/platforms/ruby/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/ruby/troubleshooting/:path*',
+  },
+  {
+    source: '/platforms/php/guides/:guide/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/php/guides/:guide/troubleshooting/:path*',
+  },
+  {
+    source: '/platforms/php/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/php/troubleshooting/:path*',
   },
 ];
 

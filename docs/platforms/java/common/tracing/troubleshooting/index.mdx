@@ -19,3 +19,11 @@ The 200+ character request above will become truncated to:
 `https://empowerplant.io/api/0/projects/ep/setup_form/?user_id=314159265358979323846264338327&tracking_id=EasyAsABC123OrSimpleAsDoReMi&product_name=PlantToHumanTranslator&product_id=1618033988749894848`
 
 <PlatformContent includePath="performance/control-data-truncation" />
+
+## Expected Spans Are Missing
+
+Our auto instrumentation, for example those instrumenting database requests or HTTP calls, require a transaction to be present on the `Scope` in order to attach a new child span. In case you're missing expected spans, please make sure `bindToScope` is set to `true` when starting a transaction. Also see <PlatformLink to="/tracing/instrumentation/custom-instrumentation/#create-transaction-bound-to-the-current-scope">Create Transaction Bound to The Current Scope</PlatformLink>.
+
+## JDBC and `spring-boot-docker-compose`
+
+When using `org.springframework.boot:spring-boot-docker-compose` mind that this extension overwrites the `spring.datasource.url` property and therefore removes the `p6spy` prefix required for using `sentry-jdbc`. Therefore if you want to test this locally you need to disable/remove spring-boot-docker-compose.

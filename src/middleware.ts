@@ -22,12 +22,17 @@ export function middleware(request: NextRequest) {
   return handleRedirects(request);
 }
 
+// don't send Permanent Redirects (301) in dev mode - it gets cached for "localhost" by the browser
+const redirectStatusCode = process.env.NODE_ENV === 'development' ? 302 : 301;
+
 const handleRedirects = (request: NextRequest) => {
   const urlPath = request.nextUrl.pathname;
 
   const redirectTo = redirectMap.get(urlPath);
   if (redirectTo) {
-    return NextResponse.redirect(new URL(redirectTo, request.url), {status: 301});
+    return NextResponse.redirect(new URL(redirectTo, request.url), {
+      status: redirectStatusCode,
+    });
   }
 
   // If we don't find an exact match, we try to look for a :guide placeholder
@@ -50,7 +55,7 @@ const handleRedirects = (request: NextRequest) => {
     );
 
     return NextResponse.redirect(new URL(finalRedirectToPath, request.url), {
-      status: 301,
+      status: redirectStatusCode,
     });
   }
 
@@ -504,6 +509,18 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/python/tryton/',
     to: '/platforms/python/integrations/tryton/',
+  },
+  {
+    from: '/platforms/python/integrations/feature-flags/launchdarkly/',
+    to: '/platforms/python/integrations/launchdarkly/',
+  },
+  {
+    from: '/platforms/python/integrations/feature-flags/openfeature/',
+    to: '/platforms/python/integrations/openfeature/',
+  },
+  {
+    from: '/platforms/python/integrations/feature-flags/unleash/',
+    to: '/platforms/python/integrations/unleash/',
   },
   {
     from: '/clients/python/breadcrumbs/',
@@ -1270,10 +1287,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/security-legal-pii/security/security-policy-reporting/',
   },
   {
-    from: '/platforms/javascript/security-policy-reporting/',
-    to: '/security-legal-pii/security/security-policy-reporting/',
-  },
-  {
     from: '/platforms/javascript/troubleshooting/session-replay/',
     to: '/platforms/javascript/session-replay/troubleshooting/',
   },
@@ -1621,6 +1634,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/ruby/performance/instrumentation/opentelemetry/',
     to: '/platforms/ruby/tracing/instrumentation/opentelemetry/',
+  },
+  {
+    from: '/platforms/ruby/metrics/',
+    to: '/platforms/ruby/',
   },
   // END  bandaid fix for #11870
   {
@@ -2248,10 +2265,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/dashboards/',
   },
   {
-    from: '/product/error-monitoring/dashboards/',
-    to: '/product/dashboards/',
-  },
-  {
     from: '/profiling/',
     to: '/product/explore/profiling/',
   },
@@ -2275,10 +2288,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/profiling/mobile-app-profiling/metrics/',
     to: '/product/explore/profiling/mobile-app-profiling/metrics/',
   },
-  {
-    from: '/product/error-monitoring/filtering/',
-    to: '/concepts/data-management/filtering/',
-  },
+
   {
     from: '/data-management/rollups/',
     to: '/concepts/data-management/event-grouping/',
@@ -2536,20 +2546,8 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/issues/ownership-rules/',
   },
   {
-    from: '/product/error-monitoring/issue-owners/',
-    to: '/product/issues/ownership-rules/',
-  },
-  {
     from: '/product/releases/suspect-commits/',
     to: '/product/issues/suspect-commits/',
-  },
-  {
-    from: '/product/error-monitoring/',
-    to: '/product/issues/',
-  },
-  {
-    from: '/product/error-monitoring/reprocessing/',
-    to: '/product/issues/reprocessing/',
   },
   {
     from: '/product/accounts/early-adopter-features/issue-archiving/',
@@ -2611,10 +2609,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/product/issues/performance-issues/large-http-payload/',
     to: '/product/issues/issue-details/performance-issues/large-http-payload/',
   },
-  {
-    from: '/product/error-monitoring/breadcrumbs/',
-    to: '/product/issues/issue-details/breadcrumbs/',
-  },
+
   {
     from: '/learn/breadcrumbs/',
     to: '/product/issues/issue-details/breadcrumbs/',
@@ -3244,10 +3239,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/organization/authentication/two-factor-authentication/',
   },
   {
-    from: '/platforms/go/guides/fiber/',
-    to: '/platforms/go/',
-  },
-  {
     from: '/platforms/go/guides/fiber/user-feedback/configuration/',
     to: '/platforms/go/user-feedback/',
   },
@@ -3362,6 +3353,18 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/clients/cordova/',
     to: '/platforms/javascript/guides/cordova/',
+  },
+  {
+    from: '/organization/integrations/incidentio/',
+    to: '/organization/integrations/issue-tracking/incidentio/',
+  },
+  {
+    from: '/contributing/onboarding-wizard/',
+    to: '/contributing/',
+  },
+  {
+    from: '/security-legal-pii/security/security-policy-reporting/',
+    to: '/platform-redirect/?next=/security-policy-reporting/',
   },
 ];
 
