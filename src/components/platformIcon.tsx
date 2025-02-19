@@ -138,6 +138,7 @@ import VueSVG from 'platformicons/svg/vue.svg';
 import WasmSVG from 'platformicons/svg/wasm.svg';
 import WindowsSVG from 'platformicons/svg/windows.svg';
 import XamarinSVG from 'platformicons/svg/xamarin.svg';
+import XboxSVG from 'platformicons/svg/xbox.svg';
 import ActixSVGLarge from 'platformicons/svg_80x80/actix.svg';
 import AiohttpSVGLarge from 'platformicons/svg_80x80/aiohttp.svg';
 import AndroidSVGLarge from 'platformicons/svg_80x80/android.svg';
@@ -279,6 +280,7 @@ import VueSVGLarge from 'platformicons/svg_80x80/vue.svg';
 import WasmSVGLarge from 'platformicons/svg_80x80/wasm.svg';
 import WindowsSVGLarge from 'platformicons/svg_80x80/windows.svg';
 import XamarinSVGLarge from 'platformicons/svg_80x80/xamarin.svg';
+import XboxSVGLarge from 'platformicons/svg_80x80/xbox.svg';
 
 const formatToSVG = {
   HTML5: {
@@ -847,6 +849,10 @@ const formatToSVG = {
     sm: XamarinSVG,
     lg: XamarinSVGLarge,
   },
+  xbox: {
+    sm: XboxSVG,
+    lg: XboxSVGLarge,
+  },
 };
 
 export const PLATFORM_TO_ICON = {
@@ -1032,6 +1038,7 @@ export const PLATFORM_TO_ICON = {
   unrealengine: 'unreal',
   visualbasic: 'visual-basic',
   windows: 'windows',
+  xbox: 'xbox',
   // Don't add new platforms down here!
   // Please add them where they belong alphabetically
 } as const;
