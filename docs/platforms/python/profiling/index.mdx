@@ -59,11 +59,11 @@ Profiling was experimental in SDK versions `1.17.0` and older. Learn how to upgr
 
 <Include name="feature-stage-beta.mdx" />
 
-_(New in version 2.21.0)_
+_(New in version 2.23.0)_
 
 The current profiling implementation stops the profiler automatically after 30 seconds (unless you manually stop it earlier). Naturally, this limitation makes it difficult to get full coverage of your app's execution. We now offer an experimental continuous mode, where profiling data is periodically uploaded while running, with no limit on how long the profiler may run.
 
-To get started with continuous profiling, you can start and stop the profiler directly with `sentry_sdk.profiler.start_profiler` and `sentry_sdk.profiler.stop_profiler`.
+To get started with continuous profiling, you can start and stop the profiler directly with `sentry_sdk.profiler.start_profile_session` and `sentry_sdk.profiler.stop_profile_session`.
 
 ### Sampling
 
@@ -89,14 +89,14 @@ sentry_sdk.init(
     profile_session_sample_rate=1.0,
 )
 
-sentry_sdk.profiler.start_profiler()
+sentry_sdk.profiler.start_profile_session()
 
 # run some code here
 
-sentry_sdk.profiler.stop_profiler()
+sentry_sdk.profiler.stop_profile_session()
 ```
 
-For some applications such as web servers, it may be difficult to call `sentry_sdk.profiler.start_profiler` in every process. Instead, you can use the `continuous_profiling_auto_start` option to automatically start the continuous profiler when a transaction is started.
+For some applications such as web servers, it may be difficult to call `sentry_sdk.profiler.start_profile_session` in every process. Instead, you can use the `profile_lifecycle` option to automatically profile anytime a transaction is active.
 
 ```python
 import sentry_sdk
@@ -105,9 +105,9 @@ sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     send_default_pii=True,
     traces_sample_rate=1.0,
-    _experiments={
-      "continuous_profiling_auto_start": True,
-    },
+    # To collect profiles for all profile sessions, set `profile_session_sample_rate` to 1.0.
+    profile_session_sample_rate=1.0,
+    profile_lifecycle="trace",
 )
 ```
 
