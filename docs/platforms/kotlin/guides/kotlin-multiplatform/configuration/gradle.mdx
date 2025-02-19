@@ -1,0 +1,80 @@
+---
+title: Gradle Plugin
+sidebar_order: 5
+description: "Learn how to set up Sentry's Kotlin Multiplatform Gradle Plugin."
+---
+
+The [Sentry Kotlin Multiplatform Gradle Plugin](https://github.com/getsentry/sentry-kotlin-multiplatform/tree/main/sentry-kotlin-multiplatform-gradle-plugin) is a plugin that simplifies the set up process. It can be used to configure the Sentry SDK for Kotlin Multiplatform projects.
+
+The Gradle Plugin supports the following features:
+- Auto-installation of the Sentry Kotlin Multiplatform SDK.
+- Auto-installation of the Sentry Cocoa SDK via Cocoapods (if the Kotlin Cocoapods plugin is applied).
+- Automatic configuration of the Kotlin/Native linker for seamless usage with the Swift Package Manager.
+
+## Setup
+
+### Install
+
+Using Gradle in your `shared/build.gradle.kts` add:
+
+```kotlin {filename:shared/build.gradle.kts}
+plugins {
+  id("io.sentry.kotlin.multiplatform.gradle") version "{{@inject packages.version('sentry.kotlin.kmp', '0.9.0') }}"
+}
+```
+
+### Configure
+
+We expose the following configuration values:
+
+```kotlin {filename:shared/build.gradle.kts}
+sentryKmp {
+  // Configure auto-installation of Sentry components.
+  autoInstall {
+    // Enable auto-installation of Sentry components:
+    //  - Sentry Kotlin Multiplatform SDK
+    //  - Sentry Cocoa SDK with Cocoapods if Kotlin Cocoapods plugin is applied.
+    // Default is enabled.
+    enabled = true
+
+    // Configure the commonMain source set.
+    commonMain {
+      // Enable auto-installation of the Sentry Kotlin Multiplatform SDK in commonMain.
+      // Default is enabled.
+      enabled = true
+
+      // Specify the version of the Sentry Kotlin Multiplatform SDK to use.
+      // Default is the corresponding Kotlin Multiplatform SDK version.
+      sentryKmpVersion = "{{@inject packages.version('sentry.kotlin.kmp', '0.9.0') }}"
+    }
+
+    // Configure the Cocoapods plugin.
+    cocoapods {
+      // Enable auto-installation of the Sentry Cocoa SDK with Cocoapods.
+      // Default is enabled.
+      enabled = true
+
+      // Specify the version of the Sentry Cocoa SDK to install.
+      // Default is the Cocoa SDK version used in the Kotlin Multiplatform SDK.
+      sentryCocoaVersion = "8.38.0"
+    }
+
+    // Configure the linker. This is only relevant if you are using SPM.
+    linker {
+      // Enable auto-configuration of the Kotlin/Native linker for Sentry Cocoa framework.
+      // Default is enabled.
+      enabled = true
+
+      // Path to the Xcode project that will be used to link the framework.
+      // This is used to find the derived data path in which the framework is stored for SPM.
+      // Default is the current project directory.
+      xcodeprojPath = "path/to/your/project.xcodeproj"
+
+      // Path to the framework that will be linked.
+      // Takes precedence over xcodeprojPath if both are set.
+      // Default is null.
+      frameworkPath = "path/to/your/framework.framework"
+    }
+  }
+}
+```

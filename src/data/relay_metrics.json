@@ -1,8 +1,8 @@
 [
   {
-    "type": "Timer",
+    "type": "Counter",
     "name": "buffer.busy",
-    "description": "Timing in milliseconds for the time the buffer service spends handling input.\n\nThis metric is tagged with:\n- `input`: The type of input that the service is handling.",
+    "description": "Timing in nanoseconds for the time the buffer service spends handling input.\n\nThis metric is tagged with:\n- `input`: The type of input that the service is handling.\n- `partition_id`: The ID of the buffer shard (0, 1, 2, ...)",
     "features": []
   },
   {
@@ -54,21 +54,9 @@
     "features": []
   },
   {
-    "type": "Counter",
-    "name": "buffer.envelopes_returned",
-    "description": "Number of envelopes that were returned to the envelope buffer by the project cache.\n\nThis happens when the envelope buffer falsely assumes that the envelope's projects are loaded\nin the cache and sends the envelope onward, even though the project cache cannot handle it.",
-    "features": []
-  },
-  {
     "type": "Timer",
     "name": "buffer.envelopes_serialization",
     "description": "Timing in milliseconds for the time it takes for an envelope to be serialized.",
-    "features": []
-  },
-  {
-    "type": "Timer",
-    "name": "buffer.idle",
-    "description": "Timing in milliseconds for the time the buffer service is waiting for input.\n\nThis metric is tagged with:\n- `input`: The type of input that broke the idling.",
     "features": []
   },
   {
@@ -87,6 +75,18 @@
     "type": "Timer",
     "name": "buffer.pop.duration",
     "description": "Timing in milliseconds for the time it takes for the buffer to pop.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "buffer.project_changed_event",
+    "description": "Number of project changed updates received by the buffer.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "buffer.project_pending",
+    "description": "Number of times one or more projects of an envelope were pending when trying to pop\ntheir envelope.",
     "features": []
   },
   {
@@ -383,12 +383,6 @@
     "type": "Gauge",
     "name": "kafka.stats.message_size_max",
     "description": "The maximum total size of messages allowed in the producer queues.",
-    "features": []
-  },
-  {
-    "type": "Timer",
-    "name": "legacy_project_cache.task.duration",
-    "description": "Timing in milliseconds for processing a task in the legacy project cache service.\n\nA task is a unit of work the service does. Each branch of the\n`tokio::select` is a different task type.\n\nThis metric is tagged with:\n- `task`: The type of the task the project cache does.",
     "features": []
   },
   {
@@ -826,13 +820,19 @@
   {
     "type": "Timer",
     "name": "scrubbing.attachments.duration",
-    "description": "Time spend on attachment scrubbing.\n\nThis represents the total time spent on evaluating the scrubbing rules for an\nattachment and the attachment scrubbing itself, regardless of whether any rules were\napplied.  Note that minidumps which failed to be parsed (status=\"error\" in\nscrubbing.minidumps.duration) will be scrubbed as plain attachments and count\ntowards this.",
+    "description": "Time spend on attachment scrubbing.\n\nThis represents the total time spent on evaluating the scrubbing rules for an\nattachment and the attachment scrubbing itself, regardless of whether any rules were\napplied.  Note that minidumps which failed to be parsed (status=\"error\" in\nscrubbing.minidumps.duration) will be scrubbed as plain attachments and count\ntowards this.\n\nThis metric is tagged with:\n\n- `attachment_type`: The type of attachment, e.g. \"minidump\".",
     "features": []
   },
   {
     "type": "Timer",
     "name": "scrubbing.minidumps.duration",
     "description": "Time spent on minidump scrubbing.\n\nThis is the total time spent on parsing and scrubbing the minidump.  Even if no PII\nscrubbing rules applied the minidump will still be parsed and the rules evaluated on\nthe parsed minidump, this duration is reported here with status of \"n/a\".\n\nThis metric is tagged with:\n\n- `status`: Scrubbing status: \"ok\" means successful scrubbed, \"error\" means there\nwas an error during scrubbing and finally \"n/a\" means scrubbing was successful\nbut no scurbbing rules applied.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "scrubbing.view_hierarchy_scrubbing.duration",
+    "description": "Time spent on view hierarchy scrubbing.\n\nThis is the total time spent on parsing and scrubbing the view hierarchy json file.\n\nThis metric is tagged with:\n\n- `status`: \"ok\" means successful scrubbed, \"error\" means there was an error during\nscrubbing",
     "features": []
   },
   {
@@ -872,12 +872,6 @@
     "features": [
       "processing"
     ]
-  },
-  {
-    "type": "Counter",
-    "name": "transactions_with_attachments",
-    "description": "Number of transactions with attachments seen in the request handler.",
-    "features": []
   },
   {
     "type": "Histogram",

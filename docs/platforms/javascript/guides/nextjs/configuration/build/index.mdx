@@ -16,4 +16,172 @@ keywords:
   ]
 ---
 
-The Sentry Next.js SDK supports automatic code injection and source map upload during your app's build process using the `withSentryConfig` wrapper in your Next.js configuration file (`next.config.js` or `next.config.mjs`). For information on the available configuration options, see [Extend Next.js Configuration](../../manual-setup/#extend-your-nextjs-configuration).
+The Sentry Next.js SDK supports automatic code injection and source map upload during your app's build process using the `withSentryConfig` wrapper in your Next.js configuration file (`next.config.js` or `next.config.mjs`). For information on updating the configuration, see [Extend Next.js Configuration](../../manual-setup/#extend-your-nextjs-configuration).
+
+## Available Options
+
+<TableOfContents ignoreIds={["available-options"]} />
+
+## Core Options
+
+<SdkOption name="org" type="string" envVar="SENTRY_ORG">
+
+The slug of the Sentry organization associated with the app.
+
+</SdkOption>
+
+<SdkOption name="project" type="string" envVar="SENTRY_PROJECT">
+
+The slug of the Sentry project associated with the app.
+
+</SdkOption>
+
+<SdkOption name="authToken" type="string" envVar="SENTRY_AUTH_TOKEN">
+
+The authentication token to use for all communication with Sentry. Can be obtained from https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/.
+
+</SdkOption>
+
+<SdkOption name="sentryUrl" type="string" envVar="SENTRY_URL" defaultValue="https://sentry.io/">
+
+The base URL of your Sentry instance. Use this if you are using a self-hosted or Sentry instance other than sentry.io.
+
+</SdkOption>
+
+<SdkOption name="headers" type="Record<string, string>">
+
+Headers added to every outgoing network request.
+
+</SdkOption>
+
+<SdkOption name="telemetry" type="boolean" defaultValue="true">
+
+If set to true, internal plugin errors and performance data will be sent to Sentry.
+
+At Sentry we like to use Sentry ourselves to deliver faster and more stable products. We're very careful of what we're sending. We won't collect anything other than error and high-level performance data. We will never collect your code or any details of the projects in which you're using this plugin.
+
+</SdkOption>
+
+<SdkOption name="silent" type="boolean" defaultValue="false">
+
+Suppresses all Sentry SDK build logs.
+
+</SdkOption>
+
+<SdkOption name="debug" type="boolean" defaultValue="false">
+
+Prints additional debug information about the SDK and uploading source maps when building the application.
+
+</SdkOption>
+
+## Source Maps Options
+
+<SdkOption name="sourcemaps.disable" type="boolean">
+
+Disable any functionality related to source maps.
+
+</SdkOption>
+
+<SdkOption name="sourcemaps.assets" type="string | string[]">
+
+A glob or an array of globs that specifies the build artifacts that should be uploaded to Sentry. If not specified, the plugin will try to upload all JavaScript files and source map files created during build.
+
+The globbing patterns follow the implementation of the `glob` package.
+
+</SdkOption>
+
+<SdkOption name="sourcemaps.ignore" type="string | string[]" defaultValue="[]">
+
+A glob or an array of globs that specifies which build artifacts should not be uploaded to Sentry.
+
+</SdkOption>
+
+<SdkOption name="sourcemaps.deleteSourcemapsAfterUpload" type="boolean" defaultValue="false">
+
+Toggle whether generated source maps within your Next.js build folder should be automatically deleted after being uploaded to Sentry.
+
+</SdkOption>
+
+## Release Options
+
+<SdkOption name="release.name" type="string" envVar="SENTRY_RELEASE">
+
+Unique identifier for the release you want to create. Defaults to automatically detecting a value for your environment.
+
+</SdkOption>
+
+<SdkOption name="release.create" type="boolean" defaultValue="true">
+
+Whether the plugin should create a release on Sentry during the build.
+
+</SdkOption>
+
+<SdkOption name="release.finalize" type="boolean" defaultValue="true">
+
+Whether the Sentry release should be automatically finalized after the build ends.
+
+</SdkOption>
+
+<SdkOption name="release.dist" type="string">
+
+Unique identifier for the distribution, used to further segment your release. Usually your build number.
+
+</SdkOption>
+
+## Bundle Size Optimizations
+
+<SdkOption name="bundleSizeOptimizations.excludeDebugStatements" type="boolean">
+
+If set to `true`, the Sentry SDK will attempt to tree-shake any debugging code within itself during the build.
+
+</SdkOption>
+
+<SdkOption name="bundleSizeOptimizations.excludeTracing" type="boolean">
+
+If set to `true`, the Sentry SDK will attempt to tree-shake code related to tracing and performance monitoring.
+
+**Notice:** Do not enable this when using any performance monitoring-related SDK features.
+
+</SdkOption>
+
+## Next.js Specific Options
+
+<SdkOption name="widenClientFileUpload" type="boolean" defaultValue="false">
+
+Include Next.js-internal code and code from dependencies when uploading source maps.
+
+Note: Enabling this option can lead to longer build times.
+
+</SdkOption>
+
+<SdkOption name="autoInstrumentServerFunctions" type="boolean" defaultValue="true">
+
+Automatically instrument Next.js data fetching methods and Next.js API routes with error and performance monitoring.
+
+</SdkOption>
+
+<SdkOption name="autoInstrumentMiddleware" type="boolean" defaultValue="true">
+
+Automatically instrument Next.js middleware with error and performance monitoring.
+
+</SdkOption>
+
+<SdkOption name="autoInstrumentAppDirectory" type="boolean" defaultValue="true">
+
+Automatically instrument components in the `app` directory with error monitoring.
+
+</SdkOption>
+
+<SdkOption name="tunnelRoute" type="string">
+
+Tunnel Sentry requests through this route on the Next.js server, to circumvent ad-blockers blocking Sentry events from being sent. This option should be a path (for example: '/error-monitoring').
+
+Note: This feature only works with Next.js 11+
+
+</SdkOption>
+
+<SdkOption name="automaticVercelMonitors" type="boolean" defaultValue="false">
+
+Automatically create cron monitors in Sentry for your Vercel Cron Jobs if configured via `vercel.json`.
+
+</SdkOption>

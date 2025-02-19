@@ -2,20 +2,14 @@
 title: Set Up Session Replay
 sidebar_order: 5500
 notSupported:
-description: "Learn how to enable the Mobile Session Replay Beta in your app."
+description: "Learn how to enable Session Replay in your mobile app."
 ---
 
-<Note>
+<Alert>
 
-Flutter Session Replay is available on **iOS** and **Android**.
+Flutter Session Replay is available on **iOS** and **Android**. This SDK support is still experimental as we iron out any bugs that are reported. If you encounter any issues please let us know via a GitHub ticket.
 
-Mobile support for Session Replay is in beta until January 6th, 2025. Features available in beta are still work-in-progress and may have bugs. We recognize the irony.
-
-All beta users will continue to receive 2 months free of Session Replay for Mobile once we transition to GA.
-
-If you have any questions, feedback or would like to report a bug, please open a [GitHub issue](https://github.com/getsentry/sentry-java/issues/new?assignees=&labels=Platform%3A+Android%2CType%3A+Bug&projects=&template=bug_report_android.yml) with a link to a relevant replay in Sentry if possible.
-
-</Note>
+</Alert>
 
 [Session Replay](/product/explore/session-replay/) helps you get to the root cause of an error or latency issue faster by providing you with a reproduction of what was happening in the user's device before, during, and after the issue. You can rewind and replay your application's state and see key user interactions, like taps, swipes, network requests, and console entries, in a single UI.
 
@@ -33,14 +27,21 @@ dependencies:
 
 ## Setup
 
-To set up the integration, add the following to your Sentry initialization:
+To set up replay, enable it by setting a non-zero sample rate. Also, make sure you've `SentryWidget` wrapping your app:
 
 ```dart
-await SentryFlutter.init((options) {
-  ...
-  options.experimental.replay.sessionSampleRate = 1.0;
-  options.experimental.replay.onErrorSampleRate = 1.0;
-});
+await SentryFlutter.init(
+  (options) {
+    ...
+    options.experimental.replay.sessionSampleRate = 1.0;
+    options.experimental.replay.onErrorSampleRate = 1.0;
+  },
+  appRunner: () => runApp(
+    SentryWidget(
+      child: MyApp(),
+    ),
+  ),
+);
 ```
 
 ## Verify

@@ -4,14 +4,60 @@ description: "Learn how to capture performance data on any action in your app."
 sidebar_order: 20
 ---
 
-<Note>
+<Alert>
 
 To capture transactions and spans customized to your organization's needs, you must first <PlatformLink to="/tracing/">set up tracing.</PlatformLink>
 
-</Note>
+</Alert>
 
 <PlatformContent includePath="performance/enable-manual-instrumentation" />
 
 <PlatformContent includePath="performance/add-spans-example" />
 
 <PlatformContent includePath="performance/retrieve-transaction" />
+
+## Adding Span & Transaction Data Attributes
+
+You can capture data attributes along with your spans and transactions. You can specify data attributes when starting a span or transaction:
+
+```php
+// Create a transaction and assign data attributes...
+$transactionContext = \Sentry\Tracing\TransactionContext::make()
+    ->setName('Example Transaction')
+    ->setOp('http.server')
+    ->setData([
+        'data_attribute_1' => 42,
+        'data_attribute_2' => true,
+    ]);
+$transaction = \Sentry\startTransaction($transactionContext);
+
+// ... or create a span and assign data attributes
+
+$spanContext = \Sentry\Tracing\SpanContext::make()
+    ->setOp('http.client')
+    ->setData([
+        'data_attribute_1' => 42,
+        'data_attribute_2' => true,
+    ]);
+$transaction->startChild($context);
+```
+
+Or you can add data attributes to an existing span or transaction:
+
+```php
+$transaction = \Sentry\SentrySdk::getCurrentHub()->getTransaction();
+if ($transaction !== null) {
+    $transaction->setData([
+        'data_attribute_1' => 42,
+        'data_attribute_2' => true,
+    ]);
+}
+
+$span = \Sentry\SentrySdk::getCurrentHub()->getSpan();
+if ($span !== null) {
+    $span->setData([
+        'data_attribute_1' => 42,
+        'data_attribute_2' => true,
+    ]);
+}
+```

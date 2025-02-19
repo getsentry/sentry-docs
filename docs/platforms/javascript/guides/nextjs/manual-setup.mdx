@@ -156,8 +156,12 @@ We recommend you include your DSN directly in these three files. Alternatively y
 
 While the client initialization code will be injected into your application's client bundle by `withSentryConfig` which we set up earlier,
 the configuration for the server and edge runtime needs to be imported from a [Next.js Instrumentation file](https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation).
-To set up this file, enable the Next.js instrumentation hook by setting the [`experimental.instrumentationHook`](https://nextjs.org/docs/app/api-reference/next-config-js/instrumentationHook) to `true` in your `next.config.js`.
-Then add a `instrumentation.ts` file to the root directory of your Next.js application (or inside the `src` folder if you're using one) and add the following content:
+
+<Alert>
+For Next.js versions `<15` enable the Next.js instrumentation hook by setting the [`experimental.instrumentationHook`](https://nextjs.org/docs/14/pages/api-reference/next-config-js/instrumentationHook) to `true` in your `next.config.js`.
+</Alert>
+
+Add a `instrumentation.ts` file to the root directory of your Next.js application (or inside the `src` folder if you're using one) and add the following content:
 
 ```javascript {filename:instrumentation.(js|ts)}
 export async function register() {
@@ -170,6 +174,7 @@ export async function register() {
   }
 }
 ```
+
 
 Make sure that the `import` statements point to your newly created `sentry.server.config.(js|ts)` and `sentry.edge.config.(js|ts)` files.
 
@@ -306,7 +311,7 @@ If you need additional logic within the `onRequestError` hook, call `captureRequ
 
 ```TypeScript {filename:instrumentation.ts}
 import * as Sentry from "@sentry/nextjs";
-import type { Instrumentation } from 'next';
+import type { Instrumentation } from "next";
 
 export const onRequestError: Instrumentation.onRequestError = (...args) => {
   Sentry.captureRequestError(...args);
@@ -442,7 +447,7 @@ module.exports = withSentryConfig(nextConfig, {
 
 Alternatively, you can set the `SENTRY_AUTH_TOKEN` environment variable:
 
-<Alert level="danger">
+<Alert level="warning">
 
 Do not commit your auth token to version control.
 
@@ -646,11 +651,11 @@ module.exports = withSentryConfig(nextConfig, {
 
 You can set the `automaticVercelMonitors` option to automatically create [Cron Monitors](/product/crons/) in Sentry if you have configured [Vercel Cron Jobs](https://vercel.com/docs/cron-jobs).
 
-<Note>
+<Alert>
 
 Automatic instrumentation of Vercel cron jobs currently only works for the Pages Router. App Router route handlers are not yet supported.
 
-</Note>
+</Alert>
 
 ```javascript {tabTitle:ESM} {filename:next.config.mjs}
 export default withSentryConfig(nextConfig, {

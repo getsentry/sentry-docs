@@ -1,0 +1,81 @@
+## Improving Data on Transactions and Spans
+You can add Data Attributes to both Spans and Transactions. This data is visible in the trace explorer in Sentry.
+The data must be of type `sentry_value_t`, which can store:
+* 32-bit signed integers,
+* double-precision floating-points,
+* null-terminated strings, as well as
+* lists and string-keyed maps containing `sentry_value_t` entries
+
+### Adding Data Attributes to Transactions
+
+You can add data attributes to your transactions using the following API:
+
+```c
+sentry_transaction_context_t *tx_ctx =
+    sentry_transaction_context_new("processOrderBatch()", "task");
+sentry_transaction_t *tx =
+    sentry_transaction_start(tx_ctx, sentry_value_new_null());
+
+sentry_transaction_set_data(tx, "my-data-attribute-1",
+    sentry_value_new_string("value1"));
+sentry_transaction_set_data(tx, "my-data-attribute-2",
+    sentry_value_new_int32(42));
+sentry_transaction_set_data(tx, "my-data-attribute-3",
+    sentry_value_new_double(3.14));
+sentry_transaction_set_data(tx, "my-data-attribute-4",
+    sentry_value_new_bool(true));
+
+sentry_value_t value_list = sentry_value_new_list();
+sentry_value_append(value_list, sentry_value_new_string("value1"));
+sentry_value_append(value_list, sentry_value_new_int32(42));
+sentry_value_append(value_list, sentry_value_new_double(3.14));
+sentry_value_append(value_list, sentry_value_new_bool(true));
+
+sentry_transaction_set_data(tx, "my-data-attribute-5", value_list);
+
+sentry_value_t value_object = sentry_value_new_object();
+sentry_value_set_by_key(value_object, "key_1", sentry_value_new_string("value1"));
+sentry_value_set_by_key(value_object, "key_2", sentry_value_new_int32(42));
+sentry_value_set_by_key(value_object, "key_3", sentry_value_new_double(3.14));
+sentry_value_set_by_key(value_object, "key_4", sentry_value_new_bool(true));
+
+sentry_transaction_set_data(tx, "my-data-attribute-6", value_object);
+```
+
+### Adding Data Attributes to Spans
+
+You can add data attributes to your spans using the following API:
+
+```c
+sentry_transaction_context_t *tx_ctx =
+    sentry_transaction_context_new("processOrderBatch()", "task");
+sentry_transaction_t *tx =
+    sentry_transaction_start(tx_ctx, sentry_value_new_null());
+sentry_span_t *span =
+    sentry_transaction_start_child(tx, "task", "operation");
+
+sentry_span_set_data(span, "my-data-attribute-1",
+    sentry_value_new_string("value1"));
+sentry_span_set_data(span, "my-data-attribute-2",
+    sentry_value_new_int32(42));
+sentry_span_set_data(span, "my-data-attribute-3",
+    sentry_value_new_double(3.14));
+sentry_span_set_data(span, "my-data-attribute-4",
+    sentry_value_new_bool(true));
+
+sentry_value_t value_list = sentry_value_new_list();
+sentry_value_append(value_list, sentry_value_new_string("value1"));
+sentry_value_append(value_list, sentry_value_new_int32(42));
+sentry_value_append(value_list, sentry_value_new_double(3.14));
+sentry_value_append(value_list, sentry_value_new_bool(true));
+
+sentry_span_set_data(span, "my-data-attribute-5", value_list);
+
+sentry_value_t value_object = sentry_value_new_object();
+sentry_value_set_by_key(value_object, "key_1", sentry_value_new_string("value1"));
+sentry_value_set_by_key(value_object, "key_2", sentry_value_new_int32(42));
+sentry_value_set_by_key(value_object, "key_3", sentry_value_new_double(3.14));
+sentry_value_set_by_key(value_object, "key_4", sentry_value_new_bool(true));
+
+sentry_span_set_data(span, "my-data-attribute-6", value_object);
+```

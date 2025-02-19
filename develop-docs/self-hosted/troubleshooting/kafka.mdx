@@ -1,0 +1,94 @@
+---
+title: Troubleshooting Kafka
+sidebar_title: Kafka
+sidebar_order: 2
+---
+
+## Offset Out Of Range Error
+
+```log
+Exception: KafkaError{code=OFFSET_OUT_OF_RANGE,val=1,str="Broker: Offset out of range"}
+```
+
+This happens where Kafka and the consumers get out of sync. Possible reasons are:
+
+1. Running out of disk space or memory
+2. Having a sustained event spike that causes very long processing times, causing Kafka to drop messages as they go past the retention time
+3. Date/time out of sync issues due to a restart or suspend/resume cycle
+
+### Recovery
+
+Note: These solutions may result in data loss when resetting the offset of the snuba consumers.
+
+#### Proper solution
+
+The _proper_ solution is as follows ([reported](https://github.com/getsentry/self-hosted/issues/478#issuecomment-666254392) by [@rmisyurev](https://github.com/rmisyurev)):
+
+1. Receive consumers list:
+   ```shell
+   docker compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --list
+   ```
+2. Get group info:
+   ```shell
+   docker compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers --describe
+   ```
+3. Watching what is going to happen with offset by using dry-run (optional):
+   ```shell
+   docker compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers --topic events --reset-offsets --to-latest --dry-run
+   ```
+4. Set offset to latest and execute:
+   ```shell
+   docker compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers --topic events --reset-offsets --to-latest --execute
+   ```
+
+<Alert title="Tip">
+You can replace <code>snuba-consumers</code> with other consumer groups or <code>events</code> with other topics when needed.
+</Alert>
+
+#### Another option
+
+This option is as follows ([reported](https://github.com/getsentry/self-hosted/issues/1690) by [@gabn88](https://github.com/gabn88)):
+
+1. Set offset to latest and execute:
+   ```shell
+   docker compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --all-groups --all-topics --reset-offsets --to-latest --execute
+   ```
+
+Unlike the proper solution, this involves resetting the offsets of all consumer groups and all topics.
+
+#### Nuclear option
+
+The _nuclear option_ is removing all Kafka-related volumes and recreating them which _will_ cause data loss. Any data that was pending there will be gone upon deleting these volumes.
+
+1. Stop the instance:
+   ```shell
+   docker compose down --volumes
+   ```
+2. Remove the Kafka & Zookeeper related volumes:
+   ```shell
+   docker volume rm sentry-kafka
+   docker volume rm sentry-zookeeper
+   ```
+
+ 3. Run the install script again:
+    ```shell
+    ./install.sh
+    ```
+ 4. Start the instance:
+    ```shell
+    docker compose up --wait
+    ```
+## Reducing disk usage
+
+If you want to reduce the disk space used by Kafka, you'll need to carefully calculate how much data you are ingesting, how much data loss you can tolerate and then follow the recommendations on [this awesome StackOverflow post](https://stackoverflow.com/a/52970982/90297) or [this post on our community forum](https://forum.sentry.io/t/sentry-disk-cleanup-kafka/11337/2?u=byk).
+
+You could, however, add these on the Kafka container's environment variables (by [@csvan](https://github.com/getsentry/self-hosted/issues/3389#issuecomment-2453567691)):
+```yaml
+services:
+  kafka:
+    # ...
+    environment:
+      KAFKA_LOG_RETENTION_HOURS: 24
+      KAFKA_LOG_CLEANER_ENABLE: true
+      KAFKA_LOG_CLEANUP_POLICY: delete
+```

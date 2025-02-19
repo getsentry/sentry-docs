@@ -91,17 +91,6 @@ To run the test locally, run `pytest` with `--migrations` flag. For example, `py
 
 If you would like to speed up the migration tests and do not require rebuilding the databases on each test run, supply `--reuse-db` as an additional option to the test command.
 
-### Backup Testing
-When you add or change a model, an error message in CI may appear explaining that one or multiple tests "produced an `export.json` backup file that was missing the above models".
-In order to resolve this, there are two steps:
-1. Add the new or modified model to the exhaustive organization in [testutils/helpers/backups.py](https://github.com/getsentry/sentry/blob/f9e6aa610340fd41cc13490aeda71b06bbc933c2/src/sentry/testutils/helpers/backups.py#L366) by creating an instance of your model, for example by invoking MyModel.objects.create(). This ensures the presence of the new model when creating the snapshot and during testing.
-2. The snapshot files can be regenerated using the following command:
-```
-SENTRY_SNAPSHOTS_WRITEBACK=1 pytest tests/sentry/backup/test_sanitize.py
-```
-
-There are also tests for model dependencies that make use of automatically generated fixtures in tests/sentry/backup/test_dependencies.py. These tests will fail if they are not updated when a new model with dependencies on other models is added, or dependencies are modified. In order to re-generate the model dependency graphs, you can run [bin/generate-model-dependency-fixtures](https://github.com/getsentry/sentry/blob/f9e6aa610340fd41cc13490aeda71b06bbc933c2/bin/generate-model-dependency-fixtures).
-
 #### Notes
 
 - There is a [known issue](https://github.com/getsentry/sentry/blob/e4627f093de4718e054ba9c6b002ff0b9a5b6033/tests/sentry/migrations/test_0295_backfill_alertrule_type.py#L1-L3) with the `django-pg-zero-downtime-migrations` package which causes the roll back of a `NOT NULL` constraint to fail.

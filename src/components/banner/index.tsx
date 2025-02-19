@@ -56,8 +56,8 @@ const BANNERS: BannerType[] = [
   },
   {
     appearsOn: ['^/$'],
-    text: 'Check out Sentry Launch Week for our latest product releases.',
-    linkURL: 'https://sentry.io/events/launch-week/?promo_name=launchweekQ4FY2024',
+    text: 'Learn about the newest features in Sentry.',
+    linkURL: 'https://sentry.io/changelog',
     linkText: 'See what’s new.',
   },
   {
@@ -67,9 +67,9 @@ const BANNERS: BannerType[] = [
       '^/platforms/android/',
       '^/platforms/apple/guides/ios/',
     ],
-    text: 'Session Replay for Mobile beta ends January 6, 2025.',
+    text: 'Session Replay is now generally available for mobile.',
     linkURL: 'https://docs.sentry.io/product/explore/session-replay/mobile/',
-    linkText: 'Try beta for free now.',
+    linkText: 'Get started today.',
   },
 ];
 
