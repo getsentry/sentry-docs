@@ -1287,10 +1287,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/security-legal-pii/security/security-policy-reporting/',
   },
   {
-    from: '/platforms/javascript/security-policy-reporting/',
-    to: '/security-legal-pii/security/security-policy-reporting/',
-  },
-  {
     from: '/platforms/javascript/troubleshooting/session-replay/',
     to: '/platforms/javascript/session-replay/troubleshooting/',
   },
@@ -1638,6 +1634,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/ruby/performance/instrumentation/opentelemetry/',
     to: '/platforms/ruby/tracing/instrumentation/opentelemetry/',
+  },
+  {
+    from: '/platforms/ruby/metrics/',
+    to: '/platforms/ruby/',
   },
   // END  bandaid fix for #11870
   {
@@ -3237,10 +3237,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/accounts/require-2fa/',
     to: '/organization/authentication/two-factor-authentication/',
-  },
-  {
-    from: '/platforms/go/guides/fiber/',
-    to: '/platforms/go/',
   },
   {
     from: '/platforms/go/guides/fiber/user-feedback/configuration/',

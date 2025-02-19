@@ -219,6 +219,14 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/organization/integrations/cloudflare-workers/',
+    destination: '/organization/integrations/cloud-monitoring/cloudflare-workers/',
+  },
+  {
+    source: '/account/require-2fa/',
+    destination: '/organization/authentication/two-factor-authentication/',
+  },
+  {
     source: '/organization/integrations/msteams/',
     destination: '/organization/integrations/notification-incidents/msteams/',
   },
@@ -469,6 +477,14 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/:guide/integrations/plugin/',
     destination: '/platforms/javascript/guides/:guide/configuration/integrations/plugin/',
+  },
+  {
+    source: '/platforms/javascript/configuration/environments/',
+    destination: '/platforms/javascript/configuration/options/#environment',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/configuration/environments/',
+    destination: '/platforms/javascript/guides/:guide/configuration/options/#environment',
   },
   {
     source: '/platforms/:platform/context/',
@@ -947,6 +963,26 @@ const userDocsRedirects = [
   {
     source: '/product/explore/feature-flags/:path*',
     destination: '/product/issues/issue-details/feature-flags/:path*',
+  },
+  {
+    source: '/platforms/python/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/python/troubleshooting/:path*',
+  },
+  {
+    source: '/platforms/ruby/guides/:guide/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/ruby/guides/:guide/troubleshooting/:path*',
+  },
+  {
+    source: '/platforms/ruby/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/ruby/troubleshooting/:path*',
+  },
+  {
+    source: '/platforms/php/guides/:guide/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/php/guides/:guide/troubleshooting/:path*',
+  },
+  {
+    source: '/platforms/php/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/php/troubleshooting/:path*',
   },
 ];
 

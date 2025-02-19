@@ -1,0 +1,91 @@
+---
+title: ESM (MJS)
+sidebar_order: 10
+description: "Learn about running Sentry in an ESM application."
+supported:
+  - javascript.node
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.hapi
+  - javascript.koa
+  - javascript.nestjs
+noindex: true
+---
+
+<Alert>
+  Are you unsure if you should use this installation method? Review our
+  [installation methods](../).
+</Alert>
+
+When running your application in ESM mode, you can't use `require()` to load modules. Instead, you have to use the `--import` command line options to load a module before the application starts.
+
+You need to create a file named `instrument.mjs` that imports and initializes Sentry:
+
+```javascript {tabTitle:ESM} {filename: instrument.mjs}
+import * as Sentry from "@sentry/node";
+
+// Ensure to call this before importing any other modules!
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Add Tracing by setting tracesSampleRate
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
+```
+
+Adjust the Node.js call for your application to use the [--import](https://nodejs.org/api/cli.html#--importmodule) parameter and point it at `instrument.js`, which contains your `Sentry.init()` code:
+
+```bash
+# Note: This is only available for Node v18.19.0 onwards.
+node --import ./instrument.mjs app.mjs
+```
+
+If it is not possible for you to pass the `--import` flag to the Node.js binary, you can alternatively use the `NODE_OPTIONS` environment variable as follows:
+
+```bash
+NODE_OPTIONS="--import ./instrument.mjs" npm run start
+```
+
+We do not support ESM in Node versions before 18.19.0.
+
+## Troubleshooting instrumentation
+
+By default, all packages are wrapped under the hood by
+[import-in-the-middle](https://www.npmjs.com/package/import-in-the-middle) to
+aid instrumenting them.
+
+If `import-in-the-middle` encounters problems wrapping a package, you may see
+syntax errors at runtime or logged errors in your console:
+
+```logs
+SyntaxError: The requested module '...' does not provide an export named '...'
+(node:3368) Error: 'import-in-the-middle' failed to wrap 'file://../../path/to/file.js'
+```
+
+To confirm that these errors are caused by `import-in-the-middle`,
+disable it by setting `registerEsmLoaderHooks` to false. Note, this will also
+disable tracing instrumentation:
+
+```javascript {tabTitle:ESM} {filename: instrument.mjs} {4}
+import * as Sentry from "@sentry/node";
+
+Sentry.init({
+  registerEsmLoaderHooks: false,
+});
+```
+
+If you are starting Sentry via `--import`, you can instruct `import-in-the-middle`
+to only wrap packages that Sentry specifically instruments. To do this, you can
+set the `onlyIncludeInstrumentedModules` to `true`:
+
+```javascript {tabTitle:ESM} {filename: instrument.mjs} {4-6}
+import * as Sentry from "@sentry/node";
+
+Sentry.init({
+  registerEsmLoaderHooks: {
+    onlyIncludeInstrumentedModules: true,
+  },
+});
+```
