@@ -964,6 +964,18 @@ const userDocsRedirects = [
     source: '/product/explore/feature-flags/:path*',
     destination: '/product/issues/issue-details/feature-flags/:path*',
   },
+  {
+    source: '/platforms/javascript/tracing/trace-propagation/',
+    destination: '/platforms/javascript/tracing/distributed-tracing/',
+  },
+  {
+    source: '/platforms/javascript/tracing/instrumentation/custom-instrumentation/',
+    destination: '/platforms/javascript/tracing/span-metrics/custom-instrumentation/',
+  },
+  {
+    source: '/platforms/javascript/tracing/instrumentation/performance-metrics/',
+    destination: '/platforms/javascript/tracing/span-metrics/performance-metrics/',
+  },
 ];
 
 /**
