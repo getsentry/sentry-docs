@@ -55,12 +55,6 @@ const BANNERS: BannerType[] = [
     linkText: 'CTA',
   },
   {
-    appearsOn: ['^/$'],
-    text: 'Learn about the newest features in Sentry.',
-    linkURL: 'https://sentry.io/changelog',
-    linkText: 'See what’s new.',
-  },
-  {
     appearsOn: [
       '^/platforms/flutter/',
       '^/platforms/react-native/',
@@ -70,6 +64,12 @@ const BANNERS: BannerType[] = [
     text: 'Session Replay is now generally available for mobile.',
     linkURL: 'https://docs.sentry.io/product/explore/session-replay/mobile/',
     linkText: 'Get started today.',
+  },
+  {
+    appearsOn: ['^/$'],
+    text: 'Ship it, break it, fix it—live! Hands-on workshop debugging with Lazar.',
+    linkURL: 'https://sentry.io/resources/instrument-monitor-fix-workshop/',
+    linkText: 'RSVP for March 12.',
   },
 ];
 
