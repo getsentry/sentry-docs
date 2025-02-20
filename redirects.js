@@ -965,16 +965,16 @@ const userDocsRedirects = [
     destination: '/product/issues/issue-details/feature-flags/:path*',
   },
   {
-    source: '/platforms/javascript/tracing/trace-propagation/',
-    destination: '/platforms/javascript/tracing/distributed-tracing/',
+    source: '/platforms/javascript/tracing/trace-propagation/:path*',
+    destination: '/platforms/javascript/tracing/distributed-tracing/:path*',
   },
   {
     source: '/platforms/javascript/tracing/instrumentation/custom-instrumentation/:path*',
     destination: '/platforms/javascript/tracing/span-metrics/custom-instrumentation/:path*',
   },
   {
-    source: '/platforms/javascript/tracing/instrumentation/performance-metrics/',
-    destination: '/platforms/javascript/tracing/span-metrics/performance-metrics/',
+    source: '/platforms/javascript/guides/:guide/tracing/instrumentation/performance-metrics/',
+    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/performance-metrics/',
   },
 ];
 
