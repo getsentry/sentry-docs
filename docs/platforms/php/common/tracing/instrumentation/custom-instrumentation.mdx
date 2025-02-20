@@ -61,3 +61,34 @@ if ($span !== null) {
     ]);
 }
 ```
+
+To update an existing data attribute, you can combine `setData()` with `getData()`:
+
+```php
+$span->setData([
+    'data_attribute_1' => $span->getData('data_attribute_1', 0) + 1,
+]);
+
+$transaction->setData([
+    'data_attribute_1' => $transaction->getData('data_attribute_1', 0) + 1,
+]);
+```
+
+To attach data attributes to the transaction and all its spans, you can use <PlatformLink to="/configuration/filtering/#using-before-send-transaction">`before_send_transaction`</PlatformLink>:
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'before_send_transaction' => function(Event $event) {
+        $spans = $event->getSpans();
+        foreach ($spans as $span) {
+            $span->setData([
+                'data_attribute_1' => 42,
+                'data_attribute_2' => true,
+            ]);
+        }
+    
+        $event->contexts['trace']['data']['foo'] = 42;
+    },
+]);
+```
