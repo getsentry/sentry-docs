@@ -24,6 +24,8 @@ Other than service monitoring, you should also monitor your own host instance by
 
 ## Sentry-related configurations
 
+This documentation assume `100.100.123.123` as your statsd host IP address. On most services, it is recommended to provide IP address for the host, instead of a domain name (something like `statsd.yourcompany.com`).
+
 ### Sentry
 
 You can configure Sentry to send metrics to Statsd server by configuring your `sentry/sentry.conf.py` file:
@@ -31,7 +33,7 @@ You can configure Sentry to send metrics to Statsd server by configuring your `s
 ```python
 SENTRY_METRICS_BACKEND = 'sentry.metrics.statsd.StatsdMetricsBackend'
 SENTRY_METRICS_OPTIONS: dict[str, Any] = {
-    'host': 'statsd.yourcompany.com',
+    'host': '100.100.123.123', # It's recommended to use IP address instead of domain name
     'port': 8125,
 }
 # SENTRY_METRICS_SAMPLE_RATE = 1.0   # Adjust this to your needs, default is 1.0
@@ -65,8 +67,8 @@ x-snuba-defaults: &snuba_defaults
     # Leaving the value empty to just pass whatever is set
     # on the host system (or in the .env file)
     SENTRY_EVENT_RETENTION_DAYS:
-    DOGSTATSD_HOST: "statsd.yourcompany.com"
-    DOGSTATSD_PORT: 8125
+    SNUBA_STATSD_HOST: "100.100.123.123" # Must be an IP address, not domain name
+    SNUBA_STATSD_PORT: 8125
 
 # The rest of your Docker Compose file
 ```
@@ -78,7 +80,7 @@ You can configure Relay to send metrics to Statsd server by configuring your `re
 ```yaml
 # The rest of your config.yml file
 metrics:
-  statsd: "statsd.yourcompany.com:8125"
+  statsd: "100.100.123.123:8125" # It's recommended to use IP address instead of domain name
   # prefix: "sentry.relay" # Adjust this to your needs, default is "sentry.relay"
   # sample_rate: 1.0 # Adjust this to your needs, default is 1.0
   # `periodic_secs` is the interval for periodic metrics emitted from Relay.
@@ -93,7 +95,7 @@ You can configure Symbolicator to send metrics to Statsd server by configuring y
 ```yaml
 # The rest of your config.yml file
 metrics:
-  statsd: "statsd.yourcompany.com:8125"
+  statsd: "100.100.123.123:8125" # It's recommended to use IP address instead of domain name
   prefix: "sentry.symbolicator" # Adjust this to your needs, default is "symbolicator"
 ```
 
