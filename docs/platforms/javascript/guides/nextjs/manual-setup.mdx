@@ -67,12 +67,13 @@ export default withSentryConfig(nextConfig, {
 ```
 
 ### Extend Sentry Webpack Plugin Options
+
 `withSentryConfig` uses a [custom Webpack plugin](https://www.npmjs.com/package/@sentry/webpack-plugin) to manage your sourcemaps and releases under the hood. If `withSentryConfig` does not provide the option you need to modify, you may override the `sentryWebpackPluginOptions` directly via `unstable_sentryWebpackPluginOptions`.
 
 <Alert level="warning">
-  Note that this option is unstable and its API may include breaking changes in any release.
+  Note that this option is unstable and its API may include breaking changes in
+  any release.
 </Alert>
-
 
 ## Create Initialization Config Files
 
@@ -175,7 +176,6 @@ export async function register() {
 }
 ```
 
-
 Make sure that the `import` statements point to your newly created `sentry.server.config.(js|ts)` and `sentry.edge.config.(js|ts)` files.
 
 ## Report React Component Render Errors
@@ -235,53 +235,6 @@ export default function GlobalError({ error }) {
         <NextError />
       </body>
     </html>
-  );
-}
-```
-
-Note that if you create [Next.js error.js files](https://nextjs.org/docs/app/building-your-application/routing/error-handling), these files will take precedence over the `global-error.js` file.
-This means, that if you want to report errors that are caught by `error.js` files, you need to manually capture them:
-
-```tsx {filename:error.tsx}
-"use client";
-
-import { useEffect } from "react";
-import * as Sentry from "@sentry/nextjs";
-
-export default function ErrorPage({
-  error,
-}: {
-  error: Error & { digest?: string };
-}) {
-  useEffect(() => {
-    // Log the error to Sentry
-    Sentry.captureException(error);
-  }, [error]);
-
-  return (
-    <div>
-      <h2>Something went wrong!</h2>
-    </div>
-  );
-}
-```
-
-```jsx {filename:error.jsx}
-"use client";
-
-import { useEffect } from "react";
-import * as Sentry from "@sentry/nextjs";
-
-export default function ErrorPage({ error }) {
-  useEffect(() => {
-    // Log the error to Sentry
-    Sentry.captureException(error);
-  }, [error]);
-
-  return (
-    <div>
-      <h2>Something went wrong!</h2>
-    </div>
   );
 }
 ```

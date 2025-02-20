@@ -9,3 +9,53 @@ try {
   Sentry.captureException(err);
 }
 ```
+
+<Expandable type="note" title="Capturing errors in `error.js` files">
+Note that if you create [Next.js `error.js` files](https://nextjs.org/docs/app/building-your-application/routing/error-handling), these files will take precedence over any global error handling.
+This means, that if you want to report errors that are caught by `error.js` files, you need to manually capture them:
+
+```tsx {filename:error.tsx}
+"use client";
+
+import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
+
+export default function ErrorPage({
+  error,
+}: {
+  error: Error & { digest?: string };
+}) {
+  useEffect(() => {
+    // Log the error to Sentry
+    Sentry.captureException(error);
+  }, [error]);
+
+  return (
+    <div>
+      <h2>Something went wrong!</h2>
+    </div>
+  );
+}
+```
+
+```jsx {filename:error.jsx}
+"use client";
+
+import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
+
+export default function ErrorPage({ error }) {
+  useEffect(() => {
+    // Log the error to Sentry
+    Sentry.captureException(error);
+  }, [error]);
+
+  return (
+    <div>
+      <h2>Something went wrong!</h2>
+    </div>
+  );
+}
+```
+
+</Expandable>
