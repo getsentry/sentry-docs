@@ -969,8 +969,8 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/tracing/distributed-tracing/',
   },
   {
-    source: '/platforms/javascript/tracing/instrumentation/custom-instrumentation/',
-    destination: '/platforms/javascript/tracing/span-metrics/custom-instrumentation/',
+    source: '/platforms/javascript/tracing/instrumentation/custom-instrumentation/:path*',
+    destination: '/platforms/javascript/tracing/span-metrics/custom-instrumentation/:path*',
   },
   {
     source: '/platforms/javascript/tracing/instrumentation/performance-metrics/',

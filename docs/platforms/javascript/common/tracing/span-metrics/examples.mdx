@@ -1,0 +1,194 @@
+---
+title: Examples
+description: "Examples of using span metrics to debug performance issues and monitor application behavior."
+sidebar_order: 10
+---
+
+<Alert>
+
+These examples assume you have already <PlatformLink to="/tracing/">set up tracing</PlatformLink> in your application.
+
+</Alert>
+
+This guide provides practical examples of using span metrics to solve common monitoring and debugging challenges. Each example includes the context, implementation, and specific benefits of tracking these metrics.
+
+## File Upload and Processing Pipeline
+
+**Challenge:** Understanding bottlenecks and failures in multi-step file processing operations.
+
+**Solution:** Track the entire file processing pipeline with detailed metrics at each stage.
+
+```javascript
+Sentry.startSpan(
+  {
+    name: 'File Upload and Processing',
+    op: 'file.process',
+    attributes: {
+      // File metadata for correlation and context
+      'file.size_bytes': 15728640,  // 15MB
+      'file.type': 'image/jpeg',
+      'file.name': 'user-profile.jpg',
+      
+      // Track each processing step for pipeline visibility
+      'processing.steps_completed': ['resize', 'compress', 'metadata'],
+      'processing.output_size_bytes': 524288,  // 512KB
+      'processing.compression_ratio': 0.033,
+      
+      // Upload performance metrics
+      'upload.chunk_size': 1048576,  // 1MB chunks
+      'upload.chunks_completed': 15,
+      'upload.storage_provider': 's3',
+      'upload.cdn_propagation_ms': 1500,
+      
+      // Error tracking
+      'error.count': 0
+    }
+  },
+  async () => {
+    // Your file processing implementation
+  }
+);
+```
+
+**Benefits:**
+- Identify which processing steps are taking longest
+- Track upload performance across different file sizes
+- Monitor CDN propagation delays
+- Calculate processing efficiency through compression ratios
+- Detect partial failures in the pipeline
+
+## LLM Integration Monitoring
+
+**Challenge:** Managing costs and performance of LLM API integrations while ensuring optimal user experience.
+
+**Solution:** Comprehensive tracking of token usage, timing, and configuration metrics.
+
+```javascript
+Sentry.startSpan(
+  {
+    name: 'LLM Generation',
+    op: 'ai.completion',
+    attributes: {
+      // Model configuration for context
+      'llm.model': 'gpt-4',
+      'llm.temperature': 0.7,
+      'llm.max_tokens': 2000,
+      'llm.stream_mode': true,
+      
+      // Token usage for cost monitoring
+      'llm.prompt_tokens': 425,
+      'llm.completion_tokens': 632,
+      'llm.total_tokens': 1057,
+      
+      // Performance metrics
+      'llm.time_to_first_token_ms': 245,
+      'llm.total_duration_ms': 3250,
+      
+      // Request outcome
+      'llm.request_status': 'success'
+    }
+  },
+  async () => {
+    // Your LLM API implementation
+  }
+);
+```
+
+**Benefits:**
+- Monitor API costs through token usage
+- Track user experience metrics like time to first token
+- Identify optimal model configurations
+- Debug streaming vs non-streaming performance
+- Correlate model parameters with response quality
+
+## E-Commerce Transaction Flow
+
+**Challenge:** Understanding the complete purchase flow and identifying revenue-impacting issues.
+
+**Solution:** Track the entire checkout process with business and technical metrics.
+
+```javascript
+Sentry.startSpan(
+  {
+    name: 'Purchase Transaction',
+    op: 'commerce.checkout',
+    attributes: {
+      // Cart analytics
+      'cart.item_count': 3,
+      'cart.total_amount': 159.99,
+      'cart.currency': 'USD',
+      'cart.items': ['SKU123', 'SKU456', 'SKU789'],
+      
+      // Payment processing
+      'payment.provider': 'stripe',
+      'payment.method': 'credit_card',
+      'payment.status': 'success',
+      
+      // Transaction metadata
+      'transaction.id': 'ord_123456789',
+      'customer.type': 'returning',
+      
+      // Fulfillment details
+      'shipping.method': 'express',
+      
+      // Promotion tracking
+      'promotion.code_applied': 'SUMMER23',
+      'promotion.discount_amount': 20.00
+    }
+  },
+  async () => {
+    // Your checkout process implementation
+  }
+);
+```
+
+**Benefits:**
+- Track conversion rates by customer type
+- Monitor payment provider performance
+- Analyze promotion effectiveness
+- Identify abandoned cart patterns
+- Debug payment processing issues
+
+## API Integration Health
+
+**Challenge:** Maintaining reliability and performance of critical API integrations.
+
+**Solution:** Detailed tracking of API request patterns and performance.
+
+```javascript
+Sentry.startSpan(
+  {
+    name: 'External API Call',
+    op: 'http.client',
+    attributes: {
+      // Request context
+      'http.endpoint': '/api/users',
+      'http.method': 'POST',
+      
+      // Performance metrics
+      'http.response_time_ms': 200,
+      'http.response_size_bytes': 2048,
+      
+      // Reliability metrics
+      'http.retry_count': 0,
+      'http.cache_status': 'miss',
+      
+      // Request outcome
+      'http.status_code': 200,
+      'http.error_type': null
+    }
+  },
+  async () => {
+    // Your API call implementation
+  }
+);
+```
+
+**Benefits:**
+- Monitor API endpoint performance
+- Track retry patterns
+- Optimize cache usage
+- Identify slow or failing endpoints
+- Debug integration issues
+
+For more information about implementing these examples effectively, see our <PlatformLink to="/tracing/span-metrics/">Span Metrics guide</PlatformLink> which includes detailed best practices and implementation guidelines.
