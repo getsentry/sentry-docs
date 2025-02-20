@@ -30,9 +30,9 @@ In the Project Settings, this option appears as `Debug Printing` and defaults to
 
 <ConfigKey name="release">
 
-Sets the release. Some SDKs will try to automatically configure a release out of the box but it's a better idea to manually set it to guarantee that the release is in sync with your deploy integrations or source map uploads. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
+Release version of the application. This value must be unique across all projects in your organization. By default, the SDK reads from the `application/config/name` and `application/config/version` project settings to generate the release identifier in the format `"{app_name}@{app_version}"`. Alternatively, you can set `release` to a custom value, optionally using the `{app_name}` and `{app_version}` placeholders in a configuration script.
 
-By default, the SDK reads from the `application/config/name` and `application/config/version` project settings to generate the release identifier in the format `"{app_name}@{app_version}"`. Alternatively, you can set `release` to a custom value, optionally using the `{app_name}` and `{app_version}` placeholders.
+Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
 
 </ConfigKey>
 
@@ -66,13 +66,6 @@ This variable controls the total amount of breadcrumbs that should be captured. 
 
 If enabled, the SDK will include PII (Personally Identifiable Information) with the events.
 
-{/* NOTE: Mobile is not supported yet. */}
-{/* <Alert>
-
-If you are using Sentry in your mobile app, read our [frequently asked questions about mobile data privacy](/security-legal-pii/security/mobile-privacy/) to assist with Apple App Store and Google Play app privacy details.
-
-</Alert> */}
-
 This option is disabled by default. If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
 
 </ConfigKey>
@@ -95,7 +88,7 @@ If enabled, the SDK will attach the Godot log file to the event.
 
 </ConfigKey>
 
-## Logger
+## Error Logger Options
 
 <ConfigKey name="error-logger-enabled">
 
@@ -106,6 +99,13 @@ If `true`, the SDK will capture logged errors as events and/or breadcrumbs, as d
 <ConfigKey name="error-logger-breadcrumb-mask">
 
 Specifies the types of errors captured as breadcrumbs. Accepts a single value or a bitwise combination of `GodotErrorMask` masks.
+
+`GodotErrorMask` values:
+- `MASK_NONE`: No logger errors will be captured.
+- `MASK_ERROR`: Native errors will be captured. These are typically C++ errors, which may also originate from a script.
+- `MASK_WARNING`: Warnings will be captured.
+- `MASK_SCRIPT`: Script errors will be captured.
+- `MASK_SHADER`: Shader errors will be captured.
 
 ```gdscript
 var mask = SentryOptions.MASK_ERROR | SentryOptions.MASK_SCRIPT
@@ -125,15 +125,25 @@ options.error_logger_event_mask = mask
 
 </ConfigKey>
 
-<ConfigKey name="error_logger_include_source">
+<ConfigKey name="error-logger-include-source">
 
 If `true`, the SDK will include the surrounding source code of logged errors, if available in the build.
 
 </ConfigKey>
 
-<ConfigKey name="error_logger_limits">
+<ConfigKey name="error-logger-limits">
 
-todo
+Defines throttling limits for the error logger. These limits are used to prevent the SDK from sending too many non-critical and repeating error events.
+
+This option contains multiple properties that govern the behavior of throttling. The following paragraphs explain each of those properties in detail.
+
+`events_per_frame` specifies the maximum number of error events to send per processed frame. If exceeded, no further errors will be captured until the next frame. This serves as a safety measure to prevent the SDK from overloading a single frame.
+
+`repeated_error_window_ms` specifies the minimum time interval in milliseconds between two identical errors. If exceeded, no further errors from the same line of code will be captured until the next interval.
+
+`throttle_events` specifies the maximum number of events allowed within a sliding time window of `throttle_window_ms` milliseconds. If exceeded, errors will be captured as breadcrumbs only until capacity is freed.
+
+`throttle_window_ms` specifies the time window in milliseconds for `throttle_events`.
 
 </ConfigKey>
 
@@ -177,11 +187,3 @@ func _on_crash(event: SentryEvent) -> SentryEvent:
 ```
 
 </ConfigKey>
-
-{/* NOTE: In the works and coming soon! */}
-{/* <ConfigKey name="before-breadcrumb">
-
-This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
-The callback typically gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
-
-</ConfigKey> */}
