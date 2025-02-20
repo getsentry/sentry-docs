@@ -243,83 +243,97 @@ The frontend span tracks the user's checkout experience, while the backend span 
 - Measure end-to-end order completion times
 - Identify friction points in the user experience
 
-## API Integration Health
+## Job Scheduling and Processing Pipeline
 
-**Challenge:** Maintaining reliability and performance of critical API integrations across client and server components.
+**Challenge:** Understanding performance and reliability of distributed job processing systems, from job creation through completion.
 
-**Solution:** Detailed tracking of API interactions from both consumer and provider perspectives.
+**Solution:** Comprehensive tracking of job lifecycle across scheduling, queueing, and processing stages.
 
 **Frontend Instrumentation:**
 ```javascript
-// Client-side API consumer
+// Client-side job submission and monitoring
 Sentry.startSpan(
   {
-    name: 'API Client Request',
-    op: 'http.client',
+    name: 'Job Submission Flow',
+    op: 'job.client',
     attributes: {
-      // Request context
-      'http.endpoint': '/api/users',
-      'http.method': 'POST',
+      // Job configuration
+      'job.type': 'video_transcoding',
+      'job.priority': 'high',
+      'job.estimated_duration_ms': 300000,
       
-      // Client metrics
-      'client.retry_count': 0,
-      'client.cache_status': 'miss',
-      'client.network_type': '4g',
+      // Input metrics
+      'input.size_bytes': 52428800,  // 50MB
+      'input.format': 'mp4',
+      'input.segments': 5,
       
-      // Request lifecycle
-      'request.size_bytes': 1024,
-      'request.preparation_time_ms': 50,
-      'response.parse_time_ms': 75,
+      // Client-side scheduling
+      'schedule.requested_start': '2024-03-15T10:00:00Z',
+      'schedule.deadline': '2024-03-15T11:00:00Z',
       
-      // Error handling
-      'error.type': null,
-      'error.retry_strategy': 'exponential'
+      // Progress monitoring
+      'monitor.polling_interval_ms': 5000,
+      'monitor.status_updates_received': 12,
+      'monitor.last_progress_percent': 45
     }
   },
   async () => {
-    // Client-side API call
+    // Job submission and progress tracking implementation
   }
 );
 ```
 
 **Backend Instrumentation:**
 ```javascript
-// Server-side API provider
+// Server-side job processing
 Sentry.startSpan(
   {
-    name: 'API Server Handler',
-    op: 'http.server',
+    name: 'Job Processing Pipeline',
+    op: 'job.server',
     attributes: {
-      // Request processing
-      'server.handler': 'UserController.create',
-      'server.processing_time_ms': 150,
+      // Queue metrics
+      'queue.name': 'video-processing',
+      'queue.provider': 'redis',
+      'queue.length_at_enqueue': 23,
+      'queue.wait_time_ms': 45000,
       
-      // Database interaction
-      'db.query_count': 3,
-      'db.total_query_time_ms': 85,
+      // Worker metrics
+      'worker.id': 'worker-pod-123',
+      'worker.current_load': 0.75,
+      'worker.memory_usage_mb': 1024,
       
-      // Response metrics
-      'response.size_bytes': 2048,
-      'response.status_code': 200,
+      // Processing stages
+      'processing.stages_completed': ['download', 'transcode', 'thumbnail'],
+      'processing.stage_durations_ms': {
+        'download': 12000,
+        'transcode': 180000,
+        'thumbnail': 5000
+      },
       
-      // Rate limiting
-      'rate_limit.remaining': 95,
-      'rate_limit.reset_ms': 3600000
+      // Resource utilization
+      'resource.cpu_percent': 85,
+      'resource.gpu_utilization': 0.92,
+      'resource.memory_peak_mb': 2048,
+      
+      // Job outcome
+      'outcome.status': 'completed',
+      'outcome.retry_count': 0,
+      'outcome.output_size_bytes': 31457280  // 30MB
     }
   },
   async () => {
-    // Server-side request handling
+    // Job processing implementation
   }
 );
 ```
 
 **How the Trace Works Together:**
-The frontend span captures the API consumer perspective, while the backend span tracks the server-side processing. The distributed trace provides full visibility into the API interaction, enabling you to:
+The frontend span tracks job submission and monitoring, while the backend span captures queue management and processing details. The distributed trace provides visibility into the entire job lifecycle, enabling you to:
 
-- Monitor end-to-end API request lifecycles
-- Track client-side network conditions and their impact
-- Analyze server processing efficiency
-- Identify bottlenecks in database queries
-- Monitor rate limit usage and impact
+- Monitor end-to-end job processing times and success rates
+- Track queue health and worker resource utilization
+- Identify bottlenecks in specific processing stages
+- Analyze job scheduling efficiency and queue wait times
+- Optimize resource allocation based on job characteristics
 
 For more information about implementing these examples effectively, see our <PlatformLink to="/tracing/span-metrics/">Span Metrics guide</PlatformLink> which includes detailed best practices and implementation guidelines.
