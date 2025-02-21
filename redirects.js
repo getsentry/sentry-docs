@@ -975,7 +975,7 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/:guide/tracing/instrumentation/performance-metrics/',
     destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/performance-metrics/',
-  },
+  }
 ];
 
 /**
