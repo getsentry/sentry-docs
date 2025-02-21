@@ -984,18 +984,31 @@ const userDocsRedirects = [
     source: '/product/explore/feature-flags/:path*',
     destination: '/product/issues/issue-details/feature-flags/:path*',
   },
+  // Redirects for JavaScript tracing docs 
   {
     source: '/platforms/javascript/tracing/trace-propagation/:path*',
     destination: '/platforms/javascript/tracing/distributed-tracing/:path*',
   },
   {
-    source: '/platforms/javascript/tracing/instrumentation/custom-instrumentation/:path*',
-    destination: '/platforms/javascript/tracing/span-metrics/custom-instrumentation/:path*',
-  },
-  {
     source: '/platforms/javascript/guides/:guide/tracing/instrumentation/performance-metrics/',
     destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/performance-metrics/',
-  }
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/tracing/trace-propagation/:path*',
+    destination: '/platforms/javascript/guides/:guide/tracing/distributed-tracing/:path*',
+  },
+  {
+    source: '/platforms/javascript/tracing/instrumentation/custom-instrumentation/:path*',
+    destination: '/platforms/javascript/tracing/instrumentation/:path*',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/tracing/instrumentation/custom-instrumentation/:path*',
+    destination: '/platforms/javascript/guides/:guide/tracing/instrumentation/:path*',
+  },
+  {
+    source: '/platforms/javascript/tracing/instrumentation/:path*',
+    destination: '/platforms/javascript/tracing/span-metrics/performance-metrics/:path*',
+  },
 ];
 
 /**
