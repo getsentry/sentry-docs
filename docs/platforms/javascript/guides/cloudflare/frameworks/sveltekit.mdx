@@ -3,7 +3,9 @@ title: Cloudflare Sveltekit Framework Guide
 description: "Learn how to add Cloudflare instrumentation to your SvelteKit app."
 ---
 
-If you're running your SvelteKit app on Cloudflare Pages, you can use the Sentry SvelteKit SDK in combination with the Sentry Cloudflare SDK to add Sentry instrumentation.
+If you're running your SvelteKit app on Cloudflare Pages, you need to configure the SDK a little differently to the default setup. This guide will show you how to set up the Sentry SvelteKit SDK for Cloudflare Pages.
+
+## 1. Install the SDK
 
 First, install the Sentry SvelteKit SDK in your application. We recommend using the Sentry wizard to automatically install the SDK:
 
@@ -13,9 +15,7 @@ npx @sentry/wizard@latest -i sveltekit
 
 If the setup through the wizard doesn't work for you, you can also [set up the SvelteKit SDK manually](/platforms/javascript/guides/sveltekit/manual-setup/).
 
-After installing the Sentry SvelteKit SDK, you can move on to setting up the Cloudflare SDK. First, install the SDK with your package manager:
-
-<PlatformContent includePath="getting-started-install" />
+## 2. Wrangler configuration
 
 To use the SDK, you'll need to set either the `nodejs_compat` or `nodejs_als` compatibility flags in your `wrangler.toml`. This is because the SDK
 needs access to the `AsyncLocalStorage` API to work correctly.
@@ -25,13 +25,15 @@ compatibility_flags = ["nodejs_compat"]
 # compatibility_flags = ["nodejs_als"]
 ```
 
-To use this SDK, update your `src/hooks.server.(ts|js)` file to use the `Sentry.wrapRequestHandler` method from the Sentry Cloudflare SDK and remove the `Sentry.init` call from `@sentry/sveltekit`.
+## 3. Update your server hooks file
+
+To use this SDK, update your `src/hooks.server.(ts|js)` file to use the `initCloudflareSentryHandle` method from the Sentry Cloudflare SDK and remove the `Sentry.init` call from `@sentry/sveltekit`.
 
 ```typescript diff {filename:hooks.server.(ts|js)}
- import { sequence } from "@sveltejs/kit/hooks";
- import { handleErrorWithSentry, sentryHandle } from "@sentry/sveltekit";
--import * as Sentry from '@sentry/sveltekit';
-+import * as Sentry from "@sentry/cloudflare";
+-import { handleErrorWithSentry, sentryHandle } from "@sentry/sveltekit";
++import { handleErrorWithSentry, sentryHandle, initCloudflareSentryHandle } from "@sentry/sveltekit";
++import { sequence } from "@sveltejs/kit/hooks";
+ import * as Sentry from '@sentry/sveltekit';
 
 -Sentry.init({
 -  dsn: '___PUBLIC_DSN___',
@@ -41,26 +43,16 @@ To use this SDK, update your `src/hooks.server.(ts|js)` file to use the `Sentry.
 -  // spotlight: import.meta.env.DEV,
 -});
 -
-+const handleInitSentry = ({ event, resolve }) => {
-+  return event.platform
-+    ? Sentry.wrapRequestHandler(
-+        {
-+          options: {
-+            dsn: '___PUBLIC_DSN___',
-+            tracesSampleRate: 1.0,
-+          },
-+          request: event.request,
-+          context: event.platform.ctx,
-+        },
-+        () => resolve(event)
-+      )
-+    : resolve(event);
-+};
--// If you have custom handlers, make sure to place them after `sentryHandle()` in the `sequence` function.
--export const handle = sequence(sentryHandle());
-+export const handle = sequence(handleInitSentry, sentryHandle());
+-export const handle = sentryHandle();
++export const handle = sequence(
++   initCloudflareSentryHandle({
++       dsn: '___PUBLIC_DSN___',
++       tracesSampleRate: 1.0,
++   }),
++   sentryHandle()
++);
 
-export const handleError = handleErrorWithSentry(myErrorHandler);
+ export const handleError = handleErrorWithSentry(myErrorHandler);
 ```
 
 If you need to use environmental variables, you can access them using `event.platform.env`.
