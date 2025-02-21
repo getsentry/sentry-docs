@@ -37,10 +37,25 @@ Select which Sentry features you'd like to install in addition to Error Monitori
 
 Sentry captures data by using an SDK within your application's runtime. These are platform-specific and allow Sentry to have a deep understanding of how your application works.
 
-```yml {filename:pubspec.yaml}
-dependencies:
-  sentry_flutter: ^{{@inject packages.version('sentry.dart.flutter') }}
+To install, run `@sentry/wizard`:
+
+```bash {tabTitle:brew}
+brew install getsentry/tools/sentry-wizard && sentry-wizard -i flutter
 ```
+
+```bash {tabTitle:npx}
+npx @sentry/wizard@latest -i flutter
+```
+
+[Sentry Wizard](https://github.com/getsentry/sentry-wizard) will patch your project accordingly, though you can [set up manually](/platforms/flutter/manual-setup/) if you prefer. You only need to patch the project once. Then you can add the patched files to your version control system.
+
+<Expandable title="The following tasks will be performed by the Sentry Wizard">
+
+- Configure the SDK with your DSN and performance monitoring options in your main.dart file.
+- Update your `pubspec.yaml` with the `sentry_flutter` and `sentry_dart_plugin` packages.
+- Add an example error to verify your setup.
+
+</Expandable>
 
 ## Configure
 
@@ -61,6 +76,9 @@ Future<void> main() async {
       // Setting to 1.0 will profile 100% of sampled transactions:
       // Note: Profiling alpha is available for iOS and macOS since SDK version 7.12.0
       options.profilesSampleRate = 1.0;
+      // Adds request headers and IP for users,
+      // visit: https://docs.sentry.io/platforms/flutter/data-management/data-collected/ for more info
+      options.sendDefaultPii = true;
     },
     appRunner: () => runApp(
       SentryWidget(
