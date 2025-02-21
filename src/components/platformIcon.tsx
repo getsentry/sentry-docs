@@ -997,7 +997,7 @@ export const PLATFORM_TO_ICON = {
   'ruby-sidekiq': 'sidekiq',
   'ruby-sinatra': 'sinatra',
   rust: 'rust',
-  'rust-actix': 'actix',
+  'rust-actix-web': 'actix',
   scala: 'scala',
   stride3d: 'stride3d',
   sql: 'sql',
