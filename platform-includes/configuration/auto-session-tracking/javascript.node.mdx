@@ -7,24 +7,14 @@ We mark the session as crashed if an _unhandled error_ reached our `errorHandler
 
 We mark the session as an error if the SDK captures an event that contains an exception (this includes manually captured exceptions).
 
-By default, the JavaScript SDKs are sending sessions, to disable this toggle the flag `autoSessionTracking` to `false`:
+By default, the SDK is sending sessions, to disable this configure the `httpIntegration` with the `trackIncomingRequestsAsSessions` option set to `false`.
 
 ```javascript
 Sentry.init({
-  autoSessionTracking: false, // default: true
+  integrations: [Sentry.httpIntegration({
+    trackIncomingRequestsAsSessions: false, // default: true
+  })]
 });
 ```
 
-{/* TODO(v9): Remove this notice? */}
-
-<PlatformSection notSupported={["javacript.cordova", "javascript.capacitor", "javascript.electron"]}>
-
-<Alert title="Deprecation Notice">
-
-{/* We don't use platform links here because we always have to link to node and browser here and doing a conditional just for that feels overkill. */}
-
-Starting with SDK version 8.43.0 and up, the `autoSessionTracking` option has been deprecated. You can use the [BrowserSession integration](/platforms/javascript/configuration/integrations/browsersession/) in browser environments and the [Http integration](/platforms/javascript/guides/node/configuration/integrations/http/) (via the `trackIncomingRequestsAsSessions` option) in Node.js runtime.
-
-</Alert>
-
-</PlatformSection>
+A session is automatically created for every node process by the `processSessionIntegration` which is configured by default.
