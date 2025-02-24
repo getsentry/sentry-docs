@@ -1191,9 +1191,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/sentry-basics/concepts/tracing/trace-view/',
   },
   {
-    from: ''
-  },
-  {
     from: '/product/sentry-basics/tracing/trace-view/',
     to: '/product/sentry-basics/concepts/tracing/trace-view/',
   },
