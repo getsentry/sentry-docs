@@ -1191,6 +1191,9 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/sentry-basics/concepts/tracing/trace-view/',
   },
   {
+    from: ''
+  },
+  {
     from: '/product/sentry-basics/tracing/trace-view/',
     to: '/product/sentry-basics/concepts/tracing/trace-view/',
   },
@@ -2439,7 +2442,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/performance/',
-    to: '/product/insights',
+    to: '/product/sentry-basics/performance-monitoring/',
   },
   {
     from: '/product/performance/getting-started/',
@@ -2455,7 +2458,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/performance/trends/',
-    to: '/product/insights/overview/trend/',
+    to: '/product/insights/overview/trends/',
   },
   {
     from: '/product/performance/transaction-summary/',
