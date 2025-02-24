@@ -730,6 +730,11 @@ const userDocsRedirects = [
     destination: '/api/releases/create-a-new-deploy-for-an-organization/',
   },
   {
+    source: '/api/replays/retrieve-a-count-of-replays/',
+    destination:
+      '/api/replays/retrieve-a-count-of-replays-for-a-given-issue-or-transaction/',
+  },
+  {
     source: '/api/projects/post-project-user-reports/',
     destination: '/api/projects/submit-user-feedback/',
   },
