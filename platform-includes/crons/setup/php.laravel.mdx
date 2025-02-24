@@ -2,9 +2,15 @@
 
 Use the Laravel SDK to monitor and notify you if your [scheduled task](https://laravel.com/docs/10.x/scheduling) is missed (or doesn't start when expected), if it fails due to a problem in the runtime (such as an error), or if it fails by exceeding its maximum runtime.
 
-To set up, add the `sentryMonitor()` macro to the scheduled tasks defined in your `app/Console/Kernel.php` file as shown below. (Please note, this will create a Cron monitor that will count against your quota.)
+To set up, add the `sentryMonitor()` macro to the scheduled tasks defined in your application as shown below. (Please note, this will create a Cron monitor that will count against your quota.)
 
-```php {filename:app/Console/Kernel.php}
+```php {tabTitle:Laravel 12.x & 11.x} {filename:routes/console.php}
+Schedule::command(SendEmailsCommand::class)
+    ->everyHour()
+    ->sentryMonitor(); // add this line
+```
+
+```php {tabTitle:Laravel 10.x & 9.x & 8.x} {filename:app/Console/Kernel.php}
 protected function schedule(Schedule $schedule)
 {
     $schedule->command('emails:send')
@@ -21,7 +27,27 @@ For the best results, we recommend using Laravel's [`cron`](https://laravel.com/
 By default, the Laravel SDK will infer various parameters of your scheduled task.
 For greater control, we expose some optional parameters on the `sentryMonitor()` macro.
 
-```php {filename:app/Console/Kernel.php}
+```php {tabTitle:Laravel 12.x & 11.x} {filename:routes/console.php}
+Schedule::command(SendEmailsCommand::class)
+    ->everyHour()
+    ->sentryMonitor(
+        // Specify the slug of the job monitor in case of duplicate commands or if the monitor was created in the UI.
+        monitorSlug: null,
+        // Number of minutes before a check-in is considered missed.
+        checkInMargin: 5,
+        // Number of minutes before an in-progress check-in is marked timed out.
+        maxRuntime: 15,
+        // Create a new issue when this many consecutive missed or error check-ins are processed.
+        failureIssueThreshold: 1,
+        // Resolve the issue when this many consecutive healthy check-ins are processed.
+        recoveryThreshold: 1,
+        // In case you want to configure the job monitor exclusively in the UI, you can turn off sending the monitor config with the check-in.
+        // Passing a monitor-slug is required in this case.
+        updateMonitorConfig: false,
+    )
+```
+
+```php {tabTitle:Laravel 10.x & 9.x & 8.x} {filename:app/Console/Kernel.php}
 protected function schedule(Schedule $schedule)
 {
     $schedule->command('emails:send')
