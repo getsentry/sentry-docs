@@ -1,0 +1,32 @@
+Options are used to initialize and control the behavior of the SDK. They can be configured in the **Project Settings** under the **Sentry** category. Additionally, you can configure or override options using a configuration script.
+
+### Configuration Script
+
+To define a configuration script, create a new script that extends the `SentryConfiguration` class. Then, assign your configuration script in the **Project Settings** under the **Sentry** category in the `Configuration Script` field.
+
+```gdscript
+extends SentryConfiguration
+
+func _configure(options: SentryOptions):
+	if OS.is_debug_build():
+		options.environment = "debug"
+		options.debug = true
+	options.release = "mygame@1.0.0"
+	options.before_send = _process_event
+	options.on_crash = _process_event
+
+func _process_event(event: SentryEvent) -> SentryEvent:
+	if event.environment == "debug":
+		# Discard event if running in a debug build.
+		return null
+	if event.message.contains("Bruno"):
+		# Remove sensitive information from the event.
+		event.message = event.message.replace("Bruno", "REDACTED")
+	return event
+```
+
+<Alert>
+
+If a user configuration script is assigned, SDK initialization will be delayed until `ScriptServer` becomes available during game startup.
+
+</Alert>

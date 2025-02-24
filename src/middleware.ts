@@ -1287,10 +1287,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/security-legal-pii/security/security-policy-reporting/',
   },
   {
-    from: '/platforms/javascript/security-policy-reporting/',
-    to: '/security-legal-pii/security/security-policy-reporting/',
-  },
-  {
     from: '/platforms/javascript/troubleshooting/session-replay/',
     to: '/platforms/javascript/session-replay/troubleshooting/',
   },
