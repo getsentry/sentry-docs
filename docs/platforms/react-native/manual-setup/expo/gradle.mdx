@@ -87,3 +87,35 @@ Does or doesn't include the source code of native code for Sentry. This executes
 ### includeSourceContext
 
 Generates a JVM (Java, Kotlin, etc.) source bundle and uploads your source code to Sentry. This enables source context, allowing you to see your source code as part of your stack traces in Sentry.
+
+## Dynamic configuration options
+
+If you want to dynamically disable the automatic upload of source maps and debug symbols for your Expo project, you can set the `SENTRY_DISABLE_AUTO_UPLOAD` environment variable:
+
+```bash
+export SENTRY_DISABLE_AUTO_UPLOAD=true
+```
+
+Add use the `shouldSentryAutoUpload` function in your dynamic Expo configuration `app.config.js`:
+
+```js
+  const { shouldSentryAutoUpload } = require("@sentry/react-native/expo");
+
+  module.exports = {
+    "expo": {
+      "plugins": [
+        [
+          "@sentry/react-native/expo",
+          {
+            "experimental_android": {
+              "enableAndroidGradlePlugin": true,
+              "autoUploadProguardMapping": shouldSentryAutoUpload(),
+              "uploadNativeSymbols": shouldSentryAutoUpload(),
+              "includeNativeSources": shouldSentryAutoUpload(),
+              "includeSourceContext": shouldSentryAutoUpload()
+            }
+          }
+        ],
+    }
+  };
+```
