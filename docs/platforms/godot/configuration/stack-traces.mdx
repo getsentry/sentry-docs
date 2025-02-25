@@ -1,0 +1,140 @@
+---
+title: Readable Stack Traces
+description: "Learn how to get readable stack traces in Sentry with Sentry SDK for Godot Engine."
+---
+
+Debug information files allow Sentry to extract stack traces and provide additional information about crash reports. In order to get readable stack traces in Sentry when your game crashes, you need to export your project using an export template that includes debug symbols. For the official builds, Godot Engine only provides templates without debug information. This guide covers how to create such templates and use them to export your project with full debug information available in Sentry.
+
+To get debug information, we need to compile export templates with debug symbols included. You'll need **SCons** build tool, Python, and a C++ compiler for your target platform installed.
+
+<Alert>
+
+On Windows, for instance, you can use [Visual Studio Community 2022](https://visualstudio.microsoft.com/) with the C++ workload installed.
+
+For more information, refer to [Building from Source](https://docs.godotengine.org/en/stable/contributing/development/compiling/index.html) in the official Godot documentation. It provides detailed instructions for compiling Godot on different platforms and with different tools. This guide offers streamlined instructions tailored for our use case, and may omit some details you require.
+
+</Alert>
+
+## Getting Godot Source
+
+Start in a terminal with Git available. Clone Godot Engine repository and switch to your preferred version tag (or branch):
+```bash
+git clone https://github.com/godotengine/godot
+cd godot
+git checkout 4.3-stable
+```
+
+## Compiling Templates
+
+To compile the Godot release export template with debug symbols, run the following command:
+
+```bash
+scons platform=windows target=template_release production=yes debug_symbols=yes separate_debug_symbols=yes
+```
+
+<Expandable title="Options explained">
+
+- `platform`: target platform (e.g., "windows", "linux", or "macos")
+- `target`: compilation target (e.g., "editor" or "template_release")
+- `production`: sets build defaults for production use
+- `debug_symbols`: includes debugging symbols in the build
+- `separate_debug_symbols`: extracts symbols into a separate file
+
+For more information, run: `scons --help`
+
+</Expandable>
+
+If all goes well, the export template files should appear as the result of the build process in the `bin/` directory inside the Godot source tree. When using MSVC on Windows, you will find `.exe` files alongside `.pdb` files, which contain debug information.
+
+<Alert>
+
+Learn more about debug formats in [Debug Information Files](/platforms/native/data-management/debug-files/).
+
+</Alert>
+
+## Exporting Project
+
+Now you can export your project using your custom template. In the Godot **Export** dialog window, follow these steps:
+
+1. Select or add an export preset.
+2. Enable the **Advanced Options** toggle.
+3. In the **Options** tab, under **Custom Template -> Release**, assign your custom template executable file.
+
+This will configure your project to use the custom export template with the debug symbols you compiled earlier.
+
+![Export Dialog](./imgs/godot_export_dialog.png)
+
+You should now be able to export your project using this template. Just make sure to uncheck `Export with Debug` in the **Export Project...** dialog, as you will need to compile and use the `template_debug` for that option.
+
+<Alert>
+
+If you need to `Export with Debug`, you can compile a debug template using the `target=template_debug` option. Debug templates enable debugging features in your export, such as breakpoints and debugger support.
+
+</Alert>
+
+## Uploading Debug Symbols
+
+In order to see readable stack traces in Sentry, you also need to upload your debug symbols. The easiest way to do it is by using Sentry CLI tools. These tools allow you to upload the necessary debug information, making the stack traces more readable and easier to debug.
+
+<Expandable title="Installing Sentry CLI">
+
+On Windows, if you have `scoop` installed:
+```PowerShell
+scoop install sentry-cli
+```
+
+On macOS, if you have Homebrew installed:
+```bash
+brew install getsentry/tools/sentry-cli
+```
+
+On Arch Linux (btw):
+```bash
+pacman -S sentry-cli
+```
+
+For other methods, refer to [Sentry CLI Installation](/cli/installation/).
+
+</Expandable>
+
+Log in to Sentry via the CLI by running the following command:
+
+```bash
+sentry-cli login
+```
+
+It will prompt you to create an auth token in your web browser. Follow the instructions, generate the token, and then paste it into the command-line prompt when asked.
+
+To upload debug symbols to Sentry using `sentry-cli`, run the following command:
+
+```bash
+sentry-cli debug-files upload --org <YOUR_ORGANIZATION> --project <YOUR_PROJECT> ./bin
+```
+
+Replace `<YOUR_ORGANIZATION>` and `<YOUR_PROJECT>` with your actual organization and project slugs or IDs. This will upload the files with debug information from the `./bin` directory to Sentry.
+
+Example output:
+
+```PowerShell
+$ sentry-cli debug-files upload --org sentry-sdks --project sentry-godot ./bin
+> Found 4 debug information files
+> Prepared debug information files for upload
+> Uploading completed in 7.429s
+> Uploaded 4 missing debug information files
+> File upload complete:
+
+  UPLOADED 88b87add-d362-406c-b3b7-9f019072a7e0-1 (godot.windows.template_release.x86_64.console.exe; x86_64 executable)
+  UPLOADED 88b87add-d362-406c-b3b7-9f019072a7e0-1 (godot.windows.template_release.x86_64.console.pdb; x86_64 debug companion)
+  UPLOADED 07c660ac-3f72-4c75-8aca-1378240cc949-1 (godot.windows.template_release.x86_64.pdb; x86_64 debug companion)
+  UPLOADED 07c660ac-3f72-4c75-8aca-1378240cc949-1 (godot.windows.template_release.x86_64.exe; x86_64 executable)
+```
+
+<Alert>
+
+For more information, refer to [Sentry CLI](/cli/) documentation.
+
+</Alert>
+
+Congratulations! You're all set up. Your exported project should now produce a readable stack trace in Sentry.
+
+![Symbolicated Issue](./imgs/symbolicated_issue.png)
