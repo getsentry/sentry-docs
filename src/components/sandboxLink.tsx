@@ -47,7 +47,7 @@ export function getSandboxURL({
   projectSlug?: string;
   scenario?: (typeof scenarios)[number];
 } = {}) {
-  const url = new URL('https://try.sentry-demo.com/demo/start/');
+  const url = new URL('https://sandbox.sentry.io/');
 
   if (scenario) {
     url.searchParams.append('scenario', scenario);
