@@ -13,6 +13,7 @@ import kubernetes from './icons/kubernetes.png';
 import lua from './icons/lua.png';
 import nuxt from './icons/nuxt.png';
 import ocaml from './icons/ocaml.png';
+import quarkus from './icons/quarkus.png';
 import scrapy from './icons/scrapy.png';
 import serverless from './icons/serverless.png';
 import strapi from './icons/strapi.png';
@@ -79,6 +80,11 @@ const CommunityPlatforms = [
     name: 'OCaml',
     url: 'https://github.com/brendanlong/sentry-ocaml',
     icon: ocaml,
+  },
+  {
+    name: 'Quarkus',
+    url: 'https://github.com/quarkiverse/quarkus-logging-sentry',
+    icon: quarkus,
   },
   {
     name: 'Scrapy',
