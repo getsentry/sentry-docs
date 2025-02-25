@@ -1,8 +1,70 @@
 ---
 title: Set Up User Feedback
-description: "Learn more about collecting user feedback when an event occurs. Sentry pairs the feedback with the original event, giving you additional insight into issues."
+description: "Learn how to enable User Feedback in your app."
 sidebar_order: 6000
 ---
+
+The User Feedback feature allows you to collect user feedback from anywhere inside your application at any time, without needing an error event to occur first.
+
+Note that if you're using a self-hosted Sentry instance, you'll need to be on version 24.4.2 or higher in order to use the full functionality of the User Feedback feature. Lower versions may have limited functionality.
+
+## User Feedback Widget
+
+The user feedback widget allows users to submit feedback from anywhere inside your application.
+
+To collect user feedback from inside your application use the `showFeedbackWidget` method.
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.wrap(RootComponent);
+
+Sentry.showFeedbackWidget();
+```
+
+Note that [the root application component must be wrapped with `Sentry.wrap`](/platforms/react-native/#wrap-your-app) for the `showFeedbackWidget` method to work. The method depends on the React Native `Modal` implementation. It is supported fully in the legacy architecture. For the new architecture (Fabric renderer) it requires React Native `0.71` and up.
+
+To configure the widget you can use the `Sentry.feedbackIntegration({})` or add it to your Sentry initialization.
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  integrations: [
+    Sentry.feedbackIntegration({
+        // Additional SDK configuration goes in here, for example:
+        styles:{
+            submitButton: {
+                backgroundColor: '#6a1b9a',
+            },
+        },
+        namePlaceholder: 'Fullname',
+    }),
+  ],
+});
+```
+
+There are many options you can pass to the integration constructor. See the [configuration documentation](/platforms/react-native/user-feedback/configuration/) for more details.
+
+### Feedback Widget Component
+
+You can also integrate the `FeedbackWidget` component manually in your app.
+
+```javascript
+import { FeedbackWidget } from "@sentry/react-native";
+
+<FeedbackWidget/>
+```
+
+For the full set of options you can pass to the `FeedbackWidget` component see the [configuration documentation](/platforms/react-native/user-feedback/configuration/).
+
+<Alert>
+
+Note that when the device is offline, the feedback will be stored locally and sent when the device is back online.
+
+</Alert>
 
 ## User Feedback API
 
