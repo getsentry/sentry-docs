@@ -87,6 +87,10 @@ module.exports = withSentryConfig(nextConfig, {
   unstable_sentryWebpackPluginOptions: {
     applicationKey: 'sentry-docs',
   },
+
+  _experimental: {
+    thirdPartyOriginStackFrames: true,
+  },
 });
 
 process.on('warning', warning => {
