@@ -55,4 +55,8 @@ export default withSentryConfig(nextConfig, {
   },
 
   automaticVercelMonitors: true,
+
+  _experimental: {
+    thirdPartyOriginStackFrames: true,
+  },
 });
