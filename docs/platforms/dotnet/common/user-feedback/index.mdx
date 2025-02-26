@@ -6,7 +6,7 @@ sidebar_order: 6000
 
 When a user experiences an error, Sentry provides the ability to collect additional feedback. You can collect feedback according to the method supported by the SDK.
 
-## Use the .NET SDK
+## User Feedback API
 
 <Alert>
 
@@ -14,12 +14,16 @@ User Feedback for **[ASP.NET](/platforms/dotnet/guides/aspnet/user-feedback/#int
 
 </Alert>
 
-You can create a form to collect the user input in your preferred framework, and use the SDK's API to send the information to Sentry. You can also use the widget, as described below. If you'd prefer an alternative to the widget or do not have a JavaScript frontend, you can use this API:
+You can create a form to collect the user input in your preferred framework, and use the SDK's API to send the information to Sentry.
 
 ```csharp {tabTitle:C#}
 var eventId = SentrySdk.CaptureMessage("An event that will receive user feedback.");
 
-SentrySdk.CaptureUserFeedback(eventId, "user@example.com", "It broke.", "The User");
+var feedback = new SentryFeedback("It broke.", "joe@shmoe.com", "Joe Shmoe", associatedEventId: eventId);
+var hint = new SentryHint();
+hint.AddAttachment("c:\foo.png", AttachmentType.Default, "image/png");  // You can also add a screenshot
+
+SentrySdk.CaptureFeedback(feedback, hint: hint);
 ```
 
 ```fsharp {tabTitle:F#}
@@ -27,8 +31,14 @@ open Sentry
 
 let eventId = SentrySdk.CaptureMessage("An event that will receive user feedback.")
 
-SentrySdk.CaptureUserFeedback(eventId, "user@example.com", "It broke.", "The User")
+let feedback = SentryFeedback("It broke.", "joe@shmoe.com", "Joe Shmoe", associatedEventId = eventId)
+let hint = SentryHint()
+hint.AddAttachment("c:\foo.png", AttachmentType.Default, "image/png") // You can also add a screenshot
+
+SentrySdk.CaptureFeedback(feedback, hint)
 ```
+
+Alternatively you can also use the widget, as described below.
 
 ## Crash-Report Modal
 
