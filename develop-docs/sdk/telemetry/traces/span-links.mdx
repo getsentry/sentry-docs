@@ -2,9 +2,9 @@
 title: Span Links
 ---
 
-Span links associate one span with one or more spans. The most important application of linking traces are frontend applications. It's also useful in settings with producer/consumer patterns.
-We are able to display a user journey in our tracing views to make debugging of issues easier as developers get more context on what happened before a specific issue.
-Without somehow linking spans together, we are limited to the duration of one trace (id), which is handled differently and kept alive for different times across our various SDKs.
+Span links associate one span with one or more other spans. The most important application of linking traces are frontend applications.
+It can also be useful in settings with producer/consumer patterns or batch operations.
+By using span links, we are able to display a user journey in our tracing views to make debugging of issues easier as developers get more context on what happened before a specific issue.
 
 A span link can store the context of (a.k.a. link to) any other span. When necessary, a special link type can be added (see [Link Types](#link-types)).
 
@@ -15,12 +15,12 @@ Learn more about Span Links in [the RFC 141](https://github.com/getsentry/rfcs/b
 - Links are added on a span level, as defined and specified by [OpenTelemetry](https://opentelemetry.io/docs/specs/otel/trace/api/#link).
 - In addition to linking to span IDs, a span link also holds meta information about the link, collected via attributes.
 - Span links MUST only link to other spans. We do not support linking a span to an error or other Sentry events.
-- For SDKs still having public APIs around transactions, their respective Transaction interface and `startTransaction` function(s) should support the same APIs
+- For SDKs still having public APIs around transactions, their respective Transaction interface and `startTransaction` function(s) should support the same APIs.
 
 ### Type Definitions
 
 SDKs should follow the OpenTelemetry spec for the Link interface as defined by the platform.
-Non-OTel SDKs should orient themselves on OTel, resulting in the following interface:
+Non-OTel SDKs should orient themselves on OTel, resulting in the interface below, or a related version that applies to the terminology and philosophy of the respective SDK:
 
 ```ts {tabTitle:Types}
 // see https://github.com/open-telemetry/opentelemetry-js/blob/main/api/src/trace/link.ts
@@ -49,6 +49,7 @@ type AttributeValues = string | boolean | number | Array<string> | Array<boolean
 ### Required Span API
 
 Ideally, the link is added when starting a span. An optional `links` attribute is added to the `startSpan` options.
+SDKs that don't offer span-centric APIs but e.g. transaction APIs, should ensure that their respective `start...` APIs (e.g. `startTransaction`) also offer a possibility to add links.
 
 ```ts {tabTitle:Span Options}
 function startSpan(options: StartSpanOptions);
@@ -69,11 +70,6 @@ interface Span {
 }
 ```
 
-
-
-
-#### Dealing with Negative Sample Rates
-
 ## Envelope Item Payload
 
 Span trees are serialized to transaction event envelopes in all Sentry SDKs. Therefore, the envelope item needs to accommodate span links
@@ -88,7 +84,7 @@ The serialized `links` objects should always contain:
 
 Optionally, the serialized link object can contain further fields from OTel like `traceState`, `isRemote` or `droppedAttributesCount` which will be just forwarded unless we find a use case for them.
 
-The OTel fields `spanId`, `traceId`, and `traceFlags` should be excluded from the links objects in the envelope to avoid duplicate data (e.g. `trace_id`).
+The OTel fields `spanId`, `traceId`, and `traceFlags` should be excluded from the links objects in the envelope to avoid duplicate data (e.g. `trace_id` vs. `traceId`).
 
 If the root span (previously known as transaction) has span links, the links are stored in the trace context.
 
@@ -143,12 +139,13 @@ Links that are stored in child spans are serialized in `spans[i].links`.
 
 ## Link Types
 
-Links don't require a special meaning or type. When necessary, use the "sentry.link.type" attribute on the link to define the link type.
+Links don't require a special meaning or type but if necessary (e.g. for identifying special links in the product), set the `sentry.link.type` attribute on the link to define the link type.
 Any string can be used, but these types have predefined meanings:
 
 | `sentry.link.type` | Usage                                                          | UI Implications                                                                                   |
 |--------------------|----------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
 | "previous_trace"   | Linking e.g. a navigation span to the previous page load span. | Used to query linked traces. Shows a button to go to linked previous trace in the trace explorer. |
+| "next_trace"       | Linking e.g. a page load span to the next navigation span.     | Used to query linked traces. Shows a button to go to linked next trace in the trace explorer.     |
 
 ### `previous_trace`
 
@@ -213,9 +210,8 @@ const navigation2Span = startSpan({name: '/users/:id'}, (span) => {
 
 ## Ingest/Relay
 
-Relay should forward the span links in the format that is required for further processing and storage.
-Importantly, we must not require span links to be defined. They are completely optional.
+Relay forwards the span links in the format that is required for further processing and storage.
+Importantly, Relay doesn't require span links to be defined. They are completely optional.
+Relay handles passing span links in the root span as well as in any child span (see [envelope item payload](#envelope-item-payload)).
 
-As a further requirement, Relay needs to handle passing along span links in the root span as well as in any child span (see [envelope item payload](#envelope-item-payload)).
-
-The expected type and structure of the links array and its contents is specified in Relay. This further includes specifying the type of the sentry.link.type attribute value to be a string.
+The expected type and structure of the links array and its contents is [specified in Relay](https://github.com/getsentry/relay/blob/master/relay-event-schema/src/protocol/span.rs#L753).
