@@ -13,93 +13,80 @@ description: "Get started with Sentry's Dev Toolbar, bringing critical Sentry in
 
 For the Sentry Dev Toolbar to work best, [enable tracing](/platforms/javascript/tracing/) in your app. With tracing enabled, the Dev Toolbar will be able to associate issues and feedback with the current URL in the browser location.
 
-## 1. Choose Deploy Environments
+## 1. Allow Domains
 
-Since the Dev Toolbar will be visible to users within your app, it's important to consider which environments should render it.
+Since the Dev Toolbar will be visible to users within your app, it's important to consider which environments should render it. See the [FAQ: _"In what environments should I enable the Dev Toolbar?"_](/product/dev-toolbar/faq/) for tips.
 
-In dev and staging environments, include the Toolbar so that all developers and testers can use it and quickly go from the page they're looking at back to Sentry for further debugging.
-
-In production environments, the Dev Toolbar can make it easier to reproduce real issues your users are having. However the Toolbar should not be rendered for all users of the site -- only when an employee/engineer/etc visits.
-
-Once you decide where and when you want the Toolbar to appear, you'll write those conditions into your codebase. The specific implementation is something you'll need to write based on how your app works and how your dev team is set up.
-
-For example, the conditions to show show the Toolbar in dev and staging might look like this:
-
-```typescript
-const env = process.env.SENTRY_ENVIRONMENT || 'development';
-
-const isDev = env === 'development' || env === 'staging';
-if (isDev) {
-  // Enable the Dev Toolbar here...
-}
-```
-
-Or if your web application requires authentication to access, you could add a conditional where the Dev Toolbar is shown always when deployed to development **and** staging, but in production only show the Toolbar **if** an employee is logged in.
-
-## 2. Allow Domains
-
-You will need to edit the [Project Settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/) page to allow the Toolbar to connect to Sentry by configuring your dev, staging, and production domains. Only add domains that you trust and control to this list.
+You will need to edit the [Project Settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/) page to allow the Toolbar to connect to Sentry. Add any production, staging, or development domains to the list. Only add domains that you trust and control to this list.
 
 ![Sentry's Dev Toolbar Settings Page](./img/sentry-project-settings-toolbar.png)
 
-## 3. Install
+## 2. Install
 
-Next you must include the Toolbar code in your app:
+If you are developing a React based application, it's time to add the Toolbar into your `package.json` file.
 
-```html {tabTitle: CDN}
-<!--
-Put this at the bottom of your page
-so it doesn’t block other critical JavaScript.
--->
-<script src="https://browser.sentry-cdn.com/sentry-toolbar/latest/toolbar.min.js"></script>
+Or, you can skip ahead to the next step to find the CDN configuration instructions.
+
+```bash {tabTitle: npm}
+npm install --save @sentry/developer-toolbar
 ```
-```typescript {tabTitle: React}
-// An NPM package is under development
-// In the meantime, go here for instructions to create a React hook manually:
-//   https://github.com/getsentry/sentry-toolbar/blob/main/docs/conditional-script.md
+```bash {tabTitle: yarn}
+yarn add @sentry/developer-toolbar
 ```
 
-Remember to conditionally include the Toolbar code only in environments that need it. This will help reduce network traffic for your users who do not have the credentials needed to login.
+## 3. Configure
 
-## 4. Configure
+Finally, whether you have a React application or are loading the Toolbar from the CDN you need to initialize the Toolbar using JavaScript. This will prompt any visitor to login to your Sentry organization.
 
-Finally, call `SentryToolbar.init(initConfig)` to render a Toolbar instance on each page where you want to see the Dev Toolbar. This will prompt any visitor to the page to login to your Sentry organization.
+```javascript {tabTitle: React}
+import {useSentryToolbar} from '@sentry/developer-toolbar';
 
+useSentryToolbar({
+  // Remember to conditionally enable the Toolbar.
+  // This will reduce network traffic for users
+  // who do not have credentials to login to Sentry.
+  enabled,
+
+  initProps: {
+    organizationSlug: 'acme',
+    projectIdOrSlug: 'website',
+  },
+})
+```
 ```html {tabTitle: CDN}
 <html>
 <head>...</head>
 <body>
     ...
+    <!--
+    Put this at the bottom of your page so it doesn’t
+    block other critical JavaScript.
+
+    Remember to conditionally include the Toolbar
+    script. This will reduce network traffic for users
+    who do not have credentials to login to Sentry.
+    -->
     <script src="https://browser.sentry-cdn.com/sentry-toolbar/latest/toolbar.min.js"></script>
     <script>
-    window.SentryToolbar.init({ ... });
+    window.SentryToolbar.init({
+      organizationSlug: 'acme',
+      projectIdOrSlug: 'website',
+    });
     </script>
 </body>
 </html>
 ```
-```typescript {tabTitle:React}
-// An NPM package is under development
-// In the meantime, go here for instructions to create a React hook manually:
-//   https://github.com/getsentry/sentry-toolbar/blob/main/docs/conditional-script.md
-```
 
-If the toolbar `<script>` is included on your site, and `SentryToolbar.init()` is called, then a "Login to Sentry" button will be visible to the public. This is not ideal, but your data in Sentry will still be safe as users outside of your Sentry organization will not be able to login.
-
+See the [FAQ: _"How can I conditionally initialize the Toolbar?"_](/product/dev-toolbar/faq/) for help implementing conditions for different environments.
 
 ### Init Configuration Options
 
-At minimum, you should be calling `.init()` with these two options:
-```javascript
-window.SentryToolbar.init({
-  organizationSlug: 'acme',
-  projectIdOrSlug: 'website',
-});
-```
+At minimum, you must set `organizationSlug` and `projectIdOrSlug`.
 
-And you can also include any additional options from this list:
+The complete list of options is here:
 
 | Option | Type | Description | Default Value |
-| ----- | ----- | ----- | ----- |
+| ------ | ---- | ----------- | ------------- |
 | `organizationSlug` | `string` | The organization that users should login to. For example \'acme\' | *Required Value* |
 | `projectIdOrSlug` | `string \| number` | The project for which this website/webapp is associated. | *Required Value* |
 | `environment (optional)` | `string \| string[] \| undefined` | The environment of this deployment. Used to narrow search results in the Toolbar UI. Set to `undefined` or `""` or `[]` if you want to see results from all environments. | `undefined` |
@@ -111,14 +98,52 @@ And you can also include any additional options from this list:
 | `debug (optional)` | `string \| undefined` | A comma separated string of debug targets to enable. Example: `'logging,state'`. If the list contains 'all' or 'true' then all targets will be enabled. Valid targets: `'logging' 'login-success' 'settings' 'state'` | `undefined` |
 | `mountPoint (optional)` | `HTMLElement \| () => HTMLElement \| undefined` | Where to mount the Toolbar in the DOM. | `document.body` |
 
+
+The React hook supports some other top-level options. The defaults values are:
+
+```javascript {tabTitle:React}
+useSentryToolbar({
+  initProps: {
+    organizationSlug: 'acme',
+    projectIdOrSlug: 'website',
+  },
+
+  // Optional:
+  enabled: true,
+
+  // Optional: Either `version` or `cdn`
+  // If both are set then `cdn` will override `version`
+  version: 'latest',
+  cdn: 'https://browser.sentry-cdn.com/sentry-toolbar/latest/toolbar.min.js',
+})
+```
+
+| Options | Type | Description | Default Value |
+| ------- | ---- | ----------- | ------------- |
+| `enabled` | `booleand (optional)` | Conditionally initialize the toolbar. Set this to false to avoid requesting the toolbar code on the browser, or to safely unmount an existing toolbar instance | `true` |
+| `version` | `string (optional)` | Request a speicifc version of the toolbar from the CDN. It's recommended to use `latest` for automatic updates. See https://github.com/getsentry/sentry-toolbar/releases for a list of available release tags. | `'latest'` |
+| `cdn` | `string (optional)` | Overrides the `version` field above. Setting the CDN is useful if you want to self-host a specific version of the Toolbar. | `'https://browser.sentry-cdn.com/sentry-toolbar/latest/toolbar.min.js'` |
+
+
 ### Unmounting the Toolbar
 
 If you have called `SentryToolbar.init({...})` to render the Toolbar, but now want to manually remove or unmount it from the page, you can call the cleanup function that is returned from `init()`. This will unmount all the injected HTML and CSS. Login credentials will not be removed, so you can re-insert the toolbar and still be authenticated.
+
+If you are using the React hook, then the toolbar will unmount when the react component is unmounted. Or if you set `enabled: false`.
+
 ```javascript
 const unmountToolbar = window.SentryToolbar.init({ ... });
 
 // sometime later...
 unmountToolbar();
+```
+```javascript {tabTitle:React}
+useSentryToolbar({
+  enabled: false, // The toolbar will not be mounted
+  initProps: {
+    ...
+  },
+})
 ```
 
 ## Feature Flag Panel
