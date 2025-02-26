@@ -67,12 +67,13 @@ export default withSentryConfig(nextConfig, {
 ```
 
 ### Extend Sentry Webpack Plugin Options
+
 `withSentryConfig` uses a [custom Webpack plugin](https://www.npmjs.com/package/@sentry/webpack-plugin) to manage your sourcemaps and releases under the hood. If `withSentryConfig` does not provide the option you need to modify, you may override the `sentryWebpackPluginOptions` directly via `unstable_sentryWebpackPluginOptions`.
 
 <Alert level="warning">
-  Note that this option is unstable and its API may include breaking changes in any release.
+  Note that this option is unstable and its API may include breaking changes in
+  any release.
 </Alert>
-
 
 ## Create Initialization Config Files
 
@@ -156,8 +157,12 @@ We recommend you include your DSN directly in these three files. Alternatively y
 
 While the client initialization code will be injected into your application's client bundle by `withSentryConfig` which we set up earlier,
 the configuration for the server and edge runtime needs to be imported from a [Next.js Instrumentation file](https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation).
-To set up this file, enable the Next.js instrumentation hook by setting the [`experimental.instrumentationHook`](https://nextjs.org/docs/app/api-reference/next-config-js/instrumentationHook) to `true` in your `next.config.js`.
-Then add a `instrumentation.ts` file to the root directory of your Next.js application (or inside the `src` folder if you're using one) and add the following content:
+
+<Alert>
+For Next.js versions `<15` enable the Next.js instrumentation hook by setting the [`experimental.instrumentationHook`](https://nextjs.org/docs/14/pages/api-reference/next-config-js/instrumentationHook) to `true` in your `next.config.js`.
+</Alert>
+
+Add a `instrumentation.ts` file to the root directory of your Next.js application (or inside the `src` folder if you're using one) and add the following content:
 
 ```javascript {filename:instrumentation.(js|ts)}
 export async function register() {
@@ -442,7 +447,7 @@ module.exports = withSentryConfig(nextConfig, {
 
 Alternatively, you can set the `SENTRY_AUTH_TOKEN` environment variable:
 
-<Alert level="danger">
+<Alert level="warning">
 
 Do not commit your auth token to version control.
 
@@ -450,60 +455,6 @@ Do not commit your auth token to version control.
 
 ```sh {filename:.env}
 SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
-```
-
-### Disable Source Maps
-
-You can disable the custom sourcemap plugin as follows:
-
-```javascript {tabTitle:ESM} {filename:next.config.mjs}
-export default withSentryConfig(nextConfig, {
-  sourcemaps: {
-    disable: true,
-  },
-});
-```
-
-```javascript {tabTitle:CJS} {filename:next.config.js}
-module.exports = withSentryConfig(nextConfig, {
-  sourcemaps: {
-    disable: true,
-  },
-});
-```
-
-### Use `hidden-source-map`
-
-Depending on your deployment setup, adding `sentry/nextjs` to your app may cause your source code to be visible in browser devtools when it wasn't before. (This happens because of the default behavior of [webpack's `source-map` built-in `devtool`](https://webpack.js.org/configuration/devtool/).) To prevent this, you can use `hidden-source-map` rather than `source-map`, which will prevent your built files from containing a `sourceMappingURL` comment, thus making sourcemaps invisible to the browser. To use `hidden-source-map`, add a `sentry` object to `nextConfig` above, and set the `hideSourceMaps` option to `true`:
-
-```javascript {tabTitle:ESM} {filename:next.config.mjs}
-export default withSentryConfig(nextConfig, {
-  hideSourceMaps: true,
-});
-```
-
-```javascript {tabTitle:CJS} {filename:next.config.js}
-module.exports = withSentryConfig(nextConfig, {
-  hideSourceMaps: true,
-});
-```
-
-### Widen the Upload Scope
-
-If you find that there are some frames in your client-side stack traces that aren't getting source-mapped even when most others are, the issue might be that those frames are from files in `static/chunks/` rather than `static/chunks/pages/`. By default, such files aren't uploaded because the majority of the files in `static/chunks/` only contain Next.js or third-party code.
-
-To upload all of the files and source maps, including ones from third-party packages, set the `widenClientFileUpload` option to `true`:
-
-```javascript {tabTitle:ESM} {filename:next.config.mjs}
-export default withSentryConfig(nextConfig, {
-  widenClientFileUpload: true,
-});
-```
-
-```javascript {tabTitle:CJS} {filename:next.config.js}
-module.exports = withSentryConfig(nextConfig, {
-  widenClientFileUpload: true,
-});
 ```
 
 ## Configure Tunneling to avoid Ad-Blockers
@@ -646,11 +597,11 @@ module.exports = withSentryConfig(nextConfig, {
 
 You can set the `automaticVercelMonitors` option to automatically create [Cron Monitors](/product/crons/) in Sentry if you have configured [Vercel Cron Jobs](https://vercel.com/docs/cron-jobs).
 
-<Note>
+<Alert>
 
 Automatic instrumentation of Vercel cron jobs currently only works for the Pages Router. App Router route handlers are not yet supported.
 
-</Note>
+</Alert>
 
 ```javascript {tabTitle:ESM} {filename:next.config.mjs}
 export default withSentryConfig(nextConfig, {

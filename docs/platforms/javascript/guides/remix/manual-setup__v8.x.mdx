@@ -1,0 +1,266 @@
+---
+title: Manual Setup
+sidebar_order: 1
+description: "Learn how to set up the SDK manually."
+noindex: true
+---
+
+If you can't (or prefer not to) run the [automatic setup](/platforms/javascript/guides/remix/#install), you can follow the instructions below to configure your application.
+
+## Features
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also analyze performance profiles from real users with [profiling](/product/explore/profiling/). Lastly, adding [session replay](/product/explore/session-replay/web/getting-started/) lets you get to the root of an error or performance issue faster by watching a video-like reproduction of a user session.
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+## Install
+
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "profiling", "session-replay"]}
+/>
+
+Get started by installing the Sentry Remix SDK:
+
+```bash {tabTitle:npm}
+npm install @sentry/remix --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/remix
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/remix
+```
+
+## Configure
+
+To use this SDK, initialize Sentry in your Remix project for both the client and server.
+
+### Client-side Configuration
+
+```typescript {tabTitle:Client} {filename: entry.client.tsx} {"onboardingOptions": {"performance": "8-12,16-23", "session-replay": "13-14,24-28"}}
+import { useLocation, useMatches } from "@remix-run/react";
+import * as Sentry from "@sentry/remix";
+import { useEffect } from "react";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.browserTracingIntegration({
+      useEffect,
+      useLocation,
+      useMatches,
+    }),
+    // Replay is only available in the client
+    Sentry.replayIntegration(),
+  ],
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for tracing.
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+
+  // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+  tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+
+  // Capture Replay for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
+```
+
+#### Remix ErrorBoundary
+
+To capture errors from [ErrorBoundary](https://remix.run/docs/en/main/route/error-boundary), you should define your own `ErrorBoundary` in `root.tsx` and use `Sentry.captureRemixErrorBoundaryError` inside of it. You can also create route-specific error capturing behavior by defining `ErrorBoundary` in your route components. The `ErrorBoundary` you define in `root.tsx` will be used as a fallback for all routes.
+
+```typescript {filename: root.tsx}
+import { captureRemixErrorBoundaryError } from "@sentry/remix";
+
+export const ErrorBoundary: V2_ErrorBoundaryComponent = () => {
+  const error = useRouteError();
+
+  captureRemixErrorBoundaryError(error);
+
+  return <div> ... </div>;
+};
+```
+
+To catch React component errors (in Remix v1) and routing transactions (in all Remix versions), wrap your Remix root with `withSentry`.
+
+<Alert>
+
+If you use Remix v1 with the `v2_errorBoundary` future flag, you must also configure your `ErrorBoundary`.
+
+</Alert>
+
+```typescript {filename: root.tsx}
+import {
+  Links,
+  LiveReload,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+} from "@remix-run/react";
+
+import { withSentry } from "@sentry/remix";
+
+function App() {
+  return (
+    <html>
+      <head>
+        <Meta />
+        <Links />
+      </head>
+      <body>
+        <Outlet />
+        <ScrollRestoration />
+        <Scripts />
+        <LiveReload />
+      </body>
+    </html>
+  );
+}
+
+export default withSentry(App);
+```
+
+<Alert>
+
+If you use Remix v2, `wrapWithErrorBoundary` is disabled by default. You still need to wrap your root component with `withSentry` to capture routing transactions.
+
+</Alert>
+
+You can disable or configure `ErrorBoundary` using a second parameter to `withSentry`.
+
+```typescript
+withSentry(App, {
+  wrapWithErrorBoundary: false,
+});
+
+// or
+
+withSentry(App, {
+  errorBoundaryOptions: {
+    fallback: <p>An error has occurred</p>,
+  },
+});
+```
+
+### Server-side Configuration
+
+Create an instrumentation file (named here as `instrument.server.mjs`) in your project. Add your initialization code in this file for the server-side SDK.
+
+```typescript {tabTitle:Server} {filename: instrument.server.mjs} {"onboardingOptions": {"performance": "5-9"}}
+import * as Sentry from "@sentry/remix";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for tracing.
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+
+  // To use Sentry OpenTelemetry auto-instrumentation
+  // default: false
+  autoInstrumentRemix: true,
+
+  // Optionally capture action formData attributes with errors.
+  // This requires `sendDefaultPii` set to true as well.
+  captureActionFormDataKeys: {
+    key_x: true,
+    key_y: true,
+  },
+  // To capture action formData attributes.
+  sendDefaultPii: true,
+});
+```
+
+Then run your Remix server with:
+
+```bash
+NODE_OPTIONS='--import=./instrument.server.mjs' remix-serve build
+# or
+NODE_OPTIONS='--require=./instrument.server.cjs' remix-serve build
+```
+
+If you use the Express server instead of the Remix built-in server, you can alternatively import your instrumentation file directly at the top of your server implementation. See the example [here](#custom-express-server).
+
+Sentry's Remix SDK will automatically record your [`action`](https://remix.run/docs/en/main/route/action) and [`loader`](https://remix.run/docs/en/main/route/loader) transactions, as well as server-side errors. You can also initialize Sentry's database integrations, such as <Link to="/platforms/javascript/guides/node/configuration/integrations/prisma/">Prisma</Link>, to get spans for your database calls.
+
+#### Server-Side Errors
+
+To capture server-side errors automatically, instrument the [`handleError`](https://remix.run/docs/en/main/file-conventions/entry.server#handleerror) function in your server entry point.
+
+If you're using Sentry Remix SDK version `7.87.0` or higher, you can wrap your error handler with `wrapHandleErrorWithSentry` or use `sentryHandleError` to export as your `handleError` function.
+
+```typescript {filename: entry.server.tsx (@sentry/remix >= 7.87.0)}
+import * as Sentry from "@sentry/remix";
+
+export const handleError = Sentry.wrapHandleErrorWithSentry(
+  (error, { request }) => {
+    // Custom handleError implementation
+  }
+);
+
+// Alternative: Use the Sentry utility function if you don't need to wrap a custom function
+export const handleError = Sentry.sentryHandleError;
+```
+
+For SDK versions older than `7.87.0`, you can use `Sentry.captureRemixServerException` to capture errors inside `handleError`.
+
+```typescript {filename: entry.server.tsx (@sentry/remix < 7.87.0)}
+export function handleError(
+  error: unknown,
+  { request }: DataFunctionArgs
+): void {
+  if (error instanceof Error) {
+    Sentry.captureRemixServerException(error, "remix.server", request);
+  } else {
+    // Optionally capture non-Error objects
+    Sentry.captureException(error);
+  }
+}
+```
+
+### Source Maps Upload
+
+To enable readable stack traces, <PlatformLink to="/sourcemaps">configure source maps upload</PlatformLink> for your production builds.
+
+After you've completed this setup, the SDK will automatically capture unhandled errors and promise rejections, and monitor performance. You can also [manually capture errors](/platforms/javascript/guides/remix/usage).
+
+## Verify
+
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+
+<PlatformContent includePath="getting-started-verify" />
+
+<Alert>
+
+You can refer to [Remix Docs](https://remix.run/docs/en/main/guides/envvars#browser-environment-variables) to learn how to use your Sentry DSN with environment variables.
+
+</Alert>
+
+## Custom Express Server
+
+You can import your server instrumentation file at the top of your Express server implementation.
+
+```typescript {filename: server.ts}
+// import the Sentry instrumentation file before anything else.
+import "./instrument.server.mjs";
+// alternatively `require('./instrument.server.cjs')`
+
+// ...
+
+const app = express();
+
+// ...
+```

@@ -1,7 +1,6 @@
 import Image from 'next/image';
 import ActixSVG from 'platformicons/svg/actix.svg';
 import AiohttpSVG from 'platformicons/svg/aiohttp.svg';
-import AndroidSVG from 'platformicons/svg/android.svg';
 import AngularjsSVG from 'platformicons/svg/angularjs.svg';
 import AnthropicSVG from 'platformicons/svg/anthropic.svg';
 import ApacheairflowSVG from 'platformicons/svg/apache-airflow.svg';
@@ -67,6 +66,7 @@ import GrapheneSVG from 'platformicons/svg/graphene.svg';
 import GraphqlSVG from 'platformicons/svg/graphql.svg';
 import GrpcSVG from 'platformicons/svg/grpc.svg';
 import HapiSVG from 'platformicons/svg/hapi.svg';
+import HonoSVG from 'platformicons/svg/hono.svg';
 import Html5SVG from 'platformicons/svg/HTML5.svg';
 import HttpxSVG from 'platformicons/svg/httpx.svg';
 import HueySVG from 'platformicons/svg/huey.svg';
@@ -96,7 +96,6 @@ import PhpSVG from 'platformicons/svg/php.svg';
 import PostgresqlSVG from 'platformicons/svg/postgresql.svg';
 import PowershellSVG from 'platformicons/svg/powershell.svg';
 import PyramidSVG from 'platformicons/svg/pyramid.svg';
-import PythonSVG from 'platformicons/svg/python.svg';
 import QtSVG from 'platformicons/svg/qt.svg';
 import QuartSVG from 'platformicons/svg/quart.svg';
 import RailsSVG from 'platformicons/svg/rails.svg';
@@ -205,6 +204,7 @@ import GrapheneSVGLarge from 'platformicons/svg_80x80/graphene.svg';
 import GraphqlSVGLarge from 'platformicons/svg_80x80/graphql.svg';
 import GrpcSVGLarge from 'platformicons/svg_80x80/grpc.svg';
 import HapiSVGLarge from 'platformicons/svg_80x80/hapi.svg';
+import HonoSVGLarge from 'platformicons/svg_80x80/hono.svg';
 import Html5SVGLarge from 'platformicons/svg_80x80/HTML5.svg';
 import HttpxSVGLarge from 'platformicons/svg_80x80/httpx.svg';
 import HueySVGLarge from 'platformicons/svg_80x80/huey.svg';
@@ -290,7 +290,8 @@ const formatToSVG = {
     lg: AiohttpSVGLarge,
   },
   android: {
-    sm: AndroidSVG,
+    // todo: switch to small icon https://github.com/getsentry/platformicons/issues/200
+    sm: AndroidSVGLarge,
     lg: AndroidSVGLarge,
   },
   angularjs: {
@@ -585,6 +586,10 @@ const formatToSVG = {
     sm: HapiSVG,
     lg: HapiSVGLarge,
   },
+  hono: {
+    sm: HonoSVG,
+    lg: HonoSVGLarge,
+  },
   kotlin: {
     sm: KotlinSVG,
     lg: KotlinSVGLarge,
@@ -666,7 +671,8 @@ const formatToSVG = {
     lg: PyramidSVGLarge,
   },
   python: {
-    sm: PythonSVG,
+    // todo: switch to small icon https://github.com/getsentry/platformicons/issues/199
+    sm: PythonSVGLarge,
     lg: PythonSVGLarge,
   },
   qt: {
@@ -911,6 +917,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-gcp-functions': 'gcp-functions',
   'javascript-ionic': 'ionic',
   'javascript-hapi': 'hapi',
+  'javascript-hono': 'hono',
   'javascript-koa': 'koa',
   'javascript-fastify': 'fastify',
   'javascript-nestjs': 'nestjs',
@@ -997,7 +1004,7 @@ export const PLATFORM_TO_ICON = {
   'ruby-sidekiq': 'sidekiq',
   'ruby-sinatra': 'sinatra',
   rust: 'rust',
-  'rust-actix': 'actix',
+  'rust-actix-web': 'actix',
   scala: 'scala',
   stride3d: 'stride3d',
   sql: 'sql',

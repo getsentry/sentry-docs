@@ -200,10 +200,16 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     : domain;
   let title =
     'Sentry Docs | Application Performance Monitoring &amp; Error Tracking Software';
-  let customCanonicalTag;
+  let customCanonicalTag: string = '';
   let description =
     'Self-hosted and cloud-based application performance monitoring &amp; error tracking that helps software teams see clearer, solve quicker, &amp; learn continuously.';
-  const images = [{url: `${previewDomain ?? domain}/meta.jpg`, width: 1200, height: 822}];
+  // show og image on the home page only
+  const images =
+    ((await props.params).path ?? []).length === 0
+      ? [{url: `${previewDomain ?? domain}/og.png`, width: 1200, height: 630}]
+      : [];
+
+  let noindex: undefined | boolean = undefined;
 
   const rootNode = await getDocsRootNode();
 
@@ -223,6 +229,8 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
       if (pageNode.frontmatter.customCanonicalTag) {
         customCanonicalTag = formatCanonicalTag(pageNode.frontmatter.customCanonicalTag);
       }
+
+      noindex = pageNode.frontmatter.noindex;
     }
   }
 
@@ -249,5 +257,6 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     alternates: {
       canonical,
     },
+    robots: noindex ? 'noindex' : undefined,
   };
 }

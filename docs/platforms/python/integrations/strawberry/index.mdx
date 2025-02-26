@@ -32,12 +32,15 @@ Select which Sentry features you'd like to install in addition to Error Monitori
   ]}
 />
 
-```python {"onboardingOptions": {"performance": "6-8", "profiling": "9-12"}}
+```python {"onboardingOptions": {"performance": "9-11", "profiling": "12-15"}}
 import sentry_sdk
 from sentry_sdk.integrations.strawberry import StrawberryIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
+    # Add data like request headers and IP for users, if applicable;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for tracing.
     traces_sample_rate=1.0,
@@ -97,7 +100,11 @@ exception due to the `ZeroDivisionError` we've snuck into the `resolve_hello`
 resolver.
 
 This will create a `GraphQLError` in the Issues section as well as a transaction
-in the Performance section of [sentry.io](https://sentry.io). It will take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+in the Performance section of [sentry.io](https://sentry.io). As long as the GraphQL
+query has a name (like `HelloQuery` in our example), the transaction will be named
+after it.
+
+It might take a couple of moments for the error and transaction to appear in [sentry.io](https://sentry.io).
 
 ## Options
 
