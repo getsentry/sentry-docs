@@ -360,7 +360,46 @@ CustomErrorComponent.getInitialProps = async (contextData) => {
 export default CustomErrorComponent;
 ```
 
-## Step 4: Add Readable Stack Traces With Source Maps (Optional)
+## Step 4: Instrument Next.js Server Actions (Optional)
+
+_Requires `@sentry/nextjs` SDK version `7.81.0` or newer._
+
+To instrument Next.js Server Actions, wrap their content in `withServerActionInstrumentation`, along with a name to describe your server action.
+
+You can optionally pass form data and headers to record them, and configure the wrapper to record the Server Action responses:
+
+```tsx
+import * as Sentry from "@sentry/nextjs";
+import { headers } from "next/headers";
+
+export default function ServerComponent() {
+  async function myServerAction(formData: FormData) {
+    "use server";
+    return await Sentry.withServerActionInstrumentation(
+      "myServerAction", // The name you want to associate this Server Action with in Sentry
+      {
+        formData, // Optionally pass in the form data
+        headers: headers(), // Optionally pass in headers
+        recordResponse: true, // Optionally record the server action response
+      },
+      async () => {
+        // ... Your Server Action code
+
+        return { name: "John Doe" };
+      }
+    );
+  }
+
+  return (
+    <form action={myServerAction}>
+      <input type="text" name="some-input-value" />
+      <button type="submit">Run Action</button>
+    </form>
+  );
+}
+```
+
+## Step 5: Add Readable Stack Traces With Source Maps (Optional)
 
 Sentry can automatically provide readable stack traces for errors using source maps, requiring a Sentry auth token.
 
@@ -402,7 +441,7 @@ Make sure to keep your auth token secret and out of version control.
 
 </Alert>
 
-## Step 5: Avoid Ad Blockers With Tunneling (Optional)
+## Step 6: Avoid Ad Blockers With Tunneling (Optional)
 
 You can prevent ad blockers from blocking Sentry events using tunneling. Use the `tunnelRoute` option to add an API endpoint in your application that forwards Sentry events to Sentry servers.
 
@@ -432,7 +471,114 @@ module.exports = withSentryConfig(nextConfig, {
   negative matcher to your middleware like `(?!monitoring-tunnel)`.
 </Alert>
 
-## Step 6: Instrument Vercel Cron Jobs (Optional)
+## Step 7: Configure Server-side Auto-instrumentation (Optional)
+
+The SDK will automatically instrument API routes and server-side [Next.js data fetching methods](https://nextjs.org/docs/basic-features/data-fetching/overview) with error and tracing.
+
+### Disable API Route, Middleware and Data Fetching Auto-instrumentation Entirely
+
+To disable the automatic instrumentation of API route handlers and server-side data fetching functions, set the `autoInstrumentServerFunctions` to `false`.
+
+```javascript {tabTitle:ESM} {filename:next.config.mjs}
+export default withSentryConfig(nextConfig, {
+  autoInstrumentServerFunctions: false,
+});
+```
+
+```javascript {tabTitle:CJS} {filename:next.config.js}
+module.exports = withSentryConfig(nextConfig, {
+  autoInstrumentServerFunctions: false,
+});
+```
+
+With this option, under the hood, the SDK is using a webpack loader to wrap all your API route handlers and data fetching methods.
+
+### Opt In to Auto-instrumentation on Specific Routes
+
+If the automatic instrumentation doesn't work for your use case, you can turn it off globally and choose to only wrap specific API route handlers or data fetching functions instead.
+
+For API routes, use the `wrapApiHandlerWithSentry` function:
+
+```javascript {filename:pages/api/*}
+import { wrapApiHandlerWithSentry } from "@sentry/nextjs";
+
+const handler = (req, res) => {
+  res.status(200).json({ name: "John Doe" });
+};
+
+export default wrapApiHandlerWithSentry(handler, "/api/myRoute");
+```
+
+```typescript {filename:pages/api/*}
+import type { NextApiRequest, NextApiResponse } from "next";
+import { wrapApiHandlerWithSentry } from "@sentry/nextjs";
+
+const handler = (req: NextApiRequest, res: NextApiResponse) => {
+  res.status(200).json({ name: "John Doe" });
+};
+
+export default wrapApiHandlerWithSentry(handler, "/api/myRoute");
+```
+
+For data fetching methods, use the following functions:
+
+- `wrapGetInitialPropsWithSentry` for `getInitialProps`
+- `wrapGetServerSidePropsWithSentry` for `getServerSideProps`
+- `wrapGetStaticPropsWithSentry` for `getStaticProps`
+- `wrapErrorGetInitialPropsWithSentry` for `getInitialProps` in [custom Error pages](https://nextjs.org/docs/advanced-features/custom-error-page)
+- `wrapAppGetInitialPropsWithSentry` for `getInitialProps` in [custom `App` components](https://nextjs.org/docs/advanced-features/custom-app)
+- `wrapDocumentGetInitialPropsWithSentry` for `getInitialProps` in [custom `Document` components](https://nextjs.org/docs/advanced-features/custom-document)
+
+### Opt Out of Auto-instrumentation on Specific Routes
+
+If you want auto-instrumentation to apply by default, but want to exclude certain routes, use the `excludeServerRoutes` option:
+
+```javascript {tabTitle:ESM} {filename:next.config.mjs}
+export default withSentryConfig(nextConfig, {
+  excludeServerRoutes: [
+    "/some/excluded/route",
+    "/excluded/route/with/[parameter]",
+    /^\/route\/beginning\/with\/some\/prefix/,
+    /\/routeContainingASpecificPathSegment\/?/,
+  ],
+});
+```
+
+```javascript {tabTitle:CJS} {filename:next.config.js}
+module.exports = withSentryConfig(nextConfig, {
+  excludeServerRoutes: [
+    "/some/excluded/route",
+    "/excluded/route/with/[parameter]",
+    /^\/route\/beginning\/with\/some\/prefix/,
+    /\/routeContainingASpecificPathSegment\/?/,
+  ],
+});
+```
+
+Excluded routes can be specified either as regexes or strings. When using a string, make sure that it matches the route exactly, and has a leading slash but no trailing one.
+
+### Opt Out of Auto-instrumentation on Middleware
+
+To disable the automatic instrumentation of Next.js middleware, set the `autoInstrumentMiddleware` option to `false`.
+
+```javascript {tabTitle:ESM} {filename:next.config.mjs}
+export default withSentryConfig(nextConfig, {
+  autoInstrumentMiddleware: false,
+});
+```
+
+```javascript {tabTitle:CJS} {filename:next.config.js}
+module.exports = withSentryConfig(nextConfig, {
+  autoInstrumentMiddleware: false,
+});
+```
+
+### Opt Out of Sentry SDK bundling in Client- or Server-Side
+
+If you want the Sentry SDK to be available in your server-side and not in client-side, you can simply delete `sentry.client.config.js`. This will prevent webpack from pulling in the Sentry related files when generating the browser bundle.
+Similarly, to opt out of server-side SDK bundling, you can simply delete the `sentry.server.config.js` and `sentry.edge.config.js` files. Make sure to remove any imports of these files from `instrumentation.ts`.
+
+## Step 8: Instrument Vercel Cron Jobs (Optional)
 
 You can automatically create [Cron Monitors](/product/crons/) in Sentry if you have configured [Vercel cron jobs](https://vercel.com/docs/cron-jobs).
 
@@ -456,7 +602,7 @@ Automatic Vercel cron jobs instrumentation currently only supports the Pages Rou
 
 </Alert>
 
-## Step 7: Capture React Component Names (Optional)
+## Step 9: Capture React Component Names (Optional)
 
 You can capture React component names to see which component a user clicked on in Sentry features like Session Replay.
 Update `withSentryConfig` in your `next.config.(js|mjs)` file with the following option:
@@ -477,7 +623,7 @@ module.exports = withSentryConfig(nextConfig, {
 });
 ```
 
-## Step 8: Verify
+## Step 10: Verify
 
 <Include name="nextjs-turbopack-warning-expandable.mdx" />
 
