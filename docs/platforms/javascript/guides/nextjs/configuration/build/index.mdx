@@ -146,6 +146,21 @@ If set to `true`, the Sentry SDK will attempt to tree-shake code related to trac
 
 ## Next.js Specific Options
 
+<SdkOption
+  name="unstable_sentryWebpackPluginOptions"
+  type="SentryWebpackPluginOptions"
+>
+  Pass configuration options directly to the Sentry Webpack Plugin
+  [`@sentry/webpack-plugin`](https://www.npmjs.com/package/@sentry/webpack-plugin)
+  that ships with the Sentry Next.js SDK. If `withSentryConfig` doesn't provide
+  the option you need to modify, you may override the
+  `sentryWebpackPluginOptions` using this option.
+  <Alert level="warning" title="Important">
+    This option is considered unstable, and its API may change in a breaking way
+    in any release.
+  </Alert>
+</SdkOption>
+
 <SdkOption name="widenClientFileUpload" type="boolean" defaultValue="false">
 
 Include Next.js-internal code and code from dependencies when uploading source maps.
@@ -182,11 +197,47 @@ Automatically instrument components in the `app` directory with error monitoring
 
 </SdkOption>
 
+<SdkOption name="excludeServerRoutes" type="Array<RegExp | string>">
+Exclude specific server-side API routes or pages from automatic Sentry instrumentation during build time.
+This option takes an array of strings or regular expressions and affects pages in the `pages` and `app` directories.
+
+When defining routes, note the following:
+
+- Specify pages as routes and not as file system paths. For example, write `/animals` instead of `pages/animals/index.js`.
+- Make sure that any provided string matches the route exactly, has a leading slash, and doesn't have a trailing slash.
+
+```javascript
+excludeServerRoutes: [
+  "/some/excluded/route",
+  "/excluded/route/with/[parameter]",
+  /^\/route\/beginning\/with\/some\/prefix/,
+  /\/routeContainingASpecificPathSegment\/?/,
+];
+```
+
+<Alert level="info">
+  If you're building your Next.js application with Turbopack, this option will
+  have no effect. The Sentry SDK will no longer apply build-time instrumentation
+  and will rely purely on Next.js telemetry features.
+</Alert>
+
+</SdkOption>
+
 <SdkOption name="tunnelRoute" type="string">
+<Alert level="info">
+This feature requires **Next.js version 11+** and doesn't currently work with self-hosted Sentry instances.
+</Alert>
 
-Tunnel Sentry requests through this route on the Next.js server, to circumvent ad-blockers blocking Sentry events from being sent. This option should be a path (for example: '/error-monitoring').
+Tunnel Sentry requests through this route on your Next.js server to prevent ad-blockers from blocking Sentry events from being sent.
+This route should be a path, like `/error-monitoring`, as it adds an API endpoint within your application.
 
-Note: This feature only works with Next.js 11+
+Learn more about tunneling in the <PlatformLink to="/troubleshooting/#dealing-with-ad-blockers">troubleshooting section</PlatformLink>.
+
+<Expandable level="warning" title="Complications with Next.js middleware">
+  Client-side event recording will fail if your Next.js middleware intercepts
+  the configured route. To prevent this, exclude the tunnel route by adding a
+  negative matcher to your middleware like `(?!monitoring-tunnel)`.
+</Expandable>
 
 </SdkOption>
 
