@@ -984,6 +984,10 @@ const userDocsRedirects = [
     source: '/product/explore/feature-flags/:path*',
     destination: '/product/issues/issue-details/feature-flags/:path*',
   },
+  {
+    source: '/product/explore/metrics/:path*',
+    destination: '/product/explore/tracing/span-metrics/',
+  },
   // Redirects for JavaScript tracing docs 
   {
     source: '/platforms/javascript/tracing/trace-propagation/:path*',
