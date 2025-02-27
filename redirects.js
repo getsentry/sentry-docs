@@ -991,7 +991,7 @@ const userDocsRedirects = [
   },
   {
     source: '/product/explore/metrics/:path*',
-    destination: '/product/explore/tracing/span-metrics/',
+    destination: '/product/tracing/span-metrics/',
   },
   // Redirects for JavaScript tracing docs 
   {
