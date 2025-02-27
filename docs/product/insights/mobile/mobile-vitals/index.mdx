@@ -27,12 +27,14 @@ While the SDKs differentiate between cold and warm starts, they don't track hot 
 
 ## Slow and Frozen Frames
 
-To track the responsiveness of the user interface, Sentry measures _slow frames_ and _frozen frames_. Typically, a phone or tablet renders 60 frames per second (fps). At 60 fps, every frame has 16 or 16.67 ms to render.
+To track the responsiveness of the user interface, Sentry measures _slow frames_ and _frozen frames_. Both indicate if the rendering of a frame is taking too long, causing the UI to appear laggy or frozen.
+
+Typically, a phone or tablet renders at 60 or 120 frames per second (fps). Based on this a single frame has a time budget of 16.67 / 8.33 ms to render.
 
 - **Slow Frames**: Using 60 fps, slow frames are frames that take more than 16 ms (Android) or 16.67 ms (iOS) to render.
 - **Frozen Frames**: Frozen frames are frames that take longer than 700 ms to render.
 
-For Apple, the frame rate can be higher, especially as 120 fps displays are becoming more popular. For these apps, Sentry detects the frame rate and adjusts the slow frame calculation accordingly.
+Sentry also supports higher frame rates, especially as 120 fps displays are becoming more popular. For these apps, Sentry detects the frame rate and adjusts the slow frame calculation accordingly.
 
 On the Mobile Vitals insights page, you can see a slow and frozen frame rate, indicating the percentage of frames that are slow or frozen during the lifetime of the transaction.
 
@@ -49,7 +51,7 @@ You can track slow and frozen frames for:
 
 ## Frames Delay
 
-Frames Delay is the user-perceived delayed duration of rendered frames. For example, at a refresh rate of 60fps, if a single frame render takes 20ms, the frame delay is 4ms (20ms - 16ms = 4ms).
+Frames Delay is the user-perceived total delayed duration of rendered frames. For example, at a refresh rate of 60fps, if a two frame renders takes 20ms each, the frame delay is 8ms (2 * (20ms - 16ms) = 8ms).
 
 You can track frames delay on the following platforms:
 - [Android](/platforms/android/tracing/instrumentation/perf-v2/#frames-delay)
@@ -58,10 +60,11 @@ You can track frames delay on the following platforms:
 
 ## Time to Initial Display and Time to Full Display
 
-To track how long it takes your application to produce its first frame and then how long it takes to produce its first frame with all the content, Sentry measures time to initial display and time to full display, respectively.
+To track how long it takes a screen to render its first frame and then how long it takes to render its first frame with all content, Sentry measures time to initial display and time to full display, respectively.
 
-- **Time to initial display**: tracks how long it takes for your mobile application to produce its first frame. This includes app start time on the first screen loaded. It doesn’t include any content loaded lazily after the first frame is drawn. Time to initial display is automatic and enabled by default.
-- **Time to full display**: tracks how long it takes for your mobile application to produce its first frame with full content. This includes content loaded asynchronously after the first frame, for example, after loading content from the network. Time to full display is opt-in and requires you to manually call the API to report that the screen has loaded all of its content and is fully displayed.
+- **Time to initial display**: tracks how long it takes your app to render its first frame. This includes app start time on the first screen loaded. It doesn't include any content loaded lazily after the first frame is drawn. Time to initial display is measured automatically and enabled by default.
+
+- **Time to full display**: tracks how long it takes for your mobile application to render its first frame with full content. This includes content loaded asynchronously after the first frame, for example, after loading content from the network. Time to full display is opt-in and requires you to manually call the API to report that the screen has loaded all of its content and is fully displayed.
 
 In the example below, the detail view of the transaction displays the time-to-initial-display span in an Android application:
 
