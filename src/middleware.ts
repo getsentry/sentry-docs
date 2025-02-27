@@ -787,20 +787,20 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/dotnet/guides/nlog/',
   },
   {
-    from: '/platforms/flutter/configuration/integrations/user-interaction-instrumentation/',
-    to: '/platforms/flutter/integrations/user-interaction-instrumentation/',
+    from: '/platforms/dart/guides/flutter/configuration/integrations/user-interaction-instrumentation/',
+    to: '/platforms/dart/guides/flutter/integrations/user-interaction-instrumentation/',
   },
   {
-    from: '/platforms/flutter/configuration/integrations/',
-    to: '/platforms/flutter/integrations/',
+    from: '/platforms/dart/guides/flutter/configuration/integrations/',
+    to: '/platforms/dart/guides/flutter/integrations/',
   },
   {
-    from: '/platforms/flutter/configuration/integrations/sqflite-instrumentation/',
-    to: '/platforms/flutter/integrations/sqflite-instrumentation/',
+    from: '/platforms/dart/guides/flutter/configuration/integrations/sqflite-instrumentation/',
+    to: '/platforms/dart/guides/flutter/integrations/sqflite-instrumentation/',
   },
   {
-    from: '/platforms/flutter/usage/advanced-usage/',
-    to: '/platforms/flutter/troubleshooting/',
+    from: '/platforms/dart/guides/flutter/usage/advanced-usage/',
+    to: '/platforms/dart/guides/flutter/troubleshooting/',
   },
   {
     from: '/platforms/android/manual-configuration/',
