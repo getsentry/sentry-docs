@@ -1013,11 +1013,7 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/:guide/tracing/instrumentation/custom-instrumentation/:path*',
     destination: '/platforms/javascript/guides/:guide/tracing/instrumentation/:path*',
-  },
-  {
-    source: '/platforms/javascript/tracing/instrumentation/:path*',
-    destination: '/platforms/javascript/tracing/span-metrics/performance-metrics/:path*',
-  },
+  }
 ];
 
 /**
