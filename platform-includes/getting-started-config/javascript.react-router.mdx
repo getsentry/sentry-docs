@@ -118,43 +118,6 @@ export const handleError: HandleErrorFunction = (error, { request }) => {
 // ... rest of your server entry
 ```
 
-### Build-time Config
-
-Update `vite.config.ts` to include the `sentryReactRouter` plugin and also add your config options to the vite config (this is required for uploading source maps at the end of the build):
-
-```typescript {filename: vite.config.ts}
-import { reactRouter } from '@react-router/dev/vite';
-import { sentryReactRouter } from '@sentry/react-router';
-import { defineConfig } from 'vite';
-
-const sentryConfig = {
-  authToken: '...',
-  org: '...',
-  project: '...',
-  // rest of your config
-};
-
-export default defineConfig(config => {
-  return {
-    plugins: [reactRouter(), sentryReactRouter(sentryConfig, config)],
-    sentryConfig,
-  };
-});
-```
-
-Include the `sentryOnBuildEnd` hook in `react-router.config.ts`:
-
-```typescript {filename: react-router.config.ts}
-import type { Config } from '@react-router/dev/config';
-import { sentryOnBuildEnd } from '@sentry/react-router';
-
-export default {
-  ssr: true,
-  buildEnd: sentryOnBuildEnd,
-} satisfies Config;
-```
-
-
 ### Update Scripts
 
 Since React Router is running in ESM mode, you need to use the `--import` command line options to load our server-side instrumentation module before the application starts.
