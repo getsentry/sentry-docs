@@ -67,12 +67,13 @@ export default withSentryConfig(nextConfig, {
 ```
 
 ### Extend Sentry Webpack Plugin Options
+
 `withSentryConfig` uses a [custom Webpack plugin](https://www.npmjs.com/package/@sentry/webpack-plugin) to manage your sourcemaps and releases under the hood. If `withSentryConfig` does not provide the option you need to modify, you may override the `sentryWebpackPluginOptions` directly via `unstable_sentryWebpackPluginOptions`.
 
 <Alert level="warning">
-  Note that this option is unstable and its API may include breaking changes in any release.
+  Note that this option is unstable and its API may include breaking changes in
+  any release.
 </Alert>
-
 
 ## Create Initialization Config Files
 
@@ -175,7 +176,6 @@ export async function register() {
 }
 ```
 
-
 Make sure that the `import` statements point to your newly created `sentry.server.config.(js|ts)` and `sentry.edge.config.(js|ts)` files.
 
 ## Report React Component Render Errors
@@ -235,53 +235,6 @@ export default function GlobalError({ error }) {
         <NextError />
       </body>
     </html>
-  );
-}
-```
-
-Note that if you create [Next.js error.js files](https://nextjs.org/docs/app/building-your-application/routing/error-handling), these files will take precedence over the `global-error.js` file.
-This means, that if you want to report errors that are caught by `error.js` files, you need to manually capture them:
-
-```tsx {filename:error.tsx}
-"use client";
-
-import { useEffect } from "react";
-import * as Sentry from "@sentry/nextjs";
-
-export default function ErrorPage({
-  error,
-}: {
-  error: Error & { digest?: string };
-}) {
-  useEffect(() => {
-    // Log the error to Sentry
-    Sentry.captureException(error);
-  }, [error]);
-
-  return (
-    <div>
-      <h2>Something went wrong!</h2>
-    </div>
-  );
-}
-```
-
-```jsx {filename:error.jsx}
-"use client";
-
-import { useEffect } from "react";
-import * as Sentry from "@sentry/nextjs";
-
-export default function ErrorPage({ error }) {
-  useEffect(() => {
-    // Log the error to Sentry
-    Sentry.captureException(error);
-  }, [error]);
-
-  return (
-    <div>
-      <h2>Something went wrong!</h2>
-    </div>
   );
 }
 ```
@@ -455,60 +408,6 @@ Do not commit your auth token to version control.
 
 ```sh {filename:.env}
 SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
-```
-
-### Disable Source Maps
-
-You can disable the custom sourcemap plugin as follows:
-
-```javascript {tabTitle:ESM} {filename:next.config.mjs}
-export default withSentryConfig(nextConfig, {
-  sourcemaps: {
-    disable: true,
-  },
-});
-```
-
-```javascript {tabTitle:CJS} {filename:next.config.js}
-module.exports = withSentryConfig(nextConfig, {
-  sourcemaps: {
-    disable: true,
-  },
-});
-```
-
-### Use `hidden-source-map`
-
-Depending on your deployment setup, adding `sentry/nextjs` to your app may cause your source code to be visible in browser devtools when it wasn't before. (This happens because of the default behavior of [webpack's `source-map` built-in `devtool`](https://webpack.js.org/configuration/devtool/).) To prevent this, you can use `hidden-source-map` rather than `source-map`, which will prevent your built files from containing a `sourceMappingURL` comment, thus making sourcemaps invisible to the browser. To use `hidden-source-map`, add a `sentry` object to `nextConfig` above, and set the `hideSourceMaps` option to `true`:
-
-```javascript {tabTitle:ESM} {filename:next.config.mjs}
-export default withSentryConfig(nextConfig, {
-  hideSourceMaps: true,
-});
-```
-
-```javascript {tabTitle:CJS} {filename:next.config.js}
-module.exports = withSentryConfig(nextConfig, {
-  hideSourceMaps: true,
-});
-```
-
-### Widen the Upload Scope
-
-If you find that there are some frames in your client-side stack traces that aren't getting source-mapped even when most others are, the issue might be that those frames are from files in `static/chunks/` rather than `static/chunks/pages/`. By default, such files aren't uploaded because the majority of the files in `static/chunks/` only contain Next.js or third-party code.
-
-To upload all of the files and source maps, including ones from third-party packages, set the `widenClientFileUpload` option to `true`:
-
-```javascript {tabTitle:ESM} {filename:next.config.mjs}
-export default withSentryConfig(nextConfig, {
-  widenClientFileUpload: true,
-});
-```
-
-```javascript {tabTitle:CJS} {filename:next.config.js}
-module.exports = withSentryConfig(nextConfig, {
-  widenClientFileUpload: true,
-});
 ```
 
 ## Configure Tunneling to avoid Ad-Blockers

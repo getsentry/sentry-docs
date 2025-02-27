@@ -11,6 +11,7 @@ notSupported:
   - javascript.fastify
   - javascript.gcp-functions
   - javascript.hapi
+  - javascript.hono
   - javascript.koa
   - javascript.nestjs
 keywords:
@@ -131,6 +132,7 @@ init({
   },
 });
 ```
+
 ```html {tabTitle:CDN/Loader Bundle}{filename:index.html}
 <script
   src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/bundle.min.js"
@@ -150,22 +152,24 @@ init({
   crossorigin="anonymous"
 ></script>
 
-
 <script>
   const EXTRA_KEY = "ROUTE_TO";
 
-  const transport = Sentry.makeMultiplexedTransport(Sentry.makeFetchTransport, (args) => {
-    const event = args.getEvent();
-    if (
-      event &&
-      event.extra &&
-      EXTRA_KEY in event.extra &&
-      Array.isArray(event.extra[EXTRA_KEY])
-    ) {
-      return event.extra[EXTRA_KEY];
+  const transport = Sentry.makeMultiplexedTransport(
+    Sentry.makeFetchTransport,
+    (args) => {
+      const event = args.getEvent();
+      if (
+        event &&
+        event.extra &&
+        EXTRA_KEY in event.extra &&
+        Array.isArray(event.extra[EXTRA_KEY])
+      ) {
+        return event.extra[EXTRA_KEY];
+      }
+      return [];
     }
-    return [];
-  });
+  );
 
   Sentry.init({
     dsn: "__DEFAULT_DSN__",
