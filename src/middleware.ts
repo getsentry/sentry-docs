@@ -22,12 +22,17 @@ export function middleware(request: NextRequest) {
   return handleRedirects(request);
 }
 
+// don't send Permanent Redirects (301) in dev mode - it gets cached for "localhost" by the browser
+const redirectStatusCode = process.env.NODE_ENV === 'development' ? 302 : 301;
+
 const handleRedirects = (request: NextRequest) => {
   const urlPath = request.nextUrl.pathname;
 
   const redirectTo = redirectMap.get(urlPath);
   if (redirectTo) {
-    return NextResponse.redirect(new URL(redirectTo, request.url), {status: 301});
+    return NextResponse.redirect(new URL(redirectTo, request.url), {
+      status: redirectStatusCode,
+    });
   }
 
   // If we don't find an exact match, we try to look for a :guide placeholder
@@ -50,7 +55,7 @@ const handleRedirects = (request: NextRequest) => {
     );
 
     return NextResponse.redirect(new URL(finalRedirectToPath, request.url), {
-      status: 301,
+      status: redirectStatusCode,
     });
   }
 
@@ -151,7 +156,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/data-management-settings/dynamic-sampling/',
-    to: '/product/performance/',
+    to: '/product/insights/overview/',
   },
   {
     from: '/product/data-management-settings/event-grouping/',
@@ -1282,10 +1287,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/security-legal-pii/security/security-policy-reporting/',
   },
   {
-    from: '/platforms/javascript/security-policy-reporting/',
-    to: '/security-legal-pii/security/security-policy-reporting/',
-  },
-  {
     from: '/platforms/javascript/troubleshooting/session-replay/',
     to: '/platforms/javascript/session-replay/troubleshooting/',
   },
@@ -1633,6 +1634,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/ruby/performance/instrumentation/opentelemetry/',
     to: '/platforms/ruby/tracing/instrumentation/opentelemetry/',
+  },
+  {
+    from: '/platforms/ruby/metrics/',
+    to: '/platforms/ruby/',
   },
   // END  bandaid fix for #11870
   {
@@ -2429,92 +2434,124 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/relay/modes/',
   },
   {
+    from: '/product/performance/',
+    to: '/product/sentry-basics/performance-monitoring/',
+  },
+  {
+    from: '/product/performance/getting-started/',
+    to: '/product/insights/getting-started/',
+  },
+  {
+    from: '/product/performance/filters-display/',
+    to: '/product/insights/overview/filters-display/',
+  },
+  {
+    from: '/product/performance/filters-display/widgets/',
+    to: '/product/insights/overview/filters-display/widgets/',
+  },
+  {
+    from: '/product/performance/trends/',
+    to: '/product/insights/overview/trends/',
+  },
+  {
+    from: '/product/performance/transaction-summary/',
+    to: '/product/insights/overview/transaction-summary/',
+  },
+  {
+    from: '/product/performance/metrics/',
+    to: '/product/insights/overview/metrics/',
+  },
+  {
+    from: '/product/performance/performance-overhead/',
+    to: '/product/insights/performance-overhead/',
+  },
+  {
     from: '/product/performance/database/',
-    to: '/product/performance/queries/',
+    to: '/product/insights/backend/queries/',
   },
   {
     from: '/product/performance/query-insights/',
-    to: '/product/performance/queries/',
+    to: '/product/insights/backend/queries/',
   },
   {
     from: '/product/sentry-basics/metrics/',
-    to: '/product/performance/retention-priorities/',
+    to: '/product/insights/retention-priorities/',
   },
   {
     from: '/product/sentry-basics/sampling/',
-    to: '/product/performance/retention-priorities/',
+    to: '/product/insights/retention-priorities/',
   },
   {
     from: '/product/data-management-settings/server-side-sampling/',
-    to: '/product/performance/retention-priorities/',
+    to: '/product/insights/retention-priorities/',
   },
   {
     from: '/product/data-management-settings/server-side-sampling/getting-started/',
-    to: '/product/performance/retention-priorities/',
+    to: '/product/insights/retention-priorities/',
   },
   {
     from: '/product/data-management-settings/server-side-sampling/current-limitations/',
-    to: '/product/performance/retention-priorities/',
+    to: '/product/insights/retention-priorities/',
   },
   {
     from: '/product/data-management-settings/server-side-sampling/sampling-configurations/',
-    to: '/product/performance/retention-priorities/',
+    to: '/product/insights/retention-priorities/',
   },
   {
     from: '/product/data-management-settings/dynamic-sampling/current-limitations/',
-    to: '/product/performance/retention-priorities/',
+    to: '/product/insights/retention-priorities/',
   },
   {
     from: '/product/data-management-settings/dynamic-sampling/sampling-configurations/',
-    to: '/product/performance/retention-priorities/',
+    to: '/product/insights/retention-priorities/',
   },
   {
     from: '/product/performance/performance-at-scale/',
-    to: '/product/performance/retention-priorities/',
+    to: '/product/insights/retention-priorities/',
   },
   {
     from: '/product/performance/performance-at-scale/getting-started/',
-    to: '/product/performance/retention-priorities/',
+    to: '/product/insights/retention-priorities/',
   },
   {
     from: '/product/performance/performance-at-scale/benefits-performance-at-scale/',
-    to: '/product/performance/retention-priorities/',
+    to: '/product/insights/retention-priorities/',
   },
   {
     from: '/performance/',
-    to: '/product/performance/',
+    to: '/product/insights/',
   },
   {
     from: '/performance/display/',
-    to: '/product/performance/',
+    to: '/product/insights/',
   },
   {
     from: '/performance-monitoring/performance/',
-    to: '/product/performance/',
+    to: '/product/insights/',
   },
   {
     from: '/performance/performance-tab/',
-    to: '/product/performance/',
+    to: '/product/insights/overview',
   },
   {
     from: '/performance/performance-homepage/',
-    to: '/product/performance/',
+    to: '/product/insights/',
   },
   {
     from: '/performance-monitoring/setup/',
-    to: '/product/performance/getting-started/',
+    to: '/product/insights/getting-started/',
   },
   {
     from: '/performance-monitoring/getting-started/',
-    to: '/product/performance/getting-started/',
+    to: '/product/insights/getting-started/',
   },
   {
     from: '/performance-monitoring/performance/metrics/',
-    to: '/product/performance/metrics/',
+    to: '/product/insights/overview/metrics/',
   },
   {
     from: '/product/performance/display/',
-    to: '/product/performance/filters-display/',
+    to: '/product/insights/overview/filters-display/',
   },
   {
     from: '/product/issues/issue-owners/',
@@ -3234,10 +3271,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/organization/authentication/two-factor-authentication/',
   },
   {
-    from: '/platforms/go/guides/fiber/',
-    to: '/platforms/go/',
-  },
-  {
     from: '/platforms/go/guides/fiber/user-feedback/configuration/',
     to: '/platforms/go/user-feedback/',
   },
@@ -3360,6 +3393,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/contributing/onboarding-wizard/',
     to: '/contributing/',
+  },
+  {
+    from: '/security-legal-pii/security/security-policy-reporting/',
+    to: '/platform-redirect/?next=/security-policy-reporting/',
   },
 ];
 

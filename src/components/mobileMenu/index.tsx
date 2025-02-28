@@ -1,6 +1,6 @@
 'use client';
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import {TriangleRightIcon} from '@radix-ui/react-icons';
+import * as Popover from '@radix-ui/react-popover';
 import {Box, Button, Theme} from '@radix-ui/themes';
 import Link from 'next/link';
 
@@ -19,8 +19,8 @@ export function MobileMenu({pathname, searchPlatforms}: Props) {
   return (
     <div className="flex gap-6 items-center">
       <ThemeToggle />
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger asChild>
+      <Popover.Root>
+        <Popover.Trigger asChild>
           <Button
             variant="ghost"
             size="4"
@@ -31,33 +31,33 @@ export function MobileMenu({pathname, searchPlatforms}: Props) {
             Menu
             <TriangleRightIcon />
           </Button>
-        </DropdownMenu.Trigger>
+        </Popover.Trigger>
 
-        <DropdownMenu.Portal>
+        <Popover.Portal>
           <Theme accentColor="iris">
-            <DropdownMenu.Content className={styles.DropdownMenuContent} sideOffset={5}>
+            <Popover.Content className={styles.PopoverContent} sideOffset={5}>
               <Box display={{xs: 'block', sm: 'none'}}>
-                <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
+                <li className={styles.MenuItem}>
                   <Search path={pathname} searchPlatforms={searchPlatforms} />
-                </DropdownMenu.Item>
-                <DropdownMenu.Separator className={styles.DropdownMenuSeparator} />
+                </li>
+                <div className={styles.MenuSeparator} />
               </Box>
-              <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
+              <li className={styles.MenuItem}>
                 <Link href="https://sentry.io/changelog/">Changelog</Link>
-              </DropdownMenu.Item>
-              <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
+              </li>
+              <li className={styles.MenuItem}>
                 <Link href="https://try.sentry-demo.com/demo/start/">Sandbox</Link>
-              </DropdownMenu.Item>
-              <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
+              </li>
+              <li className={styles.MenuItem}>
                 <Link href="https://sentry.io/">Go to Sentry</Link>
-              </DropdownMenu.Item>
-              <DropdownMenu.Item className={styles.DropdownMenuItem} asChild>
+              </li>
+              <li className={styles.MenuItem}>
                 <Link href="https://sentry.io/signup/">Get Started</Link>
-              </DropdownMenu.Item>
-            </DropdownMenu.Content>
+              </li>
+            </Popover.Content>
           </Theme>
-        </DropdownMenu.Portal>
-      </DropdownMenu.Root>
+        </Popover.Portal>
+      </Popover.Root>
     </div>
   );
 }

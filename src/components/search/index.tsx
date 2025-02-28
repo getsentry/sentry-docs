@@ -1,7 +1,8 @@
 'use client';
 
-import {useCallback, useEffect, useRef, useState} from 'react';
+import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import {ArrowRightIcon} from '@radix-ui/react-icons';
+import {Button} from '@radix-ui/themes';
 import {captureException} from '@sentry/nextjs';
 import {
   Hit,
@@ -62,17 +63,49 @@ type Props = {
   autoFocus?: boolean;
   path?: string;
   searchPlatforms?: string[];
+  showChatBot?: boolean;
+  useStoredSearchPlatforms?: boolean;
 };
 
-export function Search({path, autoFocus, searchPlatforms = []}: Props) {
+const STORAGE_KEY = 'sentry-docs-search-platforms';
+
+export function Search({
+  path,
+  autoFocus,
+  searchPlatforms = [],
+  useStoredSearchPlatforms = true,
+}: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState(``);
   const [results, setResults] = useState([] as Result[]);
   const [inputFocus, setInputFocus] = useState(false);
   const [showOffsiteResults, setShowOffsiteResults] = useState(false);
   const [loading, setLoading] = useState(true);
-
+  const [currentSearchPlatforms, setCurrentSearchPlatforms] = useState(searchPlatforms);
   const pathname = usePathname();
+
+  // Load stored platforms on mount
+  useEffect(() => {
+    const storedPlatforms = localStorage.getItem(STORAGE_KEY) ?? '[]';
+    if (!storedPlatforms) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(searchPlatforms));
+    } else if (
+      storedPlatforms &&
+      searchPlatforms.length === 0 &&
+      useStoredSearchPlatforms
+    ) {
+      const platforms = JSON.parse(storedPlatforms);
+      setCurrentSearchPlatforms(platforms);
+    }
+  }, [useStoredSearchPlatforms, searchPlatforms]);
+
+  // Update stored platforms when they change
+  useEffect(() => {
+    if (searchPlatforms.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(searchPlatforms));
+      setCurrentSearchPlatforms(searchPlatforms);
+    }
+  }, [searchPlatforms]);
 
   const handleClickOutside = useCallback((ev: MouseEvent) => {
     // don't close the search results if the user is clicking the expand button
@@ -139,18 +172,42 @@ export function Search({path, autoFocus, searchPlatforms = []}: Props) {
         return;
       }
 
-      const queryResults = await search.query(
-        inputQuery,
-        {
-          path,
-          platforms: searchPlatforms.map(
-            platform => standardSDKSlug(platform)?.slug ?? ''
-          ),
-          searchAllIndexes: showOffsiteResults,
-          ...args,
-        },
-        {clickAnalytics: true, analyticsTags: ['source:documentation']}
-      );
+      const queryResults = await search
+        .query(
+          inputQuery,
+          {
+            path,
+            platforms: currentSearchPlatforms.map(
+              platform => standardSDKSlug(platform)?.slug ?? ''
+            ),
+            searchAllIndexes: showOffsiteResults,
+            ...args,
+          },
+          {clickAnalytics: true, analyticsTags: ['source:documentation']}
+        )
+        .then(siteResults => {
+          if (isDeveloperDocs) {
+            return siteResults;
+          }
+          return siteResults.map(site => {
+            if (site.site !== 'docs') {
+              return site;
+            }
+            return {
+              ...site,
+              // put API results last
+              hits: site.hits.sort((a, b) => {
+                if (a.url.includes('/api/') && !b.url.includes('/api/')) {
+                  return 1;
+                }
+                if (b.url.includes('/api/') && !a.url.includes('/api/')) {
+                  return -1;
+                }
+                return 0;
+              }),
+            };
+          });
+        });
 
       if (loading) {
         setLoading(false);
@@ -163,7 +220,7 @@ export function Search({path, autoFocus, searchPlatforms = []}: Props) {
         setResults(queryResults);
       }
     },
-    [path, searchPlatforms, showOffsiteResults, loading]
+    [path, currentSearchPlatforms, showOffsiteResults, loading]
   );
 
   const totalHits = results.reduce((a, x) => a + x.hits.length, 0);
@@ -235,21 +292,34 @@ export function Search({path, autoFocus, searchPlatforms = []}: Props) {
         <div className={styles['input-wrapper']}>
           <input
             type="text"
-            placeholder="Search or ask a question"
+            placeholder="Search Docs"
             aria-label="Search"
             className={styles['search-input']}
             value={query}
             onChange={({target: {value}}) => searchFor(value)}
             onFocus={() => setInputFocus(true)}
             ref={inputRef}
-            onKeyDown={ev => {
-              ev.stopPropagation();
-            }}
           />
           <kbd className={styles['search-hotkey']} data-focused={inputFocus}>
             {inputFocus ? 'esc' : '⌘K'}
           </kbd>
         </div>
+        <Fragment>
+          <span className="text-[var(--desatPurple10)] hidden md:inline">or</span>
+          <Button
+            asChild
+            variant="ghost"
+            color="gray"
+            size="3"
+            radius="medium"
+            className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer kapa-ai-class hidden md:flex"
+          >
+            <div>
+              <MagicIcon />
+              <span>Ask AI</span>
+            </div>
+          </Button>
+        </Fragment>
       </div>
       {query.length >= 2 && inputFocus && (
         <div className={styles['sgs-search-results']}>
@@ -262,7 +332,7 @@ export function Search({path, autoFocus, searchPlatforms = []}: Props) {
                   // close search results
                   setInputFocus(false);
                   // open kapa modal
-                  window.Kapa.open({query: `Explain ${query}`, submit: true});
+                  window.Kapa.open({query, submit: true});
                 }
               }}
             >
