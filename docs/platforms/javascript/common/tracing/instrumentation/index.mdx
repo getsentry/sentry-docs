@@ -18,7 +18,7 @@ To get started, import the SDK.
 
 There are three key functions for creating spans:
 
-- [startSpan](#starting-an-active-span-startspan): Creates a new span that is active, and which is automatically ended. You'll likely want to use this function.
+- [startSpan](#starting-an-active-span-startspan): Creates a new span that is active, and which will end automatically. You'll likely want to use this function.
 - [startSpanManual](#starting-an-active-span-with-manual-end-startspanmanual): Creates a new span that is active, which has to be ended manually.
 - [startInactiveSpan](#starting-inactive-spans-startinactivespan): Creates a new span that is inactive, which has to be ended manually.
 
@@ -30,7 +30,7 @@ In contrast, **inactive spans** will never have children automatically associate
 
 A key constraint for active spans is that they can only be made active inside of a callback. This constraint exists because otherwise it becomes impossible to associate spans with the correct parent span when working with asynchronous code.
 
-In places where you are not able to wrap executing code in a callback (e.g. when working with hooks or similar) you have to work with inactive spans, and can combine this with [withActiveSpan](#withactivespan) to manually associate child spans with the correct parent span.
+In places where you are not able to execute your code in a callback (for example, when working with hooks or similar) you have to work with inactive spans, and can combine this with [withActiveSpan](#withactivespan) to manually associate child spans with the correct parent span.
 
 <PlatformCategorySection supported={['browser']}>
 
@@ -86,7 +86,7 @@ Only `name` is required, all other options are optional.
 
 ## Starting an Active Span (`startSpan`)
 
-For most scenarios, we recommend to start active spans with `Sentry.startSpan()`. This will start a new span that is active in the provided callback, and will automatically end the span when the callback is done. The callback can be synchronous, or asynchronous (a promise). In the case of an asynchronous callback, the span will be ended when the promise is resolved or rejected. If the provided callback errors or rejects, the span will be marked as failed.
+For most scenarios, we recommend to start active spans with `Sentry.startSpan()`. This will start a new span that is active in the provided callback, and will automatically end the span when the callback is done. The callback can be synchronous or asynchronous (a promise). In the case of an asynchronous callback, the span will be ended when the promise is resolved or rejected. If the provided callback throws an error or rejects a promise, the span will be marked as failed.
 
 <PlatformContent includePath="performance/start-span" />
 
@@ -116,7 +116,7 @@ parentSpan.end();
 
 This option is also available for `startSpan` and `startSpanManual`.
 
-## Utilities to work with Spans
+## Utilities To Work With Spans
 
 We expose some helpful utilities that can help you with custom instrumentation.
 
@@ -175,7 +175,7 @@ const childSpan = Sentry.startInactiveSpan({
 
 ### `suppressTracing`
 
-Suppress the creation of sampled spans for the duration of the callback. This is useful when you want to prevent certain spans from being captured. For example, if you do not want to create spans for a given fetch request, you can do:
+Suppresses the creation of sampled spans for the duration of the callback. This is useful when you want to prevent certain spans from being captured. For example, if you do not want to create spans for a given fetch request, you can do:
 
 ```javascript
 Sentry.suppressTracing(() => {
@@ -255,9 +255,9 @@ Sentry.init({
 
 ### Adding Span Operations ("op")
 
-Spans can have an operation associated with them, which help activate Sentry identify additional context about the span. For example database related spans have the `db` span operation associated with them. The Sentry product offers additional controls, visualizations and filters for spans with known operations.
+Spans can have an operation associated with them, which help Sentry identify additional context about the span. For example, database related spans have the `db` span operation associated with them. The Sentry product offers additional controls, visualizations, and filters for spans with known operations.
 
-Sentry maintains a [list of well known span operations](https://develop.sentry.dev/sdk/performance/span-operations/#list-of-operations) and it is recommended that you use one of those operations if it is applicable to your span.
+Sentry maintains a [list of well-known span operations](https://develop.sentry.dev/sdk/performance/span-operations/#list-of-operations) and it is recommended that you use one of those operations if it is applicable to your span.
 
 <PlatformContent includePath="performance/span-operations" />
 
