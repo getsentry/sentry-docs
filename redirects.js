@@ -991,7 +991,11 @@ const userDocsRedirects = [
   },
   {
     source: '/product/explore/metrics/:path*',
-    destination: '/product/tracing/span-metrics/',
+    destination: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    source: '/product/tracing/:path*',
+    destination: '/concepts/key-terms/tracing/:path*',
   },
   // Redirects for JavaScript tracing docs 
   {
