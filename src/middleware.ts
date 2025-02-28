@@ -3482,6 +3482,14 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/platforms/flutter/tracing/instrumentation/automatic-instrumentation/',
     to: '/platforms/dart/guides/flutter/tracing/instrumentation/automatic-instrumentation/',
   },
+  {
+    from: '/platforms/flutter/tracing/trace-propagation/',
+    to: '/platforms/dart/guides/flutter/tracing/trace-propagation/',
+  },
+  {
+    from: '/platforms/flutter/tracing/trace-propagation/custom-instrumentation/',
+    to: '/platforms/dart/guides/flutter/tracing/trace-propagation/custom-instrumentation/',
+  },
 ];
 
 const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
