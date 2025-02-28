@@ -1331,10 +1331,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/javascript/sourcemaps/troubleshooting_js/',
   },
   {
-    from: '/platforms/javascript/guides/nextjs/sourcemaps/troubleshooting_js/legacy-uploading-methods/',
-    to: '/platforms/javascript/sourcemaps/troubleshooting_js/',
-  },
-  {
     from: '/platforms/javascript/sourcemaps/troubleshooting_js/verify-artifact-distribution-value-matches-value-configured-in-your-sdk/',
     to: '/platforms/javascript/sourcemaps/troubleshooting_js/',
   },
