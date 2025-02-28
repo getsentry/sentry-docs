@@ -231,12 +231,8 @@ const userDocsRedirects = [
     destination: '/organization/integrations/notification-incidents/msteams/',
   },
   {
-    source: '/product/dev-toolbar/setup/',
-    destination: '/product/sentry-toolbar/setup/',
-  },
-  {
-    source: '/product/dev-toolbar/faq/',
-    destination: '/product/sentry-toolbar/faq/',
+    source: '/product/dev-toolbar/:path*',
+    destination: '/product/sentry-toolbar/:path*',
   },
   {
     source: '/product/explore/session-replay/hydration-errors/',
