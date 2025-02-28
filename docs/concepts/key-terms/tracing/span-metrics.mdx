@@ -1,40 +1,55 @@
 ---
 title: Span Metrics
-description: "Learn how span metrics provide enhanced application performance monitoring by attaching attributes to trace spans."
+description: "Learn how attaching attributes to spans provides enhanced application performance monitoring and improved debugging."
 sidebar_order: 10
 ---
 
-Span metrics enable you to attach metrics and important debugging context to your application's traces. This approach provides context-rich performance monitoring by connecting metrics directly to the operations that generate them.
+Span metrics enable you to attach user defined attributes to spans, which might include application metrics or important debugging context within your application's traces. This approach provides context-rich performance monitoring by connecting attributes directly to the operations that generate them.
 
-## What Are Span Metrics?
+These attributes allow you to enrich trace spans with attributes that represent various types of measurement data:
 
-Span metrics allow you to enrich trace spans with various types of measurement data:
-
-- Performance metrics (memory usage, processing time, latency)
+- Performance attributes (memory usage, processing time, latency)
 - Business metrics (transaction value, user engagement rates)
 - Technical indicators (queue depth, cache hit ratios)
 - Debugging context (input parameters, process states)
 
-By attaching metrics directly to spans, you create a unified view of both the execution path and its associated performance data.
+By attaching attributes directly to spans, you create a unified view of both the execution path and its associated performance data.
 
 ```javascript
 // Adding performance metrics to a database span
-const span = Sentry.getActiveSpan();
-if (span) {
-  span.setAttribute('db.rows_returned', 42);
-  span.setAttribute('db.execution_time_ms', 18);
-}
+// Simple database query with dynamic attributes
+Sentry.startSpan(
+  {
+    name: 'Database Query',
+    op: 'db.query'
+  },
+  () => {
+    // Get active span to set attributes as data becomes available
+    const span = Sentry.getActiveSpan();
+    
+    // Execute query and add results to span
+    const result = executeQuery('SELECT * FROM users WHERE active = true');
+    
+    // Set attributes with the results data
+    if (span) {
+      span.setAttribute('db.rows_returned', result.length);
+      span.setAttribute('db.execution_time_ms', result.executionTime);
+    }
+    
+    return result;
+  }
+);
 ```
 
-## Benefits of Span Metrics
+## Benefits of Configuring Span Attributes
 
 ### Contextual Observability
 
-Span metrics provide contextual data that connects execution flow with performance measurements. When investigating an issue, you can view both what occurred (the trace) and the performance characteristics (the metrics) in a single view.
+Span attributes provide contextual data that connects execution flow with specific metrics that developers care about, or performance measurements. When investigating an issue, you can view both what occurred (the trace) and the performance characteristics in a single view.
 
 ### Unified Telemetry
 
-By integrating metrics with tracing, you can maintain a single telemetry pipeline rather than managing separate systems for traces and metrics, resulting in simplified instrumentation and more efficient monitoring.
+By integrating these attributes into tracing, you can maintain a single telemetry pipeline rather than managing separate systems for traces and metrics, resulting in simplified instrumentation and more efficient monitoring.
 
 ```javascript
 // Adding business context to a payment processing span
@@ -57,36 +72,30 @@ Sentry.startSpan(
 
 ### Accelerated Troubleshooting
 
-When performance issues arise, span metrics provide the necessary context to quickly identify bottlenecks. For example, when investigating slow checkout processes, you can immediately see which specific component (payment gateway, database query, third-party API) is causing the delay.
+When performance issues arise, these attributes provide the necessary context to quickly identify bottlenecks. For example, when investigating slow checkout processes, you can immediately see which specific component (payment gateway, database query, third-party API) is causing the delay.
 
 ### Technical-Business Correlation
 
-Span metrics enable correlation between technical performance data and business outcomes by connecting metrics like response time or error rates directly to business metrics such as conversion rates or revenue.
+Span attributes enable correlation between technical performance data and business outcomes by connecting metrics like response time or error rates directly to business metrics such as conversion rates or revenue.
 
 ## Implementation Approaches
 
-There are two primary methods for implementing span metrics:
+There are two primary methods for implementing attributes on spans:
 
 ### 1. Enhancing Existing Spans
 
-Augment automatically-created or manually-defined spans with additional metric attributes:
+Augment automatically-created or manually-defined spans with additional attributes:
 
 ```javascript
 // Adding metrics to an existing file upload span
 const span = Sentry.getActiveSpan();
 if (span) {
-  // Performance metrics
-  span.setAttribute('file.size_bytes', 15728640);  // 15MB
-  span.setAttribute('upload.time_ms', 3500);
-  
   // User context
   span.setAttribute('user.subscription_tier', 'premium');
-  span.setAttribute('upload.type', 'profile_photo');
   
   // Multiple metrics in a single operation
   span.setAttributes({
     'memory.heap_used': 1024000,
-    'processing.steps_completed': 3,
     'processing.total_steps': 5
   });
 }
@@ -94,7 +103,7 @@ if (span) {
 
 ### 2. Creating Dedicated Metric Spans
 
-Create spans specifically for grouping related metrics, particularly useful for complex operations:
+Create spans specifically for grouping related attributes or metrics, particularly useful for complex operations:
 
 ```javascript
 // Creating a span for monitoring external API usage
@@ -105,11 +114,6 @@ Sentry.startSpan(
     attributes: {
       // Performance metrics
       'api.response_time_ms': 245,
-      'api.rate_limit_remaining': 95,
-      
-      // Resource usage tracking
-      'api.calls_this_period': 1250,
-      'api.cost_per_call': 0.001,
       
       // Context data
       'feature.using_api': 'image_recognition',
@@ -124,7 +128,7 @@ Sentry.startSpan(
 
 ## Implementation Use Cases
 
-The following examples demonstrate how span metrics can be applied to common application scenarios:
+The following examples demonstrate how attributes can be applied to common application scenarios:
 
 ### User Interface Performance
 
@@ -238,15 +242,6 @@ Sentry.startSpan(
 
 ## Implementation Guidelines
 
-### Getting Started
-
-To implement span metrics in your application:
-
-1. Ensure you have [properly configured tracing](/product/tracing/) in your application
-2. Identify key operations where performance or business metrics would provide valuable insights
-3. Determine whether to enhance existing spans or create dedicated metric spans
-4. Implement metrics iteratively, focusing on high-value areas first
-
 ### Best Practices
 
 #### Metric Selection and Design
@@ -274,11 +269,11 @@ Be mindful of the performance impact of collecting metrics, especially for high-
 
 ## Migrating from Standalone Metrics
 
-If you're currently using Sentry's standalone Metrics product, migrating to span metrics offers several advantages:
+If you're currently using Sentry's standalone Metrics product, migrating to span attributes offers several advantages:
 
-- **Enhanced context**: Metrics are connected directly to the operations that generate them
+- **Enhanced context**: Attributes are connected directly to the operations that generate them
 - **Implementation efficiency**: A single consistent API for both traces and metrics
-- **Improved correlation**: Direct association between metrics, traces, and errors
+- **Improved correlation**: Direct association between attributes, traces, and errors
 
 Migration process:
 1. Identify your current metric instrumentation points
@@ -290,9 +285,9 @@ Migration process:
 
 For more detailed implementation examples, refer to these guides:
 
-- [E-commerce transaction flow](/platforms/javascript/tracing/span-metrics/examples/#e-commerce-transaction-flow)
-- [File upload and processing](/platforms/javascript/tracing/span-metrics/examples/#file-upload-and-processing-pipeline)
+- [E-Commerce use case](/platforms/javascript/tracing/span-metrics/examples/#e-commerce-transaction-flow)
 - [LLM integration monitoring](/platforms/javascript/tracing/span-metrics/examples/#llm-integration-monitoring)
+- [File upload and processing](/platforms/javascript/tracing/span-metrics/examples/#file-upload-and-processing-pipeline)
 - [Job scheduling and processing](/platforms/javascript/tracing/span-metrics/examples/#job-scheduling-and-processing-pipeline)
 
-These examples demonstrate how to implement comprehensive span metrics across distributed systems, providing end-to-end visibility into application performance and behavior.
+These examples demonstrate how to implement comprehensive attribute tracking across distributed systems, providing end-to-end visibility into application performance and behavior.
