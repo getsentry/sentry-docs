@@ -168,7 +168,7 @@ export function OrgAuthTokenCreator() {
       <KeywordDropdown
         ref={setReferenceEl}
         role="button"
-        title="Click to generate token"
+        title="Click to generate token (DO NOT commit)"
         tabIndex={0}
         onClick={() => {
           handlePress();
@@ -192,7 +192,7 @@ export function OrgAuthTokenCreator() {
               onAnimationStart={() => setIsAnimating(true)}
               onAnimationComplete={() => setIsAnimating(false)}
             >
-              Click to generate token
+              Click to generate token (DO NOT commit)
             </Keyword>
           </AnimatePresence>
         </span>
