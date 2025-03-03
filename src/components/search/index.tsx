@@ -33,7 +33,14 @@ algoliaInsights('init', {
 // We dont want to track anyone cross page/sessions or use cookies
 // so just generate a random token each time the page is loaded and
 // treat it as a random user.
-const randomUserToken = crypto.randomUUID();
+const randomUserToken = (() => {
+  try {
+    return crypto.randomUUID();
+  } catch {
+    // Fallback to a simple random string if crypto.randomUUID() is not available
+    return Math.random().toString(36).substring(2) + Date.now().toString(36);
+  }
+})();
 
 // this type is not exported from the global-search package
 type SentryGlobalSearchConfig = ConstructorParameters<typeof SentryGlobalSearch>[0];
