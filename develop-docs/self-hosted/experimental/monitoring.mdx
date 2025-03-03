@@ -8,23 +8,23 @@ sidebar_order: 10
     These are community-contributed docs. Sentry does not officially provide support for self-hosted configurations beyond the default install.
 </Alert>
 
-This page is considered experimental because everyone will have different setup and requirements for their monitoring system. It is also best to use your existing monitoring system, and try to integrate Sentry's with it, instead of spinning up a new one.
+This page is considered experimental because everyone will have different setup and requirements for their monitoring system. It is also best to use your existing monitoring system, and try to integrate Sentry with it, instead of spinning up a new one.
 
-Most containers have Statsd client that you can ingest to your monitoring system. If you have a native Statsd server instance, you can directly use it. If you don't, you might want to add some kind of converter that converts the ingested Statsd format into your own. For example, if you are using Prometheus, you can use [prometheus-statsd-exporter](https://github.com/prometheus/statsd_exporter) to bridge the gap.
+Most containers have a `statsd` client that you can point to your monitoring system. If you have a native `statsd` server instance, you can directly use it. If you don't, you might want to add some kind of converter that converts the ingested `statsd` format into your own. For example, if you are using Prometheus, you can use [prometheus-statsd-exporter](https://github.com/prometheus/statsd_exporter) to bridge the gap.
 
 If you are using DataDog as your monitoring system, it is recommended to use [DogStatsD](https://docs.datadoghq.com/developers/dogstatsd/?tab=hostagent) as the collector.
 
-Recommended native Statsd server are [the original Statsd server made by Etsy](https://github.com/statsd/statsd) and some others on the [server re-implementations](https://github.com/statsd/statsd/blob/master/docs/server_implementations.md).
+We recommend [the original `statsd` server made by Etsy](https://github.com/statsd/statsd) or the others on the [server re-implementations](https://github.com/statsd/statsd/blob/master/docs/server_implementations.md).
 
-Other than service monitoring, you should also monitor your own host instance by using [Prometheus Node Exporter](https://github.com/prometheus/node_exporter), and your Docker daemon by using [built-in Prometheus exporter](https://docs.docker.com/engine/daemon/prometheus/) or similar tools. Sentry does not provides any alerts if your host instance has low available remaining RAM or low remaining disk space.
+Other than service monitoring, you should also monitor your own host instance by using [Prometheus Node Exporter](https://github.com/prometheus/node_exporter), and your Docker daemon by using [built-in Prometheus exporter](https://docs.docker.com/engine/daemon/prometheus/) or similar tools. Sentry does not provide any alerts if your host instance is low on resources such as free memory or disk space. It is critical for you to monitor the disk space as once it gets full, it will be much harder to recover from there.
 
 <Alert title="Note">
-    After changing configuration files, re-run the <code>./install.sh</code> script, to rebuild and restart the containers. See the <Link to="/self-hosted/#configuration">configuration section</Link> for more information.
+    After changing configuration files, don't forget to restart the containers with `docker compose restart`. See the <Link to="/self-hosted/#configuration">configuration section</Link> for more information.
 </Alert>
 
 ## Sentry-related configurations
 
-This documentation assume `100.100.123.123` as your statsd host IP address. On most services, it is recommended to provide IP address for the host, instead of a domain name (something like `statsd.yourcompany.com`).
+This documentation assumes `100.100.123.123` as your statsd host IP address. On most services, it is recommended to provide an IP address for the host like this, instead of a domain name like `statsd.yourcompany.com`.
 
 ### Sentry
 
