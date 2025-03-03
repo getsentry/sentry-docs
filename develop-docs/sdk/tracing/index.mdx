@@ -1,0 +1,90 @@
+---
+title: Tracing
+description: Learn what tracing is and how it works in Sentry.
+sidebar_order: 999
+---
+
+## What Is a Trace?
+
+A trace is a collection of telemetry/signals (errors, transactions, spans, replays, check-in, whatever) that is collected that has the same `trace_id`.
+
+A trace has no data structure, it is just the trace_id that can be used to query all kinds of telemetrydata from our storage and display it in one big [trace view](https://docs.sentry.io/concepts/key-terms/tracing/trace-view/) in the UI.
+
+Trace IDs are 32 character random hex strings that are added to all data types that are sent to Sentry.
+
+Trace IDs (and more additional information) is also passed with outgoing requests to other services so that telemetry data from those down stream services can be associated with the trace.
+
+Trace information is also parsed from incoming requests to continue a trace that was started in an upstream service.
+
+
+## Configuring Tracing
+
+By default Sentry SDKs do continue traces (via trace information received from incoming requests) and also pass trace information with outgoing requests to down stream services. These down stream services can then add more data to the trace.
+
+The SDK itself has some config options to configure tracing behavior of your service:
+
+- `traces_sample_rate` (default: None)
+
+    None -> no new traces will be started or continued from incoming trace information
+	0 -> no new traces will be started, but traces from incoming requests will be continued
+	0..1 -> percentage of trace units (transactions/segments/spans/whatever) that will be sampled
+
+- `traces_sampler` (default: None)
+
+    A function that returns the sample rate (0..1 like above) for the current trace. This is for having custom sampling behavior (like sampling one endpoint in your web application more and another one less)
+
+- `trace_propagation_targets` (default: everything)
+
+    A list of downstream services that will receive tracing information. The elements of the list can also be sub-string-matched or can be regular expressions.
+
+- `enable_tracing` (deprecated)
+
+    deprecated, use `traces_sample_rate` or `traces_sampler` instead
+
+
+## Trace Propagation (Distributed Tracing)
+
+Trace propagation is passing trace information from one services to another.
+
+There are multiple vehicles to pass trace information between services:
+
+- `sentry-trace`
+
+    Custom header that is used by Sentry SDKs to pass trace information.
+
+    `sentry-trace = traceid-spanid[-sampled]`
+
+    No `sampled` means: Defer the sampling decision to the next downstream service.
+
+- `traceparent`
+
+    W3C standard: https://www.w3.org/TR/trace-context/#traceparent-header
+
+    `traceparent = version-traceid-spanid-traceflags`
+
+    The `traceflags` can be: 00 (not sampled) / 01 (sampled)
+
+- `baggage`:
+
+    W3C standard: https://www.w3.org/TR/baggage/
+
+    Contains key-value pairs with additional information that is used for sampling traces. See below.
+
+Passing this information in the vehicles described above between services can happen in different ways.
+
+- If it is a HTTP service, the information can be passed in HTTP headers.
+
+- If it is a message queue service, the information can be passed in meta data fields of the messages.
+
+- You can pass trace information from one process to another by setting environment variables.
+
+- You can pass trace information from a server to a frontend JS app by setting HTML meta tags that the JS SDK will pick up.
+
+
+## Sampling Traces
+
+Most of the time you do not need to collect data for every request to your service. For high traffic services this will be too expensive. For this case Sentry SDKs support sampling. You can configure your service, to collect trace information for only a certain percentage of requests. Like 10% or 1 in 10 requests.
+
+Modern applications often have multiple services that are talking to each other. The trace includes data from all services involved in the trace. So if we want to sample the trace, we need to make to either keep the full trace, or drop the full trace. Having an incomplete trace, because some services did keep the data and some services drop the data, does not help anyone.
+
+We want to make sampling decisions for entire traces. However, to keep ingestion speedy, Relay (the tool that ingests your telemetry data) only looks at singular telemetry objects (like transactions, spans, ...) in isolation (as opposed to looking at whole traces). This means that we need the exact same decision basis for all objects belonging to a trace. In other words, all objects of a trace need to hold all of the information to make a sampling decision, and that information needs to be the same across all objects of the trace. We call the information we base sampling decisions on "Dynamic Sampling Context" or "DSC".
