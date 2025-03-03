@@ -159,7 +159,6 @@ const TabButton = styled('button')`
   &:focus,
   &[data-active='true'] {
     color: #fff;
-    font-weight: 500;
     border-bottom-color: #6c5fc7;
   }
 `;
