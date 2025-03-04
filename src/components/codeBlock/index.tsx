@@ -18,11 +18,6 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
   const [showCopied, setShowCopied] = useState(false);
   const codeRef = useRef<HTMLDivElement>(null);
 
-  const {copyCodeOnClick} = useCopyCodeCleaner(codeRef, {
-    cleanDiffMarkers: true,
-    language,
-  });
-
   // Show the copy button after js has loaded
   // otherwise the copy button will not work
   const [showCopyButton, setShowCopyButton] = useState(false);
@@ -30,21 +25,31 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
     setShowCopyButton(true);
   }, []);
 
-  const handleCopyOnClick = async () => {
-    const success = await copyCodeOnClick();
+  useCleanSnippetInClipboard(codeRef, {language});
 
-    if (success) {
+  async function copyCodeOnClick() {
+    if (codeRef.current === null) {
+      return;
+    }
+
+    const code = cleanCodeSnippet(codeRef.current.innerText, {language});
+
+    try {
+      await navigator.clipboard.writeText(code);
       setShowCopied(true);
       setTimeout(() => setShowCopied(false), 1200);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to copy:', error);
     }
-  };
+  }
 
   return (
     <div className={styles['code-block']}>
       <div className={styles['code-actions']}>
         <code className={styles.filename}>{filename}</code>
         {showCopyButton && (
-          <button className={styles.copy} onClick={handleCopyOnClick}>
+          <button className={styles.copy} onClick={copyCodeOnClick}>
             <Clipboard size={16} />
           </button>
         )}
@@ -70,19 +75,48 @@ const REGEX = {
 };
 
 /**
- * A custom hook that handles cleaning text when copying from code blocks
+ * Cleans a code snippet by removing diff markers (+ or -) and bash prompts.
+ *
+ * @internal Only exported for testing
+ */
+export function cleanCodeSnippet(rawCodeSnippet: string, options?: CleanCopyOptions) {
+  const language = options?.language;
+  const cleanDiffMarkers = options?.cleanDiffMarkers ?? true;
+  const cleanBashPrompt = options?.cleanBashPrompt ?? true;
+
+  let cleanedSnippet = rawCodeSnippet.replace(REGEX.CONSECUTIVE_NEWLINES, '\n');
+
+  if (cleanDiffMarkers) {
+    cleanedSnippet = cleanedSnippet.replace(REGEX.DIFF_MARKERS, '');
+  }
+
+  if (cleanBashPrompt && (language === 'bash' || language === 'shell')) {
+    // Split into lines, clean each line, then rejoin
+    cleanedSnippet = cleanedSnippet
+      .split('\n')
+      .map(line => {
+        const match = line.match(REGEX.BASH_PROMPT);
+        return match ? line.substring(match[0].length) : line;
+      })
+      .filter(line => line.trim() !== '') // Remove empty lines
+      .join('\n');
+  }
+
+  return cleanedSnippet;
+}
+
+/**
+ * A custom hook that handles cleaning text when manually copying code to clipboard
+ *
  * @param codeRef - Reference to the code element
  * @param options - Configuration options for cleaning
  */
-export function useCopyCodeCleaner(
+export function useCleanSnippetInClipboard(
   codeRef: RefObject<HTMLElement>,
   options: CleanCopyOptions = {}
 ) {
   const {cleanDiffMarkers = true, cleanBashPrompt = true, language = ''} = options;
 
-  /**
-   *   Effect, which cleans the snippet when the user manually copies it to their clipboard
-   */
   useEffect(() => {
     const handleUserCopyEvent = (event: ClipboardEvent) => {
       if (!codeRef.current || !event.clipboardData) return;
@@ -90,20 +124,9 @@ export function useCopyCodeCleaner(
       const selection = window.getSelection()?.toString() || '';
 
       if (selection) {
-        let cleanedText = selection;
+        const cleanedSnippet = cleanCodeSnippet(selection, options);
 
-        if (cleanDiffMarkers) {
-          cleanedText = cleanedText.replace(REGEX.DIFF_MARKERS, '');
-        }
-
-        if (cleanBashPrompt && (language === 'bash' || language === 'shell')) {
-          const match = cleanedText.match(REGEX.BASH_PROMPT);
-          if (match) {
-            cleanedText = cleanedText.substring(match[0].length);
-          }
-        }
-
-        event.clipboardData.setData('text/plain', cleanedText);
+        event.clipboardData.setData('text/plain', cleanedSnippet);
         event.preventDefault();
       }
     };
@@ -118,40 +141,5 @@ export function useCopyCodeCleaner(
         codeElement.removeEventListener('copy', handleUserCopyEvent as EventListener);
       }
     };
-  }, [codeRef, cleanDiffMarkers, language, cleanBashPrompt]);
-
-  /**
-   * Function for copying code when clicking on "copy code".
-   *
-   * @returns Whether code was copied successfully
-   */
-  const copyCodeOnClick = async (): Promise<boolean> => {
-    if (codeRef.current === null) {
-      return false;
-    }
-
-    let code = codeRef.current.innerText.replace(REGEX.CONSECUTIVE_NEWLINES, '\n');
-
-    if (cleanBashPrompt && (language === 'bash' || language === 'shell')) {
-      const match = code.match(REGEX.BASH_PROMPT);
-      if (match) {
-        code = code.substring(match[0].length);
-      }
-    }
-
-    if (cleanDiffMarkers) {
-      code = code.replace(REGEX.DIFF_MARKERS, '');
-    }
-
-    try {
-      await navigator.clipboard.writeText(code);
-      return true;
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Failed to copy:', error);
-      return false;
-    }
-  };
-
-  return {copyCodeOnClick};
+  }, [codeRef, cleanDiffMarkers, language, cleanBashPrompt, options]);
 }
