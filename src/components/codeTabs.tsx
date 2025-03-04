@@ -14,6 +14,7 @@ import styled from '@emotion/styled';
 import {CodeBlockProps} from './codeBlock';
 import {CodeContext} from './codeContext';
 import {KEYWORDS_REGEX, ORG_AUTH_TOKEN_REGEX} from './codeKeywords';
+import {updateElementsVisibilityForOptions} from './onboarding';
 import {SignInNote} from './signInNote';
 
 // human readable versions of names
@@ -98,6 +99,12 @@ export function CodeTabs({children}: CodeTabProps) {
       setSelectedTabIndex(newSelection);
     }
   }, [codeContext?.storedCodeSelection, groupId, possibleChoices]);
+
+  // react to possible changes in options when switching tabs
+  useEffect(() => {
+    updateElementsVisibilityForOptions(codeContext?.onboardingOptions || [], false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTabIndex]);
 
   const buttons = possibleChoices.map((choice, idx) => (
     <TabButton
