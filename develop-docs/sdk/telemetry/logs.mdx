@@ -104,6 +104,10 @@ Example:
 }
 ```
 
+`time_unix_nano`
+
+: **String, optional**. The time the log was created in Unix nanoseconds. If not set, the SDK should set this to the current time.
+
 ### `log` Envelope Item Payload
 
 The `log` envelope item payload is a JSON object that represents a log.
@@ -121,8 +125,6 @@ The log severity level is a string that represents the severity of the log. The 
 - `error`
 - `fatal`
 
-Optionally the SDK can define a `log` log severity level, which maps to the `info` log severity level in Sentry.
-
 ### Log Severity Number
 
 The log severity number is an integer that represents the severity of the log. The Sentry's default log severity number maps exactly to [OpenTelemetry's Severity number field](https://opentelemetry.io/docs/specs/otel/logs/data-model/#field-severitynumber) on the OpenTelemetry Logs Spec.
@@ -136,9 +138,7 @@ The log severity number is an integer that represents the severity of the log. T
 | 17-20               | Error      | An error event. Something went wrong.                                                   |
 | 21-24               | Fatal      | A fatal error such as application or system crash.                                      |
 
-Default SDK public API should set the lowest severity number for a given severity level. For example, `warn` severity level logs collected by the SDK should use the severity number `13`.
-
-If an SDK collects `log` severity level, it should map to `info` severity level and `9` severity number.
+Default SDK public API should set the lowest severity number for a given severity level. For example, `warn` severity level logs collected by the SDK API should use the severity number `13`.
 
 ## Public API
 
@@ -150,7 +150,7 @@ The SDKs need to expose the following two configuration options:
 
 - `enableSentryLogs`/`enable_sentry_logs`: A boolean flag to control if log envelopes will be generated and sent to Sentry via the Sentry SDK's Logging APIs. If this flag is set to `false`, the SDK should not send logs to Sentry. Defaults to `false`.
 
-- `beforeSendLog`/`before_send_log`: A function that takes a log object and returns a log object. This function is called before sending the log to Sentry. It can be used to modify the log object or to prevent the log from being sent to Sentry. Defaults to `null`/`unset`.
+- `beforeSendLog`/`before_send_log`: A function that takes a log object and returns a log object. This function is called before sending the log to Sentry. It can be used to modify the log object or to prevent the log from being sent to Sentry.
 
 ```js
 Sentry.init({
@@ -173,7 +173,7 @@ At the current moment, logs are not sampled so no sampling configuration needs t
 
 At minimum the SDK needs to implement the following two items to be considered to have a complete logging public API:
 
-1. `Sentry.logger.X` (where `X` is the log level): The log levels are `trace`, `debug`, `info`, `warn`, `error`, and `fatal`, which is specced out by the [protocol below](#log-severity-level). These methods accepts a string template and the parameters to that string template so the SDK can perform structured logging. Optionally these methods take arbitrary attributes, but not all languages can support both passing a parameterized template and attributes in an easy way.
+1. `Sentry.logger.X` (where `X` is the log level): The log levels are `trace`, `debug`, `info`, `warn`, `error`, and `fatal`, which is specced out by the [protocol below](#log-severity-level).
 
 - `Sentry.logger.trace`
 - `Sentry.logger.debug`
@@ -182,12 +182,21 @@ At minimum the SDK needs to implement the following two items to be considered t
 - `Sentry.logger.error`
 - `Sentry.logger.fatal`
 
+These methods accepts a string template and the parameters to that string template so the SDK can perform structured logging. Optionally these methods take arbitrary attributes, but not all languages can support both passing a parameterized template and attributes in an easy way.
+
 ```js
-Sentry.logger.info`Adding item ${itemId} for user ${userId}`;
+// Need to use `fmt` helper function in JavaScript for structured logging.
+Sentry.logger.info(Sentry.logger.fmt`Adding item ${itemId} for user ${userId}`);
 
 Sentry.logger.warn("User %s performed action %s", [userId, actionName], {
   extra: "123",
 });
+```
+
+Optionally the SDK can define a `log` log severity level, which maps to the `info` log severity level in Sentry. If an SDK collects `log` severity level, it should map to `info` severity level and `9` severity number.
+
+```js
+Sentry.logger.log("Added item to shopping cart");
 ```
 
 2. `Sentry.logger.emit`: A more verbose version of the `Sentry.logger.X` methods that accepts a log object/dictionary for maximum customizability. This is only meant to be used by power users, who want full control over what exactly is being set. Note that this API aligns with [OTEL's default logging API](https://opentelemetry.io/docs/specs/otel/logs/api/#emit-a-logrecord) as well, which gives us flexibility to align on those in the future.
@@ -328,7 +337,7 @@ SentrySDK.logger
 
 Both the `Sentry.logger.X` and `Sentry.logger.emit` methods are fire-and-forget (have no return value). This means that the SDK can choose to run these methods on a separate thread or queue them up for processing later. This includes evaluating the string template, and running any internal hooks (like `beforeSendLog`). The SDK should ensure that the logs are sent in the order they are received.
 
-## SDK behavior
+## SDK Behavior
 
 ### Implementation
 
@@ -366,5 +375,3 @@ Beyond these attributes, we are exploring if the SDK should also send OS, user, 
 SDKs should aim to have it so that console/logger integrations create logs as per the appropriate log level if `enableSentryLogs` is set to true. Examples of this include JavaScript's `console` methods and Pythons `logging` standard library.
 
 If SDK authors feel the need, they can also introduce additional options to beyond `enableSentryLogs` to gate this functionality. For example an option to control log appenders added via external config like with `Log4j` in the Java SDK.
-
-### Default Attributes
