@@ -13,9 +13,102 @@ This document defines the format used by Sentry to ingest logs, as well as the S
 
 ## Logs Protocol
 
-Logs can be sent in two ways to Sentry, via the `logs` envelope and Sentry Log Schema, or the `otel_log` envelope and OpenTelemetry Log Schema. The `logs` envelope is the preferred way to send logs to Sentry, but the `otel_log` envelope is also supported.
+Logs can be sent in two ways to Sentry, via the `log` envelope and Sentry Log protocol, or the `otel_log` envelope and OpenTelemetry Log protocol. The `log` envelope and protocol is the preferred way to send logs to Sentry, but the `otel_log` envelope and protocol is also supported.
 
-### `logs` Envelope
+### `otel_log` Envelope Item Payload
+
+The `otel_log` envelope item payload is a JSON object that represents a OpenTelemetry Log. Multiple `otel_log` envelope items can be sent in a single envelope.
+
+```json
+{
+  "severity_text": "info",
+  "body": {
+    "string_value": "User John has logged in!"
+  },
+  "attributes": [
+    {
+      "key": "sentry.message.template",
+      "value": { "string_value": "User %s has logged in!" }
+    },
+    {
+      "key": "sentry.message.parameters.0",
+      "value": { "string_value": "John" }
+    }
+  ],
+  "time_unix_nano": "1741191250694000000",
+  "trace_id": "edec519707974fc8bfccb5a017e17394",
+  "severity_number": 9
+}
+```
+
+It consists of the following fields:
+
+`severity_text`
+
+: **String, required**. The severity level of the log. One of `trace`, `debug`, `info`, `warn`, `error`, `fatal` (in order of lowest to highest).
+
+`severity_number`
+
+: **Integer, optional**. The severity number of the log. See [Log Severity Number](#log-severity-number) for more information.
+
+`trace_id`
+
+: **Integer, optional**. [HEAVILY RECOMMENDED] The trace id of the log. SDKs should attempt to set this if possible. This is used to link logs to traces and errors in Sentry.
+
+`body`
+
+: **Object, required**. The log body/message.
+
+Example:
+
+```json
+{
+  "string_value": "Added item to shopping cart"
+}
+```
+
+`attributes`
+
+: **Array\<Object\>, optional**. A dictionary of key-value pairs of arbitrary data attached to the log. Attributes must also declare the type of the value. The following types are supported: `string`, `number`, `boolean`, `integer`, `double`.
+
+Example:
+
+```json
+{
+  "attributes": [
+    {
+      "key": "string_item",
+      "value": {
+        "stringValue": "value"
+      }
+    },
+    {
+      "key": "integer_item",
+      "value": {
+        "intValue": 123
+      }
+    },
+    {
+      "key": "boolean_value",
+      "value": {
+        "boolValue": false
+      }
+    },
+    {
+      "key": "double_item",
+      "value": {
+        "stringValue": "value"
+      }
+    }
+  ]
+}
+```
+
+### `log` Envelope Item Payload
+
+The `log` envelope item payload is a JSON object that represents a log.
+
+TODO: Document `log` Envelope Item Payload once finalized.
 
 ### Log Severity Level
 
@@ -29,6 +122,23 @@ The log severity level is a string that represents the severity of the log. The 
 - `fatal`
 
 Optionally the SDK can define a `log` log severity level, which maps to the `info` log severity level in Sentry.
+
+### Log Severity Number
+
+The log severity number is an integer that represents the severity of the log. The Sentry's default log severity number maps exactly to [OpenTelemetry's Severity number field](https://opentelemetry.io/docs/specs/otel/logs/data-model/#field-severitynumber) on the OpenTelemetry Logs Spec.
+
+| SeverityNumer range | Range name | Meaning                                                                                 |
+| ------------------- | ---------- | --------------------------------------------------------------------------------------- |
+| 1-4                 | Trace      | A fine-grained debugging event. Typically disabled in default configurations.           |
+| 5-8                 | Debug      | A debugging event.                                                                      |
+| 9-12                | Info       | An informational event. Indicates that an event happened.                               |
+| 13-16               | Warn       | A warning event. Not an error but is likely more important than an informational event. |
+| 17-20               | Error      | An error event. Something went wrong.                                                   |
+| 21-24               | Fatal      | A fatal error such as application or system crash.                                      |
+
+Default SDK public API should set the lowest severity number for a given severity level. For example, `warn` severity level logs collected by the SDK should use the severity number `13`.
+
+If an SDK collects `log` severity level, it should map to `info` severity level and `9` severity number.
 
 ## Public API
 
@@ -225,8 +335,6 @@ Both the `Sentry.logger.X` and `Sentry.logger.emit` methods are fire-and-forget 
 If `debug` is set to `true` in SDK init, calls to the Sentry logger API should also print to the console with the appropriate log level. This will help debugging logging setups.
 
 Logs should be buffered before being sent. SDKs should keep a buffer of logs on the client (so you can have logs from multiple traces in the buffer) that flushes out based on some kind of condition. A recommended condition is if the buffer length exceeds 25 items, or if 5 seconds have passed. In the future we can use a [weight-tracking based approach](https://github.com/getsentry/rfcs/blob/main/text/0126-sdk-spans-aggregator.md#weight) to determine when to flush logs.
-
-We recommend exposing
 
 The internal SDK implementation is kept purposefully broad as we are still in early stages. As we figure more out about the logs product and payload characteristics, we'll be able to define a more rigorous spec for logging internals in the SDK. SDKs should take care to not expose logging internals as much as possible to userland so that they can be refactored in the future.
 
