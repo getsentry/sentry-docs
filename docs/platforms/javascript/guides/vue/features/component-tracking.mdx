@@ -4,7 +4,7 @@ description: "Learn how Sentry's Vue SDK allows you to monitor the rendering per
 sidebar_order: 10
 ---
 
-Sentry's Vue SDK offers a feature to monitor the performance of your Vue components: component tracking. Enabling this feature provides you with spans in your transactions that represent the component life cycle events and durations. This allows you to get a drilled-down view into how your components are behaving so you can do things like identify slow initializations or frequent updates, which might have an impact on your app's performance.
+Sentry's Vue SDK offers a feature to monitor the performance of your Vue components: component tracking. Enabling this feature provides you with spans in your transactions that represent the component lifecycle events and durations. This allows you to get a drilled-down view into how your components are behaving so you can do things like identify slow initializations or frequent updates, which might have an impact on your app's performance.
 
 ## Usage
 
@@ -18,87 +18,86 @@ To set up component tracking, you need to configure tracing. For details on how 
 
 By default, the Vue SDK tracks the rendering performance of your app (that is, its root component) on the initial page load. This operation is represented in the page load transaction by the **`ui.vue.render`** span.
 
-### Child Components
+### Child Component Tracking
 
 You can also track your app's child components to get more details about the rendering process. This feature will create spans for each tracked component instance. The spans are called **`ui.vue.[hook]`** where `[hook]` is replaced by each tracked lifecycle stage. For example, the span representing the mount stage (the time between `beforeMount` and `mounted`) is called `ui.vue.mount`.
 
-To set it up, add, at minimum, [`trackComponents`](#trackcomponents) in your `Sentry.init` call. Optionally, you can also add [`hooks`](#hooks), and [`timeout`](#timeout).
+To set it up, add the Vue Integration to your `Sentry.init()` call and, set the `tracingOptions.trackComponents` option.
+Pass `true` to track all of your child components, or specify a list of individual comopnents you want to track:
 
-#### `trackComponents`
+```javascript {5-17}
+import * as Sentry from "@sentry/vue";
 
-This is the main option that controls which child components should be tracked. Set it to `true` to track all of them or specify a list of individual components you want to track:
-
-```javascript
 Sentry.init({
-  // ...
-  trackComponents: true,
-  // OR
-  trackComponents: [
-    "App",
-    "RwvHeader",
-    "RwvFooter",
-    "RwvArticleList",
-    "Pagination",
+  integrations: [
+    Sentry.vueIntegration({
+      tracingOptions: {
+        trackComponents: true,
+        // OR
+        trackComponents: [
+          "App",
+          "RwvHeader",
+          "RwvFooter",
+          "RwvArticleList",
+          "Pagination",
+        ],
+      },
+    }),
   ],
 });
 ```
 
-The default is `false`.
+The default value for `trackComponents` is `false`.
 
-#### `hooks`
+#### Track Specific Component Lifecycle Hooks
 
-Control which lifecycle hooks should be tracked. This is helpful if, for example, you want to know if some components are removed during the initial page load, in which case you can add a `unmount` hook to the default:
+You can control which lifecycle hooks should be tracked. This is helpful if, for example, you want to know if some components are removed during the initial page load, in which case you can configure the integration to also track `unmount` hooks:
 
-```javascript
+```javascript {8}
+import * as Sentry from "@sentry/vue";
+
 Sentry.init({
-  // ...
-  trackComponents: true
-  hooks: ["mount", "update", "unmount"],
+  integrations: [
+    Sentry.vueIntegration({
+      tracingOptions: {
+        trackComponents: true
+        hooks: ["mount", "update", "unmount"],
+      },
+    }),
+  ],
 });
 ```
+
+The default set of tracked hooks is `['activate', 'mount', 'update']`.
 
 The following hooks are available to track in Vue 3: `['activate', 'create', 'unmount', 'mount', 'update']`
 
-Note that when specifying `hooks`, we use the simple verb rather than `before` and `-ed` pairs. For example, `unmount` is correct, while `beforeUnmount` and `unmounted` are incorrect.
-
 <Alert>
 
-In Vue 2, use `destroy` instead of `unmount`. `destroy` does not work in Vue 3, as the names of the lifecycle hooks themselves [changed](https://v3-migration.vuejs.org/breaking-changes/#other-minor-changes) in Vue 3.
+In Vue 2, use `destroy` instead of `unmount`. `destroy` does not work in Vue 3, as the names of the lifecycle hooks [changed](https://v3-migration.vuejs.org/breaking-changes/#other-minor-changes) in Vue 3.
 
 </Alert>
 
-The default set of hooks is `['activate', 'mount', 'update']`.
+Note that when specifying `hooks`, we use the simple verb rather than `before` and `-ed` pairs. For example, `unmount` is correct, while `beforeUnmount` and `unmounted` are incorrect.
 
-#### `timeout`
+#### Configure a Timeout for Component Tracking
 
-You can specify how long the root rendering span should wait for the last component to render.
+You can specify how long the root rendering span should wait for the last component to render by configuring the `timeout` option in milliseconds.
 Every new rendering cycle debounces the timeout, and it starts counting from the beginning. Once the timeout is reached, tracking is completed, and all the rendering information is sent to Sentry:
 
-```javascript
+```javascript {8}
+import * as Sentry from "@sentry/vue";
+
 Sentry.init({
-  // ...
-  trackComponents: true,
-  timeout: 500,
+  integrations: [
+    Sentry.vueIntegration({
+      tracingOptions: {
+        trackComponents: true,
+        timeout: 500, // milliseconds
+      },
+    }),
+  ],
 });
 ```
 
-The default is `2000`.
-
-#### Alternative Configuration With `tracingOptions`
-
-You can also group the component tracking options by using the optional `tracingOptions` property in `Sentry.init`:
-
-```javascript
-Sentry.init({
-  // ...
-  tracingOptions: {
-    trackComponents: true;
-    timeout: 500;
-    hooks: ['mount', 'update'];
-  }
-})
-```
-
-Note that when you use this property there is no change in behaviour, as opposed to when you use the three top-level properties described above.
-
-The default value for `tracingOptions` is `undefined`.
+The default timeout is `2000` milliseconds.

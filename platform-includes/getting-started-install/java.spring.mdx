@@ -1,3 +1,52 @@
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "opentelemetry"]}
+/>
+
+```groovy {tabTitle:Gradle Plugin}
+plugins {
+  id "io.sentry.jvm.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.12.0') }}"
+}
+```
+
+```xml {tabTitle:Maven Plugin}{filename:pom.xml}
+<plugin>
+  <groupId>io.sentry</groupId>
+  <artifactId>sentry-maven-plugin</artifactId>
+  <version>{{@inject packages.version('sentry.java.maven-plugin', '0.0.2') }}</version>
+  <!-- Required to allow auto-install of Sentry SDK and Integrations -->
+  <extensions>true</extensions>
+  <configuration>
+    <!-- In case you're self hosting, provide the URL here -->
+    <!-- <url>http://localhost:8000/</url> -->
+    <org>___SENTRY_ORG_SLUG___</org>
+    <project>___SENTRY_PROJECT_SLUG___</project>
+    <!-- Do not commit you auth token with this file, you should provide it via the SENTRY_AUTH_TOKEN environment variable or similar -->
+    <!-- <authToken>${env.SENTRY_AUTH_TOKEN}</authToken> -->
+    <authToken>___SENTRY_AUTH_TOKEN___</authToken>
+    <!-- Enable debugging to see logs in case something goes wrong when uploading the source bundle -->
+    <debugSentryCli>true</debugSentryCli>
+   </configuration>
+   <executions>
+    <execution>
+      <goals>
+        <!-- Generates a source bundle and uploads it to Sentry -->
+        <!-- This enables source context, allowing you to see your source code as part of your stack traces in Sentry -->
+        <!-- Learn more about this feature in its dedicated "Source Context" docs page -->
+        <goal>uploadSourceBundle</goal>
+      </goals>
+    </execution>
+  </executions>
+</plugin>
+```
+
+```groovy {tabTitle:Gradle (Spring 5)}
+implementation 'io.sentry:sentry-spring:{{@inject packages.version('sentry.java.spring', '4.2.0') }}'
+```
+
+```groovy {tabTitle:Gradle (Spring 6)}
+implementation 'io.sentry:sentry-spring-jakarta:{{@inject packages.version('sentry.java.spring.jakarta', '6.7.0') }}'
+```
+
 ```xml {tabTitle:Maven (Spring 5)}
 <dependency>
     <groupId>io.sentry</groupId>
@@ -14,20 +63,6 @@
 </dependency>
 ```
 
-```groovy {tabTitle:Gradle Plugin}
-plugins {
-  id "io.sentry.jvm.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.12.0') }}"
-}
-```
-
-```groovy {tabTitle:Gradle (Spring 5)}
-implementation 'io.sentry:sentry-spring:{{@inject packages.version('sentry.java.spring', '4.2.0') }}'
-```
-
-```groovy {tabTitle:Gradle (Spring 6)}
-implementation 'io.sentry:sentry-spring-jakarta:{{@inject packages.version('sentry.java.spring.jakarta', '6.7.0') }}'
-```
-
 ```scala {tabTitle: SBT (Spring 5)}
 libraryDependencies += "io.sentry" % "sentry-spring" % "{{@inject packages.version('sentry.java.spring', '4.2.0') }}"
 ```
@@ -38,10 +73,10 @@ libraryDependencies += "io.sentry" % "sentry-spring-jakarta" % "{{@inject packag
 
 For other dependency managers see the [central Maven repository (Spring 5)](https://search.maven.org/artifact/io.sentry/sentry-spring) and [central Maven repository (Spring 6)](https://search.maven.org/artifact/io.sentry/sentry-spring-jakarta).
 
-<Note>
+<Alert>
 
 We recommend using our Gradle plugin as it can add integrations and provide source context for events.
 
 If you are manually adding multiple Sentry dependencies, you can add a [bill of materials](/platforms/java/configuration/bill-of-materials) to avoid specifying the version of each dependency.
 
-</Note>
+</Alert>

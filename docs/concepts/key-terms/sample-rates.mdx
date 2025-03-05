@@ -1,0 +1,47 @@
+---
+title: Sample Rates
+sidebar_order: 11
+description: Learn how to manage the amount of data you send and are billed for in Sentry by adjusting the sample rates of various Sentry products including Traces and Session Replays.
+---
+
+## Overview
+
+### What Is a Sample Rate?
+
+Adding Sentry to your app gives you a lot of valuable information about errors and performance you wouldn't otherwise get. And lots of information is good -- as long as it's the right information, at a reasonable volume. You can use sample rates to capture only a specified percentage of events like errors and traces.
+
+
+### Why Not Capture All Events?
+
+We recommend sampling your transactions for two reasons:
+
+1. Capturing a single trace involves minimal overhead, but capturing traces for every page load or API request may add an undesirable load to your system.
+
+1. Enabling sampling allows you to better manage the number of events sent to Sentry, so you can tailor your volume to your organization's needs and budget.
+
+Choose a sampling rate that balances data accuracy with performance and storage concerns. You should aim to collect enough data to get meaningful insights without overloading resources. If unsure, start with a low rate and gradually increase it as you understand your traffic patterns better.
+
+## Sampling Rate Options
+
+<Alert>
+Some of the options below aren't available in every SDK; check out our platform-specific docs for more info.
+</Alert>
+
+### Error Events
+
+- **SampleRate** - Configures the sample rate for error events, in the range of 0.0 to 1.0. The default is 1.0, which means that 100% of error events will be sent. If set to 0.1, only 10% of error events will be sent. Events are picked randomly.
+
+### Tracing
+
+- **tracesSampleRate** - A number between `0` and `1`, controlling the percentage chance a given transaction will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Applies equally to all transactions created in the app. Either this or `tracesSampler` must be defined to enable tracing.
+
+- **tracesSampler** - A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between 0 (0% chance of being sent) and 1 (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or `tracesSampleRate` must be defined to enable tracing.
+
+Learn more about [tracing](/product/tracing/) in Sentry.
+### Session Replay
+
+- **replaysSessionSampleRate** - The sample rate for replays that begin recording immediately and last the entirety of the user's session. 1.0 collects all replays, and 0 collects none.
+
+- **replaysOnErrorSampleRate** - The sample rate for replays that are recorded when an error happens. This type of replay will record up to a minute of events prior to the error and continue recording until the session ends. 1.0 captures all sessions with an error, and 0 captures none.
+
+Learn more about [session replay](/product/explore/session-replay/) in Sentry.

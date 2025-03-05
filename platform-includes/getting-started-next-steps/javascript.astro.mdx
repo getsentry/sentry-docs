@@ -1,0 +1,89 @@
+## Advanced Configuration Options
+
+### Changing Config Files Location
+
+Sentry automatically detects configuration files named `sentry.(client|server).config.js` in the root of your project. You can rename these files or move them to a custom folder within your project.
+To change their location or names, specify the paths in the Sentry Astro integration options in your `astro.config.mjs`:
+
+```javascript {filename:astro.config.mjs}
+export default defineConfig({
+  // Other Astro project options
+  integrations: [
+    sentry({
+      clientInitPath: ".config/sentryClientInit.js",
+      serverInitPath: ".config/sentryServerInit.js",
+    }),
+  ],
+});
+```
+
+### Server Instrumentation
+
+<Alert>
+
+Auto instrumentation only works for Astro 3.5.2 or newer. If you're using an older version, you need to [manually add the Sentry middleware](#manually-add-server-instrumentation) instead.
+
+</Alert>
+
+In SSR or hybrid mode configured Astro apps, the Sentry Astro integration will automatically add an [Astro middleware](https://docs.astro.build/en/guides/middleware/) request handler to your server code. This middleware enhances the data collected by Sentry on the server side by:
+
+- Collecting performance spans for incoming requests
+- Enabeling distributed tracing between client and server
+- Enhancing captured errors with additional information
+
+### Manually Add Server Instrumentation
+
+For Astro versions below 3.5.2, you need to manually add the Sentry middleware to your `src/middleware.js` file:
+
+```javascript {filename:src/middleware.(js|ts)}
+import * as Sentry from "@sentry/astro";
+import { sequence } from "astro:middleware";
+
+export const onRequest = sequence(
+  Sentry.handleRequest()
+  // other middleware handlers
+);
+```
+
+If you have multiple request handlers, make sure to add the Sentry middleware as the first handler in the sequence.
+
+### Customize Server Instrumentation
+
+Sentry's Astro middleware gives you control over what additional data should be added to the recorded request spans.
+
+To customize the server instrumentation, add the Sentry middleware to your `src/middleware.js` file:
+
+```javascript {filename:src/middleware.(js|ts)}
+import * as Sentry from "@sentry/astro";
+import { sequence } from "astro:middleware";
+
+export const onRequest = sequence(
+  Sentry.handleRequest({
+    trackClientIp: true, // defaults to false
+    trackHeaders: true, // defaults to false
+  })
+  // other middleware handlers
+);
+```
+
+If you're using Astro 3.5.2 or newer, make sure to also disable auto instrumentation as shown below.
+
+### Disable Auto Server Instrumentation
+
+For Astro 3.5.2 or newer, you can disable the automatic server instrumentation by turning off the `requestHandler` auto instrumentation option:
+
+```javascript {filename:astro.config.mjs}
+import { defineConfig } from "astro/config";
+import sentry from "@sentry/astro";
+
+export default defineConfig({
+  integrations: [
+    sentry({
+      autoInstrumentation: {
+        requestHandler: false,
+      },
+    }),
+  ],
+  output: "server",
+});
+```

@@ -12,15 +12,14 @@ use the <PlatformLink
 to="/configuration/integrations/browserwindowsession">BrowserWindowSession</PlatformLink>
 integration in the renderer processes.
 
-Unless `autoSessionTracking` is set to `false`, this integration will be automatically added.
-
+To disable sending sessions, filter the `MainProcessSession` from the default integrations:
 
 ```javascript
 import * as Sentry from "@sentry/electron/main";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  autoSessionTracking: false,
+  integrations: (defaults) => defaults.filter((i) => i.name !== "MainProcessSession"),
 });
 ```
 
@@ -31,8 +30,6 @@ import * as Sentry from "@sentry/electron/main";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [
-    Sentry.mainProcessSessionIntegration({ sendOnCreate: true }),
-  ],
+  integrations: [Sentry.mainProcessSessionIntegration({ sendOnCreate: true })],
 });
 ```

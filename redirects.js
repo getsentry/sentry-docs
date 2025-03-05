@@ -115,6 +115,10 @@ const developerDocsRedirects = [
     destination: '/backend/api/:path*',
   },
   {
+    source: '/api-server/:path*',
+    destination: '/backend/:path*',
+  },
+  {
     source: '/application/serializers/',
     destination: '/backend/serializers/',
   },
@@ -215,8 +219,56 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/platforms/javascript/enriching-events/error-tracing/',
+    destination: '/platforms/javascript/enriching-events/',
+  },
+  {
+    source: '/organization/integrations/cloudflare-workers/',
+    destination: '/organization/integrations/cloud-monitoring/cloudflare-workers/',
+  },
+  {
+    source: '/account/require-2fa/',
+    destination: '/organization/authentication/two-factor-authentication/',
+  },
+  {
+    source: '/organization/integrations/msteams/',
+    destination: '/organization/integrations/notification-incidents/msteams/',
+  },
+  {
+    source: '/product/dev-toolbar/:path*',
+    destination: '/product/sentry-toolbar/:path*',
+  },
+  {
+    source: '/product/explore/session-replay/hydration-errors/',
+    destination: '/product/issues/issue-details/replay-issues/hydration-error/',
+  },
+  {
+    source: '/product/explore/session-replay/privacy/',
+    destination: '/security-legal-pii/scrubbing/protecting-user-privacy/',
+  },
+  {
+    source: '/product/explore/session-replay/rage-dead-clicks/',
+    destination: '/product/issues/issue-details/replay-issues/rage-clicks/',
+  },
+  {
     source: '/organization/integrations/launchdarkly/',
     destination: '/organization/integrations/feature-flag/launchdarkly/',
+  },
+  {
+    source: '/product/explore/session-replay/replay-details/',
+    destination: '/product/explore/session-replay/web/replay-details/',
+  },
+  {
+    source: '/platforms/javascript/guides/nextjs/sourcemaps/uploading/',
+    destination: '/platforms/javascript/guides/nextjs/sourcemaps/',
+  },
+  {
+    source: '/organization/integrations/vercel/',
+    destination: '/organization/integrations/deployment/vercel/',
+  },
+  {
+    source: '/product/accounts/quotas/org-stats/',
+    destination: '/product/stats/',
   },
   {
     source: '/internal/:path*',
@@ -435,6 +487,14 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/:guide/configuration/integrations/plugin/',
   },
   {
+    source: '/platforms/javascript/configuration/environments/',
+    destination: '/platforms/javascript/configuration/options/#environment',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/configuration/environments/',
+    destination: '/platforms/javascript/guides/:guide/configuration/options/#environment',
+  },
+  {
     source: '/platforms/:platform/context/',
     destination: '/platforms/:platform/enriching-events/context/',
   },
@@ -638,6 +698,10 @@ const userDocsRedirects = [
     destination: '/platforms/:platform/guides/:guide/user-feedback/',
   },
   {
+    source: '/platforms/javascript/guides/:guide/user-feedback/v7/',
+    destination: '/platforms/javascript/guides/:guide/user-feedback/configuration__v7.x',
+  },
+  {
     source: '/platforms/:platform/enriching-events/user-feedback/',
     destination: '/platforms/:platform/user-feedback/',
   },
@@ -672,6 +736,11 @@ const userDocsRedirects = [
   {
     source: '/api/releases/post-release-deploys/',
     destination: '/api/releases/create-a-new-deploy-for-an-organization/',
+  },
+  {
+    source: '/api/replays/retrieve-a-count-of-replays/',
+    destination:
+      '/api/replays/retrieve-a-count-of-replays-for-a-given-issue-or-transaction/',
   },
   {
     source: '/api/projects/post-project-user-reports/',
@@ -821,11 +890,11 @@ const userDocsRedirects = [
   },
   {
     source: '/product/insights/mobile-vitals/app-starts/',
-    destination: '/product/insights/mobile/app-starts/',
+    destination: '/product/insights/mobile/mobile-screens/app-starts/',
   },
   {
     source: '/product/insights/mobile-vitals/screen-loads/',
-    destination: '/product/insights/mobile/screen-loads/',
+    destination: '/product/insights/mobile/mobile-screens/screen-loads/',
   },
   {
     source: '/product/insights/web-vitals/',
@@ -864,6 +933,70 @@ const userDocsRedirects = [
     destination: '/product/insights/ai/llm-monitoring/getting-started/the-dashboard/',
   },
   // End of Insights reduirects.
+  {
+    source: '/platforms/javascript/guides/astro/manual-setup/',
+    destination: '/platforms/javascript/guides/astro/',
+  },
+  {
+    source: '/product/error-monitoring/dashboards/',
+    destination: '/product/dashboards/',
+  },
+  {
+    source: '/product/error-monitoring/filtering/',
+    destination: '/concepts/data-management/filtering/',
+  },
+  {
+    source: '/product/error-monitoring/issue-owners/',
+    destination: '/product/issues/ownership-rules/',
+  },
+  {
+    source: '/product/error-monitoring/reprocessing/',
+    destination: '/product/issues/reprocessing/',
+  },
+  {
+    source: '/product/error-monitoring/breadcrumbs/',
+    destination: '/product/issues/issue-details/breadcrumbs/',
+  },
+  {
+    source: '/product/error-monitoring/user-impact/',
+    destination: '/product/issues/issue-details/',
+  },
+  {
+    source: '/product/error-monitoring/stacktrace/',
+    destination: '/product/issues/issue-details/#stack-trace',
+  },
+  {
+    source: '/product/error-monitoring/:path*',
+    destination: '/product/issues',
+  },
+  {
+    source: '/platforms/kotlin-multiplatform/:path*',
+    destination: '/platforms/kotlin/guides/kotlin-multiplatform/:path*',
+  },
+  {
+    source: '/product/explore/feature-flags/:path*',
+    destination: '/product/issues/issue-details/feature-flags/:path*',
+  },
+  {
+    source: '/platforms/python/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/python/troubleshooting/:path*',
+  },
+  {
+    source: '/platforms/ruby/guides/:guide/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/ruby/guides/:guide/troubleshooting/:path*',
+  },
+  {
+    source: '/platforms/ruby/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/ruby/troubleshooting/:path*',
+  },
+  {
+    source: '/platforms/php/guides/:guide/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/php/guides/:guide/troubleshooting/:path*',
+  },
+  {
+    source: '/platforms/php/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/php/troubleshooting/:path*',
+  },
 ];
 
 /**

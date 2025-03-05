@@ -1,0 +1,58 @@
+Masking in the Sentry Flutter SDK is based on Widget _types_, e.g. `Image`, not the string representation of the type (i.e. we check whether
+a `widgetInstance` should be masked by checking `if (widgetInstance is Image)` instead of `if (widgetInstance.runtimeType == 'Image')`).
+This means we can ensure masking works regardless of obfuscation in release builds and also works for subclasses.
+However, it also means we can only automatically mask widgets that are part of the Flutter SDK itself.
+
+<Alert level="warning">
+We cannot mask widgets defined in various 3rd-party packages (because the type is not known in the Sentry Flutter SDK),
+even though many should be masked.
+
+Therefore, you need to consider the widgets your application uses and ensure they're masked correctly with custom masking rules.
+Examples of widgets that usually should be masked include (but are not limited to): VideoPlayer, WebView, Chart, etc.
+
+</Alert>
+
+You can tune this and add custom masking rules to fit your needs by adjusting the configuration in `options.experimental.privacy`.
+For example, you can explicitly mask or unmask widgets by type,
+or you can even have a callback to decide whether a specific widget instance should be masked:
+
+```dart
+  options.privacy.mask<IconButton>();
+  options.privacy.unmask<Image>();
+  options.privacy.maskCallback<Text>(
+      (Element element, Text widget) =>
+          (widget.data?.contains('secret') ?? false)
+              ? SentryMaskingDecision.mask
+              : SentryMaskingDecision.continueProcessing);
+```
+
+### `maskAllText`
+
+Mask all text content. Draws a rectangle of text bounds with text color on top. Currently, only `Text` and `EditableText` Widgets are masked.
+
+### `maskAllImages`
+
+Mask content of all images. Draws a rectangle of image bounds with image's dominant color on top. Currently, only `Image` widgets are masked.
+
+### `maskAssetImages`
+
+Mask asset images coming from the root asset bundle.
+
+### `mask<T extends Widget>()`
+
+Mask given widget type `T` (or subclasses of `T`) in the screenshot. Note: masking rules are called in the order they're added so if a previous rule already makes a decision, this rule won't be called.
+
+You can find more details in the documentation for each method.
+
+<Alert>
+
+If you find that data isn't being masked with the default settings, please let us know by creating a [GitHub issue](https://github.com/getsentry/sentry-dart/issues/new?template=BUG_REPORT.yml).
+
+</Alert>
+
+To disable masking for <PlatformLink to="/enriching-events/screenshots/">`Screenshots`</PlatformLink> and <PlatformLink to="/session-replay/">`Session Replay`</PlatformLink> (not to be used on applications with sensitive data):
+
+```dart
+  options.experimental.privacy.maskAllText = false;
+  options.experimental.privacy.maskAllImages = false;
+```

@@ -1,0 +1,193 @@
+---
+title: Manual Setup
+sidebar_order: 1
+description: "Learn how to set up the SDK manually."
+---
+
+If you can't (or prefer not to) run the <PlatformLink to="/#install">automatic setup</PlatformLink>, you can follow the instructions below to configure the Sentry SvelteKit SDK in your application. This guide is also useful to adjust the pre-set configuration if you used the installation wizard for automatic setup.
+
+## Compatibility
+
+The Sentry Nuxt SDK supports Nuxt version `3.7.0` and above. For best results, we recommend
+using Nuxt `3.14.0` or later, which includes updated dependencies critical to the SDK's functionality.
+
+In case you are using Nuxt before version `3.14.0`, add the following overrides:
+
+```json {tabTitle:npm} {filename:package.json}
+"overrides": {
+  "ofetch": "^1.4.0",
+  "@vercel/nft": "^0.27.4"
+}
+```
+
+```json {tabTitle:yarn} {filename:package.json}
+"resolutions": {
+  "ofetch": "^1.4.0",
+  "@vercel/nft": "^0.27.4"
+}
+```
+
+```json {tabTitle:pnpm} {filename:package.json}
+"pnpm": {
+  "overrides": {
+    "ofetch": "^1.4.0",
+    "@vercel/nft": "^0.27.4"
+  }
+}
+```
+
+## Install
+
+```bash {tabTitle:npm}
+npm install @sentry/nuxt --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/nuxt
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/nuxt
+```
+
+## Configure
+
+Configuration should happen as early as possible in your application's lifecycle.
+
+To set up the Sentry SDK, register the Sentry Nuxt module and initialize the SDK for client and server. At build time, the Sentry Nuxt Module looks for the following two files:
+
+- Client-Side: `sentry.client.config.ts` in the root containing `Sentry.init`
+- Server-Side: `sentry.server.config.ts` in the root containing `Sentry.init`
+
+In these files, you can specify the full range of <PlatformLink to="/configuration/options">Sentry SDK options</PlatformLink>.
+
+
+### Nuxt Module Setup
+
+Add the Sentry Nuxt Module to your `nuxt.config.ts` file:
+
+```javascript {filename:nuxt.config.ts}
+export default defineNuxtConfig({
+  modules: ["@sentry/nuxt/module"]
+});
+```
+
+Adding this module enables the Sentry SDK in your Nuxt application. The Sentry Nuxt Module will then automatically look for the Sentry configuration files and initialize the SDK accordingly.
+
+### Client-side Setup
+
+Add a `sentry.client.config.ts` file to the root of your project (this is probably the same level as the `package.json`). In this file, import and initialize Sentry, specifying any SDK options for the client:
+
+```javascript {filename:sentry.client.config.ts}
+import * as Sentry from '@sentry/nuxt';
+
+Sentry.init({
+  // If set up, you can use the Nuxt runtime config here
+  // dsn: useRuntimeConfig().public.sentry.dsn, // modify, depending on your custom runtime config
+  dsn: "___PUBLIC_DSN___",
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0
+});
+```
+
+### Server-side Setup
+
+Add a `sentry.server.config.ts` file to the root of your project:
+
+```javascript {filename:sentry.server.config.ts}
+import * as Sentry from '@sentry/nuxt';
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0
+});
+```
+
+The Nuxt `useRuntimeConfig()` does not work in the Sentry server config due to technical reasons (the config file has to
+be loaded before Nuxt is loaded). To be able to use `process.env` you either have to add `--env-file=.env` to your node command
+
+```bash {tabTitle: node}
+node --env-file=.env .output/server/index.mjs
+```
+
+or use the `dotenv` package:
+
+```javascript {tabTitle: Server Config} {filename:sentry.server.config.ts} {1,3}
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+// ... rest of the file
+```
+
+#### Load Sentry config
+
+Sentry can only be loaded on the server-side by being explicitly added via `--import`.
+
+Check out the <PlatformLink to="/install/cli-import">`--import` CLI flag</PlatformLink> docs for setup instructions.
+
+<Alert level="warning">
+  In the beta state of the Nuxt SDK, some features may not work with certain deployment providers. Check the progress on GitHub: [Compatibility with different Deployment Platforms](https://github.com/getsentry/sentry-javascript/issues/14029)
+</Alert>
+
+#### Troubleshoot Errors during Server Startup
+
+In case you are experiencing problems after adding `sentry.server.config.ts` and building the project, you can check out <PlatformLink to="/troubleshooting">Troubleshooting</PlatformLink>
+or read through the different <PlatformLink to="/install">installation methods</PlatformLink>.
+
+## Source Maps Upload
+
+The Sentry Nuxt Module uses the [Sentry Vite Plugin](https://www.npmjs.com/package/@sentry/vite-plugin) to upload source maps for both server and client builds.
+This means that when you run a production build (`nuxt build`), source maps will be generated and uploaded to Sentry, so that you get readable stack traces in your Sentry issues.
+
+To upload source maps, specify your Sentry auth token as well as your org and project slugs. Set them in the `sourceMapsUploadOptions` option
+inside the `sentry` options of your `nuxt.config.ts`.
+
+<Alert>
+  The module options inside `sentry` are only affecting the **build-time** of the SDK.
+</Alert>
+
+<OrgAuthTokenNote />
+
+```javascript {filename:nuxt.config.ts} {3-9}
+export default defineNuxtConfig({
+  modules: ["@sentry/nuxt/module"],
+  sentry: {
+    sourceMapsUploadOptions: {
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      authToken: "___ORG_AUTH_TOKEN___"
+    }
+  }
+});
+```
+
+The Sentry Nuxt Module automatically enables source map generation for your project,
+but you'll need to enable it explicitly for the client-side. Add this code to your Nuxt configuration:
+
+```javascript {filename:nuxt.config.ts} {2}
+export default defineNuxtConfig({
+    sourcemap: { client: 'hidden' }
+});
+```
+
+The 'hidden' option functions the same as `true`, by enabling source map generation, but it also suppresses the source map reference comments that would
+normally appear at the end of each generated file in the build output. This keeps the source maps available without exposing their references in the files.
+
+When you open browser developer tools, browsers try to fetch source maps using reference comments in bundled files. If source maps are uploaded to Sentry and
+removed from the client-side, these references cause 404 errors in developer tools. The `'hidden'` option stops these comments from being generated, preventing browsers
+from trying to fetch missing files and avoiding unnecessary errors.
+
+You need to explicitly enable client-side source maps because Nuxt applies default [source map settings](https://nuxt.com/docs/api/nuxt-config#sourcemap), and
+the Sentry Nuxt Module respects these when they are explicitly defined.
+
+## Verify
+
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+
+<PlatformContent includePath="getting-started-verify" />

@@ -1,0 +1,61 @@
+---
+title: Performance Overhead
+sidebar_order: 5502
+notSupported:
+description: "Learn about how enabling Session Replay impacts the performance of your application."
+---
+
+If you're considering enabling Session Replay, it's important to first understand the potential performance impact to your app. While accurate metrics require realistic testing where you apply typical access patterns and correlate the results with your business metrics, to provide a baseline, we measured the overhead using the open-source [Pocket Casts](https://github.com/Automattic/pocket-casts-ios) app.
+
+You can learn more about the various performance overhead optimizations implemented in the iOS Replay SDK in the [Replay Performance Overhead](/product/explore/session-replay/mobile/performance-overhead/) docs.
+
+## Benchmarking the iOS Replay SDK
+
+The Pocket Casts app offers a diverse mix of components, including Fragments, Activities, and Jetpack Compose screens, making it an ideal candidate for testing. Here's how the benchmarks were conducted:
+- **Configuration:** Full masking was enabled, and optimized release builds were used.
+- **User Flow:** The same flow was executed 10 times to ensure consistency.
+- **Real-World Representation:** This approach closely mirrors performance in real-world scenarios.
+
+The benchmarks were run on an iPhone 14 Pro. Note that active Session Replay recording can introduce slow frames on older lower-end iOS devices (for example iPhone 8).
+
+### Results
+Below are the results of the benchmarking tests, presented as median values to reflect typical overhead.
+
+
+| Metric                           | Sentry SDK only | Sentry + Replay SDK |
+| -------------------------------- | --------------- | ------------------- |
+| FPS                              | 55 fps          | 53 fps              |
+| Memory                           | 102 MB          | 121 MB              |
+| CPU                              | 4%              | 13%                 |
+| App Startup Time (Cold)          | 1264.80 ms      | 1265 ms             |
+| Main Thread Time                 | n/a             | 43ms                |
+| Network Bandwidth                | n/a             | 10 KB/s of recording|
+
+## Reducing Performance Overhead
+
+To minimize the performance impact of the Replay SDK, consider the following steps:
+
+### Change Replay quality
+
+Lowering the quality of captured screenshots and videos can significantly reduce CPU, memory, and network bandwidth usage. Here's how you can do it:
+
+```swift
+SentrySDK.start(configureOptions: { options in
+  // this will reduce screenshot compression to 10 and bitrate to 50kbps
+  options.sessionReplay.quality = .low // defaults to .medium
+})
+```
+
+### Disable Replay for Low-End Devices
+
+If the Replay SDK causes performance issues on lower-end devices (for example, [this](https://github.com/getsentry/relay/blob/695b459e03481f7d799f07b2b901b140e5d5753d/relay-event-schema/src/protocol/device_class.rs#L21-L37) is how Sentry determines the device class), you can disable it specifically for those devices:
+
+```kotlin
+SentrySDK.start(configureOptions: { options in
+  options.dsn = "___PUBLIC_DSN___"
+  options.debug = true
+
+  options.sessionReplay.onErrorSampleRate = if isLowEnd() { 0.0 } else { 1.0 }
+  options.sessionReplay.sessionSampleRate = if isLowEnd() { 0.0 } else { 0.1 }
+})
+```

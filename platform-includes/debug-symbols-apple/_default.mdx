@@ -8,12 +8,12 @@ To view uploaded dSYMs in your project, select an existing project from the "Pro
 - [Sentry Fastlane Plugin](#fastlane)
 - [Xcode Build Phase](#xcode-build-phase)
 
-<Note>
+<Alert>
 
 Starting with Xcode 13, newly generated projects don't automatically create a required `Info.plist` configuration file.
 If this is your situation, please read [Info.plist Is Missing in Xcode 13 — Here's How To Get It Back](https://betterprogramming.pub/info-plist-is-missing-in-xcode-13-heres-how-to-get-it-back-1a7abf3e2514).
 
-</Note>
+</Alert>
 
 ## Sentry-cli
 
@@ -29,7 +29,7 @@ You can also upload your code for source context. This feature allows Sentry to 
 
 <OnboardingOptionButtons
   options={[{ id:"source-context", checked: false }]}
-/> 
+/>
 
 ```bash {"onboardingOptions": {"source-context": "2"}}
 sentry-cli debug-files upload --auth-token ___ORG_AUTH_TOKEN___ \
@@ -39,7 +39,13 @@ sentry-cli debug-files upload --auth-token ___ORG_AUTH_TOKEN___ \
   PATH_TO_DSYMS
 ```
 
-Visit the [sentry-cli docs](/cli/dif/#uploading-files) for more information.
+<Alert>
+
+You can find installation instructions for Sentry CLI https://docs.sentry.io/cli/installation/.
+
+For more info on `sentry-cli` configuration visit the [Sentry CLI configuration docs](/cli/configuration/).
+
+</Alert>
 
 ## Sentry Fastlane Plugin
 
@@ -68,7 +74,7 @@ sentry_upload_dif(
 )
 ```
 
-<Alert level="" title="On Prem">
+<Alert title="On Prem">
 
 By default fastlane will connect to sentry.io. For on-prem you need to provide the _url_ parameter to instruct the tool to connect to your server:
 
@@ -84,13 +90,13 @@ Your project's dSYM can be uploaded during Xcode's build phase as a _Run Script_
 
 Follow these steps to upload the debug symbols:
 
-1.  Download and install [sentry-cli](/product/cli/installation/).
+1.  Download and install [sentry-cli](/cli/installation/).
 2.  Copy the script below into a new _Run Script_ and set your _AUTH_TOKEN_, _ORG_SLUG_, and _PROJECT_SLUG_.
 Sentry can display snippets of your code next to the event stack traces. This feature is called <PlatformLink to="/data-management/debug-files/source-context/">source context</PlatformLink>. When setting the `--include-sources` option, sentry-cli will scan your debug files to find references to the source code files, resolve them in the local file system, bundle them up, and upload them to Sentry.
 
 For this to work, your project settings for `DEBUG_INFORMATION_FORMAT` must be set to `DWARF with dSYM File`, which is the default for release builds but not for debug builds. If you don't want Sentry to upload your source code, remove the `--include-sources` argument from the copied script.
 
-<Alert level="" title="Warnings vs. Errors">
+<Alert title="Warnings vs. Errors">
 
 Depending on your needs, you may want to emit warnings to the Xcode build log to let the build pass, or emit errors to fail it. For example, in a CI deployment where debug symbols may be harder to recover, and you might not realize symbols couldn't be symbolicated until after release, it might be better to fail the build.
 
@@ -109,7 +115,7 @@ if which sentry-cli >/dev/null; then
 export SENTRY_ORG=___ORG_SLUG___
 export SENTRY_PROJECT=___PROJECT_SLUG___
 export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
-ERROR=$(sentry-cli debug-files upload \ 
+ERROR=$(sentry-cli debug-files upload \
 --include-sources \
 "$DWARF_DSYM_FOLDER_PATH" 2>&1 >/dev/null)
 if [ ! $? -eq 0 ]; then
@@ -130,7 +136,7 @@ export SENTRY_ORG=___ORG_SLUG___
 export SENTRY_PROJECT=___PROJECT_SLUG___
 export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ERROR=$(sentry-cli debug-files upload \
---include-sources \ 
+--include-sources \
 "$DWARF_DSYM_FOLDER_PATH" --force-foreground 2>&1 >/dev/null)
 if [ ! $? -eq 0 ]; then
 echo "error: sentry-cli - $ERROR"
@@ -139,9 +145,9 @@ else
 echo "error: sentry-cli not installed, download from https://github.com/getsentry/sentry-cli/releases"
 fi
 ```
-<Note>
+<Alert>
 You can add `--force-foreground` argument to sentry-cli to help you debug any error that could happen during the upload process.
-</Note>
+</Alert>
 
 3.  You also need to add the following line to the _Input Files_ section in the _Run Script_ from step 2:
 
@@ -156,7 +162,7 @@ ${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TAR
 
 ![enable-user-script-sandboxing](./img/enable_user_script_sandboxing.png)
 
-<Alert level="" title="Self Hosted">
+<Alert title="Self Hosted">
 
 By default sentry-cli will connect to sentry.io. For on-prem you need to export the _SENTRY_URL_ environment variable to instruct the tool to connect to your server:
 

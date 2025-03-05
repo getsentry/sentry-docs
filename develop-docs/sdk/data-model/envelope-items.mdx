@@ -16,7 +16,7 @@ The headers described in this section are **in addition to the common headers**.
 
 ### Event
 
-Item type `"event"`. This Item contains an error or default event payload
+Item type `"event"`. This Item contains an error or default [event payload](/sdk/data-model/event-payloads/)
 encoded in JSON.
 
 **Constraints:**
@@ -146,7 +146,7 @@ details.
 
 *None*
 
-### Statsd
+### Statsd (deprecated)
 
 Item type `"statsd"` contains metrics emissions in a superset of the statsd format.
 
@@ -162,7 +162,7 @@ details.
 
 *None*
 
-### Metric Meta
+### Metric Meta (deprecated)
 
 Item type `"metric_meta"` contains per-metric meta data which is persisted alongside
 metrics in the system.
@@ -181,18 +181,100 @@ details.
 
 ### User Feedback
 
-User Feedback was called User Report in the beginning. Therefore the envelope item type is `"user_report"`.
-The item contains a user feedback / user report JSON payload:
+Item type `"feedback"`. This Item contains an [event payload](/sdk/data-model/event-payloads/) encoded in JSON, with an additional `feedback` context object.
+
+Example payload:
 ```json
-{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc","email":"john@me.com","name":"John Me","comments":"It broke."}\n
+{
+  "event_id": "9ec79c33ec9942ab8353589fcb2e04dc",
+  "timestamp": "2011-05-02T17:41:36Z",
+  "platform": "javascript",
+  "level": "error",
+  "contexts": {
+    "feedback": {
+      "contact_email": "john@example.com",
+      "name": "John Smith",
+      "message": "I love session replay!",
+      "url": "https://sentry.io/replays/",
+      "associated_event_id": "32fd1995636d446385016e2747623e11",
+      "replay_id":"82840977e85b4ed3bc27f7b5b25cec15"
+    }
+  }
+}
 ```
 
-**Attributes**
+**Payload Attributes**
+
+We only document attributes for the `contexts.feedback` object, which is **required**
+for this item type. For other attributes, see [Event Payloads](/sdk/data-model/event-payloads/).
+
+`message`
+
+: **String, required.** Comments of the user, describing what happened and/or sharing
+feedback. The max length is **4096 characters**.
+
+`contact_email`
+
+: *String, optional.* The email of the user who submitted the feedback. If excluded, Sentry attempts to fill this in with user context. Anonymous feedbacks (no name or email) are still accepted.
+
+`name`
+
+: *String, optional.* The name of the user who submitted the feedback. If excluded, Sentry attempts to fill this in with user context. Anonymous feedbacks (no name or email) are still accepted.
+
+`url`
+
+: *String, optional.* The URL of the webpage the user was on when submitting feedback.
+  This may be used to search for or set alerts on feedback.
+
+`associated_event_id`
+
+: *UUID String, optional.* The identifier of an error event in the same project.
+  Use this to explicitly link a related error in the feedback UI.
+
+`replay_id`
+
+: *UUID String, optional.* The identifier of a related Session Replay in the same
+  project. Sentry uses this ID to render a Replay clip in the feedback UI.
+
+**Attaching Screenshots:**
+
+You can associate screenshots with a feedback by sending image data as
+[attachment items](/sdk/data-model/envelope-items/#attachment), with `event_id`
+corresponding to the feedback item. We recommend sending the items in the same
+Envelope.
+
+**Constraints:**
+
+- This Item may occur at most once per Envelope.
+- This Item is mutually exclusive with `"transaction"` items.
+
+**Required Envelope Headers:**
 
 `event_id`
 
-: **UUID String, required.** The identifier of the event or transaction.
+: **UUID String, required.** Corresponds to the `event_id` field of the event
+  payload. **It is not equal to the `associated_event_id`** field in the feedback
+  context. Clients are required to generate an event identifier ahead of time
+  and set it at least in the Envelope headers. If the identifier mismatches
+  between the Envelope and payload, the Envelope header takes precedence.
 
+### User Report - Deprecated
+
+Item type `"user_report"`. This is an older, deprecated way of submitting user feedback. It continues to work so older SDKs won't break. New implementations should follow the `feedback` item type described above.
+
+This item works by associating user information and comments with an event. If both the item and its associated event are accepted, we convert it to a user feedback.
+
+The item contains a JSON payload like this:
+```json
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc","email":"john@example.com","name":"John Me","comments":"It broke."}\n
+```
+
+**Payload Attributes**
+
+`event_id`
+
+: **UUID String, required.** The identifier of the associated event, ideally
+an error.
 
 `email`
 
@@ -204,19 +286,25 @@ The item contains a user feedback / user report JSON payload:
 
 `comments`
 
-: *String, recommended.* Comments of the user about what happened.
+: *String, recommended.* Comments of the user about what happened. The max length is **4096 characters**.
 
 **Constraints:**
 
 - This Item may occur once per Envelope.
-- User Feedbacks / Reports can be ingested separately from their events. We recommended to
-  send them in the same Envelope.
+- User Reports can be ingested separately from their events. However, we recommend
+  sending them in the same Envelope.
+- You may not associate multiple User Reports to the same event.
+- The event can not be more than 30 minutes old.
+- If the event does not exist in the same project or was never ingested, the report
+  is discarded and never converted to feedback.
 
 **Envelope Headers:**
 
 `event_id`
 
-: **UUID String, required.** The identifier of the event or transaction.
+: **UUID String, required.** Corresponds to the `event_id` field of the payload.
+  If the identifier mismatches between the Envelope and payload, the Envelope
+  header takes precedence.
 
 **Additional Item Headers:**
 

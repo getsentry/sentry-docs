@@ -1,0 +1,54 @@
+## Improving Data on Transactions and Spans
+
+### Adding Data Attributes to Transactions
+
+You can add data attributes to your transactions. This data is visible in the trace explorer in Sentry. Data attributes can be strings, numbers or booleans, as well as (non-mixed) arrays of these types:
+
+```ruby
+Sentry.start_transaction(name: "my-transaction") do |transaction|
+  transaction.set_data("my-data-attribute-1", "value1")
+  transaction.set_data("my-data-attribute-2", 42)
+  transaction.set_data("my-data-attribute-3", true)
+
+  transaction.set_data("my-data-attribute-4", ["value1", "value2", "value3"])
+  transaction.set_data("my-data-attribute-5", [42, 43, 44])
+  transaction.set_data("my-data-attribute-6", [true, false, true])
+end
+```
+
+### Adding Data Attributes to Spans
+
+You can add data attributes to your spans the same way, with the same type restrictions as described above.
+
+```ruby
+Sentry.with_child_span(op: "my-span") do |span|
+  span.set_data("my-data-attribute-1", "value1")
+  span.set_data("my-data-attribute-2", 42)
+  span.set_data("my-data-attribute-3", true)
+
+  span.set_data("my-data-attribute-4", ["value1", "value2", "value3"])
+  span.set_data("my-data-attribute-5", [42, 43, 44])
+  span.set_data("my-data-attribute-6", [true, false, true])
+end
+```
+
+### Adding Data Attributes to All Spans
+
+To attach data attributes to the transaction and all its spans, you can use <PlatformLink to="/configuration/filtering/#using-before-send-transaction">`before_send_transaction`</PlatformLink>:
+
+```ruby
+Sentry.init do |config|
+  # ...
+  config.traces_sample_rate = 1.0
+
+  config.before_send_transaction = lambda do |event, _hint|
+    # Set the data attribute "foo" to "bar" on every span belonging to this transaction event
+    event.spans.each { |span| span.set_data(:foo, "bar")
+
+    # Set the data on the transaction itself, too
+    event.contexts[:trace][:data][:foo] = "bar"
+
+    event
+  end
+end
+```

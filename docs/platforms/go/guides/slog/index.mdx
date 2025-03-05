@@ -1,0 +1,127 @@
+---
+title: Slog
+description: "Slog is a structured logging library for Go, introduced in Go 1.21. This guide demonstrates how to integrate slog with Sentry to capture and send logs to Sentry."
+---
+
+For a quick reference, there is a [complete example](https://github.com/getsentry/sentry-go/tree/master/_examples/slog) at the Go SDK source code repository.
+
+Go API documentation for the [`sentryslog` package](https://pkg.go.dev/github.com/getsentry/sentry-go/slog) is also available.
+
+## Install
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+  ]}
+/>
+
+```bash
+go get github.com/getsentry/sentry-go/slog
+```
+
+<Break />
+
+<SignInNote />
+
+To integrate Sentry with slog, you need to set up a Sentry handler and configure the Sentry client.
+
+```go
+import (
+	"fmt"
+	"log"
+	"time"
+
+	"log/slog"
+
+	"github.com/getsentry/sentry-go"
+	sentryslog "github.com/getsentry/sentry-go/slog"
+)
+
+func main() {
+	// Initialize Sentry
+	err := sentry.Init(sentry.ClientOptions{
+		Dsn:           "___PUBLIC_DSN___",
+		EnableTracing: false,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer sentry.Flush(2 * time.Second)
+
+	// Configure `slog` to use Sentry as a handler
+	logger := slog.New(sentryslog.Option{Level: slog.LevelDebug}.NewSentryHandler())
+	logger = logger.With("release", "v1.0.0")
+
+	// Log messages with various attributes
+	logger.
+		With(
+			slog.Group("user",
+				slog.String("id", "user-123"),
+				slog.Time("created_at", time.Now()),
+			),
+		).
+		With("environment", "dev").
+		With("error", fmt.Errorf("an error")).
+		Error("a message")
+}
+```
+
+## Configure
+
+`sentryslog` provides options to configure the integration with Sentry. It accepts a struct of `sentryslog.Options` that allows you to configure how the handler will behave. The options are:
+
+```go
+// Level sets the minimum log level to capture and send to Sentry.
+// Logs at this level and above will be processed. The default level is debug.
+Level slog.Leveler
+// Hub specifies the Sentry Hub to use for capturing events.
+// If not provided, the current Hub is used by default.
+Hub *sentry.Hub
+// Converter is an optional function that customizes how log records
+// are converted into Sentry events. By default, the DefaultConverter is used.
+Converter Converter
+// AttrFromContext is an optional slice of functions that extract attributes
+// from the context. These functions can add additional metadata to the log entry.
+AttrFromContext []func(ctx context.Context) []slog.Attr
+// AddSource is an optional flag that, when set to true, includes the source
+// information (such as file and line number) in the Sentry event.
+// This can be useful for debugging purposes.
+AddSource bool
+// ReplaceAttr is an optional function that allows for the modification or
+// replacement of attributes in the log record. This can be used to filter
+// or transform attributes before they are sent to Sentry.
+ReplaceAttr func(groups []string, a slog.Attr) slog.Attr
+```
+
+## Usage
+
+```go
+logger := slog.New(sentryslog.Option{
+	Level: slog.LevelDebug,
+	AttrFromContext: []func(ctx context.Context) []slog.Attr{
+		func(ctx context.Context) []slog.Attr {
+			return []slog.Attr{slog.String("request_id", "123")}
+		},
+	},
+}.NewSentryHandler())
+
+logger = logger.With("release", "v1.0.0")
+
+logger.
+	With(
+		slog.Group("user",
+			slog.String("id", "user-123"),
+			slog.Time("created_at", time.Now()),
+		),
+	).
+	With("environment", "dev").
+	With("error", fmt.Errorf("an error")).
+	Error("a message")
+```
+
+
+
+<SignInNote />
+
+
+Note: Ensure Sentry is flushed before the application exits to avoid losing any pending events.

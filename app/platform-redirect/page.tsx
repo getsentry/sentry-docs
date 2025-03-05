@@ -8,6 +8,8 @@ import {SmartLink} from 'sentry-docs/components/smartLink';
 import {extractPlatforms, getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
 import {setServerContext} from 'sentry-docs/serverContext';
 
+import {sanitizeNext} from './utils';
+
 export const metadata: Metadata = {
   robots: 'noindex',
   title: 'Platform Specific Content',
@@ -15,17 +17,19 @@ export const metadata: Metadata = {
     'The page you are looking for is customized for each platform. Select your platform below and we’ll direct you to the most specific documentation on it.',
 };
 
-export default async function Page({
-  searchParams: {next = '', platform},
-}: {
-  searchParams: {[key: string]: string | string[] | undefined};
+export default async function Page(props: {
+  searchParams: Promise<{[key: string]: string | string[] | undefined}>;
 }) {
+  const searchParams = await props.searchParams;
+
+  let next = searchParams.next || '';
+  const platform = searchParams.platform;
+
   if (Array.isArray(next)) {
     next = next[0];
   }
 
-  // discard the hash
-  const [pathname, _] = next.split('#');
+  const pathname = sanitizeNext(next);
   const rootNode = await getDocsRootNode();
   const defaultTitle = 'Platform Specific Content';
   let description = '';
@@ -61,7 +65,7 @@ export default async function Page({
       p => p.key === requestedPlatform?.toLowerCase()
     );
     if (isValidPlatform) {
-      return redirect(`/platforms/${requestedPlatform}${next}`);
+      return redirect(`/platforms/${requestedPlatform}${pathname}`);
     }
   }
 
@@ -75,12 +79,12 @@ export default async function Page({
 
   return (
     <DocPage frontMatter={frontMatter}>
-      <Alert level="info">{platformInfo}</Alert>
+      <Alert>{platformInfo}</Alert>
 
       <ul>
         {platformList.map(p => (
           <li key={p.key}>
-            <SmartLink to={`/platforms/${p.key}${next}`}>
+            <SmartLink to={`/platforms/${p.key}${pathname}`}>
               <PlatformIcon
                 size={16}
                 platform={p.icon ?? p.key}

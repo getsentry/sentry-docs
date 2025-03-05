@@ -14,6 +14,7 @@ notSupported:
   - javascript.fastify
   - javascript.gcp-functions
   - javascript.hapi
+  - javascript.hono
   - javascript.koa
   - javascript.nestjs
   - javascript.cloudflare
@@ -46,7 +47,7 @@ The following can be configured as integration options in `replayIntegration({})
 | networkRequestHeaders    | `string[]`                          | `[]`        | Additional request headers to capture for URLs defined in `networkDetailAllowUrls`. See [Network Details](#network-details) to learn more.                                   |
 | networkResponseHeaders   | `string[]`                          | `[]`        | Additional response headers to capture for URLs defined in `networkDetailAllowUrls`. See [Network Details](#network-details) to learn more.                                  |
 | beforeAddRecordingEvent  | <code>(event) => event\|null</code> | `i => i`    | Filter additional recording events that include console logs and network requests/responses.                                                                                 |
-| beforeErrorSampling      | `(event) => boolean`                | `i => true` | Filter error events which should be skipped for error sampling. Return `false` if error sampling should be skipped for this error event, or `true` to sample for this error. |
+| beforeErrorSampling      | `(event) => boolean`                | `i => true` | Filter error events which should be skipped for error sampling. Return `false` if error sampling should be skipped for this error event, or `true` to sample for this error. Will only be called in `buffer` mode. |
 | slowClickIgnoreSelectors | `string[]`                          | `[]`        | Ignore slow/rage click detection on elements matching the given CSS selector(s).                                                                                             |
 
 ## Privacy Configuration
@@ -65,12 +66,12 @@ By default, Replay will capture basic information about all outgoing fetch and X
 
 To capture additional information such as request and response headers or bodies, you'll need to opt-in via `networkDetailAllowUrls` (requires SDK version >= [7.50.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.50.0)). This will make it possible for you to elect to only add URLs that are safe for capturing bodies and avoid any endpoints that may contain Personal Identifiable Information, (PII).
 
-<Note>
+<Alert>
 
 Content in bodies will be PII-sanitized server-side, based on object keys and values.
 Refer to our <PlatformLink to="/session-replay/privacy/#network-request-and-response-bodies-and-headers">Replay Privacy section</PlatformLink> for more details.
 
-</Note>
+</Alert>
 
 Any URL matching the given pattern(s) will then be captured with additional details:
 
@@ -102,7 +103,7 @@ replayIntegration({
 });
 ```
 
-<Note>Captured bodies will be truncated to 150k characters max.</Note>
+<Alert>aptured bodies will be truncated to 150k characters max.</Alert>
 
 ## Identifying Users
 
@@ -125,7 +126,7 @@ To solve these problems, we provide the ability to use a custom worker script. T
 
 Follow these steps in order to use a custom compression worker:
 
-1. Download the [example worker script](https://github.com/getsentry/sentry-javascript/blob/develop/packages/replay-worker/examples/worker.min.js) from our Github repository.
+1. Download the [example worker script](https://github.com/getsentry/sentry-javascript/blob/develop/packages/replay-worker/examples/worker.min.js) from our GitHub repository.
 2. Host this worker script on the same domain as your application. For example, if your application is hosted at `https://example.com`, you could host the worker script at `https://example.com/assets/worker.min.js`.
 3. Configure your custom worker script in Replay:
 
@@ -135,7 +136,7 @@ replayIntegration({
 });
 ```
 
-4. You can now <PlatformLink to="/configuration/tree-shaking/">Tree Shake</PlatformLink> the default included worker script. If you are using our bundler plugins (version 2.10.0 or later), you can do:
+4. (optional) To reduce bundle size, you can now <PlatformLink to="/configuration/tree-shaking/">Tree Shake</PlatformLink> the default included worker script. If you are using one of the [Sentry Bundler Plugins](https://github.com/getsentry/sentry-javascript-bundler-plugins) (version 2.10.0 or later):
 
 ```javascript
 sentryPlugin({
@@ -158,3 +159,19 @@ replayIntegration({
   mutationLimit: 1500,
 });
 ```
+
+## Custom breadcrumbs
+
+Our SDKs allow you to send custom breadcrumbs, which will appear in the Replay Details UI alongside existing breadcrumbs. To learn how to send custom breadcrumbs, [read the docs here](/platforms/javascript/enriching-events/breadcrumbs/#customize-breadcrumbs). Note that any custom breadcrumbs you send will be reflected in both the Issue Details breadcrumbs UI and the Replay Details breadcrumbs tab.
+
+All custom breadcrumbs in the Replay Details will appear grey, and can be identified by the terminal logo.
+
+In Replay Details, the breadcrumb `message` will take precedence over the `data` property. If the `message` property is set, then the string will be displayed like this:
+
+![Custom breadcrumb example with message](./img/message-custom-breadcrumb.png)
+
+If `message` is not set, then the breadcrumb will display the `data` property by default. For example:
+
+![Custom breadcrumb example with data](./img/data-custom-breadcrumb.png)
+
+The title of the breadcrumb will be the breadcrumb `category` that you set. If no `category` is set, then we will use the breadcrumb `message`. If that doesn't exist, we'll use the `description`. The last fallback with be a default title of "Custom".

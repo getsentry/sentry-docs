@@ -4,7 +4,9 @@ const {codecovNextJSWebpackPlugin} = require('@codecov/nextjs-webpack-plugin');
 const {withSentryConfig} = require('@sentry/nextjs');
 
 const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
-  ? {}
+  ? {
+      '/**/*': ['./.git/**/*', './apps/**/*', 'docs/**/*'],
+    }
   : {
       '/**/*': [
         './.git/**/*',
@@ -24,14 +26,9 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
-
   trailingSlash: true,
-
-  experimental: {
-    serverComponentsExternalPackages: ['rehype-preset-minify'],
-    outputFileTracingExcludes,
-  },
-
+  serverExternalPackages: ['rehype-preset-minify'],
+  outputFileTracingExcludes,
   webpack: (config, options) => {
     config.plugins.push(
       codecovNextJSWebpackPlugin({
@@ -53,6 +50,9 @@ const nextConfig = {
   cacheHandler: require.resolve(
     'next/dist/server/lib/incremental-cache/file-system-cache.js'
   ),
+  sassOptions: {
+    silenceDeprecations: ['legacy-js-api'],
+  },
 };
 
 module.exports = withSentryConfig(nextConfig, {
@@ -87,4 +87,16 @@ module.exports = withSentryConfig(nextConfig, {
   unstable_sentryWebpackPluginOptions: {
     applicationKey: 'sentry-docs',
   },
+
+  _experimental: {
+    thirdPartyOriginStackFrames: true,
+  },
+});
+
+process.on('warning', warning => {
+  if (warning.code === 'DEP0040') {
+    // Ignore punnycode deprecation warning, we don't control its usage
+    return;
+  }
+  console.warn(warning); // Log other warnings
 });
