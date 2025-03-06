@@ -2551,7 +2551,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/issues/issue-details/sentry-ai/',
-    to: '/product/issues/issue-details/seer/',
+    to: '/product/issues/issue-details/ai-autofix/',
   },
   {
     from: '/product/issues/issue-owners/',
