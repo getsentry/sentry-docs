@@ -219,6 +219,10 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/platforms/javascript/enriching-events/error-tracing/',
+    destination: '/platforms/javascript/enriching-events/',
+  },
+  {
     source: '/organization/integrations/cloudflare-workers/',
     destination: '/organization/integrations/cloud-monitoring/cloudflare-workers/',
   },
@@ -229,6 +233,10 @@ const userDocsRedirects = [
   {
     source: '/organization/integrations/msteams/',
     destination: '/organization/integrations/notification-incidents/msteams/',
+  },
+  {
+    source: '/product/dev-toolbar/:path*',
+    destination: '/product/sentry-toolbar/:path*',
   },
   {
     source: '/product/explore/session-replay/hydration-errors/',
@@ -882,11 +890,11 @@ const userDocsRedirects = [
   },
   {
     source: '/product/insights/mobile-vitals/app-starts/',
-    destination: '/product/insights/mobile/app-starts/',
+    destination: '/product/insights/mobile/mobile-screens/app-starts/',
   },
   {
     source: '/product/insights/mobile-vitals/screen-loads/',
-    destination: '/product/insights/mobile/screen-loads/',
+    destination: '/product/insights/mobile/mobile-screens/screen-loads/',
   },
   {
     source: '/product/insights/web-vitals/',
