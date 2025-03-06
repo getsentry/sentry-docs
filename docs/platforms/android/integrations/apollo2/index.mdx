@@ -1,12 +1,11 @@
 ---
-title: Apollo Integration
-sidebar_order: 30
+title: Apollo 2
+caseStyle: camelCase
+supportLevel: production
 sdk: sentry.java.apollo
-description: "Learn how to capture tracing information of the Apollo GraphQL client."
-notSupported:
-  - java.logback
-  - java.log4j2
-  - java.jul
+description: "Learn more about the Sentry Apollo 2 integration for the Android SDK."
+categories:
+  - mobile
 ---
 
 <Alert>
@@ -19,26 +18,14 @@ Sentry Apollo integration provides the `SentryApolloInterceptor`, which creates 
 
 <Alert>
 
-This integration supports Apollo 2.x. For Apollo 3.x use our <PlatformLink to="/tracing/instrumentation/apollo3">Apollo3 integration</PlatformLink>.
+This integration supports Apollo 2.x. For Apollo 3.x use our <PlatformLink to="/integrations/apollo3/">Apollo 3 integration</PlatformLink>. For Apollo 4.x use our <PlatformLink to="/integrations/apollo4/">Apollo 4 integration</PlatformLink>.
 
 </Alert>
 
 ## Install
 
-```xml {tabTitle:Maven}
-<dependency>
-    <groupId>io.sentry</groupId>
-    <artifactId>sentry-apollo</artifactId>
-    <version>{{@inject packages.version('sentry.java.apollo', '5.2.0') }}</version>
-</dependency>
-```
-
 ```groovy {tabTitle:Gradle}
 implementation 'io.sentry:sentry-apollo:{{@inject packages.version('sentry.java.apollo', '5.2.0') }}'
-```
-
-```scala {tabTitle: SBT}
-libraryDependencies += "io.sentry" % "sentry-apollo" % "{{@inject packages.version('sentry.java.apollo', '5.2.0') }}"
 ```
 
 For other dependency managers, see the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry-apollo).
@@ -65,45 +52,6 @@ val apollo = ApolloClient.builder()
     .serverUrl("https://your-api-host/")
     .addApplicationInterceptor(SentryApolloInterceptor())
     .build()
-```
-
-Apollo Android is built with Kotlin coroutines. This means that `SentryApolloInterceptor` can be used with Java using only Global Hub Mode (single Hub used by all threads), with Kotlin using single Hub mode, or with <PlatformLink to="/enriching-events/scopes/#kotlin-coroutines">Sentry's coroutines support</PlatformLink>.
-
-## Using With Java
-
-Configure Global Hub Mode:
-
-```java
-import io.sentry.Sentry;
-
-Sentry.init(options -> {
-  ..
-}, true)
-```
-
-<Alert>
-
-In Global Hub Mode, all threads use the same Hub.
-
-</Alert>
-
-## Using With Kotlin Coroutines
-
-To make sure that a coroutine has access to the correct Sentry context, an instance of `SentryContext` must be provided when launching a coroutine.
-
-```kotlin
-import io.sentry.kotlin.SentryContext
-import com.apollographql.apollo.exception.ApolloException
-import kotlinx.coroutines.launch
-
-launch(SentryContext()) {
-  val response = try {
-    apollo.query(..).toDeferred().await()
-  } catch (e: ApolloException) {
-    // handle protocol errors
-    return@launch
-  }
-}
 ```
 
 ## Modify or Drop Spans
