@@ -127,7 +127,12 @@ export function OnboardingOptionButtons({
 }) {
   const normalizedOptions = initialOptions.map(option => {
     if (typeof option === 'string') {
-      return {id: option, disabled: option === 'error-monitoring'};
+      return {
+        id: option,
+        // error monitoring is always needs to be checked and disabled
+        disabled: option === 'error-monitoring',
+        checked: option === 'error-monitoring',
+      };
     }
     return option;
   });
@@ -137,8 +142,8 @@ export function OnboardingOptionButtons({
   const [options, setSelectedOptions] = useState<OnboardingOptionType[]>(
     normalizedOptions.map(option => ({
       ...option,
-      // default to checked if not excplicitly set
-      checked: option.checked ?? true,
+      // default to unchecked if not excplicitly set
+      checked: option.checked ?? false,
     }))
   );
   const [touchedOptions, touchOptions] = useReducer(() => true, false);
