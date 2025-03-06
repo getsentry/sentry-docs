@@ -67,5 +67,117 @@ Once the callback ends, the SDK will continue the previous trace (if available).
 If you make outgoing requests from your project to other services, check if the headers `sentry-trace` and `baggage` are present in the request. If so, distributed tracing is working.
 
 <PlatformCategorySection supported={["server"]}>
-<PlatformContent includePath="distributed-tracing/custom-instrumentation/non-http-protocols" />
+## Example: Manual Instrumentation for gRPC
+
+### Server-Side Propagation
+
+```javascript
+// gRPC server interceptor with Sentry instrumentation
+function sentryInterceptor(methodDescriptor, nextCall) {
+  // Extract Sentry trace headers from the incoming metadata
+  const metadata = nextCall.metadata.getMap();
+  const sentryTrace = metadata['sentry-trace'];
+  const baggage = metadata['baggage'];
+
+  return new grpc.ServerInterceptingCall(nextCall, {
+    start: (next) => {
+      // Continue the trace using the extracted context
+      Sentry.continueTrace({ sentryTrace, baggage }, () => {
+        // Create a manual span that won't auto-close until we end it
+        Sentry.startSpanManual(
+          {
+            name: methodDescriptor.path,
+            op: 'grpc.server',
+            forceTransaction: true, // Make this a transaction in the Sentry UI
+            attributes: {
+              'grpc.method': methodDescriptor.path,
+              'grpc.service': methodDescriptor.service.serviceName,
+              'grpc.status_code': grpc.status.OK,
+            },
+          },
+          (span) => {
+            // Store the span for later use
+            nextCall.sentrySpan = span;
+            next();
+          }
+        );
+      });
+    },
+    sendStatus: (status, next) => {
+      const span = nextCall.sentrySpan;
+      if (span) {
+        // Update status based on the gRPC result
+        if (status.code !== grpc.status.OK) {
+          span.setStatus({ code: 'error' });
+          span.setAttribute('grpc.status_code', status.code);
+          span.setAttribute('grpc.status_description', status.details);
+        }
+        // End the span when the call completes
+        span.end();
+      }
+      next(status);
+    }
+  });
+}
+
+// Add the interceptor to your gRPC server
+const server = new grpc.Server({
+  interceptors: [sentryInterceptor]
+});
+
+// In your service implementation, use the active span
+const serviceImplementation = {
+  myMethod: async (call, callback) => {
+    try {
+      const span = call.call?.nextCall?.sentrySpan;
+      
+      // Use withActiveSpan to make the span active during service execution
+      await Sentry.withActiveSpan(span, async () => {
+        // Create child spans for operations within the service
+        await Sentry.startSpan({ name: 'database.query', op: 'db' }, async (childSpan) => {
+          // Database operations here
+          const result = await database.query('SELECT * FROM table');
+          childSpan.setAttribute('db.rows_affected', result.rowCount);
+        });
+        
+        callback(null, { result: 'success' });
+      });
+    } catch (error) {
+      // Capture the error with the current span as context
+      Sentry.captureException(error);
+      callback(error);
+    }
+  }
+};
+```
+
+### Client-Side Propagation
+
+```javascript
+function createGrpcClient() {
+  // Create client with interceptor
+  return new MyServiceClient(address, grpc.credentials.createInsecure(), {
+    interceptors: [(options, nextCall) => {
+      // Create metadata for the call
+      const metadata = new grpc.Metadata();
+      
+      // Get current trace information
+      const traceData = Sentry.getTraceData();
+      
+      // Add trace headers to metadata
+      if (traceData) {
+        metadata.set('sentry-trace', traceData['sentry-trace']);
+        metadata.set('baggage', traceData['baggage']);
+      }
+      
+      // Add metadata to the call
+      return new grpc.InterceptingCall(nextCall(options), {
+        start: (metadata_, listener, next) => {
+          next(metadata, listener);
+        }
+      });
+    }]
+  });
+}
+```
 </PlatformCategorySection>
