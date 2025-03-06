@@ -787,20 +787,20 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/dotnet/guides/nlog/',
   },
   {
-    from: '/platforms/dart/guides/flutter/configuration/integrations/user-interaction-instrumentation/',
-    to: '/platforms/dart/guides/flutter/integrations/user-interaction-instrumentation/',
+    from: '/platforms/flutter/configuration/integrations/user-interaction-instrumentation/',
+    to: '/platforms/flutter/integrations/user-interaction-instrumentation/',
   },
   {
-    from: '/platforms/dart/guides/flutter/configuration/integrations/',
-    to: '/platforms/dart/guides/flutter/integrations/',
+    from: '/platforms/flutter/configuration/integrations/',
+    to: '/platforms/flutter/integrations/',
   },
   {
-    from: '/platforms/dart/guides/flutter/configuration/integrations/sqflite-instrumentation/',
-    to: '/platforms/dart/guides/flutter/integrations/sqflite-instrumentation/',
+    from: '/platforms/flutter/configuration/integrations/sqflite-instrumentation/',
+    to: '/platforms/flutter/integrations/sqflite-instrumentation/',
   },
   {
-    from: '/platforms/dart/guides/flutter/usage/advanced-usage/',
-    to: '/platforms/dart/guides/flutter/troubleshooting/',
+    from: '/platforms/flutter/usage/advanced-usage/',
+    to: '/platforms/flutter/troubleshooting/',
   },
   {
     from: '/platforms/android/manual-configuration/',
@@ -1328,10 +1328,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/javascript/sourcemaps/uploading-without-debug-ids/',
-    to: '/platforms/javascript/sourcemaps/troubleshooting_js/',
-  },
-  {
-    from: '/platforms/javascript/guides/nextjs/sourcemaps/troubleshooting_js/legacy-uploading-methods/',
     to: '/platforms/javascript/sourcemaps/troubleshooting_js/',
   },
   {
@@ -3397,98 +3393,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/security-legal-pii/security/security-policy-reporting/',
     to: '/platform-redirect/?next=/security-policy-reporting/',
-  },
-  {
-    from: '/platforms/flutter/configuration/releases/',
-    to: '/platforms/dart/guides/flutter/configuration/releases/',
-  },
-  {
-    from: '/platforms/flutter/native-init/',
-    to: '/platforms/dart/guides/flutter/native-init/',
-  },
-  {
-    from: '/platforms/flutter/',
-    to: '/platforms/dart/guides/flutter/',
-  },
-  {
-    from: '/platforms/flutter/configuration/options/',
-    to: '/platforms/dart/guides/flutter/configuration/options',
-  },
-  {
-    from: '/platforms/flutter/configuration/webview/',
-    to: '/platforms/dart/guides/flutter/configuration/webview/',
-  },
-  {
-    from: '/platforms/flutter/upload-debug/',
-    to: '/platforms/dart/guides/flutter/upload-debug/',
-  },
-  {
-    from: '/platforms/flutter/tracing/',
-    to: '/platforms/dart/guides/flutter/tracing/',
-  },
-  {
-    from: '/platforms/flutter/integrations/routing-instrumentation/',
-    to: '/platforms/dart/guides/flutter/integrations/routing-instrumentation/',
-  },
-  {
-    from: '/platforms/flutter/integrations/user-interaction-instrumentation/',
-    to: '/platforms/dart/guides/flutter/integrations/user-interaction-instrumentation/',
-  },
-  {
-    from: '/platforms/flutter/integrations/app-start-instrumentation/',
-    to: '/platforms/dart/guides/flutter/integrations/app-start-instrumentation/',
-  },
-  {
-    from: '/platforms/flutter/integrations/slow-and-frozen-frames-instrumentation/',
-    to: '/platforms/dart/guides/flutter/integrations/slow-and-frozen-frames-instrumentation/',
-  },
-  {
-    from: '/platforms/flutter/integrations/asset-bundle-instrumentation/',
-    to: '/platforms/dart/guides/flutter/integrations/asset-bundle-instrumentation/',
-  },
-  {
-    from: '/platforms/flutter/integrations/sqflite-instrumentation/',
-    to: '/platforms/dart/guides/flutter/integrations/sqflite-instrumentation/',
-  },
-  {
-    from: '/platforms/flutter/troubleshooting/',
-    to: '/platforms/dart/guides/flutter/troubleshooting/',
-  },
-  {
-    from: '/platforms/flutter/data-management/apple-privacy-manifest/',
-    to: '/platforms/dart/guides/flutter/data-management/apple-privacy-manifest/',
-  },
-  {
-    from: '/platforms/flutter/metrics/',
-    to: '/platforms/dart/guides/flutter/metrics/',
-  },
-  {
-    from: '/platforms/flutter/profiling/',
-    to: '/platforms/dart/guides/flutter/profiling/',
-  },
-  {
-    from: '/platforms/flutter/session-replay/',
-    to: '/platforms/dart/guides/flutter/session-replay/',
-  },
-  {
-    from: '/platforms/flutter/enriching-events/screenshots/',
-    to: '/platforms/dart/guides/flutter/enriching-events/screenshots/',
-  },
-  {
-    from: '/platforms/flutter/user-feedback/',
-    to: '/platforms/dart/guides/flutter/user-feedback/',
-  },
-  {
-    from: '/platforms/flutter/tracing/instrumentation/automatic-instrumentation/',
-    to: '/platforms/dart/guides/flutter/tracing/instrumentation/automatic-instrumentation/',
-  },
-  {
-    from: '/platforms/flutter/tracing/trace-propagation/',
-    to: '/platforms/dart/guides/flutter/tracing/trace-propagation/',
-  },
-  {
-    from: '/platforms/flutter/tracing/trace-propagation/custom-instrumentation/',
-    to: '/platforms/dart/guides/flutter/tracing/trace-propagation/custom-instrumentation/',
   },
 ];
 
