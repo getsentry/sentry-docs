@@ -1,7 +1,97 @@
+---
+title: Capacitor
+description: Sentry's Capacitor SDK enables automatic reporting of errors, exceptions, and messages. It includes native crash support on iOS and Android.
+sdk: sentry.javascript.capacitor
+categories:
+  - javascript
+  - browser
+  - mobile
+---
+
+## Features
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also get to the root of an error or performance issue faster, by watching a video-like reproduction of a user session with [session replay](/product/explore/session-replay/web/getting-started/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+## Install
+
+<OnboardingOptionButtons options={["error-monitoring", "performance", "session-replay"]} />
+
+Sentry captures data by using an SDK within your application’s runtime.
+
+Install the Sentry Capacitor SDK alongside the corresponding Sentry SDK for the framework you're using:
+
+```bash {tabTitle:Angular}
+# npm
+npm install @sentry/capacitor @sentry/angular --save
+
+# yarn
+yarn add @sentry/capacitor @sentry/angular
+
+# pnpm
+pnpm add @sentry/capacitor @sentry/angular
+```
+
+```bash {tabTitle:React}
+# npm
+npm install @sentry/capacitor @sentry/react --save
+
+# yarn
+yarn add @sentry/capacitor @sentry/react
+
+# pnpm
+pnpm add @sentry/capacitor @sentry/react
+```
+
+```bash {tabTitle:Vue}
+# npm
+npm install @sentry/capacitor @sentry/vue --save
+
+# yarn
+yarn add @sentry/capacitor @sentry/vue
+
+# pnpm
+pnpm add @sentry/capacitor @sentry/vue
+```
+
+```bash {tabTitle:Other}
+# npm
+npm install @sentry/capacitor @sentry/browser --save
+
+# yarn
+yarn add @sentry/capacitor @sentry/browser
+
+# pnpm
+pnpm add @sentry/capacitor @sentry/browser
+```
+
+### Angular Version Compatibility
+
+In its current beta version, the Sentry Capacitor SDK only supports Angular 14 and newer.
+
+If you're using an older version of Angular, you also need to use an older version of the SDK. See the table below for compatibility guidance:
+
+| Angular version | Recommended Sentry SDK                              |
+| --------------- | --------------------------------------------------- |
+| 14 and newer    | `@sentry/capacitor` `@sentry/angular`               |
+| 12 or 13        | `@sentry/capacitor^0` `@sentry/angular-ivy@^7` *    |
+| 10 or 11        | `@sentry/capacitor^0` `@sentry/angular@^7` *        |
+
+\* These versions of the SDK are no longer maintained or tested. Version 0 might still receive bug fixes, but we don't guarantee support.
+
+### React and Vue Version Compatibility
+
+Both Frameworks are fully compatible with the current and beta versions of Sentry Capacitor.
+
+## Configure
+
+Configuration should happen as early as possible in your application's lifecycle.
+
 Then forward the `init` method from the sibling Sentry SDK for the framework you use, such as Angular in this example:
 
 
-```typescript {tabTitle: Angular 14+} {filename: app.module.ts} {"onboardingOptions": {"performance": "13-16, 21-28, 46-55", "session-replay": "17-19, 29-33"}}
+```typescript {tabTitle: Angular 14+} {filename: app.module.ts} {"onboardingOptions": {"performance": "13-16, 21-27, 50-59", "session-replay": "17-19, 31-37"}}
 import * as Sentry from "@sentry/capacitor";
 import * as SentryAngular from "@sentry/angular";
 
@@ -65,7 +155,7 @@ Sentry.init(
 })
 ```
 
-```typescript {tabTitle: Angular 12, 13} {filename: app.module.ts} {"onboardingOptions": {"performance": "14-17, 22-29, 47-56", "session-replay": "18-20, 30-34"}}
+```typescript {tabTitle: Angular 12, 13} {filename: app.module.ts} {"onboardingOptions": {"performance": "14-17, 22-28, 51-60", "session-replay": "18-20, 33-38"}}
 // Requires @sentry/capacitor V0.
 import * as Sentry from "@sentry/capacitor";
 import * as SentryAngular from "@sentry/angular-ivy";
@@ -130,7 +220,7 @@ Sentry.init(
 })
 ```
 
-```typescript {tabTitle: React} {filename: index.tsx} {"onboardingOptions": {"performance": "13-16, 21-28, 46-55", "session-replay": "17-19, 29-33"}}
+```typescript {tabTitle: React} {filename: index.tsx} {"onboardingOptions": {"performance": "13-16, 21-27, 46-55", "session-replay": "17-19, 31-37"}}
 import * as Sentry from "@sentry/capacitor";
 import * as SentryReact from "@sentry/react";
 
@@ -174,7 +264,7 @@ Sentry.init(
 );
 ```
 
-```typescript {tabTitle: Vue} {filename: main.ts} {"onboardingOptions": {"performance": "17-20, 25-32, 50-59", "session-replay": "21-23, 33-37  "}}
+```typescript {tabTitle: Vue} {filename: main.ts} {"onboardingOptions": {"performance": "17-20, 25-31, 50-59", "session-replay": "21-23, 35-41"}}
 import * as Sentry from "@sentry/capacitor";
 import * as SentryVue from "@sentry/vue";
 import { createApp } from 'vue'
@@ -217,6 +307,7 @@ Sentry.init(
     replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1.0,
   },
+
   // Forward the init method from @sentry/angular
   SentryVue.init
 );
@@ -239,3 +330,27 @@ Learn more about uploading [source maps](/platforms/javascript/guides/capacitor/
 ### Provide Native Debug Information (iOS)
 
 To make stack-trace information for native crashes on iOS easier to understand, you need to provide debug information to Sentry. Debug information is provided by [uploading dSYM files](/platforms/javascript/guides/capacitor/dsym).
+
+## Verify
+
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+
+```javascript
+import * as Sentry from "@sentry/capacitor";
+
+Sentry.captureException("Test Captured Exception");
+```
+
+You can also throw an error anywhere in your application:
+
+```javascript
+throw new Error(`Test Thrown Error`);
+```
+
+<Alert>
+
+Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+
+</Alert>
+
+To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
