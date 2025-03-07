@@ -997,6 +997,18 @@ const userDocsRedirects = [
     source: '/platforms/php/:productfeature/troubleshooting/:path*',
     destination: '/platforms/php/troubleshooting/:path*',
   },
+  {
+    source: '/platforms/flutter/:path*',
+    destination: '/platforms/dart/guides/flutter/:path*',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/configuration/integrations/:path*',
+    destination: '/platforms/dart/guides/flutter/integrations/:path*',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/usage/advanced-usage/:path*',
+    destination: '/platforms/dart/guides/flutter/troubleshooting/:path*',
+  },
 ];
 
 /**

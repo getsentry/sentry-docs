@@ -855,6 +855,7 @@ export const PLATFORM_TO_ICON = {
   csharp: 'csharp',
   'csharp-aspnetcore': 'csharp',
   dart: 'dart',
+  'dart-flutter': 'flutter',
   default: 'default',
   dotnet: 'dotnet',
   'dotnet-aspnetcore': 'dotnetcore',
