@@ -5,6 +5,8 @@ import Cookies from 'js-cookie';
 
 import {isLocalStorageAvailable} from 'sentry-docs/utils';
 
+import {OnboardingOptionType} from './onboarding';
+
 type ProjectCodeKeywords = {
   API_URL: string;
   DSN: string;
@@ -99,12 +101,14 @@ type CodeSelection = {
 type CodeContextType = {
   codeKeywords: CodeKeywords;
   isLoading: boolean;
+  onboardingOptions: OnboardingOptionType[];
   sharedKeywordSelection: [
     Record<string, number>,
     React.Dispatch<Record<string, number>>,
   ];
   storedCodeSelection: SelectedCodeTabs;
   updateCodeSelection: (selection: CodeSelection) => void;
+  updateOnboardingOptions: (options: OnboardingOptionType[]) => void;
 };
 
 export const CodeContext = createContext<CodeContextType | null>(null);
@@ -297,6 +301,7 @@ export function CodeContextProvider({children}: {children: React.ReactNode}) {
   const [codeKeywords, setCodeKeywords] = useState(cachedCodeKeywords ?? DEFAULTS);
   const [isLoading, setIsLoading] = useState<boolean>(cachedCodeKeywords ? false : true);
   const [storedCodeSelection, setStoredCodeSelection] = useState<SelectedCodeTabs>({});
+  const [onboardingOptions, setOnboardingOptions] = useState<OnboardingOptionType[]>([]);
 
   // populate state using localstorage
   useEffect(() => {
@@ -342,6 +347,8 @@ export function CodeContextProvider({children}: {children: React.ReactNode}) {
     updateCodeSelection,
     sharedKeywordSelection,
     isLoading,
+    onboardingOptions,
+    updateOnboardingOptions: options => setOnboardingOptions(options),
   };
 
   return <CodeContext.Provider value={result}>{children}</CodeContext.Provider>;
