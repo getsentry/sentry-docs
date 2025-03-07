@@ -1,3 +1,32 @@
+---
+title: SolidStart
+description: SolidStart is a framework for full-stack web apps and websites. Learn how to set it up with Sentry.
+sdk: sentry.javascript.solidstart
+categories:
+  - browser
+  - server
+---
+
+## Install
+
+Sentry captures data by using an SDK within your application’s runtime.
+
+```bash {tabTitle:npm}
+npm install @sentry/solidstart --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/solidstart
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/solidstart
+```
+
+## Configure
+
+Configuration should happen as early as possible in your application's lifecycle.
+
 Initialize the Sentry SDK in your `src/entry-client.tsx` file.
 
 If you're using Solid Router, add the `solidRouterBrowserTracingIntegration` to collect meaningful performance data about the health of your page loads and associated requests.
@@ -126,4 +155,70 @@ For example, update your scripts in `package.json`.
   or check out <PlatformLink to="/troubleshooting">Troubleshooting</PlatformLink>.
 </Alert>
 
+## Add Readable Stack Traces to Errors
 
+To upload source maps, use the `sentrySolidStartVite` plugin from `@sentry/solidstart` and configure an auth token.
+Auth tokens can be passed to the plugin explicitly with the `authToken` option. You can use the
+`SENTRY_AUTH_TOKEN` environment variable or have an `.env.sentry-build-plugin` file in the working directory when
+building your project.
+
+We recommend you add the auth token to your CI/CD environment as an environment variable.
+
+Learn more about configuring the plugin in our
+[Sentry Vite Plugin documentation](https://www.npmjs.com/package/@sentry/vite-plugin).
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env.sentry-build-plugin}
+SENTRY_ORG="___ORG_SLUG___"
+SENTRY_PROJECT="___PROJECT_SLUG___"
+SENTRY_AUTH_TOKEN="___ORG_AUTH_TOKEN___"
+```
+
+Add the plugin to your `app.config.ts`.
+
+```TypeScript {filename:app.config.ts}
+// app.config.ts
+import { defineConfig } from '@solidjs/start/config';
+import { sentrySolidStartVite } from '@sentry/solidstart';
+
+export default defineConfig({
+  // ...
+
+  vite: {
+    plugins: [
+      sentrySolidStartVite({
+        org: process.env.SENTRY_ORG,
+        project: process.env.SENTRY_PROJECT,
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+      }),
+    ],
+  },
+  // ...
+});
+```
+
+## Verify
+
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+
+```javascript
+<button
+  type="button"
+  onClick={() => {
+    throw new Error("Sentry Frontend Error");
+  }}
+>
+  Throw error
+</button>
+```
+
+This snippet adds a button that throws an error in a Solid component.
+
+<Alert>
+
+Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+
+</Alert>
+
+To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
