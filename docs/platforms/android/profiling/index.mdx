@@ -81,10 +81,10 @@ _(New in version 8.0.0)_
 
 The current profiling implementation stops the profiler automatically after 30 seconds (unless you manually stop it earlier). Naturally, this limitation makes it difficult to get full coverage of your app's execution. We now offer an experimental continuous mode, where profiling data is periodically uploaded while running, with no limit to how long the profiler may run.
 
-Previously, profiles only ran in tandem with performance transactions that were started either automatically or manually with `Sentry.startTransaction`. Now, you can start and stop the profiler directly with `Sentry.startProfiler` and `Sentry.stopProfiler`. You can also start a profile at app launch by setting `SentryOptions.enableAppStartProfiling = true` in your call to `SentryAndroid.init`.
+Previously, profiles only ran in tandem with performance transactions that were started either automatically or manually with `Sentry.startTransaction`. Now, you can start and stop the profiler directly with `Sentry.startProfileSession` and `Sentry.stopProfileSession`. You can also start a profile at app launch by setting `SentryOptions.startProfilerOnAppStart = true` in your call to `SentryAndroid.init`.
 
-Continuous profiling mode is enabled by default, requiring no changes to `SentryOptions` when you start the SDK to opt in. If you had previously set `SentryOptions.profilesSampleRate` or `SentryOptions.profilesSampler` to use transaction-based profiling, then remove those lines of code from your configuration.
+Continuous profiling mode is disabled by default, requiring only the `SentryOptions.profileSessionSampleRate` option to be set when you start the SDK to opt in. If you had previously set `SentryOptions.profilesSampleRate` or `SentryOptions.profilesSampler` to use transaction-based profiling, then remove those lines of code from your configuration.
 
-These new APIs do not offer any sampling functionality—every call to start the profiler will start it, and the same goes for launch profiles if you've configured that. If you are interested in reducing the amount of profiles that run, you must take care to do it at the call sites.
+There are two ways to start the profiler: manually, calling `Sentry.startProfileSession` and `Sentry.stopProfileSession` to start and stop the profiler, or automatically whenever a sampled trace starts and finishes. The latter behaviour is very similar to the current profiling implementation. You can control this behaviour setting `SentryOptions.profileLifecycle` to `manual` or `trace` in your call to `SentryAndroid.init`.
 
 Continuous profiling has implications for your org's billing structure. This feature is only available for subscription plans that enrolled after June 5, 2024.

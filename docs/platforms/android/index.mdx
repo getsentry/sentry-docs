@@ -80,8 +80,14 @@ Configuration is done via the application `AndroidManifest.xml`. Here's an examp
   <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
   <!-- Add data like request headers, user ip address and device name, see https://docs.sentry.io/platforms/android/data-management/data-collected/ for more info -->
   <meta-data android:name="io.sentry.send-default-pii" android:value="true" />
-  <!-- enable the performance API by setting a sample-rate, adjust in production env -->
+  <!-- Enable the performance API by setting a sample-rate, adjust in production env -->
   <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
+  <!-- Enable profiling, adjust in production env -->
+  <meta-data android:name="io.sentry.traces.profiling.session-sample-rate" android:value="1.0" />
+  <!-- Set profiling lifecycle, can be `manual` or `trace` -->
+  <meta-data android:name="io.sentry.traces.profiling.lifecycle" android:value="manual" />
+  <!-- Enable profiling on app start -->
+  <meta-data android:name="io.sentry.traces.profiling.start-on-app-start" android:value="true" />
 </application>
 ```
 
@@ -98,15 +104,15 @@ import io.sentry.Sentry;
 public class MyActivity extends AppCompatActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    // Any code running after this line will be 
-    //profiled until Sentry.stopProfiler() is called.
-    Sentry.startProfiler();
+    // Any code running after this line will be
+    //profiled until Sentry.stopProfileSession() is called.
+    Sentry.startProfileSession();
     try {
       throw new Exception("This is a test.");
     } catch (Exception e) {
       Sentry.captureException(e);
     }
-    Sentry.stopProfiler();
+    Sentry.stopProfileSession();
   }
 }
 ```
@@ -119,15 +125,15 @@ import io.sentry.Sentry
 class MyActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    // Any code running after this line will be 
-    //profiled until Sentry.stopProfiler() is called.
-    Sentry.startProfiler()
+    // Any code running after this line will be
+    //profiled until Sentry.stopProfileSession() is called.
+    Sentry.startProfileSession()
     try {
       throw Exception("This is a test.")
     } catch (e: Exception) {
       Sentry.captureException(e)
     }
-    Sentry.stopProfiler()
+    Sentry.stopProfileSession()
   }
 }
 ```
