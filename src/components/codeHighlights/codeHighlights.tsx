@@ -77,6 +77,8 @@ export function HighlightBlock({
     setShowCopyButton(true);
   }, []);
 
+  const [copied, setCopied] = useState(false);
+
   async function copyCodeOnClick() {
     if (codeRef.current === null) {
       return;
@@ -85,7 +87,10 @@ export function HighlightBlock({
     const code = cleanCodeSnippet(codeRef.current.innerText, {language});
 
     try {
+      setCopied(false);
       await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Failed to copy:', error);
@@ -95,8 +100,14 @@ export function HighlightBlock({
   return (
     <HighlightBlockContainer key={`highlight-block-${groupId}`}>
       <CodeLinesContainer ref={codeRef}>{children}</CodeLinesContainer>
-      <ClipBoardContainer onClick={copyCodeOnClick}>
-        {showCopyButton && <Clipboard size={14} opacity={70} />}
+      <ClipBoardContainer onClick={copyCodeOnClick} className=".clipboard">
+        {showCopyButton && (
+          <Clipboard
+            size={16}
+            opacity={copied ? 1 : 0.15}
+            stroke={copied ? 'green' : 'white'}
+          />
+        )}
       </ClipBoardContainer>
     </HighlightBlockContainer>
   );
@@ -111,6 +122,14 @@ const HighlightBlockContainer = styled('div')`
   min-width: 100%;
   box-sizing: border-box;
   background-color: rgba(239, 239, 239, 0.06);
+  position: relative;
+
+  :hover svg {
+    opacity: 1;
+  }
+  svg {
+    transition: all 150ms linear;
+  }
 `;
 
 const CodeLinesContainer = styled('div')`
@@ -119,16 +138,13 @@ const CodeLinesContainer = styled('div')`
 `;
 
 const ClipBoardContainer = styled('div')`
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
   width: 48px;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  :hover {
-    background-color: rgba(239, 239, 239, 0.1);
-  }
-  :active {
-    background-color: rgba(239, 239, 239, 0.15);
-  }
-  transition: background-color 150ms linear;
 `;
