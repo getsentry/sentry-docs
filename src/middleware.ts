@@ -2554,6 +2554,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/insights/overview/filters-display/',
   },
   {
+    from: '/product/issues/issue-details/sentry-ai/',
+    to: '/product/issues/issue-details/seer/',
+  },
+  {
     from: '/product/issues/issue-owners/',
     to: '/product/issues/ownership-rules/',
   },
@@ -2648,11 +2652,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/issues/issue-details/suggested-fix/',
-    to: '/product/issues/issue-details/sentry-ai/',
+    to: '/product/issues/issue-details/seer/',
   },
   {
     from: '/product/issues/issue-details/ai-suggested-solution/',
-    to: '/product/issues/issue-details/sentry-ai/',
+    to: '/product/issues/issue-details/seer/',
   },
   {
     from: '/guides/grouping-and-fingerprints/',
