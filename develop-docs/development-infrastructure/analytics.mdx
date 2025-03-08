@@ -4,7 +4,6 @@ description: This guide steps you through instrumenting your code with Sentry's 
 sidebar_order: 90
 ---
 
-
 ## Big Query
 
 [BigQuery](https://cloud.google.com/bigquery/) is a Google data warehouse that a lot of our data calls home. This includes all our analytics data and some (not all) production data that might be of interest when joins are necessary for answering richer, more complex questions. From sentry/getsentry, our data goes through [reload](https://github.com/getsentry/reload), our ETL for BigQuery.
@@ -103,6 +102,7 @@ analytics.record(
 Run the tests that touch the endpoint to ensure everything is Gucci.
 
 ### Step 3:
+
 By default, a new event type is aggregated and sent to Amplitude as long as there is a user_id sent along with the event. If you would like to send events unaggregated, refer to [our Amplitude aggregation docs](https://github.com/getsentry/etl/blob/master/documentation/amplitude_analytics.md)
 
 ## Route-Based Frontend Analytics
@@ -180,7 +180,7 @@ Example:
 <RestartButton
   analyticsEventName="Growth: Guided Tour Restart"
   analyticsEventKey="growth.guided_tour_restart"
-  analyticsParams={{tour: 'issues'}}
+  analyticsParams={{ tour: "issues" }}
 />
 ```
 
@@ -198,10 +198,10 @@ First, add the Typescript definition of the event to an analytics event file ins
 
 ```tsx
 export type ExampleTutorialEventParameters = {
-  'example_tutorial.created': {
+  "example_tutorial.created": {
     source: string;
   };
-  'example_tutorial.viewed': {
+  "example_tutorial.viewed": {
     source: string;
   };
 };
@@ -214,8 +214,8 @@ export const exampleTutorialEventMap: Record<
   keyof ExampleTutorialEventParameters,
   string | null
 > = {
-  'example_tutorial.created': 'Example Tutorial Created',
-  'example_tutorial.viewed': null, // don't send to Amplitude
+  "example_tutorial.created": "Example Tutorial Created",
+  "example_tutorial.viewed": null, // don't send to Amplitude
 };
 ```
 
@@ -242,21 +242,23 @@ Our current naming convention for Reload events is `descriptor.action` e.g. what
 
 ### Testing your Analytics Event
 
+It's important to test analytic events to ensure the data you are looking at is accurate. Any additional analytic event should be tested before merging to make sure that the events are firing correctly (with the correct values at the right times). A common issue we see when testing gets overlooked is events firing multiple times when they should only fire once.
+
 When developing locally, analytics events will not be sent to Reload or Amplitude. To test to see if your event is sending as expected and with the correct data, you can set "DEBUG_ANALYTICS" to "1" in local storage on your browser. Then it will log the analytics event data to your console, whenever it would've sent an analytics event, allowing to check your analytics locally.
 
 **getsentry**
 
 ```jsx
-import React from 'react';
+import React from "react";
 
-import { trackAnalytics } from 'getsentry/utils/analytics';
+import { trackAnalytics } from "getsentry/utils/analytics";
 
 class ExampleComponent extends React.Component {
   componentDidMount() {
-    trackAnalytics('example_tutorial.created', {
+    trackAnalytics("example_tutorial.created", {
       organization,
       subscription,
-      source: 'wakanda',
+      source: "wakanda",
     });
   }
 
@@ -271,15 +273,15 @@ class ExampleComponent extends React.Component {
 All you'll actually need is to import analytics from utils and call it wherever you need. Keep in mind the effect of React lifecycles on your data. In this case, we only want to send one event when the component mounts so we place it in `componentDidMount` .
 
 ```jsx
-import React from 'react';
+import React from "react";
 
-import { trackAnalytics } from 'getsentry/utils/analytics';
+import { trackAnalytics } from "getsentry/utils/analytics";
 
 class ExampleComponent extends React.Component {
   componentDidMount() {
-    trackAnalytics('example_tutorial.deleted', {
+    trackAnalytics("example_tutorial.deleted", {
       organization,
-      source: 'wakanda',
+      source: "wakanda",
     });
   }
   render() {
@@ -287,6 +289,18 @@ class ExampleComponent extends React.Component {
   }
 }
 ```
+
+After deploying your changes, you can open the Dev Tools in your browser and in the "Network" tab, search for the `event/` request. This will show the events being sent to Reload and Amplitude.
+
+## Debugging
+
+If your analytics aren't showing up after you added it, you can't find an event you expect to be there, or something else goes wrong, there are a few troubleshooting steps you can try:
+
+- Follow the steps [above](https://docs.sentry.io/development-infrastructure/analytics/#testing-your-analytics-event) to confirm that your analytics event is sending correctly, with the correct parameters.
+- Check Amplitude for blocked events: In Amplitude, go to the "Data" section in the sidebar. From there, navigate to "Events" and search for your event name. It will show up with status "Blocked" if blocked, which means events won't show up. Some events may be blocked in favor of automatic route or button analytics.
+- For route analytics, confirm that the analytic event isn't being blocked with `useDisableRouteAnalytics`. Some components already had an analytic event so the route analytics were disabled.
+- Check the types of the data you are sending. Arrays aren't recommended data types to send (they can be hard to query and produce some unexpected behavior). Try to remove those if you are using them.
+- Remember there will always be some discrepency. Ad-blockers, for example, can block events from being sent. This could be a cause of why some numbers aren't adding up.
 
 ## Metrics
 
