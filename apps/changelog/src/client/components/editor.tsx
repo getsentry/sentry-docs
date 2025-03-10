@@ -169,7 +169,7 @@ function Editor({name, defaultValue, minRows = 15}: EditorProps) {
           minRows={minRows}
           required
           value={value}
-          className="w-full"
+          className="form-textarea w-full"
           onChange={e => setValue(e.target.value)}
           //   aria-invalid={actionData?.errors?.content ? true : undefined}
           //   aria-errormessage={
