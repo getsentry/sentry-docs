@@ -852,11 +852,15 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/android/performance/instrumentation/apollo/',
-    to: '/platforms/android/integrations/apollo/',
+    to: '/platforms/android/integrations/apollo4/',
   },
   {
     from: '/platforms/android/configuration/integrations/apollo/',
-    to: '/platforms/android/integrations/apollo/',
+    to: '/platforms/android/integrations/apollo4/',
+  },
+  {
+    from: '/platforms/android/integrations/apollo/',
+    to: '/platforms/android/integrations/apollo4/',
   },
   {
     from: '/platforms/android/configuration/integrations/fragment/',

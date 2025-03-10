@@ -56,7 +56,7 @@ const BANNERS: BannerType[] = [
   },
   {
     appearsOn: [
-      '^/platforms/flutter/',
+      '^/platforms/dart/guides/flutter/',
       '^/platforms/react-native/',
       '^/platforms/android/',
       '^/platforms/apple/guides/ios/',
