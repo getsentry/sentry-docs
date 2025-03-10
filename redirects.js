@@ -219,6 +219,10 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/platforms/php/configuration/integrations/',
+    destination: '/platforms/php/integrations/',
+  },
+  {
     source: '/platforms/javascript/enriching-events/error-tracing/',
     destination: '/platforms/javascript/enriching-events/',
   },
