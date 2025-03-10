@@ -16,7 +16,7 @@ If you are using DataDog as your monitoring system, it is recommended to use [Do
 
 We recommend [the original `statsd` server made by Etsy](https://github.com/statsd/statsd) or the others on the [server re-implementations](https://github.com/statsd/statsd/blob/master/docs/server_implementations.md).
 
-Other than service monitoring, you should also monitor your own host instance by using [Prometheus Node Exporter](https://github.com/prometheus/node_exporter), and your Docker daemon by using [built-in Prometheus exporter](https://docs.docker.com/engine/daemon/prometheus/) or similar tools. Sentry does not provide any alerts if your host instance is low on resources such as free memory or disk space. It is critical for you to monitor the disk space as once it gets full, it will be much harder to recover from there.
+Sentry does not provide any alerts if your host instance is low on resources such as free memory or disk space. You will need to configure this own your own relative to your needs. It is critical for you to monitor the disk space as once it gets full, it will be much harder to recover from there.
 
 <Alert title="Note">
     After changing configuration files, don't forget to restart the containers with `docker compose restart`. See the <Link to="/self-hosted/#configuration">configuration section</Link> for more information.
@@ -101,84 +101,4 @@ metrics:
 
 ## Sentry dependencies
 
-Sentry and its' surrounding services have some dependencies like Redis, ClickHouse, Kafka, etc, that you can monitor with your monitoring system. The easiest way to do so is through Prometheus exporters. Although there are many exporters available, for reference purposes, you can use this setup below.
-
-Modify your `docker-compose.yml` file to add the following:
-
-```yaml
-services:
-  # The rest of your Docker Compose file
-  prometheus-postgresql-exporter:
-    <<: *restart_policy
-    image: quay.io/prometheuscommunity/postgres-exporter
-    ports:
-      - "127.0.0.1:9187:9187"
-    environment:
-      DATA_SOURCE_URI: "postgres:5432/postgres?sslmode=disable"
-      DATA_SOURCE_USER: "postgres"
-  prometheus-redis-exporter:
-    <<: *restart_policy
-    image: oliver006/redis_exporter
-    ports:
-      - "127.0.0.1:9121:9121"
-    environment:
-      REDIS_ADDR: "redis:6379"
-  prometheus-kafka-exporter:
-    <<: *restart_policy
-    image: danielqsj/kafka-exporter
-    ports:
-      - "127.0.0.1:9308:9308"
-    command: ["--kafka.server=kafka:9092"]
-  prometheus-memcached-exporter:
-    <<: *restart_policy
-    image: quay.io/prometheus/memcached-exporter
-    ports:
-      - "127.0.0.1:9150:9150"
-    command: ["--memcached.address=memcached:11211"]
-```
-
-Modify your `clickhouse/config.xml` file to add the following:
-
-```xml
-<clickhouse>
-    <!-- The rest of your ClickHouse configuration -->
-    <prometheus>
-        <endpoint>/metrics</endpoint>
-        <port>9363</port>
-        <metrics>true</metrics>
-        <events>true</events>
-        <asynchronous_metrics>true</asynchronous_metrics>
-        <errors>true</errors>
-    </prometheus>
-</clickhouse>
-```
-
-Up to this point, all metrics are exposed only on `localhost`. If you don't want your Sentry installation to expose any other ports, you can remove every `ports` directive on the `docker-compose.yml` file and route everything through the `nginx` container, by modifying your `nginx.conf` file to the following:
-
-```nginx
-# The rest of your Nginx configuration
-http {
-    # The rest of your HTTP configuration
-    server {
-      # The rest of your server configuration
-      location = /_metrics/postgresql {
-        proxy_pass http://prometheus-postgresql-exporter:9187;
-      }
-
-      location = /_metrics/redis {
-        proxy_pass http://prometheus-redis-exporter:9121;
-      }
-
-      location = /_metrics/kafka {
-        proxy_pass http://prometheus-kafka-exporter:9308;
-      }
-
-      location = /_metrics/memcached {
-        proxy_pass http://prometheus-memcached-exporter:9150;
-      }
-
-      location = /_metrics/clickhouse {
-        proxy_pass http://clickhouse:9363;
-    }
-}
-```
+We don't provide configurations for Sentry's dependencies such as PostgreSQL, Kafka, Redis, Memcached and ClickHouse that are bundled with the Docker Compose file. You will need to provide monitoring configuration for those service yourself adjusted to your needs.
