@@ -230,7 +230,8 @@ To improve the likelihood of capturing complete traces when backend services use
 
 The random value (`sample_rand`) is set according to the following rules:
 
-1. When tracing is enabled and a new trace is started, the SDK generates a `sample_rand` value for the current execution context. A `sample_rand` is a float (`0.1234` notation) in the range of `[0, 1)` (including 0.0, excluding 1.0).
+1. A `sample_rand` is a float (`0.123456` notation) in the range of `[0, 1)` (including 0.0, excluding 1.0), with six digits after the decimal point.
+1. When tracing is enabled and a new trace is started, the SDK generates a `sample_rand` value for the current execution context.
   1. This also applies to Tracing without Performance where we simply want to generate `sample_rand` every time a new trace is started. This `sample_rand` value can then be stored on `PropagationContext`.
 1. It is _recommended_ to generate the random number deterministically using the trace ID as seed or source of randomness (make sure to do this atomically so multiple threads accessing the same random instance don't mix their seeds). The exact method by which the random number is created is implementation-defined and may vary between SDK implementations.
 1. The `sample_rand` is part of the DSC (Dynamic Sampling Context) and as with other values on the `baggage` header, the `sample_rand` value from the current execution context should be propagated to downstream SDKs. It should also be sent to other system as part of the `baggage` header if Performance is disabled and sampling decision is deferred.

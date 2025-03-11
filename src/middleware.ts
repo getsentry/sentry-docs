@@ -852,11 +852,15 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/android/performance/instrumentation/apollo/',
-    to: '/platforms/android/integrations/apollo/',
+    to: '/platforms/android/integrations/apollo4/',
   },
   {
     from: '/platforms/android/configuration/integrations/apollo/',
-    to: '/platforms/android/integrations/apollo/',
+    to: '/platforms/android/integrations/apollo4/',
+  },
+  {
+    from: '/platforms/android/integrations/apollo/',
+    to: '/platforms/android/integrations/apollo4/',
   },
   {
     from: '/platforms/android/configuration/integrations/fragment/',
@@ -1328,10 +1332,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/javascript/sourcemaps/uploading-without-debug-ids/',
-    to: '/platforms/javascript/sourcemaps/troubleshooting_js/',
-  },
-  {
-    from: '/platforms/javascript/guides/nextjs/sourcemaps/troubleshooting_js/legacy-uploading-methods/',
     to: '/platforms/javascript/sourcemaps/troubleshooting_js/',
   },
   {
