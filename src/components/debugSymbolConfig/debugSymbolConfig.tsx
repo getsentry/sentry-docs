@@ -1,7 +1,7 @@
 'use client';
 
-import {Clipboard} from 'react-feather';
 import {useState} from 'react';
+import {Clipboard} from 'react-feather';
 import {Checkbox} from '@radix-ui/themes';
 
 // Import CodeBlock for reference, but we'll implement our own version
