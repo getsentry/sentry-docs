@@ -1,33 +1,31 @@
 'use client';
 
-import styled from '@emotion/styled';
-import {Checkbox} from '@radix-ui/themes';
 import {useState} from 'react';
+import {Checkbox} from '@radix-ui/themes';
+import {Clipboard} from 'react-feather';
+
+// Import CodeBlock for reference, but we'll implement our own version
+// import {CodeBlock} from '../codeBlock';
 
 type DebugSymbolConfigProps = {
   defaultOptions?: string[];
 };
 
+// Match the pattern used by the onboarding component
 const options = [
   {
     id: 'dsym', 
-    name: 'dSYM', 
-    configLine: '',
-    comment: 'Debug symbols (dSYM) are uploaded by default. You can disable this by setting upload_debug_symbols: false',
+    name: 'dSYM',
     required: true
   },
   {
     id: 'source-maps', 
-    name: 'Source Maps', 
-    configLine: '  upload_source_maps: true\n',
-    comment: 'Enabling this option allows Sentry to provide readable stack traces\n  # for Flutter web apps.',
+    name: 'Source Maps',
     required: false
   },
   {
     id: 'source-context', 
-    name: 'Source Context', 
-    configLine: '  upload_sources: true\n',
-    comment: 'Source context uploads your source files to Sentry, allowing you to see\n  # the actual code around the location of errors. \n  # This only uploads Dart/Flutter code, not native code.',
+    name: 'Source Context',
     required: false
   },
 ];
@@ -38,6 +36,7 @@ export function DebugSymbolConfig({
   // Ensure dsym is always in the selected options
   const initialOptions = [...new Set([...defaultOptions, 'dsym'])];
   const [selectedOptions, setSelectedOptions] = useState<string[]>(initialOptions);
+  const [copied, setCopied] = useState(false);
 
   const handleOptionToggle = (optionId: string) => {
     // If it's dsym, don't allow toggling
@@ -53,208 +52,96 @@ export function DebugSymbolConfig({
     });
   };
 
-  // Generate the config lines based on selected options
-  const getConfigSnippet = () => {
-    const baseConfig = `sentry:
+  // Generate YAML content that matches the format in the screenshot
+  const getYamlContent = () => {
+    // Format the YAML content to match the screenshot with proper indentation and line breaks
+    return `sentry:
   project: ___PROJECT_SLUG___
   org: ___ORG_SLUG___
-  auth_token: ___ORG_AUTH_TOKEN___\n`;
-    
-    // Add other selected options with their comments
-    const additionalConfig = options
-      .filter(option => option.id !== 'dsym' && selectedOptions.includes(option.id))
-      .map(option => `\n  # ${option.comment}\n${option.configLine}`)
-      .join('');
-    
-    return baseConfig + additionalConfig;
+  auth_token: sntrys_YOUR_TOKEN_HERE${selectedOptions.includes('source-maps') ? '\n  upload_source_maps: true' : ''}${selectedOptions.includes('source-context') ? '\n  upload_sources: true' : ''}`;
   };
 
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(getConfigSnippet());
+  // Handle copy to clipboard functionality
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(getYamlContent());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
   };
 
   return (
-    <Container>
-      <OptionsContainer>
+    <div className="mb-6">
+      <div className="flex flex-wrap gap-3 mb-4">
         {options.map(option => (
-          <OptionButton
+          <div
             key={option.id}
-            isActive={selectedOptions.includes(option.id)}
-            onClick={() => handleOptionToggle(option.id)}
-            isRequired={option.required}
+            className={`flex items-center px-4 py-2 rounded-md text-sm ${
+              selectedOptions.includes(option.id) 
+                ? 'bg-[#6C5FC7] text-white font-semibold' 
+                : 'bg-[#f4f2f7] text-[#2b1d38]'
+            } ${option.required ? '' : 'cursor-pointer'}`}
+            onClick={() => !option.required && handleOptionToggle(option.id)}
+            style={{
+              minWidth: '160px',
+              justifyContent: 'flex-start',
+              padding: '10px 16px',
+              borderRadius: '6px'
+            }}
+            role={option.required ? undefined : "button"}
+            tabIndex={option.required ? undefined : 0}
+            onKeyDown={(e) => {
+              if (!option.required && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault();
+                handleOptionToggle(option.id);
+              }
+            }}
           >
-            <CheckboxWrapper>
+            <span className="mr-2 flex items-center">
               <Checkbox 
                 checked={selectedOptions.includes(option.id)}
                 onCheckedChange={() => handleOptionToggle(option.id)}
                 disabled={option.required}
+                style={{ 
+                  color: selectedOptions.includes(option.id) ? 'white' : undefined 
+                }}
               />
-            </CheckboxWrapper>
+            </span>
             {option.name}
-          </OptionButton>
+          </div>
         ))}
-      </OptionsContainer>
-      <Content>
-        <CodeBlockContainer>
-          <CodeBlockHeader>
-            <CodeLanguage>YAML</CodeLanguage>
-            <HeaderRight>
-              <FileName>pubspec.yaml</FileName>
-              <CopyButton onClick={handleCopyCode}>
-                <CopyIcon viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z" />
-                </CopyIcon>
-              </CopyButton>
-            </HeaderRight>
-          </CodeBlockHeader>
-          <CodeBlock>
-            {getConfigSnippet()}
-          </CodeBlock>
-        </CodeBlockContainer>
-        
-        {selectedOptions.includes('dsym') && (
-          <DescriptionSection>
-            <DescriptionTitle>Debug Symbols (dSYM)</DescriptionTitle>
-            <Description>
-              Debug symbols (dSYM) are uploaded by default. You can disable this by setting the `upload_debug_symbols` option to `false`.
-            </Description>
-          </DescriptionSection>
+      </div>
+
+      {/* Custom Code Block Implementation */}
+      <div className="relative mb-6">
+        {/* Code Block Header */}
+        <div className="flex justify-between items-center bg-[#2b1d38] px-3 py-2 rounded-t-md">
+          <div className="text-white text-xs font-medium">YAML</div>
+          <div className="flex items-center">
+            <span className="text-white text-xs mr-3">pubspec.yaml</span>
+            <button 
+              className="text-white hover:bg-[rgba(255,255,255,0.2)] p-1 rounded"
+              onClick={handleCopy}
+            >
+              <Clipboard size={16} />
+            </button>
+          </div>
+        </div>
+
+        {/* Code Block Content */}
+        <pre className="bg-[#1e1225] text-white p-4 rounded-b-md m-0 overflow-auto font-mono text-sm">
+          {getYamlContent()}
+        </pre>
+
+        {/* Copied Notification */}
+        {copied && (
+          <div className="absolute top-2 right-2 bg-[rgba(255,255,255,0.25)] text-white px-2 py-1 rounded text-xs">
+            Copied
+          </div>
         )}
-      </Content>
-    </Container>
+      </div>
+    </div>
   );
-}
-
-const Container = styled('div')`
-  margin: 20px 0;
-`;
-
-const OptionsContainer = styled('div')`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 16px;
-`;
-
-const CheckboxWrapper = styled('span')`
-  margin-right: 8px;
-  display: flex;
-  align-items: center;
-`;
-
-const OptionButton = styled('button')<{isActive: boolean; isRequired?: boolean}>`
-  padding: 8px 16px;
-  background: ${props => (props.isActive ? '#6C5FC7' : '#f4f2f7')};
-  color: ${props => (props.isActive ? 'white' : '#2b1d38')};
-  border: none;
-  border-radius: 6px;
-  cursor: ${props => (props.isRequired ? 'default' : 'pointer')};
-  font-weight: ${props => (props.isActive ? 'bold' : 'normal')};
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  
-  &:hover {
-    background: ${props => {
-      if (props.isRequired) return props.isActive ? '#6C5FC7' : '#f4f2f7';
-      return props.isActive ? '#6C5FC7' : '#e7e1ef';
-    }};
-  }
-  
-  &:focus {
-    outline: none;
-    box-shadow: ${props => (props.isRequired ? 'none' : '0 0 0 2px rgba(108, 95, 199, 0.3)')};
-  }
-`;
-
-const Content = styled('div')`
-  padding: 16px;
-  border: 1px solid #e2e2e2;
-  border-radius: 4px;
-  background: #f8f8f8;
-`;
-
-const CodeBlockContainer = styled('div')`
-  border-radius: 4px;
-  overflow: hidden;
-  margin-bottom: 16px;
-  font-family: monospace;
-`;
-
-const CodeBlockHeader = styled('div')`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #211634;
-  padding: 8px 16px;
-  color: white;
-  border-bottom: 1px solid #362a45;
-`;
-
-const CodeLanguage = styled('div')`
-  font-size: 14px;
-  font-weight: bold;
-`;
-
-const HeaderRight = styled('div')`
-  display: flex;
-  align-items: center;
-`;
-
-const FileName = styled('div')`
-  font-size: 14px;
-  margin-right: 12px;
-`;
-
-const CopyButton = styled('button')`
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px;
-  
-  &:hover {
-    opacity: 0.8;
-  }
-  
-  &:focus {
-    outline: none;
-  }
-`;
-
-const CopyIcon = styled('svg')`
-  width: 18px;
-  height: 18px;
-  fill: white;
-`;
-
-const CodeBlock = styled('pre')`
-  padding: 16px;
-  background: #2b1d38;
-  color: white;
-  overflow-x: auto;
-  margin: 0;
-`;
-
-const DescriptionSection = styled('div')`
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #e2e2e2;
-  
-  &:last-child {
-    margin-bottom: 0;
-    padding-bottom: 0;
-    border-bottom: none;
-  }
-`;
-
-const DescriptionTitle = styled('h4')`
-  margin: 0 0 8px 0;
-`;
-
-const Description = styled('p')`
-  margin: 0 0 16px 0;
-  line-height: 1.5;
-`; 
+} 
