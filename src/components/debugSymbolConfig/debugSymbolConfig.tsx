@@ -1,8 +1,8 @@
 'use client';
 
+import {useState} from 'react';
 import styled from '@emotion/styled';
 import {Checkbox} from '@radix-ui/themes';
-import {useState} from 'react';
 
 type DebugSymbolConfigProps = {
   defaultOptions?: string[];
@@ -10,31 +10,32 @@ type DebugSymbolConfigProps = {
 
 const options = [
   {
-    id: 'dsym', 
-    name: 'dSYM', 
+    id: 'dsym',
+    name: 'dSYM',
     configLine: '',
-    comment: 'Debug symbols (dSYM) are uploaded by default. You can disable this by setting upload_debug_symbols: false',
-    required: true
+    comment:
+      'Debug symbols (dSYM) are uploaded by default. You can disable this by setting upload_debug_symbols: false',
+    required: true,
   },
   {
-    id: 'source-maps', 
-    name: 'Source Maps', 
+    id: 'source-maps',
+    name: 'Source Maps',
     configLine: '  upload_source_maps: true\n',
-    comment: 'Enabling this option allows Sentry to provide readable stack traces\n  # for Flutter web apps.',
-    required: false
+    comment:
+      'Enabling this option allows Sentry to provide readable stack traces\n  # for Flutter web apps.',
+    required: false,
   },
   {
-    id: 'source-context', 
-    name: 'Source Context', 
+    id: 'source-context',
+    name: 'Source Context',
     configLine: '  upload_sources: true\n',
-    comment: 'Source context uploads your source files to Sentry, allowing you to see\n  # the actual code around the location of errors. \n  # This only uploads Dart/Flutter code, not native code.',
-    required: false
+    comment:
+      'Source context uploads your source files to Sentry, allowing you to see\n  # the actual code around the location of errors. \n  # This only uploads Dart/Flutter code, not native code.',
+    required: false,
   },
 ];
 
-export function DebugSymbolConfig({
-  defaultOptions = ['dsym'],
-}: DebugSymbolConfigProps) {
+export function DebugSymbolConfig({defaultOptions = ['dsym']}: DebugSymbolConfigProps) {
   // Ensure dsym is always in the selected options
   const initialOptions = [...new Set([...defaultOptions, 'dsym'])];
   const [selectedOptions, setSelectedOptions] = useState<string[]>(initialOptions);
@@ -42,7 +43,7 @@ export function DebugSymbolConfig({
   const handleOptionToggle = (optionId: string) => {
     // If it's dsym, don't allow toggling
     if (optionId === 'dsym') return;
-    
+
     setSelectedOptions(prev => {
       // If already selected, remove it
       if (prev.includes(optionId)) {
@@ -59,13 +60,13 @@ export function DebugSymbolConfig({
   project: ___PROJECT_SLUG___
   org: ___ORG_SLUG___
   auth_token: ___ORG_AUTH_TOKEN___\n`;
-    
+
     // Add other selected options with their comments
     const additionalConfig = options
       .filter(option => option.id !== 'dsym' && selectedOptions.includes(option.id))
       .map(option => `\n  # ${option.comment}\n${option.configLine}`)
       .join('');
-    
+
     return baseConfig + additionalConfig;
   };
 
@@ -84,7 +85,7 @@ export function DebugSymbolConfig({
             isRequired={option.required}
           >
             <CheckboxWrapper>
-              <Checkbox 
+              <Checkbox
                 checked={selectedOptions.includes(option.id)}
                 onCheckedChange={() => handleOptionToggle(option.id)}
                 disabled={option.required}
@@ -107,16 +108,15 @@ export function DebugSymbolConfig({
               </CopyButton>
             </HeaderRight>
           </CodeBlockHeader>
-          <CodeBlock>
-            {getConfigSnippet()}
-          </CodeBlock>
+          <CodeBlock>{getConfigSnippet()}</CodeBlock>
         </CodeBlockContainer>
-        
+
         {selectedOptions.includes('dsym') && (
           <DescriptionSection>
             <DescriptionTitle>Debug Symbols (dSYM)</DescriptionTitle>
             <Description>
-              Debug symbols (dSYM) are uploaded by default. You can disable this by setting the `upload_debug_symbols` option to `false`.
+              Debug symbols (dSYM) are uploaded by default. You can disable this by
+              setting the `upload_debug_symbols` option to `false`.
             </Description>
           </DescriptionSection>
         )}
@@ -153,17 +153,18 @@ const OptionButton = styled('button')<{isActive: boolean; isRequired?: boolean}>
   font-size: 14px;
   display: flex;
   align-items: center;
-  
+
   &:hover {
     background: ${props => {
       if (props.isRequired) return props.isActive ? '#6C5FC7' : '#f4f2f7';
       return props.isActive ? '#6C5FC7' : '#e7e1ef';
     }};
   }
-  
+
   &:focus {
     outline: none;
-    box-shadow: ${props => (props.isRequired ? 'none' : '0 0 0 2px rgba(108, 95, 199, 0.3)')};
+    box-shadow: ${props =>
+      props.isRequired ? 'none' : '0 0 0 2px rgba(108, 95, 199, 0.3)'};
   }
 `;
 
@@ -214,11 +215,11 @@ const CopyButton = styled('button')`
   align-items: center;
   justify-content: center;
   padding: 4px;
-  
+
   &:hover {
     opacity: 0.8;
   }
-  
+
   &:focus {
     outline: none;
   }
@@ -242,7 +243,7 @@ const DescriptionSection = styled('div')`
   margin-bottom: 20px;
   padding-bottom: 20px;
   border-bottom: 1px solid #e2e2e2;
-  
+
   &:last-child {
     margin-bottom: 0;
     padding-bottom: 0;
@@ -257,4 +258,4 @@ const DescriptionTitle = styled('h4')`
 const Description = styled('p')`
   margin: 0 0 16px 0;
   line-height: 1.5;
-`; 
+`;
