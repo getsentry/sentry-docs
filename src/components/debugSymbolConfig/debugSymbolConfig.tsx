@@ -30,9 +30,7 @@ const options = [
   },
 ];
 
-export function DebugSymbolConfig({
-  defaultOptions = ['dsym'],
-}: DebugSymbolConfigProps) {
+export function DebugSymbolConfig({defaultOptions = ['dsym']}: DebugSymbolConfigProps) {
   // Ensure dsym is always in the selected options
   const initialOptions = [...new Set([...defaultOptions, 'dsym'])];
   const [selectedOptions, setSelectedOptions] = useState<string[]>(initialOptions);
@@ -41,7 +39,7 @@ export function DebugSymbolConfig({
   const handleOptionToggle = (optionId: string) => {
     // If it's dsym, don't allow toggling
     if (optionId === 'dsym') return;
-    
+
     setSelectedOptions(prev => {
       // If already selected, remove it
       if (prev.includes(optionId)) {
