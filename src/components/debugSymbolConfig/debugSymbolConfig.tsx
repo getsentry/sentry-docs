@@ -1,8 +1,8 @@
 'use client';
 
-import {useState, useEffect} from 'react';
 import styled from '@emotion/styled';
 import {Checkbox} from '@radix-ui/themes';
+import {useState} from 'react';
 
 type DebugSymbolConfigProps = {
   defaultOptions?: string[];
