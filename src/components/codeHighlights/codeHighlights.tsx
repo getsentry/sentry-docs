@@ -15,9 +15,9 @@ export function makeHighlightBlocks(
   const items = Children.toArray(children);
 
   let highlightedLineElements: ReactElement[] = [];
-  const highlightElementGroupCounter = 0;
+  let highlightElementGroupCounter = 0;
 
-  return items.reduce((arr: ChildrenItem[], child) => {
+  return items.reduce((arr: ChildrenItem[], child, index) => {
     if (typeof child !== 'object') {
       arr.push(child);
       return arr;
@@ -30,7 +30,7 @@ export function makeHighlightBlocks(
     if (!isCodeLine) {
       const updatedChild = cloneElement(
         child as ReactElement,
-        {},
+        element.props,
         makeHighlightBlocks((child as ReactElement).props.children, language)
       );
       arr.push(updatedChild);
@@ -44,11 +44,12 @@ export function makeHighlightBlocks(
     } else {
       if (highlightedLineElements.length > 0) {
         arr.push(
-          <HighlightBlock groupId={highlightElementGroupCounter} language={language}>
+          <HighlightBlock groupId={highlightElementGroupCounter} key={highlightElementGroupCounter} language={language}>
             {...highlightedLineElements}
           </HighlightBlock>
         );
         highlightedLineElements = [];
+        ++highlightElementGroupCounter;
       }
       arr.push(child);
     }
@@ -98,7 +99,7 @@ export function HighlightBlock({
   }
 
   return (
-    <HighlightBlockContainer key={`highlight-block-${groupId}`}>
+    <HighlightBlockContainer>
       <CodeLinesContainer ref={codeRef}>{children}</CodeLinesContainer>
       <ClipBoardContainer onClick={copyCodeOnClick} className=".clipboard">
         {showCopyButton && (
