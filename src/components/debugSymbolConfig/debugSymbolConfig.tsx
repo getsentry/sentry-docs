@@ -1,8 +1,8 @@
 'use client';
 
 import {useState} from 'react';
-import {Checkbox} from '@radix-ui/themes';
 import {Clipboard} from 'react-feather';
+import {Checkbox} from '@radix-ui/themes';
 
 // Import CodeBlock for reference, but we'll implement our own version
 // import {CodeBlock} from '../codeBlock';
@@ -14,19 +14,19 @@ type DebugSymbolConfigProps = {
 // Match the pattern used by the onboarding component
 const options = [
   {
-    id: 'dsym', 
+    id: 'dsym',
     name: 'dSYM',
-    required: true
+    required: true,
   },
   {
-    id: 'source-maps', 
+    id: 'source-maps',
     name: 'Source Maps',
-    required: false
+    required: false,
   },
   {
-    id: 'source-context', 
+    id: 'source-context',
     name: 'Source Context',
-    required: false
+    required: false,
   },
 ];
 
@@ -77,8 +77,8 @@ export function DebugSymbolConfig({defaultOptions = ['dsym']}: DebugSymbolConfig
           <div
             key={option.id}
             className={`flex items-center px-4 py-2 rounded-md text-sm ${
-              selectedOptions.includes(option.id) 
-                ? 'bg-[#6C5FC7] text-white font-semibold' 
+              selectedOptions.includes(option.id)
+                ? 'bg-[#6C5FC7] text-white font-semibold'
                 : 'bg-[#f4f2f7] text-[#2b1d38]'
             } ${option.required ? '' : 'cursor-pointer'}`}
             onClick={() => !option.required && handleOptionToggle(option.id)}
@@ -86,11 +86,11 @@ export function DebugSymbolConfig({defaultOptions = ['dsym']}: DebugSymbolConfig
               minWidth: '160px',
               justifyContent: 'flex-start',
               padding: '10px 16px',
-              borderRadius: '6px'
+              borderRadius: '6px',
             }}
-            role={option.required ? undefined : "button"}
+            role={option.required ? undefined : 'button'}
             tabIndex={option.required ? undefined : 0}
-            onKeyDown={(e) => {
+            onKeyDown={e => {
               if (!option.required && (e.key === 'Enter' || e.key === ' ')) {
                 e.preventDefault();
                 handleOptionToggle(option.id);
@@ -98,12 +98,12 @@ export function DebugSymbolConfig({defaultOptions = ['dsym']}: DebugSymbolConfig
             }}
           >
             <span className="mr-2 flex items-center">
-              <Checkbox 
+              <Checkbox
                 checked={selectedOptions.includes(option.id)}
                 onCheckedChange={() => handleOptionToggle(option.id)}
                 disabled={option.required}
-                style={{ 
-                  color: selectedOptions.includes(option.id) ? 'white' : undefined 
+                style={{
+                  color: selectedOptions.includes(option.id) ? 'white' : undefined,
                 }}
               />
             </span>
@@ -119,7 +119,7 @@ export function DebugSymbolConfig({defaultOptions = ['dsym']}: DebugSymbolConfig
           <div className="text-white text-xs font-medium">YAML</div>
           <div className="flex items-center">
             <span className="text-white text-xs mr-3">pubspec.yaml</span>
-            <button 
+            <button
               className="text-white hover:bg-[rgba(255,255,255,0.2)] p-1 rounded"
               onClick={handleCopy}
             >
@@ -142,4 +142,4 @@ export function DebugSymbolConfig({defaultOptions = ['dsym']}: DebugSymbolConfig
       </div>
     </div>
   );
-} 
+}
