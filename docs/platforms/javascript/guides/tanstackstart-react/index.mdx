@@ -81,7 +81,7 @@ Make sure to keep your auth token secret and out of version control.
 
 Add the following initialization code to your `app/client.tsx` file to initialize Sentry on the client:
 
-```tsx {filename:app/client.tsx} {"onboardingOptions": {"performance": "13, 16-21", "session-replay": "14,22-27"}}
+```tsx {filename:app/client.tsx} {"onboardingOptions": {"performance": "12, 15-20", "session-replay": "13,21-26"}}
 import { hydrateRoot } from "react-dom/client";
 import { StartClient } from "@tanstack/react-start";
 import { createRouter } from "./router";
@@ -92,7 +92,6 @@ const router = createRouter();
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-
   integrations: [
     Sentry.tanstackRouterBrowserTracingIntegration(router),
     Sentry.replayIntegration(),
@@ -185,6 +184,21 @@ registerGlobalMiddleware({
 ### Capture Errors in your Error Boundaries and Components
 
 The Sentry SDK cannot capture errors that you manually caught yourself with error boundaries.
+
+If you have React error boundaries in your app and you want to report errors that these boundaries catch to Sentry, apply the [`withErrorBoundary` wrapper](/platforms/javascript/guides/react/features/error-boundary/) to your `ErrorBoundary`:
+
+```tsx
+import React from "react";
+import * as Sentry from "@sentry/tanstackstart-react";
+
+class MyErrorBoundary extends React.Component {
+  // ...
+}
+
+export const MySentryWrappedErrorBoundary = withErrorBoundary(MyErrorBoundary, {
+  // ... sentry error wrapper options
+});
+```
 
 If you defined `errorComponent`s in your Code-Based TanStack Router routes, capture the `error` argument with `captureException` inside a `useEffect` hook:
 
