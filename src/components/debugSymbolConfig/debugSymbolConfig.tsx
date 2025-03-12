@@ -1,8 +1,8 @@
 'use client';
 
+import {Clipboard} from 'react-feather';
 import {useState} from 'react';
 import {Checkbox} from '@radix-ui/themes';
-import {Clipboard} from 'react-feather';
 
 // Import CodeBlock for reference, but we'll implement our own version
 // import {CodeBlock} from '../codeBlock';
@@ -66,7 +66,7 @@ export function DebugSymbolConfig({defaultOptions = ['dsym']}: DebugSymbolConfig
       setCopied(true);
       setTimeout(() => setCopied(false), 1200);
     } catch (err) {
-      console.error('Failed to copy: ', err);
+      // Silently handle errors - no console statements
     }
   };
 
