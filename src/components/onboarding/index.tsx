@@ -59,11 +59,12 @@ const optionDetails: Record<
       </span>
     ),
   },
-  'dsym': {
+  dsym: {
     name: 'dSYM',
     description: (
       <span>
-        Debug symbols for iOS and macOS that provide the necessary information to convert program addresses back to function names, source file names, and line numbers.
+        Debug symbols for iOS and macOS that provide the necessary information to convert
+        program addresses back to function names, source file names, and line numbers.
       </span>
     ),
   },
@@ -71,7 +72,8 @@ const optionDetails: Record<
     name: 'Source Maps',
     description: (
       <span>
-        Source maps for web applications that help translate minified code back to the original source for better error reporting.
+        Source maps for web applications that help translate minified code back to the
+        original source for better error reporting.
       </span>
     ),
   },
