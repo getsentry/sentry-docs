@@ -851,6 +851,18 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/android/integrations/file-io/',
   },
   {
+    from: '/platforms/java/tracing/instrumentation/apollo/',
+    to: '/platforms/java/tracing/instrumentation/apollo4/',
+  },
+  {
+    from: '/platforms/java/guides/spring/tracing/instrumentation/apollo/',
+    to: '/platforms/java/guides/spring/tracing/instrumentation/apollo4/',
+  },
+  {
+    from: '/platforms/java/guides/spring-boot/tracing/instrumentation/apollo/',
+    to: '/platforms/java/guides/spring-boot/tracing/instrumentation/apollo4/',
+  },
+  {
     from: '/platforms/android/performance/instrumentation/apollo/',
     to: '/platforms/android/integrations/apollo4/',
   },
