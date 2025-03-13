@@ -35,6 +35,12 @@ You have to have the <PlatformSdkPackageName fallback="@sentry/node"/> (minimum 
 
 ## Enabling Profiling
 
+Profiling supports two manin modes - manual and trace lifecycle. The two modes are mutually exclusive, and cannot be used at the same time. In manual mode, the profiling data collection can be managed via calls to Sentry.profiler.startProfileSession and Sentry.profiler.stopProfileSession. In this mode, you are entirely in the in control of when the profiler runs.
+
+Trace lifecycle mode differs in the sense that the profiler manages it's own start and stop calls, which are based on the logic of active spans. In this mode, the profiler continues to run while there is at least one active span, and stops when there are no active spans.
+
+### Enabling Automatic Trace Profiling
+
 To enable profiling, add `@sentry/profiling-node` to your imports and set up `nodeProfilingIntegration` in your Sentry config.
 
 ```javascript {diff}
@@ -47,23 +53,64 @@ Sentry.init({
 +   nodeProfilingIntegration(),
   ],
   tracesSampleRate: 1.0,
-+  // Set sampling rate for profiling - this is relative to tracesSampleRate
-+  profilesSampleRate: 1.0,
++ profileLifecycle: 'trace',
 });
 
 // Profiling happens automatically after setting it up with `Sentry.init()`.
-// All spans captured in your application will have profiling data attached to them.
-// You can also manually capture spans with `startSpan`, as shown below:
+// All spans (unless those discarded by sampling) will have profiling data attached to them.
 Sentry.startSpan(
   {
     op: "rootSpan",
     name: "My root span",
   },
   () => {
-    // Any code in this callback will be profiled.
+    // The code executed here will be profiled
   }
 );
 ```
+
+### Enabling Manual Trace Profiling
+
+To enable profiling, add `@sentry/profiling-node` to your imports and set up `nodeProfilingIntegration` in your Sentry config.
+
+```javascript {diff}
+const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    // Add our Profiling integration
++   nodeProfilingIntegration(),
+  ],
+  tracesSampleRate: 1.0,
++ profileLifecycle: 'manual', // default can be omitted
+});
+
+// All spans (unless those discarded by sampling) will have profiling data attached to them.
+Sentry.profiler.startProfileSession();
+// Code executed between these two calls will be profiled
+Sentry.profiler.stopProfileSession();
+```
+
+### Managing profile sampling rates
+
+Sentry SDK supports an additional `profileSessionSampleRate` that will enable or disable profiling for the entire session. This can be used if you want to control session sampling rates at the service level. The sampling decision is evaluated only once at SDK init, and it controls whether all calls to the profiler will be enabled or disabled.
+
+This is useful for cases where you deploy your service N times, but would only like for a subset of those services to be profiled.
+
+```javascript {diff}
+const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    // Add our Profiling integration
+    nodeProfilingIntegration(),
+  ],
+  tracesSampleRate: 1.0,
++ profileSessionSampleRate: 0.0 // All profiling is disabled
+});
+
 
 ## How Does It Work?
 
@@ -81,3 +128,4 @@ Starting from version `0.1.0`, the `@sentry/profiling-node` package precompiles 
 - Windows x64: Node v16, v18, v20, v22
 
 The set of common architectures should cover a wide variety of use cases, but if you have feedback or experience different behavior, please open an issue in the [Sentry JavaScript SDK](https://github.com/getsentry/sentry-javascript) repository.
+```
