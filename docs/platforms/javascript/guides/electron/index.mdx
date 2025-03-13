@@ -3,6 +3,7 @@ title: Electron
 description: "Electron is a framework for building desktop applications using JavaScript, HTML, and CSS. Learn how to set it up with Sentry."
 sdk: sentry.javascript.electron
 categories:
+  - javascript
   - desktop
 ---
 
@@ -16,15 +17,60 @@ Select which Sentry features you'd like to install in addition to Error Monitori
 
 ## Install
 
-<OnboardingOptionButtons
-  options={["error-monitoring", "performance", "session-replay"]}
-/>
+<OnboardingOptionButtons options={["error-monitoring", "performance", "session-replay"]} />
 
-<PlatformContent includePath="getting-started-install" />
+```bash {tabTitle:npm}
+npm install @sentry/electron --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/electron
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/electron
+```
 
 ## Configure
 
-<PlatformContent includePath="getting-started-config" />
+You should `init` the SDK in the `main` process and every `renderer` process you spawn.
+
+In the Electron `main` process:
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+});
+```
+
+In the Electron `renderer` process:
+
+```javascript {"onboardingOptions": {"performance": "5, 8-14", "session-replay": "6, 15-21"}}
+import * as Sentry from "@sentry/electron/renderer";
+
+Sentry.init({
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration(),
+  ],
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+
+  // Capture Replay for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
+```
 
 Once configured, all unhandled exceptions and native crashes are automatically captured by Sentry.
 
@@ -236,13 +282,13 @@ The SDK relies on the [Electron crashReporter](https://electronjs.org/docs/api/c
 Once the crash reporter is active, the SDK will automatically capture native
 crashes for the following processes:
 
-|                    | `event.process` tag|macOS | Windows | Linux |
-|--------------------|-------|---------|-------|---|
-| Electron `main` process    |`browser` |✓     | ✓       | ✓     |
-| Electron `renderer` process    |`renderer` |✓     | ✓       | ✓     |
-| Electron `utilityProcess`|`utility`|✓|✓|✓ <sup>1</sup>|
-| `child_process.fork` | `node`|✓     | ✓       |      |
-| `child_process.exec/spawn` | `unknown`|✓     |        |      |
+|                             | `event.process` tag | macOS | Windows | Linux          |
+|-----------------------------|---------------------|-------|---------|----------------|
+| Electron `main` process     | `browser`           | ✓     | ✓       | ✓              |
+| Electron `renderer` process | `renderer`          | ✓     | ✓       | ✓              |
+| Electron `utilityProcess`   | `utility`           | ✓     | ✓       | ✓ <sup>1</sup> |
+| `child_process.fork`        | `node`              | ✓     | ✓       |                |
+| `child_process.exec/spawn`  | `unknown`           | ✓     |         |                |
 
 <sup>1</sup> Not working with Electron v29.4.6.
 

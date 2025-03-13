@@ -26,13 +26,13 @@ export function ReaderDepthTracker() {
       }
 
       // find the biggest milestone that has not been reached yet
-      const milestone = PROGRESS_MILESTONES.findLast(
+      const milestone = PROGRESS_MILESTONES.filter(
         m =>
           progress >= m &&
           !reachedMilestones.has(m) &&
           // we shouldn't report smaller milestones once a bigger one has been reached
           Array.from(reachedMilestones).every(r => m > r)
-      );
+      ).pop();
       if (milestone) {
         reachedMilestones.add(milestone);
         sendProgressToPlausible(milestone);

@@ -37,7 +37,8 @@ export function OrgAuthTokenNote() {
             manually create an Auth Token
           </ExternalLink>{' '}
           or create a token directly from this page. A created token will only be visible
-          once right after creation - make sure to copy it!
+          once right after creation - make sure to copy-paste it immediately and DO NOT
+          commit it! We recommend adding it as an environment variable.
         </Alert>
       </SignedInCheck>
     </Fragment>
