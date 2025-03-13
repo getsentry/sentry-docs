@@ -978,10 +978,6 @@ const userDocsRedirects = [
     destination: '/platforms/kotlin/guides/kotlin-multiplatform/:path*',
   },
   {
-    source: '/product/explore/feature-flags/:path*',
-    destination: '/product/issues/issue-details/feature-flags/:path*',
-  },
-  {
     source: '/platforms/python/:productfeature/troubleshooting/:path*',
     destination: '/platforms/python/troubleshooting/:path*',
   },
@@ -1000,6 +996,39 @@ const userDocsRedirects = [
   {
     source: '/platforms/php/:productfeature/troubleshooting/:path*',
     destination: '/platforms/php/troubleshooting/:path*',
+  },
+   {
+    source: '/product/explore/feature-flags/:path*',
+    destination: '/product/issues/issue-details/feature-flags/:path*',
+  },
+  {
+    source: '/product/explore/metrics/:path*',
+    destination: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    source: '/product/tracing/:path*',
+    destination: '/concepts/key-terms/tracing/:path*',
+  },
+  // Redirects for JavaScript tracing docs 
+  {
+    source: '/platforms/javascript/tracing/trace-propagation/:path*',
+    destination: '/platforms/javascript/tracing/distributed-tracing/:path*',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/tracing/instrumentation/performance-metrics/',
+    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/performance-metrics/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/tracing/trace-propagation/:path*',
+    destination: '/platforms/javascript/guides/:guide/tracing/distributed-tracing/:path*',
+  },
+  {
+    source: '/platforms/javascript/tracing/instrumentation/custom-instrumentation/:path*',
+    destination: '/platforms/javascript/tracing/instrumentation/:path*',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/tracing/instrumentation/custom-instrumentation/:path*',
+    destination: '/platforms/javascript/guides/:guide/tracing/instrumentation/:path*',
   },
   {
     source: '/platforms/flutter/:path*',
