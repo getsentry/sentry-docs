@@ -18,6 +18,7 @@ Currently, `crashpad` is the default on all desktop platforms because it
 * is the primary target for Sentry-developed extensions to the upstream implementation of backend handlers (most of which aren't a particular upside vs. the other backends, but changes to reach parity), including
   * client-side stack traces (this is currently not available on `breakpad`)
   * attachment handling
+  * retry mechanism for failed report uploads
   * HTTP proxy support
   * GCC and MinGW support
   * `FirstChanceHandler` on Windows and extension of its synchronization to support Sentry hooks
@@ -39,7 +40,7 @@ In the above cases, if you cannot loosen the requirements of your environment, y
 
 ### How do I decide between `breakpad` or `inproc`?
 
-Both backends are comparable in how they differ from `crashpad`. However, there are also considerable differences between the two: 
+Both backends are comparable in how they differ from `crashpad`. However, there are also considerable differences between the two:
 
 * `inproc` only provides the backtrace of the crashing thread. `breakpad` records all threads in the minidump.
 * similar to `crashpad`, `breakpad` uses the lowest level error handling mechanism on each platform (macOS: mach exception ports, Windows: `UnhandledExceptionFilter`, Linux: signal handlers), it does cover a smaller range of errors, though as mentioned above.
@@ -63,7 +64,7 @@ Both backends are comparable in how they differ from `crashpad`. However, there 
 
 If you dive into the details, you will find many trade-offs in the selection of backends. The above merely provides a first overview. Further, the above is only a snapshot of the current capabilities, where some trade-offs are incidental and do not follow a particular strategy or technological necessity. The primary reason for providing multiple backends is to cover as many user scenarios as possible, which requires a bit of insight if you decide to deviate from the defaults.
 
-Sentry suggests the following sequence for your backend evaluations: 
+Sentry suggests the following sequence for your backend evaluations:
 
 * `crashpad` (default)
 * `breakpad`
