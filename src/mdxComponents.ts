@@ -9,7 +9,6 @@ import {CommunitySupportedPlatforms} from './components/communitySupportedPlatfo
 import {ConfigKey} from './components/configKey';
 import {ConfigValue} from './components/configValue';
 import {CreateGitHubAppForm} from './components/createGitHubAppForm';
-import {DebugSymbolConfig} from './components/debugSymbolConfig';
 import {DefinitionList} from './components/definitionList';
 import {DevDocsCardGrid} from './components/devDocsCardGrid';
 import DocImage from './components/docImage';
@@ -51,7 +50,6 @@ export function mdxComponents(
     Card,
     CliChecksumTable,
     CommunitySupportedPlatforms,
-    DebugSymbolConfig,
     DevDocsCardGrid,
     PlatformFilter,
     CodeBlock,

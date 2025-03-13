@@ -11,7 +11,30 @@ dev_dependencies:
 
 The Sentry Dart Plugin requires basic configuration in your `pubspec.yaml` file:
 
-<DebugSymbolConfig />
+<OnboardingOptionButtons
+  options={[
+    {id: 'dsym', checked: true, disabled: true},
+    'source-context',
+    'source-maps'
+  ]}
+/>
+
+```yaml {filename:pubspec.yaml} {"onboardingOptions": {"source-context": "7-8", "source-maps": "9-10"}}
+sentry:
+  project: ___PROJECT_SLUG___
+  org: ___ORG_SLUG___
+  auth_token: ___ORG_AUTH_TOKEN___
+  # Disable automatic upload of debug symbols
+  # upload_debug_symbols: false
+  # Enable source context
+  upload_source_context: true
+  # Enable source maps
+  upload_source_maps: true
+```
+
+<OnboardingOption optionId="dsym">
+The `upload_debug_symbols` option defaults to `true` when not specified.
+</OnboardingOption>
 
 ### Alternative Configuration Methods
 
@@ -23,23 +46,9 @@ For more information, read the [Sentry Dart Plugin README](https://github.com/ge
 
 ## Building Your Application
 
-Before running the plugin, build your Flutter application with one of the following commands:
+Before running the plugin, build your Flutter application with one of the following commands. Obuscated is encouraged for production builds, and will make uploading debug symbols necessary to get readable stack traces.
 
-### Standard Build
-
-```bash
-flutter build apk
-flutter build ios
-flutter build macos
-flutter build windows
-flutter build linux
-```
-
-### Obfuscated Build (Recommended for Production)
-
-Include the `--obfuscate` flag with the `--split-debug-info` option:
-
-```bash
+```bash {tabTitle: Obfuscated}
 flutter build apk --obfuscate --split-debug-info=<output-directory>
 flutter build ios --obfuscate --split-debug-info=<output-directory>
 flutter build macos --obfuscate --split-debug-info=<output-directory>
@@ -47,13 +56,20 @@ flutter build windows --obfuscate --split-debug-info=<output-directory>
 flutter build linux --obfuscate --split-debug-info=<output-directory>
 ```
 
-### Flutter Web
+```bash {tabTitle: Standard}
+flutter build apk
+flutter build ios
+flutter build macos
+flutter build windows
+flutter build linux
+```
 
-For Flutter Web, generate source maps:
-
-```bash
+```bash {tabTitle: Flutter Web}
 flutter build web --release --source-maps
 ```
+<Alert>
+For Flutter web run `flutter build web --release --source-maps` to generate source maps.
+</Alert>
 
 ## Running the Plugin
 
@@ -143,4 +159,4 @@ The following table lists all available configuration options for the Sentry Dar
 
 ## Troubleshooting
 
-If you encounter any issues with the Sentry Dart Plugin, refer to [Troubleshooting - Sentry Dart Plugin](/platforms/dart/guides/flutter/troubleshooting#sentry-dart-plugin) for solutions to common problems. 
+If you encounter any issues with the Sentry Dart Plugin, refer to [Troubleshooting - Sentry Dart Plugin](/platforms/dart/guides/flutter/troubleshooting#sentry-dart-plugin) for solutions to common problems.
