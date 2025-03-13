@@ -53,6 +53,7 @@ Sentry.init({
 +   nodeProfilingIntegration(),
   ],
   tracesSampleRate: 1.0,
++ profileSessionSampleRate: 1.0,
 + profileLifecycle: 'trace',
 });
 
@@ -83,7 +84,8 @@ Sentry.init({
 +   nodeProfilingIntegration(),
   ],
   tracesSampleRate: 1.0,
-+ profileLifecycle: 'manual', // default can be omitted
++ profileSessionSampleRate: 1.0,
++ profileLifecycle: 'manual',
 });
 
 // All spans (unless those discarded by sampling) will have profiling data attached to them.
@@ -94,9 +96,9 @@ Sentry.profiler.stopProfileSession();
 
 ### Managing profile sampling rates
 
-Sentry SDK supports an additional `profileSessionSampleRate` that will enable or disable profiling for the entire session. This can be used if you want to control session sampling rates at the service level. The sampling decision is evaluated only once at SDK init, and it controls whether all calls to the profiler will be enabled or disabled.
+Sentry SDK supports an additional `profileSessionSampleRate` that will enable or disable profiling for the entire session. This can be used if you want to control session sampling rates at the service level as the sampling decision is evaluated only once at SDK init.
 
-This is useful for cases where you deploy your service N times, but would only like for a subset of those services to be profiled.
+This is useful for cases where you deploy your service many times, but would only like a subset of those services to be profiled.
 
 ```javascript {diff}
 const { nodeProfilingIntegration } = require("@sentry/profiling-node");
@@ -108,7 +110,7 @@ Sentry.init({
     nodeProfilingIntegration(),
   ],
   tracesSampleRate: 1.0,
-+ profileSessionSampleRate: 0.0 // All profiling is disabled
++ profileSessionSampleRate: 0.0
 });
 
 
