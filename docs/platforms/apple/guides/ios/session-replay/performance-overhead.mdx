@@ -11,7 +11,8 @@ You can learn more about the various performance overhead optimizations implemen
 
 ## Benchmarking the iOS Replay SDK
 
-The Pocket Casts app offers a diverse mix of components, including Fragments, Activities, and Jetpack Compose screens, making it an ideal candidate for testing. Here's how the benchmarks were conducted:
+The Pocket Casts app offers a diverse mix of components making it an ideal candidate for testing. Here's how the benchmarks were conducted:
+
 - **Configuration:** Full masking was enabled, and optimized release builds were used.
 - **User Flow:** The same flow was executed 10 times to ensure consistency.
 - **Real-World Representation:** This approach closely mirrors performance in real-world scenarios.
@@ -19,17 +20,17 @@ The Pocket Casts app offers a diverse mix of components, including Fragments, Ac
 The benchmarks were run on an iPhone 14 Pro. Note that active Session Replay recording can introduce slow frames on older lower-end iOS devices (for example iPhone 8).
 
 ### Results
+
 Below are the results of the benchmarking tests, presented as median values to reflect typical overhead.
 
-
-| Metric                           | Sentry SDK only | Sentry + Replay SDK |
-| -------------------------------- | --------------- | ------------------- |
-| FPS                              | 55 fps          | 53 fps              |
-| Memory                           | 102 MB          | 121 MB              |
-| CPU                              | 4%              | 13%                 |
-| App Startup Time (Cold)          | 1264.80 ms      | 1265 ms             |
-| Main Thread Time                 | n/a             | 43ms                |
-| Network Bandwidth                | n/a             | 10 KB/s of recording|
+| Metric                  | Sentry SDK only | Sentry + Replay SDK  |
+| ----------------------- | --------------- | -------------------- |
+| FPS                     | 55 fps          | 53 fps               |
+| Memory                  | 102 MB          | 121 MB               |
+| CPU                     | 4%              | 13%                  |
+| App Startup Time (Cold) | 1264.80 ms      | 1265 ms              |
+| Main Thread Time        | n/a             | 43ms                 |
+| Network Bandwidth       | n/a             | 10 KB/s of recording |
 
 ## Reducing Performance Overhead
 
@@ -50,12 +51,52 @@ SentrySDK.start(configureOptions: { options in
 
 If the Replay SDK causes performance issues on lower-end devices (for example, [this](https://github.com/getsentry/relay/blob/695b459e03481f7d799f07b2b901b140e5d5753d/relay-event-schema/src/protocol/device_class.rs#L21-L37) is how Sentry determines the device class), you can disable it specifically for those devices:
 
-```kotlin
+```swift
 SentrySDK.start(configureOptions: { options in
   options.dsn = "___PUBLIC_DSN___"
   options.debug = true
 
   options.sessionReplay.onErrorSampleRate = if isLowEnd() { 0.0 } else { 1.0 }
   options.sessionReplay.sessionSampleRate = if isLowEnd() { 0.0 } else { 0.1 }
+})
+```
+
+### Enable Experimental View Renderer
+
+<Alert>
+  In case you are noticing issues with the experimental view renderer, please
+  report the issue on [GitHub](https://github.com/getsentry/sentry-cocoa).
+</Alert>
+
+Starting with v8.47.0 you can enable the up to 5x faster new view renderer, reducing the impact of Session Replay on the main thread and potential frame drops.
+
+While we do recommend the new view renderer, it is currently considered an experimental feature to further evaluate its stability.
+After the evaluation phase we are going to enable it by default and eventually replace the default implementation with it in the near future.
+
+```swift
+SentrySDK.start(configureOptions: { options in
+  options.sessionReplay.enableExperimentalViewRenderer = true
+})
+```
+
+### Enable Fast (Incomplete) View Rendering
+
+In addition to the experimental view renderer we offer the option of even faster, but potentially incomplete, view renderering.
+
+This option only works in combination with the experimental view renderer and controls the way the view hierarchy is drawn.
+By default, the view hierarchy is drawn using the method `UIView.drawHierarchy(in:afterScreenUpdates:)`, which can be slow but brings is the most complete way to render the view hierarchy.
+
+By enabling this flag the view is directly rendered using the underlying `CALayer.render(in:)` instead.
+While this appraoch can show performance benefits, it can also lead to rendering issues and incomplete UI snapshots.
+
+We recommended to leave this option set to `false`.
+In case you prefer performance over completeness, you can set this option to `true`.
+
+```swift
+SentrySDK.start(configureOptions: { options in
+  options.sessionReplay.enableExperimentalViewRenderer = true
+
+  // Enable faster but incomplete view rendering
+  options.sessionReplay.enableFastViewRendering = true
 })
 ```
