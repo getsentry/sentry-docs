@@ -172,8 +172,6 @@ Sentry.startSpan(
       span.setAttribute('ui.total_request_time_ms', totalRequestTime);
       span.setAttribute('stream.rendering_mode', 'markdown');
       span.setAttribute('stream.tokens_received', tokensReceived);
-      span.setAttribute('user.perceived_latency_ms', 
-        firstTokenReceived ? totalRequestTime - span.getAttribute('ui.time_to_first_token_ms') : totalRequestTime);
     }
   }
 );
@@ -196,14 +194,6 @@ Sentry.startSpan(
   async () => {
     const span = Sentry.getActiveSpan();
     const startTime = Date.now();
-    
-    // Record queue time if applicable
-    if (requestQueuedAt) {
-      const queueTime = startTime - requestQueuedAt;
-      if (span) {
-        span.setAttribute('llm.queue_time_ms', queueTime);
-      }
-    }
     
     try {
       // Check rate limits before processing
@@ -419,9 +409,10 @@ Sentry.startSpan(
       'outcome.output_size_bytes': 31457280  // 30MB
     }
   },
-  async () => {
+   async () => {
     // Job processing implementation
-  }
+   }
+ )
 );
 ```
 

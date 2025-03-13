@@ -13,14 +13,7 @@ The JavaScript SDK provides two main options for controlling the sampling rate:
 1. Uniform Sample Rate (`tracesSampleRate`)
 This option sets a fixed percentage of transactions to be captured:
 
-```javascript
-Sentry.init({
-  dsn: "https://examplePublicKey@o0.ingest.sentry.io/0",
-  integrations: [Sentry.browserTracingIntegration()],
-  // Capture 25% of all transactions
-  tracesSampleRate: 0.25
-});
-```
+<PlatformContent includePath="/tracing/sample-rate" />
 
 With `tracesSampleRate` set to `0.25`, approximately 25% of transactions will be recorded and sent to Sentry. This provides an even cross-section of transactions regardless of where in your app they occur.
 
@@ -33,33 +26,74 @@ For more granular control, you can use the `tracesSampler` function. This approa
 - Make sampling decisions based on transaction data
 - Control the inheritance of sampling decisions in distributed traces
 
+<PlatformContent includePath="/tracing/trace-sampler" />
+
+### Trace Sampler Examples
+
+1. Prioritizing Critical User Flows
+
 ```javascript
-Sentry.init({
-  dsn: "https://examplePublicKey@o0.ingest.sentry.io/0",
-  integrations: [Sentry.browserTracingIntegration()],
-  tracesSampler: (samplingContext) => {
-    // Access transaction details from the sampling context
-    const { name, attributes, inheritOrSampleWith } = samplingContext;
-    
-    // Skip health checks entirely
-    if (name.includes('healthcheck')) {
-      return 0;
-    }
-    
-    // Capture all auth-related transactions
-    if (name.includes('auth')) {
-      return 1;
-    }
-    
-    // Sample only 1% of comment-related transactions
-    if (name.includes('comment')) {
-      return 0.01;
-    }
-    
-    // For everything else, inherit parent sampling decision or use 0.5
-    return inheritOrSampleWith(0.5);
+tracesSampler: (samplingContext) => {
+  const { name, attributes } = samplingContext;
+  
+  // Sample all checkout transactions
+  if (name.includes('/checkout') || attributes?.flow === 'checkout') {
+    return 1.0;
   }
-});
+  
+  // Sample 50% of login transactions
+  if (name.includes('/login') || attributes?.flow === 'login') {
+    return 0.5;
+  }
+  
+  // Sample 10% of everything else
+  return 0.1;
+}
+```
+
+2. Handling Different Environments
+
+```javascript
+tracesSampler: (samplingContext) => {
+  // Sample all transactions in development
+  if (process.env.NODE_ENV === 'development') {
+    return 1.0;
+  }
+  
+  // Sample 5% in production
+  if (process.env.NODE_ENV === 'production') {
+    return 0.05;
+  }
+  
+  // Sample 20% in staging
+  return 0.2;
+}
+```
+
+3. Controlling Sampling Based on User or Transaction Properties
+
+```javascript
+tracesSampler: (samplingContext) => {
+  const { attributes, inheritOrSampleWith } = samplingContext;
+  
+  // Always sample for premium users
+  if (attributes?.userTier === 'premium') {
+    return 1.0;
+  }
+  
+  // Sample more transactions for users experiencing errors
+  if (attributes?.hasRecentErrors === true) {
+    return 0.8;
+  }
+  
+  // Sample less for high-volume, low-value paths
+  if (attributes?.path?.includes('/api/metrics')) {
+    return 0.01;
+  }
+  
+  // Default sampling rate
+  return inheritOrSampleWith(0.2);
+}
 ```
 
 ## The Sampling Context Object
@@ -150,74 +184,6 @@ webSocket.send(JSON.stringify({
     baggage: sentryBaggageHeader
   }
 }));
-```
-
-## Real-world Use Cases for Trace Samplers
-
-1. Prioritizing Critical User Flows
-
-```javascript
-tracesSampler: (samplingContext) => {
-  const { name, attributes } = samplingContext;
-  
-  // Sample all checkout transactions
-  if (name.includes('/checkout') || attributes?.flow === 'checkout') {
-    return 1.0;
-  }
-  
-  // Sample 50% of login transactions
-  if (name.includes('/login') || attributes?.flow === 'login') {
-    return 0.5;
-  }
-  
-  // Sample 10% of everything else
-  return 0.1;
-}
-```
-
-2. Handling Different Environments
-
-```javascript
-tracesSampler: (samplingContext) => {
-  // Sample all transactions in development
-  if (process.env.NODE_ENV === 'development') {
-    return 1.0;
-  }
-  
-  // Sample 5% in production
-  if (process.env.NODE_ENV === 'production') {
-    return 0.05;
-  }
-  
-  // Sample 20% in staging
-  return 0.2;
-}
-```
-
-3. Controlling Sampling Based on User or Transaction Properties
-
-```javascript
-tracesSampler: (samplingContext) => {
-  const { attributes, inheritOrSampleWith } = samplingContext;
-  
-  // Always sample for premium users
-  if (attributes?.userTier === 'premium') {
-    return 1.0;
-  }
-  
-  // Sample more transactions for users experiencing errors
-  if (attributes?.hasRecentErrors === true) {
-    return 0.8;
-  }
-  
-  // Sample less for high-volume, low-value paths
-  if (attributes?.path?.includes('/api/metrics')) {
-    return 0.01;
-  }
-  
-  // Default sampling rate
-  return inheritOrSampleWith(0.2);
-}
 ```
 
 ## Conclusion
