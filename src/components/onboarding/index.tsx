@@ -51,11 +51,29 @@ const optionDetails: Record<
     ),
   },
   'source-context': {
-    name: 'Source context',
+    name: 'Source Context',
     description: (
       <span>
         Upload your source code to allow Sentry to display snippets of your code next to
         the event stack traces.
+      </span>
+    ),
+  },
+  dsym: {
+    name: 'dSYM',
+    description: (
+      <span>
+        Debug symbols for iOS and macOS that provide the necessary information to convert
+        program addresses back to function names, source file names, and line numbers.
+      </span>
+    ),
+  },
+  'source-maps': {
+    name: 'Source Maps',
+    description: (
+      <span>
+        Source maps for web applications that help translate minified code back to the
+        original source for better error reporting.
       </span>
     ),
   },
@@ -71,6 +89,8 @@ const OPTION_IDS = [
   'profiling',
   'session-replay',
   'source-context',
+  'dsym',
+  'source-maps',
   'opentelemetry',
 ] as const;
 

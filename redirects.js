@@ -1035,6 +1035,30 @@ const userDocsRedirects = [
     destination: '/platforms/dart/guides/flutter/:path*',
   },
   {
+    source: '/platforms/dart/guides/flutter/upload-debug/',
+    destination: '/platforms/dart/guides/flutter/debug-symbols/',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/upload-debug/#when-to-upload',
+    destination: '/platforms/dart/guides/flutter/debug-symbols/#when-to-upload-debug-symbols',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/upload-debug/#source-context',
+    destination: '/platforms/dart/guides/flutter/debug-symbols/dart-plugin/#configuration',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/upload-debug/#uploading-source-code-context-for-flutter-android-ios-and-macos',
+    destination: '/platforms/dart/guides/flutter/debug-symbols/manual-upload/',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/upload-debug/#uploading-for-android-ndk',
+    destination: '/platforms/dart/guides/flutter/debug-symbols/manual-upload/#android-ndk',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/upload-debug/#automatically-upload-debug-symbols',
+    destination: '/dart/guides/flutter/debug-symbols/dart-plugin/',
+  },
+  {
     source: '/platforms/dart/guides/flutter/configuration/integrations/:path*',
     destination: '/platforms/dart/guides/flutter/integrations/:path*',
   },
