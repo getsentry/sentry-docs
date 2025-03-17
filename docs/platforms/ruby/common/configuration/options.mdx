@@ -101,6 +101,12 @@ Whether to capture local variables from the raised exceptions frame. (In older v
 
 </SdkOption>
 
+<SdkOption name="auto_session_tracking" type="Boolean" defaultValue="true">
+
+Track sessions in request/response cycles automatically.
+
+</SdkOption>
+
 <SdkOption name="max_breadcrumbs" type="Integer" defaultValue="100">
 
 The maximum number of breadcrumbs the SDK could hold.
@@ -130,9 +136,21 @@ config.breadcrumbs_logger = [:active_support_logger, :http_logger]
 
 </SdkOption>
 
+<SdkOption name="exclude_loggers" type="Array<String>" defaultValue="[]">
+
+Logger names to exclude from breadcrumbs.
+
+</SdkOption>
+
 <SdkOption name="context_lines" type="Integer" defaultValue="3">
 
 How many lines to display before/after the line where issue occurs.
+
+</SdkOption>
+
+<SdkOption name="linecache" type="Sentry::LineCache">
+
+You may provide your own `LineCache` for matching paths with source files to populate `context_lines`. This may be useful if you need to get source code from places other than the disk.
 
 </SdkOption>
 
@@ -196,9 +214,41 @@ config.enabled_patches.delete(:puma)
 
 </SdkOption>
 
+<SdkOption name="project_root" type="String" defaultValue="Dir.pwd">
+
+Project directory root for `in_app` detection. Set to `Rails.root` for Rails applications.
+
+</SdkOption>
+
+<SdkOption name="app_dirs_pattern" type="Regexp" defaultValue="/(bin|exe|app|config|lib|test|spec)/">
+
+Directories to be recognized as `in_app` in backtrace frames.
+
+</SdkOption>
+
+<SdkOption name="strip_backtrace_load_path" type="Boolean" defaultValue="true">
+
+Whether to strip the load path while constructing the backtrace frame filename.
+
+</SdkOption>
+
 <SdkOption name="skip_rake_integration" type="Boolean" defaultValue="false">
 
 Determine whether to ignore exceptions caused by rake integrations.
+
+</SdkOption>
+
+<SdkOption name="rack_env_whitelist" type="Array<String>" defaultValue='["REMOTE_ADDR", "SERVER_NAME", "SERVER_PORT"]'>
+
+Array of rack env parameters to be included in the event sent to sentry.
+
+</SdkOption>
+
+<SdkOption name="server_name" type="String">
+
+This option can be used to supply a server name sent in the event payload.
+
+If running on Heroku, it is set to `ENV["DYNO"]` otherwise set to `Socket.gethostname`.
 
 </SdkOption>
 
@@ -264,6 +314,12 @@ config.propagate_traces = false
 
 </SdkOption>
 
+<SdkOption name="instrumenter" type="Symbol" defaultValue=":sentry">
+
+The instrumenter to use, `:sentry` or `:otel` for [use with OpenTelemetry](../../tracing/instrumentation/opentelemetry).
+
+</SdkOption>
+
 ## Hooks
 
 The below options can be used to hook the SDK in various ways and customize how events are being reported.
@@ -300,6 +356,15 @@ end
 
 </SdkOption>
 
+<SdkOption name="before_breadcrumb" type="lambda | proc">
+
+This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When `nil` is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
+The callback typically gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
+
+<PlatformContent includePath="enriching-events/breadcrumbs/before-breadcrumb/" />
+
+</SdkOption>
+
 ## Transport Options
 
 <SdkOption name="background_worker_threads" type="Integer">
@@ -315,6 +380,12 @@ Or if you want to send events synchronously, set the value to 0:
 ```ruby
 config.background_worker_threads = 0
 ```
+
+</SdkOption>
+
+<SdkOption name="background_worker_max_queue" type="Integer" defaultValue="30">
+
+The maximum queue size for the background worker. Jobs will be rejected above this limit.
 
 </SdkOption>
 
@@ -352,5 +423,65 @@ Sentry.init do |config|
   }
 end
 ```
+
+</SdkOption>
+
+<SdkOption name="spotlight" type="Boolean | String" defaultValue="false">
+
+Whether to also capture events and traces into [Spotlight](https://spotlightjs.com/setup/other/).
+
+If you set this to true, Sentry will send events and traces to the local Sidecar proxy at `http://localhost:8969/stream`.
+
+If you want to use a different Sidecar proxy address, set this to String with the proxy URL.
+
+</SdkOption>
+
+## Cron Options
+
+<SdkOption name="default_checkin_margin" type="Integer" defaultValue="nil">
+
+How long (in minutes) after the expected checkin time we will wait until we consider the checkin to have been missed.
+
+```ruby
+config.cron.default_checkin_margin = 5
+```
+
+</SdkOption>
+
+<SdkOption name="default_max_runtime" type="Integer" defaultValue="nil">
+
+How long (in minutes) is the checkin allowed to be `in_progress` before it is considered failed.
+
+```ruby
+config.cron.default_max_runtime = 30
+```
+
+</SdkOption>
+
+<SdkOption name="default_timezone" type="String" defaultValue="nil">
+
+Database style timezone string for checkins.
+
+```ruby
+config.cron.default_timezone = "America/New_York"
+```
+
+</SdkOption>
+
+## Profiler Options
+
+<SdkOption name="profiles_sample_rate" type="Float" defaultValue="nil">
+
+A number between `0` and `1`, controlling the percentage chance a given sampled transaction will be profiled. (`0` represents 0% while `1` represents 100%.) Applies equally to all profiles created in the app. This is relative to the tracing sample rate - e.g. `0.5` means 50% of sampled transactions will be profiled.
+
+</SdkOption>
+
+<SdkOption name="profiler_class" type="Class" defaultValue="Sentry::Profiler">
+
+The profiler to use for collecting profiles.
+
+Set to `Sentry::Vernier::Profiler` when using `vernier` and `Sentry::Profiler` when using `stackprof`.
+
+See [the Profiling documentation](../../profiling) for setup instructions.
 
 </SdkOption>
