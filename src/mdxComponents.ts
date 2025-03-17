@@ -16,6 +16,7 @@ import {Expandable} from './components/expandable';
 import {GuideGrid} from './components/guideGrid';
 import {JsBundleList} from './components/jsBundleList';
 import {LambdaLayerDetail} from './components/lambdaLayerDetail';
+import {LinkToActivePlatform} from './components/linkToActivePlatform';
 import {LinkWithPlatformIcon} from './components/linkWithPlatformIcon';
 import {OnboardingOption, OnboardingOptionButtons} from './components/onboarding';
 import {OrgAuthTokenNote} from './components/orgAuthTokenNote';
@@ -66,6 +67,7 @@ export function mdxComponents(
     LambdaLayerDetail,
     Link: SmartLink,
     LinkWithPlatformIcon,
+    LinkToActivePlatform,
     OrgAuthTokenNote,
     PageGrid,
     ParamTable,
