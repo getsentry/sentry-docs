@@ -58,10 +58,12 @@ const provider = new NodeTracerProvider({
   // Ensure the correct subset of traces is sent to Sentry
   // This also ensures trace propagation works as expected
   sampler: sentryClient ? new SentrySampler(sentryClient) : undefined,
+  spanProcessors: [
+    // Ensure spans are correctly linked & sent to Sentry
+    new SentrySpanProcessor(),
+    // Add additional processors here
+  ],
 });
-
-// Ensure spans are correctly linked & sent to Sentry
-provider.addSpanProcessor(new SentrySpanProcessor());
 
 provider.register({
   // Ensure trace propagation works
