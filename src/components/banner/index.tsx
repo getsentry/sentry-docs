@@ -65,12 +65,6 @@ const BANNERS: BannerType[] = [
     linkURL: 'https://docs.sentry.io/product/explore/session-replay/mobile/',
     linkText: 'Get started today.',
   },
-  {
-    appearsOn: ['^/$'],
-    text: 'Ship it, break it, fix it—live! Hands-on workshop debugging with Lazar.',
-    linkURL: 'https://sentry.io/resources/instrument-monitor-fix-workshop/',
-    linkText: 'RSVP for March 12.',
-  },
 ];
 
 const LOCALSTORAGE_NAMESPACE = 'banner-manifest';
