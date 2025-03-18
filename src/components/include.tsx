@@ -5,6 +5,7 @@ import {getFileBySlug} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 
 import {PlatformContent} from './platformContent';
+import {PlatformIdentifier} from './platformIdentifier';
 
 type Props = {
   name: string;
@@ -26,7 +27,7 @@ export async function Include({name}: Props) {
   const {mdxSource} = doc;
   function MDXLayoutRenderer({mdxSource: source, ...rest}) {
     const MDXLayout = useMemo(() => getMDXComponent(source), [source]);
-    return <MDXLayout components={mdxComponents({Include, PlatformContent})} {...rest} />;
+    return <MDXLayout components={mdxComponents({Include, PlatformContent, PlatformIdentifier})} {...rest} />;
   }
   return <MDXLayoutRenderer mdxSource={mdxSource} />;
 }
