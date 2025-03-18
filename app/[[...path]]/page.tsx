@@ -10,7 +10,6 @@ import {DocPage} from 'sentry-docs/components/docPage';
 import {Home} from 'sentry-docs/components/home';
 import {Include} from 'sentry-docs/components/include';
 import {PlatformContent} from 'sentry-docs/components/platformContent';
-import {PlatformIdentifier} from 'sentry-docs/components/platformIdentifier';
 import {
   DocNode,
   getCurrentPlatformOrGuide,
