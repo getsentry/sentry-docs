@@ -14,6 +14,7 @@ import {DevDocsCardGrid} from './components/devDocsCardGrid';
 import DocImage from './components/docImage';
 import {Expandable} from './components/expandable';
 import {GuideGrid} from './components/guideGrid';
+import {Include} from './components/include';
 import {JsBundleList} from './components/jsBundleList';
 import {LambdaLayerDetail} from './components/lambdaLayerDetail';
 import {LinkWithPlatformIcon} from './components/linkWithPlatformIcon';
@@ -23,6 +24,7 @@ import {PageGrid} from './components/pageGrid';
 import {ParamTable} from './components/paramTable';
 import {PiiFields} from './components/piiFields';
 import {PlatformCategorySection} from './components/platformCategorySection';
+import {PlatformContent} from './components/platformContent';
 import {PlatformFilter} from './components/platformFilter';
 import {PlatformGrid} from './components/platformGrid';
 import {PlatformIdentifier} from './components/platformIdentifier';
@@ -62,6 +64,7 @@ export function mdxComponents(
     DefinitionList,
     Expandable,
     GuideGrid,
+    Include,
     JsBundleList,
     LambdaLayerDetail,
     Link: SmartLink,
@@ -70,6 +73,7 @@ export function mdxComponents(
     PageGrid,
     ParamTable,
     PiiFields,
+    PlatformContent,
     PlatformGrid,
     PlatformIdentifier,
     PlatformLink,
