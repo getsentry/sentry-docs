@@ -15,7 +15,6 @@ import {
 } from 'sentry-docs/versioning';
 
 import {Include} from './include';
-import {PlatformIdentifier} from './platformIdentifier';
 
 type Props = {
   includePath: string;
@@ -132,4 +131,4 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
   return <MDXLayoutRenderer mdxSource={mdxSource} />;
 }
 
-const mdxComponentsWithWrapper = mdxComponents({Include, PlatformContent, PlatformIdentifier});
+const mdxComponentsWithWrapper = mdxComponents({Include, PlatformContent});

@@ -46,7 +46,7 @@ export const dynamicParams = false;
 export const dynamic = 'force-static';
 
 const mdxComponentsWithWrapper = mdxComponents(
-  {Include, PlatformContent, PlatformIdentifier},
+  {Include, PlatformContent},
   ({children, frontMatter, nextPage, previousPage}) => (
     <DocPage frontMatter={frontMatter} nextPage={nextPage} previousPage={previousPage}>
       {children}
