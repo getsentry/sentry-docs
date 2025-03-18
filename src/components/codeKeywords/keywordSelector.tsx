@@ -150,7 +150,7 @@ export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
           </AnimatePresence>
         </span>
       </KeywordDropdown>
-      {isMounted &&
+      {isMounted && selector && 
         createPortal(<AnimatePresence>{selector}</AnimatePresence>, document.body)}
     </Fragment>
   );
