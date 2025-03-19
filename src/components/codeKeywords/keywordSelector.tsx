@@ -24,6 +24,7 @@ import {
   Selections,
 } from './styles.css';
 import {dropdownPopperOptions} from './utils';
+import {relative} from 'node:path/posix';
 
 type KeywordSelectorProps = {
   group: string;
@@ -137,6 +138,7 @@ export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
             // correctly overlap during animations, but this must be removed
             // after so copy-paste correctly works.
             display: isAnimating ? 'inline-grid' : undefined,
+            position: 'relative',
           }}
         >
           <AnimatePresence initial={false}>
@@ -148,6 +150,28 @@ export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
               {currentSelection[keyword]}
             </Keyword>
           </AnimatePresence>
+          {!isOpen && currentSelection?.title && (
+            <div
+              className='no-copy'
+              style={{
+                position: 'absolute',
+                top: '-24px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                fontSize: '12px',
+                backgroundColor: '#333',
+                color: '#fff',
+                padding: '2px 6px',
+                borderRadius: '3px',
+                pointerEvents: 'none',
+                whiteSpace: 'nowrap',
+                opacity: 0.9,
+                userSelect: 'none',
+              }}
+            >
+              {currentSelection.title}
+            </div>
+          )}
         </span>
       </KeywordDropdown>
       {isMounted &&

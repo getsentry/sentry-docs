@@ -14,6 +14,31 @@ export interface CodeBlockProps {
   title?: string;
 }
 
+/**
+ *
+ * Copy `element`'s text children as long as long as they are not `.no-copy`
+ */
+function getCopiableText(element: HTMLDivElement) {
+  let text = '';
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, {
+    acceptNode: function (node) {
+      // Skip if parent has .no-copy class
+      if (node.parentElement?.classList.contains('no-copy')) {
+        return NodeFilter.FILTER_REJECT;
+      }
+      return NodeFilter.FILTER_ACCEPT;
+    },
+  });
+
+  let node: Node | null;
+  // eslint-disable-next-line no-cond-assign
+  while ((node = walker.nextNode())) {
+    text += node.textContent;
+  }
+
+  return text.trim();
+}
+
 export function CodeBlock({filename, language, children}: CodeBlockProps) {
   const [showCopied, setShowCopied] = useState(false);
   const codeRef = useRef<HTMLDivElement>(null);
@@ -32,7 +57,9 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
       return;
     }
 
-    const code = cleanCodeSnippet(codeRef.current.innerText, {language});
+    const code = cleanCodeSnippet(getCopiableText(codeRef.current), {
+      language,
+    });
 
     try {
       await navigator.clipboard.writeText(code);
