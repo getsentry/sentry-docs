@@ -219,6 +219,10 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/platforms/php/configuration/integrations/',
+    destination: '/platforms/php/integrations/',
+  },
+  {
     source: '/platforms/javascript/enriching-events/error-tracing/',
     destination: '/platforms/javascript/enriching-events/',
   },
@@ -974,10 +978,6 @@ const userDocsRedirects = [
     destination: '/platforms/kotlin/guides/kotlin-multiplatform/:path*',
   },
   {
-    source: '/product/explore/feature-flags/:path*',
-    destination: '/product/issues/issue-details/feature-flags/:path*',
-  },
-  {
     source: '/platforms/python/:productfeature/troubleshooting/:path*',
     destination: '/platforms/python/troubleshooting/:path*',
   },
@@ -996,6 +996,75 @@ const userDocsRedirects = [
   {
     source: '/platforms/php/:productfeature/troubleshooting/:path*',
     destination: '/platforms/php/troubleshooting/:path*',
+  },
+   {
+    source: '/product/explore/feature-flags/:path*',
+    destination: '/product/issues/issue-details/feature-flags/:path*',
+  },
+  {
+    source: '/product/explore/metrics/:path*',
+    destination: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    source: '/product/tracing/:path*',
+    destination: '/concepts/key-terms/tracing/:path*',
+  },
+  // Redirects for JavaScript tracing docs 
+  {
+    source: '/platforms/javascript/tracing/trace-propagation/:path*',
+    destination: '/platforms/javascript/tracing/distributed-tracing/:path*',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/tracing/instrumentation/performance-metrics/',
+    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/performance-metrics/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/tracing/trace-propagation/:path*',
+    destination: '/platforms/javascript/guides/:guide/tracing/distributed-tracing/:path*',
+  },
+  {
+    source: '/platforms/javascript/tracing/instrumentation/custom-instrumentation/:path*',
+    destination: '/platforms/javascript/tracing/instrumentation/:path*',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/tracing/instrumentation/custom-instrumentation/:path*',
+    destination: '/platforms/javascript/guides/:guide/tracing/instrumentation/:path*',
+  },
+  {
+    source: '/platforms/flutter/:path*',
+    destination: '/platforms/dart/guides/flutter/:path*',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/upload-debug/',
+    destination: '/platforms/dart/guides/flutter/debug-symbols/',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/upload-debug/#when-to-upload',
+    destination: '/platforms/dart/guides/flutter/debug-symbols/#when-to-upload-debug-symbols',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/upload-debug/#source-context',
+    destination: '/platforms/dart/guides/flutter/debug-symbols/dart-plugin/#configuration',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/upload-debug/#uploading-source-code-context-for-flutter-android-ios-and-macos',
+    destination: '/platforms/dart/guides/flutter/debug-symbols/manual-upload/',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/upload-debug/#uploading-for-android-ndk',
+    destination: '/platforms/dart/guides/flutter/debug-symbols/manual-upload/#android-ndk',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/upload-debug/#automatically-upload-debug-symbols',
+    destination: '/dart/guides/flutter/debug-symbols/dart-plugin/',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/configuration/integrations/:path*',
+    destination: '/platforms/dart/guides/flutter/integrations/:path*',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/usage/advanced-usage/:path*',
+    destination: '/platforms/dart/guides/flutter/troubleshooting/:path*',
   },
 ];
 

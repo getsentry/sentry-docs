@@ -126,6 +126,7 @@ import Stride3dSVG from 'platformicons/svg/stride3d.svg';
 import SvelteSVG from 'platformicons/svg/svelte.svg';
 import SwiftSVG from 'platformicons/svg/swift.svg';
 import SymfonySVG from 'platformicons/svg/symfony.svg';
+import TanstackSVG from 'platformicons/svg/tanstack.svg';
 import TornadoSVG from 'platformicons/svg/tornado.svg';
 import TrytonSVG from 'platformicons/svg/tryton.svg';
 import UnitySVG from 'platformicons/svg/unity.svg';
@@ -265,6 +266,7 @@ import Stride3dSVGLarge from 'platformicons/svg_80x80/stride3d.svg';
 import SvelteSVGLarge from 'platformicons/svg_80x80/svelte.svg';
 import SwiftSVGLarge from 'platformicons/svg_80x80/swift.svg';
 import SymfonySVGLarge from 'platformicons/svg_80x80/symfony.svg';
+import TanstackSVGLarge from 'platformicons/svg_80x80/tanstack.svg';
 import TornadoSVGLarge from 'platformicons/svg_80x80/tornado.svg';
 import TrytonSVGLarge from 'platformicons/svg_80x80/tryton.svg';
 import UnitySVGLarge from 'platformicons/svg_80x80/unity.svg';
@@ -795,6 +797,10 @@ const formatToSVG = {
     sm: SymfonySVG,
     lg: SymfonySVGLarge,
   },
+  tanstack: {
+    sm: TanstackSVG,
+    lg: TanstackSVGLarge,
+  },
   tornado: {
     sm: TornadoSVG,
     lg: TornadoSVGLarge,
@@ -855,6 +861,7 @@ export const PLATFORM_TO_ICON = {
   csharp: 'csharp',
   'csharp-aspnetcore': 'csharp',
   dart: 'dart',
+  'dart-flutter': 'flutter',
   default: 'default',
   dotnet: 'dotnet',
   'dotnet-aspnetcore': 'dotnetcore',
@@ -931,6 +938,7 @@ export const PLATFORM_TO_ICON = {
   'javascript-solidstart': 'solidstart',
   'javascript-svelte': 'svelte',
   'javascript-sveltekit': 'svelte',
+  'javascript-tanstackstart-react': 'tanstack',
   'javascript-vue': 'vue',
   'javascript-wasm': 'wasm',
   ionic: 'ionic',

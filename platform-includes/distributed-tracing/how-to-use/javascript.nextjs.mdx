@@ -1,6 +1,6 @@
 If you're using the current version of our Next.js SDK, distributed tracing will work out of the box for the client, server, and edge runtimes.
 
-For client-side you might have to define `tracePropagationTargets` to get around possible [Browser CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) issues.
+For client-side, when you are interacting with other external API systems, you might have to define `tracePropagationTargets` to get around possible [Browser CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) issues.
 
 ```javascript
 // sentry.client.config.js
@@ -12,6 +12,56 @@ Sentry.init({
 ```
 
 If you're using version `7.57.x` or below, you'll need to have our <PlatformLink to="/tracing/">tracing feature enabled</PlatformLink> in order for distributed tracing to work.
+
+### Trace Propagation Examples
+
+#### Example 1: Microservices E-commerce Platform
+
+```javascript
+// sentry.client.config.js
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.browserTracingIntegration()],
+  tracePropagationTargets: [
+    "https://api.myecommerce.com",
+    "https://auth.myecommerce.com",
+    /^\/internal-api\//
+  ],
+});
+```
+
+This tells Sentry to track user journeys across three places:
+
+* Your main API server (where product data comes from)
+* Your authentication server (where logins happen)
+* Any API calls that start with "/internal-api/" on your current domain
+
+This way, if a customer experiences an error during checkout, you can see the complete path their request took across these different services.
+
+#### Example 2: Mobile App with Backend Services
+
+```javascript
+// sentry.client.config.js
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.browserTracingIntegration()],
+  // Capture 100% of spans. This is useful for development and debugging. Consider reducing in production or using traceSampler
+  tracesSampleRate: 1.0,
+  tracePropagationTargets: [
+    "https://api.myapp.com",
+    "https://media.myapp.com",
+    /^\/local-api\//
+  ],
+});
+```
+
+This configuration lets your app track user actions across:
+
+* Your main API server (handles most app functions)
+* Your media server (handles images, videos, etc.)
+* Any local API endpoints in your app
+
+If your app crashes while a user is uploading a photo, you can trace exactly where the problem occurred - in the app itself, the main API, or the media service.
 
 ### Disabling Distributed Tracing
 
