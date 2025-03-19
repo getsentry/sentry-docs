@@ -24,7 +24,6 @@ import {
   Selections,
 } from './styles.css';
 import {dropdownPopperOptions} from './utils';
-import {relative} from 'node:path/posix';
 
 type KeywordSelectorProps = {
   group: string;
@@ -152,7 +151,7 @@ export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
           </AnimatePresence>
           {!isOpen && currentSelection?.title && (
             <div
-              className='no-copy'
+              className="no-copy"
               style={{
                 position: 'absolute',
                 top: '-24px',
