@@ -7,7 +7,7 @@ import {matchSorter, rankings} from 'match-sorter';
 import Link from 'next/link';
 
 import {type Platform} from 'sentry-docs/types';
-import {splitToChunks, uniqByReference} from 'sentry-docs/utils';
+import {uniqByReference} from 'sentry-docs/utils';
 
 import styles from './style.module.scss';
 
@@ -70,19 +70,18 @@ export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
     return matches_;
   }, [filter, platformsAndGuides]);
 
-  const platformColumns: Platform[][] = splitToChunks(
-    3,
-    uniqByReference(matches.map(x => (x.type === 'platform' ? x : x.platform))).map(p => {
-      return {
-        ...p,
-        guides: matches
-          .filter(m => m.type === 'guide' && m.platform.key === p.key)
-          .map(m => p.guides.find(g => g.key === m.key)!)
-          .filter(Boolean),
-        integrations: p.integrations.filter(i => matches.some(m => m.key === i.key)),
-      };
-    })
-  );
+  const filteredPlatforms: Platform[] = uniqByReference(
+    matches.map(x => (x.type === 'platform' ? x : x.platform))
+  ).map(p => {
+    return {
+      ...p,
+      guides: matches
+        .filter(m => m.type === 'guide' && m.platform.key === p.key)
+        .map(m => p.guides.find(g => g.key === m.key)!)
+        .filter(Boolean),
+      integrations: p.integrations.filter(i => matches.some(m => m.key === i.key)),
+    };
+  });
 
   return (
     <div>
@@ -133,41 +132,38 @@ export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
           />
         </div>
       </div>
-      {matches.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {platformColumns.map((column, i) => (
-            <div key={i} className={`flex flex-col gap-4 ${styles.platform}`}>
-              {column.map(platform =>
-                platform.guides.length === 0 && platform.integrations.length === 0 ? (
-                  <Link
-                    href={platform.url}
-                    key={platform.key}
-                    style={{
-                      textDecoration: 'none',
-                      color: 'var(--foreground) !important',
-                    }}
-                  >
-                    <div className={styles.StandalonePlatform}>
-                      <PlatformIcon
-                        size={20}
-                        platform={platform.icon ?? platform.key}
-                        format="lg"
-                        className={`${styles.PlatformIcon} !border-none !shadow-none`}
-                      />
-                      {platform.title}
-                    </div>
-                  </Link>
-                ) : (
-                  <PlatformWithGuides
-                    key={platform.key}
-                    platform={platform}
-                    // force expand if the filter is long enough to have few results
-                    forceExpand={filter.length >= 2}
+      {filteredPlatforms.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-min">
+          {filteredPlatforms.map(platform =>
+            platform.guides.length === 0 && platform.integrations.length === 0 ? (
+              <Link
+                href={platform.url}
+                key={platform.key}
+                style={{
+                  textDecoration: 'none',
+                  color: 'var(--foreground) !important',
+                }}
+                className="self-start"
+              >
+                <div className={styles.StandalonePlatform}>
+                  <PlatformIcon
+                    size={20}
+                    platform={platform.icon ?? platform.key}
+                    format="lg"
+                    className={`${styles.PlatformIcon} !border-none !shadow-none`}
                   />
-                )
-              )}
-            </div>
-          ))}
+                  {platform.title}
+                </div>
+              </Link>
+            ) : (
+              <PlatformWithGuides
+                key={platform.key}
+                platform={platform}
+                // force expand if the filter is long enough to have few results
+                forceExpand={filter.length >= 2}
+              />
+            )
+          )}
         </div>
       )}
       {!matches.length && (
