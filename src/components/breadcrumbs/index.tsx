@@ -22,7 +22,9 @@ export function Breadcrumbs({leafNode}: BreadcrumbsProps) {
         const to = n.path === '/' ? n.path : `/${n.path}/`;
         return (
           <li className={styles['breadcrumb-item']} key={n.path}>
-            <SmartLink to={to}>{n.frontmatter.topLevelAlias ?? n.frontmatter.title}</SmartLink>
+            <SmartLink to={to}>
+              {n.frontmatter.topLevelAlias ?? n.frontmatter.title}
+            </SmartLink>
           </li>
         );
       })}
