@@ -4,7 +4,7 @@ sidebar_order: 1
 description: "Learn how to set up the SDK manually."
 ---
 
-If you can't (or prefer not to) run the <PlatformLink to="/#install">automatic setup</PlatformLink>, you can follow the instructions below to configure the Sentry SvelteKit SDK in your application. This guide is also useful to adjust the pre-set configuration if you used the installation wizard for automatic setup.
+If you can't (or prefer not to) run the <PlatformLink to="/#install">automatic setup</PlatformLink>, you can follow the instructions below to configure the Sentry Nuxt SDK in your application. This guide is also useful to adjust the pre-set configuration if you used the installation wizard for automatic setup.
 
 ## Compatibility
 
@@ -190,4 +190,77 @@ the Sentry Nuxt Module respects these when they are explicitly defined.
 
 This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
 
-<PlatformContent includePath="getting-started-verify" />
+### Server-side
+
+Sentry can only be loaded on the server-side by being explicitly added via `--import`.
+Check out the <PlatformLink to="/install/cli-import">`--import` CLI flag</PlatformLink> docs for setup instructions.
+
+To verify that Sentry works on the server-side, add the following snippet on the server-side:
+
+```js {tabTitle:Nitro} {filename:server/api/sentry-example.get.ts}
+export default defineEventHandler(event => {
+  throw new Error("Sentry Example API Route Error");
+});
+```
+
+If you want to test server-side monitoring locally, build your project and run:
+  ```
+  # Start your app after building your project with `nuxi build`
+  node --import ./.output/server/sentry.server.config.mjs .output/server/index.mjs
+  ```
+
+<Alert level="warning">
+  Sentry server-side monitoring **doesn't work in development mode!**
+
+  If you experience any issues with the server-side setup, check out <PlatformLink to="/troubleshooting">Troubleshooting</PlatformLink>
+  or read through the different <PlatformLink to="/install">installation methods</PlatformLink>.
+</Alert>
+
+### Client-side
+
+Add the following snippet on the client-side:
+
+```html {tabTitle:Vue} {filename:pages/example-error.vue}
+<script setup>
+  import * as Sentry from '@sentry/nuxt';
+
+  function triggerClientError() {
+    throw new Error("Nuxt Button Error");
+  };
+
+  function getSentryData() {
+    Sentry.startSpan(
+      {
+        name: 'Example Frontend Span',
+        op: 'test'
+      },
+      async () => {
+        await $fetch('/api/sentry-example');
+      }
+    )
+  }
+</script>
+
+<template>
+  <button id="errorBtn" @click="triggerClientError">
+    Throw Client Error
+  </button>
+  <button type="button" @click="getSentryData">
+    Throw Server Error
+  </button>
+</template>
+```
+
+<Alert>
+
+  Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+
+</Alert>
+
+To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+
+## Next Steps
+
+- Track your Vue Components or your Pinia store by [adding support for client features](/platforms/javascript/guides/nuxt/features/)
+- In case you experience any issues during setup or startup, check out <PlatformLink to="/troubleshooting">Troubleshooting</PlatformLink>
+or read through the different <PlatformLink to="/install">installation methods</PlatformLink>.

@@ -111,7 +111,7 @@ export function OrgAuthTokenCreator() {
   }
 
   if (tokenState.status === 'success') {
-    return <Fragment>{tokenState.token}</Fragment>;
+    return <span className="whitespace-pre-wrap break-all">{tokenState.token}</span>;
   }
 
   if (tokenState.status === 'error') {

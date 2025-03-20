@@ -56,7 +56,7 @@ const BANNERS: BannerType[] = [
   },
   {
     appearsOn: [
-      '^/platforms/flutter/',
+      '^/platforms/dart/guides/flutter/',
       '^/platforms/react-native/',
       '^/platforms/android/',
       '^/platforms/apple/guides/ios/',
@@ -64,12 +64,6 @@ const BANNERS: BannerType[] = [
     text: 'Session Replay is now generally available for mobile.',
     linkURL: 'https://docs.sentry.io/product/explore/session-replay/mobile/',
     linkText: 'Get started today.',
-  },
-  {
-    appearsOn: ['^/$'],
-    text: 'Ship it, break it, fix it—live! Hands-on workshop debugging with Lazar.',
-    linkURL: 'https://sentry.io/resources/instrument-monitor-fix-workshop/',
-    linkText: 'RSVP for March 12.',
   },
 ];
 
