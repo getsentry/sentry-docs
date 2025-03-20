@@ -253,6 +253,7 @@ function nodeToPlatform(n: DocNode): Platform {
   const caseStyle = platformData?.case_style || n.frontmatter.caseStyle;
   const guides = extractGuides(n);
   const integrations = extractIntegrations(n);
+  const topLevelAlias = n.frontmatter.topLevelAlias;
 
   return {
     key: n.slug,
@@ -267,6 +268,7 @@ function nodeToPlatform(n: DocNode): Platform {
     keywords: n.frontmatter.keywords,
     guides,
     integrations,
+    topLevelAlias,
   };
 }
 

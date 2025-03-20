@@ -130,11 +130,14 @@ export interface PlatformConfig {
    * Is this a first-party or third-party SDK?
    */
   supportLevel?: PlatformSupportLevel;
-
   /**
    * The human readable name of the platform.
    */
   title?: string;
+  /**
+   * Alias for the top level platform name.
+   */
+  topLevelAlias?: string;
 }
 
 /**

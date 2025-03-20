@@ -62,7 +62,7 @@ export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
       return platformsAndGuides;
     }
     // any of these fields can be used to match the search value
-    const keys = ['title', 'aliases', 'name', 'sdk', 'keywords'];
+    const keys = ['title', 'aliases', 'name', 'sdk', 'keywords', 'topLevelAlias'];
     const matches_ = matchSorter(platformsAndGuides, filter, {
       keys,
       threshold: rankings.CONTAINS,
@@ -213,7 +213,7 @@ function PlatformWithGuides({
               format="lg"
               className={`${styles.PlatformIcon} !border-none !shadow-none`}
             />
-            {platform.title}
+            {platform.topLevelAlias ?? platform.title}
           </div>
           <button className={styles.ChevronButton}>
             <TriangleRightIcon

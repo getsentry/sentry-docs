@@ -92,7 +92,9 @@ export function PlatformSelector({
 
   const router = useRouter();
   const onPlatformChange = (platformKey: string) => {
-    const platform_ = platformsAndGuides.find(platform => platform.key === platformKey);
+    const platform_ = platformsAndGuides.find(
+      platform => platform.key === platformKey.replace('-redirect', '')
+    );
     if (platform_) {
       localStorage.setItem('active-platform', platform_.key);
       router.push(platform_.url);
@@ -277,8 +279,17 @@ function PlatformItem({
       isLastGuide: i === guides.length - 1,
     }));
 
+  const isPlatformWithGuidesAndTopLevelAlias =
+    platform.guides.length > 0 && !!platform.topLevelAlias;
+
   const guides = platform.isExpanded
-    ? markLastGuide(platform.guides.length > 0 ? platform.guides : platform.integrations)
+    ? markLastGuide(
+        platform.guides.length > 0
+          ? isPlatformWithGuidesAndTopLevelAlias
+            ? [platform as unknown as PlatformGuide, ...platform.guides]
+            : platform.guides
+          : platform.integrations
+      )
     : [];
 
   return (
@@ -288,7 +299,11 @@ function PlatformItem({
         <RadixSelect.Label className="flex">
           <Fragment>
             <RadixSelect.Item
-              value={platform.key}
+              value={
+                isPlatformWithGuidesAndTopLevelAlias
+                  ? `${platform.key}-redirect`
+                  : platform.key
+              }
               asChild
               className={styles.item}
               data-platform-with-guides
@@ -303,7 +318,7 @@ function PlatformItem({
                       format="sm"
                       className={styles['platform-icon']}
                     />
-                    {platform.title}
+                    {platform.topLevelAlias ?? platform.title}
                   </span>
                 </RadixSelect.ItemText>
               </ComboboxItem>
@@ -327,7 +342,7 @@ function PlatformItem({
         </RadixSelect.Label>
       </RadixSelect.Group>
       {guides.map(guide => {
-        return <GuideItem key={guide.key} guide={guide} />;
+        return <GuideItem key={guide.key + '-guide'} guide={guide} />;
       })}
     </Fragment>
   );
@@ -339,7 +354,7 @@ type GuideItemProps = {
 function GuideItem({guide}: GuideItemProps) {
   return (
     <RadixSelect.Item
-      key={guide.key}
+      key={guide.key + '-guide'}
       value={guide.key}
       asChild
       className={styles.item}
