@@ -115,7 +115,8 @@ export function SidebarTableOfContents() {
     // account for the header height
     const rootMarginTop = 100;
     // element is consiered in view if it is in the top 1/3 of the screen
-    const rootMarginBottom = (2 / 3) * window.innerHeight - rootMarginTop;
+    const rootMarginBottomRaw = (2 / 3) * window.innerHeight - rootMarginTop;
+    const rootMarginBottom = Math.floor(rootMarginBottomRaw);
     const observerOptions = {
       rootMargin: `${rootMarginTop}px 0px -${rootMarginBottom}px 0px`,
       threshold: 1,
