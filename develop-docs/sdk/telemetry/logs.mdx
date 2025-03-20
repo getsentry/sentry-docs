@@ -15,61 +15,59 @@ This document defines the format used by Sentry to ingest logs, as well as the S
 
 There are two ways to send logs to Sentry: via the `log` envelope and Sentry Log protocol (preferred), or the `otel_log` envelope and OpenTelemetry Log protocol.
 
-### `otel_log` Envelope Item Payload
+All SDKs are required to send logs via the `log` envelope and Sentry Log protocol. The `otel_log` envelope and OpenTelemetry Log protocol are just documented for completeness and to provide a reference for SDK authors. See the [Appendix A](#appendix-a-otel_log-envelope-item-payload) for the `otel_log` envelope item payload.
 
-The `otel_log` envelope item payload is a JSON object that represents an OpenTelemetry Log. Multiple `otel_log` envelope items can be sent in a single envelope.
+### `log` Envelope Item Payload
+
+The `log` envelope item payload is a JSON object that represents a Sentry Log. Multiple `log` envelope items can be sent in a single envelope.
 
 ```json
 {
-  "severity_text": "info",
-  "body": {
-    "string_value": "User John has logged in!"
-  },
-  "attributes": [
-    {
-      "key": "sentry.message.template",
-      "value": { "string_value": "User %s has logged in!" }
+  "timestamp": 1544719860.0,
+  "trace_id": "5b8efff798038103d269b633813fc60c",
+  "level": "info",
+  "body": "User John has logged in!",
+  "attributes": {
+    "sentry.message.template": {
+      "string_value": "User %s has logged in!"
     },
-    {
-      "key": "sentry.message.parameters.0",
-      "value": { "string_value": "John" }
+    "sentry.message.parameters.0": {
+      "string_value": "John"
+    },
+    "sentry.environment": {
+      "string_value": "production"
+    },
+    "sentry.release": {
+      "string_value": "1.0.0"
+    },
+    "sentry.trace.parent_span_id": {
+      "string_value": "b0e6f15b45c36b12"
     }
-  ],
-  "time_unix_nano": "1741191250694000000",
-  "trace_id": "edec519707974fc8bfccb5a017e17394",
-  "severity_number": 9
+  }
 }
 ```
 
 It consists of the following fields:
 
-`severity_text`
+`timestamp`
 
-: **String, required**. The severity level of the log. One of `trace`, `debug`, `info`, `warn`, `error`, `fatal` (in order of lowest to highest).
-
-`severity_number`
-
-: **Integer, optional**. The severity number of the log. See [Log Severity Number](#log-severity-number) for more information.
+: **Number, required**. The timestamp of the log in seconds since the Unix epoch.
 
 `trace_id`
 
-: **Integer, optional**. [HEAVILY RECOMMENDED] The trace id of the log. SDKs should attempt to set this if possible. This is used to link logs to traces and errors in Sentry.
+: **String, required**. The trace id of the log.
+
+`level`
+
+: **String, required**. The severity level of the log. One of `trace`, `debug`, `info`, `warn`, `error`, `fatal` (in order of lowest to highest).
 
 `body`
 
-: **Object, required**. The log body/message.
-
-Example:
-
-```json
-{
-  "string_value": "Added item to shopping cart"
-}
-```
+: **String, required**. The log body/message.
 
 `attributes`
 
-: **Array\<Object\>, optional**. A dictionary of key-value pairs of arbitrary data attached to the log. Attributes must also declare the type of the value. The following types are supported: `string`, `number`, `boolean`, `integer`, `double`.
+: **Object, optional**. A dictionary of key-value pairs of arbitrary data attached to the log. Attributes must also declare the type of the value. The following types are supported: `string`, `boolean`, `integer`, `double`.
 
 Note: `intValue` is a string because JSON only recognizes numbers as floating point values.
 
@@ -77,48 +75,30 @@ Example:
 
 ```json
 {
-  "attributes": [
-    {
-      "key": "string_item",
-      "value": {
-        "stringValue": "value"
-      }
+  "attributes": {
+    "string_item": {
+      "stringValue": "value"
     },
-    {
-      "key": "integer_item",
-      "value": {
-        "intValue": "123"
-      }
+    "integer_item": {
+      "intValue": "123"
     },
-    {
-      "key": "boolean_value",
-      "value": {
-        "boolValue": false
-      }
+    "boolean_item": {
+      "boolValue": true
     },
-    {
-      "key": "double_item",
-      "value": {
-        "doubleValue": "value"
-      }
+    "double_item": {
+      "doubleValue": 123.456
     }
-  ]
+  }
 }
 ```
 
-`time_unix_nano`
+`severity_number`
 
-: **String, optional**. The time the log was created in Unix nanoseconds. If not set, the SDK should set this to the current time.
-
-### `log` Envelope Item Payload
-
-The `log` envelope item payload is a JSON object that represents a log.
-
-TODO: Document `log` Envelope Item Payload once finalized.
+: **Integer, optional**. The severity number of the log. See [Log Severity Number](#log-severity-number) for more information. This is inferenced from `level` unless explicitly set.
 
 ### Log Severity Level
 
-The log severity level is a string that represents the severity of the log. The Sentry's default log severity level maps exactly to [OpenTelemetry's Severity text field](https://opentelemetry.io/docs/specs/otel/logs/data-model/#field-severitytext) on the OpenTelemetry Logs Spec..
+The log severity level is a string that represents the severity of the log. The Sentry's default log severity level maps exactly to [OpenTelemetry's Severity text field](https://opentelemetry.io/docs/specs/otel/logs/data-model/#field-severitytext) on the OpenTelemetry Logs Spec.
 
 - `trace`
 - `debug`
@@ -379,3 +359,98 @@ Beyond these attributes, we are exploring if the SDK should also send OS, user, 
 SDKs should aim to have it so that console/logger integrations create logs as per the appropriate log level if `enableSentryLogs` is set to true. Examples of this include JavaScript's `console` methods and Pythons `logging` standard library.
 
 If SDK authors feel the need, they can also introduce additional options to beyond `enableSentryLogs` to gate this functionality. For example an option to control log appenders added via external config like with `Log4j` in the Java SDK.
+
+## Appendix A: `otel_log` Envelope Item Payload
+
+The `otel_log` envelope item payload is a JSON object that represents an OpenTelemetry Log. Multiple `otel_log` envelope items can be sent in a single envelope.
+
+```json
+{
+  "severity_text": "info",
+  "body": {
+    "string_value": "User John has logged in!"
+  },
+  "attributes": [
+    {
+      "key": "sentry.message.template",
+      "value": { "string_value": "User %s has logged in!" }
+    },
+    {
+      "key": "sentry.message.parameters.0",
+      "value": { "string_value": "John" }
+    }
+  ],
+  "time_unix_nano": "1741191250694000000",
+  "trace_id": "edec519707974fc8bfccb5a017e17394",
+  "severity_number": 9
+}
+```
+
+It consists of the following fields:
+
+`severity_text`
+
+: **String, required**. The severity level of the log. One of `trace`, `debug`, `info`, `warn`, `error`, `fatal` (in order of lowest to highest).
+
+`severity_number`
+
+: **Integer, optional**. The severity number of the log. See [Log Severity Number](#log-severity-number) for more information.
+
+`trace_id`
+
+: **Integer, optional**. [HEAVILY RECOMMENDED] The trace id of the log. SDKs should attempt to set this if possible. This is used to link logs to traces and errors in Sentry.
+
+`body`
+
+: **Object, required**. The log body/message.
+
+Example:
+
+```json
+{
+  "string_value": "Added item to shopping cart"
+}
+```
+
+`attributes`
+
+: **Array\<Object\>, optional**. A dictionary of key-value pairs of arbitrary data attached to the log. Attributes must also declare the type of the value. The following types are supported: `string`, `number`, `boolean`, `integer`, `double`.
+
+Note: `intValue` is a string because JSON only recognizes numbers as floating point values.
+
+Example:
+
+```json
+{
+  "attributes": [
+    {
+      "key": "string_item",
+      "value": {
+        "stringValue": "value"
+      }
+    },
+    {
+      "key": "integer_item",
+      "value": {
+        "intValue": "123"
+      }
+    },
+    {
+      "key": "boolean_value",
+      "value": {
+        "boolValue": false
+      }
+    },
+    {
+      "key": "double_item",
+      "value": {
+        "doubleValue": "value"
+      }
+    }
+  ]
+}
+```
+
+`time_unix_nano`
+
+: **String, optional**. The time the log was created in Unix nanoseconds. If not set, the SDK should set this to the current time.
