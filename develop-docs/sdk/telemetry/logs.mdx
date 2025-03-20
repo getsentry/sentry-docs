@@ -153,9 +153,7 @@ At the current moment, logs are not sampled so no sampling configuration needs t
 
 ### Logger Module
 
-At minimum the SDK needs to implement the following two items to be considered to have a complete logging public API:
-
-1. `Sentry.logger.X` (where `X` is the log level): The log levels are `trace`, `debug`, `info`, `warn`, `error`, and `fatal`, which is specced out by the [protocol below](#log-severity-level).
+At minimum the SDK needs to implement the `Sentry.logger.X` (where `X` is the log level) methods. The log levels are `trace`, `debug`, `info`, `warn`, `error`, and `fatal`, which is specced out by the [protocol below](#log-severity-level).
 
 - `Sentry.logger.trace`
 - `Sentry.logger.debug`
@@ -177,28 +175,7 @@ Sentry.logger.warn("User %s performed action %s", [userId, actionName], {
 
 Aside from accepting attributes, these methods can be overloaded to accept severity number or other parameters if required for the language or platform.
 
-2. `Sentry.logger.emit`: A more verbose version of the `Sentry.logger.X` methods that accepts a log object/dictionary for maximum customizability. This is only meant to be used by power users, who want full control over what exactly is being set. Note that this API aligns with [OTEL's default logging API](https://opentelemetry.io/docs/specs/otel/logs/api/#emit-a-logrecord) as well, which gives us flexibility to align on those in the future.
-
-Emit should take the following parameters:
-
-- `level`: The log severity level of the log. One of `trace`, `debug`, `info`, `warn`, `error`, `fatal`.
-- `message`: The log body
-- `attributes`: An object/dictionary of key-value pairs of arbitrary data attached to the log. This should not be a nested data structure. If a object or dictionary is passed in, SDKs can choose to either disregard the attribute, or serialize the object into a string.
-- `severityNumber`: An optional integer that represents the severity of the log. See [Log Severity Number](#log-severity-number) for more information.
-
-```js
-Sentry.logger.emit({
-  level: "info",
-  message: "Adding item for user",
-  attributes: {
-    itemId,
-    userId,
-  },
-  severityNumber: 11,
-});
-```
-
-Beyond the two specified sets of methods, SDKs are free to add any extra helpers as they feel is necessary. For example, they could choose to add specialized decorators or helpers for string template creation.
+Beyond the specified methods, SDKs are free to add any extra helpers as they feel is necessary. For example, they could choose to add specialized decorators or helpers for string template creation.
 
 Below are some example SDK implementations to get you started. These are not finalized versions of the API and individual SDK authors should ensure the logging APIs best fit their platforms. When an SDK implements the logging API, this section should be updated with the SDK's specific implementation.
 
@@ -212,16 +189,6 @@ Sentry.logger.info(Sentry.logger.fmt`Adding item ${itemId} for user ${userId}`);
 Sentry.logger.info("Adding item %s for user %s", [itemId, userId], {
   extra: 123,
 });
-
-Sentry.logger.emit({
-  level: "info",
-  message: "Adding item for user",
-  attributes: {
-    itemId,
-    userId,
-    extra: 123,
-  },
-});
 ```
 
 #### Python
@@ -229,16 +196,6 @@ Sentry.logger.emit({
 ```python
 # With f-string like syntax
 Sentry.logger.info('Adding item {item} for user {user}', item=item_id, user=user_id, attributes={ 'extra': 123 });
-
-Sentry.logger.emit(
-  level='info',
-  message='Adding item for user',
-  attributes={
-    'item_id': item_id,
-    'user_id': user_id,
-    extra: 123
-  },
-)
 ```
 
 #### PHP
@@ -247,16 +204,6 @@ Sentry.logger.emit(
 use function Sentry\logger;
 
 logger()->info('Adding item %s for user %s', [$item_id, $user_id], ['extra' => 123]);
-
-logger()->emit(
-  level: LogLevel::info(),
-  message: 'Adding item for user',
-  attributes: [
-    'item_id': item_id,
-    'user_id': user_id,
-    'extra': 123
-  ],
-);
 ```
 
 #### Java
@@ -265,28 +212,12 @@ logger()->emit(
 import io.sentry.Sentry;
 
 // example with MessageFormat based string template
-Sentry.logger().info("Adding item {0,string} for user {1,string}", item_id, user_id);
-
-Sentry.logger().emit(log -> {
-  log.setLevel("info");
-  log.setMessage("Adding item for user");
-  log.setAttribute("item_id", item_id);
-  log.setAttribute("user_id", user_id);
+Sentry.logger().info("Adding item {0,string} for user {1,string}", item_id, user_id, log -> {
   log.setAttribute("extra", 123);
 });
 
-// Java - Builder Pattern, where setters return builder for method chaining
-Sentry.Logger.emit(log -> {
-  log.setLevel("info")
-  .setMessage("Adding item for user")
-  .setAttribute("item_id", item_id)
-  .setAttribute("user_id", user_id)
-  .setAttribute("extra", 123)
-});
-
 // Kotlin
-Sentry.Logger.emit("Adding item for user") { // fun emit(block: LogItem.() -> Unit)
-  setLevel("info")
+Sentry.Logger.info("Adding item for user") { // fun info(block: LogItem.() -> Unit)
   setAttribute("item_id", item_id)
   setAttribute("user_id", user_id)
   setAttribute("extra", 123)
@@ -305,8 +236,7 @@ SentrySDK.logger
 
 // Objective-C
 [SentrySDK.logger
-    emit :@"Adding item for user"
-    level: @"info"
+    info :@"Adding item for user"
     attributes: @{ @"extra" : @"123", @"item_id" : item_id, @"user_id" : user_id }
 ];
 ```
