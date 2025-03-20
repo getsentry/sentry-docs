@@ -20,6 +20,7 @@ supported:
   - javascript.astro
   - javascript.remix
   - javascript.react-router
+  - javascript.tanstackstart-react
 notSupported:
   - javascript
 sidebar_order: 1
@@ -78,11 +79,28 @@ You can also use any other tracer. All OpenTelemetry spans will be picked up by 
 
 ## Modifying the default OpenTelemetry TracerProvider
 
-You can access the tracer provider set up by Sentry when using Sentry's default OpenTelemetry instrumentation. This enables you to easily add additional span processors, allowing you to export tracing data to various OTEL collectors or other backends.
+You can access the tracer provider set up by Sentry when using Sentry's default OpenTelemetry instrumentation.
 
 ```javascript
 const Sentry = require("@sentry/node");
 
 const provider = Sentry.getClient()?.traceProvider;
-provider?.addSpanProcessor(new MySpanProcessor());
+```
+
+## Adding Additional Span Processors
+
+You can add additional span processors to the tracer provider set up by Sentry when using Sentry's default OpenTelemetry instrumentation.
+
+```javascript
+const Sentry = require("@sentry/node");
+
+Sentry.init({
+  dsn: "___DSN___",
+
+  // The SentrySampler will use this to determine which traces to sample
+  tracesSampleRate: 1.0,
+
+  // Add additional OpenTelemetry SpanProcessors:
+  openTelemetrySpanProcessors: [new MySpanProcessor()],
+});
 ```
