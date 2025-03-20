@@ -60,9 +60,10 @@ export async function Sidebar({path, versions}: SidebarProps) {
 
         return {
           ...platform,
-          url: platformPageForCurrentPath
-            ? '/' + platformPageForCurrentPath.path + '/'
-            : platform.url,
+          url:
+            platformPageForCurrentPath && !platformPageForCurrentPath.missing
+              ? '/' + platformPageForCurrentPath.path + '/'
+              : platform.url,
           guides: platform.guides.map(guide => {
             const guidePageForCurrentPath = nodeForPath(rootNode, [
               'platforms',
@@ -71,7 +72,7 @@ export async function Sidebar({path, versions}: SidebarProps) {
               guide.name,
               ...path.slice(currentGuide ? 4 : 2),
             ]);
-            return guidePageForCurrentPath
+            return guidePageForCurrentPath && !guidePageForCurrentPath.missing
               ? {
                   ...guide,
                   url: '/' + guidePageForCurrentPath.path + '/',
