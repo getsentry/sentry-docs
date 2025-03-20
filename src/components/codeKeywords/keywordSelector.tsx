@@ -21,6 +21,7 @@ import {
   KeywordIndicator,
   KeywordSearchInput,
   PositionWrapper,
+  ProejectPreview,
   Selections,
 } from './styles.css';
 import {dropdownPopperOptions} from './utils';
@@ -150,26 +151,9 @@ export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
             </Keyword>
           </AnimatePresence>
           {!isOpen && currentSelection?.title && (
-            <div
-              className="no-copy"
-              style={{
-                position: 'absolute',
-                top: '-24px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                fontSize: '12px',
-                backgroundColor: '#333',
-                color: '#fff',
-                padding: '2px 6px',
-                borderRadius: '3px',
-                pointerEvents: 'none',
-                whiteSpace: 'nowrap',
-                opacity: 0.9,
-                userSelect: 'none',
-              }}
-            >
+            <ProejectPreview className="no-copy">
               {currentSelection.title}
-            </div>
+            </ProejectPreview>
           )}
         </span>
       </KeywordDropdown>

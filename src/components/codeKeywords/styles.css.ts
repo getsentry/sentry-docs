@@ -4,6 +4,22 @@ import {ArrowDown} from 'react-feather';
 import styled from '@emotion/styled';
 import {motion} from 'framer-motion';
 
+export const ProejectPreview = styled('div')`
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  background-color: rgba(51, 51, 51, 1);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 3px;
+  pointer-events: none;
+  white-space: nowrap;
+  opacity: 0.9;
+  user-select: none;
+`;
+
 export const PositionWrapper = styled('div')`
   z-index: 100;
 `;
@@ -92,8 +108,8 @@ export const ItemButton = styled('button')<{dark: boolean; isActive: boolean}>`
     color: #EBE6EF;
     `
       : `
-    
-    
+
+
     &:focus {
       outline: none;
       background-color: ${p.dark ? 'var(--gray-a4)' : 'var(--accent-purple-light)'};
@@ -141,6 +157,8 @@ export const KeywordIndicator = styled(ArrowDown, {
 export const KeywordSpan = styled(motion.span)`
   grid-row: 1;
   grid-column: 1;
+  display: inline-block;
+  margin-top: 24px;
 `;
 
 export const KeywordSearchInput = styled('input')<{dark: boolean}>`
