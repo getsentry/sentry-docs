@@ -249,6 +249,8 @@ If `debug` is set to `true` in SDK init, calls to the Sentry logger API should a
 
 Logs should be buffered before being sent. SDKs should keep a buffer of logs on the client (so you can have logs from multiple traces in the buffer) that flushes out based on some kind of condition. A recommended condition is if the buffer length exceeds 25 items, or if 5 seconds have passed. In the future we can use a [weight-tracking based approach](https://github.com/getsentry/rfcs/blob/main/text/0126-sdk-spans-aggregator.md#weight) to determine when to flush logs.
 
+A new data category for logs has been added to Relay, `log_item`. Both the `log` envelope and `otel_log` envelope is covered by this data category. This will need to implemented in the SDK. Rate limiting applies as usual, there is no special rate limit or rate limiting behaviour for logs. With this data category, client outcomes should be tracked by the SDKs to track how often logs are dropped by the SDK.
+
 The internal SDK implementation is kept purposefully broad as we are still in early stages. As we figure more out about the logs product and payload characteristics, we'll be able to define a more rigorous spec for logging internals in the SDK. SDKs should take care to not expose logging internals as much as possible to userland so that they can be refactored in the future.
 
 ### Default Attributes
