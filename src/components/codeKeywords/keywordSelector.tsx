@@ -21,6 +21,7 @@ import {
   KeywordIndicator,
   KeywordSearchInput,
   PositionWrapper,
+  ProejectPreview,
   Selections,
 } from './styles.css';
 import {dropdownPopperOptions} from './utils';
@@ -137,6 +138,7 @@ export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
             // correctly overlap during animations, but this must be removed
             // after so copy-paste correctly works.
             display: isAnimating ? 'inline-grid' : undefined,
+            position: 'relative',
           }}
         >
           <AnimatePresence initial={false}>
@@ -148,6 +150,11 @@ export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
               {currentSelection[keyword]}
             </Keyword>
           </AnimatePresence>
+          {!isOpen && currentSelection?.title && (
+            <ProejectPreview className="no-copy">
+              {currentSelection.title}
+            </ProejectPreview>
+          )}
         </span>
       </KeywordDropdown>
       {isMounted &&
