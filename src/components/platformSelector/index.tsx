@@ -279,17 +279,13 @@ function PlatformItem({
       isLastGuide: i === guides.length - 1,
     }));
 
-  const isPlatformWithGuidesAndTopLevelAlias =
-    platform.guides.length > 0 && !!platform.topLevelAlias;
+  // This is the case if `platformTitle` is configured for a platform
+  // In this case, the top-level select item should get the `-redirect` suffix,
+  // as we can't have two items with the same key
+  const hasGuideWithPlatformKey = platform.guides.some(g => g.key === platform.key);
 
   const guides = platform.isExpanded
-    ? markLastGuide(
-        platform.guides.length > 0
-          ? isPlatformWithGuidesAndTopLevelAlias
-            ? [platform as unknown as PlatformGuide, ...platform.guides]
-            : platform.guides
-          : platform.integrations
-      )
+    ? markLastGuide(platform.guides.length > 0 ? platform.guides : platform.integrations)
     : [];
 
   return (
@@ -299,11 +295,7 @@ function PlatformItem({
         <RadixSelect.Label className="flex">
           <Fragment>
             <RadixSelect.Item
-              value={
-                isPlatformWithGuidesAndTopLevelAlias
-                  ? `${platform.key}-redirect`
-                  : platform.key
-              }
+              value={hasGuideWithPlatformKey ? `${platform.key}-redirect` : platform.key}
               asChild
               className={styles.item}
               data-platform-with-guides
@@ -318,7 +310,7 @@ function PlatformItem({
                       format="sm"
                       className={styles['platform-icon']}
                     />
-                    {platform.topLevelAlias ?? platform.title}
+                    {platform.title}
                   </span>
                 </RadixSelect.ItemText>
               </ComboboxItem>

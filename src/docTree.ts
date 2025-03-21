@@ -253,14 +253,13 @@ function nodeToPlatform(n: DocNode): Platform {
   const caseStyle = platformData?.case_style || n.frontmatter.caseStyle;
   const guides = extractGuides(n);
   const integrations = extractIntegrations(n);
-  const topLevelAlias = n.frontmatter.topLevelAlias;
 
   return {
     key: n.slug,
     name: n.slug,
     type: 'platform',
     url: '/' + n.path + '/',
-    title: n.frontmatter.title,
+    title: n.frontmatter.platformTitle ?? n.frontmatter.title,
     caseStyle,
     sdk: n.frontmatter.sdk,
     fallbackPlatform: n.frontmatter.fallbackPlatform,
@@ -268,7 +267,6 @@ function nodeToPlatform(n: DocNode): Platform {
     keywords: n.frontmatter.keywords,
     guides,
     integrations,
-    topLevelAlias,
   };
 }
 
@@ -371,9 +369,20 @@ function extractGuides(platformNode: DocNode): PlatformGuide[] {
   if (!guidesNode) {
     return [];
   }
-  return guidesNode.children
+
+  // If a `platformTitle` is defined, we add a virtual guide
+  const defaultGuide = platformNode.frontmatter.platformTitle
+    ? {
+        ...nodeToGuide(platformNode.slug, platformNode),
+        key: platformNode.slug,
+      }
+    : undefined;
+
+  const childGuides = guidesNode.children
     .filter(({path}) => !isVersioned(path))
     .map(n => nodeToGuide(platformNode.slug, n));
+
+  return defaultGuide ? [defaultGuide, ...childGuides] : childGuides;
 }
 
 const extractIntegrations = (p: DocNode): PlatformIntegration[] => {

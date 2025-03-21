@@ -23,7 +23,7 @@ export function Breadcrumbs({leafNode}: BreadcrumbsProps) {
         return (
           <li className={styles['breadcrumb-item']} key={n.path}>
             <SmartLink to={to}>
-              {n.frontmatter.topLevelAlias ?? n.frontmatter.title}
+              {n.frontmatter.platformTitle ?? n.frontmatter.title}
             </SmartLink>
           </li>
         );
