@@ -9,12 +9,14 @@ export default function AskAiSearchParams() {
   useEffect(() => {
     const askAi = searchParams?.get('askAI');
     // Give Kapa.ai some time to be fully loaded
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       if (window.Kapa?.open && askAi === 'true') {
         // open kapa modal
         window.Kapa.open({});
       }
     }, 300);
+
+    return () => clearTimeout(timer);
   }, [searchParams]);
 
   return <Fragment />;
