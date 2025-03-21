@@ -2,6 +2,7 @@ import {useMemo} from 'react';
 import {getMDXComponent} from 'mdx-bundler/client';
 import {Metadata} from 'next';
 import {notFound} from 'next/navigation';
+import {Suspense} from 'react';
 
 import {apiCategories} from 'sentry-docs/build/resolveOpenAPI';
 import {ApiCategoryPage} from 'sentry-docs/components/apiCategoryPage';
@@ -58,52 +59,13 @@ function MDXLayoutRenderer({mdxSource, ...rest}) {
   return <MDXLayout components={mdxComponentsWithWrapper} {...rest} />;
 }
 
-export default async function Page(props: {params: Promise<{path?: string[]}>}) {
-  const params = await props.params;
-  // get frontmatter of all docs in tree
-  const rootNode = await getDocsRootNode();
+// Create a loading component
+function LoadingIndicator() {
+  return <div className="loading-docs">Loading documentation...</div>;
+}
 
-  setServerContext({
-    rootNode,
-    path: params.path ?? [],
-  });
-
-  if (!params.path && !isDeveloperDocs) {
-    return <Home />;
-  }
-
-  const pageNode = nodeForPath(rootNode, params.path ?? '');
-
-  if (!pageNode) {
-    // eslint-disable-next-line no-console
-    console.warn('no page node', params.path);
-    return notFound();
-  }
-
-  // gather previous and next page that will be displayed in the bottom pagination
-  const getPaginationDetails = (
-    getNode: (node: DocNode) => DocNode | undefined | 'root',
-    page: PaginationNavNode | undefined
-  ) => {
-    if (page && 'path' in page && 'title' in page) {
-      return page;
-    }
-
-    const node = getNode(pageNode);
-
-    if (node === 'root') {
-      return {path: '', title: 'Welcome to Sentry'};
-    }
-
-    return node ? {path: node.path, title: node.frontmatter.title} : undefined;
-  };
-
-  const previousPage = getPaginationDetails(
-    getPreviousNode,
-    pageNode?.frontmatter?.previousPage
-  );
-  const nextPage = getPaginationDetails(getNextNode, pageNode?.frontmatter?.nextPage);
-
+// Create a separate MDX content component to use with Suspense
+async function MDXContent({pageNode, params}) {
   if (isDeveloperDocs) {
     // get the MDX for the current doc and render it
     let doc: Awaited<ReturnType<typeof getFileBySlug>> | null = null;
@@ -118,6 +80,31 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
       throw e;
     }
     const {mdxSource, frontMatter} = doc;
+    
+    // gather previous and next page that will be displayed in the bottom pagination
+    const getPaginationDetails = (
+      getNode: (node: DocNode) => DocNode | undefined | 'root',
+      page: PaginationNavNode | undefined
+    ) => {
+      if (page && 'path' in page && 'title' in page) {
+        return page;
+      }
+
+      const node = getNode(pageNode);
+
+      if (node === 'root') {
+        return {path: '', title: 'Welcome to Sentry'};
+      }
+
+      return node ? {path: node.path, title: node.frontmatter.title} : undefined;
+    };
+
+    const previousPage = getPaginationDetails(
+      getPreviousNode,
+      pageNode?.frontmatter?.previousPage
+    );
+    const nextPage = getPaginationDetails(getNextNode, pageNode?.frontmatter?.nextPage);
+    
     // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc
     return (
       <MDXLayoutRenderer
@@ -161,6 +148,30 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   const allFm = await getDocsFrontMatter();
   const versions = getVersionsFromDoc(allFm, pageNode.path);
 
+  // gather previous and next page that will be displayed in the bottom pagination
+  const getPaginationDetails = (
+    getNode: (node: DocNode) => DocNode | undefined | 'root',
+    page: PaginationNavNode | undefined
+  ) => {
+    if (page && 'path' in page && 'title' in page) {
+      return page;
+    }
+
+    const node = getNode(pageNode);
+
+    if (node === 'root') {
+      return {path: '', title: 'Welcome to Sentry'};
+    }
+
+    return node ? {path: node.path, title: node.frontmatter.title} : undefined;
+  };
+
+  const previousPage = getPaginationDetails(
+    getPreviousNode,
+    pageNode?.frontmatter?.previousPage
+  );
+  const nextPage = getPaginationDetails(getNextNode, pageNode?.frontmatter?.nextPage);
+
   // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc.
   return (
     <MDXLayoutRenderer
@@ -169,6 +180,35 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
       nextPage={nextPage}
       previousPage={previousPage}
     />
+  );
+}
+
+export default async function Page(props: {params: Promise<{path?: string[]}>}) {
+  const params = await props.params;
+  // get frontmatter of all docs in tree
+  const rootNode = await getDocsRootNode();
+
+  setServerContext({
+    rootNode,
+    path: params.path ?? [],
+  });
+
+  if (!params.path && !isDeveloperDocs) {
+    return <Home />;
+  }
+
+  const pageNode = nodeForPath(rootNode, params.path ?? '');
+
+  if (!pageNode) {
+    // eslint-disable-next-line no-console
+    console.warn('no page node', params.path);
+    return notFound();
+  }
+
+  return (
+    <Suspense fallback={<LoadingIndicator />}>
+      <MDXContent pageNode={pageNode} params={params} />
+    </Suspense>
   );
 }
 

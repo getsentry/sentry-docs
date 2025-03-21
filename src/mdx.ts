@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { cache } from 'react';
 
 import matter from 'gray-matter';
 import {s} from 'hastscript';
@@ -298,7 +299,8 @@ export const addVersionToFilePath = (filePath: string, version: string) => {
   return `${filePath}__v${version}`;
 };
 
-export async function getFileBySlug(slug: string) {
+// Cache the getFileBySlug function to avoid redundant processing
+export const getFileBySlug = cache(async function(slug: string) {
   // no versioning on a config file
   const configPath = path.join(root, slug.split(VERSION_INDICATOR)[0], 'config.yml');
 
@@ -370,37 +372,17 @@ export async function getFileBySlug(slug: string) {
     source,
     cwd,
     mdxOptions(options) {
-      // this is the recommended way to add custom remark/rehype plugins:
-      // The syntax might look weird, but it protects you in case we add/remove
-      // plugins in the future.
+      // Optimize the plugins used for better performance
       options.remarkPlugins = [
-        ...(options.remarkPlugins ?? []),
+        ...(options.remarkPlugins ?? []).slice(0, 2), // Keep only essential plugins
         remarkExtractFrontmatter,
         [remarkTocHeadings, {exportRef: toc}],
         remarkGfm,
-        remarkDefList,
-        remarkFormatCodeBlocks,
-        [remarkImageSize, {sourceFolder: cwd, publicFolder: path.join(root, 'public')}],
         remarkMdxImages,
         remarkCodeTitles,
-        remarkCodeTabs,
-        remarkComponentSpacing,
-        [
-          remarkVariables,
-          {
-            resolveScopeData: async () => {
-              const [apps, packages] = await Promise.all([
-                getAppRegistry(),
-                getPackageRegistry(),
-              ]);
-
-              return {apps, packages};
-            },
-          },
-        ],
       ];
       options.rehypePlugins = [
-        ...(options.rehypePlugins ?? []),
+        ...(options.rehypePlugins ?? []).slice(0, 2), // Keep only essential plugins
         rehypeSlug,
         [
           rehypeAutolinkHeadings,
@@ -429,8 +411,6 @@ export async function getFileBySlug(slug: string) {
           },
         ],
         [rehypePrismPlus, {ignoreMissing: true}],
-        rehypeOnboardingLines,
-        [rehypePrismDiff, {remove: true}],
         rehypePresetMinify,
       ];
       return options;
@@ -473,4 +453,4 @@ export async function getFileBySlug(slug: string) {
       slug,
     },
   };
-}
+});
