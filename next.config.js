@@ -25,10 +25,12 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
 
 if (
   process.env.NODE_ENV !== 'development' &&
-  (!process.env.NEXT_PUBLIC_SENTRY_DSN || !process.env.SENTRY_DSN)
+  (!process.env.NEXT_PUBLIC_SENTRY_DSN ||
+    !process.env.SENTRY_DSN ||
+    !process.env.SENTRY_WEBPACK_PLUGIN_AUTH_TOKEN)
 ) {
   throw new Error(
-    'Missing required environment variables: NEXT_PUBLIC_SENTRY_DSN and SENTRY_DSN must be set in production'
+    'Missing required environment variables: NEXT_PUBLIC_SENTRY_DSN, SENTRY_DSN and SENTRY_WEBPACK_PLUGIN_AUTH_TOKEN must be set in production'
   );
 }
 
@@ -67,6 +69,7 @@ const nextConfig = {
 module.exports = withSentryConfig(nextConfig, {
   org: 'sentry',
   project: process.env.NEXT_PUBLIC_DEVELOPER_DOCS ? 'develop-docs' : 'docs',
+  authToken: process.env.SENTRY_WEBPACK_PLUGIN_AUTH_TOKEN,
 
   // Suppresses source map uploading logs during build
   silent: !process.env.CI,
