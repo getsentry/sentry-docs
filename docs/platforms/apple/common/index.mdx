@@ -18,13 +18,13 @@ The support for [visionOS](https://developer.apple.com/visionos/) is currently e
 
 ## Features
 
-<PlatformSection notSupported={["apple.tvos", "apple.watchos", "apple.visionos"]}>
+<PlatformSection supported={["apple.ios", "apple.macos"]}>
 
 In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
 
 </PlatformSection>
 
-<PlatformSection notSupported={["apple.ios", "apple.macos"]}>
+<PlatformSection supported={["apple.tvos", "apple.watchos", "apple.visionos"]}>
 
 In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/).
 
@@ -34,13 +34,19 @@ Select which Sentry features you'd like to install in addition to Error Monitori
 
 ## Install
 
-<PlatformSection notSupported={["apple.tvos", "apple.watchos", "apple.visionos"]}>
+<PlatformSection supported={["apple.ios"]}>
+
+<OnboardingOptionButtons options={['error-monitoring', 'performance', 'profiling', 'session-replay']}/>
+
+</PlatformSection>
+
+<PlatformSection supported={["apple.macos"]}>
 
 <OnboardingOptionButtons options={['error-monitoring', 'performance', 'profiling']}/>
 
 </PlatformSection>
 
-<PlatformSection notSupported={["apple.ios", "apple.macos"]}>
+<PlatformSection supported={["apple.tvos", "apple.watchos", "apple.visionos"]}>
 
 <OnboardingOptionButtons options={['error-monitoring', 'performance']}/>
 
@@ -85,9 +91,130 @@ If you prefer, you can also [set up the SDK manually](/platforms/apple/guides/io
 
 To capture all errors, initialize the SDK as soon as possible, such as in your `AppDelegate` `application:didFinishLaunchingWithOptions` method:
 
-<PlatformSection notSupported={["apple.tvos", "apple.watchos", "apple.visionos"]}>
+<PlatformSection supported={["apple.ios"]}>
 
-```swift {tabTitle:Swift} {"onboardingOptions": {"performance": "13-16", "profiling": "18-28"}}
+```swift {tabTitle:Swift} {"onboardingOptions": {"performance": "13-16", "profiling": "24-34", "session-replay": "17-22"}}
+import Sentry
+
+func application(_ application: UIApplication,
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+
+    SentrySDK.start { options in
+        options.dsn = "___PUBLIC_DSN___"
+        options.debug = true // Enabled debug when first installing is always helpful
+
+        // Adds IP for users.
+        // For more information, visit: https://docs.sentry.io/platforms/apple/data-management/data-collected/
+        options.sendDefaultPii = true
+
+        // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+        // We recommend adjusting this value in production.
+        options.tracesSampleRate = 1.0
+
+        // Record Session Replays for 100% of Errors and 10% of Sessions
+        options.sessionReplay.onErrorSampleRate = 1.0
+        options.sessionReplay.sessionSampleRate = 0.1
+        // We recommend the ~5x more performant experimental view renderer
+        options.sessionReplay.enableExperimentalViewRenderer = true
+    }
+
+    // Manually call startProfiler and stopProfiler to profile any code that runs in between.
+    SentrySDK.startProfiler()
+
+    //
+    // ...anything here will be profiled...
+    //
+
+    // Calls to stopProfiler are optional - if you don't stop the profiler, it will keep profiling
+    // your application until the process exits, the app goes to the background, or stopProfiling is called.
+    SentrySDK.stopProfiler()
+
+    return true
+}
+```
+
+```objc {tabTitle:Objective-C} {"onboardingOptions": {"performance": "12-15", "profiling": "23-33", "session-replay": "16-21"}}
+@import Sentry;
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+
+    [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+        options.dsn = @"___PUBLIC_DSN___";
+        options.debug = YES; // Enabled debug when first installing is always helpful
+
+        // Adds IP for users.
+        // For more information, visit: https://docs.sentry.io/platforms/apple/data-management/data-collected/
+        options.sendDefaultPii = YES;
+
+        // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+        // We recommend adjusting this value in production.
+        options.tracesSampleRate = @1.0;
+
+        // Record Session Replays for 100% of Errors and 10% of Sessions
+        options.sessionReplay.onErrorSampleRate = @1.0;
+        options.sessionReplay.sessionSampleRate = @0.1;
+        // We recommend the ~5x more performant experimental view renderer
+        options.sessionReplay.enableExperimentalViewRenderer = YES;
+    }];
+
+    // Manually call startProfiler and stopProfiler to profile any code that runs in between.
+    [SentrySDK startProfiler];
+
+    //
+    // ...anything here will be profiled...
+    //
+
+    // Calls to stopProfiler are optional - if you don't stop the profiler, it will keep profiling
+    // your application until the process exits, the app goes to the background, or stopProfiling is called.
+    [SentrySDK stopProfiler];
+
+    return YES;
+}
+```
+
+```swift {tabTitle:SwiftUI with App conformer} {"onboardingOptions": {"performance": "13-16", "profiling": "24-34", "session-replay": "17-22"}}
+import Sentry
+
+@main
+struct SwiftUIApp: App {
+    init() {
+        SentrySDK.start { options in
+            options.dsn = "___PUBLIC_DSN___"
+            options.debug = true // Enabled debug when first installing is always helpful
+
+            // Adds IP for users.
+            // For more information, visit: https://docs.sentry.io/platforms/apple/data-management/data-collected/
+            options.sendDefaultPii = true
+
+            // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+            // We recommend adjusting this value in production.
+            options.tracesSampleRate = 1.0
+
+            // Record Session Replays for 100% of Errors and 10% of Sessions
+            options.sessionReplay.onErrorSampleRate = 1.0
+            options.sessionReplay.sessionSampleRate = 0.1
+            // We recommend the ~5x more performant experimental view renderer
+            options.sessionReplay.enableExperimentalViewRenderer = true
+        }
+
+        // Manually call startProfiler and stopProfiler to profile any code that runs in between.
+        SentrySDK.startProfiler()
+
+        //
+        // ...anything here will be profiled...
+        //
+
+        // Calls to stopProfiler are optional - if you don't stop the profiler, it will keep profiling
+        // your application until the process exits, the app goes to the background, or stopProfiling is called.
+        SentrySDK.stopProfiler()
+    }
+}
+```
+</PlatformSection>
+
+<PlatformSection supported={["apple.macos"]}>
+
+```swift {tabTitle:Swift} {"onboardingOptions": {"performance": "13-16", "profiling": "18-28", "session-replay": "17-22"}}
 import Sentry
 
 func application(_ application: UIApplication,
@@ -132,7 +259,7 @@ func application(_ application: UIApplication,
 
         // Adds IP for users.
         // For more information, visit: https://docs.sentry.io/platforms/apple/data-management/data-collected/
-        options.sendDefaultPii = YES
+        options.sendDefaultPii = YES;
 
         // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
         // We recommend adjusting this value in production.
@@ -188,7 +315,7 @@ struct SwiftUIApp: App {
 ```
 </PlatformSection>
 
-<PlatformSection notSupported={["apple.ios", "apple.macos"]}>
+<PlatformSection supported={["apple.tvos", "apple.watchos", "apple.visionos"]}>
 
 ```swift {tabTitle:Swift} {"onboardingOptions": {"performance": "13-16"}}
 import Sentry
@@ -224,7 +351,7 @@ func application(_ application: UIApplication,
 
         // Adds IP for users.
         // For more information, visit: https://docs.sentry.io/platforms/apple/data-management/data-collected/
-        options.sendDefaultPii = YES
+        options.sendDefaultPii = YES;
 
         // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
         // We recommend adjusting this value in production.
