@@ -194,9 +194,9 @@ function PlatformWithGuides({
   const [expanded, setExpanded] = useState(false);
 
   const guides = useMemo(() => {
-    const showPlatformInContent = !forceExpand || matchKeys.includes(platform.key);
+    const showPlatformInContent = matchKeys.includes(platform.key);
     return showPlatformInContent ? [platform, ...platform.guides] : platform.guides;
-  }, [forceExpand, matchKeys, platform]);
+  }, [matchKeys, platform]);
 
   return (
     <Collapsible.Root
