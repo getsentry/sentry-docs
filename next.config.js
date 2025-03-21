@@ -57,7 +57,7 @@ const nextConfig = {
 
 module.exports = withSentryConfig(nextConfig, {
   org: 'sentry',
-  project: 'docs',
+  project: process.env.NEXT_PUBLIC_DEVELOPER_DOCS ? 'develop-docs' : 'docs',
 
   // Suppresses source map uploading logs during build
   silent: !process.env.CI,
