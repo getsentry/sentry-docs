@@ -334,7 +334,7 @@ function PlatformItem({
         </RadixSelect.Label>
       </RadixSelect.Group>
       {guides.map(guide => {
-        return <GuideItem key={guide.key + '-guide'} guide={guide} />;
+        return <GuideItem key={guide.key} guide={guide} />;
       })}
     </Fragment>
   );
@@ -346,7 +346,7 @@ type GuideItemProps = {
 function GuideItem({guide}: GuideItemProps) {
   return (
     <RadixSelect.Item
-      key={guide.key + '-guide'}
+      key={guide.key}
       value={guide.key}
       asChild
       className={styles.item}
