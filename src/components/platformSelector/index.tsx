@@ -15,6 +15,7 @@ import {matchSorter} from 'match-sorter';
 import {usePathname, useRouter} from 'next/navigation';
 
 import {PlatformIcon} from 'sentry-docs/components/platformIcon';
+import {KEY_ACTIVE_PLATFORM} from 'sentry-docs/constants/localStorage';
 import {Platform, PlatformGuide, PlatformIntegration} from 'sentry-docs/types';
 import {uniqByReference} from 'sentry-docs/utils';
 
@@ -94,7 +95,7 @@ export function PlatformSelector({
   const onPlatformChange = (platformKey: string) => {
     const platform_ = platformsAndGuides.find(platform => platform.key === platformKey);
     if (platform_) {
-      localStorage.setItem('active-platform', platform_.key);
+      localStorage.setItem(KEY_ACTIVE_PLATFORM, platform_.key);
       router.push(platform_.url);
     }
   };
@@ -114,9 +115,9 @@ export function PlatformSelector({
   );
   useEffect(() => {
     if (currentPlatformKey) {
-      localStorage.setItem('active-platform', currentPlatformKey);
+      localStorage.setItem(KEY_ACTIVE_PLATFORM, currentPlatformKey);
     } else {
-      setStoredPlatformKey(localStorage.getItem('active-platform'));
+      setStoredPlatformKey(localStorage.getItem(KEY_ACTIVE_PLATFORM));
     }
   }, [currentPlatformKey]);
 
