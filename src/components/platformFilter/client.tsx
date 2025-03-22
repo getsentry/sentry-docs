@@ -62,7 +62,7 @@ export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
       return platformsAndGuides;
     }
     // any of these fields can be used to match the search value
-    const keys = ['title', 'aliases', 'name', 'sdk', 'keywords'];
+    const keys = ['title', 'aliases', 'name', 'sdk', 'keywords', 'platformTitle'];
     const matches_ = matchSorter(platformsAndGuides, filter, {
       keys,
       threshold: rankings.CONTAINS,
@@ -195,7 +195,14 @@ function PlatformWithGuides({
 
   const guides = useMemo(() => {
     const showPlatformInContent = matchKeys.includes(platform.key);
-    return showPlatformInContent ? [platform, ...platform.guides] : platform.guides;
+
+    // This is the case if `platformTitle` is configured for a platform
+    // In this case, we do not need to add the platform to the list of guides
+    const hasGuideWithPlatformKey = platform.guides.some(g => g.key === platform.key);
+
+    return showPlatformInContent && !hasGuideWithPlatformKey
+      ? [platform, ...platform.guides]
+      : platform.guides;
   }, [matchKeys, platform]);
 
   return (

@@ -119,6 +119,12 @@ export interface PlatformConfig {
    */
   keywords?: string[];
   /**
+   * The title of the platform as it should be displayed in the sidebar.
+   * In most cases, you do not need to define this, as the title is used.
+   * However, in some cases - e.g. JavaScript - the Platform title (JavaScript) is different from the default guide (Browser JavaScript).
+   */
+  platformTitle?: string;
+  /**
    * Used to map a platform to a specific SDK as defined by the SDK registry.
    */
   sdk?: string;
@@ -130,7 +136,6 @@ export interface PlatformConfig {
    * Is this a first-party or third-party SDK?
    */
   supportLevel?: PlatformSupportLevel;
-
   /**
    * The human readable name of the platform.
    */
