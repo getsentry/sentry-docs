@@ -4,7 +4,7 @@ import {cache, useMemo} from 'react';
 import {getMDXComponent} from 'mdx-bundler/client';
 
 import {getCurrentGuide, getDocsRootNode, getPlatform} from 'sentry-docs/docTree';
-import {getFileBySlug, getFileBySlugWithCache} from 'sentry-docs/mdx';
+import {getFileBySlugWithCache} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {serverContext} from 'sentry-docs/serverContext';
 import {
@@ -69,7 +69,7 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
     guide = `${platform}.${path[3]}`;
   }
 
-  let doc: Awaited<ReturnType<typeof getFileBySlug>> | undefined;
+  let doc: Awaited<ReturnType<typeof getFileBySlugWithCache>> | undefined;
 
   if (guide) {
     const guidePath = updatePathIfVersionedFileDoesNotExistWithCache(
