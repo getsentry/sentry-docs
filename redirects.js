@@ -590,6 +590,12 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/sourcemaps/troubleshooting_js/debug-ids/',
   },
   {
+    source:
+      '/platforms/:platform/guides/:guide/sourcemaps/troubleshooting_js/artifact-bundles/',
+    destination:
+      '/platforms/:platform/guides/:guide/sourcemaps/troubleshooting_js/debug-ids/',
+  },
+  {
     source: '/platforms/minidump/crashpad/:path*',
     destination: '/platforms/native/guides/crashpad/:path*',
   },
