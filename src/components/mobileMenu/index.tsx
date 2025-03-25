@@ -46,7 +46,7 @@ export function MobileMenu({pathname, searchPlatforms}: Props) {
                 <Link href="https://sentry.io/changelog/">Changelog</Link>
               </li>
               <li className={styles.MenuItem}>
-                <Link href="https://try.sentry-demo.com/demo/start/">Sandbox</Link>
+                <Link href="https://sandbox.sentry.io/">Sandbox</Link>
               </li>
               <li className={styles.MenuItem}>
                 <Link href="https://sentry.io/">Go to Sentry</Link>

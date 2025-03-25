@@ -77,7 +77,7 @@ export function Header({
         )}
         <div className="hidden lg-xl:flex justify-end flex-1 gap-6 items-center min-w-fit">
           <NavLink href="https://sentry.io/changelog/">Changelog</NavLink>
-          <NavLink href="https://try.sentry-demo.com/demo/start/">Sandbox</NavLink>
+          <NavLink href="https://sandbox.sentry.io/">Sandbox</NavLink>
           <NavLink href="https://sentry.io/">Go to Sentry</NavLink>
           <NavLink
             href="https://sentry.io/signup/"
