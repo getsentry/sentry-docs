@@ -75,16 +75,20 @@ The wizard will prompt you to log in to Sentry. It'll then automatically do the 
 Configuration is done via the application `AndroidManifest.xml`. Here's an example config which should get you started:
 
 
-```xml {filename:AndroidManifest.xml} {"onboardingOptions": {"performance": "6-7", "profiling": "8-9", "session-replay": "10-12"}}
+```xml {filename:AndroidManifest.xml} {"onboardingOptions": {"performance": "6-7", "profiling": "8-13", "session-replay": "14-16"}}
 <application>
   <!-- Required: set your sentry.io project identifier (DSN) -->
   <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
   <!-- Add data like request headers, user ip address and device name, see https://docs.sentry.io/platforms/android/data-management/data-collected/ for more info -->
   <meta-data android:name="io.sentry.send-default-pii" android:value="true" />
-  <!-- enable the performance API by setting a sample-rate, adjust in production env -->
+  <!-- Enable the performance API by setting a sample-rate, adjust in production env -->
   <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
-  <!-- enable profiling when starting transactions, adjust in production env -->
-  <meta-data android:name="io.sentry.traces.profiling.sample-rate" android:value="1.0" />
+  <!-- Enable profiling, adjust in production env. See https://docs.sentry.io/platforms/android/profiling for more info -->
+  <meta-data android:name="io.sentry.traces.profiling.session-sample-rate" android:value="1.0" />
+  <!-- Set profiling lifecycle, can be `manual` or `trace` -->
+  <meta-data android:name="io.sentry.traces.profiling.lifecycle" android:value="manual" />
+  <!-- Enable profiling on app start -->
+  <meta-data android:name="io.sentry.traces.profiling.start-on-app-start" android:value="true" />
   <!-- record session replays for 100% of errors and 10% of sessions -->
   <meta-data android:name="io.sentry.session-replay.on-error-sample-rate" android:value="1.0" />
   <meta-data android:name="io.sentry.session-replay.session-sample-rate" android:value="0.1" />
@@ -104,11 +108,15 @@ import io.sentry.Sentry;
 public class MyActivity extends AppCompatActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    // Any code running after this line will be
+    //profiled until Sentry.stopProfiler() is called.
+    Sentry.startProfiler();
     try {
       throw new Exception("This is a test.");
     } catch (Exception e) {
       Sentry.captureException(e);
     }
+    Sentry.stopProfiler();
   }
 }
 ```
@@ -121,11 +129,15 @@ import io.sentry.Sentry
 class MyActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    // Any code running after this line will be
+    //profiled until Sentry.stopProfiler() is called.
+    Sentry.startProfiler()
     try {
       throw Exception("This is a test.")
     } catch (e: Exception) {
       Sentry.captureException(e)
     }
+    Sentry.stopProfiler()
   }
 }
 ```
