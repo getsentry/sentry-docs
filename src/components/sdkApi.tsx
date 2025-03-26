@@ -4,20 +4,27 @@ import {toJsxRuntime} from 'hast-util-to-jsx-runtime';
 import {Nodes} from 'hastscript/lib/create-h';
 import bash from 'refractor/lang/bash.js';
 import json from 'refractor/lang/json.js';
+import typescript from 'refractor/lang/typescript.js';
 import {refractor} from 'refractor/lib/core.js';
 
 import {PlatformCategory} from 'sentry-docs/types';
 
 import {Expandable} from './expandable';
-import {SdkDefinition, SdkDefinitionTable} from './sdkDefinition';
+import {RenderNestedObject} from './nestedObject';
+import {SdkDefinition} from './sdkDefinition';
 
-interface ParameterDef {
+export interface ParameterDef {
   name: string;
-  type: string | ParameterDef[];
+  type: string | ObjectParameterDef;
   defaultValue?: string;
   description?: string;
   required?: boolean;
 }
+
+type ObjectParameterDef = {
+  properties: ParameterDef[];
+  name?: string;
+};
 
 type Props = {
   name: string;
@@ -30,6 +37,7 @@ type Props = {
 
 refractor.register(bash);
 refractor.register(json);
+refractor.register(typescript);
 
 const codeToJsx = (code: string, lang = 'json') => {
   return toJsxRuntime(refractor.highlight(code, lang) as Nodes, {Fragment, jsx, jsxs});
@@ -50,11 +58,11 @@ export function SdkApi({
 
       {parameters.length ? (
         <Expandable title="Parameters">
-          <SdkDefinitionTable className="bg-white !w-full">
+          <div className="space-y-3">
             {parameters.map(param => (
-              <ApiParameterDef key={param.name} {...param} />
+              <ApiParameterDef key={param.name} language={language} {...param} />
             ))}
-          </SdkDefinitionTable>
+          </div>
         </Expandable>
       ) : null}
 
@@ -63,37 +71,36 @@ export function SdkApi({
   );
 }
 
-function ApiParameterDef({name, type, description, required}: ParameterDef) {
+function ApiParameterDef({
+  name,
+  type,
+  description,
+  required,
+  language,
+}: ParameterDef & {language: string}) {
   return (
-    <tr>
-      <th>
+    <div className="space-y-1">
+      <div className="font-bold m-0">
         {name}
         {required ? <span className="text-red">*</span> : null}
-      </th>
-      <td>
-        {typeof type === 'string' ? (
-          <code>{type}</code>
-        ) : (
-          <RenderNestedObject objProps={type} />
-        )}
+      </div>
+      <div className="space-y-1">
+        <div>
+          {typeof type === 'string' ? (
+            <pre className="m-0 pt-1 pb-1">
+              <code>{codeToJsx(type, language)}</code>
+            </pre>
+          ) : (
+            <RenderNestedObject
+              name={type.name}
+              objProps={type.properties}
+              language={language}
+            />
+          )}
+        </div>
 
         {description ? <p className="m-0">{description}</p> : null}
-      </td>
-    </tr>
-  );
-}
-
-function RenderNestedObject({objProps}: {objProps: ParameterDef[]}) {
-  return (
-    <Fragment>
-      <div>
-        <code>Object:</code>
       </div>
-      <SdkDefinitionTable className="mt-1">
-        {objProps.map(prop => (
-          <ApiParameterDef key={prop.name} {...prop} />
-        ))}
-      </SdkDefinitionTable>
-    </Fragment>
+    </div>
   );
 }
