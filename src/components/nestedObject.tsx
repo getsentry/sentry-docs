@@ -1,17 +1,11 @@
 'use client';
 
 import {Fragment, useState} from 'react';
-import {jsx, jsxs} from 'react/jsx-runtime';
 import {MinusCircledIcon, PlusCircledIcon} from '@radix-ui/react-icons';
-import {toJsxRuntime} from 'hast-util-to-jsx-runtime';
-import {Nodes} from 'hastscript/lib/create-h';
-import {refractor} from 'refractor/lib/core.js';
 
+import {codeToJsx} from './highlightCode';
 import {ParameterDef} from './sdkApi';
 
-const codeToJsx = (code: string, lang = 'json') => {
-  return toJsxRuntime(refractor.highlight(code, lang) as Nodes, {Fragment, jsx, jsxs});
-};
 
 export function RenderNestedObject({
   name,
@@ -23,6 +17,8 @@ export function RenderNestedObject({
   name?: string;
 }) {
   const [expanded, setExpanded] = useState(false);
+
+  // NOTE: For now, we always render the nested object in typescript
 
   return (
     <div>
@@ -50,14 +46,14 @@ export function RenderNestedObject({
               <div key={prop.name}>
                 {prop.description && (
                   <div>
-                    <code>{codeToJsx(`// ${prop.description}`, language)}</code>
+                    <code>{codeToJsx(`// ${prop.description}`, 'typescript')}</code>
                   </div>
                 )}
                 <div>
                   {typeof prop.type === 'string' ? (
                     <Fragment>
                       <code>{prop.name}{!prop.required ? '?' : ''}: </code>
-                      <code>{codeToJsx(prop.type, language)},</code>
+                      <code>{codeToJsx(prop.type, 'typescript')},</code>
                     </Fragment>
                   ) : (
                     <RenderNestedObject
