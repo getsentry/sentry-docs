@@ -26,9 +26,13 @@ In Python, spans are typically created using a context manager, which automatica
 ```python
 import sentry_sdk
 
+# Start a span for a task
 with sentry_sdk.start_span(op="task", name="Create User"):
     # Your code here
     # The span will automatically end when exiting this block
+    user = create_user(email="user@example.com")
+    send_welcome_email(user)
+    # The span automatically ends here when the 'with' block exits
 ```
 
 Alternatively, you can create spans manually and control their lifecycle yourself, which gives you more flexibility but also more responsibility:
@@ -41,6 +45,8 @@ try:
     # Your code here
 finally:
     # Remember to always end your spans
+    # If you don't call span.finish(), the span will remain open indefinitely,
+    # causing memory leaks and incorrect timing data
     span.finish()
 ```
 
@@ -177,7 +183,7 @@ See <PlatformLink to="/tracing/distributed-tracing/">Distributed Tracing</Platfo
 
 ### Adding Span Attributes
 
-You can capture additional context with span attributes. These can be key-value pairs of various Python types:
+Span attributes customize information you can get through tracing. This information can be found in the traces views in Sentry, once you drill into a span. You can capture additional context with span attributes. These can be key-value pairs of various Python types.
 
 ```python
 import sentry_sdk
