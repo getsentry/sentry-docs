@@ -13,7 +13,7 @@ type Props = {
 export function SdkDefinition({name, children, categorySupported = []}: Props) {
   return (
     <PlatformCategorySection supported={categorySupported}>
-      <div>
+      <div className={styles['sdk-config-option']}>
         <h3 id={name} aria-label={name} data-sdk-option>
           <a href={`#${name}`}>
             <svg
@@ -32,7 +32,7 @@ export function SdkDefinition({name, children, categorySupported = []}: Props) {
           </a>
         </h3>
 
-        {children}
+        <div className={styles['sdk-config-option-details']}>{children}</div>
       </div>
     </PlatformCategorySection>
   );

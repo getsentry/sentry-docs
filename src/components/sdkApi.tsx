@@ -50,7 +50,7 @@ export function SdkApi({
 
       {parameters.length ? (
         <Expandable title="Parameters">
-          <SdkDefinitionTable className="bg-white">
+          <SdkDefinitionTable className="bg-white !w-full">
             {parameters.map(param => (
               <ApiParameterDef key={param.name} {...param} />
             ))}
