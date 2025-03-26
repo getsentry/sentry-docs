@@ -26,50 +26,53 @@ export function RenderNestedObject({
 
   return (
     <div>
-      <pre className="m-0 pt-1 pb-1">
-        <div className="flex items-center gap-2">
-          <code>{name ? name : 'Object'}</code>
-          <button className="flex items-center" onClick={() => setExpanded(!expanded)}>
-            {expanded ? (
-              <Fragment>
-                {'{'}
-                <MinusCircledIcon />
-              </Fragment>
-            ) : (
-              <Fragment>
-                {'{'}
-                <PlusCircledIcon />
-                {'...}'}
-              </Fragment>
-            )}
-          </button>
-        </div>
-        {expanded ? (
-          <Fragment>
-            <div className="flex flex-col gap-2 pl-4">
-              {objProps.map(prop => (
-                <div key={prop.name}>
-                  {prop.description && (
-                    <div>
-                      <code>{codeToJsx(`// ${prop.description}`, language)}</code>
-                    </div>
-                  )}
+      <div className="flex items-center gap-2">
+        <code>{name ? name : 'Object'}</code>
+        <button className="flex items-center" onClick={() => setExpanded(!expanded)}>
+          {expanded ? (
+            <Fragment>
+              {'{'}
+              <MinusCircledIcon />
+            </Fragment>
+          ) : (
+            <Fragment>
+              {'{'}
+              <PlusCircledIcon />
+              {'...}'}
+            </Fragment>
+          )}
+        </button>
+      </div>
+      {expanded ? (
+        <Fragment>
+          <div className="flex flex-col gap-2 pl-4">
+            {objProps.map(prop => (
+              <div key={prop.name}>
+                {prop.description && (
+                  <div>
+                    <code>{codeToJsx(`// ${prop.description}`, language)}</code>
+                  </div>
+                )}
+                <div>
                   {typeof prop.type === 'string' ? (
-                    <code>{prop.name}: {codeToJsx(prop.type, language)},</code>
+                    <Fragment>
+                      <code>{prop.name}{!prop.required ? '?' : ''}: </code>
+                      <code>{codeToJsx(prop.type, language)},</code>
+                    </Fragment>
                   ) : (
                     <RenderNestedObject
-                      name={prop.type.name}
+                      name={`${prop.name}${!prop.required ? '?' : ''}: ${prop.type.name || 'Object'}`}
                       objProps={prop.type.properties}
-                      language={'json'}
+                      language={language}
                     />
                   )}
                 </div>
-              ))}
-            </div>
-            <div>{'}'}</div>
-          </Fragment>
-        ) : null}
-      </pre>
+              </div>
+            ))}
+          </div>
+          <div>{'}'}</div>
+        </Fragment>
+      ) : null}
     </div>
   );
 }

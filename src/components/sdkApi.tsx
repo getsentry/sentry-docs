@@ -54,7 +54,7 @@ export function SdkApi({
 }: Props) {
   return (
     <SdkDefinition name={name} categorySupported={categorySupported}>
-      <pre className="mt-2 mb-2">{codeToJsx(signature, language)}</pre>
+      <pre className="mt-2 mb-2 text-sm">{codeToJsx(signature, language)}</pre>
 
       {parameters.length ? (
         <Expandable title="Parameters">
@@ -87,15 +87,17 @@ function ApiParameterDef({
       <div className="space-y-1">
         <div>
           {typeof type === 'string' ? (
-            <pre className="m-0 pt-1 pb-1">
+            <pre className="m-0 pt-1 pb-1 text-sm">
               <code>{codeToJsx(type, language)}</code>
             </pre>
           ) : (
-            <RenderNestedObject
-              name={type.name}
-              objProps={type.properties}
-              language={language}
-            />
+            <pre className="m-0 pt-1 pb-1 text-sm">
+              <RenderNestedObject
+                name={type.name}
+                objProps={type.properties}
+                language={language}
+              />
+            </pre>
           )}
         </div>
 
