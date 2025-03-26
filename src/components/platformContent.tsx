@@ -1,10 +1,10 @@
 import fs from 'fs';
 
-import {useMemo} from 'react';
+import {cache, useMemo} from 'react';
 import {getMDXComponent} from 'mdx-bundler/client';
 
 import {getCurrentGuide, getDocsRootNode, getPlatform} from 'sentry-docs/docTree';
-import {getFileBySlug} from 'sentry-docs/mdx';
+import {getFileBySlugWithCache} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {serverContext} from 'sentry-docs/serverContext';
 import {
@@ -24,7 +24,7 @@ type Props = {
   platform?: string;
 };
 
-const udpatePathIfVersionedFileDoesNotExist = (path: string): string => {
+const updatePathIfVersionedFileDoesNotExist = (path: string): string => {
   if (!isVersioned(path)) {
     return path;
   }
@@ -38,6 +38,21 @@ const udpatePathIfVersionedFileDoesNotExist = (path: string): string => {
 
   return path;
 };
+
+/**
+ * Cache the result of updatePathIfVersionedFileDoesNotExist
+ * to avoid calling it multiple times for the same path.
+ *
+ * This is important because we want to skip the `fs.existsSync` call if possible.
+ */
+const updatePathIfVersionedFileDoesNotExistWithCache = cache(
+  updatePathIfVersionedFileDoesNotExist
+);
+
+function MDXLayoutRenderer({mdxSource: source, ...rest}) {
+  const MDXLayout = useMemo(() => getMDXComponent(source), [source]);
+  return <MDXLayout components={mdxComponentsWithWrapper} {...rest} />;
+}
 
 export async function PlatformContent({includePath, platform, noGuides}: Props) {
   const {path} = serverContext();
@@ -54,15 +69,15 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
     guide = `${platform}.${path[3]}`;
   }
 
-  let doc: Awaited<ReturnType<typeof getFileBySlug>> | null = null;
+  let doc: Awaited<ReturnType<typeof getFileBySlugWithCache>> | undefined;
 
   if (guide) {
-    const guidePath = udpatePathIfVersionedFileDoesNotExist(
+    const guidePath = updatePathIfVersionedFileDoesNotExistWithCache(
       `platform-includes/${includePath}/${guide}`
     );
 
     try {
-      doc = await getFileBySlug(guidePath);
+      doc = await getFileBySlugWithCache(guidePath);
     } catch (e) {
       // It's fine - keep looking.
     }
@@ -72,13 +87,13 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
     const rootNode = await getDocsRootNode();
     const guideObject = getCurrentGuide(rootNode, path);
 
-    const fallbackGuidePath = udpatePathIfVersionedFileDoesNotExist(
+    const fallbackGuidePath = updatePathIfVersionedFileDoesNotExistWithCache(
       `platform-includes/${includePath}/${guideObject?.fallbackGuide}${VERSION_INDICATOR}${getVersion(guide || '')}`
     );
 
     if (guideObject?.fallbackGuide) {
       try {
-        doc = await getFileBySlug(fallbackGuidePath);
+        doc = await getFileBySlugWithCache(fallbackGuidePath);
       } catch (e) {
         // It's fine - keep looking.
       }
@@ -87,11 +102,11 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
 
   if (!doc) {
     try {
-      const platformPath = udpatePathIfVersionedFileDoesNotExist(
+      const platformPath = updatePathIfVersionedFileDoesNotExistWithCache(
         `platform-includes/${includePath}/${platform}`
       );
 
-      doc = await getFileBySlug(platformPath);
+      doc = await getFileBySlugWithCache(platformPath);
     } catch (e) {
       // It's fine - keep looking.
     }
@@ -101,13 +116,13 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
     const rootNode = await getDocsRootNode();
     const platformObject = getPlatform(rootNode, platform);
 
-    const fallbackPlatformPath = udpatePathIfVersionedFileDoesNotExist(
+    const fallbackPlatformPath = updatePathIfVersionedFileDoesNotExistWithCache(
       `platform-includes/${includePath}/${platformObject?.fallbackPlatform}`
     );
 
     if (platformObject?.fallbackPlatform) {
       try {
-        doc = await getFileBySlug(fallbackPlatformPath);
+        doc = await getFileBySlugWithCache(fallbackPlatformPath);
       } catch (e) {
         // It's fine - keep looking.
       }
@@ -116,7 +131,7 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
 
   if (!doc) {
     try {
-      doc = await getFileBySlug(`platform-includes/${includePath}/_default`);
+      doc = await getFileBySlugWithCache(`platform-includes/${includePath}/_default`);
     } catch (e) {
       // Couldn't find anything.
       return null;
@@ -124,10 +139,6 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
   }
 
   const {mdxSource} = doc;
-  function MDXLayoutRenderer({mdxSource: source, ...rest}) {
-    const MDXLayout = useMemo(() => getMDXComponent(source), [source]);
-    return <MDXLayout components={mdxComponentsWithWrapper} {...rest} />;
-  }
   return <MDXLayoutRenderer mdxSource={mdxSource} />;
 }
 
