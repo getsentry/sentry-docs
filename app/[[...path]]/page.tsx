@@ -22,7 +22,7 @@ import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {
   getDevDocsFrontMatter,
   getDocsFrontMatter,
-  getFileBySlug,
+  getFileBySlugWithCache,
   getVersionsFromDoc,
 } from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
@@ -106,9 +106,9 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
 
   if (isDeveloperDocs) {
     // get the MDX for the current doc and render it
-    let doc: Awaited<ReturnType<typeof getFileBySlug>> | null = null;
+    let doc: Awaited<ReturnType<typeof getFileBySlugWithCache>>;
     try {
-      doc = await getFileBySlug(`develop-docs/${params.path?.join('/') ?? ''}`);
+      doc = await getFileBySlugWithCache(`develop-docs/${params.path?.join('/') ?? ''}`);
     } catch (e) {
       if (e.code === 'ENOENT') {
         // eslint-disable-next-line no-console
@@ -144,9 +144,9 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   }
 
   // get the MDX for the current doc and render it
-  let doc: Awaited<ReturnType<typeof getFileBySlug>> | null = null;
+  let doc: Awaited<ReturnType<typeof getFileBySlugWithCache>>;
   try {
-    doc = await getFileBySlug(`docs/${pageNode.path}`);
+    doc = await getFileBySlugWithCache(`docs/${pageNode.path}`);
   } catch (e) {
     if (e.code === 'ENOENT') {
       // eslint-disable-next-line no-console
