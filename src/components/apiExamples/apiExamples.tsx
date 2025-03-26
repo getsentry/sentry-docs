@@ -7,6 +7,7 @@ import {toJsxRuntime} from 'hast-util-to-jsx-runtime';
 import {Nodes} from 'hastscript/lib/create-h';
 import bash from 'refractor/lang/bash.js';
 import json from 'refractor/lang/json.js';
+import typescript from 'refractor/lang/typescript.js';
 import {refractor} from 'refractor/lib/core.js';
 
 import {type API} from 'sentry-docs/build/resolveOpenAPI';
@@ -19,6 +20,7 @@ import {CodeTabs} from '../codeTabs';
 
 refractor.register(bash);
 refractor.register(json);
+refractor.register(typescript);
 
 const strFormat = (str: string) => {
   const s = str.trim();
