@@ -118,6 +118,8 @@ export interface PlatformConfig {
    * Keywords used for search etc.
    */
   keywords?: string[];
+  /** The name of the programming language that should be used for formatting the SDK API docs. */
+  language?: string;
   /**
    * The title of the platform as it should be displayed in the sidebar.
    * In most cases, you do not need to define this, as the title is used.

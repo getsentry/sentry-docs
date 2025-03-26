@@ -1,15 +1,9 @@
-import {Fragment} from 'react';
-import {jsx, jsxs} from 'react/jsx-runtime';
-import {toJsxRuntime} from 'hast-util-to-jsx-runtime';
-import {Nodes} from 'hastscript/lib/create-h';
-import bash from 'refractor/lang/bash.js';
-import json from 'refractor/lang/json.js';
-import typescript from 'refractor/lang/typescript.js';
-import {refractor} from 'refractor/lib/core.js';
-
+import {getCurrentPlatform} from 'sentry-docs/docTree';
+import {serverContext} from 'sentry-docs/serverContext';
 import {PlatformCategory} from 'sentry-docs/types';
 
 import {Expandable} from './expandable';
+import {codeToJsx} from './highlightCode';
 import {RenderNestedObject} from './nestedObject';
 import {SdkDefinition} from './sdkDefinition';
 
@@ -35,32 +29,27 @@ type Props = {
   language?: string;
 };
 
-refractor.register(bash);
-refractor.register(json);
-refractor.register(typescript);
-
-const codeToJsx = (code: string, lang = 'json') => {
-  return toJsxRuntime(refractor.highlight(code, lang) as Nodes, {Fragment, jsx, jsxs});
-};
-
 export function SdkApi({
   name,
   children,
   signature,
   parameters = [],
-  // TODO: How to handle this default better?
-  language = 'typescript',
+  language,
   categorySupported = [],
 }: Props) {
+  const {rootNode, path} = serverContext();
+  const platform = getCurrentPlatform(rootNode, path);
+  const lang = language || platform?.language || 'typescript';
+
   return (
     <SdkDefinition name={name} categorySupported={categorySupported}>
-      <pre className="mt-2 mb-2 text-sm">{codeToJsx(signature, language)}</pre>
+      <pre className="mt-2 mb-2 text-sm">{codeToJsx(signature, lang)}</pre>
 
       {parameters.length ? (
         <Expandable title="Parameters">
           <div className="space-y-3">
             {parameters.map(param => (
-              <ApiParameterDef key={param.name} language={language} {...param} />
+              <ApiParameterDef key={param.name} language={lang} {...param} />
             ))}
           </div>
         </Expandable>
