@@ -29,19 +29,24 @@ The `log` envelope item payload is a JSON object that represents a Sentry Log. M
   "body": "User John has logged in!",
   "attributes": {
     "sentry.message.template": {
-      "string_value": "User %s has logged in!"
+      "value": "User %s has logged in!",
+      "type": "string"
     },
     "sentry.message.parameters.0": {
-      "string_value": "John"
+      "value": "John",
+      "type": "string"
     },
     "sentry.environment": {
-      "string_value": "production"
+      "value": "production",
+      "type": "string"
     },
     "sentry.release": {
-      "string_value": "1.0.0"
+      "value": "1.0.0",
+      "type": "string"
     },
     "sentry.trace.parent_span_id": {
-      "string_value": "b0e6f15b45c36b12"
+      "value": "b0e6f15b45c36b12",
+      "type": "string"
     }
   }
 }
@@ -69,24 +74,28 @@ It consists of the following fields:
 
 : **Object, optional**. A dictionary of key-value pairs of arbitrary data attached to the log. Attributes must also declare the type of the value. The following types are supported: `string`, `boolean`, `integer`, `double`.
 
-Note: `intValue` is a string because JSON only recognizes numbers as floating point values.
+Note: `type: "integer"` has string values because JSON only recognizes numbers as floating point values.
 
 Example:
 
 ```json
 {
   "attributes": {
-    "string_item": {
-      "stringValue": "value"
+    "db.namespace": {
+      "value": "projects",
+      "type": "string"
     },
-    "integer_item": {
-      "intValue": "123"
+    "db.response.returned_rows": {
+      "value": "123",
+      "type": "integer"
     },
-    "boolean_item": {
-      "boolValue": true
+    "db_query_processing_time": {
+      "value": 123.456,
+      "type": "double"
     },
-    "double_item": {
-      "doubleValue": 123.456
+    "is_production_db": {
+      "value": false,
+      "type": "boolean"
     }
   }
 }
@@ -136,7 +145,7 @@ The SDKs need to expose the following two configuration options:
 
 ```js
 Sentry.init({
-  enableSentryLogs: true,
+  enableLogs: true,
 
   beforeSendLog(log) {
     // Prevent logs from being sent to Sentry if the plan type is enterprise
@@ -280,9 +289,9 @@ Beyond these attributes, we are exploring if the SDK should also send OS, user, 
 
 ### SDK Integrations
 
-SDKs should aim to have it so that console/logger integrations create logs as per the appropriate log level if `enableSentryLogs` is set to true. Examples of this include JavaScript's `console` methods and Pythons `logging` standard library.
+SDKs should aim to have it so that console/logger integrations create logs as per the appropriate log level if `enableLogs` is set to true. Examples of this include JavaScript's `console` object and Pythons `logging` standard library.
 
-If SDK authors feel the need, they can also introduce additional options to beyond `enableSentryLogs` to gate this functionality. For example an option to control log appenders added via external config like with `Log4j` in the Java SDK.
+If SDK authors feel the need, they can also introduce additional options to beyond `enableLogs` to gate this functionality. For example an option to control log appenders added via external config like with `Log4j` in the Java SDK.
 
 ## Appendix A: `otel_log` Envelope Item Payload
 
