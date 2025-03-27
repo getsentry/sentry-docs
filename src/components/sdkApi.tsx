@@ -47,7 +47,9 @@ export function SdkApi({
   return (
     <SdkDefinition name={name} categorySupported={categorySupported}>
       {showBrowserOnly && <div className="italic text-sm">Only available on Client</div>}
-      {showServerLikeOnly && <div className="italic text-sm">Only available on Server</div>}
+      {showServerLikeOnly && (
+        <div className="italic text-sm">Only available on Server</div>
+      )}
 
       <pre className="mt-2 mb-2 text-sm">{codeToJsx(signature, lang)}</pre>
 

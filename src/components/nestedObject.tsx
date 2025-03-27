@@ -6,7 +6,6 @@ import {MinusCircledIcon, PlusCircledIcon} from '@radix-ui/react-icons';
 import {codeToJsx} from './highlightCode';
 import {ParameterDef} from './sdkApi';
 
-
 export function RenderNestedObject({
   name,
   objProps,
@@ -52,7 +51,10 @@ export function RenderNestedObject({
                 <div>
                   {typeof prop.type === 'string' ? (
                     <Fragment>
-                      <code>{prop.name}{!prop.required ? '?' : ''}: </code>
+                      <code>
+                        {prop.name}
+                        {!prop.required ? '?' : ''}:{' '}
+                      </code>
                       <code>{codeToJsx(prop.type, 'typescript')},</code>
                     </Fragment>
                   ) : (
