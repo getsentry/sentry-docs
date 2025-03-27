@@ -44,7 +44,7 @@ Configuration should happen as early as possible in your application's lifecycle
 
 To use the SDK, initialize it in your Svelte entry point before bootstrapping your app. In a typical Svelte project, that is your `main.js` or `main.ts` file.
 
-```javascript {filename: main.js} {"onboardingOptions": {"performance": "10, 13-20", "session-replay": "11, 23-29"}}
+```javascript {tabTitle: Svelte v3-v4} {filename: main.js} {"onboardingOptions": {"performance": "10, 13-20", "session-replay": "11, 23-29"}}
 import "./app.css";
 import App from "./App.svelte";
 
@@ -77,6 +77,46 @@ Sentry.init({
 });
 
 const app = new App({
+  target: document.getElementById("app"),
+});
+
+export default app;
+```
+
+```javascript {tabTitle: Svelte v5+} {filename: main.js} {"onboardingOptions": {"performance": "11, 14-21", "session-replay": "12, 24-30"}}
+import { mount } from "svelte";
+import "./app.css";
+import App from "./App.svelte";
+
+import * as Sentry from "@sentry/svelte";
+
+// Initialize the Sentry SDK here
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration(),
+  ],
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for tracing.
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+
+  // Set `tracePropagationTargets` to control for which URLs trace propagation should be enabled
+  tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+
+  // Capture Replay for 10% of all sessions,
+  // plus 100% of sessions with an error
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
+
+const app = mount(App, {
   target: document.getElementById("app"),
 });
 
