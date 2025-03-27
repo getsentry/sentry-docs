@@ -57,7 +57,7 @@ function OptionDefRow({label, value}: {label: string; value: string}) {
   );
 }
 
-function getPlatformHints(categorySupported: PlatformCategory[]) {
+export function getPlatformHints(categorySupported: PlatformCategory[]) {
   const {rootNode, path} = serverContext();
   const currentPlatformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
   const currentCategories = currentPlatformOrGuide?.categories || [];
