@@ -110,6 +110,24 @@ Sentry.setTag("tag", "value");
   where possible.
 </SdkApi>
 
+<SdkApi name="lazyLoadIntegration" signature="function lazyLoadIntegration(name: string, scriptNonce?: string): Promise<Integration>" categorySupported={['browser']}>
+  Lazy load an integration. This expects the name to be e.g. `replayIntegration`. It will load the script from the CDN, and return a promise that resolves to the integration, which can then be added to the SDK using `addIntegration`:
+
+```javascript
+Sentry.lazyLoadIntegration("replayIntegration")
+  .then((integration) => {
+    Sentry.addIntegration(integration);
+  })
+  .catch((error) => {
+    // Make sure to handle errors here!
+    // This rejects e.g. if the CDN bundle cannot be loaded
+  });
+```
+
+If you use a bundler, using e.g. `const { replayIntegration } = await import('@sentry/browser')` is recommended instead.
+
+</SdkApi>
+
 ## Scopes
 
 <SdkApi name="getCurrentScope" signature="function getCurrentScope(): Scope">
@@ -154,8 +172,8 @@ Sentry.setTag("tag", "value");
 <SdkApi
   name="captureException"
   signature={`function captureException(
-    exception: unknown,
-    captureContext?: CaptureContext
+  exception: unknown,
+  captureContext?: CaptureContext
 ): EventId`}
   parameters={[
     {
@@ -212,58 +230,58 @@ Sentry.setTag("tag", "value");
 </SdkApi>
 
 <SdkApi
-  name="captureMessage"
-  signature={`function captureMessage(
-    message: string,
-    captureContext?: CaptureContext | SeverityLevel
+name="captureMessage"
+signature={`function captureMessage(
+  message: string,
+  captureContext?: CaptureContext | SeverityLevel
 ): EventId`}
-  parameters={[
-    {
-      name: "message",
-      required: true,
-      type: "string",
-      description: "The message to capture.",
+parameters={[
+  {
+    name: "message",
+    required: true,
+    type: "string",
+    description: "The message to capture.",
+  },
+  {
+    name: "captureContext",
+    type: {
+      name: "CaptureContext",
+      properties: [
+        {
+          name: "user",
+          type: {
+            name: "User",
+            properties: [
+              { name: "id", type: "string | number" },
+              { name: "email", type: "string" },
+              { name: "ip_address", type: "string" },
+              { name: "username", type: "string" },
+            ],
+          },
+        },
+        {
+          name: "level",
+          type: '"fatal" | "error" | "warning" | "log" | "info" | "debug"',
+        },
+        {
+          name: "extra",
+          type: "Record<string, unknown>",
+          description:
+            "Additional data that should be sent with the exception.",
+        },
+        {
+          name: "tags",
+          type: "Record<string, string>",
+          description:
+            "Additional tags that should be sent with the exception.",
+        },
+        { name: "contexts", type: "Record<string, Record<string, unknown>>" },
+        { name: "fingerprint", type: "string[]" },
+      ],
     },
-    {
-      name: "captureContext",
-      type: {
-        name: "CaptureContext",
-        properties: [
-          {
-            name: "user",
-            type: {
-              name: "User",
-              properties: [
-                { name: "id", type: "string | number" },
-                { name: "email", type: "string" },
-                { name: "ip_address", type: "string" },
-                { name: "username", type: "string" },
-              ],
-            },
-          },
-          {
-            name: "level",
-            type: '"fatal" | "error" | "warning" | "log" | "info" | "debug"',
-          },
-          {
-            name: "extra",
-            type: "Record<string, unknown>",
-            description:
-              "Additional data that should be sent with the exception.",
-          },
-          {
-            name: "tags",
-            type: "Record<string, string>",
-            description:
-              "Additional tags that should be sent with the exception.",
-          },
-          { name: "contexts", type: "Record<string, Record<string, unknown>>" },
-          { name: "fingerprint", type: "string[]" },
-        ],
-      },
-      description: "Optional additional data to attach to the Sentry event.",
-    },
-  ]}
+    description: "Optional additional data to attach to the Sentry event.",
+  },
+]}
 >
 Capture a message event and send it to Sentry. Optionally, instead of a
 `CaptureContext`, you can also pass a `SeverityLevel` as second argument, e.g.
@@ -271,88 +289,6 @@ Capture a message event and send it to Sentry. Optionally, instead of a
 
 Messages show up as issues on your issue stream, with the message as the issue name.
 
-</SdkApi>
-
-<SdkApi
-  name="captureFeedback"
-  signature="function captureFeedback(feedback: Feedback, hint?: Hint): string"
-  parameters={[
-    {
-      name: "feedback",
-      type: {
-        name: "Feedback",
-        properties: [
-          { name: "message", type: "string", required: true },
-          { name: "name", type: "string" },
-          { name: "email", type: "string" },
-          { name: "url", type: "string" },
-          { name: "source", type: "string" },
-          {
-            name: "associatedEventId",
-            type: "string",
-            description: "The event id that this feedback is associated with.",
-          },
-          { name: "tags", type: "Record<string, string>" },
-        ],
-      },
-      description: "The feedback to capture.",
-    },
-    {
-      name: "hint",
-      type: {
-        name: "Hint",
-        properties: [
-          {
-            name: "captureContext",
-            type: {
-              name: "CaptureContext",
-              properties: [
-                {
-                  name: "user",
-                  type: {
-                    name: "User",
-                    properties: [
-                      { name: "id", type: "string | number" },
-                      { name: "email", type: "string" },
-                      { name: "ip_address", type: "string" },
-                      { name: "username", type: "string" },
-                    ],
-                  },
-                },
-                {
-                  name: "level",
-                  type: '"fatal" | "error" | "warning" | "log" | "info" | "debug"',
-                },
-                {
-                  name: "extra",
-                  type: "Record<string, unknown>",
-                  description:
-                    "Additional data that should be sent with the exception.",
-                },
-                {
-                  name: "tags",
-                  type: "Record<string, string>",
-                  description:
-                    "Additional tags that should be sent with the exception.",
-                },
-                {
-                  name: "contexts",
-                  type: "Record<string, Record<string, unknown>>",
-                },
-                { name: "fingerprint", type: "string[]" },
-              ],
-            },
-            description:
-              "Optional additional data to attach to the Sentry event.",
-          },
-        ],
-      },
-      description:
-        "Optional hint object containing additional information about the feedback.",
-    },
-  ]}
->
-  Send user feedback to Sentry.
 </SdkApi>
 
 ## Enriching Events
@@ -478,8 +414,134 @@ Messages show up as issues on your issue stream, with the message as the issue n
 
 ## Tracing
 
-<SdkApi name="startSpan" signature="function startSpan(name: string): Span">
-  Starts a new span.
+<SdkApi
+name="startSpan"
+signature="function startSpan<T>(options: StartSpanOptions, callback: (span: Span) => T): T"
+parameters={[
+  {
+    name: "options",
+    required: true,
+    type: {
+      name: 'StartSpanOptions',
+      properties: [
+        { name: "name", type: "string", required: true },
+        { name: 'attributes', type: 'Record<string, string | number | boolean | null | undefined>', description: 'Attributes to add to the span.' },
+        { name: 'startTime', type: 'number', description: 'The timestamp to use for the span start. If not provided, the current time will be used.' },
+        { name: 'op', type: 'string', description: 'The operation name for the span. This is used to group spans in the UI' },
+        { name: 'forceTransaction', type: 'boolean', description: 'If true, the span will be forced to be sent as a transaction, even if it is not the root span.' },
+        { name: 'parentSpan', type: 'Span | null', description: 'The parent span for the new span. If not provided, the current span will be used.' },
+        { name: 'onlyIfParent', type: 'boolean', description: 'If true, the span will only be created if there is an active span.' },
+      ]
+    },
+  },
+  { name: "callback", type: "(span: Span) => T", required: true },
+]}>
+  Starts a new span, that is active in the provided callback.
+  This span will be a child of the currently active span, if there is one.
+
+Any spans created inside of the callback will be children of this span.
+
+The started span will automatically be ended when the callback returns, and will thus measure the duration of the callback. The callback cann also be an async function.
+
+  <Expandable title='Examples'>
+  ```javascript
+  // Synchronous example
+ Sentry.startSpan({ name: 'my-span' }, (span) => {
+    measureThis();
+  });
+
+// Asynchronous example
+const status = await Sentry.startSpan({ name: 'my-span' }, async (span) => {
+const status = await doSomething();
+return status;
+});
+
+````
+</Expandable>
+
+See <PlatformLink to="/tracing/instrumentation/">Tracing Instrumentation</PlatformLink> for more information on how to work with spans.
+
+</SdkApi>
+
+<SdkApi
+  name="startInactiveSpan"
+  signature="function startInactiveSpan<T>(options: StartSpanOptions): Span"
+  parameters={[
+  {
+    name: "options",
+    required: true,
+    type: {
+      name: 'StartSpanOptions',
+      properties: [
+        { name: "name", type: "string", required: true },
+        { name: 'attributes', type: 'Record<string, string | number | boolean | null | undefined>', description: 'Attributes to add to the span.' },
+        { name: 'startTime', type: 'number', description: 'The timestamp to use for the span start. If not provided, the current time will be used.' },
+        { name: 'op', type: 'string', description: 'The operation name for the span. This is used to group spans in the UI' },
+        { name: 'forceTransaction', type: 'boolean', description: 'If true, the span will be forced to be sent as a transaction, even if it is not the root span.' },
+        { name: 'parentSpan', type: 'Span | null', description: 'The parent span for the new span. If not provided, the current span will be used.' },
+        { name: 'onlyIfParent', type: 'boolean', description: 'If true, the span will only be created if there is an active span.' },
+      ]
+    },
+  }
+]}>
+  Starts a new span. This span will be a child of the currently active span, if there is one.
+  The returned span has to be ended manually via `span.end()` when the span is done.
+
+  <Expandable title='Examples'>
+  ```javascript
+const span = Sentry.startInactiveSpan({ name: 'my-span' });
+doSomething();
+span.end();
+````
+
+</Expandable>
+
+See <PlatformLink to="/tracing/instrumentation/">Tracing Instrumentation</PlatformLink> for more information on how to work with spans.
+
+</SdkApi>
+
+<SdkApi
+ name="startSpanManual"
+ signature="function startSpanManual<T>(options: StartSpanOptions, callback: (span: Span) => T): T"
+ parameters={[
+  {
+    name: "options",
+    required: true,
+    type: {
+      name: 'StartSpanOptions',
+      properties: [
+        { name: "name", type: "string", required: true },
+        { name: 'attributes', type: 'Record<string, string | number | boolean | null | undefined>', description: 'Attributes to add to the span.' },
+        { name: 'startTime', type: 'number', description: 'The timestamp to use for the span start. If not provided, the current time will be used.' },
+        { name: 'op', type: 'string', description: 'The operation name for the span. This is used to group spans in the UI' },
+        { name: 'forceTransaction', type: 'boolean', description: 'If true, the span will be forced to be sent as a transaction, even if it is not the root span.' },
+        { name: 'parentSpan', type: 'Span | null', description: 'The parent span for the new span. If not provided, the current span will be used.' },
+        { name: 'onlyIfParent', type: 'boolean', description: 'If true, the span will only be created if there is an active span.' },
+      ]
+    },
+  },
+  { name: "callback", type: "(span: Span) => T", required: true },
+]}>
+  Starts a new span, that is active in the provided callback.
+  This span will be a child of the currently active span, if there is one.
+
+Any spans created inside of the callback will be children of this span.
+
+The started span will _not_ automatically end - you have to call `span.end()` when the span is done. Please note that the span will still only be the parent span of spans created inside of the callback, while the callback is active. In most cases, you will want to use `startSpan` or `startInactiveSpan` instead.
+
+  <Expandable title='Examples'>
+  ```javascript
+const status = await Sentry.startSpanManual({ name: 'my-span' }, async (span) => {
+const status = await doSomething();
+span.end();
+return status;
+});
+
+````
+</Expandable>
+
+See <PlatformLink to="/tracing/instrumentation/">Tracing Instrumentation</PlatformLink> for more information on how to work with spans.
+
 </SdkApi>
 
 <SdkApi
@@ -523,6 +585,45 @@ Messages show up as issues on your issue stream, with the message as the issue n
   Sentry.
 </SdkApi>
 
+<SdkApi
+  name="startNewTrace"
+  signature="function startNewTrace<T>(callback: () => T): T"
+>
+  Start a new trace that is active in the provided callback.
+</SdkApi>
+
+<SdkApi
+  name="startBrowserTracingPageLoadSpan"
+  signature="function startBrowserTracingPageLoadSpan(client: Client, options: StartSpanOptions): Span | undefined"
+  categorySupported={["browser"]}
+>
+  Start an pageload span that will be automatically ended when the page is
+  considered idle. If a pageload/navigation span is currently ongoing, it will
+  automatically be ended first. In most cases, you do not need to call this, as
+  the `browserTracingIntegration` will automatically do that for you. However,
+  if you opt-out of pageload spans, you can use this method to manually start
+  such a span. Please note that this function will do nothing if
+  `browserTracingIntegration` has not been enabled.
+</SdkApi>
+
+<SdkApi
+  name="startBrowserTracingNavigationSpan"
+  signature="function startBrowserTracingNavigationSpan(client: Client, options: StartSpanOptions): Span | undefined"
+  categorySupported={["browser"]}
+>
+  Start an navigation span that will be automatically ended when the page is
+  considered idle. If a pageload/navigation span is currently ongoing, it will
+  automatically be ended first. In most cases, you do not need to call this, as
+  the `browserTracingIntegration` will automatically do that for you. However,
+  if you opt-out of navigation spans, you can use this method to manually start
+  such a span. Please note that this function will do nothing if
+  `browserTracingIntegration` has not been enabled.
+</SdkApi>
+
+<SdkApi name="withActiveSpan" signature="function withActiveSpan<T>(span: Span | null, callback: () => T): T">
+  Runs the provided callback with the given span as the active span. If `null` is provided, the callback will have no active span.
+</SdkApi>
+
 ## Tracing Utilities
 
 These utilities can be used for more advanced tracing use cases.
@@ -537,6 +638,17 @@ These utilities can be used for more advanced tracing use cases.
 >
   Update the name of a span. Use this over `span.updateName(name)` to ensure
   that the span is updated in all backends.
+</SdkApi>
+
+<SdkApi
+  name="getActiveSpan"
+  signature="function getActiveSpan(): Span | undefined"
+>
+  Get the currently active span.
+</SdkApi>
+
+<SdkApi name="getRootSpan" signature="function getRootSpan(span: Span): Span">
+  Get the root span of a span.
 </SdkApi>
 
 ## Sessions
@@ -555,6 +667,182 @@ These utilities can be used for more advanced tracing use cases.
 >
   Sends the current session on the scope to Sentry. Pass `true` as argument to
   end the session first.
+</SdkApi>
+
+## User Feedback
+
+<SdkApi
+  name="captureFeedback"
+  signature="function captureFeedback(feedback: Feedback, hint?: Hint): string"
+  parameters={[
+    {
+      name: "feedback",
+      type: {
+        name: "Feedback",
+        properties: [
+          { name: "message", type: "string", required: true },
+          { name: "name", type: "string" },
+          { name: "email", type: "string" },
+          { name: "url", type: "string" },
+          { name: "source", type: "string" },
+          {
+            name: "associatedEventId",
+            type: "string",
+            description: "The event id that this feedback is associated with.",
+          },
+          { name: "tags", type: "Record<string, string>" },
+        ],
+      },
+      description: "The feedback to capture.",
+    },
+    {
+      name: "hint",
+      type: {
+        name: "Hint",
+        properties: [
+          {
+            name: "captureContext",
+            type: {
+              name: "CaptureContext",
+              properties: [
+                {
+                  name: "user",
+                  type: {
+                    name: "User",
+                    properties: [
+                      { name: "id", type: "string | number" },
+                      { name: "email", type: "string" },
+                      { name: "ip_address", type: "string" },
+                      { name: "username", type: "string" },
+                    ],
+                  },
+                },
+                {
+                  name: "level",
+                  type: '"fatal" | "error" | "warning" | "log" | "info" | "debug"',
+                },
+                {
+                  name: "extra",
+                  type: "Record<string, unknown>",
+                  description:
+                    "Additional data that should be sent with the exception.",
+                },
+                {
+                  name: "tags",
+                  type: "Record<string, string>",
+                  description:
+                    "Additional tags that should be sent with the exception.",
+                },
+                {
+                  name: "contexts",
+                  type: "Record<string, Record<string, unknown>>",
+                },
+                { name: "fingerprint", type: "string[]" },
+              ],
+            },
+            description:
+              "Optional additional data to attach to the Sentry event.",
+          },
+        ],
+      },
+      description:
+        "Optional hint object containing additional information about the feedback.",
+    },
+  ]}
+>
+  Send user feedback to Sentry.
+</SdkApi>
+
+<SdkApi
+  name="getFeedback"
+  signature="function getFeedback(): ReturnType<feedbackIntegration> | undefined"
+>
+  Get the feedback integration, if it has been added. This can be used to access
+  the feedback integration in a type-safe way.
+</SdkApi>
+
+<SdkApi
+  name="sendFeedback"
+  signature="function sendFeedback(feedback: Feedback, hint?: Hint): Promise<string>"
+  parameters={[
+    {
+      name: "feedback",
+      type: {
+        name: "Feedback",
+        properties: [
+          { name: "message", type: "string", required: true },
+          { name: "name", type: "string" },
+          { name: "email", type: "string" },
+          { name: "url", type: "string" },
+          { name: "source", type: "string" },
+          {
+            name: "associatedEventId",
+            type: "string",
+            description: "The event id that this feedback is associated with.",
+          },
+          { name: "tags", type: "Record<string, string>" },
+        ],
+      },
+      description: "The feedback to capture.",
+    },
+    {
+      name: "hint",
+      type: {
+        name: "Hint",
+        properties: [
+          {
+            name: "captureContext",
+            type: {
+              name: "CaptureContext",
+              properties: [
+                {
+                  name: "user",
+                  type: {
+                    name: "User",
+                    properties: [
+                      { name: "id", type: "string | number" },
+                      { name: "email", type: "string" },
+                      { name: "ip_address", type: "string" },
+                      { name: "username", type: "string" },
+                    ],
+                  },
+                },
+                {
+                  name: "level",
+                  type: '"fatal" | "error" | "warning" | "log" | "info" | "debug"',
+                },
+                {
+                  name: "extra",
+                  type: "Record<string, unknown>",
+                  description:
+                    "Additional data that should be sent with the exception.",
+                },
+                {
+                  name: "tags",
+                  type: "Record<string, string>",
+                  description:
+                    "Additional tags that should be sent with the exception.",
+                },
+                {
+                  name: "contexts",
+                  type: "Record<string, Record<string, unknown>>",
+                },
+                { name: "fingerprint", type: "string[]" },
+              ],
+            },
+            description:
+              "Optional additional data to attach to the Sentry event.",
+          },
+        ],
+      },
+      description:
+        "Optional hint object containing additional information about the feedback.",
+    },
+  ]}
+>
+  This method is similar to [`captureFeedback`](#capturefeedback), but it
+  returns a promise that resolves only when the feedback was successfully sent
+  to Sentry. It will reject if the feedback cannot be sent.
 </SdkApi>
 
 <PlatformCategorySection supported={['server']}>
@@ -606,44 +894,46 @@ These utilities can be used for more advanced tracing use cases.
 </SdkApi>
 
 <SdkApi
-  name="withMonitor"
-  signature={`function withMonitor(
-    monitorSlug: string,
-    callback: () => any,
-    monitorConfig?: MonitorConfig
+name="withMonitor"
+signature={`function withMonitor(
+monitorSlug: string,
+callback: () => any,
+monitorConfig?: MonitorConfig
 ): string`}
-  categorySupported={['server']}
-  parameters={[
-    {
-      name: "monitorSlug",
-      type: 'string',
-      required: true,
-    },
-     {
-      name: "callback",
-      type: '() => any',
-      required: true,
-    },
-    {
-      name: "monitorConfig",
-      type: {
-        name: "MonitorConfig",
-        properties: [
-          {
-            name: "schedule",
-            type: '{ type: "crontab", value: string } | { type: "interval", value: number, unit: "year" | "month" | "day" | "hour" | "minute" }',
-            required: true,
-          },
-          { name: "checkinMargin", type: "number" },
-          { name: "maxRuntime", type: "number" },
-          { name: "timezone", type: "string" },
-          { name: "failureIssueThreshold", type: "number" },
-          { name: "recoveryThreshold", type: "number" },
-        ],
+categorySupported={['server']}
+parameters={[
+{
+  name: "monitorSlug",
+  type: 'string',
+  required: true,
+},
+ {
+  name: "callback",
+  type: '() => any',
+  required: true,
+},
+{
+  name: "monitorConfig",
+  type: {
+    name: "MonitorConfig",
+    properties: [
+      {
+        name: "schedule",
+        type: '{ type: "crontab", value: string } | { type: "interval", value: number, unit: "year" | "month" | "day" | "hour" | "minute" }',
+        required: true,
       },
-    },
-  ]}
+      { name: "checkinMargin", type: "number" },
+      { name: "maxRuntime", type: "number" },
+      { name: "timezone", type: "string" },
+      { name: "failureIssueThreshold", type: "number" },
+      { name: "recoveryThreshold", type: "number" },
+    ],
+  },
+},
+]}
 >
-  Wraps a callback with a cron monitor check in. The check in will be sent to Sentry when the callback finishes.
+Wraps a callback with a cron monitor check in. The check in will be sent to Sentry when the callback finishes.
 </SdkApi>
 </PlatformCategorySection>
+```
+````
