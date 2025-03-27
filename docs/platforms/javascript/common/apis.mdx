@@ -17,6 +17,138 @@ Sentry.setTag("tag", "value");
 
 <TableOfContents ignoreIds={["available-options"]} />
 
+## Core APIs
+
+<SdkApi
+  name="init"
+  signature="function init(options: InitOptions): Client | undefined"
+>
+  Initialize the SDK with the given options. See{" "}
+  <PlatformLink to="/configuration/options/">Options</PlatformLink> for the
+  options you can pass to `init`.
+</SdkApi>
+
+<SdkApi name="getClient" signature="function getClient(): Client | undefined">
+  Returns the currently active client.
+</SdkApi>
+
+<SdkApi
+  name="setCurrentClient"
+  signature="function setCurrentClient(client: Client): void"
+>
+  Make the given client the current client. You do not need this if you use
+  `init()`, this is only necessary if you are manually setting up a client.˝
+</SdkApi>
+
+<SdkApi
+  name="lastEventId"
+  signature="function lastEventId(): string | undefined"
+>
+  Returns the ID of the last sent error event. Note that this does not guarantee
+  that this event ID exists, as it may have been dropped along the way.
+</SdkApi>
+
+<SdkApi
+  name="flush"
+  signature="function flush(timeout?: number): Promise<boolean>"
+  parameters={[
+    {
+      name: "timeout",
+      type: "number",
+      description:
+        "Maximum time in ms the client should wait to flush its event queue. Omitting this parameter will cause the client to wait until all events are sent before resolving the promise.",
+    },
+  ]}
+>
+  Flushes all pending events.
+</SdkApi>
+
+<SdkApi name="isEnabled" signature="function isEnabled(): boolean">
+  Returns true if the SDK is initialized & enabled.
+</SdkApi>
+
+<SdkApi
+  name="close"
+  signature="function flush(timeout?: number): Promise<boolean>"
+  parameters={[
+    {
+      name: "timeout",
+      type: "number",
+      description:
+        "Maximum time in ms the client should wait to flush its event queue. Omitting this parameter will cause the client to wait until all events are sent before resolving the promise.",
+    },
+  ]}
+>
+  Flushes all pending events and disables the SDK. Note that this does not
+  remove any listeners the SDK may have set up.
+</SdkApi>
+
+<SdkApi
+  name="addEventProcessor"
+  signature="function addEventProcessor(processor: EventProcessor): void"
+  parameters={[
+    {
+      name: "processor",
+      type: "(event: Event, hint: EventHint) => Event | null | Promise<Event | null>",
+    },
+  ]}
+>
+  Adds an event processor to the SDK. An event processor receives every event
+  before it is sent to Sentry. It can either mutate the event (and return it) or
+  return `null` to discard the event. Event processors can also return a
+  promise, but it is recommended to use this only when necessary as it slows
+  down event processing.
+</SdkApi>
+
+<SdkApi
+  name="addIntegration"
+  signature="function addIntegration(integration: Integration): void"
+>
+  Adds an integration to the SDK. This can be used to conditionally add
+  integrations after `Sentry.init()` has been called. Note that it is
+  recommended to pass integrations to `init` instead of calling this method,
+  where possible.
+</SdkApi>
+
+## Scopes
+
+<SdkApi name="getCurrentScope" signature="function getCurrentScope(): Scope">
+  Returns the current scope. See{" "}
+  <PlatformLink to="/configuration/scopes/">Scopes</PlatformLink> for more
+  information.
+</SdkApi>
+
+<SdkApi
+  name="withScope"
+  signature="function withScope(callback: (scope: Scope) => void): void"
+>
+  Forks the current scope and calls the callback with the forked scope. See{" "}
+  <PlatformLink to="/configuration/scopes/">Scopes</PlatformLink> for more
+  information.
+</SdkApi>
+
+<SdkApi
+  name="getIsolationScope"
+  signature="function getIsolationScope(): Scope"
+>
+  Returns the current isolation scope.
+</SdkApi>
+
+<SdkApi
+  name="withIsolationScope"
+  signature="function withIsolationScope(callback: (scope: Scope) => void): void"
+>
+  Forks the current isolation scope and calls the callback with the forked
+  scope. See <PlatformLink to="/configuration/scopes/">Scopes</PlatformLink> for
+  more information.
+</SdkApi>
+
+<SdkApi name="getGlobalScope" signature="function getGlobalScope(): Scope">
+  Returns the global scope. See{" "}
+  <PlatformLink to="/configuration/scopes/">Scopes</PlatformLink> for more
+  information.
+</SdkApi>
+
 ## Capturing Events
 
 <SdkApi
@@ -24,7 +156,7 @@ Sentry.setTag("tag", "value");
   signature={`function captureException(
     exception: unknown,
     captureContext?: CaptureContext
-): Promise<EventId>`}
+): EventId`}
   parameters={[
     {
       name: "exception",
@@ -69,15 +201,222 @@ Sentry.setTag("tag", "value");
           { name: "fingerprint", type: "string[]" },
         ],
       },
-      description:
-        "A hint object containing additional information about the exception.",
+      description: "Optional additional data to attach to the Sentry event.",
     },
   ]}
 >
-  Capture an exception event and send it to Sentry.
+  Capture an exception event and send it to Sentry. Note that you can pass not
+  only `Error` objects, but also other objects as `exception` - in that case,
+  the SDK will attempt to serialize the object for you, and the stack trace will
+  be generated by the SDK and may be less accurate.
+</SdkApi>
+
+<SdkApi
+  name="captureMessage"
+  signature={`function captureMessage(
+    message: string,
+    captureContext?: CaptureContext | SeverityLevel
+): EventId`}
+  parameters={[
+    {
+      name: "message",
+      required: true,
+      type: "string",
+      description: "The message to capture.",
+    },
+    {
+      name: "captureContext",
+      type: {
+        name: "CaptureContext",
+        properties: [
+          {
+            name: "user",
+            type: {
+              name: "User",
+              properties: [
+                { name: "id", type: "string | number" },
+                { name: "email", type: "string" },
+                { name: "ip_address", type: "string" },
+                { name: "username", type: "string" },
+              ],
+            },
+          },
+          {
+            name: "level",
+            type: '"fatal" | "error" | "warning" | "log" | "info" | "debug"',
+          },
+          {
+            name: "extra",
+            type: "Record<string, unknown>",
+            description:
+              "Additional data that should be sent with the exception.",
+          },
+          {
+            name: "tags",
+            type: "Record<string, string>",
+            description:
+              "Additional tags that should be sent with the exception.",
+          },
+          { name: "contexts", type: "Record<string, Record<string, unknown>>" },
+          { name: "fingerprint", type: "string[]" },
+        ],
+      },
+      description: "Optional additional data to attach to the Sentry event.",
+    },
+  ]}
+>
+Capture a message event and send it to Sentry. Optionally, instead of a
+`CaptureContext`, you can also pass a `SeverityLevel` as second argument, e.g.
+`"error"` or `"warning"`.
+
+Messages show up as issues on your issue stream, with the message as the issue name.
+
+</SdkApi>
+
+<SdkApi
+  name="captureFeedback"
+  signature="function captureFeedback(feedback: Feedback, hint?: Hint): string"
+  parameters={[
+    {
+      name: "feedback",
+      type: {
+        name: "Feedback",
+        properties: [
+          { name: "message", type: "string", required: true },
+          { name: "name", type: "string" },
+          { name: "email", type: "string" },
+          { name: "url", type: "string" },
+          { name: "source", type: "string" },
+          {
+            name: "associatedEventId",
+            type: "string",
+            description: "The event id that this feedback is associated with.",
+          },
+          { name: "tags", type: "Record<string, string>" },
+        ],
+      },
+      description: "The feedback to capture.",
+    },
+    {
+      name: "hint",
+      type: {
+        name: "Hint",
+        properties: [
+          {
+            name: "captureContext",
+            type: {
+              name: "CaptureContext",
+              properties: [
+                {
+                  name: "user",
+                  type: {
+                    name: "User",
+                    properties: [
+                      { name: "id", type: "string | number" },
+                      { name: "email", type: "string" },
+                      { name: "ip_address", type: "string" },
+                      { name: "username", type: "string" },
+                    ],
+                  },
+                },
+                {
+                  name: "level",
+                  type: '"fatal" | "error" | "warning" | "log" | "info" | "debug"',
+                },
+                {
+                  name: "extra",
+                  type: "Record<string, unknown>",
+                  description:
+                    "Additional data that should be sent with the exception.",
+                },
+                {
+                  name: "tags",
+                  type: "Record<string, string>",
+                  description:
+                    "Additional tags that should be sent with the exception.",
+                },
+                {
+                  name: "contexts",
+                  type: "Record<string, Record<string, unknown>>",
+                },
+                { name: "fingerprint", type: "string[]" },
+              ],
+            },
+            description:
+              "Optional additional data to attach to the Sentry event.",
+          },
+        ],
+      },
+      description:
+        "Optional hint object containing additional information about the feedback.",
+    },
+  ]}
+>
+  Send user feedback to Sentry.
 </SdkApi>
 
 ## Enriching Events
+
+<SdkApi
+  name="setTag"
+  signature="function setTag(key: string, value: string): void"
+  parameters={[]}
+>
+  Set a tag to be sent with Sentry events.
+</SdkApi>
+
+<SdkApi
+  name="setTags"
+  signature="function setTags(tags: Record<string, string>): void"
+  parameters={[]}
+>
+  Set multiple tags to be sent with Sentry events.
+</SdkApi>
+
+<SdkApi
+  name="setContext"
+  signature="function setContext(name: string, context: Record<string, unknown>): void"
+  parameters={[]}
+>
+  Set a context to be sent with Sentry events.
+</SdkApi>
+
+<SdkApi
+  name="setExtra"
+  signature="function setExtra(name: string, extra: unknown): void"
+  parameters={[]}
+>
+  Set additional data to be sent with Sentry events.
+</SdkApi>
+
+<SdkApi
+  name="setExtras"
+  signature="function setExtras(extras: Record<string, unknown>): void"
+  parameters={[]}
+>
+  Set multiple additional data entries to be sent with Sentry events.
+</SdkApi>
+
+<SdkApi
+  name="setUser"
+  signature="function setUser(user: User | null): void"
+  parameters={[
+    {
+      name: "user",
+      type: {
+        name: "User",
+        properties: [
+          { name: "id", type: "string | number" },
+          { name: "email", type: "string" },
+          { name: "ip_address", type: "string" },
+          { name: "username", type: "string" },
+        ],
+      },
+    },
+  ]}
+>
+  Set a user to be sent with Sentry events. Set to `null` to unset the user.
+</SdkApi>
 
 <SdkApi
   name="addBreadcrumb"
@@ -136,3 +475,175 @@ Sentry.setTag("tag", "value");
   example, you might manually record a breadcrumb if the user authenticates or
   another state change occurs.
 </SdkApi>
+
+## Tracing
+
+<SdkApi name="startSpan" signature="function startSpan(name: string): Span">
+  Starts a new span.
+</SdkApi>
+
+<SdkApi
+  name="continueTrace"
+  signature="function continueTrace<T>(options: TraceOptions, callback: () => T): T"
+  parameters={[
+    {
+      name: "options",
+      type: {
+        name: "TraceOptions",
+        properties: [
+          {
+            name: "sentryTrace",
+            type: "string",
+            description: "The sentry-trace header.",
+          },
+          {
+            name: "baggage",
+            type: "string",
+            description: "The baggage header.",
+          },
+        ],
+      },
+    },
+    {
+      name: "callback",
+      type: "() => T",
+      description: "The callback to continue the trace.",
+    },
+  ]}
+>
+  Continues a trace in the provided callback. Any spans created inside of the
+  callback will be linked to the trace.
+</SdkApi>
+
+<SdkApi
+  name="suppressTracing"
+  signature="function suppressTracing<T>(callback: () => T): T"
+>
+  Ensure that all spans created inside of the provided callback are not sent to
+  Sentry.
+</SdkApi>
+
+## Tracing Utilities
+
+These utilities can be used for more advanced tracing use cases.
+
+<SdkApi name="spanToJSON" signature="function spanToJSON(span: Span): SpanJSON">
+  Convert a span to a JSON object.
+</SdkApi>
+
+<SdkApi
+  name="updateSpanName"
+  signature="function updateSpanName(span: Span, name: string): void"
+>
+  Update the name of a span. Use this over `span.updateName(name)` to ensure
+  that the span is updated in all backends.
+</SdkApi>
+
+## Sessions
+
+<SdkApi name="startSession" signature="function startSession(): void">
+  Starts a new session.
+</SdkApi>
+
+<SdkApi name="endSession" signature="function endSession(): void">
+  Ends the current session (but does not send it to Sentry).
+</SdkApi>
+
+<SdkApi
+  name="captureSession"
+  signature="function captureSession(end = false): void"
+>
+  Sends the current session on the scope to Sentry. Pass `true` as argument to
+  end the session first.
+</SdkApi>
+
+<PlatformCategorySection supported={['server']}>
+## Cron Monitoring
+
+<SdkApi
+  name="captureCheckIn"
+  signature="function captureCheckIn(checkIn: CheckIn, monitorConfig?: MonitorConfig): string"
+  categorySupported={["server"]}
+  parameters={[
+    {
+      name: "checkIn",
+      type: {
+        name: "CheckIn",
+        properties: [
+          {
+            name: "status",
+            type: '"ok" | "error" | "in_progress"',
+            required: true,
+          },
+          { name: "monitorSlug", type: "string", required: true },
+          { name: "checkInId", type: "string" },
+          { name: "duration", type: "number" },
+        ],
+      },
+      required: true,
+    },
+    {
+      name: "monitorConfig",
+      type: {
+        name: "MonitorConfig",
+        properties: [
+          {
+            name: "schedule",
+            type: '{ type: "crontab", value: string } | { type: "interval", value: number, unit: "year" | "month" | "day" | "hour" | "minute" }',
+            required: true,
+          },
+          { name: "checkinMargin", type: "number" },
+          { name: "maxRuntime", type: "number" },
+          { name: "timezone", type: "string" },
+          { name: "failureIssueThreshold", type: "number" },
+          { name: "recoveryThreshold", type: "number" },
+        ],
+      },
+    },
+  ]}
+>
+  Create a cron monitor check in and send it to Sentry.
+</SdkApi>
+
+<SdkApi
+  name="withMonitor"
+  signature={`function withMonitor(
+    monitorSlug: string,
+    callback: () => any,
+    monitorConfig?: MonitorConfig
+): string`}
+  categorySupported={['server']}
+  parameters={[
+    {
+      name: "monitorSlug",
+      type: 'string',
+      required: true,
+    },
+     {
+      name: "callback",
+      type: '() => any',
+      required: true,
+    },
+    {
+      name: "monitorConfig",
+      type: {
+        name: "MonitorConfig",
+        properties: [
+          {
+            name: "schedule",
+            type: '{ type: "crontab", value: string } | { type: "interval", value: number, unit: "year" | "month" | "day" | "hour" | "minute" }',
+            required: true,
+          },
+          { name: "checkinMargin", type: "number" },
+          { name: "maxRuntime", type: "number" },
+          { name: "timezone", type: "string" },
+          { name: "failureIssueThreshold", type: "number" },
+          { name: "recoveryThreshold", type: "number" },
+        ],
+      },
+    },
+  ]}
+>
+  Wraps a callback with a cron monitor check in. The check in will be sent to Sentry when the callback finishes.
+</SdkApi>
+</PlatformCategorySection>

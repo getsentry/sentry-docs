@@ -6,6 +6,7 @@ import {Expandable} from './expandable';
 import {codeToJsx} from './highlightCode';
 import {RenderNestedObject} from './nestedObject';
 import {SdkDefinition} from './sdkDefinition';
+import {getPlatformHints} from './sdkOption';
 
 export interface ParameterDef {
   name: string;
@@ -41,8 +42,13 @@ export function SdkApi({
   const platform = getCurrentPlatform(rootNode, path);
   const lang = language || platform?.language || 'typescript';
 
+  const {showBrowserOnly, showServerLikeOnly} = getPlatformHints(categorySupported);
+
   return (
     <SdkDefinition name={name} categorySupported={categorySupported}>
+      {showBrowserOnly && <div className="italic text-sm">Only available on Client</div>}
+      {showServerLikeOnly && <div className="italic text-sm">Only available on Server</div>}
+
       <pre className="mt-2 mb-2 text-sm">{codeToJsx(signature, lang)}</pre>
 
       {parameters.length ? (
