@@ -3,6 +3,7 @@
 import {Children, cloneElement, ReactElement, useEffect, useRef, useState} from 'react';
 import {Clipboard} from 'react-feather';
 import styled from '@emotion/styled';
+import * as Sentry from '@sentry/nextjs';
 
 import {cleanCodeSnippet, useCleanSnippetInClipboard} from '../codeBlock';
 
@@ -91,15 +92,15 @@ export function HighlightBlock({
       setCopied(true);
       setTimeout(() => setCopied(false), 1200);
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Failed to copy:', error);
+      Sentry.captureException(error);
+      setCopied(false);
     }
   }
 
   return (
     <HighlightBlockContainer>
       <CodeLinesContainer ref={codeRef}>{children}</CodeLinesContainer>
-      <ClipBoardContainer onClick={copyCodeOnClick} className=".clipboard">
+      <ClipBoardContainer onClick={copyCodeOnClick}>
         {showCopyButton && (
           <Clipboard
             size={16}
