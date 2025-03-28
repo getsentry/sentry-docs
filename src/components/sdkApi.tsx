@@ -83,14 +83,14 @@ function ApiParameterDef({
         {required ? <span className="text-red">*</span> : null}
       </div>
       <div className="space-y-1">
-        <div className='flex'>
+        <div className="flex">
           {typeof type === 'string' ? (
             <pre className="m-0 pt-1 pb-1 text-sm">
               <code>{codeToJsx(type, language)}</code>
             </pre>
           ) : (
             <pre className="m-0 pt-1 pb-1 text-sm">
-              <RenderNestedObject
+              <NestedObject
                 name={type.name}
                 objProps={type.properties}
                 language={language}
@@ -105,7 +105,7 @@ function ApiParameterDef({
   );
 }
 
-function RenderNestedObject({
+function NestedObject({
   name,
   objProps,
   language,
@@ -142,7 +142,7 @@ function RenderNestedObject({
                   <code>{codeToJsx(prop.type, 'typescript')},</code>
                 </Fragment>
               ) : (
-                <RenderNestedObject
+                <NestedObject
                   name={`${prop.name}${!prop.required ? '?' : ''}: ${prop.type.name || 'Object'}`}
                   objProps={prop.type.properties}
                   language={language}
