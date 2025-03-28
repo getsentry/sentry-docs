@@ -1,0 +1,40 @@
+---
+title: Source Context
+sidebar_order: 2400
+description: "Learn about showing your source code as part of stack traces."
+---
+
+## Prerequisites
+
+[Install](cli/installation/) and [Configure](cli/configuration/) Sentry CLI by providing an auth token, org and project.
+
+Then, enable full debug information for your release build:
+```toml {filename:Cargo.toml}
+[profiles.release]
+debug = true
+```
+
+We will strip the binary, extract the necessary debug information and upload it to Sentry along with the source code.
+
+## Upload debug information files and source code
+
+Build the release binary, strip and extract debug information:
+```bash
+cargo build --release
+objcopy --only-keep-debug target/release/app{,.d}
+objcopy --strip-debug --strip-unneeded target/release/app
+objcopy --add-gnu-debuglink target/release/app{.d,}
+zip app-debug.zip target/release/app.d
+```
+
+Use Sentry CLI to create a source bundle:
+
+```bash
+sentry-cli difutil bundle-sources target/release/app.d
+mv target/release/app.src.zip ./app.src.zip
+```
+
+Finally, use Sentry CLI to upload both debug information files and sources to Sentry:
+```bash
+sentry-cli upload-dif ./app-debug.zip ./app.src.zip
+```
