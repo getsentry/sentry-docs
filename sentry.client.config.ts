@@ -31,6 +31,9 @@ Sentry.init({
       filterKeys: ['sentry-docs'],
       behaviour: 'apply-tag-if-contains-third-party-frames',
     }),
+    Sentry.browserTracingIntegration({
+      linkPreviousTrace: 'session-storage',
+    }),
   ],
 });
 
