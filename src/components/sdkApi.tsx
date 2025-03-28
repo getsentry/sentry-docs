@@ -83,7 +83,7 @@ function ApiParameterDef({
         {required ? <span className="text-red">*</span> : null}
       </div>
       <div className="space-y-1">
-        <div>
+        <div className='flex'>
           {typeof type === 'string' ? (
             <pre className="m-0 pt-1 pb-1 text-sm">
               <code>{codeToJsx(type, language)}</code>
