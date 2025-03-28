@@ -102,18 +102,9 @@ export function HighlightBlock({
       <CodeLinesContainer ref={codeRef}>{children}</CodeLinesContainer>
       <ClipBoardContainer onClick={copyCodeOnClick}>
         {showCopyButton && !copied && (
-          <Clipboard
-            size={16}
-            opacity={0.15}
-            stroke={"white"}
-          />
+          <Clipboard size={16} opacity={0.15} stroke={'white'} />
         )}
-        {showCopyButton && copied && (
-          <Check
-            size={16}
-            stroke={"green"}
-          />
-        )}
+        {showCopyButton && copied && <Check size={16} stroke={'green'} />}
       </ClipBoardContainer>
     </HighlightBlockContainer>
   );
