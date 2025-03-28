@@ -1,7 +1,7 @@
 'use client';
 
 import {Children, cloneElement, ReactElement, useEffect, useRef, useState} from 'react';
-import {Clipboard} from 'react-feather';
+import {Check, Clipboard} from 'react-feather';
 import styled from '@emotion/styled';
 import * as Sentry from '@sentry/nextjs';
 
@@ -101,11 +101,17 @@ export function HighlightBlock({
     <HighlightBlockContainer>
       <CodeLinesContainer ref={codeRef}>{children}</CodeLinesContainer>
       <ClipBoardContainer onClick={copyCodeOnClick}>
-        {showCopyButton && (
+        {showCopyButton && !copied && (
           <Clipboard
             size={16}
-            opacity={copied ? 1 : 0.15}
-            stroke={copied ? 'green' : 'white'}
+            opacity={0.15}
+            stroke={"white"}
+          />
+        )}
+        {showCopyButton && copied && (
+          <Check
+            size={16}
+            stroke={"green"}
           />
         )}
       </ClipBoardContainer>
