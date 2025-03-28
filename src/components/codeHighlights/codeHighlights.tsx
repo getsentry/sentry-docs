@@ -130,7 +130,7 @@ const HighlightBlockContainer = styled('div')`
   background-color: rgba(239, 239, 239, 0.06);
   position: relative;
 
-  border-left: 4px solid green;
+  border-left: 4px solid var(--brandPink);
 
   :hover svg {
     opacity: 1;
