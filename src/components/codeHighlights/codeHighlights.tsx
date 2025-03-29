@@ -42,9 +42,17 @@ export function makeHighlightBlocks(
 
     if (isHighlightedLine) {
       highlightedLineElements.push(element);
-    }
 
-    if (!isHighlightedLine || index === items.length - 1) {
+      // If it's the last line that's highlighted, push it
+      if (index === items.length - 1) {
+        arr.push(
+          <HighlightBlock key={highlightElementGroupCounter} language={language}>
+            {...highlightedLineElements}
+          </HighlightBlock>
+        );
+      }
+    } else {
+      // Check for an opened highlight group before pushing the new line
       if (highlightedLineElements.length > 0) {
         arr.push(
           <HighlightBlock key={highlightElementGroupCounter} language={language}>
@@ -53,9 +61,9 @@ export function makeHighlightBlocks(
         );
         highlightedLineElements = [];
         ++highlightElementGroupCounter;
-      } else {
-        arr.push(child);
       }
+
+      arr.push(child);
     }
 
     return arr;
