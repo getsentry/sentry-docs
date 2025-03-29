@@ -109,7 +109,7 @@ export function HighlightBlock({
   }
 
   return (
-    <HighlightBlockContainer>
+    <HighlightBlockContainer className="highlight-block">
       <CodeLinesContainer ref={codeRef}>{children}</CodeLinesContainer>
       <ClipBoardContainer onClick={copyCodeOnClick}>
         {showCopyButton && !copied && (
