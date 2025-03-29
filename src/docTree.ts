@@ -263,6 +263,7 @@ function nodeToPlatform(n: DocNode): Platform {
     caseStyle,
     sdk: n.frontmatter.sdk,
     fallbackPlatform: n.frontmatter.fallbackPlatform,
+    language: n.frontmatter.language,
     categories: n.frontmatter.categories,
     keywords: n.frontmatter.keywords,
     guides,
