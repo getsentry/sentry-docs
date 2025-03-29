@@ -18,7 +18,7 @@ export function makeHighlightBlocks(
   let highlightedLineElements: ReactElement[] = [];
   let highlightElementGroupCounter = 0;
 
-  return items.reduce((arr: ChildrenItem[], child) => {
+  return items.reduce((arr: ChildrenItem[], child, index) => {
     if (typeof child !== 'object') {
       arr.push(child);
       return arr;
@@ -42,7 +42,9 @@ export function makeHighlightBlocks(
 
     if (isHighlightedLine) {
       highlightedLineElements.push(element);
-    } else {
+    }
+
+    if (!isHighlightedLine || index === items.length - 1) {
       if (highlightedLineElements.length > 0) {
         arr.push(
           <HighlightBlock key={highlightElementGroupCounter} language={language}>
@@ -51,8 +53,9 @@ export function makeHighlightBlocks(
         );
         highlightedLineElements = [];
         ++highlightElementGroupCounter;
+      } else {
+        arr.push(child);
       }
-      arr.push(child);
     }
 
     return arr;
