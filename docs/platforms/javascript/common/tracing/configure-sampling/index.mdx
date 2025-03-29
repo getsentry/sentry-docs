@@ -10,14 +10,14 @@ Sentry's tracing functionality helps you monitor application performance by capt
 
 The JavaScript SDK provides two main options for controlling the sampling rate:
 
-1. Uniform Sample Rate (`tracesSampleRate`)
+### Uniform Sample Rate (`tracesSampleRate`)
 This option sets a fixed percentage of transactions to be captured:
 
 <PlatformContent includePath="/tracing/sample-rate" />
 
 With `tracesSampleRate` set to `0.25`, approximately 25% of transactions will be recorded and sent to Sentry. This provides an even cross-section of transactions regardless of where in your app they occur.
 
-2. Sampling Function (`tracesSampler`)
+### Sampling Function (`tracesSampler`)
 
 For more granular control, you can use the `tracesSampler` function. This approach allows you to:
 
@@ -28,26 +28,26 @@ For more granular control, you can use the `tracesSampler` function. This approa
 
 <PlatformContent includePath="/tracing/trace-sampler" />
 
-### Trace Sampler Examples
+#### Trace Sampler Examples
 
 1. Prioritizing Critical User Flows
 
 ```javascript
 tracesSampler: (samplingContext) => {
-  const { name, attributes } = samplingContext;
-  
+  const { name, attributes, inheritOrSampleWith } = samplingContext;
+
   // Sample all checkout transactions
   if (name.includes('/checkout') || attributes?.flow === 'checkout') {
     return 1.0;
   }
-  
+
   // Sample 50% of login transactions
   if (name.includes('/login') || attributes?.flow === 'login') {
     return 0.5;
   }
-  
+
   // Sample 10% of everything else
-  return 0.1;
+  return inheritOrSampleWith(0.1);
 }
 ```
 
@@ -55,18 +55,20 @@ tracesSampler: (samplingContext) => {
 
 ```javascript
 tracesSampler: (samplingContext) => {
+    const { inheritOrSampleWith } = samplingContext;
+
   // Sample all transactions in development
   if (process.env.NODE_ENV === 'development') {
     return 1.0;
   }
-  
+
   // Sample 5% in production
   if (process.env.NODE_ENV === 'production') {
     return 0.05;
   }
-  
+
   // Sample 20% in staging
-  return 0.2;
+  return inheritOrSampleWith(0.2);
 }
 ```
 
@@ -75,22 +77,22 @@ tracesSampler: (samplingContext) => {
 ```javascript
 tracesSampler: (samplingContext) => {
   const { attributes, inheritOrSampleWith } = samplingContext;
-  
+
   // Always sample for premium users
   if (attributes?.userTier === 'premium') {
     return 1.0;
   }
-  
+
   // Sample more transactions for users experiencing errors
   if (attributes?.hasRecentErrors === true) {
     return 0.8;
   }
-  
+
   // Sample less for high-volume, low-value paths
   if (attributes?.path?.includes('/api/metrics')) {
     return 0.01;
   }
-  
+
   // Default sampling rate
   return inheritOrSampleWith(0.2);
 }
@@ -104,16 +106,16 @@ When the `tracesSampler` function is called, it receives a `samplingContext` obj
 typescriptCopyinterface SamplingContext {
   // Name of the span/transaction
   name: string;
-  
+
   // Initial attributes of the span/transaction
   attributes: SpanAttributes | undefined;
-  
+
   // Whether the parent span was sampled (undefined if no incoming trace)
   parentSampled: boolean | undefined;
-  
+
   // Sample rate from incoming trace (undefined if no incoming trace)
   parentSampleRate: number | undefined;
-  
+
   // Utility function to inherit parent decision or fallback
   inheritOrSampleWith: (fallbackRate: number) => number;
 }
@@ -134,12 +136,12 @@ In distributed systems, trace information is propagated between services. The in
 ```javascript
 tracesSampler: (samplingContext) => {
   const { name, inheritOrSampleWith } = samplingContext;
-  
+
   // Apply specific rules first
   if (name.includes('critical-path')) {
     return 1.0; // Always sample
   }
-  
+
   // Otherwise inherit parent sampling decision or fall back to 0.1
   return inheritOrSampleWith(0.1);
 }
