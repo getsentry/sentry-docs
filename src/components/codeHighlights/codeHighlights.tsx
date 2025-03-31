@@ -135,7 +135,7 @@ const HighlightBlockContainer = styled('div')`
   border-left: 4px solid var(--accent-purple);
 
   .highlight-line {
-    padding-left: 8px!important;
+    padding-left: 8px !important;
   }
 
   padding: 2px 0;
@@ -145,7 +145,7 @@ const HighlightBlockContainer = styled('div')`
   }
   svg {
     transition: all 150ms linear;
-    padding-bottom: 1px
+    padding-bottom: 1px;
   }
 `;
 
