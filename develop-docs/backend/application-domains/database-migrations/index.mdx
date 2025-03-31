@@ -135,7 +135,7 @@ This is complicated due to our deploy process. When we deploy, we run migrations
 To avoid this, follow these steps:
 
 - First, if the column is either not nullable, or doesn't have a `db_default` set, then make a PR to make it nullable via `null=True`.
-- Then, make a PR to remove all uses of the column in the codebase in a separate PR. This mostly helps with code cleanliness. This should be merged ahead of the next migration PRs, but we don't need to worry about whether it is deployed first.
+- Then, remove all uses of the column in the codebase in a separate PR; this mostly helps with code cleanliness. This should be merged ahead of the next migration PRs, but we don't need to worry about whether it is deployed first.
 - Make another PR that:
     - If the column is a foreign key, remove the database level foreign key constraint it by setting `db_constraint=False`.
     - Remove the column and in the generated migration use `SafeRemoveField(..., deletion_action=DeletionAction.MOVE_TO_PENDING)` to replace `RemoveField(...)`. This only marks the state for the column as removed.
