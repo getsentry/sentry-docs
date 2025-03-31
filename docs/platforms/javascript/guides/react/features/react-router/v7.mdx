@@ -1,6 +1,6 @@
 ---
 title: React Router v7 (library mode)
-description: "Learn about Sentry's React Router v7 integration."
+description: "Learn how to instrument your React Router v7 application with Sentry."
 sidebar_order: 10
 ---
 
@@ -8,12 +8,13 @@ sidebar_order: 10
   React Router v7 (framework mode) is currently in experimental Alpha, check out
   the docs [here](/platforms/javascript/guides/react-router/).
 </Alert>
+Apply the following setup steps based on your routing method and create a
+[custom error boundary](#custom-error-boundaries) to make sure Sentry
+automatically captures rendering errors.
 
-_React Router v7 (library mode) support is included in the `@sentry/react` package since version `8.42.0`._
+## Usage with `createBrowserRouter` or `createMemoryRouter`
 
-### Usage with `createBrowserRouter` or `createMemoryRouter`
-
-To instrument your React Router, update to `Sentry.reactRouterV7BrowserTracingIntegration` within `Sentry.init` and provide the required React hooks and router functions. Then, wrap the router instance created by `createBrowserRouter` or `createMemoryRouter` with one of the following functions:
+To instrument your React Router, update your `Sentry.browserTracingIntegration` to `Sentry.reactRouterV7BrowserTracingIntegration` within `Sentry.init` and provide the required React hooks and router functions. Then, wrap the router instance created by `createBrowserRouter` or `createMemoryRouter` with one of the following functions:
 
 - Use `Sentry.wrapCreateBrowserRouterV7` for [`createBrowserRouter`](https://reactrouter.com/en/main/routers/create-browser-router) and [`createHashRouter`](https://reactrouter.com/en/main/routers/create-hash-router)
 - Use `Sentry.wrapCreateMemoryRouterV7` for [`createMemoryRouter`](https://reactrouter.com/en/main/routers/create-memory-router) (introduced in SDK version `8.50.0`)
@@ -52,9 +53,9 @@ const router = sentryCreateBrowserRouter([
 ]);
 ```
 
-### Usage With `<Routes />` Component
+## Usage With `<Routes />` Component
 
-If you're using the `<Routes />` component to define your routes, update to `Sentry.reactRouterV7BrowserTracingIntegration` inside `Sentry.init` and provide the required React hooks and router functions. Then, wrap `<Routes />` using `Sentry.withSentryReactRouterV7Routing`. This creates a higher order component, which will enable Sentry to reach your router context. You can also use `Sentry.withSentryReactRouterV7Routing` for Routes inside `BrowserRouter`, `MemoryRouter`, and `HashRouter` components.
+If you're using the `<Routes />` component to define your routes, update your `Sentry.browserTracingIntegration` to `Sentry.reactRouterV7BrowserTracingIntegration` inside `Sentry.init` and provide the required React hooks and router functions. Then, wrap `<Routes />` using `Sentry.withSentryReactRouterV7Routing`. This creates a higher order component, which will enable Sentry to reach your router context. You can also use `Sentry.withSentryReactRouterV7Routing` for routes inside `BrowserRouter`, `MemoryRouter`, and `HashRouter` components.
 
 ```javascript {3-11, 18-24, 29, 33-35}
 import React from "react";
@@ -96,11 +97,11 @@ ReactDOM.render(
 );
 ```
 
-This wrapping is only needed at the top level of your app, unlike React Router v4/v5, which required wrapping every `<Route />` you wanted parametrized.
+This wrapper is only needed at the top level of your app, unlike React Router v4/v5, which required wrapping every `<Route />` you wanted parametrized.
 
-### Usage With `useRoutes` Hook
+## Usage With `useRoutes` Hook
 
-If you specify your route definitions as an object to the [`useRoutes` hook](https://reactrouter.com/en/main/hooks/use-routes), update to `Sentry.reactRouterV7BrowserTracingIntegration` inside `Sentry.init` and provide the required React hooks and router functions. Then, use `Sentry.wrapUseRoutesV7` to create a patched `useRoutes` hook that instruments your routes with Sentry.
+If you specify your route definitions as an object to the [`useRoutes` hook](https://reactrouter.com/en/main/hooks/use-routes), update your `Sentry.browserTracingIntegration` to `Sentry.reactRouterV7BrowserTracingIntegration` inside `Sentry.init` and provide the required React hooks and router functions. Then, use `Sentry.wrapUseRoutesV7` to create a patched `useRoutes` hook that instruments your routes with Sentry.
 
 <Alert level="warning" title="Important">
 Call `wrapUseRoutesV7` outside of a React component, as in the example below. We also recommend that you assign the wrapped hook to a variable starting with `use`, as per [React's documentation](https://react.dev/learn/reusing-logic-with-custom-hooks#hook-names-always-start-with-use).
@@ -151,7 +152,7 @@ ReactDOM.render(
 
 Now, Sentry should generate `pageload`/`navigation` transactions with parameterized transaction names (for example, `/teams/:teamid/user/:userid`), where applicable. This is only needed at the top level of your app, unlike React Router v4/v5, which required wrapping every `<Route />` you wanted parametrized.
 
-### Custom Error Boundaries
+## Custom Error Boundaries
 
 When using `react-router`, errors thrown inside route elements will only be re-thrown in **development mode** while using [`strict mode`](https://react.dev/reference/react/StrictMode). In production, these errors won't be surfaced unless manually captured. If you **don't** have a custom error boundary in place, `react-router` will create a default one that "swallows" all errors.
 
@@ -202,7 +203,7 @@ export function YourCustomRootErrorBoundary() {
 
 ```
 
-## Next Steps:
+## Next Steps
 
 - [Return to **Getting Started**](../../)
 - [Return to the main integrations page](../)
