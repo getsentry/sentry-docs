@@ -18,7 +18,7 @@ export function makeHighlightBlocks(
   let highlightedLineElements: ReactElement[] = [];
   let highlightElementGroupCounter = 0;
 
-  return items.reduce((arr: ChildrenItem[], child) => {
+  return items.reduce((arr: ChildrenItem[], child, index) => {
     if (typeof child !== 'object') {
       arr.push(child);
       return arr;
@@ -42,7 +42,17 @@ export function makeHighlightBlocks(
 
     if (isHighlightedLine) {
       highlightedLineElements.push(element);
+
+      // If it's the last line that's highlighted, push it
+      if (index === items.length - 1) {
+        arr.push(
+          <HighlightBlock key={highlightElementGroupCounter} language={language}>
+            {...highlightedLineElements}
+          </HighlightBlock>
+        );
+      }
     } else {
+      // Check for an opened highlight group before pushing the new line
       if (highlightedLineElements.length > 0) {
         arr.push(
           <HighlightBlock key={highlightElementGroupCounter} language={language}>
@@ -52,6 +62,7 @@ export function makeHighlightBlocks(
         highlightedLineElements = [];
         ++highlightElementGroupCounter;
       }
+
       arr.push(child);
     }
 
@@ -98,7 +109,7 @@ export function HighlightBlock({
   }
 
   return (
-    <HighlightBlockContainer>
+    <HighlightBlockContainer className="highlight-block">
       <CodeLinesContainer ref={codeRef}>{children}</CodeLinesContainer>
       <ClipBoardContainer onClick={copyCodeOnClick}>
         {showCopyButton && !copied && (
