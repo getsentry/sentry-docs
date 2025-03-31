@@ -93,23 +93,3 @@ export function Expandable({title, level = 'info', children, permalink, group}: 
     </details>
   );
 }
-
-//
-//
-// <details name={group} className={`callout !block ${'callout-' + level}`}>
-//       <summary className="callout-header">{title}</summary>
-//       <div className="callout-body content-flush-bottom">{children}</div>
-//     </details>
-//
-//
-
-//
-// <Callout
-//       level={level}
-//       title={title}
-//       Icon={isExpanded ? ChevronDownIcon : ChevronRightIcon}
-//       id={id}
-//       titleOnClick={toggleIsExpanded}
-//     >
-//       {isExpanded ? children : undefined}
-//     </Callout>
