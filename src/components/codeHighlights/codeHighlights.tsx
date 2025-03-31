@@ -113,7 +113,7 @@ export function HighlightBlock({
       <CodeLinesContainer ref={codeRef}>{children}</CodeLinesContainer>
       <ClipBoardContainer onClick={copyCodeOnClick}>
         {showCopyButton && !copied && (
-          <Clipboard size={16} opacity={0.15} stroke={'white'} />
+          <Clipboard size={16} opacity={0.2} stroke={'white'} />
         )}
         {showCopyButton && copied && <Check size={16} stroke={'green'} />}
       </ClipBoardContainer>
@@ -132,26 +132,28 @@ const HighlightBlockContainer = styled('div')`
   background-color: rgba(239, 239, 239, 0.06);
   position: relative;
 
-  border-left: 4px solid var(--brandPink);
+  border-left: 4px solid var(--accent-purple);
+
+  .highlight-line {
+    padding-left: 8px!important;
+  }
+
+  padding: 2px 0;
 
   :hover svg {
     opacity: 1;
   }
   svg {
     transition: all 150ms linear;
+    padding-bottom: 1px
   }
 `;
 
 const CodeLinesContainer = styled('div')`
-  padding: 8px 0;
   width: calc(100% - 48px);
 `;
 
 const ClipBoardContainer = styled('div')`
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
   width: 48px;
   display: flex;
   justify-content: center;
