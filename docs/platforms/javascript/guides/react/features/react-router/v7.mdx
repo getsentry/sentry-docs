@@ -9,12 +9,10 @@ sidebar_order: 10
   the docs [here](/platforms/javascript/guides/react-router/).
 </Alert>
 Apply the following setup steps based on your routing method and create a
-[custom error boundary](#usage-with-custom-error-boundaries) to make sure Sentry
+[custom error boundary](#set-up-a-custom-error-boundary) to make sure Sentry
 automatically captures rendering errors:
 
-<TableOfContents
-  ignoreIds={["usage-with-custom-error-boundaries", "next-steps"]}
-/>
+<TableOfContents ignoreIds={["set-up-a-custom-error-boundary", "next-steps"]} />
 
 ## Usage with `createBrowserRouter` or `createMemoryRouter`
 
@@ -156,16 +154,11 @@ ReactDOM.render(
 
 Now, Sentry should generate `pageload`/`navigation` transactions with parameterized transaction names (for example, `/teams/:teamid/user/:userid`), where applicable. This is only needed at the top level of your app, unlike React Router v4/v5, which required wrapping every `<Route />` you wanted parametrized.
 
-## Usage With Custom Error Boundaries
+## Set Up a Custom Error Boundary
 
 When using `react-router`, errors thrown inside route elements will only be re-thrown in **development mode** while using [`strict mode`](https://react.dev/reference/react/StrictMode).\
 In production, these errors won't surface unless captured manually. If you **don't** have a custom error boundary in place, `react-router` will create a default one that "swallows" all errors.\
 Hence, to capture these errors with Sentry in production, we strongly recommend to implement a custom error boundary.
-
-<Alert>
-  Note, that this only applies to render method and lifecycle errors since React
-  doesn't need error boundaries to handle errors in event handlers.
-</Alert>
 
 To send errors to Sentry while using a custom error boundary, use the `Sentry.captureException` method:
 
