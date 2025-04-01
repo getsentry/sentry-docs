@@ -1,0 +1,54 @@
+---
+title: Mixed Versions
+description: "Troubleshoot and resolve mixed Java SDK dependency versions."
+sidebar_order: 1000
+---
+
+Using multiple Java SDK dependencies with mixed versions is not supported as it is very likely to lead to a crash later on. For this reason we chose to crash the application on SDK init instead.
+
+## Multiple Dependencies With Mixed Versions
+
+The following snippet shows a mixed version conflict caused by using `sentry` with version `8.6.0` and `sentry-logback` with version `8.7.0`. To fix the issue please set the same version for all dependencies or <PlatformLink to="/configuration/bill-of-materials/">use `sentry-bom`</PlatformLink>. This may also happen if you are using an internal library which has a different version defined.
+
+```groovy {tabTitle:Gradle}{filename:build.gradle}
+implementation('io.sentry:sentry:8.6.0')
+implementation('io.sentry:sentry-logback:8.7.0')
+```
+```xml {tabTitle:Maven}{filename:pom.xml}
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>io.sentry</groupId>
+            <artifactId>sentry</artifactId>
+            <version>8.6.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.sentry</groupId>
+            <artifactId>sentry-logback</artifactId>
+            <version>8.7.0</version>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+```
+
+## Build Plugin And Explicit Dependency
+
+When using our Gradle or Maven plugin and manually defining additional Sentry Java SDK dependencies, it is also possible to end up with mixed versions. The following snippet shows the plugin being configured to use version `8.0.0`, but there is an additional dependency that has been set to version `8.1.0`. To fix the issue, set the same version or <PlatformLink to="/configuration/bill-of-materials/">use `sentry-bom`</PlatformLink>.
+
+```groovy {tabTitle:Gradle}{filename:build.gradle}
+plugins { id "io.sentry.android.gradle" version "5.3.0" }
+
+dependencies {
+	implementation 'io.sentry:sentry-opentelemetry-agentless-spring:8.1.0'
+}
+
+sentry {
+	autoInstallation {
+		sentryVersion = "8.0.0"
+	}
+}
+```
+
+## Agent Version And Build Time Version
+
+When using `sentry-opentelemetry-agent` you may end up using a version of the Agent that differs from other Sentry Java SDK dependencies you are using. This is also not supported. Use the same version for `sentry-opentelemetry-agent` and all other Java SDK dependencies.
