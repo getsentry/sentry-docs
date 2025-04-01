@@ -992,6 +992,10 @@ const userDocsRedirects = [
     destination: '/platforms/python/tracing/distributed-tracing/:path*',
   },
   {
+    source: '/platforms/python/tracing/distributed-tracing/custom-instrumentation',
+    destination: '/platforms/python/tracing/distributed-tracing/custom-trace-propagation',
+  },
+  {
     source: '/platforms/ruby/guides/:guide/:productfeature/troubleshooting/:path*',
     destination: '/platforms/ruby/guides/:guide/troubleshooting/:path*',
   },
