@@ -3315,10 +3315,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/explore/session-replay/web/replay-page-and-filters/',
   },
   {
-    from: '/platforms/nintendo-switch/',
-    to: '/platforms/unity/native-support/',
-  },
-  {
     from: '/product/teams/roles/',
     to: '/organization/membership/#team-level-roles',
   },
