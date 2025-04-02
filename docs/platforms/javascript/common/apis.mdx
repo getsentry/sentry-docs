@@ -5,7 +5,14 @@ customCanonicalTag: "/platforms/javascript/apis/"
 sidebar_order: 3
 ---
 
-This page shows all available to-level APIs of the SDK. You can use them like this:
+This page shows all available to-level APIs of the SDK. You can use these APIs as the primary way to:
+
+- Configure the SDK after initialization
+- Manually capture different types of events
+- Enrich events with additional data
+- ... and more!
+
+These APIs are functions that you can use as follows - they are all available on the top-level `Sentry` object:
 
 ```javascript
 import * as Sentry from "@sentry/browser";
@@ -13,9 +20,9 @@ import * as Sentry from "@sentry/browser";
 Sentry.setTag("tag", "value");
 ```
 
-## Available Options
+## Available APIs
 
-<TableOfContents ignoreIds={["available-options"]} />
+<TableOfContents ignoreIds={["available-apis"]} />
 
 ## Core APIs
 
@@ -98,16 +105,47 @@ Sentry.setTag("tag", "value");
   return `null` to discard the event. Event processors can also return a
   promise, but it is recommended to use this only when necessary as it slows
   down event processing.
+
+  <PlatformCategorySection notSupported={['server', 'serverless']}>
+    Event processors added via `Sentry.addEventProcessor()` will be applied to all events in your application.
+  If you want to add an event processor that only applies to certain events, you can also add one to a scope as follows:
+  </PlatformCategorySection>
+
+    <PlatformCategorySection supported={['server', 'serverless']}>
+    Event processors added via `Sentry.addEventProcessor()` will be applied to all events in your current request.
+  If you want to add an event processor that only applies to certain events, you can also add one to a scope as follows:
+  </PlatformCategorySection>
+
+```javascript
+Sentry.withScope((scope) => {
+  scope.addEventProcessor((event) => {
+    // this will only be applied to events captured within this scope
+    return event;
+  });
+
+  Sentry.captureException(new Error("test"));
+});
+```
+
+  <Expandable title='What is the difference to `beforeSend` / `beforeSendTransaction`?'>
+    `beforeSend` and `beforeSendTransaction` are guaranteed to be run last, after all other event processors, (which means they get the final version of the event right before it's sent, hence the name). Event processors added with `addEventProcessor` are run in an undetermined order, which means changes to the event may still be made after the event processor runs.
+
+    There can only be a single `beforeSend` / `beforeSendTransaction` processor, but you can add multiple event processors via `addEventProcessor()`.
+  </Expandable>
 </SdkApi>
 
 <SdkApi
   name="addIntegration"
   signature="function addIntegration(integration: Integration): void"
 >
-  Adds an integration to the SDK. This can be used to conditionally add
-  integrations after `Sentry.init()` has been called. Note that it is
-  recommended to pass integrations to `init` instead of calling this method,
-  where possible.
+Adds an integration to the SDK. This can be used to conditionally add
+integrations after `Sentry.init()` has been called. Note that it is
+recommended to pass integrations to `init` instead of calling this method,
+where possible.
+
+See <PlatformLink to="/configuration/integrations">Integrations</PlatformLink> for
+more information on how to use integrations.
+
 </SdkApi>
 
 <SdkApi name="lazyLoadIntegration" signature="function lazyLoadIntegration(name: string, scriptNonce?: string): Promise<Integration>" categorySupported={['browser']}>
@@ -126,48 +164,9 @@ Sentry.lazyLoadIntegration("replayIntegration")
 
 If you use a bundler, using e.g. `const { replayIntegration } = await import('@sentry/browser')` is recommended instead.
 
-</SdkApi>
+See <PlatformLink to="/configuration/integrations">Integrations</PlatformLink> for
+more information on how to use integrations.
 
-## Scopes
-
-<SdkApi name="getCurrentScope" signature="function getCurrentScope(): Scope">
-  Returns the current scope. See{" "}
-  <PlatformLink to="/enriching-events/scopes/">Scopes</PlatformLink> for more
-  information.
-
-Note that in most cases you should not use this API, but instead use `withScope` to generate and access a local scope. There are no guarantees about the consistency of `getCurrentScope` across different parts of your application, as scope forking may happen under the hood at various points.
-
-</SdkApi>
-
-<SdkApi
-  name="withScope"
-  signature="function withScope(callback: (scope: Scope) => void): void"
->
-  Forks the current scope and calls the callback with the forked scope. See{" "}
-  <PlatformLink to="/enriching-events/scopes/">Scopes</PlatformLink> for more
-  information.
-</SdkApi>
-
-<SdkApi
-  name="getIsolationScope"
-  signature="function getIsolationScope(): Scope"
->
-  Returns the current isolation scope.
-</SdkApi>
-
-<SdkApi
-  name="withIsolationScope"
-  signature="function withIsolationScope(callback: (scope: Scope) => void): void"
->
-  Forks the current isolation scope and calls the callback with the forked
-  scope. See <PlatformLink to="/enriching-events/scopes/">Scopes</PlatformLink>{" "}
-  for more information.
-</SdkApi>
-
-<SdkApi name="getGlobalScope" signature="function getGlobalScope(): Scope">
-  Returns the global scope. See{" "}
-  <PlatformLink to="/enriching-events/scopes/">Scopes</PlatformLink> for more
-  information.
 </SdkApi>
 
 ## Capturing Events
@@ -183,7 +182,8 @@ Note that in most cases you should not use this API, but instead use `withScope`
       name: "exception",
       required: true,
       type: "unknown",
-      description: "The exception to capture. For best results, pass an `Error` object but it accepts any kind of value.",
+      description:
+        "The exception to capture. For best results, pass an `Error` object but it accepts any kind of value.",
     },
     {
       name: "captureContext",
@@ -458,7 +458,8 @@ const status = await Sentry.startSpan({ name: 'my-span' }, async (span) => {
 const status = await doSomething();
 return status;
 });
-```
+
+````
 </Expandable>
 
 See <PlatformLink to="/tracing/instrumentation/">Tracing Instrumentation</PlatformLink> for more information on how to work with spans.
@@ -494,7 +495,7 @@ See <PlatformLink to="/tracing/instrumentation/">Tracing Instrumentation</Platfo
 const span = Sentry.startInactiveSpan({ name: 'my-span' });
 doSomething();
 span.end();
-```
+````
 
 </Expandable>
 
@@ -621,14 +622,6 @@ See <PlatformLink to="/tracing/instrumentation/">Tracing Instrumentation</Platfo
   `browserTracingIntegration` has not been enabled.
 </SdkApi>
 
-<SdkApi
-  name="withActiveSpan"
-  signature="function withActiveSpan<T>(span: Span | null, callback: () => T): T"
->
-  Runs the provided callback with the given span as the active span. If `null`
-  is provided, the callback will have no active span.
-</SdkApi>
-
 ## Tracing Utilities
 
 These utilities can be used for more advanced tracing use cases.
@@ -656,7 +649,18 @@ These utilities can be used for more advanced tracing use cases.
   Get the root span of a span.
 </SdkApi>
 
+<SdkApi
+  name="withActiveSpan"
+  signature="function withActiveSpan<T>(span: Span | null, callback: () => T): T"
+>
+  Runs the provided callback with the given span as the active span. If `null`
+  is provided, the callback will have no active span.
+</SdkApi>
+
 ## Sessions
+
+Sessions allow you to track the release health of your application.
+See the <PlatformLink to="/configuration/releases/#sessions">Releases & Health</PlatformLink> page for more information.
 
 <SdkApi name="startSession" signature="function startSession(): void">
   Starts a new session.
@@ -672,6 +676,52 @@ These utilities can be used for more advanced tracing use cases.
 >
   Sends the current session on the scope to Sentry. Pass `true` as argument to
   end the session first.
+</SdkApi>
+
+## Scopes
+
+See <PlatformLink to="/enriching-events/scopes/">Scopes</PlatformLink> for more information on how to use scopes,
+as well as for an explanation of the different types of scopes (current scope, isolation scope, and global scope).
+
+<SdkApi
+  name="withScope"
+  signature="function withScope(callback: (scope: Scope) => void): void"
+>
+  Forks the current scope and calls the callback with the forked scope.
+</SdkApi>
+
+<SdkApi
+  name="withIsolationScope"
+  signature="function withIsolationScope(callback: (scope: Scope) => void): void"
+>
+  Forks the current isolation scope and calls the callback with the forked
+  scope.
+</SdkApi>
+
+<SdkApi name="getCurrentScope" signature="function getCurrentScope(): Scope">
+  Returns the <PlatformLink to="/enriching-events/scopes/#current-scope">current scope</PlatformLink>.
+
+Note that in most cases you should not use this API, but instead use `withScope` to generate and access a local scope. There are no guarantees about the consistency of `getCurrentScope` across different parts of your application, as scope forking may happen under the hood at various points.
+
+</SdkApi>
+
+<SdkApi
+  name="getIsolationScope"
+  signature="function getIsolationScope(): Scope"
+>
+  Returns the current{" "}
+  <PlatformLink to="/enriching-events/scopes/#isolation-scope">
+    isolation scope
+  </PlatformLink>
+  .
+</SdkApi>
+
+<SdkApi name="getGlobalScope" signature="function getGlobalScope(): Scope">
+  Returns the{" "}
+  <PlatformLink to="/enriching-events/scopes/#global-scope">
+    global scope
+  </PlatformLink>
+  .
 </SdkApi>
 
 ## User Feedback
@@ -851,6 +901,7 @@ These utilities can be used for more advanced tracing use cases.
 </SdkApi>
 
 <PlatformCategorySection supported={['server']}>
+
 ## Cron Monitoring
 
 <SdkApi
