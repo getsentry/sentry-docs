@@ -14,27 +14,22 @@ Then, enable full debug information for your release build:
 debug = true
 ```
 
-We will strip the binary, extract the necessary debug information and upload it to Sentry along with the source code.
+The binary will be stripped of the debug information which will be collected along with the source code and uploaded to Sentry.
 
 ## Upload debug information files and source code
 
-Build the release binary, strip and extract debug information:
+Build the release binary, extract debug information and strip it from the binary:
 ```bash
 cargo build --release
 objcopy --only-keep-debug target/release/app{,.d}
 objcopy --strip-debug --strip-unneeded target/release/app
 objcopy --add-gnu-debuglink target/release/app{.d,}
-zip app-debug.zip target/release/app.d
 ```
 
-Use Sentry CLI to create a source bundle:
+If you don't want to strip the binary, you should disable the `debug-images` integration of the SDK, as otherwise you will run into the issue documented [here](https://github.com/getsentry/sentry-rust/issues/470#issuecomment-1472136215) which could cause duplicated frames to appear in your Sentry issues.
 
-```bash
-sentry-cli difutil bundle-sources target/release/app.d
-mv target/release/app.src.zip ./app.src.zip
-```
+Use Sentry CLI to upload debug information and source files:
 
-Finally, use Sentry CLI to upload both debug information files and sources to Sentry:
-```bash
-sentry-cli upload-dif ./app-debug.zip ./app.src.zip
+```bash	
+sentry-cli debug-files upload --include-sources .
 ```
