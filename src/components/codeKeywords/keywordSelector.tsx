@@ -33,7 +33,12 @@ type KeywordSelectorProps = {
   showPreview: boolean;
 };
 
-export function KeywordSelector({keyword, group, index, showPreview}: KeywordSelectorProps) {
+export function KeywordSelector({
+  keyword,
+  group,
+  index,
+  showPreview,
+}: KeywordSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [referenceEl, setReferenceEl] = useState<HTMLSpanElement | null>(null);
   const [dropdownEl, setDropdownEl] = useState<HTMLElement | null>(null);
@@ -153,9 +158,7 @@ export function KeywordSelector({keyword, group, index, showPreview}: KeywordSel
             </Keyword>
           </AnimatePresence>
           {!isOpen && showPreview && currentSelection?.title && (
-            <ProjectPreview className="no-copy">
-              {currentSelection.title}
-            </ProjectPreview>
+            <ProjectPreview className="no-copy">{currentSelection.title}</ProjectPreview>
           )}
         </span>
       </KeywordDropdown>

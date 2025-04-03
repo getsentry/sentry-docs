@@ -43,7 +43,11 @@ function makeOrgAuthTokenClickable(arr: ChildrenItem[], str: string) {
   ));
 }
 
-function makeProjectKeywordsClickable(arr: ChildrenItem[], str: string, isProjectKeyword = false) {
+function makeProjectKeywordsClickable(
+  arr: ChildrenItem[],
+  str: string,
+  isProjectKeyword = false
+) {
   runRegex(arr, str, KEYWORDS_REGEX, (lastIndex, match) => (
     <KeywordSelector
       key={`project-keyword-${lastIndex}`}
