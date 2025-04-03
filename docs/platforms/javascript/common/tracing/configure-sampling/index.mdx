@@ -17,7 +17,7 @@ The JavaScript SDK provides two main options for controlling the sampling rate:
 
 With `tracesSampleRate` set to `0.25`, each transaction in your application is randomly sampled with a probability of 25%, so you can expect that one in every four transactions will be sent to Sentry.
 
-2. Sampling Function (`tracesSampler`)
+### Sampling Function (`tracesSampler`)
 
 For more granular control, you provide a `tracesSampler` function. This approach allows you to:
 
@@ -57,20 +57,20 @@ interface SamplingContext {
 
 ```javascript
 tracesSampler: (samplingContext) => {
-  const { name, attributes } = samplingContext;
-  
+  const { name, attributes, inheritOrSampleWith } = samplingContext;
+
   // Sample all checkout transactions
   if (name.includes('/checkout') || attributes?.flow === 'checkout') {
     return 1.0;
   }
-  
+
   // Sample 50% of login transactions
   if (name.includes('/login') || attributes?.flow === 'login') {
     return 0.5;
   }
-  
+
   // Sample 10% of everything else
-  return 0.1;
+  return inheritOrSampleWith(0.1);
 }
 ```
 
@@ -78,18 +78,20 @@ tracesSampler: (samplingContext) => {
 
 ```javascript
 tracesSampler: (samplingContext) => {
+    const { inheritOrSampleWith } = samplingContext;
+
   // Sample all transactions in development
   if (process.env.NODE_ENV === 'development') {
     return 1.0;
   }
-  
+
   // Sample 5% in production
   if (process.env.NODE_ENV === 'production') {
     return 0.05;
   }
-  
+
   // Sample 20% in staging
-  return 0.2;
+  return inheritOrSampleWith(0.2);
 }
 ```
 
@@ -98,22 +100,22 @@ tracesSampler: (samplingContext) => {
 ```javascript
 tracesSampler: (samplingContext) => {
   const { attributes, inheritOrSampleWith } = samplingContext;
-  
+
   // Always sample for premium users
   if (attributes?.userTier === 'premium') {
     return 1.0;
   }
-  
+
   // Sample more transactions for users experiencing errors
   if (attributes?.hasRecentErrors === true) {
     return 0.8;
   }
-  
+
   // Sample less for high-volume, low-value paths
   if (attributes?.path?.includes('/api/metrics')) {
     return 0.01;
   }
-  
+
   // Default sampling rate
   return inheritOrSampleWith(0.2);
 }
@@ -132,3 +134,4 @@ When multiple sampling mechanisms could apply, Sentry follows this order of prec
 ## Conclusion
 
 Effective sampling is key to getting the most value from Sentry's performance monitoring while minimizing overhead. The `tracesSampler` function gives you precise control over which transactions to record, allowing you to focus on the most important parts of your application.
+
