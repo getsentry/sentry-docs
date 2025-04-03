@@ -154,11 +154,13 @@ export const KeywordIndicator = styled(ArrowDown, {
   top: -1px;
 `;
 
-export const KeywordSpan = styled(motion.span)`
+export const KeywordSpan = styled(motion.span)<{
+  hasPreview?: boolean;
+}>`
   grid-row: 1;
   grid-column: 1;
   display: inline-block;
-  margin-top: 24px;
+  margin-top: ${p => (p.hasPreview ? '24px' : '0')};
 `;
 
 export const KeywordSearchInput = styled('input')<{dark: boolean}>`

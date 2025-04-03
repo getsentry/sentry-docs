@@ -27,7 +27,8 @@ export function makeKeywordsClickable(children: React.ReactNode) {
     if (ORG_AUTH_TOKEN_REGEX.test(child)) {
       makeOrgAuthTokenClickable(arr, child);
     } else if (KEYWORDS_REGEX.test(child)) {
-      makeProjectKeywordsClickable(arr, child);
+      const isProjectKeyword = child.startsWith('"___PROJECT_SLUG___"');
+      makeProjectKeywordsClickable(arr, child, isProjectKeyword);
     } else {
       arr.push(child);
     }
@@ -42,13 +43,14 @@ function makeOrgAuthTokenClickable(arr: ChildrenItem[], str: string) {
   ));
 }
 
-function makeProjectKeywordsClickable(arr: ChildrenItem[], str: string) {
+function makeProjectKeywordsClickable(arr: ChildrenItem[], str: string, isProjectKeyword = false) {
   runRegex(arr, str, KEYWORDS_REGEX, (lastIndex, match) => (
     <KeywordSelector
       key={`project-keyword-${lastIndex}`}
       index={lastIndex}
       group={match[1] || 'PROJECT'}
       keyword={match[2]}
+      showPreview={isProjectKeyword}
     />
   ));
 }

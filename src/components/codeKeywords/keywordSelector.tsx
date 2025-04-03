@@ -23,16 +23,17 @@ import {
   PositionWrapper,
   ProjectPreview,
   Selections,
-} from './styles.css';
+} from './styles';
 import {dropdownPopperOptions} from './utils';
 
 type KeywordSelectorProps = {
   group: string;
   index: number;
   keyword: string;
+  showPreview: boolean;
 };
 
-export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
+export function KeywordSelector({keyword, group, index, showPreview}: KeywordSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [referenceEl, setReferenceEl] = useState<HTMLSpanElement | null>(null);
   const [dropdownEl, setDropdownEl] = useState<HTMLElement | null>(null);
@@ -146,11 +147,12 @@ export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
               onAnimationStart={() => setIsAnimating(true)}
               onAnimationComplete={() => setIsAnimating(false)}
               key={currentSelectionIdx}
+              showPreview={showPreview}
             >
               {currentSelection[keyword]}
             </Keyword>
           </AnimatePresence>
-          {!isOpen && currentSelection?.title && (
+          {!isOpen && showPreview && currentSelection?.title && (
             <ProjectPreview className="no-copy">
               {currentSelection.title}
             </ProjectPreview>

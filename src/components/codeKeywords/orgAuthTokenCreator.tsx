@@ -21,7 +21,7 @@ import {
   KeywordDropdown,
   PositionWrapper,
   Selections,
-} from './styles.css';
+} from './styles';
 import {dropdownPopperOptions} from './utils';
 
 type TokenState =
