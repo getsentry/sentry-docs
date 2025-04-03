@@ -86,10 +86,85 @@ Configuration is done via the application `AndroidManifest.xml`. Here's an examp
   <meta-data android:name="io.sentry.traces.profiling.lifecycle" android:value="trace" />
   <!-- Enable profiling on app start -->
   <meta-data android:name="io.sentry.traces.profiling.start-on-app-start" android:value="true" />
-  <!-- record session replays for 100% of errors and 10% of sessions -->
+  <!-- Record session replays for 100% of errors and 10% of sessions -->
   <meta-data android:name="io.sentry.session-replay.on-error-sample-rate" android:value="1.0" />
   <meta-data android:name="io.sentry.session-replay.session-sample-rate" android:value="0.1" />
 </application>
+```
+
+```java {"onboardingOptions": {"performance": "17-18", "profiling": "19-24, 29-33", "session-replay": "25-27"}}
+import io.sentry.ProfileLifecycle;
+import io.sentry.Sentry;
+import io.sentry.android.core.SentryAndroid;
+
+// App main Application class
+public class MyApplication extends Application {
+
+  @Override
+  public void onCreate() {
+    super.onCreate();
+     SentryAndroid.init(
+        this,
+        options -> {
+          options.setDsn("___PUBLIC_DSN___");
+          // Add data like request headers, user ip address and device name, see https://docs.sentry.io/platforms/android/data-management/data-collected/ for more info
+          options.setSendDefaultPii(true);
+          // Enable the performance API by setting a sample-rate, adjust in production env
+          options.setTracesSampleRate(1.0);
+          // Enable profiling, adjust in production env. This is evaluated only once per session
+          options.setProfileSessionSampleRate(1.0);
+          // Set profiling lifecycle, can be `manual` (controlled through `Sentry.startProfiler()` and `Sentry.stopProfiler()`) or `trace` (automatically starts and stop a profile whenever a sampled trace starts and finishes)
+          options.setProfileLifecycle(ProfileLifecycle.TRACE);
+          // Enable profiling on app start. The app start profile has to be stopped through Sentry.stopProfiler() if lifecycle is set to `manual`
+          options.setStartProfilerOnAppStart(true);
+          // Record session replays for 100% of errors and 10% of sessions
+          options.getSessionReplay().setOnErrorSampleRate(1.0);
+          options.getSessionReplay().setSessionSampleRate(0.1);
+        });
+    // Start profiling, if lifecycle is set to `manual` and startProfilerOnAppStart is set to `true`
+    Sentry.startProfiler();
+    // Stop profiling, if lifecycle is set to `manual` and startProfilerOnAppStart is set to `true`.
+    // This call is optional. If you don't stop the profiler, it will keep profiling your application until the process exits.
+    Sentry.stopProfiler();
+  }
+}
+```
+
+```kotlin {"onboardingOptions": {"performance": "16-17", "profiling": "18-23, 28-32", "session-replay": "24-26"}}
+import io.sentry.ProfileLifecycle;
+import io.sentry.Sentry;
+import io.sentry.android.core.SentryAndroid;
+
+// App main Application class
+class MyApplication : Application() {
+
+  override fun onCreate() {
+    super.onCreate();
+     SentryAndroid.init(
+        this,
+         { options ->
+             options.setDsn("___PUBLIC_DSN___")
+             // Add data like request headers, user ip address and device name, see https://docs.sentry.io/platforms/android/data-management/data-collected/ for more info
+             options.isSendDefaultPii = true
+             // Enable the performance API by setting a sample-rate, adjust in production env
+             options.tracesSampleRate = 1.0
+             // Enable profiling, adjust in production env. This is evaluated only once per session
+             options.profileSessionSampleRate = 1.0
+             // Set profiling lifecycle, can be `manual` (controlled through `Sentry.startProfiler()` and `Sentry.stopProfiler()`) or `trace` (automatically starts and stop a profile whenever a sampled trace starts and finishes)
+             options.profileLifecycle = ProfileLifecycle.TRACE
+             // Enable profiling on app start. The app start profile has to be stopped through Sentry.stopProfiler() if lifecycle is set to `manual`
+             options.isStartProfilerOnAppStart = true
+             // Record session replays for 100% of errors and 10% of sessions
+             options.sessionReplay.onErrorSampleRate = 1.0
+             options.sessionReplay.sessionSampleRate = 0.1
+         })
+    // Start profiling, if lifecycle is set to `manual` and startProfilerOnAppStart is set to `true`
+    Sentry.startProfiler()
+    // Stop profiling, if lifecycle is set to `manual` and startProfilerOnAppStart is set to `true`.
+    // This call is optional. If you don't stop the profiler, it will keep profiling your application until the process exits.
+    Sentry.stopProfiler()
+  }
+}
 ```
 
 ## Verify
