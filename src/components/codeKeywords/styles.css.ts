@@ -4,7 +4,7 @@ import {ArrowDown} from 'react-feather';
 import styled from '@emotion/styled';
 import {motion} from 'framer-motion';
 
-export const ProejectPreview = styled('div')`
+export const ProjectPreview = styled('div')`
   position: absolute;
   top: -24px;
   left: 50%;

@@ -21,7 +21,7 @@ import {
   KeywordIndicator,
   KeywordSearchInput,
   PositionWrapper,
-  ProejectPreview,
+  ProjectPreview,
   Selections,
 } from './styles.css';
 import {dropdownPopperOptions} from './utils';
@@ -151,9 +151,9 @@ export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
             </Keyword>
           </AnimatePresence>
           {!isOpen && currentSelection?.title && (
-            <ProejectPreview className="no-copy">
+            <ProjectPreview className="no-copy">
               {currentSelection.title}
-            </ProejectPreview>
+            </ProjectPreview>
           )}
         </span>
       </KeywordDropdown>
