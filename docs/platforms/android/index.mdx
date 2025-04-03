@@ -30,10 +30,7 @@ Select which Sentry features you'd like to install in addition to Error Monitori
   options={[
     'error-monitoring',
     'performance',
-    {
-      id: 'profiling',
-      checked: false
-    },
+    'profiling',
     'session-replay'
   ]}
 />
@@ -83,10 +80,10 @@ Configuration is done via the application `AndroidManifest.xml`. Here's an examp
   <meta-data android:name="io.sentry.send-default-pii" android:value="true" />
   <!-- Enable the performance API by setting a sample-rate, adjust in production env -->
   <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
-  <!-- Enable profiling, adjust in production env. See https://docs.sentry.io/platforms/android/profiling for more info -->
+  <!-- Enable profiling, adjust in production env. This is evaluated only once per session -->
   <meta-data android:name="io.sentry.traces.profiling.session-sample-rate" android:value="1.0" />
-  <!-- Set profiling lifecycle, can be `manual` or `trace` -->
-  <meta-data android:name="io.sentry.traces.profiling.lifecycle" android:value="manual" />
+  <!-- Set profiling lifecycle, can be `manual` (controlled through `Sentry.startProfiler()` and `Sentry.stopProfiler()`) or `trace` (automatically starts and stop a profile whenever a sampled trace starts and finishes) -->
+  <meta-data android:name="io.sentry.traces.profiling.lifecycle" android:value="trace" />
   <!-- Enable profiling on app start -->
   <meta-data android:name="io.sentry.traces.profiling.start-on-app-start" android:value="true" />
   <!-- record session replays for 100% of errors and 10% of sessions -->
@@ -99,7 +96,7 @@ Configuration is done via the application `AndroidManifest.xml`. Here's an examp
 
 Verify that your app is sending events to Sentry by adding the following snippet, which includes an intentional error. You should see the error reported in Sentry within a few minutes.
 
-```java
+```java {"onboardingOptions": {"profiling": "9-10", "profiling": "16-17"}}
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import java.lang.Exception;
@@ -108,20 +105,20 @@ import io.sentry.Sentry;
 public class MyActivity extends AppCompatActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    // Any code running after this line will be
-    //profiled until Sentry.stopProfiler() is called.
+    // Any code running after this line will be profiled, if lifecycle is set to `manual`.
     Sentry.startProfiler();
     try {
       throw new Exception("This is a test.");
     } catch (Exception e) {
       Sentry.captureException(e);
     }
+    // Stop profiling, if lifecycle is set to `manual`. This call is optional. If you don't stop the profiler, it will keep profiling your application until the process exits or `Sentry.stopProfiler()` is called.
     Sentry.stopProfiler();
   }
 }
 ```
 
-```kotlin
+```kotlin {"onboardingOptions": {"profiling": "8-9", "profiling": "15-16"}}
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import io.sentry.Sentry
@@ -129,14 +126,14 @@ import io.sentry.Sentry
 class MyActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    // Any code running after this line will be
-    //profiled until Sentry.stopProfiler() is called.
+    // Any code running after this line will be profiled, if lifecycle is set to `manual`.
     Sentry.startProfiler()
     try {
       throw Exception("This is a test.")
     } catch (e: Exception) {
       Sentry.captureException(e)
     }
+    // Stop profiling, if lifecycle is set to `manual`. This call is optional. If you don't stop the profiler, it will keep profiling your application until the process exits or `Sentry.stopProfiler()` is called.
     Sentry.stopProfiler()
   }
 }
