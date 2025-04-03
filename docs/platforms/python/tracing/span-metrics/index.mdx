@@ -17,26 +17,26 @@ Span metrics allow you to extend the default metrics that are collected by traci
 
 ## Adding Metrics to Existing Spans
 
-You can enhance existing spans with custom metrics by adding attributes. This is useful when you want to augment automatic instrumentation or add contextual data to spans you've already created.
+You can enhance existing spans with custom metrics by adding data. This is useful when you want to augment automatic instrumentation or add contextual data to spans you've already created.
 
 ```python
 span = sentry_sdk.get_current_span()
 if span:
     # Add individual metrics
-    span.set_attribute("database.rows_affected", 42)
-    span.set_attribute("cache.hit_rate", 0.85)
+    span.set_data("database.rows_affected", 42)
+    span.set_data("cache.hit_rate", 0.85)
     
     # Add multiple metrics at once
-    span.set_attributes({
+    span.set_data({
         "memory.heap_used": 1024000,
         "queue.length": 15,
         "processing.duration_ms": 127
     })
 ```
 
-### Best Practices for Span Attributes
+### Best Practices for Span Data
 
-When adding metrics as span attributes:
+When adding metrics as span data:
 
 - Use consistent naming conventions (for example, `category.metric_name`)
 - Keep attribute names concise but descriptive
@@ -49,15 +49,16 @@ For more detailed operations, tasks, or process tracking, you can create custom 
 ```python
 with sentry_sdk.start_span(
     op="db.metrics",
-    name="Database Query Metrics",
-    attributes={
+    name="Database Query Metrics"
+) as span:
+    # Set metrics after creating the span
+    span.set_data({
         "db.query_type": "SELECT",
         "db.table": "users",
         "db.execution_time_ms": 45,
         "db.rows_returned": 100,
         "db.connection_pool_size": 5
-    }
-) as span:
+    })
     # Your database operation here
     pass
 ```

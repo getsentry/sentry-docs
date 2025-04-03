@@ -26,12 +26,15 @@ For more granular control, you can provide a `traces_sampler` function. This app
 - Filter out specific transactions entirely
 - Make sampling decisions based on transaction data
 - Control the inheritance of sampling decisions in distributed traces
+- Use custom attributes to modify sampling
 
 <Alert>
 
 It is strongly recommended when using a custom `traces_sampler` that you respect the parent sampling decision. This ensures your traces will be complete. 
 
 </Alert>
+
+In distributed systems, implement inheritance logic when trace information is propagated between services. This ensures consistent sampling decisions across your entire distributed trace
 
 <PlatformContent includePath="/performance/traces-sampler-as-sampler" />
 
@@ -52,7 +55,7 @@ def traces_sampler(sampling_context):
         return float(parent_sampling_decision)
 
     ctx = sampling_context.get("transaction_context", {})
-    name = ctx.get("name", "")
+    name = ctx.get("name")
     
     # Sample all checkout transactions
     if name and ('/checkout' in name or 
@@ -91,8 +94,8 @@ def traces_sampler(sampling_context):
     if environment == "development":
         return 1.0
     
-    # Sample more transactions if there are recent errors
-    if ctx.get("data", {}).get("hasRecentErrors"):
+    # Sample more transactions if there are recent errors by using custom attributes
+    if ctx.get("data", {}).get("hasRecentErrors"): 
         return 0.8
     
     # Sample based on environment
@@ -101,7 +104,8 @@ def traces_sampler(sampling_context):
     elif environment == "staging":
         return 0.2   # 20% in staging
     
-    return 0.1  # 10% default
+    # Default sampling rate
+    return 0.1  
 
 sentry_sdk.init(
     dsn="your-dsn",
@@ -132,16 +136,12 @@ def traces_sampler(sampling_context):
         return 0.8
     
     # Sample less for high-volume, low-value paths
-    if ctx.get("name", "").startswith("/api/metrics"):
+   if (ctx.get("name") or "").startswith("/api/metrics"):
         return 0.01
     
     # Sample more for slow transactions
     if data.get("duration_ms", 0) > 1000:  # Transactions over 1 second
         return 0.5
-    
-    # If there's a parent sampling decision, respect it
-    if sampling_context.get("parent_sampled") is not None:
-        return sampling_context["parent_sampled"]
     
     # Default sampling rate
     return 0.2
@@ -187,10 +187,6 @@ def traces_sampler(sampling_context):
     if error_rate > 0.05:  # Error rate above 5%
         return 0.9
     
-    # Inherit parent sampling decision if available
-    if sampling_context.get("parent_sampled") is not None:
-        return sampling_context["parent_sampled"]
-    
     # Default sampling rate
     return 0.1
 
@@ -226,7 +222,7 @@ def traces_sampler(sampling_context):
     if data.get("cpu_percent", 0) > 80:  # Over 80% CPU
         return 0.8
     
-    # Sample more transactions with high database load
+    # Sample more transactions with high database load using custom attributes
     if data.get("db_connections", 0) > 100:  # Over 100 connections
         return 0.7
     
@@ -242,7 +238,7 @@ sentry_sdk.init(
 
 ## The Sampling Context Object
 
-When the `traces_sampler` function is called, the Sentry SDK  passes a `sampling_context` object with information from the relevant span to help make sampling decisions:
+When the `traces_sampler` function is called, the Sentry SDK passes a `sampling_context` object with information from the relevant span to help make sampling decisions:
 
 ```python
 {
@@ -251,7 +247,7 @@ When the `traces_sampler` function is called, the Sentry SDK  passes a `sampling
         "op": str,                      # short description of transaction type, like "http.request"
         "data": Optional[Dict[str, Any]] # other transaction data
     },
-    "parent_sampled  ": Optional[bool] | None,  # whether the parent transaction was sampled, `None` if no parent
+    "parent_sampled ": Optional[bool],  # whether the parent transaction was sampled, `None` if no parent or if the parent has no sampling decision
     "parent_sample_rate": Optional[float], # the sample rate used by the parent (if any)
     "transaction_context": Optional[Dict[str, Any]],  # custom context data
     "custom_sampling_context": Optional[Dict[str, Any]]  # additional custom data for sampling
@@ -264,30 +260,6 @@ When the `traces_sampler` function is called, the Sentry SDK  passes a `sampling
     - float: for decimal numbers (like sample rates)
     - Dict[str, Any]: for dictionaries with string keys and any type of values
     - Optional[Type]: for values that might be None
-
-## Inheritance in Distributed Tracing
-
-In distributed systems, trace information is propagated between services. You can implement inheritance logic like this:
-
-```python
-def traces_sampler(sampling_context):
-    # Examine provided context data
-    if "transaction_context" in sampling_context:
-        name = sampling_context["transaction_context"].get("name", "")
-        
-        # Apply specific rules first
-        if "critical-path" in name:
-            return 1.0  # Always sample
-            
-    # Inherit parent sampling decision if available
-    if sampling_context.get("parent_sampled") is not None:
-        return sampling_context["parent_sampled"]
-        
-    # Otherwise use a default rate
-    return 0.1
-```
-
-This approach ensures consistent sampling decisions across your entire distributed trace. All transactions in a given trace will share the same sampling decision, preventing broken or incomplete traces.
 
 ## Sampling Decision Precedence
 
