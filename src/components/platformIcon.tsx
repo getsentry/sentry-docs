@@ -88,6 +88,7 @@ import MongodbSVG from 'platformicons/svg/mongodb.svg';
 import NativecSVG from 'platformicons/svg/nativec.svg';
 import NestjsSVG from 'platformicons/svg/nestjs.svg';
 import NextjsSVG from 'platformicons/svg/nextjs.svg';
+import NintendoSwitchSVG from 'platformicons/svg/nintendo-switch.svg';
 import NodejsSVG from 'platformicons/svg/nodejs.svg';
 import NuxtSVG from 'platformicons/svg/nuxt.svg';
 import OpenaiSVG from 'platformicons/svg/openai.svg';
@@ -227,6 +228,7 @@ import MongodbSVGLarge from 'platformicons/svg_80x80/mongodb.svg';
 import NativecSVGLarge from 'platformicons/svg_80x80/nativec.svg';
 import NestjsSVGLarge from 'platformicons/svg_80x80/nestjs.svg';
 import NextjsSVGLarge from 'platformicons/svg_80x80/nextjs.svg';
+import NintendoSwitchSVGLarge from 'platformicons/svg_80x80/nintendo-switch.svg';
 import NodejsSVGLarge from 'platformicons/svg_80x80/nodejs.svg';
 import NuxtSVGLarge from 'platformicons/svg_80x80/nuxt.svg';
 import OpenaiSVGLarge from 'platformicons/svg_80x80/openai.svg';
@@ -640,6 +642,10 @@ const formatToSVG = {
     sm: NextjsSVG,
     lg: NextjsSVGLarge,
   },
+  'nintendo-switch': {
+    sm: NintendoSwitchSVG,
+    lg: NintendoSwitchSVGLarge,
+  },
   nuxt: {
     sm: NuxtSVG,
     lg: NuxtSVGLarge,
@@ -949,6 +955,7 @@ export const PLATFORM_TO_ICON = {
   native: 'nativec',
   'native-qt': 'qt',
   'native-wasm': 'wasm',
+  'nintendo-switch': 'nintendo-switch',
   openai: 'openai',
   perl: 'perl',
   php: 'php',

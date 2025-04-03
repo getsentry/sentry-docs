@@ -3,11 +3,16 @@
 import {ReactNode, useEffect, useState} from 'react';
 import {ChevronDownIcon, ChevronRightIcon} from '@radix-ui/react-icons';
 
-import {Callout} from './callout';
+// explicitly not usig CSS modules here
+// because there's some prerendered content that depends on these exact class names
+import '../callout/styles.scss';
+import styles from './style.module.scss';
 
 type Props = {
   children: ReactNode;
   title: string;
+  /** If defined, the expandable will be grouped with other expandables that have the same group. */
+  group?: string;
   level?: 'info' | 'warning' | 'success';
   permalink?: boolean;
 };
@@ -19,7 +24,7 @@ function slugify(str: string) {
     .replace(/[^a-z0-9-]/g, '');
 }
 
-export function Expandable({title, level, children, permalink}: Props) {
+export function Expandable({title, level = 'info', children, permalink, group}: Props) {
   const id = permalink ? slugify(title) : undefined;
 
   const [isExpanded, setIsExpanded] = useState(false);
@@ -50,8 +55,8 @@ export function Expandable({title, level, children, permalink}: Props) {
     };
   }, [id]);
 
-  function toggleIsExpanded() {
-    const newVal = !isExpanded;
+  function toggleIsExpanded(event: React.MouseEvent<HTMLDetailsElement>) {
+    const newVal = event.currentTarget.open;
 
     if (id) {
       if (newVal) {
@@ -65,14 +70,26 @@ export function Expandable({title, level, children, permalink}: Props) {
   }
 
   return (
-    <Callout
-      level={level}
-      title={title}
-      Icon={isExpanded ? ChevronDownIcon : ChevronRightIcon}
+    <details
+      name={group}
+      className={`${styles.expandable} callout !block ${'callout-' + level}`}
+      open={isExpanded}
+      // We only need this to keep the URL hash in sync
+      onToggle={id ? toggleIsExpanded : undefined}
       id={id}
-      titleOnClick={toggleIsExpanded}
     >
-      {isExpanded ? children : undefined}
-    </Callout>
+      <summary className={`${styles['expandable-header']} callout-header`}>
+        <ChevronDownIcon
+          className={`${styles['expandable-icon-expanded']} callout-icon`}
+        />
+        <ChevronRightIcon
+          className={`${styles['expandable-icon-collapsed']} callout-icon`}
+        />
+        <div>{title}</div>
+      </summary>
+      <div className={`${styles['expandable-body']} callout-body content-flush-bottom`}>
+        {children}
+      </div>
+    </details>
   );
 }
