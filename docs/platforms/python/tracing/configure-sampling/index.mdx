@@ -34,7 +34,7 @@ It is strongly recommended when using a custom `traces_sampler` that you respect
 
 </Alert>
 
-In distributed systems, implement inheritance logic when trace information is propagated between services. This ensures consistent sampling decisions across your entire distributed trace
+In distributed systems, implementing inheritance logic when trace information is propagated between services will ensure consistent sampling decisions across your entire distributed trace.
 
 <PlatformContent includePath="/performance/traces-sampler-as-sampler" />
 
@@ -94,7 +94,8 @@ def traces_sampler(sampling_context):
     if environment == "development":
         return 1.0
     
-    # Sample more transactions if there are recent errors by using custom attributes
+    # Sample more transactions if there are recent errors
+    # Note: hasRecentErrors is a custom attribute that needs to be set
     if ctx.get("data", {}).get("hasRecentErrors"): 
         return 0.8
     
@@ -107,10 +108,23 @@ def traces_sampler(sampling_context):
     # Default sampling rate
     return 0.1  
 
+# Initialize the SDK with the sampling function
 sentry_sdk.init(
     dsn="your-dsn",
     traces_sampler=traces_sampler,
 )
+
+# You can use the sampling function by setting custom attributes:
+# Option 1: When creating the transaction
+with sentry_sdk.start_transaction(name="GET /api/users", op="http.request") as transaction:
+    # Set custom attribute
+    transaction.set_data("hasRecentErrors", True)
+    # Your code here
+
+# Option 2: During the transaction's lifecycle
+with sentry_sdk.start_transaction(name="GET /api/users", op="http.request") as transaction:
+    # Your code here
+    transaction.set_data("hasRecentErrors", True)  # Set custom attribute
 ```
 
 3. Controlling Sampling Based on User and Transaction Properties
@@ -128,28 +142,42 @@ def traces_sampler(sampling_context):
     data = ctx.get("data", {})
     
     # Always sample for premium users
+    # Note: user.tier is a custom attribute that needs to be set
     if data.get("user", {}).get("tier") == "premium":
         return 1.0
     
     # Sample more transactions for users experiencing errors
+    # Note: hasRecentErrors is a custom attribute
     if data.get("hasRecentErrors"):
         return 0.8
     
     # Sample less for high-volume, low-value paths
-   if (ctx.get("name") or "").startswith("/api/metrics"):
+    # Note: name is an SDK-provided attribute
+    if (ctx.get("name") or "").startswith("/api/metrics"):
         return 0.01
     
     # Sample more for slow transactions
+    # Note: duration_ms is a custom attribute
     if data.get("duration_ms", 0) > 1000:  # Transactions over 1 second
         return 0.5
     
     # Default sampling rate
     return 0.2
-
+    
+# Initialize the SDK with the sampling function
 sentry_sdk.init(
     dsn="your-dsn",
     traces_sampler=traces_sampler,
 )
+
+# To set custom attributes for this example:
+with sentry_sdk.start_transaction(name="GET /api/users", op="http.request") as transaction:
+    # Set custom attributes
+    transaction.set_data("user", {"tier": "premium"})  # Custom user data
+    transaction.set_data("hasRecentErrors", True)      # Custom error flag
+    transaction.set_data("duration_ms", 1500)          # Custom timing data
+    # Your code here
+
 ```
 
 4. Complex Business Logic Sampling
@@ -167,10 +195,12 @@ def traces_sampler(sampling_context):
     data = ctx.get("data", {})
     
     # Always sample critical business operations
+    # Note: op is an SDK-provided attribute
     if ctx.get("op") in ["payment.process", "order.create", "user.verify"]:
         return 1.0
     
     # Sample based on user segment
+    # Note: user.segment is a custom attribute
     user_segment = data.get("user", {}).get("segment")
     if user_segment == "enterprise":
         return 0.8
@@ -178,22 +208,34 @@ def traces_sampler(sampling_context):
         return 0.5
     
     # Sample based on transaction value
+    # Note: transaction.value is a custom attribute
     transaction_value = data.get("transaction", {}).get("value", 0)
     if transaction_value > 1000:  # High-value transactions
         return 0.7
     
     # Sample based on error rate in the service
+    # Note: service.error_rate is a custom attribute
     error_rate = data.get("service", {}).get("error_rate", 0)
     if error_rate > 0.05:  # Error rate above 5%
         return 0.9
     
     # Default sampling rate
     return 0.1
-
+ 
+# Initialize the SDK with the sampling function
 sentry_sdk.init(
     dsn="your-dsn",
     traces_sampler=traces_sampler,
 )
+
+s# To set custom attributes for this example:
+with sentry_sdk.start_transaction(name="Process Payment", op="payment.process") as transaction:
+    # Set custom attributes
+    transaction.set_data("user", {"segment": "enterprise"})  # Custom user data
+    transaction.set_data("transaction", {"value": 1500})     # Custom transaction data
+    transaction.set_data("service", {"error_rate": 0.03})    # Custom service data
+    # Your code here
+
 ```
 
 5. Performance-Based Sampling
@@ -211,28 +253,43 @@ def traces_sampler(sampling_context):
     data = ctx.get("data", {})
     
     # Sample all slow transactions
+    # Note: duration_ms is a custom attribute
     if data.get("duration_ms", 0) > 2000:  # Over 2 seconds
         return 1.0
     
     # Sample more transactions with high memory usage
+    # Note: memory_usage_mb is a custom attribute
     if data.get("memory_usage_mb", 0) > 500:  # Over 500MB
         return 0.8
     
     # Sample more transactions with high CPU usage
+    # Note: cpu_percent is a custom attribute
     if data.get("cpu_percent", 0) > 80:  # Over 80% CPU
         return 0.8
     
-    # Sample more transactions with high database load using custom attributes
+    # Sample more transactions with high database load
+    # Note: db_connections is a custom attribute
     if data.get("db_connections", 0) > 100:  # Over 100 connections
         return 0.7
     
     # Default sampling rate
     return 0.1
-
-sentry_sdk.init(
+    
+# Initialize the SDK with the sampling function
+    sentry_sdk.init(
     dsn="your-dsn",
     traces_sampler=traces_sampler,
 )
+
+# To set custom attributes for this example:
+with sentry_sdk.start_transaction(name="Process Data", op="data.process") as transaction:
+    # Set custom attributes
+    transaction.set_data("duration_ms", 2500)      # Custom timing data
+    transaction.set_data("memory_usage_mb", 600)   # Custom memory data
+    transaction.set_data("cpu_percent", 85)        # Custom CPU data
+    transaction.set_data("db_connections", 120)    # Custom database data
+    # Your code here
+
 ```
 </details>
 
@@ -243,23 +300,29 @@ When the `traces_sampler` function is called, the Sentry SDK passes a `sampling_
 ```python
 {
     "transaction_context": {
-        "name": str,                    # transaction title at creation time
-        "op": str,                      # short description of transaction type, like "http.request"
-        "data": Optional[Dict[str, Any]] # other transaction data
+        "name": str,                    # transaction title at creation time (SDK-provided)
+        "op": str,                      # short description of transaction type (SDK-provided)
+        "data": Optional[Dict[str, Any]] # custom data you've added to the transaction
     },
-    "parent_sampled ": Optional[bool],  # whether the parent transaction was sampled, `None` if no parent or if the parent has no sampling decision
-    "parent_sample_rate": Optional[float], # the sample rate used by the parent (if any)
-    "transaction_context": Optional[Dict[str, Any]],  # custom context data
+    "parent_sampled": Optional[bool],  # whether the parent transaction was sampled (SDK-provided)
+    "parent_sample_rate": Optional[float], # the sample rate used by the parent (SDK-provided)
     "custom_sampling_context": Optional[Dict[str, Any]]  # additional custom data for sampling
 }
 ```
 
-<b>Additional common types used in</b> `sampling_context`<b>:</b>
-    - str: for text values (names, operations, etc.)
-    - bool: for true/false values
-    - float: for decimal numbers (like sample rates)
-    - Dict[str, Any]: for dictionaries with string keys and any type of values
-    - Optional[Type]: for values that might be None
+### SDK-Provided vs. Custom Attributes
+
+The sampling context contains both SDK-provided attributes and custom attributes:
+
+**SDK-Provided Attributes:**
+- `transaction_context.name`: The name of the transaction
+- `transaction_context.op`: The operation type
+- `parent_sampled`: Whether the parent transaction was sampled
+- `parent_sample_rate`: The sample rate used by the parent
+
+**Custom Attributes:**
+- Any data you add to the `set_data` method on the transaction object. Use this for data that you want to include in the transaction data that gets sent to Sentry.
+- Any data you add to the `custom_sampling_context` parameter in `start_transaction`. Use this for data that you want to use for sampling decisions but don't want to include in the transaction data that gets sent to Sentry. Read more about sampling context [here](/platforms/python/configuration/sampling/#sampling-context).
 
 ## Sampling Decision Precedence
 
