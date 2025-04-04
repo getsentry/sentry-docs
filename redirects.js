@@ -219,6 +219,10 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/organization/integrations/telegram-alerts-bot/',
+    destination: '/organization/integrations/notification-incidents/telegram-alerts-bot/',
+  },
+  {
     source: '/platforms/php/configuration/integrations/',
     destination: '/platforms/php/integrations/',
   },
