@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+
 @RestController
 class HelloController {
 
@@ -51,22 +52,27 @@ Each sampled request executed by this controller method will be turned into a tr
 Sentry Spring integration provides `SentrySpanClientHttpRequestInterceptor` that creates a span for each outgoing HTTP request executed with a `RestTemplate`. To use instrumented `RestTemplate` make sure to set interceptor on the `RestTemplate` bean:
 
 ```java {tabTitle:Java (Spring 5)}
-import io.sentry.IHub;
+import io.sentry.IScopes;
 import io.sentry.spring.tracing.SentrySpanClientHttpRequestInterceptor;
 import java.util.Collections;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriTemplateHandler;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 
 @Configuration
 class AppConfig {
 
+  @Autowired 
+  private ApplicationContext applicationContext;
+
   @Bean
-  RestTemplate restTemplate(IHub hub) {
+  RestTemplate restTemplate() {
     RestTemplate restTemplate = new RestTemplate();
     SentrySpanClientHttpRequestInterceptor sentryRestTemplateInterceptor =
-        new SentrySpanClientHttpRequestInterceptor(hub);
+        new SentrySpanClientHttpRequestInterceptor(applicationContext.getBean(IScopes.class));
     restTemplate.setInterceptors(Collections.singletonList(sentryRestTemplateInterceptor));
     return restTemplate;
   }
@@ -74,22 +80,27 @@ class AppConfig {
 ```
 
 ```java {tabTitle:Java (Spring 6)}
-import io.sentry.IHub;
+import io.sentry.IScopes;
 import io.sentry.spring.jakarta.tracing.SentrySpanClientHttpRequestInterceptor;
 import java.util.Collections;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriTemplateHandler;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 
 @Configuration
 class AppConfig {
 
+  @Autowired 
+  private ApplicationContext applicationContext;
+
   @Bean
-  RestTemplate restTemplate(IHub hub) {
+  RestTemplate restTemplate() {
     RestTemplate restTemplate = new RestTemplate();
     SentrySpanClientHttpRequestInterceptor sentryRestTemplateInterceptor =
-        new SentrySpanClientHttpRequestInterceptor(hub);
+        new SentrySpanClientHttpRequestInterceptor(applicationContext.getBean(IScopes.class));
     restTemplate.setInterceptors(Collections.singletonList(sentryRestTemplateInterceptor));
     return restTemplate;
   }
@@ -97,19 +108,24 @@ class AppConfig {
 ```
 
 ```kotlin {tabTitle:Kotlin (Spring 5)}
-import io.sentry.IHub
+import io.sentry.IScopes
 import io.sentry.spring.tracing.SentrySpanClientHttpRequestInterceptor
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.UriTemplateHandler
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.ApplicationContext
 
 @Configuration
 class AppConfig {
 
+  @Autowired 
+  private ApplicationContext applicationContext;
+
   @Bean
-  fun restTemplate(hub: IHub): RestTemplate {
-    val sentryRestTemplateInterceptor = SentrySpanClientHttpRequestInterceptor(hub)
+  fun restTemplate(): RestTemplate {
+    val sentryRestTemplateInterceptor = SentrySpanClientHttpRequestInterceptor(applicationContext.getBean(IScopes.class))
 
     return RestTemplate().apply {
       interceptors = listOf(sentryRestTemplateInterceptor)
@@ -119,19 +135,24 @@ class AppConfig {
 ```
 
 ```kotlin {tabTitle:Kotlin (Spring 6)}
-import io.sentry.IHub
+import io.sentry.IScopes
 import io.sentry.spring.jakarta.tracing.SentrySpanClientHttpRequestInterceptor
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.UriTemplateHandler
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.ApplicationContext
 
 @Configuration
 class AppConfig {
 
+  @Autowired 
+  private ApplicationContext applicationContext;
+
   @Bean
-  fun restTemplate(hub: IHub): RestTemplate {
-    val sentryRestTemplateInterceptor = SentrySpanClientHttpRequestInterceptor(hub)
+  fun restTemplate(): RestTemplate {
+    val sentryRestTemplateInterceptor = SentrySpanClientHttpRequestInterceptor(applicationContext.getBean(IScopes.class))
 
     return RestTemplate().apply {
       interceptors = listOf(sentryRestTemplateInterceptor)
