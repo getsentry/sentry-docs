@@ -71,8 +71,11 @@ var tableView: UITableView!
     URLSession.shared.dataTask(with: URLRequest(url: URL(string: "https://my.domain.tld/endpoint")!)) { data, response, error in
         self.model = try! JSONDecoder().decode(MyModel.self, from: data!)
         DispatchQueue.main.async {
-            self.tableView.reloadData()
-            SentrySDK.stopProfiler()
+            self.tableView.performBatchUpdates {
+                // update table view with model
+            } completion: { finished in 
+                SentrySDK.stopProfiler()
+            }
         }
     }
 }
