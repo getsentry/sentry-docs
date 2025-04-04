@@ -499,6 +499,14 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/:guide/configuration/options/#environment',
   },
   {
+    source: '/platforms/javascript/configuration/draining/',
+    destination: '/platforms/javascript/apis/#flush',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/configuration/draining/',
+    destination: '/platforms/javascript/guides/:guide/apis/#flush',
+  },
+  {
     source: '/platforms/:platform/context/',
     destination: '/platforms/:platform/enriching-events/context/',
   },
