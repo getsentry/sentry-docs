@@ -1,6 +1,6 @@
 ---
 title: Set Up Profiling
-description: "Learn how to enable profiling in your app if it is not already set up."
+description: "Learn how to enable profiling in your app."
 sidebar_order: 5000
 supported:
   - apple
@@ -53,7 +53,7 @@ See the subsections below to learn about the various ways the profiler can be st
 
 ### Manual Lifecycle
 
-By default, the profiler can only be started and stopped manually with calls to `SentrySDK.startProfiler` and `SentrySDK.stopProfiler`. All code that executes on all threads in between those calls will be recorded. The configurations shown above demonstrate configuring manual profiling mode.
+By default, the profiler can only be started and stopped manually with calls to `SentrySDK.startProfiler` and `SentrySDK.stopProfiler`. All code that executes on all threads in between those calls will be recorded. The snippets above demonstrate configuring manual profiling mode.
 
 For example, if you wanted to profile everything that happens after starting a network request, and then update a table view with the contents of the response, you could do it like this (assuming you've already started the Sentry SDK with the options shown above):
 
@@ -115,7 +115,7 @@ SentrySDK.start { options in
 
 <Alert>
 
-The `sessionSampleRate` for profiles is undersampled with respect to the `tracesSampleRate`.
+The `sessionSampleRate` for profiles is _relative_ to the `tracesSampleRate`: if `tracesSampleRate` and `sessionSampleRate` are both `0.5`, then on average 25% of attempts to start the profiler will result in actual data collection.
 
 </Alert>
 
@@ -125,7 +125,7 @@ Check out the <PlatformLink to="/tracing/">tracing setup documentation</Platform
 
 If configured with manual lifecycle, a profile starts on the next app launch, and continues until you call `SentrySDK.stopProfiler`. 
 
-If configured with trace lifecycle, app start profiles are attached to a special performance transaction operation called `app.launch` and displayed in the product as `launch`. It is stopped either when `SentrySDK.startWithOptions` is called, or, if <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#time-to-initial-display">TTID</PlatformLink>/<PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#time-to-full-display">TTFD</PlatformLink> tracking is enabled, when the SDK determines that TTID/TTFD has been reached.
+If configured with trace lifecycle, app start profiles are attached to a special performance transaction operation called `app.launch` and displayed in the product as `launch`. It is stopped either when `SentrySDK.startWithOptions` is called, or, if <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#time-to-initial-display">Time to Initial Display (TTID)</PlatformLink>/<PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#time-to-full-display">Time to Full Display (TTFD)</PlatformLink> tracking is enabled, when the SDK determines that TTID/TTFD has been reached.
 
 Every time `SentrySDK.startWithOptions` is called with app start profiling configured, a separate sample decision is generated with `sessionSampleRate` and stored until the next app launch (as well as `tracesSampleRate` if trace profile lifecycle is configured). The same sample decision will apply for the remainder of the profile session following that subsequent launch.
 
