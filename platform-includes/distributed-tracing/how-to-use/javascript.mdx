@@ -2,6 +2,14 @@ If you're using the current version of our JavaScript SDK and have enabled the `
 
 To get around possible [Browser CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) issues, define your `tracePropagationTargets`.
 
+<Alert>
+
+Note: port numbers are relevant for trace propagation and the origin. You may need to configure the `tracePropagationTargets` to ensure that traces are propagated across your services if they run on different ports. 
+
+For example, if you have a Node.js backend running locally on port 3000, that destination (`http://localhost:3000`) should be added to the `tracePropagationTargets` array on your frontend to ensure that CORS doesn't restrict the propagation of traces.
+
+</Alert>
+
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
@@ -46,18 +54,16 @@ Sentry.init({
   tracePropagationTargets: [
     "https://api.myecommerce.com",
     "https://auth.myecommerce.com",
-    /^\/internal-api\//
   ],
 });
 ```
 
-This tells Sentry to track user journeys across three places:
+This tells Sentry to pass trace headers across the following paths:
 
 * Your main API server (where product data comes from)
 * Your authentication server (where logins happen)
-* Any API calls that start with "/internal-api/" on your current domain
 
-This way, if a customer experiences an error during checkout, you can see the complete path their request took across these different services.
+This way, if a customer experiences an error during checkout, or you want to check the performance of a specific endpoint, you can see the complete path their request took across these different services.
 
 #### Example 2: Mobile App with Backend Services
 

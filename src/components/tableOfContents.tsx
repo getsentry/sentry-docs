@@ -48,8 +48,7 @@ export function TableOfContents({ignoreIds = []}: Props) {
       .filter(Boolean) as TreeNode[];
 
     // Now group them together
-    // We only support 2 levels of nesting,
-    // where the first level is assumed to be headings, and the second one is assumed to be options
+    // We only support 2 levels of nesting for now
     const _tocItems: TreeItem[] = [];
     let currentItem: TreeItem | undefined;
     for (let node of nodes) {
@@ -70,7 +69,7 @@ export function TableOfContents({ignoreIds = []}: Props) {
     }
 
     // Remove groups without children
-    setTreeItems(_tocItems.filter(item => item.children.length > 0));
+    setTreeItems(_tocItems);
   }, [ignoreIds]);
 
   return (
