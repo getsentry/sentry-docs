@@ -20,56 +20,15 @@ You can use the <PlatformIdentifier name="ignore-errors" /> option to filter out
 
 <PlatformContent includePath="configuration/ignore-errors" />
 
+See <PlatformLink to="/configuration/options/#ignoreErrors">ignoreErrors</PlatformLink> for details.
+
 ### Using <PlatformIdentifier name="before-send" />
 
 You can configure a <PlatformIdentifier name="before-send" /> callback method to filter error events. Because it's called immediately before the event is sent to the server, this is your last chance to decide not to send data or to edit it. <PlatformIdentifier name="before-send" /> receives the event object as a parameter and, based on custom logic and the data available on the event, you can either modify the event’s data or drop it completely by returning `null`.
 
 <PlatformContent includePath="configuration/before-send/" />
 
-Note also that breadcrumbs can be filtered, as discussed in [our Breadcrumbs documentation](/product/error-monitoring/breadcrumbs/).
-
-#### Event Hints
-
-The <PlatformIdentifier name="before-send" /> callback is passed both the `event` and a second argument, `hint`, that holds one or more hints.
-
-Typically, a `hint` holds the original exception so that additional data can be extracted or grouping is affected. In this example, the fingerprint is forced to a common value if an exception of a certain type has been caught:
-
-<PlatformContent includePath="configuration/before-send-hint" />
-
-When the SDK creates an event or breadcrumb for transmission, that transmission is typically created from some sort of source object. For instance, an error event is typically created from a log record or exception instance. For better customization, SDKs send these objects to certain callbacks (<PlatformIdentifier name="before-send" />, <PlatformIdentifier name="before-breadcrumb" /> or the event processor system in the SDK).
-
-### Using Hints
-
-Hints are available in two places:
-
-1. <PlatformIdentifier name="before-send" /> / <PlatformIdentifier name="before-breadcrumb" />
-2. `eventProcessors`
-
-Event and breadcrumb `hints` are objects containing various information used to put together an event or a breadcrumb. Typically `hints` hold the original exception so that additional data can be extracted or grouping can be affected.
-
-For events, hints contain properties such as `event_id`, `originalException`, `syntheticException` (used internally to generate cleaner stack trace), and any other arbitrary `data` that you attach.
-
-For breadcrumbs, the use of `hints` is implementation dependent. For XHR requests, the hint contains the xhr object itself; for user interactions the hint contains the DOM element and event name and so forth.
-
-<PlatformContent includePath="configuration/before-send-fingerprint">
-
-In this example, the fingerprint is forced to a common value if an exception of a certain type has been caught:
-
-</PlatformContent>
-
-#### Hints for Events
-
-`originalException`
-
-The original exception that caused the Sentry SDK to create the event. This is useful for changing how the Sentry SDK groups events or to extract additional information.
-
-`syntheticException`
-
-When a string or a non-error object is raised, Sentry creates a synthetic exception so you can get a basic stack trace. This exception is stored here for further data extraction.
-
-#### Hints for Breadcrumbs
-
-<PlatformContent includePath="configuration/breadcrumb-hints" />
+See <PlatformLink to="/configuration/options/#beforeSend">beforeSend</PlatformLink> for details, and [Using Hints](#using-hints) for details on the `hint` object.
 
 ### Using `allowUrls` and `denyUrls`
 
@@ -82,6 +41,9 @@ Sentry.init({
 ```
 
 You can also use `denyUrls` if you want to block errors created on specific URLs from being sent to Sentry.
+
+- See <PlatformLink to="/configuration/options/#allowUrls">allowUrls</PlatformLink> details
+- See <PlatformLink to="/configuration/options/#denyUrls">denyUrls</PlatformLink> details
 
 ### Using `thirdPartyErrorFilterIntegration`
 
@@ -156,23 +118,19 @@ You can use the <PlatformIdentifier name="ignore-transactions" /> option to filt
 
 <PlatformContent includePath="configuration/ignore-transactions" />
 
+See <PlatformLink to="/configuration/options/#ignoreTransactions">ignoreTransactions</PlatformLink> for details.
+
 ### Using <PlatformIdentifier name="traces-sampler" />
 
-**Note:** The <PlatformIdentifier name="traces-sampler" /> and <PlatformIdentifier name="traces-sample-rate" /> config options are mutually exclusive. If you define a <PlatformIdentifier name="traces-sampler" /> to filter out certain transactions, you must also handle the case of non-filtered transactions by returning the rate at which you'd like them sampled.
+You can also use the <PlatformLink to="/configuration/options/#tracesSampler">tracesSampler</PlatformLink> option to prevent certain transactions from being reported to Sentry.
 
-In its simplest form, used just for filtering the transaction, it looks like this:
-
-<PlatformContent includePath="performance/traces-sampler-as-filter" />
-
-It also allows you to sample different transactions at different rates.
-
-If the transaction currently being processed has a parent transaction (from an upstream service calling this service), the parent (upstream) sampling decision will always be included in the sampling context data, so that your <PlatformIdentifier name="traces-sampler" /> can choose whether and when to inherit that decision. In most cases, inheritance is the right choice, to avoid breaking distributed traces. A broken trace will not include all your services. See <PlatformLink to="/configuration/sampling/#inheritance">Inheriting the parent sampling decision</PlatformLink> to learn more.
-
-Learn more about <PlatformLink to="/configuration/sampling/">configuring the sample rate</PlatformLink>.
+See <PlatformLink to="/configuration/sampling/#setting-a-sampling-function">Sampling</PlatformLink> on information about how to use it.
 
 ### Using `beforeSendTransaction`
 
 <PlatformContent includePath="configuration/before-send-transaction" />
+
+See <PlatformLink to="/configuration/options/#beforeSendTransaction">beforeSendTransaction</PlatformLink> for details, and [Using Hints](#using-hints) for details on the `hint` object.
 
 ## Filtering Spans
 
@@ -182,3 +140,46 @@ Use the <PlatformIdentifier name="before-send-span" /> configuration option whic
 This function is called for the root span and all child spans. If you want to drop the root span, including its child spans, use [`beforeSendTransaction`](#using-beforesendtransaction) instead.
 
 <PlatformContent includePath="configuration/before-send-span" />
+
+See <PlatformLink to="/configuration/options/#beforeSendSpan">beforeSendSpan</PlatformLink> for details.
+
+## Filtering Breadcrumbs
+
+You can filter breadcrumbs by using the `beforeBreadcrumb` configuration option:
+
+<PlatformContent includePath="enriching-events/breadcrumbs/before-breadcrumb" />
+
+See <PlatformLink to="/configuration/options/#beforeBreadcrumb">beforeBreadcrumb</PlatformLink> for details.
+
+## Using Hints
+
+Hints are available in two places:
+
+1. <PlatformIdentifier name="before-send" /> / <PlatformIdentifier name="before-breadcrumb" />
+2. Event processors added via `Sentry.addEventProcessor()`
+
+Event and breadcrumb `hints` are objects containing various information used to put together an event or a breadcrumb. Typically `hints` hold the original exception so that additional data can be extracted or grouping can be affected.
+
+For events, hints contain properties such as `event_id`, `originalException`, `syntheticException` (used internally to generate cleaner stack trace), and any other arbitrary `data` that you attach.
+
+For breadcrumbs, the use of `hints` is implementation dependent. For XHR requests, the hint contains the xhr object itself; for user interactions the hint contains the DOM element and event name and so forth.
+
+<PlatformContent includePath="configuration/before-send-fingerprint">
+
+In this example, the fingerprint is forced to a common value if an exception of a certain type has been caught:
+
+</PlatformContent>
+
+### Hints for Events
+
+`originalException`
+
+The original exception that caused the Sentry SDK to create the event. This is useful for changing how the Sentry SDK groups events or to extract additional information.
+
+`syntheticException`
+
+When a string or a non-error object is raised, Sentry creates a synthetic exception so you can get a basic stack trace. This exception is stored here for further data extraction.
+
+### Hints for Breadcrumbs
+
+<PlatformContent includePath="configuration/breadcrumb-hints" />
