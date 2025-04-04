@@ -507,6 +507,22 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/:guide/apis/#flush',
   },
   {
+    source: '/platforms/javascript/enriching-events/identify-user/',
+    destination: '/platforms/javascript/apis/#setUser',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/enriching-events/identify-user/',
+    destination: '/platforms/javascript/guides/:guide/apis/#setUser',
+  },
+  {
+    source: '/platforms/javascript/enriching-events/context/',
+    destination: '/platforms/javascript/apis/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/enriching-events/context/',
+    destination: '/platforms/javascript/guides/:guide/enriching-events/',
+  },
+  {
     source: '/platforms/:platform/context/',
     destination: '/platforms/:platform/enriching-events/context/',
   },
