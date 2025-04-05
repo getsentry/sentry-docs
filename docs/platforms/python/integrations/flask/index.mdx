@@ -19,11 +19,11 @@ If you have the `flask` package in your dependencies, the Flask integration will
 
 <PlatformContent includePath="getting-started-config" />
 
-<Note>
+<Alert>
 
 Our Python SDK will install the Flask integration for all of your apps. It hooks into Flask’s signals, not anything on the app object.
 
-</Note>
+</Alert>
 
 ## Verify
 
@@ -67,6 +67,7 @@ sentry_sdk.init(
     integrations = [
         FlaskIntegration(
             transaction_style="url",
+            http_methods_to_capture=("GET",),
         ),
     ],
 )
@@ -75,6 +76,9 @@ sentry_sdk.init(
 You can pass the following keyword arguments to `FlaskIntegration()`:
 
 - `transaction_style`:
+
+  Sets the format or style that transactions are named.
+  <br/>
 
   ```python
   @app.route("/myurl/<foo>")
@@ -85,9 +89,21 @@ You can pass the following keyword arguments to `FlaskIntegration()`:
   In the above code, you would set the transaction to:
 
   - `/myurl/<foo>` if you set `transaction_style="url"`.
-  - `myendpoint` if you set `transaction_style="endpoint"`
+  - `myendpoint` if you set `transaction_style="endpoint"`.
 
   The default is `"endpoint"`.
+
+- `http_methods_to_capture`:
+
+  A tuple containing all the HTTP methods that should create a transaction in Sentry.
+
+  The default is `("CONNECT", "DELETE", "GET", "PATCH", "POST", "PUT", "TRACE",)`.
+
+  (Note that `OPTIONS` and `HEAD` are missing by default.)
+
+  <Alert title="Added in 2.15.0">
+    The `http_methods_to_capture` option.
+  </Alert>
 
 ## Supported Versions
 

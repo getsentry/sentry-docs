@@ -1,21 +1,18 @@
 ---
-title: Basic Options
-description: "Learn more about how to configure the SDK. These options are set when the SDK is first initialized, passed to the init function as an object."
+title: Options
+description: "Learn more about how the SDK can be configured via options. These are being passed to the init function and therefore set when the SDK is first initialized."
 sidebar_order: 1
 ---
 
-SDKs are configurable using a variety of options. The options are largely standardized among SDKs, but there are some differences to better accommodate platform peculiarities. Options are set when the SDK is first
-initialized.
-
 <PlatformContent includePath="configuration/config-intro" />
 
-## Common Options
+## Core Options
 
-The list of common options across SDKs. These work more or less the same in all SDKs, but some subtle differences will exist to better support the platform. Options that can be read from an environment variable (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically.
+Options that can be read from an environment variable (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically.
 
 <ConfigKey name="dsn">
 
-The _DSN_ tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable also does not exist, the SDK will just not send any events.
+The DSN tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable also does not exist, the SDK will just not send any events.
 
 In runtimes without a process environment (such as the browser) that fallback does not apply.
 
@@ -71,13 +68,13 @@ Configures the sample rate for error events, in the range of `0.0` to `1.0`. The
 
 <ConfigKey name="max-breadcrumbs">
 
-This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`, but you can set this to any number. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
+This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`, but you can set this to any number. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
 
 </ConfigKey>
 
 <ConfigKey name="max-cache-items">
 
-The maximum number of [envelopes](https://develop.sentry.dev/sdk/envelopes/) to keep in cache. The SDKs use envelopes to send data, such as events, attachments, user feedback, and sessions to sentry.io. An envelope can contain multiple items, such as an event with a session and two attachments. Depending on the usage of the SDK, the size of an envelope can differ. If the number of envelopes in the local cache exceeds `max-cache-items`, the SDK deletes the oldest envelope and migrates the sessions to the next envelope to maintain the integrity of your release health stats. The default is `30`.
+The maximum number of [envelopes](https://develop.sentry.dev/sdk/data-model/envelopes/) to keep in cache. The SDKs use envelopes to send data, such as events, attachments, user feedback, and sessions to sentry.io. An envelope can contain multiple items, such as an event with a session and two attachments. Depending on the usage of the SDK, the size of an envelope can differ. If the number of envelopes in the local cache exceeds `max-cache-items`, the SDK deletes the oldest envelope and migrates the sessions to the next envelope to maintain the integrity of your release health stats. The default is `30`.
 
 </ConfigKey>
 
@@ -95,11 +92,11 @@ Grouping in Sentry is different for events with stack traces and without. As a r
 
 If this flag is enabled, certain personally identifiable information (PII) is added by active integrations. By default, no such data is sent.
 
-<Note>
+<Alert>
 
 If you are using Sentry in your mobile app, read our [frequently asked questions about mobile data privacy](/security-legal-pii/security/mobile-privacy/) to assist with Apple App Store and Google Play app privacy details.
 
-</Note>
+</Alert>
 
 This option is turned off by default.
 
@@ -113,19 +110,19 @@ When set to `true`, the SDK will send session events to Sentry. This is supporte
 
 </ConfigKey>
 
-<ConfigKey name="in-app-include">
+<ConfigKey name="in-app-includes">
 
-A list of string prefixes of module names that belong to the app. This option takes precedence over `in-app-exclude`.
+A list of string prefixes of module names that belong to the app. This option takes precedence over `in-app-excludes`.
 
 Sentry differentiates stack frames that are directly related to your application ("in application") from stack frames that come from other packages such as the standard library, frameworks, or other dependencies. The application package is automatically marked as `inApp`. The difference is visible in [sentry.io](https://sentry.io), where only the "in application" frames are displayed by default.
 
 </ConfigKey>
 
-<ConfigKey name="in-app-exclude">
+<ConfigKey name="in-app-excludes">
 
 A list of string prefixes of module names that do not belong to the app, but rather to third-party packages. Modules considered not part of the app will be hidden from stack traces by default.
 
-This option can be overridden using <PlatformIdentifier name="in-app-include" />.
+This option can be overridden using <PlatformIdentifier name="in-app-includes" />.
 
 </ConfigKey>
 
@@ -170,11 +167,11 @@ The default is `3000`.
 
 _(New in version 6.0.0)_
 
-<Note>
+<Alert>
 
 This only affects [user interaction transactions](/platforms/android/tracing/instrumentation/automatic-instrumentation/#user-interaction-instrumentation).
 
-</Note>
+</Alert>
 
 </ConfigKey>
 
@@ -189,6 +186,14 @@ Specifies whether this SDK should send events to Sentry. Defaults to `true`. Set
 Set this boolean to `false` to disable sending of client reports. Client reports are a protocol feature that let clients send status reports about themselves to Sentry. They are currently mainly used to emit outcomes for events that were never sent.
 
 _(New in version 6.0.0)_
+
+</ConfigKey>
+
+<ConfigKey name="force-init">
+
+Set this boolean to `true` to force a call to `SentryAndroid.init` to re-initialize the SDK, even if the SDK has already been initialized with high priority.
+
+_(New in version 8.0.0)_
 
 </ConfigKey>
 
@@ -258,23 +263,17 @@ Default: set to `android.content.Context.getCacheDir()/sentry`.
 
 </ConfigKey>
 
-<ConfigKey name="shutdown-timeout">
+<ConfigKey name="shutdown-timeout-millis">
 
-Controls how many seconds to wait before shutting down. Sentry SDKs send events from a background queue. This queue is given a certain amount to drain pending events. The default is SDK specific but typically around two seconds. Setting this value too low may cause problems for sending events from command line applications. Setting the value too high will cause the application to block for a long time for users experiencing network connectivity problems.
+Controls how many seconds to wait before shutting down. Sentry SDKs send events from a background queue. This queue is given a certain amount to drain pending events. The default is SDK specific but typically around two seconds. Setting this value too low may cause problems for sending events from the application. Setting the value too high will cause the application to block for a long time for users experiencing network connectivity problems.
 
 </ConfigKey>
 
 ## Tracing Options
 
-<ConfigKey name="enable-tracing">
-
-A boolean value, if true, transactions and trace data will be generated and captured. This will set the <PlatformIdentifier name="traces-sample-rate" /> to the recommended default of 1.0 if <PlatformIdentifier name="traces-sample-rate" /> is not defined. Note that <PlatformIdentifier name="traces-sample-rate" /> and <PlatformIdentifier name="traces-sampler" /> take precedence over this option.
-
-</ConfigKey>
-
 <ConfigKey name="traces-sample-rate">
 
-A number between 0 and 1, controlling the percentage chance a given transaction will be sent to Sentry. (0 represents 0% while 1 represents 100%.) Applies equally to all transactions created in the app. Either this or <PlatformIdentifier name="traces-sampler" /> must be defined to enable tracing.
+A number between `0` and `1`, controlling the percentage chance a given transaction will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Applies equally to all transactions created in the app. Either this or <PlatformIdentifier name="traces-sampler" /> must be defined to enable tracing.
 
 </ConfigKey>
 
@@ -306,18 +305,50 @@ Set this boolean to `false` to disable tracing for `OPTIONS` requests. This opti
 
 <ConfigKey name="profiles-sample-rate">
 
-A number between 0 and 1, controlling the percentage chance a given profile will be sent to Sentry. (0 represents 0% while 1 represents 100%.) Applies only to sampled transactions created in the app. Either this or <PlatformIdentifier name="profiles-sampler" /> must be defined to enable profiling.
+A number between `0` and `1`, controlling the percentage chance a given profile will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Applies only to sampled transactions created in the app. Either this or <PlatformIdentifier name="profiles-sampler" /> must be defined to enable transaction profiling. Don't set it if you want to use <PlatformLink to="/profiling/#continuous-profiling">Continuous Profiling</PlatformLink>.
 
 </ConfigKey>
 
 <ConfigKey name="profiles-sampler">
 
-A function responsible for determining the percentage chance a given profile will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering profiles, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="profiles-sample-rate" /> must be defined to enable profiling.
+A function responsible for determining the percentage chance a given profile will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering profiles, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="profiles-sample-rate" /> must be defined to enable transaction profiling. Don't set it if you want to use <PlatformLink to="/profiling/#continuous-profiling">Continuous Profiling</PlatformLink>.
 
 </ConfigKey>
 
 <ConfigKey name="enable-app-start-profiling">
 
 A boolean value that determines whether the app start process will be profiled. When true, the startup process, including ContentProviders, Application and first Activity creation, will be profiled. Note that <PlatformIdentifier name="profiles-sample-rate" /> or <PlatformIdentifier name="profiles-sampler" /> must be defined.
+
+</ConfigKey>
+
+## Continuous Profiling Options
+
+<Alert>
+
+This feature is experimental and may have bugs.
+
+</Alert>
+
+<ConfigKey name="profile-session-sample-rate">
+
+A number between `0` and `1`, controlling the percentage chance the session will be profiled. `0` represents 0% while `1` represents 100%. The default is null (disabled). <PlatformIdentifier name="profiles-sampler" /> and <PlatformIdentifier name="profiles-sample-rate" /> must not be set to enable <PlatformLink to="/profiling/#continuous-profiling">Continuous Profiling</PlatformLink>.
+
+</ConfigKey>
+
+<ConfigKey name="profile-lifecycle">
+
+Whether the profiling lifecycle is controlled manually or based on the trace lifecycle. Possible values are:
+
+- `manual`: **default** Profiler must be started and stopped through `Sentry.startProfiler()` and `Sentry.stopProfiler()` APIs
+- `trace`: Profiler is started and stopped automatically whenever a sampled trace starts and finishes
+
+</ConfigKey>
+
+<ConfigKey name="start-profiler-on-app-start">
+
+A boolean value that determines whether the app start process will be profiled. When true, the startup process, including ContentProviders, Application and first Activity creation, will be profiled. Note that <PlatformIdentifier name="profile-session-sample-rate" /> must be defined.
+
+- If profileLifecycle is set to `manual`: profiling is started automatically on startup and stopProfiler must be called manually whenever the app startup is deemed to be completed
+- If profileLifecycle is set to `trace`: profiling is started automatically on startup, and will automatically be stopped when the root span that is associated with app startup ends
 
 </ConfigKey>

@@ -7,7 +7,7 @@ On this page, you will learn how to attach files, such as logs or config files, 
 
 ## Creating Attachments
 
-The simplest way to create an attachment is to use a `path`. The SDK will read the contents of the file each time it prepares an event or transaction, then adds the attachment to the same [envelope](https://develop.sentry.dev/sdk/envelopes/). If the SDK can't read the file, the SDK logs an error message and drops the attachment.
+The simplest way to create an attachment is to use a `path`. The SDK will read the contents of the file each time it prepares an event or transaction, then adds the attachment to the same [envelope](https://develop.sentry.dev/sdk/data-model/envelopes/). If the SDK can't read the file, the SDK logs an error message and drops the attachment.
 
 <PlatformContent includePath="enriching-events/attachment-init-with-path" />
 
@@ -27,23 +27,37 @@ The filename is the name of the file to display in Sentry. When using bytes you 
 
 The type of content stored in this attachment. Any [MIME type](https://www.iana.org/assignments/media-types/media-types.xhtml) may be used; the default is `application/octet-stream`.
 
+`mimetype`
+
+The specific media content type that determines how the attachment is rendered in the Sentry UI. We currently support and can render the following MIME types:
+
+- `text/plain`
+- `text/css`
+- `text/csv`
+- `text/html`
+- `text/javascript`
+- `text/json` or `text/x-json` or `application/json` or `application/ld+json`
+- `image/jpeg`
+- `image/png`
+- `image/gif`
+
 ## Uploading Attachments
 
 Attachments live on the <PlatformLink to="/enriching-events/scopes/">Scope</PlatformLink>. You can either add an attachment on the global scope to be sent with every event or add it on the <PlatformLink to="/enriching-events/scopes/#local-scopes">local Scope</PlatformLink> to just send the attachment with one specific event.
 
-<Note>
+<Alert>
 
 Adding attachments to crashes is currently not supported.
 
-</Note>
+</Alert>
 
 <PlatformContent includePath="enriching-events/attachment-upload" />
 
-<Note>
+<Alert>
 
 Sentry allows at most 20MB for a compressed request, and at most 100MB of uncompressed attachments per event, including the crash report file (if applicable). Uploads exceeding this size are rejected with HTTP error `413 Payload Too Large` and the data is dropped immediately. To add larger or more files, consider secondary storage options.
 
-</Note>
+</Alert>
 
 Attachments persist for 30 days; if your total storage included in your quota is exceeded, attachments will not be stored. You can delete attachments or their containing events at any time. Deleting an attachment does not affect your quota - Sentry counts an attachment toward your quota as soon as it is stored.
 

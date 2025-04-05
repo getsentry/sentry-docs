@@ -36,12 +36,17 @@ type Tag = {
   'x-sidebar-name': string;
 };
 
+type ServerMeta = {
+  description: string;
+  url: string;
+};
+
 export type DeRefedOpenAPI = {
   paths: {
     [key: string]: {
       [key: string]: {
         operationId: string;
-        parameters: Parameter[];
+        parameters: Parameter[] | undefined;
         requestBody: {
           content: {
             'application/json': {
@@ -66,6 +71,7 @@ export type DeRefedOpenAPI = {
         tags: string[];
         description?: string;
         security?: any;
+        servers?: ServerMeta[];
       };
     };
   };

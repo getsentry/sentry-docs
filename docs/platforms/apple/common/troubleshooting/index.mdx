@@ -50,6 +50,24 @@ Check your app for any procedure that cleans the cache of your app during runtim
 
 Since Xcode 14 App Store Connect doesn't make debug symbols available for download anymore, see [Xcode Release Notes](https://developer.apple.com/documentation/xcode-release-notes/xcode-14-release-notes#Deprecations). Please use a different way of uploading the debug symbols by following the [documentation](/platforms/apple/dsym/).
 
+## Unknown receiver '\<SomeReceiver\>', Use of undeclared identifier '\<SomeIdentifier\>'
+
+If you see an error like `Unknown receiver 'SwiftDescriptor'` or `Use of undeclared identifier 'SentryLog'` during the application build process, there's a conflict stemming from `APPLICATION_EXTENSION_API_ONLY`. By default, the Sentry Cocoapod is configured with `APPLICATION_EXTENSION_API_ONLY=YES`, but some `post_install` script likely changed it. To fix this error, add the following to the `Podfile`.
+
+```ruby {filename:ios/Podfile}
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      if target.name == 'Sentry'
+        config.build_settings['APPLICATION_EXTENSION_API_ONLY'] = 'YES'
+      else
+        # configuration for other targets
+      end
+    end
+  end
+end
+```
+
 ## Crash in `SentrySubClassFinder.actOnSubclassesOfViewControllerInImage`
 
 Suppose your app crashes in `SentrySubClassFinder actOnSubclassesOfViewControllerInImage` with a stacktrace similar to the one below:
@@ -91,6 +109,7 @@ SentrySDK.start { options in
     options.swizzleClassNameExcludes = ["RoomPlanWrapper"]
 }
 ```
+
 ```objc {tabTitle:Objective-C}
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
      options.swizzleClassNameExcludes = [NSSet setWithObjects: @"RoomPlanWrapper", nil];
@@ -138,3 +157,26 @@ say it is due to a bug in Xcode 15.4. They recommend sticking to Xcode 15.3 unti
 If the release health page shows fewer events in the unhandled tab, your events miss the unhandled property or mach info; please update the Cocoa SDK to version 8.33.0 or above or stay on version 8.30.0.
 
 We introduced a bug with a refactoring [#4101](https://github.com/getsentry/sentry-cocoa/pull/4101) released in 8.30.1, that caused unhandled/crash events to have the unhandled property and mach info missing, which is required for release health to show events in the unhandled tab. It's essential to mention that this bug doesn't impact release health statistics, such as crash-free session or user rates.
+
+## Sandbox Error Using Cocoapods
+
+After setting up Cocoapods using a `Podfile` and running `pod install` to set up the project, you might see the following error when building the target:
+
+```
+error: Sandbox: rsync.samba(42924) deny(1) file-read-data <path/to/your/app>/Frameworks/Sentry.framework/Sentry.bundle (in target 'test' from project 'test')
+error: Sandbox: rsync.samba(42925) deny(1) file-read-data <path/to/your/app>/Frameworks/Sentry.framework/_CodeSignature/CodeResources (in target 'test' from project 'test')
+error: Sandbox: rsync.samba(42925) deny(1) file-write-create <path/to/your/app>/Frameworks/Sentry.framework/_CodeSignature/.CodeResources.a2sA9v (in target 'test' from project 'test')
+mkdir -p <path/to/your/app>/Frameworks
+rsync --delete -av --filter P .*.?????? --links --filter "- CVS/" --filter "- .svn/" --filter "- .git/" --filter "- .hg/" --filter "- Headers" --filter "- PrivateHeaders" --filter "- Modules" "<path/to/derived/data>/Sentry/Sentry.framework" "<path/to/your/app>/Frameworks"
+building file list ... done
+rsync: opendir "<path/to/your/app>/Frameworks/Sentry.framework/Sentry.bundle" failed: Operation not permitted (1)
+IO error encountered -- skipping file deletion
+Sentry.framework/_CodeSignature/CodeResources
+rsync: mkstemp "<path/to/your/app>/Frameworks/Sentry.framework/_CodeSignature/.CodeResources.a2sA9v" failed: Operation not permitted (1)
+
+sent 15034 bytes  received 42 bytes  30152.00 bytes/sec
+total size is 4950281  speedup is 328.36
+rsync error: some files could not be transferred (code 23) at /AppleInternal/Library/BuildRoots/5bb93434-bef0-11ef-bef2-d285688f7a47/Library/Caches/com.apple.xbs/Sources/rsync/rsync/main.c(996) [sender=2.6.9]
+```
+
+While it seems to be related to Sentry, it is actually caused by the user script sandbox feature introduced in [Xcode 14](https://developer.apple.com/documentation/xcode-release-notes/xcode-14-release-notes), which is enabled by default. In order to fix this, you need to head to the target settings of your project and set the "Enable User Script Sandbox" option to `NO`.

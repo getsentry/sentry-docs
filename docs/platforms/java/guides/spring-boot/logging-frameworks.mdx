@@ -50,24 +50,24 @@ If you decide to opt-out from the `application.properties` based Spring Boot log
 
   <appender name="SENTRY" class="io.sentry.logback.SentryAppender" />
 
-  <root level="info">
+  <root>
     <appender-ref ref="CONSOLE" />
     <appender-ref ref="SENTRY" />
   </root>
 </configuration>
 ```
 
-<Note>
+<Alert>
 
 You do not need to configure your DSN in the Logback configuration file since Sentry is configured from the Spring Boot integration.
 
 However, if errors that may appear during startup should to be sent to Sentry, the DSN must be provided to <i>both</i> the Logback and Spring Boot configurations.
 
-</Note>
+</Alert>
 
-### Log4j2
+### Log4j 2
 
-To use Sentry's Log4j2 integration in Spring Boot application, you must include a dependency to the `sentry-log4j2` module:
+To use Sentry's Log4j 2 integration in Spring Boot application, you must include a dependency to the `sentry-log4j2` module:
 
 ```xml {tabTitle:Maven}
 <dependency>
@@ -87,30 +87,33 @@ libraryDependencies += "io.sentry" % "sentry-log4j2" % "{{@inject packages.versi
 
 For other dependency managers see the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry-log4j2).
 
-Then [follow the guide on configuring Log4j2 with Spring Boot](https://docs.spring.io/spring-boot/docs/current/reference/html/howto.html#howto-configure-log4j-for-logging) and configure `SentryAppender` in the `log4j2.xml` file:
+Then [follow the guide on configuring Log4j 2 with Spring Boot](https://docs.spring.io/spring-boot/docs/current/reference/html/howto.html#howto-configure-log4j-for-logging) and configure `SentryAppender` in the `log4j2.xml` file:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="warn" packages="org.apache.logging.log4j.core,io.sentry.log4j2">
-    <Appenders>
-        <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
-        </Console>
-        <Sentry name="Sentry" />
-    </Appenders>
-    <Loggers>
-        <Root level="info">
-            <AppenderRef ref="Sentry"/>
-            <AppenderRef ref="Console"/>
-        </Root>
-    </Loggers>
+<Configuration>
+
+  <Appenders>
+    <Console name="CONSOLE" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+    </Console>
+    <Sentry name="SENTRY"/>
+  </Appenders>
+
+  <Loggers>
+    <Root level="INFO">
+      <AppenderRef ref="CONSOLE"/>
+      <AppenderRef ref="SENTRY"/>
+    </Root>
+  </Loggers>
+
 </Configuration>
 ```
 
-<Note>
+<Alert>
 
-You do not need to configure your DSN in the Log4j2 configuration file since Sentry is configured from the Spring Boot integration.
+You do not need to configure your DSN in the Log4j 2 configuration file since Sentry is configured from the Spring Boot integration.
 
-However, if errors that may appear during startup should to be sent to Sentry, the DSN must be provided to <i>both</i> the Log4j2 and Spring Boot configurations.
+However, if errors that may appear during startup should to be sent to Sentry, the DSN must be provided to <i>both</i> the Log4j 2 and Spring Boot configurations.
 
-</Note>
+</Alert>

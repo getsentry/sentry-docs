@@ -1,21 +1,18 @@
 ---
-title: Basic Options
-description: "Learn more about how to configure the SDK. These options are set when the SDK is first initialized, passed to the init function as an object."
+title: Options
+description: "Learn more about how the SDK can be configured via options. These are being passed to the init function and therefore set when the SDK is first initialized."
 sidebar_order: 1
 ---
 
-SDKs are configurable using a variety of options. The options are largely standardized among SDKs, but there are some differences to better accommodate platform peculiarities. Options are set when the SDK is first
-initialized.
-
 <PlatformContent includePath="configuration/config-intro" />
 
-## Common Options
+## Core Options
 
-The list of common options across SDKs. These work more or less the same in all SDKs, but some subtle differences will exist to better support the platform. Options that can be read from an environment variable (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically.
+Options that can be read from an environment variable (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically.
 
 <ConfigKey name="dsn">
 
-The _DSN_ tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable also does not exist, the SDK will just not send any events.
+The DSN tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable also does not exist, the SDK will just not send any events.
 
 In runtimes without a process environment (such as the browser) that fallback does not apply.
 
@@ -71,13 +68,13 @@ Configures the sample rate for error events, in the range of `0.0` to `1.0`. The
 
 <ConfigKey name="max-breadcrumbs">
 
-This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`, but you can set this to any number. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
+This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`, but you can set this to any number. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
 
 </ConfigKey>
 
 <ConfigKey name="max-cache-items">
 
-The maximum number of [envelopes](https://develop.sentry.dev/sdk/envelopes/) to keep in cache. The SDKs use envelopes to send data, such as events, attachments, user feedback, and sessions to sentry.io. An envelope can contain multiple items, such as an event with a session and two attachments. Depending on the usage of the SDK, the size of an envelope can differ. If the number of envelopes in the local cache exceeds `max-cache-items`, the SDK deletes the oldest envelope and migrates the sessions to the next envelope to maintain the integrity of your release health stats. The default is `30`.
+The maximum number of [envelopes](https://develop.sentry.dev/sdk/data-model/envelopes/) to keep in cache. The SDKs use envelopes to send data, such as events, attachments, user feedback, and sessions to sentry.io. An envelope can contain multiple items, such as an event with a session and two attachments. Depending on the usage of the SDK, the size of an envelope can differ. If the number of envelopes in the local cache exceeds `max-cache-items`, the SDK deletes the oldest envelope and migrates the sessions to the next envelope to maintain the integrity of your release health stats. The default is `30`.
 
 </ConfigKey>
 
@@ -95,11 +92,11 @@ Grouping in Sentry is different for events with stack traces and without. As a r
 
 If this flag is enabled, certain personally identifiable information (PII) is added by active integrations. By default, no such data is sent.
 
-<Note>
+<Alert>
 
 If you are using Sentry in your mobile app, read our [frequently asked questions about mobile data privacy](/security-legal-pii/security/mobile-privacy/) to assist with Apple App Store and Google Play app privacy details.
 
-</Note>
+</Alert>
 
 This option is turned off by default.
 
@@ -109,25 +106,25 @@ If you enable this option, be sure to manually remove what you don't want to sen
 
 <ConfigKey name="server-name">
 
-This option can be used to supply a "server name." When provided, the name of the server is sent along and persisted in the event. For many integrations, the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server.
+This option can be used to supply a server name. When provided, the name of the server is sent along and persisted in the event. For many integrations, the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server.
 
 Most SDKs will attempt to auto-discover this value.
 
 </ConfigKey>
 
-<ConfigKey name="in-app-include">
+<ConfigKey name="in-app-includes">
 
-A list of string prefixes of module names that belong to the app. This option takes precedence over `in-app-exclude`.
+A list of string prefixes of module names that belong to the app. This option takes precedence over `in-app-excludes`.
 
 Sentry differentiates stack frames that are directly related to your application ("in application") from stack frames that come from other packages such as the standard library, frameworks, or other dependencies. The application package is automatically marked as `inApp`. The difference is visible in [sentry.io](https://sentry.io), where only the "in application" frames are displayed by default.
 
 </ConfigKey>
 
-<ConfigKey name="in-app-exclude">
+<ConfigKey name="in-app-excludes">
 
 A list of string prefixes of module names that do not belong to the app, but rather to third-party packages. Modules considered not part of the app will be hidden from stack traces by default.
 
-This option can be overridden using <PlatformIdentifier name="in-app-include" />.
+This option can be overridden using <PlatformIdentifier name="in-app-includes" />.
 
 </ConfigKey>
 
@@ -146,6 +143,9 @@ This parameter controls whether integrations should capture HTTP request bodies.
 - `medium`: Medium and small requests will be captured (typically 10KB).
 - `always`: The SDK will always capture the request body as long as Sentry can make sense of it.
 
+For request bodies to be captured, the <PlatformIdentifier name="send-default-pii" /> flag must also be enabled.
+Please consult the <PlatformLink to="/configuration/options/#send-default-pii">documentation for <PlatformIdentifier name="send-default-pii" /></PlatformLink> to evaluate whether you would want to enable it, making sure to manually remove the data you don't want to send using our features for <PlatformLink to="/data-management/sensitive-data">managing Sensitive Data</PlatformLink>.
+
 </ConfigKey>
 
 <ConfigKey name="enabled">
@@ -159,6 +159,22 @@ Specifies whether this SDK should send events to Sentry. Defaults to `true`. Set
 Set this boolean to `false` to disable sending of client reports. Client reports are a protocol feature that let clients send status reports about themselves to Sentry. They are currently mainly used to emit outcomes for events that were never sent.
 
 _(New in version 6.0.0)_
+
+</ConfigKey>
+
+<ConfigKey name="force-init">
+
+Set this boolean to `true` to force a call to `Sentry.init` to re-initialize the SDK, even if the SDK has already been initialized by a high priority integration.
+
+_(New in version 8.0.0)_
+
+</ConfigKey>
+
+<ConfigKey name="enable-backpressure-handling">
+
+Set this boolean to `false` to disable automatic downsampling of transactions while the system is under load. The `tracesSampleRate` is halved for every failing health check up to 10 times, (roughly 0.001% of the original `tracesSampleRate`). Any positive health check will reset `tracesSampleRate` to its original value. Health checks run in the background every 10 seconds, checking for queue drops and rate limiting. Note: Starting with version 7.8.0 backpressure handling has changed from opt-in to opt-out.
+
+_(New in version 7.1.0)_
 
 </ConfigKey>
 
@@ -213,7 +229,7 @@ When set, a proxy can be configured that should be used for outbound requests. T
 
 </ConfigKey>
 
-<ConfigKey name="shutdown-timeout">
+<ConfigKey name="shutdown-timeout-millis">
 
 Controls how many seconds to wait before shutting down. Sentry SDKs send events from a background queue. This queue is given a certain amount to drain pending events. The default is SDK specific but typically around two seconds. Setting this value too low may cause problems for sending events from command line applications. Setting the value too high will cause the application to block for a long time for users experiencing network connectivity problems.
 
@@ -221,27 +237,15 @@ Controls how many seconds to wait before shutting down. Sentry SDKs send events 
 
 ## Tracing Options
 
-<ConfigKey name="enable-tracing">
-
-A boolean value, if true, transactions and trace data will be generated and captured. This will set the `traces-sample-rate` to the recommended default of 1.0 if `traces-sample-rate` is not defined. Note that `traces-sample-rate` and `traces-sampler` take precedence over this option.
-
-</ConfigKey>
-
 <ConfigKey name="traces-sample-rate">
 
-A number between 0 and 1, controlling the percentage chance a given transaction will be sent to Sentry. (0 represents 0% while 1 represents 100%.) Applies equally to all transactions created in the app. Either this or <PlatformIdentifier name="traces-sampler" /> must be defined to enable tracing.
+A number between `0` and `1`, controlling the percentage chance a given transaction will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Applies equally to all transactions created in the app. Either this or <PlatformIdentifier name="traces-sampler" /> must be defined to enable tracing.
 
 </ConfigKey>
 
 <ConfigKey name="traces-sampler">
 
 A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="traces-sample-rate" /> must be defined to enable tracing.
-
-</ConfigKey>
-
-<ConfigKey name="tracing-origins">
-
-An optional property that configures which downstream services receive the `sentry-trace` header attached to HTTP requests. It contains a list of URLs or regex against which URLs are matched. If not set, the `sentry-trace` header is attached to every request executed from an instrumented client.
 
 </ConfigKey>
 

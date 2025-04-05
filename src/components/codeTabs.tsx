@@ -14,6 +14,7 @@ import styled from '@emotion/styled';
 import {CodeBlockProps} from './codeBlock';
 import {CodeContext} from './codeContext';
 import {KEYWORDS_REGEX, ORG_AUTH_TOKEN_REGEX} from './codeKeywords';
+import {updateElementsVisibilityForOptions} from './onboarding';
 import {SignInNote} from './signInNote';
 
 // human readable versions of names
@@ -99,6 +100,12 @@ export function CodeTabs({children}: CodeTabProps) {
     }
   }, [codeContext?.storedCodeSelection, groupId, possibleChoices]);
 
+  // react to possible changes in options when switching tabs
+  useEffect(() => {
+    updateElementsVisibilityForOptions(codeContext?.onboardingOptions || [], false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTabIndex]);
+
   const buttons = possibleChoices.map((choice, idx) => (
     <TabButton
       key={idx}
@@ -127,8 +134,6 @@ export function CodeTabs({children}: CodeTabProps) {
 }
 
 const Container = styled('div')`
-  margin-bottom: 1.5rem;
-
   pre[class*='language-'] {
     padding: 10px 12px;
     border-radius: 0 0 3px 3px;
@@ -136,7 +141,7 @@ const Container = styled('div')`
 `;
 
 const TabBar = styled('div')`
-  background: #251f3d;
+  background: var(--code-background);
   border-bottom: 1px solid #40364a;
   height: 36px;
   display: flex;
@@ -159,7 +164,6 @@ const TabButton = styled('button')`
   &:focus,
   &[data-active='true'] {
     color: #fff;
-    font-weight: 500;
     border-bottom-color: #6c5fc7;
   }
 `;

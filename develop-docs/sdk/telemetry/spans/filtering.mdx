@@ -1,0 +1,53 @@
+---
+title: Filtering
+---
+
+<Alert level="warning">
+  🚧 This document is work in progress.
+</Alert>
+
+<Alert>
+  This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement levels.
+</Alert>
+
+The SDK MUST implement a mechanism for users to filter out spans.
+The result MUST be binary (`true` or `false`).
+Any APIs exposed to the user to filter spans MUST adhere to the following design principles:
+
+- The APIs are optimized for trace completeness
+- The APIs are optimized for conclusive sampling decisions
+
+## Filter with `ignoreSpans`
+
+The `ignoreSpans` option accepts a glob pattern or string.
+
+```js
+Sentry.init({
+  ignoreSpans: [
+    'GET /about',
+    'events.signal *',
+  ]
+})
+```
+
+## Filter with `integrations`
+
+The `integrations` option MAY perform in similar fashion as the `ignoreSpans` option, or make explicit opt-out possible via a boolean flag.
+
+```js
+Sentry.init({
+  integrations: [
+    fsIntegration: {
+      ignoreSpans: [
+        'fs.read',
+      ],
+      readSpans: true,
+      writeSpans: false,
+    }
+  ]
+})
+```
+
+## Other approaches
+
+If both options mentioned above are not feasible to be implemented in certain SDKs, other approaches MUST be explored that have the same outcome.

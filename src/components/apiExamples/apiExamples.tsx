@@ -1,74 +1,16 @@
 'use client';
 
-import {Fragment, useEffect, useRef, useState} from 'react';
+import {Fragment, useEffect, useState} from 'react';
+import {Clipboard} from 'react-feather';
 
 import {type API} from 'sentry-docs/build/resolveOpenAPI';
 
+import codeBlockStyles from '../codeBlock/code-blocks.module.scss';
 import styles from './apiExamples.module.scss';
 
-type ExampleProps = {
-  api: API;
-  selectedResponse: number;
-  selectedTabView: number;
-};
-
-const requestStyles = `${styles['api-block-example']} ${styles.request}`;
-const responseStyles = `${styles['api-block-example']} ${styles.response}`;
-
-// overwriting global code block font size
-const jsonCodeBlockStyles = `!text-[0.8rem] language-json`;
-
-function Example({api, selectedTabView, selectedResponse}: ExampleProps) {
-  const ref = useRef(null);
-  let exampleJson: any;
-  if (api.responses[selectedResponse].content?.examples) {
-    exampleJson = Object.values(
-      api.responses[selectedResponse].content?.examples ?? {}
-    ).map(e => e.value)[0];
-  } else if (api.responses[selectedResponse].content?.example) {
-    exampleJson = api.responses[selectedResponse].content?.example;
-  }
-
-  // load prism dynamically for these codeblocks,
-  // otherwise the highlighting applies globally
-  useEffect(() => {
-    (async () => {
-      const {highlightAllUnder} = await import('prismjs');
-      await import('prismjs/components/prism-json');
-      if (ref.current) {
-        highlightAllUnder(ref.current);
-      }
-    })();
-  }, [selectedResponse, selectedTabView]);
-
-  return (
-    <pre className={responseStyles} ref={ref}>
-      {selectedTabView === 0 &&
-        (exampleJson ? (
-          <code
-            className={jsonCodeBlockStyles}
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify(exampleJson, null, 2),
-            }}
-          />
-        ) : (
-          strFormat(api.responses[selectedResponse].description)
-        ))}
-      {selectedTabView === 1 && (
-        <code
-          className={jsonCodeBlockStyles}
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(
-              api.responses[selectedResponse].content?.schema,
-              null,
-              2
-            ),
-          }}
-        />
-      )}
-    </pre>
-  );
-}
+import {CodeBlock} from '../codeBlock';
+import {CodeTabs} from '../codeTabs';
+import {codeToJsx} from '../highlightCode';
 
 const strFormat = (str: string) => {
   const s = str.trim();
@@ -84,7 +26,7 @@ type Props = {
 
 export function ApiExamples({api}: Props) {
   const apiExample = [
-    `curl https://sentry.io${api.apiPath}`,
+    `curl ${api.server}${api.apiPath}`,
     ` -H 'Authorization: Bearer <auth_token>'`,
   ];
   if (['put', 'options', 'delete'].includes(api.method.toLowerCase())) {
@@ -112,11 +54,43 @@ export function ApiExamples({api}: Props) {
     ? ['RESPONSE', 'SCHEMA']
     : ['RESPONSE'];
 
+  const [showCopied, setShowCopied] = useState(false);
+
+  // Show the copy button after js has loaded
+  // otherwise the copy button will not work
+  const [showCopyButton, setShowCopyButton] = useState(false);
+  useEffect(() => {
+    setShowCopyButton(true);
+  }, []);
+  async function copyCode(code: string) {
+    await navigator.clipboard.writeText(code);
+    setShowCopied(true);
+    setTimeout(() => setShowCopied(false), 1200);
+  }
+
+  let exampleJson: any;
+  if (api.responses[selectedResponse].content?.examples) {
+    exampleJson = Object.values(
+      api.responses[selectedResponse].content?.examples ?? {}
+    ).map(e => e.value)[0];
+  } else if (api.responses[selectedResponse].content?.example) {
+    exampleJson = api.responses[selectedResponse].content?.example;
+  }
+
+  const codeToCopy =
+    selectedTabView === 0
+      ? exampleJson
+        ? JSON.stringify(exampleJson, null, 2)
+        : strFormat(api.responses[selectedResponse].description)
+      : JSON.stringify(api.responses[selectedResponse].content?.schema, null, 2);
+
   return (
     <Fragment>
-      <div className="api-block">
-        <pre className={requestStyles}>{apiExample.join(' \\\n')}</pre>
-      </div>
+      <CodeTabs>
+        <CodeBlock language="bash">
+          <pre>{codeToJsx(apiExample.join(' \\\n'), 'bash')}</pre>
+        </CodeBlock>
+      </CodeTabs>
       <div className="api-block">
         <div className="api-block-header response">
           <div className="tabs-group">
@@ -149,12 +123,32 @@ export function ApiExamples({api}: Props) {
                 )
             )}
           </div>
+
+          <button className={styles.copy} onClick={() => copyCode(codeToCopy)}>
+            {showCopyButton && <Clipboard size={16} />}
+          </button>
         </div>
-        <Example
-          api={api}
-          selectedTabView={selectedTabView}
-          selectedResponse={selectedResponse}
-        />
+        <pre className={`${styles['api-block-example']} relative`}>
+          <div className={codeBlockStyles.copied} style={{opacity: showCopied ? 1 : 0}}>
+            Copied
+          </div>
+          {selectedTabView === 0 &&
+            (exampleJson ? (
+              <code className="!text-[0.8rem]">
+                {codeToJsx(JSON.stringify(exampleJson, null, 2), 'json')}
+              </code>
+            ) : (
+              strFormat(api.responses[selectedResponse].description)
+            ))}
+          {selectedTabView === 1 && (
+            <code className="!text-[0.8rem]">
+              {codeToJsx(
+                JSON.stringify(api.responses[selectedResponse].content?.schema, null, 2),
+                'json'
+              )}
+            </code>
+          )}
+        </pre>
       </div>
     </Fragment>
   );

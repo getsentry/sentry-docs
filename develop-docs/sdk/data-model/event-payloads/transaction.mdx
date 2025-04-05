@@ -1,0 +1,212 @@
+---
+title: Transaction Payloads
+---
+
+Transactions are used to send tracing events to Sentry.
+
+Transactions must be wrapped in an [Envelope](/sdk/data-model/envelopes/) and therefore also be sent to the Envelope endpoint.
+
+<Alert title="Note on backwards compatibility">
+  Envelopes are a new format and therefore only work on Sentry >= 10. More
+  information can be found on the <Link to="/sdk/data-model/envelopes/">Envelope</Link> page.
+</Alert>
+
+## Anatomy
+
+A Transaction is basically a [Span](/sdk/data-model/event-payloads/span/) combined with an [Event](/sdk/data-model/event-payloads/). When using
+tracing with our SDKs you usually create a Span tree, the root node and therefore the whole tree is considered to be the Transaction.
+So technically a Transaction is just a Span. A Transaction must also have a `contexts.trace` (which contains some data of the [Span](/sdk/data-model/event-payloads/span/)) and some other
+properties that will be covered in the next section.
+
+Transactions are [Events](/sdk/data-model/event-payloads/) enriched with [Span](/sdk/data-model/event-payloads/span/) data.
+We are only going to list here what is important for a Transaction.
+
+`type`
+
+_Required_. A Transaction has to have this value set to `transaction`.
+
+  ```json
+  {
+    "type": "transaction"
+  }
+  ```
+
+`start_timestamp`
+
+_Required_. A timestamp representing when the measuring started. The
+  format is either a string as defined in [RFC
+  3339](https://tools.ietf.org/html/rfc3339) or a numeric (integer or float)
+  value representing the number of seconds that have elapsed since the [Unix
+  epoch](https://en.wikipedia.org/wiki/Unix_time). The `start_timestamp` value must be less than or
+  equal to the `timestamp` value, otherwise the Span is discarded as invalid.
+
+  ```json
+  {
+    "start_timestamp": "2011-05-02T17:41:36.242Z"
+  }
+  ```
+
+or:
+
+  ```json
+  {
+    "start_timestamp": 1304358096.242
+  }
+  ```
+
+`timestamp`
+
+_Required_. A timestamp representing when the measuring finished. The
+  format is either a string as defined in [RFC
+  3339](https://tools.ietf.org/html/rfc3339) or a numeric (integer or float)
+  value representing the number of seconds that have elapsed since the [Unix
+  epoch](https://en.wikipedia.org/wiki/Unix_time).
+
+  ```json
+  {
+    "timestamp": "2011-05-02T17:41:36.955Z"
+  }
+  ```
+
+or:
+
+  ```json
+  {
+    "timestamp": 1304358096.955
+  }
+  ```
+
+`contexts.trace`
+
+_Recommended_. A Transaction has to have a specific `contexts.trace` entry that contains tracing information. See the [Trace Context documentation](/sdk/data-model/event-payloads/contexts/#trace-context).
+
+```json
+{
+  "contexts": {
+    "trace": {
+      "op": "navigation",
+      "description": "User clicked on <Link />",
+      "trace_id": "743ad8bbfdd84e99bc38b4729e2864de",
+      "span_id": "a0cfbde2bdff3adc",
+      "status": "ok",
+      "parent_span_id": "99659d76b7cdae94"
+    }
+  }
+}
+```
+
+`spans`
+
+_Recommended_. A list of [Spans](/sdk/data-model/event-payloads/span/).
+
+```json
+{
+  "spans": [
+    {
+      "start_timestamp": 1588601261.481961,
+      "description": "GET /sockjs-node/info",
+      "tags": {
+        "http.status_code": "200"
+      },
+      "timestamp": 1588601261.488901,
+      "parent_span_id": "b0e6f15b45c36b12",
+      "trace_id": "1e57b752bc6e4544bbaa246cd1d05dee",
+      "op": "http",
+      "data": {
+        "url": "http://localhost:8080/sockjs-node/info?t=1588601703755",
+        "status_code": 200,
+        "type": "xhr",
+        "method": "GET"
+      },
+      "span_id": "b01b9f6349558cd1"
+    },
+    {
+      "start_timestamp": 1588601261.535386,
+      "description": "Vue <App>",
+      "timestamp": 1588601261.544196,
+      "parent_span_id": "9312d0d18bf51736",
+      "trace_id": "1e57b752bc6e4544bbaa246cd1d05dee",
+      "op": "update",
+      "span_id": "b980d4dec78d7344"
+    }
+  ]
+}
+```
+
+`measurements`
+
+_Optional_. An object containing standard/custom measurements with keys signifying the name of the measurement.
+
+- Standard measurement keys currently supported are from the following list taken from [here](https://github.com/getsentry/sentry/blob/a8c960a933d2ded5225841573d8fc426a482ca9c/static/app/utils/discover/fields.tsx#L654-L676).
+
+```json
+[
+  // Web
+  "fp",
+  "fcp",
+  "lcp",
+  "fid",
+  "cls",
+  "ttfb",
+  "ttfb.requesttime",
+
+  // Mobile
+  "app_start_cold",
+  "app_start_warm",
+  "frames_total",
+  "frames_slow",
+  "frames_frozen",
+
+  // React native
+  "frames_slow_rate",
+  "frames_frozen_rate",
+  "stall_count",
+  "stall_total_time",
+  "stall_longest_time",
+  "stall_percentage"
+]
+```
+
+- For the well-known measurements listed above, Sentry automatically infers units. Custom measurements need units to be specified; if the units are missing, Relay will set them to `"none"` as a default. The full list of supported units is specified on [Relay's `MetricUnit`](https://getsentry.github.io/relay/relay_metrics/enum.MetricUnit.html). Sentry's event ingestion supports arbitrary custom units, but many SDKs will not expose a generic user-defined unit interface.
+
+```json
+{
+  "measurements": {
+    "lcp": { "value": 100 },
+    "fp": { "value": 123 },
+    "my.custom.metric": { "value": 456, "unit": "millisecond" }
+  }
+}
+```
+
+## Transaction Annotations
+
+`transaction_info`
+
+_Recommended_. Additional information about the name of the transaction.
+
+```json
+{
+  "transaction_info": {
+    "source": "route"
+  }
+}
+```
+
+`transaction_info.source`
+
+_Required_. This information is required by dynamic sampling.
+Contains information about how the name of the transaction was determined.
+This will be used by the server to decide whether or not to scrub identifiers
+from the transaction name, or replace the entire name with a placeholder. The `source` should
+only be set by integrations and not by developers directly.
+
+| Source      | Description                                                                                                                     | <div style={{width:"220px"}}>Examples</div>                |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `custom`    | User-defined name, see [`setTransactionName()`](https://docs.sentry.io/platforms/javascript/enriching-events/transaction-name/) | `my_transaction`                                       |
+| `url`       | Raw URL, potentially containing identifiers.                                                                                    | `/auth/login/john123/`<br />`GET /auth/login/john123/` |
+| `route`     | Parametrized URL / route                                                                                                        | `/auth/login/:userId/`<br />`GET /auth/login/{user}/`  |
+| `view`      | Name of the view handling the request.                                                                                          | `UserListView`                                         |
+| `component` | Named after a software component, such as a function or class name.                                                             | `AuthLogin.login`<br /> `LoginActivity.login_button`   |
+| `task`      | Name of a background task (e.g. a Celery task)                                                                                  | `sentry.tasks.do_something`                            |
+| `unknown`   | _Value set by Relay for legacy SDKs. SDKs must not set this value explicitly._                                                  |                                                        |

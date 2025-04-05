@@ -8,6 +8,7 @@ supported:
   - javascript.express
   - javascript.fastify
   - javascript.hapi
+  - javascript.hono
   - javascript.koa
   - javascript.nestjs
 ---
@@ -49,18 +50,28 @@ NODE_OPTIONS="--import ./instrument.mjs" npm run start
 
 We do not support ESM in Node versions before 18.19.0.
 
-## Skipping instrumentation
+## Troubleshooting instrumentation
 
-By default, all packages are wrapped under the hood by [import-in-the-middle](https://www.npmjs.com/package/import-in-the-middle). If you run into a problem with a package, you can skip instrumentation for it by configuring `registerEsmLoaderHooks` in your `Sentry.init()` config:
+By default, all packages are wrapped under the hood by
+[import-in-the-middle](https://www.npmjs.com/package/import-in-the-middle) to
+aid instrumenting them.
 
-```javascript {tabTitle:ESM} {filename: instrument.mjs}
+If `import-in-the-middle` encounters problems wrapping a package, you may see
+syntax errors at runtime or logged errors in your console:
+
+```logs
+SyntaxError: The requested module '...' does not provide an export named '...'
+(node:3368) Error: 'import-in-the-middle' failed to wrap 'file://../../path/to/file.js'
+```
+
+To confirm that these errors are caused by `import-in-the-middle`,
+disable it by setting `registerEsmLoaderHooks` to false. Note, this will also
+disable tracing instrumentation:
+
+```javascript {tabTitle:ESM} {filename: instrument.mjs} {4}
 import * as Sentry from "@sentry/node";
 
 Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  registerEsmLoaderHooks: {
-    // Provide a list of package names to exclude from instrumentation
-    exclude: ["package-name"],
-  },
+  registerEsmLoaderHooks: false,
 });
 ```

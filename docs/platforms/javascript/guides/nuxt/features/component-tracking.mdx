@@ -1,0 +1,97 @@
+---
+title: Track Vue Components
+description: "Learn how to monitor the rendering performance of your application and its components with Sentry's Nuxt SDK."
+sidebar_order: 10
+---
+
+Sentry's Nuxt SDK offers a feature to monitor the performance of your Vue components: component tracking. Enabling this feature provides you with spans in your transactions that represent the component lifecycle events and durations. This allows you to get a drilled-down view into how your components are behaving so you can do things like identify slow initializations or frequent updates, which might have an impact on your app's performance.
+
+## Usage
+
+<Alert>
+
+To set up component tracking, you need to first configure tracing. For details on how to do this, check out our [Tracing documentation](/platforms/javascript/guides/nuxt/performance/).
+
+</Alert>
+
+### Initial Application Load
+
+By default, the Nuxt SDK tracks the rendering performance of your app (that is, its root component) on the initial page load. This operation is represented in the page load transaction by the **`ui.vue.render`** span.
+
+### Child Component Tracking
+
+You can also track your app's child components to get more details about the rendering process. This feature will create spans for each tracked component instance. The spans are called **`ui.vue.[hook]`** where `[hook]` is replaced by each tracked lifecycle stage. For example, the span representing the mount stage (the time between `beforeMount` and `mounted`) is called `ui.vue.mount`.
+
+To set it up, add the `vueIntegration` to your `Sentry.init()` call and, set the `tracingOptions.trackComponents` option.
+Pass `true` to track all of your child components, or specify a list of individual comopnents you want to track:
+
+```javascript {5-17}
+import * as Sentry from "@sentry/nuxt";
+
+Sentry.init({
+  integrations: [
+    Sentry.vueIntegration({
+      tracingOptions: {
+        trackComponents: true,
+        // OR
+        trackComponents: [
+          "App",
+          "RwvHeader",
+          "RwvFooter",
+          "RwvArticleList",
+          "Pagination",
+        ],
+      },
+    }),
+  ],
+});
+```
+
+The default value for `trackComponents` is `false`.
+
+#### Track Specific Component Lifecycle Hooks
+
+You can control which lifecycle hooks should be tracked. This is helpful if, for example, you want to know if some components are removed during the initial page load, in which case you can configure the integration to also track `unmount` hooks:
+
+```javascript {8}
+import * as Sentry from "@sentry/nuxt";
+
+Sentry.init({
+  integrations: [
+    Sentry.vueIntegration({
+      tracingOptions: {
+        trackComponents: true,
+        hooks: ["mount", "update", "unmount"],
+      },
+    }),
+  ],
+});
+```
+
+The default set of tracked hooks is `['activate', 'mount', 'update']`.
+
+The following hooks are available to track: `['activate', 'create', 'unmount', 'mount', 'update']`
+
+Note that when specifying `hooks`, we use the simple verb rather than `before` and `-ed` pairs. For example, `unmount` is correct, while `beforeUnmount` and `unmounted` are incorrect.
+
+#### Configure a Timeout for Component Tracking
+
+You can specify how long the root rendering span should wait for the last component to render by configuring the `timeout` option in milliseconds.
+Every new rendering cycle debounces the timeout, and it starts counting from the beginning. Once the timeout is reached, tracking is completed, and all the rendering information is sent to Sentry:
+
+```javascript {8}
+import * as Sentry from "@sentry/nuxt";
+
+Sentry.init({
+  integrations: [
+    Sentry.vueIntegration({
+      tracingOptions: {
+        trackComponents: true,
+        timeout: 500, // milliseconds
+      },
+    }),
+  ],
+});
+```
+
+The default timeout is `2000` milliseconds.

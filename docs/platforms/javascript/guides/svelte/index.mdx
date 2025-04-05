@@ -1,0 +1,164 @@
+---
+title: Svelte
+sdk: sentry.javascript.svelte
+categories:
+  - javascript
+  - browser
+---
+
+<Alert>
+
+  Sentry's Svelte SDK enables automatic reporting of errors and exceptions, as well as tracing for your client-side Svelte apps.
+
+</Alert>
+
+<PlatformContent includePath="getting-started-prerequisites" />
+
+## Features
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also get to the root of an error or performance issue faster, by watching a video-like reproduction of a user session with [session replay](/product/explore/session-replay/web/getting-started/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+## Install
+
+<OnboardingOptionButtons options={["error-monitoring", "performance", "session-replay"]} />
+
+Sentry captures data by using an SDK within your application’s runtime.
+
+```bash {tabTitle:npm}
+npm install @sentry/svelte --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/svelte
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/svelte
+```
+
+## Configure
+
+Configuration should happen as early as possible in your application's lifecycle.
+
+To use the SDK, initialize it in your Svelte entry point before bootstrapping your app. In a typical Svelte project, that is your `main.js` or `main.ts` file.
+
+```javascript {tabTitle: Svelte v5+} {filename: main.js} {"onboardingOptions": {"performance": "11, 14-21", "session-replay": "12, 24-30"}}
+import { mount } from "svelte";
+import "./app.css";
+import App from "./App.svelte";
+
+import * as Sentry from "@sentry/svelte";
+
+// Initialize the Sentry SDK here
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration(),
+  ],
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for tracing.
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+
+  // Set `tracePropagationTargets` to control for which URLs trace propagation should be enabled
+  tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+
+  // Capture Replay for 10% of all sessions,
+  // plus 100% of sessions with an error
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
+
+const app = mount(App, {
+  target: document.getElementById("app"),
+});
+
+export default app;
+```
+
+```javascript {tabTitle: Svelte v3-v4} {filename: main.js} {"onboardingOptions": {"performance": "10, 13-20", "session-replay": "11, 23-29"}}
+import "./app.css";
+import App from "./App.svelte";
+
+import * as Sentry from "@sentry/svelte";
+
+// Initialize the Sentry SDK here
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration(),
+  ],
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for tracing.
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+
+  // Set `tracePropagationTargets` to control for which URLs trace propagation should be enabled
+  tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+
+  // Capture Replay for 10% of all sessions,
+  // plus 100% of sessions with an error
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
+
+const app = new App({
+  target: document.getElementById("app"),
+});
+
+export default app;
+```
+
+Once you've done this, the SDK will automatically capture unhandled errors and promise rejections, and monitor performance in the client. You can also [manually capture errors](/platforms/javascript/guides/svelte/usage).
+
+<PlatformContent includePath="getting-started-sourcemaps" />
+
+## Verify
+
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+
+```jsx {tabTitle:Svelte v5+} {filename:SomeCmponent.svelte}
+<button
+  type="button"
+  onclick={() => {
+    throw new Error("Sentry Frontend Error");
+  }}
+>
+  Throw error
+</button>
+```
+
+```jsx {tabTitle:Svelte v3/v4} {filename:SomeCmponent.svelte}
+<button
+  type="button"
+  on:click={() => {
+    throw new Error("Sentry Frontend Error");
+  }}
+>
+  Throw error
+</button>
+```
+
+This snippet adds a button that throws an error in a Svelte component.
+
+<Alert>
+
+Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+
+</Alert>
+
+To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.

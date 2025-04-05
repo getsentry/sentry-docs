@@ -5,11 +5,14 @@ caseStyle: snake_case
 supportLevel: production
 sdk: sentry.python
 showIntegrationsInSearch: true
+categories:
+  - server
+  - serverless
 ---
 
 ## Prerequisites
 
-* You need a [Sentry account](https://sentry.io/signup/) and project
+* You need a Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
 * Read one of our dedicated guides if you use any of the <PlatformLink to="/integrations/#web-frameworks">frameworks</PlatformLink> we support
 
 ## Features
@@ -38,11 +41,14 @@ Configuration should happen as early as possible in your application's lifecycle
 
 
 
-```python {"onboardingOptions": {"performance": "5-7", "profiling": "8-11"}}
+```python {"onboardingOptions": {"performance": "8-10", "profiling": "11-14"}}
 import sentry_sdk
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
+    # Add request headers and IP for users,
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for tracing.
     traces_sample_rate=1.0,
@@ -53,6 +59,20 @@ sentry_sdk.init(
 )
 ```
 
+However, in async applications, you need to call `sentry_sdk.init()` inside an `async` function to ensure async code is instrumented properly. We recommend calling `sentry_sdk.init()` at the beginning of the first `async` function you call, as demonstrated in the example below.
+
+```python
+import asyncio
+import sentry_sdk
+
+async def main():
+    sentry_sdk.init(
+        ...  # same as above
+    )
+
+asyncio.run(main())
+```
+
 ## Verify
 
 Add this intentional error to your application to test that everything is working right away.
@@ -61,16 +81,16 @@ Add this intentional error to your application to test that everything is workin
 division_by_zero = 1 / 0
 ```
 
-<Note>
+<Alert>
 
 Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
 
-</Note>
+</Alert>
 
-To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and open your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
 
-<Note>
+<Alert>
 
 Not seeing your error in Sentry? Make sure you're running the above example from a file and not from a Python shell like IPython.
 
-</Note>
+</Alert>

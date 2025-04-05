@@ -1,6 +1,5 @@
-import {getDevDocsFrontMatter, getDocsFrontMatter} from 'sentry-docs/mdx';
-
 import {isDeveloperDocs} from './isDeveloperDocs';
+import {getDevDocsFrontMatter, getDocsFrontMatter} from './mdx';
 import {platformsData} from './platformsData';
 import {
   FrontMatter,
@@ -9,6 +8,7 @@ import {
   PlatformGuide,
   PlatformIntegration,
 } from './types';
+import {isVersioned, stripVersion, VERSION_INDICATOR} from './versioning';
 
 export interface DocNode {
   children: DocNode[];
@@ -44,7 +44,7 @@ async function getDocsRootNodeUncached(): Promise<DocNode> {
   );
 }
 
-export const sidebarOrderSorter = (a: FrontMatter, b: FrontMatter) => {
+const sidebarOrderSorter = (a: FrontMatter, b: FrontMatter) => {
   const partDiff = slugWithoutIndex(a.slug).length - slugWithoutIndex(b.slug).length;
   if (partDiff !== 0) {
     return partDiff;
@@ -134,6 +134,7 @@ function frontmatterToTree(frontmatter: FrontMatter[]): DocNode {
 export function nodeForPath(node: DocNode, path: string | string[]): DocNode | undefined {
   const stringPath = typeof path === 'string' ? path : path.join('/');
   const parts = slugWithoutIndex(stringPath);
+
   for (let i = 0; i < parts.length; i++) {
     const maybeChild = node.children.find(child => child.slug === parts[i]);
     if (maybeChild) {
@@ -144,6 +145,108 @@ export function nodeForPath(node: DocNode, path: string | string[]): DocNode | u
   }
   return node;
 }
+
+/**
+ * Returns the next node in the tree, which is either the first child,
+ * the next sibling, or the next sibling of a parent node.
+ *
+ * @param node The current DocNode
+ * @returns The next DocNode in the tree, or undefined if there is no next node
+ */
+export const getNextNode = (node: DocNode): DocNode | undefined => {
+  const children = node.children.filter(filterVisibleSiblings).sort(sortBySidebarOrder);
+  // Check for children first
+  if (
+    children.length > 0 &&
+    !isRootPlatformPath(children[0].path) &&
+    !isRootGuidePath(children[0].path)
+  ) {
+    return children[0];
+  }
+
+  // If no children, look for siblings or parent siblings
+  let currentNode: DocNode | undefined = node;
+  while (currentNode?.parent) {
+    const nextSibling = getNextSiblingNode(currentNode);
+    if (nextSibling) {
+      if (isRootPlatformPath(nextSibling.path) || isRootGuidePath(nextSibling.path)) {
+        return undefined;
+      }
+      return nextSibling;
+    }
+    currentNode = currentNode.parent;
+  }
+
+  // If we've reached this point, there are no more nodes to traverse
+  return undefined;
+};
+
+/**
+ * Returns the previous node in the tree, which is either the last child of the parent,
+ * the previous sibling, or the previous sibling of a parent node.
+ */
+export const getPreviousNode = (node: DocNode): DocNode | undefined | 'root' => {
+  // in this special case, calculating the root node is unnecessary so we return a string instead
+  if (isRootPlatformPath(node.path) || isRootGuidePath(node.path)) {
+    return 'root';
+  }
+
+  if (node.path === 'getting-started' && isDeveloperDocs) {
+    return undefined;
+  }
+
+  const previousSibling = getPreviousSiblingNode(node);
+  if (previousSibling) {
+    if (previousSibling.path === 'platforms') {
+      return undefined;
+    }
+    return previousSibling;
+  }
+  return node.parent;
+};
+
+const getNextSiblingNode = (node: DocNode): DocNode | undefined => {
+  if (!node.parent) {
+    return undefined;
+  }
+
+  const siblings = node.parent.children
+    .sort(sortBySidebarOrder)
+    .filter(filterVisibleSiblings);
+
+  const index = siblings.indexOf(node);
+  if (index < siblings.length - 1) {
+    return siblings[index + 1];
+  }
+
+  return undefined;
+};
+
+const getPreviousSiblingNode = (node: DocNode): DocNode | undefined => {
+  if (!node.parent) {
+    return undefined;
+  }
+
+  const siblings = node.parent.children
+    .sort(sortBySidebarOrder)
+    .filter(filterVisibleSiblings);
+
+  const index = siblings.indexOf(node);
+  if (index > 0) {
+    return siblings[index - 1];
+  }
+
+  return undefined;
+};
+
+const sortBySidebarOrder = (a: DocNode, b: DocNode) =>
+  (a.frontmatter.sidebar_order ?? 10) - (b.frontmatter.sidebar_order ?? 10);
+
+const filterVisibleSiblings = (s: DocNode) =>
+  (s.frontmatter.sidebar_title || s.frontmatter.title) &&
+  !s.frontmatter.sidebar_hidden &&
+  !s.frontmatter.draft &&
+  s.path;
 
 function nodeToPlatform(n: DocNode): Platform {
   const platformData = platformsData()[n.slug];
@@ -156,10 +259,11 @@ function nodeToPlatform(n: DocNode): Platform {
     name: n.slug,
     type: 'platform',
     url: '/' + n.path + '/',
-    title: n.frontmatter.title,
+    title: n.frontmatter.platformTitle ?? n.frontmatter.title,
     caseStyle,
     sdk: n.frontmatter.sdk,
     fallbackPlatform: n.frontmatter.fallbackPlatform,
+    language: n.frontmatter.language,
     categories: n.frontmatter.categories,
     keywords: n.frontmatter.keywords,
     guides,
@@ -182,6 +286,18 @@ function nodeToGuide(platform: string, n: DocNode): PlatformGuide {
   };
 }
 
+export const isRootPlatformPath = (path: string) => {
+  return path.startsWith('platforms/') && path.split('/').length === 2;
+};
+
+export const isRootGuidePath = (path: string) => {
+  return (
+    path.startsWith('platforms/') &&
+    path.split('/').length === 4 &&
+    path.split('/')[2].startsWith('guides')
+  );
+};
+
 export function getPlatform(rootNode: DocNode, name: string): Platform | undefined {
   const platformNode = nodeForPath(rootNode, ['platforms', name]);
   if (!platformNode) {
@@ -197,7 +313,7 @@ export function getCurrentPlatform(
   if (path.length < 2 || path[0] !== 'platforms') {
     return undefined;
   }
-  return getPlatform(rootNode, path[1]);
+  return getPlatform(rootNode, path[1].split(VERSION_INDICATOR)[0]);
 }
 
 export function getCurrentGuide(
@@ -205,7 +321,7 @@ export function getCurrentGuide(
   path: string[]
 ): PlatformGuide | undefined {
   if (path.length >= 4 && path[2] === 'guides') {
-    return getGuide(rootNode, path[1], path[3]);
+    return getGuide(rootNode, path[1], path[3].split(VERSION_INDICATOR)[0]);
   }
 
   return undefined;
@@ -220,10 +336,10 @@ export function getCurrentPlatformOrGuide(
   }
 
   if (path.length >= 4 && path[2] === 'guides') {
-    return getGuide(rootNode, path[1], path[3]);
+    return getGuide(rootNode, path[1], stripVersion(path[3]));
   }
 
-  return getPlatform(rootNode, path[1]);
+  return getPlatform(rootNode, stripVersion(path[1]));
 }
 
 export function getGuide(
@@ -244,7 +360,9 @@ export function extractPlatforms(rootNode: DocNode): Platform[] {
     return [];
   }
 
-  return platformsNode.children.map(nodeToPlatform);
+  return platformsNode.children
+    .filter(({path}) => !isVersioned(path))
+    .map(nodeToPlatform);
 }
 
 function extractGuides(platformNode: DocNode): PlatformGuide[] {
@@ -252,7 +370,20 @@ function extractGuides(platformNode: DocNode): PlatformGuide[] {
   if (!guidesNode) {
     return [];
   }
-  return guidesNode.children.map(n => nodeToGuide(platformNode.slug, n));
+
+  // If a `platformTitle` is defined, we add a virtual guide
+  const defaultGuide = platformNode.frontmatter.platformTitle
+    ? {
+        ...nodeToGuide(platformNode.slug, platformNode),
+        key: platformNode.slug,
+      }
+    : undefined;
+
+  const childGuides = guidesNode.children
+    .filter(({path}) => !isVersioned(path))
+    .map(n => nodeToGuide(platformNode.slug, n));
+
+  return defaultGuide ? [defaultGuide, ...childGuides] : childGuides;
 }
 
 const extractIntegrations = (p: DocNode): PlatformIntegration[] => {

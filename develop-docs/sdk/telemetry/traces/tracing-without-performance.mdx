@@ -1,0 +1,135 @@
+---
+title: Tracing Without Performance
+---
+
+If Sentry SDKs are not configured for sending spans (or transactions), they should fall back to a mode where they still handle continuing and propagating traces.
+Internally, we call this mode "Tracing without Performance", or "TwP" in short ([learn more why](#historical-context)).
+TwP mode ensures that error events and other signals are still connected via a trace, even if users choose not to send spans or performance data.
+
+## Behavior
+
+Tracing without Performance is the default fallback behavior of SDKs, when users [don't specify any tracing options](#configuration).
+
+This means that SDKs by default always:
+
+- continue incoming traces
+- attach `event.contexts.trace` context on events (e.g. errors, check-ins, replays)
+- attach the `trace` envelope header to Sentry envelopes, populated from the dynamic sampling context
+- propagate trace data (`sentry-trace`, `baggage`) via the usual channels (e.g. HTTP headers, `<meta>` HTML elements, etc), with the correct [sampling decision](#sampling-decision)
+
+## Configuration
+
+TwP is active by default if users don't specify sampling options that enable span collection and sending (i.e. [regular tracing](#enable-regular-tracing)).
+For example, the following trivial SDK setup (note the absence of sampling options) enables TwP:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+});
+```
+
+TwP mode is exited by configuring the SDK for [regular tracing](#enable-regular-tracing) or partially disabled by [opting out of trace propagation](#disable-trace-propagation).
+
+<Alert>
+
+Note that some SDKs like the JavaScript Browser SDK require additional integrations to enable tracing all together.
+This is fine as long as there's a good reason why additional configuration is required (like keeping bundle size in check in JS).
+
+</Alert>
+
+### Enable Regular Tracing
+
+As soon as users specify a tracing option in the SDK configuration, SDKs will use the normal tracing mode, which means collecting and sending spans (or transactions) in addition to continuing and propagating traces.
+
+This can be achieved by specifying `tracesSampleRate` or `tracesSampler`, or any other equivalent option in the SDK configuration:
+
+```js
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 0.1,
+  // or
+  tracesSampler: () => {
+    /*...*/
+  },
+});
+```
+
+It's important to note that setting `tracesSampleRate: 0` does not mean that we fall back to TwP mode but that sampling decisions are always negative and we propagate the trace with a negative sampling decision.
+
+### Disable Trace Propagation
+
+To opt out of further propagating a trace, users can pass an empty array (or language-equivalent parameter) to the [`tracePropagationTargets` option](/sdk/telemetry/traces/#tracepropagationtargets). This will prevent the SDK from propagating trace information any further.
+
+```js
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracePropagationTargets: [],
+});
+```
+
+Note, that for incoming requests with trace headers, SDKs should still continue this trace, but not propagate it further downstream.
+
+## Implementation
+
+SDKs implementing TwP mode must adhere to the behavior described in this section.
+Everything else (e.g. how to store the trace data and specific tracing options) is considered an implementation detail and can be implemented as needed.
+
+### Continuing Incoming Traces
+
+SDKs in TwP mode must continue incoming traces (e.g. from incoming HTTP requests) if available and attach the trace data of the continued trace to any events that are created during the lifetime of this trace.
+Furthermore, they must propagate the continued trace as usual on all outgoing requests.
+This means that continuing traces should work just like in the regular tracing mode (with spans).
+
+At the time of writing this document, there is no way to opt out of continuing incoming traces in TwP mode, unless users manually start a new trace.
+
+### Starting a New Trace
+
+If an SDK in TwP mode doesn't receive an incoming trace, it should start a new trace.
+In this case, the new trace is not sampled (as in, there is no sampling decision, neither positive nor negative).
+Instead, the sampling decision is _deferred_ to the next downstream SDK.
+
+This means that:
+
+- the SDK must not include a sampled flag in the [`sentry-trace` header](../#header-sentry-trace), meaning the header has the format `<traceId>-<spanId>`.
+  More details on the [sampled flag](../#the-sampled-value).
+- the [dynamic sampling context](https://develop.sentry.dev/sdk/telemetry/traces/dynamic-sampling-context/), propagated via `baggage` must not contain the `sentry-sampled` key.
+
+### Attaching Trace Data to Events and Envelopes
+
+Any event created by an SDK in TwP mode must include the [`trace` context](/sdk/event-payloads/contexts/#trace-context).
+This context should contain the trace data of the current trace, if available, just like in regular tracing mode.
+
+Furthermore, the [`trace` envelope header](/sdk/telemetry/traces/dynamic-sampling-context/#envelope-header) (populated from the dynamic sampling context) must be attached to any outgoing event envelope.
+
+### Trace Duration and Storage
+
+Traces in TwP mode should have the same duration as regular traces.
+For example, a TwP trace for a backend server should generally last for the duration of one individual request.
+This usually corresponds with the lifetime of an [isolation scope](/sdk/miscellaneous/hub_and_scope_refactoring/#scope) (or current scope created within the isolation scope).
+
+SDKs in TwP mode must store trace data in a way that makes it possible for them to be attached to events and propagated to outgoing requests.
+The exact storage mechanism is up to the SDK implementation, but we recommended using the same mechanism as for regular traces.
+Usually this means storing the data on the scope in a field called `propagationContext` as [recommended here](/sdk/telemetry/traces/distributed-tracing/).
+
+On a related note, the `propagationContext` should be populated with a random `traceId` and `spanId` if no incoming trace is present.
+This—in combination with the [`sentry-trace` header specification](/sdk/telemetry/traces/#header-sentry-trace) requiring a `spanId`—has an important implication on the Sentry product:
+A non-existing `spanId` will be propagated along with the trace and attached to events.
+While not ideal, we accept this limitation as the Sentry product can and should handle non-existing (parent) spans anyway.
+
+As in regular tracing mode, for SDKs starting a new trace, the [Dynamic Sampling Context](/sdk/telemetry/traces/dynamic-sampling-context/) should be lazily populated and frozen for the duration of the trace.
+Given that no span is actually available in TwP mode, the DSC will not contain any keys related to spans (`transaction`, `sample_rate` or `sampled`).
+
+In SDKs adapting OpenTelemetry's tracing capabilities ([POTel](/sdk/hub_and_scope_refactoring/#f-use-otel-for-performance-instrumentation-potel)), the TwP trace data could also be stored in a non-recording span.
+For Example, the Node SDK also starts non-recording Otel spans in TwP mode and takes the trace data from them. In case no span is started (e.g. a node script without request handling), it falls back to the propagation context on the scope.
+Note that in the case of using the non-recording span, the span is also not sampled, meaning the sampling decision must still be deferred [when starting a new Trace](#starting-a-new-trace).
+
+## Historical Context
+
+TwP mode was introduced after SDKs were already capable of sending spans and transactions. Before TwP, SDKs would only handle traces if span-sending was enabled. Otherwise, neither trace data would be attached to any events nor were traces propagated further downstream.
+
+The primary motivation for TwP was to ensure that errors across application or service boundaries were still connected if they occurred in the same trace.
+
+The name "Tracing without Performance" was chosen because at the time of introduction, we associated spans purely with performance monitoring.
+Today, we associate spans with "Tracing" in general, and only (some of) the data from spans with Performance Monitoring.
+This is why the name from today's perspective is a bit misleading.
+As a mental model, think of TwP as "Trace propagation and continuation without Spans".

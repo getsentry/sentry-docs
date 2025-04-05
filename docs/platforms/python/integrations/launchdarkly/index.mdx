@@ -1,0 +1,59 @@
+---
+title: LaunchDarkly
+description: "Learn how to use Sentry with LaunchDarkly."
+---
+
+<PlatformContent includePath="feature-flags/prerelease-alert" />
+
+The [LaunchDarkly](https://launchdarkly.com/) integration tracks feature flag evaluations produced by the LaunchDarkly SDK. These evaluations are held in memory and sent to Sentry for review and analysis if an error occurs. **At the moment, we only support boolean flag evaluations.**
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `launchdarkly` extra.
+
+```bash
+pip install --upgrade 'sentry-sdk[launchdarkly]'
+```
+
+## Configure
+
+Add `LaunchDarklyIntegration()` to your `integrations` list:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.launchdarkly import LaunchDarklyIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Add data like request headers and IP for users, if applicable;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    integrations=[
+        LaunchDarklyIntegration(),
+    ],
+)
+```
+
+## Verify
+
+The integration is tested by evaluating a feature flag using your LaunchDarkly SDK before capturing an exception.
+
+```python
+import ldclient
+import sentry_sdk
+
+client = ldclient.get()
+client.variation("hello", Context.create("test-context"), False)
+
+sentry_sdk.capture_exception(Exception("Something went wrong!"))
+```
+
+Visit the Sentry website and confirm that your error event has recorded the feature flag "hello" and its value "false".
+
+## Supported Versions
+
+- launchdarkly-server-sdk >= 9.8.0
+- sentry-sdk >= 2.19.2
+- python >= 3.8
+
+<PlatformContent includePath="feature-flags/next-steps" />

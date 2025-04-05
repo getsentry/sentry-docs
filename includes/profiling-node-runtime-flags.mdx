@@ -1,0 +1,26 @@
+## Runtime Flags
+
+There are three runtime flags you can set that control the behavior of the profiler. Two of the flags relate to how the SDK resolves the profiler binaries. The third alters how the underlying profiler is initialized by [v8](https://v8docs.nodesource.com/).
+
+<Alert>
+These flags are intended for advanced use cases only. Setting them isn't required for most use cases.
+</Alert>
+
+- SENTRY_PROFILER_BINARY_PATH
+
+This flag sets the profiler binary path and bypasses arch, platform, and libc checks. It can be useful in some build configurations if you want to override which binary is required at runtime.
+
+- SENTRY_PROFILER_BINARY_DIR
+
+Acts similarly to the flag above, however, this flag only specifies the directory where the binaries are located and defers to the runtime to resolve the correct binary depending on the arch, platform, and libc version.
+
+- SENTRY_PROFILER_LOGGING_MODE
+
+The default mode of the v8 CpuProfiler is [kEagerLogging](https://v8docs.nodesource.com/node-18.2/d2/dc3/namespacev8.html#a874b4921ddee43bef58d8538e3149374), which enables the profiler even when no profiles are active—this is good because it makes calls to startProfgiler faster with the tradeoff of constant CPU overhead. This behavior can be controlled via the `SENTRY_PROFILER_LOGGING_MODE` environment variable with values of `eager|lazy`. If you opt to use the lazy-logging mode, calls to `startProfiler` may be slow. (Depending on environment and node version, it can be in the order of a few hundred ms.)
+
+Here's an example of starting a server with lazy-logging mode:
+
+```bash
+# Run profiler in lazy mode
+SENTRY_PROFILER_LOGGING_MODE=lazy node server.js
+```

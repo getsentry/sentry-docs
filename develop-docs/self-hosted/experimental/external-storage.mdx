@@ -1,0 +1,122 @@
+---
+title: Self Hosted External Storage
+sidebar_title: External Storage
+sidebar_order: 90
+---
+
+In some cases, storing Sentry data on-disk is not really something people can do. Sometimes, it's better to offload it into some bucket storage (like AWS S3 or Google Cloud Storage).
+
+<Alert title="Important" level="warning">
+    These are community-contributed docs. Sentry does not officially provide support for self-hosted configurations beyond the default install.
+</Alert>
+<Alert title="Note">
+    After changing configuration files, re-run the <code>./install.sh</code> script, to rebuild and restart the containers. See the <Link to="/self-hosted/#configuration">configuration section</Link> for more information.
+</Alert>
+
+## Sentry
+
+Sentry has an abstraction called "filestore" that handles storing attachments, sourcemaps (release artifacts), and replays. Filestore configuration for Sentry should be configured on the `sentry/config.yml` file.
+
+**Important:** `sentry cleanup` command won't delete files that is stored on an external storage such as GCS or S3. You will have to configure your own cleanup mechanism by utilizing your storage provider's object retention configuration. This should be set accordingly to the `SENTRY_EVENTS_RETENTION_DAYS`, although you can set it as a different value than what's set on the Docker Compose file.
+
+### Google Cloud Storage backend
+
+The configuration for GCS backend is pointed to `sentry.filestore.gcs.GoogleCloudStorage`. You will need to set `GOOGLE_APPLICATION_CREDENTIALS` environment variable. For more information, refer to the [Google Cloud documentation for setting up authentication](https://cloud.google.com/storage/docs/reference/libraries#setting_up_authentication).
+
+On your `sentry/config.yml` file, you will need to set the following:
+
+```yaml
+filestore.backend: "gcs"
+filestore.options:
+  bucket_name: "..."
+```
+
+If you set up via service account key, you will need to configure your `docker-compose.yml` file with the following:
+
+```yaml
+x-sentry-defaults: &sentry-defaults
+  # ...
+  environment:
+    # The rest of the environment variables
+    GOOGLE_APPLICATION_CREDENTIALS: "/run/secrets/service_account.json"
+  volumes:
+    # The rest of the volumes
+    - "/path/to/service_account.json:/run/secrets/service_account.json:ro"
+```
+
+### S3 backend
+
+<Alert title="Warning" level="warning">
+  Although S3 support is available, it is not thoroughly tested and is not used by Sentry SaaS. Therefore, it is experimental and not officially supported.
+</Alert>
+
+The configuration for S3-compatible backend is pointed to `sentry.filestore.s3.S3Boto3Storage`.
+
+On your `sentry/config.yml` file, you will need to set the following:
+
+```yaml
+filestore.backend: 's3'
+filestore.options:
+  bucket_acl: 'private'
+  default_acl: 'private'
+  access_key: '<REDACTED>'
+  secret_key: '<REDACTED>'
+  bucket_name: 'my-bucket'
+  region_name: 'auto'
+  endpoint_url: 'https://<REDACTED>' # If you're not using AWS.
+  addressing_style: 'path' # For regular AWS S3, use "auto" or "virtual". For other S3-compatible API like MinIO or Ceph, use "path".
+  signature_version: 's3v4'
+```
+
+Refer to [botocore configuration](https://botocore.amazonaws.com/v1/documentation/api/latest/reference/config.html) for valid configuration values.
+
+## Vroom
+
+Vroom is the service that handles profiling. By default the data for profiling is saved on the local filesystem. On self-hosted deployments, this should be done by overriding the `SENTRY_BUCKET_PROFILES` environment variable. It's also possible that additional environment variables should be added, depending on the backend of choice.
+
+**Important:** `sentry cleanup` command won't delete files that is stored on an external storage such as GCS or S3. You will have to configure your own cleanup mechanism by utilizing your storage provider's object retention configuration. This should be set accordingly to the `SENTRY_EVENTS_RETENTION_DAYS`, although you can set it as a different value than what's set on the Docker Compose file.
+
+### Google Cloud Storage backend
+
+You will need to set `GOOGLE_APPLICATION_CREDENTIALS` environment variable. For more information, refer to the [Google Cloud documentation for setting up authentication](https://cloud.google.com/storage/docs/reference/libraries#setting_up_authentication).
+
+On your `docker-compose.yml` file, you will need to add the following (this assumes you are setting up via service account file):
+
+```yaml
+services:
+  vroom:
+    environment:
+      # The rest of the environment variables
+      SENTRY_BUCKET_PROFILES: "gs://my-bucket"
+      GOOGLE_APPLICATION_CREDENTIALS: "/run/secrets/service_account.json"
+    volumes:
+      # The rest of the volumes
+      - "/path/to/service_account.json:/run/secrets/service_account.json:ro"
+```
+
+### S3 backend
+
+<Alert title="Warning" level="warning">
+  Although S3 support is available, it is not thoroughly tested and is not used by Sentry SaaS. Therefore, it is experimental and not officially supported.
+</Alert>
+
+On your `docker-compose.yml` file, you will need to add the following:
+
+```yaml
+services:
+  vroom:
+    environment:
+      # The rest of the environment variables
+      SENTRY_BUCKET_PROFILES: "s3://my-bucket?awssdk=v1&region=us-west-1&endpoint=amazonaws.com"
+      # For other S3-compatible APIs
+      SENTRY_BUCKET_PROFILES: "s3://my-bucket?awssdk=v1&region=any-region&endpoint=minio.yourcompany.com&s3ForcePathStyle=true&disableSSL"
+      AWS_ACCESS_KEY: "foobar"
+      AWS_SECRET_KEY: "foobar"
+      AWS_SESSION_TOKEN: "foobar" # (optional)
+```
+
+Further explanation on the query string options:
+- `region`: The AWS region for requests.
+- `endpoint`: The endpoint URL (hostname only or fully qualified URI).
+- `disableSSL`: A value of "true" disables SSL when sending requests.
+- `s3ForcePathStyle`: A value of "true" forces the request to use path-style addressing.

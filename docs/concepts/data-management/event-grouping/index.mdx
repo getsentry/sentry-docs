@@ -55,6 +55,32 @@ If the stack trace is not available, but exception information is, then the grou
 
 Grouping falls back to messages if the stack trace, `type`, and `value` are not available. When this happens, the grouping algorithm will try to use the message without any parameters. If that is not available, the grouping algorithm will use the full message attribute.
 
+### AI-Enhanced Grouping
+
+In addition to fingerprint-based grouping, Sentry uses AI to further improve issue grouping accuracy. This system helps identify semantically similar errors that might have different fingerprints due to minor code variations. The AI grouping system works alongside traditional fingerprinting - it only attempts to group new issues and will never split up issues that were grouped by fingerprint.
+
+This system will not apply to any events that have fully custom fingerprints (either set via SDK or [fingerprint rules](https://docs.sentry.io/product/issues/grouping-and-fingerprints/#fingerprint-rules)). However, events with fingerprints containing `{{ default }}` will use AI grouping to calculate the `{{ default }}` portion of the fingerprint.
+
+When Sentry's default fingerprinting algorithm generates a new hash, it automatically sends the error data to [Seer](https://github.com/getsentry/seer), our AI/ML service. That error data includes the message and in-app stack frames (including those configured with stack trace rules), or all frames when no in-app frames are present.
+
+Seer performs the following steps:
+
+1. It generates a vector representation of the error's stack trace using a transformer-based text embedding model
+2. It compares this embedding against existing error embeddings for that project in the database
+3. If a semantically similar error is found within the configured threshold, Sentry merges the new error into the existing issue
+
+![Sentry Seer PostgreSQL.](./img/sentry-seer-postgresql.png)
+
+This algorithm is particularly effective at handling cases where:
+
+- Similar errors occur in different parts of the codebase
+- Code changes or deployments introduce slight variations in stack traces
+- Different error types represent the same underlying problem
+
+You can see issues that have been merged through this system in the “Merged Issues” section of the Issue Details UI. You can always unmerge any fingerprints that you would not like to see grouped, and our system will avoid grouping them in the future.
+
+![Merged issues.](./img/merged-issues.png)
+
 ## Ways to Customize Error Grouping
 
 If the way that Sentry is grouping issues for your organization is already ideal, you don't need to make any changes. However, you may find that Sentry is either creating too many similar groups, or is grouping disparate events into groups that should be separate. If this is the case, for **error issues**, you can extend and change the default grouping behavior. Error grouping can be extended and changed completely according to your needs. Transaction grouping currently cannot be customized.
@@ -70,29 +96,17 @@ You can customize error grouping using a combination of the following options, l
 1. In your SDK, using [SDK Fingerprinting](/platform-redirect/?next=/usage/sdk-fingerprinting/)
    > Sets a new fingerprint for incoming events based on matchers in the SDK. This doesn't affect already existing issues. Note that is not supported in WebAssembly.
 
-<Note>
+<Alert>
 
 Stack trace rules can work as a combination of both SDK and project settings. As a result, we maintain the documentation in one location.
 
-</Note>
+</Alert>
 
 ## How to View the Fingerprint
 
 You can see a fingerprint by opening an issue, clicking "{} View JSON", and finding the _fingerprint_ property in that file. If the default grouping was used, you'll see "default" written there. If a different grouping was used, you'll see the actual fingerprint value itself.
 
-<div style={{"height":"0px","paddingBottom":"calc(56.88524590163935% + 41px)","position":"relative","width":"100%"}}>
-  <iframe
-    src="https://demo.arcade.software/8vE2p1OF0WRxjg7XN8HH?embed"
-    frameborder="0"
-    loading="lazy"
-    webkitallowfullscreen
-    mozallowfullscreen
-    allowfullscreen
-    allow="fullscreen;"
-    style={{"colorScheme":"light","height":"100%","left":"0px","position":"absolute","top":"0px","width":"100%"}}
-    title="View Issue Fingerprint"
-  ></iframe>
-</div>
+<Arcade src="https://demo.arcade.software/8vE2p1OF0WRxjg7XN8HH?embed" />
 
 ## Transaction Grouping Algorithms
 

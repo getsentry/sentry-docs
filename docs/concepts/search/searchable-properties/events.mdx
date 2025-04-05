@@ -8,17 +8,17 @@ Events are the underlying event data captured using Sentry SDKs — that is, err
 
 You can search by event properties in the following [sentry.io](https://sentry.io) pages:
 
-- Discover - in the query builder
-- Dashboards - within the widget builder, depending on dataset selection
+- Discover - in the query builder (depending on the dataset selection)
+- Dashboards - within the widget builder (depending on dataset selection)
 - Performance - only in transaction summaries
 - Issues - as indicated in the list below
 - Alerts - when creating a metric alert
 
-<Note>
+<Alert>
 
 Please note that in Alerts only a limited number of properties are available for [filtering transaction events](/product/alerts/create-alerts/metric-alert-config/#tags--properties).
 
-</Note>
+</Alert>
 
 When searching on event properties within the **Issues** page, the search will return any issue that has _one or more events_ matching the supplied event properties filter.
 
@@ -30,7 +30,7 @@ Below is a list of keys and tokens that can be used in the event search.
 
 ### `apdex(threshold)`
 
-Returns results with the [Apdex score](/product/performance/metrics/#apdex) that you entered. Values must be between `0` and `1`. Higher apdex values indicate higher user satisfaction.
+Returns results with the [Apdex score](/product/insights/overview/metrics/#apdex) that you entered. Values must be between `0` and `1`. Higher apdex values indicate higher user satisfaction.
 
 - **Type:** number
 
@@ -282,7 +282,7 @@ Returns results with the defined tag or field, but not the value of that tag or 
 
 ### `http.method`
 
-HTTP method of the [request](https://develop.sentry.dev/sdk/event-payloads/request/) that created the event.
+HTTP method of the [request](https://develop.sentry.dev/sdk/data-model/event-payloads/request/) that created the event.
 
 - **Type:** string
 
@@ -342,13 +342,13 @@ Returns results with a matching maximum value for the field entered.
 
 ### `measurements.app_start_cold`
 
-A [cold start](/product/insights/mobile-vitals/#app-start) refers to when the app launches for the first time after a reboot or update. The app is not in memory and no process exists.
+A [cold start](/product/insights/mobile/mobile-vitals/app-starts/) refers to when the app launches for the first time after a reboot or update. The app is not in memory and no process exists.
 
 - **Type:** duration
 
 ### `measurements.app_start_warm`
 
-A [warm start](/product/insights/mobile-vitals/#app-start) refers to when the app has already launched at least once and is partially in memory. For instance, the user backs out of your app, but then re-launches it. The process may have continued to run, but the app must recreate the activity from scratch.
+A [warm start](/product/insights/mobile/mobile-vitals/app-starts/) refers to when the app has already launched at least once and is partially in memory. For instance, the user backs out of your app, but then re-launches it. The process may have continued to run, but the app must recreate the activity from scratch.
 
 - **Type:** duration
 
@@ -378,7 +378,7 @@ A [warm start](/product/insights/mobile-vitals/#app-start) refers to when the ap
 
 ### `measurements.frames_frozen`
 
-[Slow and frozen frames](/product/insights/mobile-vitals/#slow-and-frozen-frames) measure the responsiveness of your app.
+[Slow and frozen frames](/product/insights/mobile/mobile-vitals/#slow-and-frozen-frames) measure the responsiveness of your app.
 
 - **Type:** number
 
@@ -390,7 +390,7 @@ Returns results with a matching rate of frozen frames. That is, `measurements.fr
 
 ### `measurements.frames_slow`
 
-[Slow and frozen frames](/product/insights/mobile-vitals/#slow-and-frozen-frames) measure the responsiveness of your app.
+[Slow and frozen frames](/product/insights/mobile/mobile-vitals/#slow-and-frozen-frames) measure the responsiveness of your app.
 
 - **Type:** number
 
@@ -472,6 +472,18 @@ The independent kernel version string. This is typically the entire output of th
 
 - **Type:** string
 
+### `os.distribution_name`
+
+The Linux distribution name. This maps to `ID` in [`/etc/os-release/`](https://www.freedesktop.org/software/systemd/man/latest/os-release.html).
+
+- **Type:** string
+
+### `os.distribution_version`
+
+The Linux distribution version. This maps to `VERSION_ID` in  [`/etc/os-release/`](https://www.freedesktop.org/software/systemd/man/latest/os-release.html).
+
+- **Type:** string
+
 ### `percentile(field,level)`
 
 Returns results with an approximate percentile of the field to the level. The level can be between `0` and `1`. For example, if you wanted to find the 50th percentile of transaction durations, you would enter `percentile(transaction.duration, 0.5)`.
@@ -505,7 +517,7 @@ Returns results with an approximate percentile of the field. Replace "XY" with 5
 
 ### `release`
 
-A release is a version of your code deployed to an environment. You can create a token with an exact match of the version of a release, or `release:latest` to pick the most recent release.
+A release is a version of your code deployed to an environment. You can create a token with an exact match of the version of a release, or `release:latest` to pick the most recent release. [Learn more](/product/releases/usage/sorting-filtering/#latest-release).
 
 - **Type:** string
 
@@ -673,7 +685,7 @@ Span ID of the root span of the root transaction in the event.
 
 ### `transaction`
 
-For [transactions](/product/performance/transaction-summary/#what-is-a-transaction), the name of the transaction. For errors, the name of the associated transaction.
+For [transactions](/product/insights/overview/transaction-summary/#what-is-a-transaction), the name of the transaction. For errors, the name of the associated transaction.
 
 - **Type:** string
 
@@ -691,7 +703,7 @@ Short code identifying the [type of operation](https://develop.sentry.dev/sdk/pe
 
 ### `transaction.status`
 
-Describes the status of the span/transaction. Check out our [Transaction Payloads documentation](https://develop.sentry.dev/sdk/event-payloads/transaction/) for all possible statuses.
+Describes the status of the span/transaction. Check out our [Transaction Payloads documentation](https://develop.sentry.dev/sdk/data-model/event-payloads/transaction/) for all possible statuses.
 
 - **Type:** string
 
@@ -703,7 +715,7 @@ The [Unreal Crash Context Type](https://docs.unrealengine.com/4.27/en-US/API/Run
 
 ### `user_misery(number)`
 
-Returns transactions with the defined user misery value. [User Misery](/product/performance/metrics/#user-misery) is a user-weighted performance metric that counts the number of unique users who were frustrated; "frustration" is measured as a response time four times the satisfactory response time threshold (in milliseconds). It highlights transactions that have the highest impact on users.
+Returns transactions with the defined user misery value. [User Misery](/product/insights/overview/metrics/#user-misery) is a user-weighted performance metric that counts the number of unique users who were frustrated; "frustration" is measured as a response time four times the satisfactory response time threshold (in milliseconds). It highlights transactions that have the highest impact on users.
 
 - **Type:** number
 

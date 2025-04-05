@@ -6,6 +6,28 @@ notSupported: ["javascript.capacitor"]
 sidebar_order: 9000
 ---
 
+<Expandable permalink title="The SDK is not sending any data">
+
+If you set up the Sentry SDK and it's not sending any data to Sentry:
+
+- Check that you have configured a DSN and that you are passing it to the `dsn` option in `Sentry.init()`.
+
+  If you are using environment variables to pass the DSN, make sure the environment variables are set in all relevant environments. Additionally, if you are using environment variables inside a framework, check that the framework will include the environment variables in your bundle. Often this means you will have to prefix your environment variables with special prefixes defined by your framework (`NEXT_PUBLIC_` in Next.js, `NUXT_` in Nuxt, `VITE_` for Vite projects, `REACT_APP_` for Create React App, ...).
+
+- Check that you have disabled any ad-blockers.
+- Set `debug: true` in the `Sentry.init()` options and observe your console output when you start your application. The SDK may tell you why it is not sending any data.
+- Check the [Stats](https://sentry.io/orgredirect/organizations/:orgslug/stats/) and [Suscription](https://sentry.io/orgredirect/organizations/:orgslug/settings/billing/overview/) pages in Sentry. You may have ran out of quota.
+
+<PlatformSection supported={["javascript.nextjs"]}>
+  - Check that you didn't set `sideEffects: false` in your `package.json`.
+  Setting `sideEffects` to false in your `package.json` will cause Next.js to
+  tree shake the SDK code too agressively - effectively deleting any
+  `Sentry.init()` calls. Setting `sideEffects: false` is incorrect when you are
+  using the Sentry SDK.
+</PlatformSection>
+
+</Expandable>
+
 <Expandable permalink title="Updating to a new Sentry SDK version">
 
 If you update your Sentry SDK to a new major version, you might encounter breaking changes that need some adaption on your end.
@@ -20,7 +42,7 @@ You can view the JSON payload of an event to see how Sentry stores additional da
 
 ![Red box highlighting where to find the JSON connected to an event](./img/event_JSON.png)
 
-For more details, see the [full documentation on Event Payload](https://develop.sentry.dev/sdk/event-payloads/).
+For more details, see the [full documentation on Event Payload](https://develop.sentry.dev/sdk/data-model/event-payloads/).
 
 </Expandable>
 
@@ -77,9 +99,23 @@ Most community CDNs properly set an `Access-Control-Allow-Origin` header.
 
 If your application started to misbehave because of performing additional OPTIONS requests, it is most likely an issue with unwanted `sentry-trace` request headers, which can happen when you are using too generic a configuration for our Tracing Integration in the Browser SDK.
 
-To fix this, change the `tracePropagationTargets` option during SDK initialization. For more details, see [Automatic Instrumentation](/platforms/javascript/tracing/instrumentation/automatic-instrumentation/#tracePropagationTargets) in our Tracing documentation.
+To fix this, change the `tracePropagationTargets` option during SDK initialization. For more details, see <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#tracePropagationTarget">Automatic Instrumentation</PlatformLink> in our Tracing documentation.
 
 </Expandable>
+</PlatformCategorySection>
+
+<PlatformCategorySection notSupported={['browser']}>
+<PlatformSection notSupported={['javascript.aws-lambda', 'javascript.azure-functions', 'javascript.bun', 'javascript.cloudflare', 'javascript.deno', 'javascript.electron', 'javascript.gcp-functions', 'javascript.tanstackstart-react']}>
+<Expandable permalink title="Error: 'import-in-the-middle' failed to wrap">
+ When using ESM, by default all packages are wrapped under the hood by
+ [import-in-the-middle](https://www.npmjs.com/package/import-in-the-middle).
+ `import-in-the-middle` has compatibility issues with some packages and
+ can throw errors in these situations.
+
+Check out the <PlatformLink to="/install/esm/#troubleshooting-instrumentation">ESM Troubleshooting Instrumentation</PlatformLink> section for more information.
+
+</Expandable>
+</PlatformSection>
 </PlatformCategorySection>
 
 <PlatformCategorySection supported={['browser']}>
@@ -109,14 +145,11 @@ You can work around our CDN bundles being blocked by [using our NPM packages](#u
 
 <PlatformSection supported={["javascript.nextjs"]}>
 
-<Note>
-  The Sentry Next.js SDK has a separate option to make setting up tunnels very
-  straight-forward, allowing you to skip the setup below. See
-  <PlatformLink to="/manual-setup/#configure-tunneling-to-avoid-ad-blockers">
-    Configure Tunneling to avoid Ad-Blockers
-  </PlatformLink>
-  to learn how to set up tunneling on Next.js.
-</Note>
+The Sentry Next.js SDK has a separate option to make setting up tunnels very
+straight-forward, allowing you to skip the setup below. See <PlatformLink to="/manual-setup/#configure-tunneling-to-avoid-ad-blockers">
+Configure Tunneling to avoid Ad-Blockers</PlatformLink> to learn how to set up tunneling on Next.js.
+
+If you do not want to configure `tunnelRoute`, you can follow the guide below.
 
 </PlatformSection>
 
@@ -126,7 +159,7 @@ A tunnel is an HTTP endpoint that acts as a proxy between Sentry and your applic
 
 Starting with version `6.7.0` of the JavaScript SDK, you can use the `tunnel` option to tell the SDK to deliver events to the configured URL, instead of using the DSN. This allows the SDK to remove `sentry_key` from the query parameters, which is one of the main reasons ad-blockers prevent sending events in the first place. This option also stops the SDK from sending preflight requests, which was one of the requirements that necessitated sending the `sentry_key` in the query parameters.
 
-To enable the `tunnel` option, provide either a relative or an absolute URL in your `Sentry.init` call. When you use a relative URL, it's relative to the current origin, and this is the form that we recommend. Using a relative URL will not trigger a preflight CORS request, so no events will be blocked, because the ad-blocker will not treat these events as third-party requests.
+To enable the `tunnel` option, provide either a relative or an absolute URL in your `Sentry.init` call. When you use a relative URL, it's relative to the current origin, and this is the form that we recommend. Using a relative URL will not trigger a preflight CORS request, so no events will be blocked, because the ad-blocker will not treat these events as third-party requests. When using tunneling with server-side SDKs like `@sentry/node` or `@sentry/bun` you must provide an absolute URL.
 
 ```javascript
 Sentry.init({
@@ -366,7 +399,7 @@ Error: Could not resolve './{}.js' from node_modules/@sentry/utils/esm/index.js
 
 This might be because the [`define`](https://vitejs.dev/config/shared-options.html#define) option in your Vite config is string-replacing some variable used by the Sentry SDK, like `global`, which causes build errors. Vite recommends using `define` for CONSTANTS only, and not putting `process` or `global` into the options. To fix this build error, remove or update your `define` option, as shown below:
 
-```diff {filename:vite.config.ts}
+```javascript {filename:vite.config.ts} {diff}
 export default defineConfig({
    build: {
      sourcemap: true
@@ -385,5 +418,182 @@ export default defineConfig({
 <Include name="diagnostics-channel-build-error-troubleshooting.mdx" />
 
 </Expandable>
+
+<Expandable permalink title="Terser plugin build errors">
+
+<Include name="terser-plugin-build-error-troubleshooting.mdx" />
+
+</Expandable>
+
+<PlatformSection supported={['javascript.angular']}>
+
+<Expandable
+  permalink
+  title="Invalid hashes in Angular Service Worker ngsw.json"
+>
+If you upload source maps for your Angular application with <PlatformLink to="/sourcemaps/uploading/cli">Sentry CLI</PlatformLink>, you might encounter caching issues if you use the [Angular service worker](https://angular.dev/ecosystem/service-workers).
+Learn more about fixing these caching issues in the <PlatformLink to="/sourcemaps/uploading/cli/#fixing-angular-service-worker-caching-issues">Uploading Source Maps with Sentry CLI</PlatformLink> guide.
+
+</Expandable>
+
+</PlatformSection>
+
+<PlatformSection notSupported={['javascript.nuxt']}>
+  <Expandable permalink title="pnpm: Resolving 'import-in-the-middle' external package errors">
+
+When using pnpm, you might encounter errors related to packages that can't be external, particularly with packages like `import-in-the-middle` and `require-in-the-middle`. These errors typically occur due to pnpm's strict dependency management and hoisting behavior.
+
+While adding these packages as direct dependencies might remove the warning messages, it often doesn't resolve the underlying functionality issues:
+
+```bash
+pnpm add import-in-the-middle require-in-the-middle
+```
+
+As a workaround, create or modify `.npmrc` in your project root:
+
+```npmrc
+shamefully-hoist=true
+```
+
+<Alert level="warning">
+  **Note**: While `shamefully-hoist=true` usually isn't the ideal solution from
+  a dependency management perspective, it's sometimes necessary for
+  compatibility with certain packages that expect Node.js module resolution
+  behavior similar to npm or yarn.
+</Alert>
+
+  </Expandable>
+</PlatformSection>
+
+<PlatformSection supported={['javascript.nuxt']}>
+  <Expandable permalink title="Failed to register 'import-in-the-middle' during build time">
+    After adding `sentry.server.config.ts` and building the project, you might get an error like this:
+    `Failed to register ESM hook import-in-the-middle/hook.mjs`. You can add an override (npm/pnpm) or a resolution (yarn)
+    for `@vercel/nft` to fix this. This will add the `hook.mjs` file to your build output. See the [underlying issue in the UnJS Nitro project](https://github.com/unjs/nitro/issues/2703).
+
+    Nitro updated `@vercel/nft` in Nitro version `2.10.0`, so you might not get this error anymore, and you don't need to
+    add this override/resolution.
+
+    ```json {tabTitle:npm} {filename:package.json}
+    "overrides": {
+      "@vercel/nft": "^0.27.4"
+    }
+    ```
+
+    ```json {tabTitle:yarn} {filename:package.json}
+    "resolutions": {
+      "@vercel/nft": "^0.27.4"
+    }
+    ```
+
+    ```json {tabTitle:pnpm} {filename:package.json}
+    "pnpm": {
+      "overrides": {
+        "@vercel/nft": "^0.27.4"
+      }
+    }
+    ```
+
+  </Expandable>
+
+  <Expandable permalink title="pnpm dev: Cannot find package 'import-in-the-middle'">
+
+    Sentry injects `import "import-in-the-middle/hook.mjs"` in your server entry. This import acts as a hint for node bundlers to really include this file.
+    As pnpm implements a strict dependency isolation, this import might cause problems.
+    Per default, `shamefully-hoist` is `false` ([pnpm docs here](https://pnpm.io/next/npmrc#shamefully-hoist)) and this prevents accessing non-declared dependencies.
+    You probably don't want to change this setting, so you have to explicitly add the dependency `import-in-the-middle`:
+
+    ```bash
+    pnpm add import-in-the-middle
+    ```
+
+  </Expandable>
+
+  <Expandable permalink title="Nuxt: Server-side Nitro is not sending events">
+    Nuxt builds the server-side Nitro application as ES Modules, which introduces limitations for server-side tracing during development.
+    Currently, trace collection is only supported when building and running the application. Development mode (`nuxt dev`) is currently not supported.
+
+    When running the build output, Sentry needs to be initialized before running the rest of the application. This is done automatically, but might not work for your use case.
+    Read more about this in <PlatformLink to="/install">installation methods</PlatformLink>.
+
+    ---
+
+    We are currently investigating an issue where the server-side is not correctly initialized with a recent update of Nitro (the server-side toolkit in Nuxt).
+
+    We are working on figuring this out ([see issue here](https://github.com/getsentry/sentry-javascript/issues/14514)). For the time being, you can add the following overrides to your application:
+
+    ```json {tabTitle:npm} {filename:package.json}
+    "overrides": {
+      "nitropack": "~2.9.7",
+      "@vercel/nft": "^0.27.4"
+    }
+    ```
+
+    ```json {tabTitle:yarn} {filename:package.json}
+    "resolutions": {
+      "nitropack": "~2.9.7",
+      "@vercel/nft": "^0.27.4"
+    }
+    ```
+
+    ```json {tabTitle:pnpm} {filename:package.json}
+    "pnpm": {
+      "overrides": {
+        "nitropack": "~2.9.7",
+        "@vercel/nft": "^0.27.4"
+      }
+    }
+    ```
+
+  </Expandable>
+</PlatformSection>
+
+<PlatformSection supported={['javascript.nextjs']}>
+  <Expandable permalink title="Out of Memory (OOM) errors during build">
+    The problem here is related to memory consumption during the build process, especially when generating source maps. Here are some potential solutions and workarounds:
+
+    - Update your `@sentry/nextjs` package to the latest version.
+    - Increase Node.js memory limit: You can try increasing the memory limit for Node.js during the build process. Add this to your build command: `NODE_OPTIONS="--max-old-space-size=8192" next build`. This flag will increase the memory available to the node process to 8 GB. We have found that Next.js consumes around 4 GB in most cases. Decrease the size depending on your memory availability.
+    - Disable source maps entirely: As a last resort, you can disable source map generation completely:
+    ```js {filename:next.config.js}
+      module.exports = withSentryConfig(module.exports, {
+        sourcemaps: {
+          disable: true,
+        },
+      }
+    ```
+
+  </Expandable>
+</PlatformSection>
+
+<PlatformSection supported={['javascript.nextjs']}>
+  <Expandable permalink title="Using the Sentry Next SDK in a Nx monorepo (using `@nx/next`)">
+    To set up Sentry's Next.js SDK in an Nx monorepo context, consider the following setup:
+
+    ```js {filename:next.config.js}
+      const nextConfig = {
+      // ...
+      };
+
+      const plugins = [
+      // Your plugins excluding withNx
+      ];
+
+      module.exports = async (phase, context) => {
+        let updatedConfig = plugins.reduce((acc, fn) => fn(acc), nextConfig);
+
+        // Apply the async function that `withNx` returns.
+        updatedConfig = await withNx(updatedConfig)(phase, context);
+
+        return updatedConfig;
+      };
+
+      // The Sentry plugin should always be applied last
+      const { withSentryConfig } = require('@sentry/nextjs');
+      module.exports = withSentryConfig(module.exports)
+    ```
+
+  </Expandable>
+</PlatformSection>
 
 If you need additional help, you can [ask on GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose). Customers on a paid plan may also contact support.

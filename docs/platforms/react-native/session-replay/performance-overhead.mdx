@@ -1,0 +1,46 @@
+---
+title: Performance Overhead
+sidebar_order: 5502
+notSupported:
+description: "Learn about how enabling Session Replay impacts the performance of your application."
+---
+
+If you're considering enabling Session Replay, it's important to first understand the potential performance impact to your app. While accurate metrics require realistic testing where you apply typical access patterns and correlate the results with your business metrics, to provide a baseline, we measured the overhead using the open-source Pocket Casts app.
+
+You can learn more about the various optimizations implemented in the React Native Replay SDK in the [Replay Performance Overhead](/product/explore/session-replay/mobile/performance-overhead/) docs.
+
+The React Native Replay SDK is a lightweight wrapper for the native iOS and Android SDKs, so its overhead is minimal and doesn't require separate measurement. Below are the benchmark results for each platform.
+
+We measured the overhead using the [Pocket Casts iOS](https://github.com/Automattic/pocket-casts-ios) and [Pocket Casts Android](https://github.com/Automattic/pocket-casts-android) open-source apps. Each includes a diverse set of components such as ViewControllers and SwiftUI screens.
+
+Here's how the benchmarks were conducted:
+
+- **Configuration:** Full masking was enabled, and optimized release builds were used.
+- **User Flow:** The same flow was executed 10 times to ensure consistency.
+- **Real-World Representation:** This approach closely mirrors performance in real-world scenarios.
+
+The benchmarks were run on an iPhone 14 Pro and a Pixel 2XL. Note that active Session Replay recording can introduce slow frames on older lower-end iOS devices (for example iPhone 8).
+
+## iOS
+
+| Metric                           | Sentry SDK only | Sentry + Replay SDK |
+| -------------------------------- | --------------- | ------------------- |
+| FPS                              | 55 fps          | 53 fps              |
+| Memory                           | 102 MB          | 121 MB              |
+| CPU                              | 4%              | 13%                 |
+| App Startup Time (Cold)          | 1264.80 ms      | 1265 ms             |
+| Main Thread Time                 | n/a             | 43ms                |
+| Network Bandwidth                | n/a             | 10 KB/s of recording|
+
+
+
+## Android
+
+| Metric                           | Sentry SDK only | Sentry + Replay SDK |
+| -------------------------------- | --------------- | ------------------- |
+| FPS                              | 55 fps          | 54 fps              |
+| Memory                           | 255 MB          | 265 MB              |
+| CPU                              | 36%             | 42%                 |
+| App Startup Time (Cold)          | 1533.35 ms      | 1539.55 ms          |
+| Main Thread Time                 | n/a             | 20ms                |
+| Network Bandwidth                | n/a             | 7 KB/s of recording |

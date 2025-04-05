@@ -24,7 +24,7 @@ export function RelayMetrics() {
 function RelayFeatures({features}) {
   if (Array.isArray(features) && features.includes('processing')) {
     return (
-      <Alert level="info" title="Note">
+      <Alert title="Note">
         This metric is emitted only when Relay runs as internal Sentry service for event
         ingestion (<code>processing</code> feature).
       </Alert>

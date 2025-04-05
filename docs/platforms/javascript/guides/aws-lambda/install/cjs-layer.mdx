@@ -4,15 +4,15 @@ description: "Learn how to add the Sentry Node Lambda Layer to use Sentry in you
 sidebar_order: 1
 ---
 
-The easiest way to get started with Sentry is to use the Sentry [Lambda Layer](https://docs.aws.amazon.com/Lambda/latest/dg/configuration-layers.html) instead of adding `@sentry/aws-serverless` with `npm` or `yarn` [manually](../cjs-npm).
+The easiest way to get started with Sentry is to use the Sentry [Lambda Layer](https://docs.aws.amazon.com/lambda/latest/dg/adding-layers.html) instead of adding `@sentry/aws-serverless` with `npm` or `yarn` [manually](../cjs-npm).
 If you follow this guide, you don't have to worry about deploying Sentry dependencies alongside your function code.
 To actually start the SDK, you can decide between setting up the SDK using environment variables or in your Lambda function code. We recommend using environment variables as it's the easiest way to get started. [Initializing the SDK in code](#alternative-initialize-the-sdk-in-code) instead of setting environment variables gives you more control over the SDK setup if you need it.
 
-<Note>
+<Alert>
 
 This installation method **does not** work with Lambda functions running in EcmaScript Modules (ESM) mode, using `import` syntax. If you're running your function in ESM, follow the [ESM guide](../esm-npm).
 
-</Note>
+</Alert>
 
 ## 1. Prerequisites
 
@@ -75,6 +75,8 @@ Sentry.init({
   // Add Tracing by setting tracesSampleRate and adding integration
   // Set tracesSampleRate to 1.0 to capture 100% of transactions
   // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
   tracesSampleRate: 1.0,
 });
 
@@ -86,29 +88,3 @@ exports.handler = Sentry.wrapHandler(async (event, context) => {
 It's important to add both, the `Sentry.init` call outside the handler function and the `Sentry.wrapHandler` wrapper around your function to automatically catch errors and performance data.
 
 That's it - you're all set!
-
-## Lambda layer for v7 SDK
-
-The instructions above are written for SDK version 8 (the most recent version).
-You can also install a v7 version of the Sentry Lambda layer in case you can't upgrade to v8.
-The procedure is identical to the instructions above except for two differences:
-
-### v7 layer ARN
-
-The v7 Lambda layer has a different ARN:
-
-```
-arn:aws:Lambda:us-west-1:943013980633:layer:SentryNodeServerlessSDKv7:3
-```
-
-Modify and copy the ARN value for your region into the input, e.g. for region `:us-west-1` and the current v7 Lambda layer version `:3`:
-
-### v7 package name
-
-The `@sentry/aws-serverless` package was called `@sentry/serverless` prior to version 8. Therefore, for the v7 layer, adjust your `NODE_OPTIONS` environment variable:
-
-```bash
-NODE_OPTIONS="-r @sentry/serverless/dist/awslambda-auto"
-```
-
-The other environment variables remain the same as above.

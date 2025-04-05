@@ -61,11 +61,11 @@ The following parts of your FastAPI project are monitored:
 
 ![Performance details are shown as waterfall diagram](./img/fastapi-performance-details.png)
 
-<Note>
+<Alert>
 
-The parameter `enable_tracing` needs to be set when initializing the Sentry SDK for performance measurements to be recorded.
+The parameter [traces_sample_rate](/platforms/python/configuration/options/#traces-sample-rate) needs to be set when initializing the Sentry SDK for performance measurements to be recorded.
 
-</Note>
+</Alert>
 
 ## Options
 
@@ -81,11 +81,13 @@ sentry_sdk.init(
     integrations=[
         StarletteIntegration(
             transaction_style="endpoint",
-            failed_request_status_codes=[403, range(500, 599)],
+            failed_request_status_codes={403, *range(500, 599)},
+            http_methods_to_capture=("GET",),
         ),
         FastApiIntegration(
             transaction_style="endpoint",
-            failed_request_status_codes=[403, range(500, 599)],
+            failed_request_status_codes={403, *range(500, 599)},
+            http_methods_to_capture=("GET",),
         ),
     ]
 )
@@ -106,10 +108,10 @@ You can pass the following keyword arguments to `StarletteIntegration()` and `Fa
       # ...
       integrations=[
           StarletteIntegration(
-              transaction_style="endpoint"
+              transaction_style="endpoint",
           ),
           FastApiIntegration(
-              transaction_style="endpoint"
+              transaction_style="endpoint",
           ),
       ],
   )
@@ -130,16 +132,31 @@ You can pass the following keyword arguments to `StarletteIntegration()` and `Fa
 
 - `failed_request_status_codes`:
 
-  A list of integers or containers (objects that allow membership checks via `in`)
-  of integers that will determine which status codes should be reported to Sentry.
+  A `set` of integers that will determine which status codes should be reported to Sentry.
+
+  The `failed_request_status_codes` option determines whether [`HTTPException`](https://fastapi.tiangolo.com/reference/exceptions/?h=httpexception) exceptions should be
+  reported to Sentry. Unhandled exceptions that don't have a `status_code` attribute will always be reported to Sentry.
 
   Examples of valid `failed_request_status_codes`:
 
-  - `[500]` will only send events on HTTP 500.
-  - `[400, range(500, 599)]` will send events on HTTP 400 as well as the 500-599 range.
-  - `[500, 503]` will send events on HTTP 500 and 503.
+  - `{500}` will only send events on HTTP 500.
+  - `{400, *range(500, 600)}` will send events on HTTP 400 as well as the 5xx range.
+  - `{500, 503}` will send events on HTTP 500 and 503.
+  - `set()` (the empty set) will not send events for any HTTP status code.
 
-  The default is `[range(500, 599)]`.
+  The default is `{*range(500, 600)}`, meaning that all 5xx status codes are reported to Sentry.
+
+- `http_methods_to_capture`:
+
+  A tuple containing all the HTTP methods that should create a transaction in Sentry.
+
+  The default is `("CONNECT", "DELETE", "GET", "PATCH", "POST", "PUT", "TRACE",)`.
+
+  (Note that `OPTIONS` and `HEAD` are missing by default.)
+
+  <Alert title="Added in 2.15.0">
+    The `http_methods_to_capture` option.
+  </Alert>
 
 ## Supported Versions
 

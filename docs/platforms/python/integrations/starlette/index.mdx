@@ -45,7 +45,7 @@ It takes a couple of moments for the data to appear in [sentry.io](https://sentr
 
 - Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
 
-- If `enable_tracing` or a `traces_sample_rate` is set, then performance information is also reported, which you can see on the **Performance** page of [sentry.io](https://sentry.io).
+- If [traces_sample_rate](/platforms/python/configuration/options/#traces-sample-rate) is set, then performance information is also reported, which you can see on the **Performance** page of [sentry.io](https://sentry.io).
 
 ## Options
 
@@ -59,8 +59,9 @@ sentry_sdk.init(
     integrations=[
         StarletteIntegration(
             transaction_style="endpoint",
-            failed_request_status_codes=[403, range(500, 599)],
+            failed_request_status_codes={403, *range(500, 599)},
             middleware_spans=False,
+            http_methods_to_capture=("GET",),
         )
     ],
 )
@@ -88,22 +89,37 @@ You can pass the following keyword arguments to `StarletteIntegration()`:
 
 - `failed_request_status_codes`:
 
-  A list of integers or containers (objects that allow membership checks via `in`)
-  of integers that will determine which status codes should be reported to Sentry.
+  A `set` of integers that will determine which status codes should be reported to Sentry.
+
+  The `failed_request_status_codes` option determines whether [`HTTPException`](https://www.starlette.io/exceptions/#httpexception) exceptions should be
+  reported to Sentry. Unhandled exceptions that don't have a `status_code` attribute will always be reported to Sentry.
 
   Examples of valid `failed_request_status_codes`:
 
-  - `[500]` will only send events on HTTP 500.
-  - `[400, range(500, 599)]` will send events on HTTP 400 as well as the 500-599 range.
-  - `[500, 503]` will send events on HTTP 500 and 503.
+  - `{500}` will only send events on HTTP 500.
+  - `{400, *range(500, 600)}` will send events on HTTP 400 as well as the 5xx range.
+  - `{500, 503}` will send events on HTTP 500 and 503.
+  - `set()` (the empty set) will not send events for any HTTP status code.
 
-  The default is `[range(500, 599)]`.
+  The default is `{*range(500, 600)}`, meaning that all 5xx status codes are reported to Sentry.
 
 - `middleware_spans`:
 
   Create spans and track performance of all middleware in your Starlette project. Set to `False` to disable.
 
   The default is `True`.
+
+- `http_methods_to_capture`:
+
+  A tuple containing all the HTTP methods that should create a transaction in Sentry.
+
+  The default is `("CONNECT", "DELETE", "GET", "PATCH", "POST", "PUT", "TRACE",)`.
+
+  (Note that `OPTIONS` and `HEAD` are missing by default.)
+
+  <Alert title="Added in 2.15.0">
+    The `http_methods_to_capture` option.
+  </Alert>
 
 ## Supported Versions
 

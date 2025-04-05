@@ -8,7 +8,7 @@ import {DeRefedOpenAPI} from './open-api/types';
 
 // SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
 // DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
-const SENTRY_API_SCHEMA_SHA = '7bc6ac1be75177f28a1989587962b06798c3449a';
+const SENTRY_API_SCHEMA_SHA = 'a49a08ac028d0822391613ce7b7930eba8d22b42';
 
 const activeEnv = process.env.GATSBY_ENV || process.env.NODE_ENV || 'development';
 
@@ -70,6 +70,7 @@ export type API = {
   pathParameters: APIParameter[];
   queryParameters: APIParameter[];
   responses: APIResponse[];
+  server: string;
   slug: string;
   bodyContentType?: string;
   descriptionMarkdown?: string;
@@ -120,18 +121,23 @@ async function apiCategoriesUncached(): Promise<APICategory[]> {
 
   Object.entries(data.paths).forEach(([apiPath, methods]) => {
     Object.entries(methods).forEach(([method, apiData]) => {
+      let server = 'https://sentry.io';
+      if (apiData.servers && apiData.servers[0]) {
+        server = apiData.servers[0].url;
+      }
       apiData.tags.forEach(tag => {
         categoryMap[tag].apis.push({
           apiPath,
           method,
           name: apiData.operationId,
+          server,
           slug: slugify(apiData.operationId),
           summary: apiData.summary,
           descriptionMarkdown: apiData.description,
-          pathParameters: apiData.parameters.filter(
+          pathParameters: (apiData.parameters || []).filter(
             p => p.in === 'path'
           ) as APIParameter[],
-          queryParameters: apiData.parameters.filter(
+          queryParameters: (apiData.parameters || []).filter(
             p => p.in === 'query'
           ) as APIParameter[],
           requestBodyContent: {

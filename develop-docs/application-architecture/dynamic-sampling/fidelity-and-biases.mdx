@@ -1,0 +1,165 @@
+---
+title: Fidelity and Biases
+sidebar_order: 2
+---
+
+Dynamic Sampling allows Sentry to automatically adjust the amount of data retained based on how valuable the data is to the user. This is technically achieved by applying a **sample rate** to every event, which is determined by a **set of rules** that are evaluated for each event.
+
+<Alert title="✨ Note">
+
+A sample rate is a number in the interval `[0.0, 1.0]` that will determine the likelihood of a transaction to be retained. For example, a sample rate of `0.5` means that the transaction will be retained on average 50% of the time.
+
+</Alert>
+
+## The Concept of Fidelity
+
+At the core of Dynamic Sampling there is the concept of **fidelity**, which translates to an overall **target sample rate** that should be applied across all spans and transactions of an organization.
+
+### Dynamic Sampling Modes
+There are two available modes to govern the target sample rates for Dynamic Sampling. The definition of both the mode and the target sample rates are implemented using the organization options `sentry:sampling_mode` and `sentry:target_sample_rate` as well as the project option `sentry:target_sample_rate`.
+
+- **Automatic Mode** dynamically manages the target sample rate for each project based on the target sample rate for the organization, prioritizing lower volume projects to increase visibility. Automatic Mode is active if the organization option `sentry:sampling_mode` is set to `organization`. The target sample rate for the organization is stored in the **organization** option `sentry:target_sample_rate`, and project target sample rates are calculated based on the organization target sample rate.
+- **Manual Mode** allows the user to set static target sample rates on a per-project basis that serve as the baseline sample rate before applying the dynamic biases outlined below. Target sample rates are not adjusted by the system. Manual Mode is active if the organization option `sentry:sampling_mode` is set to `project`. The target sample rates for projects are stored in the **project** option `sentry:target_sample_rate`.
+
+All functionality defaults to Automatic Mode if the option `sentry:sampling_mode` is not set, and all target sample rates default to 1 if the option `sentry:target_sample_rate` is not set.
+
+When the user switches between modes, target sample rates are transferred unless changed explicitly. For example, if the user switches from Automatic Mode to Manual Mode, the sample rates calculated during Automatic Mode are persisted in the project option `sentry:target_sample_rate`. Conversely, if the user switches from Manual Mode to Automatic Mode, the project target sample rates are recalculated based on the overall organization target sample rate.
+
+The [sample rates are periodically recalibrated](https://github.com/getsentry/sentry/blob/9b98be6b97323a78809a829e06dcbef26a16365c/src/sentry/dynamic_sampling/rules/biases/recalibration_bias.py#L11-L44) to ensure that the overall target sample rate is met. This recalibration is done on a project level or organization level, depending on the dynamic sampling mode. Within the target sample rate, Dynamic Sampling **biases towards more meaningful data**. This is achieved by constantly updating and communicating special rules to Relay, via a project configuration, which then applies targeted sampling to every event.
+
+![Concept of Fidelity](./images/fidelityAndPriorities.png)
+
+<Alert title="✨ Note">
+For orgs under AM2, Dynamic sampling uses a [sliding window function](https://github.com/getsentry/sentry/blob/cc8cc38c8a108719d068e5622b24a8d0c744e84c/src/sentry/dynamic_sampling/tasks/sliding_window_org.py#L37-L61) over the incoming volume to calculate the target sample rate.
+</Alert>
+
+### Approximate Fidelity
+
+It is important to note that fidelity only determines an **approximate target sample rate**, so there is flexibility in creating exact sample rates. The ingestion pipeline, composed of [Relay](https://docs.sentry.io/product/relay/) and other components, does not have the infrastructure to track volume, so it cannot create an actual weighted distribution within the target sample rate.
+
+Instead, the Sentry backend **computes a set of rules** whose goal is to cooperatively achieve the target sample rate. Determining when and how to set these rules is part of the Dynamic Sampling infrastructure.
+
+<Alert title="✨ Note">
+
+The effectively applied sample rate, in the end, depends on how much data matches each of the bias overrides.
+
+</Alert>
+
+## Trace and Transaction Sampling
+
+Sentry supports **two fundamentally different types of sampling**. While this is completely opaque to the user, these rule types provide the basic building blocks for every dynamic sampling functionality and bias.
+
+### Trace Sampling
+
+A trace is a **collection of events that are related to each other**. For example, a trace could contain events started from your frontend that are then generating events in your backend.
+
+Trace sampling ensures that **either all events of a trace are sampled, or none**. That is, these rules **always yield the same sampling decision** for every event in the same trace. This requires the cooperation of SDKs and thus allows sampling only by `project`, `release`, `environment`, and `transaction` name.
+
+To achieve trace sampling, SDKs pass all fields that can be sampled by [Dynamic Sampling Context (DSC)](/sdk/performance/dynamic-sampling-context/) (defined [here](https://getsentry.github.io/relay/relay_sampling/dsc/struct.DynamicSamplingContext.html)) as they propagate traces. _This ensures that every event from the same trace comes with the same DSC._
+
+![Trace Sampling](./images/traceSampling.png)
+
+<Alert title="✨ Note">
+
+In order to achieve full trace sampling, the random number generator used by Relay is seeded with the trace ID inside of the DSC sent by the SDK. This ensures that traces with the same trace ID will always yield the same sampling decision.
+
+</Alert>
+
+### Transaction Sampling
+
+Transaction Sampling **does not guarantee complete traces** and instead **applies to individual transactions** by looking at the incoming transaction's body. It can be used to remove unwanted transactions from traces, or to individually boost transactions at the expense of incomplete contextual traces.
+
+## Biases for Sampling
+
+A bias is a set of one or more rules that are evaluated for each event. More specifically, when we define a bias, we want to achieve a specific objective, which **can be expressed as a set of rules**. You learn more about rules on the architecture page [here](/dynamic-sampling/architecture/).
+
+Sentry has already defined a set of biases that are available to all customers. These biases have different goals, but they can be combined to express more complex semantics.
+
+Some of the biases defined by Sentry can be enabled or disabled in the UI, more specifically under **Project Settings -> Performance**, while others are enabled by default and cannot be disabled.
+
+An example of how the UI looks is shown in the following screenshot (the content of this screenshot is subject to change):
+
+![Biases in the UI](./images/biasesUI.png)
+
+
+
+### Prioritize New Releases
+
+This bias is used to prioritize traces that are coming from a new release. The goal is to increase the sample rate in the time window that occurs between the creation of a release and its adoption by users. _The identification of a new release is done in the `event_manager` defined [here](https://github.com/getsentry/sentry/blob/43d7c41aee2b22ca9f51916afac40f6cbdcd2b15/src/sentry/event_manager.py#L739-L773)._
+
+Since the adoption of a release is not constant, we created a system of _decaying_ rules which can interpolate between two sample rates in a given time window with a given function (e.g. `linear`). The idea being that we want to reduce the sample rate since the amount of samples will increase as the release gets adopted by users.
+
+![Sample Rate and Adoption](./images/sampleRateAndAdoption.png)
+
+The latest release bias uses a decaying rule to interpolate between a starting sample rate and an ending sample rate over a time window that is statically defined for each platform (the list of time to adoptions is define [here](https://github.com/getsentry/sentry/blob/9b98be6b97323a78809a829e06dcbef26a16365c/src/sentry/dynamic_sampling/rules/helpers/time_to_adoptions.py#L25). For example, Android has a bigger time window than JavaScript because on average Android apps take more time to get adopted by users.
+
+### Prioritize Dev Environments
+
+This bias is used to prioritize traces coming from a development environment in order to increase the amount of data retained for such environments, since they are more likely to be useful for debugging.
+
+To mark a trace's root transaction as belonging to a development environment, we leverage a list of known development environments, which is maintained and updated regularly by Sentry.
+
+```python
+ENVIRONMENT_GLOBS = [
+    "*debug*",
+    "*dev*",
+    "*local*",
+    "*qa*",
+    "*test*",
+    # ...
+]
+```
+
+The list of development environments is available [here](https://github.com/getsentry/sentry/blob/4cb0d863de1ef8e3440153cb440eaca8025dee0d/src/sentry/dynamic_sampling/rules/biases/boost_environments_bias.py#L7).
+
+For prioritizing dev environments, we use a sample rate of `1.0` (100%), which results in all traces being sampled.
+
+### Prioritize Low Volume Projects
+<Alert title="✨ Note">
+This bias is only active in Automatic Mode (and not in Manual Mode). It applies to any incoming trace and is defined on a per-project basis.
+</Alert>
+
+The algorithm used in this bias computes a new sample rate with the goal of prioritizing low-volume projects, which can be drowned out by high-volume projects. The mechanism used for prioritizing is similar to the low-volume transactions bias in which given the sample rate of the organization and the counts of each project, it computes a new sample rate for each project, assuming an ideal distribution of the counts. The sample rate of the boost low volume projects bias is computed using an algorithm that leverages a dynamic sample rate obtained by measuring the incoming volume of transactions in a sliding time window, known as the target fidelity rate. This rate is obtained by calling, at fixed intervals, the `get_sampling_tier_for_volume` function (defined [here](https://github.com/getsentry/sentry/blob/f3a2220ccd3a2118a1255a4c96a9ec2010dab0d8/src/sentry/quotas/base.py#L481)).
+
+
+
+### Prioritize Low Volume Transactions
+This bias is used to prioritize low-volume transactions that can be drowned out by high-volume transactions. The goal is to rebalance sample rates of the individual transactions so that low-volume transactions are more likely to have representative samples. The bias is of type trace, which means that the transaction considered for rebalancing will be the root transaction of the trace.
+
+Prioritization of low volume transactions works slightly differently depending on the dynamic sampling mode:
+- In **Automatic Mode** (`sentry:sampling_mode` == `organization`), the output of the [boost_low_volume_projects](https://github.com/getsentry/sentry/blob/dee539472e999bf590cfc4e99b9b12981963defb/src/sentry/dynamic_sampling/tasks/boost_low_volume_transactions.py#L183) task is used as the base sample rate for the balancing algorithm.
+- In **Manual Mode** (`sentry:sampling_mode` == `project`), the project target sample rate is used as the base sample rate for the balancing algorithm.
+
+In order to rebalance transactions, the system retrieves the counts of the transactions for each project and calculates a new sample rate for each transaction.
+
+<Alert title="✨ Note">
+
+The algorithms for boosting low volume events are run periodically (with cron jobs) with a sliding window to account for changes in the incoming volume.
+
+</Alert>
+
+### Deprioritize Health Checks
+
+This bias is used to de-prioritize transactions that are classified as health checks. The goal is to reduce the amount of data retained for health checks, since they are not very useful for debugging.
+
+In order to mark a transaction as a health check, we leverage a list of known health check endpoints, which is maintained by Sentry and updated regularly.
+
+```python
+HEALTH_CHECK_GLOBS = [
+    "*healthcheck*",
+    "*healthy*",
+    "*live*",
+    "*ready*",
+    "*heartbeat*",
+    "*/health",
+    "*/healthz",
+    # ...
+]
+```
+
+The list of health check endpoints is available [here](https://github.com/getsentry/sentry/blob/4cb0d863de1ef8e3440153cb440eaca8025dee0d/src/sentry/dynamic_sampling/rules/biases/ignore_health_checks_bias.py#L14).
+
+For deprioritizing health checks, we compute a new sample rate by dividing the base sample rate of the project by a factor, which is defined [here](https://github.com/getsentry/sentry/blob/master/src/sentry/dynamic_sampling/rules/utils.py#L13-L13).
+
+
+If you want to learn more about the architecture behind Dynamic Sampling, continue to the [next page](/dynamic-sampling/architecture/).

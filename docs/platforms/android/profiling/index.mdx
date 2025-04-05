@@ -7,6 +7,10 @@ sidebar_order: 5000
 <PlatformContent includePath="profiling/index/preface" />
 <PlatformContent includePath="profiling/index/why-profiling" />
 
+<Alert level="warning" title="Important">
+  Profiling uses the Android runtime's `tracer` under the hood to sample threads. There are known issues that this `tracer` can cause crashes in certain circumstances. See this <PlatformLink to="/profiling/troubleshooting#i-see-elevated-number-of-crashes-in-the-android-runtime-when-profiling-is-activated">troubleshooting</PlatformLink> entry for more information.
+</Alert>
+
 ## Enable Tracing
 
 Profiling depends on Sentry’s Tracing product being enabled beforehand. To enable tracing in the SDK:
@@ -15,8 +19,8 @@ In `AndroidManifest.xml`:
 
 ```xml
 <application>
-    <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
-    <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
+  <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
+  <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
 </application>
 ```
 
@@ -26,30 +30,30 @@ By default, some transactions will be created automatically for common operation
 
 ## Enable Profiling
 
-<Note>
+<Alert>
 
 Android profiling is available starting in SDK version `6.16.0` and is supported on API level 22 and up.
 App start profiling is available starting in SDK version `7.3.0`.
 
-</Note>
+</Alert>
 
 In `AndroidManifest.xml`:
 
 
 ```xml
 <application>
-    <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
-    <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
-    <meta-data android:name="io.sentry.traces.profiling.sample-rate" android:value="1.0" />
-    <meta-data android:name="io.sentry.traces.profiling.enable-app-start" android:value="true" />
+  <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
+  <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
+  <meta-data android:name="io.sentry.traces.profiling.sample-rate" android:value="1.0" />
+  <meta-data android:name="io.sentry.traces.profiling.enable-app-start" android:value="true" />
 </application>
 ```
 
-<Note>
+<Alert>
 
 The `io.sentry.traces.profiling.sample-rate` setting is _relative_ to the `io.sentry.traces.sample-rate` setting.
 
-</Note>
+</Alert>
 
 ## App Start Profiling
 
@@ -58,9 +62,88 @@ This includes all methods from any `ContentProvider`, the `Application` class, a
 App start profiling can be enabled with the manifest option `io.sentry.traces.profiling.enable-app-start` as shown above, and it will respect the `io.sentry.traces.sample-rate` and the `io.sentry.traces.profiling.sample-rate`.
 If you prefer to use a <PlatformLink to="/configuration/sampling/#setting-a-sampling-function">sampling function</PlatformLink>, the SDK sets the `isForNextAppStart` field on the `TransactionContext` to specify it will be used for the next app start profiling.
 
-<Note>
+<Alert>
 
 The SDK won't run app start profiling the very first time the app runs, as the SDK won't have read the options by the time the profile should run.
 The SDK will set the `isForNextAppStart` flag in `TransactionContext` if app start profiling is enabled.
 
-</Note>
+</Alert>
+
+## Continuous Profiling
+
+<Alert>
+
+This feature is experimental and may have bugs.
+
+</Alert>
+
+_(New in version 8.5.0)_
+
+The current profiling implementation stops the profiler automatically after 30 seconds (unless you manually stop it earlier). Naturally, this limitation makes it difficult to get full coverage of your app's execution. We now offer an experimental continuous mode, where profiling data is periodically uploaded while running, with no limit to how long the profiler may run.
+
+Previously, profiles only ran in tandem with performance transactions that were started either automatically or manually with `Sentry.startTransaction`. Now, you can start and stop the profiler directly with `Sentry.startProfiler` and `Sentry.stopProfiler`. You can also start a profile at app launch by setting `SentryOptions.startProfilerOnAppStart = true` in your call to `SentryAndroid.init`.
+
+Continuous profiling requires only the `SentryOptions.profileSessionSampleRate` option to be set when you start the SDK to opt in. If you had previously set `SentryOptions.profilesSampleRate` or `SentryOptions.profilesSampler` to use transaction-based profiling, then remove those lines of code from your configuration.
+
+There are two ways to start the profiler: manually, calling `Sentry.startProfiler` and `Sentry.stopProfiler` to start and stop the profiler, or automatically whenever a sampled trace starts and finishes. The latter behaviour is very similar to the current profiling implementation. You can control this behaviour setting `SentryOptions.profileLifecycle` to `manual` or `trace` in your call to `SentryAndroid.init`.
+
+<Alert title="Note">
+
+Continuous profiling has implications for your org's billing structure. This feature is only available for subscription plans that enrolled after June 5, 2024.
+
+</Alert>
+
+```xml {filename:AndroidManifest.xml}
+<application>
+  <meta-data android:name="io.sentry.traces.profiling.session-sample-rate" android:value="1.0" />
+  <meta-data android:name="io.sentry.traces.profiling.lifecycle" android:value="manual" />
+  <meta-data android:name="io.sentry.traces.profiling.start-on-app-start" android:value="true" />
+</application>
+```
+
+Or, if you are manually instrumenting Sentry:
+
+
+```java {tabTitle:Java}
+import io.sentry.android.core.SentryAndroid;
+
+SentryAndroid.init(this, options -> {
+  options.setDsn("___PUBLIC_DSN___");
+  // Currently under experimental options:
+  options.getExperimental().setProfileSessionSampleRate(1.0);
+  // In manual mode, you need to start and stop the profiler manually using Sentry.startProfiler and Sentry.stopProfiler
+  // In trace mode, the profiler will start and stop automatically whenever a sampled trace starts and finishes
+  options.getExperimental().setProfileLifecycle(ProfileLifecycle.MANUAL);
+  // Start profiling automatically as early as possible, to capture app startup
+  // If profileLifecycle is set to `manual`: stopProfiler must be called manually when the app startup is completed
+  // If profileLifecycle is set to `trace`: profiling will automatically be stopped when the app start root span ends
+  options.getExperimental().setStartProfilerOnAppStart(true);
+});
+// Start profiling
+Sentry.startProfiler();
+
+// After all profiling is done, stop the profiler. Profiles can last indefinitely if not stopped.
+Sentry.stopProfiler();
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.android.core.SentryAndroid
+
+SentryAndroid.init(this) { options ->
+  options.dsn = "___PUBLIC_DSN___"
+  // Currently under experimental options:
+  options.experimental.profileSessionSampleRate = 1.0
+  // In manual mode, you need to start and stop the profiler manually using Sentry.startProfiler and Sentry.stopProfiler
+  // In trace mode, the profiler will start and stop automatically whenever a sampled trace starts and finishes
+  options.experimental.profileLifecycle = ProfileLifecycle.MANUAL
+  // Start profiling automatically as early as possible, to capture app startup
+  // If profileLifecycle is set to `manual`: stopProfiler must be called manually when the app startup is completed
+  // If profileLifecycle is set to `trace`: profiling will automatically be stopped when the app start root span ends
+  options.experimental.startProfilerOnAppStart = true
+}
+// Start profiling
+Sentry.startProfiler()
+
+// After all profiling is done, stop the profiler. Profiles can last indefinitely if not stopped.
+Sentry.stopProfiler()
+```

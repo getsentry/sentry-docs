@@ -1,9 +1,8 @@
 ---
 title: Overview
+description: The following is a guide for implementing a new Sentry SDK. It covers the protocol for event submission as well as guidelines for how clients should typically look and behave.
 sidebar_order: 1
 ---
-
-The following is a guide for implementing a new Sentry SDK. It covers the protocol for event submission as well as guidelines for how clients should typically look and behave.
 
 ## Writing an SDK
 
@@ -28,12 +27,12 @@ Additionally, the following features are highly encouraged:
 -   Non-blocking event submission
 -   Context data helpers (e.g. setting the current user, recording breadcrumbs)
 -   Event sampling
--   Honor Sentry’s <Link to="/sdk/rate-limiting/">Rate Limiting</Link> HTTP headers
+-   Honor Sentry’s <Link to="/sdk/expected-features/rate-limiting/">Rate Limiting</Link> HTTP headers
 -   Pre and Post event send hooks
 -   Local variable values in stack trace (on platforms where this is possible)
 -   Send an `environment` on each event. If none was detected or set by the user, `production` should be used.
 
-<Link to="/sdk/features#features">Please see the features page</Link> for descriptions of commonly expected Sentry SDK features.
+Please see the <Link to="/sdk/expected-features#features">expected features page</Link> for descriptions of commonly Sentry SDK features.
 
 ## Usage for End-users
 
@@ -78,7 +77,7 @@ Sentry.init({
 })
 ```
 
-<Alert title="Note" level="info">
+<Alert title="Note">
 SDKs should accept an empty DSN as valid configuration.
 
 If an SDK is not initialized or if it is initialized with an empty DSN, the SDK should not send any data over the network, such as captured exceptions.
@@ -119,8 +118,7 @@ All segments, including PROJECT_ID, are of type String.
 
 Sentry provides the following endpoints:
 
-- <Link to="/sdk/envelopes">/envelope/</Link> for any submission using Envelopes.
-- <Link to="/sdk/store">/store/</Link> for plain JSON event submission.
+- <Link to="/sdk/data-model/envelopes">/envelope/</Link> for any submission using Envelopes.
 - [`/minidump/`](https://docs.sentry.io/platforms/native/minidump/) for multipart requests containing Minidumps.
 - [`/unreal/`](https://docs.sentry.io/platforms/unreal/configuration/setup-crashreporter/) for Unreal
   Engine 4 crash reports.
@@ -170,7 +168,7 @@ The `sentry_secret` must only be included if a secret key portion was contained
 in the DSN.  Future versions of the protocol will fully deprecate the secret
 key.
 
-<Alert title="Note" level="info">
+<Alert title="Note">
 You should include the SDK version string in the User-Agent portion of the header, and it will be used if `sentry_client` is not sent in the auth header.
 </Alert>
 
@@ -200,7 +198,7 @@ it’s possible to send these values via the querystring:
 `sentry_timestamp`
 
 : The unix timestamp representing the time at which this event was generated.
-  *This key is effectively deprecated, and it is ignored on the receiving side. Use the [`sent_at` envelope header](/sdk/envelopes/#envelope-headers) instead.*
+  *This key is effectively deprecated, and it is ignored on the receiving side. Use the [`sent_at` envelope header](/sdk/data-model/envelopes/#envelope-headers) instead.*
 
 `sentry_secret`
 
@@ -264,6 +262,7 @@ and Sentry:
 - `deflate`: Using [zlib](http://tools.ietf.org/html/rfc1950) structure with the
   [deflate](http://tools.ietf.org/html/rfc1951) compression algorithm.
 - `br`: Using the [Brotli](https://en.wikipedia.org/wiki/Brotli) algorithm.
+- `zstd`: Using the [zstd](https://datatracker.ietf.org/doc/html/rfc8878) algorithm.
 
 ## Transfer Encoding
 
@@ -295,6 +294,8 @@ happens immediately that may result in a different response code (and message).
 
 ## Handling Errors
 
+### Server Errors
+
 We **highly encourage** that your SDK handle failures from the Sentry server
 gracefully. Specifically, SDKs must honor the `429` status code and not attempt
 sending until the `Retry-After` kicks in. SDKs should drop events if Sentry is
@@ -321,7 +322,7 @@ The `X-Sentry-Error` header and response body will not always contain a message,
 but they can still be helpful in debugging clients. When emitted, they will
 contain a precise error message, which is useful to identify root cause.
 
-<Alert title="Note" level="info">
+<Alert title="Note">
 We do not recommend that SDKs retry event submissions automatically on error
 &nbsp; not even if `Retry-After` is declared in the response headers. If a
 request fails once, it is very likely to fail again on the next attempt.
@@ -329,11 +330,25 @@ Retrying too often may cause further rate limiting or blocking by the Sentry
 server.
 </Alert>
 
+### SDK Errors
+
+We try our best to make our SDKs error-free. We are an exception monitoring service after all
+and throwing our own exceptions is awkward. However, if our SDKs do throw exceptions, we have to make
+sure we swallow them gracefully and emit an error level log describing the failure.
+
+As a **design principle**, we never capture Sentry events for exceptions happening within our SDKs, including within user-defined callbacks and hooks such as `before_send` or `traces_sampler`.
+
+The reason we avoid capturing internal SDK exceptions is that we are already in an event capturing flow
+where the scope has been applied and capturing another event at that point in the lifecycle
+would lead to undefined behavior. In the worst case, we could create a busy loop of creating and sending events repeatedly until the system crashes.
+
+In mobile SDKs, unhandled crashes will still make it to Sentry via the crash handlers. See [SDK Crash Detection](https://github.com/getsentry/sentry/tree/master/src/sentry/utils/sdk_crashes#sdk-crash-detection) for more details.
+
 ## Concurrency (Scope and Hubs)
 
 SDKs are supposed to provide standardized concurrency handling through the
 concept of hubs and scopes.  This is explained in more details in the
-<Link to="/sdk/unified-api#concurrency">Concurrency</Link> chapter of the unified API docs.
+<Link to="/sdk/miscellaneous/unified-api#concurrency">Concurrency</Link> chapter of the unified API docs.
 
 ## Layer of Integration
 

@@ -22,12 +22,17 @@ export function middleware(request: NextRequest) {
   return handleRedirects(request);
 }
 
+// don't send Permanent Redirects (301) in dev mode - it gets cached for "localhost" by the browser
+const redirectStatusCode = process.env.NODE_ENV === 'development' ? 302 : 301;
+
 const handleRedirects = (request: NextRequest) => {
   const urlPath = request.nextUrl.pathname;
 
   const redirectTo = redirectMap.get(urlPath);
   if (redirectTo) {
-    return NextResponse.redirect(new URL(redirectTo, request.url), {status: 301});
+    return NextResponse.redirect(new URL(redirectTo, request.url), {
+      status: redirectStatusCode,
+    });
   }
 
   // If we don't find an exact match, we try to look for a :guide placeholder
@@ -50,7 +55,7 @@ const handleRedirects = (request: NextRequest) => {
     );
 
     return NextResponse.redirect(new URL(finalRedirectToPath, request.url), {
-      status: 301,
+      status: redirectStatusCode,
     });
   }
 
@@ -76,6 +81,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/javascript/performance/instrumentation/custom-instrumentation/caches-module/',
     to: '/platforms/javascript/guides/node/performance/instrumentation/custom-instrumentation/caches-module/',
+  },
+  {
+    from: '/platforms/javascript/guides/nuxt/install/top-level-import/',
+    to: '/platforms/javascript/guides/nuxt/install/limited-server-tracing/',
   },
   {
     from: '/account/early-adopter-features/discord/',
@@ -147,7 +156,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/data-management-settings/dynamic-sampling/',
-    to: '/product/performance/',
+    to: '/product/insights/overview/',
   },
   {
     from: '/product/data-management-settings/event-grouping/',
@@ -214,6 +223,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/go/guides/fasthttp/',
   },
   {
+    from: '/platforms/go/fiber/',
+    to: '/platforms/go/guides/fiber/',
+  },
+  {
     from: '/platforms/go/echo/',
     to: '/platforms/go/guides/echo/',
   },
@@ -224,6 +237,14 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/go/negroni/',
     to: '/platforms/go/guides/negroni/',
+  },
+  {
+    from: '/platforms/go/zerolog/',
+    to: '/platforms/go/guides/zerolog/',
+  },
+  {
+    from: '/platforms/go/slog/',
+    to: '/platforms/go/guides/slog/',
   },
   {
     from: '/platforms/go/logrus/',
@@ -488,6 +509,18 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/python/tryton/',
     to: '/platforms/python/integrations/tryton/',
+  },
+  {
+    from: '/platforms/python/integrations/feature-flags/launchdarkly/',
+    to: '/platforms/python/integrations/launchdarkly/',
+  },
+  {
+    from: '/platforms/python/integrations/feature-flags/openfeature/',
+    to: '/platforms/python/integrations/openfeature/',
+  },
+  {
+    from: '/platforms/python/integrations/feature-flags/unleash/',
+    to: '/platforms/python/integrations/unleash/',
   },
   {
     from: '/clients/python/breadcrumbs/',
@@ -818,12 +851,28 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/android/integrations/file-io/',
   },
   {
+    from: '/platforms/java/tracing/instrumentation/apollo/',
+    to: '/platforms/java/tracing/instrumentation/apollo4/',
+  },
+  {
+    from: '/platforms/java/guides/spring/tracing/instrumentation/apollo/',
+    to: '/platforms/java/guides/spring/tracing/instrumentation/apollo4/',
+  },
+  {
+    from: '/platforms/java/guides/spring-boot/tracing/instrumentation/apollo/',
+    to: '/platforms/java/guides/spring-boot/tracing/instrumentation/apollo4/',
+  },
+  {
     from: '/platforms/android/performance/instrumentation/apollo/',
-    to: '/platforms/android/integrations/apollo/',
+    to: '/platforms/android/integrations/apollo4/',
   },
   {
     from: '/platforms/android/configuration/integrations/apollo/',
-    to: '/platforms/android/integrations/apollo/',
+    to: '/platforms/android/integrations/apollo4/',
+  },
+  {
+    from: '/platforms/android/integrations/apollo/',
+    to: '/platforms/android/integrations/apollo4/',
   },
   {
     from: '/platforms/android/configuration/integrations/fragment/',
@@ -1254,10 +1303,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/security-legal-pii/security/security-policy-reporting/',
   },
   {
-    from: '/platforms/javascript/security-policy-reporting/',
-    to: '/security-legal-pii/security/security-policy-reporting/',
-  },
-  {
     from: '/platforms/javascript/troubleshooting/session-replay/',
     to: '/platforms/javascript/session-replay/troubleshooting/',
   },
@@ -1299,10 +1344,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/javascript/sourcemaps/uploading-without-debug-ids/',
-    to: '/platforms/javascript/sourcemaps/troubleshooting_js/',
-  },
-  {
-    from: '/platforms/javascript/guides/nextjs/sourcemaps/troubleshooting_js/legacy-uploading-methods/',
     to: '/platforms/javascript/sourcemaps/troubleshooting_js/',
   },
   {
@@ -1585,6 +1626,32 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/platforms/javascript/guides/:guide/tracing/instrumentation/opentelemetry/',
     to: '/platforms/javascript/guides/:guide/opentelemetry/',
   },
+  // START  bandaid fix for #11870
+  {
+    from: '/platforms/java/performance/instrumentation/opentelemetry/',
+    to: '/platforms/java/tracing/instrumentation/opentelemetry/',
+  },
+  {
+    from: '/platforms/go/performance/instrumentation/opentelemetry/',
+    to: '/platforms/go/tracing/instrumentation/opentelemetry/',
+  },
+  {
+    from: '/platforms/javascript/guides/node/performance/instrumentation/opentelemetry/',
+    to: '/platforms/javascript/guides/node/opentelemetry/',
+  },
+  {
+    from: '/platforms/python/performance/instrumentation/opentelemetry/',
+    to: '/platforms/python/tracing/instrumentation/opentelemetry/',
+  },
+  {
+    from: '/platforms/ruby/performance/instrumentation/opentelemetry/',
+    to: '/platforms/ruby/tracing/instrumentation/opentelemetry/',
+  },
+  {
+    from: '/platforms/ruby/metrics/',
+    to: '/platforms/ruby/',
+  },
+  // END  bandaid fix for #11870
   {
     from: '/learn/cli/configuration/',
     to: '/cli/configuration/',
@@ -2210,10 +2277,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/dashboards/',
   },
   {
-    from: '/product/error-monitoring/dashboards/',
-    to: '/product/dashboards/',
-  },
-  {
     from: '/profiling/',
     to: '/product/explore/profiling/',
   },
@@ -2237,10 +2300,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/profiling/mobile-app-profiling/metrics/',
     to: '/product/explore/profiling/mobile-app-profiling/metrics/',
   },
-  {
-    from: '/product/error-monitoring/filtering/',
-    to: '/concepts/data-management/filtering/',
-  },
+
   {
     from: '/data-management/rollups/',
     to: '/concepts/data-management/event-grouping/',
@@ -2386,92 +2446,124 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/relay/modes/',
   },
   {
+    from: '/product/performance/',
+    to: '/product/sentry-basics/performance-monitoring/',
+  },
+  {
+    from: '/product/performance/getting-started/',
+    to: '/product/insights/getting-started/',
+  },
+  {
+    from: '/product/performance/filters-display/',
+    to: '/product/insights/overview/filters-display/',
+  },
+  {
+    from: '/product/performance/filters-display/widgets/',
+    to: '/product/insights/overview/filters-display/widgets/',
+  },
+  {
+    from: '/product/performance/trends/',
+    to: '/product/insights/overview/trends/',
+  },
+  {
+    from: '/product/performance/transaction-summary/',
+    to: '/product/insights/overview/transaction-summary/',
+  },
+  {
+    from: '/product/performance/metrics/',
+    to: '/product/insights/overview/metrics/',
+  },
+  {
+    from: '/product/performance/performance-overhead/',
+    to: '/product/insights/performance-overhead/',
+  },
+  {
     from: '/product/performance/database/',
-    to: '/product/performance/queries/',
+    to: '/product/insights/backend/queries/',
   },
   {
     from: '/product/performance/query-insights/',
-    to: '/product/performance/queries/',
+    to: '/product/insights/backend/queries/',
   },
   {
     from: '/product/sentry-basics/metrics/',
-    to: '/product/performance/retention-priorities/',
+    to: '/product/insights/retention-priorities/',
   },
   {
     from: '/product/sentry-basics/sampling/',
-    to: '/product/performance/retention-priorities/',
+    to: '/product/insights/retention-priorities/',
   },
   {
     from: '/product/data-management-settings/server-side-sampling/',
-    to: '/product/performance/retention-priorities/',
+    to: '/product/insights/retention-priorities/',
   },
   {
     from: '/product/data-management-settings/server-side-sampling/getting-started/',
-    to: '/product/performance/retention-priorities/',
+    to: '/product/insights/retention-priorities/',
   },
   {
     from: '/product/data-management-settings/server-side-sampling/current-limitations/',
-    to: '/product/performance/retention-priorities/',
+    to: '/product/insights/retention-priorities/',
   },
   {
     from: '/product/data-management-settings/server-side-sampling/sampling-configurations/',
-    to: '/product/performance/retention-priorities/',
+    to: '/product/insights/retention-priorities/',
   },
   {
     from: '/product/data-management-settings/dynamic-sampling/current-limitations/',
-    to: '/product/performance/retention-priorities/',
+    to: '/product/insights/retention-priorities/',
   },
   {
     from: '/product/data-management-settings/dynamic-sampling/sampling-configurations/',
-    to: '/product/performance/retention-priorities/',
+    to: '/product/insights/retention-priorities/',
   },
   {
     from: '/product/performance/performance-at-scale/',
-    to: '/product/performance/retention-priorities/',
+    to: '/product/insights/retention-priorities/',
   },
   {
     from: '/product/performance/performance-at-scale/getting-started/',
-    to: '/product/performance/retention-priorities/',
+    to: '/product/insights/retention-priorities/',
   },
   {
     from: '/product/performance/performance-at-scale/benefits-performance-at-scale/',
-    to: '/product/performance/retention-priorities/',
+    to: '/product/insights/retention-priorities/',
   },
   {
     from: '/performance/',
-    to: '/product/performance/',
+    to: '/product/insights/',
   },
   {
     from: '/performance/display/',
-    to: '/product/performance/',
+    to: '/product/insights/',
   },
   {
     from: '/performance-monitoring/performance/',
-    to: '/product/performance/',
+    to: '/product/insights/',
   },
   {
     from: '/performance/performance-tab/',
-    to: '/product/performance/',
+    to: '/product/insights/overview',
   },
   {
     from: '/performance/performance-homepage/',
-    to: '/product/performance/',
+    to: '/product/insights/',
   },
   {
     from: '/performance-monitoring/setup/',
-    to: '/product/performance/getting-started/',
+    to: '/product/insights/getting-started/',
   },
   {
     from: '/performance-monitoring/getting-started/',
-    to: '/product/performance/getting-started/',
+    to: '/product/insights/getting-started/',
   },
   {
     from: '/performance-monitoring/performance/metrics/',
-    to: '/product/performance/metrics/',
+    to: '/product/insights/overview/metrics/',
   },
   {
     from: '/product/performance/display/',
-    to: '/product/performance/filters-display/',
+    to: '/product/insights/overview/filters-display/',
   },
   {
     from: '/product/issues/issue-owners/',
@@ -2498,20 +2590,8 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/issues/ownership-rules/',
   },
   {
-    from: '/product/error-monitoring/issue-owners/',
-    to: '/product/issues/ownership-rules/',
-  },
-  {
     from: '/product/releases/suspect-commits/',
     to: '/product/issues/suspect-commits/',
-  },
-  {
-    from: '/product/error-monitoring/',
-    to: '/product/issues/',
-  },
-  {
-    from: '/product/error-monitoring/reprocessing/',
-    to: '/product/issues/reprocessing/',
   },
   {
     from: '/product/accounts/early-adopter-features/issue-archiving/',
@@ -2573,17 +2653,18 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/product/issues/performance-issues/large-http-payload/',
     to: '/product/issues/issue-details/performance-issues/large-http-payload/',
   },
-  {
-    from: '/product/error-monitoring/breadcrumbs/',
-    to: '/product/issues/issue-details/breadcrumbs/',
-  },
+
   {
     from: '/learn/breadcrumbs/',
     to: '/product/issues/issue-details/breadcrumbs/',
   },
   {
     from: '/product/issues/issue-details/suggested-fix/',
-    to: '/product/issues/issue-details/ai-suggested-solution/',
+    to: '/product/issues/issue-details/sentry-ai/',
+  },
+  {
+    from: '/product/issues/issue-details/ai-suggested-solution/',
+    to: '/product/issues/issue-details/sentry-ai/',
   },
   {
     from: '/guides/grouping-and-fingerprints/',
@@ -2711,7 +2792,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/clientdev/interfaces/http/',
-    to: 'https://develop.sentry.dev/sdk/event-payloads/request',
+    to: 'https://develop.sentry.dev/sdk/data-model/event-payloads/request',
   },
   {
     from: '/clients/csharp/',
@@ -2824,14 +2905,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/android/performance/custom-instrumentation/',
     to: '/platforms/android/performance/',
-  },
-  {
-    from: '/platforms/elixir/usage/set-level/',
-    to: '/platforms/elixir/usage/',
-  },
-  {
-    from: '/platforms/elixir/usage/sdk-fingerprinting/',
-    to: '/platforms/elixir/usage/',
   },
   {
     from: '/platforms/elixir/data-management/event-grouping/',
@@ -3202,10 +3275,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/organization/authentication/two-factor-authentication/',
   },
   {
-    from: '/platforms/go/guides/fiber/',
-    to: '/platforms/go/',
-  },
-  {
     from: '/platforms/go/guides/fiber/user-feedback/configuration/',
     to: '/platforms/go/user-feedback/',
   },
@@ -3246,10 +3315,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/explore/session-replay/web/replay-page-and-filters/',
   },
   {
-    from: '/platforms/nintendo-switch/',
-    to: '/platforms/unity/native-support/',
-  },
-  {
     from: '/product/teams/roles/',
     to: '/organization/membership/#team-level-roles',
   },
@@ -3276,6 +3341,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/api/projects/post-project-service-hooks/',
     to: '/api/projects/register-a-new-service-hook/',
+  },
+  {
+    from: '/api/organizations/list-your-organizations/',
+    to: '/api/users/list-your-organizations/',
   },
   {
     from: '/clients/cocoa/',
@@ -3316,6 +3385,18 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/clients/cordova/',
     to: '/platforms/javascript/guides/cordova/',
+  },
+  {
+    from: '/organization/integrations/incidentio/',
+    to: '/organization/integrations/issue-tracking/incidentio/',
+  },
+  {
+    from: '/contributing/onboarding-wizard/',
+    to: '/contributing/',
+  },
+  {
+    from: '/security-legal-pii/security/security-policy-reporting/',
+    to: '/platform-redirect/?next=/security-policy-reporting/',
   },
 ];
 
@@ -3398,7 +3479,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/architecture/',
-    to: '/application/architecture/',
+    to: '/application-architecture/',
   },
   {
     from: '/sentry-vs-getsentry/',
@@ -3490,7 +3571,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/sdk/features/data-handling/',
-    to: '/sdk/data-handling/',
+    to: '/sdk/expected-features/data-handling/',
   },
   {
     from: '/sdk/craft-quick-start/',
@@ -3511,6 +3592,381 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/sdk/distributed-tracing/',
     to: '/sdk/telemetry/traces/distributed-tracing/',
+  },
+  // New Sidebar structure
+  {
+    from: '/development/',
+    to: '/development-infrastructure/',
+  },
+  {
+    from: '/development/environment/',
+    to: '/development-infrastructure/environment/',
+  },
+  {
+    from: '/development/environment/ports/',
+    to: '/development-infrastructure/environment/ports/',
+  },
+  {
+    from: '/development/environment/u2f/',
+    to: '/development-infrastructure/environment/u2f/',
+  },
+  {
+    from: '/development/environment/pycharm/',
+    to: '/development-infrastructure/environment/pycharm/',
+  },
+  {
+    from: '/development/commit-messages/',
+    to: '/engineering-practices/commit-messages/',
+  },
+  {
+    from: '/development/code-review/',
+    to: '/engineering-practices/code-review/',
+  },
+  {
+    from: '/development/documentation/',
+    to: '/engineering-practices/documentation/',
+  },
+  {
+    from: '/development/workflow/',
+    to: '/development-infrastructure/workflow/',
+  },
+  {
+    from: '/development/testing/',
+    to: '/development-infrastructure/testing/',
+  },
+  {
+    from: '/development/continuous-integration/',
+    to: '/development-infrastructure/continuous-integration/',
+  },
+  {
+    from: '/development/ngrok/',
+    to: '/development-infrastructure/ngrok/',
+  },
+  {
+    from: '/development/devservices/',
+    to: '/development-infrastructure/devservices/',
+  },
+  {
+    from: '/development/rust/',
+    to: '/engineering-practices/rust/',
+  },
+  {
+    from: '/development/analytics/',
+    to: '/development-infrastructure/analytics/',
+  },
+  {
+    from: '/application/',
+    to: '/application-architecture/',
+  },
+  {
+    from: '/application/architecture/',
+    to: '/application-architecture/overview/',
+  },
+  {
+    from: '/application/dynamic-sampling/',
+    to: '/application-architecture/dynamic-sampling/',
+  },
+  {
+    from: '/application/dynamic-sampling/the-big-picture/',
+    to: '/application-architecture/dynamic-sampling/the-big-picture/',
+  },
+  {
+    from: '/application/dynamic-sampling/fidelity-and-biases/',
+    to: '/application-architecture/dynamic-sampling/fidelity-and-biases/',
+  },
+  {
+    from: '/application/dynamic-sampling/architecture/',
+    to: '/application-architecture/dynamic-sampling/architecture/',
+  },
+  {
+    from: '/application/dynamic-sampling/outcomes/',
+    to: '/application-architecture/dynamic-sampling/outcomes/',
+  },
+  {
+    from: '/application/feedback-architecture/',
+    to: '/application-architecture/feedback-architecture/',
+  },
+  {
+    from: '/application/control-silo/',
+    to: '/application-architecture/multi-region-deployment/control-silo/',
+  },
+  {
+    from: '/application/cross-region-replication/',
+    to: '/application-architecture/multi-region-deployment/cross-region-replication/',
+  },
+  {
+    from: '/application/cross-region-rpc/',
+    to: '/application-architecture/multi-region-deployment/cross-region-rpc/',
+  },
+  {
+    from: '/application/config/',
+    to: '/application-architecture/config/',
+  },
+  {
+    from: '/application-architecture/config/',
+    to: '/backend/config/',
+  },
+  {
+    from: '/application/sentry-vs-getsentry/',
+    to: '/application-architecture/sentry-vs-getsentry/',
+  },
+
+  {
+    from: '/frontend/development-server/',
+    to: '/development-infrastructure/frontend-development-server/',
+  },
+  {
+    from: '/api-server/',
+    to: '/backend/',
+  },
+  {
+    from: '/api-server/api/',
+    to: '/backend/api/',
+  },
+  {
+    from: '/api-server/api/basics/',
+    to: '/backend/api/basics/',
+  },
+  {
+    from: '/api-server/api/design/',
+    to: '/backend/api/design/',
+  },
+  {
+    from: '/api-server/api/concepts/',
+    to: '/backend/api/concepts/',
+  },
+  {
+    from: '/api-server/api/public/',
+    to: '/backend/api/public/',
+  },
+  {
+    from: '/api-server/api/checklist/',
+    to: '/backend/api/checklist/',
+  },
+  {
+    from: '/api-server/api/serializers/',
+    to: '/backend/api/serializers/',
+  },
+  {
+    to: '/development-infrastructure/backend-development-server/',
+    from: '/backend/development-server/',
+  },
+  {
+    from: '/backend/python-dependencies/',
+    to: '/development-infrastructure/python-dependencies/',
+  },
+  {
+    from: '/backend/database-migrations/',
+    to: '/backend/application-domains/database-migrations/',
+  },
+  {
+    from: '/api-server/application-domains/database-migrations/',
+    to: '/backend/application-domains/database-migrations/',
+  },
+  {
+    from: '/backend/feature-flags/',
+    to: '/backend/application-domains/feature-flags/',
+  },
+  {
+    from: '/api-server/application-domains/feature-flags/',
+    to: '/develop/application-domains/feature-flags/',
+  },
+  {
+    from: '/backend/feature-flags/flagpole/',
+    to: '/backend/application-domains/feature-flags/flagpole/',
+  },
+  {
+    from: '/api-server/application-domains/feature-flags/flagpole/',
+    to: '/develop/application-domains/feature-flags/flagpole/',
+  },
+  {
+    from: '/backend/feature-flags/options-backed-features/',
+    to: '/backend/application-domains/feature-flags/options-backed-features/',
+  },
+  {
+    from: '/api-server/application-domains/feature-flags/options-backed-features/',
+    to: '/develop/application-domains/feature-flags/options-backed-features/',
+  },
+  {
+    from: '/backend/options/',
+    to: '/backend/application-domains/options/',
+  },
+  {
+    from: '/api-server/application-domains/options/',
+    to: '/develop/application-domains/options/',
+  },
+  {
+    from: '/backend/transaction-clustering/',
+    to: '/backend/application-domains/transaction-clustering/',
+  },
+  {
+    from: '/api-server/application-domains/transaction-clustering/',
+    to: '/develop/application-domains/transaction-clustering/',
+  },
+  {
+    from: '/backend/grouping/',
+    to: '/backend/application-domains/grouping/',
+  },
+  {
+    from: '/api-server/application-domains/grouping/',
+    to: '/develop/application-domains/grouping/',
+  },
+  {
+    from: '/backend/outboxes/',
+    to: '/backend/application-domains/outboxes/',
+  },
+  {
+    from: '/api-server/application-domains/outboxes/',
+    to: '/develop/application-domains/outboxes/',
+  },
+  {
+    from: '/backend/issue-platform-detectors/',
+    to: '/backend/issue-platform/writing-detectors/',
+  },
+  {
+    from: '/api-server/issue-platform/writing-detectors/',
+    to: '/develop/issue-platform/writing-detectors/',
+  },
+  {
+    from: '/api-server/issue-platform/',
+    to: '/develop/issue-platform/',
+  },
+  {
+    from: '/backend/queue/',
+    to: '/backend/application-domains/asynchronous-workers/',
+  },
+  {
+    from: '/api-server/application-domains/asynchronous-workers/',
+    to: '/develop/application-domains/asynchronous-workers/',
+  },
+  {
+    from: '/backend/email/',
+    to: '/backend/application-domains/email/',
+  },
+  {
+    from: '/api-server/application-domains/email/',
+    to: '/develop/application-domains/email/',
+  },
+  {
+    from: '/backend/kafka/',
+    to: '/backend/application-domains/kafka/',
+  },
+  {
+    from: '/api-server/application-domains/kafka/',
+    to: '/develop/application-domains/kafka/',
+  },
+  {
+    from: '/backend/metrics/',
+    to: '/backend/application-domains/metrics/',
+  },
+  {
+    from: '/api-server/application-domains/metrics/',
+    to: '/develop/application-domains/metrics/',
+  },
+  {
+    from: '/backend/nodestore/',
+    to: '/backend/application-domains/nodestore/',
+  },
+  {
+    from: '/api-server/application-domains/nodestore/',
+    to: '/develop/application-domains/nodestore/',
+  },
+  {
+    from: '/backend/digests/',
+    to: '/backend/application-domains/digests/',
+  },
+  {
+    from: '/api-server/application-domains/digests/',
+    to: '/develop/application-domains/digests/',
+  },
+  {
+    from: '/backend/quotas/',
+    to: '/backend/application-domains/quotas/',
+  },
+  {
+    from: '/api-server/application-domains/quotas/',
+    to: '/develop/application-domains/quotas/',
+  },
+  {
+    from: '/backend/tsdb/',
+    to: '/backend/application-domains/tsdb/',
+  },
+  {
+    from: '/api-server/application-domains/tsdb/',
+    to: '/develop/application-domains/tsdb/',
+  },
+  {
+    from: '/backend/pii/',
+    to: '/backend/application-domains/pii/',
+  },
+  {
+    from: '/api-server/application-domains/pii/',
+    to: '/develop/application-domains/pii/',
+  },
+  {
+    from: '/backend/pii/methods/',
+    to: '/backend/application-domains/pii/methods/',
+  },
+  {
+    from: '/api-server/application-domains/pii/methods/',
+    to: '/develop/application-domains/pii/methods/',
+  },
+  {
+    from: '/backend/pii/types/',
+    to: '/backend/application-domains/pii/types/',
+  },
+  {
+    from: '/api-server/application-domains/pii/types/',
+    to: '/develop/application-domains/pii/types/',
+  },
+  {
+    from: '/backend/pii/selectors/',
+    to: '/backend/application-domains/pii/selectors/',
+  },
+  {
+    from: '/api-server/application-domains/pii/selectors/',
+    to: '/develop/application-domains/pii/selectors/',
+  },
+  {
+    from: '/backend/buffers/',
+    to: '/backend/application-domains/write-buffers/',
+  },
+  {
+    from: '/api-server/application-domains/write-buffers/',
+    to: '/develop/application-domains/write-buffers/',
+  },
+  {
+    from: '/backend/translations/',
+    to: '/backend/application-domains/translations/',
+  },
+  {
+    from: '/api-server/application-domains/translations/',
+    to: '/develop/application-domains/translations/',
+  },
+  {
+    from: '/backend/ab-testing/',
+    to: '/backend/application-domains/ab-testing/',
+  },
+  {
+    from: '/api-server/application-domains/ab-testing/',
+    to: '/develop/application-domains/ab-testing/',
+  },
+  /* Ingestion section rework */
+  {
+    from: '/relay/',
+    to: '/ingestion/relay/',
+  },
+  {
+    from: '/relay/projectconfig-versioning/',
+    to: '/ingestion/relay/projectconfig-versioning/',
+  },
+  {
+    from: '/relay/transaction-span-ratelimits/',
+    to: '/ingestion/relay/transaction-span-ratelimits/',
+  },
+  {
+    from: '/relay/relay-best-practices/',
+    to: '/ingestion/relay/relay-best-practices/',
   },
 ];
 

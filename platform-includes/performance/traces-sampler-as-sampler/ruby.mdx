@@ -9,7 +9,7 @@ Sentry.init do |config|
 
     # the sampling context also has the full rack environment if you want to check the path directly
     rack_env = sampling_context[:env]
-    return 0.0 if rack_env['PATH_INFO'] =~ /health_check/
+    return 0.0 if rack_env && rack_env['PATH_INFO'] =~ /health_check/
 
     # transaction_context is the transaction object in hash form
     # keep in mind that sampling happens right after the transaction is initialized
@@ -34,7 +34,7 @@ Sentry.init do |config|
       else
         0.1
       end
-    when /sidekiq/
+    when /queue/
       0.01 # you may want to set a lower rate for background jobs if the number is large
     else
       0.0 # ignore all other transactions

@@ -3,17 +3,17 @@ title: Attachments
 description: "Learn more about how Sentry can store additional files in the same request as event attachments."
 ---
 
-<Note>
+<Alert>
 
 This feature is supported in version 3.0 and higher of Sentry's .NET SDK.
 
-</Note>
+</Alert>
 
 Sentry can enrich your events for further investigation by storing additional files, such as config or log files, as attachments.
 
 ## Creating Attachments
 
-The simplest way to create an attachment is to use a `path`. The SDK will read the contents of the file each time it prepares an event or transaction, then adds the attachment to the same [envelope](https://develop.sentry.dev/sdk/envelopes/). If the SDK can't read the file, the SDK logs an error message and drops the attachment.
+The simplest way to create an attachment is to use a `path`. The SDK will read the contents of the file each time it prepares an event or transaction, then adds the attachment to the same [envelope](https://develop.sentry.dev/sdk/data-model/envelopes/). If the SDK can't read the file, the SDK logs an error message and drops the attachment.
 
 <PlatformContent includePath="enriching-events/attachment-init-with-path" />
 
@@ -33,17 +33,31 @@ The filename is the name of the file to display in Sentry. When using bytes you 
 
 The type of content stored in this attachment. Any [MIME type](https://www.iana.org/assignments/media-types/media-types.xhtml) may be used; the default is `application/octet-stream`.
 
+`mimetype`
+
+The specific media content type that determines how the attachment is rendered in the Sentry UI. We currently support and can render the following MIME types:
+
+- `text/plain`
+- `text/css`
+- `text/csv`
+- `text/html`
+- `text/javascript`
+- `text/json` or `text/x-json` or `application/json` or `application/ld+json`
+- `image/jpeg`
+- `image/png`
+- `image/gif`
+
 ## Uploading Attachments
 
 Unity features a global <PlatformLink to="/enriching-events/scopes/">scope</PlatformLink> to which you add an attachment that will be sent with every event.
 
 <PlatformContent includePath="enriching-events/attachment-upload" />
 
-<Note>
+<Alert>
 
 Sentry allows at most 20MB for a compressed request, and at most 100MB of uncompressed attachments per event, including the crash report file (if applicable). Uploads exceeding this size are rejected with HTTP error `413 Payload Too Large` and the data is dropped immediately. To add larger or more files, consider secondary storage options.
 
-</Note>
+</Alert>
 
 Attachments persist for 30 days; if your total storage included in your quota is exceeded, attachments will not be stored. You can delete attachments or their containing events at any time. Deleting an attachment does not affect your quota - Sentry counts an attachment toward your quota as soon as it is stored.
 
@@ -56,6 +70,14 @@ To limit access to attachments, navigate to your organization's **General Settin
 <Include name="common-imgs/attachments-access" />
 
 By default, access is granted to all members when storage is enabled. If a member does not have access to the project, the ability to download an attachment is not available; the button will be greyed out in Sentry. The member may only view that an attachment is stored.
+
+## Store Minidumps as Attachments
+
+<Include name="store-minidumps-as-attachments-intro" />
+
+<Alert>☝ This feature is supported on Windows, Linux, and Android.</Alert>
+
+<Include name="store-minidumps-as-attachments-configuration" />
 
 ## Viewing Attachments
 

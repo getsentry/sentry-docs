@@ -21,7 +21,7 @@ jobs:
           app_id: ${{ vars.SENTRY_INTERNAL_APP_ID }}
           private_key: ${{ secrets.SENTRY_INTERNAL_APP_PRIVATE_KEY }}
 
-      - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4
+      - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4
         id: setup-node
         with:
           node-version-file: 'package.json'
@@ -57,13 +57,15 @@ jobs:
         with:
           github-token: ${{ steps.token.outputs.token }}
 
-  # TODO(mjq): Bring this back once tests are working.
   job_test:
     name: Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.1.1
-      - uses: getsentry/action-setup-volta@c52be2ea13cfdc084edb806e81958c13e445941e # v1.2.0
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: 'package.json'
       - uses: actions/cache@v4
         id: cache
         with:
@@ -72,5 +74,4 @@ jobs:
       - run: yarn install --frozen-lockfile
         if: steps.cache.outputs.cache-hit != 'true'
       - name: Run Tests
-        # run: yarn test
-        run: true
+        run: yarn test

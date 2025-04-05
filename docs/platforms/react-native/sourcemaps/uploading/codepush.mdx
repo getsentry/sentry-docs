@@ -1,0 +1,117 @@
+---
+title: CodePush
+sidebar_order: 100
+description: "Upload source maps for CodePush releases."
+---
+
+Sentry's React Native SDK works out of the box with CodePush. To see readable stack traces in the product, you must upload source maps to Sentry. This guide explains how to upload source maps for CodePush releases, that are created with the AppCenter CLI.
+
+## Prerequisites
+
+- [Sign up for an account](https://sentry.io/signup/)
+- [Set up Sentry React Native SDK](/platforms/react-native)
+- [Set up Sentry Metro Plugin](/platforms/react-native/manual-setup/metro)
+  - The plugin ensures that Debug IDs are enabled and used to link source maps to bundles.
+
+## Wrap Your App
+
+Ensure `codePush` is the outer most function because it needs access to the root component in order to swap out the bundle.
+
+```javascript
+export default codePush(Sentry.wrap(App));
+```
+
+## Create CodePush Release
+
+To ensure Sentry can symbolicate events from your CodePush releases, you need to generate and upload the necessary assets. When creating a CodePush release, include the `--sourcemap-output-dir` flag to generate source maps. This allows you to upload these files to Sentry in the next step.
+
+```bash {tabTitle:JSC (Standalone)}
+code-push-standalone release-react \
+  "${APP_NAME}" \
+  "${PLATFORM}" \
+  --deploymentName "${DEPLOYMENT_NAME}" \
+  --outputDir ./build \
+  --sourcemapOutput ./build
+```
+
+```bash {tabTitle:Hermes (Standalone)}
+rm -rf ./build
+CODEPUSH_COMMAND="code-push-standalone release-react \
+  \"${APP_NAME}\" \
+  \"${PLATFORM}\" \
+  --deploymentName \"${DEPLOYMENT_NAME}\" \
+  --useHermes \
+  --outputDir ./build \
+  --sourcemapOutput ./build"
+
+DEBUG_ID=$(eval "$CODEPUSH_COMMAND" | tee /dev/tty | grep -o 'Bundle Debug ID: [0-9a-f-]*' | sed 's/Bundle Debug ID: //')
+
+MAP_FILE=$(find ./build -name "*.map" -type f)
+jq -c ". + {\"debug_id\": \"${DEBUG_ID}\"}" "${MAP_FILE}" > "${MAP_FILE}.tmp"
+mv "${MAP_FILE}.tmp" "${MAP_FILE}"
+```
+
+```bash {tabTitle:JSC (AppCenter)}
+appcenter codepush release-react \
+  --app "${APP_NAME}" \
+  --deployment-name "${DEPLOYMENT_NAME}" \
+  --output-dir ./build \
+  --sourcemap-output-dir ./build
+```
+
+```bash {tabTitle:Hermes (AppCenter)}
+rm -rf ./build
+CODEPUSH_COMMAND="appcenter codepush release-react \
+  --app \"${APP_NAME}\" \
+  --deployment-name \"${DEPLOYMENT_NAME}\" \
+  --use-hermes \
+  --output-dir ./build \
+  --sourcemap-output-dir ./build"
+
+DEBUG_ID=$(eval "$CODEPUSH_COMMAND" | tee /dev/tty | grep -o 'Bundle Debug ID: [0-9a-f-]*' | sed 's/Bundle Debug ID: //')
+
+MAP_FILE=$(find ./build -name "*.map" -type f)
+jq -c ". + {\"debug_id\": \"${DEBUG_ID}\"}" "${MAP_FILE}" > "${MAP_FILE}.tmp"
+mv "${MAP_FILE}.tmp" "${MAP_FILE}"
+```
+
+### Notes
+
+If you are using Hermes make sure `jq` is installed on your system. If it's not, you can install it using your system's package manager. For example `apt-get install jq` on Ubuntu, or `brew install jq` on macOS with Homebrew.
+
+## Upload Source Maps
+
+Upload source maps for your CodePush release by setting up your environment variables and running the `sourcemaps upload` command.
+
+Before running the upload command, make sure to set up your environment variables.
+
+```bash {tabTitle:Environment Variables}
+export SENTRY_ORG=___ORG_SLUG___
+export SENTRY_PROJECT=___PROJECT_SLUG___
+export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+To upload source maps for your CodePush release, use the `sourcemaps upload` command.
+
+```bash {tabTitle:Sentry CLI}
+npx sentry-cli sourcemaps upload \
+  --debug-id-reference \
+  --strip-prefix /path/to/project/root \
+  ./build
+```
+
+## Notes
+
+### Optional Release and Dist
+
+To associate the uploaded artifacts with the CodePush release, use the `--release` and `--dist` options, which are parameters of the sentry-cli command. Make sure that events reported by the SDK have the same `release` and `dist` values. You can follow the default schema `${BUNDLE}@${VERSION}+${BUILD}` for `release` and `${BUILD}` for `dist` or set the values manually in `Sentry.init`. This is optional when uploading artifacts with Debug IDs.
+
+### Using `codePush.getUpdateMetadata`
+
+If you rely on `codePush.getUpdateMetadata` to get the CodePush Update Label, use `Sentry.setTag` to associate the CodePush Update Label with the captured events. This will enable you to filter events in the Sentry UI based on the label. We discourage using `codePush.getUpdateMetadata` to initialize the SDK as it delays the initialization and errors before the CodePush Update Label is available won't be reported to Sentry.
+
+```javascript
+codePush.getUpdateMetadata().then((update) => {
+  Sentry.setTag('codepush', update.label);
+});
+```

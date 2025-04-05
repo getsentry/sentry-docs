@@ -1,0 +1,38 @@
+---
+title: Feature Branches
+description: How-to for syncing long-running feature branches.
+sidebar_order: 30
+---
+
+Sometimes we have long-running feature branches that can't be merged into `master` yet because they contain breaking changes (e.g. `sentry-sdk-2.0`, `potel-base` in python SDK, `8.x.x` in Java SDK). They have to be kept in sync with `master`/`main` though.
+
+You might be tempted to branch off the feature branch and do the merge there, maybe make a PR so that you can double check the changes in the UI and make sure CI is green. In that case you need to make sure you **don't actually commit the merge from another branch** — the merge commit needs to be directly on the feature branch, otherwise `git` doesn't set the parent commits for the merge commit properly and the feature branch will still have unresolved conflicts (even though you literally just resolved them).
+
+## How to sync so that merge conflicts are recognized as resolved
+
+If you still want the nice GH diff and have CI run on your changes:
+
+- check out the feature branch and `git merge master` into it
+- solve conflicts (while still on the feature branch)
+- commit the merge (still on the feature branch)
+- *(if you're already confident all is good, you can just short circuit and push now, otherwise:)*
+- then open a new branch from your feature branch `git checkout -b sync-feature-with-master`
+- push the new branch, make a PR, look at the nice diff in GitHub, see if the tests pass
+- if everything looks ok: don't merge the PR! this will not mark the merge conflicts as solved
+- instead, `git checkout` your feature branch (with the merge commit on top) and `push` it
+
+## Alternative solution A (used for Java SDK `8.x.x` branch)
+
+This does not show the full history on each file. The history only works on the full repo. Please try another method.
+
+- Create a PR for merging `main` into `8.x.x`
+- Once that PR is merged into `8.x.x` there will still be conflicts shown in the PR for merging `8.x.x` back to `main`
+- Do another merge of `main` into `8.x.x` where you accept all changes on the `8.x.x` branch and create an empty merge commit
+- NOTE: If there are new commits on `main` this won't work correctly
+
+
+## Alternative solution B (untested)
+
+- Create a merge PR for merging `main` into e.g. `8.x.x`
+- When merging the PR do not squash but create a merge commit (might have to enable this in repo settings first)
+- If someone tests this, please update the docs here

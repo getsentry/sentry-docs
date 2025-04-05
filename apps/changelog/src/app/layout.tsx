@@ -4,6 +4,7 @@ import {Theme} from '@radix-ui/themes';
 import type {Metadata} from 'next';
 import {Rubik} from 'next/font/google';
 import Script from 'next/script';
+import PlausibleProvider from 'next-plausible';
 
 const rubik = Rubik({
   weight: ['400', '500', '700'],
@@ -33,17 +34,14 @@ export const metadata: Metadata = {
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="en">
+      <head>
+        <PlausibleProvider domain="changelog.sentry.io" />
+      </head>
       <body className={`${rubik.variable}`}>
         <Theme accentColor="iris" grayColor="sand" radius="large" scaling="95%">
           {children}
         </Theme>
       </body>
-      <Script
-        defer
-        data-domain="docs.sentry.io,rollup.sentry.io"
-        data-api="https://plausible.io/api/event"
-        src="https://plausible.io/js/script.tagged-events.js"
-      />
     </html>
   );
 }

@@ -1,10 +1,10 @@
 ---
 title: Metro
-description: "Learn about the Metro bundler and how to configure it for your your application with Sentry React Native SDK."
+description: "Learn about the Metro bundler and how to configure it for your application with Sentry React Native SDK."
 sidebar_order: 3
 ---
 
-Sentry's React Native SDK package ships with a Sentry Metro Serializer which allows you to automatically generate Debug IDs for your applications' bundles. This is crucial for making source maps work properly with Sentry.
+Sentry's React Native SDK package ships with a Sentry Metro Plugin which allows you to automatically generate Debug IDs for your applications' bundles. This is crucial for making source maps work properly with Sentry. The plugin also helps you to annotate React component names so they are available in breadcrumbs and minimize the bundle size by removing unused SDK features.
 This page will guide you through the process of setting up the Metro Plugin for your application.
 
 ## Prerequisities
@@ -15,11 +15,11 @@ This page will guide you through the process of setting up the Metro Plugin for 
 
 ## Configuration
 
-The Sentry React Native SDK allows multiple ways to configure the Sentry Metro Serializer, depending on your current use of `customeSerializer` in your Metro configuration.
+The Sentry React Native SDK allows multiple ways to configure the Sentry Metro Plugin, depending on your current use of the Metro configuration.
 
-### Use Sentry Metro Serializer
+### Use the Sentry Metro Plugin
 
-The example below shows how to use the Sentry Metro Serializer if you don't have any `customSerializers` (the default configuration).
+The example below shows how to use the Sentry Metro Plugin with the default config.
 
 ```javascript {tabTitle:React Native} {filename:metro.config.js}
 const { getDefaultConfig } = require("@react-native/metro-config");
@@ -34,7 +34,42 @@ module.exports = withSentryConfig(config);
 const { getSentryExpoConfig } = require("@sentry/react-native/metro");
 
 // const config = getDefaultConfig(__dirname);
-const config = getSentryExpoConfig(config, {});
+const config = getSentryExpoConfig(__dirname);
+```
+
+### Add a Custom Babel Transformer
+
+If you already have a custom transformer, ensure that the Sentry Metro Plugin is applied as the last step. The Sentry Metro Plugin doesn't overwrite the existing configuration, it extends or wraps existing properties.
+
+```javascript {tabTitle:React Native} {filename:metro.config.js}
+const { getDefaultConfig } = require("@react-native/metro-config");
+const { withSentryConfig } = require('@sentry/react-native/metro');
+
+const config = getDefaultConfig(__dirname);
+
+config.transformer = {
+  ...config.transformer,
+  babelTransformerPath: require.resolve('react-native-custom-transformer'),
+};
+
+module.exports = withSentryConfig(config);
+```
+
+```javascript {tabTitle:Expo} {filename:metro.config.js}
+const { getDefaultConfig } = require('@expo/metro-config');
+const { getSentryExpoConfig } = require('@sentry/react-native/metro');
+
+const config = getSentryExpoConfig(__dirname, {
+  getDefaultConfig: (projectRoot, options) => {
+    const config = getDefaultConfig(projectRoot, options);
+
+    config.transformer = {
+      ...config.transformer,
+      babelTransformerPath: require.resolve('react-native-custom-transformer/expo'),
+    };
+    return config;
+  },
+});
 ```
 
 ### Wrap Your Custom Serializer
@@ -46,7 +81,7 @@ const { getDefaultConfig, mergeConfig } = require("@react-native/metro-config");
 const { withSentryConfig } = require('@sentry/react-native/metro');
 
 const myCustomSerializer = (entryPoint, preModules, graph, options) => {
-  let bundle = perapreBundle(entryPoint, preModules, graph, options);
+  let bundle = prepareBundle(entryPoint, preModules, graph, options);
   if (options.sentryBundleCallback) {
     // Callback adds Sentry Debug IDs module to the bundle
     bundle = options.sentryBundleCallback(bundle);

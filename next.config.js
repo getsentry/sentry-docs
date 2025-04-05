@@ -4,7 +4,9 @@ const {codecovNextJSWebpackPlugin} = require('@codecov/nextjs-webpack-plugin');
 const {withSentryConfig} = require('@sentry/nextjs');
 
 const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
-  ? {}
+  ? {
+      '/**/*': ['./.git/**/*', './apps/**/*', 'docs/**/*'],
+    }
   : {
       '/**/*': [
         './.git/**/*',
@@ -12,17 +14,7 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         'develop-docs/**/*',
         'node_modules/@esbuild/darwin-arm64',
       ],
-      '/platform-redirect': [
-        'docs/organization/integrations/**/*',
-        'docs/product/**/*',
-        'docs/concepts/**/*',
-        'docs/api/**/*',
-        'docs/pricing/**/*',
-        'docs/account/**/*',
-        '**/*.gif',
-        'public/mdx-images/**/*',
-        '*.pdf',
-      ],
+      '/platform-redirect': ['**/*.gif', 'public/mdx-images/**/*', '*.pdf'],
       '\\[\\[\\.\\.\\.path\\]\\]': [
         'docs/**/*',
         'node_modules/prettier/plugins',
@@ -31,17 +23,21 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
       'sitemap.xml': ['docs/**/*', 'public/mdx-images/**/*', '*.gif', '*.pdf', '*.png'],
     };
 
+if (
+  process.env.NODE_ENV !== 'development' &&
+  (!process.env.NEXT_PUBLIC_SENTRY_DSN || !process.env.SENTRY_DSN)
+) {
+  throw new Error(
+    'Missing required environment variables: NEXT_PUBLIC_SENTRY_DSN and SENTRY_DSN must be set in production'
+  );
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
-
   trailingSlash: true,
-
-  experimental: {
-    serverComponentsExternalPackages: ['rehype-preset-minify'],
-    outputFileTracingExcludes,
-  },
-
+  serverExternalPackages: ['rehype-preset-minify'],
+  outputFileTracingExcludes,
   webpack: (config, options) => {
     config.plugins.push(
       codecovNextJSWebpackPlugin({
@@ -59,11 +55,18 @@ const nextConfig = {
     DEVELOPER_DOCS_: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
   },
   redirects,
+  // https://github.com/vercel/next.js/discussions/48324#discussioncomment-10748690
+  cacheHandler: require.resolve(
+    'next/dist/server/lib/incremental-cache/file-system-cache.js'
+  ),
+  sassOptions: {
+    silenceDeprecations: ['legacy-js-api'],
+  },
 };
 
 module.exports = withSentryConfig(nextConfig, {
   org: 'sentry',
-  project: 'docs',
+  project: process.env.NEXT_PUBLIC_DEVELOPER_DOCS ? 'develop-docs' : 'docs',
 
   // Suppresses source map uploading logs during build
   silent: !process.env.CI,
@@ -93,4 +96,16 @@ module.exports = withSentryConfig(nextConfig, {
   unstable_sentryWebpackPluginOptions: {
     applicationKey: 'sentry-docs',
   },
+
+  _experimental: {
+    thirdPartyOriginStackFrames: true,
+  },
+});
+
+process.on('warning', warning => {
+  if (warning.code === 'DEP0040') {
+    // Ignore punnycode deprecation warning, we don't control its usage
+    return;
+  }
+  console.warn(warning); // Log other warnings
 });

@@ -1,0 +1,125 @@
+---
+title: Relay Best Practices
+sidebar_order: 10
+---
+
+Relay is a critical component in Sentry's infrastructure handling hundreds of thousands of requests per second.
+To make sure your changes to Relay go smoothly, there are some best practices to follow.
+
+For general Rust development best practices, make sure you read the [Rust Development](/engineering-practices/rust/)
+document.
+
+
+## Forward Compatibility
+
+Make sure changes to the event protocol and APIs are forward-compatible. Relay should not drop
+or truncate data it does not understand. It is a supported use-case to have customers running
+outdated Relays but up-to-date SDKs.
+
+
+## Feature Gate new Functionality
+
+
+Consider making your new feature conditional. Not only does this allow a gradual roll-out, but can also
+function as a kill-switch when something goes wrong.
+
+
+### Sentry Features
+
+Sentry features are best used for new product features. They can be gradually rolled out to a subset
+of organizations and projects.
+
+
+### Global Config
+
+Kill-switches, sample- and rollout-rates can also be configured via "global config". Global config
+is a simple mechanism to propagate a dynamic configuration from Sentry to Relay.
+
+Global config works very well for technical rollouts and kill-switches.
+
+
+### Relay Config
+
+The relay configuration file can also be used to feature gate functionality. This is best used
+for configuration which is environment specific or fundamental to how Relay operates and should not
+be used for product features.
+
+
+## Regular expressions
+
+Regular expressions are a powerful tool, they are well known and also extremely performant.
+But they aren't always the right choice for Relay.
+
+Some of the listed issues are specific to the [regex](https://docs.rs/regex/latest/regex/) Rust crate Relay uses
+and others apply to regular expressions in general.
+
+<Alert title="Important">
+Review the [Rust crate's documentation](https://docs.rs/regex/latest/regex/#overview) carefully before introducing a Regex.
+</Alert>
+
+
+### Compiling
+
+Compiling a Regex is quite costly.
+
+- Do not compile a regular expression for every element that is processed.
+- Always cache regular expressions.
+
+Static regular expressions can be cached using [`std::sync::LazyLock`](https://doc.rust-lang.org/beta/std/sync/struct.LazyLock.html).
+
+
+### User defined Regular Expressions
+
+Avoid exposing regular expressions to users. Instead, consider using a targeted domain specific language or
+glob like patterns for which Relay has good support.
+
+<Alert level="warning" title="Important">
+User-defined regexes are prone to leading to unexpected CPU or memory usage.
+Review the [Untrusted Input](https://docs.rs/regex/latest/regex/#untrusted-input) section in the regex crate documentation
+carefully.
+</Alert>
+
+
+### Avoid Unicode
+
+When not strictly necessary, specify match groups without Unicode support. For example, `\w` matches around 140000
+distinct code points, when you only need to match ASCII consider using explicit groups `[0-9A-Za-z_]` instead or disable Unicode `(?-u:\w)`
+for the group.
+
+
+## (De-)Serialization
+
+(De-)Serialization of JSON, protobuf, message-pack uses a considerable amount of CPU and memory. Be mindful when and where
+you (de-)serialize data.
+
+Relay's architecture requires all CPU heavy operations to be done on a dedicated thread pool, which is used in the so called
+[processor service](https://github.com/getsentry/relay/blob/master/relay-server/src/services/processor.rs).
+
+
+## Data Structures
+
+All data structures come with a cost, consider using the correct data structure for your workload.
+
+- A `BTreeMap` may be more performant than a `HashMap` for small amounts of data.
+- Use `ahash` (through `hashbrown::HashMap`) as hasher for a `HashMap` to reduce the hashing overhead for high throughput
+`HashMap`'s.
+- Use `smallvec` over `Vec` when your data is likely to be small.
+- Avoid iterating through large collections in regular intervals, consider using a [priority queue](https://en.wikipedia.org/wiki/Priority_queue) or
+[heap](https://doc.rust-lang.org/std/collections/struct.BinaryHeap.html) instead.
+
+
+## CPU and Memory constraints
+
+Relay operates on untrusted user input, make sure there are enough precautions taken to avoid a denial of service
+attack.
+
+- Apply size limits to payloads.
+- Limit memory consumption in Relay. For example, also apply size limits to decompression, not just the incoming compressed data.
+- Avoid exponential algorithms, often there are better data structures and algorithms available. If this is not possible, set a limit.
+
+
+## Don't panic
+
+Relay needs to be able to handle any user input without a [panic](https://doc.rust-lang.org/std/macro.panic.html).
+Always return useful errors when encountering unexpected or malformed inputs. This improves debuggability,
+guarantees stability and generates the necessary outcomes.

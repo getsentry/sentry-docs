@@ -1,0 +1,111 @@
+---
+title: Developing with Ngrok
+description: This document explains how to use ngrok with the development server.
+sidebar_title: Ngrok
+sidebar_order: 70
+---
+
+# Using Ngrok
+
+The development server can be operated behind ngrok for when you need to receive traffic from the outside world. This comes up frequently when working with integrations.
+
+It is recommended to use `getsentry` while working with integrations as it will automatically set up the correct configurations for you.
+
+Note, if the following instructions aren't working and you are using `getsentry`, check if there is some configuration that is set for your environment that is updating the following options and configs:
+```
+SENTRY_OPTIONS["system.url-prefix"]
+SENTRY_OPTIONS["system.base-hostname"]
+SENTRY_FEATURES["system:multi-region"]
+
+CSRF_TRUSTED_ORIGINS
+ALLOWED_HOSTS
+SESSION_COOKIE_DOMAIN
+CSRF_COOKIE_DOMAIN
+SUDO_COOKIE_DOMAIN
+```
+`dev.py` in `getsentry` should automatically set the correct values for these configurations.
+
+## Ngrok in Monolith mode
+
+The following steps will setup ngrok in `monolith` mode:
+
+### Step 1: Create Ngrok Config File
+Start off by defining a configuration file for `ngrok`, for example `ngrok.yml`:
+
+```yaml
+version: '2'
+authtoken: <YOUR-NGROK-AUTHTOKEN>
+tunnels:
+  acme-org:
+    proto: http
+    hostname: <yourname>.ngrok.io
+    addr: 8000
+    host_header: "rewrite"
+```
+
+You can grab your auth token from https://dashboard.ngrok.com/get-started/your-authtoken
+
+### Step 2: Start Ngrok
+Next start up ngrok with your configuration file:
+```shell
+ngrok start --all --config ngrok.yml
+```
+
+### Step 3: Start Devserver
+When starting the devserver, use the `--ngrok` flag:
+```shell
+getsentry devserver --ngrok=<yourname>.ngrok.io
+```
+
+## Ngrok in Silo mode
+
+To debug issues related to integration middleware as well as issues relating to latency induced by RPC calls, you can run your local environment in silo mode.
+
+To learn more about how silo mode works in the dev environment, refer to <Link to="/development/environment/#running-siloed-instances"> Running Siloed Instances</Link>.
+
+
+### Step 1: Split Local DB into Silos
+By default `sentry devserver` will run a monolith mode application server. You can also run ``devserver`` with siloed application instances. Before you do, you need to <Link to="/backend/database-migrations/#cloning-a-monolith-database">create split silo databases</Link>.
+
+
+### Step 2: Create Ngrok Config File
+To combine ngrok and local development servers you'll need to reserve multiple domains in ngrok, and create a configuration file for ngrok:
+
+```yaml
+version: "2"
+authtoken: <YOUR-NGROK-AUTHTOKEN>
+tunnels:
+  acme-org:
+    proto: http
+    hostname: acme-org.<yourname>.ngrok.io
+    addr: 8000
+  control-silo:
+    proto: http
+    hostname: <yourname>.ngrok.io
+    host_header: "rewrite"
+    addr: 8000
+  region-silo:
+    proto: http
+    hostname: us.<yourname>.ngrok.io
+    addr: 8010
+    host_header: "rewrite"
+```
+
+### Step 3: Start Ngrok
+Next start up ngrok with your configuration file:
+```shell
+ngrok start --all --config region.yml
+```
+
+### Step 4: Start Devserver
+In two separate terminal windows, start the devserver for the control and region silos:
+
+```shell
+getsentry devserver --ngrok <yourname>.ngrok.io --workers --celery-beat --silo=region
+getsentry devserver --ngrok <yourname>.ngrok.io --workers --celery-beat --silo=control
+```
+
+This setup will result in both the region and control servers responding to different domains. The multi-region setup with ngrok also enables customer-domains and you'll need ngrok domains for each organization you plan on using. In this configuration, CORS will work similar to production.
+
+### Setting up integrations
+When setting up integrations for your local environment and the above setup, you should add the secrets and configurations for the integrations in the `getsentry/conf/settings/devlocal.py` file.

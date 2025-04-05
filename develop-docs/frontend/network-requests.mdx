@@ -32,7 +32,7 @@ type ProjectsListProps = {org: string};
 
 function ProjectsList({org}: ProjectsListProps) {
   const {
-    isLoading,
+    isPending,
     isError,
     data: projects,
     refetch,
@@ -40,7 +40,7 @@ function ProjectsList({org}: ProjectsListProps) {
     staleTime: 0,
   });
 
-  if (isLoading) {
+  if (isPending) {
     return <Placeholder height="100px" />;
   }
 
@@ -112,7 +112,7 @@ export function useFetchProjects(
 
 // ProjectsPage.tsx
 function ProjectsPage({orgSlug}: EventsPageProps) {
-  const {isLoading, isError, data} = useFetchProjects({orgSlug});
+  const {isPending, isError, data} = useFetchProjects({orgSlug});
   return (...)
 }
 
@@ -131,7 +131,7 @@ Note that we add an `options` argument to our `useFetchProjects` hook so that co
   - If you know that your data will already be in the cache and you only want to extract the data from it, use this option to prevent rerenders when other `useApiQuery` states change.
 - `enabled: <condition>`
   - If this query is dependent on information that isn’t available yet, make sure to disable it until you have everything you need.
-  - Be aware that disabled queries will always return `isLoading: true`! Make sure to account for this in your components with disabled queries.
+  - Be aware that disabled queries will always return `isPending: true`! In these cases it is often better to use `isLoading` instead, which is the same as `isFetching && isPending`.
 
 Also make note of the function `makeFetchProjectsQueryKey`. We extract out the query key creation to its own function so that consumers of this hook can also update and refetch without having to recreate the query key manually, which can be prone to error.
 
@@ -142,7 +142,7 @@ Reusable queries like this can be placed in `/sentry/actionsCreators`.
 There are many situations where your query data becomes out of date and needs to be updated or refetched. This is usually because of some user input (e.g. creating/deleting/editing a record). If you already know what the new data should look like, you can (and should) immediately update the cache using the query client:
 
 ```tsx
-import {setQueryData, queryClient} from 'utils/queryClient'
+import {setQueryData, useQueryClient} from 'utils/queryClient'
 
 const queryClient = useQueryClient();
 

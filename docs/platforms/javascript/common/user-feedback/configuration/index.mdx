@@ -4,7 +4,7 @@ sidebar_order: 6100
 description: "Learn about general User Feedback configuration fields."
 ---
 
-<PlatformSection notSupported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi", "javascript.koa", "javascript.nestjs"]}>
+<PlatformSection notSupported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi",  "javascript.hono", "javascript.koa", "javascript.nestjs"]}>
 
 ## User Feedback Widget
 
@@ -18,57 +18,21 @@ The following configuration options apply to version 8.0.0 and above of the Java
 
 The following options can be configured for the integration in `feedbackIntegration({})`:
 
-| Key            | Type                                                                                      | Default           | Description                                                                                                                                                                                                                                |
-| -------------- | ----------------------------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `autoInject`   | `boolean`                                                                                 | `true`            | Injects the Feedback widget into the application when the integration is added. Set `autoInject: false` if you want to call `feedback.attachTo()` or `feedback.createWidget()` directly, or only want to show the widget on certain views. |
-| `showBranding` | `boolean`                                                                                 | `true`            | Displays the Sentry logo inside of the form.                                                                                                                                                                                               |
-| `colorScheme`  | <code>"system" \| "light" \| "dark"</code>                                                | `"system"`        | Shows the color theme choices. `"system"` will use your OS color scheme.                                                                                                                                                                   |
-| `id`           | `string`                                                                                  | `sentry-feedback` | The `id` attribute of the `<div>` that contains the feedback widget. See [CSS Customization](#css-customization) for more.                                                                                                                 |
-| `tags`         | `Record<string, number \| string \| boolean \| bigint \| symbol \| null \| undefined>` | `{}`              | <PlatformLink to="/enriching-events/tags/">Tags</PlatformLink> to set on the feedback event.                                                                                                                                                                                                         |
+| Key            | Type                                                                                   | Default           | Description                                                                                                                                                                                                                                |
+| -------------- | -------------------------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `autoInject`   | `boolean`                                                                              | `true`            | Injects the Feedback widget into the application when the integration is added. Set `autoInject: false` if you want to call `feedback.attachTo()` or `feedback.createWidget()` directly, or only want to show the widget on certain views. |
+| `showBranding` | `boolean`                                                                              | `true`            | Displays the Sentry logo inside of the form.                                                                                                                                                                                               |
+| `colorScheme`  | <code>"system" \| "light" \| "dark"</code>                                             | `"system"`        | Shows the color theme choices. `"system"` will use your OS color scheme.                                                                                                                                                                   |
+| `id`           | `string`                                                                               | `sentry-feedback` | The `id` attribute of the `<div>` that contains the feedback widget. See [CSS Customization](#css-customization) for more.                                                                                                                 |
+| `tags`         | `Record<string, number \| string \| boolean \| bigint \| symbol \| null \| undefined>` | `{}`              | <PlatformLink to="/enriching-events/tags/">Tags</PlatformLink> to set on the feedback event.                                                                                                                                               |
 
 ### Auto-Inject vs. Manual Injection
 
+Whether you want to use auto-injection, or manually control things, the integration must first be passed via the `integrations` array into `Sentry.init()`.
+
 If you have `autoInject: true` a button will be inserted into the page that triggers the form to pop up so the user can enter their feedback. If instead you want to control when this injection happens, call the `feedback.createWidget()` method to get a reference to an `Actor` object, and then call `appendToDom()` to insert it into the page.
 
-```javascript
-const feedback = feedbackIntegration({
-  // Disable injecting the default widget
-  autoInject: false,
-});
-
-// Create and render the button
-const widget = feedback.createWidget();
-
-// Later, when it's time to clean up:
-widget.removeFromDom();
-```
-```typescript {tabTitle: NextJS}
-function ToggleFeedbackButton() {
-  const [feedback, setFeedback] = useState();
-  // Read `getFeedback` on the client only, to avoid hydration errors when server rendering
-  useEffect(() => {
-    setFeedback(Sentry.getFeedback());
-  }, []);
-
-  const [widget, setWidget] = useState();
-  return (
-    <button
-      type="button"
-      onClick={async () => {
-        if (widget) {
-          widget.removeFromDom();
-          setWidget(null);
-        } else {
-          setWidget(feedback.createWidget());
-        }
-      }}
-    >
-      {widget ? "Remove Widget" : "Create Widget"}
-    </button>
-  );
-}
-```
-
+<PlatformContent includePath="user-feedback/manual-injection" />
 
 Read more about how to [use your own UI](#bring-your-own-button) below.
 
@@ -97,11 +61,16 @@ Sentry.setUser({
   email: "foo@example.com",
 });
 
-feedbackIntegration({
-  useSentryUser: {
-    name: "fullName",
-    email: "email",
-  },
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.feedbackIntegration({
+      useSentryUser: {
+        name: "fullName",
+        email: "email",
+      },
+    }),
+  ],
 });
 ```
 
@@ -111,32 +80,37 @@ Most text that you see in the default Feedback widget can be customized.
 
 The following options can be configured for the integration in `feedbackIntegration({})`:
 
-| Key                           | Default                                  | Description                                                                    |
-| ----------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------ |
-| `triggerLabel`                | `"Report a Bug"`                         | The label of the injected button that opens up the feedback form when clicked. |
-| `triggerAriaLabel`            | `triggerLabel` \|\| `"Report a Bug"`       | The aria label of the injected button that opens up the feedback form when clicked. Available starting in SDK v8.20.0. |
-| `formTitle`                   | `"Report a Bug"`                         | The title at the top of the feedback form.                                     |
-| `submitButtonLabel`           | `"Send Bug Report"`                      | The label of the submit button used in the feedback form.                      |
-| `cancelButtonLabel`           | `"Cancel"`                               | The label of cancel buttons used in the feedback form.                         |
-| `confirmButtonLabel`          | `"Confirm"`                              | The label of confirm buttons used in the feedback form.                        |
-| `addScreenshotButtonLabel`    | `"Add a screenshot"`                     | The label of the button to add a screenshot to the form.                       |
-| `removeScreenshotButtonLabel` | `"Remove screenshot"`                    | The label of the button to remove the screenshot from the form.                |
-| `nameLabel`                   | `"Name"`                                 | The label of the name input field.                                             |
-| `namePlaceholder`             | `"Your Name"`                            | The placeholder for the name input field.                                      |
-| `emailLabel`                  | `"Email"`                                | The label of the email input field.                                            |
-| `emailPlaceholder`            | `"your.email@example.org"`               | The placeholder for the email input field.                                     |
-| `isRequiredLabel`             | `"(required)"`                           | The label shown next to an input field that is required.                       |
-| `messageLabel`                | `"Description"`                          | The label for the feedback description input field.                            |
-| `messagePlaceholder`          | `"What's the bug? What did you expect?"` | The placeholder for the feedback description input field.                      |
-| `successMessageText`          | `"Thank you for your report!"`           | The message displayed after a successful feedback submission.                  |
+| Key                           | Default                                  | Description                                                                                                            |
+| ----------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `triggerLabel`                | `"Report a Bug"`                         | The label of the injected button that opens up the feedback form when clicked.                                         |
+| `triggerAriaLabel`            | `triggerLabel` \|\| `"Report a Bug"`     | The aria label of the injected button that opens up the feedback form when clicked. Available starting in SDK v8.20.0. |
+| `formTitle`                   | `"Report a Bug"`                         | The title at the top of the feedback form.                                                                             |
+| `submitButtonLabel`           | `"Send Bug Report"`                      | The label of the submit button used in the feedback form.                                                              |
+| `cancelButtonLabel`           | `"Cancel"`                               | The label of cancel buttons used in the feedback form.                                                                 |
+| `confirmButtonLabel`          | `"Confirm"`                              | The label of confirm buttons used in the feedback form.                                                                |
+| `addScreenshotButtonLabel`    | `"Add a screenshot"`                     | The label of the button to add a screenshot to the form.                                                               |
+| `removeScreenshotButtonLabel` | `"Remove screenshot"`                    | The label of the button to remove the screenshot from the form.                                                        |
+| `nameLabel`                   | `"Name"`                                 | The label of the name input field.                                                                                     |
+| `namePlaceholder`             | `"Your Name"`                            | The placeholder for the name input field.                                                                              |
+| `emailLabel`                  | `"Email"`                                | The label of the email input field.                                                                                    |
+| `emailPlaceholder`            | `"your.email@example.org"`               | The placeholder for the email input field.                                                                             |
+| `isRequiredLabel`             | `"(required)"`                           | The label shown next to an input field that is required.                                                               |
+| `messageLabel`                | `"Description"`                          | The label for the feedback description input field.                                                                    |
+| `messagePlaceholder`          | `"What's the bug? What did you expect?"` | The placeholder for the feedback description input field.                                                              |
+| `successMessageText`          | `"Thank you for your report!"`           | The message displayed after a successful feedback submission.                                                          |
 
 Example of customization:
 
 ```javascript
-feedbackIntegration({
-  buttonLabel: "Feedback",
-  submitButtonLabel: "Send Feedback",
-  formTitle: "Send Feedback",
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.feedbackIntegration({
+      buttonLabel: "Feedback",
+      submitButtonLabel: "Send Feedback",
+      formTitle: "Send Feedback",
+    })
+  ],
 });
 ```
 
@@ -162,25 +136,30 @@ The example below shows how to customize the background color for the light and 
 Alternatively, you can also do the same thing by setting theme values in JavaScript:
 
 ```javascript
-feedbackIntegration({
-  themeLight: {
-    background: "#cccccc",
-  },
-  themeDark: {
-    background: "#222222",
-  },
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.feedbackIntegration({
+      themeLight: {
+        background: "#cccccc",
+      },
+      themeDark: {
+        background: "#222222",
+      },
+    }),
+  ],
 });
 ```
 
 The following values are only available as CSS variables, and apply to both dark and light themes.
 
-| CSS Variable    | Default                                            | Description                                                                   |
-| --------------- | -------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `--font-family` | `"system-ui, 'Helvetica Neue', Arial, sans-serif"` | The default font-family to use.                                               |
-| `--font-size`   | `14px`                                             | The font size.                                                                |
-| `--z-index`     | `100000`                                           | The z-index of the widget.                                                    |
-| `--inset`       | `auto 0 0 auto`                                    | By default, the widget has fixed position, and is in the bottom right corner. |
-| `--page-margin` | `16px`                                             | The margin from the edge of the screen that the widget should be positioned.  |
+| CSS Variable    | Default                                            | Description                                                                                                                                                                   |
+| --------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--font-family` | `"system-ui, 'Helvetica Neue', Arial, sans-serif"` | The default font-family to use.                                                                                                                                               |
+| `--font-size`   | `14px`                                             | The font size.                                                                                                                                                                |
+| `--z-index`     | `100000`                                           | The z-index of the widget.                                                                                                                                                    |
+| `--inset`       | `auto 0 0 auto`                                    | By default, the widget has fixed position, and is in the bottom right corner.                                                                                                 |
+| `--page-margin` | `16px`                                             | The margin from the edge of the screen that the widget should be positioned. This also accepts shorthand values like `10px 20px 30px 10px` for top/right/bottom/left margins. |
 
 Colors can be customized by by defining CSS variables that override the default values, or by passing `themeLight` and/or `themeDark` to `feedbackIntegration({})`.
 
@@ -201,20 +180,25 @@ CSS variables take priority over configuration values in `feedbackIntegration()`
 
 ```html
 <script>
-feedbackIntegration({
-  themeLight: {
-    foreground: 'black',
-  },
-  themeDark: {
-    foreground: 'white',
-  }
-});
+  Sentry.init({
+    dsn: "___PUBLIC_DSN___",
+    integrations: [
+      Sentry.feedbackIntegration({
+        themeLight: {
+          foreground: "#000",
+        },
+        themeDark: {
+          foreground: "#fff",
+        },
+      }),
+    ],
+  });
 </script>
 
 <style>
-#sentry-feedback {
-  --foreground: 'red'; /* overrides both `white` and `black` colors */
-}
+  #sentry-feedback {
+    --foreground: "red"; /* overrides both `#fff` and `#000` above */
+  }
 </style>
 ```
 
@@ -224,15 +208,21 @@ It’s possible to set the `id` configuration value to something other than the 
 
 ```html
 <script>
-feedbackIntegration({
-  id: 'feedback-theme' // The default is 'sentry-feedback'
-});
+  Sentry.init({
+    dsn: "___PUBLIC_DSN___",
+    integrations: [
+      Sentry.feedbackIntegration({
+        id: "feedback-theme", // The default is 'sentry-feedback'
+      }),
+    ],
+  });
 </script>
 
 <style>
-#feedback-theme { /* Target the custom id */
-  --foreground: 'red';
-}
+  /* Target the custom id */
+  #feedback-theme {
+    --foreground: "red";
+  }
 </style>
 ```
 
@@ -243,11 +233,16 @@ Because it’s sometimes useful to know when a user started interacting with the
 The following options can be configured for the integration in `feedbackIntegration({})`:
 
 ```javascript
-feedbackIntegration({
-  onFormOpen: () => {},
-  onFormClose: () => {},
-  onSubmitSuccess: (data: FeedbackFormData) => {},
-  onSubmitError: (error: Error) => {},
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.feedbackIntegration({
+      onFormOpen: () => {},
+      onFormClose: () => {},
+      onSubmitSuccess: (data: FeedbackFormData) => {},
+      onSubmitError: (error: Error) => {},
+    }),
+  ],
 });
 ```
 
@@ -256,19 +251,38 @@ feedbackIntegration({
 You can use your own button instead of the default injected button to trigger the form being displayed, by calling `feedback.attachTo()` to have the SDK attach a click listener to your button. You can also supply the same customization options that the constructor accepts (for example, for text labels and colors).
 
 ```javascript
-const feedback = feedbackIntegration({
-  // Disable injecting the default widget
-  autoInject: false,
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.feedbackIntegration({
+      // Disable the injection of the default widget
+      autoInject: false,
+    })
+  ],
 });
 
-feedback.attachTo(document.querySelector("#your-button"), {
+// Get the instance returned by `feedbackIntegration()`
+const feedback = Sentry.getFeedback();
+
+feedback?.attachTo(document.querySelector("#your-button"), {
   formTitle: "Report a Bug!",
 });
 ```
+
 ```typescript {tabTitle: NextJs}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.feedbackIntegration({
+      // Disable the injection of the default widget
+      autoInject: false,
+    })
+  ],
+});
+
 function AttachToFeedbackButton() {
   const [feedback, setFeedback] = useState();
-  // Read `getFeedback` on the client only, to avoid hydration errors when server rendering
+  // Read `getFeedback` on the client only, to avoid hydration errors during server rendering
   useEffect(() => {
     setFeedback(Sentry.getFeedback());
   }, []);
@@ -293,19 +307,28 @@ function AttachToFeedbackButton() {
 Alternatively, you can call `feedback.createForm()` and have full control over when the form gets loaded, added to the dom, and finally shown to the user.
 
 ```javascript
-const feedback = feedbackIntegration({
-  // Disable injecting the default widget
-  autoInject: false,
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.feedbackIntegration({
+      // Disable the injection of the default widget
+      autoInject: false,
+    })
+  ],
 });
 
-const form = await feedback.createForm();
+// Get the instance returned by `feedbackIntegration()`
+const feedback = Sentry.getFeedback();
+
+const form = await feedback?.createForm();
 form.appendToDom();
 form.open();
 ```
+
 ```typescript {tabTitle: NextJS}
 function CreateFeedbackFromButton() {
   const [feedback, setFeedback] = useState();
-  // Read `getFeedback` on the client only, to avoid hydration errors when server rendering
+  // Read `getFeedback` on the client only, to avoid hydration errors during server rendering
   useEffect(() => {
     setFeedback(Sentry.getFeedback());
   }, []);
@@ -346,7 +369,7 @@ Sentry.captureFeedback(
   },
   {
     includeReplay: true, // optional
-    attachments: [] // optional
+    attachments: [], // optional
   }
 );
 ```
@@ -394,15 +417,18 @@ document
     });
   });
 ```
+
 </PlatformSection>
 
 ### Loading Strategies
 
 Because the `feedbackIntegration` is a user-facing integration, we offer two loading strategies that have bundle size implications.
 
-<Note>
-For most users, we recommend using `feedbackIntegration` in your `Sentry.init` call. This will set up user feedback with good defaults, matching the environment.
-</Note>
+<Alert>
+  For most users, we recommend using `feedbackIntegration` in your `Sentry.init`
+  call. This will set up user feedback with good defaults, matching the
+  environment.
+</Alert>
 
 All of the code examples on this page use `feedbackIntegration` as a default because it's available regardless of whether you've chosen the CDN or NPM installation method. However, the implementation of `feedbackIntegration` is different for the two installation methods. For NPM users, `feedbackIntegration` is an alias of `feedbackSyncIntegration`. For CDN users, `feedbackIntegration` is an alias of `feedbackAsyncIntegration`.
 
@@ -423,32 +449,32 @@ This integration includes the minimum amount of code needed upfront to show the 
 For CDN users `feedbackIntegration` is an alias of `feedbackAsyncIntegration`.
 
 ```javascript {tabTitle: Default Strategy}
-import * as Sentry from '@sentry/browser';
+import * as Sentry from "@sentry/browser";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [
     // Use the default strategy, an alias for `feedbackAsyncIntegration`
     Sentry.feedbackIntegration({
       // Additional SDK configuration goes in here, for example:
-      colorScheme: 'system',
+      colorScheme: "system",
     }),
-  ]
+  ],
 });
 ```
 
 ```javascript {tabTitle: Async Strategy}
-import * as Sentry from '@sentry/browser';
+import * as Sentry from "@sentry/browser";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [
     // Use the async strategy so everything is bundled for page load
     Sentry.feedbackAsyncIntegration({
       // Additional SDK configuration goes in here, for example:
-      colorScheme: 'system',
+      colorScheme: "system",
     }),
-  ]
+  ],
 });
 ```
 
@@ -457,47 +483,47 @@ Sentry.init({
 For NPM users `feedbackIntegration` is an alias of `feedbackSyncIntegration`.
 
 ```javascript {tabTitle: Default Strategy}
-import * as Sentry from '@sentry/browser';
+import * as Sentry from "@sentry/browser";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [
     // Use the default strategy, an alias for `feedbackSyncIntegration`
     Sentry.feedbackIntegration({
       // Additional SDK configuration goes in here, for example:
-      colorScheme: 'system',
+      colorScheme: "system",
     }),
-  ]
+  ],
 });
 ```
 
 ```javascript {tabTitle: Sync Strategy}
-import * as Sentry from '@sentry/browser';
+import * as Sentry from "@sentry/browser";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [
     // Use the sync strategy so everything is bundled for page load
     Sentry.feedbackSyncIntegration({
       // Additional SDK configuration goes in here, for example:
-      colorScheme: 'system',
+      colorScheme: "system",
     }),
-  ]
+  ],
 });
 ```
 
 ```javascript {tabTitle: Async Strategy}
-import * as Sentry from '@sentry/browser';
+import * as Sentry from "@sentry/browser";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [
     // Use the async strategy to keep bundle size lower
     Sentry.feedbackAsyncIntegration({
       // Additional SDK configuration goes in here, for example:
-      colorScheme: 'system',
+      colorScheme: "system",
     }),
-  ]
+  ],
 });
 ```
 

@@ -37,6 +37,19 @@ const isSupported = (
   return null;
 };
 
+/**
+ * Conditionally renders children based on the current platform or guide.
+ *
+ * @param supported - Array of platform/guide keys that should show this content
+ * @param notSupported - Array of platform/guide keys that should not show this content
+ * @param noGuides - If true, content will not be shown for platform guides
+ * @param children - Content to be conditionally rendered
+ * @param platform - (Optional) Override the current platform
+ *
+ * Note: This component checks against platform and guide keys (e.g. 'python', 'react').
+ * For filtering by platform categories (e.g. 'browser', 'node'),
+ * use PlatformCategorySection instead.
+ */
 export function PlatformSection({
   supported = [],
   notSupported = [],
@@ -45,6 +58,7 @@ export function PlatformSection({
 }: Props) {
   const {rootNode, path} = serverContext();
   const currentPlatformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
+
   if (!currentPlatformOrGuide) {
     return null;
   }
