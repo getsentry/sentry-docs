@@ -2,6 +2,8 @@ import {DocNode, getCurrentPlatformOrGuide, getPlatform} from 'sentry-docs/docTr
 import {serverContext} from 'sentry-docs/serverContext';
 import {Platform, PlatformGuide} from 'sentry-docs/types';
 
+import styles from './style.module.css';
+
 function getPlatformsWithFallback(
   rootNode: DocNode,
   platformOrGuide: Platform | PlatformGuide
@@ -87,5 +89,5 @@ export function PlatformSection({
     return null;
   }
 
-  return children;
+  return <div className={styles['no-space-around-ul']}>{children}</div>;
 }
