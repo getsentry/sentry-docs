@@ -27,7 +27,7 @@ export function makeKeywordsClickable(children: React.ReactNode) {
     if (ORG_AUTH_TOKEN_REGEX.test(child)) {
       makeOrgAuthTokenClickable(arr, child);
     } else if (KEYWORDS_REGEX.test(child)) {
-      const isDSNKeyword = child.startsWith('"___PUBLIC_DSN___"');
+      const isDSNKeyword = /___PUBLIC_DSN___/.test(child);
       makeProjectKeywordsClickable(arr, child, isDSNKeyword);
     } else {
       arr.push(child);
