@@ -49,7 +49,9 @@ export function DefaultSidebar({node, path}: DefaultSidebarProps) {
             data-sidebar-link
             key={node.path}
           >
-            <h6>{node.frontmatter.sidebar_title || node.frontmatter.title}</h6>
+            <div className={styles['sidebar-link-heading']}>
+              {node.frontmatter.sidebar_title || node.frontmatter.title}
+            </div>
           </Link>
           {renderChildren(node.children)}
         </Fragment>
