@@ -18,13 +18,11 @@ export type DefaultSidebarProps = SidebarProps & {
 };
 
 export type ProductSidebarProps = {
-  headerClassName: string;
   items: {root: string; title: string}[];
   rootNode: DocNode;
 };
 
 export type PlatformSidebarProps = {
-  headerClassName: string;
   platformName: string;
   rootNode: DocNode;
   guideName?: string;
