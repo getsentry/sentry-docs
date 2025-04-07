@@ -995,7 +995,7 @@ const userDocsRedirects = [
     source: '/platforms/kotlin-multiplatform/:path*',
     destination: '/platforms/kotlin/guides/kotlin-multiplatform/:path*',
   },
-   {
+  {
     source: '/platforms/python/tracing/trace-propagation/:path*',
     destination: '/platforms/python/tracing/distributed-tracing/:path*',
   },
@@ -1037,10 +1037,23 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/tracing/distributed-tracing/:path*',
   },
   {
+    source: '/platforms/javascript//tracing/instrumentation/performance-metrics/',
+    destination: '/platforms/javascript/tracing/span-metrics/',
+  },
+  {
     source:
       '/platforms/javascript/guides/:guide/tracing/instrumentation/performance-metrics/',
-    destination:
+    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/',
+  },
+  {
+    source:
+      '/platforms/javascript//tracing/instrumentation/span-metrics/performance-metrics/',
+    destination: '/platforms/javascript/tracing/span-metrics/',
+  },
+  {
+    source:
       '/platforms/javascript/guides/:guide/tracing/span-metrics/performance-metrics/',
+    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/',
   },
   {
     source: '/platforms/javascript/guides/:guide/tracing/trace-propagation/:path*',
