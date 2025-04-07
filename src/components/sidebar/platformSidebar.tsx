@@ -53,7 +53,6 @@ export function PlatformSidebar({
         title={`Sentry for ${(guide || platform).title}`}
         exclude={[`/${pathRoot}/guides/`]}
         headerClassName={headerClassName}
-        withChevron
       />
     </ul>
   );
