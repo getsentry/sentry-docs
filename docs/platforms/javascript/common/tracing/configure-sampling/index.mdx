@@ -6,18 +6,20 @@ sidebar_order: 30
 
 Sentry's tracing functionality helps you monitor application performance by capturing distributed traces, attaching attributes, and span performance across your application. However, Capturing traces for every transaction can generate significant volumes of data. Sampling allows you to control the amount of spans that are sent to Sentry from your application.
 
-## Sampling Configuration Options
-
 The JavaScript SDK provides two main options for controlling the sampling rate:
 
-1. Uniform Sample Rate (`tracesSampleRate`)
+1. [Uniform Sample Rate](#uniform-sample-rate-tracessamplerate) (recommended)
+2. [Sampling Function](#sampling-function-tracessampler)
+
+## Uniform Sample Rate (`tracesSampleRate`)
+
 `tracesSampleRate` is floating point value 0.0 and 1.0, which controls the probability that a transaction will be sampled.
 
 <PlatformContent includePath="/tracing/sample-rate" />
 
 With `tracesSampleRate` set to `0.25`, each transaction in your application is randomly sampled with a probability of 25%, so you can expect that one in every four transactions will be sent to Sentry.
 
-### Sampling Function (`tracesSampler`)
+## Sampling Function (`tracesSampler`)
 
 For more granular control, you provide a `tracesSampler` function. This approach allows you to:
 
@@ -36,16 +38,16 @@ When the `tracesSampler` function is called, it receives a `samplingContext` obj
 interface SamplingContext {
   // Name of the span/transaction
   name: string;
-  
+
   // Initial attributes of the span/transaction
   attributes: SpanAttributes | undefined;
-  
+
   // Whether the parent span was sampled (undefined if no incoming trace)
   parentSampled: boolean | undefined;
-  
+
   // Sample rate from incoming trace (undefined if no incoming trace)
   parentSampleRate: number | undefined;
-  
+
   // Utility function to inherit parent decision or fallback
   inheritOrSampleWith: (fallbackRate: number) => number;
 }
@@ -125,7 +127,7 @@ tracesSampler: (samplingContext) => {
 
 When multiple sampling mechanisms could apply, Sentry follows this order of precedence:
 
-- If `tracesSampler` is defined, its decision is used. Although the `tracesSampler` can override the parent sampling decision, most users will want to ensure their `tracesSampler` respects the parent sampling decision. 
+- If `tracesSampler` is defined, its decision is used. Although the `tracesSampler` can override the parent sampling decision, most users will want to ensure their `tracesSampler` respects the parent sampling decision.
 - If no `tracesSampler` is defined, but there is a parent sampling decision from an incoming distributed trace, we use the parent sampling decision
 - If neither of the above, `tracesSampleRate` is used
 - If `tracesSampleRate` is set to 0, no spans will be sampled, and no downstream spans will be sampled either since they inherit the parent sampling decision
@@ -134,4 +136,3 @@ When multiple sampling mechanisms could apply, Sentry follows this order of prec
 ## Conclusion
 
 Effective sampling is key to getting the most value from Sentry's performance monitoring while minimizing overhead. The `tracesSampler` function gives you precise control over which transactions to record, allowing you to focus on the most important parts of your application.
-
