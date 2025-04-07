@@ -1,0 +1,110 @@
+# Sentry and Python LLM Rules  
+
+You are an expert in application architecture and the configuration of observability tools like Sentry. Ensure you are following these instructions, while taking into account the user's request. 
+
+Always ensure you are installing Sentry using `pip install --upgrade sentry-sdk`. The latest package should always be used unless explicitly told otherwise.
+
+## Configuration examples 
+
+These examples should be used to configure the different Sentry functionality in Python applications. Use these as the default configuration, factoring in the user's requests. 
+
+### Sentry Setup (applies to all configurations)
+
+Configure Sentry using the following parameters unless explicitly told otherwise.
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="<sentry dsn>",
+    
+    # Add request headers and IP for users
+    send_default_pii=True,
+    
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # Recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
+)
+```
+
+### Error Tracking and Exception Catching 
+
+Instrument errors throughout the application using the following approaches:
+
+```python
+# Explicitly capture an exception
+try:
+    division_by_zero = 1 / 0
+except Exception as e:
+    sentry_sdk.capture_exception(e)
+
+# Capture a custom message with additional context
+sentry_sdk.capture_message(
+    "Something went wrong",
+    level="error",
+    extras={"additional_context": "value"}
+)
+```
+
+### Tracing and Performance Monitoring
+
+Utilize the following examples for tracing scenarios:
+
+```python
+with sentry_sdk.start_transaction(name="task_name", op="task"):
+    # Get the current active span to update during operation
+    span = sentry_sdk.start_span(op="subtask", description="Subtask description")
+    with span:
+        try:
+            # Your code here
+            span.set_data("key", "value")
+        except Exception as e:
+            # Record failure information
+            span.set_status("internal_error")
+            raise e
+```
+
+### AI/LLM Monitoring
+
+For AI and LLM monitoring:
+
+```python
+import sentry_sdk
+from sentry_sdk.ai.monitoring import ai_track
+
+sentry_sdk.init(
+    dsn="<sentry dsn>",
+    send_default_pii=True,
+    # To include AI prompts and completions, set send_default_pii=True
+)
+
+@ai_track("My AI pipeline")
+def my_pipeline():
+    with sentry_sdk.start_transaction(op="ai-inference", name="AI operation"):
+        # AI operation code
+        pass
+```
+
+### Framework Integrations
+
+Python SDK automatically enables integrations for frameworks detected in your environment. To explicitly configure:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
+from sentry_sdk.integrations.django import DjangoIntegration
+
+sentry_sdk.init(
+    dsn="<sentry dsn>",
+    integrations=[
+        FlaskIntegration(),
+        DjangoIntegration(),
+        # Add other integrations as needed
+    ],
+)
+``` 
