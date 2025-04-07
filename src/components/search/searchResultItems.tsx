@@ -67,7 +67,7 @@ export function SearchResultItems({
                     onClick={event => onSearchResultClick({event, hit, position: index})}
                   >
                     {hit.title && (
-                      <h6>
+                      <div className={styles['sgs-hit-title']}>
                         <span
                           dangerouslySetInnerHTML={{
                             __html: DOMPurify.sanitize(hit.title, {
@@ -75,7 +75,7 @@ export function SearchResultItems({
                             }),
                           }}
                         />
-                      </h6>
+                      </div>
                     )}
                     {hit.text && (
                       <span

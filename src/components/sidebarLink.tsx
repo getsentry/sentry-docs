@@ -27,6 +27,11 @@ interface SidebarLinkProps {
    * Indicates that the links are currently hidden. Overriden by isActive
    */
   collapsed?: boolean | null;
+
+  /**
+   * Whether to show the chevron, if the page has children
+   */
+  showChevron?: boolean;
 }
 
 export function SidebarLink({
@@ -36,6 +41,7 @@ export function SidebarLink({
   path,
   collapsed = null,
   className = '',
+  showChevron = true,
 }: SidebarLinkProps) {
   const isActive = path?.indexOf(to) === 0;
   const enableSubtree = isActive || collapsed === false;
@@ -44,10 +50,16 @@ export function SidebarLink({
   const [showSubtree, setShowSubtree] = useState(enableSubtree);
 
   return (
-    <li className={`toc-item ${className}`} data-sidebar-branch data-path={path}>
+    <li
+      className={`toc-item ${className}`}
+      data-sidebar-branch
+      data-sidebar-branch-has-subtree={hasSubtree}
+      data-path={path}
+    >
       <SidebarNavItem
         to={to}
         data-sidebar-link
+        data-sidebar-link-has-subtree={hasSubtree}
         isActive={to === getUnversionedPath(path)}
         onClick={() => {
           // Allow toggling the sidebar subtree only if the item is selected
@@ -57,9 +69,13 @@ export function SidebarLink({
         }}
       >
         {title || children}
-        {hasSubtree && <Chevron direction={showSubtree ? 'down' : 'right'} />}
+        {hasSubtree && showChevron && (
+          <Chevron direction={showSubtree ? 'down' : 'right'} />
+        )}
       </SidebarNavItem>
-      {title && children && <ul data-sidebar-tree>{showSubtree && children}</ul>}
+      {title && children && hasSubtree && (
+        <ul data-sidebar-tree>{showSubtree && children}</ul>
+      )}
     </li>
   );
 }
