@@ -100,8 +100,35 @@ type ChildrenProps = {
   showDepth?: number;
 };
 
-export function Children({tree, path, exclude = [], showDepth = 0}: ChildrenProps) {
-  return <Fragment>{renderChildren(tree, exclude, path, showDepth)}</Fragment>;
+function TopLevelChildren({tree, path, exclude = [], showDepth = 0}: ChildrenProps) {
+  return sortPages(
+    tree.filter(
+      ({name, node}) =>
+        node &&
+        !!node.context.title &&
+        name !== '' &&
+        exclude.indexOf(node.path) === -1 &&
+        !node.context.sidebar_hidden
+    ),
+    ({node}) => node!
+  ).map(({node, children: nodeChildren}) => {
+    // will not be null because of the filter above
+    if (!node) {
+      return null;
+    }
+    return (
+      <SidebarLink
+        to={node.path}
+        key={node.path}
+        title={node.context.sidebar_title || node.context.title!}
+        collapsed={false}
+        path={path}
+        showChevron={false}
+      >
+        {renderChildren(nodeChildren, exclude, path, showDepth, 1)}
+      </SidebarLink>
+    );
+  });
 }
 
 type Props = {
@@ -184,12 +211,12 @@ export function DynamicNav({
     <li className="mb-3" data-sidebar-branch>
       {header}
       {(!collapse || isActive) && entity.children && (
-        <ul data-sidebar-tree className="pl-3">
+        <ul data-sidebar-tree data-sidebar-tree-root>
           {prependLinks &&
             prependLinks.map(link => (
               <SidebarLink to={link[0]} key={link[0]} title={link[1]} path={linkPath} />
             ))}
-          <Children
+          <TopLevelChildren
             tree={entity.children}
             exclude={exclude}
             showDepth={showDepth}
