@@ -2907,14 +2907,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/android/performance/',
   },
   {
-    from: '/platforms/elixir/usage/set-level/',
-    to: '/platforms/elixir/usage/',
-  },
-  {
-    from: '/platforms/elixir/usage/sdk-fingerprinting/',
-    to: '/platforms/elixir/usage/',
-  },
-  {
     from: '/platforms/elixir/data-management/event-grouping/',
     to: '/platforms/elixir/data-management/',
   },
@@ -3321,10 +3313,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/product/explore/session-replay/replay-page-and-filters/',
     to: '/product/explore/session-replay/web/replay-page-and-filters/',
-  },
-  {
-    from: '/platforms/nintendo-switch/',
-    to: '/platforms/unity/native-support/',
   },
   {
     from: '/product/teams/roles/',

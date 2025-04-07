@@ -62,13 +62,17 @@ export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
       return platformsAndGuides;
     }
     // any of these fields can be used to match the search value
-    const keys = ['title', 'aliases', 'name', 'sdk', 'keywords'];
+    const keys = ['title', 'aliases', 'name', 'sdk', 'keywords', 'platformTitle'];
     const matches_ = matchSorter(platformsAndGuides, filter, {
       keys,
       threshold: rankings.CONTAINS,
     });
     return matches_;
   }, [filter, platformsAndGuides]);
+
+  const matchKeys = useMemo(() => {
+    return matches.map(x => x.key);
+  }, [matches]);
 
   const platformColumns: Platform[][] = splitToChunks(
     3,
@@ -161,6 +165,7 @@ export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
                   <PlatformWithGuides
                     key={platform.key}
                     platform={platform}
+                    matchKeys={matchKeys}
                     // force expand if the filter is long enough to have few results
                     forceExpand={filter.length >= 2}
                   />
@@ -180,11 +185,26 @@ export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
 function PlatformWithGuides({
   platform,
   forceExpand,
+  matchKeys,
 }: {
   forceExpand: boolean;
+  matchKeys: string[];
   platform: Platform;
 }) {
   const [expanded, setExpanded] = useState(false);
+
+  const guides = useMemo(() => {
+    const showPlatformInContent = matchKeys.includes(platform.key);
+
+    // This is the case if `platformTitle` is configured for a platform
+    // In this case, we do not need to add the platform to the list of guides
+    const hasGuideWithPlatformKey = platform.guides.some(g => g.key === platform.key);
+
+    return showPlatformInContent && !hasGuideWithPlatformKey
+      ? [platform, ...platform.guides]
+      : platform.guides;
+  }, [matchKeys, platform]);
+
   return (
     <Collapsible.Root
       className={styles.CollapsibleRoot}
@@ -217,7 +237,7 @@ function PlatformWithGuides({
         // scrollable if there are more than 8 (arbitrary limit) guides
         data-scrollable={platform.guides.length >= 8 || platform.integrations.length >= 8}
       >
-        {[platform, ...platform.guides].map((guide, i) => (
+        {guides.map((guide, i) => (
           <Link
             href={guide.url}
             style={{textDecoration: 'none', color: 'var(--foreground) !important'}}
