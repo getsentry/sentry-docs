@@ -7,6 +7,10 @@ sidebar_order: 20
 
 There are multiple ways to configure your [OpenTelemetry SDK](https://opentelemetry.io/) and send traces and spans to Sentry. They're described below.
 
+<PlatformSection supported={["java.spring", "java.spring-boot"]} notSupported={["java"]}>
+If you're unsure whether to use the Java Agent, please have a look at [what the OpenTelemetry SDK has to say about this](https://opentelemetry.io/docs/zero-code/java/spring-boot-starter/).
+</PlatformSection>
+
 ## Using `sentry-opentelemetry-agent` With Auto Initialization
 
 If you use `sentry-opentelemetry-agent`, it will look for `SENTRY_DSN` and `SENTRY_PROPERTIES_FILE` environment variables to be defined, and then initialize Sentry automatically. You'll just need to configure your `DSN` and `tracesSampleRate`.
@@ -49,7 +53,7 @@ You may also disable automatic initialization of Sentry in `sentry-opentelemetry
 
 ## Using OpenTelemetry Without Any Java Agent
 
-If the Java Agent approach isn't for you, you can manually initialize OpenTelemetry. We have a separate dependency for this use case that allows you to reuse classes used by `sentry-opentelemetry-agent`.
+If the Java Agent approach isn't for you, you can manually initialize OpenTelemetry. We have a separate dependency for this use case.
 
 ### Install
 
@@ -64,6 +68,39 @@ You'll have to configure both OpenTelemetry and Sentry to see transactions in Se
 ## OpenTelemetry and Sentry
 
 With Sentry’s OpenTelemetry SDK, an OpenTelemetry `Span` becomes a Sentry `Transaction` or `Span`. The first `Span` sent through the Sentry `SpanProcessor` is a `Transaction`, and any child `Span` gets attached to the first `Transaction` upon checking the parent `Span` context. This is true for the OpenTelemetry root `Span` and any top level `Span` in the system. For example, a request sent from frontend to backend will create an OpenTelemetry root `Span` with a corresponding Sentry `Transaction`. The backend request will create a new Sentry `Transaction` for the OpenTelemetry `Span`. The Sentry `Transaction` and `Span` are linked as a trace for navigation and error tracking purposes.
+
+### Manual Instrumentation with OpenTelemetry
+
+If you have the OpenTelemetry SDK in you classpath, you can also instrument your code manually using the OpenTelemetry API as documented [in the OpenTelemetry docs](https://opentelemetry.io/docs/languages/java/api/#span).
+
+A manually created span for HTTP requests needs to declare its `SpanKind` as well as the `HttpAttributes.HTTP_REQUEST_METHOD` attribute, so that `Sentry` can correctly process these:
+
+```java {tabTitle:Java}
+Span span = tracer.spanBuilder("myspan")
+  .setAttribute(HTTP_REQUEST_METHOD, "GET")
+  .setSpanKind(SpanKind.SERVER)
+  .startSpan();
+```
+```kotlin {tabTitle:Kotlin}
+val span = tracer.spanBuilder("myspan")
+  .setAttribute(HTTP_REQUEST_METHOD, "GET")
+  .setSpanKind(SpanKind.SERVER)
+  .startSpan()
+```
+
+### Capturing HTTP Headers
+
+By default OpenTelemetry does not capture any HTTP headers. This, however, can be configured using system properties or environment variables as per OpenTelemetry's configuration documentation [here](https://opentelemetry.io/docs/zero-code/java/agent/instrumentation/http/#capturing-http-request-and-response-headers). Each variable is a comma-separated list of HTTP header names that should be captured.
+
+#### Client variables
+
+- `OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_REQUEST_HEADERS`
+- `OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_RESPONSE_HEADERS`
+
+#### Server variables
+
+- `OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_REQUEST_HEADERS`
+- `OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_RESPONSE_HEADERS`
 
 ## Additional Configuration
 

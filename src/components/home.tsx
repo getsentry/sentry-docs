@@ -13,6 +13,7 @@ import RocketImage from 'sentry-docs/imgs/rocket.png';
 import SecurityImage from 'sentry-docs/imgs/security.png';
 import SupportImage from 'sentry-docs/imgs/support.png';
 
+import AskAiSearchParams from './askAiSearchParams';
 import {Card} from './card';
 import {Header} from './header';
 import {NavLink, NavLinkProps} from './navlink';
@@ -21,7 +22,7 @@ import {PlatformFilter} from './platformFilter';
 export function Home() {
   return (
     <div className="tw-app">
-      <Header pathname="/" searchPlatforms={[]} />
+      <Header pathname="/" searchPlatforms={[]} useStoredSearchPlatforms={false} />
       <div className="mt-[var(--header-height)]">
         <Banner />
       </div>
@@ -167,6 +168,7 @@ export function Home() {
           <SentryWordmarkLogo height={50} fill="#ffffff" />
         </div>
       </footer>
+      <AskAiSearchParams />
     </div>
   );
 }

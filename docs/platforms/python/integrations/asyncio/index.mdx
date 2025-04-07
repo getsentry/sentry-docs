@@ -13,12 +13,13 @@ pip install --upgrade 'sentry-sdk'
 
 ## Configure
 
-Add `AsyncioIntegration()` to your list of `integrations`, enable tracing and be sure to call `sentry_sdk.init()` at the beginning of your async loop:
+Add `AsyncioIntegration()` to your list of `integrations`, enable tracing and be sure to call `sentry_sdk.init()` **at the beginning of the first `async` function you call**, as shown in the example below.
 
+<Alert level="warning">
 
-In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
+If you call `sentry_sdk.init()` outside of an `async` function in an async application, the SDK will not behave as expected.
 
-Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+</Alert>
 
 <OnboardingOptionButtons
   options={[
@@ -28,13 +29,16 @@ Select which Sentry features you'd like to install in addition to Error Monitori
   ]}
 />
 
-```python {filename:main.py} {"onboardingOptions": {"performance": "7-9", "profiling": "10-13"}}
+```python {filename:main.py} {"onboardingOptions": {"performance": "10-12", "profiling": "13-16"}}
 import sentry_sdk
 from sentry_sdk.integrations.asyncio import AsyncioIntegration
 
 async def main():
     sentry_sdk.init(
         dsn="___PUBLIC_DSN___",
+        # Add data like request headers and IP for users, if applicable;
+        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+        send_default_pii=True,
         # Set traces_sample_rate to 1.0 to capture 100%
         # of transactions for tracing.
         traces_sample_rate=1.0,

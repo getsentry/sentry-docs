@@ -1,0 +1,116 @@
+---
+title: Migrating Version 7.x to 8.0
+sidebar_order: 995
+description: "Learn about migrating from version 7.x to 8.0.0"
+---
+
+## Migrating from `io.sentry:sentry` `7.x` to `io.sentry:sentry` `8.0.0`
+
+Please make sure to use the same version for all Sentry dependencies, otherwise you might face an `AbstractMethodError` runtime error.
+
+### Breaking Changes
+
+- `Contexts` no longer extends `ConcurrentHashMap`, instead we offer a selected set of methods.
+- `sentry-android-okhttp` has been removed in favor of `sentry-okhttp`, making the module independent from android ([#3510](https://github.com/getsentry/sentry-java/pull/3510))
+- Throw IllegalArgumentException when calling Sentry.init on Android ([#3596](https://github.com/getsentry/sentry-java/pull/3596))
+- Metrics have been removed from the SDK ([#3774](https://github.com/getsentry/sentry-java/pull/3774))
+  - Metrics will return but we don't know in what exact form yet
+- `enableTracing` option (a.k.a `enable-tracing`) has been removed from the SDK ([#3776](https://github.com/getsentry/sentry-java/pull/3776))
+  - Please set `tracesSampleRate` to a value >= 0.0 for enabling performance instead. The default value is `null` which means performance is disabled.
+- Change OkHttp sub-spans to span attributes ([#3556](https://github.com/getsentry/sentry-java/pull/3556))
+  - This will reduce the number of spans created by the SDK
+- Replace `synchronized` methods and blocks with `ReentrantLock` (`AutoClosableReentrantLock`) ([#3715](https://github.com/getsentry/sentry-java/pull/3715))
+  - If you are subclassing any Sentry classes, please check if the parent class used `synchronized` before. Please make sure to use the same lock object as the parent class in that case.
+- `traceOrigins` option (`io.sentry.traces.tracing-origins` in manifest) has been removed, please use `tracePropagationTargets` (`io.sentry.traces.trace-propagation-targets` in manifest`) instead ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+- `profilingEnabled` option (`io.sentry.traces.profiling.enable` in manifest) has been removed, please use `profilesSampleRate` (`io.sentry.traces.profiling.sample-rate` in manifest) instead ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+    - Please set `profileSampleRate` to a value >= 0.0 for enabling profiling instead. The default value is `null` which means profiling is disabled.
+- `shutdownTimeout` option has been removed, please use `shutdownTimeoutMillis` instead ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+- `profilingTracesIntervalMillis` option for Android has been removed ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+- `io.sentry.session-tracking.enable` manifest option has been removed ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+- `Sentry.traceHeaders()` method has been removed, please use `Sentry.getTraceparent()` instead ([#3718](https://github.com/getsentry/sentry-java/pull/3718))
+- `Sentry.reportFullDisplayed()` method has been removed, please use `Sentry.reportFullyDisplayed()` instead ([#3717](https://github.com/getsentry/sentry-java/pull/3717))
+- `User.other` has been removed, please use `data` instead ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+- `SdkVersion.getIntegrations()` has been removed, please use `getIntegrationSet` instead ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+- `SdkVersion.getPackages()` has been removed, please use `getPackageSet()` instead ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+- `Device.language` has been removed, please use `locale` instead ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+- `TraceContext.user` and `TraceContextUser` class have been removed, please use `userId` on `TraceContext` instead ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+- `TransactionContext.fromSentryTrace()` has been removed, please use `Sentry.continueTrace()` instead ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+- `SentryDataFetcherExceptionHandler` has been removed, please use `SentryGenericDataFetcherExceptionHandler` in combination with `SentryInstrumentation` instead ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+- One of the `AndroidTransactionProfiler` constructors has been removed, please use a different one ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+- Use String instead of UUID for SessionId ([#3834](https://github.com/getsentry/sentry-java/pull/3834))
+  - The `Session` constructor now takes a `String` instead of a `UUID` for the `sessionId` parameter.
+  - `Session.getSessionId()` now returns a `String` instead of a `UUID`.
+- The Android minSdk level for all Android modules is now 21 ([#3852](https://github.com/getsentry/sentry-java/pull/3852))
+- The minSdk level for sentry-android-ndk changed from 19 to 21 ([#3851](https://github.com/getsentry/sentry-java/pull/3851))
+- All status codes below 400 are now mapped to `SpanStatus.OK` ([#3869](https://github.com/getsentry/sentry-java/pull/3869))
+- `transaction.data` has moved from `extra` to `contexts.trace.data` (#3735)
+  - If you were filtering data in e.g. `beforeSendTransaction` please update accordingly
+
+### Deprecations
+
+- Classes used for the previous version of the Sentry OpenTelemetry Java Agent have been deprecated (`SentrySpanProcessor`, `SentryPropagator`, `OpenTelemetryLinkErrorEventProcessor`)
+- `Hub` has been deprecated, we're replacing the following:
+  - `IHub` has been replaced by `IScopes`, however you should be able to simply pass `IHub` instances to code expecting `IScopes`, allowing for an easier migration.
+  - `HubAdapter.getInstance()` has been replaced by `ScopesAdapter.getInstance()`
+  - The `.clone()` method on `IHub`/`IScopes` has been deprecated, please use `.pushScope()` or `.pushIsolationScope()` instead
+  - Some internal methods like `.getCurrentHub()` and `.setCurrentHub()` have also been replaced.
+- `Sentry.popScope` has been replaced by calling `.close()` on the token returned by `Sentry.pushScope()` and `Sentry.pushIsolationScope()`. The token can also be used in a `try-with-resource` block like this:
+
+```
+try (final @NotNull ISentryLifecycleToken ignored = Sentry.pushScope()) {
+  // this block has its separate current scope
+}
+```
+
+as well as:
+
+
+```
+try (final @NotNull ISentryLifecycleToken ignored = Sentry.pushIsolationScope()) {
+  // this block has its separate isolation scope
+}
+```
+
+You may also use `LifecycleHelper.close(token)`, e.g. in case you need to pass the token around for closing later.
+
+### Behavioral Changes
+
+- We're introducing some new `Scope` types in the SDK, allowing for better control over what data is attached where. Previously there was a stack of scopes that was pushed and popped. Instead we now fork scopes for a given lifecycle and then restore the previous scopes. Since `Hub` is gone, it is also never cloned anymore. Separation of data now happens through the different scope types while making it easier to manipulate exactly what you need without having to attach data at the right time to have it apply where wanted.
+  - Global scope is attached to all events created by the SDK. It can also be modified before `Sentry.init` has been called. It can be manipulated using `Sentry.configureScope(ScopeType.GLOBAL, (scope) -> { ... })`.
+  - Isolation scope can be used e.g. to attach data to all events that come up while handling an incoming request. It can also be used for other isolation purposes. It can be manipulated using `Sentry.configureScope(ScopeType.ISOLATION, (scope) -> { ... })`. The SDK automatically forks isolation scope in certain cases like incoming requests, CRON jobs, Spring `@Async` and more.
+  - Current scope is forked often and data added to it is only added to events that are created while this scope is active. Data is also passed on to newly forked child scopes but not to parents.
+- `Sentry.popScope` has been deprecated, please call `.close()` on the token returned by `Sentry.pushScope` instead or use it in a way described in more detail in "Migration Guide".
+- We have chosen a default scope that is used for `Sentry.configureScope()` as well as for APIs like `Sentry.setTag()`
+  - For Android the type defaults to `CURRENT` scope
+  - For Backend and other JVM applicatons it defaults to `ISOLATION` scope
+- Event processors on `Scope` can now be ordered by overriding the `getOrder` method on implementations of `EventProcessor`. NOTE: This order only applies to event processors on `Scope` but not `SentryOptions` at the moment. Feel free to request this if you need it.
+- `Hub` is deprecated in favor of `Scopes`, alongside some `Hub` relevant APIs. More details can be found in the "Migration Guide" section.
+- (Android) The JNI layer for sentry-native has now been moved from sentry-java to sentry-native ([#3189](https://github.com/getsentry/sentry-java/pull/3189))
+  - This now includes prefab support for sentry-native, allowing you to link and access the sentry-native API within your native app code
+  - Checkout the `sentry-samples/sentry-samples-android` example on how to configure CMake and consume `sentry.h`
+- (Android) Replace thread id with kernel thread id in span data ([#3706](https://github.com/getsentry/sentry-java/pull/3706))
+- (Android) Enable Performance V2 by default ([#3824](https://github.com/getsentry/sentry-java/pull/3824))
+  - With this change cold app start spans will include spans for ContentProviders, Application and Activity load.
+
+### Sentry Self-hosted Compatibility
+
+- The required Sentry version in version `8.0.0` of the SDK remains unchanged. [Sentry's version >= v22.12.0](https://github.com/getsentry/self-hosted/releases) is required. This only applies to self-hosted Sentry. If you are using [sentry.io](https://sentry.io), no action is needed.
+
+### Installing `sentry-opentelemetry-agent`
+
+Sentry OpenTelemetry Java Agent has been reworked and now allows you to manually create spans using Sentry API as well.
+
+#### Upgrading from a previous agent
+
+If you've been using the previous version of `sentry-opentelemetry-agent`, simply replace the agent JAR with the [latest release](https://central.sonatype.com/artifact/io.sentry/sentry-opentelemetry-agent?smo=true) and start your application. That should be it.
+
+#### New to the agent
+
+If you've not been using the Sentry OpenTelemetry agent before, you can add `sentry-opentelemetry-agent` to your setup by downloading the latest release and using it when starting up your application
+- `SENTRY_PROPERTIES_FILE=sentry.properties java -javaagent:sentry-opentelemetry-agent-x.x.x.jar -jar your-application.jar`
+- Please use `sentry.properties` or environment variables to configure the SDK as the agent is now in charge of initializing the SDK and options coming from things like logging integrations or our Spring Boot integration will not take effect.
+- You may find the [docs page](https://docs.sentry.io/platforms/java/tracing/instrumentation/opentelemetry/#using-sentry-opentelemetry-agent-with-auto-initialization) useful.
+
+If you want to skip auto initialization of the SDK performed by the agent, please follow the steps above and set the environment variable `SENTRY_AUTO_INIT` to `false`, then use `Sentry.init` as usual.
+
+We've added more sample applications that showcase how to combine Sentry and OpenTelemetry (https://github.com/getsentry/sentry-java/tree/8.x.x/sentry-samples).

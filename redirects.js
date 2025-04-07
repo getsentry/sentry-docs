@@ -219,8 +219,28 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/platforms/php/configuration/integrations/',
+    destination: '/platforms/php/integrations/',
+  },
+  {
+    source: '/platforms/javascript/enriching-events/error-tracing/',
+    destination: '/platforms/javascript/enriching-events/',
+  },
+  {
+    source: '/organization/integrations/cloudflare-workers/',
+    destination: '/organization/integrations/cloud-monitoring/cloudflare-workers/',
+  },
+  {
+    source: '/account/require-2fa/',
+    destination: '/organization/authentication/two-factor-authentication/',
+  },
+  {
     source: '/organization/integrations/msteams/',
     destination: '/organization/integrations/notification-incidents/msteams/',
+  },
+  {
+    source: '/product/dev-toolbar/:path*',
+    destination: '/product/sentry-toolbar/:path*',
   },
   {
     source: '/product/explore/session-replay/hydration-errors/',
@@ -471,6 +491,22 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/:guide/configuration/integrations/plugin/',
   },
   {
+    source: '/platforms/javascript/configuration/environments/',
+    destination: '/platforms/javascript/configuration/options/#environment',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/configuration/environments/',
+    destination: '/platforms/javascript/guides/:guide/configuration/options/#environment',
+  },
+  {
+    source: '/platforms/javascript/configuration/draining/',
+    destination: '/platforms/javascript/apis/#flush',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/configuration/draining/',
+    destination: '/platforms/javascript/guides/:guide/apis/#flush',
+  },
+  {
     source: '/platforms/:platform/context/',
     destination: '/platforms/:platform/enriching-events/context/',
   },
@@ -556,6 +592,16 @@ const userDocsRedirects = [
     source:
       '/platforms/:platform/guides/:guide/sourcemaps/:section(generating|validating|best-practices|artifact-and-release-bundles)/',
     destination: '/platforms/:platform/guides/:guide/sourcemaps/',
+  },
+  {
+    source: '/platforms/javascript/sourcemaps/troubleshooting_js/artifact-bundles/',
+    destination: '/platforms/javascript/sourcemaps/troubleshooting_js/debug-ids/',
+  },
+  {
+    source:
+      '/platforms/:platform/guides/:guide/sourcemaps/troubleshooting_js/artifact-bundles/',
+    destination:
+      '/platforms/:platform/guides/:guide/sourcemaps/troubleshooting_js/debug-ids/',
   },
   {
     source: '/platforms/minidump/crashpad/:path*',
@@ -674,6 +720,10 @@ const userDocsRedirects = [
     destination: '/platforms/:platform/guides/:guide/user-feedback/',
   },
   {
+    source: '/platforms/javascript/guides/:guide/user-feedback/v7/',
+    destination: '/platforms/javascript/guides/:guide/user-feedback/configuration__v7.x',
+  },
+  {
     source: '/platforms/:platform/enriching-events/user-feedback/',
     destination: '/platforms/:platform/user-feedback/',
   },
@@ -708,6 +758,11 @@ const userDocsRedirects = [
   {
     source: '/api/releases/post-release-deploys/',
     destination: '/api/releases/create-a-new-deploy-for-an-organization/',
+  },
+  {
+    source: '/api/replays/retrieve-a-count-of-replays/',
+    destination:
+      '/api/replays/retrieve-a-count-of-replays-for-a-given-issue-or-transaction/',
   },
   {
     source: '/api/projects/post-project-user-reports/',
@@ -857,11 +912,11 @@ const userDocsRedirects = [
   },
   {
     source: '/product/insights/mobile-vitals/app-starts/',
-    destination: '/product/insights/mobile/app-starts/',
+    destination: '/product/insights/mobile/mobile-screens/app-starts/',
   },
   {
     source: '/product/insights/mobile-vitals/screen-loads/',
-    destination: '/product/insights/mobile/screen-loads/',
+    destination: '/product/insights/mobile/mobile-screens/screen-loads/',
   },
   {
     source: '/product/insights/web-vitals/',
@@ -939,6 +994,107 @@ const userDocsRedirects = [
   {
     source: '/platforms/kotlin-multiplatform/:path*',
     destination: '/platforms/kotlin/guides/kotlin-multiplatform/:path*',
+  },
+   {
+    source: '/platforms/python/tracing/trace-propagation/:path*',
+    destination: '/platforms/python/tracing/distributed-tracing/:path*',
+  },
+  {
+    source: '/platforms/python/tracing/distributed-tracing/custom-instrumentation',
+    destination: '/platforms/python/tracing/distributed-tracing/custom-trace-propagation',
+  },
+  {
+    source: '/platforms/ruby/guides/:guide/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/ruby/guides/:guide/troubleshooting/:path*',
+  },
+  {
+    source: '/platforms/ruby/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/ruby/troubleshooting/:path*',
+  },
+  {
+    source: '/platforms/php/guides/:guide/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/php/guides/:guide/troubleshooting/:path*',
+  },
+  {
+    source: '/platforms/php/:productfeature/troubleshooting/:path*',
+    destination: '/platforms/php/troubleshooting/:path*',
+  },
+  {
+    source: '/product/explore/feature-flags/:path*',
+    destination: '/product/issues/issue-details/feature-flags/:path*',
+  },
+  {
+    source: '/product/explore/metrics/:path*',
+    destination: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    source: '/product/tracing/:path*',
+    destination: '/concepts/key-terms/tracing/:path*',
+  },
+  // Redirects for JavaScript tracing docs
+  {
+    source: '/platforms/javascript/tracing/trace-propagation/:path*',
+    destination: '/platforms/javascript/tracing/distributed-tracing/:path*',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/performance-metrics/',
+    destination:
+      '/platforms/javascript/guides/:guide/tracing/span-metrics/performance-metrics/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/tracing/trace-propagation/:path*',
+    destination: '/platforms/javascript/guides/:guide/tracing/distributed-tracing/:path*',
+  },
+  {
+    source: '/platforms/javascript/tracing/instrumentation/custom-instrumentation/:path*',
+    destination: '/platforms/javascript/tracing/instrumentation/:path*',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/custom-instrumentation/:path*',
+    destination: '/platforms/javascript/guides/:guide/tracing/instrumentation/:path*',
+  },
+  {
+    source: '/platforms/flutter/:path*',
+    destination: '/platforms/dart/guides/flutter/:path*',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/upload-debug/',
+    destination: '/platforms/dart/guides/flutter/debug-symbols/',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/upload-debug/#when-to-upload',
+    destination:
+      '/platforms/dart/guides/flutter/debug-symbols/#when-to-upload-debug-symbols',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/upload-debug/#source-context',
+    destination:
+      '/platforms/dart/guides/flutter/debug-symbols/dart-plugin/#configuration',
+  },
+  {
+    source:
+      '/platforms/dart/guides/flutter/upload-debug/#uploading-source-code-context-for-flutter-android-ios-and-macos',
+    destination: '/platforms/dart/guides/flutter/debug-symbols/manual-upload/',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/upload-debug/#uploading-for-android-ndk',
+    destination:
+      '/platforms/dart/guides/flutter/debug-symbols/manual-upload/#android-ndk',
+  },
+  {
+    source:
+      '/platforms/dart/guides/flutter/upload-debug/#automatically-upload-debug-symbols',
+    destination: '/dart/guides/flutter/debug-symbols/dart-plugin/',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/configuration/integrations/:path*',
+    destination: '/platforms/dart/guides/flutter/integrations/:path*',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/usage/advanced-usage/:path*',
+    destination: '/platforms/dart/guides/flutter/troubleshooting/:path*',
   },
 ];
 

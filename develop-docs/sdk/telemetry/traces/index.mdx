@@ -14,11 +14,11 @@ Reference implementations:
 - [JavaScript SDK](https://github.com/getsentry/sentry-javascript/tree/master/packages/core/src/tracing)
 - [Python SDK](https://github.com/getsentry/sentry-python/blob/master/sentry_sdk/tracing.py)
 
-<Note>
+<Alert>
 
 This document uses standard interval notation, where `[` and `]` indicates closed intervals, which include the endpoints of the interval, while `(` and `)` indicates open intervals, which exclude the endpoints of the interval. An interval `[x, y)` covers all values starting from `x` up to but excluding `y`.
 
-</Note>
+</Alert>
 
 ## SDK Configuration
 
@@ -66,7 +66,7 @@ URLs matching: 'localhost:8443/api/users', 'mylocalhost:8080/api/users', '/api/e
 URLs not matching: 'someHost.com/data', 'myApi.com/v1/projects'
 ```
 
-<Alert level="info" title="Deprecation of tracingOrigins">
+<Alert title="Deprecation of tracingOrigins">
 
 This Option replaces the non-standardized `tracingOrigins` option which was previously used in some SDKs. SDKs that support `tracingOrigins` are encouraged to deprecate and and eventually remove `tracingOrigins` in favour `tracePropagationTargets`. In case both options are specified by users, SDKs should only rely on the `tracePropagationTargets` array.
 
@@ -201,7 +201,7 @@ If more than one option could apply, the following rules determine which takes p
 3. If `tracesSampler` is not defined, but there's a parent sampling decision, the parent sampling decision will be used.
 4. If `tracesSampler` is not defined and there's no parent sampling decision, `tracesSampleRate` will be used.
 
-<Alert title="Note" level="info">
+<Alert title="Note">
 <markdown>
 
 Transactions should be sampled only by `tracesSampleRate` or `tracesSampler`. The `sampleRate` configuration is used for error events and should not apply to transactions.
@@ -222,7 +222,7 @@ Depending on the platform, other default data may be included. (For example, for
 
 ### Propagation
 
-A transaction's sampling decision should be passed to all of its children, including across service boundaries. This can be accomplished in the `startChild` method for same-service children and using the `senry-trace` header for children in a different service.
+A transaction's sampling decision should be passed to all of its children, including across service boundaries. This can be accomplished in the `startChild` method for same-service children and using the `sentry-trace` header for children in a different service.
 
 ### Propagated Random Value
 
@@ -230,10 +230,12 @@ To improve the likelihood of capturing complete traces when backend services use
 
 The random value (`sample_rand`) is set according to the following rules:
 
-1. When tracing is enabled and a new trace is started, the SDK generates a `sample_rand` value for the current execution context. A `sample_rand` is a float (`0.1234` notation) in the range of `[0, 1)` (including 0.0, excluding 1.0).
-1. It is _recommended_ to generate the random number deterministically using the trace ID as seed or source of randomness. The exact method by which the random number is created is implementation defined and may vary between SDK implementations.
-1. The `sample_rand` is part of the DSC (Dynamic Sampling Context) and as with other values on the `baggage` header, the `sample_rand` value from the current execution context should be propagated to downstream SDKs.
-1. On incoming traces, an SDK takes the incoming `sentry-sample_rand` value in the `baggage` header and uses it for the rest of the current execution context (e.g. request).
+1. A `sample_rand` is a float (`0.123456` notation) in the range of `[0, 1)` (including 0.0, excluding 1.0), with six digits after the decimal point.
+1. When tracing is enabled and a new trace is started, the SDK generates a `sample_rand` value for the current execution context.
+  1. This also applies to Tracing without Performance where we simply want to generate `sample_rand` every time a new trace is started. This `sample_rand` value can then be stored on `PropagationContext`.
+1. It is _recommended_ to generate the random number deterministically using the trace ID as seed or source of randomness (make sure to do this atomically so multiple threads accessing the same random instance don't mix their seeds). The exact method by which the random number is created is implementation-defined and may vary between SDK implementations.
+1. The `sample_rand` is part of the DSC (Dynamic Sampling Context) and as with other values on the `baggage` header, the `sample_rand` value from the current execution context should be propagated to downstream SDKs. It should also be sent to other system as part of the `baggage` header if Performance is disabled and sampling decision is deferred.
+1. On incoming traces, an SDK takes the incoming `sentry-sample_rand` value in the `baggage` header and uses it for the rest of the current execution context (for example, request) by storing it in the `PropagationContext`.
 1. If `sample_rand` is missing on an incoming trace, the SDK creates a new one applying **special rules** and uses it for the current execution context:
    1. If `sample_rate` (inside `baggage`) and the sampling decision (trailing `-1` or `-0` from the `sentry-trace` header) are present in the incoming trace, create `sample_rand` so that when compared to the incoming `sample_rate` it would lead to the same sampling decision that is in the `sentry-trace` header. This means, for a decision of `True` generate a random number in half-open range `[0, rate)` and for a decision of `False` generate a random number in range `[rate, 1)`.
    1. If the sampling decision is missing on the incoming trace, generate a random number in range of `[0, 1)` (including 0.0, excluding 1.0), like for a new trace.

@@ -33,12 +33,29 @@ This package extends [Sentry.Extensions.Logging](/platforms/dotnet/guides/extens
 
 Sentry integration with Azure Functions is done by calling `.UseSentry()` and specifying the options, for example:
 
+```csharp {"onboardingOptions": {"performance": "10-12"}}
+using Sentry.Azure.Functions.Worker;
 
-<Note>
+var builder = FunctionsApplication.CreateBuilder(args);
+
+builder.UseSentry(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    // When configuring for the first time, to see what the SDK is doing:
+    options.Debug = true;
+    // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
+    // We recommend adjusting this value in production.
+    options.TracesSampleRate = 1.0;
+});
+
+builder.Build().Run();
+```
+
+<Alert>
 
 If using the ASP.NET Core integration add `UseSentry` to the `ConfigureFunctionsWebApplication` call instead.
 
-</Note>
+</Alert>
 
 ```csharp {"onboardingOptions": {"performance": "11-13"}}
 using Sentry.Azure.Functions.Worker;

@@ -1,23 +1,19 @@
 'use client';
 import {useEffect} from 'react';
-import {usePlausible} from 'next-plausible';
 
+import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
+import {PROGRESS_MILESTONES, ReadProgressMilestone} from 'sentry-docs/types/plausible';
 import {debounce} from 'sentry-docs/utils';
 
-const EVENT = 'Read Progress';
-const milestones = [25, 50, 75, 100] as const;
-type Milestone = (typeof milestones)[number];
-type EVENT_PROPS = {page: string; readProgress: Milestone};
-
 export function ReaderDepthTracker() {
-  const plausible = usePlausible<{[EVENT]: EVENT_PROPS}>();
+  const {emit} = usePlausibleEvent();
 
-  const sendProgressToPlausible = (progress: Milestone) => {
-    plausible(EVENT, {props: {readProgress: progress, page: document.title}});
+  const sendProgressToPlausible = (progress: ReadProgressMilestone) => {
+    emit('Read Progress', {props: {readProgress: progress, page: document.title}});
   };
 
   useEffect(() => {
-    const reachedMilestones = new Set<Milestone>();
+    const reachedMilestones = new Set<ReadProgressMilestone>();
 
     const trackProgress = () => {
       // calculate the progress based on the scroll position
@@ -30,13 +26,13 @@ export function ReaderDepthTracker() {
       }
 
       // find the biggest milestone that has not been reached yet
-      const milestone = milestones.findLast(
+      const milestone = PROGRESS_MILESTONES.filter(
         m =>
           progress >= m &&
           !reachedMilestones.has(m) &&
           // we shouldn't report smaller milestones once a bigger one has been reached
           Array.from(reachedMilestones).every(r => m > r)
-      );
+      ).pop();
       if (milestone) {
         reachedMilestones.add(milestone);
         sendProgressToPlausible(milestone);

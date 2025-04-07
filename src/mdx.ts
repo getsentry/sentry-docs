@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
+import {cache} from 'react';
 import matter from 'gray-matter';
 import {s} from 'hastscript';
 import yaml from 'js-yaml';
@@ -474,3 +475,10 @@ export async function getFileBySlug(slug: string) {
     },
   };
 }
+
+/**
+ * Cache the result of {@link getFileBySlug}.
+ *
+ * This is useful for performance when rendering the same file multiple times.
+ */
+export const getFileBySlugWithCache = cache(getFileBySlug);

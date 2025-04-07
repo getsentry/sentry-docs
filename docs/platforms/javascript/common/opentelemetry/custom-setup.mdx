@@ -11,6 +11,7 @@ supported:
   - javascript.fastify
   - javascript.gcp-functions
   - javascript.hapi
+  - javascript.hono
   - javascript.koa
   - javascript.nestjs
   - javascript.nuxt
@@ -19,18 +20,19 @@ supported:
   - javascript.astro
   - javascript.remix
   - javascript.react-router
+  - javascript.tanstackstart-react
 notSupported:
   - javascript
 sidebar_order: 0
 ---
 
-<Note>
+<Alert>
 
 Use this guide when you already have a completely custom OpenTelemetry setup or when you intend to add a custom OpenTelemetry setup next to the Sentry SDK.
 
 If you are looking to simply add individual OpenTelemetry instrumentation to your Sentry setup, you should read <PlatformLink to="/opentelemetry/using-opentelemetry-apis/#adding-additional-opentelemetry-instrumentation">Adding Additional OpenTelemetry Instrumentation</PlatformLink> instead.
 
-</Note>
+</Alert>
 
 To use an existing OpenTelemetry setup, set `skipOpenTelemetrySetup: true` in your `init({})` config, then set up all the components that Sentry needs yourself. Finish by installing `@sentry/opentelemetry` and adding the following:
 
@@ -57,10 +59,12 @@ const provider = new NodeTracerProvider({
   // Ensure the correct subset of traces is sent to Sentry
   // This also ensures trace propagation works as expected
   sampler: sentryClient ? new SentrySampler(sentryClient) : undefined,
+  spanProcessors: [
+    // Ensure spans are correctly linked & sent to Sentry
+    new SentrySpanProcessor(),
+    // Add additional processors here
+  ],
 });
-
-// Ensure spans are correctly linked & sent to Sentry
-provider.addSpanProcessor(new SentrySpanProcessor());
 
 provider.register({
   // Ensure trace propagation works
@@ -93,7 +97,7 @@ In order for the Sentry SDK to work as expected, and for it to be in sync with O
 
 - **SentrySpanProcessor**: Ensures that spans are correctly sent to Sentry.
 
-<Note>
+<Alert>
   Trace propagation is needed for Sentry to automatically connect services
   together. (For example, if you want to connect the frontend and backend, or
   different backend services.) This makes it possible to see related errors
@@ -101,7 +105,7 @@ In order for the Sentry SDK to work as expected, and for it to be in sync with O
   <PlatformLink to="/tracing/trace-propagation">
     Learn more about Trace Propagation.
   </PlatformLink>
-</Note>
+</Alert>
 
 The following code snippet shows how to set up Sentry for error monitoring only:
 
@@ -165,14 +169,14 @@ If tracing is not enabled (no `tracesSampleRate` is defined in the SDK configura
 <PlatformSection
   notSupported={["javascript.aws-lambda", "javascript.gcp-functions"]}
 >
-  <Note>
+  <Alert>
     If tracing is not enabled, performance instrumentations will not be
     registered but they will still be included in the bundle. If you want to
     reduce the bundle size or used dependencies, you can also{" "}
     <PlatformLink to="/configuration/tree-shaking/#setting-up-sentry-without-performance-integrations">
       Set up Sentry without Performance Integrations
     </PlatformLink>
-  </Note>
+  </Alert>
 </PlatformSection>
 
 These are needed to make sure that trace propagation works correctly.
@@ -267,7 +271,7 @@ Sentry.init({
 });
 ```
 
-<Alert level="info" title="Why is it recommended to register loader hooks yourself?">
+<Alert title="Why is it recommended to register loader hooks yourself?">
 
 It is recommended registering your own ESM loader hooks when you have a complete custom OpenTelemetry setup, first and foremost because it makes the most sense architecturally.
 You likely went through the effort to set up OpenTelemetry by itself and now you want to add Sentry to your application without messing with your OpenTelemetry setup.
@@ -286,6 +290,7 @@ Additionally, there are a few pitfalls that can very simply be avoided by regist
     "javascript.aws-lambda",
     "javascript.nuxt",
     "javascript.solidstart",
+    "javascript.tanstackstart-react",
   ]}
 >
   <PlatformCategorySection supported={["server", "serverles"]}>

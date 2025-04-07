@@ -92,7 +92,9 @@ export function PlatformSelector({
 
   const router = useRouter();
   const onPlatformChange = (platformKey: string) => {
-    const platform_ = platformsAndGuides.find(platform => platform.key === platformKey);
+    const platform_ = platformsAndGuides.find(
+      platform => platform.key === platformKey.replace('-redirect', '')
+    );
     if (platform_) {
       localStorage.setItem('active-platform', platform_.key);
       router.push(platform_.url);
@@ -127,7 +129,11 @@ export function PlatformSelector({
       path.length > '/platforms/'.length
   );
   const showStoredPlatform =
-    !isPlatformPage && storedPlatformKey && storedPlatform && path !== '/platforms/';
+    !open &&
+    !isPlatformPage &&
+    storedPlatformKey &&
+    storedPlatform &&
+    path !== '/platforms/';
 
   return (
     <div>
@@ -273,6 +279,11 @@ function PlatformItem({
       isLastGuide: i === guides.length - 1,
     }));
 
+  // This is the case if `platformTitle` is configured for a platform
+  // In this case, the top-level select item should get the `-redirect` suffix,
+  // as we can't have two items with the same key
+  const hasGuideWithPlatformKey = platform.guides.some(g => g.key === platform.key);
+
   const guides = platform.isExpanded
     ? markLastGuide(platform.guides.length > 0 ? platform.guides : platform.integrations)
     : [];
@@ -284,7 +295,7 @@ function PlatformItem({
         <RadixSelect.Label className="flex">
           <Fragment>
             <RadixSelect.Item
-              value={platform.key}
+              value={hasGuideWithPlatformKey ? `${platform.key}-redirect` : platform.key}
               asChild
               className={styles.item}
               data-platform-with-guides

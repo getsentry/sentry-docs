@@ -1,11 +1,13 @@
 'use client';
 
-import {ReactNode, useEffect, useReducer, useState} from 'react';
+import {ReactNode, useContext, useEffect, useReducer, useState} from 'react';
 import {QuestionMarkCircledIcon} from '@radix-ui/react-icons';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import {Button, Checkbox, Theme} from '@radix-ui/themes';
 
 import styles from './styles.module.scss';
+
+import {CodeContext} from '../codeContext';
 
 const optionDetails: Record<
   OptionId,
@@ -49,13 +51,35 @@ const optionDetails: Record<
     ),
   },
   'source-context': {
-    name: 'Source context',
+    name: 'Source Context',
     description: (
       <span>
         Upload your source code to allow Sentry to display snippets of your code next to
         the event stack traces.
       </span>
     ),
+  },
+  dsym: {
+    name: 'dSYM',
+    description: (
+      <span>
+        Debug symbols for iOS and macOS that provide the necessary information to convert
+        program addresses back to function names, source file names, and line numbers.
+      </span>
+    ),
+  },
+  'source-maps': {
+    name: 'Source Maps',
+    description: (
+      <span>
+        Source maps for web applications that help translate minified code back to the
+        original source for better error reporting.
+      </span>
+    ),
+  },
+  opentelemetry: {
+    name: 'OpenTelemetry',
+    description: <span>Combine Sentry with OpenTelemetry.</span>,
   },
 };
 
@@ -65,11 +89,14 @@ const OPTION_IDS = [
   'profiling',
   'session-replay',
   'source-context',
+  'dsym',
+  'source-maps',
+  'opentelemetry',
 ] as const;
 
 type OptionId = (typeof OPTION_IDS)[number];
 
-type OnboardingOptionType = {
+export type OnboardingOptionType = {
   /**
    * Unique identifier for the option, will control the visibility
    * of `<OnboardingOption optionId="this_id"` /> somewhere on the page
@@ -114,15 +141,73 @@ export function OnboardingOption({
   );
 }
 
+/**
+ * Updates DOM elements' visibility based on selected onboarding options
+ */
+export function updateElementsVisibilityForOptions(
+  options: OnboardingOptionType[],
+  touchedOptions: boolean
+) {
+  options.forEach(option => {
+    if (option.disabled) {
+      return;
+    }
+    const targetElements = document.querySelectorAll<HTMLDivElement>(
+      `[data-onboarding-option="${option.id}"]`
+    );
+
+    targetElements.forEach(el => {
+      const hiddenForThisOption = el.dataset.hideForThisOption === 'true';
+      if (hiddenForThisOption) {
+        el.classList.toggle('hidden', option.checked);
+      } else {
+        el.classList.toggle('hidden', !option.checked);
+      }
+      // only animate things when user has interacted with the options
+      if (touchedOptions) {
+        if (el.classList.contains('code-line')) {
+          el.classList.toggle('animate-line', option.checked);
+        }
+        // animate content, account for inverted logic for hiding
+        else {
+          el.classList.toggle(
+            'animate-content',
+            hiddenForThisOption ? !option.checked : option.checked
+          );
+        }
+      }
+    });
+    if (option.checked && optionDetails[option.id].deps?.length) {
+      const dependenciesSelector = optionDetails[option.id].deps!.map(
+        dep => `[data-onboarding-option="${dep}"]`
+      );
+      const dependencies = document.querySelectorAll<HTMLDivElement>(
+        dependenciesSelector.join(', ')
+      );
+
+      dependencies.forEach(dep => {
+        dep.classList.remove('hidden');
+      });
+    }
+  });
+}
+
 export function OnboardingOptionButtons({
   options: initialOptions,
 }: {
   // convenience to allow passing option ids as strings when no additional config is required
   options: (OnboardingOptionType | OptionId)[];
 }) {
+  const codeContext = useContext(CodeContext);
+
   const normalizedOptions = initialOptions.map(option => {
     if (typeof option === 'string') {
-      return {id: option, disabled: option === 'error-monitoring'};
+      return {
+        id: option,
+        // error monitoring is always needs to be checked and disabled
+        disabled: option === 'error-monitoring',
+        checked: option === 'error-monitoring',
+      };
     }
     return option;
   });
@@ -132,8 +217,8 @@ export function OnboardingOptionButtons({
   const [options, setSelectedOptions] = useState<OnboardingOptionType[]>(
     normalizedOptions.map(option => ({
       ...option,
-      // default to checked if not excplicitly set
-      checked: option.checked ?? true,
+      // default to unchecked if not excplicitly set
+      checked: option.checked ?? false,
     }))
   );
   const [touchedOptions, touchOptions] = useReducer(() => true, false);
@@ -177,49 +262,15 @@ export function OnboardingOptionButtons({
       });
     });
   }
-  useEffect(() => {
-    options.forEach(option => {
-      if (option.disabled) {
-        return;
-      }
-      const targetElements = document.querySelectorAll<HTMLDivElement>(
-        `[data-onboarding-option="${option.id}"]`
-      );
-      targetElements.forEach(el => {
-        const hiddenForThisOption = el.dataset.hideForThisOption === 'true';
-        if (hiddenForThisOption) {
-          el.classList.toggle('hidden', option.checked);
-        } else {
-          el.classList.toggle('hidden', !option.checked);
-        }
-        // only animate things when user has interacted with the options
-        if (touchedOptions) {
-          if (el.classList.contains('code-line')) {
-            el.classList.toggle('animate-line', option.checked);
-          }
-          // animate content, account for inverted logic for hiding
-          else {
-            el.classList.toggle(
-              'animate-content',
-              hiddenForThisOption ? !option.checked : option.checked
-            );
-          }
-        }
-      });
-      if (option.checked && optionDetails[option.id].deps?.length) {
-        const dependenciesSelecor = optionDetails[option.id].deps!.map(
-          dep => `[data-onboarding-option="${dep}"]`
-        );
-        const dependencies = document.querySelectorAll<HTMLDivElement>(
-          dependenciesSelecor.join(', ')
-        );
 
-        dependencies.forEach(dep => {
-          dep.classList.remove('hidden');
-        });
-      }
-    });
-  }, [options, touchedOptions]);
+  // sync local state to global
+  useEffect(() => {
+    codeContext?.updateOnboardingOptions(options);
+  }, [options, codeContext]);
+
+  useEffect(() => {
+    updateElementsVisibilityForOptions(options, touchedOptions);
+  }, [options, touchOptions, touchedOptions]);
 
   return (
     <div className="onboarding-options flex flex-wrap gap-3 py-2 bg-[var(--white)] dark:bg-[var(--gray-1)]  sticky top-[80px] z-[4] shadow-[var(--shadow-6)] transition">

@@ -28,7 +28,7 @@ The `devservices` ensure that you have all the services required for local devel
 When setting up `sentry`, execute the following command in the `sentry` folder:
 
 ```shell
-sentry devservices up
+devservices up
 ```
 
 After that, you can start the development server inside the `sentry` folder:
@@ -44,7 +44,7 @@ Access it at [http://dev.getsentry.net:8000](http://dev.getsentry.net:8000) (you
 A superuser account should have been created for you during bootstrap - `admin@sentry.io` with password `admin`.
 You can create other users with `sentry createuser`.
 
-<Alert title="Note" level="info">
+<Alert title="Note">
   When asked for the root address of the server, make sure that you use
   [http://dev.getsentry.net:8000](http://dev.getsentry.net:8000), as both
   protocol _and_ port are required in order for DNS and some pages' URLs to be
@@ -75,7 +75,7 @@ yarn https-proxy
 
 After the server is running we can visit the dev server using `https` at port `:8003` instead of over `http` at `:8000`.
 
-<Alert title="HTTP Strict-Transport-Security" level="info">
+<Alert title="HTTP Strict-Transport-Security">
   You might get into a situation where [HSTS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security) is enabled for your domain and you're unable to visit using `http` anymore.
 
   To clear the HSTS visit `chrome://net-internals/#hsts` in Chrome based browsers and use the "Delete domain security policies" form.
@@ -85,30 +85,9 @@ After the server is running we can visit the dev server using `https` at port `:
 
 <Link to="/relay/">Relay</Link> and the ingest workers are not started by default. Follow the instructions below to start them so you can send events to your dev environment Sentry instance:
 
-- Set `SENTRY_USE_RELAY = True` in `~/.sentry/sentry.conf.py`. This will tell `sentry devservices up` to also start services that Relay needs.
-- Run `sentry devservices up` to start the services Relay needs. (like for example Kafka)
+- Set `SENTRY_USE_RELAY = True` in `~/.sentry/sentry.conf.py`.
+- Run `devservices up` to start the services Relay needs. (like for example Kafka)
 - (Re-)Start your devserver with the `--ingest` flag (e.g. `sentry devserver --workers --ingest`). This will start the Relay container and all related services alongside your devserver.
-
-Note: To update Relay, manually run `sentry devservices up --skip-only-if relay`.
-
-#### Metrics Ingestion Pipeline
-
-**If you want to enable the entire metrics ingestion pipeline:** You need to add the following to your config at `~/.sentry/sentry.conf.py`:
-
-```python
-SENTRY_USE_RELAY = True
-SENTRY_USE_METRICS_DEV = True
-SENTRY_EVENTSTREAM = "sentry.eventstream.kafka.KafkaEventStream"
-SENTRY_FEATURES['organizations:metrics-extraction'] = True  # Enables session metrics
-SENTRY_FEATURES['organizations:transaction-metrics-extraction'] = True  # Enables transaction metrics
-```
-
-After enabling `KafkaEventStream` the `snuba` service has to be reset to pick up the new configuration:
-
-```shell
-sentry devservices rm snuba
-sentry devservices up snuba
-```
 
 ## Running the Getsentry Development Server
 
@@ -123,7 +102,7 @@ Before running `getsentry`, you might need to run `devenv sync` inside the `gets
 Just like running `sentry` (see above), you can start the `devservices` using the following command in the `getsentry` folder:
 
 ```shell
-sentry devservices up
+devservices up
 ```
 
 After that, you can start the development server inside the `getsentry` folder:
@@ -210,6 +189,24 @@ following in getsentry:
 
 ---
 
+**Problem:** `Error response from daemon: driver failed programming external connectivity on endpoint sentry-postgres-1 (e9e631ff7f32bd00052c25064c56609794a3b96da0dc04742f558e3ae659fa66): Bind for 127.0.0.1:5432 failed: port is already allocated`
+
+**Solution:**
+
+There is another process using the port. Try running `docker ps`. If you are currently running services through `sentry devservices`, you will need to stop them.
+
+```shell
+sentry devservices down
+devservices up
+```
+Otherwise, check to see if you have another process running on the allocated port.
+```shell
+lsof -i :5432
+```
+Then, either end the process or kill it if you need to.
+
+---
+
 **Problem:** You see an error that mentions something like `pkg_resources.DistributionNotFound: The 'some_dependency<0.6.0,>=0.5.5' distribution was not found and is required by sentry`
 
 **Solution:** Your virtualenv needs to be updated. Run `devenv sync`.
@@ -267,12 +264,12 @@ brew upgrade --cask chromedriver
 
 ---
 
-**Problem:** You see something like `Error: No such container: sentry_postgres`, or you don't see `sentry_snuba`, `sentry_postgres`, `sentry_clickhouse`, and `sentry_redis` listed under `COMMAND NAMES`.
+**Problem:** You see something like `Error: No such container: sentry-postgres-1`, or you don't see `snuba-snuba-1`, `redis-redis-1`, `snuba-clickhouse-1`, and `kafka-kafka-1` listed under `COMMAND NAMES`.
 
 **Solution:**
 
 ```shell
-sentry devservices up
+devservices up
 ```
 
 ---

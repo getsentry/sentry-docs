@@ -1,3 +1,6 @@
+<OnboardingOption optionId="opentelemetry" hideForThisOption>
+Configuration should happen as early as possible in your application's lifecycle.
+
 The following example configures a `SentryInitializer` servlet container initializer that initializes Sentry on application startup.
 
 
@@ -15,6 +18,10 @@ public final class SentryInitializer implements ServletContainerInitializer {
   public void onStartup(Set<Class<?>> c, ServletContext ctx) throws ServletException {
     Sentry.init(options -> {
       options.setDsn("___PUBLIC_DSN___");
+
+      // Add data like request headers and IP for users,
+      // see https://docs.sentry.io/platforms/java/guides/servlet/data-management/data-collected/ for more info
+      options.setSendDefaultPii(true);
     });
   }
 }
@@ -32,6 +39,10 @@ class SentryInitializer : ServletContainerInitializer {
   override fun onStartup(c: Set<Class<*>?>?, ctx: ServletContext) {
     Sentry.init { options ->
       options.dsn = "___PUBLIC_DSN___"
+
+      // Add data like request headers and IP for users,
+      // see https://docs.sentry.io/platforms/java/guides/servlet/data-management/data-collected/ for more info
+      options.isSendDefaultPii = true
     }
   }
 }
@@ -39,23 +50,7 @@ class SentryInitializer : ServletContainerInitializer {
 
 Create a file in `src/main/resources/META-INF/services` named `javax.servlet.ServletContainerInitializer`, with a full name of your custom `SentryInitializer` class as a content:
 
-
 ```properties
 sentry.sample.SentryInitializer
 ```
-
-```java {tabTitle: Java}
-import io.sentry.Sentry;
-
-Sentry.init(options -> {
-  options.setDsn("___PUBLIC_DSN___");
-});
-```
-
-```kotlin {tabTitle: Kotlin}
-import io.sentry.Sentry
-
-Sentry.init { options ->
-  options.dsn = "___PUBLIC_DSN___"
-}
-```
+</OnboardingOption>

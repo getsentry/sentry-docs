@@ -3,7 +3,7 @@
 import {Fragment, useContext} from 'react';
 import {usePathname} from 'next/navigation';
 
-import {Alert, Note} from './alert';
+import {Alert} from './alert';
 import {CodeContext} from './codeContext';
 import {ExternalLink} from './externalLink';
 import {SignedInCheck} from './signedInCheck';
@@ -17,7 +17,7 @@ export function OrgAuthTokenNote() {
   return (
     <Fragment>
       <SignedInCheck isUserAuthenticated={false}>
-        <Note>
+        <Alert>
           You can{' '}
           <ExternalLink href={orgAuthTokenUrl} target="_blank">
             manually create an Auth Token
@@ -27,7 +27,7 @@ export function OrgAuthTokenNote() {
             sign in
           </ExternalLink>{' '}
           to create a token directly from this page.
-        </Note>
+        </Alert>
       </SignedInCheck>
 
       <SignedInCheck isUserAuthenticated>
@@ -37,7 +37,8 @@ export function OrgAuthTokenNote() {
             manually create an Auth Token
           </ExternalLink>{' '}
           or create a token directly from this page. A created token will only be visible
-          once right after creation - make sure to copy it!
+          once right after creation - make sure to copy-paste it immediately and DO NOT
+          commit it! We recommend adding it as an environment variable.
         </Alert>
       </SignedInCheck>
     </Fragment>

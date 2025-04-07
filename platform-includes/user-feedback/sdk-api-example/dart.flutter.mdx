@@ -1,0 +1,26 @@
+```dart
+// Option 1: Retrieving SentryId from beforeSend
+SentryId sentryId = SentryId.empty();
+
+await SentryFlutter.init((options) {
+  options.beforeSend = (event, hint) {
+    sentryId = event.eventId;
+    return event;
+  };
+});
+
+// Option 2: Retrieving SentryId from the method capturing the event
+SentryId sentryId = Sentry.captureMessage("My message");
+
+// Option 3: Retrieving SentryId from the beforeSend callback
+SentryId sentryId = Sentry.lastEventId;
+
+final feedback = SentryFeedback(
+    message: 'Hello World!',
+    contactEmail: 'foo@bar.org',
+    name: 'John Doe',
+    associatedEventId: sentryId,
+);
+
+Sentry.captureFeedback(feedback);
+```

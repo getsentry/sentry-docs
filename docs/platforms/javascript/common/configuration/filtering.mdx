@@ -1,14 +1,14 @@
 ---
 title: Filtering
 sidebar_order: 60
-description: "Learn more about how to configure your SDK to filter events reported to Sentry."
+description: "Learn more about how to configure your JavaScript SDK to set up filtering for events reported to Sentry."
 ---
 
 When you add Sentry to your app, you get a lot of valuable information about errors and performance. And lots of information is good -- as long as it's the right information, at a reasonable volume.
 
 Sentry offers [Inbound Filters](/concepts/data-management/filtering/) that you can enable per project to filter out various events in sentry.io. You can use our pre-defined inbound filters (e.g. filtering known browser extensions), as well as add your own message-based filters.
 
-However, we recommend filtering at the client-level, because it removes the overhead of sending events you don't actually want. The Sentry SDKs have several configuration options, which are described in this document, to help you filter out events. To learn more about the event fields you can use for filtering, see [Event Payloads](https://develop.sentry.dev/sdk/data-model/event-payloads/).
+However, we recommend filtering at the client-level, because it removes the overhead of sending events you don't actually want. The [Sentry SDKs](/platforms/) have several configuration options, which are described in this document, to help you filter out events. To learn more about the event fields you can use for filtering, see [Event Payloads](https://develop.sentry.dev/sdk/data-model/event-payloads/).
 
 ## Filtering Error Events
 
@@ -90,11 +90,11 @@ _Available in browser-based SDKs from version 8.10.0_
 The `thirdPartyErrorFilterIntegration` allows you to filter out errors originating from third parties, such as browser extensions, code-injecting browsers, or widgets from third-party services that also use Sentry.
 This integration can be very helpful in reducing noise that's not related to your own application code.
 
-<Note>
+<Alert>
 
 **Prerequisite**: To use the `thirdPartyErrorFilterIntegration`, ensure you are using a bundler and one of [Sentry's bundler plugins](https://github.com/getsentry/sentry-javascript-bundler-plugins).
 
-</Note>
+</Alert>
 
 This integration works by "marking" your JavaScript files with an "application key" during the build process.
 At runtime, if an error occurs, this integration checks application keys for each stack frame in the stack trace.
@@ -103,58 +103,7 @@ This allows you to filter out errors with "unmarked" stack frames, which would i
 To set up this integration and to mark your JavaScript files with an application key, first pass an `applicationKey` option to your Sentry bundler plugin.
 This can be an arbitrary string that identifies your application code:
 
-```ts {tabTitle:Vite} {8}
-// vite.config.ts
-import { defineConfig } from "vite";
-import { sentryVitePlugin } from "@sentry/vite-plugin";
-
-export default defineConfig({
-  plugins: [
-    sentryVitePlugin({
-      applicationKey: "your-custom-application-key",
-    }),
-  ],
-});
-```
-
-```js {tabTitle:Webpack} {7}
-// webpack.config.js
-const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
-
-module.exports = {
-  plugins: [
-    sentryWebpackPlugin({
-      applicationKey: "your-custom-application-key",
-    }),
-  ],
-};
-```
-
-```js {tabTitle:esbuild} {7}
-// esbuild.config.js
-const { sentryEsbuildPlugin } = require("@sentry/esbuild-plugin");
-
-require("esbuild").build({
-  plugins: [
-    sentryEsbuildPlugin({
-      applicationKey: "your-custom-application-key",
-    }),
-  ],
-});
-```
-
-```js {tabTitle:Rollup} {7}
-// rollup.config.mjs
-import { sentryRollupPlugin } from "@sentry/rollup-plugin";
-
-export default {
-  plugins: [
-    sentryRollupPlugin({
-      applicationKey: "your-custom-application-key",
-    }),
-  ],
-};
-```
+<PlatformContent includePath="configuration/filter-application-key" />
 
 Next, add the `thirdPartyErrorFilterIntegration` to your Sentry initialization:
 
@@ -190,12 +139,12 @@ There are four modes you can choose from:
 
 If you choose a mode to only apply tags, the tags can then be used in Sentry to filter your issue stream with the `third_party_code` tag in the issue search bar.
 
-<Note>
+<Alert>
 
 The `thirdPartyErrorFilterIntegration` will not work with the [Sentry Loader Script or CDN Bundles](https://docs.sentry.io/platforms/javascript/install/loader/).
 This is the case because the Sentry Loader Script and CDN Bundles are detected as "third party" by the integration. This makes it apply the chosen behavior to almost all events, since the Sentry SDK wraps many browser-native APIs.
 
-</Note>
+</Alert>
 
 ## Filtering Transaction Events
 
@@ -227,9 +176,8 @@ Learn more about <PlatformLink to="/configuration/sampling/">configuring the sam
 
 ## Filtering Spans
 
-Available since Javascript SDK version `8.2.0`.
-
-To prevent certain spans from being reported to Sentry, use the <PlatformIdentifier name="before-send-span" /> configuration option which allows you to provide a function to modify and drop a child span.
-This function is only called for child spans of the root span. If you want to modify or drop the root span, including its child spans, use [`beforeSendTransaction`](#using-beforesendtransaction) instead.
+Use the <PlatformIdentifier name="before-send-span" /> configuration option which allows you to provide a function to modify a span.
+This function is called for the root span and all child spans. If you want to drop the root span, including its child spans, use [`beforeSendTransaction`](#using-beforesendtransaction) instead.
+Please note that you cannot use `beforeSendSpan` to drop a span, you can only modify it and filter data on it.
 
 <PlatformContent includePath="configuration/before-send-span" />
