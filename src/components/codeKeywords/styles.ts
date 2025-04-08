@@ -154,7 +154,9 @@ export const KeywordIndicator = styled(ArrowDown, {
   top: -1px;
 `;
 
-export const KeywordSpan = styled(motion.span)<{
+export const KeywordSpan = styled(motion.span, {
+  shouldForwardProp: prop => prop !== 'hasPreview',
+})<{
   hasPreview?: boolean;
 }>`
   grid-row: 1;

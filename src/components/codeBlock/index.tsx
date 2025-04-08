@@ -48,6 +48,19 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
   const [showCopyButton, setShowCopyButton] = useState(false);
   useEffect(() => {
     setShowCopyButton(true);
+    // prevent .no-copy elements from being copied during selction Right click copy or / Cmd+C
+    const noCopyElements = codeRef.current?.querySelectorAll<HTMLSpanElement>('.no-copy');
+    document.addEventListener('selectionchange', () => {
+      // hide no copy elements within the selection
+      const selection = window.getSelection();
+      noCopyElements?.forEach(element => {
+        if (selection?.containsNode(element, true)) {
+          element.style.display = 'none';
+        } else {
+          element.style.display = 'inline';
+        }
+      });
+    });
   }, []);
 
   useCleanSnippetInClipboard(codeRef, {language});
