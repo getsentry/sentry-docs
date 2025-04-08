@@ -499,6 +499,14 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/:guide/configuration/options/#environment',
   },
   {
+    source: '/platforms/javascript/configuration/draining/',
+    destination: '/platforms/javascript/apis/#flush',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/configuration/draining/',
+    destination: '/platforms/javascript/guides/:guide/apis/#flush',
+  },
+  {
     source: '/platforms/:platform/context/',
     destination: '/platforms/:platform/enriching-events/context/',
   },
@@ -987,9 +995,13 @@ const userDocsRedirects = [
     source: '/platforms/kotlin-multiplatform/:path*',
     destination: '/platforms/kotlin/guides/kotlin-multiplatform/:path*',
   },
+   {
+    source: '/platforms/python/tracing/trace-propagation/:path*',
+    destination: '/platforms/python/tracing/distributed-tracing/:path*',
+  },
   {
-    source: '/platforms/python/:productfeature/troubleshooting/:path*',
-    destination: '/platforms/python/troubleshooting/:path*',
+    source: '/platforms/python/tracing/distributed-tracing/custom-instrumentation',
+    destination: '/platforms/python/tracing/distributed-tracing/custom-trace-propagation',
   },
   {
     source: '/platforms/ruby/guides/:guide/:productfeature/troubleshooting/:path*',
