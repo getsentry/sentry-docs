@@ -507,6 +507,22 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/:guide/apis/#flush',
   },
   {
+    source: '/platforms/javascript/enriching-events/identify-user/',
+    destination: '/platforms/javascript/apis/#setUser',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/enriching-events/identify-user/',
+    destination: '/platforms/javascript/guides/:guide/apis/#setUser',
+  },
+  {
+    source: '/platforms/javascript/enriching-events/context/',
+    destination: '/platforms/javascript/apis/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/enriching-events/context/',
+    destination: '/platforms/javascript/guides/:guide/enriching-events/',
+  },
+  {
     source: '/platforms/:platform/context/',
     destination: '/platforms/:platform/enriching-events/context/',
   },
@@ -995,7 +1011,7 @@ const userDocsRedirects = [
     source: '/platforms/kotlin-multiplatform/:path*',
     destination: '/platforms/kotlin/guides/kotlin-multiplatform/:path*',
   },
-   {
+  {
     source: '/platforms/python/tracing/trace-propagation/:path*',
     destination: '/platforms/python/tracing/distributed-tracing/:path*',
   },
@@ -1037,10 +1053,23 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/tracing/distributed-tracing/:path*',
   },
   {
+    source: '/platforms/javascript//tracing/instrumentation/performance-metrics/',
+    destination: '/platforms/javascript/tracing/span-metrics/',
+  },
+  {
     source:
       '/platforms/javascript/guides/:guide/tracing/instrumentation/performance-metrics/',
-    destination:
+    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/',
+  },
+  {
+    source:
+      '/platforms/javascript//tracing/instrumentation/span-metrics/performance-metrics/',
+    destination: '/platforms/javascript/tracing/span-metrics/',
+  },
+  {
+    source:
       '/platforms/javascript/guides/:guide/tracing/span-metrics/performance-metrics/',
+    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/',
   },
   {
     source: '/platforms/javascript/guides/:guide/tracing/trace-propagation/:path*',
