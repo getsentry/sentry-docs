@@ -52,12 +52,7 @@ export async function SidebarLinks({path}: {path: string[]}) {
     productSidebarItems.some(el => el.root === path[0]) ||
     path[0] === 'platform-redirect'
   ) {
-    return (
-      <ProductSidebar
-        rootNode={rootNode}
-        items={productSidebarItems}
-      />
-    );
+    return <ProductSidebar rootNode={rootNode} items={productSidebarItems} />;
   }
   // /platforms/:platformName/guides/:guideName
   if (path[0] === 'platforms') {
@@ -75,10 +70,7 @@ export async function SidebarLinks({path}: {path: string[]}) {
             <hr />
           </Fragment>
         )}
-        <ProductSidebar
-          rootNode={rootNode}
-          items={productSidebarItems}
-        />
+        <ProductSidebar rootNode={rootNode} items={productSidebarItems} />
       </Fragment>
     );
   }
