@@ -20,7 +20,7 @@ The BatchProcessor MUST start a timeout of 5 seconds when the SDK adds the first
 
 The BatchProcessor MUST send all items after the SDK when containing spans or logs exceeding 1MiB in size. The SDK MAY choose a different value for the max batch size keeping the [envelope max sizes](/sdk/data-model/envelopes/#size-limits) in mind. The SDK MUST calculate the size of a span or a log to manage the BatchProcessor's memory footprint. The SDK MUST serialize the span or log and calculate the size based on the serialized JSON bytes. As serialization is expensive, the BatchProcessor SHOULD keep track of the serialized spans and logs and pass these to the envelope to avoid serializing multiple times.
 
-When the BatchProcessor sends all spans or logs, it MUST reset its timeout and remove all spans and logs. The SDK MUST apply filtering and sampling before adding spans or logs to the BatchProcessor. The SDK SHOULD drop rate limited spans and logs before putting them into the BatchProcessor to reduce memory usage.
+When the BatchProcessor sends all spans or logs, it MUST reset its timeout and remove all spans and logs. The SDK MUST apply filtering and sampling before adding spans or logs to the BatchProcessor. The SDK MUST apply rate limits to spans and logs after they leave the BatchProcessor to send as much data as possible by dropping data as late as possible.
 
 The detailed specification is written in the [Gherkin syntax](https://cucumber.io/docs/gherkin/reference/). The specification uses spans as an example, but the same applies to logs or any other future telemetry data.
 
