@@ -330,7 +330,7 @@ Messages show up as issues on your issue stream, with the message as the issue n
   You cannot search these, but they are viewable on the issue page - if you
   need to be able to filter for certain data, use [tags](./#setTag) instead.
 
-  There are no restrictions on context name. In the context object, all keys are allowed except for `type`, which is used internally.
+There are no restrictions on context name. In the context object, all keys are allowed except for `type`, which is used internally.
 
 By default, Sentry SDKs normalize nested structured context data up to three levels deep.
 Any data beyond this depth will be trimmed and marked using its type instead.
@@ -341,13 +341,14 @@ Learn more about conventions for common contexts in the [contexts interface deve
  <Expandable title='Example'>
   Context data is structured and can contain any data you want:
 
-  ```javascript
-  Sentry.setContext("character", {
-    name: "Mighty Fighter",
-    age: 19,
-    attack_type: "melee",
-  });
-  ```
+```javascript
+Sentry.setContext("character", {
+  name: "Mighty Fighter",
+  age: 19,
+  attack_type: "melee",
+});
+```
+
   </Expandable>
 
 </SdkApi>
@@ -425,7 +426,6 @@ Learn more about conventions for common contexts in the [contexts interface deve
     To ensure your users' IP addresses are never stored in your event data, you can go to your project settings, click on "Security & Privacy", and enable "Prevent Storing of IP Addresses" or use Sentry's [server-side data scrubbing](/security-legal-pii/scrubbing/) to remove `$user.ip_address`. Adding such a rule ultimately overrules any other logic.
 
   </Expandable>
-
 
 <PlatformCategorySection supported={["server"]}>
   <Expandable title="Setting The User For the Current Request ">
@@ -1077,3 +1077,113 @@ parameters={[
 Wraps a callback with a cron monitor check in. The check in will be sent to Sentry when the callback finishes.
 </SdkApi>
 </PlatformCategorySection>
+
+<PlatformSection supported={["javascript.nextjs"]}>
+## Server Actions
+
+<SdkApi
+  name="withServerActionInstrumentation"
+  signature="function withServerActionInstrumentation(serverActionName: string, options?: Options, callback: A): Promise<ReturnType<A>>"
+>
+  To instrument Next.js Server Actions, wrap their content in `withServerActionInstrumentation`, along with a name to describe your server action.
+  You can optionally pass form data and headers to record them, and configure the wrapper to record the Server Action responses.
+
+  <Expandable title="Examples">
+    ```tsx
+    import * as Sentry from "@sentry/nextjs";
+    import { headers } from "next/headers";
+
+    export default function ServerComponent() {
+    async function myServerAction(formData: FormData) {
+        "use server";
+        return await Sentry.withServerActionInstrumentation(
+        "myServerAction", // The name you want to associate this Server Action with in Sentry
+        {
+            formData, // Optionally pass in the form data
+            headers: headers(), // Optionally pass in headers
+            recordResponse: true, // Optionally record the server action response
+        },
+        async () => {
+            // ... Your Server Action code
+
+            return { name: "John Doe" };
+        }
+        );
+    }
+
+    return (
+        <form action={myServerAction}>
+        <input type="text" name="some-input-value" />
+        <button type="submit">Run Action</button>
+        </form>
+    );
+    }
+    ```
+
+  </Expandable>
+</SdkApi>
+
+## Route and Data Fetching Instrumentation
+
+<SdkApi
+  name="wrapApiHandlerWithSentry"
+  signature="function wrapApiHandlerWithSentry(apiHandler: NextApiHandler, parameterizedRoute: string): NextApiHandler"
+>
+  Instrument the provided API route handler with Sentry for error and
+  performance monitoring. This function wraps the handler exported from the
+  user's API page route file (which may or may not already be wrapped with
+  `withSentry`).
+</SdkApi>
+
+<SdkApi
+  name="wrapGetInitialPropsWithSentry "
+  signature="function wrapGetInitialPropsWithSentry(origGetInitialProps: GetInitialProps): GetInitialProps"
+>
+  Instrument a `getInitialProps` function with Sentry error and performance
+  monitoring by creating and returning a wrapped version of the function.
+</SdkApi>
+
+<SdkApi
+  name="wrapGetServerSidePropsWithSentry "
+  signature="function wrapGetServerSidePropsWithSentry(origGetInitialProps: GetInitialProps, parameterizedRoute: string): GetServerSideProps"
+>
+  Instrument a `getServerSideProps` function with Sentry error and performance
+  monitoring by creating and returning a wrapped version of the function.
+</SdkApi>
+
+<SdkApi
+  name="wrapGetStaticPropsWithSentry "
+  signature="function wrapGetStaticPropsWithSentry(origGetStaticPropsa: GetStaticProps<Props>, _parameterizedRoute: string): GetStaticProps<Props>"
+>
+  Instrument a `getStaticProps` function with Sentry error and performance
+  monitoring by creating and returning a wrapped version of the function.
+</SdkApi>
+
+<SdkApi
+  name="wrapErrorGetInitialPropsWithSentry "
+  signature="function wrapErrorGetInitialPropsWithSentry(origErrorGetInitialProps: ErrorGetInitialProps): ErrorGetInitialProps"
+>
+  Instrument a `getInitialProps` function in a custom error page ("_error.js")
+  with Sentry error and performance monitoring by creating and returning a
+  wrapped version of the function.
+</SdkApi>
+
+<SdkApi
+  name="wrapAppGetInitialPropsWithSentry "
+  signature="function wrapAppGetInitialPropsWithSentry(origAppGetInitialProps: AppGetInitialProps): AppGetInitialProps"
+>
+  Instrument a `getInitialProps` function in a custom app ("_app.js") with
+  Sentry error and performance monitoring by creating and returning a wrapped
+  version of the function.
+</SdkApi>
+
+<SdkApi
+  name="wrapDocumentGetInitialPropsWithSentry "
+  signature="function wrapDocumentGetInitialPropsWithSentry(origDocumentGetInitialProps: DocumentGetInitialProps): DocumentGetInitialProps"
+>
+  Instrument a `getInitialProps` function in a custom document ("_document.js")
+  with Sentry error and performance monitoring by creating and returning a
+  wrapped version of the function.
+</SdkApi>
+
+</PlatformSection>
