@@ -14,11 +14,15 @@ The BatchProcessor batches spans and logs into one envelope to reduce the number
 
 ## Specification
 
-Whenever the SDK finishes a span or captures a log, it MUST put these into the BatchProcessor. The SDK MUST NOT put unfinished spans into the BatchProcessor. The BatchProcessor MUST start a timeout of `x` seconds when the SDK adds the first span or log. When the timeout exceeds, the BatchProcessor MUST send all spans or logs, no matter how many items it contains. The BatchProcessor MUST send all items after the SDK captures spans or logs with a size more than `y`. When the BatchProcessor sends all spans or logs, it MUST reset its timeout and remove all spans and logs. The SDK MUST apply filtering and sampling before adding spans or logs to the BatchProcessor. The SDK SHOULD drop rate limited spans and logs before putting them into the BatchProcessor to reduce memory usage.
+Whenever the SDK finishes a span or captures a log, it MUST put these into the BatchProcessor. The SDK MUST NOT put unfinished spans into the BatchProcessor.
 
-The SDK MUST calculate the size of a span or a log to manage the BatchProcessor's memory footprint. The SDK MUST serialize the span or log and calculate the size based on the serialized JSON bytes. As serialization is expensive, the BatchProcessor SHOULD keep track of the serialized spans and logs and pass these to the envelope to avoid serializing multiple times.
+The BatchProcessor MUST start a timeout of 5 seconds when the SDK adds the first span or log. When the timeout exceeds, the BatchProcessor MUST send all spans or logs, no matter how many items it contains. The SDK MAY choose a different value for the timeout, but it MUST NOT exceed 30 seconds, as this can lead to problems with the span buffer on the backend, which uses a time interval of 60 seconds for determining segments for spans.
 
-The detailed specification is written in the [Gherkin syntax](https://cucumber.io/docs/gherkin/reference/) and uses `x = 10` seconds for the timeout and `y = 1024 * 1024` for the maximum batch byte size in the BatchProcessor. SDKs MAY use different values for `x` and `y` depending on their needs. The SDK SHOULD NOT expose x and y via the options. The specification uses spans as an example, but the same applies to logs or any other future telemetry data.
+The BatchProcessor MUST send all items after the SDK when containing spans or logs exceeding 1MiB in size. The SDK MAY choose a different value for the max batch size keeping the [envelope max sizes](/sdk/data-model/envelopes/#size-limits) in mind. The SDK MUST calculate the size of a span or a log to manage the BatchProcessor's memory footprint. The SDK MUST serialize the span or log and calculate the size based on the serialized JSON bytes. As serialization is expensive, the BatchProcessor SHOULD keep track of the serialized spans and logs and pass these to the envelope to avoid serializing multiple times.
+
+When the BatchProcessor sends all spans or logs, it MUST reset its timeout and remove all spans and logs. The SDK MUST apply filtering and sampling before adding spans or logs to the BatchProcessor. The SDK SHOULD drop rate limited spans and logs before putting them into the BatchProcessor to reduce memory usage.
+
+The detailed specification is written in the [Gherkin syntax](https://cucumber.io/docs/gherkin/reference/). The specification uses spans as an example, but the same applies to logs or any other future telemetry data.
 
 
 ```Gherkin
@@ -26,27 +30,27 @@ Scenario: No spans in BatchProcessor 1 span added
     Given no spans in the BatchProcessor
     When the SDK finishes 1 span
     Then the SDK puts this span to the BatchProcessor
-    And starts a timeout of 10 seconds
+    And starts a timeout of 5 seconds
     And doesn't send the span to Sentry
 
 Scenario: Span added before timeout exceeds
     Given span A in the BatchProcessor
-    Given 9.9 seconds pass
+    Given 4.9 seconds pass
     When the SDK finishes span B
     Then the SDK adds span B to the BatchProcessor
     And doesn't reset the timeout
     And doesn't send the spans A and B in the BatchProcessor to Sentry
 
-Scenario: Spans with size of y - 1 added, timeout exceeds
-    Given spans with size of y - 1 in the BatchProcessor
+Scenario: Spans with size of MiB - 1 byte added, timeout exceeds
+    Given spans with size of MiB - 1 byte in the BatchProcessor
     When the timeout exceeds
     Then the SDK adds all the spans to one envelope
     And sends them to Sentry
     And resets the timeout
     And clears the BatchProcessor
 
-Scenario: Spans with size of y added within 9.9 seconds
-    Given spans with size of y - 1 in the BatchProcessor
+Scenario: Spans with size of MiB - 1 byte added within 4.9 seconds
+    Given spans with size of MiB - 1 byte in the BatchProcessor
     When the SDK finishes another span and puts it into the BatchProcessor
     Then the BatchProcessor puts all spans into one envelope
     And sends the envelope to Sentry
