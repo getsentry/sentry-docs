@@ -10,29 +10,32 @@ title: Batch Processor
   This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement levels.
 </Alert>
 
-When an SDK implements span streaming or logs, it MUST batch multiple spans and logs into envelopes to reduce the number of HTTP. SDKs MUST implement a BatchProcessor to achieve this. The BatchProcessor keeps finished spans and logs in memory and batches them together in envelopes. It uses a combination of timeout and [weight](#weight) to decide when to batch its spans and logs into an envelope and send it to Sentry.
-The SDK SHOULD use the BatchProcessor in the client because the transport SHOULD NOT be aware of spans or logs. The SDK MAY deviate from this approach. The SDK MUST call filtering and sampling before adding spans or logs to the BatchProcessor. This concept is similar to [OpenTelemetry's Batch Processors](https://github.com/open-telemetry/opentelemetry-collector/blob/main/processor/batchprocessor/README.md).
+The BatchProcessor batches spans and logs into one envelope to reduce the number of HTTP requests. When an SDK implements span streaming or logs, it MUST use a BatchProcessor, which is similar to [OpenTelemetry's Batch Processors](https://github.com/open-telemetry/opentelemetry-collector/blob/main/processor/batchprocessor/README.md). The BatchProcessor holds finished spans and logs in memory and batches them together in envelopes. It uses a combination of time and size-based batching. When writing this, the BatchProcessor only handles spans and logs, but the SDK MAY use it for other telemetry data in the future.
 
-The BatchProcessor starts a timeout of `x` seconds when the SDK adds the first span or log. When the timeout exceeds, the BatchProcessor sends all spans or logs no matter how many items it contains. The BatchProcessor also sends all items after the SDK captures spans or logs with weight more than `y`. When the BatchProcessor sends all spans or logs, it resets its timeout and removes all spans and logs in the BatchProcessor. When a span and its children have more weight than the max BatchProcessor weight `y`, the BatchProcessor MUST send the spans or logs together in one envelope directly to Sentry.
+## Specification
 
-The specification is written in the [Gherkin syntax](https://cucumber.io/docs/gherkin/reference/) and uses `x = 10` seconds for the timeout and `y = 1024 * 1024` for the maximum batch byte size in the BatchProcessor. SDKs MAY use different values for `x` and `y` depending on their needs. If the timeout is set to `0`, then the SDK sends every span and log immediately. Initially, we don't plan adding options for these variables, but we can make them configurable if required in the future, similar to the option `maxCacheItems`. The specification uses spans as an example, but the same applies to logs or any other future telemetry data.
+Whenever the SDK finishes a span or captures a log, it MUST put these into the BatchProcessor. The SDK MUST NOT put unfinished spans into the BatchProcessor. The BatchProcessor MUST start a timeout of `x` seconds when the SDK adds the first span or log. When the timeout exceeds, the BatchProcessor MUST send all spans or logs, no matter how many items it contains. The BatchProcessor MUST send all items after the SDK captures spans or logs with a size more than `y`. When the BatchProcessor sends all spans or logs, it MUST reset its timeout and remove all spans and logs. The SDK MUST apply filtering and sampling before adding spans or logs to the BatchProcessor. The SDK SHOULD drop rate limited spans and logs before putting them into the BatchProcessor to reduce memory usage.
+
+The SDK MUST calculate the size of a span or a log to manage the BatchProcessor's memory footprint. The SDK MUST serialize the span or log and calculate the size based on the serialized JSON bytes. As serialization is expensive, the BatchProcessor SHOULD keep track of the serialized spans and logs and pass these to the envelope to avoid serializing multiple times.
+
+The detailed specification is written in the [Gherkin syntax](https://cucumber.io/docs/gherkin/reference/) and uses `x = 10` seconds for the timeout and `y = 1024 * 1024` for the maximum batch byte size in the BatchProcessor. SDKs MAY use different values for `x` and `y` depending on their needs. The SDK SHOULD NOT expose x and y via the options. The specification uses spans as an example, but the same applies to logs or any other future telemetry data.
 
 
 ```Gherkin
 Scenario: No spans in BatchProcessor 1 span added
     Given no spans in the BatchProcessor
-    When the SDK adds 1 span
-    Then the SDK adds this span to the BatchProcessor
+    When the SDK finishes 1 span
+    Then the SDK puts this span to the BatchProcessor
     And starts a timeout of 10 seconds
     And doesn't send the span to Sentry
 
 Scenario: Span added before timeout exceeds
-    Given 1 span in the BatchProcessor
+    Given span A in the BatchProcessor
     Given 9.9 seconds pass
-    When the SDK adds 1 span
-    Then the SDK adds this span to the BatchProcessor
+    When the SDK finishes span B
+    Then the SDK adds span B to the BatchProcessor
     And doesn't reset the timeout
-    And doesn't send the spans in the BatchProcessor to Sentry
+    And doesn't send the spans A and B in the BatchProcessor to Sentry
 
 Scenario: Spans with size of y - 1 added, timeout exceeds
     Given spans with size of y - 1 in the BatchProcessor
@@ -43,104 +46,34 @@ Scenario: Spans with size of y - 1 added, timeout exceeds
     And clears the BatchProcessor
 
 Scenario: Spans with size of y added within 9.9 seconds
-    Given no spans in the BatchProcessor
-    When the SDK adds spans with a weight of y within 9.9 seconds
-    Then the SDK puts all spans into one envelope
+    Given spans with size of y - 1 in the BatchProcessor
+    When the SDK finishes another span and puts it into the BatchProcessor
+    Then the BatchProcessor puts all spans into one envelope
     And sends the envelope to Sentry
     And resets the timeout
     And clears the BatchProcessor
 
-Scenario: 1 span added app crashes
-    Given 1 span in the SpansAggregator
-    When the SDK detects a crash
-    Then the SDK does nothing with the BatchProcessor
-    And loses the spans in the BatchProcessor
-
 Scenario: Unfinished spans
-    Given no span is in the SpansAggregator
+    Given no span is in the BatchProcessor
     When the SDK starts a span but doesn't finish it
-    Then the SpansAggregator is empty
+    Then the BatchProcessor is empty
 
-Scenario: Spans in SpansAggregator, span with children
-    Given spans with a size of y - 1 in the BatchProcessor
-    When the SDK finishes a span with one child
-    Then the SDK puts the spans with a size of y - 1 already in the BatchProcessor into an envelope
-    And sends the envelope to Sentry.
-    And stores the span with its child into the BatchProcessor
-    And resets the timeout
+Scenario: Span filtered out
+    Given no span is in the BatchProcessor
+    When the finishes a span
+    And the span is filtered out
+    Then the BatchProcessor is empty
 
-Scenario: Span with more children than max BatchProcessor weight
-    Given one span A is in the BatchProcessor
-    When the SDK starts a span B
-    And starts child spans with a size of y for span B
-    When the SDK finishes the span B and all it's children
-    Then the SDK directly puts all spans of span B into one envelope
-    And sends the envelope to Sentry.
-    And doesn't store the spans of span B in the BatchProcessor
-    And keeps the existing span A in the BatchProcessor
-    And doesn't reset the timeout
+Scenario: Span not sampled
+    Given no span is in the BatchProcessor
+    When the finishes a span
+    And the span is not sampled
+    Then the BatchProcessor is empty
 
-Scenario: Timeout set to 0 span without children
-    Given the timeout is set to 0
-    When the SDK finishes one span without any children
-    Then the SDK puts the span into one one envelope
-    And sends the envelope to Sentry.
+Scenario: 1 span added application crashes
+  Given 1 span in the SpansAggregator
+  When the SDK detects a crash
+  Then the SDK does nothing with the items in the BatchProcessor
+  And loses the spans in the BatchProcessor
 
-Scenario: Timeout set to 0 span with children
-    Given the timeout is set to 0
-    When the SDK finishes one span with children of a weight of 100
-    Then the SDK puts the span with the children into one envelope
-    And sends the envelope to Sentry.
-
-Scenario: Timeout set to 0 spans without children
-    Given the timeout is set to 0
-    When the SDK finishes two spans without any children
-    Then the SDK puts every span into one envelope
-    And sends both envelopes to Sentry.
-
-```
-
-## Weight
-
-The SDK MUST implement a way to calculate the weight of a span or a log to manage the BatchProcessor's memory footprint. Depending on the serialization strategy, the SDK MAY either serialize the span or log into bytes and count these or serialize the span or log and recursively count the number of elements in the dictionary. Every key in a dictionary and every element in an array add a weight of one. For a detailed explanation of how to count the weight, see the example below. As serialization is expensive, the BatchProcessor SHOULD keep track of the serialized spans and logs and directly pass them to the envelope item to avoid serializing multiple times.
-
-```JSON
-{
-    // All simple properties count as 1 so in total 12
-    "timestamp": 1705031078.623853,
-    "start_timestamp": 1705031078.337715,
-    "description": "ExtraViewController full display",
-    "op": "ui.load.full_display",
-    "span_id": "794d0cba0ac64235",
-    "parent_span_id": "45054abc6ded413a",
-    "trace_id": "65880cfc084f4bd5ab3abc7d598b3c14",
-    "status": "ok",
-    "origin": "manual.ui.time_to_display",
-    "hash": "a925395473cfe97d",
-    "sampled": true,
-    "type": "trace",
-
-    // The data object has 5 simple properties, which count as 5
-    // and one list with 3 elements counting as 3
-    "data": {
-        "frames.frozen": 0,
-        "frames.slow": 1,
-        "frames.total": 1,
-        "thread.id": 259,
-        "thread.name": "main",
-        "list" : [1, 2, 3]
-    },
-
-    // Tags count as 2
-    "sentry_tags": {
-        "environment": "ui-tests",
-        "main_thread": "true",
-    },
-
-    // The weight is
-    // 12 (simple properties)
-    // 8  (data)
-    // 2  (tags)
-    // = 22
-}
 ```
