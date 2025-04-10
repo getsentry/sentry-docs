@@ -132,9 +132,7 @@ export function DynamicNav({
   rootBits.forEach(bit => {
     entity = currentTree.find(n => n.name === bit);
     if (!entity) {
-      // eslint-disable-next-line no-console
-      console.warn(`Could not find entity at ${root} (specifically at ${bit})`);
-      return;
+      throw new Error(`Could not find entity at ${root} (specifically at ${bit})`);
     }
     currentTree = entity.children;
   });
@@ -147,9 +145,7 @@ export function DynamicNav({
   const parentNode = entity.children?.find((n: EntityTree) => n.name === '');
 
   if (!parentNode) {
-    // eslint-disable-next-line no-console
-    console.warn(`Could not find parentNode at ${root}`);
-    return null;
+    throw new Error(`Could not find parentNode at ${root}`);
   }
 
   const {path} = serverContext();
