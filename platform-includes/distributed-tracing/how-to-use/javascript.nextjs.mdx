@@ -4,14 +4,14 @@ For client-side, when you are interacting with other external API systems, you m
 
 <Alert>
 
-Note: port numbers are relevant for trace propagation and the origin. You may need to configure the `tracePropagationTargets` to ensure that traces are propagated across your services if they run on different ports. 
+Note: port numbers are relevant for trace propagation and the origin. You may need to configure the `tracePropagationTargets` to ensure that traces are propagated across your services if they run on different ports.
 
 For example, if you have a Node.js backend running locally on port 3000, that destination (`http://localhost:3000`) should be added to the `tracePropagationTargets` array on your frontend to ensure that CORS doesn't restrict the propagation of traces.
 
 </Alert>
 
 ```javascript
-// sentry.client.config.js
+// instrumentation-client.js
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [Sentry.browserTracingIntegration()],
@@ -26,7 +26,7 @@ If you're using version `7.57.x` or below, you'll need to have our <PlatformLink
 #### Example 1: Microservices E-commerce Platform
 
 ```javascript
-// sentry.client.config.js
+// instrumentation-client.js
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [Sentry.browserTracingIntegration()],
@@ -39,15 +39,15 @@ Sentry.init({
 
 This tells Sentry to pass trace headers across the following paths:
 
-* Your main API server (where product data comes from)
-* Your authentication server (where logins happen)
+- Your main API server (where product data comes from)
+- Your authentication server (where logins happen)
 
 This way, if a customer experiences an error during checkout, or you want to check the performance of a specific endpoint, you can see the complete path their request took across these different services.
 
 #### Example 2: Mobile App with Backend Services
 
 ```javascript
-// sentry.client.config.js
+// instrumentation-client.js
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [Sentry.browserTracingIntegration()],
@@ -56,16 +56,16 @@ Sentry.init({
   tracePropagationTargets: [
     "https://api.myapp.com",
     "https://media.myapp.com",
-    /^\/local-api\//
+    /^\/local-api\//,
   ],
 });
 ```
 
 This configuration lets your app track user actions across:
 
-* Your main API server (handles most app functions)
-* Your media server (handles images, videos, etc.)
-* Any local API endpoints in your app
+- Your main API server (handles most app functions)
+- Your media server (handles images, videos, etc.)
+- Any local API endpoints in your app
 
 If your app crashes while a user is uploading a photo, you can trace exactly where the problem occurred - in the app itself, the main API, or the media service.
 
