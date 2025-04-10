@@ -33,7 +33,7 @@ pnpm add @sentry/react-native
 
 To set up the integration, add the following to your Sentry initialization.
 
-```javascript
+```javascript {tabTitle:Mobile}
 import * as Sentry from "@sentry/react-native";
 
 Sentry.init({
@@ -44,6 +44,24 @@ Sentry.init({
     // We recommend the ~5x more performant experimental view renderer
     enableExperimentalViewRenderer: true,
   })],
+});
+```
+
+```javascript {tabTitle:Browser}
+import * as Sentry from '@sentry/react-native';
+import { Platform } from 'react-native';
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  integrations: (integrations) => {
+    if (Platform.OS === 'web') {
+      integrations.push(Sentry.browserReplayIntegration());
+    }
+    integrations.push(Sentry.mobileReplayIntegration());
+    return integrations;
+  },
 });
 ```
 
@@ -79,15 +97,34 @@ If you encounter any data not being redacted with the default settings, please l
 
 To disable redaction altogether (not to be used on applications with sensitive data):
 
-```javascript
-// You can pass options to the mobileReplayIntegration function during init:
+```javascript {tabTitle:Mobile}
 integrations: [
+  // You can pass options to the mobileReplayIntegration function during init:
   Sentry.mobileReplayIntegration({
     maskAllText: false,
     maskAllImages: false,
     maskAllVectors: false,
   }),
 ]
+```
+
+```javascript {tabTitle:Browser}
+integrations: (integrations) => {
+  if (Platform.OS === 'web') {
+    // You can pass options to the browserReplayIntegration function during init:
+    integrations.push(Sentry.browserReplayIntegration({
+      maskAllText: true,
+      maskAllInputs: true,
+    }));
+  }
+  // You can pass options to the mobileReplayIntegration function during init:
+  integrations.push(Sentry.mobileReplayIntegration({
+    maskAllText: false,
+    maskAllImages: false,
+    maskAllVectors: false,
+  }));
+  return integrations;
+}
 ```
 
 ## React Component Names
