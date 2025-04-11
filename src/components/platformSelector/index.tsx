@@ -78,7 +78,10 @@ export function PlatformSelector({
     }
     // any of these fields can be used to match the search value
     const keys = ['title', 'name', 'aliases', 'sdk', 'keywords'];
-    const matches_ = matchSorter(platformsAndGuides, searchValue, {keys});
+    const matches_ = matchSorter(platformsAndGuides, searchValue, {
+      keys,
+      threshold: matchSorter.rankings.ACRONYM,
+    });
     // Radix Select does not work if we don't render the selected item, so we
     // make sure to include it in the list of matches.
     const selectedPlatform = platformsAndGuides.find(
