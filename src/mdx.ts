@@ -41,7 +41,7 @@ const isSupported = (
   frontmatter: FrontMatter,
   platformName: string,
   guideName?: string
-): boolean => {
+): boolean | null => {
   const canonical = guideName ? `${platformName}.${guideName}` : platformName;
   if (frontmatter.supported && frontmatter.supported.length) {
     if (frontmatter.supported.indexOf(canonical) !== -1) {
@@ -58,7 +58,7 @@ const isSupported = (
   ) {
     return false;
   }
-  return true;
+  return null;
 };
 
 let getDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
@@ -252,23 +252,29 @@ function getAllFilesFrontMatter() {
         } else {
           // For non-index files, check if there's a parent index.mdx file (on the same level) for inherited support
           let isFileSupported = isSupported(f.frontmatter, platformName, guideName);
-          const dirPath = path.dirname(subpath);
 
-          const parentIndexFile = commonFiles.find(parentFile => {
-            const parentSubpath = parentFile.commonFileName.slice(commonPath.length + 1);
-            return parentSubpath === path.join(dirPath, 'index.mdx');
-          });
+          // only check if there no explicit support decision from the file
+          if (isFileSupported === null) {
+            const dirPath = path.dirname(subpath);
 
-          if (parentIndexFile) {
-            isFileSupported = isSupported(
-              parentIndexFile.frontmatter,
-              platformName,
-              guideName
-            );
-          }
+            const parentIndexFile = commonFiles.find(parentFile => {
+              const parentSubpath = parentFile.commonFileName.slice(
+                commonPath.length + 1
+              );
+              return parentSubpath === path.join(dirPath, 'index.mdx');
+            });
 
-          if (!isFileSupported) {
-            return;
+            if (parentIndexFile) {
+              isFileSupported = isSupported(
+                parentIndexFile.frontmatter,
+                platformName,
+                guideName
+              );
+            }
+
+            if (isFileSupported === false) {
+              return;
+            }
           }
         }
 
