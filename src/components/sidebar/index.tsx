@@ -81,11 +81,11 @@ export async function Sidebar({path, versions}: SidebarProps) {
       });
 
   return (
-    <aside className={styles.sidebar}>
+    <aside className={`${styles.sidebar} py-3`}>
       <input type="checkbox" id={sidebarToggleId} className="hidden" />
       <style>{':root { --sidebar-width: 300px; }'}</style>
       <div className="md:flex flex-col items-stretch overflow-auto">
-        <div className="platform-selector">
+        <div className="platform-selector px-3">
           <div className="mb-3">
             <PlatformSelector
               platforms={platforms}
@@ -98,7 +98,7 @@ export async function Sidebar({path, versions}: SidebarProps) {
             </div>
           )}
         </div>
-        <div className={styles.toc}>
+        <div className={`${styles.toc} px-3`}>
           <ScrollActiveLink activeLinkSelector={activeLinkSelector} />
           <SidebarLinks path={path} />
         </div>
