@@ -27,7 +27,7 @@ dependencies:
 
 Configuration should happen as early as possible in your application's lifecycle.
 
-```dart {"onboardingOptions": {"performance": "11-13", "profiling": "14-17"}}
+```dart {"onboardingOptions": {"performance": "11-13, 24-31", "profiling": "14-17"}}
 import 'package:flutter/widgets.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -47,8 +47,16 @@ Future<void> main() async {
       options.profilesSampleRate = 1.0;
     },
     appRunner: () => runApp(
+      // SentryWidget automatically captures widget lifecycle events
+      // and creates breadcrumbs for important Flutter events
       SentryWidget(
-        child: MyApp(),
+        child: MyApp(
+          // When tracing is enabled, add SentryNavigatorObserver to connect
+          // page navigations, spans, and errors in a single trace
+          navigatorObservers: [
+            SentryNavigatorObserver()
+          ],
+        ),
       ),
     ),
   );
@@ -58,7 +66,7 @@ Future<void> main() async {
 }
 ```
 
-```dart {tabTitle:With custom zone}  {"onboardingOptions": {"performance": "19-21", "profiling": "22-25"}}
+```dart {tabTitle:With custom zone}  {"onboardingOptions": {"performance": "19-21, 34-41", "profiling": "22-25"}}
 import 'package:flutter/widgets.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -75,7 +83,7 @@ Future<void> main() async {
       (options) {
         options.dsn = '___PUBLIC_DSN___';
         // Adds request headers and IP for users,
-        // visit: https://docs.sentry.io/platforms/dart/guides//data-management/data-collected/ for more info
+        // visit: https://docs.sentry.io/platforms/dart/guides/flutter/data-management/data-collected/ for more info
         options.sendDefaultPii = true;
         // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
         // We recommend adjusting this value in production.
@@ -86,12 +94,20 @@ Future<void> main() async {
         options.profilesSampleRate = 1.0;
       },
       appRunner: () => runApp(
+        // SentryWidget automatically captures widget lifecycle events
+        // and creates breadcrumbs for important Flutter events
         SentryWidget(
-          child: MyApp(),
+          child: MyApp(
+            // When tracing is enabled, add SentryNavigatorObserver to connect
+            // page navigations, spans, and errors in a single trace
+            navigatorObservers: [
+              SentryNavigatorObserver()
+            ],
+          ),
         ),
       ),
     );
-  } (error, stackTrace) {
+  }, (error, stackTrace) {
     // Automatically sends errors to Sentry, no need to do any
     // captureException calls on your part.
     // On top of that, you can do your own custom stuff in this callback.
@@ -101,6 +117,10 @@ Future<void> main() async {
   // SENTRY_ENVIRONMENT via Dart environment variable (--dart-define)
 }
 ```
+
+<Alert level="info">
+When you enable tracing, make sure to provide route names so Sentry can properly identify and track navigation between screens. <PlatformLink to="/integrations/routing-instrumentation/">Learn more about routing instrumentation</PlatformLink>
+</Alert>
 
 ## Verify
 
