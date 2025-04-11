@@ -2,6 +2,7 @@
  * @typedef {import('hast').Element} Element
  * @typedef {import('hast').Root} Root
  */
+import {toString} from 'hast-util-to-string';
 
 import rangeParser from 'parse-numeric-range';
 import {visit} from 'unist-util-visit';
@@ -25,81 +26,36 @@ export default function rehypeOnboardingLines() {
     visit(tree, {type: 'element', tagName: 'code'}, visitor);
   };
 }
-/**
- * Parse the line numbers from the metastring
- * @param {string} meta
- * @return {number[]}
- * @example
- * parseLines('1, 3-4') // [1, 3, 4]
- * parseLines('') // []
- */
-const parseLines = meta => {
-  const RE = /([\d,-]+)/;
-  // Remove space between {} e.g. {1, 3}
-  const parsedMeta = meta
-    .split(',')
-    .map(str => str.trim())
-    .join(',');
-  if (RE.test(parsedMeta)) {
-    const strlineNumbers = RE.exec(parsedMeta)?.[1];
-    if (!strlineNumbers) {
-      return [];
-    }
-    const lineNumbers = rangeParser(strlineNumbers);
-    return lineNumbers;
-  }
-  return [];
-};
-
-/**
- * Create a closure that returns an onboarding option `id` for a given line if it exists
- *
- * @param {string} meta
- * @return { (index:number) => string | undefined }
- */
-const getOptionForLine = meta => {
-  // match the onboardingOptions object, but avoid `other stuff`
-  const optionsRE = /{"onboardingOptions":\s*({[^}]*})\s*}/;
-  let linesForOptions = {};
-  const options = optionsRE.exec(meta)?.[1];
-  if (!options) {
-    return () => undefined;
-  }
-
-  // eval provides the convenience of not having to wrap the object properties in quotes
-  const parsedOptions = JSON.parse(options);
-  linesForOptions = Object.keys(parsedOptions).reduce((acc, key) => {
-    acc[key] = parseLines(parsedOptions[key]);
-    return acc;
-  }, {});
-  return index => {
-    for (const key in linesForOptions) {
-      if (linesForOptions[key].includes(index + 1)) {
-        return key;
-      }
-    }
-    return undefined;
-  };
-};
 
 /**
  * @param {Element} node
  */
 function visitor(node) {
-  const meta = /** @type {string} */ (
-    node?.data?.meta || node?.properties?.metastring || ''
-  );
-
-  if (!meta.includes('onboardingOptions')) {
+  // ignore no code-highlight <code> tags as in in inline code resulting from a `markdown`
+  if (!node.properties.className?.includes('code-highlight')) {
     return;
   }
 
-  const optionForLine = getOptionForLine(meta);
+  /* @type {string | undefined} */
+  let currentOption;
 
-  node.children.forEach((line, index) => {
-    const option = optionForLine(index);
-    if (option) {
-      line.properties['data-onboarding-option'] = option;
+  // product options syntax
+  // ___product_option_start___ performance
+  // some lines here
+  // ___product_option_end___ performance
+  const PRODUCT_OPTION_START = '___product_option_start___';
+  const PRODUCT_OPTION_END = '___product_option_end___';
+  node.children?.forEach(line => {
+    const lineStr = toString(line);
+    if (lineStr.includes(PRODUCT_OPTION_START)) {
+      currentOption = lineStr.split(PRODUCT_OPTION_START)[1].trim();
+      line.properties['data-onboarding-option-hidden'] = '1';
+    } else if (lineStr.includes(PRODUCT_OPTION_END)) {
+      line.properties['data-onboarding-option-hidden'] = '1';
+      currentOption = undefined;
+    }
+    if (currentOption) {
+      line.properties['data-onboarding-option'] = currentOption;
     }
   });
 }
