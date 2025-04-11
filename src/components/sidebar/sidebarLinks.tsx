@@ -2,9 +2,8 @@ import {Fragment} from 'react';
 
 import {getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
 
-import {DynamicNav, toTree} from '../dynamicNav';
-
 import {DefaultSidebar} from './defaultSidebar';
+import {DynamicNav, toTree} from './dynamicNav';
 import {PlatformSidebar} from './platformSidebar';
 import {ProductSidebar} from './productSidebar';
 import {NavNode} from './types';
@@ -47,25 +46,13 @@ const productSidebarItems = [
   },
 ];
 
-export async function SidebarLinks({
-  path,
-  headerClassName,
-}: {
-  headerClassName: string;
-  path: string[];
-}) {
+export async function SidebarLinks({path}: {path: string[]}) {
   const rootNode = await getDocsRootNode();
   if (
     productSidebarItems.some(el => el.root === path[0]) ||
     path[0] === 'platform-redirect'
   ) {
-    return (
-      <ProductSidebar
-        rootNode={rootNode}
-        items={productSidebarItems}
-        headerClassName={headerClassName}
-      />
-    );
+    return <ProductSidebar rootNode={rootNode} items={productSidebarItems} />;
   }
   // /platforms/:platformName/guides/:guideName
   if (path[0] === 'platforms') {
@@ -79,16 +66,11 @@ export async function SidebarLinks({
               platformName={platformName}
               guideName={guideName}
               rootNode={rootNode}
-              headerClassName={headerClassName}
             />
             <hr />
           </Fragment>
         )}
-        <ProductSidebar
-          rootNode={rootNode}
-          items={productSidebarItems}
-          headerClassName={headerClassName}
-        />
+        <ProductSidebar rootNode={rootNode} items={productSidebarItems} />
       </Fragment>
     );
   }
@@ -102,7 +84,6 @@ export async function SidebarLinks({
             root="contributing"
             title="Contributing to Docs"
             tree={toTree(contribNodes)}
-            headerClassName={headerClassName}
           />
         </ul>
       );
