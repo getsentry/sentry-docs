@@ -94,35 +94,19 @@ Create three files in your application's root directory: `sentry.server.config.(
   slightly different, so copy them carefully.
 </Alert>
 
-```javascript {tabTitle:Client} {filename:instrumentation-client.(js|ts)} {"onboardingOptions": {"performance": "7-13", "session-replay": "5-6, 14-20"}}
+```javascript {tabTitle:Client} {filename:instrumentation-client.(js|ts)} {"onboardingOptions": {"performance": "5, 12"}}
 import * as Sentry from "@sentry/nextjs";
-
-// This export will instrument router navigations. `captureRouterTransitionStart` is available from SDK version 9.12.0 onwards - upgrade if necessary!
-export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  // Replay may only be enabled for the client-side
-  integrations: [Sentry.replayIntegration()],
-
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for tracing.
-  // We recommend adjusting this value in production
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
   tracesSampleRate: 1.0,
-
-  // Capture Replay for 10% of all sessions,
-  // plus for 100% of sessions with an error
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
-
-  // Note: if you want to override the automatic release value, do not set a
-  // `release` value here - use the environment variable `SENTRY_RELEASE`, so
-  // that it will also get attached to your source maps
+  //other options for replay etc.
+  //...
 });
+
+// This export will instrument router navigations, and is only relevant if you enable tracing.
+// `captureRouterTransitionStart` is available from SDK version 9.12.0 onwards
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
 ```
 
 ```javascript {tabTitle:Server} {filename:sentry.server.config.(js|ts)} {"onboardingOptions": {"performance": "5-11"}}
