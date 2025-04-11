@@ -19,7 +19,6 @@ import {SidebarLinks} from './sidebarLinks';
 import {SidebarProps} from './types';
 
 const activeLinkSelector = `.${styles.sidebar} .toc-item .active`;
-const headerClassName = `${styles['sidebar-title']} flex items-center`;
 
 export const sidebarToggleId = styles['navbar-menu-toggle'];
 
@@ -29,7 +28,6 @@ export async function Sidebar({path, versions}: SidebarProps) {
   if (isDeveloperDocs) {
     return (
       <DevelopDocsSidebar
-        headerClassName={headerClassName}
         sidebarToggleId={sidebarToggleId}
         path={'/' + path.join('/') + '/'}
         rootNode={rootNode}
@@ -102,7 +100,7 @@ export async function Sidebar({path, versions}: SidebarProps) {
         </div>
         <div className={styles.toc}>
           <ScrollActiveLink activeLinkSelector={activeLinkSelector} />
-          <SidebarLinks path={path} headerClassName={headerClassName} />
+          <SidebarLinks path={path} />
         </div>
       </div>
     </aside>
