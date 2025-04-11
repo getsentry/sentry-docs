@@ -1057,7 +1057,7 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/tracing/distributed-tracing/:path*',
   },
   {
-    source: '/platforms/javascript//tracing/instrumentation/performance-metrics/',
+    source: '/platforms/javascript/tracing/instrumentation/performance-metrics/',
     destination: '/platforms/javascript/tracing/span-metrics/',
   },
   {
@@ -1069,6 +1069,22 @@ const userDocsRedirects = [
     source:
       '/platforms/javascript//tracing/instrumentation/span-metrics/performance-metrics/',
     destination: '/platforms/javascript/tracing/span-metrics/',
+  },
+  {
+    source: '/platforms/javascript/profiling/browser-profiling/',
+    destination: '/platforms/javascript/profiling/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/profiling/browser-profiling/',
+    destination: '/platforms/javascript/guides/:guide/profiling/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/profiling/node-profiling/',
+    destination: '/platforms/javascript/guides/:guide/profiling/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/profiling/browser-profiling/',
+    destination: '/platforms/javascript/guides/:guide/profiling/',
   },
   {
     source:
