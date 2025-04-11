@@ -3,8 +3,6 @@
  * @typedef {import('hast').Root} Root
  */
 import {toString} from 'hast-util-to-string';
-
-import rangeParser from 'parse-numeric-range';
 import {visit} from 'unist-util-visit';
 
 /**
