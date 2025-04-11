@@ -14,7 +14,10 @@ export function Breadcrumbs({leafNode}: BreadcrumbsProps) {
   for (let node: DocNode | undefined = leafNode; node; node = node.parent) {
     if (node && !node.missing) {
       const to = node.path === '/' ? node.path : `/${node.path}/`;
-      const title = node.frontmatter.platformTitle ?? node.frontmatter.sidebar_title ?? node.frontmatter.title;
+      const title =
+        node.frontmatter.platformTitle ??
+        node.frontmatter.sidebar_title ??
+        node.frontmatter.title;
 
       breadcrumbs.unshift({
         to,
