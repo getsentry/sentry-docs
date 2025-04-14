@@ -240,7 +240,7 @@ export function PlatformSelector({
         </ComboboxProvider>
       </RadixSelect.Root>
       {showStoredPlatform && (
-        <div className='mt-3'>
+        <div className="mt-3">
           <SidebarLink
             href={storedPlatform.url}
             title={`Sentry for ${storedPlatform.title ?? storedPlatform.key}`}
