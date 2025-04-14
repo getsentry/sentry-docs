@@ -188,11 +188,7 @@ export function SidebarTableOfContents() {
 
   return (
     <div className={styles['doc-toc']}>
-      {!!tocItems.length && (
-        <div className={styles['doc-toc-title']}>
-          <h6>On this page</h6>
-        </div>
-      )}
+      {!!tocItems.length && <h2 className={styles['doc-toc-title']}>On this page</h2>}
       <ul className={styles['section-nav']}>{recursiveRender(buildTocTree(tocItems))}</ul>
     </div>
   );

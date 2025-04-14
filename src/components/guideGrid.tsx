@@ -27,9 +27,7 @@ export function GuideGrid({platform, className}: Props) {
 
   return (
     <Fragment>
-      <div className="doc-toc-title">
-        <h6>Related Guides</h6>
-      </div>
+      <h2>Related Guides</h2>
       <ul className={className}>
         {currentPlatform.guides.map(guide => (
           <li key={guide.key}>

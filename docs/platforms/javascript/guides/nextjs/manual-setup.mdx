@@ -19,20 +19,7 @@ Choose the features you want to configure, and this guide will show you how:
   options={["error-monitoring", "performance", "session-replay"]}
 />
 
-<Expandable title="Want to learn more about these features?">
-
-- [**Issues**](/product/issues) (always enabled): Sentry's core error monitoring product that automatically reports errors,
-  uncaught exceptions, and unhandled rejections. If you have something that
-  looks like an exception, Sentry can capture it.
-- [**Tracing**](/product/tracing): Track software performance while seeing the
-  impact of errors across multiple systems. For example, distributed tracing
-  allows you to follow a request from the frontend to the backend and back.
-- [**Session Replay**](/product/explore/session-replay/web):
-  Get to the root cause of an issue faster by viewing a video-like reproduction
-  of what was happening in the user's browser before, during, and after the
-  problem.
-
-</Expandable>
+<PlatformContent includePath="getting-started-features-expandable" />
 
 ### Install the Sentry SDK
 
@@ -100,27 +87,26 @@ export default withSentryConfig(nextConfig, {
 
 ### Initialize Sentry Client-Side and Server-Side SDKs
 
-Create three files in your application's root directory: `sentry.client.config.(js|ts)`, `sentry.server.config.(js|ts)` and `sentry.edge.config.(js|ts)`. Add the following initialization code into each respective file:
+Create three files in your application's root directory: `sentry.server.config.(js|ts)`, `sentry.edge.config.(js|ts)`, and `instrumentation-client.(js|ts)`. Add the following initialization code into each respective file:
 
 <Alert level="info" title="Note">
   These files run in different environments (browser, server, edge) and are
   slightly different, so copy them carefully.
 </Alert>
 
-```javascript {tabTitle:Client} {filename:sentry.client.config.(js|ts)} {"onboardingOptions": {"performance": "7-13", "session-replay": "5-6, 14-20"}}
+```javascript {tabTitle:Client} {filename:instrumentation-client.(js|ts)} {"onboardingOptions": {"performance": "5-10", "session-replay": "11-19"}}
 import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  // Replay may only be enabled for the client-side
-  integrations: [Sentry.replayIntegration()],
-
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for tracing.
   // We recommend adjusting this value in production
   // Learn more at
   // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
   tracesSampleRate: 1.0,
+  // Replay may only be enabled for the client-side
+  integrations: [Sentry.replayIntegration()],
 
   // Capture Replay for 10% of all sessions,
   // plus for 100% of sessions with an error
@@ -133,6 +119,10 @@ Sentry.init({
   // `release` value here - use the environment variable `SENTRY_RELEASE`, so
   // that it will also get attached to your source maps
 });
+
+// This export will instrument router navigations, and is only relevant if you enable tracing.
+// `captureRouterTransitionStart` is available from SDK version 9.12.0 onwards
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
 ```
 
 ```javascript {tabTitle:Server} {filename:sentry.server.config.(js|ts)} {"onboardingOptions": {"performance": "5-11"}}
@@ -379,7 +369,7 @@ export default function ServerComponent() {
       "myServerAction", // The name you want to associate this Server Action with in Sentry
       {
         formData, // Optionally pass in the form data
-        headers: headers(), // Optionally pass in headers
+        headers: await headers(), // Optionally pass in headers
         recordResponse: true, // Optionally record the server action response
       },
       async () => {
@@ -575,7 +565,7 @@ module.exports = withSentryConfig(nextConfig, {
 
 ### Opt Out of Sentry SDK bundling in Client- or Server-Side
 
-If you want the Sentry SDK to be available in your server-side and not in client-side, you can simply delete `sentry.client.config.js`. This will prevent webpack from pulling in the Sentry related files when generating the browser bundle.
+If you want the Sentry SDK to be available in your server-side and not in client-side, you can simply delete `instrumentation-client.(js|ts)`. This will prevent webpack from pulling in the Sentry related files when generating the browser bundle.
 Similarly, to opt out of server-side SDK bundling, you can simply delete the `sentry.server.config.js` and `sentry.edge.config.js` files. Make sure to remove any imports of these files from `instrumentation.ts`.
 
 ## Step 8: Instrument Vercel Cron Jobs (Optional)

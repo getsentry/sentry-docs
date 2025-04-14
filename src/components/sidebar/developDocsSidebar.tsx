@@ -2,14 +2,14 @@ import {DocNode, nodeForPath} from 'sentry-docs/docTree';
 
 import styles from './style.module.scss';
 
-import {DynamicNav, toTree} from '../dynamicNav';
 import {SidebarLink} from '../sidebarLink';
 
+import {DynamicNav, toTree} from './dynamicNav';
 import {NavNode} from './types';
 import {docNodeToNavNode, getNavNodes} from './utils';
 
-const devDocsMenuItems: {root: string; title: string; hideChevron?: boolean}[] = [
-  {root: 'getting-started', title: 'Getting Started', hideChevron: true},
+const devDocsMenuItems: {root: string; title: string}[] = [
+  {root: 'getting-started', title: 'Getting Started'},
   {root: 'engineering-practices', title: 'Engineering Practices'},
   {root: 'application-architecture', title: 'Application Architecture'},
   {root: 'development-infrastructure', title: 'Development Infrastructure'},
@@ -26,9 +26,7 @@ export function DevelopDocsSidebar({
   path,
   rootNode,
   sidebarToggleId,
-  headerClassName,
 }: {
-  headerClassName: string;
   path: string;
   rootNode: DocNode;
   sidebarToggleId: string;
@@ -47,15 +45,13 @@ export function DevelopDocsSidebar({
       <div className="md:flex flex-col items-stretch">
         <div className={styles.toc}>
           <ul data-sidebar-tree>
-            {devDocsMenuItems.map(({root, title, hideChevron}) => (
+            {devDocsMenuItems.map(({root, title}) => (
               <DynamicNav
                 key={root}
                 root={root}
                 title={title}
                 tree={getNavTree(root)}
-                headerClassName={headerClassName}
-                collapse
-                withChevron={!hideChevron}
+                collapsible
               />
             ))}
           </ul>
