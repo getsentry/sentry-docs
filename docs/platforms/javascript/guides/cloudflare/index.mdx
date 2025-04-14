@@ -1,6 +1,6 @@
 ---
 title: Cloudflare
-description: 'Official Sentry SDK for Cloudflare Workers and Cloudflare Pages.'
+description: "Official Sentry SDK for Cloudflare Workers and Cloudflare Pages."
 sdk: sentry.javascript.cloudflare
 categories:
   - javascript
@@ -11,7 +11,9 @@ categories:
 
 ## Install
 
-<OnboardingOptionButtons options={["error-monitoring", "performance", "profiling"]} />
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "profiling"]}
+/>
 
 In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/).
 
@@ -35,22 +37,21 @@ pnpm add @sentry/cloudflare
 
 Configuration should happen as early as possible in your application's lifecycle.
 
-To use the SDK, you'll need to set either the `nodejs_compat` or `nodejs_als` compatibility flags in your `wrangler.toml`/`wrangler.json`. This is because the SDK
+To use the SDK, you'll need to set either the `nodejs_compat` or `nodejs_als` compatibility flags in your `wrangler.jsonc`/`wrangler.toml` config. This is because the SDK
 needs access to the `AsyncLocalStorage` API to work correctly.
 
-
-```toml {tabTitle:Toml} {filename:wrangler.toml}
-compatibility_flags = ["nodejs_compat"]
-# compatibility_flags = ["nodejs_als"]
-```
-
-```json {tabTitle:JSON} {filename:wrangler.json}
+```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
 {
   "compatibility_flags": [
-    "nodejs_compat",
-    // "nodejs_als"
-  ]
+    "nodejs_als",
+    // "nodejs_compat"
+  ],
 }
+```
+
+```toml {tabTitle:Toml} {filename:wrangler.toml}
+compatibility_flags = ["nodejs_als"]
+# compatibility_flags = ["nodejs_compat"]
 ```
 
 Then you can install the SDK and add it to your project:
@@ -89,7 +90,7 @@ environment. Note that you can turn off almost all side effects using the respec
 import * as Sentry from "@sentry/cloudflare";
 
 export default Sentry.withSentry(
-  env => ({
+  (env) => ({
     dsn: "___PUBLIC_DSN___",
     // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
     // Learn more at
@@ -100,8 +101,27 @@ export default Sentry.withSentry(
     async fetch(request, env, ctx) {
       return new Response("Hello World!");
     },
-  } satisfies ExportedHandler<Env>,
+  } satisfies ExportedHandler<Env>
 );
+```
+
+If you do not have access to the `onRequest` middleware API, you can use the `wrapRequestHandler` API instead. For example:
+
+```javascript
+// hooks.server.js
+import * as Sentry from '@sentry/cloudflare';
+
+export const handle = ({ event, resolve }) => {
+  const requestHandlerOptions = {
+    options: {
+      dsn: event.platform.env.SENTRY_DSN,
+      tracesSampleRate: 1.0,
+    },
+    request: event.request,
+    context: event.platform.ctx,
+  };
+  return Sentry.wrapRequestHandler(requestHandlerOptions, () => resolve(event));
+};
 ```
 
 ## Add Readable Stack Traces to Errors
