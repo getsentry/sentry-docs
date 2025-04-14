@@ -2,10 +2,10 @@ import {Fragment} from 'react';
 
 import {getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
 
-import {DefaultSidebar} from './defaultSidebar';
 import {DynamicNav, toTree} from './dynamicNav';
 import {PlatformSidebar} from './platformSidebar';
 import {ProductSidebar} from './productSidebar';
+import {SidebarSeparator} from './sidebarLink';
 import {NavNode} from './types';
 import {docNodeToNavNode, getNavNodes} from './utils';
 
@@ -46,14 +46,16 @@ const productSidebarItems = [
   },
 ];
 
-export async function SidebarLinks({path}: {path: string[]}) {
+export async function SidebarNavigation({path}: {path: string[]}) {
   const rootNode = await getDocsRootNode();
+  // product docs and platform-redirect page
   if (
     productSidebarItems.some(el => el.root === path[0]) ||
     path[0] === 'platform-redirect'
   ) {
     return <ProductSidebar rootNode={rootNode} items={productSidebarItems} />;
   }
+
   // /platforms/:platformName/guides/:guideName
   if (path[0] === 'platforms') {
     const platformName = path[1];
@@ -67,13 +69,15 @@ export async function SidebarLinks({path}: {path: string[]}) {
               guideName={guideName}
               rootNode={rootNode}
             />
-            <hr />
+            <SidebarSeparator />
           </Fragment>
         )}
         <ProductSidebar rootNode={rootNode} items={productSidebarItems} />
       </Fragment>
     );
   }
+
+  // contributing pages
   if (path[0] === 'contributing') {
     const contribNode = nodeForPath(rootNode, 'contributing');
     if (contribNode) {
@@ -89,6 +93,7 @@ export async function SidebarLinks({path}: {path: string[]}) {
       );
     }
   }
-  // render the default sidebar if no special case is met
-  return <DefaultSidebar node={rootNode} path={path} />;
+
+  // This should never happen, all cases need to be handled above
+  throw new Error(`Unknown path: ${path.join('/')} - cannot render sidebar`);
 }
