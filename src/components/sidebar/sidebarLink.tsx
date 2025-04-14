@@ -28,10 +28,12 @@ export function SidebarLink({
     <LinkComponent
       href={href}
       onClick={onClick}
-      className={`${styles['sidebar-link']} ${isActive ? 'active' : ''}`}
+      className={`${styles['sidebar-link']} ${isActive ? 'active' : ''} ${
+        topLevel ? styles['sidebar-link-top-level'] : ''
+      }`}
       data-sidebar-link
     >
-      <div className={topLevel ? styles['sidebar-link-top-level'] : ''}>{title}</div>
+      <div>{title}</div>
       {collapsible && <NavChevron direction={isActive ? 'down' : 'right'} />}
     </LinkComponent>
   );
