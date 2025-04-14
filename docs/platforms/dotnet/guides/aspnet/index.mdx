@@ -34,7 +34,7 @@ as well as your logs as breadcrumbs. The logging integrations also capture event
 You configure the SDK in the `Global.asax.cs`:
 
 
-```csharp {"onboardingOptions": {"performance": "20-23, 33-42"}}
+```csharp
 using System;
 using System.Web;
 using Sentry.AspNet;
@@ -54,9 +54,11 @@ public class MvcApplication : HttpApplication
             // When configuring for the first time, to see what the SDK is doing:
             options.Debug = true;
 
+            // ___PRODUCT_OPTION_START___ performance
             // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
             // We recommend adjusting this value in production.
             options.TracesSampleRate = 1.0;
+            // ___PRODUCT_OPTION_END___ performance
 
             // If you also installed the Sentry.EntityFramework package
             options.AddEntityFramework();
@@ -67,6 +69,7 @@ public class MvcApplication : HttpApplication
     // Global error catcher
     protected void Application_Error() => Server.CaptureLastError();
 
+    // ___PRODUCT_OPTION_START___ performance
     protected void Application_BeginRequest()
     {
         Context.StartSentryTransaction();
@@ -76,6 +79,7 @@ public class MvcApplication : HttpApplication
     {
         Context.FinishSentryTransaction();
     }
+    // ___PRODUCT_OPTION_END___ performance
 
     protected void Application_End()
     {
