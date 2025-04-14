@@ -1,12 +1,12 @@
 import {nodeForPath} from 'sentry-docs/docTree';
 
-import {DynamicNav, toTree} from '../dynamicNav';
 import {SidebarLink} from '../sidebarLink';
 
+import {DynamicNav, toTree} from './dynamicNav';
 import {NavNode, ProductSidebarProps} from './types';
 import {docNodeToNavNode, getNavNodes} from './utils';
 
-export function ProductSidebar({rootNode, items, headerClassName}: ProductSidebarProps) {
+export function ProductSidebar({rootNode, items}: ProductSidebarProps) {
   const itemTree = (item: string) => {
     const node = nodeForPath(rootNode, item);
     if (!node) {
@@ -28,9 +28,7 @@ export function ProductSidebar({rootNode, items, headerClassName}: ProductSideba
                 root={item.root}
                 title={item.title}
                 tree={tree}
-                headerClassName={headerClassName}
-                collapse
-                withChevron
+                collapsible
               />
             )
           );

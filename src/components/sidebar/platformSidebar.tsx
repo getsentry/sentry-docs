@@ -1,7 +1,6 @@
 import {DocNode, getGuide, getPlatform, nodeForPath} from 'sentry-docs/docTree';
 
-import {DynamicNav, toTree} from '../dynamicNav';
-
+import {DynamicNav, toTree} from './dynamicNav';
 import {PlatformSidebarProps} from './types';
 import {getNavNodes} from './utils';
 
@@ -9,7 +8,6 @@ export function PlatformSidebar({
   rootNode,
   platformName,
   guideName,
-  headerClassName,
 }: PlatformSidebarProps) {
   const docNodeToPlatformSidebarNode = (n: DocNode) => {
     if (n.frontmatter.draft) {
@@ -52,8 +50,6 @@ export function PlatformSidebar({
         tree={tree}
         title={`Sentry for ${(guide || platform).title}`}
         exclude={[`/${pathRoot}/guides/`]}
-        headerClassName={headerClassName}
-        withChevron
       />
     </ul>
   );
