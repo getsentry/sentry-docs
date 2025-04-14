@@ -246,7 +246,7 @@ export function PlatformSelector({
             title={`Sentry for ${storedPlatform.title ?? storedPlatform.key}`}
             collapsible
           />
-        <SidebarSeparator />
+          <SidebarSeparator />
         </div>
       )}
     </div>

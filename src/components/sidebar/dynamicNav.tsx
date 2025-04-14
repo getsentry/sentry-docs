@@ -166,7 +166,7 @@ export function DynamicNav({
     <li className="mb-3" data-sidebar-branch>
       {header}
       {(!collapsible || isActive) && entity.children && (
-        <ul data-sidebar-tree className='pl-3'>
+        <ul data-sidebar-tree className="pl-3">
           <Children
             tree={entity.children}
             exclude={exclude}

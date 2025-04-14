@@ -39,10 +39,7 @@ export function ProductSidebar({rootNode, items}: ProductSidebarProps) {
           <ul data-sidebar-tree>
             <SidebarLink href="https://about.codecov.io/" title="Codecov" />
             <SidebarLink href="https://discord.gg/sentry" title="Discord" />
-            <SidebarLink
-              href="https://sentry.zendesk.com/hc/en-us/"
-              title="Support"
-            />
+            <SidebarLink href="https://sentry.zendesk.com/hc/en-us/" title="Support" />
             <SidebarLink
               href="https://develop.sentry.dev/self-hosted/"
               title="Self-Hosting Sentry"
