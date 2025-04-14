@@ -16,32 +16,22 @@ Item type `"feedback"`. This Item contains an [event payload](/sdk/data-model/ev
 | Key                    | Type                      | Description                                                                                                                                                                                          |
 | ---------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | message                | string                    | Required. Comments of the user, describing what happened and/or sharing feedback. The max length is **4096 characters**.                                                                             |
-| contact_email          | string                    | The email of the user who submitted the feedback. If excluded, Sentry attempts to fill this in with user context. Anonymous feedbacks (no name or email) are still accepted.                         |
-| name                   | string                    | The name of the user who submitted the feedback. If excluded, Sentry attempts to fill this in with user context. Anonymous feedbacks (no name or email) are still accepted.                          |
+| contact_email          | string                    | The email of the user who submitted the feedback. If excluded, Sentry (not the SDK) attempts to fill this in with user context. Anonymous feedbacks (no name or email) are still accepted.           |
+| name                   | string                    | The name of the user who submitted the feedback. If excluded, Sentry (not the SDK) attempts to fill this in with user context. Anonymous feedbacks (no name or email) are still accepted.            |
 | url                    | string                    | The URL of the webpage the user was on when submitting feedback. This may be used to search for or set alerts on feedback.                                                                           |
 | associated_event_id    | string                    | The identifier of an error event in the same project. Use this to explicitly link a related error in the feedback UI.                                                                                |
 | replay_id              | string                    | The identifier of a related Session Replay in the same project. Sentry uses this ID to render a Replay clip in the feedback UI.                                                                      |
 
 ### Event Attributes
 
+Below is a recap of the [required attributes](/sdk/data-model/event-payloads/#required-attributes) for the event payload.
 For the full list of attributes, see [Event Payloads](/sdk/data-model/event-payloads/).
 
-| Key                        | Type   | Description                                      |
-| -------------------------- | ------ | ------------------------------------------------ |
-| timestamp                  | number | UNIX timestamp of the current time (in seconds). |
-| event_id                   | string | This should be the same as `replay_id`           |
-| dist                       | string | -                                                |
-| platform                   | string | -                                                |
-| environment                | string | -                                                |
-| release                    | string | -                                                |
-| user.id                    | string | -                                                |
-| user.username              | string | -                                                |
-| user.email                 | string | -                                                |
-| user.ip_address            | string | -                                                |
-| sdk.name                   | string | -                                                |
-| sdk.version                | string | -                                                |
-| request.url                | string | -                                                |
-| request.headers.User-Agent | string | -                                                |
+| Key                        | Type   | Description                                     |
+| -------------------------- | ------ | ----------------------------------------------- |
+| timestamp                  | number | UNIX timestamp of the current time (in seconds) |
+| event_id                   | string | Hexadecimal string representing a uuid4 value   |
+| platform                   | string |                                                 |
 
 ### Example
 ```json
@@ -49,7 +39,6 @@ For the full list of attributes, see [Event Payloads](/sdk/data-model/event-payl
   "event_id": "9ec79c33ec9942ab8353589fcb2e04dc",
   "timestamp": "2011-05-02T17:41:36Z",
   "platform": "javascript",
-  "level": "error",
   "contexts": {
     "feedback": {
       "contact_email": "john@example.com",
@@ -79,7 +68,6 @@ Envelope.
   "event_id": "9ec79c33ec9942ab8353589fcb2e04dc",
   "timestamp": "2011-05-02T17:41:36Z",
   "platform": "javascript",
-  "level": "error",
   "contexts": {
     "organization": { "id": "0", "slug": "sentry" },
     "feedback": {
@@ -91,6 +79,7 @@ Envelope.
       "replay_id":"82840977e85b4ed3bc27f7b5b25cec15"
     }
   },
+  "level": "error",
   "environment": "prod",
   "release": "frontend@f00",
   "sdk": {
@@ -125,7 +114,7 @@ SDKs should implement a `beforeSendFeedback` callback to allow users to modify t
 
 ### Scope Data and Event Processors
 
-The scope is applied to the feedbacks, including tags, attachments, and trace context. The scope’s _event processors_ are invoked, too.
+The scope is applied to the feedbacks, including tags, user, trace and contexts. The scope’s _event processors_ are invoked, too.
 
 ### Rate Limiting
 
