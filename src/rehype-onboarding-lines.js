@@ -38,11 +38,11 @@ function visitor(node) {
   let currentOption;
 
   // product options syntax
-  // ___product_option_start___ performance
+  // ___PRODUCT_OPTION_START___ performance
   // some lines here
-  // ___product_option_end___ performance
-  const PRODUCT_OPTION_START = '___product_option_start___';
-  const PRODUCT_OPTION_END = '___product_option_end___';
+  // ___PRODUCT_OPTION_END___ performance
+  const PRODUCT_OPTION_START = '___PRODUCT_OPTION_START___';
+  const PRODUCT_OPTION_END = '___PRODUCT_OPTION_END___';
   node.children?.forEach(line => {
     const lineStr = toString(line);
     if (lineStr.includes(PRODUCT_OPTION_START)) {
