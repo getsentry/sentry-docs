@@ -88,12 +88,13 @@ export default defineNuxtConfig({
 
 Add a `sentry.client.config.ts` file to the root of your project (this is probably the same level as the `package.json`). In this file, import and initialize Sentry, specifying any SDK options for the client:
 
-```javascript {filename:sentry.client.config.ts} {"onboardingOptions": {"performance": "9-15", "session-replay": "7-8, 16-22"}}
+```javascript {filename:sentry.client.config.ts} {"onboardingOptions": {"performance": "10-16", "session-replay": "8-9, 17-23"}}
 import * as Sentry from "@sentry/nuxt";
 
 Sentry.init({
   // If set up, you can use the Nuxt runtime config here
-  // dsn: useRuntimeConfig().public.sentry.dsn, // modify, depending on your custom runtime config
+  // dsn: useRuntimeConfig().public.sentry.dsn
+  // modify depending on your custom runtime config
   dsn: "___PUBLIC_DSN___",
   // Replay may only be enabled for the client-side
   integrations: [Sentry.replayIntegration()],
@@ -135,7 +136,7 @@ This allows you to access the DSN using `useRuntimeConfig().public.sentry.dsn`.
 
 Add a `sentry.server.config.ts` file to the root of your project and add the following initialization code to it:
 
-```javascript {filename:sentry.server.config.ts}
+```javascript {filename:sentry.server.config.ts} {"onboardingOptions": {"performance": "5-11"}}
 import * as Sentry from "@sentry/nuxt";
 
 Sentry.init({
@@ -153,7 +154,7 @@ Sentry.init({
 We recommend you store your Sentry [Data Source Name](/concepts/key-terms/dsn-explainer/) (DSN) in an environment variable.
 
 <Expandable title="How to access environment variables in sentry.server.config.ts">
-Since Sentry on the server side needs to be loaded before `useRuntimeConfig()` is fully available, environment variables are not directly accessible via `process.env`. To make sure your environment variables are available, use one of these methods:
+Since Sentry on the server side needs to be loaded before `useRuntimeConfig()` is fully available, environment variables are only accessible via `process.env`. To make sure your environment variables are available, use one of these methods:
 
 Load environment variables from your `.env` file when starting the server:
 
@@ -184,7 +185,7 @@ Check out the <PlatformLink to="/install/cli-import">`--import` CLI flag</Platfo
 
 ## Step 3: Add Readable Stack Traces With Source Maps (Optional)
 
-The Sentry Nuxt Module uses the [Sentry Vite Plugin](https://www.npmjs.com/package/@sentry/vite-plugin) to upload source maps for both server and client builds.
+The Sentry Nuxt Module uses the [Sentry Vite Plugin](https://www.npmjs.com/package/@sentry/vite-plugin) and the [Sentry Rollup Plugin](https://www.npmjs.com/package/@sentry/rollup-plugin) to upload source maps for both server and client builds.
 This means that when you run a production build (`nuxt build`), source maps will be generated and uploaded to Sentry, so that you get readable stack traces in your Sentry issues.
 
 To upload source maps, specify your Sentry auth token as well as your org and project slugs. Set them in the `sourceMapsUploadOptions` option
@@ -253,7 +254,7 @@ To verify that Sentry captures errors and creates issues in your Sentry project,
 
 <OnboardingOption optionId="performance" hideForThisOption>
   Open the page in a browser (for most Nuxt applications, this will be at
-  localhost) and click the button to trigger a frontend error.
+  localhost:3000) and click the button to trigger a frontend error.
 </OnboardingOption>
 
 <PlatformContent includePath="getting-started-browser-sandbox-warning" />
@@ -299,11 +300,11 @@ Then update the test page by including a new button that executes a function to 
 ```
 
 Once you have your test code in place, you need to build your project since Sentry's server-side monitoring doesn't work in development mode.
-Then start your app and make sure to load Sentry on the server side by explicitly adding it via `--import`.
+Then start your app and make sure to load Sentry on the server side by explicitly adding the Sentry server config in the build output via `--import`.
 
 After running your project:
 
-1. Open your test page in a browser (for most Nuxt applications, this will be at localhost)
+1. Open your test page in a browser (for most Nuxt applications, this will be at localhost:3000)
 2. Click the "Throw Client Error" button to trigger an error in the frontend
 3. Click the "Throw Server Error" button to trigger an error within the API route and start a performance trace to measure the time it takes for the API request to complete.
 
@@ -317,7 +318,7 @@ Now, head over to your project on [Sentry.io](https://sentry.io) to view the col
 
 ## Next Steps
 
-At this point, you should have integrated Sentry into your Next.js application and should already be sending data to your Sentry project.
+At this point, you should have integrated Sentry into your Nuxt application and should already be sending data to your Sentry project.
 
 Now's a good time to customize your setup and look into more advanced topics. Our next recommended steps for you are:
 
@@ -330,6 +331,7 @@ Now's a good time to customize your setup and look into more advanced topics. Ou
 
 - If you encountered issues with setting up Sentry manually, [try our installation wizard](/platforms/javascript/guides/nuxt/)
 - Find various support topics in <PlatformLink to="/troubleshooting">troubleshooting</PlatformLink>
+- Review alternative <PlatformLink to="/install">installation methods</PlatformLink>
 - [Get support](https://sentry.zendesk.com/hc/en-us/)
 
 </Expandable>
