@@ -4,9 +4,12 @@ import {serverContext} from 'sentry-docs/serverContext';
 import {sortPages} from 'sentry-docs/utils';
 import {getUnversionedPath, VERSION_INDICATOR} from 'sentry-docs/versioning';
 
-import {NavChevron} from './sidebar/navChevron';
-import {SidebarLink} from './sidebarLink';
-import {SmartLink} from './smartLink';
+import styles from './style.module.scss';
+
+import {SidebarLink} from '../sidebarLink';
+import {SmartLink} from '../smartLink';
+
+import {NavChevron} from './navChevron';
 
 type Node = {
   [key: string]: any;
@@ -105,31 +108,19 @@ export function Children({tree, path, exclude = [], showDepth = 0}: ChildrenProp
 }
 
 type Props = {
-  headerClassName: string;
   root: string;
   tree: EntityTree[];
-  collapse?: boolean;
+  collapsible?: boolean;
   exclude?: string[];
-  noHeadingLink?: boolean;
-  prependLinks?: [string, string][];
-  showDepth?: number;
-  suppressMissing?: boolean;
   title?: string;
-  withChevron?: boolean;
 };
 
 export function DynamicNav({
   root,
   title,
   tree,
-  collapse = false,
+  collapsible = false,
   exclude = [],
-  showDepth = 0,
-  prependLinks = [],
-  suppressMissing = false,
-  noHeadingLink = false,
-  headerClassName,
-  withChevron = false,
 }: Props) {
   if (root.startsWith('/')) {
     root = root.substring(1);
@@ -141,11 +132,7 @@ export function DynamicNav({
   rootBits.forEach(bit => {
     entity = currentTree.find(n => n.name === bit);
     if (!entity) {
-      if (!suppressMissing) {
-        // eslint-disable-next-line no-console
-        console.warn(`Could not find entity at ${root} (specifically at ${bit})`);
-      }
-      return;
+      throw new Error(`Could not find entity at ${root} (specifically at ${bit})`);
     }
     currentTree = entity.children;
   });
@@ -155,44 +142,37 @@ export function DynamicNav({
   if (!title && entity.node) {
     title = entity.node.context.sidebar_title || entity.node.context.title || '';
   }
-  const parentNode = entity.children
-    ? entity.children.find((n: EntityTree) => n.name === '')
-    : null;
+  const parentNode = entity.children?.find((n: EntityTree) => n.name === '');
+
+  if (!parentNode) {
+    throw new Error(`Could not find parentNode at ${root}`);
+  }
 
   const {path} = serverContext();
   const isActive = path.join('/').indexOf(root) === 0;
   const linkPath = `/${path.join('/')}/`;
 
-  const header =
-    parentNode && !noHeadingLink ? (
-      <SmartLink
-        to={`/${root}/`}
-        className={`${headerClassName} ${getUnversionedPath(path, false) === root ? 'active' : ''} justify-between`}
-        activeClassName="active"
-        data-sidebar-link
-      >
-        <strong>{title}</strong>
-        {withChevron && <NavChevron direction={isActive ? 'down' : 'right'} />}
-      </SmartLink>
-    ) : (
-      <div className={headerClassName} data-sidebar-link>
-        <strong>{title}</strong>
-      </div>
-    );
+  const header = (
+    <SmartLink
+      to={`/${root}/`}
+      className={`${styles['sidebar-title']} flex items-center ${getUnversionedPath(path, false) === root ? 'active' : ''} justify-between`}
+      activeClassName="active"
+      data-sidebar-link
+    >
+      <strong>{title}</strong>
+      {collapsible && <NavChevron direction={isActive ? 'down' : 'right'} />}
+    </SmartLink>
+  );
 
   return (
     <li className="mb-3" data-sidebar-branch>
       {header}
-      {(!collapse || isActive) && entity.children && (
+      {(!collapsible || isActive) && entity.children && (
         <ul data-sidebar-tree className="pl-3">
-          {prependLinks &&
-            prependLinks.map(link => (
-              <SidebarLink to={link[0]} key={link[0]} title={link[1]} path={linkPath} />
-            ))}
           <Children
             tree={entity.children}
             exclude={exclude}
-            showDepth={showDepth}
+            showDepth={0}
             path={linkPath}
           />
         </ul>
