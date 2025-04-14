@@ -72,9 +72,7 @@ It consists of the following fields:
 
 `attributes`
 
-: **Object, optional**. A dictionary of key-value pairs of arbitrary data attached to the log. Attributes must also declare the type of the value. The following types are supported: `string`, `boolean`, `integer`, `double`.
-
-Note: `type: "integer"` has string values because JSON only recognizes numbers as floating point values.
+: **Object, optional**. A dictionary of key-value pairs of arbitrary data attached to the log. Attributes must also declare the type of the value. The following types are supported: `string`, `boolean`, `integer`, `double`. In the future arrays will be supported (`string[]`, `boolean[]`, `integer[]`, `double[]`).
 
 Example:
 
@@ -86,7 +84,7 @@ Example:
       "type": "string"
     },
     "db.response.returned_rows": {
-      "value": "123",
+      "value": 123,
       "type": "integer"
     },
     "db_query_processing_time": {
@@ -137,11 +135,13 @@ API wise the SDKs are required to expose logging methods which are to be defined
 
 ### Initialization Options
 
-The SDKs need to expose the following two configuration options:
+The SDKs must expose the following configuration options:
 
-- `enable_logs`/`enable_logs`: A boolean flag to control if log envelopes will be generated and sent to Sentry via the Sentry SDK's Logging APIs. If this flag is set to `false`, the SDK should not send logs to Sentry. Defaults to `false`.
+- `enableLogs`/`enable_logs`: A boolean flag to control if log envelopes will be generated and sent to Sentry via the Sentry SDK's Logging APIs. If this flag is set to `false`, the SDK should not send logs to Sentry. Defaults to `false`.
 
-- `beforeSendLog`/`before_send_log`: A function that takes a log object and returns a log object. This function is called before sending the log to Sentry. It can be used to modify the log object or to prevent the log from being sent to Sentry.
+- `beforeSendLog`/`before_send_log`: A function that takes a log object and returns a log object. This function is called before sending the log to Sentry. It can be used to modify the log object or to prevent the log from being sent to Sentry. This function is optional.
+
+- `logsSampleRate`/`logs_sample_rate`: A number between 0 and 1 that represents the probability that a log will be sent to Sentry. This sampling decision should be made before a log is processed by SDK to lower performance overhead. Defaults to 1.0.
 
 ```js
 Sentry.init({
@@ -155,10 +155,20 @@ Sentry.init({
 
     return log;
   },
+
+  logsSampleRate: 1.0,
 });
 ```
 
-At the current moment, logs are not sampled so no sampling configuration needs to be exposed. This may change in the future.
+At the current moment logs sampling decisions are not propagated to downstream services, or be affected by the `tracesSampleRate` configuration option. In the future there might be more advanced client-side sampling and server-side sampling strategies, but this is not yet defined.
+
+While the logs functionality for an SDK is in an experimental state, SDKs should put these configuration options in an experimental namespace to avoid breaking changes.
+
+```js
+Sentry.init({
+  _experiments: { enableLogs: true },
+});
+```
 
 ### Logger Module
 
@@ -303,9 +313,9 @@ Beyond these attributes, we are exploring if the SDK should also send OS, user, 
 
 ### SDK Integrations
 
-SDKs should aim to have it so that console/logger integrations create logs as per the appropriate log level if `enableLogs` is set to true. Examples of this include JavaScript's `console` object and Pythons `logging` standard library.
+SDKs should aim to have it so that console/logger integrations create logs as per the appropriate log level if `enableLogs`/`enable_logs` is set to true. Examples of this include JavaScript's `console` object and Pythons `logging` standard library.
 
-If SDK authors feel the need, they can also introduce additional options to beyond `enableLogs` to gate this functionality. For example an option to control log appenders added via external config like with `Log4j` in the Java SDK.
+If SDK authors feel the need, they can also introduce additional options to beyond `enableLogs`/`enable_logs` to gate this functionality. For example an option to control log appenders added via external config like with `Log4j` in the Java SDK.
 
 ## Appendix A: `otel_log` Envelope Item Payload
 
