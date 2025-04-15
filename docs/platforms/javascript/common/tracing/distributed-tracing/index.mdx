@@ -60,3 +60,32 @@ Server-side SDKs handle traces automatically on a per-request basis. This means 
 </PlatformCategorySection>
 
 If necessary, you can override the default trace duration by [manually starting a new trace](./custom-instrumentation#starting-a-new-trace).
+
+## How Sampling Propagates in Distributed Traces
+
+Sentry uses a "head-based" sampling approach:
+
+- A sampling decision is made in the originating service (the "head")
+- This decision is propagated to all downstream services
+
+The two key headers are:
+- `sentry-trace`: Contains trace ID, span ID, and sampling decision
+- `baggage`: Contains additional trace metadata including sample rate
+
+Sentry automatically attaches these headers to outgoing HTTP requests when using the `browserTracingIntegration`. For other communication channels like WebSockets, you can manually propagate trace information:
+
+```javascript
+// Extract trace data from the current scope
+const traceData = Sentry.getTraceData();
+const sentryTraceHeader = traceData["sentry-trace"];
+const sentryBaggageHeader = traceData["baggage"];
+
+// Add to your custom request (example using WebSocket)
+webSocket.send(JSON.stringify({
+  message: "Your data here",
+  metadata: {
+    sentryTrace: sentryTraceHeader,
+    baggage: sentryBaggageHeader
+  }
+}));
+```

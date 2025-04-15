@@ -1332,15 +1332,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/javascript/guides/:guide/sourcemaps/multiple-origins/',
-    to: '/platforms/javascript/sourcemaps/',
-  },
-  {
-    from: '/platforms/javascript/guides/:guide/sourcemaps/uploading/hosting-publicly/',
-    to: '/platforms/javascript/sourcemaps/',
+    to: '/platforms/javascript/guides/:guide/sourcemaps/',
   },
   {
     from: '/platforms/javascript/guides/:guide/sourcemaps/uploading-without-debug-ids/',
-    to: '/platforms/javascript/sourcemaps/',
+    to: '/platforms/javascript/guides/:guide/sourcemaps/',
   },
   {
     from: '/platforms/javascript/sourcemaps/uploading-without-debug-ids/',
@@ -3313,10 +3309,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/product/explore/session-replay/replay-page-and-filters/',
     to: '/product/explore/session-replay/web/replay-page-and-filters/',
-  },
-  {
-    from: '/platforms/nintendo-switch/',
-    to: '/platforms/unity/native-support/',
   },
   {
     from: '/product/teams/roles/',
