@@ -15,7 +15,7 @@ import {PlatformSelector} from '../platformSelector';
 import {VersionSelector} from '../versionSelector';
 
 import {DevelopDocsSidebar} from './developDocsSidebar';
-import {SidebarLinks} from './sidebarLinks';
+import {SidebarNavigation} from './sidebarNavigation';
 import {SidebarProps} from './types';
 
 const activeLinkSelector = `.${styles.sidebar} .toc-item .active`;
@@ -100,7 +100,7 @@ export async function Sidebar({path, versions}: SidebarProps) {
         </div>
         <div className={`${styles.toc} px-3`}>
           <ScrollActiveLink activeLinkSelector={activeLinkSelector} />
-          <SidebarLinks path={path} />
+          <SidebarNavigation path={path} />
         </div>
       </div>
     </aside>
