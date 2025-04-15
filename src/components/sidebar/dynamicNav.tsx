@@ -4,12 +4,8 @@ import {serverContext} from 'sentry-docs/serverContext';
 import {sortPages} from 'sentry-docs/utils';
 import {getUnversionedPath, VERSION_INDICATOR} from 'sentry-docs/versioning';
 
-import styles from './style.module.scss';
-
-import {SidebarLink} from '../sidebarLink';
-import {SmartLink} from '../smartLink';
-
-import {NavChevron} from './navChevron';
+import {CollapsibleSidebarLink} from './collapsibleSidebarLink';
+import {SidebarLink} from './sidebarLink';
 
 type Node = {
   [key: string]: any;
@@ -83,7 +79,7 @@ export const renderChildren = (
       return null;
     }
     return (
-      <SidebarLink
+      <CollapsibleSidebarLink
         to={node.path}
         key={node.path}
         title={node.context.sidebar_title || node.context.title!}
@@ -91,7 +87,7 @@ export const renderChildren = (
         path={path}
       >
         {renderChildren(nodeChildren, exclude, path, showDepth, depth + 1)}
-      </SidebarLink>
+      </CollapsibleSidebarLink>
     );
   });
 };
@@ -142,6 +138,9 @@ export function DynamicNav({
   if (!title && entity.node) {
     title = entity.node.context.sidebar_title || entity.node.context.title || '';
   }
+  if (!title) {
+    return null;
+  }
   const parentNode = entity.children?.find((n: EntityTree) => n.name === '');
 
   if (!parentNode) {
@@ -153,15 +152,14 @@ export function DynamicNav({
   const linkPath = `/${path.join('/')}/`;
 
   const header = (
-    <SmartLink
-      to={`/${root}/`}
-      className={`${styles['sidebar-title']} flex items-center ${getUnversionedPath(path, false) === root ? 'active' : ''} justify-between`}
-      activeClassName="active"
+    <SidebarLink
+      href={`/${root}/`}
+      title={title}
+      collapsible={collapsible}
+      isActive={getUnversionedPath(path, false) === root}
+      topLevel
       data-sidebar-link
-    >
-      <strong>{title}</strong>
-      {collapsible && <NavChevron direction={isActive ? 'down' : 'right'} />}
-    </SmartLink>
+    />
   );
 
   return (
