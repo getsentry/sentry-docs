@@ -898,6 +898,7 @@ export const PLATFORM_TO_ICON = {
   'go-zerolog': 'go',
   'go-slog': 'go',
   'go-logrus': 'go',
+  'go-zap': 'go',
   godot: 'godot',
   huggingface: 'huggingface',
   java: 'java',
