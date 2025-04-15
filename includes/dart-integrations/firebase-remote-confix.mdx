@@ -1,0 +1,59 @@
+---
+title: Firebase Remote Config
+description: "Learn more about the Sentry Firebase Remote Config integration for the Dart SDK."
+sidebar_order: 6
+platforms:
+  - dart
+  - flutter
+---
+
+The `sentry_firebase_remote_config` integration provides [Firebase Remote Config](https://firebase.google.com/docs/remote-config) support for Sentry thus providing insight into feature flag evaluations.
+
+## Behavior
+
+- Adding the `SentryFirebaseRemoteConfig` integration will automatically track feature flag evaluations for boolean Firebase Remote Config values.
+- The integration is available in Sentry SDK version 9.0.0 or higher.
+
+## Prerequisites
+
+1. The Sentry [Dart](/platforms/dart/#configure) SDK is initialized.
+2. Firebase Remote Config is set up.
+
+## Install
+
+To use the `SentryFirebaseRemoteConfig` integration, add the `sentry_firebase_remote_config` dependency.
+
+```yml {filename:pubspec.yaml}
+dependencies:
+  sentry: ^{{@inject packages.version('sentry.dart', '9.0.0') }}
+  sentry_firebase_remote_config: ^{{@inject packages.version('sentry.dart.firebase_remote_config', '9.0.0') }}
+```
+
+## Configure
+
+Add the `SentryFirebaseRemoteConfig` integration to the Sentry SDK initialization.
+
+```dart
+import 'package:sentry/sentry.dart';
+import 'package:sentry_firebase_remote_config/sentry_firebase_remote_config.dart';
+
+await Sentry.init(
+  (options) {
+    options.dsn = 'https://example@sentry.io/example';
+    options.firebaseRemoteConfigIntegration = SentryFirebaseRemoteConfig(
+      firebaseRemoteConfig: firebaseRemoteConfig,
+      activateOnUpdate: false, // Per default, the remote config is activated on update. You can opt out by setting this to false.
+    );
+  },
+);
+```
+
+## Verify & View
+
+### 1. Update Firebase Remote Config value
+
+Update a boolean Firebase Remote Config value to true. Keep in mind that values will be evaluated as bool if there string values are `true`, `false`, `1`, or `0`. So keep in mind that numerical values of `1` or `0` will be evaluated as `true` or `false` boolean values.
+
+### 2. View the Recorded Feature Flag Evaluation on Sentry.io
+
+To view the recorded feature flag evaluation, log into [sentry.io](https://sentry.io) and open your project.
