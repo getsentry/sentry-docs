@@ -73,6 +73,35 @@ import { SentryGlobalFilter } from "@sentry/nestjs/setup";
 export class AppModule {}
 ```
 
+<Expandable title="Using Microservices?">
+
+If you are using `@nestjs/microservices` you can also include our `SentryRpcFilter` to make sure to handle errors in RPC contexts correctly:
+
+```javascript {3-4, 8-15}
+import { Module } from "@nestjs/common";
+import { APP_FILTER } from "@nestjs/core";
+import { SentryGlobalFilter } from "@sentry/nestjs/setup";
+import { SentryRpcFilter } from "@sentry/nestjs/microservices";
+
+@Module({
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: SentryGlobalFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: SentryRpcFilter,
+    },
+    // ..other providers
+  ],
+})
+export class AppModule {}
+```
+
+</Expandable>
+
+
 If you have error filters for specific types of exceptions (for example `@Catch(HttpException)`, or any other `@Catch(...)` with arguments) and you want to capture errors caught by these filters, capture the errors in the `catch()` handler with `Sentry.captureException()`:
 
 ```javascript {9}
