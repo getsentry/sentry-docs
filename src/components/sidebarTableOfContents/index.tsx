@@ -184,7 +184,7 @@ export function SidebarTableOfContents() {
     }, observerOptions);
     const headings = tocItems.map(item => item.element);
     headings.forEach(heading => observer.observe(heading));
-    return () => headings.forEach(heading => observer.unobserve(heading));
+    return () => observer.disconnect();
   }, [tocItems]);
 
   return (
