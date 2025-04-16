@@ -50,13 +50,17 @@ def init_sentry(**_kwargs):
         # Add request headers and IP for users,
         # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
         send_default_pii=True,
+        # ___PRODUCT_OPTION_START___ performance
         # Set traces_sample_rate to 1.0 to capture 100%
         # of transactions for tracing.
         traces_sample_rate=1.0,
+        # ___PRODUCT_OPTION_END___ performance
+        # ___PRODUCT_OPTION_START___ profiling
         # Set profiles_sample_rate to 1.0 to profile 100%
         # of sampled transactions.
         # We recommend adjusting this value in production.
         profiles_sample_rate=1.0,
+        # ___PRODUCT_OPTION_END___ profiling
     )
 
 # Task definitions go here
@@ -84,13 +88,17 @@ def main():
         # Add data like request headers and IP for users, if applicable;
         # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
         send_default_pii=True,
+        # ___PRODUCT_OPTION_START___ performance
         # Set traces_sample_rate to 1.0 to capture 100%
         # of transactions for tracing.
         traces_sample_rate=1.0,
+        # ___PRODUCT_OPTION_END___ performance
+        # ___PRODUCT_OPTION_START___ profiling
         # Set profiles_sample_rate to 1.0 to profile 100%
         # of sampled transactions.
         # We recommend adjusting this value in production.
         profiles_sample_rate=1.0,
+        # ___PRODUCT_OPTION_END___ profiling
     )
 
     # Enqueueing a task to be processed by Celery
@@ -111,7 +119,7 @@ To confirm that your SDK is initialized on worker start, pass `debug=True` to `s
 
 The snippet below includes an intentional `ZeroDivisionError` in the Celery task that will be captured by Sentry. To trigger the error call `debug_sentry.delay()`:
 
-```python {filename:tasks.py} {"onboardingOptions": {"performance": "12-14", "profiling": "15-18"}}
+```python {filename:tasks.py}
 from celery import Celery, signals
 import sentry_sdk
 
@@ -121,9 +129,11 @@ app = Celery("tasks", broker="...")
 def init_sentry(**_kwargs):
     sentry_sdk.init(...)  # same as above
 
+# ___PRODUCT_OPTION_START___ performance
 @app.task
 def debug_sentry():
     1/0
+# ___PRODUCT_OPTION_END___ profiling
 ```
 
 <Alert title="Note on distributed tracing">
