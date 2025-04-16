@@ -20,7 +20,9 @@ In addition to capturing errors, you can monitor interactions between multiple s
 
 Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
 
-<OnboardingOptionButtons options={["error-monitoring", "performance", "profiling"]} />
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "profiling"]}
+/>
 
 ## Setup
 
@@ -40,27 +42,29 @@ yarn add @sentry/cloudflare
 pnpm add @sentry/cloudflare
 ```
 
-To use the SDK, you'll need to set either the `nodejs_compat` or `nodejs_als` compatibility flags in your `wrangler.toml`/`wrangler.json`.
-This is because the SDK needs access to the `AsyncLocalStorage` API to work correctly.
+To use the SDK, you'll need to set either the `nodejs_als` or `nodejs_compat` compatibility flags in your `wrangler.jsonc`/`wrangler.toml` config. This is because the SDK
+needs access to the `AsyncLocalStorage` API to work correctly.
 
-```toml {tabTitle:Toml} {filename:wrangler.toml}
-compatibility_flags = ["nodejs_compat"]
-# compatibility_flags = ["nodejs_als"]
-```
-
-```json {tabTitle:JSON} {filename:wrangler.json}
+```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
 {
   "compatibility_flags": [
-    "nodejs_compat"
-    // "nodejs_als"
-  ]
+    "nodejs_als",
+    // "nodejs_compat"
+  ],
 }
+```
+
+```toml {tabTitle:Toml} {filename:wrangler.toml}
+compatibility_flags = ["nodejs_als"]
+# compatibility_flags = ["nodejs_compat"]
 ```
 
 Next, wrap your handler with the `withSentry` function. This will initialize the SDK and hook into the
 environment. Note that you can turn off almost all side effects using the respective options.
 
-```typescript {filename:index.ts} {"onboardingOptions": {"performance": "14-18"}}
+
+
+```typescript {filename:index.ts}
 import { Hono } from "hono";
 import * as Sentry from "@sentry/cloudflare";
 
@@ -75,10 +79,17 @@ export default Sentry.withSentry(
   (env) => ({
     dsn: "___PUBLIC_DSN___",
 
+    
+    // Adds request headers and IP for users, for more info visit:
+    // https://docs.sentry.io/platforms/javascript/guides/hono/configuration/options/#sendDefaultPii
+    sendDefaultPii: true,
+
+    // ___PRODUCT_OPTION_START___ performance
     // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
     // Learn more at
     // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
     tracesSampleRate: 1.0,
+    // ___PRODUCT_OPTION_END___ performance
   }),
   app
 );
@@ -101,18 +112,18 @@ pnpm add @sentry/cloudflare
 To use the SDK, you'll need to set either the `nodejs_compat` or `nodejs_als` compatibility flags in your `wrangler.toml`/`wrangler.json`.
 This is because the SDK needs access to the `AsyncLocalStorage` API to work correctly.
 
+```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
+{
+  "compatibility_flags": [
+    "nodejs_compat",
+    // "nodejs_als"
+  ],
+}
+```
+
 ```toml {tabTitle:Toml} {filename:wrangler.toml}
 compatibility_flags = ["nodejs_compat"]
 # compatibility_flags = ["nodejs_als"]
-```
-
-```json {tabTitle:JSON} {filename:wrangler.json}
-{
-  "compatibility_flags": [
-    "nodejs_compat"
-    // "nodejs_als"
-  ]
-}
 ```
 
 Next, add the `sentryPagesPlugin` as
@@ -121,18 +132,20 @@ Next, add the `sentryPagesPlugin` as
 We recommend adding a `functions/_middleware.js` for the middleware setup so that Sentry is initialized for your entire
 app.
 
-```javascript {filename:functions/_middleware.js} {"onboardingOptions": {"performance": "7-11"}}
+```javascript {filename:functions/_middleware.js}
 import * as Sentry from "@sentry/cloudflare";
 
 export const onRequest = [
   // Make sure Sentry is the first middleware
   Sentry.sentryPagesPlugin((context) => ({
     dsn: "___PUBLIC_DSN___",
+    // ___PRODUCT_OPTION_START___ performance
 
     // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
     // Learn more at
     // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
     tracesSampleRate: 1.0,
+    // ___PRODUCT_OPTION_END___ performance
   })),
   // Add more middlewares here
 ];

@@ -83,7 +83,7 @@ npx react-router reveal
 
 Initialize the Sentry React SDK in your `entry.client.tsx` file:
 
-```tsx {filename: entry.client.tsx} {"onboardingOptions": {"performance": "9, 12-16", "session-replay": "10, 17-21"}}
+```tsx {filename: entry.client.tsx} {"onboardingOptions": {"performance": "14, 17-21", "session-replay": "15, 22-26"}}
 import * as Sentry from "@sentry/react-router";
 import { startTransition, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
@@ -91,6 +91,11 @@ import { HydratedRouter } from "react-router/dom";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  
   integrations: [
     Sentry.browserTracingIntegration(),
     Sentry.replayIntegration(),
@@ -161,12 +166,17 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 
 Create an `instrument.server.mjs` file in the root of your app:
 
-```js {filename: instrument.server.mjs} {"onboardingOptions": {"performance": "7", "profiling": "2, 6, 8"}}
+```js {filename: instrument.server.mjs} {"onboardingOptions": {"performance": "12", "profiling": "2, 10-11, 13"}}
 import * as Sentry from "@sentry/react-router";
 import { nodeProfilingIntegration } from '@sentry/profiling-node';
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  
   integrations: [nodeProfilingIntegration()],
   tracesSampleRate: 1.0, // Capture 100% of the transactions
   profilesSampleRate: 1.0, // profile every transaction
@@ -176,7 +186,7 @@ Sentry.init({
 In your `entry.server.tsx` file, export the `handleError` function:
 
 ```tsx {diff} {filename: entry.server.tsx}
-import * as Sentry from "@sentry/node";
+import * as Sentry from "@sentry/react-router";
 import { type HandleErrorFunction } from "react-router";
 
 export const handleError: HandleErrorFunction = (error, { request }) => {
@@ -188,6 +198,22 @@ export const handleError: HandleErrorFunction = (error, { request }) => {
     console.error(error);
   }
 };
+
+- export default function handleRequest(
++ function handleRequest(
+  request: Request,
+  responseStatusCode: number,
+  responseHeaders: Headers,
+  routerContext: EntryContext,
+  loadContext: AppLoadContext,
+) {
+  return new Promise((resolve, reject) => {
+    // ...
+  }
+}
+
++ export default Sentry.sentryHandleRequest(handleRequest);
+
 // ... rest of your server entry
 ```
 

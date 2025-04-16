@@ -4,6 +4,18 @@ sidebar_order: 50
 description: "Profiling offers a deeper level of visibility on top of traditional tracing, removing the need for custom instrumentation and enabling precise code-level visibility into your application in a production environment."
 ---
 
+Sentry’s Profiling products provide precise, code-level visibility into application execution in a production environment.
+
+## When Should You Use Profiling?
+
+Profiling helps you understand where time is being spent in your application at a **function level**. While [tracing](/concepts/key-terms/tracing/) can help you capture information about the higher level operations (HTTP requests, database queries, UI rendering, etc.) that consume time in your application, profiling helps you debug performance by visualizing the call stacks on every thread, throughout the execution of your application.
+
+This is especially helpful in situations where you are missing explicit instrumentation (spans and logs) that might help you narrow in on where an issue is occurring. Profiling requires *no additional instrumentation* and will automatically capture information on the functions and lines of code that take the most time as your application runs. 
+
+Profiling helps you quickly identify performance bottlenecks, enabling you to build in [performance as a feature](https://blog.codinghorror.com/performance-is-a-feature/) from day one.
+
+## Profiling Products
+
 <Alert>
 
 **The currently supported platforms are:**
@@ -21,83 +33,63 @@ description: "Profiling offers a deeper level of visibility on top of traditiona
 
 </Alert>
 
-Sentry's profiling feature builds upon our established [Insights](/product/insights) capabilities to provide precise code-level visibility into application execution in a production environment. Profiling provides context at a deeper level than traditional tracing, enabling you to visualize the precise details of the call stack without the need for custom instrumentation. With Profiling you can quickly identify hot paths in your code and understand potential performance bottlenecks, enabling you to build in [performance as a feature](https://blog.codinghorror.com/performance-is-a-feature/) from day one.
+Sentry supports profiling for both backend and frontend use cases with two products:
+* **Continuous Profiling** enables *continuously* profiling backend services to find code paths that are causing excessive resource usage and high infrastructure cost.
+* **UI Profiling** enables profiling critical user flows (or entire user sessions) in browser and [mobile](/product/explore/profiling/mobile-app-profiling/) apps to find code paths that are causing janky scrolling and animations, high interaction latency, and slow load times that contribute to a poor user experience.
 
-Sentry profiling supports common platforms for both Mobile and Backend applications:
-
-- [Mobile app profiling](/product/explore/profiling/mobile-app-profiling/) makes it possible to collect **profiles from real devices in production**, providing a complete picture of how the app performs in a variety of environments.
-- Backend platform profiling makes it possible to easily target the essential code that yields the biggest improvements in backend throughput and resource utilization.
-
-## Zooming In From Performance to Profiling
-
-Sentry profiling data is structured as an extension of performance transactions. This means you can "zoom in" on transactions to see their profiles directly by clicking on any transaction on the **Performance** page.
-
-![Performance page](./img/performance-page.png)
-
-This will take you to the **Transaction Summary** page where you'll see a list of transaction events.
-
-![Transaction Summary page](./img/transaction-summary-page.png)
-
-Transaction events that have a profile contain a link in the "Profile" column which will take you to a flame graph with details about that event. Learn how to read [Flame Graphs and Aggregated Flame Graphs](/product/explore/profiling/flame-charts-graphs).
-
-![Profile details page showing a flame graph](./img/profile-details-flame-chart.png)
-
-Alternatively, if you click on the "Event ID" for a transaction, you'll see a span waterfall where you can identify suspect spans - operations that may be impacting performance, including slow DB queries and HTTP requests. You can click on a span to see profile information, including the most frequently occurring code path (call stack with exact line numbers), along with the approximate percentage of time required for that code path.
-
-![Transaction showing call stack data from a profile](./img/call-stack-transaction.png)
-
-From this view, you can also click "View Profile" to zoom in on the flame graph.
 
 ## Profiling Page
 
-On the [**Profiling**](https://sentry.io/orgredirect/organizations/:orgslug/profiling/) page, you'll find two tabs:  "transactions" and "flamegraph". The transactions tab lists transactions in descending order of execution-time for your selected project(s), while the flamegraph tab shows an aggregate flamegraph that spans across transactions. Depending on how profiling has been set up, you might be interested more in one than the other.
+On the [**Profiling**](https://sentry.io/orgredirect/organizations/:orgslug/profiling/) page, you’ll find high level metrics on the slowest functions in the selected project(s), as well as any functions that have regressed or improved in performance within the selected time range.
 
-Using the Profiling page is typically an advanced workflow where you can select transactions of interest directly and closely examine profiling data.
+![Slowest Functions and Most Regressed Functions on the Profiling page](./img/profiling-page-functions.png)
+
+On the **Slowest Functions** widget, you can click on the ellipses button (...) on each function to see a list of example profiles containing that function. On the **Most Regressed/Improved Functions** widget, you can click on the function duration before & after the change to see before & after example profiles containing that function.
+
+Below the function metrics, you’ll find two tabs: **Transactions** and **Aggregate Flamegraph**. 
+
+If [tracing](/concepts/key-terms/tracing/) is enabled, **Transactions** shows a list of all of the transactions instrumented in the selected projects, allowing you to break down profiling data by endpoints, routes, user flows, etc. It gives you a more focused view of application performance within a *specific* part of the application.
+
+The **Aggregate Flamegraph** tab does _not_ require tracing to be enabled, and will show you a high level view of all of the most frequent code paths within the selected projects. This gives you a more general view of where time is being spent overall in a service or application.
 
 ### Transactions Tab
+<Alert>
+The transactions list will not be populated if tracing is not enabled for at least one of the selected projects.
+</Alert>
 
-This page shows a list of transactions in descending order of execution-time for your selected project(s).
+The **Transactions** tab, by default, shows a list of all transactions in the selected projects sorted by the frequency (count) of the transaction. The list can also be sorted by duration (p50/75/90/95), project, timestamp, etc. by clicking on the column headers in the table. The transactions list can also be filtered by specifying a query using the search bar. For example, you can search for transactions from specific users or transactions that are tagged with a custom attribute.
 
-![Transactions View](./img/profiling-page-transactions-view.png)
+![Transactions tab on the Profiling page](./img/profiling-page-transactions.png)
 
-The "Profiles by Percentiles" timeline chart can be used to filter transaction data by highlighting a desired time period.
+Click the name of a transaction to navigate to the **Transaction Summary** page, which contains aggregated performance data that is scoped to that transaction. By default, the **Profiles** tab is selected, which contains an [aggregate flame graph](/product/explore/profiling/flame-charts-graphs) showing the most frequent code paths that were profiled within that transaction. This flame graph behaves the same as the flame graph in the **Aggregate Flamegraph** tab described below.
 
-The "Slowest Functions" widget lists the functions that took the most time in your application, including the transactions each function was called from. Clicking on a transaction will take you to an example profile.
+![Profiles tab on the Transaction Summary page](./img/transaction-summary-profiles.png)
 
-### Flamegraph Tab
 
-The flamegraph tab shows an aggregate flamegraph based on the query you selected. You can use this tab to visualize a flamegraph across transaction boundaries so you can better understand bottlenecks that might be affecting the system as a whole. The aggregate flamegraph is a more advanced workflow that's relevant to users who've set up continuous profiling and are interested in looking at system-wide performance.
+### Aggregate Flamegraph Tab
 
-![Flamegraph View](./img/profiling-page-flamegraph-view.png)
+The **Aggregate Flamegraph** tab shows a [flame graph](/product/explore/profiling/flame-charts-graphs) with aggregated information on the frequency of code paths within the selected projects. 
 
-The function width in an aggregate flamegraph represents the number of times a particular function has been sampled. This view shows you where your system is spending the majority of its time. We recommend that you look for functions with a large sample count and optimize them, as they're the ones most frequently occupying the program's stack.
+![Aggregate Flamegraph tab on the Profiling page](./img/profiling-page-aggregate-flamegraph.png)
 
-You can right click on a function to open some example profiles and see the function executing. This is useful for gaining context into how and why that function might be running.
+The wider frames represent more **frequent** code paths, which are likely more relevant optimization opportunities. You can click on a frame to select it, which will populate the sidebar on the right with links to example profiles containing the selected function. 
 
-## Profiling Summary Page
+## Zooming Into Traces Using Profiling
 
-Selecting one of the transactions will take you to the **Profile Summary** page below. On this page, you can examine the aggregated information of this profile.
+If you are already looking at a trace and have insufficient information to debug the root cause of the problem, profiling data can help fill in the gaps. If there is profiling data associated with the trace, there are two ways to get to it from the [**Trace View**](/concepts/key-terms/tracing/trace-view/).
 
-![Transaction Profile summary page](./img/new-transaction-profile-view.png)
+One way is to select a span and scroll down to the **Profile** section of the span details:
 
-While the **Profiling** page can be used to view information about the profiles in our application, the **Profile Summary** page shows aggregated information from profiles collected under a single type of transaction.
+![Profiling data for a span in the Trace View](./img/trace-view-span-profile.png)
 
-This information allows you to dive deeper into what your code was executing during this transaction and may get you closer to the root of the problem.
+The **Most Frequent Stacks in this Span** widget shows a paginated list of call stacks in descending order of frequency that indicates where in the code most of the time in the selected span is spent. Click the **>** button to page through the other stacks, or click the **Profile** button to view the entire profile in the flame graph viewer.
 
-If you want to narrow down your investigation to profiles executed in a specific environment, use the search bar filters.
+The other way is to click the **Profiles** tab in the Trace View, which will show a list a profile events across *all* spans contained within the trace:
 
-The right side of the page has a list of the slowest functions. There's also a list of general information about the profile including:
+![Profiles tab in the Trace View](./img/trace-view-profiles.png)
 
-- When the profile was last seen
-- The total number of profiles collected for this transaction
-- p75, p95, and p99 values
+## Getting Started
 
-On the left side of the page is an aggregate flamegraph as well as a digest of the slowest and most regressed functions. We recommend looking for wide frames that have no children as a starting point. This will allow you to identify frames that are often occupying the stack and make good candidates for optimization. Read the [Flame Graphs and Aggregated Flame Graphs](/product/explore/profiling/flame-charts-graphs) docs if you'd like a deeper understanding of this data.
-
-An alternative way to visualize the flamegraph is by clicking on the "Call Tree" button which will render the flamegraph as an inverted call tree with the leftmost nodes first, which will then expand to their parent nodes. The sample column in the call tree represents the frequency with which Profiling collected stack samples where that function was on the stack. You can expand the tree by clicking on the caret before the function name. (Holding ⌘ at the same time will expand that entire branch all the way to the root.)
-
-## Learn More
-
-To learn more about profiling tools, read the docs about [Flame Graphs and Aggregated Flame Graphs](/product/explore/profiling/flame-charts-graphs).
+Read the [Getting Started guide](/product/explore/profiling/getting-started) to start using Continuous Profiling and UI Profiling.
 
 <PageGrid />

@@ -87,7 +87,7 @@ To capture all errors, initialize the SDK as soon as possible, such as in your `
 
 <PlatformSection notSupported={["apple.tvos", "apple.watchos", "apple.visionos"]}>
 
-```swift {tabTitle:Swift} {"onboardingOptions": {"performance": "13-16", "profiling": "18-28"}}
+```swift {tabTitle:Swift}
 import Sentry
 
 func application(_ application: UIApplication,
@@ -101,27 +101,25 @@ func application(_ application: UIApplication,
         // For more information, visit: https://docs.sentry.io/platforms/apple/data-management/data-collected/
         options.sendDefaultPii = true
 
-        // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+        // ___PRODUCT_OPTION_START___ performance
+        // Set tracesSampleRate to 1 to capture 100% of transactions for performance monitoring.
         // We recommend adjusting this value in production.
-        options.tracesSampleRate = 1.0
+        options.tracesSampleRate = 1
+        // ___PRODUCT_OPTION_END___ performance
+        
+        // ___PRODUCT_OPTION_START___ profiling
+        options.configureProfiling = {
+            $0.lifecycle = .trace
+            $0.sessionSampleRate = 1
+        }
+        // ___PRODUCT_OPTION_END___ profiling
     }
-
-    // Manually call startProfiler and stopProfiler to profile any code that runs in between.
-    SentrySDK.startProfiler()
-
-    //
-    // ...anything here will be profiled...
-    //
-
-    // Calls to stopProfiler are optional - if you don't stop the profiler, it will keep profiling
-    // your application until the process exits, the app goes to the background, or stopProfiling is called.
-    SentrySDK.stopProfiler()
 
     return true
 }
 ```
 
-```objc {tabTitle:Objective-C} {"onboardingOptions": {"performance": "12-15", "profiling": "17-27"}}
+```objc {tabTitle:Objective-C}
 @import Sentry;
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
@@ -134,27 +132,25 @@ func application(_ application: UIApplication,
         // For more information, visit: https://docs.sentry.io/platforms/apple/data-management/data-collected/
         options.sendDefaultPii = YES
 
+        // ___PRODUCT_OPTION_START___ performance
         // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
         // We recommend adjusting this value in production.
-        options.tracesSampleRate = @1.0;
+        options.tracesSampleRate = @1.f;
+        // ___PRODUCT_OPTION_END___ performance
+        
+        // ___PRODUCT_OPTION_START___ profiling
+        options.configureProfiling = ^(SentryProfileOptions *profiling) {
+            profiling.lifecycle = SentryProfileLifecycleTrace;
+            profiling.sessionSampleRate = 1.f;
+        };
+        // ___PRODUCT_OPTION_END___ profiling
     }];
-
-    // Manually call startProfiler and stopProfiler to profile any code that runs in between.
-    [SentrySDK startProfiler];
-
-    //
-    // ...anything here will be profiled...
-    //
-
-    // Calls to stopProfiler are optional - if you don't stop the profiler, it will keep profiling
-    // your application until the process exits, the app goes to the background, or stopProfiling is called.
-    [SentrySDK stopProfiler];
 
     return YES;
 }
 ```
 
-```swift {tabTitle:SwiftUI with App conformer} {"onboardingOptions": {"performance": "13-16", "profiling": "18-28"}}
+```swift {tabTitle:SwiftUI with App conformer}
 import Sentry
 
 @main
@@ -168,21 +164,19 @@ struct SwiftUIApp: App {
             // For more information, visit: https://docs.sentry.io/platforms/apple/data-management/data-collected/
             options.sendDefaultPii = true
 
-            // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+            // ___PRODUCT_OPTION_START___ performance
+            // Set tracesSampleRate to 1 to capture 100% of transactions for performance monitoring.
             // We recommend adjusting this value in production.
-            options.tracesSampleRate = 1.0
+            options.tracesSampleRate = 1
+            // ___PRODUCT_OPTION_END___ performance
+        
+            // ___PRODUCT_OPTION_START___ profiling
+            options.configureProfiling = {
+                $0.lifecycle = .trace
+                $0.sessionSampleRate = 1
+            }
+            // ___PRODUCT_OPTION_END___ profiling
         }
-
-        // Manually call startProfiler and stopProfiler to profile any code that runs in between.
-        SentrySDK.startProfiler()
-
-        //
-        // ...anything here will be profiled...
-        //
-
-        // Calls to stopProfiler are optional - if you don't stop the profiler, it will keep profiling
-        // your application until the process exits, the app goes to the background, or stopProfiling is called.
-        SentrySDK.stopProfiler()
     }
 }
 ```
@@ -190,7 +184,7 @@ struct SwiftUIApp: App {
 
 <PlatformSection notSupported={["apple.ios", "apple.macos"]}>
 
-```swift {tabTitle:Swift} {"onboardingOptions": {"performance": "13-16"}}
+```swift {tabTitle:Swift}
 import Sentry
 
 func application(_ application: UIApplication,
@@ -204,16 +198,25 @@ func application(_ application: UIApplication,
         // For more information, visit: https://docs.sentry.io/platforms/apple/data-management/data-collected/
         options.sendDefaultPii = true
 
-        // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+        // ___PRODUCT_OPTION_START___ performance
+        // Set tracesSampleRate to 1 to capture 100% of transactions for performance monitoring.
         // We recommend adjusting this value in production.
-        options.tracesSampleRate = 1.0
+        options.tracesSampleRate = 1
+        // ___PRODUCT_OPTION_END___ performance
+        
+        // ___PRODUCT_OPTION_START___ profiling
+        options.configureProfiling = {
+            $0.lifecycle = .trace
+            $0.sessionSampleRate = 1
+        }
+        // ___PRODUCT_OPTION_END___ profiling
     }
 
     return true
 }
 ```
 
-```objc {tabTitle:Objective-C} {"onboardingOptions": {"performance": "12-15"}}
+```objc {tabTitle:Objective-C}
 @import Sentry;
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
@@ -226,16 +229,25 @@ func application(_ application: UIApplication,
         // For more information, visit: https://docs.sentry.io/platforms/apple/data-management/data-collected/
         options.sendDefaultPii = YES
 
+        // ___PRODUCT_OPTION_START___ performance
         // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
         // We recommend adjusting this value in production.
-        options.tracesSampleRate = @1.0;
+        options.tracesSampleRate = @1.f;
+        // ___PRODUCT_OPTION_END___ performance
+        
+        // ___PRODUCT_OPTION_START___ profiling
+        options.configureProfiling = ^(SentryProfileOptions *profiling) {
+            profiling.lifecycle = SentryProfileLifecycleTrace;
+            profiling.sessionSampleRate = 1.f;
+        };
+        // ___PRODUCT_OPTION_END___ profiling
     }];
 
     return YES;
 }
 ```
 
-```swift {tabTitle:SwiftUI with App conformer} {"onboardingOptions": {"performance": "13-16"}}
+```swift {tabTitle:SwiftUI with App conformer}
 import Sentry
 
 @main
@@ -249,9 +261,18 @@ struct SwiftUIApp: App {
             // For more information, visit: https://docs.sentry.io/platforms/apple/data-management/data-collected/
             options.sendDefaultPii = true
 
-            // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+            // ___PRODUCT_OPTION_START___ performance
+            // Set tracesSampleRate to 1 to capture 100% of transactions for performance monitoring.
             // We recommend adjusting this value in production.
-            options.tracesSampleRate = 1.0
+            options.tracesSampleRate = 1
+            // ___PRODUCT_OPTION_END___ performance
+        
+            // ___PRODUCT_OPTION_START___ profiling
+            options.configureProfiling = {
+                $0.lifecycle = .trace
+                $0.sessionSampleRate = 1
+            }
+            // ___PRODUCT_OPTION_END___ profiling
         }
     }
 }
