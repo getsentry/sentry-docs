@@ -157,16 +157,17 @@ export function SidebarTableOfContents() {
 
   // Mark the active item based on the scroll position
   useEffect(() => {
-    if (!tocItems.length) {
+    const innerHeight = window.innerHeight;
+    if (!tocItems.length || !innerHeight) {
       return () => {};
     }
     // account for the header height
     const rootMarginTop = 100;
     // element is consiered in view if it is in the top 1/3 of the screen
-    const rootMarginBottomRaw = (2 / 3) * window.innerHeight - rootMarginTop;
-    const rootMarginBottom = Math.floor(rootMarginBottomRaw);
+    const rootMarginBottomRaw = (2 / 3) * innerHeight - rootMarginTop;
+    const rootMarginBottom = Math.floor(rootMarginBottomRaw) * -1;
     const observerOptions = {
-      rootMargin: `${rootMarginTop}px 0px -${rootMarginBottom}px 0px`,
+      rootMargin: `${rootMarginTop}px 0px ${rootMarginBottom}px 0px`,
       threshold: 1,
     };
     const observer = new IntersectionObserver(entries => {
