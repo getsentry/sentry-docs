@@ -65,13 +65,18 @@ To use this SDK, add the `sentryPagesPlugin` as [middleware to your Cloudflare P
 We recommend adding a `functions/_middleware.js` for the middleware setup so that Sentry is initialized for your entire
 app.
 
-```javascript {filename:functions/_middleware.js} {"onboardingOptions": {"performance": "7-10"}}
+```javascript {filename:functions/_middleware.js} {"onboardingOptions": {"performance": "11-15"}}
 import * as Sentry from "@sentry/cloudflare";
 
 export const onRequest = [
   // Make sure Sentry is the first middleware
   Sentry.sentryPagesPlugin((context) => ({
     dsn: "___PUBLIC_DSN___",
+    
+    // Adds request headers and IP for users,
+    // visit: https://docs.sentry.io/platforms/javascript/data-management/data-collected/ for more info
+    sendDefaultPii: true,
+    
     // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
     // Learn more at
     // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
