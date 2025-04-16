@@ -1,25 +1,25 @@
 ```python {tabTitle:Python (SDK 2.x)}
-from sentry_sdk import new_scope, capture_exception
+import sentry_sdk
 
 def make_request(method, path, options):
     try:
         return session.request(method, path, **options)
     except RequestError as err:
-        with new_scope() as scope:
+        with sentry_sdk.new_scope() as scope:
             # group errors together based on their request and response
             scope.fingerprint = [method, path, str(err.status_code)]
-            capture_exception(err)
+            sentry_sdk.capture_exception(err)
 ```
 
 ```python {tabTitle:Python (SDK 1.x)}
-from sentry_sdk import push_scope, capture_exception
+import sentry_sdk
 
 def make_request(method, path, options):
     try:
         return session.request(method, path, **options)
     except RequestError as err:
-        with push_scope() as scope:
+        with sentry_sdk.push_scope() as scope:
             # group errors together based on their request and response
             scope.fingerprint = [method, path, str(err.status_code)]
-            capture_exception(err)
+            sentry_sdk.capture_exception(err)
 ```
