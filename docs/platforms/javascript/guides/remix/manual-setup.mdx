@@ -38,13 +38,18 @@ To use this SDK, initialize Sentry in your Remix project for both the client and
 
 ### Client-side Configuration
 
-```typescript {tabTitle:Client} {filename: entry.client.tsx} {"onboardingOptions": {"performance": "8-12,16-23", "session-replay": "13-14,24-28"}}
+```typescript {tabTitle:Client} {filename: entry.client.tsx} {"onboardingOptions": {"performance": "12-17,21-28", "session-replay": "18-19,29-33"}}
 import { useLocation, useMatches } from "@remix-run/react";
 import * as Sentry from "@sentry/remix";
 import { useEffect } from "react";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  
+  // Adds request headers and IP for users,
+  // visit: https://docs.sentry.io/platforms/javascript/data-management/data-collected/ for more info
+  sendDefaultPii: true,
+  
   integrations: [
     Sentry.browserTracingIntegration({
       useEffect,
@@ -128,11 +133,16 @@ export default withSentry(App);
 
 Create an instrumentation file (named here as `instrument.server.mjs`) in your project. Add your initialization code in this file for the server-side SDK.
 
-```typescript {tabTitle:Server} {filename: instrument.server.mjs} {"onboardingOptions": {"performance": "5-9"}}
+```typescript {tabTitle:Server} {filename: instrument.server.mjs} {"onboardingOptions": {"performance": "9-15"}}
 import * as Sentry from "@sentry/remix";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  
+  // Adds request headers and IP for users, and captures action formData attributes
+  // visit: https://docs.sentry.io/platforms/javascript/data-management/data-collected/ for more info
+  sendDefaultPii: true,
+  
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for tracing.
   // We recommend adjusting this value in production
@@ -146,9 +156,6 @@ Sentry.init({
     key_x: true,
     key_y: true,
   },
-
-  // To capture action formData attributes.
-  sendDefaultPii: true,
 });
 ```
 
