@@ -38,28 +38,28 @@ To use this SDK, initialize Sentry in your Remix project for both the client and
 
 ### Client-side Configuration
 
-```typescript {tabTitle:Client} {filename: entry.client.tsx}
+```typescript {tabTitle:Client} {filename: entry.client.tsx} {"onboardingOptions": {"performance": "12-17,21-28", "session-replay": "18-19,29-33"}}
 import { useLocation, useMatches } from "@remix-run/react";
 import * as Sentry from "@sentry/remix";
 import { useEffect } from "react";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/remix/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  
   integrations: [
-    // ___PRODUCT_OPTION_START___ performance
     Sentry.browserTracingIntegration({
       useEffect,
       useLocation,
       useMatches,
     }),
-    // ___PRODUCT_OPTION_END___ performance
-    // ___PRODUCT_OPTION_START___ session-replay
     // Replay is only available in the client
     Sentry.replayIntegration(),
-    // ___PRODUCT_OPTION_END___ session-replay
   ],
 
-  // ___PRODUCT_OPTION_START___ performance
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for tracing.
   // We recommend adjusting this value in production
@@ -69,16 +69,13 @@ Sentry.init({
 
   // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
   tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
-  // ___PRODUCT_OPTION_END___ performance
 
-  // ___PRODUCT_OPTION_START___ session-replay
   // Capture Replay for 10% of all sessions,
   // plus for 100% of sessions with an error
   // Learn more at
   // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ session-replay
 });
 ```
 
@@ -136,19 +133,22 @@ export default withSentry(App);
 
 Create an instrumentation file (named here as `instrument.server.mjs`) in your project. Add your initialization code in this file for the server-side SDK.
 
-```typescript {tabTitle:Server} {filename: instrument.server.mjs}
+```typescript {tabTitle:Server} {filename: instrument.server.mjs} {"onboardingOptions": {"performance": "9-15"}}
 import * as Sentry from "@sentry/remix";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  // ___PRODUCT_OPTION_START___ performance
+  
+  // Adds request headers and IP for users, for more info visit: and captures action formData attributes
+  // https://docs.sentry.io/platforms/javascript/guides/remix/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for tracing.
   // We recommend adjusting this value in production
   // Learn more at
   // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
   tracesSampleRate: 1.0,
-  // ___PRODUCT_OPTION_END___ performance
 
   // Optionally capture action formData attributes with errors.
   // This requires `sendDefaultPii` set to true as well.
@@ -156,9 +156,6 @@ Sentry.init({
     key_x: true,
     key_y: true,
   },
-
-  // To capture action formData attributes.
-  sendDefaultPii: true,
 });
 ```
 

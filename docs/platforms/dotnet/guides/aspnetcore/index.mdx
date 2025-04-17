@@ -107,10 +107,11 @@ ASP.NET Core will automatically read this environment variable and bind it to th
 
 Finally, any settings that can be configured via `appsettings.json` or environment variables can also be configured via code. Some settings can only be configured in code, such as the `BeforeSend` callback:
 
-```csharp {"onboardingOptions": {"performance": "3"}}
+```csharp {"onboardingOptions": {"performance": "4"}}
 .UseSentry(options =>
 {
-    options.TracesSampleRate = 1.0; // <- Set this to configure automatic tracing
+    options.SendDefaultPii = true; // Adds request URL and headers, IP and name for users, etc.
+    options.TracesSampleRate = 1.0; // Set this to configure automatic tracing
     options.SetBeforeSend((@event, hint) =>
     {
         // Never report server names
@@ -120,9 +121,10 @@ Finally, any settings that can be configured via `appsettings.json` or environme
 })
 ```
 
-```fsharp {"onboardingOptions": {"performance": "2"}}
+```fsharp {"onboardingOptions": {"performance": "3"}}
 .UseSentry (fun options ->
-    options.TracesSampleRate <- 1.0   // <- Set this to configure automatic tracing
+    options.SendDefaultPii <- true // Adds request URL and headers, IP and name for users, etc.
+    options.TracesSampleRate <- 1.0 // Set this to configure automatic tracing
     options.SetBeforeSend(fun event hint ->
         // Never report server names
         event.ServerName <- null
@@ -259,6 +261,7 @@ A tunnel is an HTTP endpoint that acts as a proxy between Sentry and your applic
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  sendDefaultPii: true,
   tunnel: "/tunnel",
 });
 ```
