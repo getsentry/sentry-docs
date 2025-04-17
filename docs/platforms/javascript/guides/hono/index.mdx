@@ -62,7 +62,9 @@ compatibility_flags = ["nodejs_als"]
 Next, wrap your handler with the `withSentry` function. This will initialize the SDK and hook into the
 environment. Note that you can turn off almost all side effects using the respective options.
 
-```typescript {filename:index.ts} {"onboardingOptions": {"performance": "14-18"}}
+
+
+```typescript {filename:index.ts}
 import { Hono } from "hono";
 import * as Sentry from "@sentry/cloudflare";
 
@@ -77,10 +79,17 @@ export default Sentry.withSentry(
   (env) => ({
     dsn: "___PUBLIC_DSN___",
 
+    
+    // Adds request headers and IP for users, for more info visit:
+    // https://docs.sentry.io/platforms/javascript/guides/hono/configuration/options/#sendDefaultPii
+    sendDefaultPii: true,
+
+    // ___PRODUCT_OPTION_START___ performance
     // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
     // Learn more at
     // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
     tracesSampleRate: 1.0,
+    // ___PRODUCT_OPTION_END___ performance
   }),
   app
 );
@@ -123,18 +132,20 @@ Next, add the `sentryPagesPlugin` as
 We recommend adding a `functions/_middleware.js` for the middleware setup so that Sentry is initialized for your entire
 app.
 
-```javascript {filename:functions/_middleware.js} {"onboardingOptions": {"performance": "7-11"}}
+```javascript {filename:functions/_middleware.js}
 import * as Sentry from "@sentry/cloudflare";
 
 export const onRequest = [
   // Make sure Sentry is the first middleware
   Sentry.sentryPagesPlugin((context) => ({
     dsn: "___PUBLIC_DSN___",
+    // ___PRODUCT_OPTION_START___ performance
 
     // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
     // Learn more at
     // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
     tracesSampleRate: 1.0,
+    // ___PRODUCT_OPTION_END___ performance
   })),
   // Add more middlewares here
 ];
