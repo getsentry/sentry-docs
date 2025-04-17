@@ -2,9 +2,8 @@ import {DocNode, nodeForPath} from 'sentry-docs/docTree';
 
 import styles from './style.module.scss';
 
-import {SidebarLink} from '../sidebarLink';
-
 import {DynamicNav, toTree} from './dynamicNav';
+import {SidebarLink, SidebarSeparator} from './sidebarLink';
 import {NavNode} from './types';
 import {docNodeToNavNode, getNavNodes} from './utils';
 
@@ -23,7 +22,6 @@ const devDocsMenuItems: {root: string; title: string}[] = [
 ];
 
 export function DevelopDocsSidebar({
-  path,
   rootNode,
   sidebarToggleId,
 }: {
@@ -55,18 +53,13 @@ export function DevelopDocsSidebar({
               />
             ))}
           </ul>
-          <hr />
+          <SidebarSeparator />
           <ul data-sidebar-tree>
             <SidebarLink
-              to="https://open.sentry.io/code-of-conduct/"
+              href="https://open.sentry.io/code-of-conduct/"
               title="Code of Conduct"
-              path={path}
             />
-            <SidebarLink
-              to="https://docs.sentry.io"
-              title="User Documentation"
-              path={path}
-            />
+            <SidebarLink href="https://docs.sentry.io" title="User Documentation" />
           </ul>
         </div>
       </div>

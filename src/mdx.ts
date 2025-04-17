@@ -456,6 +456,10 @@ export async function getFileBySlug(slug: string) {
 
       return options;
     },
+  }).catch(e => {
+    // eslint-disable-next-line no-console
+    console.error('Error occurred during MDX compilation:', e.errors);
+    throw e;
   });
 
   const {code, frontmatter} = result;
