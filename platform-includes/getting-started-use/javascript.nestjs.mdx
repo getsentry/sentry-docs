@@ -75,29 +75,26 @@ export class AppModule {}
 
 <Expandable title="Using Microservices?">
 
-If you are using `@nestjs/microservices` you can also include our `SentryRpcFilter` to make sure to handle errors in RPC contexts correctly:
+If you are using `@nestjs/microservices` make sure to handle errors in RPC contexts correctly by providing your own `RpcExceptionFilter` (see https://docs.nestjs.com/microservices/exception-filters). 
+`SentryGlobalFilter` in a [hybrid application](https://docs.nestjs.com/faq/hybrid-application) does not extend `BaseRpcExceptionFilter` since this depends on `@nestjs/microservices`.
 
-```javascript {3-4, 8-15}
-import { Module } from "@nestjs/common";
-import { APP_FILTER } from "@nestjs/core";
-import { SentryGlobalFilter } from "@sentry/nestjs/setup";
-import { SentryRpcFilter } from "@sentry/nestjs/microservices";
+Use `Sentry.captureException(exception)` in your custom filter in case you want to send these errors to Sentry:
 
-@Module({
-  providers: [
-    {
-      provide: APP_FILTER,
-      useClass: SentryGlobalFilter,
-    },
-    {
-      provide: APP_FILTER,
-      useClass: SentryRpcFilter,
-    },
-    // ..other providers
-  ],
-})
-export class AppModule {}
+```typescript
+import { Catch, RpcExceptionFilter, ArgumentsHost } from '@nestjs/common';
+import { Observable, throwError } from 'rxjs';
+import { RpcException } from '@nestjs/microservices';
+import * as Sentry from '@sentry/nestjs';
+
+@Catch(RpcException)
+export class ExceptionFilter implements RpcExceptionFilter<RpcException> {
+  catch(exception: RpcException, host: ArgumentsHost): Observable<any> {
+    Sentry.captureException(exception); // optional
+    return throwError(() => exception.getError());
+  }
+}
 ```
+
 
 </Expandable>
 
