@@ -25,18 +25,19 @@ You can define a custom `before_send_transaction` callback to modify transaction
 ```python
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
+from sentry_sdk.types import Event, Hint
 
-def transaction_processor(event, hint):
+def transaction_processor(event: Event, hint: Hint) -> Event | None:
     if event.get("type") == "transaction":
         # Extract path from transaction name
         transaction_name = event.get("transaction", "")
-        
+
         # Remove variable IDs from URLs to reduce cardinality
         if "/user/" in transaction_name:
             # Convert /user/123/ to /user/:id/
             import re
             event["transaction"] = re.sub(r'/user/\d+/', '/user/:id/', transaction_name)
-    
+
     return event
 
 sentry_sdk.init(
