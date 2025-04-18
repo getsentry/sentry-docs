@@ -62,19 +62,26 @@ pnpm add @sentry/aws-serverless @sentry/profiling-node
 
 Initialize and configure the SDK in your Lambda function Code. Call `Sentry.init` _outside_ of the handler function to avoid re-initializing the SDK on every invocation. Also, add the `Sentry.wrapHandler` wrapper around your function to automatically catch errors and performance data:
 
-```javascript {filename:index.js} {"onboardingOptions": {"performance": "7-10", "profiling": "2,6,11-12"}}
+```javascript {filename:index.js} {"onboardingOptions": {"performance": "12-18", "profiling": "2,10-11,17-21"}}
 const Sentry = require("@sentry/aws-serverless");
 const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/aws-lambda/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  
   integrations: [nodeProfilingIntegration()],
+  
   // Add Tracing by setting tracesSampleRate and adding integration
   // Set tracesSampleRate to 1.0 to capture 100% of transactions
   // We recommend adjusting this value in production
   // Learn more at
   // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
   tracesSampleRate: 1.0,
+  
   // Set sampling rate for profiling - this is relative to tracesSampleRate
   profilesSampleRate: 1.0,
 });

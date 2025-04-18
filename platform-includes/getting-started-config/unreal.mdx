@@ -21,3 +21,21 @@ The window can be accessed by going to editor's menu: **Project Settings > Plugi
 By default, the SDK is automatically initialized on application startup. Alternatively, the `Initialize SDK automatically` option can be disabled and in this case, explicit SDK initialization is required.
 
 To override SDK settings at runtime, use the `InitializeWithSettings` method of the `SentrySubsystem` class.
+
+```cpp
+FConfigureSettingsDelegate OnConfigureSettings;
+OnConfigureSettings.BindDynamic(this, &UMyGameInstance::ConfigureSentrySettings);
+
+void UMyGameInstance::ConfigureSentrySettings(USentrySettings* Settings)
+{
+	Settings->Dsn = TEXT("DSN");
+
+  // Add data like request headers, user ip address, device name, etc.
+  Settings->SendDefaultPii = true;
+}
+
+...
+
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+SentrySubsystem->InitializeWithSettings(OnConfigureSettings);
+```

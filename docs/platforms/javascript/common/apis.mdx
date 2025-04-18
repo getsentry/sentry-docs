@@ -111,14 +111,17 @@ client enabled for continued use.
   promise, but it is recommended to use this only when necessary as it slows
   down event processing.
 
-  <PlatformCategorySection notSupported={['server', 'serverless']}>
-    Event processors added via `Sentry.addEventProcessor()` will be applied to all events in your application.
-  If you want to add an event processor that only applies to certain events, you can also add one to a scope as follows:
-  </PlatformCategorySection>
+<PlatformCategorySection notSupported={["server", "serverless"]}>
+  Event processors added via `Sentry.addEventProcessor()` will be applied to all
+  events in your application. If you want to add an event processor that only
+  applies to certain events, you can also add one to a scope as follows:
+</PlatformCategorySection>
 
     <PlatformCategorySection supported={['server', 'serverless']}>
     Event processors added via `Sentry.addEventProcessor()` will be applied to all events in your current request.
-  If you want to add an event processor that only applies to certain events, you can also add one to a scope as follows:
+
+If you want to add an event processor that only applies to certain events, you can also add one to a scope as follows:
+
   </PlatformCategorySection>
 
 ```javascript
@@ -136,6 +139,7 @@ Sentry.withScope((scope) => {
     `beforeSend` and `beforeSendTransaction` are guaranteed to be run last, after all other event processors, (which means they get the final version of the event right before it's sent, hence the name). Event processors added with `addEventProcessor` are run in an undetermined order, which means changes to the event may still be made after the event processor runs.
 
     There can only be a single `beforeSend` / `beforeSendTransaction` processor, but you can add multiple event processors via `addEventProcessor()`.
+
   </Expandable>
 </SdkApi>
 
@@ -322,7 +326,30 @@ Messages show up as issues on your issue stream, with the message as the issue n
   signature="function setContext(name: string, context: Record<string, unknown>): void"
   parameters={[]}
 >
-  Set a context to be sent with Sentry events.
+  Set a context to be sent with Sentry events. Custom contexts allow you to attach arbitrary data to an event.
+  You cannot search these, but they are viewable on the issue page - if you
+  need to be able to filter for certain data, use [tags](./#setTag) instead.
+
+  There are no restrictions on context name. In the context object, all keys are allowed except for `type`, which is used internally.
+
+By default, Sentry SDKs normalize nested structured context data up to three levels deep.
+Any data beyond this depth will be trimmed and marked using its type instead.
+To adjust this default, use the <PlatformLink to="/configuration/options#normalize-depth">`normalizeDepth`</PlatformLink> SDK option.
+
+Learn more about conventions for common contexts in the [contexts interface developer documentation](https://develop.sentry.dev/sdk/data-model/event-payloads/contexts/).
+
+ <Expandable title='Example'>
+  Context data is structured and can contain any data you want:
+
+  ```javascript
+  Sentry.setContext("character", {
+    name: "Mighty Fighter",
+    age: 19,
+    attack_type: "melee",
+  });
+  ```
+  </Expandable>
+
 </SdkApi>
 
 <SdkApi
@@ -350,16 +377,70 @@ Messages show up as issues on your issue stream, with the message as the issue n
       type: {
         name: "User",
         properties: [
-          { name: "id", type: "string | number" },
-          { name: "email", type: "string" },
-          { name: "ip_address", type: "string" },
-          { name: "username", type: "string" },
+          {
+            name: "id",
+            type: "string | number",
+            description: "Your internal identifier for the user",
+          },
+          {
+            name: "email",
+            type: "string",
+            description:
+              "Sentry is aware of email addresses and can display things such as Gravatars and unlock messaging capabilities",
+          },
+          {
+            name: "username",
+            type: "string",
+            description:
+              "Typically used as a better label than the internal id",
+          },
+          {
+            name: "ip_address",
+            type: "string",
+            description:
+              "The user's IP address. If the user is unauthenticated, Sentry uses the IP address as a unique identifier for the user",
+          },
         ],
       },
     },
   ]}
 >
-  Set a user to be sent with Sentry events. Set to `null` to unset the user.
+  Set a user to be sent with Sentry events. Set to `null` to unset the user. In
+  addition to the specified properties of the `User` object, you can also add
+  additional arbitrary key/value pairs.
+
+  <Expandable title="Capturing User IP-Addresses">
+    <PlatformCategorySection supported={['server', 'serverless']}>
+    On the server, the IP address will be inferred from the incoming HTTP request, if available.
+    This is automatically done if you have configured `sendDefaultPii: true` in your <PlatformLink to="/configuration/options/#sendDefaultPii">SDK configuration</PlatformLink>.
+    </PlatformCategorySection>
+
+    <PlatformCategorySection supported={["browser"]}>
+    On the browser, if the users' `ip_address` is set to `"{{ auto }}"`, Sentry
+    will infer the IP address from the connection between your app and Sentrys'
+    server. `{{auto}}` is automatically set if you have configured `sendDefaultPii:
+    true` in your <PlatformLink to="/configuration/options/#sendDefaultPii">SDK configuration</PlatformLink>.
+    </PlatformCategorySection>
+
+    To ensure your users' IP addresses are never stored in your event data, you can go to your project settings, click on "Security & Privacy", and enable "Prevent Storing of IP Addresses" or use Sentry's [server-side data scrubbing](/security-legal-pii/scrubbing/) to remove `$user.ip_address`. Adding such a rule ultimately overrules any other logic.
+
+  </Expandable>
+
+
+<PlatformCategorySection supported={["server"]}>
+  <Expandable title="Setting The User For the Current Request ">
+    <PlatformSection notSupported={['javascript.bun', 'javascript.cloudflare', 'javascript.deno', 'javascript.react-router', 'javascript.aws-lambda', 'javascript.azure-functions', 'javascript.gcp-functions']}>
+    `Sentry.setUser()` will set the user for the currently active request - see <PlatformLink to="/enriching-events/request-isolation">Request Isolation</PlatformLink> for more information. For example, if you want to set the user for a single request, you can do this like this:
+    </PlatformSection>
+    <PlatformContent includePath="enriching-events/set-user-request" />
+
+    Or if you want to set the user for all requests, you could use a middleware like this:
+
+    <PlatformContent includePath="enriching-events/set-user-middleware" />
+
+  </Expandable>
+</PlatformCategorySection>
+
 </SdkApi>
 
 <SdkApi
