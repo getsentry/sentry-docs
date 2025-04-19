@@ -6,6 +6,7 @@ import {FrontMatter} from 'sentry-docs/types';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
 import {isNotNil} from 'sentry-docs/utils';
 import {getUnversionedPath} from 'sentry-docs/versioning';
+import {getMarkdownContent} from 'sentry-docs/utils/getMarkdownContent';
 
 import './type.scss';
 
@@ -15,6 +16,7 @@ import {CodeContextProvider} from '../codeContext';
 import {DocFeedback} from '../docFeedback';
 import {GitHubCTA} from '../githubCTA';
 import {Header} from '../header';
+import {MarkdownButton} from '../markdownButton';
 import Mermaid from '../mermaid';
 import {PaginationNav} from '../paginationNav';
 import {PlatformSdkDetail} from '../platformSdkDetail';
@@ -34,7 +36,7 @@ type Props = {
   sidebar?: ReactNode;
 };
 
-export function DocPage({
+export async function DocPage({
   children,
   frontMatter,
   notoc = false,
@@ -57,6 +59,9 @@ export function DocPage({
   const unversionedPath = getUnversionedPath(path, false);
 
   const leafNode = nodeForPath(rootNode, unversionedPath);
+  
+  // Fetch markdown content for the current page
+  const markdownContent = await getMarkdownContent();
 
   return (
     <div className="tw-app">
@@ -83,10 +88,15 @@ export function DocPage({
             </div>
             {leafNode && <Breadcrumbs leafNode={leafNode} />}
             <div>
-              <hgroup>
-                <h1>{frontMatter.title}</h1>
-                <h2>{frontMatter.description}</h2>
-              </hgroup>
+              <div className="flex items-start justify-between">
+                <hgroup>
+                  <h1>{frontMatter.title}</h1>
+                  <h2>{frontMatter.description}</h2>
+                </hgroup>
+                <div className="flex-shrink-0 mt-11">
+                  <MarkdownButton markdownContent={markdownContent} />
+                </div>
+              </div>
               {/* This exact id is important for Algolia indexing */}
               <div id="main">
                 <CodeContextProvider>{children}</CodeContextProvider>
