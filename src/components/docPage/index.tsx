@@ -1,5 +1,4 @@
 import {ReactNode} from 'react';
-
 import {getCurrentGuide, getCurrentPlatform, nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 import {FrontMatter} from 'sentry-docs/types';
@@ -7,9 +6,7 @@ import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
 import {isNotNil} from 'sentry-docs/utils';
 import {getUnversionedPath} from 'sentry-docs/versioning';
 import {getMarkdownContent} from 'sentry-docs/utils/getMarkdownContent';
-
 import './type.scss';
-
 import {Banner} from '../banner';
 import {Breadcrumbs} from '../breadcrumbs';
 import {CodeContextProvider} from '../codeContext';
