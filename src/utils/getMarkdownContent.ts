@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { serverContext } from 'sentry-docs/serverContext';
+import {serverContext} from 'sentry-docs/serverContext';
 
 export async function getMarkdownContent(): Promise<string | null> {
   const { path: pagePath } = serverContext();

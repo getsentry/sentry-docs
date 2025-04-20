@@ -1,5 +1,5 @@
 import React from 'react';
-import { MarkdownButtonClient } from './client';
+import {MarkdownButtonClient} from './client';
 
 type MarkdownButtonProps = {
   markdownContent: string | null;
