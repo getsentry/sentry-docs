@@ -2,10 +2,12 @@ import fs from 'fs';
 import path from 'path';
 import {serverContext} from 'sentry-docs/serverContext';
 
-export async function getMarkdownContent(): Promise<string | null> {
+export function getMarkdownContent() {
   const { path: pagePath } = serverContext();
   
   const pathStr = pagePath.join('/');
+  
+  console.log(`Looking for markdown content for path: ${pathStr}`);
     
   const possibleExtensions = ['.mdx', '.md'];
   const basePaths = [
@@ -52,7 +54,7 @@ export async function getMarkdownContent(): Promise<string | null> {
     // Extract all PlatformSection blocks
     const platformSectionRegex = /<PlatformSection\s+([^>]*)>([\s\S]*?)<\/PlatformSection>/g;
     
-    return content.replace(platformSectionRegex, (match, attributes, sectionContent) => {
+    return content.replace(platformSectionRegex, (attributes, sectionContent) => {
       // Check if this section should be included or excluded based on SDK
       const supportedMatch = attributes.match(/supported=\{(\[[^\]]*\])\}/);
       const notSupportedMatch = attributes.match(/notSupported=\{(\[[^\]]*\])\}/);
@@ -100,12 +102,64 @@ export async function getMarkdownContent(): Promise<string | null> {
       return sectionContent;
     });
   };
+  
+  // Also process PlatformCategorySection tags
+  const processPlatformCategorySections = (content: string, sdk: string): string => {
+    if (!sdk) return content;
+    
+    // Extract all PlatformCategorySection blocks
+    const platformCategorySectionRegex = /<PlatformCategorySection\s+([^>]*)>([\s\S]*?)<\/PlatformCategorySection>/g;
+    
+    return content.replace(platformCategorySectionRegex, (match, attributes, sectionContent) => {
+      // Check if this section should be included or excluded based on SDK
+      const supportedMatch = attributes.match(/supported=\{(\[[^\]]*\])\}/);
+      const notSupportedMatch = attributes.match(/notSupported=\{(\[[^\]]*\])\}/);
+      
+      // If neither attribute is present, include the content
+      if (!supportedMatch && !notSupportedMatch) {
+        return sectionContent;
+      }
+      
+      if (supportedMatch) {
+        // Parse the supported categories array
+        const supportedStr = supportedMatch[1].replace(/[\[\]'"\s]/g, '');
+        const supportedCategories = supportedStr.split(',');
+        
+        // Determine if the current SDK is in a supported category
+        // For server-side JavaScript frameworks
+        const serverFrameworks = ['node', 'express', 'koa', 'fastify', 'hapi', 'connect', 'nestjs'];
+        const serverlessFrameworks = ['aws-lambda', 'azure-functions', 'gcp-functions', 'cloudflare', 'deno', 'bun'];
+        
+        const isServer = serverFrameworks.some(framework => sdk.includes(framework));
+        const isServerless = serverlessFrameworks.some(framework => sdk.includes(framework));
+        const isBrowser = !isServer && !isServerless;
+        
+        const isSupported = (
+          (supportedCategories.includes('server') && isServer) ||
+          (supportedCategories.includes('serverless') && isServerless) ||
+          (supportedCategories.includes('browser') && isBrowser) ||
+          (supportedCategories.includes('mobile') && sdk.includes('cordova'))
+        );
+        
+        // Include content only if SDK is in a supported category
+        return isSupported ? sectionContent : '';
+      }
+      
+      // Handle notSupported case if needed
+      if (notSupportedMatch) {
+        // Similar logic as above but inverted
+        return sectionContent; // Default to including for now
+      }
+      
+      return sectionContent;
+    });
+  };
     
   const processPlatformContent = (content: string, sdk: string): string => {
     // Match <PlatformContent includePath="path" /> patterns
     const platformContentRegex = /<PlatformContent\s+includePath="([^"]+)"\s*\/>/g;
     
-    return content.replace(platformContentRegex, (match, includePath) => {
+    return content.replace(platformContentRegex, (includePath) => {
       try {
         // Platform content is organized by SDK in platform-includes directory
         const platformIncludesDir = path.join(process.cwd(), 'platform-includes', includePath);
@@ -182,19 +236,19 @@ export async function getMarkdownContent(): Promise<string | null> {
   const processPlatformTags = (content: string): string => {
     // Replace PlatformLink tags
     let processedContent = content.replace(/<PlatformLink\s+to="([^"]+)">([\s\S]*?)<\/PlatformLink>/g, 
-      (match, to, linkText) => `[${linkText}](${to})`);
+      (to, linkText) => `[${linkText}](${to})`);
     
     // Replace PlatformIdentifier tags
     processedContent = processedContent.replace(/<PlatformIdentifier\s+name="([^"]+)"[^>]*\/>/g, 
-      (match, name) => `\`${name}\``);
+      (name) => `\`${name}\``);
     
     // Replace Alert tags
     processedContent = processedContent.replace(/<Alert[^>]*>([\s\S]*?)<\/Alert>/g, 
-      (match, alertContent) => `> **Note**\n> ${alertContent.trim().replace(/\n/g, '\n> ')}`);
+      (alertContent) => `> **Note**\n> ${alertContent.trim().replace(/\n/g, '\n> ')}`);
     
     // Replace code blocks with tabTitle
     processedContent = processedContent.replace(/```([a-zA-Z]+)\s+\{tabTitle:\s*([^}]+)\}([\s\S]*?)```/g,
-      (match, language, title, code) => `**${title.trim()}**\n\n\`\`\`${language}\n${code.trim()}\n\`\`\``);
+      (language, title, code) => `**${title.trim()}**\n\n\`\`\`${language}\n${code.trim()}\n\`\`\``);
     
     return processedContent;
   };
@@ -206,7 +260,7 @@ export async function getMarkdownContent(): Promise<string | null> {
     // First process regular includes
     const includeRegex = /<Include\s+name="([^"]+)"\s*\/>/g;
     
-    let processedContent = content.replace(includeRegex, (match, includeName) => {
+    let processedContent = content.replace(includeRegex, (includeName) => {
       const includePath = path.join(process.cwd(), 'includes', includeName);
       
       if (fs.existsSync(includePath)) {
@@ -238,6 +292,9 @@ export async function getMarkdownContent(): Promise<string | null> {
     // Process platform sections
     processedContent = processPlatformSections(processedContent, sdk);
     
+    // Process platform category sections
+    processedContent = processPlatformCategorySections(processedContent, sdk);
+    
     // Process other platform-specific tags
     processedContent = processPlatformTags(processedContent);
     
@@ -253,44 +310,91 @@ export async function getMarkdownContent(): Promise<string | null> {
     }
   };
   
-  // General approach for handling composite documentation
-  // This works for any platform/framework combination
+  // Check if this is a path that might have both direct and common content
   const pathSegments = pathStr.split('/');
-  if (pathSegments.length >= 4 && 
-      pathSegments[0] === 'platforms' && 
-      pathSegments[2] === 'guides') {
-    
+  if (pathSegments.length >= 3 && pathSegments[0] === 'platforms') {
     const platform = pathSegments[1];
-    const framework = pathSegments[3];
     
-    // Framework-specific path (e.g., platforms/javascript/guides/node)
-    const frameworkSpecificPath = path.join(process.cwd(), 'docs', pathStr);
+    // Handle different path patterns generically
+    let specificPath = '';
+    let commonPath = '';
     
-    // Common path (e.g., platforms/javascript/common/user-feedback)
-    const pathAfterFramework = pathStr.split(`${framework}/`)[1] || '';
-    const commonPath = path.join(
-      process.cwd(), 
-      'docs', 
-      'platforms', 
-      platform, 
-      'common', 
-      pathAfterFramework
-    );
+    if (pathSegments.length >= 4 && pathSegments[2] === 'guides') {
+      // Handle guide paths like platforms/javascript/guides/node/...
+      specificPath = path.join(process.cwd(), 'docs', pathStr);
+      
+      // Extract the part after the framework name
+      const remainingPath = pathSegments.slice(4).join('/');
+      
+      // Check for common content
+      commonPath = path.join(
+        process.cwd(), 
+        'docs', 
+        'platforms', 
+        platform, 
+        'common', 
+        remainingPath
+      );
+    } else if (pathSegments.length >= 3) {
+      const directSection = pathSegments[2];
+      
+      specificPath = path.join(process.cwd(), 'docs', pathStr);
+      
+      commonPath = path.join(
+        process.cwd(), 
+        'docs', 
+        'platforms', 
+        platform, 
+        'common', 
+        directSection
+      );
+      
+      if (fs.existsSync(commonPath) && fs.statSync(commonPath).isDirectory()) {
+        console.log(`Found common directory for ${directSection} at: ${commonPath}`);
+        
+        for (const ext of possibleExtensions) {
+          const indexPath = path.join(commonPath, `index${ext}`);
+          if (fs.existsSync(indexPath)) {
+            console.log(`Found index file in common directory: ${indexPath}`);
+            return readAndProcessMarkdown(indexPath, pathStr);
+          }
+        }
+      }
+      
+      const commonDirectPath = path.join(
+        process.cwd(), 
+        'docs', 
+        'platforms', 
+        platform, 
+        'common', 
+        directSection
+      );
+      
+      for (const ext of possibleExtensions) {
+        const commonDirectFile = commonDirectPath + ext;
+        if (fs.existsSync(commonDirectFile)) {
+          console.log(`Found common direct file: ${commonDirectFile}`);
+          return readAndProcessMarkdown(commonDirectFile, pathStr);
+        }
+      }
+    }
     
-    // Try to find both framework-specific and common content
-    let frameworkContent: string | null = null;
+    // Try to find both specific and common content
+    let specificContent: string | null = null;
     let commonContent: string | null = null;
     
-    // Check for framework-specific content
+    // Check for specific content
     for (const ext of possibleExtensions) {
-      const specificPath = frameworkSpecificPath + ext;
-      const specificIndexPath = path.join(frameworkSpecificPath, `index${ext}`);
+      const specificFilePath = specificPath + ext;
+      const specificIndexPath = path.join(specificPath, `index${ext}`);
       
-      if (fs.existsSync(specificPath)) {
-        frameworkContent = readAndProcessMarkdown(specificPath, pathStr);
+      if (fs.existsSync(specificFilePath)) {
+        console.log(`Found specific content at: ${specificFilePath}`);
+        specificContent = readAndProcessMarkdown(specificFilePath, pathStr);
         break;
       } else if (fs.existsSync(specificIndexPath)) {
-        frameworkContent = readAndProcessMarkdown(specificIndexPath, pathStr);
+        console.log(`Found specific index content at: ${specificIndexPath}`);
+        specificContent = readAndProcessMarkdown(specificIndexPath, pathStr);
         break;
       }
     }
@@ -301,17 +405,19 @@ export async function getMarkdownContent(): Promise<string | null> {
       const commonIndexPath = path.join(commonPath, `index${ext}`);
       
       if (fs.existsSync(commonFilePath)) {
+        console.log(`Found common content at: ${commonFilePath}`);
         commonContent = readAndProcessMarkdown(commonFilePath, pathStr);
         break;
       } else if (fs.existsSync(commonIndexPath)) {
+        console.log(`Found common index content at: ${commonIndexPath}`);
         commonContent = readAndProcessMarkdown(commonIndexPath, pathStr);
         break;
       }
     }
     
-    // Prioritize framework-specific content if available
-    if (frameworkContent) {
-      return frameworkContent;
+    // Prioritize specific content if available
+    if (specificContent) {
+      return specificContent;
     } else if (commonContent) {
       return commonContent;
     }
@@ -325,8 +431,10 @@ export async function getMarkdownContent(): Promise<string | null> {
       
       try {
         if (fs.existsSync(filePath)) {
+          console.log(`Found file at: ${filePath}`);
           return readAndProcessMarkdown(filePath, pathStr);
         } else if (fs.existsSync(indexPath)) {
+          console.log(`Found index file at: ${indexPath}`);
           return readAndProcessMarkdown(indexPath, pathStr);
         }
       } catch (error) {
@@ -341,6 +449,7 @@ export async function getMarkdownContent(): Promise<string | null> {
       for (const ext of possibleExtensions) {
         const indexPath = path.join(dirPath, `index${ext}`);
         if (fs.existsSync(indexPath)) {
+          console.log(`Found directory index at: ${indexPath}`);
           return readAndProcessMarkdown(indexPath, pathStr);
         }
       }
@@ -373,6 +482,7 @@ export async function getMarkdownContent(): Promise<string | null> {
         };
         
         const markdownFiles = findMarkdownFiles(baseDir);
+        console.log(`Found ${markdownFiles.length} markdown files in ${baseDir}`);
         
         const pathSegments = pathStr.split('/');
         
@@ -386,6 +496,7 @@ export async function getMarkdownContent(): Promise<string | null> {
         });
         
         if (exactPathMatch) {
+          console.log(`Found exact path match: ${exactPathMatch}`);
           return readAndProcessMarkdown(exactPathMatch, pathStr);
         }
         
@@ -408,6 +519,7 @@ export async function getMarkdownContent(): Promise<string | null> {
         });
         
         if (segmentMatchFile) {
+          console.log(`Found segment match: ${segmentMatchFile}`);
           return readAndProcessMarkdown(segmentMatchFile, pathStr);
         }
         
@@ -420,6 +532,7 @@ export async function getMarkdownContent(): Promise<string | null> {
         });
         
         if (containsAllSegmentsFile) {
+          console.log(`Found file containing all segments: ${containsAllSegmentsFile}`);
           return readAndProcessMarkdown(containsAllSegmentsFile, pathStr);
         }
         
@@ -430,6 +543,7 @@ export async function getMarkdownContent(): Promise<string | null> {
         });
         
         if (matchingIndexFile) {
+          console.log(`Found matching index file for last segment: ${matchingIndexFile}`);
           return readAndProcessMarkdown(matchingIndexFile, pathStr);
         }
       }
@@ -438,5 +552,6 @@ export async function getMarkdownContent(): Promise<string | null> {
     }
   }
   
+  console.log(`No markdown content found for path: ${pathStr}`);
   return null;
 }
