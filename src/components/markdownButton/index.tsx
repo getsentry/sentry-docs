@@ -1,4 +1,3 @@
-import React from 'react';
 import {MarkdownButtonClient} from './client';
 
 type MarkdownButtonProps = {

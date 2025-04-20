@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@radix-ui/themes';
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 type MarkdownButtonClientProps = {
   markdownContent: string | null;
@@ -36,7 +36,7 @@ export function MarkdownButtonClient({ markdownContent }: MarkdownButtonClientPr
       setShowDropdown(false);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy markdown: ', err);
+      return;
     }
   };
 
@@ -105,7 +105,7 @@ export function MarkdownButtonClient({ markdownContent }: MarkdownButtonClientPr
         )}
       </div>
 
-      <style jsx>{`
+      <style>{`
         .markdown-button-container {
           position: relative;
         }

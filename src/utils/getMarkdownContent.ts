@@ -25,7 +25,6 @@ export async function getMarkdownContent(): Promise<string | null> {
           const includeContent = fs.readFileSync(includePath, 'utf8');
           return includeContent;
         } catch (error) {
-          console.error(`Error reading include file ${includePath}: ${error}`);
           return `<!-- Error loading include: ${includeName} -->`;
         }
       }
@@ -50,7 +49,6 @@ export async function getMarkdownContent(): Promise<string | null> {
       const content = fs.readFileSync(filePath, 'utf8');
       return processIncludes(content, path.dirname(filePath));
     } catch (error) {
-      console.error(`Error reading markdown file: ${error}`);
       return `<!-- Error reading file: ${filePath} -->`;
     }
   };
@@ -67,7 +65,7 @@ export async function getMarkdownContent(): Promise<string | null> {
           return readAndProcessMarkdown(indexPath);
         }
       } catch (error) {
-        console.error(`Error reading markdown file: ${error}`);
+        return `<!-- Error reading markdown file: ${error} -->`;
       }
     }
   }
@@ -171,7 +169,7 @@ export async function getMarkdownContent(): Promise<string | null> {
         }
       }
     } catch (error) {
-      console.error(`Error exploring directories: ${error}`);
+      return `<!-- Error exploring directories: ${error} -->`;
     }
   }
   
