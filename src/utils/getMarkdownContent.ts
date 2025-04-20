@@ -6,8 +6,6 @@ export function getMarkdownContent() {
   const { path: pagePath } = serverContext();
   
   const pathStr = pagePath.join('/');
-  
-  console.log(`Looking for markdown content for path: ${pathStr}`);
     
   const possibleExtensions = ['.mdx', '.md'];
   const basePaths = [
@@ -17,7 +15,7 @@ export function getMarkdownContent() {
   ];
   
   // Extract SDK information from frontmatter and path
-  const extractSdkInfo = (content: string, pathStr: string): string => {
+  const extractSdkInfo = (content: string, filePath: string): string => {
     // First try to get SDK from frontmatter
     const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
     if (frontmatterMatch) {
@@ -30,7 +28,7 @@ export function getMarkdownContent() {
     }
     
     // If no SDK in frontmatter, try to infer from path
-    const pathSegments = pathStr.split('/');
+    const pathSegments = filePath.split('/');
     if (pathSegments.length >= 3 && pathSegments[0] === 'platforms') {
       // Format: platforms/javascript/guides/node
       const platform = pathSegments[1];
@@ -54,7 +52,7 @@ export function getMarkdownContent() {
     // Extract all PlatformSection blocks
     const platformSectionRegex = /<PlatformSection\s+([^>]*)>([\s\S]*?)<\/PlatformSection>/g;
     
-    return content.replace(platformSectionRegex, (attributes, sectionContent) => {
+    return content.replace(platformSectionRegex, (match, attributes, sectionContent) => {
       // Check if this section should be included or excluded based on SDK
       const supportedMatch = attributes.match(/supported=\{(\[[^\]]*\])\}/);
       const notSupportedMatch = attributes.match(/notSupported=\{(\[[^\]]*\])\}/);
@@ -159,7 +157,7 @@ export function getMarkdownContent() {
     // Match <PlatformContent includePath="path" /> patterns
     const platformContentRegex = /<PlatformContent\s+includePath="([^"]+)"\s*\/>/g;
     
-    return content.replace(platformContentRegex, (includePath) => {
+    return content.replace(platformContentRegex, (match, includePath) => {
       try {
         // Platform content is organized by SDK in platform-includes directory
         const platformIncludesDir = path.join(process.cwd(), 'platform-includes', includePath);
@@ -236,31 +234,31 @@ export function getMarkdownContent() {
   const processPlatformTags = (content: string): string => {
     // Replace PlatformLink tags
     let processedContent = content.replace(/<PlatformLink\s+to="([^"]+)">([\s\S]*?)<\/PlatformLink>/g, 
-      (to, linkText) => `[${linkText}](${to})`);
+      (match, to, linkText) => `[${linkText}](${to})`);
     
     // Replace PlatformIdentifier tags
     processedContent = processedContent.replace(/<PlatformIdentifier\s+name="([^"]+)"[^>]*\/>/g, 
-      (name) => `\`${name}\``);
+      (match, name) => `\`${name}\``);
     
     // Replace Alert tags
     processedContent = processedContent.replace(/<Alert[^>]*>([\s\S]*?)<\/Alert>/g, 
-      (alertContent) => `> **Note**\n> ${alertContent.trim().replace(/\n/g, '\n> ')}`);
+      (match, alertContent) => `> **Note**\n> ${alertContent.trim().replace(/\n/g, '\n> ')}`);
     
     // Replace code blocks with tabTitle
     processedContent = processedContent.replace(/```([a-zA-Z]+)\s+\{tabTitle:\s*([^}]+)\}([\s\S]*?)```/g,
-      (language, title, code) => `**${title.trim()}**\n\n\`\`\`${language}\n${code.trim()}\n\`\`\``);
+      (match, language, title, code) => `**${title.trim()}**\n\n\`\`\`${language}\n${code.trim()}\n\`\`\``);
     
     return processedContent;
   };
   
-  const processIncludes = (content: string, pathStr: string): string => {
+  const processIncludes = (content: string, filePath: string): string => {
     // Extract SDK information
-    const sdk = extractSdkInfo(content, pathStr);
+    const sdk = extractSdkInfo(content, filePath);
     
     // First process regular includes
     const includeRegex = /<Include\s+name="([^"]+)"\s*\/>/g;
     
-    let processedContent = content.replace(includeRegex, (includeName) => {
+    let processedContent = content.replace(includeRegex, (match, includeName) => {
       const includePath = path.join(process.cwd(), 'includes', includeName);
       
       if (fs.existsSync(includePath)) {
@@ -301,10 +299,10 @@ export function getMarkdownContent() {
     return processedContent;
   };
   
-  const readAndProcessMarkdown = (filePath: string, pathStr: string): string => {
+  const readAndProcessMarkdown = (filePath: string, currentPath: string): string => {
     try {
       const content = fs.readFileSync(filePath, 'utf8');
-      return processIncludes(content, pathStr);
+      return processIncludes(content, currentPath);
     } catch (error) {
       return `<!-- Error reading file: ${filePath} -->`;
     }
@@ -472,7 +470,7 @@ export function getMarkdownContent() {
         
         const markdownFiles = findMarkdownFiles(baseDir);
         
-        const pathSegments = pathStr.split('/');
+        const pathSegmentsToMatch = pathStr.split('/');
         
         const exactPathMatch = markdownFiles.find(file => {
           const relativePath = path.relative(basePath, file);
@@ -491,7 +489,7 @@ export function getMarkdownContent() {
           const relativePath = path.relative(basePath, file).toLowerCase();
           let remainingPath = relativePath.toLowerCase();
           
-          for (const segment of pathSegments) {
+          for (const segment of pathSegmentsToMatch) {
             const segmentLower = segment.toLowerCase();
             const segmentIndex = remainingPath.indexOf(segmentLower);
             
@@ -512,7 +510,7 @@ export function getMarkdownContent() {
         const containsAllSegmentsFile = markdownFiles.find(file => {
           const relativePath = path.relative(basePath, file).toLowerCase();
           
-          return pathSegments.every(segment => 
+          return pathSegmentsToMatch.every(segment => 
             relativePath.includes(segment.toLowerCase())
           );
         });
@@ -521,7 +519,7 @@ export function getMarkdownContent() {
           return readAndProcessMarkdown(containsAllSegmentsFile, pathStr);
         }
         
-        const lastSegment = pathSegments[pathSegments.length - 1];
+        const lastSegment = pathSegmentsToMatch[pathSegmentsToMatch.length - 1];
         const matchingIndexFile = markdownFiles.find(file => {
           const relativePath = path.relative(basePath, file).toLowerCase();
           return relativePath.includes(`/${lastSegment.toLowerCase()}/index.`);
