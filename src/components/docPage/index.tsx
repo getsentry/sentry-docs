@@ -1,25 +1,25 @@
-import {ReactNode} from 'react';
-import {getCurrentGuide, getCurrentPlatform, nodeForPath} from 'sentry-docs/docTree';
-import {serverContext} from 'sentry-docs/serverContext';
-import {FrontMatter} from 'sentry-docs/types';
-import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
-import {isNotNil} from 'sentry-docs/utils';
-import {getUnversionedPath} from 'sentry-docs/versioning';
-import {getMarkdownContent} from 'sentry-docs/utils/getMarkdownContent';
+import { ReactNode } from 'react';
+import { getCurrentGuide, getCurrentPlatform, nodeForPath } from 'sentry-docs/docTree';
+import { serverContext } from 'sentry-docs/serverContext';
+import { FrontMatter } from 'sentry-docs/types';
+import { PaginationNavNode } from 'sentry-docs/types/paginationNavNode';
+import { isNotNil } from 'sentry-docs/utils';
+import { getUnversionedPath } from 'sentry-docs/versioning';
+import { getMarkdownContent } from 'sentry-docs/utils/getMarkdownContent';
 import './type.scss';
-import {Banner} from '../banner';
-import {Breadcrumbs} from '../breadcrumbs';
-import {CodeContextProvider} from '../codeContext';
-import {DocFeedback} from '../docFeedback';
-import {GitHubCTA} from '../githubCTA';
-import {Header} from '../header';
-import {MarkdownButton} from '../markdownButton';
+import { Banner } from '../banner';
+import { Breadcrumbs } from '../breadcrumbs';
+import { CodeContextProvider } from '../codeContext';
+import { DocFeedback } from '../docFeedback';
+import { GitHubCTA } from '../githubCTA';
+import { Header } from '../header';
+import { MarkdownButton } from '../markdownButton';
 import Mermaid from '../mermaid';
-import {PaginationNav} from '../paginationNav';
-import {PlatformSdkDetail} from '../platformSdkDetail';
-import {Sidebar} from '../sidebar';
-import {SidebarTableOfContents} from '../sidebarTableOfContents';
-import {ReaderDepthTracker} from '../track-reader-depth';
+import { PaginationNav } from '../paginationNav';
+import { PlatformSdkDetail } from '../platformSdkDetail';
+import { Sidebar } from '../sidebar';
+import { SidebarTableOfContents } from '../sidebarTableOfContents';
+import { ReaderDepthTracker } from '../track-reader-depth';
 
 type Props = {
   children: ReactNode;
@@ -42,7 +42,7 @@ export async function DocPage({
   nextPage,
   previousPage,
 }: Props) {
-  const {rootNode, path} = serverContext();
+  const { rootNode, path } = serverContext();
   const currentPlatform = getCurrentPlatform(rootNode, path);
   const currentGuide = getCurrentGuide(rootNode, path);
 
@@ -56,7 +56,7 @@ export async function DocPage({
   const unversionedPath = getUnversionedPath(path, false);
 
   const leafNode = nodeForPath(rootNode, unversionedPath);
-  
+
   // Fetch markdown content for the current page
   const markdownContent = await getMarkdownContent();
 
