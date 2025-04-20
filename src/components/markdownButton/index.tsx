@@ -4,6 +4,6 @@ type MarkdownButtonProps = {
   markdownContent: string | null;
 };
 
-export function MarkdownButton({ markdownContent }: MarkdownButtonProps) {
+export function MarkdownButton({markdownContent}: MarkdownButtonProps) {
   return <MarkdownButtonClient markdownContent={markdownContent} />;
 }
