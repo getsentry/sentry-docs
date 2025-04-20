@@ -449,7 +449,8 @@ export function getMarkdownContent() {
     // Prioritize specific content if available
     if (specificContent) {
       return specificContent;
-    } if (commonContent) {
+    }
+    if (commonContent) {
       return commonContent;
     }
   }
@@ -463,7 +464,8 @@ export function getMarkdownContent() {
       try {
         if (fs.existsSync(filePath)) {
           return readAndProcessMarkdown(filePath, pathStr);
-        } if (fs.existsSync(indexPath)) {
+        }
+        if (fs.existsSync(indexPath)) {
           return readAndProcessMarkdown(indexPath, pathStr);
         }
       } catch (error) {
