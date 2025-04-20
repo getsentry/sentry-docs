@@ -426,7 +426,7 @@ export function getMarkdownContent() {
           return readAndProcessMarkdown(indexPath, pathStr);
         }
       } catch (error) {
-        return `<!-- Error reading markdown file: ${error} -->`;
+        // Silently catch errors during markdown file lookup to continue with fallback strategies
       }
     }
   }
@@ -530,6 +530,7 @@ export function getMarkdownContent() {
         }
       }
     } catch (error) {
+      // Silently catch errors during markdown file search to continue with fallback strategies
     }
   }
   
