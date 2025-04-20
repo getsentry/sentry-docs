@@ -350,12 +350,9 @@ export function getMarkdownContent() {
       );
       
       if (fs.existsSync(commonPath) && fs.statSync(commonPath).isDirectory()) {
-        console.log(`Found common directory for ${directSection} at: ${commonPath}`);
-        
         for (const ext of possibleExtensions) {
           const indexPath = path.join(commonPath, `index${ext}`);
           if (fs.existsSync(indexPath)) {
-            console.log(`Found index file in common directory: ${indexPath}`);
             return readAndProcessMarkdown(indexPath, pathStr);
           }
         }
@@ -373,7 +370,6 @@ export function getMarkdownContent() {
       for (const ext of possibleExtensions) {
         const commonDirectFile = commonDirectPath + ext;
         if (fs.existsSync(commonDirectFile)) {
-          console.log(`Found common direct file: ${commonDirectFile}`);
           return readAndProcessMarkdown(commonDirectFile, pathStr);
         }
       }
@@ -389,11 +385,9 @@ export function getMarkdownContent() {
       const specificIndexPath = path.join(specificPath, `index${ext}`);
       
       if (fs.existsSync(specificFilePath)) {
-        console.log(`Found specific content at: ${specificFilePath}`);
         specificContent = readAndProcessMarkdown(specificFilePath, pathStr);
         break;
       } else if (fs.existsSync(specificIndexPath)) {
-        console.log(`Found specific index content at: ${specificIndexPath}`);
         specificContent = readAndProcessMarkdown(specificIndexPath, pathStr);
         break;
       }
@@ -405,11 +399,9 @@ export function getMarkdownContent() {
       const commonIndexPath = path.join(commonPath, `index${ext}`);
       
       if (fs.existsSync(commonFilePath)) {
-        console.log(`Found common content at: ${commonFilePath}`);
         commonContent = readAndProcessMarkdown(commonFilePath, pathStr);
         break;
       } else if (fs.existsSync(commonIndexPath)) {
-        console.log(`Found common index content at: ${commonIndexPath}`);
         commonContent = readAndProcessMarkdown(commonIndexPath, pathStr);
         break;
       }
@@ -431,10 +423,8 @@ export function getMarkdownContent() {
       
       try {
         if (fs.existsSync(filePath)) {
-          console.log(`Found file at: ${filePath}`);
           return readAndProcessMarkdown(filePath, pathStr);
         } else if (fs.existsSync(indexPath)) {
-          console.log(`Found index file at: ${indexPath}`);
           return readAndProcessMarkdown(indexPath, pathStr);
         }
       } catch (error) {
@@ -449,7 +439,6 @@ export function getMarkdownContent() {
       for (const ext of possibleExtensions) {
         const indexPath = path.join(dirPath, `index${ext}`);
         if (fs.existsSync(indexPath)) {
-          console.log(`Found directory index at: ${indexPath}`);
           return readAndProcessMarkdown(indexPath, pathStr);
         }
       }
@@ -482,7 +471,6 @@ export function getMarkdownContent() {
         };
         
         const markdownFiles = findMarkdownFiles(baseDir);
-        console.log(`Found ${markdownFiles.length} markdown files in ${baseDir}`);
         
         const pathSegments = pathStr.split('/');
         
@@ -496,7 +484,6 @@ export function getMarkdownContent() {
         });
         
         if (exactPathMatch) {
-          console.log(`Found exact path match: ${exactPathMatch}`);
           return readAndProcessMarkdown(exactPathMatch, pathStr);
         }
         
@@ -519,7 +506,6 @@ export function getMarkdownContent() {
         });
         
         if (segmentMatchFile) {
-          console.log(`Found segment match: ${segmentMatchFile}`);
           return readAndProcessMarkdown(segmentMatchFile, pathStr);
         }
         
@@ -532,7 +518,6 @@ export function getMarkdownContent() {
         });
         
         if (containsAllSegmentsFile) {
-          console.log(`Found file containing all segments: ${containsAllSegmentsFile}`);
           return readAndProcessMarkdown(containsAllSegmentsFile, pathStr);
         }
         
@@ -543,15 +528,12 @@ export function getMarkdownContent() {
         });
         
         if (matchingIndexFile) {
-          console.log(`Found matching index file for last segment: ${matchingIndexFile}`);
           return readAndProcessMarkdown(matchingIndexFile, pathStr);
         }
       }
     } catch (error) {
-      console.error(`Error exploring directories: ${error}`);
     }
   }
   
-  console.log(`No markdown content found for path: ${pathStr}`);
   return null;
 }
