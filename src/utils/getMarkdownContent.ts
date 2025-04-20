@@ -52,7 +52,7 @@ export function getMarkdownContent() {
     // Extract all PlatformSection blocks
     const platformSectionRegex = /<PlatformSection\s+([^>]*)>([\s\S]*?)<\/PlatformSection>/g;
     
-    return content.replace(platformSectionRegex, (match, attributes, sectionContent) => {
+    return content.replace(platformSectionRegex, (attributes, sectionContent) => {
       // Check if this section should be included or excluded based on SDK
       const supportedMatch = attributes.match(/supported=\{(\[[^\]]*\])\}/);
       const notSupportedMatch = attributes.match(/notSupported=\{(\[[^\]]*\])\}/);
@@ -108,7 +108,7 @@ export function getMarkdownContent() {
     // Extract all PlatformCategorySection blocks
     const platformCategorySectionRegex = /<PlatformCategorySection\s+([^>]*)>([\s\S]*?)<\/PlatformCategorySection>/g;
     
-    return content.replace(platformCategorySectionRegex, (match, attributes, sectionContent) => {
+    return content.replace(platformCategorySectionRegex, (attributes, sectionContent) => {
       // Check if this section should be included or excluded based on SDK
       const supportedMatch = attributes.match(/supported=\{(\[[^\]]*\])\}/);
       const notSupportedMatch = attributes.match(/notSupported=\{(\[[^\]]*\])\}/);
@@ -157,7 +157,7 @@ export function getMarkdownContent() {
     // Match <PlatformContent includePath="path" /> patterns
     const platformContentRegex = /<PlatformContent\s+includePath="([^"]+)"\s*\/>/g;
     
-    return content.replace(platformContentRegex, (match, includePath) => {
+    return content.replace(platformContentRegex, (includePath) => {
       try {
         // Platform content is organized by SDK in platform-includes directory
         const platformIncludesDir = path.join(process.cwd(), 'platform-includes', includePath);
@@ -234,19 +234,19 @@ export function getMarkdownContent() {
   const processPlatformTags = (content: string): string => {
     // Replace PlatformLink tags
     let processedContent = content.replace(/<PlatformLink\s+to="([^"]+)">([\s\S]*?)<\/PlatformLink>/g, 
-      (match, to, linkText) => `[${linkText}](${to})`);
+      (to, linkText) => `[${linkText}](${to})`);
     
     // Replace PlatformIdentifier tags
     processedContent = processedContent.replace(/<PlatformIdentifier\s+name="([^"]+)"[^>]*\/>/g, 
-      (match, name) => `\`${name}\``);
+      (name) => `\`${name}\``);
     
     // Replace Alert tags
     processedContent = processedContent.replace(/<Alert[^>]*>([\s\S]*?)<\/Alert>/g, 
-      (match, alertContent) => `> **Note**\n> ${alertContent.trim().replace(/\n/g, '\n> ')}`);
+      (alertContent) => `> **Note**\n> ${alertContent.trim().replace(/\n/g, '\n> ')}`);
     
     // Replace code blocks with tabTitle
     processedContent = processedContent.replace(/```([a-zA-Z]+)\s+\{tabTitle:\s*([^}]+)\}([\s\S]*?)```/g,
-      (match, language, title, code) => `**${title.trim()}**\n\n\`\`\`${language}\n${code.trim()}\n\`\`\``);
+      (language, title, code) => `**${title.trim()}**\n\n\`\`\`${language}\n${code.trim()}\n\`\`\``);
     
     return processedContent;
   };
@@ -258,7 +258,7 @@ export function getMarkdownContent() {
     // First process regular includes
     const includeRegex = /<Include\s+name="([^"]+)"\s*\/>/g;
     
-    let processedContent = content.replace(includeRegex, (match, includeName) => {
+    let processedContent = content.replace(includeRegex, (includeName) => {
       const includePath = path.join(process.cwd(), 'includes', includeName);
       
       if (fs.existsSync(includePath)) {
