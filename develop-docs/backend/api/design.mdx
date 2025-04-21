@@ -5,12 +5,6 @@ sidebar_order: 2
 
 This document contains a set of design principles and requirements whish should be applied to all Sentry APIs. These are _requirements_ when designing public APIs, but internal APIs should attempt to adhere to these principles as well.
 
-The most important thing you should know up front:
-
-**Every endpoint in Sentry's API is public.**
-
-You should design it as such. You should **not** expose internal designs, including parameters which control behaviors of the underlying system.
-
 In the Sentry monolith, we use [Django REST framework](https://www.django-rest-framework.org/) (DRF).
 
 <Alert>
@@ -18,6 +12,14 @@ In the Sentry monolith, we use [Django REST framework](https://www.django-rest-f
 **Note:** Not every API we have exposed follows these guidelines, but is expected that new endpoints do, and we will work to migrate existing endpoints to adhere to these principles.
 
 </Alert>
+
+## APIs are Public
+
+**Every endpoint in Sentry's API is public.**
+
+You should design it as such. You should **not** expose internal designs, including parameters which control behaviors of the underlying system.
+
+For example, if you had an endpoint that needs to query a replica in some cases, do **not** expose a parameter to control the behavior (e.g. `useReplica=1`). Instead you should control this flag on the backend based on other information (such as a feature flag or account setting).
 
 ## Route Design
 
@@ -29,8 +31,12 @@ Use the following guidelines for naming resources and their collections:
 
 - **Do** use lowercase and hyphenated collection names, e.g. `commit-files`.
 - **Do** use plural collection names. Avoid using uncountable words because the user can't know whether the GET returns one item or a list.
-- **Do** use `snake_case` for route parameters. e.g. `organizations/\{organization}/projects/`.
+- **Do** use `snake_case` for route parameters. e.g. `tags/\{tag_name}/`.
 - **Do** consistently shorten parameters that are excessively long when the term will unambiguous. e.g. `organization` -> `org`.
+
+Standard parameters that should be shortened in route names:
+
+- `organization` -> `org`
 
 ### Prefixes and Scoping
 
