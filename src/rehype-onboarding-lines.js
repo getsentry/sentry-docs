@@ -2,7 +2,7 @@
  * @typedef {import('hast').Element} Element
  * @typedef {import('hast').Root} Root
  */
-
+import {toString} from 'hast-util-to-string';
 import rangeParser from 'parse-numeric-range';
 import {visit} from 'unist-util-visit';
 
@@ -25,6 +25,52 @@ export default function rehypeOnboardingLines() {
     visit(tree, {type: 'element', tagName: 'code'}, visitor);
   };
 }
+
+/**
+ * @param {Element} node
+ */
+function visitor(node) {
+  // ignore no code-highlight <code> tags as in in inline code resulting from a `markdown`
+  if (!node.properties.className?.includes('code-highlight')) {
+    return;
+  }
+
+  const meta = /** @type {string} */ (
+    node?.data?.meta || node?.properties?.metastring || ''
+  );
+
+  if (meta.includes('onboardingOptions')) {
+    handle_metadata_options(node, meta);
+    return;
+  }
+  handle_inline_options(node);
+}
+
+function handle_inline_options(node) {
+  /* @type {string | undefined} */
+  let currentOption;
+
+  // product options syntax
+  // ___PRODUCT_OPTION_START___ performance
+  // some lines here
+  // ___PRODUCT_OPTION_END___ performance
+  const PRODUCT_OPTION_START = '___PRODUCT_OPTION_START___';
+  const PRODUCT_OPTION_END = '___PRODUCT_OPTION_END___';
+  node.children?.forEach(line => {
+    const lineStr = toString(line);
+    if (lineStr.includes(PRODUCT_OPTION_START)) {
+      currentOption = lineStr.split(PRODUCT_OPTION_START)[1].trim();
+      line.properties['data-onboarding-option-hidden'] = '1';
+    } else if (lineStr.includes(PRODUCT_OPTION_END)) {
+      line.properties['data-onboarding-option-hidden'] = '1';
+      currentOption = undefined;
+    }
+    if (currentOption) {
+      line.properties['data-onboarding-option'] = currentOption;
+    }
+  });
+}
+
 /**
  * Parse the line numbers from the metastring
  * @param {string} meta
@@ -85,15 +131,7 @@ const getOptionForLine = meta => {
 /**
  * @param {Element} node
  */
-function visitor(node) {
-  const meta = /** @type {string} */ (
-    node?.data?.meta || node?.properties?.metastring || ''
-  );
-
-  if (!meta.includes('onboardingOptions')) {
-    return;
-  }
-
+function handle_metadata_options(node, meta) {
   const optionForLine = getOptionForLine(meta);
 
   node.children.forEach((line, index) => {

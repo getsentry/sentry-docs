@@ -11,6 +11,7 @@ supported:
   - javascript.fastify
   - javascript.gcp-functions
   - javascript.hapi
+  - javascript.hono
   - javascript.koa
   - javascript.nestjs
   - javascript.nuxt
@@ -19,6 +20,7 @@ supported:
   - javascript.astro
   - javascript.remix
   - javascript.react-router
+  - javascript.tanstackstart-react
 notSupported:
   - javascript
 sidebar_order: 0
@@ -57,10 +59,12 @@ const provider = new NodeTracerProvider({
   // Ensure the correct subset of traces is sent to Sentry
   // This also ensures trace propagation works as expected
   sampler: sentryClient ? new SentrySampler(sentryClient) : undefined,
+  spanProcessors: [
+    // Ensure spans are correctly linked & sent to Sentry
+    new SentrySpanProcessor(),
+    // Add additional processors here
+  ],
 });
-
-// Ensure spans are correctly linked & sent to Sentry
-provider.addSpanProcessor(new SentrySpanProcessor());
 
 provider.register({
   // Ensure trace propagation works
@@ -286,6 +290,7 @@ Additionally, there are a few pitfalls that can very simply be avoided by regist
     "javascript.aws-lambda",
     "javascript.nuxt",
     "javascript.solidstart",
+    "javascript.tanstackstart-react",
   ]}
 >
   <PlatformCategorySection supported={["server", "serverles"]}>

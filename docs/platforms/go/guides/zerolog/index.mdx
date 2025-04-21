@@ -9,12 +9,6 @@ For a complete example, visit the [Go SDK source code repository](https://github
 
 ## Install
 
-<OnboardingOptionButtons
-  options={[
-    'error-monitoring',
-  ]}
-/>
-
 ```bash
 go get github.com/getsentry/sentry-go/zerolog
 ```
@@ -26,7 +20,7 @@ go get github.com/getsentry/sentry-go/zerolog
 To integrate Sentry with Zerolog, you need to set up a custom writer that sends logs to Sentry based on the configured levels.
 
 
-```go {"onboardingOptions": {"performance": "12-16"}}
+```go
 import (
 	"errors"
 	"time"
@@ -42,6 +36,9 @@ func main() {
 	// Initialize Sentry
 	err := sentry.Init(sentry.ClientOptions{
 		Dsn: "___PUBLIC_DSN___",
+		// Adds request headers and IP for users,
+		// visit: https://docs.sentry.io/platforms/go/data-management/data-collected/ for more info
+		SendDefaultPII: true,
 		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
 			// Modify or filter events before sending them to Sentry
 			return event
@@ -108,6 +105,21 @@ WithBreadcrumbs bool
 // application shutdown. The default timeout is usually 3 seconds.
 FlushTimeout time.Duration
 ```
+
+- Using `hubProvider` for Scoped Sentry Hubs
+
+The hubProvider allows you to configure the Sentry hook to use a custom Sentry hub. This can be particularly useful when you want to scope logs to specific goroutines or operations, enabling more precise grouping and context in Sentry.
+
+You can set a custom hubProvider function using the SetHubProvider method:
+
+```go
+sentryHook.SetHubProvider(func() *sentry.Hub {
+    // Create or return a specific Sentry hub
+    return sentry.NewHub(sentry.GetCurrentHub().Client(), sentry.NewScope())
+})
+```
+
+This ensures that logs from specific contexts or threads use the appropriate Sentry hub and scope.
 
 ## Usage
 

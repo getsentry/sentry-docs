@@ -1,0 +1,199 @@
+---
+title: Configuration
+sidebar_order: 6100
+description: "Learn about the User Feedback Widget configuration options."
+---
+
+The User Feedback Widget offers many customization options, and if the available options are insufficient, you can [use your own UI](/platforms/react-native/user-feedback/#user-feedback-api).
+
+![An image showing the main customization options for the User Feedback Widget](./img/mobile-user-feedback-widget-customization.png)
+To collect user feedback from inside your application use the `showFeedbackWidget` method.
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.wrap(RootComponent);
+
+Sentry.showFeedbackWidget();
+```
+
+Note that [the root application component must be wrapped with `Sentry.wrap`](/platforms/react-native/#wrap-your-app) for this to work.
+
+## General
+
+The following options can be configured for the integration in `feedbackIntegration({})` or passed in the `FeedbackWidget` component props:
+
+
+| Key                    | Type                     | Default                               | Description                                                                                                                |
+| ---------------------- | ------------------------ | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `showBranding`         | `boolean`                | `true`                                | Displays the Sentry logo.                                                                                                  |
+| `showName`             | `boolean`                | `true`                                | Displays the name field on the feedback widget.                                                                            |
+| `showEmail`            | `boolean`                | `true`                                | Displays the email field on the feedback widget.                                                                           |
+| `enableScreenshot`     | `boolean`                | `false`                               | Allows the user to send a screenshot attachment with their feedback.                                                       |
+| `isNameRequired`       | `boolean`                | `false`                               | Requires the name field on the feedback widget to be filled in.                                                            |
+| `isEmailRequired`      | `boolean`                | `false`                               | Requires the email field on the feedback widget to be filled in.                                                           |
+| `shouldValidateEmail`  | `boolean`                | `true`                                | If set the email is validated with the following regular expression `"/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/"` |
+| `useSentryUser`        | `Record<string, string>` | `{ email: 'email', name: 'username'}` | Sets the default values for the `email` and `name` fields.                                                                 |
+
+
+## Text Customization
+
+All the text that you see in the Feedback widget can be customized.
+
+The following options can be configured for the integration in `feedbackIntegration({})` or passed in the `FeedbackWidget` component props:
+
+| Key                           | Default                                                 | Description                                                     |
+| ----------------------------- | ------------------------------------------------------- | --------------------------------------------------------------- |
+| `formTitle`                   | `"Report a Bug"`                                        | The title at the top of the feedback widget.                    |
+| `submitButtonLabel`           | `"Send Bug Report"`                                     | The label of the submit button used in the feedback widget.     |
+| `cancelButtonLabel`           | `"Cancel"`                                              | The label of cancel buttons used in the feedback widget.        |
+| `addScreenshotButtonLabel`    | `"Add a screenshot"`                                    | The label of the button to add a screenshot to the widget.      |
+| `removeScreenshotButtonLabel` | `"Remove screenshot"`                                   | The label of the button to remove the screenshot.               |
+| `nameLabel`                   | `"Name"`                                                | The label of the name input field.                              |
+| `namePlaceholder`             | `"Your Name"`                                           | The placeholder for the name input field.                       |
+| `emailLabel`                  | `"Email"`                                               | The label of the email input field.                             |
+| `emailPlaceholder`            | `"your.email@example.org"`                              | The placeholder for the email input field.                      |
+| `isRequiredLabel`             | `"(required)"`                                          | The label shown next to an input field that is required.        |
+| `messageLabel`                | `"Description"`                                         | The label for the feedback description input field.             |
+| `messagePlaceholder`          | `"What's the bug? What did you expect?"`                | The placeholder for the feedback description input field.       |
+| `successMessageText`          | `"Thank you for your report!"`                          | The message displayed after a successful feedback submission.   |
+| `errorTitle`                  | `"Error"`                                               | The title of the error message dialog.                          |
+| `formError`                   | `"Please fill out all required fields."`                | Form validation error message.                                  |
+| `emailError`                  | `"Please enter a valid email address."`                 | Email validation error mesage.                                  |
+| `genericError`                | `"Unable to send feedback due to an unexpected error."` | The generic error message.                                      |
+
+Example of customization:
+
+```javascript
+feedbackIntegration({
+  nameLabel: "Full Name",
+  submitButtonLabel: "Send",
+  formTitle: "Give Feedback",
+});
+```
+
+## Style Customization
+
+You can customize placement of the feedback components on the widget, as well as the fonts and colors.
+
+The example below shows how to customize the submit button background color and border radius with the `feedbackIntegration`.
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.feedbackIntegration({
+    styles:{
+        submitButton: {
+            backgroundColor: '#6a1b9a',
+            borderRadius: 5,
+        },
+    },
+});
+
+Sentry.showFeedbackWidget();
+```
+
+The same can be achived by passing the `styles` prop to the `FeedbackWidget` component:
+
+```javascript
+import { FeedbackWidget } from "@sentry/react-native";
+
+<FeedbackWidget
+  styles={{
+    submitButton: {
+      backgroundColor: '#6a1b9a',
+      borderRadius: 5,
+    },
+  }}
+/>
+```
+
+The following styles are available for customisation.
+
+| Style                 | Type         | Description                                     |
+| --------------------- | ------------ | ----------------------------------------------- |
+| `container`           | `ViewStyle`  | The widget container style.                     |
+| `title`               | `TextStyle`  | The title text style.                           |
+| `label`               | `TextStyle`  | The label text style (name, email).             |
+| `input`               | `TextStyle`  | The input field text style (name, email).       |
+| `textArea`            | `TextStyle`  | The message text style.                         |
+| `submitButton`        | `ViewStyle`  | The submit button style.                        |
+| `submitText`          | `TextStyle`  | The submit button text style.                   |
+| `cancelButton`        | `ViewStyle`  | The cancel button style.                        |
+| `cancelText`          | `TextStyle`  | The cancel button text style.                   |
+| `screenshotButton`    | `ViewStyle`  | The screenshot button style.                    |
+| `screenshotText`      | `TextStyle`  | The screenshot button text style.               |
+| `screenshotContainer` | `TextStyle`  | The screenshot thumbnail container style.       |
+| `screenshotThumbnail` | `ImageStyle` | The screenshot thumbnail image style.           |
+| `titleContainer`      | `ViewStyle`  | The title container style.                      |
+
+## Event Callbacks
+
+The following callbacks can be configured for the integration in `feedbackIntegration({})` or passed in the `FeedbackWidget` component props:
+
+| Callback          | Parameters                                                 | Default behavior        | Description                                                                                                   |
+| ----------------- | ---------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `onFormOpen`      |                                                            |                         | Callback when widget is opened.                                                                               |
+| `onFormClose`     |                                                            | The widget is unmounted.| Callback when widget is closed and not submitted.                                                             |
+| `onSubmitSuccess` | `data: FeedbackFormData`                                   |                         | Callback when feedback is successfully submitted.                                                             |
+| `onSubmitError`   | `error: Error`                                             |                         | Callback when feedback is unsuccessfully submitted.                                                           |
+| `onFormSubmitted` |                                                            | The widget is unmounted.| Callback when the feedback widget is submitted successfully, and the SuccessMessage is complete, or dismissed.|
+| `onAddScreenshot` | `addScreenshot: (uri: string) => void`                     |                         | Callback when a screenshot is added.                                                                          |
+
+## Screenshots
+
+The screenshot functionality is disabled by default. To enable it, pass an `imagePicker` integration library or set the `enableScreenshot` option to `true` and implement the `onAddScreenshot` callback.
+
+### Integrating with an Image Picker Library 
+
+Currently the supported libraries are:
+- [expo-image-picker](https://docs.expo.dev/versions/latest/sdk/imagepicker/) (tested with version `16.0`)
+- [react-native-image-picker](https://github.com/react-native-image-picker/react-native-image-picker) (tested with version `7.2` and `8.0`)
+
+You just need to import the library and pass it to the `feedbackIntegration` method.
+
+```javascript
+import * as ImagePicker from 'expo-image-picker';
+```
+
+Or `react-native-image-picker`:
+
+```javascript
+import * as ImagePicker from 'react-native-image-picker';
+```
+
+And then pass it to `feedbackIntegration`:
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.feedbackIntegration({
+      imagePicker: ImagePicker,
+    }),
+  ],
+});
+```
+
+### Implementing the `onAddScreenshot` Callback
+
+If the above libraries do not cover your use case you can manually integrate screenshots by implementing the `onAddScreenshot` callback. The callback receives the `uri` of the image like in the example below.
+
+```javascript
+import * as Sentry from '@sentry/react-native';
+import { getImage } from 'custom-image-picker';
+
+const handleChooseImage = (addScreenshot: (uri: string) => void): void => {
+  const { uri, error, canceled } = getImage();
+  if (canceled) {
+  	console.log('User canceled image choice.');
+  } else if (error) {
+    console.log('Error during image loading', error);
+  } else {
+    addScreenshot(uri);
+  }
+};
+
+Sentry.feedbackIntegration({
+    onAddScreenshot={handleChooseImage}
+});
+```

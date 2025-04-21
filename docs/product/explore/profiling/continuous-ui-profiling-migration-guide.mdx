@@ -1,0 +1,65 @@
+---
+title: Continuous & UI Profiling Migration Guide
+sidebar_order: 150
+description: "Learn how to migrate from the older transaction-based Profiling API to the new Continuous and UI Profiling APIs."
+---
+
+To learn more about the conceptual difference between the previous transaction-based and the new Continuous Profiling and UI Profiling products, please see [the Transaction vs Continuous Profiling docs](/product/explore/profiling/transaction-vs-continuous-profiling/). To summarize, the key differences are:
+
+- Transaction-based profiling was bound to the lifecycle of a trace. Profiling only occurred during a transaction or root span and could not be started independently. **Continuous and UI Profiling support both a trace-bound lifecycle mode, and a manual lifecycle mode that allows you to directly control the profiler using start/stop APIs**.
+- Transaction-based profiles were limited at 30 seconds in length. **Continuous and UI Profiling support arbitrarily long profiles.**
+
+This guide will focus on how to migrate your instrumentation from transaction-based profiling to Continuous Profiling and UI Profiling, and explain the billing implications of migrating. We plan to eventually deprecate the transaction-based API, so we recommend that you migrate to the new APIs as soon as possible.
+
+For the remainder of this document, you can assume that wherever “Continuous/UI Profiling” is referenced, the same guidance applies to both the Continuous Profiling (backend-oriented) and UI Profiling (frontend-oriented) products, even though they are targeted at different use cases.
+
+## Availability
+
+Continuous Profiling is supported on the following SDKs:
+
+- [Python](/platforms/python/profiling/) `2.24.1`
+- [Node.js](/platforms/javascript/guides/node/profiling/) `9.8.0`
+
+UI Profiling is supported on the following SDKs:
+
+- [iOS & macOS](/platforms/apple/profiling/) `8.49.0`
+- [Android (Java & Kotlin only)](/platforms/android/profiling/) `8.5.0`
+
+If you are using any other SDKs that currently support transaction-based profiling, those SDKs do not yet support Continuous or UI Profiling. We will be adding support for more SDKs over time.
+
+## Identifying Current API Usage
+
+If you are specifying either the `profiles_sample_rate`  or `profiles_sampler` configuration options, you are using transaction-based profiling. 
+
+If you are specifying the `profile_session_sample_rate` and/or `profile_lifecycle` configuration options, you are using Continuous Profiling or UI Profiling. 
+
+## Migrating to Continuous/UI Profiling
+
+### 1. Replace the `profiles_sample_rate` and `profiles_sampler` SDK configuration options with `profile_session_sample_rate`
+
+There is an important distinction in how client-side sampling is implemented between transaction-based and Continuous/UI Profiling. `profiles_sample_rate` and `profiles_sampler` were used to evaluate whether the profile would be sampled *for each  transaction*. In other words, if `profiles_sample_rate` was set to 0.5, 50% of all transactions would have associated profiles. `profiles_sampler` worked similarly — the only difference was that you could implement custom sampling logic (rather than a fixed sample rate) based on the context of the transaction being sampled. 
+
+In contrast, Continuous/UI Profiling use client-side sampling that is *session scoped,* configured via the new `profile_session_sample_rate` parameter. Sampling is evaluated once at the beginning of each session, not every time profiling data is collected. Since the scope at which sampling is applied is different, you can’t just directly translate the previous `profiles_sample_rate` value to `profile_session_sample_rate`. 
+
+To control client side sampling behavior, set the `profile_session_sample_rate` configuration parameter to a value from 0.0-1.0 (default is 0.0) to control the number of profiling sessions that are sampled. The way this sampling rate is applied depends on the context:
+
+- **For Continuous Profiling**: the session starts when the Sentry SDK is initialized, and stops when the service or process is terminated. Sampling is only evaluated once during the process lifetime (during initialization.)
+    - For example, if you are using Continuous Profiling with a backend service where there are N instances of the same service that are deployed (such as N containers, pods, etc.), the `profile_session_sample_rate` controls the percentage of those instances that will have profiling enabled. 0.5 would mean that a randomly sampled 50% of the N instances would have profiling enabled.
+    - Sampling would only be re-evaluated once an instance restarts or is re-deployed
+- **For UI Profiling:** the initial user session starts when the Sentry SDK is initialized, and sampling is first evaluated at this point. The user session will either end on termination of the application *OR*, depending on the platform, there can be other events that end a user session (for example backgrounding a mobile application). The sampling rate will be re-evaluated on each new user session.
+    - For example, on the browser, the user session begins when the tab is opened and ends when the tab is closed. The sampling will be evaluated once at the start of each session, so if `profile_session_sample_rate` is set to 0.5, then 50% of the time your application is opened in a tab, profiling will be active for that tab’s lifetime.
+    - On mobile, the user session begins when the application is started or foregrounded, and ends when the application is terminated or backgrounded. The sampling will be evaluated once at the start of each session, so if `profile_session_sample_rate` is set to 0.5 then 50% of the time the user opens your mobile app, profiling will be active until the user backgrounds or quits the app.
+    
+### 2. Set the new `profile_lifecycle` SDK configuration option
+
+Continuous/UI Profiling support two lifecycle modes: `manual` and `trace`. 
+
+**`manual` is the default mode** and allows you to more directly control when the profiler is running by calling the `start_profile_session` and `stop_profile_session` functions. If you decide to use this mode, you must add these start/stop calls anywhere in your code that you want profiling to be active. If `start_profile_session` is not called, profiling will never occur. Note that this respects `profile_session_sample_rate` — if the session is not sampled, no profiling data will be collected even if `start_profile_session` is called.
+
+**If you want a more automated profiling behavior that is analogous to the previous transaction-based profiling behavior, you can use the `trace` lifecycle mode.** In this mode, you don’t need to manually call `start_profile_session` and `stop_profile_session` because profiling will automatically be started and stopped whenever there is an active transaction or root span. This mode respects `profile_session_sample_rate` as the `manual` lifecycle mode does, but also respects `traces_sample_rate` and `traces_sampler` — in order for profiling to occur, the profiling session must be sampled, and the trace must be sampled as well.
+
+## Updating Your Subscription
+
+Access to Continuous/UI Profiling is only available through your pay-as-you-go (PAYG) budget. To set-up a PAYG budget or make changes to your existing PAYG budget please go to your [**Settings**](https://sentry.io/orgredirect/organizations/:orgslug/settings/) page and click on "Subscription" (under the "Usage & Billing" heading.) See our [**pricing docs**](/pricing/) for more information.
+
+You can see the number of Continuous and/or UI Profile Hours of your transaction-based profiles by visiting the Stats page to help estimate the profiling hours you will need when migrating.

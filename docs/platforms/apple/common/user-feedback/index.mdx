@@ -1,15 +1,65 @@
 ---
 title: Set Up User Feedback
-description: "Learn more about collecting user feedback when an event occurs. Sentry pairs the feedback with the original event, giving you additional insight into issues."
+description: "Learn how to enable User Feedback in your Cocoa app."
 sidebar_order: 6000
 ---
 
-When a user experiences an error, Sentry provides the ability to collect additional feedback. You can collect feedback according to the method supported by the SDK.
+<PlatformSection notSupported={["apple.macos", "apple.tvos", "apple.watchos", "apple.visionos"]}>
 
-## User Feedback API
+The User Feedback feature allows you to collect user feedback from anywhere inside your application at any time, without needing an error event to occur first.
 
-The user feedback API allows you to collect user feedback while utilizing your own UI. You can use the same programming language you have in your app to send user feedback. In this case, the SDK creates the HTTP request so you don't have to deal with posting data via HTTP.
+<Alert>
+If you're using a self-hosted Sentry instance, you'll need to be on version 24.4.2 or higher in order to use the full functionality of the User Feedback feature. Lower versions may have limited functionality.
+</Alert>
 
-Sentry pairs the feedback with the original event, giving you additional insight into issues. Sentry needs the `eventId` to be able to associate the user feedback to the corresponding event. For example, to get the `eventId`, you can use <PlatformLink to="/configuration/options/#before-send"><PlatformIdentifier name="before-send" /></PlatformLink> or the return value of the method capturing an event.
+## User Feedback Widget
 
-<PlatformContent includePath="user-feedback/sdk-api-example/" />
+The User Feedback widget allows users to submit feedback from anywhere inside your application.
+
+### Pre-requisites
+
+Ensure that your project is set up with Sentry and that you have added the Sentry Cocoa SDK to your project.
+
+### Installation
+
+1. Install the Sentry Cocoa SDK using CocoaPods, Carthage, or Swift Package Manager.
+2. Ensure you are using version 8.46.0 or above of the SDK to access the latest features.
+
+### Set Up
+
+To start using the User Feedback widget in your Cocoa application, provide a feedback configuration in your `SentryOptions` when starting the SDK:
+
+```swift
+ SentrySDK.start { options in
+     options.configureUserFeedback = { config in
+          config.onSubmitSuccess = { data in
+               print("Feedback submitted successfully: \(data)")
+          }
+          config.onSubmitError = { error in
+               print("Failed to submit feedback: \(error)")
+          }
+     }
+ }
+```
+
+This setup will insert the widget into your app's view hierarchy. By default, it appears in the bottom trailing corner of the screen, but you can fully customize its appearance and behavior.
+
+### Session Replay
+
+The User Feedback widget integrates seamlessly with Session Replay. When the widget is opened, the Replay SDK buffers up to 30 seconds of the user's session. If feedback is submitted, this replay is sent along with the feedback, allowing you to view both the feedback and the user's actions leading up to the feedback submission.
+
+</PlatformSection>
+
+### User Feedback API
+
+The User Feedback API allows you to collect user feedback while using your own UI components. You can submit feedback directly using the `SentrySDK.capture(feedback:)` method:
+
+```swift
+SentrySDK.capture(feedback: .init(
+    message: "I encountered a bug while using the app.",
+    name: "John Doe",
+    email: "john.doe@example.com",
+    source: .custom,
+    screenshot: somePngImageData // optional
+))
+```

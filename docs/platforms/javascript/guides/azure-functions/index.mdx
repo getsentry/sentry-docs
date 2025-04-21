@@ -1,9 +1,11 @@
 ---
 title: Azure Functions
-description: "Learn how to use Sentry's Azure Functions SDK."
-sdk: sentry.javascript.node
-fallbackGuide: javascript.node
+description: Azure Functions is a serverless compute service offered as part of Microsoft Azure. Learn how to set it up with Sentry.
+sdk: sentry.javascript.astro
 categories:
+  - javascript
+  - server
+  - server-node
   - serverless
 ---
 
@@ -15,9 +17,7 @@ Select which Sentry features you'd like to install in addition to Error Monitori
 
 ## Install
 
-<OnboardingOptionButtons
-  options={["error-monitoring", "performance", "profiling"]}
-/>
+<OnboardingOptionButtons options={["error-monitoring", "performance", "profiling"]} />
 
 Sentry captures data by using an SDK within your application’s runtime. This means that you have to add `@sentry/node` as a runtime dependency to your application:
 
@@ -27,7 +27,50 @@ Sentry captures data by using an SDK within your application’s runtime. This m
 
 To set up Sentry error logging for an Azure Function:
 
-<PlatformContent includePath="getting-started-config" />
+```javascript {tabTitle:async} {"onboardingOptions": {"performance": "14-20", "profiling": "2, 10-13, 21-23"}}
+const Sentry = require("@sentry/node");
+const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/azure-functions/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  
+  integrations: [
+    nodeProfilingIntegration(),
+  ],
+
+  // Add Performance Monitoring by setting tracesSampleRate
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+
+  // Set sampling rate for profiling - this is relative to tracesSampleRate
+  profilesSampleRate: 1.0,
+});
+
+module.exports = async function (context, req) {
+  try {
+    await notExistFunction();
+  } catch (e) {
+    Sentry.withScope((scope) => {
+      scope.setSDKProcessingMetadata({ request: req });
+      Sentry.captureException(e);
+    });
+    await Sentry.flush(2000);
+  }
+
+  context.res = {
+    status: 200,
+    body: "Hello from Azure Cloud Function!",
+  };
+};
+```
+
 
 You can obtain the DSN using your Sentry account from your organization's _Settings > Projects > Client Keys (DSN)_ in the Sentry web UI.
 
