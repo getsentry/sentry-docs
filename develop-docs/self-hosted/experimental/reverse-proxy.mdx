@@ -8,11 +8,11 @@ sidebar_order: 80
     These are community-contributed docs. Sentry does not officially provide support for self-hosted configurations beyond the default install.
 </Alert>
 
-Adding a reverse proxy in front of your Sentry deployment is strongly recommended for one big reason: you can fine tune every configuration to fit your current setup. A dedicated reverse proxy that does SSL/TLS termination that also forwards the client IP address as Docker Compose internal network (as this is [close to impossible to get otherwise](https://github.com/getsentry/self-hosted/issues/554)) would give you the best Sentry experience.
+Adding a reverse proxy in front of your Sentry deployment is strongly recommended for one big reason: you can fine tune every configuration to fit your current setup. A dedicated reverse proxy that does SSL/TLS termination that also forwards the client IP address as Docker Compose internal network (as this is [close to impossible to get otherwise](https://github.com/getsentry/self-hosted/issues/554)) would give you the best Sentry experience.
 
 Once you have setup a reverse proxy to your Sentry instance, you should modify the `system.url-prefix` in the `config.yml` file to match your new URL and protocol. You should also update the SSL/TLS section in the `sentry/sentry.conf.py` script, otherwise you may get CSRF-related errors when performing certain actions such as configuring integrations.
 
-Keep in mind that all this setup uses single-nodes for all services, including Kafka. For larger loads, you'd need a beefy machine with lots of RAM and disk storage. To scale up even further, you are very likely to use clusters with a more complex tool, such as Kubernetes. Due to self-hosted installations' very custom nature, we do not offer any recommendations or guidance around scaling up. We do what works for us for our thousands of customers over at [sentry.io](https://sentry.io/) and would love to have you over when you feel your local install's maintenance becomes a burden instead of a joy.
+Keep in mind that all this setup uses single-nodes for all services, including Kafka. For larger loads, you'd need a beefy machine with lots of RAM and disk storage. To scale up even further, you are very likely to use clusters with a more complex tool, such as Kubernetes. Due to self-hosted installations' very custom nature, we do not offer any recommendations or guidance around scaling up. We do what works for us for our thousands of customers over at [sentry.io](https://sentry.io/) and would love to have you over when you feel your local install's maintenance becomes a burden instead of a joy.
 
 ## Enabling HTTPS
 
@@ -197,7 +197,7 @@ http:
         - web       # Assuming this your HTTP entrypoint
         - websecure # Assuming this is your HTTPS entrypoint
       service: sentry@file
-      rule: "Host(`sentry.yourcompany.com`) && PathRegexp(`^/api/[1-9]\d+/(envelope|minidump|security|store|unreal)`)"
+      rule: "Host(`sentry.yourcompany.com`) && PathRegexp(`^/api/[1-9]\\d+/(envelope|minidump|security|store|unreal)`)"
       tls:
         certResolver: letsencrypt # Assuming you have a TLS certificate resolver named "letsencrypt"
       middlewares:
@@ -299,7 +299,7 @@ frontend https_bind
     bind *:443 ssl crt /etc/haproxy/certs/ name https_port
     mode http
 
-    acl sentry_domain hdr(host) -i sentry.yourcompany.com
+    acl sentry_domain   hdr(host) -i sentry.yourcompany.com
     acl ingest_endpoint path_reg -i /api/[1-9]\d+/(envelope|minidump|security|store|unreal)/
 
     # Handle CORS-related headers for ingest endpoints.
