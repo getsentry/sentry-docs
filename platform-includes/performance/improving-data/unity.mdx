@@ -1,0 +1,47 @@
+## Improving Data on Transactions and Spans
+
+### Adding Data Attributes to Transactions
+
+You can add data attributes to your transactions. This data is visible in the trace explorer in Sentry. Data attributes can be of type `string`, `number` or `boolean`, as well as arrays of these types:
+
+```csharp
+ITransaction transaction = SentrySdk.StartTransaction("processOrderBatch()", "task");
+transaction.SetData("my-data-attribute-1", "value1");
+transaction.SetData("my-data-attribute-2", 42);
+transaction.SetData("my-data-attribute-3", true);
+
+transaction.SetData("my-data-attribute-4", new[] {"value1", "value2", "value3"});
+transaction.SetData("my-data-attribute-5", new[] {42, 43, 44});
+transaction.SetData("my-data-attribute-6", new[] {true, false, true});
+```
+
+<Alert level="info">
+The <code>SetExtra</code> method is still supported but has been deprecated in favor of <code>SetData</code>.
+</Alert>
+
+### Adding Data Attributes to Spans
+
+You can add data attributes to your spans. This data is visible in the trace explorer in Sentry. Data attributes can be of type `string`, `number` or `boolean`, as well as arrays of these types:
+
+```csharp
+ISpan span = parent.StartChild("task", "operation");
+span.SetData("my-data-attribute-1", "value1");
+span.SetData("my-data-attribute-2", 42);
+span.SetData("my-data-attribute-3", true);
+
+span.SetData("my-data-attribute-4", new[] {"value1", "value2", "value3"});
+span.SetData("my-data-attribute-5", new[] {42, 43, 44});
+span.SetData("my-data-attribute-6", new[] {true, false, true});
+```
+
+### Adding Attributes to all Spans and Transactions
+
+To add an attribute to all spans and transactions, use the `BeforeSendTransaction` callback:
+
+```csharp
+options.SetBeforeSendTransaction(transaction =>
+{
+    transaction.SetData("environment-data", GetEnvironmentData());
+    return transaction;
+});
+``` 

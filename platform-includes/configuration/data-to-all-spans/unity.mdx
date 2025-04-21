@@ -1,0 +1,22 @@
+```csharp
+SentrySdk.Init(options =>
+{
+    options.SetBeforeSendTransaction(transaction =>
+    {        
+        // Set the attribute on the root span
+        if (transaction.Contexts.Trace == null)
+        {
+            transaction.Contexts.Trace = new SpanContext();
+        }
+        transaction.Contexts.Trace.SetData("myAttribute", "myValue");
+
+        // And on all child spans
+        foreach (var span in transaction.Spans)
+        {
+            span.SetData("myAttribute", "myValue");
+        }
+
+        return transaction;
+    });
+});
+``` 
