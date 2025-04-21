@@ -51,15 +51,15 @@ function handle_inline_options(node) {
   let currentOption;
 
   // product options syntax
-  // ___PRODUCT_OPTION_START___ performance
+  // ___PRODUCT_OPTION_START___ session-replay
   // some lines here
-  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_END___ session-replay
   const PRODUCT_OPTION_START = '___PRODUCT_OPTION_START___';
   const PRODUCT_OPTION_END = '___PRODUCT_OPTION_END___';
   node.children?.forEach(line => {
     const lineStr = toString(line);
     if (lineStr.includes(PRODUCT_OPTION_START)) {
-      currentOption = lineStr.split(PRODUCT_OPTION_START)[1].trim();
+      currentOption = /___PRODUCT_OPTION_START___ ([-\w]+)/.exec(lineStr)?.[1].trim();
       line.properties['data-onboarding-option-hidden'] = '1';
     } else if (lineStr.includes(PRODUCT_OPTION_END)) {
       line.properties['data-onboarding-option-hidden'] = '1';
