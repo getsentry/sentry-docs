@@ -36,7 +36,7 @@ Configuration should happen as early as possible in your application's lifecycle
 
 This snippet includes automatic instrumentation to monitor the performance of your application, which registers and configures the Tracing integration, including custom [Ember instrumentation](./configuration/ember-options/).
 
-```javascript {"onboardingOptions": {"performance": "11-17", "session-replay": "10, 18-24"}}
+```javascript
 import Application from "@ember/application";
 import Resolver from "ember-resolver";
 import loadInitializers from "ember-load-initializers";
@@ -46,7 +46,15 @@ import * as Sentry from "@sentry/ember";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/ember/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  
+  // ___PRODUCT_OPTION_START___ session-replay
   integrations: [Sentry.replayIntegration()],
+  // ___PRODUCT_OPTION_END___ session-replay
+  // ___PRODUCT_OPTION_START___ performance
 
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for tracing.
@@ -54,6 +62,8 @@ Sentry.init({
   // Learn more at
   // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
   tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ session-replay
 
   // Capture Replay for 10% of all sessions,
   // plus for 100% of sessions with an error
@@ -61,6 +71,7 @@ Sentry.init({
   // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ session-replay
 });
 
 export default class App extends Application {

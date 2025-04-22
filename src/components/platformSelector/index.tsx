@@ -20,7 +20,7 @@ import {uniqByReference} from 'sentry-docs/utils';
 
 import styles from './style.module.scss';
 
-import {SidebarLink} from '../sidebarLink';
+import {SidebarLink, SidebarSeparator} from '../sidebar/sidebarLink';
 
 export function PlatformSelector({
   platforms,
@@ -243,19 +243,14 @@ export function PlatformSelector({
         </ComboboxProvider>
       </RadixSelect.Root>
       {showStoredPlatform && (
-        <div className={styles.toc}>
-          <ul>
-            <SidebarLink
-              to={storedPlatform.url}
-              title={`Sentry for ${storedPlatform.title ?? storedPlatform.key}`}
-              path=""
-              className={styles['active-platform-title']}
-            >
-              {/* display chevron icon by adding a child element */}
-              <Fragment />
-            </SidebarLink>
-          </ul>
-          <hr />
+        <div className="mt-3">
+          <SidebarLink
+            href={storedPlatform.url}
+            title={`Sentry for ${storedPlatform.title ?? storedPlatform.key}`}
+            collapsible
+            topLevel
+          />
+          <SidebarSeparator />
         </div>
       )}
     </div>
