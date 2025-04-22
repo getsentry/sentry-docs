@@ -3,7 +3,7 @@ title: Design Principles
 sidebar_order: 2
 ---
 
-This document contains a set of design principles and requirements whish should be applied to all Sentry APIs. These are _requirements_ when designing public APIs, but internal APIs should attempt to adhere to these principles as well.
+This document contains a set of design principles and requirements whish should be applied to all Sentry APIs. These are _requirements_ when designing public APIs (such as Sentry's Web API), but internal APIs (such as an an internal service that Sentry communicates with) should attempt to adhere to these principles as well where it makes sense.
 
 In the Sentry monolith, we use [Django REST framework](https://www.django-rest-framework.org/) (DRF).
 
@@ -17,7 +17,7 @@ In the Sentry monolith, we use [Django REST framework](https://www.django-rest-f
 
 **Every endpoint in Sentry's API is public.**
 
-You should design it as such. You should **not** expose internal designs, including parameters which control behaviors of the underlying system.
+Even if its not publicly documented, if it exists in the exposed routes, you should treat it as being public. You should **not** expose internal details, including parameters which control behaviors of the underlying system.
 
 For example, if you had an endpoint that needs to query a replica in some cases, do **not** expose a parameter to control the behavior (e.g. `useReplica=1`). Instead you should control this flag on the backend based on other information (such as a feature flag or account setting).
 
@@ -31,20 +31,22 @@ Use the following guidelines for naming resources and their collections:
 
 - **Do** use lowercase and hyphenated collection names, e.g. `commit-files`.
 - **Do** use plural collection names. Avoid using uncountable words because the user can't know whether the GET returns one item or a list.
-- **Do** use `snake_case` for route parameters. e.g. `tags/\{tag_name}/`.
+- **Do** use `snake_case` for path parameters. e.g. `tags/\{tag_name}/`.
 - **Do** consistently shorten parameters that are excessively long when the term will unambiguous. e.g. `organization` -> `org`.
 
-Standard parameters that should be shortened in route names:
+Standard path parameters that should be shortened in routes:
 
-- `organization` -> `org`
+- `organization` -> `org` (e.g. `/organizations/{org}/`)
 
 ### Prefixes and Scoping
 
 Information in Sentry is typically constrained by tenants. That is, almost all information is scoped to an organization. All endpoints which query customer data **must** be scoped to an organization:
 
-- **Do** prefix resource collections with `organizations/\{organization}`.
-- **Do** prefix resource endpoints with `projects/\{organization}/\{project}`.
-- **Do not** expose endpoints which require the `organization` as a query parameter.
+- **Do** prefix resource organizations collections with `organizations/\{org}`.
+- **Do** prefix resource project collections with `projects/\{org}/\{project}`.
+- **Do not** expose endpoints which require `org` as a query parameter (it should always be a path parameter).
+
+Knowing when to choose which constraint to couple an endpoint to will be based on the purpose of an endpoint. For example, if an endpoint is only ever going to be used \to query data for a single project, it should be prefixed with `/projects/{org}/{project}/things`. If an endpoint would need to exist to query multiple projects (which is common with cross-project queries), you likely should expose it as `/organizations/{org}/things`, and expose a query param to filter on the project(s).
 
 Exceptions to these rules include:
 
@@ -55,12 +57,12 @@ Exceptions to these rules include:
 
 **Do not** exceed three levels of resource nesting.
 
-Nesting resources such as `/organizations/\{organization}/projects/`, is **preferred** over flattened resources like `/0/projects/`. This improves readability and exposes a natural understanding of resource hierarchy and relationships. However, nesting can make URLs too long and hard to use. Sentry uses 3-level nesting as a hybrid solution.
+Nesting resources such as `/organizations/\{org}/projects/`, is **preferred** over flattened resources like `/0/projects/`. This improves readability and exposes a natural understanding of resource hierarchy and relationships. However, nesting can make URLs too long and hard to use. Sentry uses 3-level nesting as a hybrid solution.
 
 Here are some possible urls for values with this resource hierarchy: organization -> project -> tag -> value:
 
-- 👍 `/projects/\{organization}/\{project}/tags/\{tag}/values`
-- 👎 `/organizations/\{organization}/projects/\{project}/tags/\{tag}/values/`
+- 👍 `/projects/\{org}/\{project}/tags/\{tag}/values`
+- 👎 `/organizations/\{org}/projects/\{project}/tags/\{tag}/values/`
 - 👎 `/values/`
 
 Hierarchy here does not necessarily mean that one collection belongs to a parent collection, it simply implies a relationship. For example:
@@ -117,9 +119,7 @@ POST /resources/{id}
 
 ### Batch Operations
 
-Resources can get complicated when you need to expose batch operations vs single resource operations.
-
-Here are some notes that can help you decide between similar methods. We use *Get* here as an example but the same applies to all the other methods in the parenthesis.
+Resources can get complicated when you need to expose batch operations vs single resource operations. For batch operations it it is preferred to expose them as a `POST` request on the collection when possible.
 
 Let's say for example we have an endpoint that mutates an issue:
 
@@ -130,13 +130,13 @@ POST /api/0/organizations/:org/issues/:issue/
 When designing a batch interface, we simply expose it on the collection instead of the individual resource:
 
 ```
-POST /api/0/organizations/:org/issues/:issue/
+POST /api/0/organizations/:org/issues/
 ```
 
 You may also need to expose selectors on batch resources, which can be done through normal request parameters:
 
 ```
-POST /api/0/organizations/:org/issues/:issue/
+POST /api/0/organizations/:org/issues/
 {
   "issues": [1, 2, 3]
 }
@@ -153,7 +153,7 @@ Each API should be **stateless**, have a clear purpose, and do one specific thin
 | Functionality | HTTP Method | Response Object | Example |
 | --- | ---- | ---- | ---- |
 | Create | POST | Serialized created resource | [Create a Project](https://github.com/getsentry/sentry/blob/756bda4419cfaf28b2e351278a5c4c1665082eba/src/sentry/api/endpoints/team_projects.py#L156) |
-| Update | PUT or PATCH | Serialized updated resource | [Update Project Settings](https://github.com/getsentry/sentry/blob/756bda4419cfaf28b2e351278a5c4c1665082eba/src/sentry/api/endpoints/project_details.py#L474) |
+| Update | PUT | Serialized updated resource | [Update Project Settings](https://github.com/getsentry/sentry/blob/756bda4419cfaf28b2e351278a5c4c1665082eba/src/sentry/api/endpoints/project_details.py#L474) |
 | Get | GET | Serialized single resource | [Retrieve a Project](https://github.com/getsentry/sentry/blob/756bda4419cfaf28b2e351278a5c4c1665082eba/src/sentry/api/endpoints/project_details.py#L415) |
 | Delete | DELETE | None | [Delete a Project](https://github.com/getsentry/sentry/blob/756bda4419cfaf28b2e351278a5c4c1665082eba/src/sentry/api/endpoints/project_details.py#L840) |
 | List | GET | List of multiple serialized resources | [List All the Projects in an Organization](https://github.com/getsentry/sentry/blob/756bda4419cfaf28b2e351278a5c4c1665082eba/src/sentry/api/endpoints/organization_projects.py#L49) |
