@@ -73,6 +73,38 @@ This is an [issue](https://github.com/flutter/flutter/issues/135245) with Flutte
 
 For prior versions, you can work around this by configuring the SDK only to take screenshots when the app is in the `resumed` state. To do this, set `SentryFlutterOptions.attachScreenshotOnlyWhenResumed` to `true`.
 
+## Zone Mismatch Error on Web
+
+By default the Sentry Flutter SDK creates a custom zone on web for automatic error and breadcrumb tracking. This could lead to zone mismatch errors if you needed to call `WidgetsBinding.ensureInitialized()` before Sentry in a custom zone.
+
+To avoid this, you can use the `Sentry.runZonedGuarded` method to run Sentry in a custom zone. This will ensure that Sentry is initialized in the same zone as the rest of your application.
+
+```dart
+import 'package:flutter/widgets.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+Future<void> main() async {
+  Sentry.runZonedGuarded(() async {
+    WidgetsBinding.ensureInitialized();
+
+    await SentryFlutter.init(
+      (options) {
+        // your config...
+      },
+      appRunner: () => runApp(
+        SentryWidget(
+          child: MyApp(),
+        ),
+      ),
+    );
+  } (error, stackTrace) {
+    // Note: Errors caught within the zone are already reported to Sentry automatically.
+    // This callback is provided so you can perform additional custom error handling
+    // on top of Sentry reporting, such as logging.
+  });
+}
+```
+
 ## Using Flutter Multi-view for Web
 
 Multi-view embedding was introduced in Flutter 3.24. You'll find a detailed guide about it in the [Flutter docs](https://docs.flutter.dev/platform-integration/web/embedding-flutter-web) .
