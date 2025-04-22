@@ -37,10 +37,10 @@ export function DevelopDocsSidebar({
     return toTree(apiNodes);
   };
   return (
-    <aside className={styles.sidebar}>
+    <aside className={`${styles.sidebar} py-3`}>
       <input type="checkbox" id={sidebarToggleId} className="hidden" />
       <style>{':root { --sidebar-width: 300px; }'}</style>
-      <div className="md:flex flex-col items-stretch">
+      <div className="md:flex flex-col items-stretch px-3">
         <div className={styles.toc}>
           <ul data-sidebar-tree>
             {devDocsMenuItems.map(({root, title}) => (
