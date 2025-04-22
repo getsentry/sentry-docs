@@ -10,15 +10,19 @@ The category types and amount of data collected vary, depending on the integrati
 
 ## HTTP Headers
 
-By default, the Sentry SDK doesn't send any HTTP headers. Even when sending HTTP headers is enabled, we have a [denylist](https://github.com/getsentry/sentry-python/blob/master/sentry_sdk/integrations/_wsgi_common.py#L19-L26) in place, which filters out any headers that contain sensitive data.
+By default, the Sentry SDK sends HTTP headers to Sentry but filters out any headers that contain sensitive data. (See the [list of headers](https://github.com/getsentry/sentry-python/blob/master/sentry_sdk/integrations/_wsgi_common.py#L28-L35) that are filtered).
 
-To start sending HTTP headers, set `send_default_pii=True` in the `sentry_sdk.init()` call.
+To send all HTTP headers, set `send_default_pii=True` in the `sentry_sdk.init()` call.
+
+Additionally a [data scrubber](/platforms/python/data-management/sensitive-data/) removes sensitive data from headers (and a lot of other fields) right before sending data to Sentry.
 
 ## Cookies
 
 By default, the Sentry SDK doesn't send cookies. Sentry tries to remove any cookies that contain sensitive information, such as the Session ID and CSRF Token cookies in Django.
 
 If you want to send cookies, set `send_default_pii=True` in the `sentry_sdk.init()` call.
+
+Additionally a [data scrubber](/platforms/python/data-management/sensitive-data/) removes sensitive data from cookies (and a lot of other fields) right before sending data to Sentry.
 
 ## Information About Logged-in User
 
