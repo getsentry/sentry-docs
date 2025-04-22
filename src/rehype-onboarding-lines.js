@@ -10,13 +10,14 @@ import {visit} from 'unist-util-visit';
  * Rehype plugin that adds the `data-onboarding-option="some-option-id"` attribute and `hidden` class name
  * to each line of code based on the metastring of the code block.
  *
- * The metastring should be in the format of:
+ * The metastring should be in the format of (legacy method):
  * `{"onboardingOptions": {"performance": "1, 3-4", "profiling": "5-6"}}`
  * where the keys are the onboarding options, the line numbers can be individual or ranges separated by a comma.
  *
  * These lines will be hidden by default and shown based on the user's selection of `<OnboardingOptionsButtons ... />`
  *
  * **Note**: This plugin should be used after `rehype-prism-plus` as it relies on its output.
+ * **Note**: the recommended way to specify the onboarding options now is to use the inline syntax.
  *
  * @return {import('unified').Plugin<[], Root>}
  */
