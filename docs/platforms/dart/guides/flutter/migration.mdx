@@ -7,30 +7,54 @@ sidebar_order: 8000
 
 ### General
 
-- The required minimium Dart and Flutter versions are now `3.5.0` and `3.24.0` respectively. 
- - This change allows us to use safer APIs and better support for features such as Session Replay or WASM compilation.
-- Remove `beforeScreenshot`
-  - This has been replaced by `beforeCaptureScreenshot`
-- Remove manual TTID implementation
-  - The automatic TTID instrumentation has proven to be accurate so a manual one is not needed anymore
-- `LoadImagesListIntegration` has been renamed to `LoadNativeDebugImagesIntegration`
-- Remove old user feedback API
-  - The new API is `Sentry.captureFeedback`
-- Remove `enableTracing`
-  - Use `options.traceSampleRate` or `options.tracesSampler` instead
-- Remove `options.autoAppStart` and `setAppStartEnd`
-  - The [App Start Instrumentation](/platforms/dart/guides/flutter/integrations/app-start-instrumentation/) will determine the end of app start and is enabled by default
-- BeforeSendTransactionCallback` now has a `Hint` parameter
-- Remove `dart:html` usage in favour of `package:web`
-  - The SDK is now packaged with the `package:web` dependency for better interopability with web APIs
-- Remove max response body APIs
-  - Due to PII, response bodies will not be added to Sentry events
-  - Responses are attached to the `Hint` object, which can be read in `beforeSend`/`beforeSendTransaction` callbacks via `hint.response` so you can manually attach the response to your event.
-  - In the versin `9.0.0` only the `dio` integration is supported.
-- Screenshots are now by default masked
-  - For example text fields are masked by default to prevent sensitive information from being leaked.
-- Default log level is now `warning` when `debug = true`
-  - This can be adjusted by `options.diagnosticLevel = SentryLevel.info`
+#### Dart and Flutter versions
+
+The required minimium Dart and Flutter versions are now `3.5.0` and `3.24.0` respectively. 
+This change allows us to use safer APIs and better support for features such as Session Replay or WASM compilation.
+
+#### API Removals and Renames
+
+- The `beforeScreenshot` method has been replaced by `beforeCaptureScreenshot`. 
+- Manual TTID implementation has been removed as the automatic TTID instrumentation has proven to be accurate enough so a manual one is not needed anymore.
+- `LoadImagesListIntegration` has been renamed to `LoadNativeDebugImagesIntegration`.
+- The `enableTracing` option has been removed. Use `options.traceSampleRate` or `options.tracesSampler` instead.
+- Both `options.autoAppStart` and `setAppStartEnd` have been removed. The [App Start Instrumentation](/platforms/dart/guides/flutter/integrations/app-start-instrumentation/) will now determine the end of app start and is enabled by default.
+- `BeforeSendTransactionCallback` now has a `Hint` parameter.
+- Usage of `dart:html` has been removed in favor of `package:web`. The SDK is now packaged with the `package:web` dependency for better interopability with web APIs.
+
+#### User Feedback
+
+The old user feedback API has been removed. The new API is `Sentry.captureFeedback`.
+
+#### Response Body Handling
+
+Max response body APIs have been removed. Due to PII concerns, response bodies will no longer be added to Sentry events by the SDK. Responses are now attached to the `Hint` object, which can be read in `beforeSend`/`beforeSendTransaction` callbacks via `hint.response` so you can manually attach the response to your event. In version `9.0.0`, only the `dio` integration is supported.
+
+#### Screenshots
+
+Screenshots are now masked by default. For example, text fields are automatically masked to prevent sensitive information from being leaked.
+
+#### Logging
+
+The default log level is now `warning` when `debug = true`. This can be adjusted by setting `options.diagnosticLevel = SentryLevel.info`.
+
+#### SDK Data Classes
+
+SDK data classes are now mutable. For backwards-compatibility, `copyWith` and `clone` can still be used but are officially deprecated.
+
+```dart
+// old
+options.beforeSend = (event, hint) {
+  event = event.copyWith(release: 'my-release')
+  return event
+}
+
+// new
+options.beforeSend = (event, hint) {
+  event.release = 'my-release'
+  return event
+}
+```
 
 ### Flutter Desktop
 
