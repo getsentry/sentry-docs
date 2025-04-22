@@ -8,7 +8,7 @@ If you need help solving issues with Sentry's Flutter SDK, you can read the edge
 
 ## Support 16 KB Page Sizes on Android
 
-Starting with Android 15, AOSP supports devices with a 16 KB page size. If your app uses NDK libraries (directly or via an SDK), you’ll need to rebuild it for compatibility with these devices.
+Starting with Android 15, AOSP supports devices with a 16 KB page size. If your app uses NDK libraries (directly or via an SDK), you'll need to rebuild it for compatibility with these devices.
 
 Update to Sentry Flutter SDK version `8.11.0` and above order to support 16 KB page sizes on Android devices. 
 
@@ -75,9 +75,9 @@ For prior versions, you can work around this by configuring the SDK only to take
 
 ## Zone Mismatch Error on Web
 
-By default the Sentry Flutter SDK creates a custom zone on web for automatic error and breadcrumb tracking. This could lead to zone mismatch errors if you needed to call `WidgetsBinding.ensureInitialized()` before Sentry in a custom zone.
+By default, the Sentry Flutter SDK creates a custom zone on web for automatic error and breadcrumb tracking. This can lead to zone mismatch errors when your application calls `WidgetsBinding.ensureInitialized()` before initializing Sentry.
 
-To avoid this, you can use the `Sentry.runZonedGuarded` method to run Sentry in a custom zone. This will ensure that Sentry is initialized in the same zone as the rest of your application.
+To resolve this issue, use the `Sentry.runZonedGuarded` method to initialize both your application and Sentry within the same zone. This approach ensures proper zone consistency throughout your application:
 
 ```dart
 import 'package:flutter/widgets.dart';
@@ -98,9 +98,9 @@ Future<void> main() async {
       ),
     );
   } (error, stackTrace) {
-    // Note: Errors caught within the zone are already reported to Sentry automatically.
-    // This callback is provided so you can perform additional custom error handling
-    // on top of Sentry reporting, such as logging.
+    // Note: Errors in this zone are already sent to Sentry automatically.
+    // This callback lets you add your own custom error handling (like logging)
+    // in addition to Sentry's reporting.
   });
 }
 ```
