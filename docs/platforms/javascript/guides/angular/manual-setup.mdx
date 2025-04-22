@@ -1,6 +1,70 @@
-Once this is done, Sentry's Angular SDK captures all unhandled exceptions and transactions.
+---
+title: Manual Setup
+sidebar_order: 1
+description: "Learn how to set up the Sentry Angular SDK manually."
+---
 
-```typescript {tabTitle: App Config} {filename: main.ts} {5-39}
+If you can't (or prefer not to) run the <PlatformLink to="/#install">automatic setup</PlatformLink>, you can follow the instructions below to configure the Sentry Angular SDK in your application. This guide is also useful to adjust the pre-set configuration if you used the installation wizard for automatic setup.
+
+<PlatformContent includePath="getting-started-prerequisites" />
+
+## Step 1: Install
+
+Choose the features you want to configure, and this guide will show you how:
+
+<OnboardingOptionButtons options={["error-monitoring", "performance", "session-replay"]} />
+
+<PlatformContent includePath="getting-started-features-expandable" />
+
+### Install the Sentry SDK
+
+```bash {tabTitle:npm}
+npm install @sentry/angular --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/angular
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/angular
+```
+
+<Expandable title="Angular Version Compatibility" permalink="true">
+
+
+In its current major version, the Sentry Angular SDK only supports Angular 14 and newer.
+
+If you're using an older version of Angular, you also need to use an older version of the SDK. See the table below for compatibility guidance:
+
+| Angular version | Recommended Sentry SDK                                                                                  |
+| --------------- | ------------------------------------------------------------------------------------------------------- |
+| 14 and newer    | `@sentry/angular`                                                                                       |
+| 12 or 13        | `@sentry/angular-ivy@^7` (see [Note](#what-is-sentryangular-ivy)) \*                                    |
+| 10 or 11        | `@sentry/angular@^7` \*                                                                                 |
+| 9 and below     | `@sentry/angular@^6` \*                                                                                 |
+| AngularJS/1.x   | `@sentry/browser@^6` with the [AngularJS integration](/platforms/javascript/guides/angular/angular1) \* |
+
+\* These versions of the SDK are no longer maintained or tested. Version 7 might still receive bug fixes but we don't guarantee support.
+
+#### What is `@sentry/angular-ivy`?
+
+The `@sentry/angular-ivy` package was an Ivy-compatible version of `@sentry/angular` in version 7 of the SDK. It's recommended to use this package if you're using Angular 12 or 13 to avoid build-time warnings.
+Functionality-wise, it's identical to `@sentry/angular` and you can simply replace all imports of `@sentry/angular` with `@sentry/angular-ivy` in our docs.
+Since version 8, `@sentry/angular-ivy` was [removed and merged](./migration/v7-to-v8/#supported-versions) with `@sentry/angular` which is now Ivy-compatible by default.
+
+</Expandable>
+
+If you're updating your Sentry SDK to the latest version, check out our [migration guide](https://github.com/getsentry/sentry-javascript/blob/master/MIGRATION.md) to learn more about breaking changes.
+
+## Step 2: Configure
+
+The main configuration should happen as early as possible in your app's lifecycle. Typically that means in your `main.ts` file.
+In addition, you'll need to register some providers to fully instrument your application.
+
+### Initialize The SDK
+
+```typescript {tabTitle: App Config} {filename: main.ts} {5-48}
 import { bootstrapApplication } from "@angular/platform-browser";
 import { appConfig } from "./app/app.config";
 import { AppComponent } from "./app/app.component";
@@ -13,7 +77,7 @@ Sentry.init({
   // Adds request headers and IP for users, for more info visit:
   // https://docs.sentry.io/platforms/javascript/guides/angular/configuration/options/#sendDefaultPii
   sendDefaultPii: true,
-  
+
   integrations: [
     // ___PRODUCT_OPTION_START___ performance
     // Registers and configures the Tracing integration,
@@ -55,7 +119,7 @@ bootstrapApplication(AppComponent, appConfig).catch((err) =>
 );
 ```
 
-```typescript {tabTitle: NGModule Config} {filename: main.ts}
+```typescript {tabTitle: NGModule Config} {filename: main.ts} {4-47}
 import { platformBrowserDynamic } from "@angular/platform-browser-dynamic";
 import { AppModule } from "./app/app.module";
 
@@ -63,11 +127,11 @@ import * as Sentry from "@sentry/angular";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  
+
   // Adds request headers and IP for users, for more info visit:
   // https://docs.sentry.io/platforms/javascript/guides/angular/configuration/options/#sendDefaultPii
   sendDefaultPii: true,
-  
+
   integrations: [
     // ___PRODUCT_OPTION_START___ performance
     // Registers and configures the Tracing integration,
@@ -111,9 +175,10 @@ platformBrowserDynamic()
 
 ### Register Sentry Providers
 
+
 The Sentry Angular SDK exports a couple of Angular providers that are necessary to fully instrument your application. We recommend registering them in your `app.config.ts` or main `app.module.ts`:
 
-```typescript {tabTitle: App Config (Angular 19+)} {filename: app.config.ts} {9, 14-24}
+```typescript {tabTitle: App Config (Angular 19+)} {filename: app.config.ts} {9, 14-25}
 import {
   ApplicationConfig,
   ErrorHandler,
@@ -144,7 +209,7 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-```typescript {tabTitle: App Config (Angular <=18)} {filename: app.config.ts} {8, 13-26}
+```typescript {tabTitle: App Config (Angular <=18)} {filename: app.config.ts} {8, 13-28}
 import {
   APP_INITIALIZER,
   ApplicationConfig,
@@ -177,7 +242,7 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-```typescript {tabTitle: NGModule Config} {filename: app.module.ts} {4, 9-22}
+```typescript {tabTitle: NGModule Config} {filename: app.module.ts} {4, 9-24}
 import { APP_INITIALIZER, ErrorHandler, NgModule } from "@angular/core";
 import { Router } from "@angular/router";
 
@@ -218,6 +283,8 @@ If your angular app is configured for SSR, make sure that the Sentry providers a
 
 <OnboardingOption optionId="performance">
 
+<Expandable title="Alternative TraceService Setup" permalink="true">
+
 If you're using an NGModule-based application (`app.module.ts`), you can also dependency-inject the `TraceService` from inside your `AppModule` constructor, instead of providing `APP_INITIALIZER`:
 
 ```javascript {tabTitle: NGModule Config} {filename: app.module.ts} {5}
@@ -229,4 +296,94 @@ export class AppModule {
 }
 ```
 
+</Expandable>
+
 </OnboardingOption>
+
+## Step 3: Add Readable Stack Traces With Source Maps (Optional)
+
+<PlatformContent includePath="getting-started-sourcemaps-short-version" />
+
+Alternatively, take a look at our <PlatformLink to="/sourcemaps">Uploading Source Maps</PlatformLink> docs
+
+## Step 4: Verify
+
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+### Issues
+
+To verify that Sentry captures errors and creates issues in your Sentry project, add the following test button to one of your components (e.g. `app.component.ts`), which will trigger an error that Sentry will capture when you click it:
+
+
+```javascript {filename: app.component.ts} {5, 9-11}
+@Component({
+    selector: "app-root",
+    template: `
+      <!-- rest of your page -->
+      <button (click)="throwTestError()">Test Sentry Error</button>`
+})
+class AppComponent {
+  // ...
+  throwTestError(): void {
+      throw new Error("Sentry Test Error");
+  }
+}
+```
+
+<OnboardingOption optionId="performance" hideForThisOption>
+  Open the page in a browser and click the button to trigger a frontend error.
+</OnboardingOption>
+
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
+
+<OnboardingOption optionId="performance">
+### Tracing
+
+To test your tracing configuration, update the previous code snippet to start a trace to measure the time it takes to execute your code:
+
+```javascript {filename: app.component.ts} {10-11, 13-14}
+@Component({
+    selector: "app-root",
+    template: `
+      <!-- rest of your page -->
+      <button (click)="throwTestError()">Test Sentry Error</button>`
+})
+class AppComponent {
+  // ...
+  throwTestError(): void {
+    Sentry.startSpan({ op: "test", name: "Example Span" }, () => {
+      setTimeout(() => {
+        throw new Error("Sentry Test Error");
+      }, 99);
+    });
+  }
+}
+```
+
+Open the page in a browser and click the button to trigger a frontend error and performance trace.
+
+</OnboardingOption>
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io/) to view the collected data (it takes a couple of moments for the data to appear).
+
+<PlatformContent includePath="getting-started-verify-locate-data" />
+
+## Next Steps
+
+At this point, you should have integrated Sentry into your Angular application and should already be sending data to your Sentry project.
+
+Now's a good time to customize your setup and look into more advanced topics. Our next recommended steps for you are:
+
+- Extend Sentry to your backend using one of our [SDKs](/)
+- Continue to <PlatformLink to="/configuration">customize your configuration</PlatformLink>
+- Make use of <PlatformLink to="/features">Angular-specific features</PlatformLink>
+- Learn how to <PlatformLink to="/usage">manually capture errors</PlatformLink>
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Find various topics in <PlatformLink to="/troubleshooting">Troubleshooting</PlatformLink>
+- [Get support](https://sentry.zendesk.com/hc/en-us/)
+
+</Expandable>
