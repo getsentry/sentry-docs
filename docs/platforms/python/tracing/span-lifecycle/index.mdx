@@ -41,11 +41,11 @@ import sentry_sdk
 
 with sentry_sdk.start_span(op="process", name="Process Data"):
     # This code is tracked in the "Process Data" span
-    
+
     with sentry_sdk.start_span(op="task", name="Validate Input"):
         # This is now a child span of "Process Data"
         validate_data()
-    
+
     with sentry_sdk.start_span(op="task", name="Transform Data"):
         # Another child span
         transform_data()
@@ -71,7 +71,7 @@ import sentry_sdk
 with sentry_sdk.start_span(op="db", name="Query Users") as span:
     # Perform a database query
     users = db.query("SELECT * FROM users")
-    
+
     # You can set data on the span
     span.set_data("user_count", len(users))
 ```
@@ -113,7 +113,7 @@ import sentry_sdk
 
 with sentry_sdk.start_transaction(name="Background Task", op="task") as transaction:
     # Your code here
-    
+
     # You can add child spans to the transaction
     with sentry_sdk.start_span(op="subtask", name="Data Processing"):
         # Process data
@@ -132,7 +132,7 @@ import sentry_sdk
 with sentry_sdk.start_span(op="db", name="Query Users") as span:
     # Execute the query
     users = db.query("SELECT * FROM users WHERE active = true")
-    
+
     # You can add more data during execution
     span.set_data("result_count", len(users))
 ```
@@ -156,32 +156,33 @@ To add attributes to all spans, use the `before_send_transaction` callback:
 
 ```python
 import sentry_sdk
+from sentry_sdk.types import Event, Hint
 
-def before_send_transaction(event):
+def before_send_transaction(event: Event, hint: Hint) -> Event | None:
     # Add attributes to the root span (transaction)
     if "trace" in event.get("contexts", {}):
         if "data" not in event["contexts"]["trace"]:
             event["contexts"]["trace"]["data"] = {}
-        
+
         event["contexts"]["trace"]["data"].update({
             "app_version": "1.2.3",
             "environment_region": "us-west-2"
         })
-    
+
     # Add attributes to all child spans
     for span in event.get("spans", []):
         if "data" not in span:
             span["data"] = {}
-        
+
         span["data"].update({
             "component_version": "2.0.0",
             "deployment_stage": "production"
         })
-    
+
     return event
 
 sentry_sdk.init(
-    # Your other Sentry configuration options here
+    # ...
     before_send_transaction=before_send_transaction
 )
 ```
@@ -202,7 +203,7 @@ with sentry_sdk.start_span(op="http.client", name="Fetch User Data"):
 # Database operation
 with sentry_sdk.start_span(op="db", name="Save User"):
         db.execute(
-        "INSERT INTO users (name, email) VALUES (%s, %s)", 
+        "INSERT INTO users (name, email) VALUES (%s, %s)",
         (user.name, user.email),
     )
 
@@ -233,4 +234,3 @@ with sentry_sdk.start_span(op="task", name="Process Payment") as span:
         # Span will automatically be marked as failed when an exception occurs
         raise
 ```
-
