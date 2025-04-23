@@ -4,6 +4,11 @@ sidebar_order: 8997
 description: "Learn about migrating from sentry-python 2.x to 3.x"
 ---
 
+TODOS:
+- exceptiongroups
+- ...?
+
+
 This guide describes the common patterns involved in migrating to version `3.x` of the `sentry-python` SDK. For the full list of changes, check out the [detailed migration guide in the repository](https://github.com/getsentry/sentry-python/blob/master/MIGRATION_GUIDE.md).
 
 ## Python Version Support
@@ -84,6 +89,10 @@ The ability to set `custom_sampling_context` on `start_transaction` was removed.
 
 ## Integrations
 
+Additional integrations will now be activated automatically if the SDK detects the respective package is installed: Ariadne, ARQ, asyncpg, Chalice, clickhouse-driver, GQL, Graphene, huey, Loguru, PyMongo, Quart, Starlite, Strawberry. You can [opt-out of specific integrations with the `disabled_integrations` option](https://docs.sentry.io/platforms/python/integrations/#disabling-integrations).
+
+We no longer support Django older than 2.0, trytond older than 5.0, and Falcon older than 3.0.
+
 ### Logging
 
 The logging integration which implements out-of-the-box support for the Python standard library `logging` framework doesn't capture error logs as events anymore by default. The original behavior can still be achieved by providing a custom `event_level` to the `LoggingIntegration`:
@@ -97,6 +106,21 @@ sentry_sdk.init(
     ]
 )
 ```
+
+### clickhouse-driver
+
+The query is now available under the `db.query.text` span attribute (only if `send_default_pii` is `True`).
+
+### PyMongo
+
+The PyMongo integration no longer sets tags automatically. The data is still accessible via span attributes.
+
+The PyMongo integration doesn't set `operation_ids` anymore. The individual IDs (`operation_id`, `request_id`, `session_id`) are now accessible as separate span attributes.
+
+
+### Redis
+
+In Redis pipeline spans there is no `span["data"]["redis.commands"]` that contains a dict `{"count": 3, "first_ten": ["cmd1", "cmd2", ...]}` but instead `span["data"]["redis.commands.count"]` (containing `3`) and `span["data"]["redis.commands.first_ten"]` (containing `["cmd1", "cmd2", ...]`).
 
 
 ## Metrics
