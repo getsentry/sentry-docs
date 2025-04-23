@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4
+      - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4
         id: setup-node
         with:
           node-version-file: 'package.json'
@@ -40,13 +40,22 @@ jobs:
 
       - run: yarn build
         if: steps.filter.outputs.docs == 'true'
+        env:
+          SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
+          NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
 
       - run: yarn build:developer-docs
         if: steps.filter.outputs.dev-docs == 'true'
+        env:
+          SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
+          NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
 
       - name: Start Http Server
         run: yarn start &
         if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
+        env:
+          SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
+          NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
 
       - name: Lint 404s
         run: bun ./scripts/lint-404s/main.ts

@@ -54,7 +54,19 @@ Note that if you have added a new model, you also need to import the model in `_
 
 When merging to master you might notice a conflict with `migrations_lockfile.txt`. This file is in place to help us avoid merging two migrations with the same migration number to master, and if you're conflicting with it then it's likely someone has committed a migration ahead of you.
 
-To resolve this, rebase against latest master, delete your current migration and then regenerate it. If your migration was custom, just save the operations in a text file somewhere so that you can reapply them on the regenerated migration.
+### Automatically Resolving Conflicts
+
+There is a [useful script](https://github.com/getsentry/sentry/blob/master/bin/update-migration) for automatically moving your migration to the top of the migration history.
+
+```bash
+bin/update-migration <migration_name>
+```
+
+It will rename the migration, modify it to depend on the latest migration, and update the lockfile and the name of any tests if they exist.
+
+### Manually Resolving Conflicts
+
+To perform the steps manually, rebase against latest master, delete your current migration and then regenerate it. If your migration was custom, just save the operations in a text file somewhere so that you can reapply them on the regenerated migration.
 
 Always commit the changes to `migrations_lockfile.txt` with your migration.
 
@@ -134,9 +146,9 @@ This is complicated due to our deploy process. When we deploy, we run migrations
 
 To avoid this, follow these steps:
 
-- Make a PR to remove all uses of the column in the codebase in a separate PR. This mostly helps with code cleanliness. This should be merged ahead of the migration prs, but we don't need to worry about whether it is deployed first.
+- First, if the column is either not nullable, or doesn't have a `db_default` set, then make a PR to make it nullable via `null=True`.
+- Then, remove all uses of the column in the codebase in a separate PR; this mostly helps with code cleanliness. This should be merged ahead of the next migration PRs, but we don't need to worry about whether it is deployed first.
 - Make another PR that:
-    - Checks if the column is either not nullable, or doesn't have a `db_default` set. If either of these is true, then make it nullable via `null=True`.
     - If the column is a foreign key, remove the database level foreign key constraint it by setting `db_constraint=False`.
     - Remove the column and in the generated migration use `SafeRemoveField(..., deletion_action=DeletionAction.MOVE_TO_PENDING)` to replace `RemoveField(...)`. This only marks the state for the column as removed.
     - Combine these migrations together to save making multiple deploys

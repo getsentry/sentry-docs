@@ -18,6 +18,7 @@ Currently, `crashpad` is the default on all desktop platforms because it
 * is the primary target for Sentry-developed extensions to the upstream implementation of backend handlers (most of which aren't a particular upside vs. the other backends, but changes to reach parity), including
   * client-side stack traces (this is currently not available on `breakpad`)
   * attachment handling
+  * retry mechanism for failed report uploads
   * HTTP proxy support
   * GCC and MinGW support
   * `FirstChanceHandler` on Windows and extension of its synchronization to support Sentry hooks
@@ -31,15 +32,16 @@ Sentry decided on `crashpad` as the default on all platforms because there are a
 * you cannot package or deploy an additional executable (the `crashpad_handler`)
 * you cannot allow a secondary process to connect via `ptrace` to your application (AWS Lambda, Flatpak-, Snap-Sandboxes)
 * IPC between your process and the `crashpad_handler` is inhibited by security settings or not available in your deployment target
-* your deployment scenario cannot wait for the `crashpad_handler` to finish its work before a shutdown-after-crash (systemd, Docker)
 * you want to distribute your application via the macOS App Store
 * you want to define crash hooks on macOS because there, error handling happens entirely in the `crashpad_handler`, whereas on Linux and Windows, at least the initial handling happens in your process, after which `crashpad_handler` takes over and snapshots the process to send a crash report
 
 In the above cases, if you cannot loosen the requirements of your environment, you have to choose an in-process backend (meaning either `breakpad` or `inproc`).
 
+When your deployment scenario should wait for the `crashpad_handler` to finish its work before a shutdown-after-crash (systemd, Docker), you can enable the option [`crashpad_wait_for_upload`](/platforms/native/configuration/options/#crashpad-wait-for-upload) to delay application shutdown until the upload of the crash report is completed.
+
 ### How do I decide between `breakpad` or `inproc`?
 
-Both backends are comparable in how they differ from `crashpad`. However, there are also considerable differences between the two: 
+Both backends are comparable in how they differ from `crashpad`. However, there are also considerable differences between the two:
 
 * `inproc` only provides the backtrace of the crashing thread. `breakpad` records all threads in the minidump.
 * similar to `crashpad`, `breakpad` uses the lowest level error handling mechanism on each platform (macOS: mach exception ports, Windows: `UnhandledExceptionFilter`, Linux: signal handlers), it does cover a smaller range of errors, though as mentioned above.
@@ -63,7 +65,7 @@ Both backends are comparable in how they differ from `crashpad`. However, there 
 
 If you dive into the details, you will find many trade-offs in the selection of backends. The above merely provides a first overview. Further, the above is only a snapshot of the current capabilities, where some trade-offs are incidental and do not follow a particular strategy or technological necessity. The primary reason for providing multiple backends is to cover as many user scenarios as possible, which requires a bit of insight if you decide to deviate from the defaults.
 
-Sentry suggests the following sequence for your backend evaluations: 
+Sentry suggests the following sequence for your backend evaluations:
 
 * `crashpad` (default)
 * `breakpad`

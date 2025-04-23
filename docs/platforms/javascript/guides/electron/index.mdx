@@ -3,6 +3,7 @@ title: Electron
 description: "Electron is a framework for building desktop applications using JavaScript, HTML, and CSS. Learn how to set it up with Sentry."
 sdk: sentry.javascript.electron
 categories:
+  - javascript
   - desktop
 ---
 
@@ -16,19 +17,75 @@ Select which Sentry features you'd like to install in addition to Error Monitori
 
 ## Install
 
-<OnboardingOptionButtons
-  options={["error-monitoring", "performance", "session-replay"]}
-/>
+<OnboardingOptionButtons options={["error-monitoring", "performance", "session-replay"]} />
 
-<PlatformContent includePath="getting-started-install" />
+```bash {tabTitle:npm}
+npm install @sentry/electron --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/electron
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/electron
+```
 
 ## Configure
 
-<PlatformContent includePath="getting-started-config" />
+You should `init` the SDK in the `main` process and every `renderer` process you spawn.
+
+In the Electron `main` process:
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+});
+```
+
+In the Electron `renderer` process:
+
+```javascript
+import * as Sentry from "@sentry/electron/renderer";
+
+Sentry.init({
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/electron/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  integrations: [
+    // ___PRODUCT_OPTION_START___ performance
+    Sentry.browserTracingIntegration(),
+    // ___PRODUCT_OPTION_END___ performance
+    // ___PRODUCT_OPTION_START___ session-replay
+    Sentry.replayIntegration(),
+    // ___PRODUCT_OPTION_END___ session-replay
+  ],
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ session-replay
+
+  // Capture Replay for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ session-replay
+});
+```
 
 Once configured, all unhandled exceptions and native crashes are automatically captured by Sentry.
 
-**Important:** Note your DSN. The _DSN_ (Data Source Name) tells the SDK where to send events. If you forget it, view _Settings -> Projects -> Client Keys (DSN)_ in the Sentry web UI.
+**Important:** Note your DSN. The DSN (Data Source Name) tells the SDK where to send events. If you forget it, view _Settings -> Projects -> Client Keys (DSN)_ in the Sentry web UI.
 
 ## Wizard
 
@@ -231,17 +288,20 @@ Information_](/cli/dif/) for the upload process.
 
 ### Child Processes
 
-The SDK relies on the [Electron CrashReporter](https://electronjs.org/docs/api/crash-reporter) to generate the crash dumps. To receive crash reports for child processes, you need to make sure the crash reporter is activated by either the SDK or manually (see [below](/platforms/javascript/guides/electron/#electron-native-manual)).
+The SDK relies on the [Electron crashReporter](https://electronjs.org/docs/api/crash-reporter) to capture crash dumps. To receive crash reports for child processes, you need to make sure the crash reporter is activated by either the SDK or manually (see [below](/platforms/javascript/guides/electron/#manual-crash-reporting)).
 
-An exception to this is _macOS_, where the crash reporter only needs to be started in the `main` process and watches all its child processes. The SDK already takes care of this difference, so there is no need to manually disable `enableNative`.
+Once the crash reporter is active, the SDK will automatically capture native
+crashes for the following processes:
 
-For custom child processes, especially ones not written in JavaScript, you need to integrate a library that can generate Minidumps. These are most notably [Crashpad](https://chromium.googlesource.com/crashpad/crashpad/) and [Breakpad](https://chromium.googlesource.com/breakpad/breakpad). Please refer to their respective documentation on how to build and integrate them. Configure them with the following upload URL:
+|                             | `event.process` tag | macOS | Windows | Linux          |
+|-----------------------------|---------------------|-------|---------|----------------|
+| Electron `main` process     | `browser`           | ✓     | ✓       | ✓              |
+| Electron `renderer` process | `renderer`          | ✓     | ✓       | ✓              |
+| Electron `utilityProcess`   | `utility`           | ✓     | ✓       | ✓ <sup>1</sup> |
+| `child_process.fork`        | `node`              | ✓     | ✓       |                |
+| `child_process.exec/spawn`  | `unknown`           | ✓     |         |                |
 
-```text
-___MINIDUMP_URL___
-```
-
-It currently not possible create breadcrumbs or other event meta data from native code. This has to happen in JavaScript. Support for this is planned in future releases.
+<sup>1</sup> Not working with Electron v29.4.6.
 
 ### Manual Crash Reporting
 

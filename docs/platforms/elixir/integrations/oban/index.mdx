@@ -18,16 +18,16 @@ This integration is built into the Sentry SDK starting with *v10.2.0*. It suppor
 
 You can configure the Oban integration in your Sentry configuration, under the `:integrations` key:
 
-```elixir {filename:config/config.exs}
+```elixir {filename:config/config.exs} {diff}
 config :sentry,
   # ...,
   integrations: [
-    oban: [
-      # Capture errors:
-      capture_errors: true,
-      # Monitor cron jobs:
-      cron: [enabled: true]
-    ]
++    oban: [
++      # Capture errors:
++      capture_errors: true,
++      # Monitor cron jobs:
++      cron: [enabled: true]
++    ]
   ]
 ```
 
@@ -56,3 +56,27 @@ You can use this for more complex filtering logic based on number of attempts an
 
 See <Link to="/platforms/elixir/configuration/filtering">the documentation for event callbacks</Link>.
 </Alert>
+
+### Customizing Job Check-In Information
+
+If you want to customize the information that is sent to Sentry when a job checks in, you can do so by providing a function that takes the job and returns a map of metadata.
+
+```elixir {filename:lib/my_app/my_worker.ex}
+defmodule MyApp.MyWorker do
+  use Oban.Worker
+
+  @behaviour Sentry.Integrations.Oban.Cron
+
+  @impl Oban.Worker
+  def perform(args) do
+    # ...
+  end
+
+  @impl Sentry.Integrations.Oban.Cron
+  def sentry_check_in_configuration(job) do
+    [monitor_slug: "custom-slug-#{job.id}"]
+  end
+end
+```
+
+This is available since v10.9.0 of the SDK.

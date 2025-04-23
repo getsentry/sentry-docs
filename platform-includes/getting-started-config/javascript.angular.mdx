@@ -1,6 +1,6 @@
 Once this is done, Sentry's Angular SDK captures all unhandled exceptions and transactions.
 
-```typescript {tabTitle: App Config} {filename: main.ts} {5-31} {"onboardingOptions": {"performance": "10-13, 18-25", "session-replay": "14-16, 26-30"}}
+```typescript {tabTitle: App Config} {filename: main.ts} {5-39}
 import { bootstrapApplication } from "@angular/platform-browser";
 import { appConfig } from "./app/app.config";
 import { AppComponent } from "./app/app.component";
@@ -9,15 +9,25 @@ import * as Sentry from "@sentry/angular";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/angular/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  
   integrations: [
+    // ___PRODUCT_OPTION_START___ performance
     // Registers and configures the Tracing integration,
     // which automatically instruments your application to monitor its
     // performance, including custom Angular routing instrumentation
     Sentry.browserTracingIntegration(),
+    // ___PRODUCT_OPTION_END___ performance
+    // ___PRODUCT_OPTION_START___ session-replay
     // Registers the Replay integration,
     // which automatically captures Session Replays
     Sentry.replayIntegration(),
+    // ___PRODUCT_OPTION_END___ session-replay
   ],
+  // ___PRODUCT_OPTION_START___ performance
 
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for tracing.
@@ -28,6 +38,8 @@ Sentry.init({
 
   // Set `tracePropagationTargets` to control for which URLs trace propagation should be enabled
   tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ session-replay
 
   // Capture Replay for 10% of all sessions,
   // plus for 100% of sessions with an error
@@ -35,6 +47,7 @@ Sentry.init({
   // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ session-replay
 });
 
 bootstrapApplication(AppComponent, appConfig).catch((err) =>
@@ -42,7 +55,7 @@ bootstrapApplication(AppComponent, appConfig).catch((err) =>
 );
 ```
 
-```typescript {tabTitle: NGModule Config} {filename: main.ts} {4-30} {"onboardingOptions": {"performance": "9-12, 17-24", "session-replay": "13-15, 25-29"}}
+```typescript {tabTitle: NGModule Config} {filename: main.ts}
 import { platformBrowserDynamic } from "@angular/platform-browser-dynamic";
 import { AppModule } from "./app/app.module";
 
@@ -50,15 +63,25 @@ import * as Sentry from "@sentry/angular";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/angular/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  
   integrations: [
+    // ___PRODUCT_OPTION_START___ performance
     // Registers and configures the Tracing integration,
     // which automatically instruments your application to monitor its
     // performance, including custom Angular routing instrumentation
     Sentry.browserTracingIntegration(),
+    // ___PRODUCT_OPTION_END___ performance
+    // ___PRODUCT_OPTION_START___ session-replay
     // Registers the Replay integration,
     // which automatically captures Session Replays
     Sentry.replayIntegration(),
+    // ___PRODUCT_OPTION_END___ session-replay
   ],
+  // ___PRODUCT_OPTION_START___ performance
 
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for tracing.
@@ -69,6 +92,8 @@ Sentry.init({
 
   // Set `tracePropagationTargets` to control for which URLs trace propagation should be enabled
   tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ session-replay
 
   // Capture Replay for 10% of all sessions,
   // plus for 100% of sessions with an error
@@ -76,6 +101,7 @@ Sentry.init({
   // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ session-replay
 });
 
 platformBrowserDynamic()
@@ -87,7 +113,7 @@ platformBrowserDynamic()
 
 The Sentry Angular SDK exports a couple of Angular providers that are necessary to fully instrument your application. We recommend registering them in your `app.config.ts` or main `app.module.ts`:
 
-```typescript {tabTitle: App Config (Angular 19+)} {filename: app.config.ts} {9, 14-24} {"onboardingOptions": {"performance": "18-24"}}
+```typescript {tabTitle: App Config (Angular 19+)} {filename: app.config.ts} {9, 14-24}
 import {
   ApplicationConfig,
   ErrorHandler,
@@ -105,6 +131,7 @@ export const appConfig: ApplicationConfig = {
       provide: ErrorHandler,
       useValue: Sentry.createErrorHandler(),
     },
+    // ___PRODUCT_OPTION_START___ performance
     {
       provide: Sentry.TraceService,
       deps: [Router],
@@ -112,11 +139,12 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(() => {
       inject(TraceService);
     }),
+    // ___PRODUCT_OPTION_END___ performance
   ],
 };
 ```
 
-```typescript {tabTitle: App Config (Angular <=18)} {filename: app.config.ts} {8, 13-26} {"onboardingOptions": {"performance": "17-26"}}
+```typescript {tabTitle: App Config (Angular <=18)} {filename: app.config.ts} {8, 13-26}
 import {
   APP_INITIALIZER,
   ApplicationConfig,
@@ -133,6 +161,7 @@ export const appConfig: ApplicationConfig = {
       provide: ErrorHandler,
       useValue: Sentry.createErrorHandler(),
     },
+    // ___PRODUCT_OPTION_START___ performance
     {
       provide: Sentry.TraceService,
       deps: [Router],
@@ -143,11 +172,12 @@ export const appConfig: ApplicationConfig = {
       deps: [Sentry.TraceService],
       multi: true,
     },
+    // ___PRODUCT_OPTION_END___ performance
   ],
 };
 ```
 
-```typescript {tabTitle: NGModule Config} {filename: app.module.ts} {4, 9-22} {"onboardingOptions": {"performance": "13-22"}}
+```typescript {tabTitle: NGModule Config} {filename: app.module.ts} {4, 9-22}
 import { APP_INITIALIZER, ErrorHandler, NgModule } from "@angular/core";
 import { Router } from "@angular/router";
 
@@ -160,6 +190,7 @@ import * as Sentry from "@sentry/angular";
       provide: ErrorHandler,
       useValue: Sentry.createErrorHandler(),
     },
+    // ___PRODUCT_OPTION_START___ performance
     {
       provide: Sentry.TraceService,
       deps: [Router],
@@ -170,6 +201,7 @@ import * as Sentry from "@sentry/angular";
       deps: [Sentry.TraceService],
       multi: true,
     },
+    // ___PRODUCT_OPTION_END___ performance
   ],
   // ...
 })

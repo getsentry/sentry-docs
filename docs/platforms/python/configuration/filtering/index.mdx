@@ -18,7 +18,7 @@ Configure your SDK to filter error events by using the <PlatformIdentifier name=
 
 The `before_send` callback allows you to modify the event payload before the SDK sends the event to Sentry. You can also stop the event from being sent by returning `None`.
 
-The callback receives two arguments: the event payload and a [hint](#event-hints). The callback can return either the event payload to send to Sentry or `None` if the event should be dropped.
+The callback receives two arguments: the event payload and a [hint](#event-hints). The corresponding `Event` and `Hint` types can be imported from `sentry_sdk.types` for better introspection into what fields are available. The callback can return either the event payload to send to Sentry or `None` if the event should be dropped.
 
 Any modifications to the event payload done in the callback, including adding data to the event and modifying or deleting existing event fields, will be reflected in Sentry.
 
@@ -30,7 +30,7 @@ Suppose that you wish prevent all errors of type `ZeroDivisionError` from being 
 import sentry_sdk
 from sentry_sdk.types import Event, Hint
 
-def my_before_send(event: Event, hint: Hint) -> Event | None:
+def before_send(event: Event, hint: Hint) -> Event | None:
     # Filter out all ZeroDivisionError events.
     # Note that the exception type is available in the hint,
     # but we should handle the case where the exception info
@@ -48,7 +48,7 @@ def my_before_send(event: Event, hint: Hint) -> Event | None:
 sentry_sdk.init(
     # ...
 
-    before_send=my_before_send,
+    before_send=before_send,
 )
 ```
 

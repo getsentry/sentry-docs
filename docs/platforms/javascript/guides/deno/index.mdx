@@ -1,0 +1,102 @@
+---
+title: Deno
+sdk: sentry.javascript.deno
+categories:
+  - javascript
+  - server
+  - server-edge
+  - serverless
+---
+
+<Alert>
+
+  The Deno SDK is currently in Beta.
+
+</Alert>
+
+The minimum supported Deno version is 2.
+
+<PlatformContent includePath="getting-started-prerequisites" />
+
+## Configure
+
+Configuration should happen as early as possible in your application's lifecycle.
+
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+<OnboardingOptionButtons options={["error-monitoring", "performance"]} />
+
+```javascript {tabTitle: Deno}
+import * as Sentry from "npm:@sentry/deno";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/deno/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+});
+```
+
+```javascript {tabTitle: npm}
+import * as Sentry from "@sentry/deno";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+});
+```
+To ensure the SDK can send events, you should enable network access for your
+ingestion domain:
+
+```bash
+deno run --allow-net=___ORG_INGEST_DOMAIN___ index.ts
+```
+
+## Allow access to your source files
+
+To ensure the SDK can include your source code in stack traces, you should enable read access for your source files:
+
+```bash
+deno run --allow-read=./src index.ts
+```
+
+## Verify
+
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+
+Verify your setup by adding the following snippet anywhere in your code and running it:
+
+```javascript
+setTimeout(() => {
+  throw new Error();
+});
+```
+
+<Alert>
+
+Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+
+</Alert>
+
+To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.

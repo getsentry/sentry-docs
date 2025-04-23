@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
+import {cache} from 'react';
 import matter from 'gray-matter';
 import {s} from 'hastscript';
 import yaml from 'js-yaml';
@@ -455,6 +456,10 @@ export async function getFileBySlug(slug: string) {
 
       return options;
     },
+  }).catch(e => {
+    // eslint-disable-next-line no-console
+    console.error('Error occurred during MDX compilation:', e.errors);
+    throw e;
   });
 
   const {code, frontmatter} = result;
@@ -474,3 +479,10 @@ export async function getFileBySlug(slug: string) {
     },
   };
 }
+
+/**
+ * Cache the result of {@link getFileBySlug}.
+ *
+ * This is useful for performance when rendering the same file multiple times.
+ */
+export const getFileBySlugWithCache = cache(getFileBySlug);
