@@ -15,6 +15,38 @@ Sentry Python SDK `3.x` only supports Python 3.7 and higher. If you're on an old
 
 ## API Changes
 
-### Metrics
+### Custom Tracing Instrumentation
+
+Tracing in the Sentry Python SDK `3.x` is powered by OpenTelemetry in the background, which also means we're moving away from the Sentry-specific concept of transactions. `sentry_sdk.start_transaction()` is now deprecated in favor of `sentry_sdk.start_span()`.
+
+```python diff
+- with sentry_sdk.start_transaction():
++ with sentry_sdk.start_span():
+    ...
+```
+
+Any spans without a parent span will become transactions by default. If you want to avoid promoting a span without a parent to a transaction, you can pass the `only_if_parent=True` keyword argument to `sentry_sdk.start_span()`.
+
+`sentry_sdk.start_transaction()` and `sentry_sdk.start_span()` no longer take the following arguments: `trace_id`, `baggage`, `span_id`, `parent_span_id`. Use `sentry_sdk.continue_trace()` for propagating trace data.
+
+`sentry_sdk.continue_trace()` no longer returns a `Transaction` and is now a context manager. To continue a trace from headers or environment variables, start a new span inside `sentry_sdk.continue_trace()`:
+
+```python diff
+- transaction = sentry_sdk.continue_trace(...)
+- with sentry_sdk.start_transaction(transaction=transaction):
+-     ...
++ with sentry_sdk.continue_trace(...):
++     with sentry_sdk.start_span(...):
++         ...
+```
+
+## Integrations
+
+
+## Metrics
 
 The `sentry_sdk.metrics` API doesn't exist anymore in SDK `3.x` as the [metrics beta has come to an end](https://sentry.zendesk.com/hc/en-us/articles/26369339769883-Metrics-Beta-Coming-to-an-End). The associated experimental options `enable_metrics`, `before_emit_metric` and `metric_code_locations` have been removed as well.
+
+## Internals
+
+There is no concept of a hub anymore and all APIs and attributes that were connected to hubs have been removed.
