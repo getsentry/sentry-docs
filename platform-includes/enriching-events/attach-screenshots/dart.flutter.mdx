@@ -21,33 +21,38 @@ Requires SDK version `8.11.0` or higher.
 
 </Alert>
 
-Capturing screenshots on Flutter is limited to once every 2 seconds by default to minimize performance impact. While this debounce interval is fixed, you can override individual capture decisions by implementing the `beforeCaptureScreenshot` option in your `SentryFlutterOptions`.
+By default, Flutter limits screenshot captures to once every 2 seconds to minimize performance impact. While this debounce interval cannot be changed, you can customize capture behavior by implementing the `beforeCaptureScreenshot` callback in your `SentryFlutterOptions`.
 
-The `BeforeCaptureCallback` also allows you to customize the behavior based on event data, so you can decide when to capture a screenshot and when not to. For example, you can decide to only capture screenshots of fatal events:
+This callback gives you fine-grained control over screenshot captures based on event and hint data, allowing you to implement conditional logic.
 
-```flutter {2-9}
+<Note>
+
+The `debounce` parameter is `true` if the debounce is active.
+If you want to capture screenshots regardless of the debounce, you ignore the `debounce` parameter.
+
+</Note>
+
+```dart {tabTitle: 'Respect debounce'} {2-9}
 await SentryFlutter.init((options) {
   options.beforeCaptureScreenshot = (event, hint, debounce) async {
     // If debounce is active, skip capturing
     if (debounce) {
       return false;
     }
-    // Capture if it's a fatal event
+    // Capture screenshot if it's a fatal event
     return event.level == SentryLevel.fatal;
   };
 });
 ```
 
-## Redact Screenshots via `masking`
-
-The masking feature is by default disabled for Screenshots. To enable masking, use the `options.experimental.privacy` parameter.
-
-<Alert level="warning">
-  Modifying this parameter will also affect `masking` for{" "}
-  <PlatformLink to="/session-replay/">`Session Replay`</PlatformLink>.
-</Alert>
-
-<PlatformContent includePath="replay/privacy-configuration" />
+```dart {tabTitle: 'Ignore debounce'} {2-4}
+await SentryFlutter.init((options) {
+  options.beforeCaptureScreenshot = (event, hint, debounce) async {
+    // Capture screenshot if it's a fatal event regardless of debounce
+    return event.level == SentryLevel.fatal;
+  };
+});
+```
 
 ## Filtering Screenshots
 
@@ -74,3 +79,15 @@ await SentryFlutter.init(
   ),
 );
 ```
+
+## Redact Screenshots via `masking`
+
+The masking feature is enabled by default for screenshots.
+If you want to disable or configure the masking feature, you can do so by adjusting the `options.experimental.privacy` option.
+
+<Alert level="warning">
+  Modifying this parameter will also affect `masking` for{" "}
+  <PlatformLink to="/session-replay/">`Session Replay`</PlatformLink>.
+</Alert>
+
+<PlatformContent includePath="replay/privacy-configuration" />
