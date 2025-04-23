@@ -13,9 +13,11 @@ Sentry Python SDK `3.x` only supports Python 3.7 and higher. If you're on an old
 - Python 2.7-3.5: SDK `1.x`
 - Python 3.6: SDK `2.x`
 
-## API Changes
+## Configuration
 
-### Custom Tracing Instrumentation
+The default of the `traces_sample_rate` option was changed from `None` to `0`. This means that even if you don't provide a custom `traces_sample_rate`, the SDK will, at minimum, at least propagate incoming tracing information, even though it will not sample any spans.
+
+## Tracing API
 
 Tracing in the Sentry Python SDK `3.x` is powered by OpenTelemetry in the background, which also means we're moving away from the Sentry-specific concept of transactions. `sentry_sdk.start_transaction()` is now deprecated in favor of `sentry_sdk.start_span()`.
 
@@ -32,15 +34,69 @@ Any spans without a parent span will become transactions by default. If you want
 `sentry_sdk.continue_trace()` no longer returns a `Transaction` and is now a context manager. To continue a trace from headers or environment variables, start a new span inside `sentry_sdk.continue_trace()`:
 
 ```python diff
-- transaction = sentry_sdk.continue_trace(...)
+- transaction = sentry_sdk.continue_trace({...})
 - with sentry_sdk.start_transaction(transaction=transaction):
 -     ...
-+ with sentry_sdk.continue_trace(...):
-+     with sentry_sdk.start_span(...):
++ with sentry_sdk.continue_trace({...}):
++     with sentry_sdk.start_span():
 +         ...
 ```
 
+## Span Data
+
+In OpenTelemetry, there is no concept of separate categories of data on a span: everything is simply a span attribute. This is a world the Sentry SDK is moving towards as well. We deprecated `set_data()` and added a new span method called `set_attribute()`:
+
+```python diff
+with sentry_sdk.start_span(...) as span:
+-    span.set_data("my_attribute", "my_value")
++    span.set_attribute("my_attribute", "my_value")
+```
+
+You can also set attributes directly when creating the span. This has the advantage that these initial attributes will be accessible in the sampling context in your `traces_sampler`/`profiles_sampler` (see also the [Sampling section](#Sampling)).
+
+```python
+with sentry_sdk.start_span(attributes={"my_attribute": "my_value"}):
+    ...
+```
+
+<Alert title="Important" level="warning">
+
+There are important type restrictions to consider when setting attributes on a span via `span.set_attribute()` and `start_span(attributes={...})`. The keys must be non-empty strings and the values can only be several primitive types (excluding `None`) or a list of a single primitive type. See [the OpenTelemetry specification](https://opentelemetry.io/docs/specs/otel/common/#attribute) for the details.
+
+</Alert>
+
+## Sampling
+
+It is no longer possible to change the sampling decision of a span by setting `span.sampled` directly. Please use a custom `traces_sampler` for determining whether a root span should be sampled.
+
+The `sampling_context` argument of `traces_sampler` and `profiles_sampler` has changed considerably for spans coming from our auto-instrumented integrations. As a consequence of using OpenTelemetry under the hood, spans can only carry specific, simple types of data, preventing us from making custom objects, like for example the `Request` object for several web frameworks, accessible on the span. See the [migration guide in the repository](https://github.com/getsentry/sentry-python/blob/master/MIGRATION_GUIDE.md) for details on what data is available.
+
+The ability to set `custom_sampling_context` on `start_transaction` was removed. If there is custom data that you want to have accessible in the `sampling_context` of a `traces_sampler` or `profiles_sampler`, set it on the span via the `attributes` argument, as all span attributes are now included in the `sampling_context` by default:
+
+```python diff
+- with start_transaction(custom_sampling_context={"custom_attribute": "custom_value"}):
++ with start_span(attributes={"custom_attribute": "custom_value"}) as span:
+    # custom_attribute will now be accessible in the sampling context
+    # of your traces_sampler/profiles_sampler
+    ...
+```
+
+
 ## Integrations
+
+### Logging
+
+The logging integration which implements out-of-the-box support for the Python standard library `logging` framework doesn't capture error logs as events anymore by default. The original behavior can still be achieved by providing a custom `event_level` to the `LoggingIntegration`:
+
+```python
+sentry_sdk.init(
+    integrations=[
+        # capture error, critical, exception logs
+        # and send them to Sentry as errors
+        LoggingIntegration(event_level="ERROR"),
+    ]
+)
+```
 
 
 ## Metrics
