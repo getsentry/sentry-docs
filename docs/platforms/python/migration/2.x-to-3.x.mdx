@@ -22,19 +22,19 @@ The default of the `traces_sample_rate` option was changed from `None` to `0`. T
 The `enable_tracing` option was removed. Use [`traces_sample_rate`](/platforms/python/configuration/options/#traces_sample_rate) directly, or configure a [`traces_sampler`](/platforms/python/configuration/options/#traces_sampler) for more fine-grained control over which spans should be sampled.
 
 ```python diff
-sentry_sdk.init(
--   enable_tracing=True,
-+   traces_sample_rate=1.0,
+  sentry_sdk.init(
+-     enable_tracing=True,
++     traces_sample_rate=1.0,
 )
 ```
 
 The deprecated `propagate_traces` option was removed. Use [`trace_propagation_targets`](/platforms/python/configuration/options/#trace_propagation_targets) instead.
 
 ```python diff
-sentry_sdk.init(
-    # don't propagate trace info downstream
--   propagate_traces=False,
-+   trace_propagation_targets=[],
+  sentry_sdk.init(
+      # don't propagate trace info downstream
+-     propagate_traces=False,
++     trace_propagation_targets=[],
 )
 ```
 
@@ -43,13 +43,13 @@ Note that this only affects the global SDK option. The `propagate_traces` option
 The `profiles_sample_rate` and `profiler_mode` options previously accessible via `_experiments` have been removed. They're superceded by top-level options of the same name:
 
 ```python diff
-sentry_sdk.init(
--   _experiments={
--       "profiles_sample_rate": 1.0,
--       "profiler_mode": "thread",
--   },
-+   profiles_sample_rate=1.0,
-+   profiler_mode="thread",
+  sentry_sdk.init(
+-     _experiments={
+-         "profiles_sample_rate": 1.0,
+-         "profiler_mode": "thread",
+-     },
++     profiles_sample_rate=1.0,
++     profiler_mode="thread",
 )
 ```
 
@@ -60,7 +60,7 @@ Tracing in the Sentry Python SDK `3.x` is powered by OpenTelemetry in the backgr
 ```python diff
 - with sentry_sdk.start_transaction():
 + with sentry_sdk.start_span():
-    ...
+      ...
 ```
 
 Any spans without a parent span will become transactions by default. If you want to avoid promoting a span without a parent to a transaction, you can pass the `only_if_parent=True` keyword argument to `sentry_sdk.start_span()`.
@@ -86,9 +86,9 @@ The functions `continue_from_headers`, `continue_from_environ` and `from_tracepa
 In OpenTelemetry, there is no concept of separate categories of data on a span: everything is simply a span attribute. This is a world the Sentry SDK is moving towards as well. We deprecated `set_data()` and added a new span method called `set_attribute()`:
 
 ```python diff
-with sentry_sdk.start_span(...) as span:
--    span.set_data("my_attribute", "my_value")
-+    span.set_attribute("my_attribute", "my_value")
+  with sentry_sdk.start_span(...) as span:
+-      span.set_data("my_attribute", "my_value")
++      span.set_attribute("my_attribute", "my_value")
 ```
 
 You can also set attributes directly when creating the span. This has the advantage that these initial attributes will be accessible in the sampling context in your `traces_sampler`/`profiles_sampler` (see also the [Sampling section](#sampling)).
@@ -129,9 +129,9 @@ The ability to set `custom_sampling_context` on `start_transaction` was removed.
 ```python diff
 - with start_transaction(custom_sampling_context={"custom_attribute": "custom_value"}):
 + with start_span(attributes={"custom_attribute": "custom_value"}) as span:
-    # custom_attribute will now be accessible in the sampling context
-    # of your traces_sampler/profiles_sampler
-    ...
+      # custom_attribute will now be accessible in the sampling context
+      # of your traces_sampler/profiles_sampler
+      ...
 ```
 
 <Alert title="Span attribute type restrictions" level="warning">
