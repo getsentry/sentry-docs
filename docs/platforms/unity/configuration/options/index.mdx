@@ -32,7 +32,7 @@ By default, the SDK reports `editor` when running inside the Unity Editor. Other
 
 <ConfigKey name="release">
 
-Sets the release. Some SDKs will try to automatically configure a release out of the box but it's a better idea to manually set it, guaranteeing that the release is in sync with your deploy integrations or source map uploads. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
+Sets the release. The SDKk will try to automatically configure a release out of the box. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
 
 By default the SDK will read from `Application.productName` and `Application.version` to create the release in the format `$"{Application.productName}@{Application.version}".`
 
@@ -64,7 +64,7 @@ For app models that don't have a console to print to, you can <PlatformLink to="
 
 A list of string prefixes of module names that belong to the app. This option takes precedence over `in-app-exclude`.
 
-Sentry differentiates stack frames that are directly related to your application ("in application") from stack frames that come from other packages such as the standard library, frameworks, or other dependencies. The application package is automatically marked as `inApp`. The difference is visible in [sentry.io](https://sentry.io), where only the "in application" frames are displayed by default.
+Sentry differentiates stack frames that are directly related to your game ("in application") from stack frames that come from other packages such as the standard library, third party plugins, or other dependencies. The game's code that is part of the 'Assembly-CSharp' is automatically marked as `inApp`. The difference is visible in [sentry.io](https://sentry.io), where only the "in application" frames are displayed by default.
 
 </ConfigKey>
 
@@ -93,22 +93,6 @@ This variable controls the total amount of breadcrumbs that should be captured. 
 When enabled, stack traces are automatically attached to all messages logged. Stack traces are always attached to exceptions; however, when this option is set, stack traces are also sent with messages. This option, for instance, means that stack traces appear next to all log messages.
 
 Grouping in Sentry is different for events with stack traces and without. As a result, you will get new groups as you enable or disable this flag for certain events.
-
-</ConfigKey>
-
-<ConfigKey name="stack-trace-mode">
-
-- Original - Default .NET stack trace format.
-- Enhanced - Include `async`, return type, arguments, and more.
-
-Before version 3.0.0 of the Sentry SDK for .NET, there was no special treatment for the stack trace. Sentry reported what .NET made available at runtime.
-This behavior now called `StackTraceMode.Original`. With the introduction of 3.0, the new default mode is `Enhanced`.
-
-<Alert>
-
-Changing this value will affect issue grouping since the frame significantly changes shape.
-
-</Alert>
 
 </ConfigKey>
 
@@ -145,16 +129,7 @@ Once enabled, this feature automatically captures HTTP client errors, like bad r
 
 <ConfigKey name="is-global-mode-enabled">
 
-Specifies whether to use global scope management mode. Should be `true` for client applications and `false` for server applications.
-
-Example scenarios where it should be explicitly set to true:
-
-- Universal Windows platform (UWP) applications
-- WinForms applications
-- Windows Presentation Foundation (WPF) applications
-- Single user console applications
-
-Defaults to `false`, unless in Blazor WASM, MAUI, Unity, or Xamarin where the default is `true`.
+Defaults to `true`. Specifies whether to use global scope management mode. Should be `true` for client applications and `false` for server applications.
 
 </ConfigKey>
 
@@ -185,8 +160,6 @@ If you enable this option, be sure to manually remove what you don't want to sen
 <ConfigKey name="server-name">
 
 This option can be used to supply a server name. When provided, the name of the server is sent along and persisted in the event. For many integrations, the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server.
-
-For ASP.NET and ASP.NET Core applications, the value will default to the server's name. For other application types, the value will default to the computer's name only when the `SendDefaultPii` is set to `true`, because the computer's name can be considered personally identifiable information (PII) in the case of a desktop or mobile application.
 
 </ConfigKey>
 
