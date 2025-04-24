@@ -21,18 +21,18 @@ import sentryhttpclient "github.com/getsentry/sentry-go/httpclient"
 
 func main() {
   // need to have tracing enabled
-	_ = sentry.Init(sentry.ClientOptions{
-		Dsn:           "___PUBLIC_DSN___",
-		EnableTracing:    true,
-		TracesSampleRate: 1.0,
-	})
+  _ = sentry.Init(sentry.ClientOptions{
+  	Dsn:           "___PUBLIC_DSN___",
+  	EnableTracing:    true,
+  	TracesSampleRate: 1.0,
+  })
 
-	client := sentryhttpclient.SentryHTTPClient
-	response, err := client.Do(request)
-	if err != nil {
-		return
-	}
-	fmt.Println(response)
+  client := sentryhttpclient.SentryHTTPClient
+  response, err := client.Do(request)
+  if err != nil {
+  	return
+  }
+  fmt.Println(response)
 }
 ```
 
@@ -44,7 +44,7 @@ If you need to use your custom HTTP client, all you need to do is use the `Sentr
 import sentryhttpclient "github.com/getsentry/sentry-go/httpclient"
 
 customClient := &http.Client{
-	Transport: sentryhttpclient.NewSentryRoundTripper(nil),
+  Transport: sentryhttpclient.NewSentryRoundTripper(nil),
 }
 resp, err := customClient.Do(req)
 ```
@@ -59,8 +59,8 @@ You can further control when sentry tracing headers are attached by using `WithT
 import sentryhttpclient "github.com/getsentry/sentry-go/httpclient"
 
 roundTripper := sentryhttpclient.NewSentryRoundTripper(
-	http.DefaultTransport,
-	sentryhttpclient.WithTracePropagationTargets([]string{"internal.service.local", "api.example.com"}),
+  http.DefaultTransport,
+  sentryhttpclient.WithTracePropagationTargets([]string{"internal.service.local", "api.example.com"}),
 )
 
 client := &http.Client{
@@ -83,20 +83,20 @@ Refer to [HTTP Span Data Conventions](https://develop.sentry.dev/sdk/performance
 Here is how to manually instrument HTTP requests:
 
 ```go
-	var span sentry.Span
-	parentSpan := sentry.SpanFromContext(ctx)
-	if parentSpan != nil {
-		span = *parentSpan.StartChild("http.client", sentry.WithTransactionName("transaction-name"), sentry.WithDescription("description"))
-	}
-	client := &http.Client{}
-	resp, err := client.Get("https://example.com")
-	if err != nil {
-		return
-	}
-	span.SetData("http.query", "GET https://example.com/")
-	span.SetData("http.request.method", "GET")
-	span.SetData("http.response.status_code", resp.StatusCode)
-	span.SetData("http.response_content_length", resp.ContentLength)
+var span sentry.Span
+parentSpan := sentry.SpanFromContext(ctx)
+if parentSpan != nil {
+  span = *parentSpan.StartChild("http.client", sentry.WithTransactionName("transaction-name"), sentry.WithDescription("description"))
+}
+client := &http.Client{}
+resp, err := client.Get("https://example.com")
+if err != nil {
+  return
+}
+span.SetData("http.query", "GET https://example.com/")
+span.SetData("http.request.method", "GET")
+span.SetData("http.response.status_code", resp.StatusCode)
+span.SetData("http.response_content_length", resp.ContentLength)
 ```
 
 
