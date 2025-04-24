@@ -4,7 +4,7 @@ sidebar_order: 8997
 description: "Learn about migrating from sentry-python 2.x to 3.x"
 ---
 
-This guide describes the common patterns involved in migrating to version `3.x` of the `sentry-python` SDK. For the full list of changes, check out the [detailed migration guide in the repository](https://github.com/getsentry/sentry-python/blob/master/MIGRATION_GUIDE.md).
+This guide describes the common patterns involved in migrating to version `3.x` of the `sentry-python` SDK. For the full list of changes, check out the [detailed migration guide in the repository](https://github.com/getsentry/sentry-python/blob/potel-base/MIGRATION_GUIDE.md).
 
 
 ## Python Version Support
@@ -19,12 +19,12 @@ Sentry Python SDK `3.x` only supports Python 3.7 and higher. If you're on an old
 
 The default of the `traces_sample_rate` option was changed from `None` to `0`. This means that even if you don't provide a custom `traces_sample_rate`, the SDK will, at minimum, at least continue incoming traces.
 
-The `enable_tracing` option was removed. Use [`traces_sample_rate`](/platforms/python/configuration/options/#traces_sample_rate) directly, or configure a [`traces_sampler`](https://docs.sentry.io/platforms/python/configuration/options/#traces_sampler) for more fine-grained tuning.
+The `enable_tracing` option was removed. Use [`traces_sample_rate`](/platforms/python/configuration/options/#traces_sample_rate) directly, or configure a [`traces_sampler`](/platforms/python/configuration/options/#traces_sampler) for more fine-grained control over which spans should be sampled.
 
 ```python diff
 sentry_sdk.init(
--     enable_tracing=True,
-+     traces_sample_rate=1.0,
+-   enable_tracing=True,
++   traces_sample_rate=1.0,
 )
 ```
 
@@ -33,23 +33,23 @@ The deprecated `propagate_traces` option was removed. Use [`trace_propagation_ta
 ```python diff
 sentry_sdk.init(
     # don't propagate trace info downstream
--     propagate_traces=False,
-+     trace_propagation_targets=[],
+-   propagate_traces=False,
++   trace_propagation_targets=[],
 )
 ```
 
 Note that this only affects the global SDK option. The `propagate_traces` option of the Celery integration remains unchanged.
 
-The `profiles_sample_rate` and `profiler_more` options previously accessible via `_experiments` have been removed. They're superceded by top-level options of the same name:
+The `profiles_sample_rate` and `profiler_mode` options previously accessible via `_experiments` have been removed. They're superceded by top-level options of the same name:
 
 ```python diff
 sentry_sdk.init(
--     _experiments={
--         "profiles_sample_rate": 1.0,
--         "profiler_mode": "thread",
--     },
-+     profiles_sample_rate=1.0,
-+     profiler_mode="thread",
+-   _experiments={
+-       "profiles_sample_rate": 1.0,
+-       "profiler_mode": "thread",
+-   },
++   profiles_sample_rate=1.0,
++   profiler_mode="thread",
 )
 ```
 
@@ -91,7 +91,7 @@ with sentry_sdk.start_span(...) as span:
 +    span.set_attribute("my_attribute", "my_value")
 ```
 
-You can also set attributes directly when creating the span. This has the advantage that these initial attributes will be accessible in the sampling context in your `traces_sampler`/`profiles_sampler` (see also the [Sampling section](#Sampling)).
+You can also set attributes directly when creating the span. This has the advantage that these initial attributes will be accessible in the sampling context in your `traces_sampler`/`profiles_sampler` (see also the [Sampling section](#sampling)).
 
 ```python
 with sentry_sdk.start_span(attributes={"my_attribute": "my_value"}):
@@ -109,7 +109,7 @@ Note that since the SDK is now exclusively using span attributes, this restricti
 
 ## Sampling
 
-It's no longer possible to change the sampling decision of a span by setting `span.sampled` directly after the span has been created. Please use either a custom `traces_sampler` (preferred) or the `sampled` argument to `start_span()` for determining whether a span should be sampled.
+It's no longer possible to change the sampling decision of a span by setting `span.sampled` directly after the span has been created. Use either a custom `traces_sampler` (preferred) or the `sampled` argument to `start_span()` for determining whether a span should be sampled.
 
 ```python
 with sentry_sdk.start_span(sampled=True) as span:
@@ -122,7 +122,7 @@ Both `traces_sampler` and the `sampled` argument will only influence whether roo
 
 </Alert>
 
-The `sampling_context` argument of `traces_sampler` and `profiles_sampler` has changed considerably for spans coming from our auto-instrumented integrations. As a consequence of using OpenTelemetry under the hood, spans can only carry specific, simple types of data, preventing us from making custom objects, like for example the `Request` object for several web frameworks, accessible on the span. See the [migration guide in the repository](https://github.com/getsentry/sentry-python/blob/master/MIGRATION_GUIDE.md) for details on what data is available.
+The `sampling_context` argument of `traces_sampler` and `profiles_sampler` has changed considerably for spans coming from our auto-instrumented integrations. As a consequence of using OpenTelemetry under the hood, spans can only carry specific, simple types of data, preventing us from making custom objects, like for example the `Request` object for several web frameworks, accessible on the span. See the [migration guide in the repository](https://github.com/getsentry/sentry-python/blob/potel-base/MIGRATION_GUIDE.md) for details on what data is available.
 
 The ability to set `custom_sampling_context` on `start_transaction` was removed. If there is custom data that you want to have accessible in the `sampling_context` of a `traces_sampler` or `profiles_sampler`, set it on the span via the `attributes` argument, as all span attributes are now included in the `sampling_context` by default:
 
@@ -134,6 +134,12 @@ The ability to set `custom_sampling_context` on `start_transaction` was removed.
     ...
 ```
 
+<Alert title="Span attribute type restrictions" level="warning">
+
+As mentioned above, span attribute keys must be non-empty strings and values can only be several primitive types (excluding `None`) or a list of a single primitive type. See [the OpenTelemetry specification](https://opentelemetry.io/docs/specs/otel/common/#attribute) for details.
+
+</Alert>
+
 
 ## Errors
 
@@ -142,7 +148,7 @@ We've updated how we handle `ExceptionGroup`s. You will now get more data if `Ex
 
 ## Integrations
 
-Additional integrations will now be activated automatically if the SDK detects the respective package is installed: Ariadne, ARQ, asyncpg, Chalice, clickhouse-driver, GQL, Graphene, huey, Loguru, PyMongo, Quart, Starlite, Strawberry. You can [opt-out of specific integrations with the `disabled_integrations` option](https://docs.sentry.io/platforms/python/integrations/#disabling-integrations).
+Additional integrations will now be activated automatically if the SDK detects the respective package is installed: Ariadne, ARQ, asyncpg, Chalice, clickhouse-driver, GQL, Graphene, huey, Loguru, PyMongo, Quart, Starlite, Strawberry. You can [opt-out of specific integrations with the `disabled_integrations` option](/platforms/python/integrations/#disabling-integrations).
 
 We no longer support Django older than 2.0, trytond older than 5.0, and Falcon older than 3.0.
 
@@ -156,13 +162,13 @@ sentry_sdk.init(
         # capture error, critical, exception logs
         # and send them to Sentry as errors
         LoggingIntegration(event_level="ERROR"),
-    ]
+    ],
 )
 ```
 
 ### clickhouse-driver
 
-The query is now available under the `db.query.text` span attribute (only if `send_default_pii` is `True`).
+The query being executed is now available under the `db.query.text` span attribute (only if `send_default_pii` is `True`).
 
 ### PyMongo
 
@@ -170,19 +176,20 @@ The PyMongo integration no longer sets tags automatically. The data is still acc
 
 The PyMongo integration doesn't set `operation_ids` anymore. The individual IDs (`operation_id`, `request_id`, `session_id`) are now accessible as separate span attributes.
 
-
 ### Redis
 
-In Redis pipeline spans there is no `span["data"]["redis.commands"]` that contains a dict `{"count": 3, "first_ten": ["cmd1", "cmd2", ...]}` but instead `span["data"]["redis.commands.count"]` (containing `3`) and `span["data"]["redis.commands.first_ten"]` (containing `["cmd1", "cmd2", ...]`).
+In Redis pipeline spans, there is no `span["data"]["redis.commands"]` that contains a dictionary `{"count": 3, "first_ten": ["cmd1", "cmd2", ...]}`. Instead, there is `span["data"]["redis.commands.count"]` (containing `3`) and `span["data"]["redis.commands.first_ten"]` (containing `["cmd1", "cmd2", ...]`).
 
 
 ## Sessions
 
 The `auto_session_tracing()` context manager was removed. Use `track_session()` instead.
 
+
 ## Metrics
 
 The `sentry_sdk.metrics` API doesn't exist anymore in SDK `3.x` as the [metrics beta has come to an end](https://sentry.zendesk.com/hc/en-us/articles/26369339769883-Metrics-Beta-Coming-to-an-End). The associated experimental options `enable_metrics`, `before_emit_metric` and `metric_code_locations` have been removed as well.
+
 
 ## Internals
 
