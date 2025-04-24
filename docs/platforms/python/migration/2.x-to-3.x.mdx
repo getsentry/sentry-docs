@@ -20,7 +20,7 @@ Sentry Python SDK `3.x` only supports Python 3.7 and higher. If you're on an old
 
 ## Configuration
 
-The default of the `traces_sample_rate` option was changed from `None` to `0`. This means that even if you don't provide a custom `traces_sample_rate`, the SDK will, at minimum, at least propagate incoming tracing information, even though it will not sample any spans.
+The default of the `traces_sample_rate` option was changed from `None` to `0`. This means that even if you don't provide a custom `traces_sample_rate`, the SDK will, at minimum, at least continue incoming traces.
 
 ## Tracing API
 
@@ -64,15 +64,28 @@ with sentry_sdk.start_span(attributes={"my_attribute": "my_value"}):
     ...
 ```
 
-<Alert title="Important" level="warning">
+<Alert title="Span attribute type restrictions" level="warning">
 
-There are important type restrictions to consider when setting attributes on a span via `span.set_attribute()` and `start_span(attributes={...})`. The keys must be non-empty strings and the values can only be several primitive types (excluding `None`) or a list of a single primitive type. See [the OpenTelemetry specification](https://opentelemetry.io/docs/specs/otel/common/#attribute) for the details.
+There are important type restrictions to consider when setting attributes on a span via `span.set_attribute()` and `start_span(attributes={...})`. The keys must be non-empty strings and the values can only be several primitive types (excluding `None`) or a list of a single primitive type. See [the OpenTelemetry specification](https://opentelemetry.io/docs/specs/otel/common/#attribute) for details.
+
+Note that since the SDK is now exclusively using span attributes, this restriction applies to other ways of setting data on a span as well like `span.set_data()`, `span.set_measurement()`, `span.set_context()`.
 
 </Alert>
 
 ## Sampling
 
-It is no longer possible to change the sampling decision of a span by setting `span.sampled` directly. Please use a custom `traces_sampler` for determining whether a root span should be sampled.
+It's no longer possible to change the sampling decision of a span by setting `span.sampled` directly after the span has been created. Please use either a custom `traces_sampler` (preferred) or the `sampled` argument to `start_span()` for determining whether a span should be sampled.
+
+```python
+with sentry_sdk.start_span(sampled=True) as span:
+    ...
+```
+
+<Alert title="Sampling non-root spans" level="warning">
+
+Both `traces_sampler` and the `sampled` argument will only influence whether root spans (transactions) are sampled. They can't be used for sampling child spans.
+
+</Alert>
 
 The `sampling_context` argument of `traces_sampler` and `profiles_sampler` has changed considerably for spans coming from our auto-instrumented integrations. As a consequence of using OpenTelemetry under the hood, spans can only carry specific, simple types of data, preventing us from making custom objects, like for example the `Request` object for several web frameworks, accessible on the span. See the [migration guide in the repository](https://github.com/getsentry/sentry-python/blob/master/MIGRATION_GUIDE.md) for details on what data is available.
 
