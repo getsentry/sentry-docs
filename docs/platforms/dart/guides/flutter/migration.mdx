@@ -9,7 +9,7 @@ sidebar_order: 8000
 
 #### Dart and Flutter versions
 
-The required minimium Dart and Flutter versions are now `3.5.0` and `3.24.0` respectively. 
+The required minimum Dart and Flutter versions are now `3.5.0` and `3.24.0` respectively. 
 This change allows us to use safer APIs and better support for features such as Session Replay and WASM compilation.
 
 #### API Removals and Renames
@@ -19,8 +19,10 @@ This change allows us to use safer APIs and better support for features such as 
 - `LoadImagesListIntegration` has been renamed to `LoadNativeDebugImagesIntegration`.
 - The `enableTracing` option has been removed. Use `options.traceSampleRate` or `options.tracesSampler` instead.
 - Both `options.autoAppStart` and `setAppStartEnd` have been removed. The [App Start Instrumentation](/platforms/dart/guides/flutter/integrations/app-start-instrumentation/) will now determine the end of app start and is enabled by default.
-- `BeforeSendTransactionCallback` now has a `Hint` parameter.
 - Usage of `dart:html` has been removed in favor of `package:web`. The SDK is now packaged with the `package:web` dependency for better interopability with web APIs.
+- The `beforeSendTransaction` callback now has a `Hint` parameter.
+- The option `attachScreenshotOnlyWhenResumed` has been removed.
+- The `segment` field from `SentryUser` has been removed.
 
 #### User Feedback
 
@@ -34,8 +36,9 @@ Currently as of version `9.0.0`, only the `dio` integration is supported.
 
 #### Screenshots
 
-Screenshots are now masked by default for privacy reasons. 
+Screenshots are now masked by default for privacy reasons.
 For example, text fields are automatically masked to prevent sensitive information from being leaked.
+Read the guide [here](platforms/dart/guides/flutter/enriching-events/screenshots/#redact-screenshots-via-masking) for more information on how to customize the masking.
 
 #### Logging
 
@@ -50,20 +53,21 @@ For backwards-compatibility, `copyWith` and `clone` can still be used but are of
 ```dart
 // old
 options.beforeSend = (event, hint) {
-  event = event.copyWith(release: 'my-release')
-  return event
+  event = event.copyWith(release: 'my-release');
+  return event;
 }
 
 // new
 options.beforeSend = (event, hint) {
-  event.release = 'my-release'
-  return event
+  event.release = 'my-release';
+  return event;
 }
 ```
 
 ### Flutter Desktop
 
-Native crash handling is now enabled by default for Flutter Desktop. Windows ARM64 uses [breakpad](https://chromium.googlesource.com/breakpad/breakpad) and all other desktop platforms use [crashpad](https://chromium.googlesource.com/crashpad/crashpad).
+Native crash handling is now enabled by default for Flutter Desktop. 
+Windows ARM64 uses [breakpad](https://chromium.googlesource.com/breakpad/breakpad) and all other desktop platforms use [crashpad](https://chromium.googlesource.com/crashpad/crashpad).
 You can turn off this feature by setting the `SENTRY_NATIVE_BACKEND` environment variable to an empty string.
 
 ### Flutter Web
@@ -80,7 +84,7 @@ If you initialize the native SDKs separately with `options.autoInitializeNativeS
 We have bumped the required Drift version to `2.24.0` and have changed the API on how to use the integration.
 Instead of a `SentryQueryExecutor`, Sentry now provides a `SentryQueryInterceptor that you can use like so:
 
-```
+```dart
 final executor = NativeDatabase.memory().interceptWith(
   SentryQueryInterceptor(databaseName: 'your_db_name')
 );
