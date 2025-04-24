@@ -19,7 +19,7 @@ This change allows us to use safer APIs and better support for features such as 
 - `LoadImagesListIntegration` has been renamed to `LoadNativeDebugImagesIntegration`.
 - The `enableTracing` option has been removed. Use `options.traceSampleRate` or `options.tracesSampler` instead.
 - Both `options.autoAppStart` and `setAppStartEnd` have been removed. The [App Start Instrumentation](/platforms/dart/guides/flutter/integrations/app-start-instrumentation/) will now determine the end of app start and is enabled by default.
-- Usage of `dart:html` has been removed in favor of `package:web`. The SDK is now packaged with the `package:web` dependency for better interopability with web APIs.
+- Usage of `dart:html` has been removed in favor of `package:web`. The SDK is now packaged with the `package:web` dependency for better interoperability with web APIs.
 - The `beforeSendTransaction` callback now has a `Hint` parameter.
 - The option `attachScreenshotOnlyWhenResumed` has been removed.
 - The `segment` field from `SentryUser` has been removed.
@@ -31,7 +31,8 @@ The old user feedback API has been removed and replaced by `Sentry.captureFeedba
 #### Response Body Handling
 
 Due to PII concerns, response bodies will no longer be added to Sentry events by the SDK automatically. 
-Responses are now attached to the `Hint` object, which can be read in `beforeSend`/`beforeSendTransaction` callbacks via `hint.response` so you can manually attach the response to your event. 
+Responses are now attached to the `Hint` object, which can be read in `beforeSend`/`beforeSendTransaction` callbacks via `hint.response` so you can manually attach the response to your event.
+Response bodies with a size greater than 0.15MB are not added to the hint object.
 Currently as of version `9.0.0`, only the `dio` integration is supported.
 
 #### Screenshots
@@ -82,13 +83,15 @@ If you initialize the native SDKs separately with `options.autoInitializeNativeS
 ### Drift Integration
 
 We have bumped the required Drift version to `2.24.0` and have changed the API on how to use the integration.
-Instead of a `SentryQueryExecutor`, Sentry now provides a `SentryQueryInterceptor that you can use like so:
+Instead of a `SentryQueryExecutor`, Sentry now provides a `SentryQueryInterceptor` that you can use like so:
 
 ```dart
 final executor = NativeDatabase.memory().interceptWith(
   SentryQueryInterceptor(databaseName: 'your_db_name')
 );
 ```
+
+For more information on how to use `QueryInterceptor` read the [Drift documentation](https://drift.simonbinder.eu/examples/tracing/).
 
 ## Migrating From `sentry_flutter` `6.18.x` to `sentry_flutter` `7.0.0`
 
