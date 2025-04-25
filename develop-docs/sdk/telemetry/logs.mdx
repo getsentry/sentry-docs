@@ -1,0 +1,432 @@
+---
+title: Logs
+sidebar_order: 3
+---
+
+<Alert title="Note" level="warning">
+
+The Sentry Logs feature is under active development. The information in this document is subject to change.
+
+</Alert>
+
+This document defines the format used by Sentry to ingest logs, as well as the SDK API and behavior that create and send logs to Sentry.
+
+## Logs Protocol
+
+There are two ways to send logs to Sentry: via the `log` envelope and Sentry Log protocol (preferred), or the `otel_log` envelope and OpenTelemetry Log protocol.
+
+All SDKs are required to send logs via the `log` envelope and Sentry Log protocol. The `otel_log` envelope and OpenTelemetry Log protocol are just documented for completeness and to provide a reference for SDK authors. See the [Appendix A](#appendix-a-otel_log-envelope-item-payload) for the `otel_log` envelope item payload.
+
+### `log` Envelope Item
+
+The `log` envelope item is an object that contains an array of log payloads encoded as JSON. This allows for multiple log payloads to be sent in a single envelope item. For more details on the `log` envelope item, see the [Log Envelope Item](/sdk/data-model/envelope-items/#log) documentation.
+
+```json
+{
+	"type": "log",
+	"item_count": 5,
+	"content_type": "application/vnd.sentry.items.log+json"
+}
+{
+	"items": [{..log..}, {..log..}, {..log..}, {..log..}, {..log..}]
+}
+```
+
+### `log` Envelope Item Payload
+
+The `log` envelope item payload is a JSON object that represents a Sentry Log.
+
+```json
+{
+  "timestamp": 1544719860.0,
+  "trace_id": "5b8efff798038103d269b633813fc60c",
+  "level": "info",
+  "body": "User John has logged in!",
+  "attributes": {
+    "sentry.message.template": {
+      "value": "User %s has logged in!",
+      "type": "string"
+    },
+    "sentry.message.parameters.0": {
+      "value": "John",
+      "type": "string"
+    },
+    "sentry.environment": {
+      "value": "production",
+      "type": "string"
+    },
+    "sentry.release": {
+      "value": "1.0.0",
+      "type": "string"
+    },
+    "sentry.trace.parent_span_id": {
+      "value": "b0e6f15b45c36b12",
+      "type": "string"
+    }
+  }
+}
+```
+
+It consists of the following fields:
+
+`timestamp`
+
+: **Number, required**. The timestamp of the log in seconds since the Unix epoch.
+
+`trace_id`
+
+: **String, required**. The trace id of the log.
+
+`level`
+
+: **String, required**. The severity level of the log. One of `trace`, `debug`, `info`, `warn`, `error`, `fatal` (in order of lowest to highest).
+
+`body`
+
+: **String, required**. The log body/message.
+
+`attributes`
+
+: **Object, optional**. A dictionary of key-value pairs of arbitrary data attached to the log. Attributes must also declare the type of the value. The following types are supported: `string`, `boolean`, `integer`, `double`. In the future arrays will be supported (`string[]`, `boolean[]`, `integer[]`, `double[]`).
+
+Example:
+
+```json
+{
+  "attributes": {
+    "db.namespace": {
+      "value": "projects",
+      "type": "string"
+    },
+    "db.response.returned_rows": {
+      "value": 123,
+      "type": "integer"
+    },
+    "db_query_processing_time": {
+      "value": 123.456,
+      "type": "double"
+    },
+    "is_production_db": {
+      "value": false,
+      "type": "boolean"
+    }
+  }
+}
+```
+
+`severity_number`
+
+: **Integer, optional**. The severity number of the log. See [Log Severity Number](#log-severity-number) for more information. This is inferenced from `level` unless explicitly set.
+
+### Log Severity Level
+
+The log severity level is a string that represents the severity of the log. The Sentry's default log severity level maps exactly to [OpenTelemetry's Severity text field](https://opentelemetry.io/docs/specs/otel/logs/data-model/#field-severitytext) on the OpenTelemetry Logs Spec.
+
+- `trace`
+- `debug`
+- `info`
+- `warn`
+- `error`
+- `fatal`
+
+### Log Severity Number
+
+The log severity number is an integer that represents the severity of the log. The Sentry's default log severity number maps exactly to [OpenTelemetry's Severity number field](https://opentelemetry.io/docs/specs/otel/logs/data-model/#field-severitynumber) on the OpenTelemetry Logs Spec.
+
+| SeverityNumber range | Range name | Meaning                                                                                 |
+| -------------------- | ---------- | --------------------------------------------------------------------------------------- |
+| 1-4                  | Trace      | A fine-grained debugging event. Typically disabled in default configurations.           |
+| 5-8                  | Debug      | A debugging event.                                                                      |
+| 9-12                 | Info       | An informational event. Indicates that an event happened.                               |
+| 13-16                | Warn       | A warning event. Not an error but is likely more important than an informational event. |
+| 17-20                | Error      | An error event. Something went wrong.                                                   |
+| 21-24                | Fatal      | A fatal error such as application or system crash.                                      |
+
+Default SDK public API should set the lowest severity number for a given severity level. For example, `warn` severity level logs collected by the SDK API should use the severity number `13`.
+
+## Public API
+
+API wise the SDKs are required to expose logging methods which are to be defined in a `logger` module or namespace. The SDKs should also include some initialization options to configure the behavior of logs in the SDK.
+
+### Initialization Options
+
+The SDKs must expose the following configuration options:
+
+- `enableLogs`/`enable_logs`: A boolean flag to control if log envelopes will be generated and sent to Sentry via the Sentry SDK's Logging APIs. If this flag is set to `false`, the SDK should not send logs to Sentry. Defaults to `false`.
+
+- `beforeSendLog`/`before_send_log`: A function that takes a log object and returns a log object. This function is called before sending the log to Sentry. It can be used to modify the log object or to prevent the log from being sent to Sentry. This function is optional.
+
+- `logsSampleRate`/`logs_sample_rate`: A number between 0 and 1 that represents the probability that a log will be sent to Sentry. This sampling decision should be made before a log is processed by SDK to lower performance overhead. Defaults to 1.0.
+
+```js
+Sentry.init({
+  enableLogs: true,
+
+  beforeSendLog(log) {
+    // Prevent logs from being sent to Sentry if the plan type is enterprise
+    if (log.attributes["plan.type"] === "enterprise") {
+      return null;
+    }
+
+    return log;
+  },
+
+  logsSampleRate: 1.0,
+});
+```
+
+At the current moment logs sampling decisions are not propagated to downstream services, or be affected by the `tracesSampleRate` configuration option. In the future there might be more advanced client-side sampling and server-side sampling strategies, but this is not yet defined.
+
+While the logs functionality for an SDK is in an experimental state, SDKs should put these configuration options in an experimental namespace to avoid breaking changes.
+
+```js
+Sentry.init({
+  _experiments: { enableLogs: true },
+});
+```
+
+### Logger Module
+
+At minimum the SDK needs to implement the `Sentry.logger.X` (where `X` is the log level) methods. The log levels are `trace`, `debug`, `info`, `warn`, `error`, and `fatal`, which is specced out by the [protocol below](#log-severity-level).
+
+- `Sentry.logger.trace`
+- `Sentry.logger.debug`
+- `Sentry.logger.info`
+- `Sentry.logger.warn`
+- `Sentry.logger.error`
+- `Sentry.logger.fatal`
+
+These methods accepts a string template and the parameters to that string template so the SDK can perform structured logging. Optionally these methods take arbitrary attributes, but not all languages can support both passing a parameterized template and attributes in an easy way.
+
+```js
+// Need to use `fmt` helper function in JavaScript for structured logging.
+Sentry.logger.info(Sentry.logger.fmt`Adding item ${itemId} for user ${userId}`);
+
+Sentry.logger.warn("User %s performed action %s", [userId, actionName], {
+  extra: "123",
+});
+```
+
+Aside from accepting attributes, these methods can be overloaded to accept severity number or other parameters if required for the language or platform.
+
+Beyond the specified methods, SDKs are free to add any extra helpers as they feel is necessary. For example, they could choose to add specialized decorators or helpers for string template creation.
+
+Below are some example SDK implementations to get you started. These are not finalized versions of the API and individual SDK authors should ensure the logging APIs best fit their platforms. When an SDK implements the logging API, this section should be updated with the SDK's specific implementation.
+
+#### JavaScript
+
+```jsx
+// Browser JavaScript - need to rely on tagged template literals for string templating
+Sentry.logger.info(Sentry.logger.fmt`Adding item ${itemId} for user ${userId}`);
+
+// Server-side (Node.js, Bun, Deno) with printf-like syntax
+Sentry.logger.info("Adding item %s for user %s", [itemId, userId], {
+  extra: 123,
+});
+```
+
+#### Python
+
+```python
+# With f-string like syntax
+Sentry.logger.info('Adding item {item} for user {user}', item=item_id, user=user_id, attributes={ 'extra': 123 });
+```
+
+#### PHP
+
+```php
+use function Sentry\logger;
+
+logger()->info('Adding item %s for user %s', [$item_id, $user_id], ['extra' => 123]);
+```
+
+#### Java
+
+```java
+import io.sentry.Sentry;
+
+// example with MessageFormat based string template
+Sentry.logger().info("Adding item {0,string} for user {1,string}", item_id, user_id, log -> {
+  log.setAttribute("extra", 123);
+});
+
+// Kotlin
+Sentry.Logger.info("Adding item for user") { // fun info(block: LogItem.() -> Unit)
+  setAttribute("item_id", item_id)
+  setAttribute("user_id", user_id)
+  setAttribute("extra", 123)
+}
+```
+
+#### Apple
+
+```swift
+// Swift
+SentrySDK.logger
+  .info(message: "Adding item %s for user %s",
+    params: [itemId, userId],
+    attributes: ["extra": @"123"]
+  )
+```
+
+#### Threading and Concurrency Considerations
+
+Both the `Sentry.logger.X` and `Sentry.logger.emit` methods are fire-and-forget (have no return value). This means that the SDK can choose to run these methods on a separate thread or queue them up for processing later. This includes evaluating the string template, and running any internal hooks (like `beforeSendLog`). The SDK should ensure that the logs are sent in the order they are received.
+
+It's important to note that putting everything immediately on a background thread has the downside of losing logs that occur directly before a crash. This will come up for Mobile SDKs. Therefore there will need to be a more robust mechanism if a separate thread is used. This mechanism will vary by platform, and the individual SDK will need to figure out the best approach for their platform.
+
+## SDK Behavior
+
+### Implementation
+
+If `debug` is set to `true` in SDK init, calls to the Sentry logger API should also print to the console with the appropriate log level. This will help debugging logging setups.
+
+Logs should be buffered before being sent. SDKs should keep a buffer of logs on the client (so you can have logs from multiple traces in the buffer) that flushes out based on some kind of condition. A recommended condition is if the buffer length exceeds 25 items, or if 5 seconds have passed. In the future we can use a [weight-tracking based approach](https://github.com/getsentry/rfcs/blob/main/text/0126-sdk-spans-aggregator.md#weight) to determine when to flush logs.
+
+A new data category for logs has been added to Relay, `log_item`. Both the `log` envelope and `otel_log` envelope is covered by this data category. This will need to implemented in the SDK. Rate limiting applies as usual, there is no special rate limit or rate limiting behaviour for logs. With this data category, client outcomes should be tracked by the SDKs to track how often logs are dropped by the SDK.
+
+The internal SDK implementation is kept purposefully broad as we are still in early stages. As we figure more out about the logs product and payload characteristics, we'll be able to define a more rigorous spec for logging internals in the SDK. SDKs should take care to not expose logging internals as much as possible to userland so that they can be refactored in the future.
+
+### Default Attributes
+
+By default the SDK should set the following attributes:
+
+1. `sentry.message.template`: The parameterized template string
+2. `sentry.message.parameter.X`: The parameters to the template string. X can either be the number that represent the parameter's position in the template string (`sentry.message.parameter.0`, `sentry.message.parameter.1`, etc) or the parameter's name (`sentry.message.parameter.item_id`, `sentry.message.parameter.user_id`, etc)
+3. `sentry.environment`: The environment set in the SDK
+4. `sentry.release`: The release set in the SDK
+5. `sentry.trace.parent_span_id`: The span id of the span that was active when the log was collected. This should not be set if there was no active span.
+6. `sentry.sdk.name`: The name of the SDK that sent the log
+7. `sentry.sdk.version`: The version of the SDK that sent the log
+8. [BACKEND SDKS ONLY] `server.address`: The address of the server that sent the log. Equivalent to `server_name` we attach to errors and transactions.
+
+Example:
+
+```json
+{
+  "sentry.message.template": "Adding item %s for user %s",
+  "sentry.message.parameter.0": "item_id",
+  "sentry.message.parameter.1": "user_id",
+  "sentry.environment": "production",
+  "sentry.release": "1.0.0",
+  "sentry.trace.parent_span_id": "b0e6f15b45c36b12",
+  "sentry.sdk.name": "sentry.javascript.node",
+  "sentry.sdk.version": "9.11.0",
+  "server.address": "foo.example.com"
+}
+```
+
+If a log is generated by an SDK integration, the SDK should also set the `sentry.origin` attribute, as per the [Trace Origin](/sdk/telemetry/traces/trace-origin/) documentation. It is assumed that logs without a `sentry.origin` attribute are manually created by the user.
+
+```json
+{
+  "sentry.origin": "auto.db.graphql"
+}
+```
+
+Beyond these attributes, we are exploring if the SDK should also send OS, user, and device information automatically (via reading the appropriate contexts from the scope). Given this behaviour can easily be added as a new feature to the SDK, it does not have to be part of the initial SDK implementation until we make a finalized decision.
+
+### SDK Integrations
+
+SDKs should aim to have it so that console/logger integrations create logs as per the appropriate log level if `enableLogs`/`enable_logs` is set to true. Examples of this include JavaScript's `console` object and Pythons `logging` standard library.
+
+If SDK authors feel the need, they can also introduce additional options to beyond `enableLogs`/`enable_logs` to gate this functionality. For example an option to control log appenders added via external config like with `Log4j` in the Java SDK.
+
+## Appendix A: `otel_log` Envelope Item Payload
+
+<Expandable title="Click to expand/collapse details about the `otel_log` envelope item payload.">
+
+The `otel_log` envelope item payload is a JSON object that represents an OpenTelemetry Log. Multiple `otel_log` envelope items can be sent in a single envelope. This is implementation of the [OpenTelemetry Log Data Model](https://opentelemetry.io/docs/specs/otel/logs/data-model/).
+
+```json
+{
+  "severity_text": "info",
+  "body": {
+    "string_value": "User John has logged in!"
+  },
+  "attributes": [
+    {
+      "key": "sentry.message.template",
+      "value": { "string_value": "User %s has logged in!" }
+    },
+    {
+      "key": "sentry.message.parameters.0",
+      "value": { "string_value": "John" }
+    }
+  ],
+  "time_unix_nano": "1741191250694000000",
+  "trace_id": "edec519707974fc8bfccb5a017e17394",
+  "severity_number": 9
+}
+```
+
+It consists of the following fields:
+
+`severity_text`
+
+: **String, required**. The severity level of the log. One of `trace`, `debug`, `info`, `warn`, `error`, `fatal` (in order of lowest to highest).
+
+`severity_number`
+
+: **Integer, optional**. The severity number of the log. See [Log Severity Number](#log-severity-number) for more information.
+
+`trace_id`
+
+: **Integer, optional**. [HEAVILY RECOMMENDED] The trace id of the log. SDKs should attempt to set this if possible. This is used to link logs to traces and errors in Sentry.
+
+`body`
+
+: **Object, required**. The log body/message.
+
+Example:
+
+```json
+{
+  "string_value": "Added item to shopping cart"
+}
+```
+
+`attributes`
+
+: **Array\<Object\>, optional**. A dictionary of key-value pairs of arbitrary data attached to the log. Attributes must also declare the type of the value. The following types are supported: `string`, `number`, `boolean`, `integer`, `double`.
+
+Note: `intValue` is a string because JSON only recognizes numbers as floating point values.
+
+Example:
+
+```json
+{
+  "attributes": [
+    {
+      "key": "string_item",
+      "value": {
+        "stringValue": "value"
+      }
+    },
+    {
+      "key": "integer_item",
+      "value": {
+        "intValue": "123"
+      }
+    },
+    {
+      "key": "boolean_value",
+      "value": {
+        "boolValue": false
+      }
+    },
+    {
+      "key": "double_item",
+      "value": {
+        "doubleValue": "value"
+      }
+    }
+  ]
+}
+```
+
+`time_unix_nano`
+
+: **String, optional**. The time the log was created in Unix nanoseconds. If not set, the SDK should set this to the current time.
+
+</Expandable>
