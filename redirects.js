@@ -974,6 +974,10 @@ const userDocsRedirects = [
     source: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
     destination: '/product/insights/ai/llm-monitoring/getting-started/the-dashboard/',
   },
+  {
+    source: '/product/insights/retention-priorities/',
+    destination: '/organization/dynamic-sampling/',
+  },
   // End of Insights reduirects.
   {
     source: '/platforms/javascript/guides/astro/manual-setup/',
