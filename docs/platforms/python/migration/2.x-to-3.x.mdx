@@ -40,7 +40,7 @@ The deprecated `propagate_traces` option was removed. Use [`trace_propagation_ta
 
 Note that this only affects the global SDK option. The `propagate_traces` option of the Celery integration remains unchanged.
 
-The `profiles_sample_rate` and `profiler_mode` options previously accessible via `_experiments` have been removed. They're superceded by top-level options of the same name:
+The `profiles_sample_rate` and `profiler_mode` options previously nested under `_experiments` have been removed. They're replaced by top-level options of the same name:
 
 ```python diff
   sentry_sdk.init(
@@ -83,7 +83,7 @@ The functions `continue_from_headers`, `continue_from_environ` and `from_tracepa
 
 ## Span Data
 
-In OpenTelemetry, there is no concept of separate categories of data on a span: everything is simply a span attribute. This is a world the Sentry SDK is moving towards as well. We deprecated `set_data()` and added a new span method called `set_attribute()`:
+In OpenTelemetry, there is no concept of separate categories of data on a span: everything is simply a span attribute. This is a concept the Sentry SDK is also adopting. We deprecated `set_data()` and added a new span method called `set_attribute()`:
 
 ```python diff
   with sentry_sdk.start_span(...) as span:
@@ -122,7 +122,7 @@ Both `traces_sampler` and the `sampled` argument will only influence whether roo
 
 </Alert>
 
-The `sampling_context` argument of `traces_sampler` and `profiles_sampler` has changed considerably for spans coming from our auto-instrumented integrations. As a consequence of using OpenTelemetry under the hood, spans can only carry specific, simple types of data, preventing us from making custom objects, like for example the `Request` object for several web frameworks, accessible on the span. See the [migration guide in the repository](https://github.com/getsentry/sentry-python/blob/potel-base/MIGRATION_GUIDE.md) for details on what data is available.
+The `sampling_context` argument of `traces_sampler` and `profiles_sampler` has changed considerably for spans coming from our auto-instrumented integrations. As a consequence of using OpenTelemetry under the hood, spans can only carry specific, simple types of data. This prevents us from making custom objects, for example, the `Request` object for several web frameworks, accessible on the span. See the [migration guide in the repository](https://github.com/getsentry/sentry-python/blob/potel-base/MIGRATION_GUIDE.md) for details on what data is available.
 
 The ability to set `custom_sampling_context` on `start_transaction` was removed. If there is custom data that you want to have accessible in the `sampling_context` of a `traces_sampler` or `profiles_sampler`, set it on the span via the `attributes` argument, as all span attributes are now included in the `sampling_context` by default:
 
@@ -154,7 +154,7 @@ We no longer support Django older than 2.0, trytond older than 5.0, and Falcon o
 
 ### Logging
 
-The logging integration which implements out-of-the-box support for the Python standard library `logging` framework doesn't capture error logs as events anymore by default. The original behavior can still be achieved by providing a custom `event_level` to the `LoggingIntegration`:
+The logging integration, which implements out-of-the-box support for the Python standard library `logging` framework, doesn't capture error logs as events anymore by default. The original behavior can still be achieved by providing a custom `event_level` to the `LoggingIntegration`:
 
 ```python
 sentry_sdk.init(
