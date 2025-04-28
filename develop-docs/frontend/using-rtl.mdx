@@ -32,23 +32,53 @@ const organization = OrganizationFixture({access: ['org:admin'], features: ['my-
 render(<Example />, {organization});
 ```
 
-Router context can be overriden in the same way.
+## Testing route changes
+
+When using `render()`, an in-memory router is used, which will react to navigations with `useNavigate()` or interations with `Link` components. If your component relies on the URL, you can define the initial state in `initialRouterConfig`. You can access the current router state by referencing the returned `router` class, as well as navigate programmatically with `router.navigate()`.
 
 ```tsx
-const {organization, router, routerContext} = initializeOrg({
-  organization: {features: ['global-views', 'open-membership']},
-  router: {
+const {router} = render(<TestComponent />, {
+  initialRouterConfig: {
     location: {
-      pathname: '/organizations/org-slug/issues/',
-      query: {environment: 'prod'},
+      pathname: '/foo/',
+      query: {page: '1'},
     },
-    params: {},
   },
 });
 
-render(<Example />, {context: routerContext, organization});
-await userEvent.click(something);
-expect(router.push).toHaveBeenCalledTimes(1);
+// Uses passes in config to set initial location
+expect(router.location.pathname).toBe('/foo');
+expect(router.location.query.page).toBe('1');
+
+// Clicking links goes to the correct location
+await userEvent.click(screen.getByRole('link', {name: 'Go to /bar/'}));
+
+// Can check current route on the returned router
+expect(router.location.pathname).toBe('/bar/');
+
+// Can test manual route changes with router.navigate
+router.navigate('/new/path/');
+router.navigate(-1); // Simulates clicking the back button
+```
+
+If you need to test route param values (as in `useParams()`), the `route` will need to be provided in the config:
+
+```tsx
+function TestComponent() {
+  const {id} = useParams();
+  return <div>{id}</div>;
+}
+
+const {router} = render(<TestComponent />, {
+  initialRouterConfig: {
+    location: {
+      pathname: '/foo/123/',
+    },
+    route: '/foo/:id/',
+  }
+});
+
+expect(screen.getByText('123')).toBeInTheDocument();
 ```
 
 ## Querying
