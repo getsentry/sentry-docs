@@ -347,6 +347,10 @@ const userDocsRedirects = [
     destination: '/concepts/key-terms/:path*',
   },
   {
+    source: '/security-legal-pii/security/ai-ml-policy/',
+    destination: '/security-legal-pii/security/service-data-usage/',
+  },
+  {
     source: '/product/security/:path*',
     destination: '/security-legal-pii/security/:path*',
   },
