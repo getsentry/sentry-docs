@@ -2,6 +2,8 @@
 title: Data Collected
 description: "See what data is collected by the Sentry SDK."
 sidebar_order: 1
+notSupported:
+  - javascript.electron
 ---
 
 Sentry takes data privacy very seriously and has default settings in place that prioritize data safety, especially when it comes to personally identifiable information (PII) data. When you add the Sentry SDK to your application, you allow it to collect data and send it to Sentry during the runtime of your application.
@@ -64,7 +66,7 @@ To disable source map upload, see <PlatformLink to="/sourcemaps">the Source Maps
 
 By default, the Sentry SDK will not send local variables in the error stack trace in client-side JavaScript SDKs.
 
-<PlatformSection notSupported={["javascript", "javascript.angular", "javascript.ember", "javascript.react", "javascript.solid", "javascript.svelte", "javascript.vue"]}>
+<PlatformSection notSupported={["javascript", "javascript.angular", "javascript.cordova", "javascript.ember", "javascript.gatsby", "javascript.react", "javascript.solid", "javascript.svelte", "javascript.vue", "javascript.wasm"]}>
   You can enable sending local variables by setting `includeLocalVariables: true` in the `Sentry.init()` call. This activates the <PlatformLink to="/configuration/integrations/localvariables">Local Variables Integration</PlatformLink>. The integration is added by default in Node.js-based runtimes.
 </PlatformSection>
 
@@ -76,14 +78,16 @@ In browser environments, this information is obtained by the User Agent string. 
 
 In server-side environments, the Sentry SDK uses the `os` module to get information about the operating system and architecture.
 
-<PlatformSection notSupported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi",  "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.wasm"]}>
+<PlatformSection notSupported={["javascript.azure-functions", "javascript.bun", "javascript.node", "javascript.aws-lambda", "javascript.connect", "javascript.cloudflare", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi",  "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.wasm"]}>
+  <PlatformSection notSupported={["javascript.cordova"]}>
+    ## Session Replay
+
+    By default, our Session Replay SDK masks all text content, images, web views, and user input. This helps ensure that no sensitive data is exposed. You can find <PlatformLink to="/session-replay/privacy/">more details in the Session Replay documentation</PlatformLink>.
+  </PlatformSection>
+
   ## Referrer URL
 
   By default, the Sentry SDK sends the referrer URL to Sentry. This is the URL of the page that linked to the current page.
-
-  ## Session Replay
-
-  By default, our Session Replay SDK masks all text content, images, web views, and user input. This helps ensure that no sensitive data is exposed. You can find <PlatformLink to="/session-replay/privacy/">more details in the Session Replay documentation</PlatformLink>.
 
   ## Console Logs
 
@@ -93,7 +97,13 @@ In server-side environments, the Sentry SDK uses the `os` module to get informat
 
 </PlatformSection>
 
-<PlatformSection notSupported={["javascript", "javascript.angular", "javascript.ember", "javascript.react", "javascript.solid", "javascript.svelte", "javascript.vue", "javascript.wasm"]}>
+<PlatformSection notSupported={["javascript", "javascript.angular", "javascript.cordova", "javascript.ember", "javascript.gatsby", "javascript.react", "javascript.solid", "javascript.svelte", "javascript.vue", "javascript.wasm"]}>
+  <PlatformSection notSupported={["javascript.fastify", "javascript.hono"]}>
+    ## Stack Trace Context Lines
+
+    By default, the <PlatformLink to="/configuration/integrations/contextlines/">Context Lines Integration</PlatformLink> is enabled. This integration sends the surrounding lines of code for each frame in the stack trace. This can include PII data if the code contains PII information.
+  </PlatformSection>
+
   ## Database Queries
 
   By default, the Sentry SDK sends SQL queries to Sentry. The SQL queries can include PII information if the statement is not parametrized.
@@ -108,10 +118,6 @@ In server-side environments, the Sentry SDK uses the `os` module to get informat
 
   By default, the Sentry SDK doesn't send tRPC input from the tRPC context.
 
-  If you want to send the tRPC input you can enable it by setting `sendDefaultPii: true` in the `Sentry.init()` call or by setting `attachRpcInput: true` in the `Sentry.trpcMiddleware()` options.
-
-  ## Stack Trace Context Lines
-
-  By default, the <PlatformLink to="/configuration/integrations/contextlines/">Context Lines Integration</PlatformLink> is enabled. This integration sends the surrounding lines of code for each frame in the stack trace. This can include PII data if the code contains PII information.
+  If you want to send the tRPC input you can enable it by setting `sendDefaultPii: true` in the `Sentry.init()` call or by setting `attachRpcInput: true` in the <PlatformLink to="/configuration/integrations/trpc/">`Sentry.trpcMiddleware()`</PlatformLink> options.
 
 </PlatformSection>
