@@ -8,25 +8,25 @@ sidebar_order: 80
     These are community-contributed docs. Sentry does not officially provide support for self-hosted configurations beyond the default install.
 </Alert>
 
-Adding a reverse proxy in front of your Sentry deployment is strongly recommended for one big reason: you can fine tune every configuration to fit your current setup. A dedicated reverse proxy that does SSL/TLS termination that also forwards the client IP address as Docker Compose internal network (as this is [close to impossible to get otherwise](https://github.com/getsentry/self-hosted/issues/554)) would give you the best Sentry experience.
+Adding a reverse proxy in front of your Sentry deployment is strongly recommended for one big reason: you can fine tune every configuration to fit your current setup. A dedicated reverse proxy that does SSL/TLS termination that also forwards the client IP address as Docker Compose internal network (as this is [close to impossible to get otherwise](https://github.com/getsentry/self-hosted/issues/554)) would give you the best Sentry experience.
 
 Once you have setup a reverse proxy to your Sentry instance, you should modify the `system.url-prefix` in the `config.yml` file to match your new URL and protocol. You should also update the SSL/TLS section in the `sentry/sentry.conf.py` script, otherwise you may get CSRF-related errors when performing certain actions such as configuring integrations.
 
-Keep in mind that all this setup uses single-nodes for all services, including Kafka. For larger loads, you'd need a beefy machine with lots of RAM and disk storage. To scale up even further, you are very likely to use clusters with a more complex tool, such as Kubernetes. Due to self-hosted installations' very custom nature, we do not offer any recommendations or guidance around scaling up. We do what works for us for our thousands of customers over at [sentry.io](https://sentry.io/) and would love to have you over when you feel your local install's maintenance becomes a burden instead of a joy.
+Keep in mind that all this setup uses single-nodes for all services, including Kafka. For larger loads, you'd need a beefy machine with lots of RAM and disk storage. To scale up even further, you are very likely to use clusters with a more complex tool, such as Kubernetes. Due to self-hosted installations' very custom nature, we do not offer any recommendations or guidance around scaling up. We do what works for us for our thousands of customers over at [sentry.io](https://sentry.io/) and would love to have you over when you feel your local install's maintenance becomes a burden instead of a joy.
 
 ## Enabling HTTPS
 
-We recommend TLS termination to be done on your own dedicated load balancer or proxy. Although you can set it on the `nginx.conf` file, it is not recommended as newer self-hosted releases might alter some configurations on the file. Some examples are available on [Reverse Proxy Examples](#reverse-proxy-examples) section.
+We recommend TLS termination to be done on your own dedicated load balancer or proxy. Although you can set it on the `nginx.conf` file provided by the self-hosted installation, it is not recommended as newer self-hosted releases might alter some configurations on the file. Some examples are available on [Reverse Proxy Examples](#reverse-proxy-examples) section.
 
 ## Expose Only Ingest Endpoint Publicly
 
 Certain self-hosted deployments requires the dashboard to be accessed only via internal network. But, they also need to provide public Sentry ingestion endpoint for client devices such as mobile and desktop apps. You can expose some of these endpoints publicly:
 
-- `/api/[1-9]\d*/envelope/` - Main endpoint for submitting event from SDK
-- `/api/[1-9]\d*/minidump/` - Endpoint for submitting minidump from native SDKs
-- `/api/[1-9]\d*/security/` - Endpoint for submitting security-related such as CSP errors
-- `/api/[1-9]\d*/store/` - Old endpoint for submitting event from SDK, it is deprecated.
-- `/api/[1-9]\d*/unreal/` - Endpoint for submitting crash report from Unreal Engine SDK
+- `/api/[1-9]\d+/envelope/` - Main endpoint for submitting event from SDK
+- `/api/[1-9]\d+/minidump/` - Endpoint for submitting minidump from native SDKs
+- `/api/[1-9]\d+/security/` - Endpoint for submitting security-related such as CSP errors
+- `/api/[1-9]\d+/store/` - Old endpoint for submitting event from SDK, it is deprecated.
+- `/api/[1-9]\d+/unreal/` - Endpoint for submitting crash report from Unreal Engine SDK
 
 The `[1-9]\d+` is a regular expression string that is acquired from the project DSN.
 
@@ -71,6 +71,21 @@ server {
     proxy_buffer_size    128k;
     proxy_buffers        4 256k;
 
+    # Handle CORS-related headers for ingest endpoints.
+    # You can also only expose the ingest endpoints only,
+    # by removing the other `location` directive.
+    #
+    # It is recomended to put a rate limiter on the ingest endpoints.
+    location ~ ^/api/[1-9]\d*/(envelope|minidump|security|store|unreal)/ {
+        add_header Access-Control-Allow-Origin * always;
+        add_header Access-Control-Allow-Credentials false always;
+        add_header Access-Control-Allow-Methods GET,POST,PUT always;
+        add_header Access-Control-Allow-Headers sentry-trace,baggage always;
+        add_header Access-Control-Expose-Headers sentry-trace,headers always;
+        include proxy_params;
+        proxy_pass http://your-sentry-ip:9000;
+    }
+
     location / {
         include proxy_params;
         proxy_pass http://your-sentry-ip:9000;
@@ -107,10 +122,35 @@ It is also recommended to fine tune your NGINX for some performance benefits. Yo
 
 ```caddyfile
 sentry.yourcompany.com {
-    reverse_proxy your-sentry-ip:9000 {
-        health_uri /_health/
-        health_status 2xx
-        header_up Host {upstream_hostport}
+    # Handle CORS-related headers for ingest endpoints.
+    # You can also only expose the ingest endpoints only,
+    # by removing the other `handle` directive.
+    #
+    # It is recomended to put a rate limiter on the ingest endpoints.
+    @ingest_endpoint path_regexp ^/api/[1-9]\d+/(envelope|minidump|security|store|unreal)/
+
+    handle @ingest_endpoint {
+        header {
+            Access-Control-Allow-Origin *
+            Access-Control-Allow-Credentials false
+            Access-Control-Allow-Methods GET,POST,PUT
+            Access-Control-Allow-Headers sentry-trace,baggage
+            Access-Control-Expose-Headers sentry-trace,headers
+        }
+
+        reverse_proxy your-sentry-ip:9000 {
+            health_uri /_health/
+            health_status 2xx
+            header_up Host {upstream_hostport}
+        }
+    }
+
+    handle {
+        reverse_proxy your-sentry-ip:9000 {
+            health_uri /_health/
+            health_status 2xx
+            header_up Host {upstream_hostport}
+        }
     }
 
     # By default, the TLS is acquired from Let's Encrypt
@@ -133,11 +173,6 @@ sentry.yourcompany.com {
     #         events 100
     #     }
     # }
-
-    # To expose only ingest endpoint publicly, add the named matcher below before `reverse_proxy` directive
-    # @ingest_endpoint {
-    #     path_regexp /api/[1-9]\d+/(envelope|minidump|security|store|unreal)/
-    # }
 }
 ```
 
@@ -147,24 +182,39 @@ For detailed documentation on Caddyfile configuration, see [Caddy documentation]
 
 [Traefik](https://doc.traefik.io/traefik/) is another reverse proxy that provides a lot of plugin and integrations out of the box. It automatically handles TLS certificate management via ACME, too. After you [install Traefik](https://doc.traefik.io/traefik/getting-started/install-traefik/), add a configuration to Traefik as follows (this example is using the YAML file provider, convert to your prefered configuration provider as needed).
 
+The configuration below is intended for Traefik v3 with a File Provider.
+
 ```yaml
 http:
   routers:
+    # Handle CORS-related headers for ingest endpoints.
+    # You can also only expose the ingest endpoints only,
+    # by removing the other `handle` directive.
+    #
+    # It is recomended to put a rate limiter on the ingest endpoints.
+    sentry-ingest:
+      entryPoints:
+        - web       # Assuming this your HTTP entrypoint
+        - websecure # Assuming this is your HTTPS entrypoint
+      service: sentry@file
+      rule: "Host(`sentry.yourcompany.com`) && PathRegexp(`^/api/[1-9]\\d+/(envelope|minidump|security|store|unreal)`)"
+      tls:
+        certResolver: letsencrypt # Assuming you have a TLS certificate resolver named "letsencrypt"
+      middlewares:
+        - https_redirect@file
+        - cors_headers@file # For handling browser clients
+        - rate_limiter@file
     sentry:
       entryPoints:
         - web       # Assuming this your HTTP entrypoint
         - websecure # Assuming this is your HTTPS entrypoint
       service: sentry@file
       rule: "Host(`sentry.yourcompany.com`)"
-      # If you want to expose only ingest endpoint publicly
-      # rule: "Host(`sentry.yourcompany.com`) && PathPrefix(`/api/{id:[1-9]\d*}/envelope`, `/api/{id:[1-9]\d*}/minidump`, `/api/{id:[1-9]\d*}/security`, `/api/{id:[1-9]\d*}/store`, `/api/{id:[1-9]\d*}/unreal`)"
       tls:
         certResolver: letsencrypt # Assuming you have a TLS certificate resolver named "letsencrypt"
       # Enable middleware as needed
       middlewares:
         - https_redirect@file
-        - cors_headers@file # For handling browser clients
-        - rate_limiter@file
 
   services:
     sentry:
@@ -187,8 +237,6 @@ http:
     cors_headers:
       headers:
         customResponseHeaders:
-          # We can't remove header on Traefik, but we can put it to some other values
-          server: "Your Company Name"
           addVaryHeader: true
           # If you want to set this to true, adjust "accessControlAllowOriginList" to a valid domain and remove the asterisk wildcard
           accessControlAllowCredentials: false
@@ -201,12 +249,9 @@ http:
             - GET
             - POST
             - PUT
-            - PATCH
-            - DELETE
           accessControlExposeHeaders:
             - "sentry-trace"
             - "baggage"
-          sslRedirect: true
     rate_limiter:
       rateLimit:
         average: 100
@@ -254,12 +299,27 @@ frontend https_bind
     bind *:443 ssl crt /etc/haproxy/certs/ name https_port
     mode http
 
-    acl sentry_domain hdr(host) -i sentry.yourcompany.com
+    acl sentry_domain   hdr(host) -i sentry.yourcompany.com
+    acl ingest_endpoint path_reg -i /api/[1-9]\d+/(envelope|minidump|security|store|unreal)/
+
+    # Handle CORS-related headers for ingest endpoints.
+    # You can also only expose the ingest endpoints only,
+    # by removing the other `handle` directive.
+    #
+    # It is recomended to put a rate limiter on the ingest endpoints.
+    use_backend sentry_ingest if sentry_domain ingest_endpoint
+
     use_backend sentry if sentry_domain
 
-    # To expose only ingest endpoints publicly, add the acl below on `use_backend` directive
-    # acl ingest_endpoint path_reg -i /api/[1-9]\d+(envelope|minidump|security|store|unreal)/
-    # use_backend sentry if sentry_domain ingest_endpoint
+backend sentry_ingest
+    mode http
+    option httpchk
+    server server1 your-sentry-ip:9000 check
+    http-response set-header Access-Control-Allow-Origin *
+    http-response set-header Access-Control-Allow-Credentials false
+    http-response set-header Access-Control-Allow-Methods GET,POST,PUT
+    http-response set-header Access-Control-Allow-Headers sentry-trace,baggage
+    http-response set-header Access-Control-Expose-Headers sentry-trace,headers
 
 backend sentry
     mode http

@@ -8,16 +8,19 @@
 
 Sentry should be initialized in your application as early as possible:
 
-```javascript {tabTitle:CommonJS} {filename: instrument.js} {"onboardingOptions": {"performance": "10-14", "profiling": "3, 15-18, 22"}}
+```javascript {tabTitle:CommonJS} {filename: instrument.js}
 const express = require('express');
 const Sentry = require('@sentry/node');
+// ___PRODUCT_OPTION_START___ profiling
 const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+// ___PRODUCT_OPTION_END___ profiling
 
 const app = express();
 
 // Sentry must be initialized as early as possible
 Sentry.init({
   dsn: "___DSN___",
+  // ___PRODUCT_OPTION_START___ performance
 
   // Add Performance Monitoring by setting tracesSampleRate and adding integration
   // Set tracesSampleRate to 1.0 to capture 100% of transactions
@@ -25,14 +28,19 @@ Sentry.init({
   // Learn more at
   // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
   tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ profiling
 
   // Set sampling rate for profiling
   // This is relative to tracesSampleRate
   profilesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ profiling
 
   integrations: [
     expressIntegration({ app }),
+    // ___PRODUCT_OPTION_START___ profiling
     nodeProfilingIntegration(),
+    // ___PRODUCT_OPTION_END___ profiling
   ],
 
   // It is possible to specify the routes that should be traced by passing a router instance to the `router` option:
@@ -63,29 +71,37 @@ app.use(function onError(err, req, res, next) {
 app.listen(3000);
 ```
 
-```javascript {tabTitle:ESM} {filename: instrument.mjs} {"onboardingOptions": {"performance": "10-14", "profiling": "3, 15-18, 22"}}
+```javascript {tabTitle:ESM} {filename: instrument.mjs}
 import express from "express";
 import * as Sentry from "@sentry/node";
+// ___PRODUCT_OPTION_START___ profiling
 import { nodeProfilingIntegration } from '@sentry/profiling-node';
+// ___PRODUCT_OPTION_END___ profiling
 
 const app = express();
 
 // Sentry must be initialized as early as possible
 Sentry.init({
   dsn: "___DSN___",
+  // ___PRODUCT_OPTION_START___ performance
 
   // Add Performance Monitoring by setting tracesSampleRate and adding integration
   // Set tracesSampleRate to 1.0 to capture 100% of transactions
   // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ profiling
 
   // Set sampling rate for profiling
   // This is relative to tracesSampleRate
   profilesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ profiling
 
   integrations: [
     expressIntegration({ app }),
+    // ___PRODUCT_OPTION_START___ profiling
     nodeProfilingIntegration(),
+    // ___PRODUCT_OPTION_END___ profiling
   ],
 
   // It is possible to specify the routes that should be traced by passing a router instance to the `router` option:
