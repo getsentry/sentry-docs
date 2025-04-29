@@ -37,7 +37,7 @@ export function DevelopDocsSidebar({
     return toTree(apiNodes);
   };
   return (
-    <aside className={styles.sidebar}>
+    <aside className={`${styles.sidebar} p-3`}>
       <input type="checkbox" id={sidebarToggleId} className="hidden" />
       <style>{':root { --sidebar-width: 300px; }'}</style>
       <div className="md:flex flex-col items-stretch">
