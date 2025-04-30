@@ -14,9 +14,7 @@ Many of the categories listed here require you to enable the <PlatformLink to="/
 
 ## HTTP Headers
 
-By default, the Sentry SDK doesn't send any HTTP response or request headers.
-
-To start sending HTTP headers, set <PlatformLink to="/configuration/options/#sendDefaultPii">`sendDefaultPii: true`</PlatformLink>.
+By default, the Sentry SDK sends HTTP response or request headers.
 
 ## Cookies
 
@@ -26,9 +24,9 @@ If you want to send cookies, set `sendDefaultPii: true` in the `Sentry.init()` c
 
 ## Information About Logged-in User
 
-By default, the Sentry SDK doesn't send any information about the logged-in user, such as email address, user ID, or username. Even if enabled, the type of logged-in user information you'll be able to send depends on the integrations you enable in Sentry's SDK. Most integrations won't send any user information. Some will only set the user ID, but there are a few (e.g. <PlatformLink to="/user-feedback/">User Feedback</PlatformLink>) that will set the user ID, username, and email address.
+By default, the Sentry SDK doesn't send any information about the logged-in user, such as email address, user ID, or username.
 
-To start sending logged-in user information, set <PlatformLink to="/configuration/options/#sendDefaultPii">`sendDefaultPii: true`</PlatformLink> in your `Sentry.init({})` config.
+The type of logged-in user information you'll be able to send depends on the integrations you enable in Sentry's SDK. Most integrations won't send any user information. Some integrations (e.g. <PlatformLink to="/user-feedback/">User Feedback</PlatformLink>) make it possible to send data like the user ID, username, and email address.
 
 ## Users' IP Address and Location
 
@@ -44,27 +42,35 @@ The full request URL of outgoing and incoming HTTP requests is **always sent to 
 
 ## Request Query String
 
-The full request query string of outgoing and incoming HTTP requests is **always sent to Sentry**. Depending on your application, this could contain PII data.
+The full request query string of outgoing and incoming HTTP requests is **always sent to Sentry**. Depending on your application, this could contain PII data. For example, a query string like `?user_id=1234`, where `1234` is a user id (which may be considered PII).
+
+However, Sentry has some default [server-side data scrubbing](/security-legal-pii/scrubbing/server-side-scrubbing/) in place to remove sensitive data from the query string. For example, the `apiKey` and `token` query parameters are removed by default.
 
 ## Request Body
 
-- **The type of the request body:**
-  - JSON and HTML Form bodies are sent
-- **The size of the request body:** There's a <PlatformLink to="/configuration/options/#max-request-body-size">maxRequestBodySize</PlatformLink> option that's set to `NONE` by default. This means by default no request body is sent to Sentry.
+By default, Sentry sends the size of the body content of incoming HTTP requests. This is inferred from the `content-length` header. Sentry does not send the request body itself on the client-side.
+
+<PlatformSection notSupported={["javascript", "javascript.angular", "javascript.capacitor", "javascript.cordova", "javascript.ember", "javascript.gatsby", "javascript.react", "javascript.solid", "javascript.svelte", "javascript.vue", "javascript.wasm"]}>
+  On the server-side, the incoming request body is captured by default. You can disable sending the incoming request body by configuring `ignoreIncomingRequestBody` in the <PlatformLink to="/configuration/integrations/http/">HTTP Integration</PlatformLink>.
+</PlatformSection>
+
+<PlatformSection supported={["javascript.remix"]}>
+  If `sendDefaultPii` is enabled, you can send Form Data with `captureActionFormDataKeys` in the Remix <PlatformLink to="/manual-setup/#server-side-configuration">server-side configuration</PlatformLink>.
+</PlatformSection>
 
 ## Response Body
 
-By default, the Sentry SDK doesn't send the content of response bodies. By default, the SDK will send the response body size based on the `content-length` header.
+By default, the Sentry SDK doesn't send the body content of responses received from outgoing requests. By default, the SDK will send the response body size based on the `content-length` header.
 
 ## Source Context
 
-By default, using the Sentry CLI Wizard will enable uploading source maps to Sentry.
+By default, SDKs set up by the Sentry CLI Wizard (`@sentry/wizard`) will enable uploading source maps to Sentry.
 
 To disable source map upload, see <PlatformLink to="/sourcemaps">the Source Maps documentation</PlatformLink>.
 
 ## Local Variables In Stack Trace
 
-By default, the Sentry SDK will not send local variables in the error stack trace in client-side JavaScript SDKs.
+The Sentry SDK does not send local variables in the error stack trace in client-side JavaScript SDKs.
 
 <PlatformSection notSupported={["javascript", "javascript.angular", "javascript.capacitor", "javascript.cordova", "javascript.ember", "javascript.gatsby", "javascript.react", "javascript.solid", "javascript.svelte", "javascript.vue", "javascript.wasm"]}>
   You can enable sending local variables by setting `includeLocalVariables: true` in the `Sentry.init()` call. This activates the <PlatformLink to="/configuration/integrations/localvariables">Local Variables Integration</PlatformLink>. The integration is added by default in Node.js-based runtimes.
@@ -83,6 +89,8 @@ In server-side environments, the Sentry SDK uses the `os` module to get informat
     ## Session Replay
 
     By default, our Session Replay SDK masks all text content, images, web views, and user input. This helps ensure that no sensitive data is exposed. You can find <PlatformLink to="/session-replay/privacy/">more details in the Session Replay documentation</PlatformLink>.
+
+    Session Replay also captures basic information about all outgoing fetch and XHR requests in your application. This includes the URL, request and response body size, method, and status code. If <PlatformLink to="/session-replay/configuration/#network-details">`networkDetailAllowUrls`</PlatformLink> are defined, the request and response body will be sent to Sentry as well. This can include PII data if the request or response body contains PII information.
   </PlatformSection>
 
   ## Referrer URL
@@ -91,7 +99,7 @@ In server-side environments, the Sentry SDK uses the `os` module to get informat
 
   ## Console Logs
 
-  By default, the Sentry SDK sends JS console logs to Sentry which may contain PII data.
+  By default, the Sentry SDK sends JS console logs to Sentry as breadcrumbs which may contain PII data.
 
   To disable sending console messages, set `console: false` in your `Sentry.breadcrumbsIntegration` config, see <PlatformLink to="/configuration/integrations/breadcrumbs/">the Breadcrumbs documentation</PlatformLink>.
 
