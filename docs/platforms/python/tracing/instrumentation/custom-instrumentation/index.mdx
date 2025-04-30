@@ -273,7 +273,10 @@ with sentry_sdk.start_span(name="my-span") as span:
 To attach data attributes to the transaction and all its spans, you can use <PlatformLink to="/configuration/filtering/#using-before-send-transaction">`before_send_transaction`</PlatformLink>:
 
 ```python
-def my_before_send_transaction(event, hint):
+import sentry_sdk
+from sentry_sdk.types import Event, Hint
+
+def before_send_transaction(event: Event, hint: Hint) -> Event | None:
     # Set the data attribute "foo" to "bar" on every span belonging to this
     # transaction event
     for span in event["spans"]:
@@ -284,9 +287,8 @@ def my_before_send_transaction(event, hint):
 
     return event
 
-
 sentry_sdk.init(
     traces_sample_rate=1.0,
-    before_send_transaction=my_before_send_transaction,
+    before_send_transaction=before_send_transaction,
 )
 ```

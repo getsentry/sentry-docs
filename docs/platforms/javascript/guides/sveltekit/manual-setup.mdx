@@ -1,7 +1,7 @@
 ---
 title: Manual Setup
 sidebar_order: 1
-description: "Learn how to set up the SDK manually."
+description: "Learn how to manually set up Sentry in your Angular app and capture your first errors."
 ---
 
 If you can't (or prefer not to) run the <PlatformLink to="/#install">automatic setup</PlatformLink>, you can follow the instructions below to configure the Sentry SvelteKit SDK in your application. This guide is also useful to adjust the pre-set configuration if you used the installation wizard for automatic setup.
@@ -33,11 +33,15 @@ If you don't already have a [client hooks](https://kit.svelte.dev/docs/hooks#sha
 At the top of your client hooks file, import and initialize the Sentry SDK as shown in the snippet below. See the [Basic Options](../configuration/options/) page to view other SDK configuration options.
 Also, add the `handleErrorWithSentry` function to the [`handleError` hook](https://kit.svelte.dev/docs/hooks#shared-hooks-handleerror):
 
-```javascript {filename:hooks.client.(js|ts)} {1, 3-14, 20}
+```javascript {filename:hooks.client.(js|ts)} {1, 3-18, 24}
 import * as Sentry from "@sentry/sveltekit";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/sveltekit/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
 
   // We recommend adjusting this value in production, or using tracesSampler
   // for finer control
@@ -67,11 +71,15 @@ At the top of your server hooks file, import and initialize the Sentry SDK as sh
 Add the `handleErrorWithSentry` function to the [`handleError` hook](https://kit.svelte.dev/docs/hooks#shared-hooks-handleerror) and add the Sentry request handler to the [`handle` hook](https://kit.svelte.dev/docs/hooks#server-hooks-handle).
 If you're already using your own handler(s), use SvelteKit's [`sequence`](https://kit.svelte.dev/docs/modules#sveltejs-kit-hooks-sequence) function to add the Sentry handler _before_ your handler(s).
 
-```javascript {filename:hooks.server.(js|ts)} {1, 3-9, 15, 19}
+```javascript {filename:hooks.server.(js|ts)} {1, 3-13, 19, 23}
 import * as Sentry from "@sentry/sveltekit";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/sveltekit/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
 
   // We recommend adjusting this value in production, or using tracesSampler
   // for finer control
