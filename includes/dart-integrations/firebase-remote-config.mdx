@@ -10,7 +10,7 @@ The `sentry_firebase_remote_config` integration provides [Firebase Remote Config
 
 ## Behavior
 
-- Adding the `SentryFirebaseRemoteConfig` integration will automatically track feature flag evaluations for boolean Firebase Remote Config values.
+- Adding the `SentryFirebaseRemoteConfig` integration will automatically track feature flag evaluations.
 - Only boolean values are supported.
 
 ## Prerequisites
@@ -30,21 +30,15 @@ dependencies:
 
 ## Configure
 
-Add the `SentryFirebaseRemoteConfig` integration to the Sentry SDK initialization.
+Add the `SentryFirebaseRemoteConfig` integration to the Sentry SDK initialization. The integration will automatically call `await remoteConfig.activate();` when the config is updated.
+If you don't want this behavior, you can set `activateOnConfigUpdated` to `false`.
 
 ```dart
-import 'package:sentry_flutter/sentry_flutter.dart';
-import 'package:sentry_firebase_remote_config/sentry_firebase_remote_config.dart';
-
-... // Initialize Firebase Remote Config
-
 await SentryFlutter.init(
   (options) {
-    options.dsn = 'https://example@sentry.io/example';
     options.addIntegration(
       SentryFirebaseRemoteConfigIntegration(
         firebaseRemoteConfig: firebaseRemoteConfig,
-        // Don't call `await remoteConfig.activate();` when firebase config is updated. Per default this is true.
         activateOnConfigUpdated: false,
       ),
     );
