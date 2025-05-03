@@ -1,0 +1,125 @@
+# Sentry and Node.js LLM Rules  
+
+You are an expert in application architecture and the configuration of observability tools like Sentry. Ensure you are following these instructions, while taking into account the user's request. 
+
+Always ensure you are installing Sentry using `npm install @sentry/node@latest` or `yarn add @sentry/node@latest`. The latest package should always be used unless explicitly told otherwise.
+
+## Configuration examples 
+
+These examples should be used to configure the different Sentry functionality in Node.js applications. Use these as the default configuration, factoring in the user's requests. 
+
+### Sentry Setup (applies to all configurations)
+
+Configure Sentry using the following parameters unless explicitly told otherwise.
+
+```javascript
+import * as Sentry from "@sentry/node";
+
+// Initialize Sentry as early as possible
+Sentry.init({
+  dsn: "<sentry dsn>",
+  
+  // Enable tracing to capture 100% of transactions
+  // Recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+  
+  // Set tracePropagationTargets for which URLs trace propagation should be enabled
+  tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+  
+  // Enable HTTP capturing
+  integrations: [
+    Sentry.httpIntegration(),
+  ],
+});
+```
+
+### Error Tracking and Exception Catching 
+
+Instrument errors throughout the application using the following approaches:
+
+```javascript
+// Explicitly capture an exception
+try {
+  throw new Error("Example error");
+} catch (e) {
+  Sentry.captureException(e);
+}
+
+// Capture a custom message
+Sentry.captureMessage("Something went wrong", "error");
+
+// Add extra context to the error
+Sentry.configureScope((scope) => {
+  scope.setTag("page_locale", "de-at");
+  scope.setUser({ id: '123', email: 'user@example.com' });
+  scope.setExtra("character_name", "Mighty Fighter");
+});
+```
+
+### Tracing and Performance Monitoring
+
+Utilize the following examples for tracing scenarios:
+
+```javascript
+// Create a transaction
+const transaction = Sentry.startTransaction({
+  op: "test",
+  name: "My First Test Transaction"
+});
+
+// Set transaction as the current scope
+Sentry.getCurrentHub().configureScope(scope => {
+  scope.setSpan(transaction);
+});
+
+// Create a child span
+const span = transaction.startChild({ op: "functionX", description: "Function doing work" });
+
+try {
+  // Do something...
+  span.setStatus("ok");
+} catch (error) {
+  span.setStatus("internal_error");
+  throw error;
+} finally {
+  // Finish the span
+  span.finish();
+  // Finish the transaction
+  transaction.finish();
+}
+```
+
+### Express Framework Integration
+
+For Express.js applications:
+
+```javascript
+import express from "express";
+import * as Sentry from "@sentry/node";
+
+const app = express();
+
+// Initialize Sentry - this must happen before other app middleware
+Sentry.init({
+  dsn: "<sentry dsn>",
+  integrations: [
+    // Enable Express.js monitoring
+    Sentry.expressIntegration(),
+    Sentry.httpIntegration(),
+  ],
+  tracesSampleRate: 1.0,
+});
+
+// The request handler must be the first middleware on the app
+app.use(Sentry.Handlers.requestHandler());
+
+// All your controllers should go here
+app.get("/", function rootHandler(req, res) {
+  res.end("Hello world!");
+});
+
+// The error handler must be registered before any other error middleware and after all controllers
+app.use(Sentry.Handlers.errorHandler());
+
+app.listen(3000);
+``` 

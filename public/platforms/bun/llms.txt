@@ -1,0 +1,130 @@
+# Sentry and Bun LLM Rules  
+
+You are an expert in application architecture and the configuration of observability tools like Sentry. Ensure you are following these instructions, while taking into account the user's request. 
+
+Always ensure you are installing Sentry using `bun add @sentry/bun@latest`. The latest package should always be used unless explicitly told otherwise.
+
+## Configuration examples 
+
+These examples should be used to configure the different Sentry functionality in Bun applications. Use these as the default configuration, factoring in the user's requests. 
+
+### Sentry Setup (applies to all configurations)
+
+Sentry should be initialized as early as possible in your application's lifecycle. Create a file named `instrument.js` that imports and initializes Sentry:
+
+```javascript
+import * as Sentry from "@sentry/bun";
+
+// Initialize Sentry before importing any other modules
+Sentry.init({
+  dsn: "<sentry dsn>",
+  
+  // Enable tracing to capture 100% of transactions
+  // Recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+  
+  // Set tracePropagationTargets for which URLs trace propagation should be enabled
+  tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+});
+```
+
+Then import this file at the very beginning of your main application file:
+
+```javascript
+// Import this first!
+import "./instrument";
+
+// Now import other modules
+import http from "http";
+
+// Your application code goes here
+```
+
+### Error Tracking and Exception Catching 
+
+Instrument errors throughout the application using the following approaches:
+
+```javascript
+// Explicitly capture an exception
+try {
+  throw new Error("Example error");
+} catch (e) {
+  Sentry.captureException(e);
+}
+
+// Capture a custom message
+Sentry.captureMessage("Something went wrong", "error");
+
+// Add extra context to the error
+Sentry.configureScope((scope) => {
+  scope.setTag("page_locale", "de-at");
+  scope.setUser({ id: '123', email: 'user@example.com' });
+  scope.setExtra("character_name", "Mighty Fighter");
+});
+```
+
+### Tracing and Performance Monitoring
+
+Utilize the following examples for tracing scenarios:
+
+```javascript
+// Create a transaction
+const transaction = Sentry.startTransaction({
+  op: "test",
+  name: "My First Test Transaction"
+});
+
+// Set transaction as the current scope
+Sentry.getCurrentHub().configureScope(scope => {
+  scope.setSpan(transaction);
+});
+
+// Create a child span
+const span = transaction.startChild({ op: "functionX", description: "Function doing work" });
+
+try {
+  // Do something...
+  span.setStatus("ok");
+} catch (error) {
+  span.setStatus("internal_error");
+  throw error;
+} finally {
+  // Finish the span
+  span.finish();
+  // Finish the transaction
+  transaction.finish();
+}
+```
+
+### Bun.serve Integration
+
+For Bun server applications:
+
+```javascript
+import * as Sentry from "@sentry/bun";
+
+// Initialize Sentry before anything else
+Sentry.init({
+  dsn: "<sentry dsn>",
+  integrations: [
+    // Add Bun server integration
+    Sentry.bunServerIntegration(),
+  ],
+  tracesSampleRate: 1.0,
+});
+
+// Example Bun server
+Bun.serve({
+  port: 3000,
+  fetch(req) {
+    const url = new URL(req.url);
+    
+    if (url.pathname === "/error") {
+      // This will be automatically captured by Sentry
+      throw new Error("Example server error");
+    }
+    
+    return new Response("Hello World!");
+  },
+});
+``` 
