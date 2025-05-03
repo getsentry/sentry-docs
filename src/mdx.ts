@@ -41,7 +41,7 @@ const isSupported = (
   frontmatter: FrontMatter,
   platformName: string,
   guideName?: string
-): boolean => {
+): boolean | null => {
   const canonical = guideName ? `${platformName}.${guideName}` : platformName;
   if (frontmatter.supported && frontmatter.supported.length) {
     if (frontmatter.supported.indexOf(canonical) !== -1) {
@@ -58,7 +58,7 @@ const isSupported = (
   ) {
     return false;
   }
-  return true;
+  return null;
 };
 
 let getDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
@@ -242,11 +242,42 @@ function getAllFilesFrontMatter() {
       }
 
       commonFiles.forEach(f => {
-        if (!isSupported(f.frontmatter, platformName, guideName)) {
-          return;
+        const subpath = f.commonFileName.slice(commonPath.length + 1);
+
+        // If we look at an index.mdx file, only check support directly - no inheritance needed
+        if (subpath === 'index.mdx') {
+          if (!isSupported(f.frontmatter, platformName, guideName)) {
+            return;
+          }
+        } else {
+          // For non-index files, check if there's a parent index.mdx file (on the same level) for inherited support
+          let isFileSupported = isSupported(f.frontmatter, platformName, guideName);
+
+          // only check if there no explicit support decision from the file
+          if (isFileSupported === null) {
+            const dirPath = path.dirname(subpath);
+
+            const parentIndexFile = commonFiles.find(parentFile => {
+              const parentSubpath = parentFile.commonFileName.slice(
+                commonPath.length + 1
+              );
+              return parentSubpath === path.join(dirPath, 'index.mdx');
+            });
+
+            if (parentIndexFile) {
+              isFileSupported = isSupported(
+                parentIndexFile.frontmatter,
+                platformName,
+                guideName
+              );
+            }
+
+            if (isFileSupported === false) {
+              return;
+            }
+          }
         }
 
-        const subpath = f.commonFileName.slice(commonPath.length + 1);
         const slug = path.join('platforms', platformName, 'guides', guideName, subpath);
         if (!fs.existsSync(path.join(docsPath, slug))) {
           let frontmatter = f.frontmatter;
