@@ -15,11 +15,11 @@ This document defines the format used by Sentry to ingest logs, as well as the S
 
 There are two ways to send logs to Sentry: via the `log` envelope and Sentry Log protocol (preferred), or the `otel_log` envelope and OpenTelemetry Log protocol.
 
-All SDKs are required to send logs via the `log` envelope and Sentry Log protocol. The `otel_log` envelope and OpenTelemetry Log protocol are just documented for completeness and to provide a reference for SDK authors. See the [Appendix A](#appendix-a-otel_log-envelope-item-payload) for the `otel_log` envelope item payload.
+All SDKs are required to send logs via the `log` envelope and Sentry Log protocol. The `otel_log` envelope and OpenTelemetry Log protocol are just documented for completeness and to provide a reference for SDK authors. See the [Appendix B](#appendix-b-otel_log-envelope-item-payload) for the `otel_log` envelope item payload.
 
 ### `log` Envelope Item
 
-The `log` envelope item is an object that contains an array of log payloads encoded as JSON. This allows for multiple log payloads to be sent in a single envelope item. For more details on the `log` envelope item, see the [Log Envelope Item](/sdk/data-model/envelope-items/#log) documentation.
+The `log` envelope item is an object that contains an array of log payloads encoded as JSON. This allows for multiple log payloads to be sent in a single envelope item. For more details on the `log` envelope item, see the [Log Envelope Item](/sdk/data-model/envelope-items/#log) documentation. See [Appendix A](#appendix-a-log-envelope-item-payload) for an example `log` envelope.
 
 ```json
 {
@@ -338,7 +338,180 @@ If SDK authors feel the need, they can also introduce additional options to beyo
 
 If `debug` is set to `true` in SDK init, calls to the Sentry logger API should also print to the console with the appropriate log level. This will help debugging logging setups.
 
-## Appendix A: `otel_log` Envelope Item Payload
+## Appendix A: Example `log` Envelope
+
+```json
+{ "sdk": { "name": "sentry.javascript.browser", "version": "9.15.0" } }
+{
+  "type": "log",
+  "item_count": 6,
+  "content_type": "application/vnd.sentry.items.log+json"
+}
+{
+  "items": [
+    {
+      "timestamp": 1746456149.0191,
+      "level": "trace",
+      "body": "Modal animation performance: openTime=120ms, closeTime=85ms, fps=60",
+      "trace_id": "624f66e93a04469f9992c7e9f1485056",
+      "severity_number": 1,
+      "attributes": {
+        "modalId": { "value": "product_details", "type": "string" },
+        "animationType": { "value": "slide-up", "type": "string" },
+        "devicePixelRatio": { "value": 2, "type": "integer" },
+        "browser": { "value": "Chrome", "type": "string" },
+        "memoryUsage": { "value": "45MB", "type": "string" },
+        "sentry.sdk.name": {
+          "value": "sentry.javascript.browser",
+          "type": "string"
+        },
+        "sentry.sdk.version": { "value": "9.15.0", "type": "string" },
+        "sentry.message.template": {
+          "value": "Modal animation performance: openTime=%sms, closeTime=%sms, fps=%s",
+          "type": "string"
+        },
+        "sentry.message.parameter.0": { "value": 120, "type": "integer" },
+        "sentry.message.parameter.1": { "value": 85, "type": "integer" },
+        "sentry.message.parameter.2": { "value": 60, "type": "integer" }
+      }
+    },
+    {
+      "timestamp": 1746456149.0191998,
+      "level": "debug",
+      "body": "Component ProductCard rendered 3 times",
+      "trace_id": "624f66e93a04469f9992c7e9f1485056",
+      "severity_number": 5,
+      "attributes": {
+        "props": { "value": "{\"productId\":\"prod_123\"}", "type": "string" },
+        "renderTime": { "value": 45, "type": "integer" },
+        "sentry.sdk.name": {
+          "value": "sentry.javascript.browser",
+          "type": "string"
+        },
+        "sentry.sdk.version": { "value": "9.15.0", "type": "string" },
+        "sentry.message.template": {
+          "value": "Component %s rendered %s times",
+          "type": "string"
+        },
+        "sentry.message.parameter.0": {
+          "value": "ProductCard",
+          "type": "string"
+        },
+        "sentry.message.parameter.1": { "value": 3, "type": "integer" }
+      }
+    },
+    {
+      "timestamp": 1746456149.0191998,
+      "level": "info",
+      "body": "Form checkout_form submitted successfully with 8 fields",
+      "trace_id": "624f66e93a04469f9992c7e9f1485056",
+      "severity_number": 9,
+      "attributes": {
+        "step": { "value": "payment_details", "type": "string" },
+        "timeSpent": { "value": 120, "type": "integer" },
+        "sentry.sdk.name": {
+          "value": "sentry.javascript.browser",
+          "type": "string"
+        },
+        "sentry.sdk.version": { "value": "9.15.0", "type": "string" },
+        "sentry.message.template": {
+          "value": "Form %s submitted successfully with %s fields",
+          "type": "string"
+        },
+        "sentry.message.parameter.0": {
+          "value": "checkout_form",
+          "type": "string"
+        },
+        "sentry.message.parameter.1": { "value": 8, "type": "integer" }
+      }
+    },
+    {
+      "timestamp": 1746456149.0192997,
+      "level": "warn",
+      "body": "API endpoint /api/products response time 2500ms exceeds threshold of 1000ms",
+      "trace_id": "624f66e93a04469f9992c7e9f1485056",
+      "severity_number": 13,
+      "attributes": {
+        "userAgent": { "value": "Mozilla/5.0...", "type": "string" },
+        "connectionType": { "value": "4g", "type": "string" },
+        "sentry.sdk.name": {
+          "value": "sentry.javascript.browser",
+          "type": "string"
+        },
+        "sentry.sdk.version": { "value": "9.15.0", "type": "string" },
+        "sentry.message.template": {
+          "value": "API endpoint %s response time %sms exceeds threshold of %sms",
+          "type": "string"
+        },
+        "sentry.message.parameter.0": {
+          "value": "/api/products",
+          "type": "string"
+        },
+        "sentry.message.parameter.1": { "value": 2500, "type": "integer" },
+        "sentry.message.parameter.2": { "value": 1000, "type": "integer" }
+      }
+    },
+    {
+      "timestamp": 1746456149.0192997,
+      "level": "error",
+      "body": "Failed to load images for products prod_123, prod_456",
+      "trace_id": "624f66e93a04469f9992c7e9f1485056",
+      "severity_number": 17,
+      "attributes": {
+        "error": { "value": "NetworkError", "type": "string" },
+        "statusCode": { "value": 404, "type": "integer" },
+        "retryAttempts": { "value": 2, "type": "integer" },
+        "browser": { "value": "Chrome", "type": "string" },
+        "version": { "value": "120.0", "type": "string" },
+        "sentry.sdk.name": {
+          "value": "sentry.javascript.browser",
+          "type": "string"
+        },
+        "sentry.sdk.version": { "value": "9.15.0", "type": "string" },
+        "sentry.message.template": {
+          "value": "Failed to load images for products %s",
+          "type": "string"
+        },
+        "sentry.message.parameter.0": {
+          "value": "prod_123, prod_456",
+          "type": "string"
+        }
+      }
+    },
+    {
+      "timestamp": 1746456149.0192997,
+      "level": "fatal",
+      "body": "State corruption detected in ShoppingCart component during UPDATE_CART action",
+      "trace_id": "624f66e93a04469f9992c7e9f1485056",
+      "severity_number": 21,
+      "attributes": {
+        "error": { "value": "ReduxStateError", "type": "string" },
+        "previousState": { "value": "valid", "type": "string" },
+        "currentState": { "value": "invalid", "type": "string" },
+        "sentry.sdk.name": {
+          "value": "sentry.javascript.browser",
+          "type": "string"
+        },
+        "sentry.sdk.version": { "value": "9.15.0", "type": "string" },
+        "sentry.message.template": {
+          "value": "State corruption detected in %s component during %s action",
+          "type": "string"
+        },
+        "sentry.message.parameter.0": {
+          "value": "ShoppingCart",
+          "type": "string"
+        },
+        "sentry.message.parameter.1": {
+          "value": "UPDATE_CART",
+          "type": "string"
+        }
+      }
+    }
+  ]
+}
+```
+
+## Appendix B: `otel_log` Envelope Item Payload
 
 <Expandable title="Click to expand/collapse details about the `otel_log` envelope item payload.">
 
