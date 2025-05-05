@@ -94,6 +94,7 @@ import NuxtSVG from 'platformicons/svg/nuxt.svg';
 import OpenaiSVG from 'platformicons/svg/openai.svg';
 import PerlSVG from 'platformicons/svg/perl.svg';
 import PhpSVG from 'platformicons/svg/php.svg';
+import PlaystationSVG from 'platformicons/svg/playstation.svg';
 import PostgresqlSVG from 'platformicons/svg/postgresql.svg';
 import PowershellSVG from 'platformicons/svg/powershell.svg';
 import PyramidSVG from 'platformicons/svg/pyramid.svg';
@@ -235,6 +236,7 @@ import NuxtSVGLarge from 'platformicons/svg_80x80/nuxt.svg';
 import OpenaiSVGLarge from 'platformicons/svg_80x80/openai.svg';
 import PerlSVGLarge from 'platformicons/svg_80x80/perl.svg';
 import PhpSVGLarge from 'platformicons/svg_80x80/php.svg';
+import PlaystationSVGLarge from 'platformicons/svg_80x80/playstation.svg';
 import PostgresqlSVGLarge from 'platformicons/svg_80x80/postgresql.svg';
 import PowershellSVGLarge from 'platformicons/svg_80x80/powershell.svg';
 import PyramidSVGLarge from 'platformicons/svg_80x80/pyramid.svg';
@@ -668,6 +670,10 @@ const formatToSVG = {
     sm: PhpSVG,
     lg: PhpSVGLarge,
   },
+  playstation: {
+    sm: PlaystationSVG,
+    lg: PlaystationSVGLarge,
+  },
   postgresql: {
     sm: PostgresqlSVG,
     lg: PostgresqlSVGLarge,
@@ -969,6 +975,7 @@ export const PLATFORM_TO_ICON = {
   'php-monolog': 'php',
   'php-symfony2': 'symfony',
   'php-symfony': 'symfony',
+  playstation: 'playstation',
   python: 'python',
   'python-aiohttp': 'aiohttp',
   'python-airflow': 'apache-airflow',
