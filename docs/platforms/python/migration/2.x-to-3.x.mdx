@@ -126,7 +126,123 @@ Both `traces_sampler` and the `sampled` argument will only influence whether roo
 
 </Alert>
 
-The `sampling_context` argument of `traces_sampler` and `profiles_sampler` has changed considerably for spans coming from our auto-instrumented integrations. As a consequence of using OpenTelemetry under the hood, spans can only carry specific, simple types of data. This prevents us from making custom objects, for example, the `Request` object for several web frameworks, accessible on the span. See the [migration guide in the repository](https://github.com/getsentry/sentry-python/blob/potel-base/MIGRATION_GUIDE.md) for details on what data is available.
+The `sampling_context` argument of `traces_sampler` and `profiles_sampler` has changed considerably for spans coming from our auto-instrumented integrations. As a consequence of using OpenTelemetry under the hood, spans can only carry specific, simple types of data. This prevents us from making custom objects, for example, the `Request` object for several web frameworks, accessible on the span.
+
+<Expandable title='AIOHTTP `sampling_context` changes'>
+  The AIOHTTP integration doesn't add the `aiohttp_request` object anymore. Instead, some of the individual properties of the request are accessible, if available, as follows:
+
+    | Request property  | Sampling context key(s)         |
+    | ----------------- | ------------------------------- |
+    | `path`            | `url.path`                      |
+    | `query_string`    | `url.query`                     |
+    | `method`          | `http.request.method`           |
+    | `host`            | `server.address`, `server.port` |
+    | `scheme`          | `url.scheme`                    |
+    | full URL          | `url.full`                      |
+    | `request.headers` | `http.request.header.{header}`  |
+</Expandable>
+
+<Expandable title='Celery `sampling_context` changes'>
+  The Celery integration doesn't add the `celery_job` dictionary anymore. Instead, the individual keys are now available as:
+
+  | Dictionary keys        | Sampling context key        | Example                        |
+  | ---------------------- | --------------------------- | ------------------------------ |
+  | `celery_job["args"]`   | `celery.job.args.{index}`   | `celery.job.args.0`            |
+  | `celery_job["kwargs"]` | `celery.job.kwargs.{kwarg}` | `celery.job.kwargs.kwarg_name` |
+  | `celery_job["task"]`   | `celery.job.task`           |                                |
+</Expandable>
+
+<Expandable title='Tornado `sampling_context` changes'>
+  The Tornado integration doesn't add the `tornado_request` object anymore. Instead, some of the individual properties of the request are accessible, if available, as follows:
+
+    | Request property  | Sampling context key(s)                             |
+    | ----------------- | --------------------------------------------------- |
+    | `path`            | `url.path`                                          |
+    | `query`           | `url.query`                                         |
+    | `protocol`        | `url.scheme`                                        |
+    | `method`          | `http.request.method`                               |
+    | `host`            | `server.address`, `server.port`                     |
+    | `version`         | `network.protocol.name`, `network.protocol.version` |
+    | full URL          | `url.full`                                          |
+    | `request.headers` | `http.request.header.{header}`                      |
+</Expandable>
+
+<Expandable title='WSGI `sampling_context` changes'>
+  The WSGI integration doesn't add the `wsgi_environ` object anymore. Instead, the individual properties of the environment are accessible, if available, as follows:
+
+    | Env property      | Sampling context key(s)                           |
+    | ----------------- | ------------------------------------------------- |
+    | `PATH_INFO`       | `url.path`                                        |
+    | `QUERY_STRING`    | `url.query`                                       |
+    | `REQUEST_METHOD`  | `http.request.method`                             |
+    | `SERVER_NAME`     | `server.address`                                  |
+    | `SERVER_PORT`     | `server.port`                                     |
+    | `SERVER_PROTOCOL` | `server.protocol.name`, `server.protocol.version` |
+    | `wsgi.url_scheme` | `url.scheme`                                      |
+    | full URL          | `url.full`                                        |
+    | `HTTP_*`          | `http.request.header.{header}`                    |
+</Expandable>
+
+<Expandable title='ASGI `sampling_context` changes'>
+  The ASGI integration doesn't add the `asgi_scope` object anymore. Instead, the individual properties of the scope, if available, are accessible as follows:
+
+    | Scope property | Sampling context key(s)         |
+    | -------------- | ------------------------------- |
+    | `type`         | `network.protocol.name`         |
+    | `scheme`       | `url.scheme`                    |
+    | `path`         | `url.path`                      |
+    | `query`        | `url.query`                     |
+    | `http_version` | `network.protocol.version`      |
+    | `method`       | `http.request.method`           |
+    | `server`       | `server.address`, `server.port` |
+    | `client`       | `client.address`, `client.port` |
+    | full URL       | `url.full`                      |
+    | `headers`      | `http.request.header.{header}`  |
+</Expandable>
+
+<Expandable title='RQ `sampling_context` changes'>
+  The RQ integration doesn't add the `rq_job` object anymore. Instead, the individual properties of the job and the queue, if available, are accessible as follows:
+
+    | RQ property     | Sampling context key         | Example                |
+    | --------------- | ---------------------------- | ---------------------- |
+    | `rq_job.args`   | `rq.job.args.{index}`        | `rq.job.args.0`        |
+    | `rq_job.kwargs` | `rq.job.kwargs.{kwarg}`      | `rq.job.args.my_kwarg` |
+    | `rq_job.func`   | `rq.job.func`                |                        |
+    | `queue.name`    | `messaging.destination.name` |                        |
+    | `rq_job.id`     | `messaging.message.id`       |                        |
+
+    Note that `rq.job.args`, `rq.job.kwargs`, and `rq.job.func` are serialized and not the actual objects on the job.
+</Expandable>
+
+<Expandable title='AWS Lambda `sampling_context` changes'>
+  The AWS Lambda integration doesn't add the `aws_event` and `aws_context` objects anymore. Instead, the following, if available, is accessible:
+
+    | AWS property                                | Sampling context key(s)         |
+    | ------------------------------------------- | ------------------------------- |
+    | `aws_event["httpMethod"]`                   | `http.request.method`           |
+    | `aws_event["queryStringParameters"]`        | `url.query`                     |
+    | `aws_event["path"]`                         | `url.path`                      |
+    | full URL                                    | `url.full`                      |
+    | `aws_event["headers"]["X-Forwarded-Proto"]` | `network.protocol.name`         |
+    | `aws_event["headers"]["Host"]`              | `server.address`                |
+    | `aws_context["function_name"]`              | `faas.name`                     |
+    | `aws_event["headers"]`                      | `http.request.headers.{header}` |
+</Expandable>
+
+<Expandable title='GCP `sampling_context` changes'>
+  The GCP integration doesn't add the `gcp_env` and `gcp_event` keys anymore. Instead, the following, if available, is accessible:
+
+    | Old sampling context key          | New sampling context key       |
+    | --------------------------------- | ------------------------------ |
+    | `gcp_env["function_name"]`        | `faas.name`                    |
+    | `gcp_env["function_region"]`      | `faas.region`                  |
+    | `gcp_env["function_project"]`     | `gcp.function.project`         |
+    | `gcp_env["function_identity"]`    | `gcp.function.identity`        |
+    | `gcp_env["function_entry_point"]` | `gcp.function.entry_point`     |
+    | `gcp_event.method`                | `http.request.method`          |
+    | `gcp_event.query_string`          | `url.query`                    |
+    | `gcp_event.headers`               | `http.request.header.{header}` |
+</Expandable>
 
 The ability to set `custom_sampling_context` on `start_transaction` was removed. If there is custom data that you want to have accessible in the `sampling_context` of a `traces_sampler` or `profiles_sampler`, set it on the span via the `attributes` argument, as all span attributes are now included in the `sampling_context` by default:
 
