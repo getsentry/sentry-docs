@@ -31,7 +31,7 @@ When the SDK receives the start and end times of the app launch, the SDK:
 
 <Alert>
 
-While the SDK differentiates between cold and warm starts, it doesn't track hot starts/resumes.
+Sentry's App Start instrumentation aims to be as comprehensive and representative of the user experience as possible, and adheres to guidelines by the platform vendors. For this reason, App Starts reported by Sentry might be longer than what you see in other tools.
 
 </Alert>
 
@@ -45,6 +45,22 @@ Before starting, ensure:
 ## Configure
 
 This instrumentation is automatically enabled. There is no need for further configuration.
+
+<Alert>
+
+App start instrumentation is designed specifically for pure Flutter applications and requires UI rendering to function properly. If you're using Flutter in an add-to-app integration scenario, the app start metrics will not provide accurate measurements. In such cases, we recommend disabling this instrumentation.
+
+```dart
+// ignore: implementation_imports
+import 'package:sentry_flutter/src/integrations/native_app_start_integration.dart';
+
+// in SentryFlutter.init
+final integration = options.integrations.firstWhere(
+  (integration) => integration is NativeAppStartIntegration);
+options.removeIntegration(integration);
+```
+
+</Alert>
 
 ## Verify
 

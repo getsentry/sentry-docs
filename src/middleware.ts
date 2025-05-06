@@ -1332,15 +1332,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/javascript/guides/:guide/sourcemaps/multiple-origins/',
-    to: '/platforms/javascript/sourcemaps/',
-  },
-  {
-    from: '/platforms/javascript/guides/:guide/sourcemaps/uploading/hosting-publicly/',
-    to: '/platforms/javascript/sourcemaps/',
+    to: '/platforms/javascript/guides/:guide/sourcemaps/',
   },
   {
     from: '/platforms/javascript/guides/:guide/sourcemaps/uploading-without-debug-ids/',
-    to: '/platforms/javascript/sourcemaps/',
+    to: '/platforms/javascript/guides/:guide/sourcemaps/',
   },
   {
     from: '/platforms/javascript/sourcemaps/uploading-without-debug-ids/',
@@ -2660,11 +2656,15 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/issues/issue-details/suggested-fix/',
-    to: '/product/issues/issue-details/sentry-ai/',
+    to: '/product/issues/issue-details/sentry-seer/',
   },
   {
     from: '/product/issues/issue-details/ai-suggested-solution/',
-    to: '/product/issues/issue-details/sentry-ai/',
+    to: '/product/issues/issue-details/sentry-seer/',
+  },
+  {
+    from: '/product/issues/issue-details/sentry-ai/',
+    to: '/product/issues/issue-details/sentry-seer/',
   },
   {
     from: '/guides/grouping-and-fingerprints/',

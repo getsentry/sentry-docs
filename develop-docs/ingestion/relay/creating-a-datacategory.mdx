@@ -1,0 +1,47 @@
+---
+title: Creating a new Data Category
+sidebar_order: 40
+---
+
+
+Adding a new data category to Sentry requires a modification to [Relay](https://github.com/getsentry/relay).
+Relay provides a Python library `sentry-relay`, which must be updated before a new data category can be imported
+in Sentry.
+
+
+## Adding the new Data Category to Relay
+
+
+You need to be able to develop on Relay, the [README](https://github.com/getsentry/relay?tab=readme-ov-file#development),
+describes how to setup a local development environment for Relay.
+
+
+1. Modify `relay-base-schema/src/data_category.rs` and add your data category. Make sure to give it a good name
+and document the purpose of the data category. Don't forget to fill out `DataCategory::name`  and `DataCategory::from_name`.
+2. Define how your data category should be rate limited in `relay-quotas/src/quota.rs`, by modifying `CategoryUnit::from`.
+3. Update `sentry-relay` by running `make header` in the `relay-cabi/` directory.
+4. Add your data category to the Relay `CHANGELOG.md`.
+5. Add your data category to the Python `py/CHANGELOG.md`.
+
+You can also use this [Example PR](https://github.com/getsentry/relay?tab=readme-ov-file#development) as a reference.
+
+
+## Creating a `sentry-relay` Release
+
+
+To release a new version of `sentry-relay` you have to trigger the [Release Library](https://github.com/getsentry/relay/actions/workflows/release_library.yml)
+workflow with the next version.
+
+New data categories are always released as a new patch version, for example if the current version is `0.7.12` you
+would trigger the workflow with version `0.7.13`.
+
+<Alert level="warning" title="Important">
+Double and tripple check the version before triggering the workflow.
+</Alert>
+
+
+## Updating Sentry
+
+After the library has been published you can update `sentry-relay` in Sentry and use your new data category!
+
+[Example Sentry PR](https://github.com/getsentry/sentry/pull/88919/files).

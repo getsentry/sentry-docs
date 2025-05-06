@@ -9,8 +9,11 @@ Use this integration to create spans for DNS resolves and socket connection crea
 
 Install `sentry-sdk`` from PyPI.
 
-```bash
-pip install --upgrade 'sentry-sdk'
+```bash {tabTitle:pip}
+pip install "sentry-sdk"
+```
+```bash {tabTitle:uv}
+uv add "sentry-sdk"
 ```
 
 ## Configure
@@ -30,7 +33,7 @@ Select which Sentry features you'd like to install in addition to Error Monitori
   ]}
 />
 
-```python {"onboardingOptions": {"performance": "9-11", "profiling": "12-15"}}
+```python
 import sentry_sdk
 from sentry_sdk.integrations.socket import SocketIntegration
 
@@ -39,13 +42,19 @@ sentry_sdk.init(
     # Add data like request headers and IP for users, if applicable;
     # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
     send_default_pii=True,
+    # ___PRODUCT_OPTION_START___ performance
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for tracing.
     traces_sample_rate=1.0,
-    # Set profiles_sample_rate to 1.0 to profile 100%
-    # of sampled transactions.
-    # We recommend adjusting this value in production.
-    profiles_sample_rate=1.0,
+    # ___PRODUCT_OPTION_END___ performance
+    # ___PRODUCT_OPTION_START___ profiling
+    # To collect profiles for all profile sessions,
+    # set `profile_session_sample_rate` to 1.0.
+    profile_session_sample_rate=1.0,
+    # Profiles will be automatically collected while
+    # there is an active span.
+    profile_lifecycle="trace",
+    # ___PRODUCT_OPTION_END___ profiling
     integrations=[
         SocketIntegration(),
     ],

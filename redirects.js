@@ -219,6 +219,10 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/organization/integrations/telegram-alerts-bot/',
+    destination: '/organization/integrations/notification-incidents/telegram-alerts-bot/',
+  },
+  {
     source: '/platforms/php/configuration/integrations/',
     destination: '/platforms/php/integrations/',
   },
@@ -341,6 +345,10 @@ const userDocsRedirects = [
   {
     source: '/product/sentry-basics/concepts/:path*',
     destination: '/concepts/key-terms/:path*',
+  },
+  {
+    source: '/security-legal-pii/security/ai-ml-policy/',
+    destination: '/security-legal-pii/security/service-data-usage/',
   },
   {
     source: '/product/security/:path*',
@@ -505,6 +513,22 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/:guide/configuration/draining/',
     destination: '/platforms/javascript/guides/:guide/apis/#flush',
+  },
+  {
+    source: '/platforms/javascript/enriching-events/identify-user/',
+    destination: '/platforms/javascript/apis/#setUser',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/enriching-events/identify-user/',
+    destination: '/platforms/javascript/guides/:guide/apis/#setUser',
+  },
+  {
+    source: '/platforms/javascript/enriching-events/context/',
+    destination: '/platforms/javascript/apis/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/enriching-events/context/',
+    destination: '/platforms/javascript/guides/:guide/enriching-events/',
   },
   {
     source: '/platforms/:platform/context/',
@@ -954,6 +978,10 @@ const userDocsRedirects = [
     source: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
     destination: '/product/insights/ai/llm-monitoring/getting-started/the-dashboard/',
   },
+  {
+    source: '/product/insights/retention-priorities/',
+    destination: '/organization/dynamic-sampling/',
+  },
   // End of Insights reduirects.
   {
     source: '/platforms/javascript/guides/astro/manual-setup/',
@@ -1037,10 +1065,39 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/tracing/distributed-tracing/:path*',
   },
   {
+    source: '/platforms/javascript/tracing/instrumentation/performance-metrics/',
+    destination: '/platforms/javascript/tracing/span-metrics/',
+  },
+  {
     source:
       '/platforms/javascript/guides/:guide/tracing/instrumentation/performance-metrics/',
-    destination:
+    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/',
+  },
+  {
+    source:
+      '/platforms/javascript//tracing/instrumentation/span-metrics/performance-metrics/',
+    destination: '/platforms/javascript/tracing/span-metrics/',
+  },
+  {
+    source: '/platforms/javascript/profiling/browser-profiling/',
+    destination: '/platforms/javascript/profiling/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/profiling/browser-profiling/',
+    destination: '/platforms/javascript/guides/:guide/profiling/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/profiling/node-profiling/',
+    destination: '/platforms/javascript/guides/:guide/profiling/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/profiling/browser-profiling/',
+    destination: '/platforms/javascript/guides/:guide/profiling/',
+  },
+  {
+    source:
       '/platforms/javascript/guides/:guide/tracing/span-metrics/performance-metrics/',
+    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/',
   },
   {
     source: '/platforms/javascript/guides/:guide/tracing/trace-propagation/:path*',
@@ -1103,6 +1160,15 @@ const userDocsRedirects = [
   {
     source: '/platforms/java/guides/:guide/scope/',
     destination: '/platforms/java/guides/:guide/enriching-events/',
+  },
+  // Redirects for Trace Explorer
+  {
+    source: '/product/explore/traces',
+    destination: '/product/explore/trace-explorer/',
+  },
+  {
+    source: '/product/explore/new-trace-explorer',
+    destination: '/product/explore/trace-explorer/',
   },
 ];
 

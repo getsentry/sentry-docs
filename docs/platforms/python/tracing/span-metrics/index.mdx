@@ -25,7 +25,7 @@ if span:
     # Add individual metrics
     span.set_data("database.rows_affected", 42)
     span.set_data("cache.hit_rate", 0.85)
-    
+
     # Add multiple metrics at once
     span.set_data({
         "memory.heap_used": 1024000,
@@ -70,12 +70,15 @@ For detailed examples of how to implement span metrics in common scenarios, see 
 To consistently add metrics across all spans in your application, you can use the `before_send_transaction` callback:
 
 ```python
-def before_send_transaction(event):
+import sentry_sdk
+from sentry_sdk.types import Event, Hint
+
+def before_send_transaction(event: Event, hint: Hint) -> Event | None:
     # Add metrics to the root span
     if "trace" in event.get("contexts", {}):
         if "data" not in event["contexts"]["trace"]:
             event["contexts"]["trace"]["data"] = {}
-        
+
         event["contexts"]["trace"]["data"].update({
             "app.version": "1.2.3",
             "environment.region": "us-west-2"
@@ -85,7 +88,7 @@ def before_send_transaction(event):
     for span in event.get("spans", []):
         if "data" not in span:
             span["data"] = {}
-            
+
         span["data"].update({
             "app.component_version": "2.0.0",
             "app.deployment_stage": "production"
@@ -94,50 +97,9 @@ def before_send_transaction(event):
     return event
 
 sentry_sdk.init(
-    # Your other Sentry configuration options here
+    # ...
     before_send_transaction=before_send_transaction
 )
 ```
-
-## Best Practices for Span Metrics
-
-1. **Metric Naming**
-   - Use clear, consistent naming patterns
-   - Include the metric category (examples: `db`, `cache`, `http`)
-   - Use snake_case for metric names
-
-2. **Data Types**
-   - Use appropriate numeric types for measurements
-   - Use booleans for status flags
-   - Use strings for categorical data
-   - Use arrays when grouping related values
-
-3. **Performance Considerations**
-   - Consider the overhead of metric collection
-   - Use sampling when collecting high-frequency metrics
-   - Balance metric granularity with system performance
-
-4. **Debugging and Monitoring**
-   - Include correlation IDs for related operations
-   - Add context that helps with troubleshooting
-
-## Best Practices for Implementation
-
-When implementing span metrics in your application:
-
-1. **Start Small and Iterate**
-   - Begin with basic metrics that directly relate to your debugging or performance monitoring needs
-   - Add more detailed tracking as specific debugging needs emerge
-   - Remove metrics that aren't providing actionable insights
-
-2. **Maintain Consistency**
-   - Use consistent naming patterns across your application
-   - Document metric meanings and units in your codebase
-   - Share common metrics across similar operations
-
-3. **Focus on Actionability**
-   - Track metrics that help diagnose specific issues
-   - Consider what alerts or dashboard visualizations you'll want to create
-   - Ensure metrics can drive issue resolution or decision making
 
 For detailed examples of how to implement span metrics in common scenarios, see our <PlatformLink to="/tracing/span-metrics/examples/">Span Metrics Examples</PlatformLink> guide.

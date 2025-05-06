@@ -12,8 +12,11 @@ and ensure traces are properly propagated to downstream services.
 
 Install `sentry-sdk` from PyPI with the `grpcio` extra.
 
-```bash
-pip install --upgrade 'sentry-sdk[grpcio]'
+```bash {tabTitle:pip}
+pip install "sentry-sdk[grpcio]"
+```
+```bash {tabTitle:uv}
+uv add "sentry-sdk[grpcio]"
 ```
 
 ## Configure
@@ -37,7 +40,7 @@ Select which Sentry features you'd like to install in addition to Error Monitori
 
 ### Server
 
-```python {"onboardingOptions": {"performance": "11-13", "profiling": "14-17"}}
+```python
 import grpc
 
 import sentry_sdk
@@ -48,13 +51,19 @@ sentry_sdk.init(
     # Add data like request headers and IP for users, if applicable;
     # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
     send_default_pii=True,
+    # ___PRODUCT_OPTION_START___ performance
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for tracing.
     traces_sample_rate=1.0,
-    # Set profiles_sample_rate to 1.0 to profile 100%
-    # of sampled transactions.
-    # We recommend adjusting this value in production.
-    profiles_sample_rate=1.0,
+    # ___PRODUCT_OPTION_END___ performance
+    # ___PRODUCT_OPTION_START___ profiling
+    # To collect profiles for all profile sessions,
+    # set `profile_session_sample_rate` to 1.0.
+    profile_session_sample_rate=1.0,
+    # Profiles will be automatically collected while
+    # there is an active span.
+    profile_lifecycle="trace",
+    # ___PRODUCT_OPTION_END___ profiling
     integrations=[
         GRPCIntegration(),
     ],
@@ -72,7 +81,7 @@ server = grpc.aio.server()
 
 ### Client
 
-```python {"onboardingOptions": {"performance": "8-10", "profiling": "11-14"}}
+```python
 import grpc
 
 import sentry_sdk
@@ -80,13 +89,22 @@ from sentry_sdk.integrations.grpc import GRPCIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
+    # Add data like request headers and IP for users, if applicable;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    # ___PRODUCT_OPTION_START___ performance
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for tracing.
     traces_sample_rate=1.0,
-    # Set profiles_sample_rate to 1.0 to profile 100%
-    # of sampled transactions.
-    # We recommend adjusting this value in production.
-    profiles_sample_rate=1.0,
+    # ___PRODUCT_OPTION_END___ performance
+    # ___PRODUCT_OPTION_START___ profiling
+    # To collect profiles for all profile sessions,
+    # set `profile_session_sample_rate` to 1.0.
+    profile_session_sample_rate=1.0,
+    # Profiles will be automatically collected while
+    # there is an active span.
+    profile_lifecycle="trace",
+    # ___PRODUCT_OPTION_END___ profiling
     integrations=[
         GRPCIntegration(),
     ],
