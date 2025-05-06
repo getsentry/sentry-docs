@@ -995,7 +995,7 @@ const userDocsRedirects = [
     source: '/platforms/kotlin-multiplatform/:path*',
     destination: '/platforms/kotlin/guides/kotlin-multiplatform/:path*',
   },
-   {
+  {
     source: '/platforms/python/tracing/trace-propagation/:path*',
     destination: '/platforms/python/tracing/distributed-tracing/:path*',
   },
@@ -1095,6 +1095,14 @@ const userDocsRedirects = [
   {
     source: '/platforms/dart/guides/flutter/usage/advanced-usage/:path*',
     destination: '/platforms/dart/guides/flutter/troubleshooting/:path*',
+  },
+  {
+    source: '/platforms/java/scope/',
+    destination: '/platforms/java/enriching-events/',
+  },
+  {
+    source: '/platforms/java/guides/:guide/scope/',
+    destination: '/platforms/java/guides/:guide/enriching-events/',
   },
 ];
 
