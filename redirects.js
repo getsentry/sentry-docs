@@ -347,6 +347,10 @@ const userDocsRedirects = [
     destination: '/concepts/key-terms/:path*',
   },
   {
+    source: '/security-legal-pii/security/ai-ml-policy/',
+    destination: '/security-legal-pii/security/service-data-usage/',
+  },
+  {
     source: '/product/security/:path*',
     destination: '/security-legal-pii/security/:path*',
   },
@@ -1148,6 +1152,15 @@ const userDocsRedirects = [
   {
     source: '/platforms/dart/guides/flutter/usage/advanced-usage/:path*',
     destination: '/platforms/dart/guides/flutter/troubleshooting/:path*',
+  },
+  // Redirects for Trace Explorer
+  {
+    source: '/product/explore/traces',
+    destination: '/product/explore/trace-explorer/',
+  },
+  {
+    source: '/product/explore/new-trace-explorer',
+    destination: '/product/explore/trace-explorer/',
   },
 ];
 
