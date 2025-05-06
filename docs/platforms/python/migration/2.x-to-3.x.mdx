@@ -42,7 +42,7 @@ The deprecated `propagate_traces` option was removed. Use [`trace_propagation_ta
   )
 ```
 
-Note that this only affects the global SDK option. The `propagate_traces` option of the Celery integration remains unchanged.
+Note that this only affects the global SDK option. The [`propagate_traces`](/platforms/python/integrations/celery/#options) option of the Celery integration remains unchanged.
 
 The `profiles_sample_rate` and `profiler_mode` options previously nested under `_experiments` have been removed. They're replaced by top-level options of the same name:
 
@@ -59,7 +59,7 @@ The `profiles_sample_rate` and `profiler_mode` options previously nested under `
 
 ## API Changes
 
-`add_attachment()` is now a part of the top-level level API and can be imported and used directly from `sentry_sdk`.
+`add_attachment()` is now a part of the top-level level API and should be imported and used directly from `sentry_sdk`.
 
 ```python diff
   import sentry_sdk
@@ -73,7 +73,7 @@ Using `sentry_sdk.add_attachment()` directly also makes sure the attachment is a
 
 ### Custom Tracing API
 
-Tracing in the Sentry Python SDK `3.x` is powered by OpenTelemetry in the background, which also means we're moving away from the Sentry-specific concept of transactions and towards a span-only future. `sentry_sdk.start_transaction()` is now deprecated in favor of `sentry_sdk.start_span()`.
+Tracing in the Sentry Python SDK `3.x` is powered by [OpenTelemetry](https://opentelemetry.io/) in the background, which also means we're moving away from the Sentry-specific concept of transactions and towards a span-only future. `sentry_sdk.start_transaction()` is now deprecated in favor of `sentry_sdk.start_span()`.
 
 ```python diff
 - with sentry_sdk.start_transaction():
@@ -140,7 +140,7 @@ Both `traces_sampler` and the `sampled` argument will only influence whether roo
 
 </Alert>
 
-The `sampling_context` argument of `traces_sampler` and `profiles_sampler` has changed considerably for spans coming from our auto-instrumented integrations. As a consequence of using OpenTelemetry under the hood, spans can only carry specific, simple types of data. This prevents us from making custom objects, for example, the `Request` object for several web frameworks, accessible on the span.
+The `sampling_context` argument of `traces_sampler` and `profiles_sampler` has changed considerably for spans coming from our auto-instrumented integrations. As a consequence of using OpenTelemetry under the hood, spans can only carry specific, primitive types of data. This prevents us from making custom objects, for example, the `Request` object for several web frameworks, accessible on the span.
 
 <Expandable title='AIOHTTP sampling context changes'>
   The AIOHTTP integration doesn't add the `aiohttp_request` object anymore. Instead, some of the individual properties of the request are accessible, if available, as follows:
