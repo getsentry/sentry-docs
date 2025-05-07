@@ -73,13 +73,14 @@ These parameters are documented in more detail in the section on compile-time op
 When you use POSIX signal handlers, you can specify a `sigaltstack`. This alternative signal stack allows the kernel to
 continue the handler stack even if the crashed and preempted thread stack runs out.
 
-This relatively low-level interface allows users to specify an arbitrary memory range (from the heap or any `mmap` a
-user can access). The upside of allowing the user to determine the size _and_ location offers flexibility compared to
-the Windows approach because it is independent of the stack usage and size of the crashed thread and allows you to add
-additional bounds like protected regions around the handler stack. However, it also adds environmental complexity because
-a badly placed or incorrectly set up memory region could lead to hard-to-identify bugs (consider a handler stack inside
-the heap, where a handler overflow caused by a stack hungry `on_crash` implementation could lead to arbitrary heap
-corruption).
+This relatively low-level interface allows users to specify an arbitrary memory range (on the heap, stack or any memory
+mapping a user can access). The upside of allowing the user to determine the size _and_ location offers flexibility
+compared to the Windows approach because it is independent of the stack usage and size of the crashed thread and allows
+you to add additional bounds like protected regions around the handler stack.
+
+However, it also adds environmental complexity because a badly placed or incorrectly set up memory region could lead to
+hard-to-identify bugs (consider a handler stack inside the heap, where a handler overflow caused by a stack hungry
+`on_crash` implementation could lead to arbitrary heap corruption).
 
 Like Windows, you can only assign a `sigaltstack` from within the thread, meaning you can only set the handler region
 for threads you own.
