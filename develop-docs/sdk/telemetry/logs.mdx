@@ -75,7 +75,7 @@ It consists of the following fields:
 
 `trace_id`
 
-: **String, required**. The trace id of the log.
+: **String, required**. The trace id of the log. The value should be 16 random bytes encoded as a hex string (32 characters long). The trace id should be grabbed from the current propagation context in the SDK.
 
 `level`
 
@@ -258,8 +258,6 @@ It's important to note that putting everything immediately on a background threa
 
 ## SDK Behavior
 
-The internal SDK implementation is kept purposefully broad as we are still in early stages. As we figure more out about the logs product and payload characteristics, we'll be able to define a more rigorous spec for logging internals in the SDK. SDKs should take care to not expose logging internals as much as possible to userland so that they can be refactored in the future.
-
 In general log processing should follow this order:
 
 1. Capture log via [Public APIs](#logger-module) (e.g. `Sentry.logger.info`) or via [SDK integrations](#sdk-integrations).
@@ -268,6 +266,12 @@ In general log processing should follow this order:
 1. Run `beforeSendLog`/`before_send_log` to filter or modify the log.
 1. Add log to buffer/batch processor as detailed in [buffering](#buffering).
 1. At time of flushing buffer, send array of logs to Sentry via `log` envelope, apply rate limiting as per [data category and rate limiting](#data-category-and-rate-limiting).
+
+<Alert title="Note" level="warning">
+
+An SDK should implement [Tracing without Performance](/sdk/telemetry/traces/tracing-without-performance) before adding support for logs. This is required to ensure that logs are associated with traces and that the correct trace context is sent to Sentry.
+
+</Alert>
 
 ### Default Attributes
 
