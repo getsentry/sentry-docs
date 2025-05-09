@@ -1,7 +1,6 @@
-import {useMemo} from 'react';
-import {getMDXComponent} from 'mdx-bundler/client';
 import {Metadata} from 'next';
 import {notFound} from 'next/navigation';
+import {MDXRemote} from 'next-mdx-remote/rsc';
 
 import {apiCategories} from 'sentry-docs/build/resolveOpenAPI';
 import {ApiCategoryPage} from 'sentry-docs/components/apiCategoryPage';
@@ -24,6 +23,8 @@ import {
   getDocsFrontMatter,
   getFileBySlugWithCache,
   getVersionsFromDoc,
+  rehypePlugins,
+  remarkPlugins,
 } from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {setServerContext} from 'sentry-docs/serverContext';
@@ -47,16 +48,15 @@ export const dynamic = 'force-static';
 const mdxComponentsWithWrapper = mdxComponents(
   {Include, PlatformContent},
   ({children, frontMatter, nextPage, previousPage}) => (
-    <DocPage frontMatter={frontMatter} nextPage={nextPage} previousPage={previousPage}>
+    <DocPage
+      frontMatter={frontMatter ?? {}}
+      nextPage={nextPage}
+      previousPage={previousPage}
+    >
       {children}
     </DocPage>
   )
 );
-
-function MDXLayoutRenderer({mdxSource, ...rest}) {
-  const MDXLayout = useMemo(() => getMDXComponent(mdxSource), [mdxSource]);
-  return <MDXLayout components={mdxComponentsWithWrapper} {...rest} />;
-}
 
 export default async function Page(props: {params: Promise<{path?: string[]}>}) {
   const params = await props.params;
@@ -117,15 +117,27 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
       }
       throw e;
     }
-    const {mdxSource, frontMatter} = doc;
+    // const {mdxSource, frontMatter} = doc;
     // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc
     return (
-      <MDXLayoutRenderer
-        mdxSource={mdxSource}
-        frontMatter={frontMatter}
+      <DocPage
+        frontMatter={{title: 'TODO'}}
         nextPage={nextPage}
         previousPage={previousPage}
-      />
+      >
+        <MDXRemote
+          source={doc}
+          components={mdxComponentsWithWrapper}
+          options={{
+            mdxOptions: {
+              // @ts-ignore
+              remarkPlugins,
+              // @ts-ignore
+              rehypePlugins,
+            },
+          }}
+        />
+      </DocPage>
     );
   }
 
@@ -146,7 +158,7 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   // get the MDX for the current doc and render it
   let doc: Awaited<ReturnType<typeof getFileBySlugWithCache>>;
   try {
-    doc = await getFileBySlugWithCache(`docs/${pageNode.path}`);
+    doc = getFileBySlugWithCache(`docs/${pageNode.path}`);
   } catch (e) {
     if (e.code === 'ENOENT') {
       // eslint-disable-next-line no-console
@@ -155,19 +167,26 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
     }
     throw e;
   }
-  const {mdxSource, frontMatter} = doc;
-
   // collect versioned files
   const allFm = await getDocsFrontMatter();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const versions = getVersionsFromDoc(allFm, pageNode.path);
 
-  // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc.
   return (
-    <MDXLayoutRenderer
-      mdxSource={mdxSource}
-      frontMatter={{...frontMatter, versions}}
-      nextPage={nextPage}
-      previousPage={previousPage}
+    <MDXRemote
+      source={doc}
+      components={mdxComponentsWithWrapper}
+      options={{
+        mdxOptions: {
+          // @ts-ignore
+          remarkPlugins,
+          // @ts-ignore
+          rehypePlugins,
+        },
+      }}
+      // frontMatter={{...{}, versions}}
+      // nextPage={nextPage}
+      // previousPage={previousPage}
     />
   );
 }
