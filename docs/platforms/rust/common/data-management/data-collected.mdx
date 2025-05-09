@@ -4,22 +4,23 @@ description: "See what data is collected by the Sentry SDK."
 sidebar_order: 1
 ---
 
-Sentry takes data privacy very seriously and has default settings in place that prioritize data safety, especially when it comes to personally identifiable information (PII) data.
-When you add the Sentry SDK to your application, you allow it to collect data and send it to Sentry during the runtime of your application.
+Sentry takes data privacy very seriously and has default settings in place that prioritize data safety, especially when it comes to personally identifiable information (PII) data. When you add the Sentry SDK to your application, you allow it to collect data and send it to Sentry during the runtime of your application.
 
-We are currently working with high priority on improving defaults and providing more control over what data is collected and sent to Sentry by the Sentry Rust SDK to align with our data privacy principles.
-
-In the meantime, here is the information about what data is collected by the Sentry Rust SDK.
-The category types and amount of data collected vary, depending on the integrations you've enabled in the Sentry SDK.
+The category types and amount of data collected vary, depending on the integrations you've enabled in the Sentry SDK. Here's a list of data categories the Sentry Rust SDK collects.
+PII data collection is generally enabled by the `send_default_pii` option, which is disabled by default.
 
 ## HTTP Headers
 
-By default, the Sentry SDK sends all HTTP headers captured by `sentry-actix` and `sentry-tower` (with `http` feature enabled) to Sentry.
-For both integrations, it's possible to exclude certain headers from being sent by registering an additional middleware on your HTTP server and setting `header.set_sensitive(true)` on the headers you want to exclude.
+The `sentry-actix` and `sentry-tower` (with `http` feature enabled) can capture headers from incoming HTTP requests and send them to Sentry.
+By default, the SDK filters potentially sensitive headers, such as those carrying authorization data, cookies or the user's IP address.
+To capture all headers, set `send_default_pii` to `true` in your `sentry::init` options.
 
 ## Cookies
 
-All request cookies are sent to Sentry. Server-side scrubbing rules are in place that will filter out certain well-known cookies that contain sensitive data.
+The `sentry-actix` and `sentry-tower` (with `http` feature enabled) can capture cookies from incoming HTTP requests and send them to Sentry.
+By default, the SDK does not capture any cookie.
+To capture request cookies, set `send_default_pii` to `true` in your `sentry::init` options.
+Server-side scrubbing rules are in place that will filter out certain cookies that are known to contain sensitive data.
 
 ## Information About Logged-in User
 
