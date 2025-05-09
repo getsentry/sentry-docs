@@ -12,7 +12,11 @@ In Tracing without Performance ([TwP](https://develop.sentry.dev/sdk/telemetry/t
 ### Tracing with Performance
 When any [traces sampling option](https://docs.sentry.io/platforms/native/configuration/sampling/#configuring-the-transaction-sample-rate) is enabled, the SDK can send spans. Just like in TwP, we still use a `propagation_context` to store the relevant data (a `trace_id` and a `span_id`). Now, events and spans can be connected through a common `trace_id` and, if a span is scoped, it will additionally be connected hierarchically to the event through its `span_id`. By default, both spans and events will inherit the `trace_id` from the `propagation_context` as generated during SDK initialization.
 
-Downstream SDKs are still able to use `sentry_set_trace()`, which updates the `propagation_context` with a new `trace_id`, `span_id` and `parent_span_id`. Root spans (=transactions) will pick up the data currently in the `propagation_context`, which can still be overwritten by `sentry_transaction_context_update_from_header()` before the span is started. Child spans will inherit the trace data from their parent. While a span is scoped, any event will use that span's data. If no spans are scoped, events will just use the `propagation_context` data directly.
+Independent of whether tracing is used with or without performance, downstream SDKs can use `sentry_set_trace()` to continue their traces in the Native SDK. This function updates the `propagation_context` with a new `trace_id`, `span_id`, and `parent_span_id`.
+
+Root spans (=transactions) will inherit the trace context from the `propagation_context` during the transaction context creation, but introduce a new span layer. If users want to override the SDK-established traces with their external traces, this context can be overwritten by `sentry_transaction_context_update_from_header()`. All of this happens before transaction creation or scoping.
+
+Child spans will then inherit the trace data from their parent. As long as a span is scoped, any event will use that span's trace context. If no spans are scoped, events will use the `propagation_context` directly.
 
 ### Visualization
 The flow of the trace-context (via the `propagation_context`) can be visualized for the following scenarios:
