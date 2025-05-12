@@ -21,17 +21,24 @@ import {
   KeywordIndicator,
   KeywordSearchInput,
   PositionWrapper,
+  ProjectPreview,
   Selections,
-} from './styles.css';
+} from './styles';
 import {dropdownPopperOptions} from './utils';
 
 type KeywordSelectorProps = {
   group: string;
   index: number;
   keyword: string;
+  showPreview: boolean;
 };
 
-export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
+export function KeywordSelector({
+  keyword,
+  group,
+  index,
+  showPreview,
+}: KeywordSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [referenceEl, setReferenceEl] = useState<HTMLSpanElement | null>(null);
   const [dropdownEl, setDropdownEl] = useState<HTMLElement | null>(null);
@@ -137,6 +144,7 @@ export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
             // correctly overlap during animations, but this must be removed
             // after so copy-paste correctly works.
             display: isAnimating ? 'inline-grid' : undefined,
+            position: 'relative',
           }}
         >
           <AnimatePresence initial={false}>
@@ -144,10 +152,14 @@ export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
               onAnimationStart={() => setIsAnimating(true)}
               onAnimationComplete={() => setIsAnimating(false)}
               key={currentSelectionIdx}
+              showPreview={showPreview}
             >
               {currentSelection[keyword]}
             </Keyword>
           </AnimatePresence>
+          {!isOpen && showPreview && currentSelection?.title && (
+            <ProjectPreview className="no-copy">{currentSelection.title}</ProjectPreview>
+          )}
         </span>
       </KeywordDropdown>
       {isMounted &&
