@@ -1,8 +1,8 @@
-import { Alert } from './alert';
-import { CodeBlock } from './codeBlock';
-import { CodeTabs } from './codeTabs';
+import {Alert} from './alert';
+import {CodeBlock} from './codeBlock';
+import {CodeTabs} from './codeTabs';
 
-export function WindowsNodeEnvSetup({ nodeOption }: { nodeOption: string }) {
+export function WindowsNodeEnvSetup({nodeOption}: {nodeOption: string}) {
   return (
     <Alert>
       <p>
