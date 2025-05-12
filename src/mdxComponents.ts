@@ -39,7 +39,6 @@ import {SignInNote} from './components/signInNote';
 import {SmartLink} from './components/smartLink';
 import {TableOfContents} from './components/tableOfContents';
 import {VimeoEmbed} from './components/video';
-import {WindowsNodeEnvSetup} from './components/WindowsNodeEnvSetup';
 
 export function mdxComponents(
   dynamicComponents: any = {},
@@ -87,7 +86,6 @@ export function mdxComponents(
     SandboxLink,
     SignInNote,
     VimeoEmbed,
-    WindowsNodeEnvSetup,
     a: SmartLink,
     img: DocImage,
     ...dynamicComponents,
