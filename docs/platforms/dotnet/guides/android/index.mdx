@@ -25,11 +25,11 @@ Sentry supports [.NET for Android](https://learn.microsoft.com/dotnet/android/ge
 Add the Sentry dependency to your .NET for Android application:
 
 ```shell {tabTitle:.NET Core CLI}
-dotnet add package Sentry.Maui -v {{@inject packages.version('sentry.dotnet') }}
+dotnet add package Sentry -v {{@inject packages.version('sentry.dotnet') }}
 ```
 
 ```powershell {tabTitle:Package Manager}
-Install-Package Sentry.Maui -Version {{@inject packages.version('sentry.dotnet') }}
+Install-Package Sentry -Version {{@inject packages.version('sentry.dotnet') }}
 ```
 
 ## Configure
@@ -47,6 +47,10 @@ public class MainActivity : Activity
         {
             options.Dsn = "___PUBLIC_DSN___";
             options.SendDefaultPii = true; // adds the user's IP address automatically
+#if DEBUG
+            // Log debug information about the Sentry SDK
+            options.Debug = true;
+#endif
 
             // Android specific .NET features are under the Android properties:
             options.Android.LogCatIntegration = LogCatIntegrationType.Errors; // Get logcat logs for both handled and unhandled errors; default is unhandled only
@@ -67,30 +71,12 @@ public class MainActivity : Activity
             {
                 if (evt.Exception?.Message.Contains("Something you don't care want logged?") ?? false)
                 {
-                    // return null to filter out an event
-                    return null;
+                    return null; // return null to filter out event
                 }
                 // or add additional data
                 evt.SetTag("dotnet-Android-Native-Before", "Hello World");
                 return evt;
             });
-        });
-
-        // Here's an example of adding custom scope information.
-        // This can be done at any time, and will be passed through to the Native Android SDK as well.
-        SentrySdk.ConfigureScope(scope =>
-        {
-            scope.AddBreadcrumb("Custom Breadcrumb");
-            scope.SetExtra("Test", "Custom Extra Data");
-            scope.User = new SentryUser
-            {
-                Username = "SomeUser",
-                Email = "test@example.com",
-                Other =
-                {
-                    ["CustomInfo"] = "Custom User Info"
-                }
-            };
         });
 
         base.OnCreate(savedInstanceState);
