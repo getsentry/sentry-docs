@@ -45,8 +45,9 @@ Once the feature is enabled on the SDK and the SDK is initialized, you can send 
 the `sentry.Logger` API.
 
 The `Sentry.Logger` API exposes methods that support six different log levels: `trace`,
- `debug`, `info`, `warn`, `error` and `fatal`. The methods support both `fmt.Print` and `fmt.Println` like syntax. Using
- these methods is as simple as:
+`debug`, `info`, `warn`, `error` and `fatal`. The methods support both `fmt.Print` and `fmt.Printf` like syntax.
+If you pass in format specifiers like `%v`, these will be sent to Sentry, and can be searched from within the Logs UI,
+ and even added to the Logs views as a dedicated column.
 
 ```go
 ctx := context.Background()
@@ -57,8 +58,7 @@ logger.Info(ctx, "Hello ", "world!")
 // Or like [fmt.Printf]
 logger.Infof(ctx, "Hello %v!", "world")
 ```
-Additionally, you can attach properties to each log entry using the `attribute` API. These properties will be sent
-to Sentry, and can be searched from within the Logs UI, and even added to the Logs views as a dedicated column.
+You can also pass additional attributes to the logger via the `SetAttributes` function. These attributes will also be searchable in the Logs UI.
 
 ```go
 package main
@@ -108,9 +108,9 @@ slogger.Info("Implementing slog.Logger")
 ```
 
 <Alert>
-However in order to properly attach the correct Spans with each Log entry, a `context.Context` is required. The `Write` function of
-the `io.Writer` interface does not provide `context` so currently wrapping the custom logger will provide limited functionality.
-The recommended way is to use the `sentry.Logger` itself.
+In order to properly attach the correct trace with each Log entry, a `context.Context` is required. The `Write` function of
+the `io.Writer` interface does not provide `context` so wrapping the custom logger will not get the trace and current span attached.
+We recommend using the `sentry.Logger` to ensure your logs are connected to spans and errors in the Sentry UI.
 </Alert>
 
 ## Options
@@ -140,4 +140,4 @@ if err := sentry.Init(sentry.ClientOptions{
 
 ### Debug
 
-If debug is set to true, calls to the logger will also print to the console with the appropriate log level.
+If the `Debug` init option is set to true, calls to the `sentry.Logger` will also print to the console with the appropriate log level.
