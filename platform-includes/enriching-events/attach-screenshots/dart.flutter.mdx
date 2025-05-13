@@ -15,7 +15,7 @@ await SentryFlutter.init(
 
 ## Customize Screenshot Capturing
 
-By default, Flutter limits screenshot captures to once every 2 seconds to minimize performance impact. While this debounce interval cannot be changed, you can customize capture behavior by implementing the `beforeCaptureScreenshot` callback in your `SentryFlutterOptions`.
+By default, Flutter limits screenshot captures to once every 2 seconds to minimize performance impact. While this debounce interval cannot be changed, you can customize capture behavior by implementing the `beforeCaptureScreenshot` callback in `SentryFlutter.init`.
 
 This callback gives you fine-grained control over screenshot captures based on event and hint data, allowing you to implement conditional logic.
 
@@ -28,26 +28,22 @@ If you want to capture screenshots regardless of the debounce, you can ignore th
 
 </Alert>
 
-```dart {tabTitle: 'Respect debounce'} {2-9}
-await SentryFlutter.init((options) {
-  options.beforeCaptureScreenshot = (event, hint, shouldDebounce) async {
-    // If shouldDebounce is active, skip capturing
-    if (shouldDebounce) {
-      return false;
-    }
-    // Capture screenshot if it's a fatal event
-    return event.level == SentryLevel.fatal;
-  };
-});
+```dart {tabTitle: Respect debounce}
+options.beforeCaptureScreenshot = (event, hint, shouldDebounce) async {
+  // If shouldDebounce is active, skip capturing
+  if (shouldDebounce) {
+    return false;
+  }
+  // Capture screenshot if it's a fatal event
+  return event.level == SentryLevel.fatal;
+};
 ```
 
-```dart {tabTitle: 'Ignore debounce'} {2-4}
-await SentryFlutter.init((options) {
-  options.beforeCaptureScreenshot = (event, hint, shouldDebounce) async {
-    // Capture screenshot if it's a fatal event regardless of debounce
-    return event.level == SentryLevel.fatal;
-  };
-});
+```dart {tabTitle: Ignore debounce}
+options.beforeCaptureScreenshot = (event, hint, shouldDebounce) async {
+  // Capture screenshot if it's a fatal event regardless of debounce
+  return event.level == SentryLevel.fatal;
+};
 ```
 
 ## Redact Screenshots via `masking`
