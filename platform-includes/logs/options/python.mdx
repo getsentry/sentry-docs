@@ -1,0 +1,29 @@
+#### before_send_log
+
+To filter logs, or update them before they are sent to Sentry, you can use the `_experiments.before_send_log` option.
+
+```python
+def _before_log(log):
+    if log.level == "info":
+        # Filter out all info logs
+        return None
+
+    return log
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    _experiments={
+        "enable_logs": True,
+        "before_send_log": _before_log,
+    },
+)
+```
+
+The `before_send_log` function receives a log object, and should return the log object if you want it to be sent to Sentry, or `None` if you want to discard it.
+
+The log object has the following properties:
+
+- `level`: (string - one of `trace`, `debug`, `info`, `warn`, `error`, `fatal`) The log level.
+- `message`: (string) The message to be logged.
+- `timestamp`: (number) The timestamp of the log.
+- `attributes`: (object) The attributes of the log.
