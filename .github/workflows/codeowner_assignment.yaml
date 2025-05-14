@@ -48,6 +48,13 @@ jobs:
           echo "Changed files:"
           echo "$CHANGED_FILES" | tr ' ' '\n' | sed 's/^/- /'
           echo "----------------------------------------"
+          
+          # Get existing reviewers
+          # merge reqeusted teams and users into a single array
+          REQUESTED_REVIEWERS=$(gh pr view $PR_NUMBER --json reviewRequests --jq '[.reviewRequests[] | if .__typename == "Team" then .slug else .login end]')
+          echo "Requested reviewers:"
+          echo "$REQUESTED_REVIEWERS" | tr ' ' '\n' | sed 's/^/- /'
+          echo "----------------------------------------"
 
           # Parse CODEOWNERS and find commented lines
           # Add newline to the end of the file if it doesn't have one, otherwise sed will not read the last line
@@ -85,8 +92,12 @@ jobs:
                     for REVIEWER in $REVIEWERS; do
                       # Remove @ symbol from reviewer name
                       REVIEWER_NAME=${REVIEWER#@}
-                      echo " - Assigning $REVIEWER_NAME to review changes in $FILE"
-                      gh pr edit $PR_NUMBER --add-reviewer "$REVIEWER_NAME"
+                      if [[ "$REQUESTED_REVIEWERS" == *"$REVIEWER_NAME"* ]]; then
+                        echo " - $REVIEWER_NAME is already a requested reviewer, skipping"
+                      else
+                        echo " - Assigning $REVIEWER_NAME to review changes in $FILE"
+                        gh pr edit $PR_NUMBER --add-reviewer "$REVIEWER_NAME"
+                      fi
                     done
                   fi
                 else
@@ -98,8 +109,12 @@ jobs:
                     for REVIEWER in $REVIEWERS; do
                       # Remove @ symbol from reviewer name
                       REVIEWER_NAME=${REVIEWER#@}
-                      echo " - Assigning $REVIEWER_NAME to review changes in $FILE"
-                      gh pr edit $PR_NUMBER --add-reviewer "$REVIEWER_NAME"
+                      if [[ "$REQUESTED_REVIEWERS" == *"$REVIEWER_NAME"* ]]; then
+                        echo " - $REVIEWER_NAME is already a requested reviewer, skipping"
+                      else
+                        echo " - Assigning $REVIEWER_NAME to review changes in $FILE"
+                        gh pr edit $PR_NUMBER --add-reviewer "$REVIEWER_NAME"
+                      fi
                     done
                   fi
                 fi
@@ -111,8 +126,12 @@ jobs:
                   for REVIEWER in $REVIEWERS; do
                     # Remove @ symbol from reviewer name
                     REVIEWER_NAME=${REVIEWER#@}
-                    echo " - Assigning $REVIEWER_NAME to review changes in $FILE"
-                    gh pr edit $PR_NUMBER --add-reviewer "$REVIEWER_NAME"
+                    if [[ "$REQUESTED_REVIEWERS" == *"$REVIEWER_NAME"* ]]; then
+                      echo " - $REVIEWER_NAME is already a requested reviewer, skipping"
+                    else
+                      echo " - Assigning $REVIEWER_NAME to review changes in $FILE"
+                      gh pr edit $PR_NUMBER --add-reviewer "$REVIEWER_NAME"
+                    fi
                   done
                 fi
               fi
