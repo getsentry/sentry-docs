@@ -1,0 +1,43 @@
+### Python Logger Integration
+
+Sentry automatically instruments Python loggers via its `LoggingIntegration`.
+
+```python
+import sentry_sdk
+import logging
+
+sentry_sdk.init(
+  dsn="___PUBLIC_DSN___",
+  _experiments={
+      "enable_logs": True
+  }
+)
+
+# Your existing logging setup
+my_logger = logging.Logger("some-logger")
+
+my_value = 42
+my_logger.debug('In this example debug events will not be sent to Sentry logs. my_value=%s', my_value)
+my_logger.info('But info events will be sent to Sentry logs. my_value=%s', my_value)
+```
+
+The logging integration automatically monkeypatches a handler into all loggers except for the root logger. If you'd like to manually configure the handler, you can do that like so:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.logging import SentryLogsHandler
+from sentry_sdk.integrations.logging import LoggingIntegration
+
+sentry_sdk.init(
+  dsn="...",
+  _experiments={
+      "enable_logs": True
+  },
+  integrations=[
+    LoggingIntegration(sentry_logs_level=None),  # Do not monkeypatch the sentry handler
+  ]
+}
+
+# Instead, configure the root logger to send INFO-level logs to Sentry
+logging.basicConfig(level=logging.INFO, handlers=[SentryLogsHandler(level=logging.INFO)])
+```
