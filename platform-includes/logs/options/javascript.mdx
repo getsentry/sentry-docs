@@ -1,0 +1,29 @@
+#### beforeSendLog
+
+To filter logs, or update them before they are sent to Sentry, you can use the `_experiments.beforeSendLog` option.
+
+```js
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  _experiments: {
+    enableLogs: true,
+    beforeSendLog: (log) => {
+      if (log.level === "info") {
+        // Filter out all info logs
+        return null;
+      }
+
+      return log;
+    },
+  },
+});
+```
+
+The `beforeSendLog` function receives a log object, and should return the log object if you want it to be sent to Sentry, or `null` if you want to discard it.
+
+The log object has the following properties:
+
+- `level`: (string - one of `trace`, `debug`, `info`, `warn`, `error`, `fatal`) The log level.
+- `message`: (string) The message to be logged.
+- `timestamp`: (number) The timestamp of the log.
+- `attributes`: (object) The attributes of the log.
