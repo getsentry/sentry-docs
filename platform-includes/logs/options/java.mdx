@@ -1,0 +1,33 @@
+#### beforeSendLog
+
+To filter logs, or update them before they are sent to Sentry, you can use the `getLogs().beforeSend` option.
+
+```java {tabTitle: Java} {5-9}
+import io.sentry.Sentry;
+
+Sentry.init(options -> {
+  options.setDsn("___PUBLIC_DSN___");
+  options.getLogs().setBeforeSend((logEvent) -> {
+    // Modify the event here:
+    logEvent.setBody("new message body");
+    return logEvent;
+  });
+});
+```
+
+```kotlin {tabTitle: Kotlin} {6-10}
+import io.sentry.Sentry
+import io.sentry.SentryOptions.Logs.BeforeSendLogCallback
+
+Sentry.init { options ->
+  options.dsn = "___PUBLIC_DSN___"
+  options.logs.beforeSend = BeforeSendLogCallback { logEvent ->
+    // Modify the event here:
+    logEvent.body = "new message body"
+    return logEvent;
+  }
+}
+```
+
+
+The `beforeSend` function receives a log object, and should return the log object if you want it to be sent to Sentry, or `null` if you want to discard it.
