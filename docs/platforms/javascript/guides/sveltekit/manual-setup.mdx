@@ -9,29 +9,7 @@ description: "Learn how to manually set up Sentry in your SvelteKit app and capt
   installer](/platforms/javascript/guides/sveltekit).
 </Alert>
 
-## Prerequisites
-
-You need:
-
-- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
-- Your application up and running
-
-<Expandable title="Notes on SvelteKit adapter compatibility">
-The SvelteKit Sentry SDK is designed to work out of the box with several SvelteKit adapters and their underlying server runtimes.
-Here's an overview of the current support:
-
-- **Fully supported Node.js runtimes**
-  - [Adapter-auto](https://kit.svelte.dev/docs/adapter-auto) for Vercel; other Node.js-based platforms might work, but we don't guarantee compatibility at this time
-  - [Adapter-vercel](https://kit.svelte.dev/docs/adapter-vercel) when used with Vercel's Node.js Lambda runtime
-  - [Adapter-node](https://kit.svelte.dev/docs/adapter-node)
-- **Supported non-Node.js runtimes**
-  - [Adapter-cloudflare](https://kit.svelte.dev/docs/adapter-cloudflare) requires [additional setup](/platforms/javascript/guides/cloudflare/frameworks/sveltekit/)
-- **Currently not supported**
-  - Non-Node.js server runtimes, such as Vercel's edge runtime, are not yet supported.
-- **Other adapters**
-  - Other SvelteKit adapters might work, but they're not currently officially supported. We're looking into extending first-class support to more adapters in the future.
-
-</Expandable>
+<PlatformContent includePath="getting-started-prerequisites" />
 
 ## Step 1: Install
 
@@ -146,16 +124,9 @@ export const handle = Sentry.sentryHandle();
 // export const handle = sequence(Sentry.sentryHandle(), yourHandler());
 ```
 
-<Alert level="warning" title="Important">
-  For development, you can include your [Data Source
-  Name](/concepts/key-terms/dsn-explainer/) (DSN) directly in these files.
-  However, in production, we strongly recommend you use an environment variable
-  to avoid accidentally exposing your DSN in the codebase.
-</Alert>
-
 ### Configure Vite
 
-Add `sentrySvelteKit` to your plugins before `sveltekit` in your `vite.config.(js|ts)` file to automatically upload source maps to Sentry and instrument `load` functions for tracing if it's configured.
+Add the `sentrySvelteKit` plugin **before** `sveltekit` in your `vite.config.(js|ts)` file to automatically upload source maps to Sentry and instrument `load` functions for tracing if it's configured.
 
 ```javascript {filename:vite.config.(js|ts)} {2,6}
 import { sveltekit } from "@sveltejs/kit/vite";
@@ -453,15 +424,14 @@ Let's test your setup and confirm that Sentry is working correctly and sending d
 
 To verify that Sentry captures errors and creates issues in your Sentry project, create a test page, for example, at `src/routes/sentry-example/+page.svelte` with a button that throws an error when clicked:
 
-```javascript {filename:+page.svelte}
-<button
-  type="button"
-  onclick={() => {
+```html {filename:+page.svelte}
+<script>
+  function throwTestError() {
     throw new Error("Sentry Example Frontend Error");
-  }}
->
-  Throw error
-</button>
+  }
+</script>
+
+<button type="button" onclick="{throwTestError}">Throw error</button>
 ```
 
 <OnboardingOption optionId="performance" hideForThisOption>
@@ -483,29 +453,27 @@ export const GET = async () => {
 
 Next, update your test button to call this route and throw an error if the response isn't `ok`:
 
-```javascript {filename:+page.svelte}
+```html {filename:+page.svelte}
 <script>
-  import * as Sentry from '@sentry/sveltekit';
+  import * as Sentry from "@sentry/sveltekit";
 
-  function getSentryData() {
+  function throwTestError() {
     Sentry.startSpan(
       {
-        name: 'Example Frontend Span',
-        op: 'test'
+        name: "Example Frontend Span",
+        op: "test",
       },
       async () => {
-        const res = await fetch('/sentry-example');
+        const res = await fetch("/sentry-example");
         if (!res.ok) {
-          throw new Error('Sentry Example Frontend Error');
+          throw new Error("Sentry Example Frontend Error");
         }
       }
     );
   }
 </script>
 
-<button type="button" onclick={handleClick}>
-	Throw error with trace
-</button>
+<button type="button" onclick="{throwTestError}">Throw error with trace</button>
 ```
 
 Open the page `sentry-example` in a browser and click the button to trigger two errors:
