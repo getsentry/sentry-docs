@@ -37,7 +37,42 @@ To import and initialize Sentry, create a file named `instrument.ts` in the root
 
 ### Apply Instrumentation to Your App
 
-<PlatformContent includePath="getting-started-use" />
+Make sure to import the `instrument.ts` file before any other modules:
+
+```typescript {filename: main.ts} {1-2}
+// Import this first!
+import "./instrument";
+
+// Now import other modules
+import { NestFactory } from "@nestjs/core";
+import { AppModule } from "./app.module";
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  await app.listen(3000);
+}
+
+bootstrap();
+```
+
+Afterward, add the `SentryModule` as a root module to your main module:
+
+```typescript {filename: app.module.ts} {2, 8}
+import { Module } from "@nestjs/common";
+import { SentryModule } from "@sentry/nestjs/setup";
+import { AppController } from "./app.controller";
+import { AppService } from "./app.service";
+
+@Module({
+  imports: [
+    SentryModule.forRoot(),
+    // ...other modules
+  ],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
+```
 
 ## Step 3: Capture Nest.js Errors
 
