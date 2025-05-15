@@ -1,0 +1,27 @@
+---
+title: Telemetry
+description: "Sentry supports monitoring Telemetry handler errors and reporting them."
+sidebar_order: 40
+---
+
+The [Telemetry](https://github.com/beam-telemetry/telemetry) integration supports:
+
+  * Capturing errors that happen in Telemetry handlers and reporting them.
+
+This integration is built into the Sentry SDK starting with *v10.10.0*.
+
+## Configure
+
+You can configure the Telemetry integration in your Sentry configuration, under the `:integrations` key:
+
+```elixir {filename:config/config.exs} {diff}
+config :sentry,
+  # ...,
+  integrations: [
++    telemetry: [
++      report_handler_failures: true,
++    ]
+  ]
+```
+
+This configuration will report failed Telemetry handler errors to Sentry. It's usually important to report these errors, as Telemetry *detaches* failing handlers. If you don't monitor these errors, you may not know that a handler failed and is not going to execute anymore until it's re-attached (usually when the application restarts).
