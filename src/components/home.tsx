@@ -1,12 +1,8 @@
-import Image from 'next/image';
-
 import {Banner} from 'sentry-docs/components/banner';
-import {SentryWordmarkLogo} from 'sentry-docs/components/wordmarkLogo';
 import PlugImage from 'sentry-docs/imgs/api.png';
 import ChatBubble from 'sentry-docs/imgs/chat-bubble.png';
 import TerminalImage from 'sentry-docs/imgs/cli.png';
 import ConceptsImage from 'sentry-docs/imgs/concepts-reference.png';
-import HeroImage from 'sentry-docs/imgs/home_illustration.png';
 import OrganizationImage from 'sentry-docs/imgs/organization.png';
 import CalculatorImage from 'sentry-docs/imgs/pricing.png';
 import RocketImage from 'sentry-docs/imgs/rocket.png';
@@ -18,6 +14,7 @@ import {Card} from './card';
 import {Header} from './header';
 import {NavLink, NavLinkProps} from './navlink';
 import {PlatformFilter} from './platformFilter';
+import {PlatformIcon} from './platformIcon';
 
 export function Home() {
   return (
@@ -26,27 +23,73 @@ export function Home() {
       <div className="mt-[var(--header-height)]">
         <Banner />
       </div>
+      <div className="flex justify-center mt-40 mb-0">
+        <input
+          type="text"
+          placeholder="Search Docs"
+          className="w-full max-w-xl px-5 py-3 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-accent-purple text-lg"
+        />
+      </div>
       <div className="hero max-w-screen-xl mx-auto px-6 lg:px-8 py-2">
-        <div className="flex flex-col md:flex-row gap-4 mx-auto justify-between pt-20">
-          <div className="flex flex-col justify-center items-start">
-            <h1 className="text-[40px] font-medium mb-2 leading-[1.2]">
-              Welcome to Sentry Docs
-            </h1>
-            <p className="max-w-[55ch]">
-              Sentry provides end-to-end distributed tracing, enabling developers to
-              identify and debug performance issues and errors across their systems and
-              services.
-            </p>
+        {/* Sentry Products Header */}
+        <h2 className="text-2xl mt-16 mb-6 font-medium">Sentry Products</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-8 md:items-start">
+          {/* Column 1: Sentry */}
+          <div>
+            <div className="flex items-center mb-4">
+              <h2 className="text-xl font-medium">Sentry</h2>
+              <PlatformIcon platform="sentry" size={24} format="lg" className="ml-2" />
+            </div>
+            <div className="flex flex-col gap-3">
+              <Card href="/issues" title="Issues" description="" image={SupportImage} imageAlt="Issues image" className="min-h-[60px] h-[60px] card-large-icon card-align-center" />
+              <Card href="/logs" title="Logs" description="" image={TerminalImage} imageAlt="Logs image" className="min-h-[60px] h-[60px] card-large-icon card-align-center" />
+              <Card href="/explore" title="Explore" description="" image={ConceptsImage} imageAlt="Explore image" className="min-h-[60px] h-[60px] card-large-icon card-align-center" />
+            </div>
+            <div className="px-4">
+              <hr className="my-2 border-gray-200" />
+              <a href="#" className="inline-block text-accent-purple hover:underline font-medium text-base">
+                More <span aria-hidden="true">→</span>
+              </a>
+            </div>
           </div>
-          <div className="self-center">
-            <Image
-              src={HeroImage}
-              alt="Sentry's hero image"
-              className="max-h-[200px] w-auto md:max-h-[390px]"
-            />
+          {/* Column 2: Sentry Prevent */}
+          <div>
+            <div className="flex items-center mb-4">
+              <h2 className="text-xl font-medium">Sentry Prevent</h2>
+              <PlatformIcon platform="sentry" size={24} format="lg" className="ml-2" />
+            </div>
+            <div className="flex flex-col gap-3">
+              <Card href="/test" title="Test" description="" image={RocketImage} imageAlt="Test image" className="min-h-[60px] h-[60px] card-large-icon card-align-center" />
+              <Card href="/coverage" title="Coverage" description="" image={CalculatorImage} imageAlt="Coverage image" className="min-h-[60px] h-[60px] card-large-icon card-align-center" />
+            </div>
+            <div className="px-4">
+              <hr className="my-2 border-gray-200" />
+              <a href="#" className="inline-block text-accent-purple hover:underline font-medium text-base">
+                More <span aria-hidden="true">→</span>
+              </a>
+            </div>
+          </div>
+          {/* Column 3: Seer */}
+          <div>
+            <div className="flex items-center mb-4">
+              <h2 className="text-xl font-medium">Seer</h2>
+              <PlatformIcon platform="sentry" size={24} format="lg" className="ml-2" />
+            </div>
+            <div className="flex flex-col gap-3">
+              <Card href="/autofix" title="Autofix" description="" image={PlugImage} imageAlt="Autofix image" className="min-h-[60px] h-[60px] card-large-icon card-align-center" />
+              <Card href="/issue-summary" title="Issue Summary" description="" image={OrganizationImage} imageAlt="Issue Summary image" className="min-h-[60px] h-[60px] card-large-icon card-align-center" />
+            </div>
+            <div className="px-4">
+              <hr className="my-2 border-gray-200" />
+              <a href="#" className="inline-block text-accent-purple hover:underline font-medium text-base">
+                More <span aria-hidden="true">→</span>
+              </a>
+            </div>
           </div>
         </div>
-
+        {/* Sentry Platforms Header and Subheader */}
+        <h2 className="text-2xl mt-10 mb-2 font-medium">Sentry Platforms</h2>
+        <p className="mb-6 text-lg text-gray-600">Discovery how Sentry products integrate into your applications</p>
         <PlatformFilter />
         <h2 className="text-2xl mt-16 mb-6 font-medium">Get to know us</h2>
         <div className="flex flex-wrap gap-6">
@@ -56,7 +99,7 @@ export function Home() {
             image={RocketImage}
             imageAlt="Rocket image"
             title="What is Sentry?"
-            description="Application monitoring and debugging software considered “not bad” by 4 million developers."
+            description={'Application monitoring and debugging software considered "not bad" by 4 million developers.'}
           />
 
           <Card
@@ -92,7 +135,7 @@ export function Home() {
             image={TerminalImage}
             imageAlt="Terminal image"
             title="CLI"
-            description="How to use ‘sentry-cli’ on the command line."
+            description="How to use 'sentry-cli' on the command line."
           />
 
           <Card
@@ -165,10 +208,20 @@ export function Home() {
           Software, Inc.
         </p>
         <div className="bg-accent-purple max-w-max md:ml-auto ml-2 px-5">
-          <SentryWordmarkLogo height={50} fill="#ffffff" />
+          <PlatformIcon platform="sentry" size={50} format="lg" />
         </div>
       </footer>
       <AskAiSearchParams />
+      <style>{`
+        .card-large-icon img {
+          width: 40px !important;
+          height: 40px !important;
+        }
+        .card-align-center > div,
+        .card-align-center .flex {
+          align-items: center !important;
+        }
+      `}</style>
     </div>
   );
 }

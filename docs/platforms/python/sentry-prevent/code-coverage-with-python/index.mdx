@@ -1,0 +1,146 @@
+---
+title: Code coverage with Python
+description: "How to use Codecov for code coverage in Python projects."
+sidebar_order: 100
+---
+
+# Code coverage with Python
+
+Trying to use Codecov with your Python project? Start here.
+
+## Getting Started
+
+To start you will need the following:
+
+- A code host (we'll be using Github in our example here)
+- A repository
+- Tested code within that repository
+- A Codecov account
+
+For easy reference here is our Python Example repo that we will reference throughout the walk-through.
+
+## Getting test coverage using Pytest
+
+In this tutorial, we'll use `pytest-cov` to generate a code coverage report locally. Make sure to include `pytest-cov` in your `requirements.txt` or by running `pip install pytest-cov`.
+
+We'll show how you can run pytest locally (in terminal) or in CI and have it output a coverage report. Later, we'll utilize the power of Codecov along with GitHub Actions to integrate our coverage report into our pull requests.
+
+## Generating a Coverage Report and Viewing It Locally
+
+Let's start with a pretty basic calculator app in Python. Following these steps should show you how to run tests and generate a coverage report locally. We'll upload this to Codecov in the next step.
+
+```python
+class Calculator:
+    def add(x, y):
+        return x + y
+
+    def subtract(x, y):
+        return x - y
+
+    def multiply(x, y):
+        return x * y
+
+    def divide(x, y):
+        if y == 0:
+            return 'Cannot divide by 0'
+        return x * 1.0 / y
+```
+
+Write tests for your calculator:
+
+```python
+from .calculator import Calculator
+
+def test_add():
+    assert Calculator.add(1, 2) == 3.0
+    assert Calculator.add(1.0, 2.0) == 3.0
+    assert Calculator.add(0, 2.0) == 2.0
+    assert Calculator.add(2.0, 0) == 2.0
+    assert Calculator.add(-4, 2.0) == -2.0
+
+def test_subtract():
+    assert Calculator.subtract(1, 2) == -1.0
+    assert Calculator.subtract(2, 1) == 1.0
+    assert Calculator.subtract(1.0, 2.0) == -1.0
+    assert Calculator.subtract(0, 2.0) == -2.0
+    assert Calculator.subtract(2.0, 0.0) == 2.0
+    assert Calculator.subtract(-4, 2.0) == -6.0
+
+def test_multiply():
+    assert Calculator.multiply(1, 2) == 2.0
+    assert Calculator.multiply(1.0, 2.0) == 2.0
+    assert Calculator.multiply(0, 2.0) == 0.0
+    assert Calculator.multiply(2.0, 0.0) == 0.0
+    assert Calculator.multiply(-4, 2.0) == -8.0
+
+def test_divide():
+    assert Calculator.divide(1, 2) == 0.5
+    assert Calculator.divide(1.0, 2.0) == 0.5
+    assert Calculator.divide(0, 2.0) == 0
+    assert Calculator.divide(-4, 2.0) == -2.0
+```
+
+Now, run the command below in your terminal:
+
+```sh
+pytest --cov api.calculator
+```
+
+Example output:
+
+```
+Name                                Stmts   Miss  Cover
+-------------------------------------------------------
+api/calculator/__init__.py              0      0   100%
+api/calculator/calculator.py           11      1    91%
+api/calculator/test_calculator.py      25      0   100%
+-------------------------------------------------------
+TOTAL                                  36      1    97%
+```
+
+## Pushing Your Project to Codecov
+
+The real power of code coverage comes when you can integrate it into your team's everyday workflow. This is where Codecov comes in, making this integration a breeze.
+
+### Sign up for Codecov
+
+Visit [Codecov sign up](https://about.codecov.io/sign-up/) and sign up for Codecov using your preferred auth mechanism.
+
+Choose the repo you'd like to link with your Codecov account. You'll be provided with a Codecov upload token. You need to use this token when uploading data from your repo to Codecov. You can always access this token again in the repository's Configuration tab (under General) on the Codecov website.
+
+Now that you're set up on Codecov, it's time to create a GitHub Action. This will be a three-step process every time you push a branch:
+
+- Run your tests with coverage just like you did locally.
+- Create the coverage report.
+- Push that report up to Codecov so you can view your data and make it available as a graph in your pull request.
+
+If you've never worked with GitHub Actions before, you can control everything with a simple YAML config file. It needs to be in the `.github/workflows` directory, for example, `.github/workflows/workflow.yml`. Then, include the following code:
+
+```yaml
+name: Workflow for Codecov example-python
+on: [push, pull_request]
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run tests and collect coverage
+        run: pytest --cov app
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+```
+
+## Advanced Codecov configurations
+
+Now that you have uploaded your first Python coverage reports successfully to Codecov, you can check out some of our other features including:
+
+- Configuring Codecov settings
+- Adding flags to isolate coverage reports
+- Labeling critical files 

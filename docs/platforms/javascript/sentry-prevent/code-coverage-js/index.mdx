@@ -1,0 +1,148 @@
+---
+title: Code coverage with JavaScript
+description: "How to use Codecov for code coverage in JavaScript projects."
+sidebar_order: 100
+---
+
+# Code coverage with JavaScript
+
+Trying to use Codecov with your JavaScript project? Start here.
+
+## Getting Started
+
+To start you will need the following:
+
+- A code host (we'll be using Github in our example here)
+- A repository
+- Tested code within that repository
+- A Codecov account
+
+For easy reference here is our JavaScript Example repo that we will reference throughout the walk-through.
+
+## Getting test coverage with Jest
+
+We will be taking advantage of the **jest** package to run our tests. We will need to create a **package.json** file.
+
+```json
+{
+  "name": "@codecov/example-javascript",
+  "version": "0.0.1",
+  "description": "Codecov Example Javascript",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^28.1.1"
+  }
+}
+```
+
+To run your tests, run:
+
+```sh
+npm install && npm run test
+```
+
+Example output:
+
+```
+> @codecov/example-javascript test
+> jest
+
+ PASS  app/calculator.test.js
+  ✓ add function (2 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.762 s
+Ran all test suites.
+```
+
+To get coverage results, update your jest settings. Create a file `jest.config.js`:
+
+```js
+module.exports = {
+    collectCoverage: true,
+    coverageReporters: ['text', 'cobertura'],
+}
+```
+
+Install the dependencies and run the tests to view code coverage:
+
+```sh
+npm run test
+```
+
+Example output:
+
+```
+---------------|---------|----------|---------|---------|-------------------
+File           | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s
+---------------|---------|----------|---------|---------|-------------------
+All files      |      80 |      100 |      50 |      80 |
+ calculator.js |      80 |      100 |      50 |      80 | 5
+---------------|---------|----------|---------|---------|-------------------
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.397 s, estimated 1 s
+```
+
+Note that we are showing 80% code coverage.
+
+## How to upload to Codecov
+
+Now that you have collected coverage locally, let's learn how to upload these reports to Codecov. Codecov is often used in conjunction with continuous integration (CI) systems to ensure that new code changes are adequately covered by tests.
+
+We will be using GitHub Actions as the CI and the Codecov Action to upload coverage reports.
+
+Create a file called `.github/workflows/ci.yml`:
+
+```yaml
+name: Workflow for Codecov example-javascript
+on: [push, pull_request]
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Node 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install dependencies
+        run: npm install
+      - name: Run tests and collect coverage
+        run: npm run test
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+```
+
+It is recommended that you install the Codecov app for this repository to prevent rate-limiting issues. Save your code and push up to GitHub.
+
+```sh
+git checkout -b 'initial-commit'
+git add .
+git commit -m 'Initial commit and upload coverage to Codecov'
+git push origin initial-commit
+```
+
+In GitHub, open the pull request and wait for CI and Codecov to finish running and analyzing. You should see the following pull request commit and status checks from Codecov.
+
+## Covering uncovered code
+
+Now that we can get coverage data in our pull request, let's take a look at how to increase coverage.
+
+Let's take a look at the coverage report from Codecov. Navigate to your repository from the Codecov UI. You should see a dashboard like this. If you click on a file, you'll come to the file view and see which lines are covered or not.
+
+If you add more tests, you can see your coverage increase in the Codecov UI and in your pull requests.
+
+## Advanced Codecov configurations
+
+Now that you have uploaded your first Javascript coverage reports successfully to Codecov, you can check out some of our other features including:
+
+- Configuring Codecov settings
+- Adding flags to isolate coverage reports
+- Labeling critical files 

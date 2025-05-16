@@ -48,7 +48,7 @@ export function PlatformSidebar({
       <DynamicNav
         root={pathRoot}
         tree={tree}
-        title={`Sentry for ${(guide || platform).title}`}
+        title={`Get started with ${(guide || platform).title}`}
         exclude={[`/${pathRoot}/guides/`]}
       />
     </ul>

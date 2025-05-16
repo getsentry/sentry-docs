@@ -1,16 +1,15 @@
-import defaultTheme from 'tailwindcss/defaultTheme';
-
-import Typography from '@tailwindcss/typography';
 import Forms from '@tailwindcss/forms';
+import Typography from '@tailwindcss/typography';
+import defaultTheme from 'tailwindcss/defaultTheme';
 import {
   isolateInsideOfContainer,
   scopedPreflightStyles,
 } from 'tailwindcss-scoped-preflight';
 
 /** @type {import('tailwindcss').Config} */
-export default {
+const config = {
   darkMode: ['selector', '.dark'],
-  content: ['./app/**/*.{js,ts,jsx,tsx}', './src/components/**/*.{js,ts,jsx,tsx,mdx}'],
+  content: ['./app/**/*.{js,ts,jsx,tsx}', './src/components/**/*.{js,ts,jsx,tsx,mdx}', './docs/**/*.{md,mdx}'],
   theme: {
     extend: {
       animation: {
@@ -71,3 +70,5 @@ export default {
   ],
   blocklist: ['collapse'],
 };
+
+export default config;
