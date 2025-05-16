@@ -1,12 +1,29 @@
 ---
 title: Manual Setup
 sidebar_order: 1
-description: "Learn how to manually set up Sentry in your Angular app and capture your first errors."
+description: "Learn how to manually set up Sentry in your SvelteKit app and capture your first errors."
 ---
 
-If you can't (or prefer not to) run the <PlatformLink to="/#install">automatic setup</PlatformLink>, you can follow the instructions below to configure the Sentry SvelteKit SDK in your application. This guide is also useful to adjust the pre-set configuration if you used the installation wizard for automatic setup.
+<Alert type="info">
+  For the fastest setup, we recommend using the [wizard
+  installer](/platforms/javascript/guides/sveltekit).
+</Alert>
 
-## Install
+<PlatformContent includePath="getting-started-prerequisites" />
+
+## Step 1: Install
+
+Choose the features you want to configure, and this guide will show you how:
+
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "session-replay"]}
+/>
+
+<PlatformContent includePath="getting-started-features-expandable" />
+
+### Install the Sentry SDK
+
+Run the command for your preferred package manager to add the Sentry SDK to your application:
 
 ```bash {tabTitle:npm}
 npm install @sentry/sveltekit --save
@@ -22,18 +39,15 @@ pnpm add @sentry/sveltekit
 
 If you're updating your Sentry SDK to the latest version, check out our [migration guide](https://github.com/getsentry/sentry-javascript/blob/master/MIGRATION.md) to learn more about breaking changes.
 
-## Configure
+## Step 2: Configure
 
-The Sentry SDK needs to be initialized and configured in three places: On the client-side, server-side and in your Vite config.
+You need to initialize and configure the Sentry SDK in three places: the client side, the server side, and your Vite config.
 
-### Client-side Setup
+### Configure Client-Side Sentry
 
-If you don't already have a [client hooks](https://kit.svelte.dev/docs/hooks#shared-hooks) file, create a new one in `src/hooks.client.(js|ts)`.
+Create a client hooks file `src/hooks.client.(js|ts)` in the `src` folder of your project if you don't have one already. In this file, import and initialize the Sentry SDK and add the `handleErrorWithSentry` function to the [`handleError` hook](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError).
 
-At the top of your client hooks file, import and initialize the Sentry SDK as shown in the snippet below. See the [Basic Options](../configuration/options/) page to view other SDK configuration options.
-Also, add the `handleErrorWithSentry` function to the [`handleError` hook](https://kit.svelte.dev/docs/hooks#shared-hooks-handleerror):
-
-```javascript {filename:hooks.client.(js|ts)} {1, 3-18, 24}
+```javascript {filename:hooks.client.(js|ts)} {1, 3-28, 34}
 import * as Sentry from "@sentry/sveltekit";
 
 Sentry.init({
@@ -42,15 +56,25 @@ Sentry.init({
   // Adds request headers and IP for users, for more info visit:
   // https://docs.sentry.io/platforms/javascript/guides/sveltekit/configuration/options/#sendDefaultPii
   sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
 
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for tracing.
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
   tracesSampleRate: 1.0,
-
-  // Optional: Initialize Session Replay:
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ session-replay
   integrations: [Sentry.replayIntegration()],
+
+  // Capture Replay for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ session-replay
 });
 
 const myErrorHandler = ({ error, event }) => {
@@ -63,15 +87,11 @@ export const handleError = Sentry.handleErrorWithSentry(myErrorHandler);
 // export const handleError = handleErrorWithSentry();
 ```
 
-### Server-side Setup
+### Configure Server-Side Sentry
 
-If you don't already have a [server hooks](https://kit.svelte.dev/docs/hooks#server-hooks) file, create a new one in `src/hooks.server.(js|ts)`.
+Create a server hooks file `src/hooks.server.(js|ts)` in the `src` folder of your project if you don't have one already. In this file, import and initialize the Sentry SDK and add the `handleErrorWithSentry` function to the [`handleError` hook](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) and the Sentry request handler to the [`handle` hook](https://kit.svelte.dev/docs/hooks#server-hooks-handle).
 
-At the top of your server hooks file, import and initialize the Sentry SDK as shown in the snippet below. See the [Basic Options](../configuration/options/) page to view other SDK configuration options.
-Add the `handleErrorWithSentry` function to the [`handleError` hook](https://kit.svelte.dev/docs/hooks#shared-hooks-handleerror) and add the Sentry request handler to the [`handle` hook](https://kit.svelte.dev/docs/hooks#server-hooks-handle).
-If you're already using your own handler(s), use SvelteKit's [`sequence`](https://kit.svelte.dev/docs/modules#sveltejs-kit-hooks-sequence) function to add the Sentry handler _before_ your handler(s).
-
-```javascript {filename:hooks.server.(js|ts)} {1, 3-13, 19, 23}
+```javascript {filename:hooks.server.(js|ts)} {1, 3-18, 24, 28}
 import * as Sentry from "@sentry/sveltekit";
 
 Sentry.init({
@@ -80,10 +100,15 @@ Sentry.init({
   // Adds request headers and IP for users, for more info visit:
   // https://docs.sentry.io/platforms/javascript/guides/sveltekit/configuration/options/#sendDefaultPii
   sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
 
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for tracing.
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
   tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
 });
 
 const myErrorHandler = ({ error, event }) => {
@@ -95,29 +120,24 @@ export const handleError = Sentry.handleErrorWithSentry(myErrorHandler);
 // export const handleError = handleErrorWithSentry();
 
 export const handle = Sentry.sentryHandle();
-// Or use `sequence`:
+// Or use `sequence` if you're using your own handler(s):
 // export const handle = sequence(Sentry.sentryHandle(), yourHandler());
 ```
 
-### Vite Setup
+### Configure Vite
 
-Add the `sentrySvelteKit` plugins to your `vite.config.(js|ts)` file so the Sentry SDK can apply build-time features.
-Make sure that it is added _before_ the sveltekit plugin:
+Add the `sentrySvelteKit` plugin **before** `sveltekit` in your `vite.config.(js|ts)` file to automatically upload source maps to Sentry and instrument `load` functions for tracing if it's configured.
 
-```javascript {filename:vite.config.(js|ts)} {2,5}
+```javascript {filename:vite.config.(js|ts)} {2,6}
 import { sveltekit } from "@sveltejs/kit/vite";
 import { sentrySvelteKit } from "@sentry/sveltekit";
+import { defineConfig } from "vite";
 
-export default {
+export default defineConfig({
   plugins: [sentrySvelteKit(), sveltekit()],
   // ... rest of your Vite config
-};
+});
 ```
-
-The `sentrySvelteKit()` function adds Vite plugins to your Vite config to:
-
-- Automatically upload source maps to Sentry
-- Automatically instrument `load` functions for tracing
 
 ### Source Maps Upload
 
@@ -207,7 +227,7 @@ export default {
 
 If you disable automatic source maps upload, you must explicitly set a `release` value in your `Sentry.init()` configs. You can also skip the `sentry-cli` configuration step below.
 
-## Optional Configuration
+## Step 3: Optional Configuration
 
 The points explain additional optional configuration or more in-depth customization of your Sentry SvelteKit SDK setup.
 
@@ -376,7 +396,116 @@ export const GET = wrapServerRouteWithSentry(async () => {
 });
 ```
 
-## Cloudflare Pages Configuration
+## Step 4: Cloudflare Pages Configuration (Optional)
 
 If you're deploying your application to Cloudflare Pages, you need to adjust your server-side setup.
 Follow this guide to [configure Sentry for Cloudflare](/platforms/javascript/guides/cloudflare/frameworks/sveltekit/).
+
+## Step 5: Avoid Ad Blockers With Tunneling (Optional)
+
+You can prevent ad blockers from blocking Sentry events using tunneling. Use the `tunnel` option to add an API endpoint in your application that forwards Sentry events to Sentry servers.
+
+Update `Sentry.init` in your `hooks.client.(js|ts)` file with the following option:
+
+```javascript {filename:hooks.client.(js|ts)}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",,
+  tunnel: "/tunnel",
+});
+```
+
+This will send all events to the `tunnel` endpoint. However, the events need to be parsed and redirected to Sentry, so you need to do additional configuration on the server. You can find a detailed explanation on how to do this on our [Troubleshooting page](/platforms/javascript/guides/sveltekit/troubleshooting/#using-the-tunnel-option).
+
+## Step 6: Verify Your Setup
+
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+### Issues
+
+To verify that Sentry captures errors and creates issues in your Sentry project, create a test page, for example, at `src/routes/sentry-example/+page.svelte` with a button that throws an error when clicked:
+
+```html {filename:+page.svelte}
+<script>
+  function throwTestError() {
+    throw new Error("Sentry Example Frontend Error");
+  }
+</script>
+
+<button type="button" onclick="{throwTestError}">Throw error</button>
+```
+
+<OnboardingOption optionId="performance" hideForThisOption>
+  Open the page `sentry-example` in a browser and click the button to trigger a
+  frontend error.
+</OnboardingOption>
+
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
+
+<OnboardingOption optionId="performance">
+### Tracing
+To test tracing, create a test API route like `src/routes/sentry-example/+server.(js|ts)`:
+
+```javascript {filename:+server.(js|ts)}
+export const GET = async () => {
+  throw new Error("Sentry Example API Route Error");
+};
+```
+
+Next, update your test button to call this route and throw an error if the response isn't `ok`:
+
+```html {filename:+page.svelte}
+<script>
+  import * as Sentry from "@sentry/sveltekit";
+
+  function throwTestError() {
+    Sentry.startSpan(
+      {
+        name: "Example Frontend Span",
+        op: "test",
+      },
+      async () => {
+        const res = await fetch("/sentry-example");
+        if (!res.ok) {
+          throw new Error("Sentry Example Frontend Error");
+        }
+      }
+    );
+  }
+</script>
+
+<button type="button" onclick="{throwTestError}">Throw error with trace</button>
+```
+
+Open the page `sentry-example` in a browser and click the button to trigger two errors:
+
+- a frontend error
+- an error within the API route
+
+Additionally, this starts a trace to measure the time it takes for the API request to complete.
+
+</OnboardingOption>
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
+
+<PlatformContent includePath="getting-started-verify-locate-data" />
+
+## Next Steps
+
+At this point, you should have integrated Sentry into your SvelteKit application and should already be sending data to your Sentry project.
+
+Now's a good time to customize your setup and look into more advanced topics.
+Our next recommended steps for you are:
+
+- Learn how to [manually capture errors](/platforms/javascript/guides/sveltekit/usage/)
+- Continue to [customize your configuration](/platforms/javascript/guides/sveltekit/configuration/)
+- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- If you encountered issues with setting up Sentry manually, [try our installation wizard](/platforms/javascript/guides/sveltekit/)
+- Find various topics in [Troubleshooting](/platforms/javascript/guides/sveltekit/troubleshooting/)
+- [Get support](https://sentry.zendesk.com/hc/en-us/)
+
+</Expandable>
