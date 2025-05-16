@@ -47,7 +47,7 @@ the `sentry.Logger` API.
 The `Sentry.Logger` API exposes methods that support six different log levels: `trace`,
 `debug`, `info`, `warn`, `error` and `fatal`. The methods support both `fmt.Print` and `fmt.Printf` like syntax.
 If you pass in format specifiers like `%v`, these will be sent to Sentry, and can be searched from within the Logs UI,
- and even added to the Logs views as a dedicated column.
+and even added to the Logs views as a dedicated column.
 
 ```go
 ctx := context.Background()
@@ -58,6 +58,7 @@ logger.Info(ctx, "Hello ", "world!")
 // Or like [fmt.Printf]
 logger.Infof(ctx, "Hello %v!", "world")
 ```
+
 You can also pass additional attributes to the logger via the `SetAttributes` function. These attributes will also be searchable in the Logs UI.
 
 ```go
@@ -92,9 +93,12 @@ func main() {
 	logger.Warnf(ctx, "I have params: %v and attributes", "example param")
 }
 ```
+
 Currently the `attribute` API supports only these value types: `int`, `string`, `bool`, and `float`.
 
 ## Integrations
+
+### `io.Writer` interface
 
 The `sentry.Logger` implements the `io.Writer` interface, so you can easily inject the logger into your existing setup.
 
@@ -108,16 +112,24 @@ slogger.Info("Implementing slog.Logger")
 ```
 
 <Alert>
-In order to properly attach the correct trace with each Log entry, a `context.Context` is required. The `Write` function of
-the `io.Writer` interface doesn't provide `context`, so wrapping the custom logger will not get the trace and current span attached.
-We recommend using the `sentry.Logger` to ensure your logs are connected to spans and errors in the Sentry UI.
+  In order to properly attach the correct trace with each Log entry, a
+  `context.Context` is required. The `Write` function of the `io.Writer`
+  interface doesn't provide `context`, so wrapping the custom logger will not
+  get the trace and current span attached. We recommend using the
+  `sentry.Logger` to ensure your logs are connected to spans and errors in the
+  Sentry UI.
 </Alert>
+
+### Upcoming Integrations
+
+We're actively working on adding more integration support for Logs. Currently we are looking at adding support for [`slog`](https://pkg.go.dev/log/slog), [`logrus`](https://pkg.go.dev/github.com/sirupsen/logrus), and [`zerolog`](https://pkg.go.dev/github.com/rs/zerolog). You can follow this [GitHub issue](https://github.com/getsentry/sentry-go/issues/1015) to track progress.
 
 ## Options
 
 ### BeforeSendLog
 
 To filter logs, or update them before they are sent to Sentry, you can use the `BeforeSendLog` client option.
+
 ```go
 if err := sentry.Init(sentry.ClientOptions{
   Dsn:        "___PUBLIC_DSN___",
