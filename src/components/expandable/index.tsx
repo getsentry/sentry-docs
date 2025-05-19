@@ -57,6 +57,7 @@ export function Expandable({title, level = 'info', children, permalink, group}: 
 
   function toggleIsExpanded(event: React.MouseEvent<HTMLDetailsElement>) {
     const newVal = event.currentTarget.open;
+    setIsExpanded(newVal);
 
     if (id) {
       if (newVal) {
@@ -65,8 +66,6 @@ export function Expandable({title, level = 'info', children, permalink, group}: 
         window.history.pushState({}, '', '#');
       }
     }
-
-    setIsExpanded(newVal);
   }
 
   return (
@@ -74,17 +73,15 @@ export function Expandable({title, level = 'info', children, permalink, group}: 
       name={group}
       className={`${styles.expandable} callout !block ${'callout-' + level}`}
       open={isExpanded}
-      // We only need this to keep the URL hash in sync
-      onToggle={id ? toggleIsExpanded : undefined}
+      onToggle={toggleIsExpanded}
       id={id}
     >
       <summary className={`${styles['expandable-header']} callout-header`}>
-        <ChevronDownIcon
-          className={`${styles['expandable-icon-expanded']} callout-icon`}
-        />
-        <ChevronRightIcon
-          className={`${styles['expandable-icon-collapsed']} callout-icon`}
-        />
+        {isExpanded ? (
+          <ChevronDownIcon className="callout-icon" />
+        ) : (
+          <ChevronRightIcon className="callout-icon" />
+        )}
         <div>{title}</div>
       </summary>
       <div className={`${styles['expandable-body']} callout-body content-flush-bottom`}>
