@@ -11,11 +11,11 @@ import styles from './style.module.scss';
 
 type Props = {
   children: ReactNode;
+  copy?: boolean;
   title: string;
   /** If defined, the expandable will be grouped with other expandables that have the same group. */
   group?: string;
   level?: 'info' | 'warning' | 'success';
-  copy?: boolean;
   permalink?: boolean;
 };
 
