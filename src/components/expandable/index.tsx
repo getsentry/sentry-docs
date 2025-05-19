@@ -15,9 +15,8 @@ type Props = {
   /** If defined, the expandable will be grouped with other expandables that have the same group. */
   group?: string;
   level?: 'info' | 'warning' | 'success';
-  permalink?: boolean;
-  /** If true, a copy button will be displayed to copy the content of the expandable. */
   copy?: boolean;
+  permalink?: boolean;
 };
 
 function slugify(str: string) {
