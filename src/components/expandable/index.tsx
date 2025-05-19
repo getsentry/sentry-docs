@@ -1,6 +1,6 @@
 'use client';
 
-import {ReactNode, useEffect, useRef,useState} from 'react';
+import {ReactNode, useEffect, useRef, useState} from 'react';
 import {ChevronDownIcon, ChevronRightIcon} from '@radix-ui/react-icons';
 import * as Sentry from '@sentry/nextjs';
 
@@ -26,7 +26,14 @@ function slugify(str: string) {
     .replace(/[^a-z0-9-]/g, '');
 }
 
-export function Expandable({title, level = 'info', children, permalink, group, copy}: Props) {
+export function Expandable({
+  title,
+  level = 'info',
+  children,
+  permalink,
+  group,
+  copy,
+}: Props) {
   const id = permalink ? slugify(title) : undefined;
 
   const [isExpanded, setIsExpanded] = useState(false);
@@ -83,7 +90,7 @@ export function Expandable({title, level = 'info', children, permalink, group, c
       codeBlocks.forEach(block => {
         // Exclude code elements within other code elements (e.g. inline code in a block)
         if (!block.closest('code')?.parentElement?.closest('code')) {
-           contentToCopy += (block.textContent || '') + '\n';
+          contentToCopy += (block.textContent || '') + '\n';
         }
       });
       contentToCopy = contentToCopy.trim();
@@ -144,17 +151,20 @@ export function Expandable({title, level = 'info', children, permalink, group, c
           <div>{title}</div>
         </div>
         {copy && (
-          <button 
+          <button
             className={styles['copy-button']}
             onClick={copyContentOnClick}
             type="button" // Important for buttons in summaries
           >
-            {showCopyButton && !copied && "Copy Rules"}
-            {showCopyButton && copied && "Copied!"}
+            {showCopyButton && !copied && 'Copy Rules'}
+            {showCopyButton && copied && 'Copied!'}
           </button>
         )}
       </summary>
-      <div ref={contentRef} className={`${styles['expandable-body']} callout-body content-flush-bottom`}>
+      <div
+        ref={contentRef}
+        className={`${styles['expandable-body']} callout-body content-flush-bottom`}
+      >
         {children}
       </div>
     </details>
