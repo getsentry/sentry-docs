@@ -1170,6 +1170,10 @@ const userDocsRedirects = [
     source: '/product/explore/new-trace-explorer',
     destination: '/product/explore/trace-explorer/',
   },
+  {
+    source: '/organization/integrations/expo/',
+    destination: '/organization/integrations/deployment/expo/',
+  },
 ];
 
 /**
