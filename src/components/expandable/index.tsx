@@ -1,7 +1,8 @@
 'use client';
 
-import {ReactNode, useEffect, useState} from 'react';
+import {ReactNode, useEffect, useRef, useState} from 'react';
 import {ChevronDownIcon, ChevronRightIcon} from '@radix-ui/react-icons';
+import * as Sentry from '@sentry/nextjs';
 
 // explicitly not usig CSS modules here
 // because there's some prerendered content that depends on these exact class names
@@ -11,6 +12,7 @@ import styles from './style.module.scss';
 type Props = {
   children: ReactNode;
   title: string;
+  copy?: boolean;
   /** If defined, the expandable will be grouped with other expandables that have the same group. */
   group?: string;
   level?: 'info' | 'warning' | 'success';
@@ -24,10 +26,20 @@ function slugify(str: string) {
     .replace(/[^a-z0-9-]/g, '');
 }
 
-export function Expandable({title, level = 'info', children, permalink, group}: Props) {
+export function Expandable({
+  title,
+  level = 'info',
+  children,
+  permalink,
+  group,
+  copy,
+}: Props) {
   const id = permalink ? slugify(title) : undefined;
 
   const [isExpanded, setIsExpanded] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [showCopyButton, setShowCopyButton] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   // Ensure we scroll to the element if the URL hash matches
   useEffect(() => {
@@ -55,6 +67,56 @@ export function Expandable({title, level = 'info', children, permalink, group}: 
     };
   }, [id]);
 
+  useEffect(() => {
+    if (copy) {
+      setShowCopyButton(true);
+    }
+  }, [copy]);
+
+  async function copyContentOnClick(event: React.MouseEvent<HTMLButtonElement>) {
+    event.stopPropagation(); // Prevent the details element from toggling
+    event.preventDefault(); // Prevent default summary click behavior
+
+    if (contentRef.current === null) {
+      return;
+    }
+
+    // Attempt to get text from markdown code blocks if they exist
+    const codeBlocks = contentRef.current.querySelectorAll('code');
+    let contentToCopy = '';
+
+    if (codeBlocks.length > 0) {
+      // If there are code blocks, concatenate their text content
+      codeBlocks.forEach(block => {
+        // Exclude code elements within other code elements (e.g. inline code in a block)
+        if (!block.closest('code')?.parentElement?.closest('code')) {
+          contentToCopy += (block.textContent || '') + '\n';
+        }
+      });
+      contentToCopy = contentToCopy.trim();
+    }
+
+    // Fallback to the whole content if no code blocks or if they are empty
+    if (!contentToCopy && contentRef.current.textContent) {
+      contentToCopy = contentRef.current.textContent.trim();
+    }
+
+    if (!contentToCopy) {
+      // if there is no content to copy (e.g. only images), do nothing.
+      return;
+    }
+
+    try {
+      setCopied(false);
+      await navigator.clipboard.writeText(contentToCopy);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
+    } catch (error) {
+      Sentry.captureException(error);
+      setCopied(false);
+    }
+  }
+
   function toggleIsExpanded(event: React.MouseEvent<HTMLDetailsElement>) {
     const newVal = event.currentTarget.open;
     setIsExpanded(newVal);
@@ -77,14 +139,30 @@ export function Expandable({title, level = 'info', children, permalink, group}: 
       id={id}
     >
       <summary className={`${styles['expandable-header']} callout-header`}>
-        {isExpanded ? (
-          <ChevronDownIcon className="callout-icon" />
-        ) : (
-          <ChevronRightIcon className="callout-icon" />
+        <div className={styles['expandable-title-container']}>
+          <ChevronDownIcon
+            className={`${styles['expandable-icon-expanded']} callout-icon`}
+          />
+          <ChevronRightIcon
+            className={`${styles['expandable-icon-collapsed']} callout-icon`}
+          />
+          <div>{title}</div>
+        </div>
+        {copy && (
+          <button
+            className={styles['copy-button']}
+            onClick={copyContentOnClick}
+            type="button" // Important for buttons in summaries
+          >
+            {showCopyButton && !copied && 'Copy Rules'}
+            {showCopyButton && copied && 'Copied!'}
+          </button>
         )}
-        <div>{title}</div>
       </summary>
-      <div className={`${styles['expandable-body']} callout-body content-flush-bottom`}>
+      <div
+        ref={contentRef}
+        className={`${styles['expandable-body']} callout-body content-flush-bottom`}
+      >
         {children}
       </div>
     </details>
