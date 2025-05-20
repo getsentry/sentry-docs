@@ -8,29 +8,21 @@ description: "Learn more about how to troubleshoot common issues with the Unity 
 
 ### Disabling the Sentry SDK for selected platforms
 
-By adding the snippet below to an `Editor` directory inside your Unity project, you can set up the ability to automatically disable the Sentry SDK for any targeted platform.
+If you want to disable the SDK for a specific platform, you can use the [programmatic configuration](/platforms/unity/configuration/options/programmatic-configuration/) to have your own code run as part of the initialization and disable the SDK like in the example below:
 
 ```csharp
 using Sentry.Unity;
-using UnityEditor;
-using UnityEditor.Build;
-using UnityEditor.Build.Reporting;
 
-public class PreBuildProcessor : IPreprocessBuildWithReport
+public class SentryOptionConfiguration : SentryOptionsConfiguration
 {
-    public int callbackOrder => 0;
-
-    public void OnPreprocessBuild(BuildReport report)
+    public override void Configure(SentryUnityOptions options)
     {
-        if (report.summary.platform is BuildTarget.Android)
-        {
-            var sentryOptions =
-                AssetDatabase.LoadAssetAtPath<ScriptableSentryUnityOptions>("Assets/Resources/Sentry/SentryOptions.asset");
-            sentryOptions.Enabled = false;
-            EditorUtility.SetDirty(sentryOptions);
-        }
+#if UNITY_ANDROID
+        options.Enabled = false;
+#endif
     }
 }
+
 ```
 
 ### Build input file cannot be found: '\*\*/Libraries/io.sentry.unity/Plugins/iOS/SentryNativeBridge.m'
