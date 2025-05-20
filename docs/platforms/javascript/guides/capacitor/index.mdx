@@ -55,6 +55,17 @@ yarn add @sentry/capacitor @sentry/vue
 pnpm add @sentry/capacitor @sentry/vue
 ```
 
+```bash {tabTitle:Nuxt}
+# npm
+npm install @sentry/capacitor @sentry/nuxt --save
+
+# yarn
+yarn add @sentry/capacitor @sentry/nuxt
+
+# pnpm
+pnpm add @sentry/capacitor @sentry/nuxt
+```
+
 ```bash {tabTitle:Other}
 # npm
 npm install @sentry/capacitor @sentry/browser --save
@@ -219,6 +230,7 @@ Sentry.init(
     // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
     replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1.0,
+    // ___PRODUCT_OPTION_END___ session-replay
   },
   // Forward the init method from @sentry/angular
   SentryAngular.init
@@ -296,7 +308,7 @@ Sentry.init(
     replaysOnErrorSampleRate: 1.0,
     // ___PRODUCT_OPTION_END___ session-replay
   },
-  // Forward the init method from @sentry/angular
+  // Forward the init method from @sentry/react
   SentryReact.init
 );
 ```
@@ -357,8 +369,65 @@ Sentry.init(
     // ___PRODUCT_OPTION_END___ session-replay
   },
 
-  // Forward the init method from @sentry/angular
+  // Forward the init method from @sentry/vue
   SentryVue.init
+);
+```
+
+```typescript {tabTitle: Nuxt} {filename: sentry.client.config.ts}
+import * as Sentry from "@sentry/capacitor";
+import * as SentryNuxt from "@sentry/nuxt";
+
+Sentry.init(
+  {
+    dsn: "___PUBLIC_DSN___",
+    
+    // Adds request headers and IP for users, for more info visit:
+    // https://docs.sentry.io/platforms/javascript/guides/capacitor/configuration/options/#sendDefaultPii
+    sendDefaultPii: true,
+
+    // Set your release version, such as "getsentry@1.0.0"
+    release: "my-project-name@<release-name>",
+    // Set your dist version, such as "1"
+    dist: "<dist>",
+    integrations: [
+      // ___PRODUCT_OPTION_START___ performance
+      // Registers and configures the Tracing integration,
+      // which automatically instruments your application to monitor its
+      // performance, including custom Angular routing instrumentation
+      Sentry.browserTracingIntegration(),
+      // ___PRODUCT_OPTION_END___ performance
+      // ___PRODUCT_OPTION_START___ session-replay
+      // Registers the Replay integration,
+      // which automatically captures Session Replays
+      Sentry.replayIntegration(),
+      // ___PRODUCT_OPTION_END___ session-replay
+    ],
+    // ___PRODUCT_OPTION_START___ performance
+
+    // Set tracesSampleRate to 1.0 to capture 100%
+    // of transactions for tracing.
+    // We recommend adjusting this value in production
+    // Learn more at
+    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+    tracesSampleRate: 1.0,
+
+    // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+    tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+    // ___PRODUCT_OPTION_END___ performance
+    // ___PRODUCT_OPTION_START___ session-replay
+
+    // Capture Replay for 10% of all sessions,
+    // plus for 100% of sessions with an error
+    // Learn more at
+    // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+    // ___PRODUCT_OPTION_END___ session-replay
+  },
+
+  // Forward the init method from @sentry/nuxt
+  SentryNuxt.init
 );
 ```
 
