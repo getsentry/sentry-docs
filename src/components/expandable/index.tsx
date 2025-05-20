@@ -119,6 +119,7 @@ export function Expandable({
 
   function toggleIsExpanded(event: React.MouseEvent<HTMLDetailsElement>) {
     const newVal = event.currentTarget.open;
+    setIsExpanded(newVal);
 
     if (id) {
       if (newVal) {
@@ -127,8 +128,6 @@ export function Expandable({
         window.history.pushState({}, '', '#');
       }
     }
-
-    setIsExpanded(newVal);
   }
 
   return (
@@ -136,8 +135,7 @@ export function Expandable({
       name={group}
       className={`${styles.expandable} callout !block ${'callout-' + level}`}
       open={isExpanded}
-      // We only need this to keep the URL hash in sync
-      onToggle={id ? toggleIsExpanded : undefined}
+      onToggle={toggleIsExpanded}
       id={id}
     >
       <summary className={`${styles['expandable-header']} callout-header`}>
