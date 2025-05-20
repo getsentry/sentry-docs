@@ -18,6 +18,19 @@ export function register() {
       tracesSampleRate: 1,
       debug: false,
       environment: process.env.NODE_ENV === 'development' ? 'development' : undefined,
+      // temporary change for investigating edge middleware tx names
+      beforeSendTransaction(event) {
+        if (
+          event.transaction?.includes('middleware GET') &&
+          event.contexts?.trace?.data
+        ) {
+          event.contexts.trace.data = {
+            ...event.contexts.trace.data,
+            'sentry.source': 'custom',
+          };
+        }
+        return event;
+      },
     });
   }
 }

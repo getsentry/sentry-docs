@@ -5,10 +5,7 @@ traces_sampler_callback(const sentry_transaction_context_t *transaction_ctx,
 {
     // check if there was a parent sampling decision
     if (parent_sampled != NULL) {
-        if (*parent_sampled) {
-            return 0.8; // high sample rate for children of sampled transactions
-        }
-        return 0.0; // don't sample if parent is not sampled
+        return *parent_sampled; // Inherit parent's sampling decision
     }
     // a sampling decision can be made on the transaction context name and operation
     if (strcmp(sentry_transaction_context_get_name(transaction_ctx),

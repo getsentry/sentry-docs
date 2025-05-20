@@ -41,6 +41,8 @@ python -m pip install scons
 python -m pip install --upgrade scons
 ```
 
+For compiling on macOS you also need to install [Vulkan SDK](https://sdk.lunarg.com/sdk/download/latest/mac/vulkan-sdk.dmg).
+
 <Alert>
 
 For more information, refer to [Building from Source](https://docs.godotengine.org/en/stable/contributing/development/compiling/index.html) in the official Godot documentation. It provides detailed instructions for compiling Godot on different platforms and with different tools. This guide offers streamlined instructions tailored for our use case, and may omit some details you require.
@@ -146,35 +148,76 @@ sentry-cli login
 
 It will prompt you to create an auth token in your web browser. Follow the instructions, generate the token, and then paste it into the command-line prompt when asked.
 
-To upload debug symbols to Sentry using `sentry-cli`, run the following command:
+To show inline source context in Sentry, `sentry-cli` can scan debug files for source references, resolves them locally, and creates an archive of all referenced source files called _source bundle_. The source bundle can be created by `sentry-cli` during the upload of debug information files.
 
-```bash
-sentry-cli debug-files upload --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ ./bin
+To upload the debug information files to Sentry with sources included, run the following command:
+
+```bash {tabTitle:Bash/PowerShell}
+sentry-cli debug-files upload --include-sources --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ bin
 ```
 
-This will upload the files with debug information from the `./bin` directory to Sentry.
+This uploads debug information files from the `bin` directory to Sentry, creating the source bundles on the fly.
+
+<Expandable title="Generating source bundle archives separately">
+
+You can also create the source bundles separately from the upload step by running:
+
+```PowerShell {tabTitle:Windows}
+sentry-cli debug-files bundle-sources bin\godot.windows.template_release.x86_64.pdb
+sentry-cli debug-files bundle-sources bin\godot.windows.template_release.x86_64.console.pdb
+```
+
+```bash {tabTitle:macOS}
+sentry-cli debug-files bundle-sources bin/godot.macos.template_release.x86_64.dSYM
+mv bin/godot.macos.template_release.src.zip bin/godot.macos.template_release.x86_64.src.zip
+sentry-cli debug-files bundle-sources bin/godot.macos.template_release.arm64.dSYM
+mv bin/godot.macos.template_release.src.zip bin/godot.macos.template_release.arm64.src.zip
+```
+
+```bash {tabTitle:Linux}
+sentry-cli debug-files bundle-sources bin/godot.linuxbsd.template_release.x86_64.debugsymbols
+```
+
+</Expandable>
 
 Example output:
 
 ```PowerShell
-$ sentry-cli debug-files upload --org my-sentry-org --project my-game ./bin
+$ sentry-cli debug-files upload --include-sources --org my-sentry-org --project my-game bin
 > Found 4 debug information files
+  WARN    2025-05-12 12:03:13.130458600 -07:00 Source exceeded maximum item size limit (1572415). C:\Program Files (x86)\Windows Kits\10\include\10.0.22621.0\shared\winerror.h
+  WARN    2025-05-12 12:03:14.535023400 -07:00 Source exceeded maximum item size limit (1572415). C:\Program Files (x86)\Windows Kits\10\include\10.0.22621.0\shared\winerror.h
+  WARN    2025-05-12 12:03:15.349655900 -07:00 Source exceeded maximum item size limit (1152425). C:\Program Files (x86)\Windows Kits\10\include\10.0.22621.0\um\shobjidl_core.h
+  WARN    2025-05-12 12:03:15.947910200 -07:00 Source exceeded maximum item size limit (1145069). C:\Users\user\Projects\godot\4.4.1-stable\thirdparty\ufbx\ufbx.c
+> Resolved source code for 2 debug information files
 > Prepared debug information files for upload
-> Uploading completed in 7.429s
-> Uploaded 4 missing debug information files
+> Uploading completed in 10.049s
+> Uploaded 6 missing debug information files
 > File upload complete:
 
-  UPLOADED 88b87add-d362-406c-b3b7-9f019072a7e0-1 (godot.windows.template_release.x86_64.console.exe; x86_64 executable)
-  UPLOADED 88b87add-d362-406c-b3b7-9f019072a7e0-1 (godot.windows.template_release.x86_64.console.pdb; x86_64 debug companion)
-  UPLOADED 07c660ac-3f72-4c75-8aca-1378240cc949-1 (godot.windows.template_release.x86_64.pdb; x86_64 debug companion)
-  UPLOADED 07c660ac-3f72-4c75-8aca-1378240cc949-1 (godot.windows.template_release.x86_64.exe; x86_64 executable)
+  UPLOADED efc658cd-7481-4a15-93a5-9f8fa2b6c8a3-1 (godot.windows.template_release.x86_64.pdb; x86_64 sources)
+  UPLOADED efc658cd-7481-4a15-93a5-9f8fa2b6c8a3-1 (godot.windows.template_release.x86_64.pdb; x86_64 debug companion)
+  UPLOADED 050f8915-6eae-4054-8062-b90d75593f3a-1 (godot.windows.template_release.x86_64.console.pdb; x86_64 sources)
+  UPLOADED efc658cd-7481-4a15-93a5-9f8fa2b6c8a3-1 (godot.windows.template_release.x86_64.exe; x86_64 executable)
+  UPLOADED 050f8915-6eae-4054-8062-b90d75593f3a-1 (godot.windows.template_release.x86_64.console.exe; x86_64 executable)
+  UPLOADED 050f8915-6eae-4054-8062-b90d75593f3a-1 (godot.windows.template_release.x86_64.console.pdb; x86_64 debug companion)
 ```
 
 <Alert>
 
+A handful of Godot engine source files over 10 MiB may be excluded from the bundle. You’ll see warnings about them in the console output. While this isn’t an issue, stack frames pointing to those files won’t show inline source context.
+
 For more information, refer to [Sentry CLI](/cli/) documentation.
 
 </Alert>
+
+You can also upload debug files for the Sentry SDK itself by running the following command from your project directory:
+
+```bash {tabTitle:Bash/PowerShell}
+sentry-cli debug-files upload --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ addons/sentrysdk/
+```
+
+This uploads the SDK's debug files to Sentry. You can repeat this step for any other native extension used in your Godot project.
 
 Congratulations! You're all set up. Your exported project should now produce symbolicated stack traces in Sentry.
 

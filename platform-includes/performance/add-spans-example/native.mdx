@@ -37,3 +37,14 @@ void perform_checkout() {
 ```
 
 This example will send a transaction named `checkout` to Sentry. The transaction will contain a `validation` span that measures how long `validate_shopping_cart()` took and a `process` span that measures `process_shopping_cart()`. Finally, the call to `sentry_transaction_finish()` will finish the transaction and send it to Sentry.
+
+By default, transactions will inherit the `trace_id` and `parent_span_id` from the `propagation_context` as generated during SDK initialization. These values can be overridden by calling `sentry_set_trace()`, for example from a downstream SDK or to define a manual trace boundary:
+
+```c
+// Set the trace propagation_context which will be used
+//  for all events and transactions/spans
+const char *trace_id = "2674eb52d5874b13b560236d6c79ce8a";
+const char *parent_span_id = "a0f9fdf04f1a63df";
+
+sentry_set_trace(trace_id, parent_span_id);
+```

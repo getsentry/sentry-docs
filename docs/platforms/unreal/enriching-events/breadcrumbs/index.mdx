@@ -37,3 +37,29 @@ The same result can be achieved by calling corresponding function in blueprint:
 The Unreal Engine SDK can capture certain types of breadcrumbs automatically. Those can be enabled using the Sentry configuration window at **Project Settings > Plugins > Sentry**.
 
 ![Sentry automatic breadcrumbs](./img/unreal_automatic_breadcrumbs.png)
+
+## Customize Breadcrumbs
+
+SDKs allow you to customize breadcrumbs through the <PlatformIdentifier name="before-breadcrumb" /> hook (the corresponding handler class can be set in the plugin settings).
+
+This hook is passed an already assembled breadcrumb and, in some SDKs, an optional hint. The function can modify the breadcrumb or decide to discard it entirely by returning `nullptr`:
+
+```cpp
+UCLASS()
+class UCustomBeforeBreadcrumbHandler : public USentryBeforeBreadcrumbHandler
+{
+	GENERATED_BODY()
+
+public:
+	virtual USentryBreadcrumb* HandleBeforeBreadcrumb_Implementation(USentryBreadcrumb* Breadcrumb, USentryHint* Hint)
+    {
+        if (Breadcrumb->GetCategory() == "Spammy.Logger")
+        {
+            // Discard breadcrumb
+            return nullptr;
+        }
+
+        return Breadcrumb;
+    }
+};
+```
