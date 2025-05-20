@@ -1,0 +1,84 @@
+---
+title: Data Collected
+description: "See what data is collected by the Sentry SDK."
+sidebar_order: 1
+---
+
+Sentry takes data privacy very seriously and has default settings in place that prioritize data safety, especially when it comes to personally identifiable information (PII) data. When you add the Sentry SDK to your application, you allow it to collect data and send it to Sentry during the runtime of your application.
+
+The category types and amount of data collected vary, depending on the integrations you've enabled in the Sentry SDK. Here's a list of data categories the Sentry .NET SDK collects:
+
+## HTTP Headers
+
+By default, the Sentry SDK sends HTTP headers to Sentry but redacts any headers that may contain sensitive data. (See the [list of headers](https://github.com/getsentry/sentry-dotnet/blob/main/src/Sentry/Internal/RedactedHeaders.cs#L7) that are redacted).
+
+## Cookies
+
+By default, the Sentry SDK doesn't send cookies.
+
+If you want to send cookies, set the option `SendDefaultPii = true` when initializing the Sentry SDK.
+
+A [data scrubber](/platforms/dotnet/data-management/sensitive-data/) can be used to filter information before sending data to Sentry.
+
+Any [sensitive cookies](https://github.com/getsentry/relay/blob/249971e1702991c64cf0f7f89773fb019ffb4a95/relay-pii/src/convert.rs#L235-L263) that the SDK does send will be stripped by Relay before Sentry stores these.
+
+## Information About Logged-in User
+
+By default, the Sentry SDK doesn't send any information about the logged-in user, such as email address, user ID, or username. Even if enabled, the type of logged-in user information you'll be able to send depends on the integrations you enable in Sentry's SDK. Most integrations won't send any user information. Some will only set the user ID, but there are a few that will set the user ID, username, and email address.
+
+To start sending logged-in user information, set the option `SendDefaultPii = true` when initializing the Sentry SDK.
+
+## Users' IP Address
+
+By default, the Sentry SDK doesn't send the user's IP address.
+
+To enable sending the user's IP address, set the option `SendDefaultPii = true` when initializing the Sentry SDK.
+
+Even if enabled, whether you're able to send the user's IP address or not, will depend on the integrations you enable in Sentry's SDK. Most integrations won't set the user's IP address at all.
+
+You can [prevent Sentry from storing IP Addresses](https://docs.sentry.io/platforms/native/enriching-events/identify-user/#ip_address) either by configuring this in the "Security & Privacy" settings of your Sentry project or using [server-side data scrubbing](https://docs.sentry.io/security-legal-pii/scrubbing/server-side-scrubbing/).
+
+## Request URL
+
+By default, the [HttpRequestUrl](https://learn.microsoft.com/en-us/dotnet/api/System.UriComponents) of outgoing and incoming HTTP requests is **always sent to Sentry**. This includes the Scheme, Host, Port, LocalPath, and Query data.
+
+If `SendDefaultPii` is set to `true` then the [AbsoluteUri](https://learn.microsoft.com/en-us/dotnet/api/System.UriComponents) of outgoing and incoming HTTP requests will be sent to Sentry (including the Scheme, UserInfo, Host, Port, LocalPath, Query, and Fragment data).
+
+Depending on your application, this could contain PII data.
+
+## Request Query String
+
+The full request query string of outgoing and incoming HTTP requests is **always sent to Sentry**. Depending on your application, this could contain PII data.
+
+## SQL Queries
+
+While SQL queries are sent to Sentry, neither the full SQL query (`SELECT * FROM users WHERE email = 'joe@shmoe.com'`), nor the values of its parameters will ever be sent. A parameterized version of the query (`SELECT * FROM users WHERE email = @email`) is sent instead.
+
+## Device Unique Identifier
+
+The Sentry SDK does not set the `Device Unique Identifier` by default.
+
+If `SendDefaultPii` is set to `true` then the SDK will capture `SystemInfo.deviceUniqueIdentifier` automatically and send this with any event.
+
+## Machine Name
+
+The Sentry SDK does not send the machine name by default.
+
+If you assign a value to the `ServerName` in the Sentry options then Sentry SDK will send this with any events.
+
+Otherwise, if `SendDefaultPii` is set to true then the Sentry SDK will capture the `Environment.MachineName` automatically and send this with any events.
+
+## General Device Information
+
+The Sentry SDK collects information about the device, such as the version and build of your operating system, CPU and GPU details etc. This information is sent to Sentry by default.
+
+## Data captured by Mobile SDKs
+
+On mobile platforms, the Sentry SDK for .NET can also capture data indirectly via the Android and iOS SDKs. You should refer to the documentation for those SDKs for more information on what data is captured.
+
+- [Android](/platforms/android/data-management/data-collected/)
+- [iOS](/platforms/apple/data-management/data-collected/)
+
+## Data captured by the Native SDK
+
+When compiling for Windows, Linux or other platforms that use Sentry Native, you should refer to [data captured by the Native SDK](/platforms/native/data-management/data-collected/) to understand what data is sent with those events.

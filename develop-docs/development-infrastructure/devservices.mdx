@@ -11,8 +11,8 @@ usage: devservices [-h] [--version] COMMAND ...
 CLI tool for managing service dependencies.
 
 options:
-  -h, --help            show this help message and exit
-  --version             show program's version number and exit
+  -h, --help          show this help message and exit
+  --version           show program's version number and exit
 
 commands:
   up                  Bring up a service and its dependencies
@@ -23,6 +23,7 @@ commands:
   logs                View logs for a service
   update              Update devservices to the latest version
   purge               Purge the local devservices cache
+  toggle              Toggle how a service is run
 ```
 
 ## Installation
@@ -80,6 +81,65 @@ Common modes:
 ```shell
 devservices up --mode symbolicator
 ```
+
+## Running a dependency locally
+
+You can run a dependency locally instead of as a container by toggling its runtime via the `devservices toggle` command.
+
+### Toggle to local runtime
+
+For example, if you're running Sentry and want to run Snuba **locally** from source, you can toggle Snuba to the local runtime like this:
+
+```shell
+devservices toggle snuba
+```
+
+or you can specify the runtime explicitly:
+
+```shell
+devservices toggle snuba local
+```
+
+This tells devservices to treat Snuba as a service that should be started alongside dependent services like Sentry. Dependencies of Snuba, such as Redis, Kafka, and Clickhouse, will still run as containers.
+
+<Alert title="Note">
+  Toggling to `local` does not start the dev server for that service. You'll need to start that manually.
+</Alert>
+
+### What happens when you toggle
+
+If Sentry is already running, toggling Snuba to `local` will:
+1. Stop Snuba's containers (unless shared by another service)
+2. Start Snuba's non-local dependencies (Redis, Kafka, Clickhouse) as containers
+
+If Sentry is not yet running, the next time `devservices up` is run, Snuba (and any other services you toggle to `local`) will be automatically started as local services alongside Sentry.
+
+If you want to bring up Snuba, or other local runtime dependencies in a non-default mode, you can:
+1. Tell devservices to not bring them up automatically by passing the `--exclude-local` flag to `devservices up`.
+2. Bring that mode up manually via `devservices up --mode <mode>` since modes are additive.
+3. Bring that service down and back up again with the new mode.
+
+### Bringing down services with local runtimes
+
+When stopping services with `devservices down`, the default behavior is to stop all services and their dependencies, including dependencies with local runtimes.
+
+If you don't want dependencies with local runtimes to be brought down when bringing down a dependent service, you can pass the `--exclude-local` flag to `devservices down`. This tells devservices to only stop dependencies that are not running with local runtimes.
+
+### Toggle back to containerized runtime
+
+To switch a service back to running in a container, you can do the following:
+
+```shell
+devservices toggle snuba
+```
+
+Or explicitly specify the runtime:
+
+```shell
+devservices toggle snuba CONTAINERIZED
+```
+
+Replace `snuba` with the name of the service you want to toggle.
 
 ## Migrating data from the deprecated `sentry devservices`
 
