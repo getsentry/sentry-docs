@@ -1,3 +1,5 @@
+import type {MDXComponents} from 'mdx/types';
+
 import {Alert} from './components/alert';
 import {Arcade} from './components/arcade';
 import {Break} from './components/break';
@@ -43,7 +45,7 @@ import {VimeoEmbed} from './components/video';
 export function mdxComponents(
   dynamicComponents: any = {},
   wrapper: any = ({children}) => children
-) {
+): MDXComponents {
   return {
     Alert,
     Arcade,
