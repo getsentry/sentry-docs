@@ -161,6 +161,11 @@ export function Expandable({
           </button>
         )}
       </summary>
+       {/* {isExpanded ? (
+          <ChevronDownIcon className="callout-icon" />
+        ) : (
+          <ChevronRightIcon className="callout-icon" />
+        )} */}
       <div
         ref={contentRef}
         className={`${styles['expandable-body']} callout-body content-flush-bottom`}
