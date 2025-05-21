@@ -38,7 +38,6 @@ export function Expandable({
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [showCopyButton, setShowCopyButton] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Ensure we scroll to the element if the URL hash matches
@@ -66,12 +65,6 @@ export function Expandable({
       window.removeEventListener('hashchange', onHashChange);
     };
   }, [id]);
-
-  useEffect(() => {
-    if (copy) {
-      setShowCopyButton(true);
-    }
-  }, [copy]);
 
   async function copyContentOnClick(event: React.MouseEvent<HTMLButtonElement>) {
     event.stopPropagation(); // Prevent the details element from toggling
@@ -153,8 +146,8 @@ export function Expandable({
             onClick={copyContentOnClick}
             type="button" // Important for buttons in summaries
           >
-            {showCopyButton && !copied && 'Copy Rules'}
-            {showCopyButton && copied && 'Copied!'}
+            {!copied && 'Copy Rules'}
+            {copied && 'Copied!'}
           </button>
         )}
       </summary>
