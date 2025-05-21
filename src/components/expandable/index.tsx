@@ -140,12 +140,11 @@ export function Expandable({
     >
       <summary className={`${styles['expandable-header']} callout-header`}>
         <div className={styles['expandable-title-container']}>
-          <ChevronDownIcon
-            className={`${styles['expandable-icon-expanded']} callout-icon`}
-          />
-          <ChevronRightIcon
-            className={`${styles['expandable-icon-collapsed']} callout-icon`}
-          />
+          {isExpanded ? (
+            <ChevronDownIcon className="callout-icon" />
+          ) : (
+            <ChevronRightIcon className="callout-icon" />
+          )}
           <div>{title}</div>
         </div>
         {copy && (
