@@ -33,18 +33,7 @@ function recursiveRender(items: TocItem[]) {
           } as React.CSSProperties
         }
       >
-        <a
-          href={`${i.url}`}
-          style={{
-            textOverflow: 'ellipsis',
-            overflow: 'hidden',
-            whiteSpace: 'nowrap',
-            display: 'block',
-          }}
-          title={i.title}
-        >
-          {i.title}
-        </a>
+        <a href={`${i.url}`}>{i.title}</a>
         {i.children && <ul>{recursiveRender(i.children)}</ul>}
       </li>
     );
