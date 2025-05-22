@@ -50,3 +50,17 @@ To upload debug symbols to Sentry manually, run `sentry-cli` through the command
 ```bash
 sentry-cli --auth-token ___ORG_AUTH_TOKEN___ debug-files upload --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ PATH_TO_SYMBOLS
 ```
+
+## Debug symbols for macOS and iOS
+
+Sentry requires [_dSYM files_](/platforms/unreal/data-management/debug-files/file-formats/#mach-o-and-dsym) to fully symbolicate your stack traces for macOS/iOS games. To ensure that the debug symbols are generated and can be processed by `sentry-cli` during the execution of `PostBuildSteps`, add the following build settings to your project `.Target.cs` file:
+
+```csharp
+// For Mac
+MacPlatform.bUseDSYMFiles = true;
+
+// For iOS
+IOSPlatform.bGeneratedSYM = true;
+```
+
+Alternatively, Unreal Engine 5.3 and newer supports [Modernized Xcode Workflow](https://dev.epicgames.com/documentation/en-us/unreal-engine/using-modern-xcode-in-unreal-engine-5.3-and-newer) which aligns more closely with standard Apple development practices. In this case, symbol upload can be handled during the custom [Xcode Build Phase](https://docs.sentry.io/platforms/apple/guides/macos/dsym/#xcode-build-phase).
