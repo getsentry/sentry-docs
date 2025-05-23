@@ -4,6 +4,8 @@ import {ReactNode, useCallback, useEffect, useRef, useState} from 'react';
 import {ChevronDownIcon, ChevronRightIcon} from '@radix-ui/react-icons';
 import * as Sentry from '@sentry/nextjs';
 
+import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
+
 // explicitly not usig CSS modules here
 // because there's some prerendered content that depends on these exact class names
 import '../callout/styles.scss';
@@ -39,6 +41,7 @@ export function Expandable({
   const [isExpanded, setIsExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const {emit} = usePlausibleEvent();
 
   // Ensure we scroll to the element if the URL hash matches
   useEffect(() => {
@@ -74,6 +77,8 @@ export function Expandable({
       if (contentRef.current === null) {
         return;
       }
+
+      emit('Copy Expandable Content', {props: {page: window.location.pathname, title}});
 
       // Attempt to get text from markdown code blocks if they exist
       const codeBlocks = contentRef.current.querySelectorAll('code');
@@ -116,6 +121,10 @@ export function Expandable({
   function toggleIsExpanded(event: React.MouseEvent<HTMLDetailsElement>) {
     const newVal = event.currentTarget.open;
     setIsExpanded(newVal);
+
+    if (newVal) {
+      emit('Open Expandable', {props: {page: window.location.pathname, title}});
+    }
 
     if (id) {
       if (newVal) {
