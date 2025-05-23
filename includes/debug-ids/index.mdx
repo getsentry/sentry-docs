@@ -1,9 +1,9 @@
----
-title: What are Debug IDs
-sidebar_order: 7
----
-
-This documentation provides an in-depth look at Debug IDs, explaining how they work and why Sentry recommends using them. Visit [Uploading Source Maps](https://docs.sentry.io/platforms/javascript/guides/react/sourcemaps/uploading/) if you're looking for our guides on how to upload source maps.
+<PlatformSection notSupported={["react-native"]}>
+This documentation provides an in-depth look at Debug IDs, explaining how they work and why Sentry recommends using them. Visit [Uploading Source Maps](/platforms/javascript/guides/react/sourcemaps/uploading/) if you're looking for our guides on how to upload source maps.
+</PlatformSection>
+<PlatformSection supported={["react-native"]}>
+This documentation provides an in-depth look at Debug IDs, explaining how they work and why Sentry recommends using them. Visit [Uploading Source Maps](/platforms/react-native/sourcemaps/uploading/) if you're looking for our guides on how to upload source maps.
+</PlatformSection>
 
 ## Introduction
 
@@ -29,7 +29,7 @@ Inspired by approaches in native language ecosystems, Debug IDs are globally uni
 
 When using sentry-cli or Sentry plugins for Webpack, Vite, or Rollup, Debug IDs are deterministically generated based on the source file contents. Note that deterministic Debug IDs for esbuild are not currently supported.
 
-This approach is Sentry's recommended and most reliable method for associating minified JavaScript files with their original source code, making it easier to trace errors back to their source. Because debug IDs will generally change across releasess if the file content is changed **creating a release is no longer required**. Release names were previously used to disambiguate sourcemaps with the same name across deployments.
+This approach is Sentry's recommended and most reliable method for associating minified JavaScript files with their original source code, making it easier to trace errors back to their source. Because debug IDs will generally change across releases if the file content is changed **creating a release is no longer required**. Release names were previously used to disambiguate sourcemaps with the same name across deployments.
 
 <Alert>
 
@@ -39,17 +39,27 @@ If you want to learn more about the rationale behind Debug IDs, we suggest takin
 
 ## How Sentry uses Debug IDs
 
-<PlatformSection notSupported={["javascript.nextjs"]}>
+<PlatformSection notSupported={["javascript.nextjs", "react-native"]}>
  To use Debug IDs, ensure that you're using **Sentry's SDK version 7.47 or higher**. Once you're on a supported version, follow the steps outlined below:
 </PlatformSection>
 <PlatformSection supported={["javascript.nextjs"]}>
    For Debug IDs with Next.js, you’ll need **Sentry's SDK version 8.0.0 or higher**. Once you're on a supported version, follow the steps outlined below:
 </PlatformSection>
+<PlatformSection supported={["react-native"]}>
+   For Debug IDs with React Native, you’ll need **Sentry's React Native SDK version 5.16.0 or higher**. Once you're on a supported version, follow the steps outlined below:
+</PlatformSection>
 
 
+<PlatformSection notSupported={["react-native"]}>
 1. **A globally unique Debug ID is generated**: During the build process, if you are using one of Sentry's Bundler Plugins or Sentry CLI a Debug ID is generated, which is globally unique and ideally deterministic.
 
 2. **Debug IDs are embedded in minified files**: Each minified JavaScript file includes a special comment, such as `//# debugId=DEBUG_ID`, where `DEBUG_ID` is the unique identifier generated in the previous step.
+</PlatformSection>
+<PlatformSection supported={["react-native"]}>
+1. **A globally unique Debug ID is generated**: During the build process, if you are using [Sentry's Metro Plugin](/platforms/react-native/manual-setup/metro/) a Debug ID is generated, which is globally unique and ideally deterministic.
+
+2. **Debug IDs are embedded in the output files**: Each JavaScript file includes a special comment, such as `//# debugId=DEBUG_ID`, where `DEBUG_ID` is the unique identifier generated in the previous step.
+</PlatformSection>
 
 3. **The same Debug ID is added to source maps**: Source maps also include the same Debug ID as a new attribute, linking the minified JavaScript file to its corresponding source map.
 
@@ -57,7 +67,12 @@ If you want to learn more about the rationale behind Debug IDs, we suggest takin
 
 ### Why use Debug IDs to uniminify your code?
 
-Unminifying your code is essential for effective debugging. While there are other [legacy ways](https://docs.sentry.io/platforms/javascript/sourcemaps/troubleshooting_js/legacy-uploading-methods/) to achieve this at Sentry, using **Debug IDs are recommended by Sentry** as it is the most reliable method. By unminifying your code, you get much clearer stack traces when errors occur. Instead of seeing obfuscated code, you'll see the exact code you originally wrote, making it far easier to understand and resolve issues. Below are examples that demonstrates the difference:
+<PlatformSection notSupported={["react-native"]}>
+Unminifying your code is essential for effective debugging. While there are other [legacy ways](/platforms/javascript/sourcemaps/troubleshooting_js/legacy-uploading-methods/) to achieve this at Sentry, using **Debug IDs are recommended by Sentry** as it is the most reliable method. By unminifying your code, you get much clearer stack traces when errors occur. Instead of seeing obfuscated code, you'll see the exact code you originally wrote, making it far easier to understand and resolve issues. Below are examples that demonstrates the difference:
+</PlatformSection>
+<PlatformSection supported={["react-native"]}>
+Unminifying your code is essential for effective debugging. While there are other [legacy ways](/platforms/react-native/sourcemaps/troubleshooting/legacy-uploading-methods/) to achieve this at Sentry, using **Debug IDs are recommended by Sentry** as it is the most reliable method. By unminifying your code, you get much clearer stack traces when errors occur. Instead of seeing obfuscated code, you'll see the exact code you originally wrote, making it far easier to understand and resolve issues. Below are examples that demonstrates the difference:
+</PlatformSection>
 
 #### Bad Stack Trace
 ![bad stack trace example](./img/bad-stack-trace.png)
@@ -78,3 +93,7 @@ Since you might still want to know to which release an specific Debug ID is conn
 The new Debug ID format supports a new kind of association to a `release` and optionally `dist`, known as weak release association. This type of association **will not require the creation of a `release`** before uploading source maps and will consequently allow the creation of a `release` as a separate step down the pipeline.
 
 With an associated `release` and optionally `dist` you will be able to quickly go to the Debug ID from your `release` in Sentry, without having to worry about which Debug ID was used for your errors.
+
+<PlatformSection supported={["react-native"]}>
+This is done by the Sentry Xcode and Sentry Gradle plugins automatically during the React Native application build process.
+</PlatformSection>
