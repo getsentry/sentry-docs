@@ -115,7 +115,7 @@ export function Expandable({
         setCopied(false);
       }
     },
-    []
+    [emit, title]
   );
 
   function toggleIsExpanded(event: React.MouseEvent<HTMLDetailsElement>) {
