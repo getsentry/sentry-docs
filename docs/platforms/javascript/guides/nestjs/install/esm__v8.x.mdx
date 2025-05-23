@@ -3,13 +3,8 @@ title: ESM (MJS)
 sidebar_order: 10
 description: "Learn about running Sentry in an ESM application."
 supported:
-  - javascript.node
-  - javascript.connect
-  - javascript.express
-  - javascript.fastify
-  - javascript.hapi
-  - javascript.hono
-  - javascript.koa
+  - javascript.nestjs
+noindex: true
 ---
 
 <Alert>
@@ -22,7 +17,7 @@ When running your application in ESM mode, you can't use `require()` to load mod
 You need to create a file named `instrument.mjs` that imports and initializes Sentry:
 
 ```javascript {tabTitle:ESM} {filename: instrument.mjs}
-import * as Sentry from "@sentry/node";
+import * as Sentry from "@sentry/nestjs";
 
 // Ensure to call this before importing any other modules!
 Sentry.init({
@@ -38,7 +33,7 @@ Adjust the Node.js call for your application to use the [--import](https://nodej
 
 ```bash
 # Note: This is only available for Node v18.19.0 onwards.
-node --import ./instrument.mjs app.mjs
+node --import ./instrument.mjs dist/main.js
 ```
 
 If it is not possible for you to pass the `--import` flag to the Node.js binary, you can alternatively use the `NODE_OPTIONS` environment variable as follows:
@@ -68,9 +63,23 @@ disable it by setting `registerEsmLoaderHooks` to false. Note, this will also
 disable tracing instrumentation:
 
 ```javascript {tabTitle:ESM} {filename: instrument.mjs} {4}
-import * as Sentry from "@sentry/node";
+import * as Sentry from "@sentry/nestjs";
 
 Sentry.init({
   registerEsmLoaderHooks: false,
+});
+```
+
+If you are starting Sentry via `--import`, you can instruct `import-in-the-middle`
+to only wrap packages that Sentry specifically instruments. To do this, you can
+set the `onlyIncludeInstrumentedModules` to `true`:
+
+```javascript {tabTitle:ESM} {filename: instrument.mjs} {4-6}
+import * as Sentry from "@sentry/nestjs";
+
+Sentry.init({
+  registerEsmLoaderHooks: {
+    onlyIncludeInstrumentedModules: true,
+  },
 });
 ```
