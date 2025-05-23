@@ -1,13 +1,45 @@
-Set `tracesSampleRate` in your config files, `instrumentation-client.js`, `sentry.server.config.js`, and `sentry.edge.config.js`:
+Set `tracesSampleRate` in your config files:
+- `sentry.server.config.js`
+- `sentry.edge.config.js`:
+- `instrumentation-client.js`
+  - If you previously had file called `sentry.client.config.(js|ts)`, you can also safely rename this to `instrumentation-client.(js|ts)` for all Next.js versions.
 
-```javascript
+```javascript {tabTitle:Client} {filename:instrumentation-client.(js|ts)}
 import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-
   // We recommend adjusting this value in production, or using `tracesSampler`
   // for finer control
   tracesSampleRate: 1.0,
+  // ... rest of your config
+});
+
+// This export will instrument router navigations, and is only relevant if you enable tracing.
+// `captureRouterTransitionStart` is available from SDK version 9.12.0 onwards
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
+```
+
+```javascript {tabTitle:Server} {filename:sentry.server.config.(js|ts)}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // We recommend adjusting this value in production, or using `tracesSampler`
+  // for finer control
+  tracesSampleRate: 1.0,
+  // ... rest of your config
+});
+```
+
+```javascript {tabTitle:Edge} {filename:sentry.edge.config.(js|ts)}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // We recommend adjusting this value in production, or using `tracesSampler`
+  // for finer control
+  tracesSampleRate: 1.0,
+  // ... rest of your config
 });
 ```
