@@ -1,0 +1,33 @@
+```cpp
+FHttpModule* Http = &FHttpModule::Get();
+TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = Http->CreateRequest();
+
+// Configure the request
+HttpRequest->SetURL(URL);
+HttpRequest->SetVerb("POST");
+HttpRequest->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+HttpRequest->SetContentAsString(JsonString);
+HttpRequest->OnProcessRequestComplete().BindLambda([=](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+    if (bWasSuccessful && Response.IsValid() && Response->GetResponseCode() != 200)
+    {
+        // Handle successful response
+    }
+    else
+    {
+        TArray<FString> Fingerprint;
+        Fingerprint.Add("http-request-error");
+        Fingerprint.Add(Request->GetURL());
+        Fingerprint.Add(Request->GetVerb());
+
+        // Add more context if needed
+
+        USentryEvent* Event = NewObject<USentryEvent>();
+        Event->Initialize();
+        Event->SetFingerprint(Fingerprint);
+
+        USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+        SentrySubsystem->CaptureEvent(Event, ESentryLevel::Error);
+    }
+});
+```
