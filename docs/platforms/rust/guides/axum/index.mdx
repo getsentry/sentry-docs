@@ -1,0 +1,99 @@
+---
+title: axum
+description: "Learn about monitoring your axum application with Sentry."
+---
+
+The Sentry SDK offers a middleware for the [`axum`](https://github.com/tokio-rs/axum) framework that supports:
+
+- Reporting errors and panics with the correct request correlation.
+- Starting a [transaction](https://docs.sentry.io/concepts/key-terms/tracing/) for each request-response cycle.
+
+The integration actually supports any crate based on [`tower`](https://github.com/tower-rs/tower), not just `axum`.
+
+## Install
+
+To add Sentry with the `axum` integration to your Rust project, just add a new dependency to your `Cargo.toml`:
+
+```toml {filename:Cargo.toml} 
+[dependencies]
+axum = "0.8.4"
+tower = "0.5.2"
+tokio = { version = "1.45.0", features = ["full"] }
+sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = ["tower-axum-matched-path"] }
+```
+
+## Configure
+
+Initialize and configure the Sentry client. This will enable a set of default integrations, such as panic reporting.
+Then, initialize `axum` with the Sentry middleware.
+
+<Alert level="warning">
+
+Macros like `#[tokio::main]` are not supported. The Sentry client must be initialized before the async runtime is started, as shown below.
+
+</Alert>
+
+```rust {filename:main.rs}
+use axum::{body::Body, http::Request, routing::get, Router};
+use sentry::integrations::tower::{NewSentryLayer, SentryHttpLayer};
+use std::io;
+use tower::ServiceBuilder;
+
+async fn failing() -> () {
+    panic!("Everything is on fire!")
+}
+
+fn main() -> io::Result<()> {
+    let _guard = sentry::init((
+        "https://6b76fb2a5dc1164849cd797b75b6d879@o447951.ingest.us.sentry.io/4508694563782656",
+        sentry::ClientOptions {
+            release: sentry::release_name!(),
+            // Capture all traces. Set to a lower value in production.
+            traces_sample_rate: 1.0,
+            // Capture user IPs and potentially sensitive headers when using HTTP server integrations
+            // see https://docs.sentry.io/platforms/rust/data-management/data-collected for more info
+            send_default_pii: true,
+            ..Default::default()
+        },
+    ));
+
+    let app = Router::new().route("/", get(failing)).layer(
+        ServiceBuilder::new()
+            // If you're binding the layers directly on the `Router`, bind them in the opposite order, otherwise you might run into a memory leak.
+            .layer(NewSentryLayer::<Request<Body>>::new_from_top()) // Bind a new Hub per request, to ensure correct error <> request correlation
+            .layer(SentryHttpLayer::new().enable_transaction()), // Start a transaction (Sentry root span) for each request
+    );
+
+    tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()?
+        .block_on(async {
+            let listener = tokio::net::TcpListener::bind("127.0.0.1:3001")
+                .await
+                .unwrap();
+            axum::serve(listener, app.into_make_service())
+                .await
+                .unwrap();
+        });
+
+    Ok(())
+}
+```
+
+## Verify
+
+The snippet above sets up a service that always panics, so you can test that everything is working as soon as you set it up.
+
+Send a request to the application. The panic will be captured by Sentry.
+
+```bash
+curl http://localhost:3001/
+```
+
+<Alert>
+
+Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+
+</Alert>
+
+To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
