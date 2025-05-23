@@ -4014,7 +4014,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     to: '/organization/integrations/debugging/sourcery/',
   },
     {
-    from: '/organization/integrations/codecomet',
+    from: '/organization/integrations/codecomet/',
     to: '/organization/integrations/debugging/codecomet/',
   },
   {
