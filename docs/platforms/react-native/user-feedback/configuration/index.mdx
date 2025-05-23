@@ -39,6 +39,7 @@ The following options can be configured for the integration in `feedbackIntegrat
 | `showName`             | `boolean`                | `true`                                | Displays the name field on the feedback widget.                                                                            |
 | `showEmail`            | `boolean`                | `true`                                | Displays the email field on the feedback widget.                                                                           |
 | `enableScreenshot`     | `boolean`                | `false`                               | Allows the user to send a screenshot attachment with their feedback.                                                       |
+| `enableTakeScreenshot` | `boolean`                | `false`                               | Determines whether the "Take Screenshot" button is displayed.                                                            |
 | `isNameRequired`       | `boolean`                | `false`                               | Requires the name field on the feedback widget to be filled in.                                                            |
 | `isEmailRequired`      | `boolean`                | `false`                               | Requires the email field on the feedback widget to be filled in.                                                           |
 | `shouldValidateEmail`  | `boolean`                | `true`                                | If set the email is validated with the following regular expression `"/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/"` |
@@ -51,25 +52,26 @@ All the text that you see in the Feedback widget can be customized.
 
 The following options can be configured for the integration in `feedbackIntegration({})` or passed in the `FeedbackWidget` component props:
 
-| Key                           | Default                                                 | Description                                                     |
-| ----------------------------- | ------------------------------------------------------- | --------------------------------------------------------------- |
-| `formTitle`                   | `"Report a Bug"`                                        | The title at the top of the feedback widget.                    |
-| `submitButtonLabel`           | `"Send Bug Report"`                                     | The label of the submit button used in the feedback widget.     |
-| `cancelButtonLabel`           | `"Cancel"`                                              | The label of cancel buttons used in the feedback widget.        |
-| `addScreenshotButtonLabel`    | `"Add a screenshot"`                                    | The label of the button to add a screenshot to the widget.      |
-| `removeScreenshotButtonLabel` | `"Remove screenshot"`                                   | The label of the button to remove the screenshot.               |
-| `nameLabel`                   | `"Name"`                                                | The label of the name input field.                              |
-| `namePlaceholder`             | `"Your Name"`                                           | The placeholder for the name input field.                       |
-| `emailLabel`                  | `"Email"`                                               | The label of the email input field.                             |
-| `emailPlaceholder`            | `"your.email@example.org"`                              | The placeholder for the email input field.                      |
-| `isRequiredLabel`             | `"(required)"`                                          | The label shown next to an input field that is required.        |
-| `messageLabel`                | `"Description"`                                         | The label for the feedback description input field.             |
-| `messagePlaceholder`          | `"What's the bug? What did you expect?"`                | The placeholder for the feedback description input field.       |
-| `successMessageText`          | `"Thank you for your report!"`                          | The message displayed after a successful feedback submission.   |
-| `errorTitle`                  | `"Error"`                                               | The title of the error message dialog.                          |
-| `formError`                   | `"Please fill out all required fields."`                | Form validation error message.                                  |
-| `emailError`                  | `"Please enter a valid email address."`                 | Email validation error mesage.                                  |
-| `genericError`                | `"Unable to send feedback due to an unexpected error."` | The generic error message.                                      |
+| Key                            | Default                                                 | Description                                                         |
+| ------------------------------ | ------------------------------------------------------- | ------------------------------------------------------------------- |
+| `formTitle`                    | `"Report a Bug"`                                        | The title at the top of the feedback widget.                        |
+| `submitButtonLabel`            | `"Send Bug Report"`                                     | The label of the submit button used in the feedback widget.         |
+| `cancelButtonLabel`            | `"Cancel"`                                              | The label of cancel buttons used in the feedback widget.            |
+| `addScreenshotButtonLabel`     | `"Add a screenshot"`                                    | The label of the button to add a screenshot to the widget.          |
+| `removeScreenshotButtonLabel`  | `"Remove screenshot"`                                   | The label of the button to remove the screenshot.                   |
+| `captureScreenshotButtonLabel` | `"Take a screenshot"`                                   | The label for the button that triggers the capture screenshot flow. |
+| `nameLabel`                    | `"Name"`                                                | The label of the name input field.                                  |
+| `namePlaceholder`              | `"Your Name"`                                           | The placeholder for the name input field.                           |
+| `emailLabel`                   | `"Email"`                                               | The label of the email input field.                                 |
+| `emailPlaceholder`             | `"your.email@example.org"`                              | The placeholder for the email input field.                          |
+| `isRequiredLabel`              | `"(required)"`                                          | The label shown next to an input field that is required.            |
+| `messageLabel`                 | `"Description"`                                         | The label for the feedback description input field.                 |
+| `messagePlaceholder`           | `"What's the bug? What did you expect?"`                | The placeholder for the feedback description input field.           |
+| `successMessageText`           | `"Thank you for your report!"`                          | The message displayed after a successful feedback submission.       |
+| `errorTitle`                   | `"Error"`                                               | The title of the error message dialog.                              |
+| `formError`                    | `"Please fill out all required fields."`                | Form validation error message.                                      |
+| `emailError`                   | `"Please enter a valid email address."`                 | Email validation error mesage.                                      |
+| `genericError`                 | `"Unable to send feedback due to an unexpected error."` | The generic error message.                                          |
 
 Example of customization:
 
@@ -247,6 +249,51 @@ Sentry.feedbackIntegration({
     onAddScreenshot={handleChooseImage}
 });
 ```
+
+### Screenshot Button
+
+You can show a button that allows the user to take a screenshot in the Feedback Widget. The button is shown when `enableTakeScreenshot` is set to `true` in the `feedbackIntegration` method like in the example below.
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  integrations: [
+    Sentry.feedbackIntegration({
+      buttonOptions: {
+        styles: {
+          triggerButton: {
+            marginBottom: 75,
+          },
+        },
+      },
+    }),
+  ],
+});
+
+Sentry.showFeedbackButton();
+```
+
+You can customize the Feedback Widget screenshot button text with the following options.
+
+| Key                | Default             | Description                               |
+| ------------------ | ------------------- | ----------------------------------------- |
+| `triggerLabel`     | `"Take Screenshot"` | The label for the Screenshot button.      |
+| `triggerAriaLabel` | -                   | The aria label for the Screenshot button. |
+
+The capture screenshot button can be customized too. The following styles are available.
+
+| Style           | Type         | Description                       |
+| --------------- | ------------ | --------------------------------- |
+| `triggerButton` | `ViewStyle`  | The screenshot button style.      |
+| `triggerText`   | `TextStyle`  | The screenshot button text style. |
+| `triggerIcon`   | `ImageStyle` | The screenshot button icon style. |
+
+<Alert>
+
+Note that the screenshot button is currently not supported on the web.
+
+</Alert>
 
 ## Theming
 
