@@ -3977,7 +3977,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     from: '/organization/integrations/pagertree/',
     to: '/organization/integrations/notification-incidents/pagertree/',
   },
-    {
+  {
     from: '/organization/integrations/goast/',
     to: '/organization/integrations/issue-tracking/goast/',
   },
@@ -4013,7 +4013,7 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     from: '/organization/integrations/sourcery/',
     to: '/organization/integrations/debugging/sourcery/',
   },
-    {
+  {
     from: '/organization/integrations/codecomet/',
     to: '/organization/integrations/debugging/codecomet/',
   },
