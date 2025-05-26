@@ -3,15 +3,36 @@ title: Kafka consumers
 sidebar_order: 60
 ---
 
-## Creating a new consumer in Sentry
+## Create a new Kafka topic
 
-WIP! This is currently just a checklist.
+1. Add the topic to the `KAFKA_TOPIC_TO_CLUSTER` in [src/sentry/conf/server.py](https://github.com/getsentry/sentry/blob/master/src/sentry/conf/server.py):
+  * e.g. `subscription-results-eap-items`
+2. Add the topic to `Topic` in [src/sentry/conf/types/kafka_definition.py](https://github.com/getsentry/sentry/blob/master/src/sentry/conf/types/kafka_definition.py)
+
+## Define or re-use a processing strategy
+
+In most cases a [Streaming Factory](https://getsentry.github.io/arroyo/getstarted.html#create-a-streaming-consumer) is what you want to when defining a consumer (see next section). You can find examples of it in [Sentry's code base](https://github.com/search?q=repo%3Agetsentry%2Fsentry+%28ProcessingStrategyFactory&type=code).
+
+## Define a new Kafka consumer
 
 1. Add a new entry in the `KAFKA_CONSUMERS` key in
-   `src/sentry/consumers/__init__.py`.
+   [src/sentry/consumers/__init__.py](https://github.com/getsentry/sentry/blob/master/src/sentry/consumers/__init__.py):
+```python
+KAFKA_CONSUMERS = {
+    "<your_topic_str_here>": {
+        "topic": Topic.YOUR_TOPIC,
+        "strategy_factory": "sentry_package_defining_your_strategy_factory_class",
+    }
+}
+```
+2. You may need optional properties (e.g. `click_options`, you will need to research them by looking at [ConsumerDefinition](https://github.com/getsentry/sentry/blob/master/src/sentry/conf/types/kafka_definition.py)'s code.
 
+3. Make sure you can run it: `sentry run consumer <your_topic> 
+4. You may need to add some devserver options [here](https://github.com/getsentry/sentry/blob/master/src/sentry/runner/commands/devserver.py).
+4. Add tests for your consumer
+
+## Run the consumer in production
+1. Discuss it with SRE during their office  hours
 2. Create ops PR for adding your consumer to
-   `k8s/services/getsentry/consumer-deployment.yaml`.
-
-3. In the Sentry Consumers metrics dashboard, add a new saved view for your
-   consumer.
+   [k8s/services/getsentry/_consumer-deployment.yaml.j2](https://github.com/getsentry/ops/blob/master/k8s/services/getsentry/_consumer-deployment.yaml.j2).
+3. In the [Sentry Consumers metrics dashboard](https://www.notion.so/sentry/Kafka-e8b4f93595684c97b01fe831fbceb0dc?pvs=4#1fa8b10e4b5d8044859ecaf559463cb0), add a new saved view for your consumer.
