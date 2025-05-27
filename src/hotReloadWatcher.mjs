@@ -1,4 +1,5 @@
 import path from 'path';
+
 import {watch} from 'node:fs/promises';
 import {WebSocketServer} from 'ws';
 
@@ -9,7 +10,7 @@ export const throttle = (fn, delay) => {
   return (...args) => {
     const now = Date.now();
     if (now - last < delay) {
-      return;
+      return () => {};
     }
     last = now;
     return fn(...args);
