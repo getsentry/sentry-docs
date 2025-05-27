@@ -1,0 +1,82 @@
+### Source Maps Upload
+
+By default, `sentrySvelteKit()` will add an instance of the Sentry Vite Plugin, to upload source maps for both server and client builds. This means that when you run a production build (`npm run build`), source maps will be generated and uploaded to Sentry so that you get readable stack traces in your Sentry issues.
+
+However, you still need to specify your Sentry auth token as well as your org and project slugs.
+There are two ways to set them:
+
+**Option 1**
+
+You can set them as environment variables, for example, in a `.env` file:
+
+- `SENTRY_ORG` your Sentry org slug
+- `SENTRY_PROJECT` your Sentry project slug
+- `SENTRY_AUTH_TOKEN` your Sentry auth token (can be obtained from the [Organization Token Settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/))
+- `SENTRY_URL` your Sentry instance URL. This is only required if you use your own Sentry instance (as opposed to `https://sentry.io`).
+
+**Option 2:**
+
+You can also set them by passing a `sourceMapsUploadOptions` object to `sentrySvelteKit`, as seen in the example below. For a full list of available options, see the [Sentry Vite Plugin documentation](https://www.npmjs.com/package/@sentry/vite-plugin#options).
+
+<OrgAuthTokenNote />
+
+```javascript {filename:vite.config.(js|ts)} {6-12}
+import { sveltekit } from "@sveltejs/kit/vite";
+import { sentrySvelteKit } from "@sentry/sveltekit";
+
+export default {
+  plugins: [
+    sentrySvelteKit({
+      sourceMapsUploadOptions: {
+        org: "___ORG_SLUG___",
+        project: "___PROJECT_SLUG___",
+        authToken: "___ORG_AUTH_TOKEN___",
+        // If you're self-hosting Sentry, also add your instance URL:
+        // url: "https://your-self-hosted-sentry.com/",
+      },
+    }),
+    sveltekit(),
+  ],
+  // ... rest of your Vite config
+};
+```
+
+### Override SvelteKit Adapter Detection
+
+By default, `sentrySvelteKit` will try to detect your SvelteKit adapter to configure the source maps upload correctly. If you're not using one of the [supported adapters](/platforms/javascript/guides/sveltekit) or the wrong one is detected, you can override the adapter detection by passing the `adapter` option to `sentrySvelteKit`:
+
+```javascript {filename:vite.config.(js|ts)} {7}
+import { sveltekit } from "@sveltejs/kit/vite";
+import { sentrySvelteKit } from "@sentry/sveltekit";
+
+export default {
+  plugins: [
+    sentrySvelteKit({
+      adapter: "vercel",
+    }),
+    sveltekit(),
+  ],
+  // ... rest of your Vite config
+};
+```
+
+### Disable Source Maps Upload
+
+You can disable automatic source maps upload in your Vite config:
+
+```javascript {filename:vite.config.(js|ts)} {7}
+import { sveltekit } from "@sveltejs/kit/vite";
+import { sentrySvelteKit } from "@sentry/sveltekit";
+
+export default {
+  plugins: [
+    sentrySvelteKit({
+      autoUploadSourceMaps: false,
+    }),
+    sveltekit(),
+  ],
+  // ... rest of your Vite config
+};
+```
+
+If you disable automatic source maps upload, you must explicitly set a `release` value in your `Sentry.init()` configuration. This is important for Sentry features like release health and correctly associating errors with specific deployments.
