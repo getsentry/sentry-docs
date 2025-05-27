@@ -1,7 +1,7 @@
 const {redirects} = require('./redirects.js');
 
 const {codecovNextJSWebpackPlugin} = require('@codecov/nextjs-webpack-plugin');
-const {withSentryConfig} = require('@sentry/nextjs');
+// const {withSentryConfig} = require('@sentry/nextjs');
 
 const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? {
@@ -13,6 +13,8 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         './apps/**/*',
         'develop-docs/**/*',
         'node_modules/@esbuild/darwin-arm64',
+        '*.png',
+        '*.gif',
       ],
       '/platform-redirect': ['**/*.gif', 'public/mdx-images/**/*', '*.pdf'],
       '\\[\\[\\.\\.\\.path\\]\\]': [
@@ -33,7 +35,7 @@ if (
 }
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+module.exports = {
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
   trailingSlash: true,
   serverExternalPackages: ['rehype-preset-minify'],
@@ -64,43 +66,43 @@ const nextConfig = {
   },
 };
 
-module.exports = withSentryConfig(nextConfig, {
-  org: 'sentry',
-  project: process.env.NEXT_PUBLIC_DEVELOPER_DOCS ? 'develop-docs' : 'docs',
+// module.exports = withSentryConfig(nextConfig, {
+//   org: 'sentry',
+//   project: process.env.NEXT_PUBLIC_DEVELOPER_DOCS ? 'develop-docs' : 'docs',
 
-  // Suppresses source map uploading logs during build
-  silent: !process.env.CI,
+//   // Suppresses source map uploading logs during build
+//   silent: !process.env.CI,
 
-  // Upload a larger set of source maps for prettier stack traces (increases build time)
-  widenClientFileUpload: true,
+//   // Upload a larger set of source maps for prettier stack traces (increases build time)
+//   widenClientFileUpload: true,
 
-  // Transpiles SDK to be compatible with IE11 (increases bundle size)
-  transpileClientSDK: true,
+//   // Transpiles SDK to be compatible with IE11 (increases bundle size)
+//   transpileClientSDK: true,
 
-  // Hides source maps from generated client bundles
-  hideSourceMaps: true,
+//   // Hides source maps from generated client bundles
+//   hideSourceMaps: true,
 
-  // Automatically tree-shake Sentry logger statements to reduce bundle size
-  disableLogger: true,
+//   // Automatically tree-shake Sentry logger statements to reduce bundle size
+//   disableLogger: true,
 
-  // Enables automatic instrumentation of Vercel Cron Monitors
-  // See the following for more information:
-  // https://docs.sentry.io/product/crons/
-  // https://vercel.com/docs/cron-jobs
-  automaticVercelMonitors: true,
+//   // Enables automatic instrumentation of Vercel Cron Monitors
+//   // See the following for more information:
+//   // https://docs.sentry.io/product/crons/
+//   // https://vercel.com/docs/cron-jobs
+//   automaticVercelMonitors: true,
 
-  reactComponentAnnotation: {
-    enabled: true,
-  },
+//   reactComponentAnnotation: {
+//     enabled: true,
+//   },
 
-  unstable_sentryWebpackPluginOptions: {
-    applicationKey: 'sentry-docs',
-  },
+//   unstable_sentryWebpackPluginOptions: {
+//     applicationKey: 'sentry-docs',
+//   },
 
-  _experimental: {
-    thirdPartyOriginStackFrames: true,
-  },
-});
+//   _experimental: {
+//     thirdPartyOriginStackFrames: true,
+//   },
+// });
 
 process.on('warning', warning => {
   if (warning.code === 'DEP0040') {

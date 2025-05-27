@@ -3,7 +3,7 @@
 import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import {ArrowRightIcon} from '@radix-ui/react-icons';
 import {Button} from '@radix-ui/themes';
-import {captureException} from '@sentry/nextjs';
+// import {captureException} from '@sentry/nextjs';
 import {
   Hit,
   Result,
@@ -244,7 +244,7 @@ export function Search({
         positions: [position + 1],
       });
     } catch (error) {
-      captureException(error);
+      // captureException(error);
     }
   }, []);
 

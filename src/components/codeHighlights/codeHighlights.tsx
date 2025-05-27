@@ -3,8 +3,8 @@
 import {Children, cloneElement, ReactElement, useEffect, useRef, useState} from 'react';
 import {Check, Clipboard} from 'react-feather';
 import styled from '@emotion/styled';
-import * as Sentry from '@sentry/nextjs';
 
+// import * as Sentry from '@sentry/nextjs';
 import {cleanCodeSnippet, useCleanSnippetInClipboard} from '../codeBlock';
 
 type ChildrenItem = ReturnType<typeof Children.toArray>[number] | React.ReactNode;
@@ -103,7 +103,7 @@ export function HighlightBlock({
       setCopied(true);
       setTimeout(() => setCopied(false), 1200);
     } catch (error) {
-      Sentry.captureException(error);
+      // Sentry.captureException(error);
       setCopied(false);
     }
   }
