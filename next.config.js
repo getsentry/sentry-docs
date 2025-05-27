@@ -3,26 +3,6 @@ const {redirects} = require('./redirects.js');
 const {codecovNextJSWebpackPlugin} = require('@codecov/nextjs-webpack-plugin');
 const {withSentryConfig} = require('@sentry/nextjs');
 
-const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
-  ? {
-      '/**/*': ['./.git/**/*', './apps/**/*', 'docs/**/*'],
-    }
-  : {
-      '/**/*': [
-        './.git/**/*',
-        './apps/**/*',
-        'develop-docs/**/*',
-        'node_modules/@esbuild/darwin-arm64',
-      ],
-      '/platform-redirect': ['**/*.gif', 'public/mdx-images/**/*', '*.pdf'],
-      '\\[\\[\\.\\.\\.path\\]\\]': [
-        'docs/**/*',
-        'node_modules/prettier/plugins',
-        'node_modules/rollup/dist',
-      ],
-      'sitemap.xml': ['docs/**/*', 'public/mdx-images/**/*', '*.gif', '*.pdf', '*.png'],
-    };
-
 if (
   process.env.NODE_ENV !== 'development' &&
   (!process.env.NEXT_PUBLIC_SENTRY_DSN || !process.env.SENTRY_DSN)
@@ -37,7 +17,6 @@ const nextConfig = {
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
   trailingSlash: true,
   serverExternalPackages: ['rehype-preset-minify'],
-  outputFileTracingExcludes,
   webpack: (config, options) => {
     config.plugins.push(
       codecovNextJSWebpackPlugin({
