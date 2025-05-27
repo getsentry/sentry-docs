@@ -2,8 +2,8 @@
 
 import {ReactNode, useCallback, useEffect, useRef, useState} from 'react';
 import {ChevronDownIcon, ChevronRightIcon} from '@radix-ui/react-icons';
-import * as Sentry from '@sentry/nextjs';
 
+// import * as Sentry from '@sentry/nextjs';
 // explicitly not usig CSS modules here
 // because there's some prerendered content that depends on these exact class names
 import '../callout/styles.scss';
@@ -106,7 +106,7 @@ export function Expandable({
         setCopied(true);
         setTimeout(() => setCopied(false), 1200);
       } catch (error) {
-        Sentry.captureException(error);
+        // Sentry.captureException(error);
         setCopied(false);
       }
     },
