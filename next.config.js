@@ -13,6 +13,8 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         './apps/**/*',
         'develop-docs/**/*',
         'node_modules/@esbuild/darwin-arm64',
+        '*.png',
+        '*.gif',
       ],
       '/platform-redirect': ['**/*.gif', 'public/mdx-images/**/*', '*.pdf'],
       '\\[\\[\\.\\.\\.path\\]\\]': [
