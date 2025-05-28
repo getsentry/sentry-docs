@@ -95,58 +95,61 @@ Most community CDNs properly set an `Access-Control-Allow-Origin` header.
 
 <PlatformSection supported={["javascript.sveltekit"]}>
 
-    <Expandable permalink title="Configure CSP for Client-side `fetch` Instrumentation">
+<Expandable permalink title="Configure CSP for Client-side `fetch` Instrumentation">
 
-        <Alert>
-            Only relevant for SvelteKit versions below `@sveltejs/kit@2.16.0`
-        </Alert>
-        If you're using a SvelteKit version older than `sveltejs/kit@2.16.0`, the Sentry SDK injects an inline `<script>` tag into the HTML response of the server.
-        This script proxies all client-side `fetch` calls so that `fetch` calls inside your `load` functions are captured by the SDK.
-        However, if you configured CSP rules to block inline fetch scripts by default, this script will be [blocked by the browser](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src#unsafe_inline_script).
+<Alert>
+    Only relevant for SvelteKit versions below `@sveltejs/kit@2.16.0`
+</Alert>
+If you're using a SvelteKit version older than `sveltejs/kit@2.16.0`, the Sentry SDK injects an inline `<script>` tag into the HTML response of the server.
+This script proxies all client-side `fetch` calls so that `fetch` calls inside your `load` functions are captured by the SDK.
+However, if you configured CSP rules to block inline fetch scripts by default, this script will be [blocked by the browser](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src#unsafe_inline_script).
 
-        You have multiple options to solve this CSP issue:
+You have multiple options to solve this CSP issue:
 
-        #### Option 1: Upgrade SvelteKit
+#### Option 1: Upgrade SvelteKit
 
-        The easiest option is to update `@sveltejs/kit` to at least version `2.16.0` (or newer). The SDK will not inject the fetch proxy script as it's no longer necessary.
+The easiest option is to update `@sveltejs/kit` to at least version `2.16.0` (or newer). The SDK will not inject the fetch proxy script as it's no longer necessary.
 
-        #### Option 2: Add Script Hash to CSP policy
+#### Option 2: Add Script Hash to CSP policy
 
-        To enable the script, add an exception for the `sentryHandle` script by adding the hash of the script to your CSP script source rules.
+To enable the script, add an exception for the `sentryHandle` script by adding the hash of the script to your CSP script source rules.
 
-        If your CSP is defined in `svelte.config.js`, you can add the hash to the `csp.directives.script-src` array:
+If your CSP is defined in `svelte.config.js`, you can add the hash to the `csp.directives.script-src` array:
 
-        ```javascript {filename:svelte.config.js} {5-7}
-        const config = {
-        kit: {
-            csp: {
-            directives: {
-                "script-src": ["sha256-y2WkUILyE4eycy7x+pC0z99aZjTZlWfVwgUAfNc1sY8="], // + rest of your values
-            },
-            },
-        },
-        };
-        ```
+```javascript {filename:svelte.config.js} {5-7}
+const config = {
+  kit: {
+    csp: {
+      directives: {
+        "script-src": ["sha256-y2WkUILyE4eycy7x+pC0z99aZjTZlWfVwgUAfNc1sY8="], // + rest of your values
+      },
+    },
+  },
+};
+```
 
-        For external CSP configurations, add the following hash to your `script-src` directive:
+For external CSP configurations, add the following hash to your `script-src` directive:
 
-        ```txt
-        'sha256-y2WkUILyE4eycy7x+pC0z99aZjTZlWfVwgUAfNc1sY8='
-        ```
-        <Alert>
-            We will not change this script any time soon, so the hash will stay consistent.
-        </Alert>
+```txt
+'sha256-y2WkUILyE4eycy7x+pC0z99aZjTZlWfVwgUAfNc1sY8='
+```
 
-        #### Option 3: Disable `fetch` Proxy Script
-        If you don't want to inject the script responsible for instrumenting client-side `fetch` calls, you can disable injection by passing `injectFetchProxyScript: false` to `sentryHandle`:
+<Alert>
+  We will not change this script any time soon, so the hash will stay
+  consistent.
+</Alert>
 
-        ```javascript {filename:hooks.server.(js|ts)}
-        export const handle = sentryHandle({ injectFetchProxyScript: false });
-        ```
+#### Option 3: Disable `fetch` Proxy Script
 
-        Note that if you disable the `fetch` proxy script, the SDK will not be able to capture spans for `fetch` calls made by SvelteKit when your route has a server load function. This also means that potential spans created on the server for these `fetch` calls will not be connected to the client-side trace.
+If you don't want to inject the script responsible for instrumenting client-side `fetch` calls, you can disable injection by passing `injectFetchProxyScript: false` to `sentryHandle`:
 
-    </Expandable>
+```javascript {filename:hooks.server.(js|ts)}
+export const handle = sentryHandle({ injectFetchProxyScript: false });
+```
+
+Note that if you disable the `fetch` proxy script, the SDK will not be able to capture spans for `fetch` calls made by SvelteKit when your route has a server load function. This also means that potential spans created on the server for these `fetch` calls will not be connected to the client-side trace.
+
+</Expandable>
 
 </PlatformSection>
 
