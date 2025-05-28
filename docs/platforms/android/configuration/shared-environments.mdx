@@ -1,0 +1,67 @@
+---
+title: Using Sentry within an SDK
+description: "Learn how to use the Sentry SDK within a shared environment, e.g. another SDK."
+sidebar_order: 2000
+---
+
+<Alert>
+
+Using the Sentry SDK within another SDK is [discouraged](https://docs.sentry.io/platforms/). This can lead to unexpected behaviour and potential data leakage. If you need to use Sentry within another SDK, please follow the best practices outlined below.
+
+</Alert>
+
+<Alert>
+
+When setting up Sentry inside a library, the consuming app could use the Sentry SDK as well, thus you should **not use `Sentry.init()`**, as this will pollute the global state.
+
+</Alert>
+
+In order to not conflict with other Sentry instances, you should use the `Scopes` API to create a new instance of Sentry.
+The Scopes API works the same way as the global Sentry instance, but it is not global and can be used within your component. If you want to capture uncaught exceptions, you can use the `UncaughtExceptionHandlerIntegration` to capture them. As this will capture all uncaught exceptions within an app, you should use the `BeforeSendCallback` to only accept events that are relevant for your SDK.
+
+```kotlin
+import io.sentry.Scope
+import io.sentry.Scopes
+import io.sentry.SentryOptions
+import io.sentry.SentryOptions.BeforeSendCallback
+import io.sentry.UncaughtExceptionHandlerIntegration
+
+val options = SentryOptions().apply {
+    dsn = "___PUBLIC_DSN___"
+    isEnableUncaughtExceptionHandler = true
+    setBeforeSend { event, _ ->
+        // as uncaught exceptions are captured globally,
+        // you need to only accept events which are relevant
+        if (isRelevantForMySdk(event.throwable)) {
+            return@setBeforeSend event
+        }
+        // drop the event
+        return@setBeforeSend null
+    }
+
+}
+
+val globalScope = Scope(options);
+val isolationScope = Scope(options);
+val scope = Scope(options);
+
+globalScope.bindClient(new SentryClient(options));
+
+Scopes scopes = Scopes(scope, isolationScope, globalScope, "MySentry.init");
+
+val integration = UncaughtExceptionHandlerIntegration()
+options.addIntegration(integration)
+integration.register(scopes, options)
+```
+
+Once the `Scopes` are configured, you can use them to capture events:
+
+```kotlin
+scopes.captureException(IllegalStateException("Example Exception"))
+```
+
+If your SDK can be opened and closed multiple times, you should also close the `Scopes` when you are done:
+
+```kotlin
+scopes.close()
+```

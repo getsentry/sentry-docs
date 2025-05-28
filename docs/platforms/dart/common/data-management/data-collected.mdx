@@ -1,0 +1,64 @@
+---
+title: Data Collected
+description: "See what data is collected by the Sentry SDK."
+sidebar_order: 1
+---
+
+Sentry takes data privacy very seriously and has default settings in place that prioritize data safety, especially when it comes to personally identifiable information (PII) data. When you add the Sentry SDK to your application, you allow it to collect data and send it to Sentry during the runtime of your application.
+
+The category types and amount of data collected vary, depending on the integrations you've enabled in the Sentry SDK. This page lists data categories that the Sentry Dart SDK collects.
+
+Many of the categories listed here require you to enable the <PlatformLink to="/configuration/options/#send-default-pii">sendDefaultPii option</PlatformLink>.
+
+## HTTP Headers
+
+By default, the Sentry SDK doesn't send any HTTP headers. Even when sending HTTP headers is enabled, we have a [denylist](https://github.com/getsentry/sentry-dart/blob/ea1d45d64f52551e2e033c50b0ff8512e3d8a4e3/dart/lib/src/utils/http_sanitizer.dart#L9C1-L21C1) in place, which filters out any headers that contain sensitive data.
+
+To start sending HTTP headers, set <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii = true`</PlatformLink>.
+
+## Information About Logged-in User
+
+By default, the Sentry SDK doesn't send any information about the logged-in user, such as email address, user ID, or username. Even if enabled, the type of logged-in user information you'll be able to send depends on the integrations you enable in Sentry's SDK. Most integrations won't send any user information. Some will only set the user ID, but there are a few that will set the user ID, username, and email address.
+
+To start sending logged-in user information, set <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii = true`</PlatformLink>.
+
+## Users' IP Addresses
+
+By default, the Sentry SDK doesn't send the user's IP address. Once enabled, the Sentry backend services will infer the user ip address based on the incoming request, unless certain integrations you can enable override this behavior.
+
+To enable sending the user's IP address, set <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii = true`</PlatformLink>.
+
+## Request URL
+
+The full request URL of outgoing and incoming HTTP requests is **always sent to Sentry**. Depending on your application, this could contain PII data.
+
+## Request Query String
+
+The full request query string of outgoing and incoming HTTP requests is **always sent to Sentry**. Depending on your application, this could contain PII data.
+
+## Request Body
+
+The request body of incoming HTTP requests can be sent to Sentry. Whether it's sent or not, depends on the type and size of request body as described below:
+
+- **The type of the request body:**
+  - JSON and form bodies are sent
+- **The size of the request body:** There's a <PlatformLink to="/configuration/options/#max-request-body-size">maxRequestBodySize</PlatformLink> option that's set to `NONE` by default. This means by default no request body is sent to Sentry.
+
+## File I/O
+
+By default the Sentry SDK does not send the name or path of files when <PlatformLink to="/integrations/file">instrumenting File I/O</PlatformLink>.
+
+If you want to send file names and paths, set <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii = true`</PlatformLink>.
+
+## Runtime Information
+
+By default, the SDK collects basic runtime information like the Dart version and platform.
+
+When <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii = true`</PlatformLink>, additional runtime details are collected:
+- Executable path e.g `dart`
+- Resolved executable locations e.g `/system/bin/app_process64`
+- Script path e.g `file:///main.dart`
+
+## SQL Queries
+
+While SQL queries are sent to Sentry, neither the full SQL query (`UPDATE app_user SET password='supersecret' WHERE id=1;`), nor the values of its parameters will ever be sent. A parameterized version of the query (`UPDATE app_user SET password=? WHERE id=?;`) is sent instead.

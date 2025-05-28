@@ -1,0 +1,98 @@
+---
+title: Serverless
+description: "Learn about using Sentry's Python SDK for a serverless environment."
+---
+
+The Serverless integration adds support for the [Serverless Framework](https://www.serverless.com/).
+
+It is recommended to use an integration for your particular serverless environment if available, as those are easier to use and capture more useful information:
+
+- <Link to="/platforms/python/integrations/gcp-functions">Google Cloud Functions</Link>
+- <Link to="/platforms/python/integrations/aws-lambda">AWS Lambda Functions</Link>
+
+If you use a serverless provider not directly supported by the SDK, you can use this generic integration.
+
+## Install
+
+Install `sentry-sdk` from PyPI:
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk"
+```
+```bash {tabTitle:uv}
+uv add "sentry-sdk"
+```
+
+## Configure
+
+Apply the `serverless_function` decorator to each function that might throw errors:
+
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.serverless import serverless_function
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Add data like request headers and IP for users, if applicable;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    # ___PRODUCT_OPTION_START___ performance
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    # ___PRODUCT_OPTION_END___ performance
+    # ___PRODUCT_OPTION_START___ profiling
+    # To collect profiles for all profile sessions,
+    # set `profile_session_sample_rate` to 1.0.
+    profile_session_sample_rate=1.0,
+    # Profiles will be automatically collected while
+    # there is an active span.
+    profile_lifecycle="trace",
+    # ___PRODUCT_OPTION_END___ profiling
+)
+
+@serverless_function
+def my_function(...): ...
+```
+
+Use the generic integration by calling the `serverless_function` decorator.
+Decorators wrap a function and modify its behavior. Then, deploy and test the function.
+
+## Verify
+
+Wrap a functions with the `serverless_function` that triggers an error:
+
+```python
+@serverless_function
+def my_function(...):
+    1 / 0  # raises an error
+```
+
+Now deploy your function. When you now run your function an error event will be sent to [sentry.io](https://sentry.io).
+
+## Behavior
+
+- Each call of a decorated function will block and wait for current events to be sent before returning. When there are no events to be sent, no delay is added. However, if there are errors, it will delay the return of your serverless function until the events are sent. This is necessary as serverless environments typically reserve the right to kill the runtime/VM when they consider it is unused.
+
+- You can add more context as described <PlatformLink to="/enriching-events/context/">here</PlatformLink>.
+
+- Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
+
+- Each request has a separate scope. Changes to the scope within a view, for example setting a tag, will only apply to events sent as part of the request being handled.
+
+The maximum amount of time to block overall is set by the <PlatformLink to="/configuration/options/#shutdown-timeout">`shutdown_timeout` client option</PlatformLink>.
+
+You can disable this aspect by decorating with `@serverless_function(flush=False)` instead.

@@ -94,7 +94,7 @@ export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
       <div style={{marginBottom: '40px'}}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-8 md:items-end">
           <div className="lg:col-span-2 space-y-2">
-            <h2 className="text-xl font-medium">Most Viewed Sentry Platforms</h2>
+            <h2 className="text-xl font-medium">Most Viewed Sentry SDKs</h2>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -125,12 +125,12 @@ export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-8 md:items-end">
         <div className="lg:col-span-2 space-y-2">
-          <h2 className="text-2xl font-medium">All Platforms Supported by Sentry</h2>
+          <h2 className="text-2xl font-medium">All SDKs Supported by Sentry</h2>
           <p className="m-0">If you use it, we probably support it.</p>
         </div>
         <div className="w-full flex justify-end">
           <input
-            placeholder="Search Platforms"
+            placeholder="Search SDKs"
             className={`${styles.input}`}
             value={filter}
             onChange={e => setFilter(e.target.value)}
@@ -176,7 +176,7 @@ export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
         </div>
       )}
       {!matches.length && (
-        <div className="col-span-3 text-center text-gray-600">No platforms found</div>
+        <div className="col-span-3 text-center text-gray-600">No SDKs found</div>
       )}
     </div>
   );

@@ -1,0 +1,70 @@
+---
+title: Kotlin Compiler Plugin
+sidebar_order: 101
+description: "Learn about using the Sentry Kotlin Compiler Plugin."
+---
+
+The [Sentry Kotlin Compiler Plugin](https://github.com/getsentry/sentry-android-gradle-plugin) is an addition to the Sentry Android Gradle plugin and offers improvements to existing SDK features. As of now the main focus of the plugin is to improve apps which utilize Jetpack Compose by automatically tagging `@Composable` functions.
+
+- <PlatformLink to="/enriching-events/viewhierarchy">View Hierarchy</PlatformLink>
+- <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#user-interaction-instrumentation">User Interaction Tracing</PlatformLink>
+
+<Alert>
+
+The minimum supported Kotlin version is `1.8.20`.
+
+</Alert>
+
+## How it works
+
+Given a `@Composable` function:
+
+```kotlin
+@Composable
+fun LoginScreen() {
+    Column() {
+        // ...
+    }
+}
+```
+
+The Sentry Kotlin Compiler Plugin will transform it into the following:
+
+```kotlin
+@Composable
+fun LoginScreen() {
+    Column(modifier = Modifier.sentryTag("LoginScreen")) {
+        // ...
+    }
+}
+```
+
+## Setup
+
+### Install the Compiler Plugin
+
+Kotlin Compiler plugins are executed during compilation and thus need to be applied to _every_ relevant Gradle module. Add the following to e.g. your `app/build.gradle`:
+
+```groovy {filename:app/build.gradle}
+plugins {
+  id "io.sentry.kotlin.compiler.gradle" version "{{@inject packages.version('sentry.kotlin.compiler-plugin', '3.7.0') }}"
+}
+```
+
+```kotlin {filename:app/build.gradle.kts}
+plugins {
+  id("io.sentry.kotlin.compiler.gradle") version "{{@inject packages.version('sentry.kotlin.compiler-plugin', '3.7.0') }}"
+}
+```
+
+### Add the Runtime Dependency
+
+The runtime dependency is required as well, otherwise the Compiler Plugin will not be able to apply any changes. Add the following to _every_ relevant `build.gradle` module. If you are using the Sentry Android Gradle Plugin, this is already done for you for the `app` module.
+
+```kotlin {filename:app/build.gradle.kts}
+implementation("io.sentry:sentry-compose-android:{{@inject packages.version('sentry.java.android', '8.1.0') }}")
+```
+
+### Configuration
+
+As of now no additional steps are necessary. Checkout the docs for <PlatformLink to="/enriching-events/viewhierarchy">View Hierarchy</PlatformLink> and <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#user-interaction-instrumentation">User Interaction Tracing</PlatformLink> to see which features the Sentry Kotlin Compiler Plugin improves.

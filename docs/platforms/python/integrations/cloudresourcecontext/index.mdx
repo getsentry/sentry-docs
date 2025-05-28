@@ -1,0 +1,84 @@
+---
+title: Cloud Resource Context
+description: "Learn about the Cloud Resource Context integration and how it adds information about the Cloud environment the project runs in."
+---
+
+The Cloud Resource Context integration adds information about the cloud platform your app runs to errors and performance events. Currently [Amazon EC2](https://aws.amazon.com/ec2/) and [Google Compute Engine](https://cloud.google.com/compute) are supported.
+
+## Install
+
+To install it, run:
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk"
+```
+```bash {tabTitle:uv}
+uv add "sentry-sdk"
+```
+
+## Configure
+
+Add `CloudResourceContextIntegration()` to your `integrations` list:
+
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.cloud_resource_context import CloudResourceContextIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Add data like request headers and IP for users, if applicable;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    # ___PRODUCT_OPTION_START___ performance
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    # ___PRODUCT_OPTION_END___ performance
+    # ___PRODUCT_OPTION_START___ profiling
+    # To collect profiles for all profile sessions,
+    # set `profile_session_sample_rate` to 1.0.
+    profile_session_sample_rate=1.0,
+    # Profiles will be automatically collected while
+    # there is an active span.
+    profile_lifecycle="trace",
+    # ___PRODUCT_OPTION_END___ profiling
+    integrations=[
+        CloudResourceContextIntegration(),
+    ],
+)
+```
+
+## Verify
+
+Trigger an error in the code running in your cloud and see the error and performance data show up in [sentry.io](https://sentry.io). It takes a couple of moments for the performance data to show up in [sentry.io](https://sentry.io).
+
+## Behavior
+
+When the SDK starts up, information from the cloud provider the app is running in is retrieved and added to all error and performance events sent to Sentry.
+The [developer documentation](https://develop.sentry.dev/sdk/data-model/event-payloads/contexts/#runtime-context) lists all the information that's being added.
+
+In AWS EC2 the context looks like this:
+
+![AWS EC2 Cloud Resource Context in Sentry event](./img/cloudresourcecontext-aws-ec2.png)
+
+In Google Cloud Platform GCE the context looks like this:
+
+![Google GCE Cloud Resource Context in Sentry event](./img/cloudresourcecontext-gcp-gce.png)
+
+## Supported Versions
+
+- Python: 3.6+
+- Cloud platforms: Amazon EC2, Google Compute Engine

@@ -1,9 +1,85 @@
 ---
 title: PHP
-description: "Auto-generated index for platforms/php"
-slug: "platforms/php"
+sdk: sentry.php
+caseStyle: snake_case
+supportLevel: production
+description: Learn how to set up Sentry in your PHP application.
+categories:
+  - server
 ---
 
-# PHP
+## Prerequisites
 
-_Auto-generated index file for platforms/php._ 
+* You need a [Sentry account](https://sentry.io/signup/) and project
+* Your application needs to run on PHP 7.2 or later
+* Read one of these other guides if you use <PlatformLink to="/guides/laravel">Laravel</PlatformLink> or <PlatformLink to="/guides/symfony">Symfony</PlatformLink>
+
+## Features
+
+<p className="mb-5">Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.</p>
+
+<OnboardingOptionButtons options={['error-monitoring', 'performance', 'profiling']}/>
+
+## Install
+
+Install the Sentry SDK using [Composer](https://getcomposer.org/):
+
+```bash
+composer require sentry/sentry
+```
+
+<OnboardingOption optionId="profiling">
+
+To use Profiling, you'll also need to install the Excimer extension via PECL:
+
+```bash
+pecl install excimer
+```
+
+The Excimer PHP extension supports PHP 7.2 and up. Excimer requires Linux or macOS and doesn't support Windows. For additional ways to install Excimer, [see docs](/platforms/php/profiling/#installation).
+
+</OnboardingOption>
+
+## Configure
+
+To capture all errors, even the one during the startup of your application, you should initialize the Sentry PHP SDK as soon as possible.
+
+
+```php
+\Sentry\init([
+  'dsn' => '___PUBLIC_DSN___',
+  // Add request headers, cookies and IP address,
+  // see https://docs.sentry.io/platforms/php/data-management/data-collected/ for more info
+  'send_default_pii' => true,
+  // ___PRODUCT_OPTION_START___ performance
+  // Specify a fixed sample rate
+  'traces_sample_rate' => 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ profiling
+  // Set a sampling rate for profiling - this is relative to traces_sample_rate
+  'profiles_sample_rate' => 1.0,
+  // ___PRODUCT_OPTION_END___ profiling
+]);
+```
+
+<Alert level="warning">
+  In order to receive stack trace arguments in your errors, make sure to set `zend.exception_ignore_args: Off` in your php.ini
+</Alert>
+
+## Verify
+
+In PHP you can either capture a caught exception or capture the last error with captureLastError.
+
+```php
+try {
+  $this->functionFailsForSure();
+} catch (\Throwable $exception) {
+  \Sentry\captureException($exception);
+}
+```
+
+## Set up Sentry through Forge
+
+If you're using Laravel's Forge platform to provision and deploy your PHP application, you can create a Sentry organization through [Forge](https://forge.laravel.com/docs/integrations/sentry.html).
+
+![Sentry and Forge](./img/forge-sentry.png)

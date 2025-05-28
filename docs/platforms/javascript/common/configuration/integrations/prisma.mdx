@@ -1,0 +1,91 @@
+---
+title: Prisma
+description: "Adds instrumentation for Prisma."
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.react-router
+  - javascript.astro
+  - javascript.bun
+  - javascript.tanstackstart-react
+---
+
+<Alert>
+
+This integration only works in the Node.js and Bun runtimes.
+
+</Alert>
+
+_Import name: `Sentry.prismaIntegration`_
+
+Sentry supports tracing [Prisma ORM](https://www.prisma.io/) queries with the Prisma integration.
+
+The Prisma Integrations creates a spans for each query and reports to Sentry with relevant details inside the`description` if available.
+
+This integration is enabled by default when using Prisma version 6 or higher.
+When using Prisma version 5 this integration requires additional setup, which you can read about below.
+If you'd like to learn how to modify your default integrations, visit the docs on <PlatformLink to="/configuration/integrations/#modifying-default-integrations">Modifying Default Integrations</PlatformLink>.
+
+## Prisma Version >=6
+
+To use the integration with Prisma version >=6, add the `prismaIntegration` to your Sentry initialization as follows:
+
+```javascript {3}
+Sentry.init({
+  tracesSampleRate: 1.0,
+  integrations: [Sentry.prismaIntegration()],
+});
+```
+
+## Prisma Version 5
+
+To configure the integration for Prisma version 5, first add the `tracing` feature flag to the `generator` block of your Prisma schema:
+
+```txt {tabTitle: Prisma Schema} {filename: schema.prisma} {3}
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["tracing"]
+}
+```
+
+For Prisma version 5 compatibility you must pass a specific version of the Prisma instrumentation to the Sentry Prisma integration. Add the `prismaIntegration` to your Sentry initialization as follows:
+
+```javascript {1,6-9}
+import { PrismaInstrumentation } from "@prisma/instrumentation";
+
+Sentry.init({
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.prismaIntegration({
+      // Override the default instrumentation that Sentry uses
+      prismaInstrumentation: new PrismaInstrumentation(),
+    }),
+  ],
+});
+```
+
+## Options
+
+### `prismaInstrumentation`
+
+_Type: `Instrumentation`_ (An OpenTelemetry type)
+
+Overrides the instrumentation used by the Sentry SDK with the passed in instrumentation instance.
+
+## Supported Versions
+
+- `prisma`: `>=5`

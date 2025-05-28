@@ -1,9 +1,105 @@
 ---
 title: Python
-description: "Auto-generated index for platforms/python"
-slug: "platforms/python"
+description: Sentry's Python SDK enables automatic reporting of errors and performance data in your application.
+caseStyle: snake_case
+supportLevel: production
+sdk: sentry.python
+showIntegrationsInSearch: true
+categories:
+  - server
+  - serverless
 ---
 
-# Python
+## Prerequisites
 
-_Auto-generated index file for platforms/python._ 
+* You need a Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+* Read one of our dedicated guides if you use any of the <PlatformLink to="/integrations/#web-frameworks">frameworks</PlatformLink> we support
+
+## Features
+
+<p className="mb-5">Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.</p>
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+## Install
+
+Install the Sentry SDK using [`pip`](https://pip.pypa.io/en/stable/):
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk"
+```
+```bash {tabTitle:uv}
+uv add "sentry-sdk"
+```
+
+## Configure
+
+Configuration should happen as **early as possible** in your application's lifecycle.
+
+
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Add request headers and IP for users,
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    # ___PRODUCT_OPTION_START___ performance
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    # ___PRODUCT_OPTION_END___ performance
+    # ___PRODUCT_OPTION_START___ profiling
+    # To collect profiles for all profile sessions,
+    # set `profile_session_sample_rate` to 1.0.
+    profile_session_sample_rate=1.0,
+    # Profiles will be automatically collected while
+    # there is an active span.
+    profile_lifecycle="trace",
+    # ___PRODUCT_OPTION_END___ profiling
+)
+```
+
+However, in async applications, you need to call `sentry_sdk.init()` inside an `async` function to ensure async code is instrumented properly. We recommend calling `sentry_sdk.init()` at the beginning of the first `async` function you call, as demonstrated in the example below.
+
+```python
+import asyncio
+import sentry_sdk
+
+async def main():
+    sentry_sdk.init(
+        ...  # same as above
+    )
+
+asyncio.run(main())
+```
+
+## Verify
+
+Add this intentional error to your application to test that everything is working right away.
+
+```py
+division_by_zero = 1 / 0
+```
+
+<Alert>
+
+Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+
+</Alert>
+
+To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+
+<Alert>
+
+Not seeing your error in Sentry? Make sure you're running the above example from a file and not from a Python shell like IPython.
+
+</Alert>

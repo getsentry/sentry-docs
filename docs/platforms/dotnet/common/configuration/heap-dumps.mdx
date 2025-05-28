@@ -1,0 +1,77 @@
+---
+title: Heap Dumps
+sidebar_order: 23
+description: "This experimental feature allows you to automatically capture heap dumps for your application."
+---
+
+<Alert>
+
+The SDK relies on `dotnet-gcdump` to capture the heap dumps. `dotnet-gcdump` requires .NET 6 or later and must be [installed globally](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/dotnet-gcdump#install) on the machine or container where the heap dumps will be captured.
+
+</Alert>
+
+Using the .NET SDK you can automatically captures heap dumps based on certain triggers. When triggered, the SDK captures the heap dump and sends an event to Sentry with the heap dump as an attachment.
+
+The basic configuration for enabling automatic heap dumps is:
+
+```csharp
+options => {
+    // All your other options like DSN, SendDefaultPii, etc.
+    ...
+    options.EnableHeapDumps(
+        // Triggers if the process uses more than 90% of the total available memory
+        90,
+        // Limit heap dumps to 3 per day with at least 2 hours between each event
+        Debouncer.PerDay(3, TimeSpan.FromHours(2)),
+        // Set the level for heap dump events to Warning
+        SentryLevel.Warning);
+}
+```
+
+### Trigger
+
+The first argument to `EnableHeapDumps` is the *Trigger*. The above example passes an integer as the trigger, which configures the SDK to capture a heap dump when the memory allocated by your application exceeds a certain percentage threshold of total available memory.
+
+Alternatively, there is an overload of `EnableHeapDumps` that allows you to specify a custom trigger:
+
+```csharp
+options => {
+    // All your other options like DSN, SendDefaultPii, etc.
+    ...
+    options.EnableHeapDumps(
+        // Triggers if the process uses more than 10MB of memory
+        (usedMemory, totalMemory) => usedMemory > 10_000_000,
+        // Limit heap dumps to 3 per day with at least 2 hours between each event
+        Debouncer.PerDay(3, TimeSpan.FromHours(2)),
+        // Set the level for heap dump events to Warning
+        SentryLevel.Warning);
+}
+```
+
+### Debouncer
+
+The second argument is a *Debouncer*, which is used to prevent heap dumps from being captured too often.
+
+The above examples configure a debouncer that limits heap dumps to 3 per day with a cooldown of at least 2 hours between each event. The other available debouncers are `PerMinute`, `PerHour`, and `PerApplicationLifetime`.
+
+If no debouncer is specified, this defaults to Debouncer.PerApplicationLifetime(1) - which means only one heap dump will be captured each time the application is run. If the application keeps running for 3 months then no more than one heap dump will be sent during that 3 month period.
+
+### Event Level
+
+The final argument determines the event level to associate with the event that the heap dump is attached to. If you don't specify a value then this defaults to `SentryLevel.Warning`.
+
+## Viewing heap dumps
+
+Heap dumps will be displayed as "Memory threshold exceeded" events in the Sentry UI. Clicking on such an event, you’ll see all the usual event details. However the event will also contain a `.gcdump` file as an attachment, that you can download for analysis.
+
+There are various different tools that you can use to view the dump file:
+- [dotnet-gcdump report](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/dotnet-gcdump)
+- [dotnet-heapview](https://github.com/getsentry/dotnet-heapview)
+- [Visual Studio](https://devblogs.microsoft.com/dotnet/collecting-and-analyzing-memory-dumps/)
+- [Perfview](https://github.com/microsoft/perfview)
+
+## Feedback
+
+This features is currently experimental and we're open to suggestions about how it could be improved.
+
+If you have any feedback about the capabilities or the API design, please join the [discussion on GitHub](https://github.com/getsentry/sentry-dotnet/discussions/3885).

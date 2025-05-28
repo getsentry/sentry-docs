@@ -1,0 +1,85 @@
+---
+title: Transports
+sidebar_order: 90
+description: Learn more about customizing how the Sentry SDK sends data to Sentry.
+---
+
+The Native SDK uses _Transports_ to send event payloads to Sentry. The default
+transport depends on the target platform:
+
+- **Windows**: WinHTTP
+- **Linux**: Curl
+- **macOS**: Curl
+
+## Custom Transports
+
+To specify a custom transport, use the `sentry_options_set_transport` function
+and supply a transport that implements the `sentry_transport_t` interface.
+
+```c
+#include <sentry.h>
+
+void custom_transport(sentry_envelope_t *envelope, void *state) {
+  /*
+   * Send the event here. If the transport requires state, such as an HTTP
+   * client object or request queue, it can be specified in the `state`
+   * parameter when configuring the transport. It will be passed as second
+   * argument to this function.
+   * The transport takes ownership of the `envelope`, and must free it once it
+   * is done.
+   */
+  sentry_envelope_free(envelope);
+}
+
+int main(void) {
+  void *transport_state = 0;
+
+  sentry_options_t *options = sentry_options_new();
+  sentry_transport_t *transport = sentry_transport_new(custom_transport);
+  sentry_transport_set_state(transport, transport_state);
+
+  sentry_options_set_transport(options, transport);
+  sentry_init(options);
+
+  /* ... */
+}
+```
+
+The transport is invoked in the same thread as the call to
+`sentry_capture_event`. Consider to offload network communication to a
+background thread or thread pool to avoid blocking execution.
+
+## Using a Proxy
+
+The Native SDK allows the configuration of an `HTTP` (`CONNECT`) or `SOCKS5` proxy through which requests can be tunneled to our backend. It can be configured manually via the following option interface:
+
+```c
+sentry_options_t *options = sentry_options_new();
+sentry_options_set_proxy(options, "http://my.proxy:8080");
+sentry_init(options);
+
+/* ... */
+```
+The same function can also be used for the `SOCKS5` proxy:
+```c
+sentry_options_t *options = sentry_options_new();
+sentry_options_set_proxy(options, "socks5://my.proxy:1080");
+sentry_init(options);
+
+/* ... */
+```
+
+### Proxy behavior
+
+We support `HTTP` proxies on all platforms, and `SOCKS5` proxies on Linux and macOS. On Windows, `https` proxy servers are not supported by the default transport (WinHTTP). The proxy may also contain authentication (`"http://user:password@my.proxy:8080"`) or be written in IPv6 format (`"http://[::1]:8080"`).
+
+The SDK will always automatically configure the HTTP proxy if a corresponding environment variable is set. Depending on the [DSN](https://docs.sentry.io/concepts/key-terms/dsn-explainer/) protocol, the matching `http(s)_proxy` environment variable is read. So for a usual Sentry-hosted `DSN`, you must set the `https_proxy` variable .
+
+If you don't want the SDK to configure the HTTP proxy from the environment variables automatically, you can set the proxy option to an empty string value:
+```c
+sentry_options_t *options = sentry_options_new();
+sentry_options_set_proxy(options, "");
+sentry_init(options);
+
+/* ... */
+```

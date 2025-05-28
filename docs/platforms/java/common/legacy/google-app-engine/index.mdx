@@ -1,0 +1,60 @@
+---
+title: Google App Engine
+sidebar_order: 30
+---
+
+<Alert level="warning" title="Note">
+
+An [updated Java SDK](/platforms/java/) Java SDK has superseded this deprecated version. Sentry preserves this documentation for customers using the old client. We recommend using the updated Java SDK for new projects.
+
+</Alert>
+
+The `sentry-appengine` library provides [Google App Engine](https://cloud.google.com/appengine/) support for Sentry via the [Task Queue API](https://cloud.google.com/appengine/docs/java/taskqueue/).
+
+The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-appengine).
+
+{/* <!-- WIZARD appengine --> */}
+
+### Installation
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-appengine</artifactId>
+    <version>1.7.30</version>
+</dependency>
+```
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-appengine:1.7.30'
+```
+
+```scala {tabTitle: SBT}
+libraryDependencies += "io.sentry" % "sentry-appengine" % "1.7.30"
+```
+
+For other dependency managers see the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry-appengine).
+
+### Usage
+
+This module provides a new `SentryClientFactory` implementation which replaces the default async system with a Google App Engine compatible one. You’ll need to configure Sentry to use the `io.sentry.appengine.AppEngineSentryClientFactory` as its factory.
+
+The queue size and thread options will not be used as they are specific to the default Java threading system.
+
+{/* <!-- TODO-ADD-VERIFICATION-EXAMPLE --> */}
+
+### Queue Name
+
+By default, the default task queue will be used, but it’s possible to specify which one will be used with the `sentry.async.gae.queuename` option:
+
+```
+{DSN}?async.gae.queuename=MyQueueName
+```
+
+### Connection Name
+
+As the queued tasks are sent across different instances of the application, it’s important to be able to identify which connection should be used when processing the event. To do so, the GAE module will identify each connection based on an identifier either automatically generated or user defined. To manually set the connection identifier (only used internally) use the option `sentry.async.gae.connectionid`:
+
+```
+{DSN}?async.gae.connectionid=MyConnection
+```

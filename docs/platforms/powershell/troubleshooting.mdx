@@ -1,0 +1,19 @@
+---
+title: Troubleshooting
+sidebar_order: 9000
+description: "Learn more about how to troubleshoot common issues. "
+---
+
+## The event is dropped by Sentry because it's too large
+
+> Sentry: (Error) Sentry rejected the envelope 5bfe4129cb2446c08768b16479865035. Status code: RequestEntityTooLarge. Error detail: failed to read request body. Error causes: A payload reached size limit.
+
+You can have the [Sentry SDK write these envelopes to a path](https://github.com/getsentry/sentry-dotnet/blob/e62013ca63436d2a786fb229570e96f42c7c4044/src/Sentry/Http/HttpTransportBase.cs#L341-L363) in order to troubleshoot why they are too large.
+Set the environment variable `SENTRY_KEEP_LARGE_ENVELOPE_PATH` to the directory you want these to be written to.
+Make sure the process the SDK is running in has write access to it.
+
+## Unhandled exceptions are not captured
+
+Currently, the SDK captures exceptions that are explicitly handled by ane of the following methods:
+- piping the `ErrorRecord` inside a `catch` statement or in a `trap` using `$_ | Out-Sentry`
+- using `Invoke-WithSentry { ... }`

@@ -1,0 +1,157 @@
+---
+title: Multiple Sentry Instances
+sidebar_order: 300
+description: Learn how to manage several Sentry instances by creating your own clients.
+notSupported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+keywords: ["multiple clients", "BrowserClient", "NodeClient", "monorepo"]
+---
+
+<Alert>
+
+Creating multiple Sentry clients is **not recommended** in general, as it can lead to unexpected behavior. In case you are using Micro Frontends or similar, multiplexing might be a better solution than using multiple clients. Check out [Micro Frontends](/platforms/javascript/best-practices/micro-frontends) in the Best Practices for more information.
+
+</ Alert>
+
+To be able to manage several Sentry instances without any conflicts between them you need to create your own `Client`.
+This also helps to prevent tracking of any parent application errors in case your application is integrated
+inside of it. To ensure you don't conflict with your parent application, you should also remove any integrations that rely on global state.
+
+In this example we use `BrowserClient` from `@sentry/browser` but it's also applicable to `NodeClient` from `@sentry/node`.
+
+```javascript
+import {
+  BrowserClient,
+  defaultStackParser,
+  getDefaultIntegrations,
+  makeFetchTransport,
+  Scope,
+} from "@sentry/browser";
+
+// filter integrations that use the global variable
+const integrations = getDefaultIntegrations({}).filter((defaultIntegration) => {
+  return !["BrowserApiErrors", "Breadcrumbs", "GlobalHandlers"].includes(
+    defaultIntegration.name
+  );
+});
+
+const client = new BrowserClient({
+  dsn: "___PUBLIC_DSN___",
+  transport: makeFetchTransport,
+  stackParser: defaultStackParser,
+  integrations: integrations,
+});
+
+const scope = new Scope();
+scope.setClient(client);
+
+client.init(); // initializing has to be done after setting the client on the scope
+
+// You can capture exceptions manually for this client like this:
+scope.captureException(new Error("example"));
+```
+
+You can now customize the scope to your liking, without affecting other clients.
+
+## Dealing With Integrations
+
+Integrations are set up on the `Client`. If you need to deal with multiple clients, you'll have to make sure the integration handling is set up correctly.
+
+We do not recommend doing this if you are using Sentry in a browser extension or in similar scenarios.
+If you can't avoid using global integrations (e.g. in a micro frontend application), here is a working example of how to use multiple clients with multiple scopes running global integrations.
+
+```javascript
+import * as Sentry from "@sentry/browser";
+
+// Very happy integration that'll prepend and append very happy stick figure to the message
+function happyIntegration() {
+  return {
+    name: "Happy",
+    setupOnce() {
+      Sentry.addEventProcessor((event) => {
+        const self = Sentry.getClient().getIntegration(HappyIntegration);
+        // Run the integration ONLY if it was installed on the current client
+        if (self) {
+          event.message = `\\o/ ${event.message} \\o/`;
+        }
+        return event;
+      });
+    },
+  };
+}
+
+// filter integrations that use the global variable
+const integrations = Sentry.getDefaultIntegrations({}).filter(
+  (defaultIntegration) => {
+    return !["BrowserApiErrors", "Breadcrumbs", "GlobalHandlers"].includes(
+      defaultIntegration.name
+    );
+  }
+);
+
+const client1 = new Sentry.BrowserClient({
+  dsn: "___PUBLIC_DSN___",
+  transport: Sentry.makeFetchTransport,
+  stackParser: Sentry.defaultStackParser,
+  integrations: [...integrations, happyIntegration()],
+  beforeSend(event) {
+    console.log("client 1", event);
+    return null; // Returning `null` prevents the event from being sent
+  },
+});
+const scope1 = new Sentry.Scope();
+scope1.setClient(client1);
+
+const client2 = new Sentry.BrowserClient({
+  dsn: "___PUBLIC_DSN___", // Can be a different DSN
+  transport: Sentry.makeFetchTransport,
+  stackParser: Sentry.defaultStackParser,
+  integrations: [...integrations, happyIntegration()],
+  beforeSend(event) {
+    console.log("client 2", event);
+    return null; // Returning `null` prevents the event from being sent
+  },
+});
+const scope2 = new Sentry.Scope();
+scope2.setClient(client2);
+
+scope1.captureMessage("a");
+scope1.setTag("a", "b");
+
+scope2.captureMessage("x");
+scope2.setTag("c", "d");
+```
+
+## Using `withScope` With Multiple Clients
+
+By default, `Sentry.withScope()` will fork the current scope and allow you to add data that is only applied inside of the provided callback. If you want to leverage this in a multi-client setup, you can use `withScope` like this:
+
+```javascript
+import * as Sentry from "@sentry/browser";
+
+// Multiple clients setup as described above
+const scopeA = new Sentry.Scope();
+const clientA = new Sentry.BrowserClient(clientOptions);
+scopeA.setClient(clientA);
+clientA.init();
+
+// Want to fork scopeA?
+const scopeA2 = scopeA.clone();
+Sentry.withScope(scopeA2, () => {
+  // scopeA2 is active in this callback
+  // it is still attached to clientA
+  scopeA2.setTag("key", "value");
+  scopeA2.captureMessage("message");
+  // Any event captured inside of this callback will have scopeA2 applied to it
+});
+```

@@ -1,0 +1,116 @@
+---
+title: Integrations
+sidebar_order: 30
+description: "Learn more about how integrations extend the functionality of our SDK to cover common libraries and environments automatically."
+---
+
+The Sentry SDK uses integrations to hook into the functionality of popular libraries to automatically instrument your application and give you the best data out of the box.
+
+Integrations automatically add error instrumentation, performance instrumentation, and/or extra context information to your application. Some are enabled by default, but you can disable them or modify their settings.
+
+<PlatformSection notSupported={['javascript.electron']}>
+
+<PlatformContent includePath="configuration/integrations" />
+
+</PlatformSection>
+
+## Modifying Default Integrations
+
+To disable system integrations, set `defaultIntegrations: false` when calling `init()`.
+
+To override their settings, provide a new instance with your config to the `integrations` option. For example, to turn off browser capturing console calls:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  integrations: [
+    Sentry.linkedErrorsIntegration({
+      limit: 7,
+    }),
+  ],
+});
+```
+
+## Adding an Integration
+
+You can add additional integrations in your `init` call:
+
+<PlatformContent includePath="configuration/enable-pluggable-integrations" />
+
+Alternatively, you can add integrations via `Sentry.addIntegration()`.
+This is useful if you only want to enable an integration in a specific environment or if you want to load an integration later.
+For all other cases, we recommend you use the `integrations` option.
+
+<PlatformContent includePath="configuration/enable-pluggable-integrations-lazy" />
+
+<PlatformCategorySection supported={['browser']}>
+
+## Lazy Loading Integrations
+
+Lazy-loading lets you add pluggable integrations without increasing the initial bundle size. You can do this in two ways:
+
+### 1. Dynamic Import (recommended)
+
+You can add the integration with a dynamic import using `import()`. This method loads the integration from the npm package. To avoid running into issues with `import()`, you should use a bundler that supports dynamic imports. If you're using a tool like Vite for your project, the bundling process is probably already set up.
+
+<PlatformContent includePath="configuration/integrations/lazy-loading-replay" />
+
+### 2. Load from CDN with `lazyLoadIntegration()`
+
+You can also lazy-load pluggable integrations via `Sentry.lazyLoadIntegration()`. This will attempt to load the integration from the Sentry CDN.
+Note that this function will reject if it fails to load the integration from the Sentry CDN, which can happen if a user has an ad-blocker or if there's a network problem. You should always make sure that rejections are handled for this function in your application.
+
+```javascript
+async function loadHttpClient() {
+  const httpClientIntegration = await Sentry.lazyLoadIntegration(
+    "httpClientIntegration"
+  );
+  Sentry.addIntegration(httpClientIntegration());
+}
+```
+
+Lazy loading is available for the following integrations:
+
+- `replayIntegration`
+- `replayCanvasIntegration`
+- `feedbackIntegration`
+- `feedbackModalIntegration`
+- `feedbackScreenshotIntegration`
+- `captureConsoleIntegration`
+- `contextLinesIntegration`
+- `linkedErrorsIntegration`
+- `dedupeIntegration`
+- `extraErrorDataIntegration`
+- `httpClientIntegration`
+- `reportingObserverIntegration`
+- `rewriteFramesIntegration`
+- `browserProfilingIntegration`
+
+</PlatformCategorySection>
+
+## Removing a Default Integration
+
+If you only want to remove a single or some of the default integrations, instead of disabling all of them with `defaultIntegrations: false`, you can use the following syntax to filter out the ones you don't want.
+
+This example removes the integration for adding breadcrumbs to the event, which is enabled by default:
+
+```javascript
+Sentry.init({
+  // ...
+  integrations: function (integrations) {
+    // integrations will be all default integrations
+    return integrations.filter(function (integration) {
+      return integration.name !== "Breadcrumbs";
+    });
+  },
+});
+```
+
+## Custom Integrations
+
+You can also create [custom integrations](./custom).
+
+## Available Integrations
+
+<PageGrid exclude={["custom"]} />

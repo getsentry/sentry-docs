@@ -1,0 +1,111 @@
+---
+title: Ray
+description: "Learn how to import and use the Ray integration."
+---
+
+The Ray integration adds support for the [Ray](https://www.ray.io/) unified compute framework.
+
+## Install
+
+To get started, install `sentry-sdk` from PyPI.
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk"
+```
+```bash {tabTitle:uv}
+uv add "sentry-sdk"
+```
+
+## Configure
+
+Add `RayIntegration()` to your `integrations` list:
+
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "profiling"]}
+/>
+
+```python
+import ray
+
+import sentry_sdk
+from sentry_sdk.integrations.ray import RayIntegration
+
+def init_sentry():
+    sentry_sdk.init(
+        dsn="___PUBLIC_DSN___",
+        # Add data like request headers and IP for users, if applicable;
+        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+        send_default_pii=True,
+        # ___PRODUCT_OPTION_START___ performance
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for tracing.
+        traces_sample_rate=1.0,
+        # ___PRODUCT_OPTION_END___ performance
+        # ___PRODUCT_OPTION_START___ profiling
+        # To collect profiles for all profile sessions,
+        # set `profile_session_sample_rate` to 1.0.
+        profile_session_sample_rate=1.0,
+        # Profiles will be automatically collected while
+        # there is an active span.
+        profile_lifecycle="trace",
+        # ___PRODUCT_OPTION_END___ profiling
+        integrations=[
+            RayIntegration(),
+        ],
+    )
+
+init_sentry()
+
+ray.init(
+    runtime_env={"worker_process_setup_hook": init_sentry},
+)
+```
+
+Be sure to call `sentry_sdk.init()` before you call `ray.init()`.
+
+By setting the `worker_process_setup_hook` we make sure that `sentry_sdk.init()` is called inside Ray worker processes during startup. This allows Sentry to connect code running in the worker with the calling code.
+
+## Verify
+
+Trigger an error in your code to verify that the integration is sending events to Sentry.
+
+```python
+def init_sentry():
+    sentry_sdk.init(...)  # same as above
+
+init_sentry()
+
+ray.init(
+    runtime_env={"worker_process_setup_hook": init_sentry},
+)
+
+@ray.remote
+def divide(a, b):
+    return a/b
+
+with sentry_sdk.start_transaction(name="ray-test"):
+    futures = [
+        divide.remote(10, 5),
+        divide.remote(10, 0),
+    ]
+    print(ray.get(futures))
+```
+
+Running this will create an error event (`ZeroDivisionError`) that will be sent to [sentry.io](https://sentry.io). Additionally, trace information will be created in the Performance section of [sentry.io](https://sentry.io).
+
+## Behavior
+
+- All unhandled exceptions will be captured and can be seen on [sentry.io](https://sentry.io).
+- Performance data will be captured and available in the Performance section of [sentry.io](https://sentry.io).
+- Performance data from [Ray Tasks](https://docs.ray.io/en/latest/ray-core/tasks.html) will be captured and linked to the calling code.
+- **Note**: Capturing performance data from [Ray Actors](https://docs.ray.io/en/latest/ray-core/actors.html) is currently **not supported**. (As always, [PRs are welcome](https://github.com/getsentry/sentry-python/blob/master/CONTRIBUTING.md))
+
+## Supported Versions
+
+- Ray: 2.34+
+- Python: 3.8+

@@ -1,0 +1,94 @@
+---
+title: Instrument Caches
+sidebar_order: 1000
+description: "Learn how to manually instrument your code to use Sentry's Caches module. "
+---
+Sentry offers a cache-monitoring dashboard that can be auto-instrumented by some SDKs. If you're Go, you can manually instrument your cache operations and use Sentry to monitor your caching performance to get a look into how your caching solution is performing by following the setup instructions below.
+
+To allow Sentry to track cache performance, you'll need to create two spans:
+
+- One for when an item is put into the cache.
+- Another for when an item is fetched from the cache.
+
+Ensure there is an active transaction when creating the spans. For more information, see [Tracing](../..).
+
+For detailed information about the available data, see the Cache Module developer specification.
+
+## Custom Instrumentation
+
+As the GO SDK does not support auto cache instrumentation, you'll need to manually instrument the Cache Module as described below.
+
+### Add Span When Putting Data Into the Cache
+
+Use custom instrumentation to emit spans for cache data.
+
+- Set the cache value using your preferred cache library.
+- Wrap the part of your application that adds data to the cache in a span.
+- Set `op` to `cache.put`.
+- Optionally, set `cache.item_size` to the size of the cached item.
+
+#### Example (Go)
+
+```go
+key := "cache_key"
+value := "cache_value"
+
+parentSpan := sentry.StartSpan(context.Background(), "parent_span")
+
+if parentSpan != nil {
+    span := parentSpan.StartChild("cache.put")
+    defer span.Finish()
+
+    // Perform the cache operation
+    err := cache.Put(key, value)
+
+    span.SetData("network.peer.address", "127.0.0.1")
+    span.SetData("network.peer.port", 9000)
+    span.SetData("cache.key", key)
+    span.SetData("cache.item_size", len(value))
+
+    if err != nil {
+        span.SetTag("error", err.Error())
+    }
+}
+```
+
+### Add Span When Retrieving Data From the Cache
+
+For unsupported cache solutions, use custom instrumentation to emit cache spans:
+
+Fetch the cached value using your preferred cache library.
+Wrap the part of your application that retrieves data from the cache in a span.
+Set op to cache.get.
+Set cache.hit to true or false, depending on whether the value was found.
+Optionally, set cache.item_size to the size of the retrieved item.
+
+
+Example:
+```go
+key := "cache_key"
+var value string
+
+parentSpan := sentry.StartSpan(context.Background(), "parent_span")
+
+if parentSpan != nil {
+    span := parentSpan.StartChild("cache.get")
+    defer span.Finish()
+
+    // Perform the cache operation
+    value, err := cache.Get(key)
+
+    span.SetData("network.peer.address", "127.0.0.1")
+    span.SetData("network.peer.port", 9000)
+    span.SetData("cache.key", key)
+
+    if err == nil && value != "" {
+        span.SetData("cache.hit", true)
+        span.SetData("cache.item_size", len(value))
+    } else {
+        span.SetData("cache.hit", false)
+    }
+}
+```
+
+You should now have the right spans in place. Head over to the [Cache dashboard](https://sentry.io/orgredirect/organizations/:orgslug/insights/backend/caches/) to see how your cache is performing.

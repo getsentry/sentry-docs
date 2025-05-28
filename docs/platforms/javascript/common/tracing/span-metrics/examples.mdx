@@ -1,0 +1,310 @@
+---
+title: Example Instrumentation
+description: "Examples of using span metrics to debug performance issues and monitor application behavior across frontend and backend services."
+sidebar_order: 10
+---
+
+<Alert>
+
+These examples assume you have already <PlatformLink to="/tracing/">set up tracing</PlatformLink> in your application.
+
+</Alert>
+
+This guide provides practical examples of using span attributes and metrics to solve common monitoring and debugging challenges across your entire application stack. Each example demonstrates how to instrument both frontend and backend components, showing how they work together within a distributed trace to provide end-to-end visibility.
+
+## File Upload and Processing Pipeline
+
+**Challenge:** Understanding bottlenecks and failures in multi-step file processing operations across client and server components.
+
+**Solution:** Track the entire file processing pipeline with detailed metrics at each stage, from client-side upload preparation through server-side processing.
+
+**Frontend Instrumentation:**
+
+```javascript
+// Client-side file upload handling
+Sentry.startSpan(
+  {
+    name: "Client File Upload",
+    op: "file.upload.client",
+    attributes: {
+      // Static details available at the start
+      "file.size_bytes": 15728640, // 15MB
+      "file.type": "image/jpeg",
+      "file.name": "user-profile.jpg",
+      "client.compression_applied": true,
+    },
+  },
+  async (span) => {
+    try {
+      // Begin upload process
+      const uploader = new FileUploader(file);
+
+      // Update progress as upload proceeds
+      uploader.on("progress", (progressEvent) => {
+        span.setAttribute("upload.percent_complete", progressEvent.percent);
+        span.setAttribute("upload.bytes_transferred", progressEvent.loaded);
+      });
+
+      uploader.on("retry", (retryCount) => {
+        span.setAttribute("upload.retry_count", retryCount);
+      });
+
+      const result = await uploader.start();
+
+      // Set final attributes after completion
+      span.setAttribute("upload.total_time_ms", result.totalTime);
+      span.setAttribute("upload.success", true);
+      span.setAttribute("upload.server_file_id", result.fileId);
+
+      return result;
+    } catch (error) {
+      // Record failure information
+      span.setAttribute("upload.success", false);
+      Sentry.captureException(error);
+    }
+  }
+);
+```
+
+**Backend Instrumentation:**
+
+```javascript
+// Server-side processing
+Sentry.startSpan(
+  {
+    name: "Server File Processing",
+    op: "file.process.server",
+    attributes: {
+      // Server processing steps
+      "processing.steps_completed": [
+        "virus_scan",
+        "resize",
+        "compress",
+        "metadata",
+      ],
+
+      // Storage operations
+      "storage.provider": "s3",
+      "storage.region": "us-west-2",
+      "storage.upload_time_ms": 850,
+
+      // CDN configuration
+      "cdn.provider": "cloudfront",
+      "cdn.propagation_ms": 1500,
+    },
+  },
+  async () => {
+    // Server-side processing implementation
+  }
+);
+```
+
+**How the Trace Works Together:**
+The frontend span initiates the trace and handles the file upload process. It propagates the trace context to the backend through the upload request headers. The backend span continues the trace, processing the file and storing it. This creates a complete picture of the file's journey from client to CDN, allowing you to:
+
+- Identify bottlenecks at any stage (client prep, upload, server processing, CDN propagation)
+- Track end-to-end processing times and success rates
+- Monitor resource usage across the stack
+- Correlate client-side upload issues with server-side processing errors
+
+## LLM Integration Monitoring
+
+**Challenge:** Managing cost (token usage) and performance of LLM integrations across frontend and backend components.
+
+**Solution:** Tracking of the entire LLM interaction flow, from user input to response rendering.
+
+**Frontend Instrumentation:**
+
+```javascript
+// Client-side LLM interaction handling
+Sentry.startSpan(
+  {
+    name: "LLM Client Interaction",
+    op: "ai.client",
+    attributes: {
+      // Initial metrics available at request time
+      "input.char_count": 280,
+      "input.language": "en",
+      "input.type": "question",
+    },
+  },
+  async (span) => {
+    const startTime = performance.now();
+
+    // Begin streaming response from LLM API
+    const stream = await llmClient.createCompletion({
+      prompt: userInput,
+      stream: true,
+    });
+
+    // Record time to first token when received
+    let firstTokenReceived = false;
+    let tokensReceived = 0;
+
+    for await (const chunk of stream) {
+      tokensReceived++;
+
+      // Record time to first token
+      if (!firstTokenReceived && chunk.content) {
+        firstTokenReceived = true;
+        const timeToFirstToken = performance.now() - startTime;
+
+        span.setAttribute("ui.time_to_first_token_ms", timeToFirstToken);
+      }
+
+      // Process and render the chunk
+      renderChunkToUI(chunk);
+    }
+
+    // Record final metrics after stream completes
+    const totalRequestTime = performance.now() - startTime;
+
+    span.setAttribute("ui.total_request_time_ms", totalRequestTime);
+    span.setAttribute("stream.rendering_mode", "markdown");
+    span.setAttribute("stream.tokens_received", tokensReceived);
+  }
+);
+```
+
+**Backend Instrumentation:**
+
+```javascript
+// Server-side LLM processing
+Sentry.startSpan(
+  {
+    name: "LLM API Processing",
+    op: "ai.server",
+    attributes: {
+      // Model configuration - known at start
+      "llm.model": "claude-3-5-sonnet-20241022",
+      "llm.temperature": 0.5,
+      "llm.max_tokens": 4096,
+    },
+  },
+  async (span) => {
+    const startTime = Date.now();
+
+    try {
+      // Check rate limits before processing
+      const rateLimits = await getRateLimits();
+      span.setAttribute("llm.rate_limit_remaining", rateLimits.remaining);
+
+      // Make the actual API call to the LLM provider
+      const response = await llmProvider.generateCompletion({
+        model: "claude-3-5-sonnet-20241022",
+        prompt: preparedPrompt,
+        temperature: 0.5,
+        max_tokens: 4096,
+      });
+
+      // Record token usage and performance metrics
+      span.setAttribute("llm.prompt_tokens", response.usage.prompt_tokens);
+      span.setAttribute(
+        "llm.completion_tokens",
+        response.usage.completion_tokens
+      );
+      span.setAttribute("llm.total_tokens", response.usage.total_tokens);
+      span.setAttribute("llm.api_latency_ms", Date.now() - startTime);
+
+      // Calculate and record cost based on token usage
+      const cost = calculateCost(
+        response.usage.prompt_tokens,
+        response.usage.completion_tokens,
+        "claude-3-5-sonnet-20241022"
+      );
+      span.setAttribute("llm.cost_usd", cost);
+
+      return response;
+    } catch (error) {
+      // Record error details
+      span.setAttribute("error", true);
+      Sentry.captureException(error);
+    }
+  }
+);
+```
+
+**How the Trace Works Together:**
+The frontend span captures the user interaction and UI rendering performance, while the backend span tracks the actual LLM API interaction. The distributed trace shows the complete flow from user input to rendered response, enabling you to:
+
+- Analyze end-to-end response times and user experience
+- Track costs and token usage patterns
+- Optimize streaming performance and UI rendering
+- Monitor rate limits and queue times
+- Correlate user inputs with model performance
+
+## E-Commerce Transaction Flow
+
+**Challenge:** Understanding the complete purchase flow and identifying revenue-impacting issues across the entire stack.
+
+**Solution:** Track the full checkout process from cart interaction to order fulfillment.
+
+**Frontend Instrumentation:**
+
+```javascript
+// Client-side checkout process
+Sentry.startSpan(
+  {
+    name: "Checkout UI Flow",
+    op: "commerce.checkout.client",
+    attributes: {
+      // Cart interaction metrics
+      "cart.items_added": 3,
+      "cart.items_removed": 0,
+      "cart.update_count": 2,
+
+      // User interaction tracking
+      "ui.form_completion_time_ms": 45000,
+      "ui.payment_method_changes": 1,
+      "ui.address_validation_retries": 0,
+    },
+  },
+  async () => {
+    // Client-side checkout implementation
+  }
+);
+```
+
+**Backend Instrumentation:**
+
+```javascript
+// Server-side order processing
+Sentry.startSpan(
+  {
+    name: "Order Processing",
+    op: "commerce.order.server",
+    attributes: {
+      // Order details
+      "order.id": "ord_123456789",
+      "order.total_amount": 159.99,
+      "order.currency": "USD",
+      "order.items": ["SKU123", "SKU456", "SKU789"],
+
+      // Payment processing
+      "payment.provider": "stripe",
+      "payment.method": "credit_card",
+      "payment.processing_time_ms": 1200,
+
+      // Inventory checks
+      "inventory.all_available": true,
+
+      // Fulfillment
+      "fulfillment.warehouse": "WEST-01",
+      "fulfillment.shipping_method": "express",
+      "fulfillment.estimated_delivery": "2024-03-20",
+    },
+  },
+  async () => {
+    // Server-side order processing
+  }
+);
+```
+
+**How the Trace Works Together:**
+The frontend span tracks the user's checkout experience, while the backend span handles order processing and fulfillment. The distributed trace provides visibility into the entire purchase flow, allowing you to:
+
+- Analyze checkout funnel performance and drop-off points
+- Track payment processing success rates and timing
+- Monitor inventory availability impact on conversions
+- Measure end-to-end order completion times
+- Identify friction points in the user experience

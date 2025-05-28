@@ -1,0 +1,94 @@
+---
+title: Sending Span Metrics
+description: "Learn how to add attributes to spans to monitor performance and debug applications "
+sidebar_order: 10
+---
+
+<Alert>
+
+To use span metrics, you must first <PlatformLink to="/tracing/">configure tracing</PlatformLink> in your application.
+
+</Alert>
+
+Span metrics allow you to extend the default metrics that are collected by tracing and track custom performance data and debugging information within your application's traces. There are two main approaches to instrumenting metrics:
+
+1. [Adding metrics to existing spans](#adding-metrics-to-existing-spans)
+2. [Creating dedicated spans with custom metrics](#creating-dedicated-metric-spans)
+
+## Adding Metrics to Existing Spans
+
+You can enhance existing spans with custom metrics by adding attributes. This is useful when you want to augment automatic instrumentation or add contextual data to spans you've already created.
+
+```javascript
+const span = Sentry.getActiveSpan();
+if (span) {
+  // Add individual metrics
+  span.setAttribute("database.rows_affected", 42);
+  span.setAttribute("cache.hit_rate", 0.85);
+
+  // Add multiple metrics at once
+  span.setAttributes({
+    "memory.heap_used": 1024000,
+    "queue.length": 15,
+    "processing.duration_ms": 127,
+  });
+}
+```
+
+### Best Practices for Span Attributes
+
+When adding metrics as span attributes:
+
+- Use consistent naming conventions (for example, `category.metric_name`)
+- Keep attribute names concise but descriptive
+- Use appropriate data types (string, number, boolean, or an array containing only one of these types)
+
+## Creating Dedicated Metric Spans
+
+For more detailed operations, tasks, or process tracking, you can create custom dedicated spans that focus on specific metrics or attributes that you want to track. This approach provides better discoverability and more precise span configurations, however it can also create more noise in your trace waterfall.
+
+```javascript
+Sentry.startSpan(
+  {
+    name: "Database Query Metrics",
+    op: "db.metrics",
+    attributes: {
+      "db.query_type": "SELECT",
+      "db.table": "users",
+      "db.execution_time_ms": 45,
+      "db.rows_returned": 100,
+      "db.connection_pool_size": 5,
+    },
+  },
+  () => {
+    // Your database operation here
+  }
+);
+```
+
+For detailed examples of how to implement span metrics in common scenarios, see our <PlatformLink to="/tracing/span-metrics/examples/">Span Metrics Examples</PlatformLink> guide.
+
+## Adding Metrics to All Spans
+
+To consistently add metrics across all spans in your application, you can use the `beforeSendSpan` callback:
+
+```javascript
+Sentry.init({
+  beforeSendSpan(span) {
+    span.data = {
+      ...span.data,
+      "app.version": "1.2.3",
+      "environment.region": "us-west-2",
+    };
+
+    return span;
+  },
+});
+```
+
+For detailed examples of how to implement span metrics in common scenarios, see our <PlatformLink to="/tracing/span-metrics/examples/">Span Metrics Examples</PlatformLink> guide.
+
+## Span Metrics vs. Measurements
+
+Previously, Sentry supported adding metrics to transactions using the `Sentry.setMeasurement()` API.
+This approach is deprecated, you should use span attributes instead.

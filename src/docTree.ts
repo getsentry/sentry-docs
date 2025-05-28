@@ -97,7 +97,8 @@ function frontmatterToTree(frontmatter: FrontMatter[]): DocNode {
         const grandparentSlug = slugParts.slice(0, slugParts.length - 2).join('/');
         const grandparent = slugMap[grandparentSlug];
         if (!grandparent) {
-          throw new Error('missing parent and grandparent: ' + parentSlug);
+          console.warn('missing parent and grandparent: ' + parentSlug);
+          return;
         }
         parent = {
           path: parentSlug,

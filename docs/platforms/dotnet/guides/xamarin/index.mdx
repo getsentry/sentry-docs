@@ -1,0 +1,94 @@
+---
+title: Xamarin
+sdk: sentry.dotnet.xamarin
+description: "Learn more about how Sentry's .NET SDK works with Xamarin applications."
+---
+
+Sentry's .NET SDK works with Xamarin applications through the [Sentry Xamarin NuGet package](https://www.nuget.org/packages/Sentry.Xamarin) and Xamarin Forms with the [Sentry Xamarin Forms NuGet package](https://www.nuget.org/packages/Sentry.Xamarin.Forms).
+
+The SDK is compatible with the following versions or higher:
+
+- Xamarin.Android 9.0
+- Xamarin.iOS 10.14
+- Universal Windows Platform 10.0.16299
+- Tizen 4.0
+
+## Install
+
+<PlatformContent includePath="getting-started-install" />
+
+## Configure
+
+After you’ve completed setting up a project in Sentry, Sentry will give you a value which we call a DSN or Data Source Name. It looks a lot like a standard URL, but it’s just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
+
+<OnboardingOptionButtons options={['error-monitoring', 'performance']}/>
+
+You should initialize the SDK as early as possible, for an example, the start of OnCreate
+on MainActivity for Android, and, the top of FinishedLaunching on AppDelegate for iOS).
+
+```csharp
+SentryXamarin.Init(options =>
+{
+    options.AddXamarinFormsIntegration();
+    // Tells which project in Sentry to send events to:
+    options.Dsn = "___PUBLIC_DSN___";
+    // When configuring for the first time, to see what the SDK is doing:
+    options.Debug = true;
+    // Adds request URL and headers, IP and name for users, etc.
+    options.SendDefaultPii = true;
+    // ___PRODUCT_OPTION_START___ performance
+    // Set TracesSampleRate to 1.0 to capture 100%
+    // of transactions for tracing.
+    // We recommend adjusting this value in production
+    options.TracesSampleRate = 1.0;
+    // ___PRODUCT_OPTION_END___ performance
+});
+// App code
+
+```
+
+## Verify
+
+Great! Now that you’ve completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
+
+<PlatformContent includePath="getting-started-verify" />
+
+All you need to do is to [initialize the SDK with `SentryXamarin.Init`](../../), you will not need any additional changes to get the SDK ready to go.
+
+The SDK automatically handles `AppDomain.UnhandledException` and `Application.UnhandledException`, so you'll not need to worry about trying to Catch Unhandled Exceptions.
+
+### Xamarin Options
+
+The following options are only going to be valid during the SDK initialization.
+
+#### DisableNativeIntegration
+
+Disable the native event processor for Android,iOS,UWP
+
+#### DisableOfflineCaching
+
+By calling it, the SDK will not automatically Cache your events and they might be lost if a hard crash happens or no connectivity is available during the transport of the event.
+
+#### AttachScreenshots
+
+Automatically attaches a screenshot of the app at the time of the event capture. By default, it is set to false.
+
+<Alert level="warning" title="Note">
+
+Note that personally identifiable information (PII) might be included in the screenshot when you activate this feature.
+
+</Alert>
+
+### Xamarin Forms Options
+
+#### DisableXamarinWarningsBreadcrumbs
+
+Disables the automatic Logging of internal Warnings that comes from Xamarin Forms.
+
+## Troubleshooting
+
+For information about Troubleshooting, please visit the [troubleshooting](troubleshooting) page.
+
+## Samples
+
+- An [example](https://github.com/getsentry/sentry-xamarin/tree/main/Samples) using Xamarin Forms and most of the SDK features. (**Android, iOS, UWP**)

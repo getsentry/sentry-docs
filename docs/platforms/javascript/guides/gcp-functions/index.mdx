@@ -1,0 +1,117 @@
+---
+title: Google Cloud Functions
+description: "Learn how to use Sentry's Google Cloud Functions SDK."
+sdk: sentry.javascript.google-cloud-serverless
+fallbackGuide: javascript.node
+categories:
+  - javascript
+  - server
+  - server-node
+  - serverless
+---
+
+<Alert>
+  This guide is for version 8.0.0 and up of `@sentry/google-cloud-serverless`.
+</Alert>
+
+## Features
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+## Install
+
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "profiling"]}
+/>
+
+Add `@sentry/google-cloud-serverless` as a dependency to `package.json`:
+
+<PlatformContent includePath="getting-started-install" />
+
+## Configure
+
+To set up Sentry for a Google Cloud Function:
+
+
+```javascript {tabTitle:Http functions}
+const Sentry = require("@sentry/google-cloud-serverless");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/gcp-functions/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Add Tracing by setting tracesSampleRate and adding integration
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+});
+
+exports.helloHttp = Sentry.wrapHttpFunction((req, res) => {
+  throw new Error("oh, hello there!");
+});
+```
+
+```javascript {tabTitle:Background functions}
+const Sentry = require("@sentry/google-cloud-serverless");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // ___PRODUCT_OPTION_START___ performance
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+});
+
+exports.helloEvents = Sentry.wrapEventFunction(
+  (data, context, callback) => {
+    throw new Error("oh, hello there!");
+  }
+);
+```
+
+```javascript {tabTitle:CloudEvent functions}
+const Sentry = require("@sentry/google-cloud-serverless");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // ___PRODUCT_OPTION_START___ performance
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+});
+
+exports.helloEvents = Sentry.wrapCloudEventFunction(
+  (context, callback) => {
+    throw new Error("oh, hello there!");
+  }
+);
+```
+
+<Alert level="warning" title="Note">
+
+Sentry JavaScript Serverless SDK does not support Cloud Functions for Firebase at the moment.
+
+</Alert>
+
+Check out Sentry's [GCP sample apps](https://github.com/getsentry/examples/tree/master/gcp-cloud-functions/node) for detailed examples. Refer to the [JavaScript docs](/platforms/javascript/) for more configuration options.
+
+## Behavior
+
+With the Google Cloud Functions integration enabled, the Node SDK will:
+
+- Automatically report all events from your Cloud Functions.
+- Allows you to <PlatformLink to="/configuration/sampling/#configuring-the-transaction-sample-rate">modify the transaction sample rate</PlatformLink> using <PlatformIdentifier name="traces-sample-rate" />.
+- Issue reports automatically include:
+  - A link to the Stackdriver logs
+  - Function details
+  - sys.argv for the function
+  - Function execution time
+  - Function version
+- Sentry holds the thread for up to two seconds to report errors. You can change flush time limit by defining a `flushTimeout` value in the handler options

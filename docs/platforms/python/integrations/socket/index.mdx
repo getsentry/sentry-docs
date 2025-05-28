@@ -1,0 +1,86 @@
+---
+title: Socket
+description: "Learn about the Socket integration and how it adds support network actions."
+---
+
+Use this integration to create spans for DNS resolves and socket connection creations.
+
+## Install
+
+Install `sentry-sdk`` from PyPI.
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk"
+```
+```bash {tabTitle:uv}
+uv add "sentry-sdk"
+```
+
+## Configure
+
+Add `SocketIntegration()` to your `integrations` list:
+
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.socket import SocketIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Add data like request headers and IP for users, if applicable;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    # ___PRODUCT_OPTION_START___ performance
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    # ___PRODUCT_OPTION_END___ performance
+    # ___PRODUCT_OPTION_START___ profiling
+    # To collect profiles for all profile sessions,
+    # set `profile_session_sample_rate` to 1.0.
+    profile_session_sample_rate=1.0,
+    # Profiles will be automatically collected while
+    # there is an active span.
+    profile_lifecycle="trace",
+    # ___PRODUCT_OPTION_END___ profiling
+    integrations=[
+        SocketIntegration(),
+    ],
+)
+```
+
+## Verify
+
+```python
+import socket
+
+def main():
+    sentry_init(...)  # same as above
+    with sentry_sdk.start_transaction(name="testing_sentry"):
+        timeout = 10
+        socket.getaddrinfo("sentry.io", 443)
+        socket.create_connection(("sentry.io", 443), timeout, None)
+main()
+```
+
+This example will create a transaction called `testing_sentry` in the Performance section of [sentry.io](https://sentry.io), and create spans for the socket commands.
+
+It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Supported Versions
+
+- Python: 3.6+
+
+<Include name="python-use-older-sdk-for-legacy-support.mdx" />

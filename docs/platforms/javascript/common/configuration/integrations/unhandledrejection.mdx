@@ -1,0 +1,94 @@
+---
+title: OnUnhandledRejection
+description: "Registers handlers to capture global unhandled promise rejections. (default)"
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.electron
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.react-router
+  - javascript.astro
+  - javascript.bun
+  - javascript.deno
+  - javascript.cloudflare
+  - javascript.tanstackstart-react
+---
+
+<Alert>
+
+This integration only works inside server environments (Node.js, Bun, Deno).
+
+</Alert>
+
+_Import name: `Sentry.onUnhandledRejectionIntegration`_
+
+This integration is enabled by default. If you'd like to modify your default integrations, read [this](./../#modifying-default-integrations).
+
+The `onUnhandledRejectionIntegration` registers handlers to capture global unhandled promise rejections.
+
+```JavaScript
+Sentry.init({
+  integrations: [Sentry.onUnhandledRejectionIntegration()],
+});
+```
+
+<PlatformSection supported={["javascript.aws-lambda"]}>
+
+## On AWS Lambda
+
+AWS adds their own `unhandledRejection` handlers to a lambda function which results in Sentry not being able to pick these up.
+As a workaround, remove all handlers before initializing Sentry.
+
+Unfortunately, this means the AWS Lambda handler has to be <PlatformLink to="/install/cjs-layer/#alternative-initialize-the-sdk-in-code">manually wrapped</PlatformLink>.
+
+```JavaScript
+const Sentry = require("@sentry/aws-serverless");
+
+// Remove `unhandledRejection` handlers set up by AWS so the
+// Sentry SDK can capture these
+process.removeAllListeners("unhandledRejection");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___"
+  // Add Tracing by setting tracesSampleRate and adding integration
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+});
+
+exports.handler = Sentry.wrapHandler(async (event, context) => {
+  // Your handler code
+});
+```
+
+</PlatformSection>
+
+## Options
+
+### `mode`
+
+_Type: `'none' | 'warn' | 'strict'`_
+
+This option defines what to do after capturing an unhandled rejection and
+mimics the behavior of [node's](https://nodejs.org/api/cli.html#--unhandled-rejectionsmode) `--unhandled-rejection` flag:
+
+- `strict`: Raise the unhandled rejection as an uncaught exception. If the exception is handled, unhandledRejection is emitted.
+- `warn`: Always trigger a warning, no matter if the unhandledRejection hook is set or not but do not print the deprecation warning.
+- `none`: Silence all warnings.
+
+Defaults to `warn`.

@@ -1,0 +1,38 @@
+---
+title: Custom Navigation
+description: "Learn how to use Sentry's Generic Navigation instrumentation."
+sidebar_order: 70
+---
+
+Sentry's React Native SDK package ships with instrumentation for [React Navigation](/platforms/react-native/tracing/instrumentation/react-navigation/), [React Native Navigation](/platforms/react-native/tracing/instrumentation/react-native-navigation/), and [Expo Router](/platforms/react-native/tracing/instrumentation/expo-router/). This allows you to see the performance of your navigation transitions and the errors that may occur.
+
+If you use a navigation library that we don't yet support, or have a custom routing solution, you can use `startIdleNavigationSpan` function to implement your own navigation integration. This page will guide you through setting it up and configuring it to your needs.
+
+```javascript {filename: customNavigationIntegration.js}
+import Sentry from '@sentry/react-native';
+
+const customNavigationIntegration = ({navigator}) => {
+  navigator.registerRouteChangeListener((newRoute) => {
+    Sentry.startIdleNavigationSpan({
+      name: newRoute.name,
+      op: 'navigation'
+    })
+  });
+
+  return {
+    name: "CustomNavigation",
+  };
+};
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
+  // We recommend adjusting this value in production.
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  integrations: [customNavigationIntegration({navigator})],
+});
+```
+
+To lear more about the `Integration` lifecycle, see the [Integration API](/platforms/react-native/integrations/custom/).

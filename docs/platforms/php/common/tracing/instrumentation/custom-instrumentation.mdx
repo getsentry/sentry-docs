@@ -1,0 +1,94 @@
+---
+title: Custom Instrumentation
+description: "Learn how to capture performance data on any action in your app."
+sidebar_order: 20
+---
+
+<Alert>
+
+To capture transactions and spans customized to your organization's needs, you must first <PlatformLink to="/tracing/">set up tracing.</PlatformLink>
+
+</Alert>
+
+<PlatformContent includePath="performance/enable-manual-instrumentation" />
+
+<PlatformContent includePath="performance/add-spans-example" />
+
+<PlatformContent includePath="performance/retrieve-transaction" />
+
+## Adding Span & Transaction Data Attributes
+
+You can capture data attributes along with your spans and transactions. You can specify data attributes when starting a span or transaction:
+
+```php
+// Create a transaction and assign data attributes...
+$transactionContext = \Sentry\Tracing\TransactionContext::make()
+    ->setName('Example Transaction')
+    ->setOp('http.server')
+    ->setData([
+        'data_attribute_1' => 42,
+        'data_attribute_2' => true,
+    ]);
+$transaction = \Sentry\startTransaction($transactionContext);
+
+// ... or create a span and assign data attributes
+
+$spanContext = \Sentry\Tracing\SpanContext::make()
+    ->setOp('http.client')
+    ->setData([
+        'data_attribute_1' => 42,
+        'data_attribute_2' => true,
+    ]);
+$transaction->startChild($context);
+```
+
+Or you can add data attributes to an existing span or transaction:
+
+```php
+$transaction = \Sentry\SentrySdk::getCurrentHub()->getTransaction();
+if ($transaction !== null) {
+    $transaction->setData([
+        'data_attribute_1' => 42,
+        'data_attribute_2' => true,
+    ]);
+}
+
+$span = \Sentry\SentrySdk::getCurrentHub()->getSpan();
+if ($span !== null) {
+    $span->setData([
+        'data_attribute_1' => 42,
+        'data_attribute_2' => true,
+    ]);
+}
+```
+
+To update an existing data attribute, you can combine `setData()` with `getData()`:
+
+```php
+$span->setData([
+    'data_attribute_1' => $span->getData('data_attribute_1', 0) + 1,
+]);
+
+$transaction->setData([
+    'data_attribute_1' => $transaction->getData('data_attribute_1', 0) + 1,
+]);
+```
+
+To attach data attributes to the transaction and all its spans, you can use <PlatformLink to="/configuration/filtering/#using-before-send-transaction">`before_send_transaction`</PlatformLink>:
+
+```php
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'before_send_transaction' => function(Event $event) {
+        $spans = $event->getSpans();
+        foreach ($spans as $span) {
+            $span->setData([
+                'data_attribute_1' => 42,
+                'data_attribute_2' => true,
+            ]);
+        }
+    
+        $event->contexts['trace']['data']['foo'] = 42;
+    },
+]);
+```

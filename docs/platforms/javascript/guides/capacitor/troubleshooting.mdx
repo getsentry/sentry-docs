@@ -1,0 +1,96 @@
+---
+title: Troubleshooting
+description: "Troubleshoot and resolve common issues with the Capacitor SDK."
+keywords: ["minimum version", "deployment target"]
+sidebar_order: 9000
+---
+
+## Different Versions for Sibling SDKs
+
+If you see the following error during build time, the sibling SDKs installed in your app have mismatched versions:
+
+```javascript
+  node_modules/@sentry/types/types/globals.d.ts:2:11 - error TS2451: Cannot redeclare block-scoped variable '__DEBUG_BUILD__'.
+```
+
+To avoid any issues when installing packages or using the code on another machine, you must use the same version of Sentry Capacitor and @Sentry/Angular (or any other sibling SDK) that is referenced by the peer dependency of Sentry Capacitor in your app.
+
+Correct:
+
+```xml
+    "@sentry/angular": "7.13.0",
+    "@sentry/capacitor": "0.10.1"
+```
+
+Incorrect:
+
+```xml
+    "@sentry/angular": "^7.13.0",
+    "@sentry/capacitor": "^0.10.1"
+```
+
+You can check which version of the sibling SDK is installed using the following command: `npm info @sentry/capacitor peerDependencies`.
+
+## Capacitor 2 on iOS
+
+Capacitor 3 has a minimum requirement of iOS 12.0. As a result, the Sentry SDK needs to match this requirement to support Capacitor 3. Users on older versions may run into an error similar to:
+
+> Specs satisfying the SentryCapacitor (from ../../node_modules/@sentry/capacitor) dependency were found, but they required a higher minimum deployment target.
+
+You can fix this by bumping your iOS deployment target. Add the snippet below to your `capacitor.config.json`:
+
+```json
+// capacitor.config.json
+{
+  "ios": {
+    "minVersion": "12.0"
+  }
+}
+```
+
+Then update your iOS settings:
+
+```bash
+npx cap sync
+```
+
+## Capacitor on Android
+
+### No events sent
+
+Check if you added `SentryCapacitor` to the bridge. This step is required for Capacitor 2 and optional on Capacitor 3. (It's only required if you are initializing other plugins using the old method. If so, we recommend you use `registerPlugin` instead of the deprecated code for initializing plugins.)
+
+```java
+import io.sentry.capacitor.SentryCapacitor;
+
+public class MainActivity extends BridgeActivity {
+  @Override
+  public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+
+    // Capacitor 3
+    registerPlugin(SentryCapacitor.class);
+
+    // Capacitor 2
+    this.init(savedInstanceState, new ArrayList<Class<? extends Plugin>>() {{
+      add(SentryCapacitor.class);
+    }});
+  }
+}
+```
+
+## Capacitor on iOS
+
+### Capacitor sync failing
+
+If you encounter the following error:
+
+```
+CocoaPods could not find compatible versions for pod "Sentry"
+```
+
+You can fix this by udating your pod repository:
+
+```bash
+pod repo update
+```

@@ -1,0 +1,101 @@
+---
+title: Http
+description: "Capture spans & breadcrumbs for http requests. (default)"
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.electron
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.react-router
+  - javascript.astro
+  - javascript.bun
+  - javascript.tanstackstart-react
+---
+
+<Alert>
+
+This integration only works inside server environments (Node.js, Bun, Deno).
+
+</Alert>
+
+_Import name: `Sentry.httpIntegration`_
+
+This integration is enabled by default. If you'd like to modify your default integrations, read [this](./../#modifying-default-integrations).
+
+The `httpIntegration` does two things:
+
+1. It captures breadcrumbs for HTTP requests.
+2. It captures spans for outgoing HTTP requests.
+
+```JavaScript
+Sentry.init({
+  integrations: [Sentry.httpIntegration()],
+});
+```
+
+## Options
+
+### `breadcrumbs`
+
+_Type: `boolean`_
+
+If set to false, no breadcrumbs will be captured.
+
+### `ignoreOutgoingRequests`
+
+_Type: `(url: string, request: RequestOptions) => boolean`_
+
+Allows you to define a method to filter out outgoing requests based on the URL. If the method returns `true`, no spans or breadcrumbs will be captured for the outgoing request.
+
+The callback function receives two arguments:
+
+- `url`: The full URL of the outgoing request, including the protocol, host, port, path and query string. For example: `https://example.com/users?name=John`.
+- `request`: An object of type `RequestOptions` containing the outgoing request's options. You can use this to filter on properties like the request method or headers.
+
+### `ignoreIncomingRequests`
+
+_Type: `(urlPath: string, request: IncomingMessage) => boolean`_
+
+Allows you to define a method to filter out incoming requests based on the URL. If the method returns `true`, no span or transaction will be captured for the incoming request.
+
+The callback function receives two arguments:
+
+- `urlPath`: The URL path of the incoming request, including the query string if available. For example: `/users?name=John`.
+- `request`: An object of type `IncomingMessage` containing the incoming request. You can use this to filter on properties like the request method or headers.
+
+### `trackIncomingRequestsAsSessions`
+
+_Type: `boolean`_ (Defaults to `true`)
+
+Determines whether the integration should create [Sessions](/product/releases/health/#sessions) for incoming requests to track the health and crash-free rate of your releases in Sentry.
+Read more about [Release Health](/product/releases/health/).
+
+### `instrumentation`
+
+You can also pass some hooks through to the [underlying OpenTelemetry Instrumentation](https://www.npmjs.com/package/@opentelemetry/instrumentation-http):
+
+```typescript
+httpIntegration({
+  instrumentation?: {
+    requestHook?: (span: Span, req: ClientRequest | HTTPModuleRequestIncomingMessage) => void;
+    responseHook?: (span: Span, response: HTTPModuleRequestIncomingMessage | ServerResponse) => void;
+    applyCustomAttributesOnSpan?: (
+      span: Span,
+      request: ClientRequest | HTTPModuleRequestIncomingMessage,
+      response: HTTPModuleRequestIncomingMessage | ServerResponse,
+    ) => void;
+});
+```

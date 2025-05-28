@@ -1,0 +1,58 @@
+---
+title: Lambda Handler Wrapper
+description: "Configure Sentry's Lambda function wrapper"
+sidebar_order: 2
+---
+
+On this page you'll learn about the options to configure the `Sentry.wrapHandler` wrapper for your Lambda function.
+
+If you're using the AWS Lambda layer with environment variables (i.e. no Sentry code in your function), skip this guide or switch to the [initializing the SDK in code](../../install/cjs-layer#alternative-initialize-the-sdk-in-code).
+
+## Flush Timeout
+
+Sentry keeps the lambda function thread alive for up to 2 seconds to ensure reported errors are sent. You can change this flush time limit by defining a `flushTimeout` value in the handler options:
+
+```javascript {filename:index.js} {2}
+exports.handler = Sentry.wrapHandler(yourHandler, {
+  flushTimeout: 1000,
+});
+```
+
+## Timeout Warning
+
+Sentry reports timeout warnings when the Lambda function is within 500ms of its execution time. You can turn off timeout warnings by setting `captureTimeoutWarning` to `false` in the handler options.
+
+```javascript {filename:index.js} {2}
+exports.handler = Sentry.wrapHandler(yourHandler, {
+  captureTimeoutWarning: false,
+});
+```
+
+To change the timeout warning limit, assign a numeric value (in ms) to `timeoutWarningLimit`:
+
+```javascript {filename:index.js} {2}
+exports.handler = Sentry.wrapHandler(yourHandler, {
+  timeoutWarningLimit: 700,
+});
+```
+
+## Capture Rejected Promises in `Promise.allSettled`
+
+By default, Sentry captures errors raised by your handler.
+However, your handler might return a `Promise.allSettled` result.
+In this case, even if one of the messages has failed, Sentry won't capture any exception.
+
+The `captureAllSettledReasons` (default: `false`) option captures all promise rejected results
+
+```javascript {tabTitle:captureAllSettledReasons}
+exports.handler = Sentry.wrapHandler(
+  () => {
+    return Promise.allSettled([
+      Promise.rejected(new Error("first")),
+      Promise.rejected(new Error("second")),
+    ]);
+  },
+  { captureAllSettledReasons: true }
+);
+// `first` and `second` errors are captured
+```

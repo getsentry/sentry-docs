@@ -1,0 +1,56 @@
+---
+title: Performance V2
+sidebar_order: 11
+description: "Learn how to get even more insights into Android app performance"
+---
+
+Performance V2 contains a set of features that enrich performance instrumentation. It tightly integrates with the [Mobile Vitals](/product/insights/mobile/mobile-vitals/) Insights module, enabling <PlatformLink to="/tracing/instrumentation/perf-v2/#app-start">App Start</PlatformLink> and <PlatformLink to="/tracing/instrumentation/perf-v2/#frames-delay">Frames Delay</PlatformLink> reporting.
+
+Since version 8 of the SDK, Performance V2 is generally available and enabled by default. In versions `7.4.0..<8.0.0`, this feature is available as _experimental_ and you need to opt in to use it:
+
+### Enabling Performance V2
+
+```java {filename:MyApplication.java} {4}
+import io.sentry.android.core.SentryAndroid;
+
+SentryAndroid.init(this, options -> {
+  options.setEnablePerformanceV2(true);
+});
+```
+
+```kotlin {filename:MyApplication.kt} {4}
+import io.sentry.android.core.SentryAndroid
+
+SentryAndroid.init(this) { options ->
+  options.enablePerformanceV2 = true
+}
+```
+
+```xml {filename:AndroidManifest.xml} {3-5}
+<manifest>
+    <application>
+        <meta-data
+          android:name="io.sentry.performance-v2.enable"
+          android:value="true" />
+    </application>
+</manifest>
+```
+
+### App Start
+
+Besides enabling Performance V2, this feature requires the <PlatformLink to="/configuration/gradle/">Sentry Android Gradle Plugin</PlatformLink> (version `4.2.0` or above) to be applied to your app module.
+
+Once enabled, your App Start transaction will show a detailed span breakdown of various components:
+* `process.load`: The process initialization time
+* `contentprovider.load`: `ContentProvider.onCreate()` execution time
+* `application.load`: `Application.onCreate()` execution time
+* `activity.load`: The execution time of your `Activity` lifecycle prior to the first frame being drawn
+
+![Screenshot Performance V2 App Start](./img/perf-v2-app-start.png)
+
+
+### Frames Delay
+
+Frames Delay is the user-perceived delayed duration of rendered frames. The Android SDK automatically attaches this information to every span, giving useful insights and showcasing which spans correlate the most to an impaired user experience. For more technical details about frame delay, head over to our [develop docs](https://develop.sentry.dev/sdk/performance/frames-delay/).
+
+![Screenshot Performance V2 Frame Delay](./img/perf-v2-frame-delay.png)

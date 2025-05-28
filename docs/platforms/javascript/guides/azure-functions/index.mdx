@@ -1,0 +1,87 @@
+---
+title: Azure Functions
+description: Azure Functions is a serverless compute service offered as part of Microsoft Azure. Learn how to set it up with Sentry.
+sdk: sentry.javascript.astro
+categories:
+  - javascript
+  - server
+  - server-node
+  - serverless
+---
+
+## Features
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+## Install
+
+<OnboardingOptionButtons options={["error-monitoring", "performance", "profiling"]} />
+
+Sentry captures data by using an SDK within your application’s runtime. This means that you have to add `@sentry/node` as a runtime dependency to your application:
+
+<PlatformContent includePath="getting-started-install" />
+
+## Configure
+
+To set up Sentry error logging for an Azure Function:
+
+```javascript {tabTitle:async}
+const Sentry = require("@sentry/node");
+// ___PRODUCT_OPTION_START___ profiling
+const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+
+// ___PRODUCT_OPTION_END___ profiling
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/azure-functions/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ profiling
+  
+  integrations: [
+    nodeProfilingIntegration(),
+  ],
+  // ___PRODUCT_OPTION_END___ profiling
+
+  // ___PRODUCT_OPTION_START___ performance
+  // Add Performance Monitoring by setting tracesSampleRate
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+
+  // ___PRODUCT_OPTION_START___ profiling
+  // Set sampling rate for profiling - this is relative to tracesSampleRate
+  profilesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ profiling
+});
+
+module.exports = async function (context, req) {
+  try {
+    await notExistFunction();
+  } catch (e) {
+    Sentry.withScope((scope) => {
+      scope.setSDKProcessingMetadata({ request: req });
+      Sentry.captureException(e);
+    });
+    await Sentry.flush(2000);
+  }
+
+  context.res = {
+    status: 200,
+    body: "Hello from Azure Cloud Function!",
+  };
+};
+```
+
+
+You can obtain the DSN using your Sentry account from your organization's _Settings > Projects > Client Keys (DSN)_ in the Sentry web UI.
+
+Note: You need to call both `captureException` and `flush` for captured events to be successfully delivered to Sentry.
+
+Check out Sentry's [Azure sample apps](https://github.com/getsentry/examples/tree/master/azure-functions/node) for detailed examples. Refer to the [JavaScript docs](/platforms/javascript/) for more configuration options.

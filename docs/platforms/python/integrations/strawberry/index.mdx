@@ -1,0 +1,175 @@
+---
+title: Strawberry
+description: "Learn how to import the Strawberry GraphQL integration and how it captures GraphQL errors and spans."
+---
+
+The Strawberry integration captures errors and operations from the
+[Strawberry GraphQL library](https://strawberry.rocks/), which can then be viewed
+in [Sentry](https://sentry.io).
+
+## Install
+
+To get started, install `sentry-sdk` from PyPI.
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk"
+```
+```bash {tabTitle:uv}
+uv add "sentry-sdk"
+```
+
+## Configure
+
+Add `StrawberryIntegration()` to your `integrations` list:
+
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.strawberry import StrawberryIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Add data like request headers and IP for users, if applicable;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    # ___PRODUCT_OPTION_START___ performance
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    # ___PRODUCT_OPTION_END___ performance
+    # ___PRODUCT_OPTION_START___ profiling
+    # To collect profiles for all profile sessions,
+    # set `profile_session_sample_rate` to 1.0.
+    profile_session_sample_rate=1.0,
+    # Profiles will be automatically collected while
+    # there is an active span.
+    profile_lifecycle="trace",
+    # ___PRODUCT_OPTION_END___ profiling
+    integrations=[
+        StrawberryIntegration(
+            # Set async_execution to True if you have
+            # at least one async resolver
+            async_execution=True,
+        ),
+    ],
+)
+```
+
+## Verify
+
+Make sure you have all the prerequisites installed:
+
+```bash
+pip install 'strawberry-graphql[debug-server]'
+pip install fastapi
+```
+
+Create a `schema.py` file with the below content:
+
+```python
+import strawberry
+
+sentry_sdk.init(...)  # same as above
+
+async def resolve_hello(root) -> str:
+    1 / 0
+    return "Hello world!"
+
+@strawberry.type
+class Query:
+    hello: str = strawberry.field(resolver=resolve_hello)
+
+schema = strawberry.Schema(Query)
+```
+
+To start the web server, run:
+
+```bash
+strawberry server schema
+```
+
+Navigate to [http://127.0.0.1:8000/graphql](http://127.0.0.1:8000/graphql) in your
+browser. You should see the GraphiQL graphical interface.
+
+Type `query HelloQuery { hello }` into the query input field then press the
+"Execute query" button. Your web server will be queried, which should result in an
+exception due to the `ZeroDivisionError` we've snuck into the `resolve_hello`
+resolver.
+
+This will create a `GraphQLError` in the Issues section as well as a transaction
+in the Performance section of [sentry.io](https://sentry.io). As long as the GraphQL
+query has a name (like `HelloQuery` in our example), the transaction will be named
+after it.
+
+It might take a couple of moments for the error and transaction to appear in [sentry.io](https://sentry.io).
+
+## Options
+
+There are several options you will get to choose from:
+
+### Synchronous vs. Asynchronous Execution
+
+Strawberry supports both synchronous and asynchronous execution of GraphQL
+queries. If you have at least one async resolver, you should initialize
+`StrawberryIntegration` with `async_execution=True`, otherwise set it to `False`.
+
+The SDK will make a best-effort guess if `async_execution` is not provided,
+based on installed web frameworks.
+
+```python
+sentry_sdk.init(
+    # ...
+    integrations=[
+        StrawberryIntegration(
+            async_execution=True  # or False
+        ),
+    ],
+)
+```
+
+### Capturing Request and Response Bodies
+
+The Strawberry integration can capture request and response bodies
+for each GraphQL error that happens. Since these may contain sensitive data,
+this is the default behavior. To enable capturing request and response bodies, the
+SDK needs to be initialized with the
+[send_default_pii](https://docs.sentry.io/platforms/python/configuration/options/#send-default-pii) option set to `True`.
+
+```python
+sentry_sdk.init(
+    # ...
+    send_default_pii=True,
+)
+```
+
+<Alert level="warning" title="Note">
+
+Since `send_default_pii` is a global SDK option, setting it to `True` will affect all
+integrations, not just Strawberry. Please make sure to
+[remove sensitive data](/platforms/python/data-management/sensitive-data/)
+from events before enabling this option.
+
+</Alert>
+
+## Notes
+
+Strawberry comes with a (now deprecated) built-in
+[Sentry tracing extension](https://strawberry.rocks/docs/extensions/sentry-tracing)
+that this integration is built on. To prevent duplicate traces, the Sentry SDK integration will deactivate the built-in Strawberry extension if you happen to be using both.
+
+## Supported Versions
+
+- strawberry-graphql: 0.209.5+
+- Python: 3.8+

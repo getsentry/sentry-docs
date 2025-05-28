@@ -1,0 +1,81 @@
+---
+title: Data Collected
+description: "See what data is collected by the Sentry SDK."
+sidebar_order: 1
+---
+
+Sentry takes data privacy very seriously and has default settings in place that prioritize data safety, especially when it comes to personally identifiable information (PII) data. When you add the Sentry SDK to your application, you allow it to collect data and send it to Sentry during the runtime of your application.
+
+The category types and amount of data collected vary, depending on the integrations you've enabled in the Sentry SDK. This page lists data categories that the Sentry Java SDK collects.
+
+For many of the categories listed here it is required to enable the <PlatformLink to="/configuration/options/#send-default-pii">sendDefaultPii option</PlatformLink>.
+
+## HTTP Headers
+
+### Outgoing Requests
+
+By default, the Sentry SDK doesn't send any headers for outgoing HTTP requests. Even when sending HTTP headers is enabled, we have a [denylist](https://github.com/getsentry/sentry-java/blob/main/sentry/src/main/java/io/sentry/util/HttpUtils.java#L21-L34) in place, which filters out any headers that contain sensitive data.
+
+To send all HTTP headers, set <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii=true`</PlatformLink>.
+
+### Incoming Requests
+
+By default, the Sentry SDK sends headers for incoming HTTP requests to Sentry but filters out any headers that contain sensitive data. (See the [list of headers](https://github.com/getsentry/sentry-java/blob/main/sentry/src/main/java/io/sentry/util/HttpUtils.java#L21-L34) that are filtered).
+
+To send all HTTP headers, set <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii=true`</PlatformLink>.
+
+## Cookies
+
+By default, the Sentry SDK doesn't send cookies. Sentry tries to remove any cookies that contain sensitive information, such as the Session ID and CSRF Token cookies.
+
+If you want to send cookies, set <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii=true`</PlatformLink>.
+
+## Information About Logged-in User
+
+By default, the Sentry SDK doesn't send any information about the logged-in user, such as email address, user ID, or username. Even if enabled, the type of logged-in user information you'll be able to send depends on the integrations you enable in Sentry's SDK. Most integrations won't send any user information. Some will only set the user ID, but there are a few that will set the user ID, username, and email address.
+
+To start sending logged-in user information, set <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii=true`</PlatformLink>.
+
+## Users' IP Addresses
+
+By default, the Sentry SDK doesn't send the user's IP address. Once enabled, the Sentry backend services will infer the user ip address based on the incoming request, unless certain integrations you can enable override this behavior.
+
+To enable sending the user's IP address, set <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii=true`</PlatformLink>.
+
+## Request URL
+
+The full request URL of outgoing and incoming HTTP requests is **always sent to Sentry**. Depending on your application, this could contain PII data.
+
+## Request Query String
+
+The full request query string of outgoing and incoming HTTP requests is **always sent to Sentry**. Depending on your application, this could contain PII data.
+
+## Request Body
+
+The request body of incoming HTTP requests can be sent to Sentry. Whether it's sent or not, depends on the type and size of request body as described below:
+
+- **The type of the request body:**
+  - JSON and form bodies are sent
+- **The size of the request body:** There's a <PlatformLink to="/configuration/options/#max-request-body-size">maxRequestBodySize</PlatformLink> option that's set to `NONE` by default. This means by default no request body is sent to Sentry.
+
+## Source Context
+
+Our build tool plugins for Gradle and Maven can upload your source code to Sentry, which can then used to show the lines of code where an error happened in the Issue Details page.
+
+To opt into sending this source context to Sentry, you have to enable the feature as described in <PlatformLink to="/source-context/">the Source Context documentation</PlatformLink>.
+
+## File I/O
+
+By default the Sentry SDK does not send the name or path of files when instrumenting File I/O.
+
+If you want to send file names and paths, set <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii=true`</PlatformLink>.
+
+## Log Messages
+
+By default the Sentry SDK does not send unencoded Logback messages and parameters if an encoder has been set. It will however send the encoded message.
+
+If you want to send the unencoded message and parameters, set <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii=true`</PlatformLink>.
+
+## SQL Queries
+
+While SQL queries are sent to Sentry, neither the full SQL query (`UPDATE app_user SET password='supersecret' WHERE id=1;`), nor the values of its parameters will ever be sent. A parameterized version of the query (`UPDATE app_user SET password=? WHERE id=?;`) is sent instead.

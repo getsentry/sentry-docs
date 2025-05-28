@@ -1,0 +1,82 @@
+---
+title: Oban
+description: "Sentry supports monitoring scheduled Oban jobs and automatically capturing exceptions."
+sidebar_order: 20
+---
+
+The [Oban](https://getoban.pro) integration supports:
+
+  * Capturing errors and exceptions that happen in Oban jobs.
+  * Cron monitoring for scheduled Oban jobs.
+
+This integration is built into the Sentry SDK starting with *v10.2.0*. It supports automatic monitoring starting with *v10.3.0*. It requires:
+
+  1. Oban version 2.17.6 and up to be a dependency of your application.
+  1. Elixir version 1.13 and up, (since that's required by Oban).
+
+## Configure
+
+You can configure the Oban integration in your Sentry configuration, under the `:integrations` key:
+
+```elixir {filename:config/config.exs} {diff}
+config :sentry,
+  # ...,
+  integrations: [
++    oban: [
++      # Capture errors:
++      capture_errors: true,
++      # Monitor cron jobs:
++      cron: [enabled: true]
++    ]
+  ]
+```
+
+This configuration will report failed Oban jobs to Sentry. It will also report started, completed, and failed jobs, as well as their duration. It will use the worker name as the `monitor_slug` of the reported cron.
+
+<Alert title="Perform Errors">
+Oban wraps *unhandled* crashes, exits, and throws in jobs inside [`Oban.CrashError`](https://hexdocs.pm/oban/2.18.0/Oban.CrashError.html) exceptions. However, if jobs return errors manually (such as by returning `{:error, reason}` tuples) then Oban will wrap those inside [`Oban.PerformError`](https://hexdocs.pm/oban/2.18.0/Oban.PerformError.html) exceptions. If you only want to report crashes to Sentry, you can either configure an event filter that doesn't report `Oban.PerformError` events, or that inspects its `:reason` field to determine whether to report them. For example:
+
+```elixir
+def before_send(event) do
+  case event.original_exception do
+    %Oban.PerformError{reason: {:error, reason}} -> event
+    %Oban.PerformError{} -> nil
+    _other -> event
+  end
+end
+```
+
+The Oban job itself (an [`Oban.Job` struct](https://hexdocs.pm/oban/Oban.Job.html)) is also available inside the event's `:integration_meta` field, under:
+
+```elixir
+event.integration_meta[:oban][:job]
+```
+
+You can use this for more complex filtering logic based on number of attempts and such.
+
+See <Link to="/platforms/elixir/configuration/filtering">the documentation for event callbacks</Link>.
+</Alert>
+
+### Customizing Job Check-In Information
+
+If you want to customize the information that is sent to Sentry when a job checks in, you can do so by providing a function that takes the job and returns a map of metadata.
+
+```elixir {filename:lib/my_app/my_worker.ex}
+defmodule MyApp.MyWorker do
+  use Oban.Worker
+
+  @behaviour Sentry.Integrations.Oban.Cron
+
+  @impl Oban.Worker
+  def perform(args) do
+    # ...
+  end
+
+  @impl Sentry.Integrations.Oban.Cron
+  def sentry_check_in_configuration(job) do
+    [monitor_slug: "custom-slug-#{job.id}"]
+  end
+end
+```
+
+This is available since v10.9.0 of the SDK.

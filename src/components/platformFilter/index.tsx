@@ -6,7 +6,7 @@ export async function PlatformFilter() {
   const rootNode = await getDocsRootNode();
   // this regex deals with names like .NET that would otherwise be sorted at the top
   const leadingNonAlphaRegex = /^[^\w]/;
-  // sort the platforms alphabetically
+  // sort the SDKs alphabetically
   const sortedPlatforms = extractPlatforms(rootNode).sort((a, b) =>
     (a.title ?? a.name)
       .replace(leadingNonAlphaRegex, '')

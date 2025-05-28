@@ -1,0 +1,106 @@
+---
+title: Ember
+sdk: sentry.javascript.ember
+categories:
+  - javascript
+  - browser
+---
+
+<Alert>
+
+  Sentry's Ember addon enables automatic reporting of errors, exceptions, and transactions.
+
+</Alert>
+
+The minimum supported Ember.js version is `4.0.0`.
+
+<PlatformContent includePath="getting-started-prerequisites" />
+
+## Features
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also get to the root of an error or performance issue faster, by watching a video-like reproduction of a user session with [session replay](/product/explore/session-replay/web/getting-started/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+## Install
+
+<OnboardingOptionButtons options={["error-monitoring", "performance", "session-replay"]} />
+
+Sentry captures data by using an SDK within your application’s runtime.
+
+<PlatformContent includePath="getting-started-install" />
+
+## Configure
+
+Configuration should happen as early as possible in your application's lifecycle.
+
+This snippet includes automatic instrumentation to monitor the performance of your application, which registers and configures the Tracing integration, including custom [Ember instrumentation](./configuration/ember-options/).
+
+```javascript
+import Application from "@ember/application";
+import Resolver from "ember-resolver";
+import loadInitializers from "ember-load-initializers";
+import config from "./config/environment";
+
+import * as Sentry from "@sentry/ember";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/ember/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  
+  // ___PRODUCT_OPTION_START___ session-replay
+  integrations: [Sentry.replayIntegration()],
+  // ___PRODUCT_OPTION_END___ session-replay
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for tracing.
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ session-replay
+
+  // Capture Replay for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ session-replay
+});
+
+export default class App extends Application {
+  modulePrefix = config.modulePrefix;
+  podModulePrefix = config.podModulePrefix;
+  Resolver = Resolver;
+}
+```
+
+<Alert>
+
+  This SDK uses Ember configuration conventions to manage its automatic instrumentation and other Sentry options. This additional configuration can be found under <PlatformLink to="/configuration/ember-options/">Ember options</PlatformLink>.
+
+</Alert>
+
+<PlatformContent includePath="getting-started-sourcemaps" />
+
+## Verify
+
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+
+<PlatformContent includePath="getting-started-verify" />
+
+<Alert>
+
+Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+
+</Alert>
+
+To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+
+<PlatformContent includePath="getting-started-next-steps" />

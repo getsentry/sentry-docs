@@ -1,0 +1,141 @@
+---
+title: java.util.logging
+sidebar_order: 30
+---
+
+<Alert level="warning" title="Note">
+
+An [updated Java SDK](/platforms/java/) supersedes this deprecated version. Sentry preserves this documentation for customers using the old client. We recommend using the updated Java SDK for new projects.
+
+</Alert>
+
+The `sentry` library provides a [java.util.logging Handler](http://docs.oracle.com/javase/8/docs/api/java/util/logging/Handler.html) that sends logged exceptions to Sentry. Once this integration is configured you can _also_ use Sentry’s static API, [as shown on the usage page](/platforms/java/legacy/usage), in order to do things like record breadcrumbs, set the current user, or manually send events.
+
+The source for `sentry` can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry).
+
+### Installation
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry</artifactId>
+    <version>1.7.30</version>
+</dependency>
+```
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry:1.7.30'
+```
+
+```scala {tabTitle: SBT}
+libraryDependencies += "io.sentry" % "sentry" % "1.7.30"
+```
+
+For other dependency managers see the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry).
+
+### Usage
+
+The following example configures a `ConsoleHandler` that logs to standard out at the `INFO` level and a `SentryHandler` that logs to the Sentry server at the `WARN` level. The `ConsoleHandler` is only provided as an example of a non-Sentry appender that is set to a different logging threshold, like one you may already have in your project.
+
+Example configuration using the `logging.properties` format:
+
+```ini
+# Enable the Console and Sentry handlers
+handlers=java.util.logging.ConsoleHandler,io.sentry.jul.SentryHandler
+
+# Set the default log level to INFO
+.level=INFO
+
+# Override the Sentry handler log level to WARNING
+io.sentry.jul.SentryHandler.level=WARNING
+```
+
+When starting your application, add the `java.util.logging.config.file` to the system properties, with the full path to the `logging.properties` as its value:
+
+```bash
+java -Djava.util.logging.config.file=/path/to/app.properties MyClass
+```
+
+Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page](/platforms/java/legacy/configuration/#setting-the-dsn) for ways you can do this.
+
+{/* <!-- TODO-ADD-VERIFICATION-EXAMPLE --> */}
+
+### In Practice
+
+```java
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+public class MyClass {
+  private static final Logger logger = Logger.getLogger(MyClass.class.getName());
+
+  void logSimpleMessage() {
+    // This sends a simple event to Sentry
+    logger.error(Level.INFO, "This is a test");
+  }
+
+  void logWithBreadcrumbs() {
+    // Record a breadcrumb that will be sent with the next event(s),
+    // by default the last 100 breadcrumbs are kept.
+    Sentry.record(
+        new BreadcrumbBuilder().setMessage("User made an action").build()
+    );
+
+    // This sends a simple event to Sentry
+    logger.error("This is a test");
+  }
+
+  void logException() {
+    try {
+      unsafeMethod();
+    } catch (Exception e) {
+      // This sends an exception event to Sentry
+      logger.error(Level.SEVERE, "Exception caught", e);
+    }
+  }
+
+  void unsafeMethod() {
+    throw new UnsupportedOperationException("You shouldn't call this!");
+  }
+}
+```
+
+```kotlin
+import java.util.logging.Level
+import java.util.logging.Logger
+
+class MyClass {
+  fun logSimpleMessage() {
+    // This sends a simple event to Sentry
+    logger.error(Level.INFO, "This is a test")
+  }
+
+  fun logWithBreadcrumbs() {
+    // Record a breadcrumb that will be sent with the next event(s),
+    // by default the last 100 breadcrumbs are kept.
+    Sentry.record(
+      BreadcrumbBuilder().setMessage("User made an action").build()
+    )
+
+    // This sends a simple event to Sentry
+    logger.error("This is a test")
+  }
+
+  fun logException() {
+    try {
+      unsafeMethod()
+    } catch (e: Exception) {
+      // This sends an exception event to Sentry
+      logger.error(Level.SEVERE, "Exception caught", e)
+    }
+  }
+
+  fun unsafeMethod() {
+    throw UnsupportedOperationException("You shouldn't call this!")
+  }
+
+  companion object {
+    private val logger = Logger.getLogger(MyClass::class.java.name)
+  }
+}
+```

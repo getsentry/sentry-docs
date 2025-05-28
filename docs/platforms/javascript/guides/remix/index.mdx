@@ -1,0 +1,106 @@
+---
+title: Remix
+description: Sentry's Remix SDK enables automatic reporting of errors and exceptions, as well as the performance metrics for both client and server side operations.
+sdk: sentry.javascript.remix
+categories:
+  - javascript
+  - browser
+  - server
+  - server-node
+---
+
+<Alert>
+
+Sentry's Remix SDK enables automatic reporting of errors and exceptions, as well as the performance metrics for both client and server side operations.
+
+</Alert>
+
+Sentry's Remix SDK relies on our [React SDK](/platforms/javascript/guides/react/) for the frontend and [Node SDK](/platforms/node) for the backend. That means all features available in those SDKs are also available in this SDK.
+The minimum supported Remix version is `2.0.0`.
+
+<PlatformContent includePath="getting-started-prerequisites" />
+
+## Install
+
+Sentry captures data by using an SDK within your application’s runtime.
+
+We recommend installing the SDK through our installation wizard:
+
+```bash
+npx @sentry/wizard@latest -i remix
+```
+
+The wizard will prompt you to log in to Sentry. It will then automatically do the following steps for you:
+
+- create two files in the root directory of your project, `entry.client.tsx` and `entry.server.tsx` (if they don't already exist).
+- add the default `Sentry.init()` for the client in `entry.client.tsx` and the server in `entry.server.tsx`.
+- create `.sentryclirc` with an auth token to upload source maps (this file is automatically added to `.gitignore`).
+- adjust your `build` script in `package.json` to automatically upload source maps to Sentry when you build your application.
+- add an example page to your app to verify your Sentry setup
+
+If you use [Remix future flags](https://remix.run/docs/en/main/pages/api-development-strategy#current-future-flags), the wizard will instrument your application accordingly to support Remix v2 features.
+
+After the wizard setup is completed, the SDK will automatically capture unhandled errors, and monitor performance.
+You can also <PlatformLink to="/usage/">manually capture errors</PlatformLink>.
+
+<Alert>
+
+If the wizard setup isn't working for you, you can <PlatformLink to="/manual-setup/">set up the SDK manually</PlatformLink>.
+
+</Alert>
+
+## Configure
+
+Configuration should happen as early as possible in your application's lifecycle.
+
+To complete your configuration, add <PlatformLink to="/configuration/options/">options</PlatformLink> to your `Sentry.init()` calls.
+Here, you'll also be able to set context data, which includes data about the <PlatformLink to="/enriching-events/identify-user/">user</PlatformLink>, <PlatformLink to="/enriching-events/tags/">tags</PlatformLink>, or even <PlatformLink to="/enriching-events/context/">arbitrary data</PlatformLink>, all of which will be added to every event sent to Sentry.
+
+## Add Readable Stack Traces to Errors
+
+By default, Remix will minify your JavaScript and CSS files in production. This makes it difficult to debug errors in production. To make debugging easier, you can generate source maps and upload them to Sentry.
+
+Depending on your build setup, you can either use [Sentry's Vite plugin](/platforms/javascript/sourcemaps/uploading/vite/) or `sentry-upload-sourcemaps` script to upload sourcemaps.
+
+Please refer to the <PlatformLink to="/sourcemaps">Sourcemaps Documentation</PlatformLink>, for more information.
+
+For more advanced configuration, you can use [`sentry-cli`](https://github.com/getsentry/sentry-cli) directly to upload sourcemaps.
+
+## Verify
+
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+
+```typescript {filename:routes/error.tsx}
+<button
+  type="button"
+  onClick={() => {
+    throw new Error("Sentry Frontend Error");
+  }}
+>
+  Throw error
+</button>
+```
+
+This snippet adds a button that throws an error in a component or page.
+
+<Alert>
+
+Errors triggered from within Browser DevTools are sandboxed, so will not trigger an error handler. Place the snippet directly in your code instead.
+
+</Alert>
+
+Then, throw an error in a `loader` or `action`.
+
+```typescript {filename:routes/error.tsx}
+export const action: ActionFunction = async ({ request }) => {
+  throw new Error("Sentry Error");
+};
+```
+
+<Alert>
+
+Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+
+</Alert>
+
+To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.

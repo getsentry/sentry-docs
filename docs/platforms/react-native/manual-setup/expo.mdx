@@ -1,0 +1,150 @@
+---
+title: Expo
+description: "Learn how to set up an Expo-managed project with the Sentry React Native SDK."
+---
+
+To set up the Sentry React Native SDK in your Expo project, follow the steps on this page.
+
+## Prerequisities
+
+- [Expo SDK 50](https://docs.expo.dev/workflow/upgrading-expo-sdk-walkthrough/) or newer.
+  - [Expo SDK 49](https://docs.expo.dev/guides/using-sentry/) and older are supported by the `sentry-expo` package.
+- [Migrate from `sentry-expo` to `@sentry/react-native`](/platforms/react-native/migration/sentry-expo/).
+- [Sign up for an account](https://sentry.io/signup/).
+
+## Automatic Install
+
+Use the [Sentry Wizard](https://github.com/getsentry/sentry-wizard) to patch your project automatically, as shown below. Alternatively, you can follow the [Manual Install](./#manual-install) if you prefer. You only need to patch the project once. Then, you can add the patched files to your version control system.
+
+```bash {tabTitle:npm}
+npx @sentry/wizard@latest -i reactNative
+```
+
+<Expandable title="The following tasks will be performed by the Sentry Wizard">
+
+- Install the `@sentry/react-native` package.
+- Add the `@sentry/react-native/metro` to the _*metro.config.js*_ Metro configuration.
+- Add the `@sentry/react-native/expo` to the _*app.json*_ Expo configuration.
+- Enable the Sentry React Native Gradle build step for Android to auto-upload generated source maps and debug symbols.
+- Wrap the _Bundle React Native code and images_ Xcode project build phase script to upload generated source maps and collect bundled node modules.
+- Add _Upload Debug Symbols to Sentry_ Xcode project build phase.
+- Run `pod install`.
+- Store build credentials in _*ios/sentry.properties*_, _*android/sentry.properties*_ and _*env.local*_.
+- Configure Sentry for the supplied DSN in your _*layout.tsx*_ file.
+
+</Expandable>
+
+## Manual Install
+
+If you don't use the Wizard, install the `@sentry/react-native` package:
+
+```bash {tabTitle:Expo}
+npx expo install @sentry/react-native
+```
+
+```bash {tabTitle:npm}
+npm install @sentry/react-native --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/react-native
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/react-native
+```
+
+### Initialize the SDK
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+Import the `@sentry/react-native` package and call `init` with your DSN:
+
+```javascript {tabTitle:App.js or app/_layout.js}
+import { Text, View } from "react-native";
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // Adds more context data to events (IP address, cookies, user, etc.)
+  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
+  // We recommend adjusting this value in production.
+  // Learn more at
+  // https://docs.sentry.io/platforms/react-native/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ profiling
+  // profilesSampleRate is relative to tracesSampleRate.
+  // Here, we'll capture profiles for 100% of transactions.
+  profilesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ profiling
+});
+
+function App() {
+  return (
+    <View>
+      <Text>Expo Example!</Text>
+    </View>
+  );
+}
+
+export default Sentry.wrap(App);
+```
+
+### Wrap Your App
+
+Wrap the root component of your application with `Sentry.wrap`:
+
+```javascript {tabTitle:App.js or app/_layout.js}
+export default Sentry.wrap(App);
+```
+
+### Add the Sentry Expo Plugin
+
+To ensure bundles and source maps are automatically uploaded during the native applications builds, add `withSentry` to the Expo application configuration:
+
+<Include name="react-native-expo-plugin-code-snippet.mdx" />
+
+### Add Sentry Metro Plugin
+
+To ensure unique Debug IDs get assigned to the generated bundles and source maps, add Sentry Serializer to the Metro configuration:
+
+<Include name="react-native-expo-metro-plugin-code-snippet.mdx" />
+
+### Add Privacy Manifest
+
+The SDK needs access to certain information about the device and the application for its essential functionality. Some of the APIs required for this are considered privacy-relevant. Add the privacy manifest to your Xcode project to ensure your app is compliant with Apple's guidelines. Read the [Apple Privacy Manifest](/platforms/react-native/data-management/apple-privacy-manifest/) guide for more info on how to add records required for the Sentry SDKs.
+
+## Verify Setup
+
+To verify that everything is working as expected, build the `Release` version of your application and send a test event to Sentry by adding:
+
+```javascript
+<Button
+  title="Try!"
+  onPress={() => {
+    Sentry.captureException(new Error("First error"));
+  }}
+/>
+```
+
+## Next Steps
+
+- [Learn how to upload source maps for native builds and Expo Updates](/platforms/react-native/sourcemaps/uploading/expo/)
+- [Add automatic tracing with Expo Router](/platforms/react-native/tracing/instrumentation/expo-router/)
+- [Configure the Sentry Android Gradle Plugin](/platforms/react-native/manual-setup/expo/gradle/)
+
+## Notes
+
+- Don't commit your auth token. Instead, use an environment variable like `SENTRY_AUTH_TOKEN`.
+- Source maps for the `Release` version of your application are uploaded automatically during the native application build.
+- During development, the source code is resolved using the Metro Server and source maps aren't used. This currently doesn't work on web.

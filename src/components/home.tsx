@@ -88,7 +88,7 @@ export function Home() {
           </div>
         </div>
         {/* Sentry Platforms Header and Subheader */}
-        <h2 className="text-2xl mt-10 mb-2 font-medium">Sentry Platforms</h2>
+        <h2 className="text-2xl mt-10 mb-2 font-medium">Sentry SDKs</h2>
         <p className="mb-6 text-lg text-gray-600">Discovery how Sentry products integrate into your applications</p>
         <PlatformFilter />
         <h2 className="text-2xl mt-16 mb-6 font-medium">Get to know us</h2>

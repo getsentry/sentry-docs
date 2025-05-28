@@ -1,9 +1,106 @@
 ---
 title: .NET
-description: "Auto-generated index for platforms/dotnet"
-slug: "platforms/dotnet"
+sdk: sentry.dotnet
+description: Learn how to set up and run Sentry's .NET SDK, which will automatically report errors and exceptions in your application.
+caseStyle: PascalCase
+supportLevel: production
+aliases:
+  - C#
 ---
 
-# .NET
+<Alert>
 
-_Auto-generated index file for platforms/dotnet._ 
+If you don't already have an account and Sentry project established, head over to [sentry.io](https://sentry.io/signup/), then return to this page.
+
+</Alert>
+
+You can use these instructions to run Sentry in an app running on:
+
+* Windows
+* macOS
+* Linux
+* Android
+* iOS
+
+If you're using a framework, such as ASP.NET Core or MAUI, please select the framework on the drop down on the top left.
+
+## Features
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+## Install
+
+<OnboardingOptionButtons options={['error-monitoring', 'performance', 'profiling']}/>
+
+Sentry captures data by using an SDK within your application’s runtime. These are platform-specific and allow Sentry to have a deep understanding of how your application works.
+
+Install the **NuGet** package to add the Sentry dependency:
+
+<OnboardingOption optionId="profiling" hideForThisOption>
+  ```shell {tabTitle:.NET Core CLI}
+  dotnet add package Sentry -v {{@inject packages.version('sentry.dotnet') }}
+  ```
+
+  ```powershell {tabTitle:Package Manager}
+  Install-Package Sentry -Version {{@inject packages.version('sentry.dotnet') }}
+  ```
+
+  ```shell {tabTitle:Paket CLI}
+  paket add Sentry --version {{@inject packages.version('sentry.dotnet') }}
+```
+</OnboardingOption>
+
+<OnboardingOption optionId="profiling">
+
+  <Alert>
+
+  Sentry profiling for .NET is available in Alpha on .NET 6.0 and newer.
+
+  </Alert>
+
+  ```shell {tabTitle:.NET Core CLI}
+  dotnet add package Sentry -v {{@inject packages.version('sentry.dotnet') }}
+  dotnet add package Sentry.Profiling -v {{@inject packages.version('sentry.dotnet.profiling') }}
+  ```
+
+  ```powershell {tabTitle:Package Manager}
+  Install-Package Sentry -Version {{@inject packages.version('sentry.dotnet') }}
+  Install-Package Sentry.Profiling -Version {{@inject packages.version('sentry.dotnet.profiling') }}
+  ```
+
+  ```shell {tabTitle:Paket CLI}
+  paket add Sentry --version {{@inject packages.version('sentry.dotnet') }}
+  paket add Sentry.Profiling --version {{@inject packages.version('sentry.dotnet.profiling') }}
+    ```
+</OnboardingOption>
+
+## Configure
+
+To capture all errors, even the one during the startup of your application, you should initialize the Sentry .NET SDK as soon as possible.
+
+
+```csharp
+SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.Debug = true;
+    // Adds request URL and headers, IP and name for users, etc.
+    options.SendDefaultPii = true;
+    // ___PRODUCT_OPTION_START___ performance
+    // A fixed sample rate of 1.0 - 100% of all transactions are getting sent
+    options.TracesSampleRate = 1.0f;
+    // ___PRODUCT_OPTION_END___ performance
+    // ___PRODUCT_OPTION_START___ profiling
+    // A sample rate for profiling - this is relative to TracesSampleRate
+    options.ProfilesSampleRate = 1.0f;
+    // ___PRODUCT_OPTION_END___ profiling
+});
+```
+
+## Verify
+
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+
+<PlatformContent includePath="getting-started-verify" />

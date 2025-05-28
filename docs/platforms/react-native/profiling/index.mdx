@@ -1,0 +1,67 @@
+---
+title: Set Up Profiling
+sidebar_title: Profiling
+description: "Learn how to enable profiling in your app if it is not already set up."
+sidebar_order: 5000
+---
+
+<PlatformContent includePath="profiling/index/why-profiling" />
+
+## Enable Tracing
+
+Profiling depends on Sentry’s Tracing product being enabled beforehand. To enable tracing in the SDK:
+
+```javascript
+Sentry.init({
+  dsn: "___DSN___",
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
+  // We recommend adjusting this value in production.
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+});
+```
+
+Check out the <PlatformLink to="/tracing/">tracing setup documentation</PlatformLink> for more detailed information on how to configure sampling. Setting the sample rate to 1.0 means all transactions will be captured.
+
+## Enable Profiling
+
+<Alert>
+
+Profiling for React Native is available in SDK versions `5.32.0` and above.
+
+</Alert>
+
+To enable profiling, set the `profilesSampleRate`:
+
+```javascript
+Sentry.init({
+  dsn: "___DSN___",
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
+  // We recommend adjusting this value in production.
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  // profilesSampleRate is relative to tracesSampleRate.
+  // Here, we'll capture profiles for 100% of transactions.
+  profilesSampleRate: 1.0,
+});
+```
+
+### Options
+
+To change the React Native profiling options add the `hermesProfilingIntegration` to the integrations in `Sentry.init`.
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.hermesProfilingIntegration({
+      platformProfilers: false,
+    }),
+  ],
+});
+```
+
+#### platformProfilers
+
+Default value `true`, platform profilers are enabled. By default both React Native JS code executed in Hermes engine and platform specific code (Swift, Objective-C, Kotlin, Java) are profiled by their respective profilers. Setting `platformProfilers` to `false` will disable profiling of the platform specific code and only the JS code executed in Hermes will be profiled. This option is available since the SDK version [5.33.0](https://github.com/getsentry/sentry-react-native/releases/tag/5.33.0).

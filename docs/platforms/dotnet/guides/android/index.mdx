@@ -1,0 +1,120 @@
+---
+title: .NET for Android
+sdk: sentry.dotnet.android
+description: "Learn about Sentry's .NET integration with .NET for Android"
+---
+
+Sentry supports [.NET for Android](https://learn.microsoft.com/dotnet/android/getting-started/installation/) directly from the [Sentry NuGet package](https://www.nuget.org/packages/Sentry).
+
+## Overview of the features
+
+- All the features of our main [.NET SDK](/platforms/dotnet), for your managed code
+- Attach LogCat logs to events
+- Java crash reporting for Android, leveraging our [Android SDK](/platforms/android) including:
+    - [Capture Application Not Responding (ANR) errors](/platforms/android/configuration/app-not-respond/) when the app is unresponsive
+    - Automatically [attach screenshots to Java exceptions](/platforms/android/enriching-events/screenshots/)
+    - Automatic breadcrumbs for Activity lifecycle, App lifecycle, System and Network events and User Interactions
+    - Automatic [Activity lifecycle tracing](/platforms/android/tracing/instrumentation/automatic-instrumentation/#activity-instrumentation) and [User Interaction tracing](/platforms/android/performance/instrumentation/automatic-instrumentation/#user-interaction-instrumentation)
+    - Device Root checking
+- Native crash reporting for Android, leveraging our [Android NDK](/platforms/android/configuration/using-ndk/)
+- Automatic session tracking and [release health](/product/releases/)
+- _Session Replay for Android_ (currently experimental)
+
+## Install
+
+Add the Sentry dependency to your .NET for Android application:
+
+```shell {tabTitle:.NET Core CLI}
+dotnet add package Sentry -v {{@inject packages.version('sentry.dotnet') }}
+```
+
+```powershell {tabTitle:Package Manager}
+Install-Package Sentry -Version {{@inject packages.version('sentry.dotnet') }}
+```
+
+## Configure
+
+In your `MainActivity.cs` file, call `SentrySdk.Init` in the `OnCreate` event and include any options you would like to set. The `Dsn` is the only required parameter.
+
+
+```csharp
+[Activity(Label = "@string/app_name", MainLauncher = true)]
+public class MainActivity : Activity
+{
+    protected override void OnCreate(Bundle? savedInstanceState)
+    {
+        SentrySdk.Init(options =>
+        {
+            options.Dsn = "___PUBLIC_DSN___";
+            options.SendDefaultPii = true; // adds the user's IP address automatically
+#if DEBUG
+            // Log debug information about the Sentry SDK
+            options.Debug = true;
+#endif
+
+            // Android specific .NET features are under the Android properties:
+            options.Android.LogCatIntegration = LogCatIntegrationType.Errors; // Get logcat logs for both handled and unhandled errors; default is unhandled only
+            options.Android.LogCatMaxLines = 1000; // Defaults to 1000
+
+            // All the native Android SDK options are available below
+            // https://docs.sentry.io/platforms/android/configuration/
+            // Enable Native Android SDK ANR detection
+            options.Native.AnrEnabled = true;
+
+            // Session Replay is currently available via the ExperimentalOptions
+            options.Native.ExperimentalOptions.SessionReplay.OnErrorSampleRate = 1.0;
+            options.Native.ExperimentalOptions.SessionReplay.SessionSampleRate = 1.0;
+            options.Native.ExperimentalOptions.SessionReplay.MaskAllImages = false;
+            options.Native.ExperimentalOptions.SessionReplay.MaskAllText = false;
+
+            options.SetBeforeSend(evt =>
+            {
+                if (evt.Exception?.Message.Contains("Something you don't care want logged?") ?? false)
+                {
+                    return null; // return null to filter out event
+                }
+                // or add additional data
+                evt.SetTag("dotnet-Android-Native-Before", "Hello World");
+                return evt;
+            });
+        });
+
+        base.OnCreate(savedInstanceState);
+    }
+}
+```
+
+### Options
+
+The .NET for Android integration is part of [Sentry](/platforms/dotnet/). Please refer to the documentation for that package for information about platform agnostic options.
+
+Android specific options are described below.
+
+### LogCatIntegration
+
+Can be set to control whether when LogCat logs are attached to events. It can be set to one of the following values:
+
+- `None`: The LogCat integration is disabled.
+- `Unhandled`: LogCat logs are attached to events only when the event is unhandled.
+- `Errors`: LogCat logs are attached to events with an exception.
+- `All`: LogCat logs are attached to all events.
+
+The default is `LogCatIntegrationType.None`
+
+<Alert level="warning">
+
+Use caution when enabling `LogCatIntegrationType.All`, as this may result in a lot of data being sent to Sentry and performance issues if the SDK generates a lot of events.
+
+</Alert>
+
+### LogCatMaxLines
+
+The maximum number of lines to read from LogCat logs.
+
+The default value is 1000.
+
+## Verify
+
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+
+<PlatformContent includePath="getting-started-verify" />

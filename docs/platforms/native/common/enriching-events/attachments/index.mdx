@@ -1,0 +1,58 @@
+---
+title: Attachments
+description: "Learn more about how Sentry can store additional files in the same request as event attachments."
+---
+
+Sentry can enrich your events for further investigation by storing additional files, such as config or log files, as attachments.
+
+You can use a higher-level SDK for platforms with built-in support for native crashes, or generate and upload attachments using the API:
+
+- [Native C/C++](/platforms/native/)
+- [Electron](/platforms/javascript/guides/electron/)
+- [Minidump endpoint](/platforms/native/guides/minidumps/)
+
+To receive symbolicated stack traces, you have to upload debug information to Sentry. Unless the option to store crash reports is enabled, Sentry will use the crash reports only to create the event, then will drop the files. For more information, see [Debug Information Files](/platforms/native/data-management/debug-files/).
+
+## Uploading Attachments
+
+<PlatformContent includePath="enriching-events/add-attachment" />
+
+<Alert>
+
+Sentry allows at most 20MB for a compressed request, and at most 100MB of uncompressed attachments per event, including the crash report file (if applicable). Uploads exceeding this size are rejected with HTTP error `413 Payload Too Large` and the data is dropped immediately. To add larger or more files, consider secondary storage options.
+
+Usually, native crash reports range from a few kilobytes to a few megabytes. This leaves sufficient space to add custom attachments. In case your application generates particularly large crash reports, consider to limit or avoid adding additional attachments in the SDK.
+
+</Alert>
+
+Attachments persist for 30 days; if your total storage included in your quota is exceeded, attachments will not be stored. You can delete attachments or their containing events at any time. Deleting an attachment does not affect your quota - Sentry counts an attachment toward your quota as soon as it is stored.
+
+Learn more about how attachments impact your [quota](/pricing/quotas/).
+
+### Access to Attachments
+
+To limit access to attachments, navigate to your organization's **General Settings**, then select the _Attachments Access_ dropdown to set appropriate access — any member of your organization, the organization billing owner, member, admin, manager, or owner.
+
+<Include name="common-imgs/attachments-access" />
+
+By default, access is granted to all members when storage is enabled. If a member does not have access to the project, the ability to download an attachment is not available; the button will be greyed out in Sentry. The member may only view that an attachment is stored.
+
+## Store Minidumps as Attachments
+
+<Include name="store-minidumps-as-attachments-intro" />
+
+<Alert>☝ This feature is supported on Windows, Linux, and Android.</Alert>
+
+<Include name="store-minidumps-as-attachments-configuration" />
+
+## Viewing Attachments
+
+Attachments display on the bottom of the **Issue Details** page for the event that is shown.
+
+<Include name="common-imgs/attachments-access-denied" />
+
+Alternately, attachments also appear in the _Attachments_ tab on the **Issue Details** page, where you can view the _Type_ of attachment, as well as associated events. Click the Event ID to open the **Issue Details** of that specific event.
+
+<Include name="common-imgs/attachments-list-example" />
+
+If you chose to limit the number of crash reports per issue, you can show _Only Crash Reports_. This removes all other attachments from the list, which can be useful if the issue has accumulated a large number of events.

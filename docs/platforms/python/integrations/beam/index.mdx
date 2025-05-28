@@ -1,0 +1,59 @@
+---
+title: Apache Beam
+description: "Learn about using Sentry with Beam."
+---
+
+The Beam integration currently parses the functions in [ParDo](https://github.com/apache/beam/blob/release-2.13.0/sdks/python/apache_beam/transforms/core.py#L991) to return exceptions in their respective `setup`, `start_bundle`, `process`, and `finish_bundle` functions.
+
+**This integration is experimental.** It may be removed in minor versions. When enabling this integration, expect to see incorrect `server_name` and `ip` due to some distributed properties within Beam.
+
+A Beam version of 2.12 or later is required.
+
+Add `BeamIntegration()` to your `integrations` list:
+
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.beam import BeamIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Add data like request headers and IP for users, if applicable;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    # ___PRODUCT_OPTION_START___ performance
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    # ___PRODUCT_OPTION_END___ performance
+    # ___PRODUCT_OPTION_START___ profiling
+    # To collect profiles for all profile sessions,
+    # set `profile_session_sample_rate` to 1.0.
+    profile_session_sample_rate=1.0,
+    # Profiles will be automatically collected while
+    # there is an active span.
+    profile_lifecycle="trace",
+    # ___PRODUCT_OPTION_END___ profiling
+    integrations=[
+        BeamIntegration(),
+    ],
+)
+```
+
+## Behavior
+
+- The functions get injected with an inspect function to patch getting the [function signature](https://github.com/apache/beam/blob/release-2.13.0/sdks/python/apache_beam/transforms/core.py#L288L298).
+- The integration requires Sentry to be installed on all the worker computers using a `--requirements_file`.
+- The main computer invoking the pipeline requires the same version of Sentry as the worker nodes.

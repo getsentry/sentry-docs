@@ -9,54 +9,20 @@ import {SidebarSeparator} from './sidebarLink';
 import {NavNode} from './types';
 import {docNodeToNavNode, getNavNodes} from './utils';
 
-/** a root of `"some-root"` maps to the `/some-root/` url */
-// todo: we should probably get rid of this
-const productSidebarItems = [
-  {
-    title: 'Account Settings',
-    root: 'account',
-  },
-  {
-    title: 'Organization Settings',
-    root: 'organization',
-  },
-  {
-    title: 'Product Walkthroughs',
-    root: 'product',
-  },
-  {
-    title: 'Pricing & Billing',
-    root: 'pricing',
-  },
-  {
-    title: 'Sentry CLI',
-    root: 'cli',
-  },
-  {
-    title: 'Sentry API',
-    root: 'api',
-  },
-  {
-    title: 'Security, Legal, & PII',
-    root: 'security-legal-pii',
-  },
-  {
-    title: 'Concepts & Reference',
-    root: 'concepts',
-  },
-];
-
 export async function SidebarNavigation({path}: {path: string[]}) {
   const rootNode = await getDocsRootNode();
-  // product docs and platform-redirect page
-  if (
-    productSidebarItems.some(el => el.root === path[0]) ||
-    path[0] === 'platform-redirect'
-  ) {
-    return <ProductSidebar rootNode={rootNode} items={productSidebarItems} />;
+
+  // Product sections
+  if (path[0] === 'product' || path[0] === 'product/sentry' || path[0] === 'product/sentry-prevent' || path[0] === 'product/seer') {
+    const productItems = [
+      {title: 'Sentry', root: 'product/sentry'},
+      {title: 'Sentry Prevent', root: 'product/sentry-prevent'},
+      {title: 'Seer', root: 'product/seer'},
+    ];
+    return <ProductSidebar rootNode={rootNode} items={productItems} />;
   }
 
-  // /platforms/:platformName/guides/:guideName
+  // SDKs/Platforms
   if (path[0] === 'platforms') {
     const platformName = path[1];
     const guideName = path[3];
@@ -72,12 +38,90 @@ export async function SidebarNavigation({path}: {path: string[]}) {
             <SidebarSeparator />
           </Fragment>
         )}
-        <ProductSidebar rootNode={rootNode} items={productSidebarItems} />
       </Fragment>
     );
   }
 
-  // contributing pages
+  // Concepts & Reference
+  if (path[0] === 'concepts') {
+    return (
+      <ul data-sidebar-tree>
+        <DynamicNav
+          root="concepts"
+          title="Concepts & Reference"
+          tree={toTree(getNavNodes([nodeForPath(rootNode, 'concepts')!], docNodeToNavNode))}
+          collapsible={false}
+        />
+      </ul>
+    );
+  }
+
+  // Admin Settings
+  if (path[0] === 'organization' || path[0] === 'account') {
+    const adminItems = [
+      {title: 'Account Settings', root: 'account'},
+      {title: 'Organization Settings', root: 'organization'},
+    ];
+    return <ProductSidebar rootNode={rootNode} items={adminItems} />;
+  }
+
+  // Pricing & Billing
+  if (path[0] === 'pricing') {
+    return (
+      <ul data-sidebar-tree>
+        <DynamicNav
+          root="pricing"
+          title="Pricing & Billing"
+          tree={toTree(getNavNodes([nodeForPath(rootNode, 'pricing')!], docNodeToNavNode))}
+          collapsible={false}
+        />
+      </ul>
+    );
+  }
+
+  // Sentry CLI
+  if (path[0] === 'cli') {
+    return (
+      <ul data-sidebar-tree>
+        <DynamicNav
+          root="cli"
+          title="Sentry CLI"
+          tree={toTree(getNavNodes([nodeForPath(rootNode, 'cli')!], docNodeToNavNode))}
+          collapsible={false}
+        />
+      </ul>
+    );
+  }
+
+  // Sentry API
+  if (path[0] === 'api') {
+    return (
+      <ul data-sidebar-tree>
+        <DynamicNav
+          root="api"
+          title="Sentry API"
+          tree={toTree(getNavNodes([nodeForPath(rootNode, 'api')!], docNodeToNavNode))}
+          collapsible={false}
+        />
+      </ul>
+    );
+  }
+
+  // Security, Legal, & PII
+  if (path[0] === 'security-legal-pii') {
+    return (
+      <ul data-sidebar-tree>
+        <DynamicNav
+          root="security-legal-pii"
+          title="Security, Legal, & PII"
+          tree={toTree(getNavNodes([nodeForPath(rootNode, 'security-legal-pii')!], docNodeToNavNode))}
+          collapsible={false}
+        />
+      </ul>
+    );
+  }
+
+  // Contributing pages
   if (path[0] === 'contributing') {
     const contribNode = nodeForPath(rootNode, 'contributing');
     if (contribNode) {

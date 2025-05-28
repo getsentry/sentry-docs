@@ -1,0 +1,65 @@
+---
+title: Users
+description: "Learn how to configure the SDK to capture the user and gain critical pieces of information that construct a unique identity in Sentry."
+---
+
+If the SDK is configured with <PlatformLink to="/configuration/options/#send_default_pii">send_default_pii</PlatformLink> set to `true`, we automatically attach the authenticated user to all your events sent to Sentry. 
+
+If you instead want to manually attach the user to your events, we recommend to listen to Laravel's `\Illuminate\Auth\Events\Authenticated` event:
+
+```php {filename:app/Providers/AppServiceProvider.php}
+/**
+* Bootstrap any application services.
+*/
+public function boot(): void
+{
+    \Illuminate\Support\Facades\Event::listen(function (\Illuminate\Auth\Events\Authenticated $event) {
+        $user = $event->user;
+
+        \Sentry\Laravel\Integration::configureScope(static function (Scope $scope) use ($user): void {
+            $scope->setUser([
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ]);
+        });
+    });
+}
+```
+
+You can also clear the currently set user:
+
+```php
+\Sentry\Laravel\Integration::configureScope(static function (\Sentry\State\Scope $scope): void {
+    $scope->removeUser();
+});
+```
+
+Users consist of a few critical pieces of information that construct a unique identity in Sentry. Each of these is optional, but one **must** be present for the Sentry SDK to capture the user:
+
+<DefinitionList>
+
+### `id`
+
+Your internal identifier for the user.
+
+### `username`
+
+The username. Typically used as a better label than the internal id.
+
+### `email`
+
+An alternative, or addition, to the username. Sentry is aware of email addresses and can display things such as Gravatars and unlock messaging capabilities.
+
+### `ip_address`
+
+The user's IP address. If the user is unauthenticated, Sentry uses the IP address as a unique identifier for the user.
+Serverside SDKs that instrument incoming requests will attempt to pull the IP address from the HTTP request data (`request.env.REMOTE_ADDR` field in JSON), if available. That might require <PlatformLink to="/configuration/options/#send_default_pii">send_default_pii</PlatformLink> set to `true` in the SDK options.
+
+If the field is omitted, the default value is `null`.
+
+To opt out of storing users' IP addresses in your event data, you can go to your project settings, click on "Security & Privacy", and enable "Prevent Storing of IP Addresses" or use Sentry's [server-side data](/security-legal-pii/scrubbing/) scrubbing to remove `$user.ip_address`. Adding such a rule ultimately overrules any other logic.
+
+</DefinitionList>
+
+Additionally, you can provide arbitrary key/value pairs beyond the reserved names, and the Sentry SDK will store those with the user.

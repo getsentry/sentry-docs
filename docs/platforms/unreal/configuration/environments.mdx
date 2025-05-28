@@ -1,0 +1,39 @@
+---
+title: Environments
+description: "Learn how to configure your SDK to tell Sentry about your environments."
+sidebar_order: 30
+---
+
+Environments in Sentry let you know where an error occurred, (such as in production, staging server, or another location).
+They make it easier to filter issues, releases, and user feedback on the Issue Details page, (which you can navigate to by clicking any issue on the [**Issues**](https://sentry.io/orgredirect/organizations/:orgslug/issues/) page). To learn more, read our docs about [using environments](/product/sentry-basics/environments/).
+
+Sentry automatically creates an environment when it receives an event with the `environment` parameter set.
+
+When running inside the Unreal Engine Editor, the SDK reports the environment as `Editor`. For shipping builds, it defaults to `Release`.
+In other configurations it uses the `FApp::GetBuildConfiguration()`.
+You can also set the default environment to `Release`, `Development`, or `Debug` in your build configuration, or override it programmatically.
+
+```cpp
+FConfigureSettingsDelegate SettingsDelegate;
+SettingsDelegate.BindDynamic(this, &USomeClass::HandleSettingsDelegate);
+
+void USomeClass::HandleSettingsDelegate(USentrySettings* Settings)
+{
+    Settings->Environment = FString(TEXT("MyEnvironment"));
+}
+
+...
+
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+SentrySubsystem->InitializeWithSettings(SettingsDelegate);
+```
+
+**Important things to note about environments:**
+
+    - Environment names are case-sensitive.
+    - Names cannot include new lines, spaces, or forward slashes.
+    - Certain strings, like "None", aren't allowed.
+    - The maximum length for an environment name is 64 characters.
+    - Environments can't be deleted, but can be [hidden](/product/sentry-basics/environments/#hidden-environments) if no longer needed.
+

@@ -1,0 +1,253 @@
+---
+title: Automatic Instrumentation
+description: "Learn what transactions are captured after tracing is enabled."
+sidebar_order: 10
+---
+
+`@sentry/react-native` provides automatic performance instrumentation out of the box when <PlatformLink to="/tracing/">tracing is enabled</PlatformLink>.
+
+## Set Up
+
+To make the most out of our automatic instrumentation, you should:
+
+### Wrap Your Root Component
+
+Wrap your root component with Sentry to access the most Performance features.
+
+```javascript {filename:App.js}
+export default Sentry.wrap(App);
+```
+
+### Enable Routing Instrumentation
+
+<Alert>
+
+When no routing instrumentation is used, a transaction for `App Start` is automatically captured. However, that transaction stops being sent when one of the routing integrations below is added. Instead, the `App Start` information is included as a span in a transaction captured by the routing instrumentation.
+
+</Alert>
+
+We currently provide three routing instrumentations out of the box to instrument route changes for:
+
+- [Expo Router](/platforms/react-native/tracing/instrumentation/expo-router/)
+- [React Navigation](/platforms/react-native/tracing/instrumentation/react-navigation/)
+- [React Native Navigation](/platforms/react-native/tracing/instrumentation/react-native-navigation/)
+
+### Additional Instrumentation
+
+- [Custom Navigation](/platforms/react-native/tracing/instrumentation/custom-navigation/) to add the custom navigation library integration
+- [Custom Instrumentation](/platforms/react-native/tracing/instrumentation/custom-navigation/) to add custom performance data to your application
+
+## Features
+
+Sentry offers the following automatic instrumentation features.
+
+### App Start Instrumentation
+
+The App Start Instrumentation provides insight into how long your application takes to launch. It tracks the length of time from the **earliest native process initialization** until the **React Native root component mounts**.
+
+<Alert>
+
+If you don't [wrap your root component with Sentry](#wrap-your-root-component), the App Start measurement will finish when the JavaScript code is initialized instead of when the first component mount.
+
+</Alert>
+
+The SDK differentiates between a cold and a warm start, but doesn't track hot starts or resumes. The measurements are available under `measurements.app_start_warm` and `measurements.app_start_cold`.
+
+Cold and warm start are Mobile Vitals, which you can learn about in the [full documentation](/product/insights/mobile/mobile-vitals).
+
+<Alert>
+
+Sentry's App Start instrumentation aims to be as comprehensive and representative of the user experience as possible, and adheres to guidelines by the platform vendors. For this reason, App Starts reported by Sentry might be longer than what you see in other tools. Read more on the [Apple App Start docs](/platforms/apple/guides/ios/tracing/instrumentation/automatic-instrumentation/#app-start-tracing) and [Android App Start docs](/platforms/android/tracing/instrumentation/automatic-instrumentation/#app-start-instrumentation).
+
+</Alert>
+
+### Slow and Frozen Frames
+
+Unresponsive UI and animation hitches annoy users and degrade the user experience. Two measurements to track these types of experiences are slow frames and frozen frames. If you want your app to run smoothly, you should try to avoid both. The SDK adds these two measurements for the transactions you capture.
+
+Slow and frozen frames are Mobile Vitals, which you can learn about in the [full documentation](/product/insights/mobile/mobile-vitals).
+
+<Alert>
+
+React Native mobile apps will not report [Web Vitals](/product/insights/web-vitals/). These values depend on APIs provided by browsers, and are not available in this context.
+
+</Alert>
+
+#### AndroidX Support
+
+Sentry uses the `androidx.core` library for detecting [slow and frozen frames](#slow-and-frozen-frames). This is necessary to produce accurate results across all Android OS versions.
+
+We check for availability at runtime, so if you're not using `androidx.core`, you can remove it from Sentry's transitive dependencies.
+
+```Groovy
+api ('io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '4.2.0') }}') {
+    exclude group: 'androidx.core', module: 'core'
+}
+```
+
+Note that if you remove this transitive dependency, slow and frozen frames won't be reported.
+
+### Stall Tracking
+
+A stall is when the JavaScript event loop takes longer than expected to complete. A stall in your JavaScript code will not just make your UI unresponsive, but also slow down the logic that is contained within JavaScript. This slows everything down, creating a bad experience for your users.
+
+We track stalls that occur in your React Native app during a transaction and provide you with these values:
+
+- **Longest Stall Time**: The time, in milliseconds, of the longest event loop stall.
+- **Total Stall Time**: The total combined time, in milliseconds, of all stalls.
+- **Stall Count**: The total number of stalls that occurred during the transaction.
+
+### Fetch/XML Request Instrumentation
+
+The tracing integration creates a child span for every `XMLHttpRequest` or `fetch` request on the JavaScript layer that occurs while those transactions are open. Learn more about [traces, transactions, and spans](/product/sentry-basics/tracing/distributed-tracing/).
+
+## Configuration Options
+
+To configure the automatic performance instrumentation, you will need to add the `ReactNativeTracing` integration yourself. We provide many options by default, so for the majority of apps you won't need to configure the integration yourself.
+
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  integrations: [Sentry.reactNativeTracingIntegration()],
+});
+```
+
+### tracePropagationTargets
+
+The default value of `tracePropagationTargets` is `[/.*/]` for mobile and `['localhost', /^\//]` for web. The React Native SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests on mobile.
+On web, trace data is only attached to outgoing requests that contain `localhost` in their URL or requests whose URL starts with a `'/'` (for example `GET /api/v1/users`).
+
+<Expandable title="Using React Native on Web? Here is how `tracePropagationTargets` changes.">
+
+The SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you'll need to add the domain there to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace. **The `tracePropagationTargets` option matches against the entire request URL, not just the domain. Using stricter regex to match certain parts of the URL ensures that requests don't unnecessarily have the `sentry-trace` header attached.**
+
+<PlatformContent includePath="performance/tracePropagationTargets-example" />
+
+You'll need to configure your web server CORS to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but the configuration depends on your setup. If you don't allow the `sentry-trace` header, the request might get blocked.
+
+</Expandable>
+
+### beforeStartSpan
+
+`beforeStartSpan` is called at the start of every `pageload` or `navigation` span, and is passed an object containing data about the span which will be started. With `beforeStartSpan` you can modify that data.
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.reactNativeTracingIntegration({
+      beforeStartSpan: (context) => {
+        return {
+          ...context,
+          attributes: {
+            ...context.attributes,
+            "custom": "value",
+          },
+        };
+      },
+    }),
+  ],
+});
+```
+
+### shouldCreateSpanForRequest
+
+This function can be used to filter out unwanted spans such as XHRs running
+health checks or something similar. If this function isn't specified, spans
+will be created for all requests.
+
+```javascript
+Sentry.init({
+  // ...
+  integrations: [
+    Sentry.reactNativeTracingIntegration({
+      shouldCreateSpanForRequest: (url) => {
+        // Do not create spans for outgoing requests to a `/health/` endpoint
+        return !url.match(/\/health\/?$/);
+      },
+    }),
+  ],
+});
+```
+
+### idleTimeoutMs
+
+The amount of idle time, measured in ms, you have to wait for the transaction to finish if there are no unfinished spans. The transaction will use the end timestamp of the last finished span as the endtime for the transaction.
+
+The default is `1_000`.
+
+### finalTimeoutMs
+
+The maximum duration of the transaction, measured in ms. If the transaction duration hits the `finalTimeout` value, it will be done.
+
+The default is `60_0000`.
+
+## Recipes
+
+Currently, by default, the React Native SDK will only create child spans for fetch/XHR transactions out of the box. This means once you are done setting up your routing instrumentation, you will either see just a few fetch/XHR child spans or no children at all. To find out how to customize instrumentation your app, review our <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">Custom Instrumentation</PlatformLink>.
+
+### React Profiler
+
+We export the React Profiler from our React Native SDK as well. Learn more in [React Component Tracking](/platforms/javascript/guides/react/features/component-monitoring/).
+
+After you instrument your app's routing, if you wrap a component that renders on one of the routes with `withProfiler`, you will be able to track the component's lifecycle as a child span of the route transaction.
+
+```javascript {tabTitle: Higher Order Component}
+import * as Sentry from "@sentry/react-native";
+
+// withProfiler HOC
+const SomeComponent = () => {
+  // ...
+};
+
+export default Sentry.withProfiler(SomeComponent);
+```
+
+```javascript {tabTitle: Parent Component}
+// Profiler parent
+const SomeComponent = () => {
+  return (
+    <Sentry.Profiler name="SomeChild">
+      <SomeChild />
+    </Sentry.Profiler>
+  );
+};
+```
+
+```javascript {tabTitle: Hook}
+// useProfiler hook
+const SomeComponent = () => {
+  Sentry.useProfiler("SomeComponent");
+
+  return (
+    //...
+  )
+}
+```
+
+#### Minified Names in Production
+
+When bundling for production, React Native will minify class and function names to reduce the bundle size. This means that **you won't get the full original component names in your Profiler spans** and instead you will see minified names. Check out our [troubleshooting guide for minified production bundles](/platforms/react-native/troubleshooting/#minified-names-in-production) documentation to solve this.
+
+## Opt Out
+
+If you want to use tracing without our automatic instrumentation, you can disable it by setting `enableAutoPerformanceTracing` in your Sentry options and removing the `ReactNativeTracing` integration, if you added it:
+
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  enableAutoPerformanceTracing: false,
+});
+```
+
+## User Interaction Instrumentation
+
+The UI instrumentation captures transactions and adds breadcrumbs for touch interactions. Gesture support using React Native Gesture Handler is also available with the `sentryTraceGesture` wrapper. Learn more about [User Interaction Instrumentation](/platforms/react-native/tracing/instrumentation/user-interaction-instrumentation).

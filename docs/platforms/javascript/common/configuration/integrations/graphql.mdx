@@ -1,0 +1,76 @@
+---
+title: GraphQL
+description: "Adds instrumentation for GraphQL. (default)"
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.electron
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.react-router
+  - javascript.astro
+  - javascript.bun
+  - javascript.tanstackstart-react
+---
+
+<Alert>
+
+This integration only works in the Node.js and Bun runtimes.
+
+</Alert>
+
+_Import name: `Sentry.graphqlIntegration`_
+
+This integration is enabled by default when performance monitoring is enabled. If you'd like to modify your default integrations, read [this](./../#modifying-default-integrations).
+
+The `graphqlIntegration` adds instrumentation for the `graphql` library to capture spans using [`@opentelemetry/instrumentation-graphql`](https://www.npmjs.com/package/@opentelemetry/instrumentation-graphql).
+
+```JavaScript
+Sentry.init({
+  integrations: [Sentry.graphqlIntegration()],
+});
+```
+
+## Supported Versions
+
+- `graphql`: `>=14.0.0 <17`
+
+## Options
+
+### `ignoreResolveSpans`
+
+_Type: `boolean`_
+
+If spans for resolver functions should not be created. Default is `true`.
+
+### `ignoreTrivalResolveSpans`
+
+_Type: `boolean`_
+
+If spans for the execution of the default resolver on object properties should not be created. Default is `true`.
+
+When a resolver function is not defined on the schema for a field, GraphQL will use the default resolver which just looks for a property with that name on the object. If the property is not a function, it's not very interesting to trace. This option can reduce noise and number of spans created.
+
+### `useOperationNameForRootSpan`
+
+_Type: `boolean`_
+
+By default, this option is `true`.
+
+With this setting enabled, the GraphQL instrumentation dynamically updates the name of the `http.server` root span by appending
+the operation names. Instead of generic span names like `POST /graphql`, span names will be more descriptive, such as `POST /graphql (query MyQuery)`.
+For requests containing multiple operations, the span names will aggregate operation names, for example `POST /graphql (query Query1, query Query2)`
+
+Set the option to `false` to preserve the default `http.server` span name without this additional context.

@@ -1,0 +1,178 @@
+---
+title: Migrate from 1.x to 2.x
+sidebar_order: 8998
+description: "Learn about migrating from sentry-python 1.x to 2.x"
+---
+
+This guide describes the common patterns involved in migrating to version 2.x of the `sentry-python` SDK.
+
+While the top-level API stays the same for the most part, there's a number of deprecations and breaking changes in `2.0`. This guide captures the top changes that will affect most users and the corresponding updates they'll need to make in order to migrate. For the full list of changes, check out the [detailed migration guide in the repository](https://github.com/getsentry/sentry-python/blob/master/MIGRATION_GUIDE.md).
+
+## Python Version Support
+
+Sentry Python SDK `2.0` now only supports Python 3.6 and higher. If you're on Python 2.7 or 3.5 and lower, you'll need to stay on `1.x`.
+
+## Configuration Options
+
+The `profiles_sample_rate` and `profiler_mode` options are not experimental anymore and can be used directly. Setting them via `_experiments` is deprecated and will be removed in the future.
+
+The deprecated `with_locals` and `request_bodies` options have been removed in favor of their new counterparts: `include_local_variables` and `max_request_body_size`, respectively.
+
+**These are all potential changes you need to apply to your init**:
+
+
+```python diff
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+
+    # Replace with_locals
+-   with_locals=False,
++   include_local_variables=False,
+
+    # Replace request_bodies
+-   request_bodies="always",
++   max_request_body_size="always",
+
+    # Replace _experiments["profiles_sample_rate"]
+    # Replace _experiments["profiler_mode"]
+-   _experiments={
+-       "profiles_sample_rate": 1.0,
+-       "profiler_mode": "thread",
+-   },
++   profiles_sample_rate=1.0,
++   profiler_mode="thread",
+)
+```
+
+The signature for the experimental Sentry Metrics callback function set with `before_emit_metric` has changed from `before_emit_callback(key, tags)` to `before_emit_callback(key, value, unit, tags)`.
+
+## API
+
+The API function `last_event_id()` was removed in 2.0.0, but was brought back by public demand in 2.2.0. The last event ID is returned by `capture_event()`, `capture_exception()`, and `capture_message()` in all SDK versions.
+
+## Custom Instrumentation
+
+Hub-based APIs as well as some scope-based APIs (like `configure_scope()` and `push_scope()`) are now deprecated as a consequence of [reworking](/platforms/python/enriching-events/scopes/) the way the SDK saves and propagates data internally. Instead, SDK 2.0 introduces the concept of a global, isolation and current scope. In short:
+
+- The **global scope** holds data that doesn't change as long as your app is running (for example, the current release).
+- The **isolation scope** follows a single basic unit of your program, such as a single request-response cycle or one task in a task queue, and holds data pertaining to it. In most cases, the lifecycle of an isolation scope maps to the lifecycle of a transaction.
+- The **current scope** wraps a smaller part of the code, often something that's being tracked by a single span.
+
+The SDK will take care of deciding what data belongs on which scope as long as you use the top-level API. For example, you can use `sentry_sdk.set_tag()` and let the SDK handle the data for you, instead of manually setting it with `scope.set_tag()`.
+
+The old APIs will continue to work in 2.0, but we recommend migrating to their new counterparts as soon as possible since they will be removed in the next major release.
+
+### Activating a Custom Hub
+
+If you were using a custom hub to isolate event data, we recommend using a custom isolation scope instead. To activate the custom isolation scope, you will need to explicitly pass the isolation scope to `use_isolation_scope`, which creates a context manager that activates the scope. Here is an example of how to change your code to make it work:
+
+```python diff
+  import sentry_sdk
++ import sentry_sdk.scope
+
+- with my_hub:
++ with sentry_sdk.scope.use_isolation_scope(my_isolation_scope):
+      sentry_sdk.capture_message("I am isolated")
+```
+
+### Cloning a Hub
+
+If you previously cloned a hub by passing a hub to the `Hub` constructor, you should now fork an isolation scope by calling the scope's `fork()` method, like this:
+
+```python diff
+- import sentry_sdk
+
+- my_cloned_hub = sentry_sdk.Hub(my_hub)
++ my_cloned_isolation_scope = my_isolation_scope.fork()
+```
+
+You can follow the previous section's instructions to activate the cloned isolation scope.
+
+### Activating Current Hub Clone
+
+If you previously used `with sentry_sdk.Hub(sentry_sdk.Hub.current)` to clone the current hub and activate the clone, you should now use `with sentry_sdk.isolation_scope()`, like so:
+
+
+```python diff
+  import sentry_sdk
+
+- with sentry_sdk.Hub(sentry_sdk.Hub.current) as hub:
++ with sentry_sdk.isolation_scope() as scope:
+      sentry_sdk.capture_message("I am isolated!")
+```
+
+`sentry_sdk.isolation_scope` is a context manager that creates a new isolation scope by forking the current isolation scope. The forked isolation scope is activated during the context manager's lifetime, providing a similar level of isolation within the context manager as the previous `Hub`-based approach.
+
+Note that using `sentry_sdk.isolation_scope()` is equivalent to `sentry_sdk.scope.use_isolation_scope(sentry_sdk.get_isolation_scope().fork())`.
+
+### Scope Configuring
+
+In case of `configure_scope()`, you will need to modify either the isolation scope
+or the current scope, depending on whether the change you're making to the scope
+should affect the whole transaction (one request-response cycle, one execution of
+a task, and so on) or just a specific part of the code.
+
+If you want your scope change to affect a smaller unit of code such as a span, use the current scope.
+
+```python diff
+- with sentry_sdk.configure_scope() as scope:
+-     # do something with scope
++ scope = sentry_sdk.get_current_scope()
++ # do something with scope
+```
+
+If you want your scope change to affect the whole transaction, use the isolation scope.
+
+```python diff
+- with sentry_sdk.configure_scope() as scope:
+-     # do something with scope
++ scope = sentry_sdk.get_isolation_scope()
++ # do something with scope
+```
+
+Additionally, you no longer have to use `configure_scope` to mutate a transaction. Instead, you simply get the current scope to mutate the transaction. Here is a recipe on how to change your code to make it work:
+
+```python diff
+transaction = sentry_sdk.transaction(...)
+
+# later in the code execution:
+
+- with sentry_sdk.configure_scope() as scope:
+-     scope.set_transaction_name("new-transaction-name")
+
++ scope = sentry_sdk.get_current_scope()
++ scope.set_transaction_name("new-transaction-name")
+```
+
+### Scope Pushing
+
+Scope pushing translates to forking a scope in `2.0`. You either want to fork the current or the isolation scope, depending on how long the new scope should be active. If it should encompass the whole transaction, fork the isolation scope, otherwise fork the current scope.
+
+If you only want to apply something to a smaller, localized part of the code, fork the current scope with `new_scope()`:
+
+```python diff
+- with sentry_sdk.push_scope() as scope:
+-     # do something
++ with sentry_sdk.new_scope() as scope:
++     # do something
+```
+
+If you're wrapping a whole request-response cycle or a whole execution of a task, fork the isolation scope:
+
+```python diff
+- with sentry_sdk.push_scope() as scope:
+-     # do something
++ with sentry_sdk.isolation_scope() as scope:
++     # do something
+```
+
+
+## Self-Hosted
+
+Sentry Python `2.0` is now only compatible with self-hosted Sentry `v20.6.0` and above, since the SDK now sends all events to the `/envelope` API endpoint. Self-hosted Sentry users must upgrade their self-hosted instance to a compatible version. No action is needed for SaaS users and self-hosted users already running a compatible Sentry version.
+
+## Transport
+
+If you're using a custom transport, `sentry_sdk.transport.Transport.capture_event` has been deprecated. Use `sentry_sdk.transport.Transport.capture_envelope` instead. Additionally, custom transports should now all be implemented as `sentry_sdk.transport.Transport` subclasses, since transport functions are deprecated.

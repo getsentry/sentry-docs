@@ -1,0 +1,98 @@
+---
+title: Nuxt
+description: Learn how to set up and configure Sentry in your Nuxt application using the installation wizard, capture your first errors, and view them in Sentry.
+sdk: sentry.javascript.nuxt
+categories:
+  - javascript
+  - browser
+  - server
+---
+
+<Alert level="warning">
+  This SDK is currently in **beta**. Beta features are still in progress and may
+  have bugs. Please reach out on
+  [GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose) if
+  you have any feedback or concerns.
+</Alert>
+
+<PlatformContent includePath="getting-started-prerequisites" />
+
+## Step 1: Install
+
+To install Sentry using the installation wizard, run the following command within your project:
+
+```bash
+npx @sentry/wizard@latest -i nuxt
+```
+
+The wizard then guides you through the setup process, asking you to enable additional (optional) Sentry features for your application beyond error monitoring.
+
+<PlatformContent includePath="getting-started-features-expandable" />
+
+This guide assumes that you enable all features and allow the wizard to create an example page or component. You can add or remove features at any time, but setting them up now will save you the effort of configuring them manually later.
+
+<Expandable title="What does the installation wizard change inside your application?">
+- Creates `sentry.(client|server).config.ts` to initialize the SDK
+- Creates or updates your `nuxt.config.ts` to add build options to add source maps upload and auto-instrumentation via Vite plugins
+- Creates `.env.sentry-build-plugin` with an auth token to upload source maps (this file is automatically added to `.gitignore`)
+- Adds an example page and route to your application to help verify your Sentry setup
+  - If it couldn't create a page, the wizard adds an example component instead
+
+</Expandable>
+
+## Step 2: Verify Your Setup
+
+If you haven't tested your Sentry configuration yet, let's do it now. You can confirm that Sentry is working properly and sending data to your Sentry project by using the example page created by the installation wizard.
+
+<Expandable level="warning" title="The wizard created an example component instead of a page.">
+The wizard creates a `SentryErrorButton` component when it fails to add an example page to your project. This usually happens if you don't have a `app.vue` file or if that file does not contain the `NuxtPage` component. To verify your setup, follow these steps before continuing with the next section, "View Captured Data in Sentry":
+
+1. Add the `SentryErrorButton` component to a page and open it in your browser. For most Nuxt applications, this will be at localhost.
+2. Click the "Throw Sample Error" button, which triggers an error and starts a performance trace on the client side.
+
+To test the server side as well, refer to the "Verify" section in the [Manual setup guide](/platforms/javascript/guides/nuxt/manual-setup/).
+
+</Expandable>
+
+To test Sentry on the server side, you first need to build your project since Sentry's server-side monitoring **doesn't work in development mode**.\
+Then run your project and make sure to load Sentry on the server side by explicitly adding it via [`--import`](/platforms/javascript/guides/nuxt/install/cli-import/):
+
+```
+# Start your app after building your project with `nuxi build`
+node --import ./.output/server/sentry.server.config.mjs .output/server/index.mjs
+```
+
+After building and running your project:
+
+1.  Open the example page `/sentry-example-page` in your browser. For most Nuxt applications, this will be at localhost.
+2.  Click the "Throw sample error" button. This triggers two errors:
+    - a frontend error
+    - an error within the API route
+
+Sentry captures both of these errors for you. Additionally, the button click starts a performance trace to measure the time it takes for the API request to complete.
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io/) to view the collected data (it takes a couple of moments for the data to appear).
+
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
+
+<PlatformContent includePath="getting-started-verify-locate-data" />
+
+## Next Steps
+
+At this point, you should have integrated Sentry into your Nuxt application and should already be sending error and performance data to your Sentry project.
+
+Now's a good time to customize your setup and look into more advanced topics. Our next recommended steps for you are:
+
+- Learn how to [manually capture errors](/platforms/javascript/guides/nuxt/usage/)
+- Continue to [customize your configuration](/platforms/javascript/guides/nuxt/configuration/)
+- Get familiar with [Sentry's product features](/product) like tracing, insights, and alerts
+- Learn how to [track your Vue components or your Pinia store](/platforms/javascript/guides/nuxt/features/)
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- If you encountered issues with our installation wizard, try [setting up Sentry manually](/platforms/javascript/guides/nuxt/manual-setup/)
+- [Get support](https://sentry.zendesk.com/hc/en-us/)
+
+</Expandable>

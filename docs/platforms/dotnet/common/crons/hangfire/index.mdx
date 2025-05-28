@@ -1,0 +1,47 @@
+---
+title: Hangfire
+description: "Learn more about how to monitor your Hangfire jobs."
+sidebar_order: 5001
+---
+
+The .NET SDK provides an integration with [Hangfire](https://www.hangfire.io/) to monitor your jobs by automatically [creating check-ins for them](https://docs.sentry.io/product/crons/job-monitoring/). The SDK relies on job filters that are set up when you call `UseSentry`. For example:
+
+```csharp
+using Hangfire;
+using Sentry.Hangfire;
+
+GlobalConfiguration.Configuration.UseSentry();
+```
+
+Alternatively, if you're using the builder pattern, your code may look like this:
+
+```csharp
+using Hangfire;
+using Sentry.Hangfire;
+
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddHangfire(configuration => configuration
+    .UseSentry() // <- Add Sentry to automatically send check-ins
+);
+```
+
+To let the SDK know which jobs to monitor, you need to provide the job with a monitor slug. This can be done by setting the `SentryMonitorSlug` attribute on the job. For example, the following snippet shows how to set up a fire-and-forget job that Sentry will monitor:
+
+```csharp
+using Hangfire;
+using Sentry.Hangfire;
+
+GlobalConfiguration.Configuration.UseSentry();
+BackgroundJob.Enqueue<PricingUpdateWorker>(job => job.Execute());
+
+public class PricingUpdateWorker
+{
+    [SentryMonitorSlug("update-pricing")]
+    public void Execute()
+    {
+        // Do your work to update the price
+    }
+}
+```
+
+The SDK will automatically capture a check-in with `CheckInStatus.InProgress` when the job starts and update the check-in with `CheckInStatus.OK` on success. In case of an exception during execution, the check-in will be updated as `CheckInStatus.ERROR` instead.

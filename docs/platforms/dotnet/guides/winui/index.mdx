@@ -1,0 +1,158 @@
+---
+title: WinUI
+description: "Learn about using Sentry's .NET SDK with the Windows UI Library"
+---
+
+Sentry's .NET SDK works with Windows UI Library applications through the [Sentry NuGet package](https://www.nuget.org/packages/Sentry).
+
+## Features
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+## Install
+
+<OnboardingOptionButtons options={['error-monitoring', 'performance']}/>
+
+<PlatformContent includePath="getting-started-install" />
+
+## Configure (Without Trimming)
+
+If you don't have [Trimming](https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trimming-options?pivots=dotnet-8-0) enabled when publishing your application then all you need to do is [initialize the SDK with `SentrySdk.Init`](/platforms/dotnet/) in the constructor of your application class (usually `App.xaml.cs`). Sentry's integration for WinUI will automatically capture any unhandled exceptions in your application and send these to Sentry.
+
+<Alert>
+
+Do not initialize the SDK in the `OnLaunched` event of the application or the `Hub` will not be initialized correctly.
+
+</Alert>
+
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+```csharp
+using Sentry.Protocol;
+
+sealed partial class App : Application
+{
+    public App()
+    {
+        // Initialize Sentry in the App constructor before any other code, to ensure you capture all possible exceptions.
+        SentrySdk.Init(options =>
+        {
+            // Tells which project in Sentry to send events to:
+            options.Dsn = "___PUBLIC_DSN___";
+
+            // When configuring for the first time, to see what the SDK is doing:
+            options.Debug = true;
+
+            // Adds request URL and headers, IP and name for users, etc.
+            options.SendDefaultPii = true;
+            // ___PRODUCT_OPTION_START___ performance
+
+            // Set TracesSampleRate to 1.0 to capture 100% of transactions for tracing.
+            // We recommend adjusting this value in production.
+            options.TracesSampleRate = 1.0;
+            // ___PRODUCT_OPTION_END___ performance
+
+            // Enable Global Mode since this is a client app.
+            options.IsGlobalModeEnabled = true;
+
+            // TODO:Any other Sentry options you need go here.
+        });
+
+        // Initialize the app component, and hook the Suspending event.
+        this.InitializeComponent();
+
+        // Add any other code you may need last.
+    }
+}
+```
+
+## Configure (With Trimming)
+
+If you have [Trimming](https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trimming-options?pivots=dotnet-8-0) enabled when publishing your application then, in addition to [initializing the SDK with `SentrySdk.Init`](/platforms/dotnet/), you must also configure an UnhandledException handler in the constructor of your application class (usually `App.xaml.cs`).
+
+<Alert>
+
+Do not initialize the SDK in the `OnLaunched` event of the application or the `Hub` will not be initialized correctly.
+
+</Alert>
+
+
+```csharp
+// Add these to your existing using statements.
+using Sentry.Protocol;
+using UnhandledExceptionEventArgs = Microsoft.UI.Xaml.UnhandledExceptionEventArgs;
+
+sealed partial class App : Application
+{
+    public App()
+    {
+        // Initialize Sentry in the App constructor before any other code, to ensure you capture all possible exceptions.
+        SentrySdk.Init(o =>
+        {
+            // Tells which project in Sentry to send events to:
+            o.Dsn = "___PUBLIC_DSN___";
+
+            // When configuring for the first time, to see what the SDK is doing:
+            o.Debug = true;
+
+            // Adds request URL and headers, IP and name for users, etc.
+            o.SendDefaultPii = true;
+            // ___PRODUCT_OPTION_START___ performance
+
+            // Set TracesSampleRate to 1.0 to capture 100% of transactions for tracing.
+            // We recommend adjusting this value in production.
+            o.TracesSampleRate = 1.0;
+            // ___PRODUCT_OPTION_END___ performance
+
+            // Enable Global Mode since this is a client app.
+            o.IsGlobalModeEnabled = true;
+
+            // Disable Sentry's built in UnhandledException handler as this won't work with AOT compilation
+            o.DisableWinUiUnhandledExceptionIntegration();
+
+            // TODO:Any other Sentry options you need go here.
+        });
+
+        // Hook up the WinUI UnhandledException event before initializing the app component.
+        this.UnhandledException += OnUnhandledException;
+
+        // Initialize the app component, and hook the Suspending event.
+        this.InitializeComponent();
+
+        // Add any other code you may need last.
+    }
+
+    // Add this OnUnhandledException handler.
+
+    // Use this attribute to ensure all types of exceptions are handled.
+    [SecurityCritical]
+    private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+    {
+        // Get a reference to the exception, because the Exception property is cleared when accessed.
+        var exception = e.Exception;
+        if (exception != null)
+        {
+            // Tell Sentry this was an unhandled exception
+            exception.Data[Mechanism.HandledKey] = false;
+            exception.Data[Mechanism.MechanismKey] = "Application.UnhandledException";
+
+            // Capture the exception
+            SentrySdk.CaptureException(exception);
+
+            // Flush the event immediately
+            SentrySdk.FlushAsync(TimeSpan.FromSeconds(2)).GetAwaiter().GetResult();
+        }
+    }
+}
+```
+
+## Verify
+
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+
+<PlatformContent includePath="getting-started-verify" />

@@ -1,0 +1,68 @@
+---
+title: Statsig
+description: "Learn how to use Sentry with Statsig."
+---
+
+<PlatformContent includePath="feature-flags/prerelease-alert" />
+
+The [Statsig](https://www.statsig.com/) integration tracks feature flag evaluations produced by the Statsig Python Server SDK. These evaluations are held in memory and sent to Sentry for review and analysis if an error occurs. **At the moment, we only support boolean flag evaluations from Statsig's `check_gate` function.** Learn more about [Statsig feature gates](https://docs.statsig.com/feature-flags/working-with/).
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `statsig` extra.
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[statsig]"
+```
+```bash {tabTitle:uv}
+uv add "sentry-sdk[statsig]"
+```
+
+## Configure
+
+Add `StatsigIntegration` to your `integrations` list:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.statsig import StatsigIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Add data like request headers and IP for users, if applicable;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    integrations=[StatsigIntegration()],
+)
+```
+
+For more information on how to use Statsig, read Statsig's [Python reference](https://docs.statsig.com/server/pythonSDK) and [quickstart guide](https://docs.statsig.com/guides/first-feature).
+
+## Verify
+
+Test the integration by evaluating a feature flag using your Statsig SDK before capturing an exception.
+
+```python
+import sentry_sdk
+from statsig.statsig_user import StatsigUser
+from statsig import statsig
+
+import time
+
+statsig.initialize("server-secret-key")
+while not statsig.is_initialized():
+    time.sleep(0.2)
+
+result = statsig.check_gate(StatsigUser("my-user-id"), "my-feature-gate")
+sentry_sdk.capture_exception(Exception("Something went wrong!"))
+```
+
+Visit the [Sentry website](https://sentry.io/issues/) and confirm that your error
+event has recorded the feature flag "my-feature-gate", and its value is equal to `result`.
+
+## Supported Versions
+
+- statsig >= 0.55.3
+- sentry-sdk >= 2.22.0
+- python >= 3.7
+
+<PlatformContent includePath="feature-flags/next-steps" />

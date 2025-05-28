@@ -1,0 +1,69 @@
+---
+title: Data Collected
+description: "See what data is collected by the Sentry SDK."
+sidebar_order: 1
+---
+
+Sentry takes data privacy very seriously and has default settings in place that prioritize data safety, especially when it comes to personally identifiable information (PII) data. When you add the Sentry SDK to your application, you allow it to collect data and send it to Sentry during the runtime of your application.
+
+The category types and amount of data collected vary, depending on the integrations you've enabled in the Sentry SDK. This page lists data categories that the Apple SDK collects.
+
+<PlatformSection supported={["apple"]}>
+
+<Alert>
+  The types and amount of information collected depends on the platform on which the Apple SDK is used. Refer to the <PlatformLink to="/">respective platform guide</PlatformLink> to see information specific to the platform you're interested in.
+</Alert>
+
+</PlatformSection>
+
+## HTTP Headers
+
+The <PlatformLink to="/configuration/http-client-errors">HTTP Client Errors</PlatformLink>, which are enabled by default, send the HTTP headers of the failed request and response to Sentry. The SDK uses a [denylist](https://github.com/getsentry/sentry-cocoa/blob/main/Sources/Swift/Tools/HTTPHeaderSanitizer.swift) to filter out any headers that contain sensitive data.
+
+## Users' IP Addresses
+
+By default, the Sentry SDK doesn't send the user's IP address. Once enabled, the Sentry backend services will infer the user ip address based on the incoming request, unless certain integrations you can enable override this behavior.
+
+To enable sending the user's IP address, set <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii=true`</PlatformLink>.
+
+## Request URL
+
+When the Apple SDK sends URLs to Sentry it always sends a sanitized URL which means it removes the query string and the fragment of the URL. Although the Apple SDK sanitizes the URL by removing the query string and the fragment of the URL, depending on your application, this could contain PII data.
+
+Network breadcrumbs and HTTP Client Errors, both enabled by default, send a sanitized URL for outgoing HTTP requests. You can disable network breadcrumbs by setting the option `enableNetworkBreadcrumbs` to `false` and you can disable HTTP Client Errors by setting the option `enableCaptureFailedRequests` to `false`.
+
+When you enable <PlatformLink to="/tracing">tracing</PlatformLink>, which is disabled per default, <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#network-tracking"> network tracing</PlatformLink> sends a sanitized URL for outgoing HTTP requests.
+
+## Source Context
+
+You can upload your source code to Sentry, which can then used to show the lines of code where an error happened in the Issue Details page, via the <PlatformLink to="/sourcecontext/#1-manually-upload-with-the-sentry-cli">sentry-cli</PlatformLink> or the <PlatformLink to="/sourcecontext/#2-fastlane-plugin">Sentry Fastlane plugin</PlatformLink>.
+
+To opt into sending this source context to Sentry, you have to enable the feature as described in <PlatformLink to="/sourcecontext/">the Source Context documentation</PlatformLink>.
+
+## File I/O
+
+When you enable tracing, which is disabled per default, the Apple SDK <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#file-io-tracing">instruments file I/O operations</PlatformLink> and sends the file names and paths to Sentry.
+
+## Core Data Queries
+
+When you enable <PlatformLink to="/tracing">tracing</PlatformLink>, which is disabled per default, the Apple SDK <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#core-data-tracing">instruments Core Data queries</PlatformLink> and sends the Core Data queries to Sentry. Neither the full SQL query (`SELECT 'User' WHERE name == 'username'`), nor the values of its parameters will ever be sent. A parameterized version of the query (`SELECT 'User' WHERE name == %@`) is sent instead.
+
+<PlatformSection supported={["apple.ios", "apple.visionos"]}>
+
+## Screenshots
+
+The <PlatformLink to="/enriching-events/screenshots">screenshot feature</PlatformLink> is disabled per default, but when enabled the screenshots may contain PII data.
+
+## View Hierarchy
+
+The <PlatformLink to="/enriching-events/viewhierarchy">view hierarchy feature</PlatformLink> is disabled per default, but when enabled the view hierarchy may contain PII data when using the `accessibilityIdentifier` property with personal information.
+
+</PlatformSection>
+
+<PlatformSection supported={["apple.ios"]}>
+
+## Session Replay
+
+By default, our Session Replay SDK masks all text content, images, webviews, and user input. This helps ensure that no sensitive data is exposed. You can find <PlatformLink to="/session-replay/#privacy">more details in the Session Replay documentation</PlatformLink>.
+
+</PlatformSection>

@@ -1,0 +1,108 @@
+---
+title: Troubleshooting
+sidebar_order: 9000
+description: "Troubleshooting steps for PHP"
+---
+
+## General
+
+<Expandable title="How can I log internal SDK events?">
+
+A good first step to debug SDK issues is using the `logger` option. For your convenience, the SDK ships with two implementations, `DebugFileLogger` and `DebugStdOutLogger`.
+
+```php
+\Sentry\init([
+    'logger' => new \Sentry\Logger\DebugFileLogger('/path/to/your/logfile.log'),
+]);
+
+// or
+
+\Sentry\init([
+    'logger' => new \Sentry\Logger\DebugStdOutLogger(),
+]);
+```
+
+The produced output will look something like this:
+
+```
+sentry/sentry: [debug] The "Sentry\Integration\ExceptionListenerIntegration, Sentry\Integration\ErrorListenerIntegration, Sentry\Integration\FatalErrorListenerIntegration, Sentry\Integration\RequestIntegration, Sentry\Integration\TransactionIntegration, Sentry\Integration\FrameContextifierIntegration, Sentry\Integration\EnvironmentIntegration, Sentry\Integration\ModulesIntegration" integration(s) have been installed.
+sentry/sentry: [info] Transaction [e2919a7b0f954478b6994c7282b060de] was started and sampled, decided by config:traces_sample_rate.
+sentry/sentry: [info] Transaction [e2919a7b0f954478b6994c7282b060de] started profiling because it was sampled.
+sentry/sentry: [info] Sending transaction [59390dc9dd934c0290d8cdc7a589da82] to o1.ingest.sentry.io [project:1].
+sentry/sentry: [warning] The profile does not contain enough samples, the profile will be discarded.
+sentry/sentry: [info] Sent transaction [59390dc9dd934c0290d8cdc7a589da82] to o1.ingest.sentry.io [project:1]. Result: "success" (status: 200).
+
+```
+</Expandable>
+
+<Expandable title="Missing Variables in Stack Traces">
+
+This is caused by the PHP configuration. PHP 7.4 introduced a new .ini setting, `zend.exception_ignore_args`, that will ignore stack trace arguments. Check your .ini file to ensure this setting is set to `Off` or `0`.
+
+</Expandable>
+
+<Expandable title="Why was my tag value truncated?">
+
+  Currently, every tag has a maximum character limit of 200 characters. Tags over the 200 character limit will become truncated, losing potentially important information. To retain this data, you can split data over several tags instead.
+
+  For example, a 200+ character tagged request:
+
+  `https://empowerplant.io/api/0/projects/ep/setup_form/?user_id=314159265358979323846264338327&tracking_id=EasyAsABC123OrSimpleAsDoReMi&product_name=PlantToHumanTranslator&product_id=161803398874989484820458683436563811772030917980576`
+
+  The 200+ character request above will become truncated to:
+
+  `https://empowerplant.io/api/0/projects/ep/setup_form/?user_id=314159265358979323846264338327&tracking_id=EasyAsABC123OrSimpleAsDoReMi&product_name=PlantToHumanTranslator&product_id=1618033988749894848`
+
+  <PlatformContent includePath="performance/control-data-truncation" />
+
+</Expandable>
+
+
+## Profiling
+
+<Expandable title="Why am I not seeing any profiling data?">
+
+If you don't see any profiling data in [sentry.io](https://sentry.io), you can try the following:
+
+  - Ensure that <PlatformLink to="/tracing/">Tracing is enabled</PlatformLink>.
+  - Ensure that the automatic instrumentation is sending performance data to Sentry by going to the **Performance** page in [sentry.io](https://sentry.io).
+  - Ensure that the <PlatformLink to="/tracing/instrumentation/custom-instrumentation">custom instrumentation</PlatformLink> is sending performance data to Sentry by going to the **Performance** page in [sentry.io](https://sentry.io).
+  - Ensure the <PlatformLink to="/integrations/#environmentintegration">`Sentry\Integration\EnvironmentIntegration`</PlatformLink> is enabled.
+  - Enable the <PlatformLink to="/configuration/options/#logger">logger</PlatformLink> to see what the SDK is doing under the hood.
+
+</Expandable>
+
+## Crons
+
+
+<PlatformContent includePath="crons/troubleshooting" />
+
+<Expandable title="Why aren't recurring job errors showing up on my monitor details page?">
+
+  You may not have <PlatformLink to="/crons/#connecting-errors-to-cron-monitors">linked errors to your monitor</PlatformLink>.
+
+</Expandable>
+
+<Expandable title="Why am I not receiving alerts when my monitor fails?">
+
+  You may not have <PlatformLink to="/crons/#alerts">set up alerts for your monitor</PlatformLink>.
+
+</Expandable>
+
+<Expandable title="What is the crons data retention policy for check-ins?">
+
+  Our current data retention policy is 90 days.
+
+</Expandable>
+
+<Expandable title="Do you support a monitor schedule with a six-field crontab expression?">
+
+  Currently, we only support crontab expressions with five fields.
+
+</Expandable>
+
+<Expandable title="My jobs time out because all of them start at the same time and sometimes they fail, how can I fix that?">
+
+  You can either consider running your jobs in the background OR use the `checkInMargin` option to make the window larger.
+
+</Expandable>

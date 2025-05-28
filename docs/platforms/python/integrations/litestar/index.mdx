@@ -1,0 +1,129 @@
+---
+title: Litestar
+description: "Learn about using Sentry with Litestar."
+---
+
+The Litestar integration adds support for the [Litestar framework](https://docs.litestar.dev/2/).
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `litestar` extra:
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[litestar]" "uvicorn"
+```
+```bash {tabTitle:uv}
+uv add "sentry-sdk[litestar]" "uvicorn"
+```
+
+## Configure
+
+If you have the `litestar` package in your dependencies, the Litestar integration will be enabled automatically when you initialize the Sentry SDK.
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Add data like request headers and IP for users, if applicable;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    # ___PRODUCT_OPTION_START___ performance
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    # ___PRODUCT_OPTION_END___ performance
+    # ___PRODUCT_OPTION_START___ profiling
+    # To collect profiles for all profile sessions,
+    # set `profile_session_sample_rate` to 1.0.
+    profile_session_sample_rate=1.0,
+    # Profiles will be automatically collected while
+    # there is an active span.
+    profile_lifecycle="trace",
+    # ___PRODUCT_OPTION_END___ profiling
+)
+```
+
+## Verify
+
+```python
+from litestar import Litestar, get
+
+sentry_sdk.init(...)  # same as above
+
+@get("/hello")
+async def hello_world() -> str:
+    1 / 0
+    return "Hello!"
+
+app = Litestar(route_handlers=[hello_world])
+```
+
+Save the file above as `app.py` and start the development server with:
+
+```bash
+uvicorn app:app
+```
+
+When you point your browser to [http://localhost:8000/hello](http://localhost:8000/hello) a transaction will be created in the Performance section of [sentry.io](https://sentry.io). Additionally, the `ZeroDivisionError` we've snuck into our `hello_world` handler will be sent to [sentry.io](https://sentry.io) and will be connected to the transaction.
+
+It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Options
+
+By adding `LitestarIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `LitestarIntegration` to change its behavior:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.litestar import LitestarIntegration
+
+sentry_sdk.init(
+    # ...
+    integrations=[
+        LitestarIntegration(
+            failed_request_status_codes={403, *range(500, 599)},
+        ),
+    ],
+)
+```
+
+You can pass the following keyword arguments to `LitestarIntegration()`:
+
+### `failed_request_status_codes`
+
+A `set` of integers that will determine when an `HTTPException` should be reported to Sentry. The `HTTPException` is reported to Sentry if its status code is contained in the `failed_request_status_codes` set.
+
+Examples of valid `failed_request_status_codes`:
+
+- `{500}` will only report `HTTPException` with status 500.
+- `{400, *range(500, 600)}` will report `HTTPException` with status 400 as well as those in the 5xx range.
+- `set()` (the empty set) will not report any `HTTPException` to Sentry.
+
+The default is `{*range(500, 600)}`, meaning that any `HTTPException` with a status in the 5xx range is reported to Sentry.
+
+Regardless of how `failed_request_status_codes` is set, any exceptions raised by the handler, which are not of type `HTTPException` (or a subclass) are reported to Sentry. For example, if your request handler raises an unhandled `AttributeError`, the `AttributeError` gets reported to Sentry, even if you have set `failed_request_status_codes=set()`.
+
+## Supported Versions
+
+<Alert level="warning" title="Note">
+
+Litestar was [renamed from Starlite](https://litestar.dev/about/organization.html#litestar-and-starlite)
+with the release of version 2.0. We support different integrations for each one. This guide applies to Litestar.
+See [Starlite integration](/platforms/python/integrations/starlite) for the guide that applies to Starlite.
+
+</Alert>
+
+- Litestar: 2.0.0+
+- Python: 3.8+

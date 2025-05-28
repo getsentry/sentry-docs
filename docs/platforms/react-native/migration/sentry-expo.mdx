@@ -1,0 +1,116 @@
+---
+title: Migrate from sentry-expo
+sidebar_order: 300
+description: "Learn about migrating from sentry-expo to @sentry/react-native"
+---
+
+This guide scribes how to migrate from `sentry-expo` to `@sentry/react-native` in your Expo application.
+
+## Remove `sentry-expo`
+
+First, remove `sentry-expo` from your dependencies:
+
+```bash {tabTitle:npm}
+npm uninstall sentry-expo
+```
+
+```bash {tabTitle:yarn}
+yarn remove sentry-expo
+```
+
+```bash {tabTitle:pnpm}
+pnpm remove sentry-expo
+```
+
+### Install `@sentry/react-native`
+
+Install the `@sentry/react-native` package:
+
+```bash {tabTitle:Expo}
+npx expo install @sentry/react-native
+```
+
+```bash {tabTitle:npm}
+npm install @sentry/react-native --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/react-native
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/react-native
+```
+
+### Fix Imports
+
+Replace all imports of `sentry-expo` with `@sentry/react-native`:
+
+```javascript {tabTitle:JavaScript} diff
+- import * as Sentry from 'sentry-expo';
++ import * as Sentry from '@sentry/react-native';
+```
+
+Replace `sentry-expo` exports `Browser` and `React` with `@sentry/react`:
+
+```javascript {tabTitle:JavaScript} diff
+- import { Browser, React } from 'sentry-expo';
++ import * as Browser from '@sentry/react';
++ import * as React from '@sentry/react';
+```
+
+Replace `sentry-expo` export `Native` with `@sentry/react-native`:
+
+```javascript {tabTitle:JavaScript} diff
+- import { Native } from 'sentry-expo';
++ import * as Sentry from '@sentry/react-native';
+```
+
+### Review `Sentry.init` Options
+
+The `enableInExpoDevelopment` option is no longer supported. If you were using it, remove it and replace it with a `__DEV__` check, or leave the SDK enabled in development.
+
+```javascript {tabTitle:JavaScript} diff
+Sentry.init({
+-  enableInExpoDevelopment: true,
++  enabled: __DEV__,
+});
+```
+
+### Changes to Default Tags
+
+Expo-specific tags are no longer added by default. If you were using them, you can add them manually:
+
+```javascript
+import Constants from "expo-constants";
+import * as Application from 'expo-application';
+import * as Device from "expo-device";
+import * as Updates from "expo-updates";
+
+import * as Sentry from "@sentry/react-native";
+
+Sentry.setExtras({
+  manifest: Updates.manifest,
+  deviceYearClass: Device.deviceYearClass,
+  linkingUri: Constants.linkingUri,
+});
+
+Sentry.setTag("expoChannel", Updates.channel);
+Sentry.setTag("appVersion", Application.nativeApplicationVersion);
+Sentry.setTag("deviceId", Constants.sessionId);
+Sentry.setTag("executionEnvironment", Constants.executionEnvironment);
+Sentry.setTag("expoGoVersion", Constants.expoVersion);
+Sentry.setTag("expoRuntimeVersion", Constants.expoRuntimeVersion);
+```
+
+## Review `react-native-web` Compatibility
+
+The `sentry-expo` package automatically switched to `@sentry/react` for `react-native-web` builds. This is no longer the case with `@sentry/react-native` which supports `react-native-web` out of the box.
+
+Note that some features might not be supported or work differently in `@sentry/react-native` on `react-native-web` compared to direct usage of `@sentry/react`. Verify in your application that the features you use work as expected.
+
+To continue using `@sentry/react` for `react-native-web` builds, see [@sentry/react](/platforms/javascript/guides/react/) for more details about the web React package.
+
+## Set Up the `@sentry/react-native` Expo and Metro Plugins
+
+Next, [set up the Expo and Metro plugins](/platforms/react-native/manual-setup/expo/) for `@sentry/react-native`.

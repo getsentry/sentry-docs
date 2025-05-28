@@ -1,0 +1,96 @@
+---
+title: Automatic Instrumentation
+description: "Learn what instrumentation automatically captures transactions."
+sidebar_order: 10
+---
+
+The Symfony SDK offers integrations to support tracing that are enabled by default. To use them, update to the latest version of the SDK.
+
+If the vendors (DBAL, Cache, Twig, and HTTP client) are installed, `enabled` will be set to `true`, so it's likely that this configuration is the same in your app.
+
+These integrations are hooking into critical paths of the framework and of the vendors. As a result, there may be a performance penalty. If you are updating from a previous version or installing the SDK, you may observe a degradation of your app performance, though it may not be noticeable. If you need to disable tracing, you can do so by setting `enabled` to `false`.
+
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+  tracing:
+    enabled: true
+    dbal: # DB queries
+      enabled: true
+    cache: # cache pools
+      enabled: true
+    twig: # templating engine
+      enabled: true
+    http_client: # Symfony HTTP client
+      enabled: true
+```
+
+You can adjust the integrations to your needs if you want to disable a specific integration.
+
+## DBAL
+
+This integration supports tracking database queries as Spans. Enabling this option will create Spans for your queries.
+
+It is enabled by default. To disable tracking database queries, set `enabled` to `false`.
+
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+  tracing:
+    dbal: # DB queries
+      enabled: false
+```
+
+## Twig
+
+This integration adds distributed tracing for Twig template rendering using Sentry.
+
+It is enabled by default. To disable it, set `enabled` to `false`.
+
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+  tracing:
+    twig: # templating engine
+      enabled: false
+```
+
+## Cache
+
+This integration adds support for distributed tracing of cache pools.
+
+It is enabled by default. To disable it, set `enabled` to `false`.
+
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+  tracing:
+    cache: # cache pools
+      enabled: false
+```
+
+## HTTP Client
+
+This integration adds support for distributed tracing of the Symfony HTTP client.
+
+It is enabled by default. To disable it, set `enabled` to `false`.
+
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+  tracing:
+    http_client: # Symfony HTTP client
+      enabled: false
+```
+
+As the HTTP client tracing is based on Symfony's [TraceableHttpClient](https://github.com/symfony/symfony/blob/558fec00b0fa92dc1499434355e5a35de162bbe7/src/Symfony/Component/HttpClient/TraceableHttpClient.php), you must consider the following:
+
+- Using HTTP client tracing will not execute your requests concurrently.
+- To get correct span timings, don't assign the response of the request to a variable if you don't intend to use it.
+
+```php
+// Correct way
+$this->client->request('GET',
+    'https://example.com'
+);
+
+// Incorrect way
+$response = $this->client->request('GET',
+    'https://example.com'
+);
+```

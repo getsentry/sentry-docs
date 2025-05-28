@@ -1,0 +1,76 @@
+---
+title: Performance Metrics
+description: "Learn how to attach performance metrics to your transactions."
+sidebar_order: 20
+---
+
+Sentry's SDKs support sending performance metrics data to Sentry. These are numeric values attached to transactions that are aggregated and displayed in Sentry.
+
+The React Native SDK automatically collects the following performance metrics:
+
+- <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#app-start-instrumentation"> Cold and warm app start time </PlatformLink>
+- <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#slow-and-frozen-frames"> Slow and frozen frame rendering </PlatformLink>
+
+## Custom Measurements
+
+In addition to automatic performance metrics, the SDK supports setting [custom performance measurements](/product/insights/overview/metrics/#custom-performance-measurements) on transactions. This allows you to define measurements that are important to your application and send them to Sentry.
+
+To set a performance measurement, you need to supply the following:
+
+- name (`string`)
+- value (any numeric type - `float`, `integer`, etc.)
+- unit (`string`, defaults to the string `none` if omitted)
+
+Sentry supports adding arbitrary custom units, but we recommend using one of the [supported units listed below](./#supported-measurement-units).
+
+```javascript
+// Record amount of memory used
+Sentry.setMeasurement("memoryUsed", 123, "byte");
+
+// Record time when Footer component renders on page
+Sentry.setMeasurement("ui.footerComponent.render", 1.3, "second");
+
+// Record amount of times localStorage was read
+Sentry.setMeasurement("localStorageRead", 4);
+```
+
+<Include name="custom-measurements-units-disclaimer.mdx" />
+
+## Supported Measurement Units
+
+Units augment measurement values by giving meaning to what otherwise might be abstract numbers. Adding units also allows Sentry to offer controls - unit conversions, filters, and so on - based on those units. For values that are unitless, you can supply an empty string or `none`.
+
+### Duration Units
+
+- `nanosecond`
+- `microsecond`
+- `millisecond`
+- `second`
+- `minute`
+- `hour`
+- `day`
+- `week`
+
+### Information Units
+
+- `bit`
+- `byte`
+- `kilobyte`
+- `kibibyte`
+- `megabyte`
+- `mebibyte`
+- `gigabyte`
+- `gibibyte`
+- `terabyte`
+- `tebibyte`
+- `petabyte`
+- `pebibyte`
+- `exabyte`
+- `exbibyte`
+
+### Fraction Units
+
+- `ratio`
+- `percent`
+
+If you want to explore further, you can find details about supported units in our [event ingestion documentation](https://getsentry.github.io/relay/relay_metrics/enum.MetricUnit.html).

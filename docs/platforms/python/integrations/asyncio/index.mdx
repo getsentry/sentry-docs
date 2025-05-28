@@ -1,0 +1,96 @@
+---
+title: asyncio
+description: "Learn about the asyncio integration and how it adds support for applications the asyncio module."
+---
+
+The `AsyncioIntegration` integrates with applications doing concurrent code execution using Python's [asyncio](https://docs.python.org/3/library/asyncio.html) module.
+
+## Install
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk"
+```
+```bash {tabTitle:uv}
+uv add "sentry-sdk"
+```
+
+## Configure
+
+Add `AsyncioIntegration()` to your list of `integrations`, enable tracing and be sure to call `sentry_sdk.init()` **at the beginning of the first `async` function you call**, as shown in the example below.
+
+<Alert level="warning">
+
+If you call `sentry_sdk.init()` outside of an `async` function in an async application, the SDK will not behave as expected.
+
+</Alert>
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python {filename:main.py}
+import sentry_sdk
+from sentry_sdk.integrations.asyncio import AsyncioIntegration
+
+async def main():
+    sentry_sdk.init(
+        dsn="___PUBLIC_DSN___",
+        # Add data like request headers and IP for users, if applicable;
+        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+        send_default_pii=True,
+        # ___PRODUCT_OPTION_START___ performance
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for tracing.
+        traces_sample_rate=1.0,
+        # ___PRODUCT_OPTION_END___ performance
+        # ___PRODUCT_OPTION_START___ profiling
+        # To collect profiles for all profile sessions,
+        # set `profile_session_sample_rate` to 1.0.
+        profile_session_sample_rate=1.0,
+        # Profiles will be automatically collected while
+        # there is an active span.
+        profile_lifecycle="trace",
+        # ___PRODUCT_OPTION_END___ profiling
+        integrations=[
+            AsyncioIntegration(),
+        ],
+    )
+
+    # your code goes here.
+    ...
+
+asyncio.run(main())
+```
+
+## Verify
+
+Trigger an error in your code and see it show up in [sentry.io](https://sentry.io).
+
+```python {filename:main.py}
+import asyncio
+
+import sentry_sdk
+from sentry_sdk.integrations.asyncio import AsyncioIntegration
+
+async def my_task():
+    1 / 0  # raises an error!
+
+async def main():
+    sentry_sdk.init(...)  # same as above
+    asyncio.create_task(my_task())
+
+asyncio.run(main())
+```
+
+## Behavior
+
+- All unhandled exceptions in tasks will be captured
+- Every executed Task will be instrumented and show up in the performance waterfall on Sentry.io
+
+## Supported Versions
+
+- Python: 3.7+

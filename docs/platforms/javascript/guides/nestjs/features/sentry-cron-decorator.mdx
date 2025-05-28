@@ -1,0 +1,38 @@
+---
+title: SentryCron Decorator
+description: "Learn about Sentry's SentryCron decorator."
+---
+
+<Alert>
+  The `@SentryCron` decorator is available from version `@sentry/nestjs` 8.16.0 and up.
+</Alert>
+
+The NestJS SDK includes a `@SentryCron` decorator that can be used to augment the native NestJS `@Cron` decorator to
+send check-ins to Sentry before and after each cron job run.
+
+To get started, import `SentryCron` from `@sentry/nestjs` and use it to decorate a cron job function in your NestJS application.
+
+<Alert>
+  The `@SentryCron` decorator needs to be applied after the `@Cron` decorator, or else the instrumentation does not work.
+</Alert>
+
+```typescript
+import { Cron } from '@nestjs/schedule';
+import { SentryCron } from '@sentry/nestjs';
+
+export class MyCronService {
+  @Cron('* * * * *')
+  @SentryCron('my-monitor-slug', {
+    schedule: {
+      type: "crontab",
+      value: "* * * * *",
+    },
+    checkinMargin: 2, // In minutes. Optional.
+    maxRuntime: 10, // In minutes. Optional.
+    timezone: "America/Los_Angeles", // Optional.
+  })
+  handleCron() {
+    // Your cron job logic here
+  }
+}
+```

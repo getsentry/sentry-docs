@@ -1,0 +1,113 @@
+---
+title: Google Cloud Functions
+description: "Learn about using Sentry with Google Cloud Functions."
+---
+
+## Install
+
+Add the Sentry SDK to your `requirements.txt`:
+
+```text {filename:requirements.txt}
+ sentry-sdk>=0.17.1
+```
+
+<Alert>
+
+The GCP integration currently supports only the Python `3.7` runtime environment. If you try to run it with a newer version (such as `3.9`), an error message will be displayed (with debug mode on).
+
+Limited Sentry support is available on newer Python runtimes by directly enabling [integrations for supported frameworks](/platforms/python/integrations) and/or using the generic [serverless integration](/platforms/python/integrations/serverless/).
+
+</Alert>
+
+## Configure
+
+You can use the Google Cloud Functions integration for the Python SDK like this:
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance',
+    'profiling',
+  ]}
+/>
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.gcp import GcpIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Add data like request headers and IP for users, if applicable;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    # ___PRODUCT_OPTION_START___ performance
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    # ___PRODUCT_OPTION_END___ performance
+    # ___PRODUCT_OPTION_START___ profiling
+    # To collect profiles for all profile sessions,
+    # set `profile_session_sample_rate` to 1.0.
+    profile_session_sample_rate=1.0,
+    # Profiles will be automatically collected while
+    # there is an active span.
+    profile_lifecycle="trace",
+    # ___PRODUCT_OPTION_END___ profiling
+    integrations=[
+        GcpIntegration(),
+    ],
+)
+
+def http_function_entrypoint(request):
+    # ...
+```
+
+<Alert title="Note">
+
+If you are using a web framework inside of your Cloud Function, the framework might catch those exceptions before we get to see them. Make sure to enable the framework specific integration as well, if one exists. See [_the Python main page_](/platforms/python/) for more information.
+
+</Alert>
+
+### Timeout Warning
+
+The timeout warning reports an issue when the function execution time is near
+the [configured timeout](https://cloud.google.com/functions/docs/concepts/exec#timeout).
+
+To enable the warning, update the SDK initialization to set `timeout_warning` to
+`true`:
+
+```python
+sentry_sdk.init(
+    # ...
+    integrations=[
+        GcpIntegration(
+            timeout_warning=True
+        ),
+    ],
+)
+```
+
+The timeout warning is sent only if the timeout in the Cloud Function configuration is set to a value greater than one second.
+
+## Behavior
+
+With the Google Cloud Functions integration enabled, the Python SDK will:
+
+- Automatically report all events from your Cloud Functions
+- You can <PlatformLink to="/configuration/filtering/">modify the transaction sample rate</PlatformLink> using `traces_sample_rate`.
+- Issues reports automatically include:
+
+  - A link to the stackdriver logs
+  - Function details
+  - `sys.argv` for the function
+  - Function execution time (in milliseconds)
+  - Function configured time (in seconds)
+  - You can add more data as described <PlatformLink to="/enriching-events/">here</PlatformLink>
+
+- Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
+
+- Each request has a separate scope. Changes to the scope within a view, for example setting a tag, will only apply to events sent as part of the request being handled.

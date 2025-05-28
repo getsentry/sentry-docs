@@ -1,0 +1,79 @@
+---
+title: WPF
+description: "Learn more about how Sentry's .NET SDK works with Windows Presentation Foundation (WPF) applications."
+---
+
+Sentry's .NET SDK works with Windows Presentation Foundation applications through the [Sentry NuGet package](https://www.nuget.org/packages/Sentry). It works with WPF apps running on .NET Framework 4.6.2, .NET Core 3.0 or higher.
+
+## Features
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+## Install
+
+<OnboardingOptionButtons options={['error-monitoring', 'performance']}/>
+
+<PlatformContent includePath="getting-started-install" />
+
+## Configure
+
+In addition to [initializing the SDK with `SentrySdk.Init`](/platforms/dotnet/), you must configure the WPF specific error handler.
+
+<Alert>
+
+The SDK should be initialized in the constructor of your application class (usually `App.xaml.cs`). Do not initialize the SDK in the `OnStartup()` event of the application or the `Hub` will not be initialized correctly.
+
+</Alert>
+
+The SDK automatically handles `AppDomain.UnhandledException`. On WPF, for production apps (when no debugger is attached), WPF catches exception to show the dialog to the user. You can also configure your app to capture those exceptions before the dialog shows up:
+
+
+```csharp
+using System.Windows;
+
+public partial class App : Application
+{
+    public App()
+    {
+        SentrySdk.Init(options =>
+        {
+            // Tells which project in Sentry to send events to:
+            options.Dsn = "___PUBLIC_DSN___";
+
+            // When configuring for the first time, to see what the SDK is doing:
+            options.Debug = true;
+
+            // Adds request URL and headers, IP and name for users, etc.
+            options.SendDefaultPii = true;
+
+            // ___PRODUCT_OPTION_START___ performance
+            // Set traces_sample_rate to 1.0 to capture 100% of transactions for tracing.
+            // We recommend adjusting this value in production.
+            options.TracesSampleRate = 1.0;
+
+            // ___PRODUCT_OPTION_END___ performance
+            // Enable Global Mode since this is a client app
+            options.IsGlobalModeEnabled = true;
+
+            //TODO: any other options you need go here
+        });
+        DispatcherUnhandledException += App_DispatcherUnhandledException;
+    }
+
+    void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+    {
+        SentrySdk.CaptureException(e.Exception);
+
+        // If you want to avoid the application from crashing:
+        e.Handled = true;
+    }
+}
+```
+
+## Verify
+
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+
+<PlatformContent includePath="getting-started-verify" />
