@@ -148,7 +148,7 @@ export function DynamicNav({
   }
 
   const {path} = serverContext();
-  const isActive = path.join('/').indexOf(root) === 0;
+  const isActive = getUnversionedPath(path, false) === root;
   const linkPath = `/${path.join('/')}/`;
 
   const header = (

@@ -1,5 +1,5 @@
 "use client";
-import {Fragment, useState} from 'react';
+import {Fragment, useEffect,useRef, useState} from 'react';
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
 
@@ -27,9 +27,42 @@ const sections = [
 export default function TopNavClient({platforms}: { platforms: Platform[] }) {
   const [platformDropdownOpen, setPlatformDropdownOpen] = useState(false);
   const [productDropdownOpen, setProductDropdownOpen] = useState(false);
+  const [platformDropdownByClick, setPlatformDropdownByClick] = useState(false);
+  const [productDropdownByClick, setProductDropdownByClick] = useState(false);
+  const platformBtnRef = useRef<HTMLButtonElement>(null);
+  const productBtnRef = useRef<HTMLButtonElement>(null);
+  const platformDropdownRef = useRef<HTMLDivElement>(null);
+  const productDropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const isPlatformsRoute = pathname?.startsWith('/platforms/');
   const isProductRoute = pathname?.startsWith('/product/');
+  const closeTimers = useRef<{products?: NodeJS.Timeout; sdks?: NodeJS.Timeout}>({});
+
+  // Close dropdowns on outside click if opened by click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (platformDropdownOpen && platformDropdownByClick) {
+        if (
+          !platformBtnRef.current?.contains(e.target as Node) &&
+          !platformDropdownRef.current?.contains(e.target as Node)
+        ) {
+          setPlatformDropdownOpen(false);
+          setPlatformDropdownByClick(false);
+        }
+      }
+      if (productDropdownOpen && productDropdownByClick) {
+        if (
+          !productBtnRef.current?.contains(e.target as Node) &&
+          !productDropdownRef.current?.contains(e.target as Node)
+        ) {
+          setProductDropdownOpen(false);
+          setProductDropdownByClick(false);
+        }
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [platformDropdownOpen, platformDropdownByClick, productDropdownOpen, productDropdownByClick]);
 
   return (
     <Fragment>
@@ -42,14 +75,23 @@ export default function TopNavClient({platforms}: { platforms: Platform[] }) {
           {sections.map(section => (
             <li key={section.href} className="list-none relative">
               {section.label === 'Products' ? (
-                <Fragment>
+                <div
+                  style={{display: 'inline-block'}}
+                >
                   <button
+                    ref={productBtnRef}
                     className={`text-[var(--gray-12)] transition-colors duration-150 inline-block ${
                       (productDropdownOpen || isProductRoute)
                         ? 'bg-[var(--accent-purple-light)] text-[var(--accent)] shadow-sm py-[6px] pl-[18px] pr-[18px] rounded-md'
                         : 'hover:text-[var(--accent)] py-2 px-1 rounded-t-md'
                     } flex items-center gap-1`}
-                    onClick={() => setProductDropdownOpen(v => !v)}
+                    onClick={() => {
+                      clearTimeout(closeTimers.current.products);
+                      setProductDropdownOpen(v => !v);
+                      setProductDropdownByClick(true);
+                    }}
+                    aria-haspopup="true"
+                    aria-expanded={productDropdownOpen}
                   >
                     {section.label}
                     <svg
@@ -62,6 +104,7 @@ export default function TopNavClient({platforms}: { platforms: Platform[] }) {
                   </button>
                   {productDropdownOpen && (
                     <div
+                      ref={productDropdownRef}
                       className="absolute left-0 bg-white border border-[var(--gray-a3)] shadow-lg z-50 min-w-[220px] p-2 rounded-b-md rounded-t-none"
                       style={{top: '100%', marginTop: 0}}
                       onClick={e => e.stopPropagation()}
@@ -77,16 +120,25 @@ export default function TopNavClient({platforms}: { platforms: Platform[] }) {
                       ))}
                     </div>
                   )}
-                </Fragment>
+                </div>
               ) : section.label === 'SDKs' ? (
-                <Fragment>
+                <div
+                  style={{display: 'inline-block'}}
+                >
                   <button
+                    ref={platformBtnRef}
                     className={`text-[var(--gray-12)] transition-colors duration-150 inline-block ${
                       (platformDropdownOpen || isPlatformsRoute)
                         ? 'bg-[var(--accent-purple-light)] text-[var(--accent)] shadow-sm py-[6px] pl-[18px] pr-[18px] rounded-md'
                         : 'hover:text-[var(--accent)] py-2 px-1 rounded-t-md'
                     } flex items-center gap-1`}
-                    onClick={() => setPlatformDropdownOpen(v => !v)}
+                    onClick={() => {
+                      clearTimeout(closeTimers.current.sdks);
+                      setPlatformDropdownOpen(v => !v);
+                      setPlatformDropdownByClick(true);
+                    }}
+                    aria-haspopup="true"
+                    aria-expanded={platformDropdownOpen}
                   >
                     {section.label}
                     <svg
@@ -99,6 +151,7 @@ export default function TopNavClient({platforms}: { platforms: Platform[] }) {
                   </button>
                   {platformDropdownOpen && (
                     <div
+                      ref={platformDropdownRef}
                       className="absolute left-0 bg-white border border-[var(--gray-a3)] shadow-lg z-50 min-w-[300px] p-4 rounded-b-md rounded-t-none"
                       style={{top: '100%', marginTop: 0}}
                       onClick={e => e.stopPropagation()}
@@ -109,7 +162,7 @@ export default function TopNavClient({platforms}: { platforms: Platform[] }) {
                       />
                     </div>
                   )}
-                </Fragment>
+                </div>
               ) : (
                 <Link
                   href={section.href}
