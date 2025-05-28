@@ -1,5 +1,5 @@
 ---
-title: ESM without CLI Flag
+title: ESM Without CLI Flag
 sidebar_order: 11
 description: "Learn about running Sentry in an ESM application, without the --import flag."
 supported:
@@ -17,13 +17,13 @@ When running your application in ESM mode, you will most likely want to <Platfor
 
 This installation method has the fundamental restriction that only native Node.js APIs can be instrumented (such as `fetch` and the `http` module).
 
-As a result, the Sentry SDK will not capture data from database calls, queues, ORMs, third-party libraries, or other framework-specific data.
+As a result, the Sentry SDK will **not** capture data from database calls, queues, ORMs, third-party libraries, or other framework-specific data.
 
 We recommend using this only if the `--import` flag is not an option for you.
 
 </Alert>
 
-You need to create a file named `instrument.mjs` that imports and initializes Sentry:
+**Step 1:** Create a file named `instrument.mjs` that imports and initializes Sentry:
 
 ```javascript {tabTitle:ESM} {filename: instrument.mjs}
 import * as Sentry from "@sentry/nestjs";
@@ -38,14 +38,14 @@ Sentry.init({
 });
 ```
 
-You need to import the `instrument.mjs` file before importing any other modules in your application. This is necessary to ensure that Sentry can automatically instrument all modules in your application:
+**Step 2:** Import the `instrument.mjs` file before importing any other modules in your in the `main.ts` file of your application. This ensures that Sentry can automatically instrument all modules in your application:
 
-```javascript {filename: main.js}
+```javascript {filename: main.ts}
 // Import this first!
 import "./instrument";
 
 // Now import other modules
-import http from "http";
-
+import { NestFactory } from "@nestjs/core";
+// ...
 // Your application code goes here
 ```
