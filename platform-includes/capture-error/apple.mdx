@@ -3,8 +3,16 @@ You can capture errors with the `captureError` method. This method takes an `Err
 ```swift {tabTitle:Swift}
 import Sentry
 
+enum MyCustomError: Error {
+    case myFirstIssue
+}
+
+func thisFunctionWillThrow() throws {
+    throw MyCustomError.myFirstIssue
+} 
+
 do {
-    try aMethodThatMightFail()
+    try thisFunctionWillThrow()
 } catch {
     SentrySDK.capture(error: error)
 }
@@ -13,8 +21,17 @@ do {
 ```objc {tabTitle:Objective-C}
 @import Sentry;
 
+- (void)thisFunctionWillReturnAnError:(NSError **)error {
+    *error = [NSError errorWithDomain:@"com.example.myapp"
+                                 code:1001
+                             userInfo:@{
+      NSLocalizedDescriptionKey: @"Something went wrong."
+    }];
+}
+// ... Your code
+
 NSError *error = nil;
-[self aMethodThatMightFail:&error]
+[self thisFunctionWillReturnAnError:&error];
 
 if (error) {
     [SentrySDK captureError:error];
