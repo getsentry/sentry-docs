@@ -4033,6 +4033,23 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     from: '/organization/integrations/elba/',
     to: '/organization/integrations/compliance/elba/',
   },
+  /* Uptime Monitoring */
+  {
+    from: '/product/alerts/uptime-monitoring/',
+    to: '/product/uptime-monitoring/',
+  },
+  {
+    from: '/product/alerts/uptime-monitoring/automatic-detection/',
+    to: '/product/uptime-monitoring/automatic-detection/',
+  },
+  {
+    from: '/product/alerts/uptime-monitoring/uptime-tracing/',
+    to: '/product/uptime-monitoring/uptime-tracing/',
+  },
+  {
+    from: '/product/alerts/uptime-monitoring/troubleshooting/',
+    to: '/product/uptime-monitoring/troubleshooting/',
+  },
 ];
 
 const redirectMap = new Map(
