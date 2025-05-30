@@ -7,12 +7,12 @@ enum MyCustomError: Error {
     case myFirstIssue
 }
 
-func thisFunctionWillThrow() throws {
+func thisFunctionThrows() throws {
     throw MyCustomError.myFirstIssue
 } 
 
 do {
-    try thisFunctionWillThrow()
+    try thisFunctionThrows()
 } catch {
     SentrySDK.capture(error: error)
 }
@@ -21,17 +21,18 @@ do {
 ```objc {tabTitle:Objective-C}
 @import Sentry;
 
-- (void)thisFunctionWillReturnAnError:(NSError **)error {
+- (void)thisFunctionReturnsAnError:(NSError **)error {
     *error = [NSError errorWithDomain:@"com.example.myapp"
                                  code:1001
                              userInfo:@{
       NSLocalizedDescriptionKey: @"Something went wrong."
     }];
 }
+
 // ... Your code
 
 NSError *error = nil;
-[self thisFunctionWillReturnAnError:&error];
+[self thisFunctionReturnsAnError:&error];
 
 if (error) {
     [SentrySDK captureError:error];
