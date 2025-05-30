@@ -94,7 +94,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/platforms/python/migration/configuration/filtering/',
     to: '/platforms/python/configuration/filtering/',
   },
-      /*  integration platform    */
+  /*  integration platform    */
   {
     from: '/organization/integrations/github/',
     to: '/organization/integrations/source-code-mgmt/github/',
@@ -215,7 +215,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/organization/integrations/elba/',
     to: '/organization/integrations/compliance/elba/',
   },
-      /*  ^  integration platform  ^  */
+  /*  ^  integration platform  ^  */
   {
     from: '/product/crons/getting-started/cli/',
     to: '/cli/crons/',
