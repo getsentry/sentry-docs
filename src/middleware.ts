@@ -3398,6 +3398,23 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/security-legal-pii/security/security-policy-reporting/',
     to: '/platform-redirect/?next=/security-policy-reporting/',
   },
+  /* Uptime Monitoring */
+  {
+    from: '/product/alerts/uptime-monitoring/',
+    to: '/product/uptime-monitoring/',
+  },
+  {
+    from: '/product/alerts/uptime-monitoring/automatic-detection/',
+    to: '/product/uptime-monitoring/automatic-detection/',
+  },
+  {
+    from: '/product/alerts/uptime-monitoring/uptime-tracing/',
+    to: '/product/uptime-monitoring/uptime-tracing/',
+  },
+  {
+    from: '/product/alerts/uptime-monitoring/troubleshooting/',
+    to: '/product/uptime-monitoring/troubleshooting/',
+  },
 ];
 
 const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
