@@ -111,7 +111,7 @@ export function Navbar() {
                     <div
                       id={id}
                       ref={dropdownRef}
-                      className="bg-white z-20 w-auto py-4 lg:px-5 lg:-mx-4 lg:absolute realtive lg:-left-2/4 lg:top-12 lg:rounded-2xl lg:shadow-sm "
+                      className="bg-white z-20 w-auto py-4 lg:px-5 lg:-mx-4 lg:absolute relative lg:-left-2/4 lg:top-12 lg:rounded-2xl lg:shadow-sm "
                     >
                       <div className="max-w-6xl w-full">
                         <div className="flex gap-6 lg:gap-0 lg:flex-row flex-col ">
