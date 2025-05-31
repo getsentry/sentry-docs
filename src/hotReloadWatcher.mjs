@@ -31,7 +31,7 @@ wss.on('connection', async function onConnect(ws) {
   const {signal} = ac;
   ws.on('close', () => ac.abort());
 
-  // avoid fileystem chatter when you save a file
+  // avoid filesystem chatter when you save a file
   const sendReload = throttle(() => ws.send('reload'), 10);
 
   try {

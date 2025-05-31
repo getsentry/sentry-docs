@@ -36,7 +36,7 @@ const handleRedirects = (request: NextRequest) => {
   }
 
   // If we don't find an exact match, we try to look for a :guide placeholder
-  const guidePlaceholer = '/guides/:guide/';
+  const guidePlaceholder = '/guides/:guide/';
   const guideRegex = /\/guides\/(\w+)\//g;
   const match = guideRegex.exec(urlPath);
 
@@ -44,13 +44,13 @@ const handleRedirects = (request: NextRequest) => {
     return undefined;
   }
 
-  const pathWithPlaceholder = urlPath.replace(guideRegex, guidePlaceholer);
+  const pathWithPlaceholder = urlPath.replace(guideRegex, guidePlaceholder);
   const guide = match[1];
 
   const redirectToGuide = redirectMap.get(pathWithPlaceholder);
   if (redirectToGuide) {
     const finalRedirectToPath = redirectToGuide.replace(
-      guidePlaceholer,
+      guidePlaceholder,
       `/guides/${guide}/`
     );
 

@@ -31,7 +31,7 @@ docker-compose up -d
 
 If you already run a local postgres, it will create a `changelog` table.
 
-The inital setup or the clean the database call:
+The initial setup or the clean the database call:
 
 ```
 yarn migrate:dev
