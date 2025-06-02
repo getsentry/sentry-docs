@@ -9,6 +9,8 @@ There are two ways to set them:
 
 You can set all values as environment variables, for example, in a `.env` file:
 
+<OrgAuthTokenNote />
+
 ```bash {filename: .env}
 # DO NOT commit this file to your repo. The auth token is a secret.
 SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
@@ -23,8 +25,6 @@ SENTRY_URL="https://your-sentry-instance.com"
 
 You can also set your org and project slugs by passing a `sourceMapsUploadOptions` object to `sentrySvelteKit`, as seen in the example below. For a full list of available options, see the [Sentry Vite Plugin documentation](https://www.npmjs.com/package/@sentry/vite-plugin#options).
 
-<OrgAuthTokenNote />
-
 ```javascript {filename:vite.config.(js|ts)} {6-12}
 import { sveltekit } from "@sveltejs/kit/vite";
 import { sentrySvelteKit } from "@sentry/sveltekit";
@@ -35,7 +35,7 @@ export default {
       sourceMapsUploadOptions: {
         org: "___ORG_SLUG___",
         project: "___PROJECT_SLUG___",
-        authToken: "process.env.SENTRY_AUTH_TOKEN",
+        authToken: process.env.SENTRY_AUTH_TOKEN,
         // If you're self-hosting Sentry, also add your instance URL:
         // url: "https://your-self-hosted-sentry.com/",
       },
@@ -46,10 +46,14 @@ export default {
 };
 ```
 
-<Alert level="warning" title="Important">
-  To keep your auth token secure, always store it in an environment variable
-  instead of directly in your files.
-</Alert>
+To keep your auth token secure, always store it in an environment variable instead of directly in your files:
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
 ### Override SvelteKit Adapter Detection
 
 By default, `sentrySvelteKit` will try to detect your SvelteKit adapter to configure the source maps upload correctly. If you're not using one of the [supported adapters](/platforms/javascript/guides/sveltekit) or the wrong one is detected, you can override the adapter detection by passing the `adapter` option to `sentrySvelteKit`:

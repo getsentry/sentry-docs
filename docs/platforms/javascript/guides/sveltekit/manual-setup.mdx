@@ -147,7 +147,7 @@ export default defineConfig({
 
 ## Step 3: Add Readable Stack Traces With Source Maps (Optional)
 
-To upload source maps for clear error stack traces, add your Sentry auth token, organization, and project slug in your `vite.config.(js|ts)` file:
+To upload source maps for clear error stack traces, create an environment variable for your auth token and add your Sentry organization, and project slug in your `vite.config.(js|ts)` file:
 
 ```javascript {filename:vite.config.(js|ts)} {6-10}
 import { sveltekit } from "@sveltejs/kit/vite";
@@ -159,13 +159,21 @@ export default {
       sourceMapsUploadOptions: {
         org: "___ORG_SLUG___",
         project: "___PROJECT_SLUG___",
-        authToken: "___ORG_AUTH_TOKEN___",
+        authToken: process.env.SENTRY_AUTH_TOKEN,
       },
     }),
     sveltekit(),
   ],
   // ... rest of your Vite config
 };
+```
+
+To keep your auth token secure, always store it in an environment variable instead of directly in your files:
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
 
 ### Override Adapter Detection
@@ -187,7 +195,7 @@ export default {
 };
 ```
 
-## Step 3: Optional Configuration
+## Step 4: Optional Configuration
 
 The points explain additional optional configuration or more in-depth customization of your Sentry SvelteKit SDK setup.
 
@@ -302,16 +310,16 @@ export const GET = wrapServerRouteWithSentry(async () => {
 });
 ```
 
-## Step 4: Cloudflare Pages Configuration (Optional)
+## Step 5: Cloudflare Pages Configuration (Optional)
 
 If you're deploying your application to Cloudflare Pages, you need to adjust your server-side setup.
 Follow this guide to [configure Sentry for Cloudflare](/platforms/javascript/guides/cloudflare/frameworks/sveltekit/).
 
-## Step 5: Avoid Ad Blockers With Tunneling (Optional)
+## Step 6: Avoid Ad Blockers With Tunneling (Optional)
 
 <PlatformContent includePath="getting-started-tunneling" />
 
-## Step 6: Verify Your Setup
+## Step 7: Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
