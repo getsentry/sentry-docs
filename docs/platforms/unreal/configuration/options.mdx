@@ -99,7 +99,35 @@ Learn more about enriching events with screenshots in our <PlatformLink to="/enr
 
 <Alert>
 
-The support for screenshot attachment on crash events is limited to Windows and Linux.
+Attaching screenshots to crash events is currently not supported on Android.
+
+</Alert>
+
+</ConfigKey>
+
+<ConfigKey name="attach-game-log">
+
+When enabled, game log file is automatically attached to all events captured if the current build configuration allows logging.
+
+This option is turned off by default.
+
+</ConfigKey>
+
+<ConfigKey name="attach-gpu-dump">
+
+When enabled, [Nsight Aftermath](https://developer.nvidia.com/nsight-aftermath) mini-dump file is automatically attached to GPU crash events captured.
+
+This option is turned on by default.
+
+<Alert>
+
+This feature is currently supported only for Nvidia GPUs.
+
+</Alert>
+
+<Alert>
+
+On Windows, capturing GPU crashes requires [modifying the Unreal Engine source code](https://github.com/getsentry/sentry-unreal/issues/673).
 
 </Alert>
 
@@ -109,11 +137,26 @@ The support for screenshot attachment on crash events is limited to Windows and 
 
 These options can be used to hook the SDK in various ways to customize the reporting of events.
 
+The callbacks you set as hooks will be called on the thread where the event happened. If the event occurs on a non-game thread during garbage collection the callback will not be invoked.
+
 <ConfigKey name="before-send">
 
 This function is called with an SDK-specific message or error event object, and can return a modified event object, or `null` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
 
 By the time <PlatformIdentifier name="before-send" /> is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
+
+</ConfigKey>
+
+<ConfigKey name="before-breadcrumb">
+
+This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
+The callback typically gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
+
+<Alert>
+
+Currently, hints are supported only on Android.
+
+</Alert>
 
 </ConfigKey>
 

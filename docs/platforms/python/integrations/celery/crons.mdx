@@ -42,6 +42,8 @@ Next, initialize Sentry. Where to do this depends on how you run beat:
 
 Make sure to also set `monitor_beat_tasks=True` in `CeleryIntegration`.
 
+If you have set `monitor_beat_tasks=True` make sure that you do not do manual task monitoring using the `@sentry_sdk.monitor` decorator, because this will lead to double instrumentation.
+
 In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
 
 Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
@@ -71,10 +73,12 @@ def init_sentry(**kwargs):
         traces_sample_rate=1.0,
         # ___PRODUCT_OPTION_END___ performance
         # ___PRODUCT_OPTION_START___ profiling
-        # Set profiles_sample_rate to 1.0 to profile 100%
-        # of sampled transactions.
-        # We recommend adjusting this value in production.
-        profiles_sample_rate=1.0,
+        # To collect profiles for all profile sessions,
+        # set `profile_session_sample_rate` to 1.0.
+        profile_session_sample_rate=1.0,
+        # Profiles will be automatically collected while
+        # there is an active span.
+        profile_lifecycle="trace",
         # ___PRODUCT_OPTION_END___ profiling
 +       integrations=[
 +           CeleryIntegration(

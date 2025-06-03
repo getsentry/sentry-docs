@@ -94,6 +94,7 @@ import NuxtSVG from 'platformicons/svg/nuxt.svg';
 import OpenaiSVG from 'platformicons/svg/openai.svg';
 import PerlSVG from 'platformicons/svg/perl.svg';
 import PhpSVG from 'platformicons/svg/php.svg';
+import PlaystationSVG from 'platformicons/svg/playstation.svg';
 import PostgresqlSVG from 'platformicons/svg/postgresql.svg';
 import PowershellSVG from 'platformicons/svg/powershell.svg';
 import PyramidSVG from 'platformicons/svg/pyramid.svg';
@@ -138,6 +139,7 @@ import VueSVG from 'platformicons/svg/vue.svg';
 import WasmSVG from 'platformicons/svg/wasm.svg';
 import WindowsSVG from 'platformicons/svg/windows.svg';
 import XamarinSVG from 'platformicons/svg/xamarin.svg';
+import XboxSVG from 'platformicons/svg/xbox.svg';
 import ActixSVGLarge from 'platformicons/svg_80x80/actix.svg';
 import AiohttpSVGLarge from 'platformicons/svg_80x80/aiohttp.svg';
 import AndroidSVGLarge from 'platformicons/svg_80x80/android.svg';
@@ -234,6 +236,7 @@ import NuxtSVGLarge from 'platformicons/svg_80x80/nuxt.svg';
 import OpenaiSVGLarge from 'platformicons/svg_80x80/openai.svg';
 import PerlSVGLarge from 'platformicons/svg_80x80/perl.svg';
 import PhpSVGLarge from 'platformicons/svg_80x80/php.svg';
+import PlaystationSVGLarge from 'platformicons/svg_80x80/playstation.svg';
 import PostgresqlSVGLarge from 'platformicons/svg_80x80/postgresql.svg';
 import PowershellSVGLarge from 'platformicons/svg_80x80/powershell.svg';
 import PyramidSVGLarge from 'platformicons/svg_80x80/pyramid.svg';
@@ -279,6 +282,7 @@ import VueSVGLarge from 'platformicons/svg_80x80/vue.svg';
 import WasmSVGLarge from 'platformicons/svg_80x80/wasm.svg';
 import WindowsSVGLarge from 'platformicons/svg_80x80/windows.svg';
 import XamarinSVGLarge from 'platformicons/svg_80x80/xamarin.svg';
+import XboxSVGLarge from 'platformicons/svg_80x80/xbox.svg';
 
 const formatToSVG = {
   HTML5: {
@@ -666,6 +670,10 @@ const formatToSVG = {
     sm: PhpSVG,
     lg: PhpSVGLarge,
   },
+  playstation: {
+    sm: PlaystationSVG,
+    lg: PlaystationSVGLarge,
+  },
   postgresql: {
     sm: PostgresqlSVG,
     lg: PostgresqlSVGLarge,
@@ -847,6 +855,10 @@ const formatToSVG = {
     sm: XamarinSVG,
     lg: XamarinSVGLarge,
   },
+  xbox: {
+    sm: XboxSVG,
+    lg: XboxSVGLarge,
+  },
 };
 
 export const PLATFORM_TO_ICON = {
@@ -963,6 +975,7 @@ export const PLATFORM_TO_ICON = {
   'php-monolog': 'php',
   'php-symfony2': 'symfony',
   'php-symfony': 'symfony',
+  playstation: 'playstation',
   python: 'python',
   'python-aiohttp': 'aiohttp',
   'python-airflow': 'apache-airflow',
@@ -1032,6 +1045,7 @@ export const PLATFORM_TO_ICON = {
   unrealengine: 'unreal',
   visualbasic: 'visual-basic',
   windows: 'windows',
+  xbox: 'xbox',
   // Don't add new platforms down here!
   // Please add them where they belong alphabetically
 } as const;

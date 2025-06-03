@@ -3398,6 +3398,23 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/security-legal-pii/security/security-policy-reporting/',
     to: '/platform-redirect/?next=/security-policy-reporting/',
   },
+  /* Uptime Monitoring */
+  {
+    from: '/product/alerts/uptime-monitoring/',
+    to: '/product/uptime-monitoring/',
+  },
+  {
+    from: '/product/alerts/uptime-monitoring/automatic-detection/',
+    to: '/product/uptime-monitoring/automatic-detection/',
+  },
+  {
+    from: '/product/alerts/uptime-monitoring/uptime-tracing/',
+    to: '/product/uptime-monitoring/uptime-tracing/',
+  },
+  {
+    from: '/product/alerts/uptime-monitoring/troubleshooting/',
+    to: '/product/uptime-monitoring/troubleshooting/',
+  },
 ];
 
 const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
@@ -3576,10 +3593,6 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/sdk/craft-quick-start/',
     to: '/sdk/processes/releases/',
-  },
-  {
-    from: '/sdk/metrics/',
-    to: '/sdk/telemetry/metrics/',
   },
   {
     from: '/sdk/check-ins/',
@@ -3967,6 +3980,71 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/relay/relay-best-practices/',
     to: '/ingestion/relay/relay-best-practices/',
+  },
+  /*  integration platform    */
+  {
+    from: '/organization/integrations/kitemaker/',
+    to: '/organization/integrations/issue-tracking/kitemaker/',
+  },
+  {
+    from: '/organization/integrations/pagertree/',
+    to: '/organization/integrations/notification-incidents/pagertree/',
+  },
+  {
+    from: '/organization/integrations/goast/',
+    to: '/organization/integrations/issue-tracking/goast/',
+  },
+  {
+    from: '/organization/integrations/betterbugs/',
+    to: '/organization/integrations/session-replay/betterbugs/',
+  },
+  {
+    from: '/organization/integrations/blar/',
+    to: '/organization/integrations/notification-incidents/blar/',
+  },
+  {
+    from: '/organization/integrations/apigene/',
+    to: '/organization/integrations/debugging/apigene/',
+  },
+  {
+    from: '/organization/integrations/revisedev/',
+    to: '/organization/integrations/debugging/revisedev/',
+  },
+  {
+    from: '/organization/integrations/foamai/',
+    to: '/organization/integrations/debugging/foamai/',
+  },
+  {
+    from: '/organization/integrations/telegram-alerts-bot/',
+    to: '/organization/integrations/notification-incidents/telegram-alerts-bot/',
+  },
+  {
+    from: '/organization/integrations/vanta-eu/',
+    to: '/organization/integrations/compliance/vanta-eu/',
+  },
+  {
+    from: '/organization/integrations/sourcery/',
+    to: '/organization/integrations/debugging/sourcery/',
+  },
+  {
+    from: '/organization/integrations/codecomet/',
+    to: '/organization/integrations/debugging/codecomet/',
+  },
+  {
+    from: '/organization/integrations/glueai/',
+    to: '/organization/integrations/notification-incidents/glueai/',
+  },
+  {
+    from: '/organization/integrations/factory/',
+    to: '/organization/integrations/issue-tracking/factory/',
+  },
+  {
+    from: '/organization/integrations/teamcamp/',
+    to: '/organization/integrations/issue-tracking/teamcamp/',
+  },
+  {
+    from: '/organization/integrations/elba/',
+    to: '/organization/integrations/compliance/elba/',
   },
 ];
 

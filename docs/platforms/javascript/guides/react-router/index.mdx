@@ -98,7 +98,7 @@ Initialize the Sentry React SDK in your `entry.client.tsx` file:
 +  
 +  integrations: [
 +    // ___PRODUCT_OPTION_START___ performance
-+    Sentry.browserTracingIntegration(),
++    Sentry.reactRouterTracingIntegration(),
 +    // ___PRODUCT_OPTION_END___ performance
 +    // ___PRODUCT_OPTION_START___ session-replay
 +    Sentry.replayIntegration(),
@@ -308,6 +308,8 @@ export const handleError: HandleErrorFunction = (error, { request }) => {
 Since React Router is running in ESM mode, you need to use the `--import` command line options to load our server-side instrumentation module before the application starts.
 Update the `start` and `dev` script to include the instrumentation file:
 
+<PlatformContent includePath="node-options-windows" />
+
 ```json {filename: package.json}
 "scripts": {
   "dev": "NODE_OPTIONS='--import ./instrument.server.mjs' react-router dev",
@@ -317,7 +319,7 @@ Update the `start` and `dev` script to include the instrumentation file:
 
 ## Source Maps Upload
 
-Update `vite.config.ts` to include the `sentryReactRouter` plugin. Also add your `SentryReactRouterBuildOptions` config options to the Vite config (this is required for uploading source maps at the end of the build):
+Update `vite.config.ts` to include the `sentryReactRouter` plugin, making sure to pass both the Vite and Sentry configurations to it:
 
 <OrgAuthTokenNote />
 
@@ -338,7 +340,6 @@ const sentryConfig: SentryReactRouterBuildOptions = {
 export default defineConfig(config => {
   return {
 +   plugins: [reactRouter(),sentryReactRouter(sentryConfig, config)],
-+   sentryConfig, // Also pass the config here!
   };
 });
 ```

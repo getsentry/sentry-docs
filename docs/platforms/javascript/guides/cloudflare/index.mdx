@@ -72,11 +72,11 @@ export const onRequest = [
   // Make sure Sentry is the first middleware
   Sentry.sentryPagesPlugin((context) => ({
     dsn: "___PUBLIC_DSN___",
-    
+
     // Adds request headers and IP for users, for more info visit:
     // https://docs.sentry.io/platforms/javascript/guides/cloudflare/configuration/options/#sendDefaultPii
     sendDefaultPii: true,
-    
+
     // ___PRODUCT_OPTION_START___ performance
     // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
     // Learn more at
@@ -118,7 +118,7 @@ If you do not have access to the `onRequest` middleware API, you can use the `wr
 
 ```javascript
 // hooks.server.js
-import * as Sentry from '@sentry/cloudflare';
+import * as Sentry from "@sentry/cloudflare";
 
 export const handle = ({ event, resolve }) => {
   const requestHandlerOptions = {
@@ -133,13 +133,29 @@ export const handle = ({ event, resolve }) => {
 };
 ```
 
+### Cloudflare Durable Objects
+
+You can use the `instrumentDurableObjectWithSentry` method to instrument [Cloudflare Durable Objects](https://developers.cloudflare.com/durable-objects/). This will need to be done alongside the worker setup.
+
+See the [Cloudflare Durable Objects](features/durableobject/) guide for more information.
+
 ## Add Readable Stack Traces to Errors
 
 Depending on how you've set up your project, the stack traces in your Sentry errors probably don't look like your actual code.
 
 To fix this, upload your source maps to Sentry.
 
-To start, add `upload_source_maps = true` to your `wrangler.toml` file to enable source map uploading.
+To start, set the `upload_source_maps` option to `true` in your wrangler config file to enable source map uploading.
+
+```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
+{
+  "upload_source_maps": true,
+}
+```
+
+```toml {tabTitle:Toml} {filename:wrangler.toml}
+upload_source_maps = true
+```
 
 Then run the Sentry Wizard to finish your setup:
 
