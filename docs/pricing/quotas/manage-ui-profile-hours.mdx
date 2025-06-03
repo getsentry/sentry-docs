@@ -1,0 +1,66 @@
+---
+title: Manage Your UI Profile Hours
+keywords: ["best practices"]
+sidebar_order: 51
+description: Learn how to use Sentry's tools to manage the amount of UI Profile hours you pay for.
+---
+
+You can control when UI Profiling is active as well as use sampling to control the number of UI Profile hours you are billed for. See below to learn how.
+
+## Before You Begin: Check Your Usage       
+
+You can look at your UI Profile hours in aggregate in the "Usage Stats" tab of the **Stats** page to understand the breakdown of your incoming profiles and see which projects are consuming your quota. This may help you figure out where you need to further fine-tune your configuration.
+
+## How Can I Sample Profiles?
+
+UI Profiling only supports **client-side** sampling. To control client-side sampling behavior, you can set the `profile_session_sample_rate` configuration parameter to a value between 0.0-1.0 to control the number of profiling sessions that are sampled (the default is 0.0.)
+
+For UI Profiling, the initial user session starts when the SDK is initialized, and sampling is first evaluated at this point. The user session will either end on termination of the application **or** depending on the platform, there can be other events that end a user session (like backgrounding a mobile application). The sampling rate will be re-evaluated on each new user session.
+
+For example: In the browser, the user session begins when the tab is opened and the user session ends when the tab is closed. Sampling will be evaluated once at the start of each session, so if `profile_session_sample_rate` is set to 0.5, then 50% of the time your application is opened in a browser tab, profiling will be active for that tab's lifetime. On mobile, the user session begins when the application is started or foregrounded, and the user session ends when the application is terminated or backgrounded. The sampling will be evaluated once at the start of each session, so if `profile_session_sample_rate` is set to 0.5%, then 50% of the time a user opens your mobile app, profiling will be active until the user backgrounds or quits the app.
+
+## How Can I Control When Profiling Is Active?
+
+UI Profiling provides two "lifecycle" modes that can be used to control when the profiler is running. These lifecycle modes are controlled by setting the `profile_lifecycle` SDK configuration option to one of two values:
+
+- `manual` (default) - This provides fully manual control over when the profile is running. You can use the `start_profile_session` and `stop_profile_session` functions to precisely control this. Note that a profile session has to be sampled based on the value of `profile_session_sample_rate` for `start_profiler` to have any effect. Calling `start_profile_session` will have no effect on un-sampled sessions.
+
+- `trace` - This provides a behavior similar to the previous transaction-based profiling product, where the profiler will automatically be started and stopped based on the trace lifecycle. In this mode, the profiler will automatically be started when there is at least one root span/transaction active, and automatically stopped when there are no root spans/transactions active. This lifecycle mode only works if both of the following conditions are met: 
+
+    - The profile session is sampled (via `profile_session_sample_rate`)
+    - The trace is sampled (via `traces_sample_rate` or `traces_sampler`)
+
+ ## How Can I Estimate Usage For UI Profiling?
+
+### On Mobile
+
+To estimate monthly usage for UI profiling when used on mobile, the calculation is **average user session length in hours * the number of sampled user sessions per month.** For example, if the average user session length is 6 minutes and there are 10,000 sampled user sessions per month, then the total usage os **0.1 hours * 10,000 sessions = 1,000 hours per month.** You can reduce the number of profiling hours by profiling a smaller number of user sessions (reducing `profile_session_sample_rate`), or only profiling devices or configurations tht are particularly performance sensitive (like low-end mobile devices).
+
+### In The Browser
+
+To estimate monthly usage for UI Profiling in the browser, the calculation is **average user session length in hours * the number of user sessions per month.** For example, if the average user session length is 6 minutes and there are 10,000 sampled user sessions per month, then the total usage is **0.1 hours * 10,000 sessions = 1,000 hours per month**. You can reduce the number of profiling hours by profiling a smaller number of user sessions (reducing `profile_session_sample_rate`).                                                                         
+
+## How Do You Purchase UI Profiling?
+
+ Set your Pay-As-You-Go (PAYG) budget, which can be used to allocate spend towards UI Profiling and other Sentry products. See the [pricing docs](/pricing/) for more info.
+
+ ## What If I'm Already Using Transaction-Based Profiling?
+
+ UI Profiling and the previous transaction-based profiling are **mutually exclusive** within the same service, meaning you **cannot** use both at the same time. If you are setting `profiles_sample_rate` or `profiles_sampler` in your Sentry SDK configuration options, you are using transaction-based profiling. If you are setting `profile_session_sample_rate`, you are using UI Profiling.
+
+  ### What If I Try To Activate Both At Once?
+
+ If you set `profile_session_sample_rate` while either `profiles_sample_rate` or `profiles_sampler` are configured, `profile_session_sample_rate` will have no effect and transaction-based profiling will take precedence.
+
+  ### Can I Use Both Transaction-Based Profiling and UI Profiling On Separate Services?
+
+ Across **separate** applications or services you **can** choose to use a mix of both transaction-based profiling APIs and the new UI Profiling APIs. We recommend that all users migrate to UI Profiling APIs, since transaction-based APIs will eventually be deprecated and removed in a major SDK release. We will continue to support ingesting transaction-based profiles sent by older SDKs for backward compatibility.
+
+ ## How Do I Migrate From Transaction-Based Profiling to UI Profiling?
+
+- Replace usage of `profiles_sample_rate` and `profiles_sampler` with `profile_session_sample_rate`
+- If you're using the `manual` profile lifecycle mode, add calls to `start_profile_session` and `stop_profile_session`
+- If you're using the `trace` profile lifecycle mode, ensure that `traces_sample_rate` or `traces_sampler` are configured appropriately in addition to `profile_session_sample_rate`
+
+See the detailed [migration guide](/product/explore/profiling/continuous-ui-profiling-migration-guide/) for more information.
+

@@ -20,22 +20,17 @@ By attaching attributes directly to spans, you create a unified view of both the
 // Simple database query with dynamic attributes
 Sentry.startSpan(
   {
-    name: 'Database Query',
-    op: 'db.query'
+    name: "Database Query",
+    op: "db.query",
   },
-  () => {
-    // Get active span to set attributes as data becomes available
-    const span = Sentry.getActiveSpan();
-    
+  (span) => {
     // Execute query and add results to span
-    const result = executeQuery('SELECT * FROM users WHERE active = true');
-    
+    const result = executeQuery("SELECT * FROM users WHERE active = true");
+
     // Set attributes with the results data
-    if (span) {
-      span.setAttribute('db.rows_returned', result.length);
-      span.setAttribute('db.execution_time_ms', result.executionTime);
-    }
-    
+    span.setAttribute("db.rows_returned", result.length);
+    span.setAttribute("db.execution_time_ms", result.executionTime);
+
     return result;
   }
 );
@@ -55,14 +50,14 @@ By integrating these attributes into tracing, you can maintain a single telemetr
 // Adding business context to a payment processing span
 Sentry.startSpan(
   {
-    name: 'Process Payment',
-    op: 'payment.process',
+    name: "Process Payment",
+    op: "payment.process",
     attributes: {
-      'payment.amount': 99.99,
-      'payment.currency': 'USD',
-      'payment.method': 'credit_card',
-      'customer.type': 'returning'
-    }
+      "payment.amount": 99.99,
+      "payment.currency": "USD",
+      "payment.method": "credit_card",
+      "customer.type": "returning",
+    },
   },
   async () => {
     // Payment processing implementation
@@ -91,12 +86,12 @@ Augment automatically-created or manually-defined spans with additional attribut
 const span = Sentry.getActiveSpan();
 if (span) {
   // User context
-  span.setAttribute('user.subscription_tier', 'premium');
-  
+  span.setAttribute("user.subscription_tier", "premium");
+
   // Multiple metrics in a single operation
   span.setAttributes({
-    'memory.heap_used': 1024000,
-    'processing.total_steps': 5
+    "memory.heap_used": 1024000,
+    "processing.total_steps": 5,
   });
 }
 ```
@@ -109,16 +104,16 @@ Create spans specifically for grouping related attributes or metrics, particular
 // Creating a span for monitoring external API usage
 Sentry.startSpan(
   {
-    name: 'Third-Party API Usage',
-    op: 'external.api',
+    name: "Third-Party API Usage",
+    op: "external.api",
     attributes: {
       // Performance metrics
-      'api.response_time_ms': 245,
-      
+      "api.response_time_ms": 245,
+
       // Context data
-      'feature.using_api': 'image_recognition',
-      'user.plan': 'enterprise'
-    }
+      "feature.using_api": "image_recognition",
+      "user.plan": "enterprise",
+    },
   },
   async () => {
     // API call implementation
@@ -138,15 +133,15 @@ Monitor client-side performance metrics related to user experience:
 // UI performance monitoring
 Sentry.startSpan(
   {
-    name: 'Page Interaction',
-    op: 'ui.interaction',
+    name: "Page Interaction",
+    op: "ui.interaction",
     attributes: {
-      'ui.first_input_delay_ms': 24,
-      'ui.time_to_interactive_ms': 320,
-      'ui.frames_dropped': 0,
-      'user.device_type': 'mobile',
-      'feature.being_used': 'image_carousel'
-    }
+      "ui.first_input_delay_ms": 24,
+      "ui.time_to_interactive_ms": 320,
+      "ui.frames_dropped": 0,
+      "user.device_type": "mobile",
+      "feature.being_used": "image_carousel",
+    },
   },
   async () => {
     // UI interaction handling
@@ -162,17 +157,17 @@ Track database performance characteristics and their impact on application behav
 // Database query monitoring
 Sentry.startSpan(
   {
-    name: 'Product Search Query',
-    op: 'db.query',
+    name: "Product Search Query",
+    op: "db.query",
     attributes: {
-      'db.query_type': 'SELECT',
-      'db.table': 'products',
-      'db.execution_time_ms': 145,
-      'db.rows_returned': 87,
-      'db.index_used': 'product_category_idx',
-      'business.search_term': 'winter jacket',
-      'business.search_filters_applied': 3
-    }
+      "db.query_type": "SELECT",
+      "db.table": "products",
+      "db.execution_time_ms": 145,
+      "db.rows_returned": 87,
+      "db.index_used": "product_category_idx",
+      "business.search_term": "winter jacket",
+      "business.search_filters_applied": 3,
+    },
   },
   async () => {
     // Database query execution
@@ -188,21 +183,21 @@ Monitor file handling operations across your application stack:
 // File processing monitoring
 Sentry.startSpan(
   {
-    name: 'Process Uploaded Image',
-    op: 'file.process',
+    name: "Process Uploaded Image",
+    op: "file.process",
     attributes: {
       // Technical metrics
-      'file.size_bytes': 2500000,
-      'file.type': 'image/jpeg',
-      
+      "file.size_bytes": 2500000,
+      "file.type": "image/jpeg",
+
       // Processing metrics
-      'processing.steps_completed': ['virus_scan', 'resize', 'compress'],
-      'processing.total_time_ms': 850,
-      
+      "processing.steps_completed": ["virus_scan", "resize", "compress"],
+      "processing.total_time_ms": 850,
+
       // Context data
-      'feature.using_upload': 'user_avatar',
-      'subscription.allows_hd': true
-    }
+      "feature.using_upload": "user_avatar",
+      "subscription.allows_hd": true,
+    },
   },
   async () => {
     // Image processing implementation
@@ -218,21 +213,21 @@ Monitor performance and reliability of third-party service interactions:
 // Payment gateway monitoring
 Sentry.startSpan(
   {
-    name: 'Payment Gateway',
-    op: 'payment.gateway',
+    name: "Payment Gateway",
+    op: "payment.gateway",
     attributes: {
       // Performance metrics
-      'gateway.response_time_ms': 980,
-      'gateway.retry_count': 0,
-      
+      "gateway.response_time_ms": 980,
+      "gateway.retry_count": 0,
+
       // Transaction data
-      'order.total_amount': 159.99,
-      'order.items_count': 3,
-      
+      "order.total_amount": 159.99,
+      "order.items_count": 3,
+
       // Service metrics
-      'gateway.fee_amount': 4.50,
-      'gateway.fee_percent': 0.029
-    }
+      "gateway.fee_amount": 4.5,
+      "gateway.fee_percent": 0.029,
+    },
   },
   async () => {
     // Payment gateway integration
@@ -255,6 +250,7 @@ Maintain consistent naming patterns following the format `category.metric_name` 
 #### Data Type Selection
 
 Choose appropriate data types for your metrics:
+
 - Numeric values for measurements (`response_time_ms`: 250)
 - Boolean values for state indicators (`cache.hit`: true)
 - String values for categorical data (`user.subscription`: 'premium')
@@ -263,6 +259,7 @@ Choose appropriate data types for your metrics:
 #### Performance Considerations
 
 Be mindful of the performance impact of collecting metrics, especially for high-volume operations:
+
 - Consider implementing sampling for high-frequency operations
 - Prioritize metrics with the highest analytical value
 - Avoid redundant or closely correlated metrics
@@ -276,6 +273,7 @@ If you're currently using Sentry's standalone Metrics product, migrating to span
 - **Improved correlation**: Direct association between attributes, traces, and errors
 
 Migration process:
+
 1. Identify your current metric instrumentation points
 2. Locate corresponding spans in your application
 3. Transfer your metrics to span attributes

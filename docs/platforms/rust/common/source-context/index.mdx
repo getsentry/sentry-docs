@@ -1,0 +1,54 @@
+---
+title: Source Context
+sidebar_order: 2400
+description: "Learn about showing your source code as part of stack traces."
+---
+
+## Prerequisites
+
+[Install](/cli/installation/) and [Configure](/cli/configuration/) Sentry CLI by providing an auth token, org and project.
+
+## Compile and create debug information files
+
+### Linux
+
+Enable full debug information for your release build:
+```toml {filename:Cargo.toml}
+[profile.release]
+debug = true
+```
+
+Build the release binary, extract debug information and strip it from the binary:
+```bash
+cargo build --release
+objcopy --only-keep-debug target/release/app{,.d}
+objcopy --strip-debug --strip-unneeded target/release/app
+objcopy --add-gnu-debuglink target/release/app{.d,}
+```
+
+### macOS
+
+Use a profile like the following for your release builds:
+```toml {filename:Cargo.toml}
+[profile.release]
+debug = true
+split-debuginfo = "packed"
+strip = true
+```
+
+Build the release binary, debug information will be available in separate files and stripped from the binary automatically:
+```bash
+cargo build --release
+```
+
+## Upload debug information and source files
+
+Use Sentry CLI to upload debug information and source files:
+
+```bash	
+sentry-cli debug-files upload --include-sources .
+```
+
+## Troubleshooting
+
+If you don't want to strip the binary, you should disable the `debug-images` integration of the SDK, as otherwise you will run into the issue documented [here](https://github.com/getsentry/sentry-rust/issues/470#issuecomment-1472136215) which could cause duplicated frames to appear in your Sentry issues.

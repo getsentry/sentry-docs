@@ -66,3 +66,13 @@ In order to send events to Sentry, you will need to activate the InternetClient 
 ### Mono JIT stack trace is incomplete on crashes
 
 This is a [known limitation](https://github.com/getsentry/sentry-unity/issues/884#issuecomment-1233035296) of the Mono JIT scripting backend, resulting from the native code not being able to see the actual generated code at the time of a crash. There are no debug files we can use to provide more information to stack traces since all code is generated when running the managed code. Using the IL2CPP scripting backend may provide more information, if that's an option for you.
+
+### Sentry didn't capture Unity's test/helper function ForceCrash
+
+Unity provides a function to test crashes called `UnityEngine.Diagnostics.Utils.ForceCrash()`. The Sentry SDK subscribes to the signal handlers and captures **all signals** received by it.
+But the result of that function doesn't get invoked our callback.
+Outside of this helper function, Sentry is unaware of any **real world** crash type that isn't invoking our signal handlers.
+
+### Screenshot contain artifacts
+
+The screenshot capture relies on Unity's `ScreenCapture.CaptureScreenshotIntoRenderTexture` function. When capturing errors in the Editor, this might lead to artifacts or scaling issues in the captured screenshot.

@@ -12,7 +12,8 @@ Incoming tracing information has to be extracted and stored in memory for later 
 Here's an example of how to extract and store incoming tracing information using `sentry.ContinueTrace()`:
 
 ```go
-hub := sentry.CurrentHub()
+ctx := r.Context()
+hub := sentry.GetHubFromContext(ctx)
 sentry.ContinueTrace(hub, r.Header.Get(sentry.SentryTraceHeader), r.Header.Get(sentry.SentryBaggageHeader)),
 ```
 
@@ -27,10 +28,11 @@ For distributed tracing to work, the two headers `sentry-trace` and `baggage`, m
 You can generate this tracing information with the Sentry SDK's `hub.GetTraceparent()` and `hub.GetBaggage()` functions. Here's an example using Guzzle:
 
 ```go
-hub := sentry.CurrentHub()
+ctx := r.Context()
+hub := sentry.GetHubFromContext(ctx)
 req, _ := http.NewRequest("GET", "http://exmaple.com", nil)
-req.Header.Add(sentry.SentryTraceHeader, hub.GetTraceparent())
-req.Header.Add(sentry.SentryBaggageHeader, hub.GetBaggage())
+req.Header.Set(sentry.SentryTraceHeader, hub.GetTraceparent())
+req.Header.Set(sentry.SentryBaggageHeader, hub.GetBaggage())
 ```
 
 In this example, tracing information is propagated to the project running at `https://example.com`. If this project uses a Sentry SDK, it will extract and save the tracing information for later use.

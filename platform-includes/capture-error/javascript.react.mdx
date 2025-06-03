@@ -29,3 +29,43 @@ function App() {
   // ...
 }
 ```
+
+The React SDK exports an error boundary component that leverages [React component APIs](https://reactjs.org/docs/error-boundaries.html) to automatically catch and send JavaScript errors from inside a React component tree to Sentry. See the [React Error Boundary](/platforms/javascript/guides/react/features/error-boundary/) guide for more information.
+
+If you don't want to use the error boundary component, you can use the `captureReactException` function to capture errors manually. The `Sentry.captureReactException` function requires Sentry React SDK `v9.8.0` or above.
+
+```javascript
+import * as Sentry from "@sentry/react";
+
+class ErrorBoundary extends React.Component {
+  componentDidCatch(error, info) {
+    Sentry.captureReactException(error, info);
+  }
+
+  render() {
+    return this.props.children;
+  }
+}
+```
+
+Starting with React 19, the `createRoot` and `hydrateRoot` methods from `react-dom` will expose error hooks that are used to capture errors automatically. To customize how errors are handled in specific error hooks, use the `Sentry.reactErrorHandler` method. The `Sentry.reactErrorHandler` method requires `v8.6.0` or above.
+
+```javascript
+import { createRoot } from "react-dom/client";
+import * as Sentry from '@sentry/react';
+
+const container = document.getElementById(“app”);
+const root = createRoot(container, {
+  // Callback called when an error is thrown and not caught by an ErrorBoundary.
+  onUncaughtError: Sentry.reactErrorHandler((error, errorInfo) => {
+    console.warn('Uncaught error', error, errorInfo.componentStack);
+  }),
+  // Callback called when React catches an error in an ErrorBoundary.
+  onCaughtError: Sentry.reactErrorHandler(),
+  // Callback called when React automatically recovers from errors.
+  onRecoverableError: Sentry.reactErrorHandler(),
+});
+root.render();
+```
+
+These hooks apply to all React components that are mounted to the container which is passed onto `createRoot`/`hydrateRoot`. For more precise control over error handling, we recommend adding an `ErrorBoundary` component to your application.

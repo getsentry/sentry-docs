@@ -42,6 +42,8 @@ Next, initialize Sentry. Where to do this depends on how you run beat:
 
 Make sure to also set `monitor_beat_tasks=True` in `CeleryIntegration`.
 
+If you have set `monitor_beat_tasks=True` make sure that you do not do manual task monitoring using the `@sentry_sdk.monitor` decorator, because this will lead to double instrumentation.
+
 In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
 
 Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
@@ -50,7 +52,7 @@ Select which Sentry features you'd like to install in addition to Error Monitori
   options={["error-monitoring", "performance", "profiling"]}
 />
 
-```python {diff} {filename:tasks.py} {"onboardingOptions": {"performance": "15-17", "profiling": "18-21"}}
+```python {diff} {filename:tasks.py}
 # tasks.py
 from celery import signals
 
@@ -65,13 +67,19 @@ def init_sentry(**kwargs):
         # Add data like request headers and IP for users, if applicable;
         # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
         send_default_pii=True,
+        # ___PRODUCT_OPTION_START___ performance
         # Set traces_sample_rate to 1.0 to capture 100%
         # of transactions for tracing.
         traces_sample_rate=1.0,
-        # Set profiles_sample_rate to 1.0 to profile 100%
-        # of sampled transactions.
-        # We recommend adjusting this value in production.
-        profiles_sample_rate=1.0,
+        # ___PRODUCT_OPTION_END___ performance
+        # ___PRODUCT_OPTION_START___ profiling
+        # To collect profiles for all profile sessions,
+        # set `profile_session_sample_rate` to 1.0.
+        profile_session_sample_rate=1.0,
+        # Profiles will be automatically collected while
+        # there is an active span.
+        profile_lifecycle="trace",
+        # ___PRODUCT_OPTION_END___ profiling
 +       integrations=[
 +           CeleryIntegration(
 +               monitor_beat_tasks=True

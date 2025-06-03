@@ -54,15 +54,25 @@ module.exports = {
 Then, configure your `Sentry.init`. For this, create a new file called `sentry.config.js` in the root of your project and add the following code:
 
 
-```javascript {filename:sentry.config.(js|ts)} {"onboardingOptions": {"performance": "6, 9-15", "session-replay": "7, 16-22"}}
+```javascript {filename:sentry.config.(js|ts)}
 import * as Sentry from "@sentry/gatsby";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/gatsby/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  
   integrations: [
+    // ___PRODUCT_OPTION_START___ performance
     Sentry.browserTracingIntegration(),
+    // ___PRODUCT_OPTION_END___ performance
+    // ___PRODUCT_OPTION_START___ session-replay
     Sentry.replayIntegration(),
+    // ___PRODUCT_OPTION_END___ session-replay
   ],
+  // ___PRODUCT_OPTION_START___ performance
 
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for tracing.
@@ -70,6 +80,8 @@ Sentry.init({
   // Learn more at
   // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
   tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ session-replay
 
   // Capture Replay for 10% of all sessions,
   // plus for 100% of sessions with an error
@@ -77,5 +89,6 @@ Sentry.init({
   // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ session-replay
 });
 ```

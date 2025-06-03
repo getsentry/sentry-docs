@@ -33,6 +33,7 @@ import {PlatformSdkPackageName} from './components/platformSdkPackageName';
 import {PlatformSection} from './components/platformSection';
 import {RelayMetrics} from './components/relayMetrics';
 import {SandboxLink} from './components/sandboxLink';
+import {SdkApi} from './components/sdkApi';
 import {SdkOption} from './components/sdkOption';
 import {SignInNote} from './components/signInNote';
 import {SmartLink} from './components/smartLink';
@@ -56,6 +57,7 @@ export function mdxComponents(
     CodeTabs,
     ConfigKey,
     SdkOption,
+    SdkApi,
     TableOfContents,
     CreateGitHubAppForm,
     ConfigValue,

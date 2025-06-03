@@ -9,8 +9,11 @@ The RQ integration adds support for the [RQ job queue system](https://python-rq.
 
 Install `sentry-sdk` from PyPI with the `rq` extra:
 
-```bash
-pip install --upgrade 'sentry-sdk[rq]'
+```bash {tabTitle:pip}
+pip install "sentry-sdk[rq]"
+```
+```bash {tabTitle:uv}
+uv add "sentry-sdk[rq]"
 ```
 
 ## Configure
@@ -32,7 +35,7 @@ Select which Sentry features you'd like to install in addition to Error Monitori
   ]}
 />
 
-```python {filename:mysettings.py} {"onboardingOptions": {"performance": "9-11", "profiling": "12-15"}}
+```python {filename:mysettings.py}
 # mysettings.py
 import sentry_sdk
 
@@ -41,13 +44,19 @@ sentry_sdk.init(
     # Add data like request headers and IP for users, if applicable;
     # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
     send_default_pii=True,
+    # ___PRODUCT_OPTION_START___ performance
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for tracing.
     traces_sample_rate=1.0,
-    # Set profiles_sample_rate to 1.0 to profile 100%
-    # of sampled transactions.
-    # We recommend adjusting this value in production.
-    profiles_sample_rate=1.0,
+    # ___PRODUCT_OPTION_END___ performance
+    # ___PRODUCT_OPTION_START___ profiling
+    # To collect profiles for all profile sessions,
+    # set `profile_session_sample_rate` to 1.0.
+    profile_session_sample_rate=1.0,
+    # Profiles will be automatically collected while
+    # there is an active span.
+    profile_lifecycle="trace",
+    # ___PRODUCT_OPTION_END___ profiling
 )
 ```
 
@@ -66,7 +75,7 @@ Generally, make sure that the **call to `init` is loaded on worker startup**, an
 In addition, make sure that **`init` is called only once** in your app. For example, if you have a `Flask` app and a worker that depends on the app, we recommend only initializing Sentry once. Note that because the Flask integration is enabled automatically, you don't need to change the configuration shown above.
 
 
-```python {filename:app.py} {"onboardingOptions": {"performance": "9-11", "profiling": "12-15"}}
+```python {filename:app.py}
 # app.py
 import sentry_sdk
 
@@ -75,13 +84,19 @@ sentry_sdk.init(
     # Add data like request headers and IP for users, if applicable;
     # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
     send_default_pii=True,
+    # ___PRODUCT_OPTION_START___ performance
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for tracing.
     traces_sample_rate=1.0,
-    # Set profiles_sample_rate to 1.0 to profile 100%
-    # of sampled transactions.
-    # We recommend adjusting this value in production.
-    profiles_sample_rate=1.0,
+    # ___PRODUCT_OPTION_END___ performance
+    # ___PRODUCT_OPTION_START___ profiling
+    # To collect profiles for all profile sessions,
+    # set `profile_session_sample_rate` to 1.0.
+    profile_session_sample_rate=1.0,
+    # Profiles will be automatically collected while
+    # there is an active span.
+    profile_lifecycle="trace",
+    # ___PRODUCT_OPTION_END___ profiling
 )
 ```
 
@@ -108,7 +123,7 @@ def hello(name):
 
 ### Settings for worker
 
-```python {filename:mysettings.py} {"onboardingOptions": {"performance": "10-12", "profiling": "13-16"}}
+```python {filename:mysettings.py}
 # mysettings.py
 import sentry_sdk
 
@@ -118,19 +133,25 @@ sentry_sdk.init(
     # Add data like request headers and IP for users, if applicable;
     # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
     send_default_pii=True,
+    # ___PRODUCT_OPTION_START___ performance
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for tracing.
     traces_sample_rate=1.0,
-    # Set profiles_sample_rate to 1.0 to profile 100%
-    # of sampled transactions.
-    # We recommend adjusting this value in production.
-    profiles_sample_rate=1.0,
+    # ___PRODUCT_OPTION_END___ performance
+    # ___PRODUCT_OPTION_START___ profiling
+    # To collect profiles for all profile sessions,
+    # set `profile_session_sample_rate` to 1.0.
+    profile_session_sample_rate=1.0,
+    # Profiles will be automatically collected while
+    # there is an active span.
+    profile_lifecycle="trace",
+    # ___PRODUCT_OPTION_END___ profiling
 )
 ```
 
 ### Main Python Script
 
-```python {filename:main.py} {"onboardingOptions": {"performance": "18-20", "profiling": "21-24"}}
+```python {filename:main.py}
 # main.py
 from redis import Redis
 from rq import Queue
@@ -145,13 +166,19 @@ sentry_sdk.init(
     # Add data like request headers and IP for users, if applicable;
     # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
     send_default_pii=True,
+    # ___PRODUCT_OPTION_START___ performance
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for tracing.
     traces_sample_rate=1.0,
-    # Set profiles_sample_rate to 1.0 to profile 100%
-    # of sampled transactions.
-    # We recommend adjusting this value in production.
-    profiles_sample_rate=1.0,
+    # ___PRODUCT_OPTION_END___ performance
+    # ___PRODUCT_OPTION_START___ profiling
+    # To collect profiles for all profile sessions,
+    # set `profile_session_sample_rate` to 1.0.
+    profile_session_sample_rate=1.0,
+    # Profiles will be automatically collected while
+    # there is an active span.
+    profile_lifecycle="trace",
+    # ___PRODUCT_OPTION_END___ profiling
 )
 
 q = Queue(connection=Redis())

@@ -1,0 +1,130 @@
+---
+title: Handling Stack Overflows
+description: "Learn about differences in reporting crashes from stack overflows across platforms, and how Sentry can help."
+sidebar_order: 1100
+---
+Application crashes due to stack overflow differ from other crashes from the handler's perspective because the handler
+relies on the resource that ran out: stack space. Since the handler typically runs on the thread whose stack overflowed,
+it can no longer use stack variables or call functions. This results in a crashed application without sending a report that
+it happened.
+
+How to handle this issue is different from platform to platform, but options boil down to:
+
+* allocating a stack that only the crash handler can use (Linux/POSIX and Windows)
+* running the handler in a separate thread (or process), which will receive a message of the crash asynchronously (macOS)
+
+Independent of whether an application crashed due to a stack overflow or not, handlers should make minimal use of the
+stack because even if there was no stack overflow, the amount of stack available to the handler could be limited. This is
+especially true for users who use the `on_crash` or `before_send` hook over which Sentry has no control.
+
+On Linux (and other `POSIX` systems), users should preallocate everything before their hooks run and only move data into
+preallocated storage because heap allocations can also fail inside the signal handler (constructing `sentry_value_t` is
+okay because we use a safe allocator inside the signal handler). See also:
+[What to consider when writing on_crash hooks](https://docs.sentry.io/platforms/native/advanced-usage/signal-handling/#what-to-consider-when-writing-on_crash-hooks).
+
+## How do OSes differ, and how can Sentry help?
+
+### Windows
+
+The Windows API provides a [thread-stack guarantee interface](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-setthreadstackguarantee)
+where users can give a size in bytes reserved for the handler to run in case of a crash. However, this size is subtracted
+from the thread stack reserve as it is a direct continuation inside the thread stack, not a separate allocation or
+memory region.
+
+The developer must weigh the thread stack reserve against the handler's guarantee during regular operation.
+Otherwise, the guarantee used for the handler could eat enough stack space to lead to an overflow.
+
+This should not be the case for most threads on Windows, which have a default stack reserve of 1MiB (whereas the
+required handler guarantee will be only 10s of KiB). However, some threads created by specific runtimes or the kernel
+(for drivers) might have much smaller stack reserves, where a handler guarantee of 32KiB could already be half or all
+the stack available to the thread.
+
+In short, while Windows provides a very high-level request interface ("guarantee me x bytes for my handler"), it is not
+flexible regarding the location of the guaranteed handler stack. As such, you must consider the size of the guarantee in
+the context of the stack reserve and the actual stack use in a particular thread. The latter is hard to do for threads
+you do not control.
+
+Also, you'll need to request the stack guarantee from within the thread you want to specify. You cannot set a
+guarantee from the outside, which typically limits you to the threads you own.
+
+On Windows, the Native SDK automatically sets a stack guarantee of 64KiB for all threads that start after loading it as
+a shared library. For static library builds, we only automatically set the stack guarantee for the thread that calls
+`sentry_init()`.
+
+If you need to set stack guarantees manually, you can use the Win32 API directly. A once-set guarantee amount cannot be
+decreased through the Win32 API; it can only be increased. We also provide `sentry_set_thread_stack_guarantee()` on top
+of the Win32 function, which includes helpful logging and prevents overriding a previously set stack guarantee.
+
+The auto initialization is also defensive in requesting the stack reserve for each thread it runs on, and only attempts
+to set a guarantee if the reserve is at least, by default, 10 times larger than the requested default guarantee.
+
+You can parameterize this behavior to suit your use case by:
+
+* changing the default handler stack using the compile-time parameter `SENTRY_HANDLER_STACK_SIZE`.
+* disabling auto-initialization altogether using the compile-time option `SENTRY_THREAD_STACK_GUARANTEE_AUTO_INIT`
+* tuning the relative allowance between the stack reserve and the handler guarantee using the compile-time parameter `SENTRY_THREAD_STACK_GUARANTEE_FACTOR`
+* enabling more detailed logging during tuning parameters with `SENTRY_THREAD_STACK_GUARANTEE_VERBOSE_LOG`
+
+These parameters are documented in more detail in the section on compile-time options of
+[the Native SDK's README](https://github.com/getsentry/sentry-native?tab=readme-ov-file#compile-time-options).
+
+### Linux or OSes that primarily use POSIX signal handlers
+
+When you use POSIX signal handlers, you can specify a `sigaltstack`. This alternative signal stack allows the kernel to
+continue the handler stack even if the crashed and preempted thread stack runs out.
+
+This relatively low-level interface allows users to specify an arbitrary memory range (on the heap, stack or any memory
+mapping a user can access). The upside of allowing the user to determine the size _and_ location offers flexibility
+compared to the Windows approach because it is independent of the stack usage and size of the crashed thread and allows
+you to add additional bounds like protected regions around the handler stack.
+
+However, it also adds environmental complexity because a badly placed or incorrectly set up memory region could lead to
+hard-to-identify bugs (consider a handler stack inside the heap, where a handler overflow caused by a stack hungry
+`on_crash` implementation could lead to arbitrary heap corruption).
+
+Like Windows, you can only assign a `sigaltstack` from within the thread, meaning you can only set the handler region
+for threads you own.
+
+On Linux, `crashpad` and `breakpad` provide their own `sigaltstack` initialization, currently not influenced by Sentry:
+
+* `breakpad` typically allocates 16KiB or `SIGSTKSZ` if it is bigger.
+* `crashpad` allocates `SIGSTKSZ` + your system's page size and aligns it to the page size (which will lead to 16KiB or
+32KiB on most systems)
+
+Both `breakpad` and `crashpad` will only specify a `sigaltstack` if none exists or the one defined is smaller than
+the target size. `breakpad` allocates the alternate stack on the heap. `crashpad` creates a separate memory mapping that
+includes a guard page.
+
+The `inproc` backend uses the handler stack size specified in [`SENTRY_HANDLER_STACK_SIZE`](https://github.com/getsentry/sentry-native?tab=readme-ov-file#compile-time-options)
+and only sets up a `sigaltstack` if none has been defined. Like `breakpad`, it allocates the handler stack on the heap.
+
+<Alert>
+All backends currently only set up the `sigaltstack` for the thread that initializes the Native SDK. All other threads
+must get their own `sigaltstack` setup since no auto-initialization, like on Windows, exists on Linux.
+</Alert>
+
+### Android
+
+Android automatically configures every thread to use a `sigaltstack` size of 16KiB (on 32-bit systems) and 32KiB (on
+64-bit systems). The Android team recommends not overriding these because configuration inconsistencies with the signal
+stacks provided by Android can lead to crashes in regular runtime operation. The `inproc` backend of the Native SDK used
+in the Android integration will not define a `sigaltstack` on Linux/Android if one is already specified. Thus, only the
+default `sigaltstack` will be used on Android, and you can be sure one exists for each thread.
+
+### macOS, when using Mach exception port listeners
+
+The Mach exception port listener typically blocks in a separate thread until the kernel delivers a Mach exception. Since
+the listener thread is entirely independent of the thread that crashed, an exception caused by a stack overflow will
+never affect the available stack for the handler. This is even more true for `crashpad` on macOS, where the handler
+doesn't only run in a separate thread but in a separate process.
+
+<Alert>
+This means that when using `breakpad` or `crashpad` on macOS, handling a stack overflow does not require any different setup
+or care than other crashes.
+</Alert>
+
+<Alert>
+Be aware that, in contrast to Mach exception port usage, signal handlers on macOS run on the same thread that caused the
+signal and thus also need a `sigaltstack` to handle any crash from a stack overflow. Only the `inproc` backend on macOS
+currently relies entirely on signal handlers, and its signal stack is set up equivalently to Linux or other POSIX platforms.
+</Alert>

@@ -1,5 +1,6 @@
 ---
 title: Set Up Session Replay
+sidebar_title: Session Replay
 sidebar_order: 5500
 notSupported:
 description: "Learn how to enable Session Replay in your mobile app."
@@ -33,7 +34,7 @@ pnpm add @sentry/react-native
 
 To set up the integration, add the following to your Sentry initialization.
 
-```javascript
+```javascript {tabTitle:Mobile}
 import * as Sentry from "@sentry/react-native";
 
 Sentry.init({
@@ -41,6 +42,24 @@ Sentry.init({
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
   integrations: [Sentry.mobileReplayIntegration()],
+});
+```
+
+```javascript {tabTitle:Browser}
+import * as Sentry from '@sentry/react-native';
+import { Platform } from 'react-native';
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  integrations: (integrations) => {
+    if (Platform.OS === 'web') {
+      integrations.push(Sentry.browserReplayIntegration());
+    }
+    integrations.push(Sentry.mobileReplayIntegration());
+    return integrations;
+  },
 });
 ```
 
@@ -68,17 +87,18 @@ Sampling begins as soon as a session starts. <PlatformIdentifier name="replays-s
 The SDK is recording and aggressively masking all text, images, and webviews by default. If your app has any sensitive data, you should only turn the default masking off after explicitly masking out any sensitive data, using the APIs described below.
 However, if you're working on a mobile app that doesn't contain any PII or private data, you can opt out of the default text and image-masking settings. To learn more about Session Replay privacy, [read our docs](/platforms/react-native/session-replay/privacy/).
 
-<Alert>
 
-If you encounter any data not being redacted with the default settings, please let us know through a [GitHub issue](https://github.com/getsentry/sentry-react-native/issues/new?assignees=&labels=Platform%3A+React-Native%2CType%3A+%F0%9F%AA%B2+Bug&projects=&template=BUG_REPORT.md).
+<Alert level="warning">
+
+If you are manually initializing native SDKs before JS, the React Native text and images won't be automatically masked. For the current state of this issue and example workaround, please see [GH-4853](https://github.com/getsentry/sentry-react-native/issues/4853).
 
 </Alert>
 
 To disable redaction altogether (not to be used on applications with sensitive data):
 
-```javascript
-// You can pass options to the mobileReplayIntegration function during init:
+```javascript {tabTitle:Mobile}
 integrations: [
+  // You can pass options to the mobileReplayIntegration function during init:
   Sentry.mobileReplayIntegration({
     maskAllText: false,
     maskAllImages: false,
@@ -86,6 +106,31 @@ integrations: [
   }),
 ]
 ```
+
+```javascript {tabTitle:Browser}
+integrations: (integrations) => {
+  if (Platform.OS === 'web') {
+    // You can pass options to the browserReplayIntegration function during init:
+    integrations.push(Sentry.browserReplayIntegration({
+      maskAllText: true,
+      maskAllInputs: true,
+    }));
+  }
+  // You can pass options to the mobileReplayIntegration function during init:
+  integrations.push(Sentry.mobileReplayIntegration({
+    maskAllText: false,
+    maskAllImages: false,
+    maskAllVectors: false,
+  }));
+  return integrations;
+}
+```
+
+<Alert>
+
+If you encounter any data not being redacted with the default settings, please let us know through a [GitHub issue](https://github.com/getsentry/sentry-react-native/issues/new?assignees=&labels=Platform%3A+React-Native%2CType%3A+%F0%9F%AA%B2+Bug&projects=&template=BUG_REPORT.md).
+
+</Alert>
 
 ## React Component Names
 

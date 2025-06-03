@@ -71,6 +71,36 @@ function buildTocTree(toc: TocItem[]): TocItem[] {
   return items;
 }
 
+function getTocItems(main: HTMLElement) {
+  return Array.from(main.querySelectorAll('h2, h3'))
+    .map(el => {
+      const title = el.textContent?.trim();
+      if (!el.id || !title) {
+        return null;
+      }
+      // This is a relatively new API, that checks if the element is visible in the document
+      // With this, we filter out e.g. sections hidden via CSS
+      if (typeof el.checkVisibility === 'function' && !el.checkVisibility()) {
+        return null;
+      }
+      return {
+        depth: el.tagName === 'H2' ? 2 : 3,
+        url: `#${el.id}`,
+        title,
+        element: el,
+        isActive: false,
+      };
+    })
+    .filter(isNotNil);
+}
+
+function getMainElement() {
+  if (typeof document === 'undefined') {
+    return null;
+  }
+  return document.getElementById('main');
+}
+
 // The full, rendered page is required in order to generate the table of
 // contents since headings can come from child components, included MDX files,
 // etc. Even though this should hypothetically be doable on the server, methods
@@ -83,41 +113,61 @@ export function SidebarTableOfContents() {
 
   // gather the toc items on mount
   useEffect(() => {
-    if (typeof document === 'undefined') {
+    const main = getMainElement();
+    if (!main) {
       return;
     }
-    const main = document.getElementById('main');
-    if (!main) {
-      throw new Error('#main element not found');
-    }
-    const tocItems_ = Array.from(main.querySelectorAll('h2, h3'))
-      .map(el => {
-        const title = el.textContent?.trim() ?? '';
-        if (!el.id) {
-          return null;
-        }
-        return {
-          depth: el.tagName === 'H2' ? 2 : 3,
-          url: `#${el.id}`,
-          title,
-          element: el,
-          isActive: false,
-        };
-      })
-      .filter(isNotNil);
-    setTocItems(tocItems_);
+
+    setTocItems(getTocItems(main));
   }, []);
 
+  // ensure toc items are kept up-to-date if the DOM changes
   useEffect(() => {
-    if (tocItems.length === 0) {
+    const main = getMainElement();
+    if (!main) {
+      return () => {};
+    }
+
+    const observer = new MutationObserver(() => {
+      const newTocItems = getTocItems(main);
+
+      // Avoid flashing sidebar elements if nothing changes
+      if (
+        newTocItems.length === tocItems.length &&
+        newTocItems.every((item, index) => item.url === tocItems[index].url)
+      ) {
+        return;
+      }
+      setTocItems(newTocItems);
+    });
+
+    // Start observing the target node for any changes in its subtree
+    // We only care about:
+    // * Children being added/removed (childList)
+    // Any id, class, or style attribute being changed (this approximates CSS changes)
+    observer.observe(main, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class', 'id', 'style'],
+    });
+
+    return () => observer.disconnect();
+  }, [tocItems]);
+
+  // Mark the active item based on the scroll position
+  useEffect(() => {
+    const innerHeight = window.innerHeight;
+    if (!tocItems.length || !innerHeight) {
       return () => {};
     }
     // account for the header height
     const rootMarginTop = 100;
     // element is consiered in view if it is in the top 1/3 of the screen
-    const rootMarginBottom = (2 / 3) * window.innerHeight - rootMarginTop;
+    const rootMarginBottomRaw = (2 / 3) * innerHeight - rootMarginTop;
+    const rootMarginBottom = Math.floor(rootMarginBottomRaw) * -1;
     const observerOptions = {
-      rootMargin: `${rootMarginTop}px 0px -${rootMarginBottom}px 0px`,
+      rootMargin: `${rootMarginTop}px 0px ${rootMarginBottom}px 0px`,
       threshold: 1,
     };
     const observer = new IntersectionObserver(entries => {
@@ -134,16 +184,12 @@ export function SidebarTableOfContents() {
     }, observerOptions);
     const headings = tocItems.map(item => item.element);
     headings.forEach(heading => observer.observe(heading));
-    return () => headings.forEach(heading => observer.unobserve(heading));
+    return () => observer.disconnect();
   }, [tocItems]);
 
   return (
     <div className={styles['doc-toc']}>
-      {!!tocItems.length && (
-        <div className={styles['doc-toc-title']}>
-          <h6>On this page</h6>
-        </div>
-      )}
+      {!!tocItems.length && <h2 className={styles['doc-toc-title']}>On this page</h2>}
       <ul className={styles['section-nav']}>{recursiveRender(buildTocTree(tocItems))}</ul>
     </div>
   );

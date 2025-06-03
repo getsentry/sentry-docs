@@ -5,6 +5,7 @@ import {Clipboard} from 'react-feather';
 
 import styles from './code-blocks.module.scss';
 
+import {makeHighlightBlocks} from '../codeHighlights';
 import {makeKeywordsClickable} from '../codeKeywords';
 
 export interface CodeBlockProps {
@@ -57,7 +58,9 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
       <div className={styles.copied} style={{opacity: showCopied ? 1 : 0}}>
         Copied
       </div>
-      <div ref={codeRef}>{makeKeywordsClickable(children)}</div>
+      <div ref={codeRef}>
+        {makeKeywordsClickable(makeHighlightBlocks(children, language))}
+      </div>
     </div>
   );
 }

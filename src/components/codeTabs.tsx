@@ -134,8 +134,6 @@ export function CodeTabs({children}: CodeTabProps) {
 }
 
 const Container = styled('div')`
-  margin-bottom: 1.5rem;
-
   pre[class*='language-'] {
     padding: 10px 12px;
     border-radius: 0 0 3px 3px;

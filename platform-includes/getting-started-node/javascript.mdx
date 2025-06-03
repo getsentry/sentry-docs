@@ -1,60 +1,91 @@
-If you don't already have an account and a Sentry project established, sign up for [Sentry](https://sentry.io/signup/) for free, then return to this page.
+<PlatformContent includePath="getting-started-prerequisites" />
 
-## Install
+## Step 1: Install
 
-In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
+Choose the features you want to configure, and this guide will show you how:
 
-Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "profiling"]}
+/>
 
-<OnboardingOptionButtons options={["error-monitoring", "performance", "profiling"]} />
+<PlatformContent includePath="getting-started-features-expandable" />
 
-Sentry captures data by using an SDK within your application’s runtime.
+### Install the Sentry SDK
+
+Run the command for your preferred package manager to add the Sentry SDK to your application:
 
 <PlatformContent includePath="getting-started-install" />
 
-## Configure
+## Step 2: Configure
 
-Sentry should be initialized in your app as early as possible. It's essential that you call `Sentry.init` before you require any other modules in your application, otherwise, auto-instrumentation won't work for these modules.
+### Initialize the Sentry SDK
 
-Once this is done, Sentry's Node SDK will capture unhandled exceptions as well as tracing data for your application.
-
-To import and initialize Sentry, you'll need to create a file named `instrument.js`:
+To import and initialize Sentry, create a file named `instrument.(js|mjs)` in the root directory of your project and add the following code:
 
 <PlatformContent includePath="getting-started-config" />
 
-<OnboardingOption optionId="performance">
+### Apply Instrumentation to Your App
 
-Once you set a `tracesSampleRate`, performance instrumentation will be automatically enabled. Read about <PlatformLink to="/tracing/instrumentation/automatic-instrumentation">Automatic Instrumentation</PlatformLink> to learn more about what the SDK can automatically instrument for you.
+Make sure to initialize Sentry before you require or import any other modules in your app. Otherwise, auto-instrumentation won't work for these modules.
 
-You can also manually capture performance data - see <PlatformLink to="/tracing/instrumentation/custom-instrumentation">Custom Instrumentation</PlatformLink> for details.
+<Alert level="info" title="Which module system are you using?">
 
-</OnboardingOption>
+The method for applying instrumentation depends on whether your application uses CommonJS (CJS) or ECMAScript Modules (ESM). If you're unsure which system you're using or if you're looking for alternative installation methods, see <PlatformLink to="/install">here</PlatformLink>.
 
-## Use
+</Alert>
 
-To ensure that Sentry can automatically instrument all modules in your application, you'll need to require or import the `instrument.js` file before requiring any other modules in your application:
+#### CommonJS
+
+Require the `instrument.js` file before any other modules:
 
 <PlatformContent includePath="getting-started-use" />
 
-<Alert level="warning" title="Running with ESM">
+#### ESM
 
-If you run your application with ESM, you'll need to import the Sentry Initialization file before importing any other modules. Read about <PlatformLink to="/install/esm">running Sentry with ESM</PlatformLink>.
-If you're not sure about how you're running your application, see <PlatformLink to="/install">Installation Methods</PlatformLink> for more information.
+When running your application in ESM mode, use the [--import](https://nodejs.org/api/cli.html#--importmodule) command line option and point it to `instrument.mjs` to load the module before the application starts:
 
-</Alert>
+```bash
+# Note: This is only available for Node v18.19.0 onwards.
+node --import ./instrument.mjs app.mjs
+```
 
-<PlatformContent includePath="getting-started-sourcemaps" />
+## Step 3: Add Readable Stack Traces With Source Maps (Optional)
 
-## Verify
+The stack traces in your Sentry errors probably won't look like your actual code. To fix this, upload your source maps to Sentry.
+The easiest way to do this is by using the Sentry Wizard:
 
-This snippet includes an intentional error, so you can test to make sure that everything is working as soon as you set it up.
+```bash
+npx @sentry/wizard@latest -i sourcemaps
+```
+
+## Step 4: Verify Your Setup
+
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
 <PlatformContent includePath="getting-started-verify" />
 
-<Alert>
+### View Captured Data in Sentry
 
-Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+Now, head over to your project on [Sentry.io](https://sentry.io/) to view the collected data (it takes a couple of moments for the data to appear).
 
-</Alert>
+<PlatformContent includePath="getting-started-verify-locate-data" />
 
-To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+## Next Steps
+
+At this point, you should have integrated Sentry into your Node.js application and should already be sending data to your Sentry project.
+
+Now's a good time to customize your setup and look into more advanced topics.
+Our next recommended steps for you are:
+
+- Extend Sentry to your frontend using one of our [frontend SDKs](/)
+- Learn how to [manually capture errors](/platforms/javascript/guides/node/usage/)
+- Continue to [customize your configuration](/platforms/javascript/guides/node/configuration/)
+- Get familiar with [Sentry's product features](/product) like tracing, insights, and alerts
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Check out alternative <PlatformLink to="/install">installation methods</PlatformLink>
+- Find various topics in <PlatformLink to="/troubleshooting">Troubleshooting</PlatformLink>
+- [Get support](https://sentry.zendesk.com/hc/en-us/)
+
+</Expandable>

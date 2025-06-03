@@ -11,7 +11,8 @@ You can learn more about the various performance overhead optimizations implemen
 
 ## Benchmarking the iOS Replay SDK
 
-The Pocket Casts app offers a diverse mix of components, including Fragments, Activities, and Jetpack Compose screens, making it an ideal candidate for testing. Here's how the benchmarks were conducted:
+The Pocket Casts app offers a diverse mix of components making it an ideal candidate for testing. Here's how the benchmarks were conducted:
+
 - **Configuration:** Full masking was enabled, and optimized release builds were used.
 - **User Flow:** The same flow was executed 10 times to ensure consistency.
 - **Real-World Representation:** This approach closely mirrors performance in real-world scenarios.
@@ -19,17 +20,17 @@ The Pocket Casts app offers a diverse mix of components, including Fragments, Ac
 The benchmarks were run on an iPhone 14 Pro. Note that active Session Replay recording can introduce slow frames on older lower-end iOS devices (for example iPhone 8).
 
 ### Results
+
 Below are the results of the benchmarking tests, presented as median values to reflect typical overhead.
 
-
-| Metric                           | Sentry SDK only | Sentry + Replay SDK |
-| -------------------------------- | --------------- | ------------------- |
-| FPS                              | 55 fps          | 53 fps              |
-| Memory                           | 102 MB          | 121 MB              |
-| CPU                              | 4%              | 13%                 |
-| App Startup Time (Cold)          | 1264.80 ms      | 1265 ms             |
-| Main Thread Time                 | n/a             | 43ms                |
-| Network Bandwidth                | n/a             | 10 KB/s of recording|
+| Metric                  | Sentry SDK only | Sentry + Replay SDK  |
+| ----------------------- | --------------- | -------------------- |
+| FPS                     | 55 fps          | 53 fps               |
+| Memory                  | 102 MB          | 121 MB               |
+| CPU                     | 4%              | 13%                  |
+| App Startup Time (Cold) | 1264.80 ms      | 1265 ms              |
+| Main Thread Time        | n/a             | 43ms                 |
+| Network Bandwidth       | n/a             | 10 KB/s of recording |
 
 ## Reducing Performance Overhead
 
@@ -50,7 +51,7 @@ SentrySDK.start(configureOptions: { options in
 
 If the Replay SDK causes performance issues on lower-end devices (for example, [this](https://github.com/getsentry/relay/blob/695b459e03481f7d799f07b2b901b140e5d5753d/relay-event-schema/src/protocol/device_class.rs#L21-L37) is how Sentry determines the device class), you can disable it specifically for those devices:
 
-```kotlin
+```swift
 SentrySDK.start(configureOptions: { options in
   options.dsn = "___PUBLIC_DSN___"
   options.debug = true
@@ -59,3 +60,21 @@ SentrySDK.start(configureOptions: { options in
   options.sessionReplay.sessionSampleRate = if isLowEnd() { 0.0 } else { 0.1 }
 })
 ```
+
+### Disable View Renderer V2
+
+Starting with v8.50.0, the up-to-5x-faster view renderer V2 is used by default, reducing the impact of Session Replay on the main thread and potential frame drops. In previous versions (v8.47.0 and above), you can already enable it by setting `enableExperimentalViewRenderer=true`.
+
+While we do recommend the new view renderer, if you are experiencing issues, you can opt out of using it by setting the following flag:
+
+```swift
+SentrySDK.start(configureOptions: { options in
+  options.sessionReplay.enableViewRendererV2 = false
+})
+```
+
+<Alert title="✨ Note">
+
+The old view renderer will be deprecated and removed in a future release.
+
+</Alert>

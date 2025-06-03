@@ -180,3 +180,26 @@ rsync error: some files could not be transferred (code 23) at /AppleInternal/Lib
 ```
 
 While it seems to be related to Sentry, it is actually caused by the user script sandbox feature introduced in [Xcode 14](https://developer.apple.com/documentation/xcode-release-notes/xcode-14-release-notes), which is enabled by default. In order to fix this, you need to head to the target settings of your project and set the "Enable User Script Sandbox" option to `NO`.
+
+## 'required' initializer 'init(from:)' must be provided by subclass
+
+Since Cocoa SDK version [8.45.0](https://github.com/getsentry/sentry-cocoa/blob/main/CHANGELOG.md#8450) and above,
+you might see a compilation error `'required' initializer 'init(from:)' must be provided by subclass ...`, when you subclass any of the following classes:
+
+* `SentryBreadcrumb`
+* `SentryDebugMeta`
+* `SentryEvent`
+* `SentryException`
+* `SentryFrame`
+* `SentryGeo`
+* `SentryId`
+* `SentryMechanism`
+* `SentryMechanismMeta`
+* `SentryMessage`
+* `SentryNSError`
+* `SentryRequest`
+* `SentryStacktrace`
+* `SentryThread`
+* `SentryUser`
+
+You can fix this by not subclassing the affected classes. Strictly speaking, this is a breaking change, but these classes are not intended to be subclassed. If you have a strong reason to subclass them, please open a [GitHub issue](https://github.com/getsentry/sentry-cocoa/issues/new/choose).

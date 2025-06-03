@@ -219,6 +219,10 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/organization/integrations/telegram-alerts-bot/',
+    destination: '/organization/integrations/notification-incidents/telegram-alerts-bot/',
+  },
+  {
     source: '/platforms/php/configuration/integrations/',
     destination: '/platforms/php/integrations/',
   },
@@ -341,6 +345,10 @@ const userDocsRedirects = [
   {
     source: '/product/sentry-basics/concepts/:path*',
     destination: '/concepts/key-terms/:path*',
+  },
+  {
+    source: '/security-legal-pii/security/ai-ml-policy/',
+    destination: '/security-legal-pii/security/service-data-usage/',
   },
   {
     source: '/product/security/:path*',
@@ -499,6 +507,30 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/:guide/configuration/options/#environment',
   },
   {
+    source: '/platforms/javascript/configuration/draining/',
+    destination: '/platforms/javascript/apis/#flush',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/configuration/draining/',
+    destination: '/platforms/javascript/guides/:guide/apis/#flush',
+  },
+  {
+    source: '/platforms/javascript/enriching-events/identify-user/',
+    destination: '/platforms/javascript/apis/#setUser',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/enriching-events/identify-user/',
+    destination: '/platforms/javascript/guides/:guide/apis/#setUser',
+  },
+  {
+    source: '/platforms/javascript/enriching-events/context/',
+    destination: '/platforms/javascript/apis/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/enriching-events/context/',
+    destination: '/platforms/javascript/guides/:guide/enriching-events/',
+  },
+  {
     source: '/platforms/:platform/context/',
     destination: '/platforms/:platform/enriching-events/context/',
   },
@@ -584,6 +616,16 @@ const userDocsRedirects = [
     source:
       '/platforms/:platform/guides/:guide/sourcemaps/:section(generating|validating|best-practices|artifact-and-release-bundles)/',
     destination: '/platforms/:platform/guides/:guide/sourcemaps/',
+  },
+  {
+    source: '/platforms/javascript/sourcemaps/troubleshooting_js/artifact-bundles/',
+    destination: '/platforms/javascript/sourcemaps/troubleshooting_js/debug-ids/',
+  },
+  {
+    source:
+      '/platforms/:platform/guides/:guide/sourcemaps/troubleshooting_js/artifact-bundles/',
+    destination:
+      '/platforms/:platform/guides/:guide/sourcemaps/troubleshooting_js/debug-ids/',
   },
   {
     source: '/platforms/minidump/crashpad/:path*',
@@ -936,6 +978,10 @@ const userDocsRedirects = [
     source: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
     destination: '/product/insights/ai/llm-monitoring/getting-started/the-dashboard/',
   },
+  {
+    source: '/product/insights/retention-priorities/',
+    destination: '/organization/dynamic-sampling/',
+  },
   // End of Insights reduirects.
   {
     source: '/platforms/javascript/guides/astro/manual-setup/',
@@ -978,8 +1024,12 @@ const userDocsRedirects = [
     destination: '/platforms/kotlin/guides/kotlin-multiplatform/:path*',
   },
   {
-    source: '/platforms/python/:productfeature/troubleshooting/:path*',
-    destination: '/platforms/python/troubleshooting/:path*',
+    source: '/platforms/python/tracing/trace-propagation/:path*',
+    destination: '/platforms/python/tracing/distributed-tracing/:path*',
+  },
+  {
+    source: '/platforms/python/tracing/distributed-tracing/custom-instrumentation',
+    destination: '/platforms/python/tracing/distributed-tracing/custom-trace-propagation',
   },
   {
     source: '/platforms/ruby/guides/:guide/:productfeature/troubleshooting/:path*',
@@ -997,7 +1047,7 @@ const userDocsRedirects = [
     source: '/platforms/php/:productfeature/troubleshooting/:path*',
     destination: '/platforms/php/troubleshooting/:path*',
   },
-   {
+  {
     source: '/product/explore/feature-flags/:path*',
     destination: '/product/issues/issue-details/feature-flags/:path*',
   },
@@ -1009,14 +1059,49 @@ const userDocsRedirects = [
     source: '/product/tracing/:path*',
     destination: '/concepts/key-terms/tracing/:path*',
   },
-  // Redirects for JavaScript tracing docs 
+  {
+    source: '/organization/integrations/shortcut/',
+    destination: '/organization/integrations/issue-tracking/shortcut/',
+  },
+  // Redirects for JavaScript tracing docs
   {
     source: '/platforms/javascript/tracing/trace-propagation/:path*',
     destination: '/platforms/javascript/tracing/distributed-tracing/:path*',
   },
   {
-    source: '/platforms/javascript/guides/:guide/tracing/instrumentation/performance-metrics/',
-    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/performance-metrics/',
+    source: '/platforms/javascript/tracing/instrumentation/performance-metrics/',
+    destination: '/platforms/javascript/tracing/span-metrics/',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/performance-metrics/',
+    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/',
+  },
+  {
+    source:
+      '/platforms/javascript//tracing/instrumentation/span-metrics/performance-metrics/',
+    destination: '/platforms/javascript/tracing/span-metrics/',
+  },
+  {
+    source: '/platforms/javascript/profiling/browser-profiling/',
+    destination: '/platforms/javascript/profiling/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/profiling/browser-profiling/',
+    destination: '/platforms/javascript/guides/:guide/profiling/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/profiling/node-profiling/',
+    destination: '/platforms/javascript/guides/:guide/profiling/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/profiling/browser-profiling/',
+    destination: '/platforms/javascript/guides/:guide/profiling/',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide/tracing/span-metrics/performance-metrics/',
+    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/',
   },
   {
     source: '/platforms/javascript/guides/:guide/tracing/trace-propagation/:path*',
@@ -1027,12 +1112,42 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/tracing/instrumentation/:path*',
   },
   {
-    source: '/platforms/javascript/guides/:guide/tracing/instrumentation/custom-instrumentation/:path*',
+    source:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/custom-instrumentation/:path*',
     destination: '/platforms/javascript/guides/:guide/tracing/instrumentation/:path*',
   },
   {
     source: '/platforms/flutter/:path*',
     destination: '/platforms/dart/guides/flutter/:path*',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/upload-debug/',
+    destination: '/platforms/dart/guides/flutter/debug-symbols/',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/upload-debug/#when-to-upload',
+    destination:
+      '/platforms/dart/guides/flutter/debug-symbols/#when-to-upload-debug-symbols',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/upload-debug/#source-context',
+    destination:
+      '/platforms/dart/guides/flutter/debug-symbols/dart-plugin/#configuration',
+  },
+  {
+    source:
+      '/platforms/dart/guides/flutter/upload-debug/#uploading-source-code-context-for-flutter-android-ios-and-macos',
+    destination: '/platforms/dart/guides/flutter/debug-symbols/manual-upload/',
+  },
+  {
+    source: '/platforms/dart/guides/flutter/upload-debug/#uploading-for-android-ndk',
+    destination:
+      '/platforms/dart/guides/flutter/debug-symbols/manual-upload/#android-ndk',
+  },
+  {
+    source:
+      '/platforms/dart/guides/flutter/upload-debug/#automatically-upload-debug-symbols',
+    destination: '/dart/guides/flutter/debug-symbols/dart-plugin/',
   },
   {
     source: '/platforms/dart/guides/flutter/configuration/integrations/:path*',
@@ -1041,6 +1156,27 @@ const userDocsRedirects = [
   {
     source: '/platforms/dart/guides/flutter/usage/advanced-usage/:path*',
     destination: '/platforms/dart/guides/flutter/troubleshooting/:path*',
+  },
+  {
+    source: '/platforms/java/scope/',
+    destination: '/platforms/java/enriching-events/',
+  },
+  {
+    source: '/platforms/java/guides/:guide/scope/',
+    destination: '/platforms/java/guides/:guide/enriching-events/',
+  },
+  // Redirects for Trace Explorer
+  {
+    source: '/product/explore/traces',
+    destination: '/product/explore/trace-explorer/',
+  },
+  {
+    source: '/product/explore/new-trace-explorer',
+    destination: '/product/explore/trace-explorer/',
+  },
+  {
+    source: '/organization/integrations/expo/',
+    destination: '/organization/integrations/deployment/expo/',
   },
 ];
 

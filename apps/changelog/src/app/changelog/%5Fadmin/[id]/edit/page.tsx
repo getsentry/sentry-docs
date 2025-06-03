@@ -28,7 +28,7 @@ export default async function ChangelogCreatePage(props: {
           <h2>Changelog not found</h2>
         </header>
         <footer>
-          <Link href="/changelogs">Return to Changelogs list</Link>
+          <Link href="/changelog/_admin">Return to Changelogs list</Link>
         </footer>
       </Fragment>
     );

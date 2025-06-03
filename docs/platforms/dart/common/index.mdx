@@ -1,0 +1,95 @@
+---
+title: Dart
+caseStyle: camelCase
+supportLevel: production
+sdk: sentry.dart
+categories:
+  - mobile
+  - browser
+  - server
+---
+
+On this page, we get you up and running with Sentry's Dart SDK.
+
+<Alert>
+
+If you don't already have an account and Sentry project established, head over to [sentry.io](https://sentry.io/signup/), then return to this page.
+
+</Alert>
+
+## Features
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+<Alert>
+
+Sentry provides a dedicated [Flutter SDK](/platforms/dart/guides/flutter) as well.
+
+</Alert>
+
+
+## Install
+
+<OnboardingOptionButtons
+  options={[
+    'error-monitoring',
+    'performance'
+  ]}
+/>
+
+Sentry captures data by using an SDK within your application's runtime.
+
+```yml {filename:pubspec.yaml}
+dependencies:
+  sentry: ^{{@inject packages.version('sentry.dart') }}
+```
+
+## Configure
+
+To capture all errors, initialize the Sentry Dart SDK as soon as possible.
+
+
+```dart
+import 'package:sentry/sentry.dart';
+
+Future<void> main() async {
+  await Sentry.init((options) {
+    options.dsn = '___PUBLIC_DSN___';
+    // Adds request headers and IP for users, for more info visit:
+    // https://docs.sentry.io/platforms/dart/data-management/data-collected/
+    options.sendDefaultPii = true;
+    // ___PRODUCT_OPTION_START___ performance
+    // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
+    // We recommend adjusting this value in production.
+    options.tracesSampleRate = 1.0;
+    // ___PRODUCT_OPTION_END___ performance
+  });
+
+  // you can also configure SENTRY_DSN, SENTRY_RELEASE, SENTRY_DIST, and
+  // SENTRY_ENVIRONMENT via Dart environment variable (--dart-define)
+}
+```
+
+## Verify
+
+Verify that your app is sending events to Sentry by adding the following snippet, which includes an intentional error. You should see the error reported in Sentry within a few minutes.
+
+```dart
+import 'package:sentry/sentry.dart';
+
+try {
+  throw StateError('Sentry Test Error');
+} catch (exception, stackTrace) {
+  await Sentry.captureException(
+    exception,
+    stackTrace: stackTrace,
+  );
+}
+```
+
+## Next Steps
+
+- <PlatformLink to="/features">Learn about the features of Sentry's Dart SDK</PlatformLink>
+- <PlatformLink to="/tracing/instrumentation">Add performance instrumentation to your app</PlatformLink>

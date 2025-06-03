@@ -20,7 +20,7 @@ import {uniqByReference} from 'sentry-docs/utils';
 
 import styles from './style.module.scss';
 
-import {SidebarLink} from '../sidebarLink';
+import {SidebarLink, SidebarSeparator} from '../sidebar/sidebarLink';
 
 export function PlatformSelector({
   platforms,
@@ -78,7 +78,10 @@ export function PlatformSelector({
     }
     // any of these fields can be used to match the search value
     const keys = ['title', 'name', 'aliases', 'sdk', 'keywords'];
-    const matches_ = matchSorter(platformsAndGuides, searchValue, {keys});
+    const matches_ = matchSorter(platformsAndGuides, searchValue, {
+      keys,
+      threshold: matchSorter.rankings.ACRONYM,
+    });
     // Radix Select does not work if we don't render the selected item, so we
     // make sure to include it in the list of matches.
     const selectedPlatform = platformsAndGuides.find(
@@ -92,7 +95,9 @@ export function PlatformSelector({
 
   const router = useRouter();
   const onPlatformChange = (platformKey: string) => {
-    const platform_ = platformsAndGuides.find(platform => platform.key === platformKey);
+    const platform_ = platformsAndGuides.find(
+      platform => platform.key === platformKey.replace('-redirect', '')
+    );
     if (platform_) {
       localStorage.setItem('active-platform', platform_.key);
       router.push(platform_.url);
@@ -238,19 +243,14 @@ export function PlatformSelector({
         </ComboboxProvider>
       </RadixSelect.Root>
       {showStoredPlatform && (
-        <div className={styles.toc}>
-          <ul>
-            <SidebarLink
-              to={storedPlatform.url}
-              title={`Sentry for ${storedPlatform.title ?? storedPlatform.key}`}
-              path=""
-              className={styles['active-platform-title']}
-            >
-              {/* display chevron icon by adding a child element */}
-              <Fragment />
-            </SidebarLink>
-          </ul>
-          <hr />
+        <div className="mt-3">
+          <SidebarLink
+            href={storedPlatform.url}
+            title={`Sentry for ${storedPlatform.title ?? storedPlatform.key}`}
+            collapsible
+            topLevel
+          />
+          <SidebarSeparator />
         </div>
       )}
     </div>
@@ -277,6 +277,11 @@ function PlatformItem({
       isLastGuide: i === guides.length - 1,
     }));
 
+  // This is the case if `platformTitle` is configured for a platform
+  // In this case, the top-level select item should get the `-redirect` suffix,
+  // as we can't have two items with the same key
+  const hasGuideWithPlatformKey = platform.guides.some(g => g.key === platform.key);
+
   const guides = platform.isExpanded
     ? markLastGuide(platform.guides.length > 0 ? platform.guides : platform.integrations)
     : [];
@@ -288,7 +293,7 @@ function PlatformItem({
         <RadixSelect.Label className="flex">
           <Fragment>
             <RadixSelect.Item
-              value={platform.key}
+              value={hasGuideWithPlatformKey ? `${platform.key}-redirect` : platform.key}
               asChild
               className={styles.item}
               data-platform-with-guides

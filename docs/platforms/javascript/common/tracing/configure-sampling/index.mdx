@@ -6,48 +6,73 @@ sidebar_order: 30
 
 Sentry's tracing functionality helps you monitor application performance by capturing distributed traces, attaching attributes, and span performance across your application. However, Capturing traces for every transaction can generate significant volumes of data. Sampling allows you to control the amount of spans that are sent to Sentry from your application.
 
-## Sampling Configuration Options
-
 The JavaScript SDK provides two main options for controlling the sampling rate:
 
-1. Uniform Sample Rate (`tracesSampleRate`)
-This option sets a fixed percentage of transactions to be captured:
+1. [Uniform Sample Rate](#uniform-sample-rate-tracessamplerate) (recommended)
+2. [Sampling Function](#sampling-function-tracessampler)
+
+## Uniform Sample Rate (`tracesSampleRate`)
+
+`tracesSampleRate` is floating point value 0.0 and 1.0, which controls the probability that a transaction will be sampled.
 
 <PlatformContent includePath="/tracing/sample-rate" />
 
-With `tracesSampleRate` set to `0.25`, approximately 25% of transactions will be recorded and sent to Sentry. This provides an even cross-section of transactions regardless of where in your app they occur.
+With `tracesSampleRate` set to `0.25`, each transaction in your application is randomly sampled with a probability of 25%, so you can expect that one in every four transactions will be sent to Sentry.
 
-2. Sampling Function (`tracesSampler`)
+## Sampling Function (`tracesSampler`)
 
-For more granular control, you can use the `tracesSampler` function. This approach allows you to:
+For more granular control, you provide a `tracesSampler` function. This approach allows you to:
 
 - Apply different sampling rates to different types of transactions
 - Filter out specific transactions entirely
 - Make sampling decisions based on transaction data
 - Control the inheritance of sampling decisions in distributed traces
 
-<PlatformContent includePath="/tracing/trace-sampler" />
+<PlatformContent includePath="/tracing/traces-sampler" />
 
-### Trace Sampler Examples
+### The Sampling Context Object
+
+When the `tracesSampler` function is called, it receives a `samplingContext` object with valuable information to help make sampling decisions:
+
+```typescript
+interface SamplingContext {
+  // Name of the span/transaction
+  name: string;
+
+  // Initial attributes of the span/transaction
+  attributes: SpanAttributes | undefined;
+
+  // Whether the parent span was sampled (undefined if no incoming trace)
+  parentSampled: boolean | undefined;
+
+  // Sample rate from incoming trace (undefined if no incoming trace)
+  parentSampleRate: number | undefined;
+
+  // Utility function to inherit parent decision or fallback
+  inheritOrSampleWith: (fallbackRate: number) => number;
+}
+```
+
+### Traces Sampler Examples
 
 1. Prioritizing Critical User Flows
 
 ```javascript
 tracesSampler: (samplingContext) => {
-  const { name, attributes } = samplingContext;
-  
+  const { name, attributes, inheritOrSampleWith } = samplingContext;
+
   // Sample all checkout transactions
   if (name.includes('/checkout') || attributes?.flow === 'checkout') {
     return 1.0;
   }
-  
+
   // Sample 50% of login transactions
   if (name.includes('/login') || attributes?.flow === 'login') {
     return 0.5;
   }
-  
+
   // Sample 10% of everything else
-  return 0.1;
+  return inheritOrSampleWith(0.1);
 }
 ```
 
@@ -55,18 +80,20 @@ tracesSampler: (samplingContext) => {
 
 ```javascript
 tracesSampler: (samplingContext) => {
+    const { inheritOrSampleWith } = samplingContext;
+
   // Sample all transactions in development
   if (process.env.NODE_ENV === 'development') {
     return 1.0;
   }
-  
+
   // Sample 5% in production
   if (process.env.NODE_ENV === 'production') {
     return 0.05;
   }
-  
+
   // Sample 20% in staging
-  return 0.2;
+  return inheritOrSampleWith(0.2);
 }
 ```
 
@@ -75,119 +102,37 @@ tracesSampler: (samplingContext) => {
 ```javascript
 tracesSampler: (samplingContext) => {
   const { attributes, inheritOrSampleWith } = samplingContext;
-  
+
   // Always sample for premium users
   if (attributes?.userTier === 'premium') {
     return 1.0;
   }
-  
+
   // Sample more transactions for users experiencing errors
   if (attributes?.hasRecentErrors === true) {
     return 0.8;
   }
-  
+
   // Sample less for high-volume, low-value paths
   if (attributes?.path?.includes('/api/metrics')) {
     return 0.01;
   }
-  
+
   // Default sampling rate
   return inheritOrSampleWith(0.2);
 }
 ```
 
-## The Sampling Context Object
-
-When the `tracesSampler` function is called, it receives a `samplingContext` object with valuable information to help make sampling decisions:
-
-```typescript
-typescriptCopyinterface SamplingContext {
-  // Name of the span/transaction
-  name: string;
-  
-  // Initial attributes of the span/transaction
-  attributes: SpanAttributes | undefined;
-  
-  // Whether the parent span was sampled (undefined if no incoming trace)
-  parentSampled: boolean | undefined;
-  
-  // Sample rate from incoming trace (undefined if no incoming trace)
-  parentSampleRate: number | undefined;
-  
-  // Utility function to inherit parent decision or fallback
-  inheritOrSampleWith: (fallbackRate: number) => number;
-}
-```
-
-The sampling context contains:
-
-- `name`: The name of the transaction/span
-- `attributes`: Initial tags and attributes set on the transaction
-- `parentSampled`: Whether the parent transaction was sampled (for distributed tracing)
-- `parentSampleRate`: The sample rate used in the parent transaction
-- `inheritOrSampleWith`: A utility function to handle inheritance logic (recommended)
-
-## Inheritance in Distributed Tracing
-
-In distributed systems, trace information is propagated between services. The inheritOrSampleWith function simplifies handling parent sampling decisions:
-
-```javascript
-tracesSampler: (samplingContext) => {
-  const { name, inheritOrSampleWith } = samplingContext;
-  
-  // Apply specific rules first
-  if (name.includes('critical-path')) {
-    return 1.0; // Always sample
-  }
-  
-  // Otherwise inherit parent sampling decision or fall back to 0.1
-  return inheritOrSampleWith(0.1);
-}
-```
-This approach ensures consistent sampling decisions across your entire distributed trace. All transactions in a given trace will share the same sampling decision, preventing broken or incomplete traces.
-
-**Note:** The `inheritOrSampleWith` helper was introduced in version 9 of the SDK. For earlier versions, you can implement similar logic manually using the `parentSampled` property.
-
 ## Sampling Decision Precedence
 
 When multiple sampling mechanisms could apply, Sentry follows this order of precedence:
 
-- If `tracesSampler` is defined, its decision is used (can consider parent sampling)
-- If no `tracesSampler` but parent sampling is available, parent decision is used
+- If `tracesSampler` is defined, its decision is used. Although the `tracesSampler` can override the parent sampling decision, most users will want to ensure their `tracesSampler` respects the parent sampling decision.
+- If no `tracesSampler` is defined, but there is a parent sampling decision from an incoming distributed trace, we use the parent sampling decision
 - If neither of the above, `tracesSampleRate` is used
-- If none of the above are set, no transactions are sampled (0%)
-
-## How Sampling Propagates in Distributed Traces
-
-Sentry uses a "head-based" sampling approach:
-
-- A sampling decision is made in the originating service (the "head")
-- This decision is propagated to all downstream services via HTTP headers
-
-The two key headers are:
-- `sentry-trace`: Contains trace ID, span ID, and sampling decision
-- `baggage`: Contains additional trace metadata including sample rate
-
-Sentry automatically attaches these headers to outgoing HTTP requests when using the `browserTracingIntegration`. For other communication channels like WebSockets, you can manually propagate trace information:
-
-```javascript
-// Extract trace data from the current scope
-const traceData = Sentry.getTraceData();
-const sentryTraceHeader = traceData["sentry-trace"];
-const sentryBaggageHeader = traceData["baggage"];
-
-// Add to your custom request (example using WebSocket)
-webSocket.send(JSON.stringify({
-  message: "Your data here",
-  metadata: {
-    sentryTrace: sentryTraceHeader,
-    baggage: sentryBaggageHeader
-  }
-}));
-```
+- If `tracesSampleRate` is set to 0, no spans will be sampled, and no downstream spans will be sampled either since they inherit the parent sampling decision
+- If none of the above are set, no transactions are sampled and tracing will be disabled
 
 ## Conclusion
 
 Effective sampling is key to getting the most value from Sentry's performance monitoring while minimizing overhead. The `tracesSampler` function gives you precise control over which transactions to record, allowing you to focus on the most important parts of your application.
-
-By implementing a thoughtful sampling strategy, you'll get the performance insights you need without overwhelming your systems or your Sentry quota.

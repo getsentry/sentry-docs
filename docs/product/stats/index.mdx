@@ -34,6 +34,7 @@ Filtered events and attachments intentionally excluded based on defined settings
 
 - **Browser Extensions**: Filtered by browser extension.
 - **Chunk Load Errors**: Filtered when code chunks can’t be found on the server.
+- **Discarded Hash**: Filtered based on fingerprints of previously deleted and discarded issues.
 - **Error Message**: Filtered based on specific error messages.
 - **Filtered Transaction**: Filtered because it was a call to a filtered transaction.
 - **Invalid CSP**: Filtered due to an invalid Content Security Policy (CSP) policy.
@@ -69,7 +70,7 @@ Events and attachments might be discarded if they don't match the expected forma
 - **Project Missing**: The specified Sentry project is disabled or project information in the submitted request was inconclusive.
 - **Sampling**: Tracing data that is discarded during sampling.
 - **Security Report**: An invalid or unsupported security report was submitted. If this report originates from an up-to-date browser, please report a bug to Sentry. See [Security Policy Reporting](/security-legal-pii/security/security-policy-reporting/) for more information.
-- **Too Large**: The HTTP submission or its contained data exceeds size limits. See [this document](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) for the precise limits.
+- **Too Large**: The HTTP submission or its contained data exceeds size limits. If available, what exactly exceeded might be provided as "Too Large &lt;what&gt;", where &lt;what&gt; specifies the specific size limit that was exceeded (e.g., "Too Large Event") else "Too Large Other". For the exact size limits, refer to [this document](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits)
 - **Unreal**: An unsupported or invalid Unreal Engine crash report was submitted. If this request originates from a recent or development version of the Unreal Engine, please report a bug to Sentry. See [Unreal Engine](/platforms/unreal/) for more information.
 - **Internal**: An internal problem at Sentry prevented regular processing or storage of the submitted information.
 
@@ -159,3 +160,9 @@ The "Metric Alerts Triggered" chart and table show alert rules that have been tr
 #### Number of Releases
 
 The "Number of Releases" chart and table show the releases that were created for each of your team's projects.
+
+## Continuous Profiling Stats
+
+#### Dropped Profile Hours
+
+[Relay](/product/relay/) calculates profile durations for accepted outcomes rather than for every profile chunk received. Both profile hours and UI profile hours stats are derived from these accepted profile chunks or UI profile chunks, respectively, with no duration data stored for dropped outcomes (which are simply counted). Each profile chunk has a maximum duration of 66 seconds. Based on internal testing data the 10th and 25th percentiles of accepted profile chunk durations are approximately 9.9 seconds. This metric was used to select 9.0 seconds as the estimation multiplier for each dropped profile chunk.

@@ -294,6 +294,8 @@ happens immediately that may result in a different response code (and message).
 
 ## Handling Errors
 
+### Server Errors
+
 We **highly encourage** that your SDK handle failures from the Sentry server
 gracefully. Specifically, SDKs must honor the `429` status code and not attempt
 sending until the `Retry-After` kicks in. SDKs should drop events if Sentry is
@@ -327,6 +329,20 @@ request fails once, it is very likely to fail again on the next attempt.
 Retrying too often may cause further rate limiting or blocking by the Sentry
 server.
 </Alert>
+
+### SDK Errors
+
+We try our best to make our SDKs error-free. We are an exception monitoring service after all
+and throwing our own exceptions is awkward. However, if our SDKs do throw exceptions, we have to make
+sure we swallow them gracefully and emit an error level log describing the failure.
+
+As a **design principle**, we never capture Sentry events for exceptions happening within our SDKs, including within user-defined callbacks and hooks such as `before_send` or `traces_sampler`.
+
+The reason we avoid capturing internal SDK exceptions is that we are already in an event capturing flow
+where the scope has been applied and capturing another event at that point in the lifecycle
+would lead to undefined behavior. In the worst case, we could create a busy loop of creating and sending events repeatedly until the system crashes.
+
+In mobile SDKs, unhandled crashes will still make it to Sentry via the crash handlers. See [SDK Crash Detection](https://github.com/getsentry/sentry/tree/master/src/sentry/utils/sdk_crashes#sdk-crash-detection) for more details.
 
 ## Concurrency (Scope and Hubs)
 

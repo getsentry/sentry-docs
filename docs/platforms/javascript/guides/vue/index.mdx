@@ -18,7 +18,7 @@ Select which Sentry features you'd like to install in addition to Error Monitori
 
 <OnboardingOptionButtons options={["error-monitoring", "performance", "session-replay"]} />
 
-Sentry captures data by using an SDK within your application’s runtime.
+Sentry captures data by using an SDK within your application's runtime.
 
 ```bash {tabTitle:npm}
 npm install @sentry/vue --save
@@ -38,9 +38,7 @@ Configuration should happen as early as possible in your application's lifecycle
 
 To initialize Sentry in your Vue application, add the following code snippet to your `main.js`:
 
-### Vue 3
-
-```javascript {filename:main.js} {"onboardingOptions": {"performance": "16, 19-25", "session-replay": "17, 29-35"}}
+```javascript {tabTitle:Vue 3} {filename:main.js} {3, 12-41}
 import { createApp } from "vue";
 import { createRouter } from "vue-router";
 import * as Sentry from "@sentry/vue";
@@ -55,10 +53,20 @@ const router = createRouter({
 Sentry.init({
   app,
   dsn: "___PUBLIC_DSN___",
+  
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/vue/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  
   integrations: [
+    // ___PRODUCT_OPTION_START___ performance
     Sentry.browserTracingIntegration({ router }),
+    // ___PRODUCT_OPTION_END___ performance
+    // ___PRODUCT_OPTION_START___ session-replay
     Sentry.replayIntegration(),
+    // ___PRODUCT_OPTION_END___ session-replay
   ],
+  // ___PRODUCT_OPTION_START___ performance
 
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for tracing.
@@ -69,6 +77,8 @@ Sentry.init({
 
   // Set `tracePropagationTargets` to control for which URLs trace propagation should be enabled
   tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ session-replay
 
   // Capture Replay for 10% of all sessions,
   // plus for 100% of sessions with an error
@@ -76,15 +86,14 @@ Sentry.init({
   // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ session-replay
 });
 
 app.use(router);
 app.mount("#app");
 ```
 
-### Vue 2
-
-```javascript {filename:main.js} {"onboardingOptions": {"performance": "15, 18-24", "session-replay": "16, 28-34"}}
+```javascript {tabTitle:Vue 2} {filename:main.js} {3, 11-35}
 import Vue from "vue";
 import Router from "vue-router";
 import * as Sentry from "@sentry/vue";
@@ -99,9 +108,14 @@ Sentry.init({
   Vue,
   dsn: "___PUBLIC_DSN___",
   integrations: [
+    // ___PRODUCT_OPTION_START___ performance
     Sentry.browserTracingIntegration({ router }),
+    // ___PRODUCT_OPTION_END___ performance
+    // ___PRODUCT_OPTION_START___ session-replay
     Sentry.replayIntegration(),
+    // ___PRODUCT_OPTION_END___ session-replay
   ],
+  // ___PRODUCT_OPTION_START___ performance
 
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for tracing.
@@ -112,6 +126,8 @@ Sentry.init({
 
   // Set `tracePropagationTargets` to control for which URLs trace propagation should be enabled
   tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ session-replay
 
   // Capture Replay for 10% of all sessions,
   // plus for 100% of sessions with an error
@@ -119,6 +135,7 @@ Sentry.init({
   // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ session-replay
 });
 
 // ...
@@ -130,14 +147,6 @@ new Vue({
 ```
 
 If you're creating more than one Vue 3 app within your application, check out how to initialize the SDK for [multiple apps](./features/multiple-apps).
-
-### Vue-Specific configuration
-
-The SDK accepts a few Vue-specific `Sentry.init` configuration options:
-
-- `attachProps` (defaults to `true`) - Includes all Vue components' props with the events.
-- `logErrors` (defaults to `true`) - Decides whether SDK should call Vue's original `logError` function as well.
-- Check out how to [Track Vue Components](./features/component-tracking) for performance.
 
 ### Late-Defined Vue Apps
 

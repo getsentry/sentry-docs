@@ -69,15 +69,13 @@ If you expect to frequently update your option, you can make it editable in the 
 If you're working on a system-wide feature, you may choose to use options for your rollout instead of feature flags. Unlike feature flags, options don't allow for easy segmentation, but they are performant, stable, and simple to implement. e.g.,
 
 ```python
-import random
-from sentry import options
+from sentry.options.rollout import in_random_rollout
 
-rate = options.get("performance.some-feature-rate")
-if rate > random.random():
+if in_random_rollout("performance.some-feature-rate"):
     do_feature_stuff()
 ```
 
-However, be careful! Using `random.random` will cause your feature to be enabled and disabled randomly between page requests. This may be unacceptable for user-facing features. To avoid this, you can use the `sample_modulo` helper. e.g.,
+However, be careful! `in_random_rollout` uses `random.random` under the hood, and will cause your feature to be enabled and disabled randomly between page requests. This may be unacceptable for user-facing features. To avoid this, you can use the `sample_modulo` helper. e.g.,
 
 ```python
 from sentry.utils.options import sample_modulo

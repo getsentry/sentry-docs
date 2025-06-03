@@ -1,0 +1,83 @@
+---
+title: Sentry MCP Server
+sidebar_order: 120
+description: "Enable secure connectivity between Sentry issues and debugging data, and LLM clients, using a Model Context Protocol (MCP) server."
+---
+
+<Alert>
+  The Sentry MCP Server is currently in **beta**. Beta features are still a work in progress and may have bugs. Please reach out on
+  [GitHub](https://github.com/getsentry/sentry-mcp/issues) if you have any feedback or concerns.
+</Alert>
+
+## Overview
+
+The [Sentry MCP Server](https://mcp.sentry.dev) provides a secure way of bringing Sentry's full issue context into systems that are able to leverage the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction). Sentry hosts and manages a remote MCP server, which you can connect to and leverage centrally. With the MCP, you can:
+
+- Access Sentry issues and errors
+- Search for errors in specific files
+- Query projects and organizations
+- List and create Sentry DSN's for projects
+- Execute autofix runs and retrieve autofix status and details 
+
+<VimeoEmbed id="1080588938?h=1e437d4874" />
+
+## Getting Started
+
+Most clients that natively support MCP can be configured using a mcp_config.json file or an equivalent. In these systems, adding the server configuration to the file will setup an MCP server: 
+
+```json
+{
+    "mcpServers": {
+        "Sentry": {
+            "command": "npx",
+            "args": [
+                "mcp-remote@latest",
+                "https://mcp.sentry.dev/sse"
+            ]
+        }
+    }
+}
+```
+
+This setup uses the Remote-MCP server configuration, enabling most clients to connect to the Sentry MCP, authenticate via OAuth, and access the available tools.
+
+Alternatively, if you don't want the Remote-MCP server, you can run the MCP Server locally in STDIO mode by following the instructions in the [README](https://github.com/getsentry/sentry-mcp).
+
+Once configured via one of these methods, you'll be able to view the available tools within your client and use them as part of your LLM calls.
+
+![Available Sentry MCP Tools](./img/mcp-tools.png)
+
+## Example Calls 
+
+- Tell me about the issues in my `project`
+- Check Sentry for errors in `file.tsx` and propose solutions.
+- Diagnose issue `issue id` and propose solutions.
+- Create a new project in Sentry for `service-name` and setup local instrumentation using it.
+- Use Sentry's autofix feature, and help me analyze and propose a solution for `issue id`.
+
+![Sentry MCP using Autofix](./img/mcp-autofix1.png)
+
+## Verified Clients 
+
+The Sentry MCP Server has been verified to work in: 
+
+### Claude for Desktop 
+
+By accessing the developer tools via `CMD + ,` -> `Developer` -> `Edit Config` -> edit the `claude_desktop_config.json` file 
+
+### Claude.ai 
+
+You can access the `Settings` -> `Profile` -> Scroll to `Integrations`, select `Add More`, and add the Sentry MCP server URL `https://mcp.sentry.dev/sse`
+
+### Windsurf
+
+Via the `Configure MCP` option in Cascade (CMD + L)
+
+### Cursor
+
+Via the `Cursor` -> `Settings` -> `Cursor Settings` -> `MCP` and editing the `mcp.json` file
+
+### VS Code and GitHub Copilot
+
+By adding the server in `CMD+Shift+P` and selecting `MCP: Add Server`
+

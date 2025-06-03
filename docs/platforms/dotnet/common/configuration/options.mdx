@@ -49,9 +49,13 @@ Example scenarios where it should be explicitly set to true:
 
 Defaults to `false`, unless in Blazor WASM, MAUI, Unity, or Xamarin where the default is `true`.
 
-In server applications, when Global Mode is **disabled**, data stored in the scope is only available in the context of the particular request in which it is created.
+When Global Mode is **disabled** data stored in the scope is set on the current [ExecutionContext](https://learn.microsoft.com/en-us/dotnet/api/system.threading.executioncontext).
+In server applications data stored in the scope is only available in the context of the particular request in which it is created.
+Broadly, the ExecutionContext passes to child tasks and threads, but not to parent tasks and threads.
 
-For UI applications (like MAUI) when Global mode is **enabled**, a single scope stack is shared by the whole application.
+When Global Mode is **enabled**, a single scope stack is shared by the whole application.
+
+Since version 5.0.0 the transaction is always set on the current ExecutionContext, regardless of the Global Mode, so that spans from the UI don't get mixed up with transactions in background services.
 
 See the <PlatformLink to="/enriching-events/scopes/">Scopes and Hubs documentation</PlatformLink> for more information.
 

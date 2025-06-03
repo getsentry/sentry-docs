@@ -345,10 +345,10 @@ export function Search({
             >
               <MagicIcon className="size-6 text-[var(--sgs-color-hit-highlight)] flex-shrink-0" />
               <div className={styles['sgs-ai-button-content']}>
-                <h6>
+                <div className={styles['sgs-ai-button-heading']}>
                   Ask Sentry about{' '}
                   <span>{query.length > 30 ? query.slice(0, 30) + '...' : query}</span>
-                </h6>
+                </div>
                 <div className={styles['sgs-ai-hint']}>
                   Get an AI-powered answer to your question
                 </div>

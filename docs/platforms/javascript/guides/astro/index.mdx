@@ -80,6 +80,7 @@ export default defineConfig({
     sentry({
       sourceMapsUploadOptions: {
         project: "___PROJECT_SLUG___",
+        org: "___ORG_SLUG___",
         authToken: process.env.SENTRY_AUTH_TOKEN,
       },
     }),
@@ -94,20 +95,31 @@ export default defineConfig({
 
 ### Client-Side Setup
 
-```javascript {filename:sentry.client.config.js} {"onboardingOptions": {"performance": "7,10-13", "session-replay": "8,14-21"}}
+```javascript {filename:sentry.client.config.js}
 import * as Sentry from "@sentry/astro";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/astro/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+
   integrations: [
+    // ___PRODUCT_OPTION_START___ performance
     Sentry.browserTracingIntegration(),
+    // ___PRODUCT_OPTION_END___ performance
+    // ___PRODUCT_OPTION_START___ session-replay
     Sentry.replayIntegration(),
+    // ___PRODUCT_OPTION_END___ session-replay
   ],
+  // ___PRODUCT_OPTION_START___ performance
 
   // Define how likely traces are sampled. Adjust this value in production,
   // or use tracesSampler for greater control.
   tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ session-replay
 
   // This sets the sample rate to be 10%. You may want this to be 100% while
   // in development and sample at a lower rate in production
@@ -116,31 +128,47 @@ Sentry.init({
   // If the entire session is not sampled, use the below sample rate to sample
   // sessions when an error occurs.
   replaysOnErrorSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ session-replay
 });
 ```
 
 ### Server-Side Setup
 
-```javascript {filename:sentry.server.config.js} {"onboardingOptions": {"performance": "10-13", "profiling": "2,6-9,14-17"}}
+```javascript {filename:sentry.server.config.js}
 import * as Sentry from "@sentry/astro";
+// ___PRODUCT_OPTION_START___ profiling
 import { nodeProfilingIntegration } from '@sentry/profiling-node';
+// ___PRODUCT_OPTION_END___ profiling
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+
+  // Adds request headers and IP for users, for more info visit: for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/astro/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ profiling
+
   integrations: [
     // Add our Profiling integration
     nodeProfilingIntegration(),
   ],
+  // ___PRODUCT_OPTION_END___ profiling
+  // ___PRODUCT_OPTION_START___ performance
 
   // Define how likely traces are sampled. Adjust this value in production,
   // or use tracesSampler for greater control.
   tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ profiling
 
   // Set sampling rate for profiling
   // This is relative to tracesSampleRate
   profilesSampleRate: 1.0
+  // ___PRODUCT_OPTION_END___ profiling
 });
 ```
+
+If you want to configure your SDK using environment variables, make sure to follow Astro's documentation on [using environment variables](https://docs.astro.build/en/guides/environment-variables/).
 
 ## Add Readable Stack Traces to Errors
 

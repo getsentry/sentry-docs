@@ -130,6 +130,10 @@ Render an expandable section to provide additional information to users on deman
   provide optional information that can help users be more successful.
 </Expandable>
 
+<Expandable title="Expandable with a code block">
+  ```js const foo = 'bar'; ```
+</Expandable>
+
 ```markdown {tabTitle:Example}
 <Expandable title="Here's something worth noting">
   This is an expandable section in an `'info'` alert style.
@@ -372,20 +376,28 @@ Attributes:
 
 ## Onboarding Options
 
-If you're writing product feature specific docs, you can specify code block `onboardingOptions` metadata:
+If you're writing product feature specific docs, you can specify markers within code blocks that enable or disable certain parts of snippets:
+
+<Alert title="warning">
+  Do not copy the following code snippet, the `___PRODUCT_OPTION_START___` and
+  `___PRODUCT_OPTION_END___` markers have an extra character (zero width space)
+  as a workaround to make them show up correctly in the example.
+</Alert>
 
 ````markdown
-```go {"onboardingOptions": {"performance": "13-17"}}
-// your code here
+```go
+  // _​__PRODUCT_OPTION_START___ performance
+  // your code here
+  // _​__PRODUCT_OPTION_END___ performance
 ```
 ````
 
-the general syntax is `{"onboardingOptions": {"feature": "range"}}` where `feature` is the feature id
-and `range` is the corresponding line range (similar to the line highlighting syntax).
+the syntax uses the standard comment style of the programming language you're documenting. For example:
 
-You can specify multiple features by separating them with a comma:
+- TypeScript/JavaScript: `// ___PRODUCT_OPTION_START___ feature`
+- Python: `# ___PRODUCT_OPTION_START___ feature`
 
-`{"onboardingOptions": {"performance": "13-17", "profiling": "5-6"}}`
+where `feature` is the feature id (e.g. `performance`, `profiling` or `session-replay`).
 
 The range visibility will be controlled by the `OnboardingOptionButtons` component:
 
@@ -421,7 +433,7 @@ Example (output of the above):
   dontStick
 />
 
-```go {"onboardingOptions": {"performance": "13-17"}}
+```go
 import (
 	"fmt"
 	"net/http"
@@ -434,11 +446,16 @@ import (
 // To initialize Sentry's handler, you need to initialize Sentry itself beforehand
 if err := sentry.Init(sentry.ClientOptions{
 	Dsn: "___PUBLIC_DSN___",
+  // ___PRODUCT_OPTION_START___ performance
 	EnableTracing: true,
 	// Set TracesSampleRate to 1.0 to capture 100%
 	// of transactions for performance monitoring.
 	// We recommend adjusting this value in production,
 	TracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // Adds request headers and IP for users,
+  // visit: https://docs.sentry.io/platforms/go/data-management/data-collected/ for more info
+  SendDefaultPII: true,
 }); err != nil {
 	fmt.Printf("Sentry initialization failed: %v\n", err)
 }

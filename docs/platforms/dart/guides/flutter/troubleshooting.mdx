@@ -8,9 +8,9 @@ If you need help solving issues with Sentry's Flutter SDK, you can read the edge
 
 ## Support 16 KB Page Sizes on Android
 
-Starting with Android 15, AOSP supports devices with a 16 KB page size. If your app uses NDK libraries (directly or via an SDK), you’ll need to rebuild it for compatibility with these devices.
+Starting with Android 15, AOSP supports devices with a 16 KB page size. If your app uses NDK libraries (directly or via an SDK), you'll need to rebuild it for compatibility with these devices.
 
-Update to Sentry Flutter SDK version `8.11.0` and above order to support 16 KB page sizes on Android devices. 
+Update to Sentry Flutter SDK version `8.11.0` and above order to support 16 KB page sizes on Android devices.
 
 Please read the [Android developer documentation](https://developer.android.com/guide/practices/page-sizes) to update and test your app with 16 KB page size support.
 
@@ -36,6 +36,10 @@ Building a Flutter app for a specific ABI using the `--target-platform` argument
 ```bash
 flutter build apk --target-platform=android-arm --split-per-abi
 ```
+
+## Running Sentry Within an Isolate
+
+If you have a Sentry instance running within a separate [Isolate](https://dart.dev/language/isolates) you must execute `Sentry.close()` before the Isolate completes, otherwise the Isolate won't shut down correctly.
 
 ## Native Symbolication on Android
 
@@ -68,6 +72,38 @@ There is an [issue with the Sentry Flutter SDK](https://github.com/getsentry/sen
 This is an [issue](https://github.com/flutter/flutter/issues/135245) with Flutter itself and should be fixed in [Flutter 3.15](https://github.com/flutter/flutter/labels/found%20in%20release%3A%203.15).
 
 For prior versions, you can work around this by configuring the SDK only to take screenshots when the app is in the `resumed` state. To do this, set `SentryFlutterOptions.attachScreenshotOnlyWhenResumed` to `true`.
+
+## Zone Mismatch Error on Web
+
+By default, the Sentry Flutter SDK creates a custom zone on web for automatic error and breadcrumb tracking. This can lead to zone mismatch errors when your application calls `WidgetsBinding.ensureInitialized()` before initializing Sentry.
+
+To resolve this issue, use the `Sentry.runZonedGuarded` method to initialize both your application and Sentry within the same zone. This approach ensures proper zone consistency throughout your application:
+
+```dart
+import 'package:flutter/widgets.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+Future<void> main() async {
+  Sentry.runZonedGuarded(() async {
+    WidgetsBinding.ensureInitialized();
+
+    await SentryFlutter.init(
+      (options) {
+        // your config...
+      },
+      appRunner: () => runApp(
+        SentryWidget(
+          child: MyApp(),
+        ),
+      ),
+    );
+  }, (error, stackTrace) {
+    // Note: Errors in this zone are already sent to Sentry automatically.
+    // This callback lets you add your own custom error handling (like logging)
+    // in addition to Sentry's reporting.
+  });
+}
+```
 
 ## Using Flutter Multi-view for Web
 

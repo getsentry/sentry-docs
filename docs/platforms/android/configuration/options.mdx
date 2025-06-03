@@ -301,22 +301,56 @@ Set this boolean to `false` to disable tracing for `OPTIONS` requests. This opti
 
 </ConfigKey>
 
-## Profiling Options
+## UI Profiling Options
+
+<Alert title="Note">
+
+UI Profiling requires SDK versions `8.7.0` or higher. Lower versions can use the <PlatformLink to="/configuration/options/#transaction-based-profiling-options">transaction-based profiling</PlatformLink>.
+
+</Alert>
+
+<ConfigKey name="profile-session-sample-rate">
+
+A number between `0` and `1`, controlling the percentage chance that the session will be profiled. `0` represents 0% while `1` represents 100%. The default is null (disabled).
+
+</ConfigKey>
+
+<ConfigKey name="profile-lifecycle">
+
+Whether the UI profiling lifecycle is controlled manually or based on the trace lifecycle. Possible values are:
+
+- `manual`: **default** Profiler must be started and stopped through `Sentry.startProfiler()` and `Sentry.stopProfiler()` APIs
+- `trace`: Profiler is started and stopped automatically whenever a sampled trace starts or finishes
+
+</ConfigKey>
+
+<ConfigKey name="start-profiler-on-app-start">
+
+A boolean value that determines whether the app start process will be profiled. When true, the startup process, including ContentProviders, Application, and first Activity creation, will be profiled. Note that <PlatformIdentifier name="profile-session-sample-rate" /> must be defined.
+
+- If profileLifecycle is set to `manual`: profiling is started automatically on startup and stopProfiler must be called manually whenever the app startup is deemed to be completed
+- If profileLifecycle is set to `trace`: profiling is started automatically on startup, and will automatically be stopped when the root span that is associated with app startup ends
+
+</ConfigKey>
+
+## Transaction-Based Profiling Options
+
+This mode will eventually be deprecated, and it's recommended to upgrade to <PlatformLink to="/configuration/options/#ui-profiling-options">UI Profiling</PlatformLink>. The same behaviour, without the 30 seconds limitation, can be achieved with the `trace` <PlatformLink to="/configuration/options/#profile-lifecycle">profile lifecycle</PlatformLink> option. In order to upgrade to UI Profiling, you also need to remove the transaction-based options from your configuration.
 
 <ConfigKey name="profiles-sample-rate">
 
-A number between `0` and `1`, controlling the percentage chance a given profile will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Applies only to sampled transactions created in the app. Either this or <PlatformIdentifier name="profiles-sampler" /> must be defined to enable profiling.
+A number between `0` and `1`, controlling the percentage chance that a given profile will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Applies only to sampled transactions created in the app. Setting this option will enable the legacy profiler.
 
 </ConfigKey>
 
 <ConfigKey name="profiles-sampler">
 
-A function responsible for determining the percentage chance a given profile will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering profiles, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="profiles-sample-rate" /> must be defined to enable profiling.
+A function responsible for determining the percentage chance that a given profile will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering profiles, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="profiles-sample-rate" /> must be defined to enable transaction profiling. Setting this option will enable the legacy profiler.
 
 </ConfigKey>
 
 <ConfigKey name="enable-app-start-profiling">
 
-A boolean value that determines whether the app start process will be profiled. When true, the startup process, including ContentProviders, Application and first Activity creation, will be profiled. Note that <PlatformIdentifier name="profiles-sample-rate" /> or <PlatformIdentifier name="profiles-sampler" /> must be defined.
+A boolean value that determines whether the app start process will be profiled. When true, the startup process, including ContentProviders, Application, and first Activity creation, will be profiled.
 
 </ConfigKey>

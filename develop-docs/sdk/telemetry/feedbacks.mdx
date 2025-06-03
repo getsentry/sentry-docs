@@ -1,0 +1,129 @@
+---
+title: Feedbacks
+sidebar_order: 4
+---
+
+This document is meant for Sentry SDK developers and maintainers of the Feedback ingestion pipeline.
+
+## Feedback Protocol
+
+Item type `"feedback"`. This Item contains an [event payload](/sdk/data-model/event-payloads/) encoded in JSON, with an additional `feedback` context object.
+
+## `"feedback"` Item
+
+### Feedback Context Attributes
+
+| Key                    | Type                      | Description                                                                                                                                                                                          |
+| ---------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| message                | string                    | Required. Comments of the user, describing what happened and/or sharing feedback. The max length is **4096 characters**.                                                                             |
+| contact_email          | string                    | The email of the user who submitted the feedback. If excluded, Sentry (not the SDK) attempts to fill this in with user context. Anonymous feedbacks (no name or email) are still accepted.           |
+| name                   | string                    | The name of the user who submitted the feedback. If excluded, Sentry (not the SDK) attempts to fill this in with user context. Anonymous feedbacks (no name or email) are still accepted.            |
+| url                    | string                    | The URL of the webpage the user was on when submitting feedback. This may be used to search for or set alerts on feedback.                                                                           |
+| associated_event_id    | string                    | The identifier of an error event in the same project. Use this to explicitly link a related error in the feedback UI.                                                                                |
+| replay_id              | string                    | The identifier of a related Session Replay in the same project. Sentry uses this ID to render a Replay clip in the feedback UI.                                                                      |
+
+### Event Attributes
+
+Below is a recap of the [required attributes](/sdk/data-model/event-payloads/#required-attributes) for the event payload.
+For the full list of attributes, see [Event Payloads](/sdk/data-model/event-payloads/).
+
+| Key                        | Type   | Description                                     |
+| -------------------------- | ------ | ----------------------------------------------- |
+| timestamp                  | number | UNIX timestamp of the current time (in seconds) |
+| event_id                   | string | Hexadecimal string representing a uuid4 value   |
+| platform                   | string |  Platform of the SDK                            |
+
+### Example
+```json
+{
+  "event_id": "9ec79c33ec9942ab8353589fcb2e04dc",
+  "timestamp": "2011-05-02T17:41:36Z",
+  "platform": "javascript",
+  "contexts": {
+    "feedback": {
+      "contact_email": "john@example.com",
+      "name": "John Smith",
+      "message": "I love session replay!",
+      "url": "https://sentry.io/replays/",
+      "associated_event_id": "32fd1995636d446385016e2747623e11",
+      "replay_id":"82840977e85b4ed3bc27f7b5b25cec15"
+    }
+  }
+}
+```
+
+### Attaching Screenshots
+
+You can associate screenshots with a feedback by sending image data as
+[attachment items](/sdk/data-model/envelope-items/#attachment), with `event_id`
+corresponding to the feedback item. We recommend sending the items in the same
+Envelope.
+
+## Full Envelope Example
+
+```json
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc","sent_at":"2024-03-19T15:18:27.581Z","sdk":{"name":"sentry.javascript.react","version":"7.105.0"}}
+{"type":"feedback"}
+{
+  "event_id": "9ec79c33ec9942ab8353589fcb2e04dc",
+  "timestamp": "2011-05-02T17:41:36Z",
+  "platform": "javascript",
+  "contexts": {
+    "organization": { "id": "0", "slug": "sentry" },
+    "feedback": {
+      "contact_email": "john@example.com",
+      "name": "John Smith",
+      "message": "I love session replay!",
+      "url": "https://sentry.io/replays/",
+      "associated_event_id": "32fd1995636d446385016e2747623e11",
+      "replay_id":"82840977e85b4ed3bc27f7b5b25cec15"
+    }
+  },
+  "level": "error",
+  "environment": "prod",
+  "release": "frontend@f00",
+  "sdk": {
+    "integrations": [
+      "BrowserTracing",
+      "BrowserProfiling",
+      "Replay",
+      "ReplayCanvas"
+    ],
+    "name": "sentry.javascript.react",
+    "version": "7.105.0"
+  },
+  "tags": {
+    "sentry_version": "24.4.0.dev0",
+  },
+  "user": {
+    "ip_address": "127.0.0.1",
+    "email": "john@example.com",
+    "id": 1,
+    "name": "John Smith"
+  }
+}
+```
+
+## Feedback SDK Pipeline
+
+A feedback captured by capture_feedback is processed by the SDK. Note: The event can be discarded at any of the stages, at which point no further processing happens.
+
+### BeforeSendFeedback
+
+SDKs should implement a `beforeSendFeedback` callback to allow users to modify the feedback before it is sent. This callback should be similar to the existing [`beforeSend`](/sdk/expected-features/#before-send-hook) callback used for events.
+
+### Scope Data and Event Processors
+
+The scope is applied to the feedbacks, including tags, user, trace and contexts. The scope’s _event processors_ are invoked, too.
+
+### Rate Limiting
+
+[Rate limiting](/sdk/expected-features/rate-limiting/) is applied to feedbacks in the same way as it is applied to events.
+
+### Dropped Feedback Reports
+
+There is no sample rate for feedbacks, as they are always sampled. However, a feedback can be discarded at any of the pipeline stages, for reasons like rate limiting or an invalid message (too large or empty). The SDK should report dropped feedbacks through [client reports](/sdk/telemetry/client-reports/).
+
+### Session Replay Integration
+
+When sending feedback, SDKs are expected to flush the current Session Replay, if running. This ensures a meaningful replay recording exists and can be included in the `replay_id` attribute of the feedback context.

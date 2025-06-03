@@ -1,6 +1,7 @@
 ---
-title: Set Up Profiling
-description: "Learn how to enable profiling in your app if it is not already set up."
+title: Set Up Apple Profiling
+sidebar_title: Profiling
+description: "Learn how to enable profiling in your app."
 sidebar_order: 5000
 supported:
   - apple
@@ -15,17 +16,24 @@ notSupported:
 <PlatformContent includePath="profiling/index/preface" />
 <PlatformContent includePath="profiling/index/why-profiling" />
 
-## Enable Tracing
+## Enable UI Profiling
 
-Profiling depends on Sentry’s Tracing product being enabled beforehand. To enable tracing in the SDK:
+<Alert>
 
+UI Profiling was introduced in SDK version 8.49.0. All prior profiling API are deprecated and will be removed in a future major version of the SDK.
+
+</Alert>
+
+To configure profiling, assign a closure to `SentryOptions.configureProfiling`, setting the desired options on the object passed in as parameter:
 
 ```swift {tabTitle:Swift}
 import Sentry
 
 SentrySDK.start { options in
     options.dsn = "___PUBLIC_DSN___"
-    options.tracesSampleRate = 1.0
+    options.configureProfiling = {
+        $0.sessionSampleRate = 1
+    }
 }
 ```
 
@@ -34,22 +42,109 @@ SentrySDK.start { options in
 
 [SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
     options.dsn = @"___PUBLIC_DSN___";
-    options.tracesSampleRate = @1.0;
+    options.configureProfiling = ^(SentryProfileOptions *profiling) {
+        profiling.sessionSampleRate = 1.f;
+    };
 }];
 ```
 
-Check out the <PlatformLink to="/tracing/">tracing setup documentation</PlatformLink> for more detailed information on how to configure sampling. Setting the sample rate to 1.0 means all transactions will be captured.
+By default, `sessionSampleRate` is `0`, so you'll need to set it to a higher value to receive profile data. `sessionSampleRate` is evaluated once per user session and applies to any attempt to start a profile until the next user session starts. See <PlatformLink to="/configuration/releases/#sessions">user session documentation</PlatformLink> for more information on user sessions. 
 
-By default, some transactions will be created automatically for common operations like loading a view controller/activity and app startup.
+See the subsections below to learn about the various ways the profiler can be started and stopped.
 
-## Enable Profiling
+### Manual Lifecycle
+
+By default, the profiler can only be started and stopped manually with calls to `SentrySDK.startProfiler` and `SentrySDK.stopProfiler`. All code that executes on all threads in between those calls will be recorded. The snippets above demonstrate configuring manual profiling mode.
+
+For example, if you wanted to profile everything that happens after starting a network request, and then update a table view with the contents of the response, you could do it like this (assuming you've already started the Sentry SDK with the options shown above):
+
+```swift {tabTitle:Swift}
+import Sentry
+
+struct MyModel: Codable {
+    // fields...
+}
+var model: MyModel?
+var tableView: UITableView!
+
+@IBAction func updateTable() {
+    SentrySDK.startProfiler()
+    URLSession.shared.dataTask(with: URLRequest(url: URL(string: "https://my.domain.tld/endpoint")!)) { data, response, error in
+        self.model = try! JSONDecoder().decode(MyModel.self, from: data!)
+        DispatchQueue.main.async {
+            self.tableView.performBatchUpdates {
+                // update table view with model
+            } completion: { finished in 
+                SentrySDK.stopProfiler()
+            }
+        }
+    }
+}
+```
+
+This would capture every stacktrace on every thread involved with performing the network request, decoding the response and rebuilding the cells in the table view.
+
+### Trace Lifecycle
+
+The profiler can be configured to start when a new root span is started where none already exist, and stopped when there are no root spans remaining. For this mode, you must set the `SentryProfileOptions.lifecycle` property to `SentryProfileLifecycleTrace` and ensure some traces will be sampled:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.tracesSampleRate = 1
+    options.configureProfiling = {
+        $0.sessionSampleRate = 1
+        $0.lifecycle = .trace
+    }
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.tracesSampleRate = @1.f;
+    options.configureProfiling = ^(SentryProfileOptions *profiling) {
+        profiling.sessionSampleRate = 1.f;
+        profiling.lifecycle = SentryProfileLifecycleTrace;
+    };
+}];
+```
 
 <Alert>
 
-iOS profiling is available starting in SDK version `8.12.0`.
+The `sessionSampleRate` for profiles is _relative_ to the `tracesSampleRate`: if `tracesSampleRate` and `sessionSampleRate` are both `0.5`, then on average 25% of attempts to start the profiler will result in actual data collection.
 
 </Alert>
 
+Check out the <PlatformLink to="/tracing/">tracing setup documentation</PlatformLink> for more detailed information on how to configure sampling for Sentry Tracing.
+
+### App Starts
+
+If configured with manual lifecycle, a profile starts on the next app launch, and continues until you call `SentrySDK.stopProfiler`. 
+
+If configured with trace lifecycle, app start profiles are attached to a special performance transaction operation called `app.launch` and displayed in the product as `launch`. It is stopped either when `SentrySDK.startWithOptions` is called, or, if <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#time-to-initial-display">Time to Initial Display (TTID)</PlatformLink>/<PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#time-to-full-display">Time to Full Display (TTFD)</PlatformLink> tracking is enabled, when the SDK determines that TTID/TTFD has been reached.
+
+Every time `SentrySDK.startWithOptions` is called with app start profiling configured, a separate sample decision is generated with `sessionSampleRate` and stored until the next app launch (as well as `tracesSampleRate` if trace profile lifecycle is configured). The same sample decision will apply for the remainder of the profile session following that subsequent launch.
+
+## Transaction-based Profiling (deprecated)
+
+<Alert>
+
+Profiling configuration, explained below, was originally introduced in SDK version `8.12.0`. It is now deprecated in favor of UI Profiling, introduced in 8.49.0.
+
+</Alert>
+
+<Alert>
+
+Transaction-based Profiling depends on Sentry’s Tracing product being enabled beforehand. Check out the <PlatformLink to="/tracing/">tracing setup documentation</PlatformLink> for detailed information on how to configure sampling.
+
+</Alert>
+
+Configure the sampling rates for traces and profiles to ensure they are nonzero so that some are recorded. The <PlatformIdentifier name="profiles-sample-rate" /> setting is _relative_ to the <PlatformIdentifier name="traces-sample-rate" /> setting.
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -58,7 +153,6 @@ SentrySDK.start { options in
     options.dsn = "___PUBLIC_DSN___"
     options.tracesSampleRate = 1.0 // tracing must be enabled for profiling
     options.profilesSampleRate = 1.0 // see also `profilesSampler` if you need custom sampling logic
-    options.enableAppLaunchProfiling = true // experimental new feature to start profiling in the pre-main launch phase
 }
 ```
 
@@ -69,25 +163,16 @@ SentrySDK.start { options in
     options.dsn = @"___PUBLIC_DSN___";
     options.tracesSampleRate = @1.0; // tracing must be enabled for profiling
     options.profilesSampleRate = @1.0; // see also `profilesSampler` if you need custom sampling logic
-    options.enableAppLaunchProfiling = YES; // experimental new feature to start profiling in the pre-main launch phase
 }];
 ```
 
-<Alert>
-
-The <PlatformIdentifier name="profiles-sample-rate" /> setting is _relative_ to the <PlatformIdentifier name="traces-sample-rate" /> setting.
-
-</Alert>
-
-## Enable Launch Profiling
+## Launch Profiling (deprecated)
 
 <Alert>
 
-This feature is experimental and may have bugs.
+Launch profiling configuration, explained below, was originally introduced in SDK version 8.21.0. It is now deprecated in favor of UI Profiling, released in 8.49.0.
 
 </Alert>
-
-_(New in version 8.21.0)_
 
 Normally, a profile can only be taken during a trace span after the SDK has been initialized. Now, you can configure the SDK to automatically profile certain app launches.
 
@@ -97,15 +182,35 @@ If you use `SentryOptions.tracesSampler` or `SentryOptions.profilesSampler`, it 
 
 Currently, launch profiles are attached to a special performance transaction operation called `app.launch` and displayed in the product simply as `launch`.
 
-## Continuous Profiling
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.tracesSampleRate = 1.0 // tracing must be enabled for profiling
+    options.profilesSampleRate = 1.0 // see also `profilesSampler` if you need custom sampling logic
+    options.enableAppLaunchProfiling = true
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.tracesSampleRate = @1.0; // tracing must be enabled for profiling
+    options.profilesSampleRate = @1.0; // see also `profilesSampler` if you need custom sampling logic
+    options.enableAppLaunchProfiling = YES;
+}];
+```
+
+## Continuous Profiling Beta (deprecated)
 
 <Alert>
 
-This feature is experimental and may have bugs.
+Continuous Profiling Beta, explained below, was originally introduced in SDK version 8.36.0. It is now deprecated in favor of UI Profiling, released in 8.49.0.
 
 </Alert>
-
-_(New in version 8.36.0)_
 
 The current profiling implementation stops the profiler automatically after 30 seconds (unless you manually stop it earlier). Naturally, this limitation makes it difficult to get full coverage of your app's execution. We now offer an experimental continuous mode, where profiling data is periodically uploaded while running, with no limit to how long the profiler may run.
 
@@ -113,6 +218,6 @@ Previously, profiles only ran in tandem with performance transactions that were 
 
 Continuous profiling mode is enabled by default, requiring no changes to `SentryOptions` when you start the SDK to opt in. If you had previously set `SentryOptions.profilesSampleRate` or `SentryOptions.profilesSampler` to use transaction-based profiling, then remove those lines of code from your configuration.
 
-These new APIs do not offer any sampling functionality—every call to start the profiler will start it, and the same goes for launch profiles if you've configured that. If you are interested in reducing the amount of profiles that run, you must take care to do it at the callsites.
+These new APIs do not offer any sampling functionality—every call to start the profiler will start it, and the same goes for launch profiles if you've configured that. If you are interested in reducing the amount of profiles that run, you must take care to do it at the call sites.
 
 Continuous profiling has implications for your org's billing structure. This feature is only available for subscription plans that enrolled after June 5, 2024.

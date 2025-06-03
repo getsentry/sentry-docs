@@ -1,6 +1,6 @@
 ---
 title: Cloudflare
-description: 'Official Sentry SDK for Cloudflare Workers and Cloudflare Pages.'
+description: "Official Sentry SDK for Cloudflare Workers and Cloudflare Pages."
 sdk: sentry.javascript.cloudflare
 categories:
   - javascript
@@ -11,7 +11,9 @@ categories:
 
 ## Install
 
-<OnboardingOptionButtons options={["error-monitoring", "performance", "profiling"]} />
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "profiling"]}
+/>
 
 In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/).
 
@@ -35,22 +37,21 @@ pnpm add @sentry/cloudflare
 
 Configuration should happen as early as possible in your application's lifecycle.
 
-To use the SDK, you'll need to set either the `nodejs_compat` or `nodejs_als` compatibility flags in your `wrangler.toml`/`wrangler.json`. This is because the SDK
+To use the SDK, you'll need to set either the `nodejs_compat` or `nodejs_als` compatibility flags in your `wrangler.jsonc`/`wrangler.toml` config. This is because the SDK
 needs access to the `AsyncLocalStorage` API to work correctly.
 
-
-```toml {tabTitle:Toml} {filename:wrangler.toml}
-compatibility_flags = ["nodejs_compat"]
-# compatibility_flags = ["nodejs_als"]
-```
-
-```json {tabTitle:JSON} {filename:wrangler.json}
+```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
 {
   "compatibility_flags": [
-    "nodejs_compat",
-    // "nodejs_als"
-  ]
+    "nodejs_als",
+    // "nodejs_compat"
+  ],
 }
+```
+
+```toml {tabTitle:Toml} {filename:wrangler.toml}
+compatibility_flags = ["nodejs_als"]
+# compatibility_flags = ["nodejs_compat"]
 ```
 
 Then you can install the SDK and add it to your project:
@@ -64,17 +65,24 @@ To use this SDK, add the `sentryPagesPlugin` as [middleware to your Cloudflare P
 We recommend adding a `functions/_middleware.js` for the middleware setup so that Sentry is initialized for your entire
 app.
 
-```javascript {filename:functions/_middleware.js} {"onboardingOptions": {"performance": "7-10"}}
+```javascript {filename:functions/_middleware.js}
 import * as Sentry from "@sentry/cloudflare";
 
 export const onRequest = [
   // Make sure Sentry is the first middleware
   Sentry.sentryPagesPlugin((context) => ({
     dsn: "___PUBLIC_DSN___",
+
+    // Adds request headers and IP for users, for more info visit:
+    // https://docs.sentry.io/platforms/javascript/guides/cloudflare/configuration/options/#sendDefaultPii
+    sendDefaultPii: true,
+
+    // ___PRODUCT_OPTION_START___ performance
     // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
     // Learn more at
     // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
     tracesSampleRate: 1.0,
+    // ___PRODUCT_OPTION_END___ performance
   })),
   // Add more middlewares here
 ];
@@ -85,24 +93,51 @@ export const onRequest = [
 To use this SDK, wrap your handler with the `withSentry` function. This will initialize the SDK and hook into the
 environment. Note that you can turn off almost all side effects using the respective options.
 
-```typescript {filename:index.ts} {"onboardingOptions": {"performance": "6-9"}}
+```typescript {filename:index.ts}
 import * as Sentry from "@sentry/cloudflare";
 
 export default Sentry.withSentry(
-  env => ({
+  (env) => ({
     dsn: "___PUBLIC_DSN___",
+    // ___PRODUCT_OPTION_START___ performance
     // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
     // Learn more at
     // https://docs.sentry.io/platforms/javascript/guides/cloudflare/configuration/options/#tracesSampleRate
     tracesSampleRate: 1.0,
+    // ___PRODUCT_OPTION_END___ performance
   }),
   {
     async fetch(request, env, ctx) {
       return new Response("Hello World!");
     },
-  } satisfies ExportedHandler<Env>,
+  } satisfies ExportedHandler<Env>
 );
 ```
+
+If you do not have access to the `onRequest` middleware API, you can use the `wrapRequestHandler` API instead. For example:
+
+```javascript
+// hooks.server.js
+import * as Sentry from "@sentry/cloudflare";
+
+export const handle = ({ event, resolve }) => {
+  const requestHandlerOptions = {
+    options: {
+      dsn: event.platform.env.SENTRY_DSN,
+      tracesSampleRate: 1.0,
+    },
+    request: event.request,
+    context: event.platform.ctx,
+  };
+  return Sentry.wrapRequestHandler(requestHandlerOptions, () => resolve(event));
+};
+```
+
+### Cloudflare Durable Objects
+
+You can use the `instrumentDurableObjectWithSentry` method to instrument [Cloudflare Durable Objects](https://developers.cloudflare.com/durable-objects/). This will need to be done alongside the worker setup.
+
+See the [Cloudflare Durable Objects](features/durableobject/) guide for more information.
 
 ## Add Readable Stack Traces to Errors
 
@@ -110,7 +145,17 @@ Depending on how you've set up your project, the stack traces in your Sentry err
 
 To fix this, upload your source maps to Sentry.
 
-To start, add `upload_source_maps = true` to your `wrangler.toml` file to enable source map uploading.
+To start, set the `upload_source_maps` option to `true` in your wrangler config file to enable source map uploading.
+
+```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
+{
+  "upload_source_maps": true,
+}
+```
+
+```toml {tabTitle:Toml} {filename:wrangler.toml}
+upload_source_maps = true
+```
 
 Then run the Sentry Wizard to finish your setup:
 

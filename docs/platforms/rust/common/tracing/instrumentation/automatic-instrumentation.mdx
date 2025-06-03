@@ -27,6 +27,9 @@ fn main() {
     let _sentry = sentry::init(sentry::ClientOptions {
         release: sentry::release_name!(),
         traces_sample_rate: 1.0,
+        // Capture user IPs and potentially sensitive headers when using HTTP server integrations
+        // see https://docs.sentry.io/platforms/rust/data-management/data-collected for more info
+        send_default_pii: true,
         ..Default::default()
     });
 
@@ -44,6 +47,73 @@ fn main_span1() {
 fn main_span2() {
     thread::sleep(Duration::from_millis(200));
 }
+```
+
+## OpenTelemetry Integration
+
+The Rust SDK offers an integration for the OpenTelemetry ecosystem.
+The integration can automatically capture Sentry [spans/transactions](/concepts/key-terms/tracing/distributed-tracing/#traces-transactions-and-spans) for every span created through the OpenTelemetry API, with support for [distributed tracing](/concepts/key-terms/tracing/distributed-tracing/).
+The integration also captures errors with the correct span and trace associations.
+
+For this integration to work as intended, only the OpenTelemetry tracing API should be used to manage spans. 
+Mixing it with the Sentry tracing API will result in incorrectly nested spans.
+
+To get started using the OpenTelemetry integration for the Sentry Rust SDK, add the necessary dependencies to your `Cargo.toml`:
+```toml {filename:Cargo.toml}
+[dependencies]
+sentry = "{{@inject packages.version('sentry.rust') }}"
+opentelemetry = { version = "0.29.1", features = ["trace"] }
+opentelemetry_sdk = { version = "0.29.0", features = ["trace"] }
+```
+
+Initialize the SDK, then create and register the `SentryPropagator` and `SentrySpanProcessor`:
+
+```rust
+use opentelemetry::{
+    global,
+    trace::{TraceContextExt, Tracer},
+    KeyValue,
+};
+use opentelemetry_sdk::trace::SdkTracerProvider;
+use sentry::integrations::opentelemetry as sentry_opentelemetry;
+
+// Initialize the Sentry SDK
+let _guard = sentry::init((
+    "___PUBLIC_DSN___",
+    sentry::ClientOptions {
+        release: sentry::release_name!(),
+        // Enable capturing of traces; set this a to lower value in production.
+        traces_sample_rate: 1.0,
+        ..sentry::ClientOptions::default()
+    },
+));
+
+// Register the Sentry propagator for distributed tracing
+global::set_text_map_propagator(sentry_opentelemetry::SentryPropagator::new());
+
+let tracer_provider = SdkTracerProvider::builder()
+    // Register the Sentry span processor to send OpenTelemetry spans to Sentry
+    .with_span_processor(sentry_opentelemetry::SentrySpanProcessor::new())
+    .build();
+
+global::set_tracer_provider(tracer_provider);
+```
+
+Use the OpenTelemetry API to create spans. They will be captured by Sentry:
+
+```rust
+let tracer = global::tracer("tracer");
+// Creates a Sentry span (transaction) with the name set to "example"
+tracer.in_span("example", |_| {
+    // Creates a Sentry child span with the name set to "child"
+    tracer.in_span("child", |cx| {
+        // OTEL span attributes are captured as data attributes on the Sentry span
+        cx.span().set_attribute(KeyValue::new("my", "attribute"));
+
+        // Captures a Sentry error message and associates it with the ongoing child span
+        sentry::capture_message("Everything is on fire!", sentry::Level::Error);
+    });
+});
 ```
 
 ## HTTP Instrumentation

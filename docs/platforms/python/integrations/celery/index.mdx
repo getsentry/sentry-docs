@@ -9,8 +9,11 @@ The Celery integration adds support for the [Celery Task Queue System](https://d
 
 Install `sentry-sdk` from PyPI with the `celery` extra:
 
-```bash
-pip install --upgrade 'sentry-sdk[celery]'
+```bash {tabTitle:pip}
+pip install "sentry-sdk[celery]"
+```
+```bash {tabTitle:uv}
+uv add "sentry-sdk[celery]"
 ```
 
 ## Configure
@@ -35,7 +38,7 @@ In addition to capturing errors, you can use Sentry for [distributed tracing](/c
   options={["error-monitoring", "performance", "profiling"]}
 />
 
-```python {filename:tasks.py} {"onboardingOptions": {"performance": "15-17", "profiling": "18-21"}}
+```python {filename:tasks.py}
 from celery import Celery, signals
 import sentry_sdk
 
@@ -50,13 +53,19 @@ def init_sentry(**_kwargs):
         # Add request headers and IP for users,
         # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
         send_default_pii=True,
+        # ___PRODUCT_OPTION_START___ performance
         # Set traces_sample_rate to 1.0 to capture 100%
         # of transactions for tracing.
         traces_sample_rate=1.0,
-        # Set profiles_sample_rate to 1.0 to profile 100%
-        # of sampled transactions.
-        # We recommend adjusting this value in production.
-        profiles_sample_rate=1.0,
+        # ___PRODUCT_OPTION_END___ performance
+        # ___PRODUCT_OPTION_START___ profiling
+        # To collect profiles for all profile sessions,
+        # set `profile_session_sample_rate` to 1.0.
+        profile_session_sample_rate=1.0,
+        # Profiles will be automatically collected while
+        # there is an active span.
+        profile_lifecycle="trace",
+        # ___PRODUCT_OPTION_END___ profiling
     )
 
 # Task definitions go here
@@ -73,7 +82,7 @@ The [`celeryd_init`](https://docs.celeryq.dev/en/stable/userguide/signals.html?#
   options={["error-monitoring", "performance", "profiling"]}
 />
 
-```python {filename:main.py} {"onboardingOptions": {"performance": "11-13", "profiling": "14-17"}}
+```python {filename:main.py}
 from tasks import add
 import sentry_sdk
 
@@ -84,13 +93,19 @@ def main():
         # Add data like request headers and IP for users, if applicable;
         # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
         send_default_pii=True,
+        # ___PRODUCT_OPTION_START___ performance
         # Set traces_sample_rate to 1.0 to capture 100%
         # of transactions for tracing.
         traces_sample_rate=1.0,
-        # Set profiles_sample_rate to 1.0 to profile 100%
-        # of sampled transactions.
-        # We recommend adjusting this value in production.
-        profiles_sample_rate=1.0,
+        # ___PRODUCT_OPTION_END___ performance
+        # ___PRODUCT_OPTION_START___ profiling
+        # To collect profiles for all profile sessions,
+        # set `profile_session_sample_rate` to 1.0.
+        profile_session_sample_rate=1.0,
+        # Profiles will be automatically collected while
+        # there is an active span.
+        profile_lifecycle="trace",
+        # ___PRODUCT_OPTION_END___ profiling
     )
 
     # Enqueueing a task to be processed by Celery
@@ -111,7 +126,7 @@ To confirm that your SDK is initialized on worker start, pass `debug=True` to `s
 
 The snippet below includes an intentional `ZeroDivisionError` in the Celery task that will be captured by Sentry. To trigger the error call `debug_sentry.delay()`:
 
-```python {filename:tasks.py} {"onboardingOptions": {"performance": "12-14", "profiling": "15-18"}}
+```python {filename:tasks.py}
 from celery import Celery, signals
 import sentry_sdk
 

@@ -501,7 +501,7 @@ const NAV_ITEMS: NavItemsProps[] = [
     id: 'sandbox',
     title: 'Sandbox',
     type: 'a',
-    to: 'https://try.sentry-demo.com/demo/start/',
+    to: 'https://sandbox.sentry.io/',
     target: '_blank',
     variant: 'ghost',
     className: '',

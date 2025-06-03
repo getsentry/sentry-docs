@@ -12,9 +12,9 @@ sidebar_order: 1
 ## Core Options
 
 <SdkOption name='dsn' type='string' envVar='SENTRY_DSN'>
-  The DSN tells the SDK where to send the events. If this is not set, the SDK will not send any events. Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
-
-  <PlatformContent includePath="configuration/dsn" />
+  The DSN tells the SDK where to send the events. If this is not set, the SDK will not send any events.
+  Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
+<PlatformContent includePath="configuration/dsn" />
 
 </SdkOption>
 
@@ -60,6 +60,12 @@ Environments are case-sensitive. The environment name can't contain newlines, sp
 <SdkOption name="tunnel" type='string'>
 
 Sets the URL that will be used to transport captured events. This can be used to work around ad-blockers or to have more granular control over events sent to Sentry. Adding your DSN is still required when using this option so necessary attributes can be set on the generated Sentry data. This option **requires the implementation** of a custom server endpoint. Learn more and find examples in [Dealing with Ad-Blockers](/platforms/javascript/troubleshooting/#dealing-with-ad-blockers).
+
+</SdkOption>
+
+<SdkOption name="sendDefaultPii" type='boolean' defaultValue='false'>
+
+Set this option to `true` to send default PII data to Sentry. Among other things, enabling this will enable automatic IP address collection on events.
 
 </SdkOption>
 
@@ -207,7 +213,7 @@ Options used to configure the transport. This is an object with the following po
 - `headers`: An object containing headers to be sent with every request.
 - `proxy`: A proxy used for outbound requests. Can be http or https.
 - `caCerts`: A path or list of paths to a CA certificate, or a buffer of CA certificates.
-- `httpModule`: A custom HTTP module to use for requests. Defaults to the the native `http` and `https` modules.
+- `httpModule`: A custom HTTP module to use for requests. Defaults to the native `http` and `https` modules.
 - `keepAlive`: Determines whether to keep the socket alive between requests. Defaults to `false`.
 
 </PlatformCategorySection>
@@ -228,6 +234,20 @@ Options used to configure the transport. This is an object with the following po
 <SdkOption name="shutdownTimeout" type='number' defaultValue='2000' categorySupported={['server', 'serverless']}>
 
 Controls how many seconds to wait before shutting down. Sentry SDKs send events from a background queue. This queue is given a certain amount to drain pending events. The default is SDK specific but typically around two seconds. Setting this value too low may cause problems for sending events from command line applications. Setting the value too high will cause the application to block for a long time for users experiencing network connectivity problems.
+
+</SdkOption>
+
+<SdkOption name="disableInstrumentationWarnings" type='boolean' defaultValue='false' categorySupported={['server']}>
+
+Depending on your setup, the Sentry SDK will try to detect if it has been incorrectly set up. This can result in warnings like this being logged:
+
+> [Sentry] < libraryName > is not instrumented. This is likely because you required/imported < libraryName > before calling `Sentry.init()`.
+
+Or
+
+> [Sentry] < libraryName > is not instrumented. Please make sure to initialize Sentry in a separate file that you \`--import\` when running node, see: < docs link >.
+
+This means the SDK detected that the library hasn’t been wrapped for automatic performance instrumentation. This may result in some spans not being reported correctly. If this is not affecting you (for example because the warning is a false positive or you do not care about these specific spans), you can disable this warning by setting this option to `true`.
 
 </SdkOption>
 
@@ -292,6 +312,26 @@ By the time `beforeSend` is executed, all scope data has already been applied to
 
 </SdkOption>
 
+<PlatformSection supported={["javascript.vue", "javascript.nuxt"]}>
+
+<SdkOption name="attachProps" type='boolean' defaultValue='true' categorySupported={['browser']}>
+
+When enabled, all props of the Vue component where the error was thrown in are attached to the event.
+
+</SdkOption>
+
+<SdkOption name="attachErrorHandler" type='boolean' defaultValue='true' categorySupported={['browser']}>
+  By default, the SDK attaches a [Vue error handler](https://vuejs.org/api/application.html#app-config-errorhandler)
+  to capture Vue exceptions and report them to Sentry.
+  When `attachErrorHandler` is set to `false`, automatic error reporting is disabled.
+
+Usually, this option should stay enabled, unless you want to set up Sentry error reporting yourself.
+For example, the Sentry Nuxt SDK does not attach an error handler as it's capturing errors through the error hooks provided by Nuxt.
+
+</SdkOption>
+
+</PlatformSection>
+
 ## Tracing Options
 
 <SdkOption name="tracesSampleRate" type='number' envVar='SENTRY_TRACES_SAMPLE_RATE'>
@@ -351,6 +391,8 @@ This function is called with a serialized span object, and can return a modified
 This function is only called for root spans and all children.
 If you want to drop the root span, including all of its child spans, use [`beforeSendTransaction`](#beforeSendTransaction) instead.
 
+Please note that the `span` you receive as an argument is a serialized object, not a `Span` class instance.
+
 </SdkOption>
 
 <SdkOption name="ignoreTransactions" type='Array<string | RegExp>' defaultValue='[]'>
@@ -398,14 +440,6 @@ An optional property that configures which features are in experimental mode. Th
 <SdkOption name="enableNative" type='boolean' defaultValue='true'>
 
 Set this option to `false` to disable the native SDK. This will disable all native crash and error handling and, instead, the SDK will only capture errors on the upper layer.
-
-</SdkOption>
-
-<SdkOption name="autoInitializeNativeSdk" type='boolean' defaultValue='true'>
-
-Set this option to `false` to disable the auto initialization of the native layer SDK. Doing so means you will need to initialize the native SDK manually. Do not use this to disable the native layer.
-
-To disable the native layer, use [enableNative](#enableNative).
 
 </SdkOption>
 

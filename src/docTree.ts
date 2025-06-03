@@ -259,10 +259,11 @@ function nodeToPlatform(n: DocNode): Platform {
     name: n.slug,
     type: 'platform',
     url: '/' + n.path + '/',
-    title: n.frontmatter.title,
+    title: n.frontmatter.platformTitle ?? n.frontmatter.title,
     caseStyle,
     sdk: n.frontmatter.sdk,
     fallbackPlatform: n.frontmatter.fallbackPlatform,
+    language: n.frontmatter.language,
     categories: n.frontmatter.categories,
     keywords: n.frontmatter.keywords,
     guides,
@@ -369,9 +370,20 @@ function extractGuides(platformNode: DocNode): PlatformGuide[] {
   if (!guidesNode) {
     return [];
   }
-  return guidesNode.children
+
+  // If a `platformTitle` is defined, we add a virtual guide
+  const defaultGuide = platformNode.frontmatter.platformTitle
+    ? {
+        ...nodeToGuide(platformNode.slug, platformNode),
+        key: platformNode.slug,
+      }
+    : undefined;
+
+  const childGuides = guidesNode.children
     .filter(({path}) => !isVersioned(path))
     .map(n => nodeToGuide(platformNode.slug, n));
+
+  return defaultGuide ? [defaultGuide, ...childGuides] : childGuides;
 }
 
 const extractIntegrations = (p: DocNode): PlatformIntegration[] => {

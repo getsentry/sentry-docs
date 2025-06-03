@@ -19,86 +19,79 @@ This guide provides practical examples of using span attributes and metrics to s
 **Solution:** Track the entire file processing pipeline with detailed metrics at each stage, from client-side upload preparation through server-side processing.
 
 **Frontend Instrumentation:**
+
 ```javascript
 // Client-side file upload handling
 Sentry.startSpan(
   {
-    name: 'Client File Upload',
-    op: 'file.upload.client',
+    name: "Client File Upload",
+    op: "file.upload.client",
     attributes: {
       // Static details available at the start
-      'file.size_bytes': 15728640,  // 15MB
-      'file.type': 'image/jpeg',
-      'file.name': 'user-profile.jpg',
-      'client.compression_applied': true
-    }
+      "file.size_bytes": 15728640, // 15MB
+      "file.type": "image/jpeg",
+      "file.name": "user-profile.jpg",
+      "client.compression_applied": true,
+    },
   },
-  async () => {
-    // Get the current active span to update during upload
-    const span = Sentry.getActiveSpan();
-    
+  async (span) => {
     try {
       // Begin upload process
       const uploader = new FileUploader(file);
-      
+
       // Update progress as upload proceeds
-      uploader.on('progress', (progressEvent) => {
-        if (span) {
-          span.setAttribute('upload.percent_complete', progressEvent.percent);
-          span.setAttribute('upload.bytes_transferred', progressEvent.loaded);
-        }
+      uploader.on("progress", (progressEvent) => {
+        span.setAttribute("upload.percent_complete", progressEvent.percent);
+        span.setAttribute("upload.bytes_transferred", progressEvent.loaded);
       });
-      
-      uploader.on('retry', (retryCount) => {
-        if (span) {
-          span.setAttribute('upload.retry_count', retryCount);
-        }
+
+      uploader.on("retry", (retryCount) => {
+        span.setAttribute("upload.retry_count", retryCount);
       });
-      
+
       const result = await uploader.start();
-      
+
       // Set final attributes after completion
-      if (span) {
-        span.setAttribute('upload.total_time_ms', result.totalTime);
-        span.setAttribute('upload.success', true);
-        span.setAttribute('upload.server_file_id', result.fileId);
-      }
-      
+      span.setAttribute("upload.total_time_ms", result.totalTime);
+      span.setAttribute("upload.success", true);
+      span.setAttribute("upload.server_file_id", result.fileId);
+
       return result;
     } catch (error) {
       // Record failure information
-      if (span) {
-        span.setAttribute('upload.success', false);
-        span.setAttribute('upload.error_type', error.name);
-        span.setAttribute('upload.error_message', error.message);
-        span.setStatus({ code: 'ERROR' });
-      }
-      throw error;
+      span.setAttribute("upload.success", false);
+      Sentry.captureException(error);
     }
   }
 );
 ```
 
 **Backend Instrumentation:**
+
 ```javascript
 // Server-side processing
 Sentry.startSpan(
   {
-    name: 'Server File Processing',
-    op: 'file.process.server',
+    name: "Server File Processing",
+    op: "file.process.server",
     attributes: {
       // Server processing steps
-      'processing.steps_completed': ['virus_scan', 'resize', 'compress', 'metadata'],
-      
+      "processing.steps_completed": [
+        "virus_scan",
+        "resize",
+        "compress",
+        "metadata",
+      ],
+
       // Storage operations
-      'storage.provider': 's3',
-      'storage.region': 'us-west-2',
-      'storage.upload_time_ms': 850,
-      
+      "storage.provider": "s3",
+      "storage.region": "us-west-2",
+      "storage.upload_time_ms": 850,
+
       // CDN configuration
-      'cdn.provider': 'cloudfront',
-      'cdn.propagation_ms': 1500
-    }
+      "cdn.provider": "cloudfront",
+      "cdn.propagation_ms": 1500,
+    },
   },
   async () => {
     // Server-side processing implementation
@@ -116,127 +109,116 @@ The frontend span initiates the trace and handles the file upload process. It pr
 
 ## LLM Integration Monitoring
 
-**Challenge:** Managing cost (token usage) and performance of LLM integrations across frontend and backend coponents.
+**Challenge:** Managing cost (token usage) and performance of LLM integrations across frontend and backend components.
 
 **Solution:** Tracking of the entire LLM interaction flow, from user input to response rendering.
 
 **Frontend Instrumentation:**
+
 ```javascript
 // Client-side LLM interaction handling
 Sentry.startSpan(
   {
-    name: 'LLM Client Interaction',
-    op: 'ai.client',
+    name: "LLM Client Interaction",
+    op: "ai.client",
     attributes: {
       // Initial metrics available at request time
-      'input.char_count': 280,
-      'input.language': 'en',
-      'input.type': 'question'
-    }
+      "input.char_count": 280,
+      "input.language": "en",
+      "input.type": "question",
+    },
   },
-  async () => {
-    const span = Sentry.getActiveSpan();
+  async (span) => {
     const startTime = performance.now();
-    
+
     // Begin streaming response from LLM API
     const stream = await llmClient.createCompletion({
       prompt: userInput,
-      stream: true
+      stream: true,
     });
-    
+
     // Record time to first token when received
     let firstTokenReceived = false;
     let tokensReceived = 0;
-    
+
     for await (const chunk of stream) {
       tokensReceived++;
-      
+
       // Record time to first token
       if (!firstTokenReceived && chunk.content) {
         firstTokenReceived = true;
         const timeToFirstToken = performance.now() - startTime;
-        
-        if (span) {
-          span.setAttribute('ui.time_to_first_token_ms', timeToFirstToken);
-        }
+
+        span.setAttribute("ui.time_to_first_token_ms", timeToFirstToken);
       }
-      
+
       // Process and render the chunk
       renderChunkToUI(chunk);
     }
-    
+
     // Record final metrics after stream completes
     const totalRequestTime = performance.now() - startTime;
-    
-    if (span) {
-      span.setAttribute('ui.total_request_time_ms', totalRequestTime);
-      span.setAttribute('stream.rendering_mode', 'markdown');
-      span.setAttribute('stream.tokens_received', tokensReceived);
-    }
+
+    span.setAttribute("ui.total_request_time_ms", totalRequestTime);
+    span.setAttribute("stream.rendering_mode", "markdown");
+    span.setAttribute("stream.tokens_received", tokensReceived);
   }
 );
 ```
 
 **Backend Instrumentation:**
+
 ```javascript
 // Server-side LLM processing
 Sentry.startSpan(
   {
-    name: 'LLM API Processing',
-    op: 'ai.server',
+    name: "LLM API Processing",
+    op: "ai.server",
     attributes: {
       // Model configuration - known at start
-      'llm.model': 'claude-3-5-sonnet-20241022',
-      'llm.temperature': 0.5,
-      'llm.max_tokens': 4096
-    }
+      "llm.model": "claude-3-5-sonnet-20241022",
+      "llm.temperature": 0.5,
+      "llm.max_tokens": 4096,
+    },
   },
-  async () => {
-    const span = Sentry.getActiveSpan();
+  async (span) => {
     const startTime = Date.now();
-    
+
     try {
       // Check rate limits before processing
       const rateLimits = await getRateLimits();
-      if (span) {
-        span.setAttribute('llm.rate_limit_remaining', rateLimits.remaining);
-      }
-      
+      span.setAttribute("llm.rate_limit_remaining", rateLimits.remaining);
+
       // Make the actual API call to the LLM provider
       const response = await llmProvider.generateCompletion({
-        model: 'claude-3-5-sonnet-20241022',
+        model: "claude-3-5-sonnet-20241022",
         prompt: preparedPrompt,
         temperature: 0.5,
-        max_tokens: 4096
+        max_tokens: 4096,
       });
-      
+
       // Record token usage and performance metrics
-      if (span) {
-        span.setAttribute('llm.prompt_tokens', response.usage.prompt_tokens);
-        span.setAttribute('llm.completion_tokens', response.usage.completion_tokens);
-        span.setAttribute('llm.total_tokens', response.usage.total_tokens);
-        span.setAttribute('llm.api_latency_ms', Date.now() - startTime);
-        
-        // Calculate and record cost based on token usage
-        const cost = calculateCost(
-          response.usage.prompt_tokens, 
-          response.usage.completion_tokens,
-          'claude-3-5-sonnet-20241022'
-        );
-        span.setAttribute('llm.cost_usd', cost);
-      }
-      
+      span.setAttribute("llm.prompt_tokens", response.usage.prompt_tokens);
+      span.setAttribute(
+        "llm.completion_tokens",
+        response.usage.completion_tokens
+      );
+      span.setAttribute("llm.total_tokens", response.usage.total_tokens);
+      span.setAttribute("llm.api_latency_ms", Date.now() - startTime);
+
+      // Calculate and record cost based on token usage
+      const cost = calculateCost(
+        response.usage.prompt_tokens,
+        response.usage.completion_tokens,
+        "claude-3-5-sonnet-20241022"
+      );
+      span.setAttribute("llm.cost_usd", cost);
+
       return response;
     } catch (error) {
       // Record error details
-      if (span) {
-        span.setAttribute('error', true);
-        span.setAttribute('error.type', error.name);
-        span.setAttribute('error.message', error.message);
-        span.setAttribute('error.is_rate_limit', error.code === 'rate_limit_exceeded');
-        span.setStatus({ code: 'ERROR' });
-      }
-      throw error;
+      span.setAttribute("error", true);
+      Sentry.captureException(error);
     }
   }
 );
@@ -258,28 +240,24 @@ The frontend span captures the user interaction and UI rendering performance, wh
 **Solution:** Track the full checkout process from cart interaction to order fulfillment.
 
 **Frontend Instrumentation:**
+
 ```javascript
 // Client-side checkout process
 Sentry.startSpan(
   {
-    name: 'Checkout UI Flow',
-    op: 'commerce.checkout.client',
+    name: "Checkout UI Flow",
+    op: "commerce.checkout.client",
     attributes: {
       // Cart interaction metrics
-      'cart.items_added': 3,
-      'cart.items_removed': 0,
-      'cart.update_count': 2,
-      
+      "cart.items_added": 3,
+      "cart.items_removed": 0,
+      "cart.update_count": 2,
+
       // User interaction tracking
-      'ui.form_completion_time_ms': 45000,
-      'ui.payment_method_changes': 1,
-      'ui.address_validation_retries': 0,
-      
-      // Client performance
-      'client.page_load_time_ms': 850,
-      'client.payment_widget_load_ms': 650,
-      'client.total_interaction_time_ms': 120000
-    }
+      "ui.form_completion_time_ms": 45000,
+      "ui.payment_method_changes": 1,
+      "ui.address_validation_retries": 0,
+    },
   },
   async () => {
     // Client-side checkout implementation
@@ -288,33 +266,33 @@ Sentry.startSpan(
 ```
 
 **Backend Instrumentation:**
+
 ```javascript
 // Server-side order processing
 Sentry.startSpan(
   {
-    name: 'Order Processing',
-    op: 'commerce.order.server',
+    name: "Order Processing",
+    op: "commerce.order.server",
     attributes: {
       // Order details
-      'order.id': 'ord_123456789',
-      'order.total_amount': 159.99,
-      'order.currency': 'USD',
-      'order.items': ['SKU123', 'SKU456', 'SKU789'],
-      
+      "order.id": "ord_123456789",
+      "order.total_amount": 159.99,
+      "order.currency": "USD",
+      "order.items": ["SKU123", "SKU456", "SKU789"],
+
       // Payment processing
-      'payment.provider': 'stripe',
-      'payment.method': 'credit_card',
-      'payment.processing_time_ms': 1200,
-      
+      "payment.provider": "stripe",
+      "payment.method": "credit_card",
+      "payment.processing_time_ms": 1200,
+
       // Inventory checks
-      'inventory.check_time_ms': 150,
-      'inventory.all_available': true,
-      
+      "inventory.all_available": true,
+
       // Fulfillment
-      'fulfillment.warehouse': 'WEST-01',
-      'fulfillment.shipping_method': 'express',
-      'fulfillment.estimated_delivery': '2024-03-20'
-    }
+      "fulfillment.warehouse": "WEST-01",
+      "fulfillment.shipping_method": "express",
+      "fulfillment.estimated_delivery": "2024-03-20",
+    },
   },
   async () => {
     // Server-side order processing
@@ -330,99 +308,3 @@ The frontend span tracks the user's checkout experience, while the backend span 
 - Monitor inventory availability impact on conversions
 - Measure end-to-end order completion times
 - Identify friction points in the user experience
-
-## Job Scheduling and Processing Pipeline
-
-**Challenge:** Understanding performance and reliability of distributed job processing systems, from job creation through completion.
-
-**Solution:** Comprehensive tracking of job lifecycle across scheduling, queueing, and processing stages.
-
-**Frontend Instrumentation:**
-```javascript
-// Client-side job submission and monitoring
-Sentry.startSpan(
-  {
-    name: 'Job Submission Flow',
-    op: 'job.client',
-    attributes: {
-      // Job configuration
-      'job.type': 'video_transcoding',
-      'job.priority': 'high',
-      'job.estimated_duration_ms': 300000,
-      
-      // Input metrics
-      'input.size_bytes': 52428800,  // 50MB
-      'input.format': 'mp4',
-      'input.segments': 5,
-      
-      // Client-side scheduling
-      'schedule.requested_start': '2024-03-15T10:00:00Z',
-      'schedule.deadline': '2024-03-15T11:00:00Z',
-      
-      // Progress monitoring
-      'monitor.polling_interval_ms': 5000,
-      'monitor.status_updates_received': 12,
-      'monitor.last_progress_percent': 45
-    }
-  },
-  async () => {
-    // Job submission and progress tracking implementation
-  }
-);
-```
-
-**Backend Instrumentation:**
-```javascript
-// Server-side job processing
-Sentry.startSpan(
-  {
-    name: 'Job Processing Pipeline',
-    op: 'job.server',
-    attributes: {
-      // Queue metrics
-      'queue.name': 'video-processing',
-      'queue.provider': 'redis',
-      'queue.length_at_enqueue': 23,
-      'queue.wait_time_ms': 45000,
-      
-      // Worker metrics
-      'worker.id': 'worker-pod-123',
-      'worker.current_load': 0.75,
-      'worker.memory_usage_mb': 1024,
-      
-      // Processing stages
-      'processing.stages_completed': ['download', 'transcode', 'thumbnail'],
-      'processing.stage_durations_ms': {
-        'download': 12000,
-        'transcode': 180000,
-        'thumbnail': 5000
-      },
-      
-      // Resource utilization
-      'resource.cpu_percent': 85,
-      'resource.gpu_utilization': 0.92,
-      'resource.memory_peak_mb': 2048,
-      
-      // Job outcome
-      'outcome.status': 'completed',
-      'outcome.retry_count': 0,
-      'outcome.output_size_bytes': 31457280  // 30MB
-    }
-  },
-   async () => {
-    // Job processing implementation
-   }
- )
-);
-```
-
-**How the Trace Works Together:**
-The frontend span tracks job submission and monitoring, while the backend span captures queue management and processing details. The distributed trace provides visibility into the entire job lifecycle, enabling you to:
-
-- Monitor end-to-end job processing times and success rates
-- Track queue health and worker resource utilization
-- Identify bottlenecks in specific processing stages
-- Analyze job scheduling efficiency and queue wait times
-- Optimize resource allocation based on job characteristics
-
-For more information about implementing these examples effectively, see our <PlatformLink to="/tracing/span-metrics/">Span Metrics guide</PlatformLink> which includes detailed best practices and implementation guidelines.

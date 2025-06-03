@@ -15,22 +15,11 @@ description: "Learn how to manually set up Sentry in your Next.js app and captur
 
 Choose the features you want to configure, and this guide will show you how:
 
-<OnboardingOptionButtons options={["error-monitoring", "performance", "session-replay"]} />
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "session-replay"]}
+/>
 
-<Expandable title="Want to learn more about these features?">
-
-- [**Issues**](/product/issues) (always enabled): Sentry's core error monitoring product that automatically reports errors,
-  uncaught exceptions, and unhandled rejections. If you have something that
-  looks like an exception, Sentry can capture it.
-- [**Tracing**](/product/tracing): Track software performance while seeing the
-  impact of errors across multiple systems. For example, distributed tracing
-  allows you to follow a request from the frontend to the backend and back.
-- [**Session Replay**](/product/explore/session-replay/web):
-  Get to the root cause of an issue faster by viewing a video-like reproduction
-  of what was happening in the user's browser before, during, and after the
-  problem.
-
-</Expandable>
+<PlatformContent includePath="getting-started-features-expandable" />
 
 ### Install the Sentry SDK
 
@@ -96,22 +85,33 @@ export default withSentryConfig(nextConfig, {
 });
 ```
 
+<Include name="nextjs-app-router-14-config" />
+
 ### Initialize Sentry Client-Side and Server-Side SDKs
 
-Create three files in your application's root directory: `sentry.client.config.(js|ts)`, `sentry.server.config.(js|ts)` and `sentry.edge.config.(js|ts)`. Add the following initialization code into each respective file:
+Create three files in your application's root directory:
+- `sentry.server.config.(js|ts)`
+- `sentry.edge.config.(js|ts)`
+- `instrumentation-client.(js|ts)`
+  - If you previously had a file called `sentry.client.config.(js|ts)`, you can safely rename this to `instrumentation-client.(js|ts)` for all Next.js versions.
+
+Add the following initialization code into each respective file:
 
 <Alert level="info" title="Note">
   These files run in different environments (browser, server, edge) and are
   slightly different, so copy them carefully.
 </Alert>
 
-```javascript {tabTitle:Client} {filename:sentry.client.config.(js|ts)} {"onboardingOptions": {"performance": "7-13", "session-replay": "5-6, 14-20"}}
+```javascript {tabTitle:Client} {filename:instrumentation-client.(js|ts)}
 import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  // Replay may only be enabled for the client-side
-  integrations: [Sentry.replayIntegration()],
+
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
 
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for tracing.
@@ -119,6 +119,10 @@ Sentry.init({
   // Learn more at
   // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
   tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ session-replay
+  // Replay may only be enabled for the client-side
+  integrations: [Sentry.replayIntegration()],
 
   // Capture Replay for 10% of all sessions,
   // plus for 100% of sessions with an error
@@ -127,17 +131,27 @@ Sentry.init({
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
 
+  // ___PRODUCT_OPTION_END___ session-replay
   // Note: if you want to override the automatic release value, do not set a
   // `release` value here - use the environment variable `SENTRY_RELEASE`, so
   // that it will also get attached to your source maps
 });
+
+// This export will instrument router navigations, and is only relevant if you enable tracing.
+// `captureRouterTransitionStart` is available from SDK version 9.12.0 onwards
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
 ```
 
-```javascript {tabTitle:Server} {filename:sentry.server.config.(js|ts)} {"onboardingOptions": {"performance": "5-11"}}
+```javascript {tabTitle:Server} {filename:sentry.server.config.(js|ts)}
 import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
 
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for tracing.
@@ -145,6 +159,7 @@ Sentry.init({
   // Learn more at
   // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
   tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
 
   // ...
 
@@ -154,11 +169,16 @@ Sentry.init({
 });
 ```
 
-```javascript {tabTitle:Edge} {filename:sentry.edge.config.(js|ts)} {"onboardingOptions": {"performance": "5-11"}}
+```javascript {tabTitle:Edge} {filename:sentry.edge.config.(js|ts)}
 import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
 
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for tracing.
@@ -166,6 +186,7 @@ Sentry.init({
   // Learn more at
   // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
   tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
 
   // ...
 
@@ -175,10 +196,8 @@ Sentry.init({
 });
 ```
 
-<Alert level="success" title="Tip">
-  Include your [Data Source Name](/concepts/key-terms/dsn-explainer/) (DSN)
-  directly in these files, or use a _public_ environment variable like
-  `NEXT_PUBLIC_SENTRY_DSN`.
+<Alert title="Tip">
+  Include your DSN directly in these files, or use a _public_ environment variable like `NEXT_PUBLIC_SENTRY_DSN`.
 </Alert>
 
 ### Register Sentry Server-Side SDK Initialization
@@ -197,11 +216,14 @@ export async function register() {
 }
 ```
 
-<Alert level="warning" title="Next.js version <15 only">
-  You need to enable the instrumentation hook by setting the
-  `experimental.instrumentationHook` to `true` in your `next.config.(js|mjs)`
-  file.
-</Alert>
+<Expandable title="Opt out of Sentry SDK bundling on client- or server-side.">
+  If you want the Sentry SDK to be available on the server side and not on the
+  client side, simply delete `instrumentation-client.(js|ts)`. This will prevent
+  webpack from pulling in the Sentry-related files when generating the browser
+  bundle. Similarly, if you want to opt out of server-side SDK bundling, delete
+  the `sentry.server.config.js` and `sentry.edge.config.js` files. Make sure to
+  remove any imports of these files from `instrumentation.ts`.
+</Expandable>
 
 ## Step 3: Capture React Render Errors
 
@@ -358,46 +380,7 @@ CustomErrorComponent.getInitialProps = async (contextData) => {
 export default CustomErrorComponent;
 ```
 
-## Step 4: Instrument Next.js Server Actions (Optional)
-
-_Requires `@sentry/nextjs` SDK version `7.81.0` or newer._
-
-To instrument Next.js Server Actions, wrap their content in `withServerActionInstrumentation`, along with a name to describe your server action.
-
-You can optionally pass form data and headers to record them, and configure the wrapper to record the Server Action responses:
-
-```tsx
-import * as Sentry from "@sentry/nextjs";
-import { headers } from "next/headers";
-
-export default function ServerComponent() {
-  async function myServerAction(formData: FormData) {
-    "use server";
-    return await Sentry.withServerActionInstrumentation(
-      "myServerAction", // The name you want to associate this Server Action with in Sentry
-      {
-        formData, // Optionally pass in the form data
-        headers: headers(), // Optionally pass in headers
-        recordResponse: true, // Optionally record the server action response
-      },
-      async () => {
-        // ... Your Server Action code
-
-        return { name: "John Doe" };
-      }
-    );
-  }
-
-  return (
-    <form action={myServerAction}>
-      <input type="text" name="some-input-value" />
-      <button type="submit">Run Action</button>
-    </form>
-  );
-}
-```
-
-## Step 5: Add Readable Stack Traces With Source Maps (Optional)
+## Step 4: Add Readable Stack Traces With Source Maps (Optional)
 
 Sentry can automatically provide readable stack traces for errors using source maps, requiring a Sentry auth token.
 
@@ -439,7 +422,7 @@ Make sure to keep your auth token secret and out of version control.
 
 </Alert>
 
-## Step 6: Avoid Ad Blockers With Tunneling (Optional)
+## Step 5: Avoid Ad Blockers With Tunneling (Optional)
 
 You can prevent ad blockers from blocking Sentry events using tunneling. Use the `tunnelRoute` option to add an API endpoint in your application that forwards Sentry events to Sentry servers.
 
@@ -469,114 +452,7 @@ module.exports = withSentryConfig(nextConfig, {
   negative matcher to your middleware like `(?!monitoring-tunnel)`.
 </Alert>
 
-## Step 7: Configure Server-side Auto-instrumentation (Optional)
-
-The SDK will automatically instrument API routes and server-side [Next.js data fetching methods](https://nextjs.org/docs/basic-features/data-fetching/overview) with error and tracing.
-
-### Disable API Route, Middleware and Data Fetching Auto-instrumentation Entirely
-
-To disable the automatic instrumentation of API route handlers and server-side data fetching functions, set the `autoInstrumentServerFunctions` to `false`.
-
-```javascript {tabTitle:ESM} {filename:next.config.mjs}
-export default withSentryConfig(nextConfig, {
-  autoInstrumentServerFunctions: false,
-});
-```
-
-```javascript {tabTitle:CJS} {filename:next.config.js}
-module.exports = withSentryConfig(nextConfig, {
-  autoInstrumentServerFunctions: false,
-});
-```
-
-With this option, under the hood, the SDK is using a webpack loader to wrap all your API route handlers and data fetching methods.
-
-### Opt In to Auto-instrumentation on Specific Routes
-
-If the automatic instrumentation doesn't work for your use case, you can turn it off globally and choose to only wrap specific API route handlers or data fetching functions instead.
-
-For API routes, use the `wrapApiHandlerWithSentry` function:
-
-```javascript {filename:pages/api/*}
-import { wrapApiHandlerWithSentry } from "@sentry/nextjs";
-
-const handler = (req, res) => {
-  res.status(200).json({ name: "John Doe" });
-};
-
-export default wrapApiHandlerWithSentry(handler, "/api/myRoute");
-```
-
-```typescript {filename:pages/api/*}
-import type { NextApiRequest, NextApiResponse } from "next";
-import { wrapApiHandlerWithSentry } from "@sentry/nextjs";
-
-const handler = (req: NextApiRequest, res: NextApiResponse) => {
-  res.status(200).json({ name: "John Doe" });
-};
-
-export default wrapApiHandlerWithSentry(handler, "/api/myRoute");
-```
-
-For data fetching methods, use the following functions:
-
-- `wrapGetInitialPropsWithSentry` for `getInitialProps`
-- `wrapGetServerSidePropsWithSentry` for `getServerSideProps`
-- `wrapGetStaticPropsWithSentry` for `getStaticProps`
-- `wrapErrorGetInitialPropsWithSentry` for `getInitialProps` in [custom Error pages](https://nextjs.org/docs/advanced-features/custom-error-page)
-- `wrapAppGetInitialPropsWithSentry` for `getInitialProps` in [custom `App` components](https://nextjs.org/docs/advanced-features/custom-app)
-- `wrapDocumentGetInitialPropsWithSentry` for `getInitialProps` in [custom `Document` components](https://nextjs.org/docs/advanced-features/custom-document)
-
-### Opt Out of Auto-instrumentation on Specific Routes
-
-If you want auto-instrumentation to apply by default, but want to exclude certain routes, use the `excludeServerRoutes` option:
-
-```javascript {tabTitle:ESM} {filename:next.config.mjs}
-export default withSentryConfig(nextConfig, {
-  excludeServerRoutes: [
-    "/some/excluded/route",
-    "/excluded/route/with/[parameter]",
-    /^\/route\/beginning\/with\/some\/prefix/,
-    /\/routeContainingASpecificPathSegment\/?/,
-  ],
-});
-```
-
-```javascript {tabTitle:CJS} {filename:next.config.js}
-module.exports = withSentryConfig(nextConfig, {
-  excludeServerRoutes: [
-    "/some/excluded/route",
-    "/excluded/route/with/[parameter]",
-    /^\/route\/beginning\/with\/some\/prefix/,
-    /\/routeContainingASpecificPathSegment\/?/,
-  ],
-});
-```
-
-Excluded routes can be specified either as regexes or strings. When using a string, make sure that it matches the route exactly, and has a leading slash but no trailing one.
-
-### Opt Out of Auto-instrumentation on Middleware
-
-To disable the automatic instrumentation of Next.js middleware, set the `autoInstrumentMiddleware` option to `false`.
-
-```javascript {tabTitle:ESM} {filename:next.config.mjs}
-export default withSentryConfig(nextConfig, {
-  autoInstrumentMiddleware: false,
-});
-```
-
-```javascript {tabTitle:CJS} {filename:next.config.js}
-module.exports = withSentryConfig(nextConfig, {
-  autoInstrumentMiddleware: false,
-});
-```
-
-### Opt Out of Sentry SDK bundling in Client- or Server-Side
-
-If you want the Sentry SDK to be available in your server-side and not in client-side, you can simply delete `sentry.client.config.js`. This will prevent webpack from pulling in the Sentry related files when generating the browser bundle.
-Similarly, to opt out of server-side SDK bundling, you can simply delete the `sentry.server.config.js` and `sentry.edge.config.js` files. Make sure to remove any imports of these files from `instrumentation.ts`.
-
-## Step 8: Instrument Vercel Cron Jobs (Optional)
+## Step 6: Instrument Vercel Cron Jobs (Optional)
 
 You can automatically create [Cron Monitors](/product/crons/) in Sentry if you have configured [Vercel cron jobs](https://vercel.com/docs/cron-jobs).
 
@@ -600,7 +476,7 @@ Automatic Vercel cron jobs instrumentation currently only supports the Pages Rou
 
 </Alert>
 
-## Step 9: Capture React Component Names (Optional)
+## Step 7: Capture React Component Names (Optional)
 
 You can capture React component names to see which component a user clicked on in Sentry features like Session Replay.
 Update `withSentryConfig` in your `next.config.(js|mjs)` file with the following option:
@@ -621,7 +497,7 @@ module.exports = withSentryConfig(nextConfig, {
 });
 ```
 
-## Step 10: Verify
+## Step 8: Verify
 
 <Include name="nextjs-turbopack-warning-expandable.mdx" />
 
@@ -647,11 +523,7 @@ To verify that Sentry captures errors and creates issues in your Sentry project,
   localhost) and click the button to trigger a frontend error.
 </OnboardingOption>
 
-<Alert level="warning" title="Important">
-
-Errors triggered from within your browser's developer tools (like the browser console) are sandboxed, so they will not trigger Sentry's error monitoring.
-
-</Alert>
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
 
 <OnboardingOption optionId="performance">
 ### Tracing
@@ -703,13 +575,7 @@ Additionally, this starts a performance trace to measure the time it takes for t
 
 Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
 
-<Expandable title="Need help locating the captured errors in your Sentry project?">
-
-1. Open the [**Issues**](https://sentry.io/orgredirect/organizations/:orgslug/issues) page and select an error from the issues list to view the full details and context of this error. For an interactive UI walkthrough, click [here](/product/sentry-basics/integrate-frontend/generate-first-error/#ui-walkthrough).
-2. Open the [**Traces**](https://sentry.io/orgredirect/organizations/:orgslug/traces) page and select a trace to reveal more information about each span, its duration, and any errors. For an interactive UI walkthrough, click [here](/product/sentry-basics/distributed-tracing/generate-first-error/#ui-walkthrough).
-3. Open the [**Replays**](https://sentry.io/orgredirect/organizations/:orgslug/replays) page and select an entry from the list to get a detailed view where you can replay the interaction and get more information to help you troubleshoot.
-
-</Expandable>
+<PlatformContent includePath="getting-started-verify-locate-data" />
 
 ## Next Steps
 
@@ -718,7 +584,7 @@ At this point, you should have integrated Sentry into your Next.js application a
 Now's a good time to customize your setup and look into more advanced topics.
 Our next recommended steps for you are:
 
-- Instrument Next.js server actions
+- Learn about [instrumenting Next.js server actions](/platforms/javascript/guides/nextjs/apis/#server-actions)
 - Configure [server-side auto-instrumentation](/platforms/javascript/guides/nextjs/configuration/build/#nextjs-specific-options)
 - Learn how to [manually capture errors](/platforms/javascript/guides/nextjs/usage/)
 - Continue to [customize your configuration](/platforms/javascript/guides/nextjs/configuration/)

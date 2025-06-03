@@ -1,0 +1,83 @@
+---
+title: Batch Processor
+---
+
+<Alert level="warning">
+  🚧 This document is work in progress.
+</Alert>
+
+<Alert>
+  This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement levels.
+</Alert>
+
+The BatchProcessor batches spans and logs into one envelope to reduce the number of HTTP requests. When an SDK implements span streaming or logs, it MUST use a BatchProcessor, which is similar to [OpenTelemetry's Batch Processor](https://github.com/open-telemetry/opentelemetry-collector/blob/main/processor/batchprocessor/README.md). The BatchProcessor holds logs and finished spans in memory and batches them together into envelopes. It uses a combination of time and size-based batching. When writing this, the BatchProcessor only handles spans and logs, but an SDK MAY use it for other telemetry data in the future.
+
+## Specification
+
+Whenever the SDK finishes a span or captures a log, it MUST put it into the BatchProcessor. The SDK MUST NOT put unfinished spans into the BatchProcessor.
+
+The BatchProcessor MUST start a timeout of 5 seconds when the SDK adds the first span or log. When the timeout exceeds, the BatchProcessor MUST send all spans or logs, no matter how many items it contains. The SDK MAY choose a different value for the timeout, but it MUST NOT exceed 30 seconds, as this can lead to problems with the span buffer on the backend, which uses a time interval of 60 seconds for determining segments for spans.
+
+The BatchProcessor MUST send all items after the SDK when containing spans or logs exceeding 1MiB in size. The SDK MAY choose a different value for the max batch size keeping the [envelope max sizes](/sdk/data-model/envelopes/#size-limits) in mind. The SDK MUST calculate the size of a span or a log to manage the BatchProcessor's memory footprint. The SDK MUST serialize the span or log and calculate the size based on the serialized JSON bytes. As serialization is expensive, the BatchProcessor SHOULD keep track of the serialized spans and logs and pass these to the envelope to avoid serializing multiple times.
+
+When the BatchProcessor sends all spans or logs, it MUST reset its timeout and remove all spans and logs. The SDK MUST apply filtering and sampling before adding spans or logs to the BatchProcessor. The SDK MUST apply rate limits to spans and logs after they leave the BatchProcessor to send as much data as possible by dropping data as late as possible.
+
+The detailed specification is written in the [Gherkin syntax](https://cucumber.io/docs/gherkin/reference/). The specification uses spans as an example, but the same applies to logs or any other future telemetry data.
+
+
+```Gherkin
+Scenario: No spans in BatchProcessor 1 span added
+    Given no spans in the BatchProcessor
+    When the SDK finishes 1 span
+    Then the SDK puts this span to the BatchProcessor
+    And starts a timeout of 5 seconds
+    And doesn't send the span to Sentry
+
+Scenario: Span added before timeout exceeds
+    Given span A in the BatchProcessor
+    Given 4.9 seconds pass
+    When the SDK finishes span B
+    Then the SDK adds span B to the BatchProcessor
+    And doesn't reset the timeout
+    And doesn't send the spans A and B in the BatchProcessor to Sentry
+
+Scenario: Spans with size of 1 MiB - 1 byte added, timeout exceeds
+    Given spans with size of 1 MiB - 1 byte in the BatchProcessor
+    When the timeout exceeds
+    Then the SDK adds all the spans to one envelope
+    And sends them to Sentry
+    And resets the timeout
+    And clears the BatchProcessor
+
+Scenario: Spans with size of 1 MiB - 1 byte added within 4.9 seconds
+    Given spans with size of 1 MiB - 1 byte in the BatchProcessor
+    When the SDK finishes another span and puts it into the BatchProcessor
+    Then the BatchProcessor puts all spans into one envelope
+    And sends the envelope to Sentry
+    And resets the timeout
+    And clears the BatchProcessor
+
+Scenario: Unfinished spans
+    Given no span is in the BatchProcessor
+    When the SDK starts a span but doesn't finish it
+    Then the BatchProcessor is empty
+
+Scenario: Span filtered out
+    Given no span is in the BatchProcessor
+    When the finishes a span
+    And the span is filtered out
+    Then the BatchProcessor is empty
+
+Scenario: Span not sampled
+    Given no span is in the BatchProcessor
+    When the finishes a span
+    And the span is not sampled
+    Then the BatchProcessor is empty
+
+Scenario: 1 span added application crashes
+  Given 1 span in the SpansAggregator
+  When the SDK detects a crash
+  Then the SDK does nothing with the items in the BatchProcessor
+  And loses the spans in the BatchProcessor
+
+```

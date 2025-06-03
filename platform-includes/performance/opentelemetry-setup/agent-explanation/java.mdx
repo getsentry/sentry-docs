@@ -1,0 +1,24 @@
+This is our recommended way of setting up Sentry with OpenTelemetry as it offers the broadest support for frameworks and libraries.
+
+The `sentry-opentelemetry-agent` makes use of the [`java` command's `-javaagent` argument](https://docs.oracle.com/en/java/javase/17/docs/api/java.instrument/java/lang/instrument/package-summary.html). This Java Agent will run some code before starting your application, configuring OpenTelemetry and Sentry and also dynamically injects bytecode into your application.
+
+The injected code allows OpenTelemetry and by extension also Sentry to:
+
+- Instrument your application by creating spans around things like HTTP requests, database queries, and many more.
+- Propagate OpenTelemetry `Context` and Sentry `Scopes` through libraries
+- Extract tracing information from incoming requests and consumed messages
+- Inject tracing information into outgoing requests and produced messages
+
+The `sentry-opentelemetry-agent` is packaged as a JAR file and is separate from your applications JAR / WAR file. This means you will have to manage the version on your server and upgrade it whenever you upgrade the Sentry SDK dependency in your application should you have it.
+
+<Alert title="✨ Note">
+
+Sentry Java SDK dependencies as well as `sentry-opentelemetry-agent` version must always be aligned. Mixing them is very likely to cause crashes and as of version `8.6.0` the Java SDK will throw an exception on `init` in this case to help catch the issue during development.
+
+</Alert>
+
+<PlatformSection supported={["java.spring", "java.spring-boot"]} notSupported={["java"]}>
+If you're unsure whether to use the Java Agent, please have a look at [OpenTelemetry documentation](https://opentelemetry.io/docs/zero-code/java/spring-boot-starter/).
+</PlatformSection>
+
+Since `sentry-opentelemetry-agent` is based on `opentelemetry-agent`, you may also find [OpenTelmetry docs](https://opentelemetry.io/docs/zero-code/java/agent/) helpful.
