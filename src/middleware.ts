@@ -212,8 +212,8 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/organization/integrations/issue-tracking/teamcamp/',
   },
   {
-    from: '/organization/integrations/elba/',
-    to: '/organization/integrations/compliance/elba/',
+    from: '/organization/integrations/elba-alpha/',
+    to: '/organization/integrations/compliance/elba-alpha/',
   },
   /*  ^  integration platform  ^  */
   {
