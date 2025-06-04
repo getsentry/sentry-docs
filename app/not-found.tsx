@@ -17,7 +17,7 @@ export default function NotFound() {
   const reportUrl = `https://github.com/getsentry/sentry-docs/issues/new?template=issue-platform-404.yml&title=🔗 404 Error&url=${brokenUrl}`;
   return (
     <div className="tw-app">
-      <Header pathname="/" searchPlatforms={[]} noSearch />
+      <Header pathname="/" searchPlatforms={[]} noSearch platforms={[]} />
       <main className="px-8 pt-28">
         <h1 className="font-medium text-3xl mb-4">Page Not Found</h1>
         <p className="text-lg">We couldn't find the page you were looking for :(</p>

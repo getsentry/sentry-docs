@@ -18,9 +18,9 @@ export const sidebarToggleId = sidebarStyles['navbar-menu-toggle'];
 
 type Props = {
   pathname: string;
-  platforms: Platform[];
   searchPlatforms: string[];
   noSearch?: boolean;
+  platforms?: Platform[];
   useStoredSearchPlatforms?: boolean;
 };
 
@@ -29,7 +29,7 @@ export default function Header({
   searchPlatforms,
   noSearch,
   useStoredSearchPlatforms,
-  platforms,
+  platforms = [],
 }: Props) {
   return (
     <header className="bg-[var(--gray-1)] h-[var(--header-height)] w-full z-50 border-b border-[var(--gray-a3)] fixed top-0">
