@@ -70,12 +70,8 @@ export default async function Home() {
           {/* Right column: Most Viewed SDKs */}
           <div className="flex-1 flex flex-col items-center justify-center -mt-4">
             <div className="bg-white rounded-xl shadow-md p-6 w-full max-w-md">
-              <h2 className="text-lg font-semibold mb-1 text-left">
-                Most Viewed Sentry SDKs
-              </h2>
-              <p className="text-left text-gray-600 mb-4">
-                Get started by setting up Sentry in your app to capture your first errors
-              </p>
+              <h2 className="text-lg font-semibold mb-1 text-left">Most Viewed Sentry SDKs</h2>
+              <p className="text-left text-gray-600 mb-4">Get started by setting up Sentry in your app to capture your first errors</p>
               <div className="grid grid-cols-3 gap-4">
                 {mostViewedSDKs.map(platform => (
                   <Link
@@ -95,6 +91,7 @@ export default async function Home() {
                   </Link>
                 ))}
               </div>
+              <a href="#all-sdks" className="text-accent-purple hover:underline font-medium text-base text-left block mt-2">See all SDKs</a>
             </div>
           </div>
         </div>
@@ -212,7 +209,9 @@ export default async function Home() {
             </div>
           </div>
         </div>
-        <PlatformFilter />
+        <div id="all-sdks">
+          <PlatformFilter />
+        </div>
         <h2 className="text-2xl mt-16 mb-6 font-medium">Get to know us</h2>
         <div className="flex flex-wrap gap-6">
           <Card
