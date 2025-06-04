@@ -1,19 +1,11 @@
-import {useMemo} from 'react';
-import {getMDXComponent} from 'mdx-bundler/client';
+import {MDXRemote} from 'next-mdx-remote/rsc';
 
-import {getFileBySlugWithCache} from 'sentry-docs/mdx';
+import {getFileBySlugWithCache, rehypePlugins, remarkPlugins} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 
 import {PlatformContent} from './platformContent';
 
-type Props = {
-  name: string;
-};
-
-function MDXLayoutRenderer({mdxSource: source, ...rest}) {
-  const MDXLayout = useMemo(() => getMDXComponent(source), [source]);
-  return <MDXLayout components={mdxComponents({Include, PlatformContent})} {...rest} />;
-}
+type Props = {name: string};
 
 export async function Include({name}: Props) {
   let doc: Awaited<ReturnType<typeof getFileBySlugWithCache>>;
@@ -28,6 +20,18 @@ export async function Include({name}: Props) {
     }
     throw e;
   }
-  const {mdxSource} = doc;
-  return <MDXLayoutRenderer mdxSource={mdxSource} />;
+  return (
+    <MDXRemote
+      source={doc}
+      components={mdxComponents({Include, PlatformContent})}
+      options={{
+        mdxOptions: {
+          // @ts-ignore
+          remarkPlugins,
+          // @ts-ignore
+          rehypePlugins,
+        },
+      }}
+    />
+  );
 }

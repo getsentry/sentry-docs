@@ -1,10 +1,10 @@
 import fs from 'fs';
 
-import {cache, useMemo} from 'react';
-import {getMDXComponent} from 'mdx-bundler/client';
+import {cache} from 'react';
+import {MDXRemote} from 'next-mdx-remote/rsc';
 
 import {getCurrentGuide, getDocsRootNode, getPlatform} from 'sentry-docs/docTree';
-import {getFileBySlugWithCache} from 'sentry-docs/mdx';
+import {getFileBySlugWithCache, rehypePlugins, remarkPlugins} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {serverContext} from 'sentry-docs/serverContext';
 import {
@@ -49,11 +49,6 @@ const updatePathIfVersionedFileDoesNotExistWithCache = cache(
   updatePathIfVersionedFileDoesNotExist
 );
 
-function MDXLayoutRenderer({mdxSource: source, ...rest}) {
-  const MDXLayout = useMemo(() => getMDXComponent(source), [source]);
-  return <MDXLayout components={mdxComponentsWithWrapper} {...rest} />;
-}
-
 export async function PlatformContent({includePath, platform, noGuides}: Props) {
   const {path} = serverContext();
 
@@ -77,7 +72,7 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
     );
 
     try {
-      doc = await getFileBySlugWithCache(guidePath);
+      doc = getFileBySlugWithCache(guidePath);
     } catch (e) {
       // It's fine - keep looking.
     }
@@ -93,7 +88,7 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
 
     if (guideObject?.fallbackGuide) {
       try {
-        doc = await getFileBySlugWithCache(fallbackGuidePath);
+        doc = getFileBySlugWithCache(fallbackGuidePath);
       } catch (e) {
         // It's fine - keep looking.
       }
@@ -106,7 +101,7 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
         `platform-includes/${includePath}/${platform}`
       );
 
-      doc = await getFileBySlugWithCache(platformPath);
+      doc = getFileBySlugWithCache(platformPath);
     } catch (e) {
       // It's fine - keep looking.
     }
@@ -122,7 +117,7 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
 
     if (platformObject?.fallbackPlatform) {
       try {
-        doc = await getFileBySlugWithCache(fallbackPlatformPath);
+        doc = getFileBySlugWithCache(fallbackPlatformPath);
       } catch (e) {
         // It's fine - keep looking.
       }
@@ -131,15 +126,27 @@ export async function PlatformContent({includePath, platform, noGuides}: Props) 
 
   if (!doc) {
     try {
-      doc = await getFileBySlugWithCache(`platform-includes/${includePath}/_default`);
+      doc = getFileBySlugWithCache(`platform-includes/${includePath}/_default`);
     } catch (e) {
       // Couldn't find anything.
       return null;
     }
   }
 
-  const {mdxSource} = doc;
-  return <MDXLayoutRenderer mdxSource={mdxSource} />;
+  return (
+    <MDXRemote
+      source={doc}
+      components={mdxComponentsWithWrapper}
+      options={{
+        mdxOptions: {
+          // @ts-ignore
+          remarkPlugins,
+          // @ts-ignore
+          rehypePlugins,
+        },
+      }}
+    />
+  );
 }
 
 const mdxComponentsWithWrapper = mdxComponents({Include, PlatformContent});
