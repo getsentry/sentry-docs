@@ -13,40 +13,6 @@ import styles from './style.module.scss';
 
 import {PlatformIcon} from '../platformIcon';
 
-const mostViewedPlatforms: {icon: string; key: string; title: string; url: string}[] = [
-  {
-    url: '/platforms/javascript/guides/nextjs/',
-    key: 'javascript-nextjs',
-    icon: 'javascript-nextjs',
-    title: 'Next.js',
-  },
-  {
-    url: '/platforms/javascript/guides/react/',
-    key: 'javascript-react',
-    icon: 'javascript-react',
-    title: 'React',
-  },
-  {
-    url: 'platforms/php/guides/laravel/',
-    key: 'php-laravel',
-    icon: 'php-laravel',
-    title: 'Laravel',
-  },
-  {
-    url: '/platforms/javascript/guides/node/',
-    key: 'node',
-    icon: 'javascript-node',
-    title: 'Node.js',
-  },
-  {url: '/platforms/python/', key: 'python', icon: 'python', title: 'Python'},
-  {
-    url: '/platforms/react-native/',
-    key: 'react-native',
-    icon: 'react-native',
-    title: 'React Native',
-  },
-];
-
 export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
   const platformsAndGuides = platforms
     .map(p => [
@@ -90,39 +56,6 @@ export function PlatformFilterClient({platforms}: {platforms: Platform[]}) {
 
   return (
     <div>
-      {/* TODO: Refactor a more elegant solution for this top grid, this was thrown together quickly for https://github.com/getsentry/projects/issues/548 */}
-      <div style={{marginBottom: '40px'}}>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-8 md:items-end">
-          <div className="lg:col-span-2 space-y-2">
-            <h2 className="text-2xl font-medium">Most Viewed Sentry SDKs</h2>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {mostViewedPlatforms.map(platform => (
-            <div className={`flex flex-col gap-4 ${styles.platform}`} key={platform.key}>
-              <Link
-                href={platform.url}
-                key={platform.key}
-                style={{
-                  textDecoration: 'none',
-                  color: 'var(--foreground) !important',
-                }}
-              >
-                <div className={styles.StandalonePlatform}>
-                  <PlatformIcon
-                    size={20}
-                    platform={platform.icon ?? platform.key}
-                    format="lg"
-                    className={`${styles.PlatformIcon} !border-none !shadow-none`}
-                  />
-                  {platform.title}
-                </div>
-              </Link>
-            </div>
-          ))}
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-8 md:items-end">
         <div className="lg:col-span-2 space-y-2">
           <h2 className="text-2xl font-medium">All SDKs Supported by Sentry</h2>

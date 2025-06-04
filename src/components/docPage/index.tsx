@@ -1,6 +1,6 @@
 import {ReactNode} from 'react';
 
-import {getCurrentGuide, getCurrentPlatform, nodeForPath} from 'sentry-docs/docTree';
+import {extractPlatforms,getCurrentGuide, getCurrentPlatform, nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 import {FrontMatter} from 'sentry-docs/types';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
@@ -14,7 +14,7 @@ import {Breadcrumbs} from '../breadcrumbs';
 import {CodeContextProvider} from '../codeContext';
 import {DocFeedback} from '../docFeedback';
 import {GitHubCTA} from '../githubCTA';
-import {Header} from '../header';
+import Header from '../header';
 import Mermaid from '../mermaid';
 import {PaginationNav} from '../paginationNav';
 import {PlatformSdkDetail} from '../platformSdkDetail';
@@ -46,6 +46,7 @@ export function DocPage({
   const {rootNode, path} = serverContext();
   const currentPlatform = getCurrentPlatform(rootNode, path);
   const currentGuide = getCurrentGuide(rootNode, path);
+  const platforms = extractPlatforms(rootNode);
 
   const hasToc = (!notoc && !frontMatter.notoc) || !!(currentPlatform || currentGuide);
   const hasGithub = !!path?.length && path[0] !== 'api';
@@ -60,16 +61,18 @@ export function DocPage({
 
   return (
     <div className="tw-app">
-      <Header pathname={pathname} searchPlatforms={searchPlatforms} />
-
+      <Header pathname={pathname} searchPlatforms={searchPlatforms} platforms={platforms} />
       <section className="px-0 flex relative">
         {sidebar ?? (
           <Sidebar path={unversionedPath.split('/')} versions={frontMatter.versions} />
         )}
-        <main className="main-content flex w-full mt-[var(--header-height)] flex-1 mx-auto">
+        <main
+          className="main-content flex w-full flex-1 mx-auto"
+          style={{marginTop: 'calc(var(--header-height) + var(--topnav-height))', paddingTop: '78px'}}
+        >
           <div
             className={[
-              'mx-auto lg:mx-0 pt-6 px-6 prose dark:prose-invert max-w-full text-[var(--gray-12)] prose-a:no-underline hover:prose-a:underline',
+              'mx-auto lg:mx-0 px-6 prose dark:prose-invert max-w-full text-[var(--gray-12)] prose-a:no-underline hover:prose-a:underline',
               'prose-code:font-normal prose-code:font-mono marker:text-[var(--accent)] prose-li:my-1',
               'prose-headings:mt-0 prose-headings:font-medium prose-headings:relative prose-headings:text-[var(--gray-12)]',
               'prose-blockquote:font-normal prose-blockquote:border-l-[3px] prose-em:font-normal prose-blockquote:text-[var(--gray-12)]',
@@ -78,10 +81,10 @@ export function DocPage({
               fullWidth ? 'max-w-none w-full' : 'w-[75ch] xl:max-w-[calc(100%-250px)]',
             ].join(' ')}
           >
+            {leafNode && <Breadcrumbs leafNode={leafNode} />}
             <div className="mb-4">
               <Banner />
             </div>
-            {leafNode && <Breadcrumbs leafNode={leafNode} />}
             <div>
               <hgroup>
                 <h1>{frontMatter.title}</h1>

@@ -7,7 +7,7 @@ import {apiCategories} from 'sentry-docs/build/resolveOpenAPI';
 import {ApiCategoryPage} from 'sentry-docs/components/apiCategoryPage';
 import {ApiPage} from 'sentry-docs/components/apiPage';
 import {DocPage} from 'sentry-docs/components/docPage';
-import {Home} from 'sentry-docs/components/home';
+import Home from 'sentry-docs/components/home';
 import {Include} from 'sentry-docs/components/include';
 import {PlatformContent} from 'sentry-docs/components/platformContent';
 import {
@@ -75,8 +75,6 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   const pageNode = nodeForPath(rootNode, params.path ?? '');
 
   if (!pageNode) {
-    // eslint-disable-next-line no-console
-    console.warn('no page node', params.path);
     return notFound();
   }
 
@@ -111,8 +109,6 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
       doc = await getFileBySlugWithCache(`develop-docs/${params.path?.join('/') ?? ''}`);
     } catch (e) {
       if (e.code === 'ENOENT') {
-        // eslint-disable-next-line no-console
-        console.error('ENOENT', params.path);
         return notFound();
       }
       throw e;
@@ -149,8 +145,6 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
     doc = await getFileBySlugWithCache(`docs/${pageNode.path}`);
   } catch (e) {
     if (e.code === 'ENOENT') {
-      // eslint-disable-next-line no-console
-      console.error('ENOENT', pageNode.path);
       return notFound();
     }
     throw e;

@@ -1,0 +1,33 @@
+---
+title: Automatic Detection
+sidebar_order: 51
+description: "Learn how automatic detection of uptime monitoring works."
+---
+
+In order to be able to automatically detect uptime alerts, we analyze all the URLs detected in your project's captured error data to find the hostname that appears most frequently. This helps ensure that your most critical hostname is continuously monitored, enhancing the reliability and availability of your web services. We then create an uptime alert if it passes our [uptime check criteria](/product/alerts/uptime-monitoring/#uptime-check-criteria). Automatic uptime checks are configured to run once a minute as GET requests.
+
+The automatic creation of Uptime Monitors only happens if there are no other existing uptime monitors configured. 
+
+To avoid creating flaky alerts, the hostname undergoes an "onboarding period" of three days. During this period, we send HTTP requests to the hostname every hour. If the request fails three times or more, the hostname will be dropped and re-evaluated after seven days.
+
+<Alert>
+ Sentry will execute uptime checks against the hostname root path of the most frequently-seen URLs. For example, if the most frequently-seen URL in your events is `GET https://www.example.com/docs/introduction`, the check will be `GET https://www.example.com/`.
+</Alert>
+
+Once an automatically detected uptime alert has been created, you'll be able to [customize its configuration](/product/alerts/create-alerts/uptime-alert-config/), including the HTTP request method, headers, and request body.
+
+## Disabling Automatic Detection
+
+If you prefer not to use automatically detected uptime alerts, you have two options for disabling them:
+
+1. **Deleting Uptime Alerts:** You can directly delete existing automatically detected uptime alerts from your [Alerts page](https://sentry.io/orgredirect/organizations/:orgslug/alerts/rules). Once deleted, these alerts will not be re-created automatically in the future.
+2. **Blocking Sentry via `robots.txt`:** Another method to prevent automatic detection is by updating your hostname's robots.txt file to block Sentry’s uptime monitoring bot. To do this, add the following lines to your robots.txt file:
+
+```txt{tabTitle: Example}{filename: robots.txt}
+User-agent: SentryUptimeBot
+Disallow: *
+```
+
+<Alert level="warning">
+**Note:** The `robots.txt` file only prevents Sentry from detecting URLs that it encounters after its been implemented. Existing URLs that have already been detected will continue to have uptime alerts unless they're manually deleted.
+</Alert>

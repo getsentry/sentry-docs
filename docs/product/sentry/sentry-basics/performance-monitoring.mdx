@@ -1,0 +1,84 @@
+---
+title: "Performance Monitoring"
+sidebar_order: 1
+description: "Understand and monitor how your application performs in production. Track key metrics, analyze bottlenecks, and resolve performance issues with distributed tracing, detailed transaction data, and automated issue detection."
+---
+
+<Include name="performance-moving.mdx" />
+
+In many tools, Performance Monitoring is just about tracking a few key metrics on your web pages. Sentry takes a different approach. By setting up [Tracing](/concepts/key-terms/tracing/), Sentry captures detailed performance data for every transaction in your entire application stack and automatically presents it in a variety of easy-to-use but powerful features so you can rapidly identify and resolve performance issues as they happen - all in one place.
+
+<Alert>
+
+Set up [Distributed Tracing](/product/sentry-basics/tracing/) to enable Performance Monitoring.
+
+</Alert>
+
+## Ways to Monitor Performance in Sentry
+
+Sentry has multiple tools for monitoring performance which are useful for different aspects of your monitoring & debugging needs:
+
+### 1: Insights: Opinionated views of performance data for each layer of your stack
+
+After turning on Distributed Tracing, you'll automatically see a set of [Insights](/product/insights/) pages that give you a high-level view of performance data for each layer of your stack. This is extremely useful for quickly seeing any major performance outliers that need optimization, or tracking potential regressions across time, environments, releases, etc.
+
+- [**Frontend Insights**](/product/insights/frontend) gives you an easy but powerful way to drill into common frontend performance issues with things like Core Web Vitals, as well as transaction performance with things like duration, and error rate.
+- [**Backend Insights**](/product/insights/backend/) show your backend transaction performance, across things like database queries, external API calls, caches, queues, crons, and more.
+- [**Mobile Insights**](/product/insights/mobile/) track vital performance metrics for your mobile apps, including your cold & warm app start times, TTID & TTFD, and time to load or render key screens throughout your app.
+- [**AI Insights**](/product/insights/ai/) give you a view of your LLM performance. This is currently in beta and only available for certain integrations.
+
+See the demo video below for a quick tour of the Insights pages:
+
+<Arcade src="https://demo.arcade.software/BTvUjriSDjaHiVqPvIFP?embed&embed_mobile=tab&embed_desktop=inline&show_copy_link=true" /><br />
+
+All accounts have access to the top level insights pages. Upgrading to the [Team plan](https://sentry.io/signup/?original_referrer=https%3A%2F%2Fwww.google.com%2F&period=annual&plan=am1_team_auf&trial) or higher gets you access to more dedicated insights pages for common monitoring use cases.
+
+### 2: Performance Issues: Automatically identify full-stack bottlenecks
+
+Alongside typical [error issues](/product/issues/issue-details/error-issues/), Sentry will automatically detect common performance issues and group them into [performance issues](/product/issues/issue-details/performance-issues/). For instance:
+- N+1 Query & API call issues that indicate unnecessary round-trips to your backend
+- Consecutive DB Queries or HTTP Requests that could be batched for better performance
+- Database queries or File I/O running on the main thread, which can block the UI thread and cause performance issues
+- And many more documented [here](/product/issues/performance-issues/)
+
+
+<Arcade src="https://demo.arcade.software/t8kZ9OeigLNrH3fLynIu?embed&embed_mobile=tab&embed_desktop=inline&show_copy_link=true" /> <br />
+
+### 3: Trace Explorer: Find root causes & common patterns for performance issues
+
+While Performance Issues and Insights give you a high-level view of performance data, the [Trace Explorer](/product/explore/traces/) lets you slice and dice all your performance data by any attribute. This is an extremely powerful tool for finding root causes and common patterns for performance regressions or potential optimizations. For instance, you can find the p95 duration of all spans on the `GET /users/:id` endpoint, or find all pages slowing down because of a particular middleware routing.
+
+The newest version of the Trace Explorer also lets you quickly calculate metrics based on your span data, like p50, p95, and p99 durations, and then group them by any attribute. This lets you quickly see if there's specific endpoints, versions, user groups, etc. that are performing poorly. For a more thorough dive into how you can use the new Trace Explorer and Span Metrics, take a look at our most recent [blog post](https://blog.sentry.io/find-and-fix-performance-bottlenecks-with-sentrys-trace-explorer/).
+
+<Alert>
+
+This demo shows a [new version](/product/explore/new-trace-explorer/) of the Trace Explorer that is available for all self-serve orgs in the Early Adopter program. Enable the EA flag in your [organization settings](https://sentry.io/orgredirect/settings/:orgslug/) to gain access to Span Metrics, Group By, Create Widgets and Alerts.
+
+</Alert>
+
+
+<Arcade src="https://demo.arcade.software/E04YSJpq1w8bpk18Q5Kp" /> <br />
+
+### 4: Metrics, Alerts, and Dashboards: Build custom views of performance data
+
+By default, Sentry automatically tracks a set of [performance metrics](/platforms/javascript/tracing/span-metrics/) for every trace. These are used to pupulate the Insights dashboards, but you can also use them to build custom [dashboards](/product/dashboards/) and [alerts](/product/alerts/).
+
+Opting into the [Early Adopter](https://sentry.io/orgredirect/settings/:orgslug/) program for the Trace Explorer also gives you access to the new [Span Metrics](/product/explore/new-trace-explorer/#span-metrics/) feature, which lets you calculate custom metrics based on your span data. This is extremely useful for building dashboards and alerts that are underpinned by real performance tracing data, so you can quickly debug performance issues.
+
+## How to set up Performance Monitoring
+
+For basic frontend or backend performance monitoring, just turn on Tracing in your relevant SDK. This will automatically trace every network request and give you a basic set of performance metrics. However, to make sure Sentry is capturing accurate and complete performance data, you need to set up [Distributed Tracing](/product/sentry-basics/distributed-tracing/). NextJS, Laravel, Ruby on Rails and a few others have strong out-of-the-box support for distributed tracing, but for more complex or multi-language applications, you'll need to configure this manually. Learn more about trace propagation [here](/platforms/javascript/tracing/distributed-tracing/).
+
+## How Performance Monitoring works under the hood
+
+Instead of instrumenting page loads with specific metrics at certain set intervals, like `onLoad`, `onUnload`, `onError`, etc., Sentry makes an effort to automatically instrument the libraries you rely on, providing detailed telemetry for Web Vitals, file I/O, network requests, and more. This lets you see the performance impact of every request, and any errors that occur during that request.
+
+This differs substantially from other performance monitoring tools that only capture *predefined* metrics with much less granularity. All your holistic metrics in Sentry are backed up by the raw tracing data, so you can drill into any specific request or operation to get a detailed view of its performance.
+
+These performance metrics are sent by the Sentry SDK as part of each [Span](/concepts/key-terms/tracing/#whats-a-span), which is the smallest unit of work in a [Trace](/concepts/key-terms/tracing/). Traces are assembled in Sentry's backend, and then extrapolated to populate all the tools we have for monitoring performance.
+
+This differs substantially from other performance monitoring tools that only capture metrics at specific points in your application. Instead, all your holistic metrics are backed up by the raw tracing data, so you can drill into any specific request or operation to get a detailed view of its performance.
+
+## Learn More
+
+<PageGrid />

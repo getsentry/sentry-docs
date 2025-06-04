@@ -1,0 +1,96 @@
+---
+title: Configuration Options
+sidebar_order: 2
+description: "Learn how to configure releases, breadcrumbs, and environments to enhance the SDK's functionality."
+---
+
+Sentry has various configuration options to help enhance the SDK functionality. The options can help provide additional data needed to debug issues even faster or to help control what's sent to Sentry by filtering. Learn more in [Configuration](/platforms/python/configuration/).
+
+## Releases
+
+A _release_ is a version of your code that's deployed to an environment. Configuring the release helps you figure out if there's a regression in your code, ensure accountability, resolve issues within Sentry, and stay up-to-date with your deployments. Releases need to be configured within your SDK and then managed through the [sentry-cli](/cli/).
+
+Sentry currently supports integrations with GitHub, Bitbucket, Azure DevOps, GitLab, and others. For a complete list of our integrations, check out our [Integrations documentation](/organization/integrations/).
+
+To set up the release in this project:
+
+1. Open the file `settings.py`. Notice that we add the `release` configuration option when initializing the SDK:
+
+   ```python {filename: myproject/settings.py}
+   sentry_sdk.init(
+       ...
+       release=os.environ.get("VERSION"),
+       ...
+   )
+   ```
+
+2. Open the `Makefile` you ran in the previous tutorial.
+
+   ![Makefile](./img/makefile.png)
+
+3. Notice that we're setting the release version name as an environment variable that's then used in the application's runtime. We're letting the CLI propose a release version name, but you probably want to apply your own naming conventions:
+
+   ```Makefile {filename: Makefile}
+   VERSION=`sentry-cli releases propose-version`
+   ```
+
+4. We then create a new release for our project with the proposed or selected name.
+
+   ```Makefile {filename: Makefile}
+   create_release:
+       sentry-cli releases -o $(SENTRY_ORG) new -p $(SENTRY_PROJECT) $(VERSION)
+   ```
+
+5. In the previous tutorial, we configured the GitHub integration and added the code repository for commit tracking. Now we can associate commits from that repository to the new release by running the command:
+
+   ```Makefile {filename: Makefile}
+   associate_commits:
+       sentry-cli releases -o $(SENTRY_ORG) -p $(SENTRY_PROJECT) \
+           set-commits $(VERSION) --auto
+   ```
+
+## Breadcrumbs
+
+_Breadcrumbs_ are the trail of events that led up to an error. They're very useful for reproducing an issue. Depending on the platform, the SDK will track various types of breadcrumbs by default (for backend SDKs these are DB queries, network events, logging, and others). You can also add your own custom breadcrumbs.
+
+To add breadcrumbs to our app:
+
+1. Open the file `myapp > view.py`.
+
+2. Notice that we import the `sentry_sdk` lib, which contains the `add_breadcrumb` method:
+
+   ```python {filename: myapp/views.py}
+   import sentry_sdk
+   ```
+
+3. We then create a custom breadcrumb for each method-handler in the view classes. This breadcrumb gets added to the trail of breadcrumbs associated with any error triggered through these method call flows. For instance, under `HandledErrorView.get`:
+
+   ```python {filename: myapp/views.py}
+   sentry_sdk.add_breadcrumb(
+       category='URL Endpoints',
+       message='In the handled function',
+       level='info',
+   )
+   ```
+
+## Environment
+
+_Environment_ is a powerful configuration option that enables developers using Sentry to perform various workflows, (such as filtering issues and triggering alerts) in the context of the deployment environment in which the errors occurred.
+
+1. Open the `settings.py` file.
+
+2. Notice that we initialize the SDK with the `environment` configuration option. Any event that's subsequently captured by the SDK will be tagged with the configured environment value.
+
+   ```python {filename: myproject/settings.py}
+   sentry_sdk.init(
+       ...
+       environment="Production"
+       ...
+   )
+   ```
+
+   > Environment values are freeform strings. Neither the Sentry SDK nor [sentry.io](https://sentry.io) will limit you to any specific value or format. In this example, we hardcoded the value. In a real-life app, the value would probably be determined dynamically through a properties file, system, or environment variable.
+
+## Next
+
+[Capturing Errors](/guides/integrate-backend/capturing-errors/)

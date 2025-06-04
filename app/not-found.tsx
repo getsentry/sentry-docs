@@ -3,7 +3,7 @@
 import {useEffect, useState} from 'react';
 import {Button} from '@radix-ui/themes';
 
-import {Header} from 'sentry-docs/components/header';
+import Header from 'sentry-docs/components/header';
 import {Search} from 'sentry-docs/components/search';
 
 export default function NotFound() {
