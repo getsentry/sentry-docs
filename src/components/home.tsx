@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 import {Banner} from 'sentry-docs/components/banner';
-import {extractPlatforms,getDocsRootNode} from 'sentry-docs/docTree';
+import {extractPlatforms, getDocsRootNode} from 'sentry-docs/docTree';
 import PlugImage from 'sentry-docs/imgs/api.png';
 import ChatBubble from 'sentry-docs/imgs/chat-bubble.png';
 import TerminalImage from 'sentry-docs/imgs/cli.png';
@@ -23,7 +23,11 @@ export default async function Home() {
   const rootNode = await getDocsRootNode();
   const platforms = extractPlatforms(rootNode);
   const mostViewedSDKs = [
-    {key: 'javascript-nextjs', title: 'Next.js', url: '/platforms/javascript/guides/nextjs/'},
+    {
+      key: 'javascript-nextjs',
+      title: 'Next.js',
+      url: '/platforms/javascript/guides/nextjs/',
+    },
     {key: 'javascript-node', title: 'Node.js', url: '/platforms/javascript/guides/node/'},
     {key: 'javascript-react', title: 'React', url: '/platforms/javascript/guides/react/'},
     {key: 'python', title: 'Python', url: '/platforms/python/'},
@@ -32,7 +36,12 @@ export default async function Home() {
   ];
   return (
     <div className="tw-app">
-      <Header pathname="/" searchPlatforms={[]} useStoredSearchPlatforms={false} platforms={platforms} />
+      <Header
+        pathname="/"
+        searchPlatforms={[]}
+        useStoredSearchPlatforms={false}
+        platforms={platforms}
+      />
       <div className="mt-[var(--header-height)]">
         <Banner />
       </div>
@@ -45,21 +54,41 @@ export default async function Home() {
       </div>
       <div className="hero max-w-screen-xl mx-auto px-6 lg:px-8 py-2">
         {/* New Top Row: Docs intro + Most Viewed SDKs */}
-        <div className="w-full flex flex-col md:flex-row gap-8 items-start mb-12" style={{paddingTop: '70px'}}>
+        <div
+          className="w-full flex flex-col md:flex-row gap-8 items-start mb-12"
+          style={{paddingTop: '70px'}}
+        >
           {/* Left column: Header and subheader */}
           <div className="flex-1 flex flex-col">
             <h1 className="text-3xl font-bold mb-2">Welcome to Sentry Docs</h1>
-            <p className="text-lg text-gray-600">Sentry provides end-to-end distributed tracing, enabling developers to identify and debug performance issues and errors across their systems and services.</p>
+            <p className="text-lg text-gray-600">
+              Sentry provides end-to-end distributed tracing, enabling developers to
+              identify and debug performance issues and errors across their systems and
+              services.
+            </p>
           </div>
           {/* Right column: Most Viewed SDKs */}
           <div className="flex-1 flex flex-col items-center justify-center -mt-4">
             <div className="bg-white rounded-xl shadow-md p-6 w-full max-w-md">
-              <h2 className="text-lg font-semibold mb-1 text-left">Most Viewed Sentry SDKs</h2>
-              <p className="text-left text-gray-600 mb-4">Get started by setting up Sentry in your app to capture your first errors</p>
+              <h2 className="text-lg font-semibold mb-1 text-left">
+                Most Viewed Sentry SDKs
+              </h2>
+              <p className="text-left text-gray-600 mb-4">
+                Get started by setting up Sentry in your app to capture your first errors
+              </p>
               <div className="grid grid-cols-3 gap-4">
                 {mostViewedSDKs.map(platform => (
-                  <Link key={platform.key} href={platform.url} className="flex flex-col items-center group relative">
-                    <PlatformIcon platform={platform.key} size={40} format="lg" className="transition-transform group-hover:scale-110" />
+                  <Link
+                    key={platform.key}
+                    href={platform.url}
+                    className="flex flex-col items-center group relative"
+                  >
+                    <PlatformIcon
+                      platform={platform.key}
+                      size={40}
+                      format="lg"
+                      className="transition-transform group-hover:scale-110"
+                    />
                     <span className="absolute bottom-[-2.2rem] left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-10 transition-opacity duration-200">
                       {platform.title}
                     </span>
@@ -79,13 +108,37 @@ export default async function Home() {
               <PlatformIcon platform="sentry" size={24} format="lg" className="ml-2" />
             </div>
             <div className="flex flex-col gap-3">
-              <Card href="/issues" title="Issues" description="" image={SupportImage} imageAlt="Issues image" className="min-h-[60px] h-[60px] card-large-icon card-align-center" />
-              <Card href="/logs" title="Logs" description="" image={TerminalImage} imageAlt="Logs image" className="min-h-[60px] h-[60px] card-large-icon card-align-center" />
-              <Card href="/explore" title="Explore" description="" image={ConceptsImage} imageAlt="Explore image" className="min-h-[60px] h-[60px] card-large-icon card-align-center" />
+              <Card
+                href="/issues"
+                title="Issues"
+                description=""
+                image={SupportImage}
+                imageAlt="Issues image"
+                className="min-h-[60px] h-[60px] card-large-icon card-align-center"
+              />
+              <Card
+                href="/logs"
+                title="Logs"
+                description=""
+                image={TerminalImage}
+                imageAlt="Logs image"
+                className="min-h-[60px] h-[60px] card-large-icon card-align-center"
+              />
+              <Card
+                href="/explore"
+                title="Explore"
+                description=""
+                image={ConceptsImage}
+                imageAlt="Explore image"
+                className="min-h-[60px] h-[60px] card-large-icon card-align-center"
+              />
             </div>
             <div className="px-4">
               <hr className="my-2 border-gray-200" />
-              <a href="#" className="inline-block text-accent-purple hover:underline font-medium text-base">
+              <a
+                href="#"
+                className="inline-block text-accent-purple hover:underline font-medium text-base"
+              >
                 More <span aria-hidden="true">→</span>
               </a>
             </div>
@@ -97,12 +150,29 @@ export default async function Home() {
               <PlatformIcon platform="sentry" size={24} format="lg" className="ml-2" />
             </div>
             <div className="flex flex-col gap-3">
-              <Card href="/test" title="Test" description="" image={RocketImage} imageAlt="Test image" className="min-h-[60px] h-[60px] card-large-icon card-align-center" />
-              <Card href="/coverage" title="Coverage" description="" image={CalculatorImage} imageAlt="Coverage image" className="min-h-[60px] h-[60px] card-large-icon card-align-center" />
+              <Card
+                href="/test"
+                title="Test"
+                description=""
+                image={RocketImage}
+                imageAlt="Test image"
+                className="min-h-[60px] h-[60px] card-large-icon card-align-center"
+              />
+              <Card
+                href="/coverage"
+                title="Coverage"
+                description=""
+                image={CalculatorImage}
+                imageAlt="Coverage image"
+                className="min-h-[60px] h-[60px] card-large-icon card-align-center"
+              />
             </div>
             <div className="px-4">
               <hr className="my-2 border-gray-200" />
-              <a href="#" className="inline-block text-accent-purple hover:underline font-medium text-base">
+              <a
+                href="#"
+                className="inline-block text-accent-purple hover:underline font-medium text-base"
+              >
                 More <span aria-hidden="true">→</span>
               </a>
             </div>
@@ -114,12 +184,29 @@ export default async function Home() {
               <PlatformIcon platform="sentry" size={24} format="lg" className="ml-2" />
             </div>
             <div className="flex flex-col gap-3">
-              <Card href="/autofix" title="Autofix" description="" image={PlugImage} imageAlt="Autofix image" className="min-h-[60px] h-[60px] card-large-icon card-align-center" />
-              <Card href="/issue-summary" title="Issue Summary" description="" image={OrganizationImage} imageAlt="Issue Summary image" className="min-h-[60px] h-[60px] card-large-icon card-align-center" />
+              <Card
+                href="/autofix"
+                title="Autofix"
+                description=""
+                image={PlugImage}
+                imageAlt="Autofix image"
+                className="min-h-[60px] h-[60px] card-large-icon card-align-center"
+              />
+              <Card
+                href="/issue-summary"
+                title="Issue Summary"
+                description=""
+                image={OrganizationImage}
+                imageAlt="Issue Summary image"
+                className="min-h-[60px] h-[60px] card-large-icon card-align-center"
+              />
             </div>
             <div className="px-4">
               <hr className="my-2 border-gray-200" />
-              <a href="#" className="inline-block text-accent-purple hover:underline font-medium text-base">
+              <a
+                href="#"
+                className="inline-block text-accent-purple hover:underline font-medium text-base"
+              >
                 More <span aria-hidden="true">→</span>
               </a>
             </div>
@@ -134,7 +221,9 @@ export default async function Home() {
             image={RocketImage}
             imageAlt="Rocket image"
             title="What is Sentry?"
-            description={'Application monitoring and debugging software considered "not bad" by 4 million developers.'}
+            description={
+              'Application monitoring and debugging software considered "not bad" by 4 million developers.'
+            }
           />
 
           <Card

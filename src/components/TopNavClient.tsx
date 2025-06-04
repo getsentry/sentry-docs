@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import {useEffect, useRef, useState} from 'react';
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
@@ -16,25 +16,33 @@ const productSections = [
 const mainSections = [
   {label: 'Products', href: '/product/sentry'},
   {label: 'SDKs', href: '/platforms/'},
-  {label: 'Concepts & Reference', href: '/concepts/', dropdown: [
-    {label: 'Key Terms', href: '/concepts/key-terms/'},
-    {label: 'Search', href: '/concepts/search/'},
-    {label: 'Migration', href: '/concepts/migration/'},
-    {label: 'Data Management', href: '/concepts/data-management/'},
-    {label: 'Sentry CLI', href: '/cli/'},
-  ]},
-  {label: 'Admin', href: '/organization/', dropdown: [
-    {label: 'Account Settings', href: '/account/'},
-    {label: 'Organization Settings', href: '/organization/'},
-    {label: 'Pricing & Billing', href: '/pricing'},
-  ]},
+  {
+    label: 'Concepts & Reference',
+    href: '/concepts/',
+    dropdown: [
+      {label: 'Key Terms', href: '/concepts/key-terms/'},
+      {label: 'Search', href: '/concepts/search/'},
+      {label: 'Migration', href: '/concepts/migration/'},
+      {label: 'Data Management', href: '/concepts/data-management/'},
+      {label: 'Sentry CLI', href: '/cli/'},
+    ],
+  },
+  {
+    label: 'Admin',
+    href: '/organization/',
+    dropdown: [
+      {label: 'Account Settings', href: '/account/'},
+      {label: 'Organization Settings', href: '/organization/'},
+      {label: 'Pricing & Billing', href: '/pricing'},
+    ],
+  },
 ];
 const moreSections = [
   {label: 'API', href: '/api/'},
   {label: 'Security, Legal, & PII', href: '/security-legal-pii/'},
 ];
 
-export default function TopNavClient({platforms}: { platforms: Platform[] }) {
+export default function TopNavClient({platforms}: {platforms: Platform[]}) {
   const [platformDropdownOpen, setPlatformDropdownOpen] = useState(false);
   const [platformDropdownByClick, setPlatformDropdownByClick] = useState(false);
   const platformBtnRef = useRef<HTMLButtonElement>(null);
@@ -93,7 +101,13 @@ export default function TopNavClient({platforms}: { platforms: Platform[] }) {
     }
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, [platformDropdownOpen, platformDropdownByClick, productsDropdownOpen, conceptsDropdownOpen, adminDropdownOpen]);
+  }, [
+    platformDropdownOpen,
+    platformDropdownByClick,
+    productsDropdownOpen,
+    conceptsDropdownOpen,
+    adminDropdownOpen,
+  ]);
 
   return (
     <ul className="flex gap-4 w-full items-center">
@@ -104,7 +118,7 @@ export default function TopNavClient({platforms}: { platforms: Platform[] }) {
               <button
                 ref={productsBtnRef}
                 className={`text-[var(--gray-12)] transition-colors duration-150 inline-block ${
-                  (productsDropdownOpen || isProductRoot)
+                  productsDropdownOpen || isProductRoot
                     ? 'bg-[var(--accent-purple)] text-white rounded-md'
                     : 'hover:text-[var(--accent)] py-2 px-1 rounded-t-md'
                 } flex items-center gap-1`}
@@ -119,10 +133,19 @@ export default function TopNavClient({platforms}: { platforms: Platform[] }) {
                 {section.label}
                 <svg
                   className={`ml-1 transition-transform duration-150 ${productsDropdownOpen ? 'rotate-180' : ''}`}
-                  width="16" height="16" viewBox="0 0 16 16" fill="none"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path
+                    d="M4 6L8 10L12 6"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </button>
               {productsDropdownOpen && (
@@ -149,7 +172,7 @@ export default function TopNavClient({platforms}: { platforms: Platform[] }) {
               <button
                 ref={platformBtnRef}
                 className={`text-[var(--gray-12)] transition-colors duration-150 inline-block ${
-                  (platformDropdownOpen || isPlatformsRoute)
+                  platformDropdownOpen || isPlatformsRoute
                     ? 'bg-[var(--accent-purple)] text-white rounded-md'
                     : 'hover:text-[var(--accent)] py-2 px-1 rounded-t-md'
                 } flex items-center gap-1`}
@@ -164,10 +187,19 @@ export default function TopNavClient({platforms}: { platforms: Platform[] }) {
                 {section.label}
                 <svg
                   className={`ml-1 transition-transform duration-150 ${platformDropdownOpen ? 'rotate-180' : ''}`}
-                  width="16" height="16" viewBox="0 0 16 16" fill="none"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path
+                    d="M4 6L8 10L12 6"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </button>
               {platformDropdownOpen && (
@@ -177,10 +209,7 @@ export default function TopNavClient({platforms}: { platforms: Platform[] }) {
                   style={{top: '100%', marginTop: 0}}
                   onClick={e => e.stopPropagation()}
                 >
-                  <PlatformSelector
-                    platforms={platforms}
-                    currentPlatform={undefined}
-                  />
+                  <PlatformSelector platforms={platforms} currentPlatform={undefined} />
                 </div>
               )}
             </div>
@@ -204,10 +233,19 @@ export default function TopNavClient({platforms}: { platforms: Platform[] }) {
                 {section.label}
                 <svg
                   className={`ml-1 transition-transform duration-150 ${conceptsDropdownOpen ? 'rotate-180' : ''}`}
-                  width="16" height="16" viewBox="0 0 16 16" fill="none"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path
+                    d="M4 6L8 10L12 6"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </button>
               {conceptsDropdownOpen && (
@@ -249,10 +287,19 @@ export default function TopNavClient({platforms}: { platforms: Platform[] }) {
                 {section.label}
                 <svg
                   className={`ml-1 transition-transform duration-150 ${adminDropdownOpen ? 'rotate-180' : ''}`}
-                  width="16" height="16" viewBox="0 0 16 16" fill="none"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path
+                    d="M4 6L8 10L12 6"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </button>
               {adminDropdownOpen && (
@@ -293,7 +340,7 @@ export default function TopNavClient({platforms}: { platforms: Platform[] }) {
         <div style={{display: 'inline-block'}}>
           <button
             className={`text-[var(--gray-12)] transition-colors duration-150 inline-block ${
-              (moreDropdownOpen || moreSections.some(s => pathname?.startsWith(s.href)))
+              moreDropdownOpen || moreSections.some(s => pathname?.startsWith(s.href))
                 ? 'bg-[var(--accent-purple)] text-white rounded-md'
                 : 'hover:text-[var(--accent)] py-2 px-1 rounded-t-md'
             } flex items-center gap-1`}
@@ -304,10 +351,19 @@ export default function TopNavClient({platforms}: { platforms: Platform[] }) {
             More
             <svg
               className={`ml-1 transition-transform duration-150 ${moreDropdownOpen ? 'rotate-180' : ''}`}
-              width="16" height="16" viewBox="0 0 16 16" fill="none"
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
-              <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path
+                d="M4 6L8 10L12 6"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </button>
           {moreDropdownOpen && (
@@ -346,4 +402,4 @@ export default function TopNavClient({platforms}: { platforms: Platform[] }) {
       ))}
     </ul>
   );
-} 
+}

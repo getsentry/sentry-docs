@@ -8,7 +8,9 @@ type Props = {
 /** Make sure the active link is visible in the sidebar */
 export function ScrollActiveLink({activeLinkSelector}: Props) {
   useEffect(() => {
-    const activeLinks = Array.from(document.querySelectorAll(activeLinkSelector)) as HTMLElement[];
+    const activeLinks = Array.from(
+      document.querySelectorAll(activeLinkSelector)
+    ) as HTMLElement[];
     const activeLink = activeLinks[activeLinks.length - 1];
     if (activeLink) {
       // Find the closest scrollable sidebar container
@@ -17,8 +19,7 @@ export function ScrollActiveLink({activeLinkSelector}: Props) {
         const linkRect = activeLink.getBoundingClientRect();
         const containerRect = sidebarMain.getBoundingClientRect();
         const isFullyVisible =
-          linkRect.top >= containerRect.top &&
-          linkRect.bottom <= containerRect.bottom;
+          linkRect.top >= containerRect.top && linkRect.bottom <= containerRect.bottom;
         if (!isFullyVisible) {
           activeLink.scrollIntoView({block: 'nearest'});
         }

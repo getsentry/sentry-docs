@@ -1,6 +1,11 @@
 import {ReactNode} from 'react';
 
-import {extractPlatforms,getCurrentGuide, getCurrentPlatform, nodeForPath} from 'sentry-docs/docTree';
+import {
+  extractPlatforms,
+  getCurrentGuide,
+  getCurrentPlatform,
+  nodeForPath,
+} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 import {FrontMatter} from 'sentry-docs/types';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
@@ -61,14 +66,21 @@ export function DocPage({
 
   return (
     <div className="tw-app">
-      <Header pathname={pathname} searchPlatforms={searchPlatforms} platforms={platforms} />
+      <Header
+        pathname={pathname}
+        searchPlatforms={searchPlatforms}
+        platforms={platforms}
+      />
       <section className="px-0 flex relative">
         {sidebar ?? (
           <Sidebar path={unversionedPath.split('/')} versions={frontMatter.versions} />
         )}
         <main
           className="main-content flex w-full flex-1 mx-auto"
-          style={{marginTop: 'calc(var(--header-height) + var(--topnav-height))', paddingTop: '78px'}}
+          style={{
+            marginTop: 'calc(var(--header-height) + var(--topnav-height))',
+            paddingTop: '78px',
+          }}
         >
           <div
             className={[

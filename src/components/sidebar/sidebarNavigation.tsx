@@ -19,7 +19,12 @@ export async function SidebarNavigation({path}: {path: string[]}) {
   }
 
   // Product sections
-  if (path[0] === 'product' || path[0] === 'product/sentry' || path[0] === 'product/sentry-prevent' || path[0] === 'product/seer') {
+  if (
+    path[0] === 'product' ||
+    path[0] === 'product/sentry' ||
+    path[0] === 'product/sentry-prevent' ||
+    path[0] === 'product/seer'
+  ) {
     const productItems = [
       {title: 'Sentry', root: 'product/sentry'},
       {title: 'Sentry Prevent', root: 'product/sentry-prevent'},
@@ -55,25 +60,36 @@ export async function SidebarNavigation({path}: {path: string[]}) {
         <DynamicNav
           root="concepts/key-terms"
           title="Key Terms"
-          tree={toTree(getNavNodes([nodeForPath(rootNode, 'concepts/key-terms')!], docNodeToNavNode))}
+          tree={toTree(
+            getNavNodes([nodeForPath(rootNode, 'concepts/key-terms')!], docNodeToNavNode)
+          )}
           collapsible={false}
         />
         <DynamicNav
           root="concepts/search"
           title="Search"
-          tree={toTree(getNavNodes([nodeForPath(rootNode, 'concepts/search')!], docNodeToNavNode))}
+          tree={toTree(
+            getNavNodes([nodeForPath(rootNode, 'concepts/search')!], docNodeToNavNode)
+          )}
           collapsible={false}
         />
         <DynamicNav
           root="concepts/migration"
           title="Migration"
-          tree={toTree(getNavNodes([nodeForPath(rootNode, 'concepts/migration')!], docNodeToNavNode))}
+          tree={toTree(
+            getNavNodes([nodeForPath(rootNode, 'concepts/migration')!], docNodeToNavNode)
+          )}
           collapsible={false}
         />
         <DynamicNav
           root="concepts/data-management"
           title="Data Management"
-          tree={toTree(getNavNodes([nodeForPath(rootNode, 'concepts/data-management')!], docNodeToNavNode))}
+          tree={toTree(
+            getNavNodes(
+              [nodeForPath(rootNode, 'concepts/data-management')!],
+              docNodeToNavNode
+            )
+          )}
           collapsible={false}
         />
         <DynamicNav
@@ -103,7 +119,9 @@ export async function SidebarNavigation({path}: {path: string[]}) {
         <DynamicNav
           root="security-legal-pii"
           title="Security, Legal, & PII"
-          tree={toTree(getNavNodes([nodeForPath(rootNode, 'security-legal-pii')!], docNodeToNavNode))}
+          tree={toTree(
+            getNavNodes([nodeForPath(rootNode, 'security-legal-pii')!], docNodeToNavNode)
+          )}
           collapsible={false}
         />
       </ul>
@@ -148,25 +166,36 @@ export async function SidebarNavigation({path}: {path: string[]}) {
         <DynamicNav
           root="concepts/key-terms"
           title="Key Terms"
-          tree={toTree(getNavNodes([nodeForPath(rootNode, 'concepts/key-terms')!], docNodeToNavNode))}
+          tree={toTree(
+            getNavNodes([nodeForPath(rootNode, 'concepts/key-terms')!], docNodeToNavNode)
+          )}
           collapsible={false}
         />
         <DynamicNav
           root="concepts/search"
           title="Search"
-          tree={toTree(getNavNodes([nodeForPath(rootNode, 'concepts/search')!], docNodeToNavNode))}
+          tree={toTree(
+            getNavNodes([nodeForPath(rootNode, 'concepts/search')!], docNodeToNavNode)
+          )}
           collapsible={false}
         />
         <DynamicNav
           root="concepts/migration"
           title="Migration"
-          tree={toTree(getNavNodes([nodeForPath(rootNode, 'concepts/migration')!], docNodeToNavNode))}
+          tree={toTree(
+            getNavNodes([nodeForPath(rootNode, 'concepts/migration')!], docNodeToNavNode)
+          )}
           collapsible={false}
         />
         <DynamicNav
           root="concepts/data-management"
           title="Data Management"
-          tree={toTree(getNavNodes([nodeForPath(rootNode, 'concepts/data-management')!], docNodeToNavNode))}
+          tree={toTree(
+            getNavNodes(
+              [nodeForPath(rootNode, 'concepts/data-management')!],
+              docNodeToNavNode
+            )
+          )}
           collapsible={false}
         />
         <DynamicNav

@@ -6,4 +6,4 @@ export default async function TopNav() {
   const rootNode = await getDocsRootNode();
   const platforms = extractPlatforms(rootNode);
   return <TopNavClient platforms={platforms} />;
-} 
+}

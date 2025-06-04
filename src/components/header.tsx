@@ -79,7 +79,9 @@ export default function Header({
               showChatBot
               useStoredSearchPlatforms={useStoredSearchPlatforms}
             />
-            <NavLink href="https://sentry.io/" className="ml-4 whitespace-nowrap">Go to Sentry</NavLink>
+            <NavLink href="https://sentry.io/" className="ml-4 whitespace-nowrap">
+              Go to Sentry
+            </NavLink>
           </div>
         )}
         <div className="ml-2">

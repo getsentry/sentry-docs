@@ -106,13 +106,30 @@ export async function Sidebar({path, versions}: SidebarProps) {
             <ul data-sidebar-tree>
               <li className="mb-3" data-sidebar-branch>
                 <ul data-sidebar-tree>
-                  <SidebarLink href="https://sentry.io/changelog/" title="Changelog" className="font-bold" />
-                  <SidebarLink href="https://sandbox.sentry.io/" title="Sandbox" className="font-bold" />
+                  <SidebarLink
+                    href="https://sentry.io/changelog/"
+                    title="Changelog"
+                    className="font-bold"
+                  />
+                  <SidebarLink
+                    href="https://sandbox.sentry.io/"
+                    title="Sandbox"
+                    className="font-bold"
+                  />
                   <SidebarLink href="https://about.codecov.io/" title="Codecov" />
                   <SidebarLink href="https://discord.gg/sentry" title="Discord" />
-                  <SidebarLink href="https://sentry.zendesk.com/hc/en-us/" title="Support" />
-                  <SidebarLink href="https://develop.sentry.dev/self-hosted/" title="Self-Hosting Sentry" />
-                  <SidebarLink href="https://develop.sentry.dev" title="Developer Documentation" />
+                  <SidebarLink
+                    href="https://sentry.zendesk.com/hc/en-us/"
+                    title="Support"
+                  />
+                  <SidebarLink
+                    href="https://develop.sentry.dev/self-hosted/"
+                    title="Self-Hosting Sentry"
+                  />
+                  <SidebarLink
+                    href="https://develop.sentry.dev"
+                    title="Developer Documentation"
+                  />
                 </ul>
               </li>
             </ul>
@@ -127,7 +144,10 @@ export async function Sidebar({path, versions}: SidebarProps) {
     <aside className={`${styles.sidebar} py-3`}>
       <input type="checkbox" id={sidebarToggleId} className="hidden" />
       <style>{':root { --sidebar-width: 300px; }'}</style>
-      <div className="md:flex flex-col items-stretch overflow-auto h-full" style={{display: 'flex', flexDirection: 'column', height: '100%'}}>
+      <div
+        className="md:flex flex-col items-stretch overflow-auto h-full"
+        style={{display: 'flex', flexDirection: 'column', height: '100%'}}
+      >
         <div className={`${styles['sidebar-main']} px-3 flex-1`}>
           <ScrollActiveLink activeLinkSelector={activeLinkSelector} />
           <SidebarNavigation path={path} />
@@ -137,13 +157,30 @@ export async function Sidebar({path, versions}: SidebarProps) {
           <ul data-sidebar-tree>
             <li className="mb-3" data-sidebar-branch>
               <ul data-sidebar-tree>
-                <SidebarLink href="https://sentry.io/changelog/" title="Changelog" className="font-bold" />
-                <SidebarLink href="https://sandbox.sentry.io/" title="Sandbox" className="font-bold" />
+                <SidebarLink
+                  href="https://sentry.io/changelog/"
+                  title="Changelog"
+                  className="font-bold"
+                />
+                <SidebarLink
+                  href="https://sandbox.sentry.io/"
+                  title="Sandbox"
+                  className="font-bold"
+                />
                 <SidebarLink href="https://about.codecov.io/" title="Codecov" />
                 <SidebarLink href="https://discord.gg/sentry" title="Discord" />
-                <SidebarLink href="https://sentry.zendesk.com/hc/en-us/" title="Support" />
-                <SidebarLink href="https://develop.sentry.dev/self-hosted/" title="Self-Hosting Sentry" />
-                <SidebarLink href="https://develop.sentry.dev" title="Developer Documentation" />
+                <SidebarLink
+                  href="https://sentry.zendesk.com/hc/en-us/"
+                  title="Support"
+                />
+                <SidebarLink
+                  href="https://develop.sentry.dev/self-hosted/"
+                  title="Self-Hosting Sentry"
+                />
+                <SidebarLink
+                  href="https://develop.sentry.dev"
+                  title="Developer Documentation"
+                />
               </ul>
             </li>
           </ul>
