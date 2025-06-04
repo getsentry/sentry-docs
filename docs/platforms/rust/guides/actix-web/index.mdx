@@ -1,27 +1,33 @@
 ---
-title: actix-web
-description: "Learn about using Sentry with Actix Web."
+title: Actix Web
+description: "Learn about monitoring your Actix Web application with Sentry."
 ---
 
-The `sentry-actix` crate adds a middleware for [`actix-web`](https://actix.rs/) that captures errors and report them to `Sentry`.
+The Sentry SDK offers a middleware for the [Actix Web](https://actix.rs/) framework that supports:
 
-To use this middleware, configure Sentry then add it to your actix web app as a middleware. Because actix is generally working with non sendable objects and is highly concurrent, this middleware creates a new hub per request. As a result, many of the Sentry integrations, such as breadcrumbs, do not work unless you bind the actix hub.
+- Capturing server errors returned by Actix Web services.
+- Starting a [transaction](https://docs.sentry.io/concepts/key-terms/tracing/) for each request-response cycle.
 
-Note: Macros like `#[tokio::main]` and `#[actix_web::main]` are not supported. The Sentry client must be initialized before the async runtime is started so that all threads are correctly connected to the Hub.
+## Install
 
-## Example
-
-In your `Cargo.toml`:
+To add Sentry with the Actix Web integration to your Rust project, add a new dependency to your `Cargo.toml`:
 
 ```toml {filename:Cargo.toml}
 [dependencies]
-actix-web = "4.3.1"
-sentry = "{{@inject packages.version('sentry.rust') }}"
-sentry-actix = "{{@inject packages.version('sentry.rust') }}"
+actix-web = "4.11.0"
+sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = ["actix"] }
 ```
 
-And your Rust code:
+## Configure
 
+Initialize and configure the Sentry client. This will enable a set of default integrations, such as panic reporting.
+Then, initialize Actix Web with the Sentry middleware.
+
+<Alert level="warning">
+
+Macros like `#[tokio::main]` and `#[actix_web::main]` are not supported. The Sentry client must be initialized before the async runtime is started, as shown below.
+
+</Alert>
 
 ```rust {filename:main.rs}
 use std::io;
@@ -38,18 +44,26 @@ fn main() -> io::Result<()> {
         "___PUBLIC_DSN___",
         sentry::ClientOptions {
             release: sentry::release_name!(),
+            // Capture all traces and spans. Set to a lower value in production
+            traces_sample_rate: 1.0,
             // Capture user IPs and potentially sensitive headers when using HTTP server integrations
             // see https://docs.sentry.io/platforms/rust/data-management/data-collected for more info
             send_default_pii: true,
+            // Capture all HTTP request bodies, regardless of size
+            max_request_body_size: sentry::MaxRequestBodySize::Always,
             ..Default::default()
         },
     ));
-    std::env::set_var("RUST_BACKTRACE", "1");
 
     actix_web::rt::System::new().block_on(async {
         HttpServer::new(|| {
             App::new()
-                .wrap(sentry_actix::Sentry::new())
+                .wrap(
+                    sentry::integrations::actix::Sentry::builder()
+                        .capture_server_errors(true) // Capture server errors
+                        .start_transaction(true) // Start a transaction (Sentry root span) for each request
+                        .finish(),
+                )
                 .service(failing)
         })
         .bind("127.0.0.1:3001")?
@@ -61,7 +75,20 @@ fn main() -> io::Result<()> {
 }
 ```
 
-## Reusing the Hub
+## Verify
 
-When using the actix integration, a new per-request Hub will be created from the main Hub, and will be set automatically as the current Hub (`Hub::current()`).
-No manual intervention in needed.
+The snippet above sets up a service that always fails, so you can test that everything is working as soon as you set it up.
+
+Send a request to the application. The response error will be captured by Sentry.
+
+```bash
+curl http://localhost:3001/
+```
+
+<Alert>
+
+Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+
+</Alert>
+
+To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
