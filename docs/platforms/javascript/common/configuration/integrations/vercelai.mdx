@@ -46,7 +46,44 @@ To enhance the spans collected by this integration, we recommend providing a `fu
 ```javascript
 const result = await generateText({
   model: openai("gpt-4-turbo"),
-  experimental_telemetry: { functionId: "my-awesome-function" },
+  experimental_telemetry: {
+    isEnabled: true,
+    functionId: "my-awesome-function",
+  },
+});
+```
+
+## Options
+
+### `recordInputs`
+
+Requires SDK version `9.27.0` or higher.
+
+_Type: `boolean`_
+
+Records inputs to the ai function call.
+
+Defaults to `true` if `sendDefaultPii` is `true` or if you explicitly set `experimental_telemetry.isEnabled` to `true` in your `ai` function callsites.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.vercelAIIntegration({ recordInputs: true })],
+});
+```
+
+### `recordOutputs`
+
+Requires SDK version `9.27.0` or higher.
+
+_Type: `boolean`_
+
+Records outputs to the ai function call.
+
+Defaults to `true` if `sendDefaultPii` is `true` or if you explicitly set `experimental_telemetry.isEnabled` to `true` in your `ai` function callsites.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.vercelAIIntegration({ recordOutputs: true })],
 });
 ```
 
@@ -61,7 +98,7 @@ const result = await generateText({
 });
 ```
 
-If you want to collect inputs and outputs for a specific call, you must specifically opt-in to each function call by setting `experimental_telemetry.recordInputs` and `experimental_telemetry.recordOutputs` to `true`.
+If you set `experimental_telemetry.recordInputs` and `experimental_telemetry.recordOutputs` it will override the default behavior of collecting inputs and outputs for that function call.
 
 ```javascript
 const result = await generateText({
