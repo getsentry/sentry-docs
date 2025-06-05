@@ -3595,10 +3595,6 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     to: '/sdk/processes/releases/',
   },
   {
-    from: '/sdk/metrics/',
-    to: '/sdk/telemetry/metrics/',
-  },
-  {
     from: '/sdk/check-ins/',
     to: '/sdk/telemetry/check-ins/',
   },
