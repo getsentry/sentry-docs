@@ -28,6 +28,48 @@ Select which Sentry features you'd like to install in addition to Error Monitori
 
 Since Hono is a framework designed to run in all kinds of JavaScript runtimes, different setups for different platforms are outlined below.
 
+### Setup On Node.js
+
+```bash {tabTitle:npm}
+npm install @sentry/node --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/node
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/node
+```
+
+From there, you'll need to bind an `onError` hook to report unhandled exceptions to Sentry:
+
+```typescript {filename:index.ts}
+import { Hono, HTTPException } from "hono";
+import * as Sentry from "@sentry/node";
+
+const app = new Hono()
+  // Add an onError hook to report unhandled exceptions to Sentry.
+  .onError((err, c) => {
+    // Report _all_ unhandled errors.
+    Sentry.captureException(err);
+    if (err instanceof HTTPException) {
+      return err.getResponse()
+    }
+    // Or just report errors which are not instances of HTTPException
+    // Sentry.captureException(err);
+    return c.json({ error: "Internal server error" }, 500)
+  })
+  // Your routes...
+  app.get("/", () => {
+    // ...
+  });
+
+export default app;
+```
+
+Note: We don't currently support automatic tracing instrumentation for Hono within the Node.js adapter.
+
 ### Setup On Cloudflare Workers
 
 ```bash {tabTitle:npm}
@@ -62,24 +104,50 @@ compatibility_flags = ["nodejs_als"]
 Next, wrap your handler with the `withSentry` function. This will initialize the SDK and hook into the
 environment. Note that you can turn off almost all side effects using the respective options.
 
-
-
 ```typescript {filename:index.ts}
-import { Hono } from "hono";
+import { Hono, HTTPException } from "hono";
 import * as Sentry from "@sentry/cloudflare";
 
-const app = new Hono();
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
 
-// Your routes...
-app.get("/", () => {
-  // ...
+
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/hono/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+
+  // ___PRODUCT_OPTION_START___ performance
+  // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
 });
 
+const app = new Hono()
+  // Add an onError hook to report unhandled exceptions to Sentry.
+  .onError((err, c) => {
+    // Report _all_ unhandled errors.
+    Sentry.captureException(err);
+    if (err instanceof HTTPException) {
+      return err.getResponse()
+    }
+    // Or just report errors which are not instances of HTTPException
+    // Sentry.captureException(err);
+    return c.json({ error: "Internal server error" }, 500)
+  })
+  // Your routes...
+  app.get("/", () => {
+    // ...
+  });
+
+// Wrap your Worker binding with Sentry to ensure tracing instrumentation is enabled,
+// and Sentry telemetry is flushed at the end of requests.
 export default Sentry.withSentry(
   (env) => ({
     dsn: "___PUBLIC_DSN___",
 
-    
+
     // Adds request headers and IP for users, for more info visit:
     // https://docs.sentry.io/platforms/javascript/guides/hono/configuration/options/#sendDefaultPii
     sendDefaultPii: true,
