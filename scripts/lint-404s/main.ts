@@ -50,7 +50,7 @@ async function main() {
     return pathnameSlug === '' || allSlugsSet.has(pathnameSlug);
   };
 
-  function shouldSkipLink(href: string) {
+  function shoudlSkipLink(href: string) {
     const isExternal = (href_: string) =>
       href_.startsWith('http') || href_.startsWith('mailto:');
     const isLocalhost = (href_: string) =>
@@ -68,7 +68,7 @@ async function main() {
   }
 
   async function is404(link: Link, pageUrl: URL): Promise<boolean> {
-    if (shouldSkipLink(link.href)) {
+    if (shoudlSkipLink(link.href)) {
       return false;
     }
 

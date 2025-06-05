@@ -49,9 +49,9 @@ export default function deflist(): Transformer {
       if (isSingleDeflist(node)) {
         const [title, ...children] = toMarkdown(node as any).split(/\n:\s+/);
 
-        const children = fromMarkdown(title).children as Parent[];
+        const childs = fromMarkdown(title).children as Parent[];
 
-        dt = children.flatMap(n => n.children);
+        dt = childs.flatMap(n => n.children);
         dd = children
           .map(str => fromMarkdown(str) as Parent)
           .flatMap(n => n.children)
@@ -65,8 +65,8 @@ export default function deflist(): Transformer {
         start = i as number;
         count = 1;
       } else {
-        const children = parent!.children[i! - 1] as Parent;
-        dt = children.children;
+        const childs = parent!.children[i! - 1] as Parent;
+        dt = childs.children;
         dd = toMarkdown(node as any)
           .replace(/^:\s+/, '')
           .split(/\n:\s+/)

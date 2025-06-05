@@ -19,7 +19,7 @@ export function ScrollActiveLink({activeLinkSelector}: Props) {
       const target = e.target as HTMLElement;
       if (target.hasAttribute('data-sidebar-link')) {
         const top = target.getBoundingClientRect().top;
-        sessionStorage.setItem('sidebar-link-position', top.toString());
+        sessionStorage.setItem('sidebar-link-poisition', top.toString());
       }
     };
     sidebar.addEventListener('click', onLinkClick);
@@ -28,7 +28,7 @@ export function ScrollActiveLink({activeLinkSelector}: Props) {
       const activeLink = document.querySelector(activeLinkSelector);
       if (activeLink) {
         const top = activeLink.getBoundingClientRect().top.toString();
-        sessionStorage.setItem('sidebar-link-position', top);
+        sessionStorage.setItem('sidebar-link-poisition', top);
       }
     }, 50);
 
@@ -45,7 +45,7 @@ export function ScrollActiveLink({activeLinkSelector}: Props) {
     if (!activeLink || !sidebar) {
       return;
     }
-    const previousBoundingRectTop = sessionStorage.getItem('sidebar-link-position');
+    const previousBoundingRectTop = sessionStorage.getItem('sidebar-link-poisition');
     const currentBoundingRectTop = activeLink.getBoundingClientRect().top;
     // scroll the sidebar to make sure the active link is visible & has the same position as when it was clicked
     if (!previousBoundingRectTop) {
