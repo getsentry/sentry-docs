@@ -22,13 +22,13 @@ We recommend TLS termination to be done on your own dedicated load balancer or p
 
 Certain self-hosted deployments requires the dashboard to be accessed only via internal network. But, they also need to provide public Sentry ingestion endpoint for client devices such as mobile and desktop apps. You can expose some of these endpoints publicly:
 
-- `/api/[1-9]\d+/envelope/` - Main endpoint for submitting event from SDK
-- `/api/[1-9]\d+/minidump/` - Endpoint for submitting minidump from native SDKs
-- `/api/[1-9]\d+/security/` - Endpoint for submitting security-related such as CSP errors
-- `/api/[1-9]\d+/store/` - Old endpoint for submitting event from SDK, it is deprecated.
-- `/api/[1-9]\d+/unreal/` - Endpoint for submitting crash report from Unreal Engine SDK
+- `/api/[1-9]+/envelope/` - Main endpoint for submitting event from SDK
+- `/api/[1-9]+/minidump/` - Endpoint for submitting minidump from native SDKs
+- `/api/[1-9]+/security/` - Endpoint for submitting security-related such as CSP errors
+- `/api/[1-9]+/store/` - Old endpoint for submitting event from SDK, it is deprecated.
+- `/api/[1-9]+/unreal/` - Endpoint for submitting crash report from Unreal Engine SDK
 
-The `[1-9]\d+` is a regular expression string that is acquired from the project DSN.
+The `[1-9]+` is a regular expression string that is acquired from the project DSN.
 
 ## Rate Limiting
 
@@ -76,7 +76,7 @@ server {
     # by removing the other `location` directive.
     #
     # It is recommended to put a rate limiter on the ingest endpoints.
-    location ~ ^/api/[1-9]\d*/(envelope|minidump|security|store|unreal)/ {
+    location ~ ^/api/[1-9]+/(envelope|minidump|security|store|unreal)/ {
         add_header Access-Control-Allow-Origin * always;
         add_header Access-Control-Allow-Credentials false always;
         add_header Access-Control-Allow-Methods GET,POST,PUT always;
@@ -127,7 +127,7 @@ sentry.yourcompany.com {
     # by removing the other `handle` directive.
     #
     # It is recommended to put a rate limiter on the ingest endpoints.
-    @ingest_endpoint path_regexp ^/api/[1-9]\d+/(envelope|minidump|security|store|unreal)/
+    @ingest_endpoint path_regexp ^/api/[1-9]+/(envelope|minidump|security|store|unreal)/
 
     handle @ingest_endpoint {
         header {
@@ -197,7 +197,7 @@ http:
         - web       # Assuming this your HTTP entrypoint
         - websecure # Assuming this is your HTTPS entrypoint
       service: sentry@file
-      rule: "Host(`sentry.yourcompany.com`) && PathRegexp(`^/api/[1-9]\\d+/(envelope|minidump|security|store|unreal)`)"
+      rule: "Host(`sentry.yourcompany.com`) && PathRegexp(`^/api/[1-9]+/(envelope|minidump|security|store|unreal)`)"
       tls:
         certResolver: letsencrypt # Assuming you have a TLS certificate resolver named "letsencrypt"
       middlewares:
@@ -300,7 +300,7 @@ frontend https_bind
     mode http
 
     acl sentry_domain   hdr(host) -i sentry.yourcompany.com
-    acl ingest_endpoint path_reg -i /api/[1-9]\d+/(envelope|minidump|security|store|unreal)/
+    acl ingest_endpoint path_reg -i /api/[1-9]+/(envelope|minidump|security|store|unreal)/
 
     # Handle CORS-related headers for ingest endpoints.
     # You can also only expose the ingest endpoints only,
