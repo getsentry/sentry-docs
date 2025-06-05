@@ -18,7 +18,7 @@ The initial `@sentry/react-native@7.0.0` ships with `@sentry/core@9.1.0`. Always
 
 Version 7 also includes a major upgrade to the Android SDK dependency, introducing behavioral changes, breaking changes, and deprecations. If you are using the Android SDK directly, please follow the [Android SDK version 8 migration guide](/platforms/android/migration/#migrating-from-iosentrysentry-7x-to-iosentrysentry-800).
 
-### General API Changes
+### Major Changes in Sentry JS SDK v9
 
 Other general JavaScript SDK version 9 changes are described in the [JavaScript SDK 8.x to 9.x migration guide](/platforms/javascript/guides/react/migration/v8-to-v9/).
 
@@ -30,7 +30,7 @@ Beginning with version 7.0.0, the Sentry Capacitor SDK will only support self-ho
 
 This section describes API changes in the Sentry React7 Native SDK, version 7.
 
-### captureUserFeedback is now removed
+### `captureUserFeedback` is now removed
 
 You can use the updated snippet in order to capture user Feedbacks:
 
@@ -48,3 +48,34 @@ You can use the updated snippet in order to capture user Feedbacks:
 ```
 
 Additionally you can also see our new Feedback integration by checking the following [link](../../user-feedback/configuration/)
+
+### `autoSessionTracking` united with `enableAutoSessionTracking`
+
+Option key `autoSessionTracking` was removed. Use `enableAutoSessionTracking` instead, enabled by default.
+
+```javascript diff
+Sentry.init({
++  enableAutoSessionTracking: true,
+-  autoSessionTracking: true,
+});
+```
+
+### `browserReplayIntegration` can be used directly without `isWeb` check
+
+The check is done inside of the integration, which makes it easier to use.
+
+```javascript diff
+Sentry.init({
++  integrations: [ Sentry.browserReplayIntegration() ],
+-  integrations: (defaultIntegrations) => {
+-    if (Platform.OS === 'web') {
+-      defaultIntegrations.push(Sentry.browserReplayIntegration());
+-    }
+-    return defaultIntegrations;
+-  },
+});
+```
+
+### `Cold/Warm App Start` spans were renamed to `Cold/Warm Start`
+
+The `App` word was removed from the span description. If you have any logic in your application or in Sentry based on this span description, please, check if it still works.
