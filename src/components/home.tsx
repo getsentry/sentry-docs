@@ -1,3 +1,5 @@
+'use client';
+
 import {Banner} from 'sentry-docs/components/banner';
 import {SentryWordmarkLogo} from 'sentry-docs/components/wordmarkLogo';
 import PlugImage from 'sentry-docs/imgs/api.png';
