@@ -38,13 +38,24 @@ jobs:
       - run: yarn install --frozen-lockfile
         if: steps.cache.outputs.cache-hit != 'true'
 
-      - run: yarn build
+      # Setup Turbo cache with better cache keys for builds
+      - name: Setup Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-build-${{ hashFiles('**/package.json', '**/turbo.json', '**/next.config.*', '**/tsconfig.json', 'docs/**', 'includes/**', 'platform-includes/**', 'develop-docs/**') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-build-${{ hashFiles('**/package.json', '**/turbo.json', '**/next.config.*', '**/tsconfig.json') }}-
+            ${{ runner.os }}-turbo-build-
+            ${{ runner.os }}-turbo-
+
+      - run: yarn turbo run build
         if: steps.filter.outputs.docs == 'true'
         env:
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
 
-      - run: yarn build:developer-docs
+      - run: yarn turbo run build:developer-docs
         if: steps.filter.outputs.dev-docs == 'true'
         env:
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
