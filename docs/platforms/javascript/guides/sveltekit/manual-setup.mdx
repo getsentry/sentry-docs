@@ -124,6 +124,12 @@ export const handle = Sentry.sentryHandle();
 // export const handle = sequence(Sentry.sentryHandle(), yourHandler());
 ```
 
+<Expandable title="Having CSP issues with `fetch` instrumentation on older SvelteKit versions?">
+
+If you're using SvelteKit versions older than `2.16.0` and encounter Content Security Policy (CSP) errors related to Sentry's `fetch` instrumentation, you can find support in our [Troubleshooting guide](/platforms/javascript/guides/sveltekit/troubleshooting/#configure-csp-for-client-side-fetch-instrumentation).
+
+</Expandable>
+
 ### Configure Vite
 
 Add the `sentrySvelteKit` plugin **before** `sveltekit` in your `vite.config.(js|ts)` file to automatically upload source maps to Sentry and instrument `load` functions for tracing if it's configured.
@@ -139,28 +145,11 @@ export default defineConfig({
 });
 ```
 
-### Source Maps Upload
+## Step 3: Add Readable Stack Traces With Source Maps (Optional)
 
-By default, `sentrySvelteKit()` will add an instance of the [Sentry Vite Plugin](https://www.npmjs.com/package/@sentry/vite-plugin), to upload source maps for both server and client builds. This means that when you run a production build (`npm run build`), source maps will be generated and uploaded to Sentry, so that you get readable stack traces in your Sentry issues.
+To upload source maps for clear error stack traces, add your Sentry auth token, organization, and project slug in your `vite.config.(js|ts)` file:
 
-However, you still need to specify your Sentry auth token as well as your org and project slugs. There are two ways to set them.
-
-You can set them as environment variables, for example in a `.env` file:
-
-- `SENTRY_ORG` your Sentry org slug
-- `SENTRY_PROJECT` your Sentry project slug
-- `SENTRY_AUTH_TOKEN` your Sentry auth token (can be obtained from the [Organization Token Settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/))
-- `SENTRY_URL` your Sentry instance URL. This is only required if you use your own Sentry instance (as opposed to `https://sentry.io`).
-
-Or, you can set them by passing a `sourceMapsUploadOptions` object to `sentrySvelteKit`, as seen in the example below. All available options are documented at [the Sentry Vite plugin repo](https://www.npmjs.com/package/@sentry/vite-plugin/v/2.14.2#options).
-
-<OrgAuthTokenNote />
-
-```bash {filename:.env}
-SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
-```
-
-```javascript {filename:vite.config.(js|ts)} {7-16}
+```javascript {filename:vite.config.(js|ts)} {6-11}
 import { sveltekit } from "@sveltejs/kit/vite";
 import { sentrySvelteKit } from "@sentry/sveltekit";
 
@@ -170,12 +159,8 @@ export default {
       sourceMapsUploadOptions: {
         org: "___ORG_SLUG___",
         project: "___PROJECT_SLUG___",
+        // store your auth token in an environment variable
         authToken: process.env.SENTRY_AUTH_TOKEN,
-        sourcemaps: {
-          assets: ["./build/*/**/*"],
-          ignore: ["**/build/client/**/*"],
-          filesToDeleteAfterUpload: ["./build/**/*.map"],
-        },
       },
     }),
     sveltekit(),
@@ -184,12 +169,17 @@ export default {
 };
 ```
 
-Using the `sourceMapsUploadOptions` object is useful if the default source maps upload doesn't work out of the box, for instance, if you have a customized build setup or if you're using the SDK with a SvelteKit adapter other than the [supported adapters](../#compatibility).
+To keep your auth token secure, always store it in an environment variable instead of directly in your files:
 
-#### Overriding SvelteKit Adapter detection
+<OrgAuthTokenNote />
 
-By default, `sentrySvelteKit` will try to detect your SvelteKit adapter to configure source maps upload correctly.
-If you're not using one of the [supported adapters](../#compatibility) or the wrong one is detected, you can override the adapter detection by passing the `adapter` option to `sentrySvelteKit`:
+```bash {filename:.env}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+### Override Adapter Detection
+
+`sentrySvelteKit` tries to auto-detect your SvelteKit adapter to configure source maps upload correctly. If you're using an unsupported adapter or the wrong one is detected, set it using the `adapter` option:
 
 ```javascript {filename:vite.config.(js|ts)} {7}
 import { sveltekit } from "@sveltejs/kit/vite";
@@ -206,28 +196,7 @@ export default {
 };
 ```
 
-#### Disable Source Maps Upload
-
-You can disable automatic source maps upload in your Vite config:
-
-```javascript {filename:vite.config.(js|ts)} {7}
-import { sveltekit } from "@sveltejs/kit/vite";
-import { sentrySvelteKit } from "@sentry/sveltekit";
-
-export default {
-  plugins: [
-    sentrySvelteKit({
-      autoUploadSourceMaps: false,
-    }),
-    sveltekit(),
-  ],
-  // ... rest of your Vite config
-};
-```
-
-If you disable automatic source maps upload, you must explicitly set a `release` value in your `Sentry.init()` configs. You can also skip the `sentry-cli` configuration step below.
-
-## Step 3: Optional Configuration
+## Step 4: Optional Configuration
 
 The points explain additional optional configuration or more in-depth customization of your Sentry SvelteKit SDK setup.
 
@@ -284,60 +253,6 @@ export default {
   // ... rest of your Vite config
 };
 ```
-
-### Configure CSP for Client-side `fetch` Instrumentation
-
-<Alert>
-
-Only relevant for SvelteKit versions below `@sveltejs/kit@2.16.0`
-
-</Alert>
-
-If you're using a SvelteKit version older than `sveltejs/kit@2.16.0`, The Sentry SDK injects an inline `<script>` tag into the HTML response of the server.
-This script proxies all client-side `fetch` calls, so that `fetch` calls inside your `load` functions are captured by the SDK.
-However, if you configured CSP rules to block inline fetch scripts by default, this script will be [blocked by the browser](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src#unsafe_inline_script).
-
-You have multiple options to solve this CSP issue:
-
-#### Upgrade SvelteKit
-
-The easiest option is to update `@sveltejs/kit` to at least version `2.16.0` (or newer). The SDK will not inject the fetch proxy script as it's no longer necessary.
-
-#### Add Script Hash to CSP policy
-
-To enable the script, add an exception for the `sentryHandle` script by adding the hash of the script to your CSP script source rules.
-
-If your CSP is defined in `svelte.config.js`, you can add the hash to the `csp.directives.script-src` array:
-
-```javascript {filename:svelte.config.js} {5-7}
-const config = {
-  kit: {
-    csp: {
-      directives: {
-        "script-src": ["sha256-y2WkUILyE4eycy7x+pC0z99aZjTZlWfVwgUAfNc1sY8="], // + rest of your values
-      },
-    },
-  },
-};
-```
-
-For external CSP configurations, add the following hash to your `script-src` directive:
-
-```txt
-'sha256-y2WkUILyE4eycy7x+pC0z99aZjTZlWfVwgUAfNc1sY8='
-```
-
-We will not make changes to this script any time soon, so the hash will stay consistent.
-
-#### Disable `fetch` Proxy Script
-
-If you don't want to inject the script responsible for instrumenting client-side `fetch` calls, you can disable injection by passing `injectFetchProxyScript: false` to `sentryHandle`:
-
-```javascript {filename:hooks.server.(js|ts)}
-export const handle = sentryHandle({ injectFetchProxyScript: false });
-```
-
-Note that if you disable the `fetch` proxy script, the SDK will not be able to capture spans for `fetch` calls made by SvelteKit when your route has a server load function. This also means that potential spans created on the server for these `fetch` calls will not be connected to the client-side trace.
 
 ### Manual Instrumentation
 
@@ -396,27 +311,16 @@ export const GET = wrapServerRouteWithSentry(async () => {
 });
 ```
 
-## Step 4: Cloudflare Pages Configuration (Optional)
+## Step 5: Cloudflare Pages Configuration (Optional)
 
 If you're deploying your application to Cloudflare Pages, you need to adjust your server-side setup.
 Follow this guide to [configure Sentry for Cloudflare](/platforms/javascript/guides/cloudflare/frameworks/sveltekit/).
 
-## Step 5: Avoid Ad Blockers With Tunneling (Optional)
+## Step 6: Avoid Ad Blockers With Tunneling (Optional)
 
-You can prevent ad blockers from blocking Sentry events using tunneling. Use the `tunnel` option to add an API endpoint in your application that forwards Sentry events to Sentry servers.
+<PlatformContent includePath="getting-started-tunneling" />
 
-Update `Sentry.init` in your `hooks.client.(js|ts)` file with the following option:
-
-```javascript {filename:hooks.client.(js|ts)}
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",,
-  tunnel: "/tunnel",
-});
-```
-
-This will send all events to the `tunnel` endpoint. However, the events need to be parsed and redirected to Sentry, so you need to do additional configuration on the server. You can find a detailed explanation on how to do this on our [Troubleshooting page](/platforms/javascript/guides/sveltekit/troubleshooting/#using-the-tunnel-option).
-
-## Step 6: Verify Your Setup
+## Step 7: Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
