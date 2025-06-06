@@ -6,7 +6,6 @@ import PlugImage from 'sentry-docs/imgs/api.png';
 import ChatBubble from 'sentry-docs/imgs/chat-bubble.png';
 import TerminalImage from 'sentry-docs/imgs/cli.png';
 import ConceptsImage from 'sentry-docs/imgs/concepts-reference.png';
-import HeroImage from 'sentry-docs/imgs/home_illustration.png';
 import OrganizationImage from 'sentry-docs/imgs/organization.png';
 import CalculatorImage from 'sentry-docs/imgs/pricing.png';
 import RocketImage from 'sentry-docs/imgs/rocket.png';
@@ -18,6 +17,21 @@ import {Card} from './card';
 import {Header} from './header';
 import {NavLink, NavLinkProps} from './navlink';
 import {PlatformFilter} from './platformFilter';
+import {PlatformIcon} from './platformIcon';
+import {Search} from './search';
+
+// Define the 9 most popular languages for the grid
+const POPULAR_LANGUAGES = [
+  {slug: 'javascript', name: 'JavaScript', href: '/platforms/javascript/'},
+  {slug: 'python', name: 'Python', href: '/platforms/python/'},
+  {slug: 'java', name: 'Java', href: '/platforms/java/'},
+  {slug: 'react', name: 'React', href: '/platforms/javascript/guides/react/'},
+  {slug: 'node', name: 'Node.js', href: '/platforms/node/'},
+  {slug: 'php', name: 'PHP', href: '/platforms/php/'},
+  {slug: 'go', name: 'Go', href: '/platforms/go/'},
+  {slug: 'csharp', name: 'C#', href: '/platforms/dotnet/'},
+  {slug: 'ruby', name: 'Ruby', href: '/platforms/ruby/'},
+];
 
 export function Home() {
   return (
@@ -32,18 +46,45 @@ export function Home() {
             <h1 className="text-[40px] font-medium mb-2 leading-[1.2]">
               Welcome to Sentry Docs
             </h1>
+            
+            {/* Search Bar */}
+            <div className="w-full max-w-lg mb-6">
+              <Search 
+                path="/" 
+                searchPlatforms={[]} 
+                useStoredSearchPlatforms={false}
+              />
+            </div>
+            
             <p className="max-w-[55ch]">
               Sentry provides end-to-end distributed tracing, enabling developers to
               identify and debug performance issues and errors across their systems and
               services.
             </p>
           </div>
+          
+          {/* Popular Languages Grid */}
           <div className="self-center">
-            <Image
-              src={HeroImage}
-              alt="Sentry's hero image"
-              className="max-h-[200px] w-auto md:max-h-[390px]"
-            />
+            <div className="grid grid-cols-3 gap-4 p-4">
+              {POPULAR_LANGUAGES.map((language) => (
+                <a
+                  key={language.slug}
+                  href={language.href}
+                  className="flex flex-col items-center justify-center p-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all duration-200 bg-white dark:bg-gray-800 dark:border-gray-700 dark:hover:border-gray-600 group"
+                  title={`Get started with ${language.name}`}
+                >
+                  <PlatformIcon 
+                    platform={language.slug} 
+                    size={48} 
+                    format="lg"
+                    className="mb-2 group-hover:scale-110 transition-transform duration-200"
+                  />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 text-center">
+                    {language.name}
+                  </span>
+                </a>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -56,7 +97,7 @@ export function Home() {
             image={RocketImage}
             imageAlt="Rocket image"
             title="What is Sentry?"
-            description="Application monitoring and debugging software considered “not bad” by 4 million developers."
+            description="Application monitoring and debugging software considered &quot;not bad&quot; by 4 million developers."
           />
 
           <Card
@@ -92,7 +133,7 @@ export function Home() {
             image={TerminalImage}
             imageAlt="Terminal image"
             title="CLI"
-            description="How to use ‘sentry-cli’ on the command line."
+            description="How to use 'sentry-cli' on the command line."
           />
 
           <Card
