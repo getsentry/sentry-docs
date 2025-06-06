@@ -1045,6 +1045,7 @@ export const PLATFORM_TO_ICON = {
   unrealengine: 'unreal',
   visualbasic: 'visual-basic',
   windows: 'windows',
+  sentry: 'sentry',
   xbox: 'xbox',
   // Don't add new platforms down here!
   // Please add them where they belong alphabetically
