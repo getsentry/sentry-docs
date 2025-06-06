@@ -1,5 +1,3 @@
-import Image from 'next/image';
-
 import {Banner} from 'sentry-docs/components/banner';
 import {SentryWordmarkLogo} from 'sentry-docs/components/wordmarkLogo';
 import PlugImage from 'sentry-docs/imgs/api.png';
@@ -20,20 +18,46 @@ import {PlatformFilter} from './platformFilter';
 import {PlatformIcon} from './platformIcon';
 import {Search} from './search';
 
-// Define the 9 most popular languages for the grid
-const POPULAR_LANGUAGES = [
-  {slug: 'javascript', name: 'JavaScript', href: '/platforms/javascript/'},
-  {slug: 'python', name: 'Python', href: '/platforms/python/'},
-  {slug: 'java', name: 'Java', href: '/platforms/java/'},
+// Define the 9 most popular SDKs for the grid
+const POPULAR_SDKS = [
+  {slug: 'nextjs', name: 'Next.js', href: '/platforms/javascript/guides/nextjs/'},
   {slug: 'react', name: 'React', href: '/platforms/javascript/guides/react/'},
+  {slug: 'laravel', name: 'Laravel', href: '/platforms/php/guides/laravel/'},
   {slug: 'node', name: 'Node.js', href: '/platforms/node/'},
-  {slug: 'php', name: 'PHP', href: '/platforms/php/'},
+  {slug: 'python', name: 'Python', href: '/platforms/python/'},
+  {slug: 'react-native', name: 'React Native', href: '/platforms/react-native/'},
+  {slug: 'javascript', name: 'JavaScript', href: '/platforms/javascript/'},
   {slug: 'go', name: 'Go', href: '/platforms/go/'},
-  {slug: 'csharp', name: 'C#', href: '/platforms/dotnet/'},
-  {slug: 'ruby', name: 'Ruby', href: '/platforms/ruby/'},
+  {slug: 'flutter', name: 'Flutter', href: '/platforms/flutter/'},
 ];
 
 export function Home() {
+  const scrollToAllSDKs = () => {
+    // Look for the "All SDKs supported by Sentry" section or platform filter
+    const targets = [
+      // Try to find by text content
+      ...Array.from(document.querySelectorAll('h2, h3')).filter(h => 
+        h.textContent?.toLowerCase().includes('sdk') || 
+        h.textContent?.toLowerCase().includes('platform')
+      ),
+      // Look for the PlatformFilter component
+      document.querySelector('[data-testid="platform-filter"]'),
+      document.querySelector('.platform-filter'),
+      // Look for any element with "platform" in className
+      document.querySelector('[class*="platform"]'),
+      // Fallback to the main platforms section
+      document.querySelector('main .platforms'),
+    ].filter(Boolean);
+    
+    const target = targets[0];
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      // Final fallback - scroll down by a reasonable amount
+      window.scrollTo({ top: window.innerHeight * 1.5, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="tw-app">
       <Header pathname="/" searchPlatforms={[]} useStoredSearchPlatforms={false} />
@@ -47,49 +71,64 @@ export function Home() {
               Welcome to Sentry Docs
             </h1>
             
-            {/* Search Bar */}
-            <div className="w-full max-w-lg mb-6">
-              <Search 
-                path="/" 
-                searchPlatforms={[]} 
-                useStoredSearchPlatforms={false}
-              />
-            </div>
-            
-            <p className="max-w-[55ch]">
+            <p className="max-w-[55ch] mb-8">
               Sentry provides end-to-end distributed tracing, enabling developers to
               identify and debug performance issues and errors across their systems and
               services.
             </p>
           </div>
           
-          {/* Popular Languages Grid */}
+          {/* Popular SDKs Grid with Frame */}
           <div className="self-center">
-            <div className="grid grid-cols-3 gap-4 p-4">
-              {POPULAR_LANGUAGES.map((language) => (
-                <a
-                  key={language.slug}
-                  href={language.href}
-                  className="flex flex-col items-center justify-center p-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all duration-200 bg-white dark:bg-gray-800 dark:border-gray-700 dark:hover:border-gray-600 group"
-                  title={`Get started with ${language.name}`}
+            <div className="relative p-6 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-gradient-to-br from-gray-50/50 to-gray-100/50 dark:from-gray-800/50 dark:to-gray-900/50">
+              <div className="grid grid-cols-3 gap-3">
+                {POPULAR_SDKS.map((sdk) => (
+                  <a
+                    key={sdk.slug}
+                    href={sdk.href}
+                    className="flex flex-col items-center justify-center p-3 rounded-lg border border-gray-200/60 hover:border-gray-300 dark:border-gray-700/60 dark:hover:border-gray-600 group transition-all duration-200 hover:shadow-md dark:hover:shadow-gray-900/25"
+                    title={`Get started with ${sdk.name}`}
+                  >
+                    <PlatformIcon 
+                      platform={sdk.slug} 
+                      size={32} 
+                      format="lg"
+                      className="mb-2 group-hover:scale-110 transition-transform duration-200"
+                    />
+                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300 text-center">
+                      {sdk.name}
+                    </span>
+                  </a>
+                ))}
+              </div>
+              
+              {/* View all SDKs link */}
+              <div className="mt-4 text-center">
+                <button
+                  onClick={scrollToAllSDKs}
+                  className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium hover:underline transition-colors duration-200"
                 >
-                  <PlatformIcon 
-                    platform={language.slug} 
-                    size={48} 
-                    format="lg"
-                    className="mb-2 group-hover:scale-110 transition-transform duration-200"
-                  />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 text-center">
-                    {language.name}
-                  </span>
-                </a>
-              ))}
+                  View all SDKs →
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        <PlatformFilter />
         <h2 className="text-2xl mt-16 mb-6 font-medium">Get to know us</h2>
+        
+        {/* Search Bar under H2 */}
+        <div className="w-full max-w-lg mb-8">
+          <Search 
+            path="/" 
+            searchPlatforms={[]} 
+            useStoredSearchPlatforms={false}
+            showChatBot={false}
+          />
+        </div>
+
+        <PlatformFilter />
+        
         <div className="flex flex-wrap gap-6">
           <Card
             className="w-full"
