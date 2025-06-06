@@ -171,7 +171,7 @@ Any values on the DSC should be propagated "as is" - this includes values like "
 SDKs should recognize incoming requests as "instrumented" or "traced" when at least one of the following applies:
 
 - The incoming request has a `sentry-trace` header
-- The incoming request has a `baggage` header containing one or more keys starting with "`sentry-`"
+- The incoming request has a `sentry-trace` header and `baggage` header containing one or more keys starting with "`sentry-`"
 
 After the DSC of a particular trace has been frozen, API calls like `set_user` should have no effect on the DSC.
 
@@ -193,7 +193,7 @@ def on_incoming_request(request):
     # Request comes from an old SDK which doesn't support Dynamic Sampling Context yet
     # --> we don't propagate baggage for this trace
     current_transaction.dynamic_sampling_context_frozen = True
-  elif request.has_header("baggage") and has_sentry_value_in_baggage_header(request):
+  elif request.has_header("sentry-trace") and request.has_header("baggage") and has_sentry_value_in_baggage_header(request):
     current_transaction.dynamic_sampling_context_frozen = True
     current_transaction.dynamic_sampling_context = baggage_header_to_dict(request.headers.baggage)
 
