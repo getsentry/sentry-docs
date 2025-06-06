@@ -27,8 +27,9 @@ Sentry.init({
       filterKeys: ['sentry-docs'],
       behaviour: 'apply-tag-if-contains-third-party-frames',
     }),
-    Sentry.browserTracingIntegration({
-      linkPreviousTrace: 'session-storage',
+    // Use the integration from the nextjs package to avoid type conflicts
+    new Sentry.BrowserTracing({
+      tracePropagationTargets: ['localhost', /^https:\/\/yourserver\.io\/api/],
     }),
   ],
 });
