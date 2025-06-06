@@ -1,5 +1,3 @@
-'use client';
-
 import {Banner} from 'sentry-docs/components/banner';
 import {SentryWordmarkLogo} from 'sentry-docs/components/wordmarkLogo';
 import PlugImage from 'sentry-docs/imgs/api.png';
@@ -34,32 +32,6 @@ const POPULAR_SDKS = [
 ];
 
 export function Home() {
-  const scrollToAllSDKs = () => {
-    // Look for the "All SDKs supported by Sentry" section or platform filter
-    const targets = [
-      // Try to find by text content
-      ...Array.from(document.querySelectorAll('h2, h3')).filter(h => 
-        h.textContent?.toLowerCase().includes('sdk') || 
-        h.textContent?.toLowerCase().includes('platform')
-      ),
-      // Look for the PlatformFilter component
-      document.querySelector('[data-testid="platform-filter"]'),
-      document.querySelector('.platform-filter'),
-      // Look for any element with "platform" in className
-      document.querySelector('[class*="platform"]'),
-      // Fallback to the main platforms section
-      document.querySelector('main .platforms'),
-    ].filter(Boolean);
-    
-    const target = targets[0];
-    if (target) {
-      target.scrollIntoView({ behavior: 'smooth' });
-    } else {
-      // Final fallback - scroll down by a reasonable amount
-      window.scrollTo({ top: window.innerHeight * 1.5, behavior: 'smooth' });
-    }
-  };
-
   return (
     <div className="tw-app">
       <Header pathname="/" searchPlatforms={[]} useStoredSearchPlatforms={false} />
@@ -102,16 +74,6 @@ export function Home() {
                     </span>
                   </a>
                 ))}
-              </div>
-              
-              {/* View all SDKs link */}
-              <div className="mt-4 text-center">
-                <button
-                  onClick={scrollToAllSDKs}
-                  className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium hover:underline transition-colors duration-200"
-                >
-                  View all SDKs →
-                </button>
               </div>
             </div>
           </div>
