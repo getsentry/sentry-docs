@@ -1,79 +1,19 @@
 ---
-title: Cloudflare Hono Framework Guide
+title: Hono on Cloudflare
 description: "Learn how to add Cloudflare instrumentation to your Hono app."
 ---
 
 This guide explains how to set up Sentry in your Hono application running on Cloudflare Workers.
 
+## Install
+
+<PlatformContent includePath="getting-started-install" />
+
 ## Setup
 
-To use the SDK, you'll need to set either the `nodejs_als` or `nodejs_compat` compatibility flags in your `wrangler.jsonc`/`wrangler.toml` config. This is because the SDK
-needs access to the `AsyncLocalStorage` API to work correctly.
+<PlatformContent includePath="getting-started-config" />
 
-```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
-{
-  "compatibility_flags": [
-    "nodejs_als",
-    // "nodejs_compat"
-  ],
-}
-```
-
-```toml {tabTitle:Toml} {filename:wrangler.toml}
-compatibility_flags = ["nodejs_als"]
-# compatibility_flags = ["nodejs_compat"]
-```
-
-You will also want to add the `CF_VERSION_METADATA` binding:
-
-```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
-{
-  // ...
-  "version_metadata": {
-    "binding": "CF_VERSION_METADATA"
-  },
-}
-```
-
-```toml {tabTitle:Toml} {filename:wrangler.toml}
-version_metadata = { binding = "CF_VERSION_METADATA" }
-```
-
-## Config
-
-Next, wrap your worker handler with the `withSentry` function. This will initialize the SDK and hook into the
-environment. Note that you can turn off almost all side effects using the respective options.
-
-```typescript {filename:index.ts}
-import { Hono, HTTPException } from "hono";
-import * as Sentry from "@sentry/cloudflare";
-
-// Wrap your Worker binding with Sentry to ensure tracing instrumentation is enabled,
-// and Sentry telemetry is flushed at the end of requests.
-export default Sentry.withSentry(
-  (env) => {
-    const { id: versionId } = env.CF_VERSION_METADATA;
-
-    return {
-      dsn: "___PUBLIC_DSN___",
-
-      release: versionId,
-
-      // Adds request headers and IP for users, for more info visit:
-      // https://docs.sentry.io/platforms/javascript/guides/cloudflare/configuration/options/#sendDefaultPii
-      sendDefaultPii: true,
-
-      // ___PRODUCT_OPTION_START___ performance
-      // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
-      // Learn more at
-      // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
-      tracesSampleRate: 1.0,
-      // ___PRODUCT_OPTION_END___ performance
-    }
-  },
-  app
-);
-```
+<PlatformContent includePath="getting-started-config" platform="javascript.cloudflare.workers" />
 
 <PlatformContent includePath="getting-started-config" platform="javascript.hono" />
 
