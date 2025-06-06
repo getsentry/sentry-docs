@@ -1,0 +1,219 @@
+---
+title: "Quickstart"
+description: "Get started with Sentry for React in minutes. Set up error monitoring, performance tracing, session replay, and logging."
+sdk: sentry.javascript.react
+sidebar_order: 1
+categories:
+  - javascript
+  - browser
+---
+
+Get Sentry up and running in your React app in under 5 minutes with error monitoring, performance tracing, session replay, and logging.
+
+## Install
+
+Install the Sentry React SDK:
+
+```bash {tabTitle:npm}
+npm install @sentry/react --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/react
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/react
+```
+
+## Configure
+
+Create an `instrument.js` file in your project root and initialize Sentry with all features:
+
+```javascript {filename:instrument.js}
+import * as Sentry from "@sentry/react";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  
+  // Enable all features
+  integrations: [
+    // Performance monitoring
+    Sentry.browserTracingIntegration(),
+    // Session replay
+    Sentry.replayIntegration(),
+  ],
+  
+  // Performance Monitoring
+  tracesSampleRate: 1.0, // Capture 100% of transactions for tracing
+  tracePropagationTargets: [/^\//, /^https:\/\/yourserver\.io\/api/],
+  
+  // Session Replay
+  replaysSessionSampleRate: 0.1, // 10% of sessions
+  replaysOnErrorSampleRate: 1.0, // 100% of sessions with errors
+  
+  // Logging (experimental)
+  _experiments: {
+    enableLogs: true,
+  },
+});
+```
+
+Import this file as the **first import** in your app's entry point:
+
+```javascript {filename:index.js}
+// Import Sentry first!
+import "./instrument";
+import App from "./App";
+import { createRoot } from "react-dom/client";
+
+const container = document.getElementById("app");
+const root = createRoot(container);
+root.render(<App />);
+```
+
+## Error Monitoring
+
+### React 19+
+
+Use the built-in error hooks:
+
+```javascript {filename:index.js}
+import { createRoot } from "react-dom/client";
+import * as Sentry from '@sentry/react';
+
+const container = document.getElementById("app");
+const root = createRoot(container, {
+  onUncaughtError: Sentry.reactErrorHandler(),
+  onCaughtError: Sentry.reactErrorHandler(),
+  onRecoverableError: Sentry.reactErrorHandler(),
+});
+root.render(<App />);
+```
+
+### React <19
+
+Wrap components with Sentry's Error Boundary:
+
+```javascript
+import * as Sentry from "@sentry/react";
+
+function App() {
+  return (
+    <Sentry.ErrorBoundary fallback={<div>Something went wrong</div>}>
+      <MyComponent />
+    </Sentry.ErrorBoundary>
+  );
+}
+```
+
+## Performance Tracing (React Router)
+
+If you're using React Router, replace the `browserTracingIntegration()` with your router version:
+
+### React Router v6
+
+```javascript {filename:instrument.js}
+import * as Sentry from "@sentry/react";
+import { 
+  createRoutesFromChildren,
+  matchRoutes,
+  useLocation,
+  useNavigationType,
+} from "react-router-dom";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.reactRouterV6BrowserTracingIntegration({
+      useEffect: React.useEffect,
+      useLocation,
+      useNavigationType,
+      createRoutesFromChildren,
+      matchRoutes,
+    }),
+    Sentry.replayIntegration(),
+  ],
+  // ... other options
+});
+```
+
+### React Router v7
+
+```javascript {filename:instrument.js}
+import * as Sentry from "@sentry/react";
+import { useLocation, useMatches } from "react-router";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.reactRouterV7BrowserTracingIntegration({
+      useLocation,
+      useMatches,
+    }),
+    Sentry.replayIntegration(),
+  ],
+  // ... other options
+});
+```
+
+## Logging
+
+Capture console logs automatically:
+
+```javascript
+// Logs are automatically captured when _experiments.enableLogs is true
+console.log("This will be sent to Sentry");
+console.error("This error log will also be captured");
+
+// Manual log capture
+Sentry.addBreadcrumb({
+  message: "User clicked button",
+  level: "info",
+});
+```
+
+## Test Your Setup
+
+Add this test button to verify everything works:
+
+```javascript
+function TestButton() {
+  const testSentry = () => {
+    // Test performance tracing
+    Sentry.startSpan({ op: "test", name: "Test Operation" }, () => {
+      // Test logging
+      console.log("Test log message");
+      
+      // Test error monitoring
+      setTimeout(() => {
+        throw new Error("Test error for Sentry!");
+      }, 100);
+    });
+  };
+
+  return (
+    <button onClick={testSentry}>
+      Test Sentry Integration
+    </button>
+  );
+}
+```
+
+Click the button and check your [Sentry project](https://sentry.io/) for:
+- **Issues**: The test error
+- **Performance**: The test transaction
+- **Replays**: Session recording with the button click
+- **Logs**: Console messages
+
+## Next Steps
+
+✅ **You're all set!** Your React app now has comprehensive monitoring.
+
+Continue with:
+- [Advanced Configuration](../configuration/) - Customize your setup
+- [React Features](../features/) - React-specific integrations
+- [Source Maps](../sourcemaps/) - Get readable stack traces
+- [Tunneling](../troubleshooting/#using-the-tunnel-option) - Avoid ad blockers
+
+Need help? [Contact support](https://sentry.zendesk.com/hc/en-us/).
