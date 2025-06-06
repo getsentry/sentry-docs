@@ -1,0 +1,97 @@
+---
+title: Set Up Logs in Rust
+sidebar_title: Logs
+description: "Structured logs allow you to send, view, and query logs sent from your applications within Sentry."
+sidebar_order: 5600
+---
+
+<Include name="feature-stage-beta-logs.mdx" />
+
+With Sentry Structured Logs, you can send text based log information from your applications to Sentry. Once in Sentry, these logs can be viewed alongside relevant errors, searched by text-string, or searched using their individual attributes.
+
+## Requirements
+
+Logs in Rust are supported in Sentry Rust SDK version `0.39.0` and above.
+Additionally, the `UNSTABLE_logs` feature flag needs to be enabled.
+
+```toml {filename:Cargo.toml}
+[dependencies]
+sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = ["UNSTABLE_logs"] }
+```
+
+## Setup
+
+To enable logging, you need to initialize the SDK with the `enable_logs` option set to `true`.
+
+```rust
+let _guard = sentry::init(("___PUBLIC_DSN___", sentry::ClientOptions {
+    release: sentry::release_name!(),
+    enable_logs: true,
+    ..Default::default()
+}));
+```
+
+## Usage
+
+Once the feature is enabled on the SDK and the SDK is initialized, you can send logs by using the logging macros.
+The `sentry` crate exposes macros that support six different log levels:
+`logger_trace`, `logger_debug`, `logger_info`, `logger_warn`, `logger_error` and `logger_fatal`.
+The macros support logging a simple message, or a message with parameters, with `format` syntax:
+
+```rust
+use sentry::logger_info;
+
+logger_info!("Hello, world!");
+logger_info!("Hello, {}!", "world");
+```
+
+You can also log additional attributes using the `key = value` syntax before the message:
+
+```rust
+use sentry::logger_error;
+
+logger_error!(
+    database.host = "prod-db-01",
+    database.port = 5432,
+    database.name = "user_service",
+    retry_attempt = 2,
+    beta_features = false,
+    "Database connection failed"
+);
+```
+
+The supported attribute keys consist of any number of valid Rust identifiers, separated by dots.
+Attributes containing dots will be nested under their common prefix when displayed in the UI.
+
+The supported attribute values correspond to the values that can be converted to a `serde_json::Value`,
+which include primitive types for numbers, `bool`, and string types.
+As of today, array and object types will be converted to strings using their JSON representation.
+
+## Integrations
+
+We're actively working on adding integration support for Logs.
+Currently, we're looking at adding support for the `tracing` and `log` crates.
+You can follow progress on the following GitHub issues or open a [new one](https://github.com/getsentry/sentry-rust/issues/new/choose) for any additional integration you would like to see.
+- [`tracing`](https://github.com/getsentry/sentry-rust/issues/799)
+- [`log`](https://github.com/getsentry/sentry-rust/issues/818)
+
+## Options
+
+### `before_send_log`
+
+To filter logs, or update them before they are sent to Sentry, you can use the `before_send_log` client option.
+
+```rust
+let _guard = sentry::init(("___PUBLIC_DSN___", sentry::ClientOptions {
+    release: sentry::release_name!(),
+    enable_logs: true,
+    before_send_log: Some(std::sync::Arc::new(|log| {
+        // filter out all trace level logs
+        if log.level == sentry::protocol::LogLevel::Trace {
+            return None;
+        }
+        Some(log)
+    })),
+    ..Default::default()
+}));
+```
