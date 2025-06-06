@@ -9,6 +9,7 @@ import {SdkDefinition, SdkDefinitionTable} from './sdkDefinition';
 type Props = {
   name: string;
   type: string;
+  availableSince?: string;
   categorySupported?: PlatformCategory[];
   children?: React.ReactNode;
   defaultValue?: string;
@@ -19,6 +20,7 @@ export function SdkOption({
   name,
   children,
   type,
+  availableSince,
   defaultValue,
   envVar,
   categorySupported = [],
@@ -28,9 +30,11 @@ export function SdkOption({
   return (
     <SdkDefinition name={name} categorySupported={categorySupported}>
       <SdkDefinitionTable>
+        {availableSince && (
+          <OptionDefRow label="Available since" value={availableSince} />
+        )}
         {type && <OptionDefRow label="Type" value={type} />}
         {defaultValue && <OptionDefRow label="Default" value={defaultValue} />}
-
         <PlatformCategorySection supported={['server', 'serverless']}>
           <PlatformSection notSupported={['javascript.nextjs']}>
             {envVar && <OptionDefRow label="ENV Variable" value={envVar} />}
