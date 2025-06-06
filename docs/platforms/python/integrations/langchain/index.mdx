@@ -36,6 +36,8 @@ An additional dependency, `tiktoken`, is required to be installed if you want to
 
 In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
 
+Tracing is required to see AI pipelines in sentry's [AI tab](https://sentry.io/insights/ai/llm-monitoring/).
+
 Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
 
 <OnboardingOptionButtons
@@ -76,13 +78,15 @@ Verify that the integration works by inducing an error:
 
 ```python
 from langchain_openai import ChatOpenAI
+from langchain_core.output_parsers import StrOutputParser
 import sentry_sdk
 
 sentry_sdk.init(...)  # same as above
 
 llm = ChatOpenAI(model="gpt-3.5-turbo-0125", temperature=0, api_key="bad API key")
 with sentry_sdk.start_transaction(op="ai-inference", name="The result of the AI inference"):
-    response = llm.invoke([("system", "What is the capital of paris?")])
+    chain = (llm | StrOutputParser()).with_config({"run_name": "test-run"})
+    response = chain.invoke([("system", "What is the capital of France?")])
     print(response)
 ```
 
