@@ -1,7 +1,6 @@
-```javascript
-import * as Sentry from "@sentry/node";
-import { Hono, HTTPException } from "hono";
+Now bind an `onError` hook to report unhandled exceptions to Sentry:
 
+```javascript
 const app = new Hono()
   // Add an onError hook to report unhandled exceptions to Sentry.
   .onError((err, c) => {
@@ -14,10 +13,20 @@ const app = new Hono()
     // Sentry.captureException(err);
     return c.json({ error: "Internal server error" }, 500)
   })
+
+  // Bind global context via Hono middleware
+  .use((c, next) => {
+    Sentry.setUser({
+      email: c.session.user.email,
+    })
+
+    Sentry.setTag("project_id", c.session.projectId);
+
+    return next();
+  })
+
   // Your routes...
-  app.get("/", () => {
+  .get("/", () => {
     // ...
   });
-
-export default app;
 ```
