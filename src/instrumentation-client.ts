@@ -27,12 +27,13 @@ Sentry.init({
       filterKeys: ['sentry-docs'],
       behaviour: 'apply-tag-if-contains-third-party-frames',
     }),
-    // Use the integration from the nextjs package to avoid type conflicts
-    new Sentry.BrowserTracing({
-      tracePropagationTargets: ['localhost', /^https:\/\/yourserver\.io\/api/],
-    }),
+    // Use the correct integration function for v9.27.0
+    Sentry.browserTracingIntegration(),
   ],
 });
+
+// Required for navigation instrumentation
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
 
 if (process.env.NODE_ENV === 'development') {
   Spotlight.init({
