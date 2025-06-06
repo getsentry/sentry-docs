@@ -20,10 +20,10 @@ import {Search} from './search';
 
 // Define the 9 most popular SDKs for the grid
 const POPULAR_SDKS = [
-  {slug: 'nextjs', name: 'Next.js', href: '/platforms/javascript/guides/nextjs/'},
-  {slug: 'react', name: 'React', href: '/platforms/javascript/guides/react/'},
-  {slug: 'laravel', name: 'Laravel', href: '/platforms/php/guides/laravel/'},
-  {slug: 'node', name: 'Node.js', href: '/platforms/node/'},
+  {slug: 'javascript-nextjs', name: 'Next.js', href: '/platforms/javascript/guides/nextjs/'},
+  {slug: 'javascript-react', name: 'React', href: '/platforms/javascript/guides/react/'},
+  {slug: 'php-laravel', name: 'Laravel', href: '/platforms/php/guides/laravel/'},
+  {slug: 'javascript-node', name: 'Node.js', href: '/platforms/node/'},
   {slug: 'python', name: 'Python', href: '/platforms/python/'},
   {slug: 'react-native', name: 'React Native', href: '/platforms/react-native/'},
   {slug: 'javascript', name: 'JavaScript', href: '/platforms/javascript/'},
@@ -67,7 +67,7 @@ export function Home() {
                       platform={sdk.slug} 
                       size={32} 
                       format="lg"
-                      className="mb-2 group-hover:scale-110 transition-transform duration-200"
+                      className="mb-3 group-hover:scale-110 transition-transform duration-200"
                     />
                     <span className="text-xs font-medium text-gray-700 dark:text-gray-300 text-center">
                       {sdk.name}
