@@ -1,0 +1,194 @@
+---
+title: Span Protocol
+---
+
+<Alert level="info">
+  This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement levels.
+</Alert>
+
+The SDK must implement a new "span v2" envelope item, which is used to emit spans to Sentry.
+
+## Span v2 Envelope Item Header
+
+The envelope item header must contain the following properties:
+
+```json
+{
+  "type": "span",
+  "item_count": 2,
+  "content_type": "application/vnd.sentry.items.span.v2+json"
+}
+```
+
+## Span v2 Envelope Item Payload
+
+The envelope item payload must contain an `items` array with span one and up to 1000 span objects:
+
+```json
+{
+  "items": [
+    {
+      "trace_id": "6cf173d587eb48568a9b2e12dcfbea52",
+      "parent_span_id": null,
+      "span_id": "438f40bd3b4a41ee",
+      "name": "GET /users",
+      "status": "ok",
+      "is_remote": true,
+      "kind": "server",
+      "start_timestamp": 1742921669.158209,
+      "end_timestamp": 1742921669.180536,
+      "attributes": {
+        "sentry.release": {
+          "type": "string",
+          "value": "1.0.0"
+        },
+        "sentry.environment": {
+          "type": "string",
+          "value": "local"
+        },
+        "sentry.platform": {
+          "type": "string",
+          "value": "php"
+        },
+        "sentry.sdk.name": {
+          "type": "string",
+          "value": "sentry.php"
+        },
+        "sentry.sdk.version": {
+          "type": "string",
+          "value": "4.10.0"
+        },
+        "sentry.transaction_info.source": {
+          "type": "string",
+          "value": "route"
+        },
+        "sentry.origin": {
+          "type": "string",
+          "value": "auto"
+        },
+        "server.address": {
+          "type": "string",
+          "value": "127.0.0.1"
+        },
+        "http.response.status_code": {
+          "type": "integer",
+          "value": 200
+        },
+        "links": [
+			{
+			"span_id": "6c71fc6b09b8b716",
+			"trace_id": "627a2885119dcc8184fae7eef09438cb",
+			"sampled": true,
+			"attributes": {
+				"sentry.link.type": {
+				"type": "string",
+				"value": "previous_trace"
+				}
+			}
+			}
+      	]
+      },
+    },
+    {
+      "trace_id": "6cf173d587eb48568a9b2e12dcfbea52",
+      "parent_span_id": "438f40bd3b4a41ee",
+      "span_id": "f1196292f76e45c0",
+      "name": "app.handle",
+      "status": "ok",
+      "is_remote": false,
+      "kind": "server",
+      "start_timestamp": 1742921669.178306,
+      "end_timestamp": 1742921669.180484,
+      "attributes": {
+        "sentry.origin": {
+          "type": "string",
+          "value": "auto"
+        }
+      }
+    }
+  ]
+}
+```
+
+## Span v2 Protocol Properties
+
+### Envelope Item Header Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `type` | string | Yes | Must be set to `"span"` to identify this as a span envelope item |
+| `item_count` | integer | Yes | Number of span items in the payload |
+| `content_type` | string | Yes | Must be set to `"application/vnd.sentry.items.span.v2+json"` |
+
+### Span Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `trace_id` | string | Yes | 32-character hexadecimal string (a valid uuid4 without dashes) |
+| `span_id` | string | Yes | 16-character hexadecimal string (a valid uuid4 without dashes) |
+| `parent_span_id` | string | No | 16-character hexadecimal string (a valid uuid4 without dashes) |
+| `name` | string | Yes | A low cardinality description of what the span represents (e.g., "GET /users", "database.query") |
+| `status` | string | Yes | Status of the span operation. Either `"ok"` or `"error"` |
+| `is_remote` | boolean | Yes | Whether the SpanContext creating the span was received from somewhere else or locally generated |
+| `kind` | string | Yes | The kind of span. Values: `"server"`, `"client"`, `"producer"`, `"consumer"`, `"internal"` |
+| `start_timestamp` | number | Yes | Unix timestamp (with fractional microseconds) when the span was started |
+| `end_timestamp` | number | Yes | Unix timestamp (with fractional microseconds) when the span was ended |
+| `attributes` | object | No | Key-value pairs containing additional metadata about the span |
+| `links` | array | No | Array of links connecting this span to other spans or traces |
+
+### Attribute Object Properties
+
+Attributes are stored as key-value pairs where each value is an object with type information:
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `type` | string | Yes | The data type of the attribute value. Values: `"string"`, `"integer"`, `"float"`, `"boolean"` |
+| `value` | any | Yes | The actual attribute value, must match the specified type |
+| `unit` | string | No | The unit of the attribute value. Example values: `"ms"`, `"s"`, `"bytes"`, `"count"`, `"percent"` |
+
+#### Common Attribute Keys
+
+| Attribute Key | Type | Description |
+|---------------|------|-------------|
+| `sentry.release` | string | The release version of the application |
+| `sentry.environment` | string | The environment name (e.g., "production", "staging", "development") |
+| `sentry.platform` | string | The platform/language (e.g., "php", "javascript", "python") |
+| `sentry.sdk.name` | string | Name of the Sentry SDK (e.g., "sentry.php", "sentry.javascript") |
+| `sentry.sdk.version` | string | Version of the Sentry SDK |
+
+See [Sentry Conventions](https://github.com/getsentry/sentry-conventions/) for a full list of supported attributes.
+
+### Link Object Properties
+
+Links connect spans to other spans or traces, enabling distributed tracing:
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `span_id` | string | Yes | 16-character hexadecimal string (a valid uuid4 without dashes) |
+| `trace_id` | string | Yes | 32-character hexadecimal string (a valid uuid4 without dashes) |
+| `sampled` | boolean | No | Whether the linked trace was sampled |
+| `attributes` | object | No | Additional metadata about the link relationship |
+
+#### Link Attribute Keys
+
+| Attribute Key | Type | Description |
+|---------------|------|-------------|
+| `sentry.link.type` | string | Type of link relationship (e.g., "previous_trace", "child_of", "follows_from") |
+
+## Data Types and Formats
+
+### Timestamp Format
+Timestamps use Unix time with fractional microseconds as a floating-point number:
+```
+1742921669.158209
+```
+
+### ID Formats
+- **Trace ID**: 32-character (128 bits) lowercase hexadecimal string (a valid uuid4 without dashes)
+- **Span ID**: 16-character (64 bits) lowercase hexadecimal string  (a valid uuid4 without dashes)
+
+Example:
+```
+trace_id: "6cf173d587eb48568a9b2e12dcfbea52"
+span_id: "438f40bd3b4a41ee"
+```
