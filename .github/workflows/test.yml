@@ -31,16 +31,28 @@ jobs:
         with:
           path: ${{ github.workspace }}/node_modules
           key: node-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+
       - run: yarn install --frozen-lockfile
         if: steps.cache.outputs.cache-hit != 'true'
 
-      # Additional checks
-      - run: yarn lint:ts
-      - run: yarn lint:docs
+      # Setup Turbo cache with better cache keys
+      - name: Setup Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-lint-${{ hashFiles('**/package.json', '**/turbo.json', '**/.eslintrc*', '**/tsconfig.json') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-lint-${{ hashFiles('**/package.json', '**/turbo.json', '**/.eslintrc*', '**/tsconfig.json') }}-
+            ${{ runner.os }}-turbo-lint-
+            ${{ runner.os }}-turbo-
 
-      # Run automatic fixes (run prettier apart from eslint to also fix mdx files)
-      - run: yarn lint:prettier:fix
-      - run: yarn lint:eslint:fix
+      # Additional checks using Turbo
+      - run: yarn turbo run lint:ts
+      - run: yarn turbo run lint:docs
+
+      # Run automatic fixes using Turbo (run prettier apart from eslint to also fix mdx files)
+      - run: yarn turbo run lint:prettier:fix
+      - run: yarn turbo run lint:eslint:fix
 
       # Check (and error) for dirty working tree for forks
       # Reason being we need a different token to auto commit changes and
@@ -73,5 +85,17 @@ jobs:
           key: node-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
         if: steps.cache.outputs.cache-hit != 'true'
+
+      # Setup Turbo cache with better cache keys
+      - name: Setup Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-test-${{ hashFiles('**/package.json', '**/turbo.json', '**/*.{ts,tsx,js,jsx}', '**/tsconfig.json') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-test-${{ hashFiles('**/package.json', '**/turbo.json', '**/*.{ts,tsx,js,jsx}', '**/tsconfig.json') }}-
+            ${{ runner.os }}-turbo-test-
+            ${{ runner.os }}-turbo-
+
       - name: Run Tests
-        run: yarn test
+        run: yarn turbo run test
