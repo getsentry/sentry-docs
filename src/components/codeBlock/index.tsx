@@ -58,7 +58,7 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
       <div className={styles.copied} style={{opacity: showCopied ? 1 : 0}}>
         Copied
       </div>
-      <div ref={codeRef}>
+      <div data-codeblock ref={codeRef}>
         {makeKeywordsClickable(makeHighlightBlocks(children, language))}
       </div>
     </div>

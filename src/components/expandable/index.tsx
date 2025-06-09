@@ -80,8 +80,9 @@ export function Expandable({
 
       emit('Copy Expandable Content', {props: {page: window.location.pathname, title}});
 
-      // Attempt to get text from markdown code blocks if they exist
-      const codeBlocks = contentRef.current.querySelectorAll('code');
+      // Attempt to get text from markdown code blocks if they exist. Only
+      // targets CodeBlock components using the data-codeblock marker.
+      const codeBlocks = contentRef.current.querySelectorAll('[data-codeblock]');
       let contentToCopy = '';
 
       if (codeBlocks.length > 0) {
