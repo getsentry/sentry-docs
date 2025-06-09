@@ -101,10 +101,10 @@ export function Expandable({
         });
 
         if (largeCodeBlocks.length > 0) {
-          largeCodeBlocks.forEach((block: Element) => {
-            contentToCopy += (block.textContent || '') + '\n';
-          });
-          contentToCopy = contentToCopy.trim();
+          contentToCopy = largeCodeBlocks
+            .map((block: Element) => block.textContent || '')
+            .join('\n')
+            .trim();
         }
       }
 
