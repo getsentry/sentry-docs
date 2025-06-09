@@ -10,26 +10,15 @@ jobs:
   index:
     runs-on: ubuntu-latest
     steps:
-      - name: Internal github app token
-        id: token
-        uses: tibdex/github-app-token@b62528385c34dbc9f38e5f4225ac829252d1ea92 # v1.8.0
-        with:
-          app_id: ${{ vars.SENTRY_INTERNAL_APP_ID }}
-          private_key: ${{ secrets.SENTRY_INTERNAL_APP_PRIVATE_KEY }}
-
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          token: ${{ steps.token.outputs.token }}
       - uses: actions/setup-node@v4
+        id: setup-node
         with:
-          node-version: '20'
-          cache: 'pnpm'
-          cache-dependency-path: 'pnpm-lock.yaml'
+          node-version-file: 'package.json'
+
       - uses: pnpm/action-setup@v4
         with:
           version: 8
-      - run: pnpm install --frozen-lockfile
 
       - uses: dorny/paths-filter@v3
         id: filter
@@ -45,7 +34,15 @@ jobs:
         with:
           bun-version: latest
 
-      # Build the app
+      - uses: actions/cache@v4
+        id: cache
+        with:
+          path: ${{ github.workspace }}/node_modules
+          key: node-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - run: pnpm install --frozen-lockfile
+        if: steps.cache.outputs.cache-hit != 'true'
+
       - run: pnpm build
         if: steps.filter.outputs.docs == 'true'
         env:
@@ -59,7 +56,6 @@ jobs:
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_DEVELOPER_DOCS: 1
 
-      # Start the server in the background
       - name: Start Http Server
         run: pnpm start &
         if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
