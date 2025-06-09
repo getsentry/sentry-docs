@@ -1,0 +1,346 @@
+---
+title: Troubleshooting
+sidebar_order: 9000
+description: "Troubleshooting steps for Laravel with Sentry"
+---
+
+## General
+
+<Expandable title="How can I log internal SDK events?">
+
+Enable debug logging by adding the `logger` option to your `config/sentry.php` file:
+
+```php {filename:config/sentry.php}
+'logger' => new \Sentry\Logger\DebugFileLogger(storage_path('logs/sentry-debug.log')),
+
+// or for console output
+
+'logger' => new \Sentry\Logger\DebugStdOutLogger(),
+```
+
+You can also set this up using environment variables in your `.env` file:
+
+```shell {filename:.env}
+SENTRY_DEBUG=true
+```
+
+The produced output will help you debug SDK issues and will be stored in your Laravel `storage/logs` directory.
+
+</Expandable>
+
+<Expandable title="Missing Variables in Stack Traces">
+
+This is caused by the PHP configuration. PHP 7.4 introduced a new .ini setting, `zend.exception_ignore_args`, that will ignore stack trace arguments. Check your .ini file to ensure this setting is set to `Off` or `0`.
+
+You can verify this setting in Laravel by running:
+
+```bash
+php artisan tinker
+php_ini_loaded_file()
+```
+
+Or create a temporary route to check:
+
+```php {filename:routes/web.php}
+Route::get('/debug-php', function () {
+    return [
+        'zend.exception_ignore_args' => ini_get('zend.exception_ignore_args'),
+        'all_ini' => ini_get_all()
+    ];
+});
+```
+
+</Expandable>
+
+<Expandable title="Why was my tag value truncated?">
+
+Currently, every tag has a maximum character limit of 200 characters. Tags over the 200 character limit will become truncated, losing potentially important information. To retain this data, you can split data over several tags instead.
+
+For example, a 200+ character tagged request:
+
+`https://mylaravelapp.com/api/users/314159265358979323846264338327/profile?tracking_id=EasyAsABC123OrSimpleAsDoReMi&product_name=LaravelApp&session_id=161803398874989484820458683436563811772030917980576`
+
+The 200+ character request above will become truncated to:
+
+`https://mylaravelapp.com/api/users/314159265358979323846264338327/profile?tracking_id=EasyAsABC123OrSimpleAsDoReMi&product_name=LaravelApp&session_id=1618033988749894848`
+
+<PlatformContent includePath="performance/control-data-truncation" />
+
+</Expandable>
+
+## Laravel-Specific Issues
+
+<Expandable title="Sentry not capturing errors in production">
+
+If Sentry is working in development but not in production, check these common Laravel-specific issues:
+
+1. **Environment Configuration**: Ensure your `.env` file in production has the correct `SENTRY_LARAVEL_DSN`:
+
+```shell {filename:.env}
+SENTRY_LARAVEL_DSN=your_production_dsn_here
+```
+
+2. **Config Caching**: If you're using `php artisan config:cache`, make sure to clear and re-cache your config after updating the DSN:
+
+```bash
+php artisan config:clear
+php artisan config:cache
+```
+
+3. **Exception Handler**: Verify that your `bootstrap/app.php` includes the Sentry integration:
+
+```php {filename:bootstrap/app.php}
+->withExceptions(function (Exceptions $exceptions) {
+    \Sentry\Laravel\Integration::handles($exceptions);
+})
+```
+
+</Expandable>
+
+<Expandable title="Artisan commands not reporting to Sentry">
+
+If your Artisan commands are not sending errors to Sentry:
+
+1. **Check Command Exception Handling**: Make sure your commands don't catch exceptions without re-throwing them:
+
+```php
+// ❌ Bad - swallows exceptions
+try {
+    // risky code
+} catch (Exception $e) {
+    Log::error($e->getMessage());
+    // Exception is lost to Sentry
+}
+
+// ✅ Good - reports to Sentry
+try {
+    // risky code
+} catch (Exception $e) {
+    Log::error($e->getMessage());
+    throw $e; // Re-throw so Sentry can capture it
+}
+```
+
+2. **Test with the Sentry test command**:
+
+```bash
+php artisan sentry:test
+```
+
+</Expandable>
+
+<Expandable title="Queue jobs not reporting to Sentry">
+
+If errors in your Laravel queue jobs aren't being captured:
+
+1. **Queue Worker Configuration**: Ensure your queue workers are running with the correct environment:
+
+```bash
+php artisan queue:work --env=production
+```
+
+2. **Job Exception Handling**: Use the `failed` method in your jobs:
+
+```php
+class ProcessOrder implements ShouldQueue
+{
+    public function handle()
+    {
+        // Job logic
+    }
+
+    public function failed(Throwable $exception)
+    {
+        // This will be automatically reported to Sentry
+        // You can add additional context here
+        \Sentry\withScope(function (\Sentry\State\Scope $scope) use ($exception) {
+            $scope->setTag('job_type', 'process_order');
+            $scope->setContext('job_data', $this->data);
+        });
+    }
+}
+```
+
+</Expandable>
+
+<Expandable title="Events not showing Laravel context (user, request, etc.)">
+
+If your Sentry events lack Laravel-specific context:
+
+1. **Check Middleware**: Ensure Sentry middleware is properly registered. This should be automatic with Laravel 11+, but for older versions:
+
+```php {filename:app/Http/Kernel.php}
+protected $middleware = [
+    // Other middleware
+    \Sentry\Laravel\Http\SetRequestIpMiddleware::class,
+    \Sentry\Laravel\Http\SetRequestMiddleware::class,
+];
+```
+
+2. **User Context**: To automatically include user information:
+
+```php {filename:config/sentry.php}
+'send_default_pii' => true,
+```
+
+Or manually set user context:
+
+```php
+\Sentry\configureScope(function (\Sentry\State\Scope $scope): void {
+    $scope->setUser([
+        'id' => auth()->id(),
+        'email' => auth()->user()->email ?? null,
+    ]);
+});
+```
+
+</Expandable>
+
+<Expandable title="High memory usage or performance issues">
+
+If you're experiencing performance issues with Sentry in Laravel:
+
+1. **Reduce Sample Rate**: Lower your tracing sample rate in production:
+
+```shell {filename:.env}
+SENTRY_TRACES_SAMPLE_RATE=0.1  # Only trace 10% of requests
+```
+
+2. **Exclude Certain Routes**: You can exclude high-frequency routes from being traced:
+
+```php {filename:config/sentry.php}
+'tracing' => [
+    'ignore_routes' => [
+        'health-check',
+        'metrics',
+        '_debugbar/*',
+    ],
+],
+```
+
+3. **Async Transport**: Consider using async transport for better performance:
+
+```bash
+composer require sentry/sentry-laravel-async
+```
+
+</Expandable>
+
+## Profiling
+
+<Expandable title="Why am I not seeing any profiling data?">
+
+If you don't see any profiling data in [sentry.io](https://sentry.io), you can try the following:
+
+- Ensure that <PlatformLink to="/tracing/">Tracing is enabled</PlatformLink> in your Laravel configuration.
+- Ensure that the automatic instrumentation is sending performance data to Sentry by going to the **Performance** page in [sentry.io](https://sentry.io).
+- Check your `config/sentry.php` file for the tracing configuration:
+
+```php {filename:config/sentry.php}
+'traces_sample_rate' => env('SENTRY_TRACES_SAMPLE_RATE', 0.0),
+```
+
+- Enable the <PlatformLink to="/configuration/options/#logger">logger</PlatformLink> to see what the SDK is doing under the hood.
+- Test with a simple route to verify tracing is working:
+
+```php {filename:routes/web.php}
+Route::get('/test-tracing', function () {
+    \Sentry\startTransaction('test', 'test-operation');
+    // Some work here
+    return 'Tracing test complete';
+});
+```
+
+</Expandable>
+
+## Crons
+
+<PlatformContent includePath="crons/troubleshooting" />
+
+<Expandable title="Laravel Scheduler not reporting to Sentry">
+
+If your Laravel scheduled tasks aren't being monitored:
+
+1. **Check your Task Definition**: Ensure you're using the `sentryMonitor()` method:
+
+```php {filename:app/Console/Kernel.php}
+protected function schedule(Schedule $schedule)
+{
+    $schedule->command('your:command')
+        ->hourly()
+        ->sentryMonitor('your-monitor-slug');
+}
+```
+
+2. **Verify Cron is Running**: Make sure your Laravel scheduler is actually running:
+
+```bash
+php artisan schedule:list
+php artisan schedule:run
+```
+
+3. **Check Cron Configuration**: Ensure your server cron is properly configured:
+
+```bash
+* * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
+```
+
+</Expandable>
+
+<Expandable title="Why aren't recurring job errors showing up on my monitor details page?">
+
+You may not have <PlatformLink to="/crons/#connecting-errors-to-cron-monitors">linked errors to your monitor</PlatformLink>.
+
+In Laravel, ensure your scheduled command failures are properly reported:
+
+```php {filename:app/Console/Commands/YourCommand.php}
+public function handle()
+{
+    try {
+        // Your command logic
+    } catch (Exception $e) {
+        $this->error('Command failed: ' . $e->getMessage());
+        throw $e; // Re-throw to ensure Sentry captures it
+    }
+}
+```
+
+</Expandable>
+
+<Expandable title="Why am I not receiving alerts when my monitor fails?">
+
+You may not have <PlatformLink to="/crons/#alerts">set up alerts for your monitor</PlatformLink>.
+
+</Expandable>
+
+<Expandable title="What is the crons data retention policy for check-ins?">
+
+Our current data retention policy is 90 days.
+
+</Expandable>
+
+<Expandable title="Do you support a monitor schedule with a six-field crontab expression?">
+
+Currently, we only support crontab expressions with five fields. Laravel's scheduler syntax will be automatically converted to the appropriate crontab format.
+
+</Expandable>
+
+<Expandable title="My jobs time out because all of them start at the same time and sometimes they fail, how can I fix that?">
+
+You can either consider running your jobs in the background OR use the `checkInMargin` option to make the window larger:
+
+```php {filename:app/Console/Kernel.php}
+$schedule->command('your:command')
+    ->hourly()
+    ->sentryMonitor('your-monitor-slug', checkInMargin: 5); // 5 minute margin
+```
+
+You can also stagger your Laravel scheduled tasks:
+
+```php
+$schedule->command('command:one')->hourly();
+$schedule->command('command:two')->hourly()->delay(10); // 10 seconds delay
+$schedule->command('command:three')->hourly()->delay(20); // 20 seconds delay
+```
+
+</Expandable>
