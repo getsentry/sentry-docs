@@ -59,6 +59,15 @@ const optionDetails: Record<
       </span>
     ),
   },
+  'logs-beta': {
+    name: 'Logs Beta',
+    description: (
+      <span>
+        Send structured logs from your application to Sentry to view, search, and analyze
+        alongside your errors and performance data.
+      </span>
+    ),
+  },
   'source-context': {
     name: 'Source Context',
     description: (
@@ -98,6 +107,7 @@ const OPTION_IDS = [
   'profiling',
   'session-replay',
   'user-feedback',
+  'logs-beta',
   'source-context',
   'dsym',
   'source-maps',
