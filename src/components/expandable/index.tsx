@@ -80,22 +80,35 @@ export function Expandable({
 
       emit('Copy Expandable Content', {props: {page: window.location.pathname, title}});
 
-      // Attempt to get text from markdown code blocks if they exist
-      const codeBlocks = contentRef.current.querySelectorAll('code');
+      // First, try to get text from main code blocks (those inside pre elements)
+      const preCodeBlocks = contentRef.current.querySelectorAll('pre code');
       let contentToCopy = '';
 
-      if (codeBlocks.length > 0) {
-        // If there are code blocks, concatenate their text content
-        codeBlocks.forEach(block => {
-          // Exclude code elements within other code elements (e.g. inline code in a block)
-          if (!block.closest('code')?.parentElement?.closest('code')) {
-            contentToCopy += (block.textContent || '') + '\n';
-          }
+      if (preCodeBlocks.length > 0) {
+        // If there are pre code blocks, concatenate their text content
+        preCodeBlocks.forEach(block => {
+          contentToCopy += (block.textContent || '') + '\n';
         });
         contentToCopy = contentToCopy.trim();
+      } else {
+        // Fallback: Look for large standalone code blocks (not inline code)
+        const allCodeBlocks = contentRef.current.querySelectorAll('code');
+        const largeCodeBlocks = Array.from(allCodeBlocks).filter((block: Element) => {
+          // Skip inline code (usually short and inside paragraphs)
+          const isInlineCode =
+            block.closest('p') !== null && (block.textContent?.length || 0) < 100;
+          return !isInlineCode;
+        });
+
+        if (largeCodeBlocks.length > 0) {
+          contentToCopy = largeCodeBlocks
+            .map((block: Element) => block.textContent || '')
+            .join('\n')
+            .trim();
+        }
       }
 
-      // Fallback to the whole content if no code blocks or if they are empty
+      // Final fallback to the whole content if no code blocks or if they are empty
       if (!contentToCopy && contentRef.current.textContent) {
         contentToCopy = contentRef.current.textContent.trim();
       }
