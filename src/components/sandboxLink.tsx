@@ -3,7 +3,7 @@ import {serverContext} from 'sentry-docs/serverContext';
 
 import {ExternalLink} from './externalLink';
 
-const scenarios = [
+const _scenarios = [
   'performance',
   'releases',
   'alerts',
@@ -25,7 +25,7 @@ type Props = {
   errorType?: string;
   platform?: string;
   projectSlug?: string;
-  scenario?: (typeof scenarios)[number];
+  scenario?: (typeof _scenarios)[number];
   target?: string;
 };
 
@@ -45,7 +45,7 @@ export function getSandboxURL({
 }: {
   errorType?: string;
   projectSlug?: string;
-  scenario?: (typeof scenarios)[number];
+  scenario?: (typeof _scenarios)[number];
 } = {}) {
   const url = new URL('https://sandbox.sentry.io/');
 
