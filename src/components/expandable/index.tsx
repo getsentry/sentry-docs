@@ -1,10 +1,10 @@
 'use client';
 
-import {ReactNode, useCallback, useEffect, useRef, useState} from 'react';
-import {ChevronDownIcon, ChevronRightIcon} from '@radix-ui/react-icons';
+import { ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import { ChevronDownIcon, ChevronRightIcon } from '@radix-ui/react-icons';
 import * as Sentry from '@sentry/nextjs';
 
-import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
+import { usePlausibleEvent } from 'sentry-docs/hooks/usePlausibleEvent';
 
 // explicitly not usig CSS modules here
 // because there's some prerendered content that depends on these exact class names
@@ -41,12 +41,12 @@ export function Expandable({
   const [isExpanded, setIsExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
-  const {emit} = usePlausibleEvent();
+  const { emit } = usePlausibleEvent();
 
   // Ensure we scroll to the element if the URL hash matches
   useEffect(() => {
     if (!id) {
-      return () => {};
+      return () => { };
     }
 
     if (window.location.hash === `#${id}`) {
@@ -78,24 +78,36 @@ export function Expandable({
         return;
       }
 
-      emit('Copy Expandable Content', {props: {page: window.location.pathname, title}});
+      emit('Copy Expandable Content', { props: { page: window.location.pathname, title } });
 
-      // Attempt to get text from markdown code blocks if they exist
-      const codeBlocks = contentRef.current.querySelectorAll('code');
+      // First, try to get text from main code blocks (those inside pre elements)
+      const preCodeBlocks = contentRef.current.querySelectorAll('pre code');
       let contentToCopy = '';
 
-      if (codeBlocks.length > 0) {
-        // If there are code blocks, concatenate their text content
-        codeBlocks.forEach(block => {
-          // Exclude code elements within other code elements (e.g. inline code in a block)
-          if (!block.closest('code')?.parentElement?.closest('code')) {
-            contentToCopy += (block.textContent || '') + '\n';
-          }
+      if (preCodeBlocks.length > 0) {
+        // If there are pre code blocks, concatenate their text content
+        preCodeBlocks.forEach(block => {
+          contentToCopy += (block.textContent || '') + '\n';
         });
         contentToCopy = contentToCopy.trim();
+      } else {
+        // Fallback: Look for large standalone code blocks (not inline code)
+        const allCodeBlocks = contentRef.current.querySelectorAll('code');
+        const largeCodeBlocks = Array.from(allCodeBlocks).filter((block: Element) => {
+          // Skip inline code (usually short and inside paragraphs)
+          const isInlineCode = block.closest('p') !== null && (block.textContent?.length || 0) < 100;
+          return !isInlineCode;
+        });
+
+        if (largeCodeBlocks.length > 0) {
+          largeCodeBlocks.forEach((block: Element) => {
+            contentToCopy += (block.textContent || '') + '\n';
+          });
+          contentToCopy = contentToCopy.trim();
+        }
       }
 
-      // Fallback to the whole content if no code blocks or if they are empty
+      // Final fallback to the whole content if no code blocks or if they are empty
       if (!contentToCopy && contentRef.current.textContent) {
         contentToCopy = contentRef.current.textContent.trim();
       }
@@ -123,7 +135,7 @@ export function Expandable({
     setIsExpanded(newVal);
 
     if (newVal) {
-      emit('Open Expandable', {props: {page: window.location.pathname, title}});
+      emit('Open Expandable', { props: { page: window.location.pathname, title } });
     }
 
     if (id) {
