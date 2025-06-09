@@ -1,4 +1,3 @@
-import * as SentryCore from '@sentry/core';
 import * as Sentry from '@sentry/nextjs';
 import * as Spotlight from '@spotlightjs/spotlight';
 
@@ -10,7 +9,7 @@ Sentry.init({
   replaysSessionSampleRate: 0.1,
   integrations: [
     Sentry.replayIntegration(),
-    SentryCore.thirdPartyErrorFilterIntegration({
+    Sentry.thirdPartyErrorFilterIntegration({
       filterKeys: ['sentry-changelog'],
       behaviour: 'apply-tag-if-contains-third-party-frames',
     }),

@@ -36,11 +36,23 @@ jobs:
       - run: yarn install --frozen-lockfile
         if: steps.cache.outputs.cache-hit != 'true'
 
+      # Setup Turbo cache with better cache keys for builds
+      - name: Setup Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-algolia-${{ hashFiles('**/package.json', '**/turbo.json', '**/next.config.*', '**/tsconfig.json', 'docs/**', 'includes/**', 'platform-includes/**', 'develop-docs/**') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-algolia-${{ hashFiles('**/package.json', '**/turbo.json', '**/next.config.*', '**/tsconfig.json') }}-
+            ${{ runner.os }}-turbo-algolia-
+            ${{ runner.os }}-turbo-build-
+            ${{ runner.os }}-turbo-
+
       # bun seems to be the most straightforward way to run a TypeScript script
       # without introducing another dependency like ts-node or tsx for everyone else
 
       - name: Build index for user docs
-        run: yarn build && bun ./scripts/algolia.ts
+        run: yarn turbo run build && bun ./scripts/algolia.ts
         if: steps.filter.outputs.docs == 'true'
         env:
           ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
@@ -52,7 +64,7 @@ jobs:
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
 
       - name: Build index for developer docs
-        run: yarn build:developer-docs && bun ./scripts/algolia.ts
+        run: yarn turbo run build:developer-docs && bun ./scripts/algolia.ts
         if: steps.filter.outputs.dev-docs == 'true'
         env:
           ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
