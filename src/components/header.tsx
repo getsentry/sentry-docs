@@ -9,7 +9,7 @@ import {Platform} from 'sentry-docs/types';
 
 import sidebarStyles from './sidebar/style.module.scss';
 
-import {NavLink} from './navlink';
+import {MobileMenu} from './mobileMenu';
 import {Search} from './search';
 import {ThemeToggle} from './theme-toggle';
 import TopNavClient from './TopNavClient';
@@ -68,24 +68,27 @@ export default function Header({
           </div>
           <span className="text-base font-semibold tracking-tight">Docs</span>
         </Link>
-        <div className="flex-1 min-w-0">
-          <TopNavClient platforms={platforms} />
-        </div>
-        {!noSearch && (
-          <div className="flex items-center min-w-[320px] max-w-lg w-full ml-4">
-            <Search
-              path={pathname}
-              searchPlatforms={searchPlatforms}
-              showChatBot
-              useStoredSearchPlatforms={useStoredSearchPlatforms}
-            />
-            <NavLink href="https://sentry.io/" className="ml-4 whitespace-nowrap">
-              Go to Sentry
-            </NavLink>
+        <div className="flex-1 min-w-0 flex items-center gap-4">
+          <div className="hidden sm:block flex-1 min-w-0">
+            <TopNavClient platforms={platforms} />
           </div>
-        )}
-        <div className="ml-2">
-          <ThemeToggle />
+          {!noSearch && (
+            <div className="hidden sm:flex flex-shrink-0 items-center gap-2 min-w-[320px] max-w-lg ml-4">
+              <Search
+                path={pathname}
+                searchPlatforms={searchPlatforms}
+                showChatBot
+                useStoredSearchPlatforms={useStoredSearchPlatforms}
+              />
+              <ThemeToggle />
+            </div>
+          )}
+          {!noSearch && (
+            <div className="flex items-center sm:hidden ml-2 gap-2">
+              <MobileMenu pathname={pathname} searchPlatforms={searchPlatforms || []} />
+              <ThemeToggle />
+            </div>
+          )}
         </div>
       </nav>
     </header>

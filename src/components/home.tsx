@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import {Tooltip} from '@radix-ui/themes';
 
 import {Banner} from 'sentry-docs/components/banner';
 import {extractPlatforms, getDocsRootNode} from 'sentry-docs/docTree';
@@ -18,6 +18,7 @@ import Header from './header';
 import {NavLink, NavLinkProps} from './navlink';
 import {PlatformFilter} from './platformFilter';
 import {PlatformIcon} from './platformIcon';
+import {SentryWordmarkLogo} from './wordmarkLogo';
 
 export default async function Home() {
   const rootNode = await getDocsRootNode();
@@ -33,6 +34,9 @@ export default async function Home() {
     {key: 'python', title: 'Python', url: '/platforms/python/'},
     {key: 'php-laravel', title: 'Laravel', url: '/platforms/php/guides/laravel/'},
     {key: 'react-native', title: 'React Native', url: '/platforms/react-native/'},
+    {key: 'apple', title: 'Apple', url: '/platforms/apple/'},
+    {key: 'android', title: 'Android', url: '/platforms/android/'},
+    {key: 'dart', title: 'Dart', url: '/platforms/dart/'},
   ];
   return (
     <div className="tw-app">
@@ -61,7 +65,7 @@ export default async function Home() {
           {/* Left column: Header and subheader */}
           <div className="flex-1 flex flex-col">
             <h1 className="text-3xl font-bold mb-2">Welcome to Sentry Docs</h1>
-            <p className="text-lg text-gray-600">
+            <p className="text-lg">
               Sentry provides end-to-end distributed tracing, enabling developers to
               identify and debug performance issues and errors across their systems and
               services.
@@ -69,35 +73,62 @@ export default async function Home() {
           </div>
           {/* Right column: Most Viewed SDKs */}
           <div className="flex-1 flex flex-col items-center justify-center -mt-4">
-            <div className="bg-white rounded-xl shadow-md p-6 w-full max-w-md">
-              <h2 className="text-lg font-semibold mb-1 text-left">
-                Most Viewed Sentry SDKs
+            <div
+              className="bg-white dark:bg-[var(--gray-2)] rounded-xl shadow-md dark:shadow-none p-6 pt-14 pb-14 w-full max-w-md aspect-square flex flex-col items-start"
+              style={{
+                width: '350px',
+                minHeight: '350px',
+                aspectRatio: '1 / 1',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto',
+              }}
+            >
+              <h2 className="text-lg font-semibold mb-1 text-left w-full">
+                <span className="dark:text-white">Most Viewed Sentry SDKs</span>
               </h2>
-              <p className="text-left text-gray-600 mb-4">
+              <p className="text-left text-gray-600 dark:text-[var(--foreground-secondary)] mb-4 w-full">
                 Get started by setting up Sentry in your app to capture your first errors
               </p>
-              <div className="grid grid-cols-3 gap-4">
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 50px)',
+                  gridTemplateRows: 'repeat(3, 50px)',
+                  gap: '10px',
+                  justifyContent: 'center',
+                  alignContent: 'center',
+                }}
+              >
                 {mostViewedSDKs.map(platform => (
-                  <Link
-                    key={platform.key}
-                    href={platform.url}
-                    className="flex flex-col items-center group relative"
-                  >
-                    <PlatformIcon
-                      platform={platform.key}
-                      size={40}
-                      format="lg"
-                      className="transition-transform group-hover:scale-110"
-                    />
-                    <span className="absolute bottom-[-2.2rem] left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-10 transition-opacity duration-200">
-                      {platform.title}
-                    </span>
-                  </Link>
+                  <Tooltip content={platform.title} key={platform.key}>
+                    <a
+                      href={platform.url}
+                      style={{
+                        width: 50,
+                        height: 50,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: 0,
+                        margin: 0,
+                      }}
+                    >
+                      <PlatformIcon
+                        platform={platform.key}
+                        size={50}
+                        format="lg"
+                        style={{margin: 0, display: 'block'}}
+                      />
+                    </a>
+                  </Tooltip>
                 ))}
               </div>
               <a
                 href="#all-sdks"
-                className="text-accent-purple hover:underline font-medium text-base text-left block mt-2"
+                className="text-accent-purple hover:underline font-medium text-base text-left block mt-2 w-full"
               >
                 See all SDKs
               </a>
@@ -109,9 +140,9 @@ export default async function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-8 md:items-start">
           {/* Column 1: Sentry */}
           <div>
-            <div className="flex items-center mb-4">
+            <div className="flex flex-row items-center mb-4 gap-2">
+              <PlatformIcon platform="sentry" size={24} format="lg" />
               <h2 className="text-xl font-medium">Sentry</h2>
-              <PlatformIcon platform="sentry" size={24} format="lg" className="ml-2" />
             </div>
             <div className="flex flex-col gap-3">
               <Card
@@ -151,9 +182,9 @@ export default async function Home() {
           </div>
           {/* Column 2: Sentry Prevent */}
           <div>
-            <div className="flex items-center mb-4">
+            <div className="flex flex-row items-center mb-4 gap-2">
+              <PlatformIcon platform="sentry" size={24} format="lg" />
               <h2 className="text-xl font-medium">Sentry Prevent</h2>
-              <PlatformIcon platform="sentry" size={24} format="lg" className="ml-2" />
             </div>
             <div className="flex flex-col gap-3">
               <Card
@@ -185,9 +216,9 @@ export default async function Home() {
           </div>
           {/* Column 3: Seer */}
           <div>
-            <div className="flex items-center mb-4">
+            <div className="flex flex-row items-center mb-4 gap-2">
+              <PlatformIcon platform="sentry" size={24} format="lg" />
               <h2 className="text-xl font-medium">Seer</h2>
-              <PlatformIcon platform="sentry" size={24} format="lg" className="ml-2" />
             </div>
             <div className="flex flex-col gap-3">
               <Card
@@ -340,7 +371,7 @@ export default async function Home() {
           Software, Inc.
         </p>
         <div className="bg-accent-purple max-w-max md:ml-auto ml-2 px-5">
-          <PlatformIcon platform="sentry" size={50} format="lg" />
+          <SentryWordmarkLogo height={50} fill="#ffffff" />
         </div>
       </footer>
       <AskAiSearchParams />
