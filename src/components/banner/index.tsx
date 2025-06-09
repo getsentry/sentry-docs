@@ -91,7 +91,7 @@ const readOrResetLocalStorage = () => {
 
   try {
     return JSON.parse(stored);
-  } catch (e) {
+  } catch {
     localStorage.removeItem(LOCALSTORAGE_NAMESPACE);
     return null;
   }

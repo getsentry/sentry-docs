@@ -6,5 +6,6 @@ module.exports = {
   },
   rules: {
     'import/no-nodejs-modules': 'off',
+    '@typescript-eslint/ban-types': 'off',
   },
 };
