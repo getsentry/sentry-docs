@@ -60,7 +60,7 @@ const optionDetails: Record<
     ),
   },
   'logs-beta': {
-    name: 'Logs Beta',
+    name: 'Logs (Beta)',
     description: (
       <span>
         Send structured logs from your application to Sentry to view, search, and analyze
