@@ -77,7 +77,6 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
   const platformDropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const isPlatformsRoute = pathname?.startsWith('/platforms/');
-  const isProductRoot = pathname === '/product/sentry' || pathname === '/product/sentry/';
   const closeTimers = useRef<{products?: NodeJS.Timeout; sdks?: NodeJS.Timeout}>({});
   const [productsDropdownOpen, setProductsDropdownOpen] = useState(false);
   const [conceptsDropdownOpen, setConceptsDropdownOpen] = useState(false);
@@ -225,7 +224,11 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
             </svg>
           </button>
         )}
-        <div ref={navRef} className="overflow-x-auto whitespace-nowrap max-w-full scrollbar-hide pr-8 pl-8">
+        <div
+          ref={navRef}
+          className="overflow-x-auto whitespace-nowrap max-w-full scrollbar-hide pr-8 pl-8"
+          style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}
+        >
           <ul
             className="flex gap-4 w-full items-center overflow-x-visible"
             style={{scrollbarWidth: 'none'}}>
@@ -236,7 +239,7 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                     <button
                       ref={productsBtnRef}
                       className={`text-[var(--gray-12)] transition-colors duration-150 inline-block py-2 px-1 rounded-t-md flex items-center gap-1 text-[0.875rem] font-normal ${
-                        productsDropdownOpen || isProductRoot
+                        productsDropdownOpen || productSections.some(p => pathname?.startsWith(p.href))
                           ? 'border-b-2 border-[var(--accent-purple)]'
                           : 'hover:text-[var(--accent)]'
                       }`}
@@ -569,7 +572,11 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
         </div>,
         document.body
       )}
-      <style>{`div[role='menu']::-webkit-scrollbar { display: none !important; }`}</style>
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 }

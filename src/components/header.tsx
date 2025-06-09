@@ -1,6 +1,7 @@
 'use client';
 
 import {HamburgerMenuIcon} from '@radix-ui/react-icons';
+import {Button} from '@radix-ui/themes';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -80,11 +81,21 @@ export default function Header({
                 showChatBot
                 useStoredSearchPlatforms={useStoredSearchPlatforms}
               />
+              <Button
+                asChild
+                variant="ghost"
+                color="gray"
+                size="3"
+                radius="medium"
+                className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer kapa-ai-class hidden md:flex mr-4"
+              >
+                <a href="https://sentry.io/" target="_blank" rel="noopener noreferrer">Go to Sentry</a>
+              </Button>
               <ThemeToggle />
             </div>
           )}
           {!noSearch && (
-            <div className="flex items-center sm:hidden ml-2 gap-2">
+            <div className="flex items-center sm:hidden ml-2 gap-2 w-full justify-between">
               <MobileMenu pathname={pathname} searchPlatforms={searchPlatforms || []} />
               <ThemeToggle />
             </div>
