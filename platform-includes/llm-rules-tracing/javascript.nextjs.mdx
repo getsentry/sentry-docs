@@ -1,0 +1,160 @@
+<Expandable title="AI Rules for Tracing in Code Editors" copy={true}>
+
+When created as a rules file this should be placed alongside other editor specific rule files. For example, if you are using Cursor, place this file in the `.cursorrules` directory.
+
+````markdown {filename:rules.md}
+
+# Tracing Examples
+
+- Spans should be created for meaningful actions within an applications like button clicks, API calls, and function calls
+- Use the `Sentry.startSpan` function to create a span
+- Child spans can exist within a parent span
+- The `name` and `op` properties should be meaningful for the activities in the call
+- Attach attributes based on relevant information and metrics from the request
+- Where tracing is used, ensure Sentry is imported using `import * as Sentry from "@sentry/nextjs"`
+
+## Custom Span instrumentation in component actions
+
+- The `name` and `op` properties should be meaningful for the activities in the call.
+- Attach attributes based on relevant information and metrics from the request
+
+```javascript
+import * as Sentry from "@sentry/nextjs";
+
+function TestComponent() {
+  const handleTestButtonClick = () => {
+    // Create a transaction/span to measure performance
+    Sentry.startSpan(
+      {
+        op: "ui.click",
+        name: "Test Button Click",
+      },
+      (span) => {
+        const value = "some config";
+        const metric = "some metric";
+
+        // Metrics can be added to the span
+        span.setAttribute("config", value);
+        span.setAttribute("metric", metric);
+
+        doSomething();
+      }
+    );
+  };
+
+  return (
+    <button type="button" onClick={handleTestButtonClick}>
+      Test Sentry
+    </button>
+  );
+}
+```
+
+## Custom span instrumentation in API calls
+
+- The `name` and `op` properties should be meaningful for the activities in the call.
+- Attach attributes based on relevant information and metrics from the request
+
+```javascript
+import * as Sentry from "@sentry/nextjs";
+
+async function fetchUserData(userId) {
+  return Sentry.startSpan(
+    {
+      op: "http.client",
+      name: `GET /api/users/${userId}`,
+    },
+    async () => {
+      const response = await fetch(`/api/users/${userId}`);
+      const data = await response.json();
+      return data;
+    }
+  );
+}
+```
+
+## Next.js API Route Tracing
+
+```javascript
+import * as Sentry from "@sentry/nextjs";
+
+export async function GET(request, { params }) {
+  return Sentry.startSpan(
+    {
+      op: "http.server",
+      name: "GET /api/users/[id]",
+    },
+    async (span) => {
+      const { id } = params;
+      
+      // Add meaningful attributes
+      span.setAttribute("user.id", id);
+      span.setAttribute("route.type", "app_router");
+      span.setAttribute("http.method", "GET");
+      
+      const userData = await fetchUserData(id);
+      return Response.json(userData);
+    }
+  );
+}
+```
+
+## Additional Span Examples
+
+```javascript
+import * as Sentry from "@sentry/nextjs";
+
+// Server action span
+async function updateUserProfile(formData) {
+  return Sentry.startSpan(
+    {
+      op: "function.server_action",
+      name: "Update User Profile",
+    },
+    async (span) => {
+      span.setAttribute("form.fields", formData.size);
+      span.setAttribute("action.type", "server_action");
+      
+      const result = await database.updateProfile(formData);
+      return result;
+    }
+  );
+}
+
+// Page component data fetching span
+async function fetchPageData(slug) {
+  return Sentry.startSpan(
+    {
+      op: "function.data_fetch",
+      name: "Fetch Page Data",
+    },
+    async (span) => {
+      span.setAttribute("page.slug", slug);
+      span.setAttribute("fetch.type", "static_props");
+      
+      const data = await cms.getPage(slug);
+      return data;
+    }
+  );
+}
+
+// Middleware span
+export function middleware(request) {
+  return Sentry.startSpan(
+    {
+      op: "middleware.execution",
+      name: "Authentication Middleware",
+    },
+    (span) => {
+      const { pathname } = request.nextUrl;
+      
+      span.setAttribute("request.pathname", pathname);
+      span.setAttribute("middleware.type", "auth");
+      
+      return authenticateRequest(request);
+    }
+  );
+}
+```
+````
+</Expandable>

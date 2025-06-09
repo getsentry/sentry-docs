@@ -1,0 +1,118 @@
+<Expandable title="AI Rules for Tracing in Code Editors" copy={true}>
+
+When created as a rules file this should be placed alongside other editor specific rule files. For example, if you are using Cursor, place this file in the `.cursorrules` directory.
+
+````markdown {filename:rules.md}
+
+# Tracing Examples
+
+- Spans should be created for meaningful actions within an applications like API calls, database operations, and function calls
+- Ensure you are creating custom spans with meaningful names and operations
+- Use the `Sentry.startSpan` function to create a span
+- Child spans can exist within a parent span
+- Where tracing is used, ensure Sentry is imported using `import * as Sentry from "@sentry/node"`
+
+## Custom Span instrumentation in API routes
+
+```javascript
+import * as Sentry from "@sentry/node";
+
+app.get('/api/users/:userId', async (req, res) => {
+  return Sentry.startSpan(
+    {
+      op: "http.server",
+      name: "GET /api/users/:userId",
+    },
+    async (span) => {
+      const { userId } = req.params;
+      
+      // Add attributes to the span
+      span.setAttribute("user.id", userId);
+      span.setAttribute("http.method", "GET");
+      
+      const userData = await fetchUserData(userId);
+      res.json(userData);
+    }
+  );
+});
+```
+
+## Custom span instrumentation in API calls
+
+```javascript
+import * as Sentry from "@sentry/node";
+
+async function fetchUserData(userId) {
+  return Sentry.startSpan(
+    {
+      op: "http.client",
+      name: `GET /api/users/${userId}`,
+    },
+    async () => {
+      const response = await fetch(`/api/users/${userId}`);
+      const data = await response.json();
+      return data;
+    }
+  );
+}
+```
+
+## Additional Span Examples
+
+```javascript
+import * as Sentry from "@sentry/node";
+
+// Database operation span
+async function saveUserProfile(userId, profileData) {
+  return Sentry.startSpan(
+    {
+      op: "db.query",
+      name: "Update User Profile",
+    },
+    async (span) => {
+      span.setAttribute("user.id", userId);
+      span.setAttribute("profile.fields", Object.keys(profileData).length);
+      span.setAttribute("db.operation", "update");
+      
+      const result = await database.updateProfile(userId, profileData);
+      return result;
+    }
+  );
+}
+
+// File processing span
+async function processFile(filePath) {
+  return Sentry.startSpan(
+    {
+      op: "file.process",
+      name: "Process Upload File",
+    },
+    async (span) => {
+      span.setAttribute("file.path", filePath);
+      span.setAttribute("file.size", await getFileSize(filePath));
+      
+      const result = await processFileContent(filePath);
+      return result;
+    }
+  );
+}
+
+// Background job span
+function processBackgroundJob(jobData) {
+  Sentry.startSpan(
+    {
+      op: "job.process",
+      name: `Process ${jobData.type} Job`,
+    },
+    (span) => {
+      span.setAttribute("job.id", jobData.id);
+      span.setAttribute("job.type", jobData.type);
+      span.setAttribute("job.priority", jobData.priority);
+      
+      executeJob(jobData);
+    }
+  );
+}
+```
+````
+</Expandable>
