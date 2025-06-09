@@ -10,11 +10,27 @@ jobs:
   index:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4
-        id: setup-node
+      - name: Internal github app token
+        id: token
+        uses: tibdex/github-app-token@b62528385c34dbc9f38e5f4225ac829252d1ea92 # v1.8.0
         with:
-          node-version-file: 'package.json'
+          app_id: ${{ vars.SENTRY_INTERNAL_APP_ID }}
+          private_key: ${{ secrets.SENTRY_INTERNAL_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ steps.token.outputs.token }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 8
+      - run: pnpm install --frozen-lockfile
+
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -29,29 +45,23 @@ jobs:
         with:
           bun-version: latest
 
-      - uses: actions/cache@v4
-        id: cache
-        with:
-          path: ${{ github.workspace }}/node_modules
-          key: node-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
-
-      - run: yarn install --frozen-lockfile
-        if: steps.cache.outputs.cache-hit != 'true'
-
-      - run: yarn build
+      # Build the app
+      - run: pnpm build
         if: steps.filter.outputs.docs == 'true'
         env:
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
 
-      - run: yarn build:developer-docs
+      - run: pnpm build:developer-docs
         if: steps.filter.outputs.dev-docs == 'true'
         env:
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
+          NEXT_PUBLIC_DEVELOPER_DOCS: 1
 
+      # Start the server in the background
       - name: Start Http Server
-        run: yarn start &
+        run: pnpm start &
         if: steps.filter.outputs.docs == 'true' || steps.filter.outputs.dev-docs == 'true'
         env:
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0

@@ -8,11 +8,26 @@ jobs:
     name: Update Algolia index
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4
-        id: setup-node
+      - name: Internal github app token
+        id: token
+        uses: tibdex/github-app-token@b62528385c34dbc9f38e5f4225ac829252d1ea92 # v1.8.0
         with:
-          node-version-file: 'package.json'
+          app_id: ${{ vars.SENTRY_INTERNAL_APP_ID }}
+          private_key: ${{ secrets.SENTRY_INTERNAL_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ steps.token.outputs.token }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 8
+      - run: pnpm install --frozen-lockfile
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -40,7 +55,7 @@ jobs:
       # without introducing another dependency like ts-node or tsx for everyone else
 
       - name: Build index for user docs
-        run: yarn build && bun ./scripts/algolia.ts
+        run: pnpm build && bun ./scripts/algolia.ts
         if: steps.filter.outputs.docs == 'true'
         env:
           ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
@@ -52,7 +67,7 @@ jobs:
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
 
       - name: Build index for developer docs
-        run: yarn build:developer-docs && bun ./scripts/algolia.ts
+        run: pnpm build:developer-docs && bun ./scripts/algolia.ts
         if: steps.filter.outputs.dev-docs == 'true'
         env:
           ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
@@ -63,3 +78,15 @@ jobs:
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_DEVELOPER_DOCS: 1
+
+      - name: Build & Update Sentry Docs Algolia Index
+        env:
+          ALGOLIA_WRITE_API_KEY: ${{ secrets.ALGOLIA_WRITE_API_KEY }}
+        run: pnpm build && bun ./scripts/algolia.ts
+        if: github.ref == 'refs/heads/master'
+      - name: Build & Update Developer Docs Algolia Index
+        env:
+          ALGOLIA_WRITE_API_KEY: ${{ secrets.ALGOLIA_WRITE_API_KEY }}
+          NEXT_PUBLIC_DEVELOPER_DOCS: '1'
+        run: pnpm build:developer-docs && bun ./scripts/algolia.ts
+        if: github.ref == 'refs/heads/master'

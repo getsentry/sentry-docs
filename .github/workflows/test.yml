@@ -11,7 +11,7 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v4
 
       - name: Internal github app token
         id: token
@@ -21,26 +21,24 @@ jobs:
           app_id: ${{ vars.SENTRY_INTERNAL_APP_ID }}
           private_key: ${{ secrets.SENTRY_INTERNAL_APP_PRIVATE_KEY }}
 
-      - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4
-        id: setup-node
+      - uses: actions/setup-node@v4
         with:
-          node-version-file: 'package.json'
-
-      - uses: actions/cache@v4
-        id: cache
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
+      - uses: pnpm/action-setup@v4
         with:
-          path: ${{ github.workspace }}/node_modules
-          key: node-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+          version: 8
+      - run: pnpm install --frozen-lockfile
         if: steps.cache.outputs.cache-hit != 'true'
 
-      # Additional checks
-      - run: yarn lint:ts
-      - run: yarn lint:docs
+      # Linting
+      - run: pnpm lint:ts
+      - run: pnpm lint:docs
 
-      # Run automatic fixes (run prettier apart from eslint to also fix mdx files)
-      - run: yarn lint:prettier:fix
-      - run: yarn lint:eslint:fix
+      # Auto-fix formatting to reduce noise in diffs
+      - run: pnpm lint:prettier:fix
+      - run: pnpm lint:eslint:fix
 
       # Check (and error) for dirty working tree for forks
       # Reason being we need a different token to auto commit changes and
@@ -61,17 +59,15 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.1
-      - name: Set up Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version-file: 'package.json'
-      - uses: actions/cache@v4
-        id: cache
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
+      - uses: pnpm/action-setup@v4
         with:
-          path: ${{ github.workspace }}/node_modules
-          key: node-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
-      - run: yarn install --frozen-lockfile
-        if: steps.cache.outputs.cache-hit != 'true'
+          version: 8
+      - run: pnpm install --frozen-lockfile
       - name: Run Tests
-        run: yarn test
+        run: pnpm test

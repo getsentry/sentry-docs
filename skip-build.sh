@@ -14,8 +14,8 @@ docs_diff_status=$(git diff HEAD^ HEAD --quiet -- docs includes platform-include
 # have changes occurred outside of the content directories
 non_content_diff_status=$(git diff HEAD^ HEAD --name-only | grep -vE '^(docs/|platform-includes/|includes/|develop-docs/|apps/)' | wc -l)
 
-# apps/changelog changes or workspace deps changes (yarn.lock)
-changelog_diff_status=$(git diff HEAD^ HEAD --name-only | grep -E '^(apps/changelog/|yarn.lock)' | wc -l)
+# apps/changelog changes or workspace deps changes (pnpm-lock.yaml)
+changelog_diff_status=$(git diff HEAD^ HEAD --name-only | grep -E '^(apps/changelog/|pnpm-lock.yaml)' | wc -l)
 
 if [[ "$NEXT_PUBLIC_CHANGELOG" == "1" ]] ; then
   if [[ $changelog_diff_status -gt 0 ]] ; then
