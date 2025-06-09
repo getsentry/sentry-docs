@@ -22,21 +22,27 @@ jobs:
           private_key: ${{ secrets.SENTRY_INTERNAL_APP_PRIVATE_KEY }}
 
       - uses: actions/setup-node@v4
+        id: setup-node
         with:
-          node-version: '20'
-          cache: 'pnpm'
-          cache-dependency-path: 'pnpm-lock.yaml'
+          node-version-file: 'package.json'
+
+      - uses: actions/cache@v4
+        id: cache
+        with:
+          path: ${{ github.workspace }}/node_modules
+          key: node-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+
       - uses: pnpm/action-setup@v4
         with:
           version: 8
       - run: pnpm install --frozen-lockfile
         if: steps.cache.outputs.cache-hit != 'true'
 
-      # Linting
+      # Additional checks
       - run: pnpm lint:ts
       - run: pnpm lint:docs
 
-      # Auto-fix formatting to reduce noise in diffs
+      # Run automatic fixes (run prettier apart from eslint to also fix mdx files)
       - run: pnpm lint:prettier:fix
       - run: pnpm lint:eslint:fix
 
@@ -60,14 +66,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'pnpm'
-          cache-dependency-path: 'pnpm-lock.yaml'
+          node-version-file: 'package.json'
+      - uses: actions/cache@v4
+        id: cache
+        with:
+          path: ${{ github.workspace }}/node_modules
+          key: node-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
       - uses: pnpm/action-setup@v4
         with:
           version: 8
       - run: pnpm install --frozen-lockfile
+        if: steps.cache.outputs.cache-hit != 'true'
       - name: Run Tests
         run: pnpm test
