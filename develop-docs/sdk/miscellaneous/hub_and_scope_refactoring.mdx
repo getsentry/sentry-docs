@@ -31,7 +31,7 @@ Hubs and scopes is a complicated system, that can easily be misused (also see [h
 
 ## B) What Is the Outcome of the Refactoring?
 
-1. The SDKs model of Scope forking is aligned with the one from OTel. Paving the way for making it possble to use OTel tooling for performance monitoring and still see their data in Sentry. (And Sentry error events are still connected to the spans captured by OTel).
+1. The SDKs model of Scope forking is aligned with the one from OTel. Paving the way for making it possible to use OTel tooling for performance monitoring and still see their data in Sentry. (And Sentry error events are still connected to the spans captured by OTel).
 2. The new Scopes API is implemented in the API and can be used.
 3. The old `Hub` based API still works as expected for backwards compatibility. After a transition phase the `Hub` will be removed in a major update of the SDK.
 
@@ -218,7 +218,7 @@ Here's how the new APIs roughly map to the old-style APIs. In case of `configure
 - If insertion order matters for data we now need some way of sorting when merging data, e.g. to send out an event. For breadcrumbs, we want to send them in insertion order which means we somehow have to keep track of when a breadcrumb was added. When merging data we then sort them and afterwards apply the breadcrumb limit again. A similar problem exists for event processors on scope as well which should also be executed in insertion order.
 - It feels like there should be some easy to use API for forking isolation scope, starting/continuing a trace (and transaction) from incoming headers/metadata which currently doesn't exist.
 - We decided to not deprecate/remove configureScope for Java SDK as it makes it harder for customers to hold a reference to a scope (which they shouldn't). It now has an overload that allows passing in a scope type (global, isolation, current, combined). We have a default scope we write to for the old overload. We do not want to default to combined/merged scope since that would mean you can manipulate a scope you wouldn't expect, e.g. when using `withScope`.
-- For Java SDK we also keep `pushScope` around and added `pushIsolationScope`. We deprecated `popScope` as users should now call `close` on a lifecycle token we hand back in the push methods. The token can also be used as an automaitcally closed resource in a `try` block.
+- For Java SDK we also keep `pushScope` around and added `pushIsolationScope`. We deprecated `popScope` as users should now call `close` on a lifecycle token we hand back in the push methods. The token can also be used as an automatically closed resource in a `try` block.
 
 ---
 
@@ -297,7 +297,7 @@ We can use `Propagator.extract` to fork isolation scope. We try to read the `Sco
 #### Tracing Without Performance
 
 Untested:
-In `Propagator.extract` we can create `PropagationContext` from incoming headers (or similar metadata) or fall back to creating a new `PropagationContext` with random IDs. We then store this `PropagationContet` on the isolation scope. In `Propagator.inject` and when sending events to Sentry, we can use that `PropagationContext` from isolation scope and generate headers (or similar).
+In `Propagator.extract` we can create `PropagationContext` from incoming headers (or similar metadata) or fall back to creating a new `PropagationContext` with random IDs. We then store this `PropagationContext` on the isolation scope. In `Propagator.inject` and when sending events to Sentry, we can use that `PropagationContext` from isolation scope and generate headers (or similar).
 
 - tbd: how does freezing DSC/baggage work? Can we simply freeze whenever the first request (or similar) goes out?
 - tbd: should Sentry.continueTrace write to isolation scope? Would it then also need to always fork an isolation scope at the same time? Should it create a new span (in case performance is enabled)?

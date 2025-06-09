@@ -15,7 +15,7 @@
  * If you want to run it locally,
  *   1. Make sure you have the required env vars set up
  *   2. Be careful to change to `DOCS_INDEX_NAME` to a value different
- *      from the productoin docs index name (specified in the `@sentry-internal/global-search`)
+ *      from the productions docs index name (specified in the `@sentry-internal/global-search`)
  *      to avoid accidental deletions
  *   3. Run a production build of the app before running this script
  */

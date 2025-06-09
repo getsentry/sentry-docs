@@ -227,7 +227,7 @@ export function OnboardingOptionButtons({
   const [options, setSelectedOptions] = useState<OnboardingOptionType[]>(
     normalizedOptions.map(option => ({
       ...option,
-      // default to unchecked if not excplicitly set
+      // default to unchecked if not explicitly set
       checked: option.checked ?? false,
     }))
   );

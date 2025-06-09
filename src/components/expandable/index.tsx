@@ -6,7 +6,7 @@ import * as Sentry from '@sentry/nextjs';
 
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 
-// explicitly not usig CSS modules here
+// explicitly not using CSS modules here
 // because there's some prerendered content that depends on these exact class names
 import '../callout/styles.scss';
 import styles from './style.module.scss';
