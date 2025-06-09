@@ -1,10 +1,10 @@
 'use client';
 
-import { ReactNode, useCallback, useEffect, useRef, useState } from 'react';
-import { ChevronDownIcon, ChevronRightIcon } from '@radix-ui/react-icons';
+import {ReactNode, useCallback, useEffect, useRef, useState} from 'react';
+import {ChevronDownIcon, ChevronRightIcon} from '@radix-ui/react-icons';
 import * as Sentry from '@sentry/nextjs';
 
-import { usePlausibleEvent } from 'sentry-docs/hooks/usePlausibleEvent';
+import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 
 // explicitly not usig CSS modules here
 // because there's some prerendered content that depends on these exact class names
@@ -41,12 +41,12 @@ export function Expandable({
   const [isExpanded, setIsExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
-  const { emit } = usePlausibleEvent();
+  const {emit} = usePlausibleEvent();
 
   // Ensure we scroll to the element if the URL hash matches
   useEffect(() => {
     if (!id) {
-      return () => { };
+      return () => {};
     }
 
     if (window.location.hash === `#${id}`) {
@@ -78,7 +78,7 @@ export function Expandable({
         return;
       }
 
-      emit('Copy Expandable Content', { props: { page: window.location.pathname, title } });
+      emit('Copy Expandable Content', {props: {page: window.location.pathname, title}});
 
       // First, try to get text from main code blocks (those inside pre elements)
       const preCodeBlocks = contentRef.current.querySelectorAll('pre code');
@@ -95,7 +95,8 @@ export function Expandable({
         const allCodeBlocks = contentRef.current.querySelectorAll('code');
         const largeCodeBlocks = Array.from(allCodeBlocks).filter((block: Element) => {
           // Skip inline code (usually short and inside paragraphs)
-          const isInlineCode = block.closest('p') !== null && (block.textContent?.length || 0) < 100;
+          const isInlineCode =
+            block.closest('p') !== null && (block.textContent?.length || 0) < 100;
           return !isInlineCode;
         });
 
@@ -135,7 +136,7 @@ export function Expandable({
     setIsExpanded(newVal);
 
     if (newVal) {
-      emit('Open Expandable', { props: { page: window.location.pathname, title } });
+      emit('Open Expandable', {props: {page: window.location.pathname, title}});
     }
 
     if (id) {
