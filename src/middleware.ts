@@ -19,6 +19,11 @@ export const config = {
 
 // This function can be marked `async` if using `await` inside
 export function middleware(request: NextRequest) {
+  // Check if the URL ends with llms.txt
+  if (request.nextUrl.pathname.endsWith('llms.txt')) {
+    return handleLlmsTxt(request);
+  }
+  
   return handleRedirects(request);
 }
 
@@ -60,6 +65,166 @@ const handleRedirects = (request: NextRequest) => {
   }
 
   return undefined;
+};
+
+const handleLlmsTxt = async (request: NextRequest) => {
+  try {
+    // Get the original path by removing llms.txt
+    const originalPath = request.nextUrl.pathname.replace(/\/llms\.txt$/, '') || '/';
+    const pathSegments = originalPath.split('/').filter(Boolean);
+    
+    let markdownContent = '';
+    
+    // Create a comprehensive markdown representation
+    markdownContent += `# Sentry Documentation${originalPath !== '/' ? `: ${pathSegments.join(' / ')}` : ''}\n\n`;
+    
+    if (originalPath === '/') {
+      markdownContent += `## Welcome to Sentry Documentation
+
+This is the home page of Sentry's documentation, providing comprehensive guides for application performance monitoring and error tracking.
+
+### Main Sections
+
+- **Getting Started**: Quick setup guides for various platforms
+- **Platforms**: Language and framework-specific integration guides
+- **Product Guides**: Feature documentation and usage guides
+- **API Reference**: Complete API documentation
+- **CLI Tools**: Command-line interface documentation
+- **Best Practices**: Recommended approaches and configurations
+
+Sentry helps developers monitor and fix crashes in real time. The platform supports over 100 platforms and integrations.
+`;
+    } else if (pathSegments[0] === 'platforms') {
+      markdownContent += `## Platform Integration Guide
+
+This page provides integration instructions for ${pathSegments.slice(1).join(' ')}.
+
+### Platform Overview
+
+This section contains detailed setup and configuration instructions for integrating Sentry with your application.
+
+### Key Topics Covered
+
+- Installation and setup
+- Configuration options  
+- Error handling
+- Performance monitoring
+- Release tracking
+- Source maps (for JavaScript platforms)
+- Debug information upload
+
+### Integration Steps
+
+1. **Install the SDK**: Add the Sentry SDK to your project
+2. **Configure**: Set up your DSN and configuration options
+3. **Initialize**: Initialize Sentry in your application
+4. **Test**: Verify the integration is working correctly
+5. **Customize**: Configure advanced features as needed
+
+For detailed implementation instructions, please visit the full documentation at: ${request.nextUrl.origin}${originalPath}
+`;
+    } else if (pathSegments[0] === 'api') {
+      markdownContent += `## API Documentation
+
+This is API documentation for Sentry's REST API.
+
+### API Overview
+
+The Sentry API allows you to programmatically interact with Sentry data and configuration.
+
+### Key API Categories
+
+- **Organizations**: Manage organization settings and members
+- **Projects**: Configure projects and their settings  
+- **Issues**: Retrieve and manage error issues
+- **Events**: Access detailed event data
+- **Releases**: Manage application releases
+- **Teams**: Team management and permissions
+
+### Authentication
+
+API requests require authentication via API tokens or integration tokens.
+
+### Rate Limits
+
+API requests are subject to rate limiting to ensure service stability.
+
+For complete API reference and examples, visit: ${request.nextUrl.origin}${originalPath}
+`;
+    } else if (pathSegments[0] === 'product') {
+      markdownContent += `## Product Guide
+
+This section covers Sentry's product features and how to use them effectively.
+
+### Product Features
+
+- **Error Monitoring**: Real-time error tracking and alerting
+- **Performance Monitoring**: Application performance insights
+- **Release Health**: Track the health of your releases
+- **Alerts**: Configure notifications for issues and performance problems
+- **Dashboards**: Custom dashboards for monitoring
+- **Discover**: Query and analyze your data
+
+### Getting the Most from Sentry
+
+This guide helps you understand and utilize Sentry's features to improve your application's reliability and performance.
+
+For detailed feature documentation, visit: ${request.nextUrl.origin}${originalPath}
+`;
+    } else {
+      markdownContent += `## Documentation Page
+
+This page contains Sentry documentation for: **${pathSegments.join(' / ')}**
+
+### Content Overview
+
+This section provides detailed information, setup instructions, and best practices related to this topic.
+
+### Key Information
+
+- Setup and configuration guidance
+- Code examples and implementation details  
+- Troubleshooting tips and common issues
+- Advanced configuration options
+- Integration with other tools and services
+
+### Additional Resources
+
+For the complete interactive documentation with code examples, screenshots, and detailed explanations, please visit:
+
+${request.nextUrl.origin}${originalPath}
+`;
+    }
+    
+    markdownContent += `
+
+---
+
+**Note**: This is a simplified markdown version of the documentation page. 
+For the full interactive experience with syntax highlighting, live examples, and complete formatting, please visit the original page.
+
+**Original URL**: ${request.nextUrl.origin}${originalPath}
+**Generated**: ${new Date().toISOString()}
+
+This content is automatically generated from Sentry's documentation and may not include all details present in the original page.
+`;
+
+    return new Response(markdownContent, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'public, max-age=3600',
+      },
+    });
+  } catch (error) {
+    console.error('Error generating llms.txt:', error);
+    return new Response('Error generating markdown content', {
+      status: 500,
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+      },
+    });
+  }
 };
 
 type Redirect = {
@@ -2342,7 +2507,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/security-legal-pii/scrubbing/',
   },
   {
-    from: '/data-management/advanced-datascrubbing/',
+    from: '/data-management-settings/advanced-datascrubbing/',
     to: '/security-legal-pii/scrubbing/advanced-datascrubbing/',
   },
   {
