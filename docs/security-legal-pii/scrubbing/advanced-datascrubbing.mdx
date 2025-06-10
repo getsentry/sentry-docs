@@ -76,7 +76,6 @@ Sentry does not know if a local variable that looks like a credit card number ac
 Selectors allow you to restrict rules to certain parts of the event. This is useful to unconditionally remove certain data by event attribute, and can also be used to conservatively test rules on real data. A few examples:
 
 - `**` to scrub [all default event PII fields](/security-legal-pii/scrubbing//server-side-scrubbing/event-pii-fields/) (other fields, like the span description, require specific selectors)
-- `$error.value` to scrub in the exception message
 - `$message` to scrub the event-level log message
 - `extra.'My Value'` to scrub the key `My Value` in "Additional Data"
 - `extra.**` to scrub everything in "Additional Data"
@@ -102,31 +101,6 @@ For example, what is called "Additional Data" in the UI is called `extra` in the
 
 ```
 [Remove] [Anything] from [extra.foo]
-```
-
-Another example. Sentry knows about two kinds of error messages: the exception message, and the top-level log message. Here is an example of how such an event payload as sent by the SDK (and downloadable from the UI) would look like:
-
-```json
-{
-  "logentry": {
-    "formatted": "Failed to roll out the dinglebop"
-  },
-  "exception": {
-    "values": [
-      {
-        "type": "ZeroDivisionError",
-        "value": "integer division or modulo by zero"
-      }
-    ]
-  }
-}
-```
-
-Since the "error message" is taken from the `exception`'s `value`, and the "message" is taken from `logentry`, we would have to write the following to remove both from the event:
-
-```
-[Remove] [Anything] from [exception.values.*.value]
-[Remove] [Anything] from [logentry.formatted]
 ```
 
 ### Boolean Logic
