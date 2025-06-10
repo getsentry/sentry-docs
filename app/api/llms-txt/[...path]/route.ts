@@ -1,23 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { nodeForPath, getDocsRootNode } from 'sentry-docs/docTree';
-import { getFileBySlugWithCache, getDocsFrontMatter, getDevDocsFrontMatter } from 'sentry-docs/mdx';
+import { getFileBySlugWithCache } from 'sentry-docs/mdx';
 import { isDeveloperDocs } from 'sentry-docs/isDeveloperDocs';
-import { stripVersion } from 'sentry-docs/versioning';
 import matter from 'gray-matter';
 import fs from 'fs';
 import path from 'path';
 
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const pathParam = searchParams.get('path');
-  
-  if (!pathParam) {
-    return new NextResponse('Path parameter is required', { status: 400 });
-  }
-
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
   try {
-    // Parse the path - it should be the original path without llms.txt
-    const pathSegments = pathParam.split('/').filter(Boolean);
+    const resolvedParams = await params;
+    const pathSegments = resolvedParams.path || [];
     
     // Get the document tree
     const rootNode = await getDocsRootNode();
@@ -85,7 +80,6 @@ Sentry helps developers monitor and fix crashes in real time. The platform suppo
       }
     } else if (pathSegments[0] === 'api' && pathSegments.length > 1) {
       // Handle API docs - these are generated from OpenAPI specs
-      // For now, provide a message explaining this
       pageTitle = `API Documentation: ${pathSegments.slice(1).join(' / ')}`;
       pageContent = `# ${pageTitle}
 

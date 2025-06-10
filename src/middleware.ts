@@ -71,10 +71,14 @@ const handleLlmsTxt = async (request: NextRequest) => {
   try {
     // Get the original path by removing llms.txt
     const originalPath = request.nextUrl.pathname.replace(/\/llms\.txt$/, '') || '/';
+    const pathSegments = originalPath.split('/').filter(Boolean);
     
-    // Rewrite to the API route with the path as a parameter
-    const apiUrl = new URL('/api/llms-txt', request.url);
-    apiUrl.searchParams.set('path', originalPath);
+    // Rewrite to the API route with path segments
+    const apiPath = pathSegments.length > 0 
+      ? `/api/llms-txt/${pathSegments.join('/')}`
+      : '/api/llms-txt';
+    
+    const apiUrl = new URL(apiPath, request.url);
     
     return NextResponse.rewrite(apiUrl);
   } catch (error) {
