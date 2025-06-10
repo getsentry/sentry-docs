@@ -24,7 +24,7 @@ export async function GET(
         if (fs.existsSync(indexPath)) {
           const rawContent = fs.readFileSync(indexPath, 'utf8');
           const parsed = matter(rawContent);
-          const cleanContent = cleanupMarkdown(parsed.content);
+          const cleanContent = await cleanupMarkdown(parsed.content, pathSegments);
           return createResponse(parsed.data.title || 'Welcome to Sentry Documentation', cleanContent, '/');
         }
       } catch (e) {
@@ -173,7 +173,7 @@ For the complete content with full formatting, code examples, and interactive el
     }
 
     // Clean up the markdown content
-    const cleanContent = cleanupMarkdown(pageContent);
+    const cleanContent = await cleanupMarkdown(pageContent, pathSegments);
     
     return createResponse(pageTitle, cleanContent, `/${pathSegments.join('/')}`);
 
@@ -203,8 +203,21 @@ ${content}
   });
 }
 
-function cleanupMarkdown(content: string): string {
+async function cleanupMarkdown(content: string, pathSegments: string[] = []): Promise<string> {
   let cleaned = content;
+  
+  // First, try to resolve PlatformContent includes with actual content
+  cleaned = await resolvePlatformIncludes(cleaned, pathSegments);
+  
+  // Preserve existing code blocks by temporarily replacing them
+  const codeBlocks: string[] = [];
+  const codeBlockPlaceholder = '___CODE_BLOCK_PLACEHOLDER___';
+  
+  // Extract code blocks to preserve them
+  cleaned = cleaned.replace(/```[\s\S]*?```/g, (match) => {
+    codeBlocks.push(match);
+    return `${codeBlockPlaceholder}${codeBlocks.length - 1}`;
+  });
   
   // First pass: Extract content from specific platform components while preserving inner text
   cleaned = cleaned
@@ -244,6 +257,11 @@ function cleanupMarkdown(content: string): string {
       .replace(/<\/?[A-Z][a-zA-Z0-9]*[^>]*>/g, '');
   }
   
+  // Restore code blocks
+  codeBlocks.forEach((block, index) => {
+    cleaned = cleaned.replace(`${codeBlockPlaceholder}${index}`, block);
+  });
+  
   return cleaned
     // Remove import/export statements
     .replace(/^import\s+.*$/gm, '')
@@ -252,12 +270,73 @@ function cleanupMarkdown(content: string): string {
     // Remove HTML comments
     .replace(/<!--[\s\S]*?-->/g, '')
     
-    // Handle special Sentry include paths (these are dynamic content)
-    .replace(/<PlatformContent\s+includePath="[^"]*"\s*\/>/g, '\n*[Platform-specific content would appear here]*\n')
-    
     // Clean up whitespace and formatting
     .replace(/\n{3,}/g, '\n\n')
     .replace(/^\s*\n/gm, '\n')
     .replace(/\n\s*\n\s*\n/g, '\n\n')
     .trim();
+}
+
+async function resolvePlatformIncludes(content: string, pathSegments: string[]): Promise<string> {
+  // Detect platform and guide from path segments
+  let platform = '';
+  let guide = '';
+  
+  if (pathSegments.length >= 2 && pathSegments[0] === 'platforms') {
+    platform = pathSegments[1]; // e.g., 'javascript'
+    
+    if (pathSegments.length >= 4 && pathSegments[2] === 'guides') {
+      guide = pathSegments[3]; // e.g., 'react'
+    }
+  }
+  
+  // Build platform identifier for include files
+  let platformId = platform;
+  if (guide && guide !== platform) {
+    platformId = `${platform}.${guide}`;
+  }
+  
+  // Replace PlatformContent includes with actual content
+  const includePattern = /<PlatformContent[^>]*includePath="([^"]*)"[^>]*\/>/g;
+  let result = content;
+  let match;
+  
+  while ((match = includePattern.exec(content)) !== null) {
+    const includePath = match[1];
+    const fullMatch = match[0];
+    
+    try {
+      // Try to load the platform-specific include file
+      const possiblePaths = [
+        path.join(process.cwd(), `platform-includes/${includePath}/${platformId}.mdx`),
+        path.join(process.cwd(), `platform-includes/${includePath}/${platform}.mdx`),
+        // Fallback to generic if platform-specific doesn't exist
+        path.join(process.cwd(), `platform-includes/${includePath}/index.mdx`),
+      ];
+      
+      let includeContent = '';
+      for (const filePath of possiblePaths) {
+        if (fs.existsSync(filePath)) {
+          const rawContent = fs.readFileSync(filePath, 'utf8');
+          const parsed = matter(rawContent);
+          includeContent = parsed.content.trim();
+          break;
+        }
+      }
+      
+      if (includeContent) {
+        result = result.replace(fullMatch, `\n${includeContent}\n`);
+      } else {
+        // Fallback placeholder with more descriptive text
+        const sectionName = includePath.split('/').pop() || 'content';
+        result = result.replace(fullMatch, `\n*[${sectionName.charAt(0).toUpperCase() + sectionName.slice(1)} instructions would appear here for ${platformId || platform || 'this platform'}]*\n`);
+      }
+    } catch (error) {
+      console.error(`Error loading include ${includePath}:`, error);
+      const sectionName = includePath.split('/').pop() || 'content';
+      result = result.replace(fullMatch, `\n*[${sectionName.charAt(0).toUpperCase() + sectionName.slice(1)} instructions would appear here]*\n`);
+    }
+  }
+  
+  return result;
 }
