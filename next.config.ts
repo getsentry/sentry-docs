@@ -1,7 +1,7 @@
-const {redirects} = require('./redirects.js');
+import {codecovNextJSWebpackPlugin} from '@codecov/nextjs-webpack-plugin';
+import {withSentryConfig} from '@sentry/nextjs';
 
-const {codecovNextJSWebpackPlugin} = require('@codecov/nextjs-webpack-plugin');
-const {withSentryConfig} = require('@sentry/nextjs');
+import {redirects} from './redirects';
 
 const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? {
@@ -34,7 +34,7 @@ if (
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
+  pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx', 'mdx'],
   trailingSlash: true,
   serverExternalPackages: ['rehype-preset-minify'],
   outputFileTracingExcludes,
@@ -55,10 +55,6 @@ const nextConfig = {
     DEVELOPER_DOCS_: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
   },
   redirects,
-  // https://github.com/vercel/next.js/discussions/48324#discussioncomment-10748690
-  cacheHandler: require.resolve(
-    'next/dist/server/lib/incremental-cache/file-system-cache.js'
-  ),
   sassOptions: {
     silenceDeprecations: ['legacy-js-api'],
   },
@@ -73,12 +69,6 @@ module.exports = withSentryConfig(nextConfig, {
 
   // Upload a larger set of source maps for prettier stack traces (increases build time)
   widenClientFileUpload: true,
-
-  // Transpiles SDK to be compatible with IE11 (increases bundle size)
-  transpileClientSDK: true,
-
-  // Hides source maps from generated client bundles
-  hideSourceMaps: true,
 
   // Automatically tree-shake Sentry logger statements to reduce bundle size
   disableLogger: true,
@@ -100,12 +90,4 @@ module.exports = withSentryConfig(nextConfig, {
   _experimental: {
     thirdPartyOriginStackFrames: true,
   },
-});
-
-process.on('warning', warning => {
-  if (warning.code === 'DEP0040') {
-    // Ignore punnycode deprecation warning, we don't control its usage
-    return;
-  }
-  console.warn(warning); // Log other warnings
 });
