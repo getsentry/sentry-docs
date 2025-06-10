@@ -146,8 +146,14 @@ export function PlatformSelector({
 
   if (listOnly) {
     return (
-      <div className={styles.popover} style={{display: 'flex', flexDirection: 'column', height: '100%'}}>
-        <div className={styles['combobox-wrapper']} style={{position: 'sticky', top: 0, zIndex: 2}}>
+      <div
+        className={styles.popover}
+        style={{display: 'flex', flexDirection: 'column', height: '100%'}}
+      >
+        <div
+          className={styles['combobox-wrapper']}
+          style={{position: 'sticky', top: 0, zIndex: 2}}
+        >
           <div className={styles['combobox-icon']}>
             <MagnifyingGlassIcon />
           </div>
@@ -164,17 +170,14 @@ export function PlatformSelector({
         </div>
         <div className={styles.listbox} style={{flex: 1, overflowY: 'auto'}}>
           {uniqByReference(
-            matches
-              .map(x => (x.type === 'platform' ? x : x.platform))
+            matches.map(x => (x.type === 'platform' ? x : x.platform))
           ).map(platform => (
             <PlatformItem
               key={platform.key}
               platform={{
                 ...platform,
                 guides: platform.guides
-                  .filter(g =>
-                    matches.some(m => m.key === g.key && m.type === 'guide')
-                  )
+                  .filter(g => matches.some(m => m.key === g.key && m.type === 'guide'))
                   .sort((a, b) => {
                     const indexA = matches.findIndex(m => m.key === a.key);
                     const indexB = matches.findIndex(m => m.key === b.key);
@@ -256,8 +259,7 @@ export function PlatformSelector({
             </div>
             <ComboboxList className={styles.listbox}>
               {uniqByReference(
-                matches
-                  .map(x => (x.type === 'platform' ? x : x.platform))
+                matches.map(x => (x.type === 'platform' ? x : x.platform))
               ).map(platform => {
                 return (
                   <PlatformItem
@@ -354,7 +356,11 @@ function PlatformItem({
     return (
       <Fragment>
         <div
-          className={dropdownStyle ? 'block px-4 py-2 text-[var(--gray-12)] hover:bg-[var(--gray-3)] rounded text-[0.875rem] font-normal font-sans no-underline' : styles.item}
+          className={
+            dropdownStyle
+              ? 'block px-4 py-2 text-[var(--gray-12)] hover:bg-[var(--gray-3)] rounded text-[0.875rem] font-normal font-sans no-underline'
+              : styles.item
+          }
           data-platform-with-guides
           ref={activeItemRef}
           style={{cursor: 'pointer', display: 'flex', alignItems: 'center'}}
@@ -392,7 +398,12 @@ function PlatformItem({
           )}
         </div>
         {guides.map(guide => (
-          <GuideItem key={guide.key} guide={guide} dropdownStyle={dropdownStyle} listOnly />
+          <GuideItem
+            key={guide.key}
+            guide={guide}
+            dropdownStyle={dropdownStyle}
+            listOnly
+          />
         ))}
       </Fragment>
     );
@@ -406,7 +417,11 @@ function PlatformItem({
             <RadixSelect.Item
               value={hasGuideWithPlatformKey ? `${platform.key}-redirect` : platform.key}
               asChild
-              className={dropdownStyle ? 'block px-4 py-2 text-[var(--gray-12)] hover:bg-[var(--gray-3)] rounded text-[0.875rem] font-normal font-sans no-underline' : styles.item}
+              className={
+                dropdownStyle
+                  ? 'block px-4 py-2 text-[var(--gray-12)] hover:bg-[var(--gray-3)] rounded text-[0.875rem] font-normal font-sans no-underline'
+                  : styles.item
+              }
               data-platform-with-guides
               ref={activeItemRef}
             >
@@ -458,10 +473,19 @@ function GuideItem({guide, dropdownStyle = false, listOnly = false}: GuideItemPr
   if (listOnly) {
     return (
       <div
-        className={dropdownStyle ? 'block px-4 py-2 text-[var(--gray-12)] hover:bg-[var(--gray-3)] rounded text-[0.875rem] font-normal font-sans no-underline' : styles.item}
+        className={
+          dropdownStyle
+            ? 'block px-4 py-2 text-[var(--gray-12)] hover:bg-[var(--gray-3)] rounded text-[0.875rem] font-normal font-sans no-underline'
+            : styles.item
+        }
         data-guide
         data-last-guide={guide.type === 'guide' && guide.isLastGuide}
-        style={{marginLeft: '1.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center'}}
+        style={{
+          marginLeft: '1.5rem',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+        }}
         onClick={() => {
           if (typeof window !== 'undefined') {
             window.location.href = guide.url;
@@ -488,7 +512,11 @@ function GuideItem({guide, dropdownStyle = false, listOnly = false}: GuideItemPr
       key={guide.key}
       value={guide.key}
       asChild
-      className={dropdownStyle ? 'block px-4 py-2 text-[var(--gray-12)] hover:bg-[var(--gray-3)] rounded text-[0.875rem] font-normal font-sans no-underline' : styles.item}
+      className={
+        dropdownStyle
+          ? 'block px-4 py-2 text-[var(--gray-12)] hover:bg-[var(--gray-3)] rounded text-[0.875rem] font-normal font-sans no-underline'
+          : styles.item
+      }
       data-guide
       data-last-guide={guide.type === 'guide' && guide.isLastGuide}
     >

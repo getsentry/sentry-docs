@@ -179,7 +179,9 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
             className="absolute left-0 top-1/2 -translate-y-1/2 z-50 pointer-events-auto bg-white/80 hover:bg-white dark:bg-black/80 dark:hover:bg-black rounded-full p-1 shadow"
             style={{boxShadow: '0 1px 4px rgba(0,0,0,0.08)'}}
             aria-label="Scroll left"
-            onClick={() => { scrollNavBy(-120); }}
+            onClick={() => {
+              scrollNavBy(-120);
+            }}
           >
             <svg
               className="transition-transform duration-150 rotate-90 text-black dark:text-white"
@@ -204,7 +206,9 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
             className="absolute right-0 top-1/2 -translate-y-1/2 z-50 pointer-events-auto bg-white/80 hover:bg-white dark:bg-black/80 dark:hover:bg-black rounded-full p-1 shadow"
             style={{boxShadow: '0 1px 4px rgba(0,0,0,0.08)'}}
             aria-label="Scroll right"
-            onClick={() => { scrollNavBy(120); }}
+            onClick={() => {
+              scrollNavBy(120);
+            }}
           >
             <svg
               className="transition-transform duration-150 -rotate-90 text-black dark:text-white"
@@ -231,7 +235,8 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
         >
           <ul
             className="flex gap-4 w-full items-center overflow-x-visible"
-            style={{scrollbarWidth: 'none'}}>
+            style={{scrollbarWidth: 'none'}}
+          >
             {mainSections.map(section => (
               <li key={section.href} className="list-none relative">
                 {section.label === 'Products' ? (
@@ -239,7 +244,8 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                     <button
                       ref={productsBtnRef}
                       className={`text-[var(--gray-12)] transition-colors duration-150 inline-block py-2 px-1 rounded-t-md flex items-center gap-1 text-[0.875rem] font-normal ${
-                        productsDropdownOpen || productSections.some(p => pathname?.startsWith(p.href))
+                        productsDropdownOpen ||
+                        productSections.some(p => pathname?.startsWith(p.href))
                           ? 'border-b-2 border-[var(--accent-purple)]'
                           : 'hover:text-[var(--accent)]'
                       }`}
@@ -311,7 +317,10 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                     <button
                       ref={conceptsBtnRef}
                       className={`text-[var(--gray-12)] transition-colors duration-150 inline-block py-2 px-1 rounded-t-md flex items-center gap-1 text-[0.875rem] font-normal ${
-                        (conceptsDropdownOpen || (mainSections.find(s => s.label === 'Concepts & Reference')?.dropdown?.some(d => pathname?.startsWith(d.href))) )
+                        conceptsDropdownOpen ||
+                        mainSections
+                          .find(s => s.label === 'Concepts & Reference')
+                          ?.dropdown?.some(d => pathname?.startsWith(d.href))
                           ? 'border-b-2 border-[var(--accent-purple)]'
                           : 'hover:text-[var(--accent)]'
                       }`}
@@ -347,7 +356,10 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
                     <button
                       ref={adminBtnRef}
                       className={`text-[var(--gray-12)] transition-colors duration-150 inline-block py-2 px-1 rounded-t-md flex items-center gap-1 text-[0.875rem] font-normal ${
-                        (adminDropdownOpen || (mainSections.find(s => s.label === 'Admin')?.dropdown?.some(d => pathname?.startsWith(d.href))) )
+                        adminDropdownOpen ||
+                        mainSections
+                          .find(s => s.label === 'Admin')
+                          ?.dropdown?.some(d => pathname?.startsWith(d.href))
                           ? 'border-b-2 border-[var(--accent-purple)]'
                           : 'hover:text-[var(--accent)]'
                       }`}
@@ -396,50 +408,60 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
         </div>
       </div>
       {/* Portal-based dropdowns */}
-      {productsDropdownOpen && ReactDOM.createPortal(
-        <div
-          ref={productsDropdownRef}
-          className="absolute left-0 bg-white dark:bg-black border border-[var(--gray-a3)] dark:border-[var(--gray-7)] shadow-lg z-50 min-w-[220px] p-2 rounded-b-md rounded-t-none"
-          style={{position: 'absolute', top: productsPosition.top, left: productsPosition.left, minWidth: productsPosition.width, overflowY: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none'}}
-          onClick={e => e.stopPropagation()}
-        >
-          <style>{`
+      {productsDropdownOpen &&
+        ReactDOM.createPortal(
+          <div
+            ref={productsDropdownRef}
+            className="absolute left-0 bg-white dark:bg-black border border-[var(--gray-a3)] dark:border-[var(--gray-7)] shadow-lg z-50 min-w-[220px] p-2 rounded-b-md rounded-t-none"
+            style={{
+              position: 'absolute',
+              top: productsPosition.top,
+              left: productsPosition.left,
+              minWidth: productsPosition.width,
+              overflowY: 'auto',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <style>{`
             .dark .product-dropdown-link {
               color: #fff !important;
             }
           `}</style>
-          {productSections.map(product => (
-            <Link
-              key={product.href}
-              href={product.href}
-              className="product-dropdown-link block px-4 py-2 text-[var(--gray-12)] dark:text-white hover:bg-[var(--gray-3)] dark:hover:bg-[var(--gray-8)] rounded text-[0.875rem] font-normal font-sans no-underline"
-            >
-              {product.label}
-            </Link>
-          ))}
-        </div>,
-        document.body
-      )}
-      {platformDropdownOpen && ReactDOM.createPortal(
-        <div
-          ref={platformDropdownRef}
-          className="absolute left-0 bg-white dark:bg-black shadow-lg z-50 min-w-[300px] p-4 rounded-b-md rounded-t-none border border-[var(--gray-a3)] dark:border-[var(--gray-7)]"
-          tabIndex={0}
-          style={{
-            position: 'absolute',
-            top: sdksPosition.top,
-            left: sdksPosition.left,
-            minWidth: 340,
-            width: 340,
-            maxHeight: 'calc(100vh - 32px)',
-            overflowY: 'auto',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-            fontFamily: 'var(--font-sans, sans-serif)',
-          }}
-          onClick={e => e.stopPropagation()}
-        >
-          <style>{`
+            {productSections.map(product => (
+              <Link
+                key={product.href}
+                href={product.href}
+                className="product-dropdown-link block px-4 py-2 text-[var(--gray-12)] dark:text-white hover:bg-[var(--gray-3)] dark:hover:bg-[var(--gray-8)] rounded text-[0.875rem] font-normal font-sans no-underline"
+              >
+                {product.label}
+              </Link>
+            ))}
+          </div>,
+          document.body
+        )}
+      {platformDropdownOpen &&
+        ReactDOM.createPortal(
+          <div
+            ref={platformDropdownRef}
+            className="absolute left-0 bg-white dark:bg-black shadow-lg z-50 min-w-[300px] p-4 rounded-b-md rounded-t-none border border-[var(--gray-a3)] dark:border-[var(--gray-7)]"
+            tabIndex={0}
+            style={{
+              position: 'absolute',
+              top: sdksPosition.top,
+              left: sdksPosition.left,
+              minWidth: 340,
+              width: 340,
+              maxHeight: 'calc(100vh - 32px)',
+              overflowY: 'auto',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              fontFamily: 'var(--font-sans, sans-serif)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <style>{`
             .dark .${platformSelectorStyles.popover} {
               background: #000 !important;
               color: #fff !important;
@@ -520,58 +542,80 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
               align-items: center;
             }
           `}</style>
-          <PlatformSelector platforms={platforms} listOnly />
-        </div>,
-        document.body
-      )}
-      {conceptsDropdownOpen && ReactDOM.createPortal(
-        <div
-          ref={conceptsDropdownRef}
-          className="absolute left-0 bg-white dark:bg-black border border-[var(--gray-a3)] dark:border-[var(--gray-7)] shadow-lg z-50 min-w-[220px] p-2 rounded-b-md rounded-t-none"
-          style={{position: 'absolute', top: conceptsPosition.top, left: conceptsPosition.left, minWidth: conceptsPosition.width, overflowY: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none'}}
-          onClick={e => e.stopPropagation()}
-        >
-          <style>{`
+            <PlatformSelector platforms={platforms} listOnly />
+          </div>,
+          document.body
+        )}
+      {conceptsDropdownOpen &&
+        ReactDOM.createPortal(
+          <div
+            ref={conceptsDropdownRef}
+            className="absolute left-0 bg-white dark:bg-black border border-[var(--gray-a3)] dark:border-[var(--gray-7)] shadow-lg z-50 min-w-[220px] p-2 rounded-b-md rounded-t-none"
+            style={{
+              position: 'absolute',
+              top: conceptsPosition.top,
+              left: conceptsPosition.left,
+              minWidth: conceptsPosition.width,
+              overflowY: 'auto',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <style>{`
             .dark .concepts-dropdown-link {
               color: #fff !important;
             }
           `}</style>
-          {mainSections.find(s => s.label === 'Concepts & Reference')?.dropdown?.map(dropdown => (
-            <Link
-              key={dropdown.href}
-              href={dropdown.href}
-              className="concepts-dropdown-link block px-4 py-2 text-[var(--gray-12)] dark:text-white hover:bg-[var(--gray-3)] dark:hover:bg-[var(--gray-8)] rounded text-[0.875rem] font-normal font-sans no-underline"
-            >
-              {dropdown.label}
-            </Link>
-          ))}
-        </div>,
-        document.body
-      )}
-      {adminDropdownOpen && ReactDOM.createPortal(
-        <div
-          ref={adminDropdownRef}
-          className="absolute left-0 bg-white dark:bg-black border border-[var(--gray-a3)] dark:border-[var(--gray-7)] shadow-lg z-50 min-w-[220px] p-2 rounded-b-md rounded-t-none"
-          style={{position: 'absolute', top: adminPosition.top, left: adminPosition.left, minWidth: adminPosition.width, overflowY: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none'}}
-          onClick={e => e.stopPropagation()}
-        >
-          <style>{`
+            {mainSections
+              .find(s => s.label === 'Concepts & Reference')
+              ?.dropdown?.map(dropdown => (
+                <Link
+                  key={dropdown.href}
+                  href={dropdown.href}
+                  className="concepts-dropdown-link block px-4 py-2 text-[var(--gray-12)] dark:text-white hover:bg-[var(--gray-3)] dark:hover:bg-[var(--gray-8)] rounded text-[0.875rem] font-normal font-sans no-underline"
+                >
+                  {dropdown.label}
+                </Link>
+              ))}
+          </div>,
+          document.body
+        )}
+      {adminDropdownOpen &&
+        ReactDOM.createPortal(
+          <div
+            ref={adminDropdownRef}
+            className="absolute left-0 bg-white dark:bg-black border border-[var(--gray-a3)] dark:border-[var(--gray-7)] shadow-lg z-50 min-w-[220px] p-2 rounded-b-md rounded-t-none"
+            style={{
+              position: 'absolute',
+              top: adminPosition.top,
+              left: adminPosition.left,
+              minWidth: adminPosition.width,
+              overflowY: 'auto',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <style>{`
             .dark .admin-dropdown-link {
               color: #fff !important;
             }
           `}</style>
-          {mainSections.find(s => s.label === 'Admin')?.dropdown?.map(dropdown => (
-            <Link
-              key={dropdown.href}
-              href={dropdown.href}
-              className="admin-dropdown-link block px-4 py-2 text-[var(--gray-12)] dark:text-white hover:bg-[var(--gray-3)] dark:hover:bg-[var(--gray-8)] rounded text-[0.875rem] font-normal font-sans no-underline"
-            >
-              {dropdown.label}
-            </Link>
-          ))}
-        </div>,
-        document.body
-      )}
+            {mainSections
+              .find(s => s.label === 'Admin')
+              ?.dropdown?.map(dropdown => (
+                <Link
+                  key={dropdown.href}
+                  href={dropdown.href}
+                  className="admin-dropdown-link block px-4 py-2 text-[var(--gray-12)] dark:text-white hover:bg-[var(--gray-3)] dark:hover:bg-[var(--gray-8)] rounded text-[0.875rem] font-normal font-sans no-underline"
+                >
+                  {dropdown.label}
+                </Link>
+              ))}
+          </div>,
+          document.body
+        )}
       <style>{`
         .scrollbar-hide::-webkit-scrollbar {
           display: none;

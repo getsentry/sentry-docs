@@ -89,7 +89,9 @@ export default function Header({
                 radius="medium"
                 className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer kapa-ai-class hidden md:flex mr-4"
               >
-                <a href="https://sentry.io/" target="_blank" rel="noopener noreferrer">Go to Sentry</a>
+                <a href="https://sentry.io/" target="_blank" rel="noopener noreferrer">
+                  Go to Sentry
+                </a>
               </Button>
               <ThemeToggle />
             </div>
