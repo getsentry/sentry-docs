@@ -9,10 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4
-        id: setup-node
-        with:
-          node-version-file: 'package.json'
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -31,16 +27,13 @@ jobs:
         with:
           version: 10
 
-      - uses: actions/cache@v4
-        id: cache
+      - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4
+        id: setup-node
         with:
-          path: ~/.pnpm-store
-          key: pnpm-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-${{ runner.os }}-
+          node-version-file: 'package.json'
+          cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
-        if: steps.cache.outputs.cache-hit != 'true'
 
       # bun seems to be the most straightforward way to run a TypeScript script
       # without introducing another dependency like ts-node or tsx for everyone else
