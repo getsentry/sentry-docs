@@ -25,7 +25,7 @@ If you let everything stagnate and upgrade nothing, simply because it all works,
 
 This can become a massive amount of work, as the package is maybe many minor versions **or even multiple major versions** out of date. If it becomes difficult enough to upgrade, the engineer may choose to avoid upgrading altogether and implement a hack to work around the need. This of course is doubly bad, as when you do _absolutely need to upgrade_, not only is it difficult to upgrade a very outdated package, you now have to understand and reverse the hack.
 
-By being proactive and keeping up with major and minor versions, we will typically need to only consider a small set of changes in the package. This is safer as it is less likely for usages of the package to break since there is simply less to validate. This also helps to keep up with the latest performance updates, bug fixes, security patches. And helps to ensure when a developer is looking for documentation on the usage of a package, they won’t have to hunt for older versions of the documentation.
+By being proactive and keeping up with major and minor versions, we will typically need to only consider a small set of changes in the package. This is safer as it is less likely for usages of the package to break since there is simply less to validate. This also helps to keep up with the latest performance updates, bug fixes, security patches. And helps to ensure when a developer is looking for documentation on the usage of a package, they won't have to hunt for older versions of the documentation.
 
 ### Consider the benefits and risks
 
@@ -63,7 +63,7 @@ yarn upgrade --latest [package-name] [...]
 
 <Alert>
 
-Don’t forget to upgrade the `@types/[package-name]` package as well if necessary.
+Don't forget to upgrade the `@types/[package-name]` package as well if necessary.
 
 </Alert>
 
@@ -83,7 +83,7 @@ yarn upgrade --latest $(yarn outdated | cut -d' ' -f1 | grep [group-name])
 
 ### Classifying types of upgrades
 
-Depending on what category of package you’ve upgraded there are a number of steps you’ll need to take to validate that the upgrade is safe and that nothing has broken. The first step is to consider what categories the package being upgraded falls into.
+Depending on what category of package you've upgraded there are a number of steps you'll need to take to validate that the upgrade is safe and that nothing has broken. The first step is to consider what categories the package being upgraded falls into.
 
 The general category of frontend dependencies we have are
 
@@ -119,39 +119,39 @@ For example, some dependencies such as `webpack` fall both into the app build **
 
 1. **Read the CHANGELOG of the package**
 
-   This will give you context into what you need to look out for. If the package has explicit breaking changes it’s important to be aware of those so you can validate that our usages is not affected by those changes. If we are affected changes will have to be made to Sentry’s usage of that dependency to make it compatible.
+   This will give you context into what you need to look out for. If the package has explicit breaking changes it's important to be aware of those so you can validate that our usages is not affected by those changes. If we are affected changes will have to be made to Sentry's usage of that dependency to make it compatible.
 
 2. **Is CI passing?**
 
-   This is a really good first indicator of if the change is safe. If CI is failing there’s a good chance the application itself is actually broken. You will need to fix failing tests before you can merge a package upgrade.
+   This is a really good first indicator of if the change is safe. If CI is failing there's a good chance the application itself is actually broken. You will need to fix failing tests before you can merge a package upgrade.
 
    However, **DO NOT** rely on CI passing to guarantee that the package was successfully upgraded! Our test coverage is good, but it is not perfect.
 
-   When upgrading Testing dependencies, at this point may also want to check the test logs and make sure there’s no unusual output, ensure the number of tests run has not changed, and even check that the performance of the test runs has not regressed.
+   When upgrading Testing dependencies, at this point may also want to check the test logs and make sure there's no unusual output, ensure the number of tests run has not changed, and even check that the performance of the test runs has not regressed.
 
 3. **Does the application work?**
 
-   This is where it begins to become important to understand the category of the dependency. It’s very useful to use the **Vercel Frontend Previews** during this step to see how the application acts with the upgraded package in a production build.
+   This is where it begins to become important to understand the category of the dependency. It's very useful to use the **Vercel Frontend Previews** during this step to see how the application acts with the upgraded package in a production build.
 
    - For feature-specific dependencies, you can specifically check that the features using the package are correctly working as expected.
 
-   - For framework dependencies, you’ll want to spot-check as much as you can. You should take into consideration the changes in the new version of the package and validate that whatever was changed behaves as expected. Looking for “odd” usage of APIs can be helpful here (e.g., are we doing manual `ReactDOM` calls anywhere? etc)
+   - For framework dependencies, you'll want to spot-check as much as you can. You should take into consideration the changes in the new version of the package and validate that whatever was changed behaves as expected. Looking for "odd" usage of APIs can be helpful here (e.g., are we doing manual `ReactDOM` calls anywhere? etc)
 
-   - For application build dependencies we should already be feeling pretty good at this step, considering the application built and passed CI. But it’s still worth checking the change log to make sure nothing in the build pipeline may have affected the application. However, problems with the application build here may be hard to spot as they will likely be subtle if CI did not catch them.
+   - For application build dependencies we should already be feeling pretty good at this step, considering the application built and passed CI. But it's still worth checking the change log to make sure nothing in the build pipeline may have affected the application. However, problems with the application build here may be hard to spot as they will likely be subtle if CI did not catch them.
 
-   - For test and development dependencies, it’s highly likely the application should be working fine. The only scenario where the application could be broken is if the dependency DID have some effect on the application code (in which case it should not be categorized as a pure test or dev dependency).
+   - For test and development dependencies, it's highly likely the application should be working fine. The only scenario where the application could be broken is if the dependency DID have some effect on the application code (in which case it should not be categorized as a pure test or dev dependency).
 
-   This may also be a good time to check if the **size-limit report bot** has left a comment indicating a change in bundle size. If the bundle has increased dramatically it’s worth investigating (likewise if it’s decreased in size dramatically)
+   This may also be a good time to check if the **size-limit report bot** has left a comment indicating a change in bundle size. If the bundle has increased dramatically it's worth investigating (likewise if it's decreased in size dramatically)
 
 4. **Does the development environment work**
 
-   If you’ve upgraded a build or development dependency, you’ll definitely want to make sure the development environment is still working as expected.
+   If you've upgraded a build or development dependency, you'll definitely want to make sure the development environment is still working as expected.
 
    - Does `sentry devserver` still correctly run the client-side application?
 
-   - Does `pnpm dev-ui` still run the client-only version of the application?
+   - Does `yarn dev-ui` still run the client-only version of the application?
 
-   Depending on what package you’re upgrading, you’ll what to consider what to test. For example, if you upgraded `fork-ts-checker-webpack-plugin` you’ll want to validate that types are still being checked in development.
+   Depending on what package you're upgrading, you'll what to consider what to test. For example, if you upgraded `fork-ts-checker-webpack-plugin` you'll want to validate that types are still being checked in development.
 
 5. **Upgrade the package in getsentry if applicable**
 
@@ -159,7 +159,7 @@ For example, some dependencies such as `webpack` fall both into the app build **
 
 6. **Read the `yarn.lock` diff**
 
-   It’s good to understand exactly what has changed with the upgrade. It’s generally a bad thing if upgrading has caused a discrepancy in shared sub dependency versions. For example, if you upgrade `lodash` but another top level package specifies that it needs and older version of `lodash` we will now have **two versions** of `lodash` installed. That means two separate versions of `lodash` will be shipped!
+   It's good to understand exactly what has changed with the upgrade. It's generally a bad thing if upgrading has caused a discrepancy in shared sub dependency versions. For example, if you upgrade `lodash` but another top level package specifies that it needs and older version of `lodash` we will now have **two versions** of `lodash` installed. That means two separate versions of `lodash` will be shipped!
 
    Generally you will want to make sure nothing has duplicated versions, in that case you may need to use `[yarn-deduplicate](https://www.npmjs.com/package/yarn-deduplicate)` or in the worst case you may need to upgrade the package which is pulling in the offending older versions.
 
@@ -171,7 +171,7 @@ For example, some dependencies such as `webpack` fall both into the app build **
 
 ## Take advantage of tooling
 
-We use [GitHub’s Dependabot](https://docs.github.com/en/code-security/dependabot) to automatically open pull requests for package upgrades.
+We use [GitHub's Dependabot](https://docs.github.com/en/code-security/dependabot) to automatically open pull requests for package upgrades.
 
 It has two primary modes of operation
 
@@ -179,7 +179,7 @@ It has two primary modes of operation
 
   These package version bumps are critical as they fix known CVE vulnerabilities reported in the [GitHub Advisory Database](https://github.com/advisories). These should be merged ASAP.
   [Learn more about Dependabot alerts on GitHub](https://docs.github.com/en/code-security/dependabot/dependabot-alerts/about-dependabot-alerts).
-  Again, keeping dependencies up to date helps to ensure that when a vulnerability is discovered, we’re able to upgrade that package without having to upgrade across multiple minor or even major versions.
+  Again, keeping dependencies up to date helps to ensure that when a vulnerability is discovered, we're able to upgrade that package without having to upgrade across multiple minor or even major versions.
 
 - **Opening version upgrade PRs**
 
@@ -207,7 +207,7 @@ To tackle a dependabot PR there are a few steps to take
          <summary>Why do I have to do this?</summary>
 
      The `dependabot` user is considered an outside contributor so the same precautions must be taken with these PRs as would be with an outside contributor.
-     It’s important to note that this is an explicit action you’re taking to indicate that the upgrade is **generally considered safe**. Since it is theoretically possible for a package to exfiltrate secrets from the `getsentry/getsentry` GitHub actions run by including malicious code in the new package. This situation however is highly unlikely and would need to be a coordinated supply chain attack by one of our already vetted dependencies.
+     It's important to note that this is an explicit action you're taking to indicate that the upgrade is **generally considered safe**. Since it is theoretically possible for a package to exfiltrate secrets from the `getsentry/getsentry` GitHub actions run by including malicious code in the new package. This situation however is highly unlikely and would need to be a coordinated supply chain attack by one of our already vetted dependencies.
 
       </details>
 
