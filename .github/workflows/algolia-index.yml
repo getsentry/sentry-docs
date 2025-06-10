@@ -27,20 +27,26 @@ jobs:
         with:
           bun-version: '1.1.34'
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - uses: actions/cache@v4
         id: cache
         with:
-          path: ${{ github.workspace }}/node_modules
-          key: node-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          path: ~/.pnpm-store
+          key: pnpm-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-${{ runner.os }}-
 
-      - run: yarn install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile
         if: steps.cache.outputs.cache-hit != 'true'
 
       # bun seems to be the most straightforward way to run a TypeScript script
       # without introducing another dependency like ts-node or tsx for everyone else
 
       - name: Build index for user docs
-        run: yarn build && bun ./scripts/algolia.ts
+        run: pnpm build && bun ./scripts/algolia.ts
         if: steps.filter.outputs.docs == 'true'
         env:
           ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
@@ -52,7 +58,7 @@ jobs:
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
 
       - name: Build index for developer docs
-        run: yarn build:developer-docs && bun ./scripts/algolia.ts
+        run: pnpm build:developer-docs && bun ./scripts/algolia.ts
         if: steps.filter.outputs.dev-docs == 'true'
         env:
           ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}

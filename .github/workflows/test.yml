@@ -26,21 +26,28 @@ jobs:
         with:
           node-version-file: 'package.json'
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - uses: actions/cache@v4
         id: cache
         with:
-          path: ${{ github.workspace }}/node_modules
-          key: node-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+          path: ~/.pnpm-store
+          key: pnpm-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-${{ runner.os }}-
+
+      - run: pnpm install --frozen-lockfile
         if: steps.cache.outputs.cache-hit != 'true'
 
       # Additional checks
-      - run: yarn lint:ts
-      - run: yarn lint:docs
+      - run: pnpm lint:ts
+      - run: pnpm lint:docs
 
       # Run automatic fixes (run prettier apart from eslint to also fix mdx files)
-      - run: yarn lint:prettier:fix
-      - run: yarn lint:eslint:fix
+      - run: pnpm lint:prettier:fix
+      - run: pnpm lint:eslint:fix
 
       # Check (and error) for dirty working tree for forks
       # Reason being we need a different token to auto commit changes and
@@ -66,12 +73,20 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: 'package.json'
+      
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - uses: actions/cache@v4
         id: cache
         with:
-          path: ${{ github.workspace }}/node_modules
-          key: node-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+          path: ~/.pnpm-store
+          key: pnpm-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-${{ runner.os }}-
+
+      - run: pnpm install --frozen-lockfile
         if: steps.cache.outputs.cache-hit != 'true'
       - name: Run Tests
-        run: yarn test
+        run: pnpm test
