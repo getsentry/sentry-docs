@@ -254,63 +254,6 @@ export default {
 };
 ```
 
-### Manual Instrumentation
-
-Instead or in addition to [Auto Instrumentation](#auto-instrumentation), you can manually instrument certain SvelteKit-specific features with the SDK:
-
-#### Instrument `load` Functions
-
-SvelteKit's universal and server `load` functions are instrumented automatically by default.
-If you don't want to use `load` auto-instrumentation, you can [disable it](#disable-auto-instrumentation), and manually instrument specific `load` functions with the SDK's `load` function wrappers.
-
-##### Universal `load` Functions
-
-Use the `wrapLoadWithSentry` function to wrap universal `load` functions declared in `+page.(js|ts)` or `+layout.(js|ts)`
-
-```javascript {filename:+(page|layout).(js|ts)} {1,3}
-import { wrapLoadWithSentry } from "@sentry/sveltekit";
-
-export const load = wrapLoadWithSentry(({ fetch }) => {
-  const res = await fetch("/api/data");
-  const data = await res.json();
-  return { data };
-});
-```
-
-##### Server-only `load` Functions
-
-Or use the `wrapServerLoadWithSentry` function to wrap server-only `load` functions declared in `+page.server.(js|ts)` or `+layout.server.(js|ts)`
-
-```javascript {filename:+(page|layout).server.(js|ts)} {1,3}
-import { wrapServerLoadWithSentry } from "@sentry/sveltekit";
-
-export const load = wrapServerLoadWithSentry(({ fetch }) => {
-  const res = await fetch("/api/data");
-  const data = await res.json();
-  return { data };
-});
-```
-
-#### Instrument Server Routes
-
-<Alert>
-
-Available since `8.25.0`
-
-</Alert>
-
-You can also manually instrument [server (API) routes ](https://kit.svelte.dev/docs/routing#server) with the SDK.
-This is useful if you have custom server routes that you want to trace or if you want to capture `error()` calls within your server routes:
-
-```javascript {filename:+server.(js|ts)} {1,3}
-import { wrapServerRouteWithSentry } from "@sentry/sveltekit";
-
-export const GET = wrapServerRouteWithSentry(async () => {
-  // your endpoint logic
-  return new Response("Hello World");
-});
-```
-
 ## Step 5: Cloudflare Pages Configuration (Optional)
 
 If you're deploying your application to Cloudflare Pages, you need to adjust your server-side setup.
@@ -404,6 +347,7 @@ Our next recommended steps for you are:
 
 - Learn how to [manually capture errors](/platforms/javascript/guides/sveltekit/usage/)
 - Continue to [customize your configuration](/platforms/javascript/guides/sveltekit/configuration/)
+- Learn how to [manually instrument](/platforms/javascript/sveltekit/apis#load-function-instrumentation) SvelteKit-specific features
 - Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
