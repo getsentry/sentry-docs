@@ -2,22 +2,24 @@
 
 ## Overview
 
-This feature allows converting any page on the Sentry documentation site to a plain markdown format by simply appending `llms.txt` to the end of any URL. This is designed to make the documentation more accessible to Large Language Models (LLMs) and other automated tools that work better with plain text markdown content.
+This feature allows converting any page on the Sentry documentation site to a plain markdown format by simply appending `llms.txt` to the end of any URL. The feature extracts the actual page content from the source MDX files and converts it to clean markdown, making the documentation more accessible to Large Language Models (LLMs) and other automated tools.
 
 ## How It Works
 
-The feature is implemented using Next.js middleware that intercepts requests ending with `llms.txt` and converts the corresponding page content to markdown format.
+The feature is implemented using Next.js middleware that intercepts requests ending with `llms.txt` and rewrites them to an API route that extracts and converts the actual page content to markdown format.
 
 ### Implementation Details
 
 1. **Middleware Interception**: The middleware in `src/middleware.ts` detects URLs ending with `llms.txt`
-2. **Path Processing**: The middleware strips the `llms.txt` suffix to get the original page path
-3. **Content Generation**: A comprehensive markdown representation is generated based on the page type and content
-4. **Response**: The markdown content is returned as plain text with appropriate headers
+2. **Request Rewriting**: The middleware rewrites the request to `/api/llms-txt` with the original path as a parameter
+3. **Content Extraction**: The API route extracts the actual MDX content from source files
+4. **Markdown Conversion**: JSX components and imports are stripped to create clean markdown
+5. **Response**: The full page content is returned as plain text with appropriate headers
 
 ### File Changes
 
-- `src/middleware.ts`: Added `handleLlmsTxt` function and URL detection logic
+- `src/middleware.ts`: Added `handleLlmsTxt` function with URL detection and rewriting logic
+- `app/api/llms-txt/route.ts`: New API route that handles content extraction and conversion
 
 ## Usage Examples
 
@@ -37,47 +39,63 @@ The feature is implemented using Next.js middleware that intercepts requests end
 - Original URL: `https://docs.sentry.io/product/performance/`
 - LLMs.txt URL: `https://docs.sentry.io/product/performance/llms.txt`
 
-## Content Structure
+## Content Extraction Process
 
-The generated markdown content includes:
+The API route performs the following steps to extract content:
 
-1. **Page Title**: Based on the URL path structure
-2. **Section Overview**: Contextual information about the page type
-3. **Key Information**: Relevant details based on the page category
-4. **Additional Resources**: Link back to the original page
-5. **Metadata**: Generation timestamp and original URL
+1. **Path Resolution**: Determines the original page path from the request
+2. **Document Tree Lookup**: Uses `nodeForPath()` to find the page in the documentation tree
+3. **File System Access**: Searches for source MDX/MD files in multiple possible locations:
+   - Direct file paths (`docs/path/to/page.mdx`)
+   - Index files (`docs/path/to/page/index.mdx`)
+   - Common files for platform documentation
+   - Developer documentation files
+4. **Content Parsing**: Uses `gray-matter` to parse frontmatter and content
+5. **Markdown Cleanup**: Removes JSX components, imports, and expressions
+6. **Response Formatting**: Combines title, content, and metadata
 
-### Content Types
+### Supported Content Types
 
-#### Home Page (`/`)
-- Welcome message and overview of Sentry documentation
-- Main sections listing (Getting Started, Platforms, Product Guides, etc.)
-- Brief description of Sentry's capabilities
+#### Regular Documentation Pages
+- Extracts content from `docs/**/*.mdx` files
+- Handles both direct files and index files
+- Supports platform-specific common files
 
-#### Platform Pages (`/platforms/*`)
-- Platform-specific integration guide overview
-- Key topics covered (Installation, Configuration, Error handling, etc.)
-- Step-by-step integration process
-- Link to full documentation
+#### Developer Documentation
+- Extracts content from `develop-docs/**/*.mdx` files
+- Uses the same file resolution logic
 
-#### API Documentation (`/api/*`)
-- API overview and description
-- Key API categories
-- Authentication information
-- Rate limiting details
-- Link to complete API reference
+#### API Documentation
+- Provides explanatory text for dynamically generated API docs
+- Explains that full API reference is available interactively
 
-#### Product Features (`/product/*`)
-- Product feature overview
-- Key features list (Error Monitoring, Performance Monitoring, etc.)
-- Usage guidance
-- Link to detailed feature documentation
+#### Home Page
+- Attempts to extract from `docs/index.mdx`
+- Falls back to curated home page content
 
-#### General Pages
-- Generic documentation page template
-- Content overview
-- Key information points
-- Additional resources section
+## Content Cleanup
+
+The `cleanupMarkdown()` function performs the following cleanup operations:
+
+```typescript
+function cleanupMarkdown(content: string): string {
+  return content
+    // Remove JSX components and their content
+    .replace(/<[A-Z][a-zA-Z0-9]*[^>]*>[\s\S]*?<\/[A-Z][a-zA-Z0-9]*>/g, '')
+    // Remove self-closing JSX components
+    .replace(/<[A-Z][a-zA-Z0-9]*[^>]*\/>/g, '')
+    // Remove import statements
+    .replace(/^import\s+.*$/gm, '')
+    // Remove export statements
+    .replace(/^export\s+.*$/gm, '')
+    // Remove JSX expressions
+    .replace(/\{[^}]*\}/g, '')
+    // Clean up multiple newlines
+    .replace(/\n{3,}/g, '\n\n')
+    // Remove leading/trailing whitespace
+    .trim();
+}
+```
 
 ## Technical Implementation
 
@@ -88,21 +106,15 @@ const handleLlmsTxt = async (request: NextRequest) => {
   try {
     // Get the original path by removing llms.txt
     const originalPath = request.nextUrl.pathname.replace(/\/llms\.txt$/, '') || '/';
-    const pathSegments = originalPath.split('/').filter(Boolean);
     
-    // Generate comprehensive markdown content based on path
-    let markdownContent = generateContentForPath(originalPath, pathSegments);
+    // Rewrite to the API route with the path as a parameter
+    const apiUrl = new URL('/api/llms-txt', request.url);
+    apiUrl.searchParams.set('path', originalPath);
     
-    return new Response(markdownContent, {
-      status: 200,
-      headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'Cache-Control': 'public, max-age=3600',
-      },
-    });
+    return NextResponse.rewrite(apiUrl);
   } catch (error) {
-    console.error('Error generating llms.txt:', error);
-    return new Response('Error generating markdown content', {
+    console.error('Error handling llms.txt rewrite:', error);
+    return new Response('Error processing request', {
       status: 500,
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
@@ -112,6 +124,15 @@ const handleLlmsTxt = async (request: NextRequest) => {
 };
 ```
 
+### API Route Structure
+
+The API route (`app/api/llms-txt/route.ts`) handles:
+- Path parameter validation
+- Document tree navigation
+- File system access for content extraction
+- Error handling for missing or inaccessible content
+- Response formatting with proper headers
+
 ### Response Headers
 
 - `Content-Type: text/plain; charset=utf-8`: Ensures proper text encoding
@@ -119,11 +140,13 @@ const handleLlmsTxt = async (request: NextRequest) => {
 
 ## Benefits
 
-1. **LLM-Friendly**: Provides clean, structured markdown that's easy for AI models to process
-2. **Automated Access**: Enables automated tools to access documentation content
-3. **Simplified Format**: Removes complex UI elements and focuses on content
-4. **Fast Performance**: Cached responses with minimal processing overhead
-5. **Universal Access**: Works with any page on the documentation site
+1. **Authentic Content**: Extracts actual page content, not summaries
+2. **LLM-Friendly**: Provides clean, structured markdown that's easy for AI models to process
+3. **Automated Access**: Enables automated tools to access documentation content
+4. **Simplified Format**: Removes complex UI elements and focuses on content
+5. **Fast Performance**: Cached responses with efficient file system access
+6. **Universal Access**: Works with any page on the documentation site
+7. **Fallback Handling**: Graceful degradation for pages that can't be processed
 
 ## Testing
 
@@ -132,32 +155,65 @@ To test the feature:
 1. Start the development server: `yarn dev`
 2. Visit any documentation page
 3. Append `llms.txt` to the URL
-4. Verify the markdown content is returned
+4. Verify the actual page content is returned in markdown format
 
 ### Example Test URLs (Development)
 
-- `http://localhost:3000/llms.txt` - Home page
-- `http://localhost:3000/platforms/javascript/llms.txt` - JavaScript platform
-- `http://localhost:3000/api/llms.txt` - API documentation
-- `http://localhost:3000/product/performance/llms.txt` - Performance features
+- `http://localhost:3000/llms.txt` - Home page content
+- `http://localhost:3000/platforms/javascript/llms.txt` - JavaScript platform documentation
+- `http://localhost:3000/platforms/javascript/install/llms.txt` - JavaScript installation guide
+- `http://localhost:3000/product/performance/llms.txt` - Performance monitoring documentation
+
+### Expected Output Format
+
+```markdown
+# Page Title
+
+[Actual page content converted to markdown]
+
+---
+
+**Original URL**: https://docs.sentry.io/original/path
+**Generated**: 2024-01-01T12:00:00.000Z
+
+*This is the full page content converted to markdown format.*
+```
+
+## Error Handling
+
+The feature includes comprehensive error handling:
+
+- **404 Not Found**: When the requested page doesn't exist
+- **500 Internal Server Error**: When content processing fails
+- **400 Bad Request**: When path parameter is missing
+- **Graceful Fallbacks**: When source files aren't accessible
+
+## Performance Considerations
+
+- **Caching**: Responses are cached for 1 hour to reduce server load
+- **File System Access**: Direct file system reads for optimal performance
+- **Efficient Processing**: Minimal regex operations for content cleanup
+- **Error Recovery**: Fast fallback responses when content isn't available
 
 ## Future Enhancements
 
 Potential improvements for the feature:
 
-1. **Real Content Extraction**: Integration with the actual MDX content processing
-2. **Enhanced Formatting**: Better markdown structure and formatting
-3. **Custom Templates**: Page-specific markdown templates
-4. **Content Optimization**: LLM-optimized content structure
-5. **Recursive Processing**: Full page content extraction and processing
+1. **Enhanced JSX Cleanup**: More sophisticated removal of React components
+2. **Code Block Preservation**: Better handling of code examples
+3. **Link Resolution**: Convert relative links to absolute URLs
+4. **Image Handling**: Process and reference images appropriately
+5. **Table of Contents**: Generate TOC from headings
+6. **Metadata Extraction**: Include more frontmatter data in output
 
 ## Maintenance
 
-- The feature is self-contained in the middleware
-- Content templates can be updated in the `handleLlmsTxt` function
+- The feature is self-contained with clear separation of concerns
+- Content extraction logic can be enhanced in the API route
+- Cleanup patterns can be updated in the `cleanupMarkdown()` function
 - Performance can be monitored through response times and caching metrics
-- Error handling is built-in with fallback responses
+- Error handling provides clear debugging information
 
 ---
 
-**Note**: This is a simplified implementation that provides structured markdown summaries. For complete content access, users should visit the original documentation pages.
+**Note**: This feature extracts the actual page content from source MDX files and converts it to clean markdown format, making it ideal for LLM consumption and automated processing.
