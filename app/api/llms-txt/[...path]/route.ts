@@ -107,20 +107,38 @@ For complete API reference with examples and detailed parameters, please visit t
           path.join(process.cwd(), `docs/${pageNode.path}/index.md`),
         ];
 
-        // Check if it's a common file
+        // Check if it's a platform guide that might use common files
         if (pageNode.path.includes('platforms/')) {
           const pathParts = pageNode.path.split('/');
-          if (pathParts.length >= 3) {
-            const commonPath = path.join(pathParts.slice(0, 3).join('/'), 'common');
-            if (pathParts.length >= 5 && pathParts[3] === 'guides') {
-              possiblePaths.push(path.join(process.cwd(), 'docs', commonPath, pathParts.slice(5).join('/') + '.mdx'));
-              possiblePaths.push(path.join(process.cwd(), 'docs', commonPath, pathParts.slice(5).join('/') + '.md'));
-              possiblePaths.push(path.join(process.cwd(), 'docs', commonPath, pathParts.slice(5).join('/'), 'index.mdx'));
-            } else {
-              possiblePaths.push(path.join(process.cwd(), 'docs', commonPath, pathParts.slice(3).join('/') + '.mdx'));
-              possiblePaths.push(path.join(process.cwd(), 'docs', commonPath, pathParts.slice(3).join('/') + '.md'));
-              possiblePaths.push(path.join(process.cwd(), 'docs', commonPath, pathParts.slice(3).join('/'), 'index.mdx'));
-            }
+          
+          // For paths like platforms/javascript/guides/react/tracing
+          // Check platforms/javascript/common/tracing
+          if (pathParts.length >= 5 && pathParts[2] === 'guides') {
+            const platform = pathParts[1]; // e.g., 'javascript'
+            const commonPath = `platforms/${platform}/common`;
+            const remainingPath = pathParts.slice(4).join('/'); // e.g., 'tracing'
+            
+            possiblePaths.push(
+              path.join(process.cwd(), 'docs', commonPath, remainingPath + '.mdx'),
+              path.join(process.cwd(), 'docs', commonPath, remainingPath + '.md'),
+              path.join(process.cwd(), 'docs', commonPath, remainingPath, 'index.mdx'),
+              path.join(process.cwd(), 'docs', commonPath, remainingPath, 'index.md')
+            );
+          }
+          
+          // For paths like platforms/javascript/tracing (direct platform paths)
+          // Check platforms/javascript/common/tracing
+          else if (pathParts.length >= 3) {
+            const platform = pathParts[1]; // e.g., 'javascript'
+            const commonPath = `platforms/${platform}/common`;
+            const remainingPath = pathParts.slice(2).join('/'); // e.g., 'tracing'
+            
+            possiblePaths.push(
+              path.join(process.cwd(), 'docs', commonPath, remainingPath + '.mdx'),
+              path.join(process.cwd(), 'docs', commonPath, remainingPath + '.md'),
+              path.join(process.cwd(), 'docs', commonPath, remainingPath, 'index.mdx'),
+              path.join(process.cwd(), 'docs', commonPath, remainingPath, 'index.md')
+            );
           }
         }
 
@@ -186,19 +204,60 @@ ${content}
 }
 
 function cleanupMarkdown(content: string): string {
-  return content
-    // Remove JSX components and their content (basic cleanup)
-    .replace(/<[A-Z][a-zA-Z0-9]*[^>]*>[\s\S]*?<\/[A-Z][a-zA-Z0-9]*>/g, '')
-    // Remove self-closing JSX components
-    .replace(/<[A-Z][a-zA-Z0-9]*[^>]*\/>/g, '')
-    // Remove import statements
+  let cleaned = content;
+  
+  // First pass: Extract content from specific platform components while preserving inner text
+  cleaned = cleaned
+    // Extract content from Alert components
+    .replace(/<Alert[^>]*>([\s\S]*?)<\/Alert>/g, '\n> **Note:** $1\n')
+    
+    // Extract content from PlatformSection components - preserve inner content
+    .replace(/<PlatformSection[^>]*>([\s\S]*?)<\/PlatformSection>/g, '$1')
+    
+    // Extract content from PlatformContent components - preserve inner content  
+    .replace(/<PlatformContent[^>]*>([\s\S]*?)<\/PlatformContent>/g, '$1')
+    
+    // Extract content from PlatformCategorySection components - preserve inner content
+    .replace(/<PlatformCategorySection[^>]*>([\s\S]*?)<\/PlatformCategorySection>/g, '$1')
+    
+    // Handle PlatformIdentifier components - extract name attribute or use placeholder
+    .replace(/<PlatformIdentifier[^>]*name="([^"]*)"[^>]*\/>/g, '`$1`')
+    .replace(/<PlatformIdentifier[^>]*\/>/g, '`[PLATFORM_IDENTIFIER]`')
+    
+    // Handle PlatformLink components - preserve link text and convert to markdown links when possible
+    .replace(/<PlatformLink[^>]*to="([^"]*)"[^>]*>([\s\S]*?)<\/PlatformLink>/g, '[$2]($1)')
+    .replace(/<PlatformLink[^>]*>([\s\S]*?)<\/PlatformLink>/g, '$1');
+  
+  // Multiple passes to handle any remaining nested components
+  for (let i = 0; i < 3; i++) {
+    cleaned = cleaned
+      // Remove any remaining JSX components but try to preserve inner content first
+      .replace(/<([A-Z][a-zA-Z0-9]*)[^>]*>([\s\S]*?)<\/\1>/g, '$2')
+      
+      // Remove any remaining self-closing JSX components
+      .replace(/<[A-Z][a-zA-Z0-9]*[^>]*\/>/g, '')
+      
+      // Remove JSX expressions
+      .replace(/\{[^}]*\}/g, '')
+      
+      // Remove any remaining opening/closing JSX tags
+      .replace(/<\/?[A-Z][a-zA-Z0-9]*[^>]*>/g, '');
+  }
+  
+  return cleaned
+    // Remove import/export statements
     .replace(/^import\s+.*$/gm, '')
-    // Remove export statements
     .replace(/^export\s+.*$/gm, '')
-    // Remove JSX expressions (basic)
-    .replace(/\{[^}]*\}/g, '')
-    // Clean up multiple newlines
+    
+    // Remove HTML comments
+    .replace(/<!--[\s\S]*?-->/g, '')
+    
+    // Handle special Sentry include paths (these are dynamic content)
+    .replace(/<PlatformContent\s+includePath="[^"]*"\s*\/>/g, '\n*[Platform-specific content would appear here]*\n')
+    
+    // Clean up whitespace and formatting
     .replace(/\n{3,}/g, '\n\n')
-    // Remove leading/trailing whitespace
+    .replace(/^\s*\n/gm, '\n')
+    .replace(/\n\s*\n\s*\n/g, '\n\n')
     .trim();
 }
