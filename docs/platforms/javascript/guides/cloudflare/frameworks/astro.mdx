@@ -1,0 +1,36 @@
+---
+title: Astro on Cloudflare
+description: "Learn how to add Cloudflare instrumentation to your Astro app."
+---
+
+## Install
+
+If you're running your Astro app on Cloudflare Pages, you can use the Sentry Astro SDK in combination with the Sentry Cloudflare SDK to add Sentry instrumentation.
+
+First, install the Sentry Astro SDK in your application. We recommend [setting up the Astro SDK manually](/platforms/javascript/guides/astro/manual-setup/) and manually initializing the SDK. Make sure you have a `sentry.client.config.js` file created, but do not add a `sentry.server.config.js` file.
+
+After installing the Sentry Astro SDK, you can now install the Sentry Cloudflare SDK. First, install the SDK with your package manager:
+
+<PlatformContent includePath="getting-started-install" />
+
+## Setup
+
+<PlatformContent includePath="getting-started-config" />
+
+Then create a `functions` directory and add a `_middleware.js` file to it with the following code:
+
+```javascript {filename:functions/_middleware.js}
+import * as Sentry from "@sentry/cloudflare";
+
+export const onRequest = [
+  // Make sure Sentry is the first middleware
+  Sentry.sentryPagesPlugin((context) => ({
+    dsn: "___PUBLIC_DSN___",
+    // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
+    // Learn more at
+    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+    tracesSampleRate: 1.0,
+  })),
+  // Add more middlewares here
+];
+```
