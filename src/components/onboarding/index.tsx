@@ -50,6 +50,15 @@ const optionDetails: Record<
       </span>
     ),
   },
+  'user-feedback': {
+    name: 'User Feedback',
+    description: (
+      <span>
+        Collect user feedback from anywhere in your application with an embeddable widget
+        that allows users to report bugs and provide insights.
+      </span>
+    ),
+  },
   'source-context': {
     name: 'Source Context',
     description: (
@@ -88,6 +97,7 @@ const OPTION_IDS = [
   'performance',
   'profiling',
   'session-replay',
+  'user-feedback',
   'source-context',
   'dsym',
   'source-maps',
