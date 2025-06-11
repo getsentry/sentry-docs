@@ -1,6 +1,6 @@
 'use client';
 
-import {type KeyboardEvent,useState} from 'react';
+import {type KeyboardEvent, useState} from 'react';
 import {Button} from '@radix-ui/themes';
 
 const MAX_COMPONENTS_ON_PAGE = 100;
