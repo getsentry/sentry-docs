@@ -23,7 +23,7 @@ export function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.endsWith('llms.txt')) {
     return handleLlmsTxt(request);
   }
-  
+
   return handleRedirects(request);
 }
 
@@ -72,14 +72,15 @@ const handleLlmsTxt = async (request: NextRequest) => {
     // Get the original path by removing llms.txt
     const originalPath = request.nextUrl.pathname.replace(/\/llms\.txt$/, '') || '/';
     const pathSegments = originalPath.split('/').filter(Boolean);
-    
+
     // Rewrite to the API route with path segments
-    const apiPath = pathSegments.length > 0 
-      ? `/api/llms-txt/${pathSegments.join('/')}`
-      : '/api/llms-txt';
-    
+    const apiPath =
+      pathSegments.length > 0
+        ? `/api/llms-txt/${pathSegments.join('/')}`
+        : '/api/llms-txt';
+
     const apiUrl = new URL(apiPath, request.url);
-    
+
     return NextResponse.rewrite(apiUrl);
   } catch (error) {
     console.error('Error handling llms.txt rewrite:', error);
