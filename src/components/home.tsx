@@ -6,7 +6,6 @@ import PlugImage from 'sentry-docs/imgs/api.png';
 import ChatBubble from 'sentry-docs/imgs/chat-bubble.png';
 import TerminalImage from 'sentry-docs/imgs/cli.png';
 import ConceptsImage from 'sentry-docs/imgs/concepts-reference.png';
-import HeroImage from 'sentry-docs/imgs/home_illustration.png';
 import OrganizationImage from 'sentry-docs/imgs/organization.png';
 import CalculatorImage from 'sentry-docs/imgs/pricing.png';
 import RocketImage from 'sentry-docs/imgs/rocket.png';
@@ -18,6 +17,79 @@ import {Card} from './card';
 import {Header} from './header';
 import {NavLink, NavLinkProps} from './navlink';
 import {PlatformFilter} from './platformFilter';
+import {PlatformIcon} from './platformIcon';
+
+const topSDKs = [
+  {
+    name: 'Next.js',
+    slug: 'javascript-nextjs',
+    url: '/platforms/javascript/guides/nextjs/',
+  },
+  {
+    name: 'React',
+    slug: 'javascript-react',
+    url: '/platforms/javascript/guides/react/',
+  },
+  {
+    name: 'Python',
+    slug: 'python',
+    url: '/platforms/python/',
+  },
+  {
+    name: 'Node.js',
+    slug: 'javascript-node',
+    url: '/platforms/javascript/guides/node/',
+  },
+  {
+    name: 'Laravel',
+    slug: 'php-laravel',
+    url: '/platforms/php/guides/laravel/',
+  },
+  {
+    name: 'React Native',
+    slug: 'react-native',
+    url: '/platforms/react-native/',
+  },
+  {
+    name: 'Java',
+    slug: 'java',
+    url: '/platforms/java/',
+  },
+  {
+    name: 'Go',
+    slug: 'go',
+    url: '/platforms/go/',
+  },
+];
+
+function TopSDKsGrid() {
+  return (
+    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 max-w-md">
+      <h3 className="text-lg font-medium mb-4 text-center">Popular SDKs</h3>
+      <div className="grid grid-cols-4 gap-4">
+        {topSDKs.map((sdk) => (
+          <a
+            key={sdk.slug}
+            href={sdk.url}
+            className="flex flex-col items-center p-3 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group"
+            title={sdk.name}
+          >
+            <div className="w-8 h-8 mb-2 group-hover:scale-110 transition-transform">
+              <PlatformIcon
+                platform={sdk.slug}
+                size={32}
+                className="w-full h-full"
+              />
+            </div>
+            <span className="text-xs text-center text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">
+              {sdk.name}
+            </span>
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function Home() {
   return (
@@ -39,11 +111,7 @@ export function Home() {
             </p>
           </div>
           <div className="self-center">
-            <Image
-              src={HeroImage}
-              alt="Sentry's hero image"
-              className="max-h-[200px] w-auto md:max-h-[390px]"
-            />
+            <TopSDKsGrid />
           </div>
         </div>
 
@@ -56,7 +124,7 @@ export function Home() {
             image={RocketImage}
             imageAlt="Rocket image"
             title="What is Sentry?"
-            description="Application monitoring and debugging software considered “not bad” by 4 million developers."
+            description="Application monitoring and debugging software considered &quot;not bad&quot; by 4 million developers."
           />
 
           <Card
@@ -92,7 +160,7 @@ export function Home() {
             image={TerminalImage}
             imageAlt="Terminal image"
             title="CLI"
-            description="How to use ‘sentry-cli’ on the command line."
+            description="How to use &quot;sentry-cli&quot; on the command line."
           />
 
           <Card
