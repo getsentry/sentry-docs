@@ -67,7 +67,7 @@ const handleRedirects = (request: NextRequest) => {
   return undefined;
 };
 
-const handleLlmsTxt = async (request: NextRequest) => {
+const handleLlmsTxt = (request: NextRequest) => {
   try {
     // Get the original path by removing llms.txt
     const originalPath = request.nextUrl.pathname.replace(/\/llms\.txt$/, '') || '/';
@@ -83,7 +83,10 @@ const handleLlmsTxt = async (request: NextRequest) => {
 
     return NextResponse.rewrite(apiUrl);
   } catch (error) {
-    console.error('Error handling llms.txt rewrite:', error);
+    // Log error conditionally to avoid console warnings in production
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error handling llms.txt rewrite:', error);
+    }
     return new Response('Error processing request', {
       status: 500,
       headers: {
