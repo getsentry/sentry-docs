@@ -13,6 +13,7 @@ import {DefinitionList} from './components/definitionList';
 import {DevDocsCardGrid} from './components/devDocsCardGrid';
 import DocImage from './components/docImage';
 import {Expandable} from './components/expandable';
+import {GitHubDomainChecker} from './components/githubDomainChecker';
 import {GuideGrid} from './components/guideGrid';
 import {JsBundleList} from './components/jsBundleList';
 import {LambdaLayerDetail} from './components/lambdaLayerDetail';
@@ -63,6 +64,7 @@ export function mdxComponents(
     ConfigValue,
     DefinitionList,
     Expandable,
+    GitHubDomainChecker,
     GuideGrid,
     JsBundleList,
     LambdaLayerDetail,
