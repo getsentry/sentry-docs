@@ -16,7 +16,12 @@ description: "Learn how to manually set up Sentry in your SvelteKit app and capt
 Choose the features you want to configure, and this guide will show you how:
 
 <OnboardingOptionButtons
-  options={["error-monitoring", "performance", "session-replay", "user-feedback"]}
+  options={[
+    "error-monitoring",
+    "performance",
+    "session-replay",
+    "user-feedback",
+  ]}
 />
 
 <PlatformContent includePath="getting-started-features-expandable" />
@@ -206,74 +211,16 @@ export default {
 };
 ```
 
-## Step 4: Optional Configuration
-
-The points explain additional optional configuration or more in-depth customization of your Sentry SvelteKit SDK setup.
-
-### Auto-Instrumentation
-
-The SDK primarily uses [SvelteKit's hooks](https://kit.svelte.dev/docs/hooks) to collect error and performance data. However, SvelteKit doesn't yet offer a hook for universal or server-only `load` function calls. Therefore, the SDK uses a Vite plugin to auto-instrument `load` functions so that you don't have to add a Sentry wrapper to each function manually.
-
-Auto-instrumentation is enabled by default when you add the `sentrySvelteKit()` function call to your `vite.config.(js|ts)`. However, you can customize the behavior, or disable it entirely. If you disable it you can still manually wrap specific `load` functions with the `withSentry` function.
-
-<Alert>
-
-The SDK will only auto-instrument `load` functions in `+page` or `+layout` files that don't contain any Sentry code.
-If you have custom Sentry code in these files, you'll have to [manually](#instrument-load-functions-manually) add the Sentry wrapper to your `load` functions.
-
-</Alert>
-
-#### Customize Auto-instrumentation
-
-By passing the `autoInstrument` option to `sentrySvelteKit` you can disable auto-instrumentation entirely, or customize which `load` functions should be instrumented:
-
-```javascript {filename:vite.config.(js|ts)} {7-10}
-import { sveltekit } from "@sveltejs/kit/vite";
-import { sentrySvelteKit } from "@sentry/sveltekit";
-
-export default {
-  plugins: [
-    sentrySvelteKit({
-      autoInstrument: {
-        load: true,
-        serverLoad: false,
-      },
-    }),
-    sveltekit(),
-  ],
-  // ... rest of your Vite config
-};
-```
-
-#### Disable Auto-instrumentation
-
-If you set the `autoInstrument` option to `false`, the SDK won't auto-instrument any `load` functions. You can still [manually instrument](#instrument-load-functions-manually) specific `load` functions.
-
-```javascript {filename:vite.config.(js|ts)} {7}
-import { sveltekit } from '@sveltejs/kit/vite';
-import { sentrySvelteKit } from '@sentry/sveltekit';
-
-export default {
-  plugins: [
-    sentrySvelteKit({
-      autoInstrument: false;
-    }),
-    sveltekit(),
-  ],
-  // ... rest of your Vite config
-};
-```
-
-## Step 5: Cloudflare Pages Configuration (Optional)
+## Step 4: Cloudflare Pages Configuration (Optional)
 
 If you're deploying your application to Cloudflare Pages, you need to adjust your server-side setup.
 Follow this guide to [configure Sentry for Cloudflare](/platforms/javascript/guides/cloudflare/frameworks/sveltekit/).
 
-## Step 6: Avoid Ad Blockers With Tunneling (Optional)
+## Step 5: Avoid Ad Blockers With Tunneling (Optional)
 
 <PlatformContent includePath="getting-started-tunneling" />
 
-## Step 7: Verify Your Setup
+## Step 6: Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 

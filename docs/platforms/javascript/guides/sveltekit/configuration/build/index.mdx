@@ -26,25 +26,25 @@ The Sentry SvelteKit SDK supports automatic code instrumentation and source map 
 
 <SdkOption name="sourceMapsUploadOptions.org" type="string" envVar="SENTRY_ORG">
 
-For details on this option, refer to the [Sentry Vite plugin documentation](https://www.npmjs.com/package/@sentry/vite-plugin#org).
+The slug of the Sentry organization associated with the app.
 
 </SdkOption>
 
 <SdkOption name="sourceMapsUploadOptions.project" type="string" envVar="SENTRY_PROJECT">
 
-For details on this option, refer to the [Sentry Vite plugin documentation](https://www.npmjs.com/package/@sentry/vite-plugin#project).
+The slug of the Sentry project associated with the app.
 
 </SdkOption>
 
 <SdkOption name="sourceMapsUploadOptions.authToken" type="string" envVar="SENTRY_AUTH_TOKEN">
 
-For details on this option, refer to the [Sentry Vite plugin documentation](https://www.npmjs.com/package/@sentry/vite-plugin#authtoken).
+The authentication token to use for all communication with Sentry. Can be obtained from https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/.
 
 </SdkOption>
 
 <SdkOption name="sourceMapsUploadOptions.url" type="string" envVar="SENTRY_URL" defaultValue="https://sentry.io/">
 
-For details on this option, refer to the [Sentry Vite plugin documentation](https://www.npmjs.com/package/@sentry/vite-plugin#url).
+The base URL of your Sentry instance. Only relevant if you're using a self-hosted or Sentry instance other than sentry.io.
 
 </SdkOption>
 
@@ -70,14 +70,29 @@ However, you can customize the behavior or disable it entirely.
 <Alert>
   The SDK will only auto-instrument `load` functions in `+page` or `+layout`
   files that don't contain any Sentry-related code. If you have custom Sentry
-  code in these files, you'll have to [manually add the Sentry
-  wrapper](/platforms/javascript/guides/sveltekit/apis) to your `load`
-  functions.
+  code in these files, you'll have to [manually add a Sentry
+  wrapper](/platforms/javascript/guides/sveltekit/apis/#load-function-instrumentation)
+  to your `load` functions.
 </Alert>
 
 <SdkOption name="autoInstrument" type="boolean | object" defaultValue="true">
 
-Set `autoInstrument` to `false` to disable auto-instrumentation of any `load` functions. You can still [manually instrument](/platforms/javascript/guides/sveltekit/apis) specific `load` functions.
+Set `autoInstrument` to `false` to disable auto-instrumentation of any `load` functions. You can still [manually instrument](/platforms/javascript/guides/sveltekit/apis/#load-function-instrumentation) specific `load` functions.
+
+```javascript {filename:vite.config.(js|ts)} {7}
+import { sveltekit } from '@sveltejs/kit/vite';
+import { sentrySvelteKit } from '@sentry/sveltekit';
+
+export default {
+  plugins: [
+    sentrySvelteKit({
+      autoInstrument: false;
+    }),
+    sveltekit(),
+  ],
+  // ... rest of your Vite config
+};
+```
 
 Alternatively, you can provide `autoInstrument` with an object to customize which `load` functions should be instrumented.
 
@@ -87,10 +102,44 @@ Alternatively, you can provide `autoInstrument` with an object to customize whic
 
 Set to `false` to disable auto-instrumentation of `load` functions inside `+page.(js|ts)` or `+layout.(js|ts)`.
 
+```javascript {filename:vite.config.(js|ts)} {7-10}
+import { sveltekit } from "@sveltejs/kit/vite";
+import { sentrySvelteKit } from "@sentry/sveltekit";
+
+export default {
+  plugins: [
+    sentrySvelteKit({
+      autoInstrument: {
+        load: false,
+      },
+    }),
+    sveltekit(),
+  ],
+  // ... rest of your Vite config
+};
+```
+
 </SdkOption>
 
 <SdkOption name="autoInstrument.serverLoad" type="boolean" defaultValue="true">
 
 Set to `false` to disable auto-instrumentation of server-only `load` functions inside `+page.server.(js|ts)` or `+layout.server.(js|ts)`.
+
+```javascript {filename:vite.config.(js|ts)} {7-10}
+import { sveltekit } from "@sveltejs/kit/vite";
+import { sentrySvelteKit } from "@sentry/sveltekit";
+
+export default {
+  plugins: [
+    sentrySvelteKit({
+      autoInstrument: {
+        serverLoad: false,
+      },
+    }),
+    sveltekit(),
+  ],
+  // ... rest of your Vite config
+};
+```
 
 </SdkOption>
