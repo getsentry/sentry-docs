@@ -108,15 +108,14 @@ from loguru import logger
 from sentry_sdk.integrations.loguru import LoguruIntegration
 from sentry_sdk.integrations.loguru import LoggingLevels
 
-sentry_loguru = LoguruIntegration(
-    level=LoggingLevels.INFO.value,        # Capture info and above as breadcrumbs
-    event_level=LoggingLevels.ERROR.value  # Send errors as events
-)
-
 sentry_sdk.init(
     # ...
     integrations=[
-        sentry_loguru,
+        LoguruIntegration(
+            level=LoggingLevels.INFO.value,              # Capture INFO and above as breadcrumbs
+            event_level=LoggingLevels.ERROR.value,       # Send ERROR logs as events
+            sentry_logs_level=LoggingLevels.INFO.value,  # Capture INFO and above as logs
+        )
     ],
 )
 ```
@@ -132,6 +131,22 @@ sentry_sdk.init(
   The Sentry Python SDK will report log records with a level higher than or equal to `event_level` as events. If set to `None`, the SDK won't send log records as events.
 
   Default: `ERROR`
+
+- `sentry_logs_level`
+
+  The Sentry Python SDK will capture log records with a level higher than or equal to `sentry_logs_level` as logs. If set to `None`, the SDK won't send records as logs.
+
+  To capture Loguru log records as Sentry logs, you must enable the experimental `enable_logs` option when initializing the SDK (regardless of the `sentry_logs_level` setting).
+
+  ```python
+  sentry_sdk.init(
+      # ...
+      _experiments={"enable_logs": True},
+  )
+  ```
+
+  Default: `INFO`
+
 
 ## Supported Versions
 

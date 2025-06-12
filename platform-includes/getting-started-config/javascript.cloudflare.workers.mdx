@@ -1,0 +1,38 @@
+Wrap your worker handler with the `withSentry` function. This will initialize the SDK and hook into the
+environment. Note that you can turn off almost all side effects using the respective options.
+
+```typescript {filename:index.ts}
+import { Hono, HTTPException } from "hono";
+import * as Sentry from "@sentry/cloudflare";
+
+export default Sentry.withSentry(
+  (env) => {
+    const { id: versionId } = env.CF_VERSION_METADATA;
+
+    return {
+      dsn: "___PUBLIC_DSN___",
+
+      release: versionId,
+
+      // Adds request headers and IP for users, for more info visit:
+      // https://docs.sentry.io/platforms/javascript/guides/cloudflare/configuration/options/#sendDefaultPii
+      sendDefaultPii: true,
+
+      // ___PRODUCT_OPTION_START___ logs
+
+      // Enable logs to be sent to Sentry
+      _experiments: { enableLogs: true },
+      // ___PRODUCT_OPTION_END___ logs
+
+      // ___PRODUCT_OPTION_START___ performance
+      // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
+      // Learn more at
+      // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+      tracesSampleRate: 1.0,
+      // ___PRODUCT_OPTION_END___ performance
+    }
+  },
+  // your existing worker export
+  app
+);
+```

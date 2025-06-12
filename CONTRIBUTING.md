@@ -20,29 +20,3 @@ yarn dev:developer-docs
 ```
 
 With that, the repo is fully set up and you are ready to open local docs under http://localhost:3000
-
-### Database
-
-There is a compose file to start a local postgres db:
-
-```
-docker-compose up -d
-```
-
-If you already run a local postgres, it will create a `changelog` table.
-
-The inital setup or the clean the database call:
-
-```
-yarn migrate:dev
-```
-
-To add new entries, visit `/changelog/_admin` you need to have a Google Account in the Sentry org to login.
-
-#### Seeding
-
-Call
-
-```
-npx prisma db seed
-```
