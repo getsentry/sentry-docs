@@ -1,5 +1,27 @@
-To add an attachment, the path to the file has to be configured when initializing the SDK. It will monitor the file and upload it along with any event or crash that is sent to Sentry:
+To add an attachment, you can either configure it when initializing the SDK, or manipulate the list of attachments in the scope.
+
+### SDK Initialization
+
+Adding attachments during SDK initialization is supported on all platforms. It will monitor the file and upload it along with any event or crash that is sent to Sentry:
 
 ```c
 sentry_options_add_attachment(options, "/var/server.log");
+```
+
+### Global Scope
+
+Adding attachments to the global scope at run-time after SDK initialization is supported on Windows and Linux. It will monitor the file and upload it along with any event or crash that is sent to Sentry:
+
+```c
+sentry_add_attachment_path("/var/server.log");
+```
+
+### Local Scope
+
+Adding attachments to local scopes is supported on Windows and Linux. It will upload the file along with the specific event captured in the local scope:
+
+```c
+sentry_scope_t *scope = sentry_local_scope_new();
+sentry_scope_add_attachment_path(scope, "/var/server.log");
+sentry_capture_event_with_scope(event, scope);
 ```
