@@ -142,6 +142,40 @@ You can combine sources using boolean logic.
 - `**` matches all subpaths, so that `foo.**` matches all JSON keys within `foo`.
 - `*` matches a single path item, so that `foo.*` matches all JSON keys one level below `foo`.
 
+When using `**` selectors in scrubbing rules, be aware that they only apply to the [default event PII fields](/security-legal-pii/scrubbing//server-side-scrubbing/event-pii-fields/). Fields not on that list will not be scrubbed automatically when using `**`.
+
+For example, given the following event payload:
+
+```json
+{
+  "exception": {
+    "values": [
+      {
+        "type": "Error",
+        "value": "An error occurred",
+        "stacktrace": {
+          "frames": [
+            {
+              "filename": "test/example/script.js",
+              "abs_path": "test/example/script.js?id=12345"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+```
+
+Using the scrubbing rule `[Mask] [Anything] from [$frame.**]` will not scrub the filename or abs_path fields, since they're not included in the default PII field list.
+
+To scrub those fields, use one of the following rules:
+```
+[Mask] [Anything] from [$frame.*]
+[Mask] [Anything] from [$frame.filename]
+[Mask] [Anything] from [$frame.abs_path]
+```
+
 ### Value Types
 
 Select subsections by JSON-type using the following:
