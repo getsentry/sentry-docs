@@ -1,0 +1,117 @@
+---
+title: Instrument AI Agents
+sidebar_order: 500
+description: "Learn how to manually instrument your code to use Sentry's Agents module."
+---
+
+As a prerequisite to setting up [AI Agents](/product/insights/agents/), you’ll need to first <PlatformLink to="/tracing/">set up tracing</PlatformLink>. Once this is done, the Python SDK will automatically instrument AI agents created with the `openai-agents` library. If that doesn't fit your use case, you can set up using custom instrumentation described below.
+
+## Custom Instrumentation
+
+For your AI agents data to show up in the Sentry Agents Insights Module a couple of different spans can be created. Those spans need to have well defined names and attributes.
+
+### Common Span Attributes
+
+Some attributes are common to all types of AI Agents spans:
+
+| Data Attribute          | Type   | Description                                                                          |
+| :---------------------- | :----- | :----------------------------------------------------------------------------------- |
+| `gen_ai.system`         | string | The Generative AI product as identified by the client or server instrumentation. [1] |
+| `gen_ai.request.model`  | string | The name of the AI model a request is being made to.                                 |
+| `gen_ai.operation.name` | string | The name of the operation being performed. [2]                                       |
+| `gen_ai.agent.name`     | string | The name of the agent this span belongs to.                                          |
+
+**[1]** Well defined values for data attribute `gen_ai.system`:
+
+| Value             | Description                       |
+| :---------------- | :-------------------------------- |
+| `anthropic`       | Anthropic                         |
+| `aws.bedrock`     | AWS Bedrock                       |
+| `az.ai.inference` | Azure AI Inference                |
+| `az.ai.openai`    | Azure OpenAI                      |
+| `cohere`          | Cohere                            |
+| `deepseek`        | DeepSeek                          |
+| `gcp.gemini`      | Gemini                            |
+| `gcp.gen_ai`      | Any Google generative AI endpoint |
+| `gcp.vertex_ai`   | Vertex AI                         |
+| `groq`            | Groq                              |
+| `ibm.watsonx.ai`  | IBM Watsonx AI                    |
+| `mistral_ai`      | Mistral AI                        |
+| `openai`          | OpenAI                            |
+| `perplexity`      | Perplexity                        |
+| `xai`             | xAI                               |
+
+**[2]** Well defined values for data attribute `gen_ai.operation.name`:
+
+| Value              | Description                                                             |
+| :----------------- | :---------------------------------------------------------------------- |
+| `chat`             | Chat completion operation such as OpenAI Chat API                       |
+| `create_agent`     | Create GenAI agent                                                      |
+| `embeddings`       | Embeddings operation such as OpenAI Create embeddings API               |
+| `execute_tool`     | Execute a tool                                                          |
+| `generate_content` | Multimodal content generation operation such as Gemini Generate Content |
+| `invoke_agent`     | Invoke GenAI agent                                                      |
+
+### Invoke Agent Span
+
+This span wraps one invocation of an agent.
+
+- `span.op` = `"gen_ai.invoke_agent"`
+- `span.name` = `"gen_ai.invoke_agent {gen_ai.agent.name}"` (Example: `"gen_ai.invoke_agent Weather Forecast Agent"`)
+
+- Span attributes:
+    - `gen_ai.request.model`: The model that is used.
+    - `gen_ai.request.available_tools`: An array of objects that describe the tools available to the agent.
+    - `gen_ai.request.frequency_penalty`: Model configuration
+    - `gen_ai.request.max_tokens`:  Model configuration
+    - `gen_ai.request.presence_penalty`:  Model configuration
+    - `gen_ai.request.temperature`:  Model configuration
+    - `gen_ai.request.top_p`:  Model configuration
+
+
+### Execute Tool Span
+
+This span wraps the execution of a tool.
+
+- `span.op` = `"gen_ai.execute_tool"`
+- `span.name` = `"gen_ai.execute_tool {tool.name}"` (Example: `"gen_ai.execute_tool query_database"`)
+
+
+- Span attributes:
+    - `gen_ai.request.available_tools`:
+    - `gen_ai.request.frequency_penalty`: Model configuration
+    - `gen_ai.request.max_tokens`: Model configuration
+    - `gen_ai.request.model`:
+    - `gen_ai.request.presence_penalty`: Model configuration
+    - `gen_ai.request.temperature`: Model configuration
+    - `gen_ai.request.top_p`:  Model configuration
+    - `gen_ai.tool.description`:
+    - `gen_ai.tool.input`: \{"max":10\}
+    - `gen_ai.tool.name:`: "random_number"
+    - `gen_ai.tool.output`:
+    - `gen_ai.tool.type`:
+
+### AI Client Span
+
+This span wraps the request to an LLM.
+
+- `span.op` = `"gen_ai.{gen_ai.operation.name}"` (Example: `"gen_ai.chat"`)
+- `span.name` = `"{gen_ai.operation.name} {model.name}"` (Example: `"chat gpt-4o-mini"`)
+- Span attributes:
+  - `gen_ai.request.available_tools`
+  - `gen_ai.request.frequency_penalty`
+  - `gen_ai.request.max_tokens`
+  - `gen_ai.request.messages`
+  - `gen_ai.request.model`
+  - `gen_ai.request.presence_penalty`
+  - `gen_ai.request.temperature`
+  - `gen_ai.request.top_p`
+  - `gen_ai.response.tool_calls`
+  - `gen_ai.system`
+  - `gen_ai.system.message`
+  - `gen_ai.usage.input_tokens`
+  - `gen_ai.usage.input_tokens.cached`
+  - `gen_ai.usage.output_tokens`
+  - `gen_ai.usage.output_tokens.reasoning`
+  - `gen_ai.usage.total_tokens`
+  - `gen_ai.user.message`
