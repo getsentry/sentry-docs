@@ -2,26 +2,26 @@ To add an attachment, you can either configure it when initializing the SDK, or 
 
 ### SDK Initialization
 
-Adding attachments during SDK initialization is supported on all platforms. It will monitor the file and upload it along with any event or crash that is sent to Sentry:
+Adding attachments to the options during SDK initialization will monitor the file and upload it along with any event or crash that is sent to Sentry:
 
 ```c
 sentry_options_add_attachment(options, "/var/server.log");
 ```
 
-### Global Scope
+### Adding Attachments to the Scope
 
-Adding attachments to the global scope at run-time after SDK initialization is supported on Windows and Linux. It will monitor the file and upload it along with any event or crash that is sent to Sentry:
-
-```c
-sentry_add_attachment_path("/var/server.log");
-```
-
-### Local Scope
-
-Adding attachments to local scopes is supported on Windows and Linux. It will upload the file along with the specific event captured in the local scope:
+Adding attachments to the global scope at run-time after SDK initialization will monitor the file and upload it along with any event or crash that is sent to Sentry, whereas adding attachments to a local scope will only upload the file with the specific event captured in that local scope.
 
 ```c
+// Global Scope
+sentry_attach_file("/var/global.log");
+
+// Local Scope
 sentry_scope_t *scope = sentry_local_scope_new();
-sentry_scope_add_attachment_path(scope, "/var/server.log");
+sentry_scope_attach_file(scope, "/var/local.log");
+sentry_value_t event = sentry_value_new_event();
+/* ... */
 sentry_capture_event_with_scope(event, scope);
 ```
+
+<Alert>☝ When using the `crashpad` backend on macOS, the list of attachments that will be added at the time of a hard crash will be frozen at the time of `sentry_init`, and later modifications will not be reflected.</Alert>
