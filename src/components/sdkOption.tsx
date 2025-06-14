@@ -9,8 +9,10 @@ import {SdkDefinition, SdkDefinitionTable} from './sdkDefinition';
 type Props = {
   name: string;
   type: string;
+  availableSince?: string;
   categorySupported?: PlatformCategory[];
   children?: React.ReactNode;
+  defaultNote?: string;
   defaultValue?: string;
   envVar?: string;
 };
@@ -19,7 +21,9 @@ export function SdkOption({
   name,
   children,
   type,
+  availableSince,
   defaultValue,
+  defaultNote,
   envVar,
   categorySupported = [],
 }: Props) {
@@ -28,9 +32,13 @@ export function SdkOption({
   return (
     <SdkDefinition name={name} categorySupported={categorySupported}>
       <SdkDefinitionTable>
+        {availableSince && (
+          <OptionDefRow label="Available since" value={availableSince} />
+        )}
         {type && <OptionDefRow label="Type" value={type} />}
-        {defaultValue && <OptionDefRow label="Default" value={defaultValue} />}
-
+        {defaultValue && (
+          <OptionDefRow label="Default" value={defaultValue} note={defaultNote} />
+        )}
         <PlatformCategorySection supported={['server', 'serverless']}>
           <PlatformSection notSupported={['javascript.nextjs']}>
             {envVar && <OptionDefRow label="ENV Variable" value={envVar} />}
@@ -46,12 +54,21 @@ export function SdkOption({
   );
 }
 
-function OptionDefRow({label, value}: {label: string; value: string}) {
+function OptionDefRow({
+  label,
+  value,
+  note,
+}: {
+  label: string;
+  value: string;
+  note?: string;
+}) {
   return (
     <tr>
       <th>{label}</th>
       <td>
         <code>{value}</code>
+        {note && <small> ({note})</small>}
       </td>
     </tr>
   );
