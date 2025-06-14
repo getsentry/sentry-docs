@@ -1,14 +1,24 @@
 ```c
 #include <sentry.h>
 
-sentry_value_t strip_sensitive_data(sentry_value_t event, void *hint) {
+sentry_value_t strip_sensitive_data(sentry_value_t event, void *hint, void *user_data) {
   /* modify event here or return NULL to discard the event */
+  (void)hint;
+
+  if (strcmp(sentry_value_as_string(sentry_value_get_by_key(event, "level")), "info") == 0) {
+    // remove the user data from "info" level events
+    sentry_value_remove_by_key(event, "user");
+    // make our mark on the event
+    sentry_value_set_by_key(sentry_value_get_by_key(event, "tags"),
+        "info", sentry_value_new_string((char*) user_data));
+  }
+
   return event;
 }
 
 int main(void) {
   sentry_options_t *options = sentry_options_new();
-  sentry_options_set_before_send(options, strip_sensitive_data, NULL);
+  sentry_options_set_before_send(options, strip_sensitive_data, "anonymized");
   sentry_init(options);
 
   /* ... */
@@ -28,7 +38,7 @@ static sentry_value_t
 crash_cleanup(
     const sentry_ucontext_t *uctx, // provides the user-space context of the crash
     sentry_value_t event,          // used the same way as in `before_send`
-    void *closure                  // user-data that you can provide at configuration time
+    void *user_data                  // user-data that you can provide at configuration time
 )
 {
     // Do contextual clean-up before the crash is sent to sentry's backend infrastructure
