@@ -381,7 +381,14 @@ export async function getFileBySlug(slug: string) {
         remarkGfm,
         remarkDefList,
         remarkFormatCodeBlocks,
-        [remarkImageSize, {sourceFolder: cwd, publicFolder: path.join(root, 'public')}],
+        [
+          remarkImageSize,
+          {
+            sourceFolder: cwd,
+            publicFolder: path.join(root, 'public'),
+            mdxFilePath: sourcePath,
+          },
+        ],
         remarkMdxImages,
         remarkCodeTitles,
         remarkCodeTabs,
