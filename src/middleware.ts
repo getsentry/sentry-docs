@@ -19,6 +19,11 @@ export const config = {
 
 // This function can be marked `async` if using `await` inside
 export function middleware(request: NextRequest) {
+  // Check if the URL ends with llms.txt
+  if (request.nextUrl.pathname.endsWith('llms.txt')) {
+    return handleLlmsTxt(request);
+  }
+
   return handleRedirects(request);
 }
 
@@ -60,6 +65,35 @@ const handleRedirects = (request: NextRequest) => {
   }
 
   return undefined;
+};
+
+const handleLlmsTxt = (request: NextRequest) => {
+  try {
+    // Get the original path by removing llms.txt
+    const originalPath = request.nextUrl.pathname.replace(/\/llms\.txt$/, '') || '/';
+    const pathSegments = originalPath.split('/').filter(Boolean);
+
+    // Rewrite to the API route with path segments
+    const apiPath =
+      pathSegments.length > 0
+        ? `/api/llms-txt/${pathSegments.join('/')}`
+        : '/api/llms-txt';
+
+    const apiUrl = new URL(apiPath, request.url);
+
+    return NextResponse.rewrite(apiUrl);
+  } catch (error) {
+    // Log error conditionally to avoid console warnings in production
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error handling llms.txt rewrite:', error);
+    }
+    return new Response('Error processing request', {
+      status: 500,
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+      },
+    });
+  }
 };
 
 type Redirect = {
@@ -2342,7 +2376,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/security-legal-pii/scrubbing/',
   },
   {
-    from: '/data-management/advanced-datascrubbing/',
+    from: '/data-management-settings/advanced-datascrubbing/',
     to: '/security-legal-pii/scrubbing/advanced-datascrubbing/',
   },
   {
