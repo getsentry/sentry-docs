@@ -2,18 +2,23 @@
 #include <sentry.h>
 
 sentry_value_t strip_sensitive_data(sentry_value_t event, void *hint, void *user_data) {
-  /* modify event here or return NULL to discard the event */
-  (void)hint;
+    (void)hint; // unlike in other SDKs, `hint` currently contains no data.
+    // to get more crash context into a callback, use the `on_crash` hook instead.
 
-  if (strcmp(sentry_value_as_string(sentry_value_get_by_key(event, "level")), "info") == 0) {
-    // remove the user data from "info" level events
-    sentry_value_remove_by_key(event, "user");
-    // make our mark on the event
-    sentry_value_set_by_key(sentry_value_get_by_key(event, "tags"),
-        "info", sentry_value_new_string((char*) user_data));
-  }
+    if (strcmp(sentry_value_as_string(sentry_value_get_by_key(event, "level")), "info") == 0) {
+        // remove the user data from "info" level events
+        sentry_value_remove_by_key(event, "user");
+        // make our mark on the event
+        sentry_value_t tags = sentry_value_get_by_key(event, "tags");
+        if (!sentry_value_is_null(tags)) {
+            sentry_value_set_by_key(tags, "info", sentry_value_new_string((char*) user_data));
+        }
+    }
 
-  return event;
+    // return the modified event, or discard it by freeing it and returning `null`
+    //       sentry_value_decref(event);
+    //       return sentry_value_new_null();
+    return event;
 }
 
 int main(void) {
@@ -35,14 +40,17 @@ The `before_send` callback implementation in `sentry-native` makes it hard to di
 #include <sentry.h>
 
 static sentry_value_t
-crash_cleanup(
+on_crash_callback(
     const sentry_ucontext_t *uctx, // provides the user-space context of the crash
-    sentry_value_t event,          // used the same way as in `before_send`
-    void *user_data                  // user-data that you can provide at configuration time
+    sentry_value_t event,          // used the same way as in `before_send`; mostly empty for minidump-generating backends (crashpad, breakpad)
+    void *user_data                // user-data that you can provide at configuration time
 )
 {
-    // Do contextual clean-up before the crash is sent to sentry's backend infrastructure
-
+    // Enrich an event before the crash is sent to sentry's backend infrastructure
+    sentry_value_t tags = sentry_value_get_by_key(event, "tags");
+    if (!sentry_value_is_null(tags)) {
+        sentry_value_set_by_key(tags, "crash_hook", sentry_value_new_string("invoked"));
+    }
     /* ... */
 
     // tell the backend to retain the event (+ dump)
@@ -54,7 +62,7 @@ crash_cleanup(
 
 int main(void) {
   sentry_options_t *options = sentry_options_new();
-  sentry_options_set_on_crash(options, crash_cleanup, NULL);
+  sentry_options_set_on_crash(options, on_crash_callback, NULL);
   sentry_init(options);
 
   /* ... */
