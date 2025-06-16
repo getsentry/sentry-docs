@@ -16,7 +16,7 @@ description: "Learn how to manually set up Sentry in your Next.js app and captur
 Choose the features you want to configure, and this guide will show you how:
 
 <OnboardingOptionButtons
-  options={["error-monitoring", "performance", "session-replay"]}
+  options={["error-monitoring", "performance", "session-replay", "user-feedback"]}
 />
 
 <PlatformContent includePath="getting-started-features-expandable" />
@@ -85,9 +85,17 @@ export default withSentryConfig(nextConfig, {
 });
 ```
 
+<Include name="nextjs-app-router-14-config" />
+
 ### Initialize Sentry Client-Side and Server-Side SDKs
 
-Create three files in your application's root directory: `sentry.server.config.(js|ts)`, `sentry.edge.config.(js|ts)`, and `instrumentation-client.(js|ts)`. Add the following initialization code into each respective file:
+Create three files in your application's root directory:
+- `sentry.server.config.(js|ts)`
+- `sentry.edge.config.(js|ts)`
+- `instrumentation-client.(js|ts)`
+  - If you previously had a file called `sentry.client.config.(js|ts)`, you can safely rename this to `instrumentation-client.(js|ts)` for all Next.js versions.
+
+Add the following initialization code into each respective file:
 
 <Alert level="info" title="Note">
   These files run in different environments (browser, server, edge) and are
@@ -112,9 +120,17 @@ Sentry.init({
   // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
   tracesSampleRate: 1.0,
   // ___PRODUCT_OPTION_END___ performance
-  // Replay may only be enabled for the client-side
   // ___PRODUCT_OPTION_START___ session-replay
-  integrations: [Sentry.replayIntegration()],
+  // Replay may only be enabled for the client-side
+  integrations: [
+    Sentry.replayIntegration(),
+    // ___PRODUCT_OPTION_START___ user-feedback
+    Sentry.feedbackIntegration({
+      // Additional SDK configuration goes in here, for example:
+      colorScheme: "system",
+    }),
+    // ___PRODUCT_OPTION_END___ user-feedback
+  ],
 
   // Capture Replay for 10% of all sessions,
   // plus for 100% of sessions with an error
@@ -188,10 +204,8 @@ Sentry.init({
 });
 ```
 
-<Alert level="success" title="Tip">
-  Include your [Data Source Name](/concepts/key-terms/dsn-explainer/) (DSN)
-  directly in these files, or use a _public_ environment variable like
-  `NEXT_PUBLIC_SENTRY_DSN`.
+<Alert title="Tip">
+  Include your DSN directly in these files, or use a _public_ environment variable like `NEXT_PUBLIC_SENTRY_DSN`.
 </Alert>
 
 ### Register Sentry Server-Side SDK Initialization
@@ -209,12 +223,6 @@ export async function register() {
   }
 }
 ```
-
-<Alert level="warning" title="Next.js version <15 only">
-  You need to enable the instrumentation hook by setting the
-  `experimental.instrumentationHook` to `true` in your `next.config.(js|mjs)`
-  file.
-</Alert>
 
 <Expandable title="Opt out of Sentry SDK bundling on client- or server-side.">
   If you want the Sentry SDK to be available on the server side and not on the

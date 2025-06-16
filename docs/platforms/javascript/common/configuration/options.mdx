@@ -213,7 +213,7 @@ Options used to configure the transport. This is an object with the following po
 - `headers`: An object containing headers to be sent with every request.
 - `proxy`: A proxy used for outbound requests. Can be http or https.
 - `caCerts`: A path or list of paths to a CA certificate, or a buffer of CA certificates.
-- `httpModule`: A custom HTTP module to use for requests. Defaults to the the native `http` and `https` modules.
+- `httpModule`: A custom HTTP module to use for requests. Defaults to the native `http` and `https` modules.
 - `keepAlive`: Determines whether to keep the socket alive between requests. Defaults to `false`.
 
 </PlatformCategorySection>
@@ -234,6 +234,20 @@ Options used to configure the transport. This is an object with the following po
 <SdkOption name="shutdownTimeout" type='number' defaultValue='2000' categorySupported={['server', 'serverless']}>
 
 Controls how many seconds to wait before shutting down. Sentry SDKs send events from a background queue. This queue is given a certain amount to drain pending events. The default is SDK specific but typically around two seconds. Setting this value too low may cause problems for sending events from command line applications. Setting the value too high will cause the application to block for a long time for users experiencing network connectivity problems.
+
+</SdkOption>
+
+<SdkOption name="disableInstrumentationWarnings" type='boolean' defaultValue='false' categorySupported={['server']}>
+
+Depending on your setup, the Sentry SDK will try to detect if it has been incorrectly set up. This can result in warnings like this being logged:
+
+> [Sentry] < libraryName > is not instrumented. This is likely because you required/imported < libraryName > before calling `Sentry.init()`.
+
+Or
+
+> [Sentry] < libraryName > is not instrumented. Please make sure to initialize Sentry in a separate file that you \`--import\` when running node, see: < docs link >.
+
+This means the SDK detected that the library hasn’t been wrapped for automatic performance instrumentation. This may result in some spans not being reported correctly. If this is not affecting you (for example because the warning is a false positive or you do not care about these specific spans), you can disable this warning by setting this option to `true`.
 
 </SdkOption>
 
@@ -371,10 +385,10 @@ This function is called with a transaction event object, and can return a modifi
 
 </SdkOption>
 
-<SdkOption name="beforeSendSpan" type='(span: SpanJSON) => SpanJSON | null'>
+<SdkOption name="beforeSendSpan" type='(span: SpanJSON) => SpanJSON'>
 
 This function is called with a serialized span object, and can return a modified span object. This might be useful for manually stripping PII from spans.
-This function is only called for root spans and all children.
+This function is called for root spans as well as for all child spans.
 If you want to drop the root span, including all of its child spans, use [`beforeSendTransaction`](#beforeSendTransaction) instead.
 
 Please note that the `span` you receive as an argument is a serialized object, not a `Span` class instance.
@@ -426,14 +440,6 @@ An optional property that configures which features are in experimental mode. Th
 <SdkOption name="enableNative" type='boolean' defaultValue='true'>
 
 Set this option to `false` to disable the native SDK. This will disable all native crash and error handling and, instead, the SDK will only capture errors on the upper layer.
-
-</SdkOption>
-
-<SdkOption name="autoInitializeNativeSdk" type='boolean' defaultValue='true'>
-
-Set this option to `false` to disable the auto initialization of the native layer SDK. Doing so means you will need to initialize the native SDK manually. Do not use this to disable the native layer.
-
-To disable the native layer, use [enableNative](#enableNative).
 
 </SdkOption>
 

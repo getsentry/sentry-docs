@@ -30,9 +30,8 @@ routes or controllers.
 As you start using an SDK, a scope and hub are automatically created for you out
 of the box. It's unlikely that you'll interact with the hub directly unless you're
 writing an integration or you want to create or destroy scopes. Scopes, on the
-other hand are more user facing. You can call <PlatformIdentifier name="configure-scope" /> at any point in
-time to modify data stored on the scope. This is useful for doing things like
-[modifying the context](../context/).
+other hand are more user facing. You can modify data stored on the scope at any point.
+This is useful for doing things like [modifying the context](../context/).
 
 When you call a global function such as <PlatformIdentifier name="capture-event" /> internally Sentry
 discovers the current hub and asks it to capture an event. Internally the hub will
@@ -40,32 +39,7 @@ then merge the event with the topmost scope's data.
 
 ## Configuring the Scope
 
-The most useful operation when working with scopes is the <PlatformIdentifier name="configure-scope" /> function. It can be used to reconfigure the current scope.
-
-You can, for instance, add custom tags or inform Sentry about the currently authenticated user.
-
-```cpp
-FConfigureScopeDelegate ScopeDelegate;
-ScopeDelegate.BindDynamic(this, &USomeClass::HandleScopeDelegate);
-
-void USomeClass::HandleScopeDelegate(USentryScope* Scope)
-{
-    USentryUser* SentryUser = NewObject<USentryUser>();
-    SentryUser->SetEmail("john.doe@example.com");
-    SentryUser->SetId(42);
-
-    Scope->SetUser(SentryUser);
-    Scope->SetTagValue("my-tag", "my value");
-}
-
-...
-
-USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
-
-SentrySubsystem->ConfigureScope(ScopeDelegate);
-```
-
-Alternatively, all data can be configured on the global scope using dedicated methods of `SentrySubsystem` class.
+All data can be configured on the global scope using dedicated methods of `SentrySubsystem` class.
 
 ```cpp
 USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();

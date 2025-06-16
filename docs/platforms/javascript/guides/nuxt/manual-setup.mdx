@@ -51,7 +51,7 @@ Add the following overrides:
 Choose the features you want to configure, and this guide will show you how:
 
 <OnboardingOptionButtons
-  options={["error-monitoring", "performance", "session-replay"]}
+  options={["error-monitoring", "performance", "session-replay", "user-feedback"]}
 />
 
 <PlatformContent includePath="getting-started-features-expandable" />
@@ -96,14 +96,22 @@ Sentry.init({
   // dsn: useRuntimeConfig().public.sentry.dsn
   // modify depending on your custom runtime config
   dsn: "___PUBLIC_DSN___",
-  
+
   // Adds request headers and IP for users, for more info visit:
   // https://docs.sentry.io/platforms/javascript/guides/nuxt/configuration/options/#sendDefaultPii
   sendDefaultPii: true,
   // ___PRODUCT_OPTION_START___ session-replay
 
   // Replay may only be enabled for the client-side
-  integrations: [Sentry.replayIntegration()],
+  integrations: [
+    Sentry.replayIntegration(),
+    // ___PRODUCT_OPTION_START___ user-feedback
+    Sentry.feedbackIntegration({
+      // Additional SDK configuration goes in here, for example:
+      colorScheme: "system",
+    }),
+    // ___PRODUCT_OPTION_END___ user-feedback
+  ],
   // ___PRODUCT_OPTION_END___ session-replay
   // ___PRODUCT_OPTION_START___ performance
 
@@ -225,7 +233,11 @@ export default defineNuxtConfig({
 
 The `hidden` option enables source map generation while preventing source map reference comments that would normally appear at the end of each generated file in the build output.
 
-## Step 4: Verify Your Setup
+## Step 4: Avoid Ad Blockers With Tunneling (Optional)
+
+<PlatformContent includePath="getting-started-tunneling" />
+
+## Step 5: Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
