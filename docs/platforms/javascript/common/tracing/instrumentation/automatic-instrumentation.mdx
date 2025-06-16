@@ -50,7 +50,7 @@ Sentry.init({
 
 Supported options:
 
-### tracePropagationTargets
+<SdkOption name="tracePropagationTargets" type='Array<string | RegExp>' defaultValue={'[\'localhost\', /^\\\/$/]'}>
 
 <Alert>
 
@@ -68,90 +68,92 @@ The default value of `tracePropagationTargets` is `['localhost', /^\//]`. This m
 
 You will need to configure your web server [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers) to allow the `sentry-trace` and `baggage` headers. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"` and `"Access-Control-Allow-Headers: baggage"`, but it depends on your set up. If you do not allow the two headers, the request might be blocked.
 
-### beforeStartSpan
+</SdkOption>
+
+<SdkOption name="beforeStartSpan" type='(options: StartSpanOptions) => StartSpanOptions'>
 
 `beforeStartSpan` is called at the start of every `pageload` or `navigation` span, and is passed an object containing data about the span which will be started. With `beforeStartSpan` you can modify that data.
 
 <PlatformContent includePath="performance/beforeNavigate-example" />
+
+</SdkOption>
 
 <Alert>
   If you're using React, read our docs to learn how to set up your [React Router
   integration](/platforms/javascript/guides/react/configuration/integrations/react-router/).
 </Alert>
 
-### shouldCreateSpanForRequest
+<SdkOption name="shouldCreateSpanForRequest" type='(url: string) => boolean'>
 
 This function can be used to filter out unwanted spans such as XHRs running
-health checks or something similar. If this function isn't specified, spans
-will be created for all requests.
+health checks or something similar. 
 
 <PlatformContent includePath="performance/filter-span-example" />
 
-### idleTimeout
+By default, spans will be created for all requests.
+
+</SdkOption>
+
+<SdkOption name="onRequestSpanStart" type="(span: Span, requestInformation: { headers?: WebFetchHeaders }): void">
+
+This callback is invoked directly after a span is started for an outgoing fetch or XHR request.
+You can use it to annotate the span with additional data or attributes, for example by setting attributes based on the passed request headers.
+
+</SdkOption>
+
+<SdkOption name="idleTimeout" type='number' defaultValue='1000'>
 
 The idle time, measured in ms, to wait until the pageload/navigation span will be finished, if there are no unfinished spans. The pageload/navigation span will use the end timestamp of the last finished span as the endtime.
 
-The default is `1000`.
+</SdkOption>
 
-### finalTimeout
+<SdkOption name="finalTimeout" type='number' defaultValue='30000'>
 
 The maximum duration of the pageload/naivgation span, measured in ms. If the duration exceeds the `finalTimeout` value, it will be finished.
 
-The default is `30000`.
+</SdkOption>
 
-### childSpanTimeout
+<SdkOption name="childSpanTimeout" type='number' defaultValue='15000'>
 
 The time, measured in ms, that a child span may run. If the last started child span is still running for more than this time, the pageload/navigation span will be finished.
 
-The default is `15000`.
+</SdkOption>
 
-### instrumentNavigation
+<SdkOption name="instrumentNavigation" type='boolean' defaultValue='true'>
 
 This flag enables or disables creation of `navigation` span on history changes.
 
-The default is `true`.
+</SdkOption>
 
-### instrumentPageLoad
+<SdkOption name="instrumentPageLoad" type='boolean' defaultValue='true'>
 
 This flag enables or disables creation of `pageload` span on first pageload.
 
-The default is `true`.
+</SdkOption>
 
-### markBackgroundSpans
+<SdkOption name="markBackgroundSpans" type='boolean' defaultValue='true'>
 
 This option flags pageload/navigation spans when tabs are moved to the background with "cancelled". Because browser background tab timing is not suited for precise measurements of operations and can affect your statistics in nondeterministic ways, we recommend that this option be enabled.
 
-The default is `true`.
+</SdkOption>
 
-### enableLongTask
+<SdkOption name="enableLongTask" type='boolean' defaultValue='true'>
 
 This option determines whether spans for long tasks automatically get created.
 
-The default is `true`.
+</SdkOption>
 
-### enableLongAnimationFrame
+<SdkOption name="enableLongAnimationFrame" type='boolean' defaultValue='true' availableSince='8.18.0'>
 
-<Alert>
-  The `enableLongAnimationFrame` option requires SDK [version
-  8.18.0](https://github.com/getsentry/sentry-javascript/releases/tag/8.18.0) or
-  higher.
-</Alert>
+This option determines whether spans for long animation frames get created automatically. If both `enableLongAnimationFrame` and [`enableLongTask`](#enableLongTask) are enabled, Sentry will send long animation frames and fallback to long tasks (if long animation frames aren't supported by the browser).
 
-This option determines whether spans for long animation frames get created automatically. If both `enableLongAnimationFrame` and `enableLongTask` are enabled, Sentry will send long animation frames and fallback to long tasks (if long animation frames aren't supported by the browser).
+</SdkOption>
 
-The default is `true`.
-
-### enableInp
-
-<Alert>
-  The `enableInp` option requires SDK [version
-  7.104.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.104.0)
-  or higher.
-</Alert>
+<SdkOption name="enableInp" type='boolean' defaultValue='true' availableSince='7.104.0' defaultNote="See note">
 
 This option determines whether interactions spans automatically get created when an [Interaction to Next Paint (INP)](/product/insights/web-vitals/web-vitals-concepts/#interaction-to-next-paint-inp) event is detected. Interactions are scored and surfaced in the [Web Vitals](/product/insights/web-vitals/) module.
 
-The default is `true` in `8.x` of the SDK, and `false` in `7.x`.
+The default is `true` starting with SDK version `8.x` and `false` in `7.x`.
 
 <Alert>
 INP samples currently incur no cost to enable at Sentry. Basic samples contain limited information such as the interaction target, latency, and user. You may wish to enrich your INP samples by setting up [Session Replays](/platforms/javascript/session-replay/) and/or setting up [Browser Profiling](/platforms/javascript/profiling/) instrumentation around your interactive elements to gain further insights into your slowest interactions.
@@ -162,8 +164,62 @@ Please note that any Session Replays and Browser Profiles used this way will inc
 
 <PlatformContent includePath="performance/enable-inp-example" />
 
-### interactionsSampleRate
+</SdkOption>
+
+<SdkOption name="interactionsSampleRate" type='number' defaultValue='1.0'>
 
 This option determines the sample rate of INP spans. `interactionsSampleRate` is applied on top of `tracesSampleRate`, therefore if your `interactionsSampleRate` is set to `0.5` and your `tracesSampleRate` is set to `0.1`, the outcome will be `0.05`.
 
 The default is `1.0`.
+
+</SdkOption>
+
+<SdkOption name="ignoreResourceSpans" type='Array<string>' defaultValue='[]' availableSince='9.23.0'>
+
+This option determines which categories or resource spans should be ignored. The resource categories are the span `op`s (for example `resource.script` or `resource.img`)
+
+```JavaScript
+Sentry.init({
+  // ...
+  integrations: [
+    Sentry.browserTracingIntegration({
+      ignoreResourceSpans: ['resource.css', 'resource.script'],
+    }),
+  ],
+});
+```
+
+By default, all resource spans are captured.
+
+</SdkOption>
+
+<SdkOption name="ignorePerformanceApiSpans" type='Array<string | RegExp>' defaultValue='[]' availableSince='9.23.0'>
+
+This option allows you to ignore certain spans created from the following browser Performance APIs:
+
+  - [`performance.mark(...)`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark)
+  - [`performance.measure(...)`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/measure)
+
+Any mark or measure entries matching the strings or regular expressions in the passed array will not be emitted as `mark` or `measure` spans.
+
+```JavaScript
+Sentry.init({
+  integrations: [
+    Sentry.browserTracingIntegration({
+      ignorePerformanceApiSpans: ['myMeasurement', /myMark/],
+    }),
+  ],
+});
+
+// no spans will not be created for these:
+performance.mark('myMark');
+performance.measure('myMeasurement');
+
+// spans will be created for these:
+performance.mark('authenticated');
+performance.measure('input-duration', ...);
+```
+
+By default, all performance API spans are captured.
+
+</SdkOption>
