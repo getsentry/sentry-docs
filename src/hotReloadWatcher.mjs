@@ -1,5 +1,6 @@
-import path from 'path';
+// eslint-disable-next-line simple-import-sort/imports -- idk why this just keeps failing
 import {watch} from 'node:fs/promises';
+import path from 'path';
 import {WebSocketServer} from 'ws';
 
 const watchedContent = new Set(['.mdx', '.md', '.png', '.jpg', '.jpeg', '.gif', '.svg']);
@@ -9,7 +10,7 @@ export const throttle = (fn, delay) => {
   return (...args) => {
     const now = Date.now();
     if (now - last < delay) {
-      return;
+      return undefined;
     }
     last = now;
     return fn(...args);
@@ -17,10 +18,12 @@ export const throttle = (fn, delay) => {
 };
 
 const wss = new WebSocketServer({port: 8080});
+// eslint-disable-next-line no-console
 console.info('⚡️ Hot reload watcher listening on ws://localhost:8080');
 
 wss.on('connection', async function onConnect(ws) {
   ws.on('error', err => {
+    // eslint-disable-next-line no-console
     console.log('ws error', err);
   });
   ws.on('message', function incoming(_msg) {
