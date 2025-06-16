@@ -118,11 +118,13 @@ This functionality should be gated behind the `includeLocalVariables` option, wh
 
 ## Feature Flags
 
-An SDK may optionally support feature flag collection. Feature flags are collected on evaluation, stored on the scope, and submitted to Sentry on error obeying the schema specified in the <Link to="/sdk/data-model/event-payloads/contexts/#feature-flag-context">Feature Flag Context</Link> protocol documentation.
+An SDK may optionally track feature flag evaluations. Feature flags can be attached to error events or to span events.
 
-If an SDK supports feature flags it must expose a function `addFeatureFlag` which has similar behavior to the `set_tag` function. It must accept a key of type string and a value which is a union of string, boolean, integer, float, and structure. An SDK may hold up to 100 evaluations (similar to the breadcrumb implementation). Evaluations are ordered based on their evaluation time. Typically, an LRU cache is used to store feature flags. When the capacity of the cache is exceeded the oldest flag is dropped. Any (or multiple) data structure(s) may be chosen by the SDK to store feature flags as long as the evaluation order of the flags is maintained.
+When tracking feature flag evaluations on spans, we track the first 10 feature flags evaluated within the span's scope.  Evaluations are span attributes and follow the existing span attribute schema.
 
-Because flags are stored on the scope, when a scope forks the flags data structure must be cloned. Failure to clone the data structure appropriately will lead to flags leaking across thread boundaries and lead to unexpected results.
+When tracking on error feature flag evaluations, we record the 100 most recent, unique feature flag evaluations.  Evaluations are stored on the scope. When the scope forks a copy of the collected feature flag evaluations are given to the child scope.  Mutations to the child's copy of the feature flags object should not be propagated to the parent.  Flag evaluations within a scope are considered local to the scope and do not propagate.  Evaluations should be submitted to Sentry following the schema specified in the <Link to="/sdk/data-model/event-payloads/contexts/#feature-flag-context">Feature Flag Context</Link> protocol documentation.
+
+If an SDK supports feature flags it must expose a function `add_feature_flag` which has similar behavior to the `set_tag` function. It must accept a key of type string and a value which is a union of string, boolean, integer, float, and structure.
 
 ### Integrations
 
@@ -207,8 +209,7 @@ It's advised to provide this feature through a single option called `attachScree
 
 The feature is achieved by adding an attachment with:
 
-* File name `screenshot.jpg` or `screenshot.png`
-  * Subsequent screenshots in the same event should be named `screenshot-n`, where n is the screenshot number starting with 2
+* The file name should contain the word `screenshot`
 * Image size, if possible should stay below 2 MB but quality/size could be configurable
 * `ContentType: image/jpg` or `ContentType: image/png`
 

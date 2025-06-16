@@ -93,6 +93,63 @@ Most community CDNs properly set an `Access-Control-Allow-Origin` header.
 
 </PlatformCategorySection>
 
+<PlatformSection supported={["javascript.sveltekit"]}>
+
+<Expandable permalink title="Configure CSP for Client-side `fetch` Instrumentation">
+
+If you're using a SvelteKit version older than `sveltejs/kit@2.16.0`, the Sentry SDK injects an inline `<script>` tag into the HTML response of the server.
+This script proxies all client-side `fetch` calls so that `fetch` calls inside your `load` functions are captured by the SDK.
+However, if you configured CSP rules to block inline fetch scripts by default, this script will be [blocked by the browser](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src#unsafe_inline_script).
+
+You have multiple options to solve this CSP issue:
+
+#### Option 1: Upgrade SvelteKit
+
+The easiest option is to update `@sveltejs/kit` to at least version `2.16.0` (or newer). The SDK will not inject the fetch proxy script as it's no longer necessary.
+
+#### Option 2: Add Script Hash to CSP Policy
+
+To enable the script, add an exception for the `sentryHandle` script by adding the hash of the script to your CSP script source rules.
+
+If your CSP is defined in `svelte.config.js`, you can add the hash to the `csp.directives.script-src` array:
+
+```javascript {filename:svelte.config.js} {5-7}
+const config = {
+  kit: {
+    csp: {
+      directives: {
+        "script-src": ["sha256-y2WkUILyE4eycy7x+pC0z99aZjTZlWfVwgUAfNc1sY8="], // + rest of your values
+      },
+    },
+  },
+};
+```
+
+For external CSP configurations, add the following hash to your `script-src` directive:
+
+```txt
+'sha256-y2WkUILyE4eycy7x+pC0z99aZjTZlWfVwgUAfNc1sY8='
+```
+
+<Alert>
+  We will not change this script any time soon, so the hash will stay
+  consistent.
+</Alert>
+
+#### Option 3: Disable the `fetch` Proxy Script
+
+If you don't want to inject the script responsible for instrumenting client-side `fetch` calls, you can disable injection by passing `injectFetchProxyScript: false` to `sentryHandle`:
+
+```javascript {filename:hooks.server.(js|ts)}
+export const handle = sentryHandle({ injectFetchProxyScript: false });
+```
+
+Note that if you disable the `fetch` proxy script, the SDK will not be able to capture spans for `fetch` calls made by SvelteKit when your route has a server load function. This also means that potential spans created on the server for these `fetch` calls will not be connected to the client-side trace.
+
+</Expandable>
+
+</PlatformSection>
+
 <PlatformCategorySection supported={['browser']}>
 
 <Expandable permalink title="Unexpected OPTIONS request">
@@ -146,8 +203,8 @@ You can work around our CDN bundles being blocked by [using our NPM packages](#u
 <PlatformSection supported={["javascript.nextjs"]}>
 
 The Sentry Next.js SDK has a separate option to make setting up tunnels very
-straight-forward, allowing you to skip the setup below. See <PlatformLink to="/manual-setup/#configure-tunneling-to-avoid-ad-blockers">
-Configure Tunneling to avoid Ad-Blockers</PlatformLink> to learn how to set up tunneling on Next.js.
+straight-forward, allowing you to skip the setup below. See <PlatformLink to="/configuration/build/#tunnelRoute">
+`tunnelRoute`</PlatformLink> to learn how to set up tunneling on Next.js.
 
 If you do not want to configure `tunnelRoute`, you can follow the guide below.
 
@@ -389,6 +446,18 @@ Remember to pass in `true` as the second parameter to `addEventListener()`. With
 </Expandable>
 </PlatformCategorySection>
 
+<PlatformCategorySection supported={['browser']}>
+
+<Expandable permalink title="SDK causes double invocations of `addEventListener` (e.g. duplicated click events)">
+
+In very rare cases, the SDK can cause callbacks added via `addEventListener` to an event target (such as a button) to be invoked twice.
+This is usually a sign of the SDK being intialized too late in the lifecycle of the page. If you can, try initializing the SDK earlier in your application.
+
+If this is not possible or doesn't apply to your use case, set the `unregisterOriginalCallbacks` option in the [`browserApiErrors` integration](../configuration/integrations/browserapierrors) to `true`.
+
+</Expandable>
+</PlatformCategorySection>
+
 <Expandable permalink title="Build errors with vite">
 
 If you're using the [Vite Bundler](https://vitejs.dev/) and a Sentry NPM package, and you see the following error:
@@ -449,9 +518,16 @@ While adding these packages as direct dependencies might remove the warning mess
 pnpm add import-in-the-middle require-in-the-middle
 ```
 
-As a workaround, create or modify `.npmrc` in your project root:
+As a workaround, create or modify `.npmrc` in your project root. First, try to specifially hoist the dependencies in question:
 
-```npmrc
+```ini {filename:.npmrc}
+public-hoist-pattern[]=*import-in-the-middle*
+public-hoist-pattern[]=*require-in-the-middle*
+```
+
+If that doesn't work, you can also tell pnpm to hoist all dependencies:
+
+```ini {filename:.npmrc}
 shamefully-hoist=true
 ```
 

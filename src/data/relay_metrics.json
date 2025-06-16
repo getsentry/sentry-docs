@@ -168,6 +168,12 @@
     "features": []
   },
   {
+    "type": "Timer",
+    "name": "envelope.span_v2_expansion",
+    "description": "The time in milliseconds it takes to expand a Span V2 container into Spans V1.",
+    "features": []
+  },
+  {
     "type": "Counter",
     "name": "event.accepted",
     "description": "Number of envelopes accepted in the current time slot.\n\nThis represents requests that have successfully passed rate limits and filters, and have\nbeen sent to the upstream.\n\nThis metric is tagged with:\n- `handling`: Either `\"success\"` if the envelope was handled correctly, or `\"failure\"` if\nthere was an error or bug.",
@@ -182,19 +188,19 @@
   {
     "type": "Counter",
     "name": "event.item_bytes",
-    "description": "Number of bytes we processed per envelope item.",
+    "description": "Number of bytes we processed per envelope item.\n\nThis metric is tagged with:\n- `item_type`: The type of the items being counted.\n- `is_container`: Whether this item is a container holding multiple items.\n- `sdk`: The name of the Sentry SDK sending the envelope. This tag is only set for\nSentry's SDKs and defaults to \"proprietary\".",
     "features": []
   },
   {
     "type": "Histogram",
     "name": "event.item_size",
-    "description": "The number of bytes received by Relay for each individual envelope item type.\n\nMetric is tagged by the item type.",
+    "description": "The number of bytes received by Relay for each individual envelope item type.\n\nThis metric is tagged with:\n- `item_type`: The type of the items being counted.\n- `is_container`: Whether this item is a container holding multiple items.",
     "features": []
   },
   {
     "type": "Counter",
     "name": "event.items",
-    "description": "Number of items we processed per envelope.",
+    "description": "Number of total envelope items we received.\n\nNote: This does not count raw items, it counts the logical amount of items,\ne.g. a single item container counts all its contained items.\n\nThis metric is tagged with:\n- `item_type`: The type of the items being counted.\n- `is_container`: Whether this item is a container holding multiple items.\n- `sdk`: The name of the Sentry SDK sending the envelope. This tag is only set for\nSentry's SDKs and defaults to \"proprietary\".",
     "features": []
   },
   {
@@ -572,6 +578,12 @@
   },
   {
     "type": "Counter",
+    "name": "producer.partition_key.rate_limit",
+    "description": "Number of messages that were written to the wrong partition because of configured rate limits.\n\nEach topic in Relay can optionally be configured with a per-partition-key rate limit. This\nrate limit does not drop messages, but instead disables semantic partitioning. Everytime\nthis happens for a message, this counter is incremented.",
+    "features": []
+  },
+  {
+    "type": "Counter",
     "name": "project_cache.eviction",
     "description": "Number of evicted stale projects from the cache.\n\nRelay scans the in-memory project cache for stale entries in a regular interval configured\nby `cache.eviction_interval`.\n\nThe cache duration for project states can be configured with the following options:\n\n- `cache.project_expiry`: The time after which a project state counts as expired. It is\nautomatically refreshed if a request references the project after it has expired.\n- `cache.project_grace_period`: The time after expiry at which the project state will still\nbe used to ingest events. Once the grace period expires, the cache is evicted and new\nrequests wait for an update.",
     "features": []
@@ -592,6 +604,12 @@
     "type": "Timer",
     "name": "project_cache.latency",
     "description": "Latency of project config updates until they reach Relay.\n\nThe metric is calculated by using the creation timestamp of the project config\nand when Relay updates its local cache with the new project config.\n\nNo metric is emitted when Relay fetches a project config for the first time.\n\nThis metric is tagged with:\n- `delay`: Bucketed amount of seconds passed between fetches.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "project_cache.refresh",
+    "description": "Number of refreshes for stale projects in the cache.",
     "features": []
   },
   {

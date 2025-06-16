@@ -68,6 +68,22 @@ logger.exception("An exception happened")
 - `"An exception happened"` will send the current exception from `sys.exc_info()` with the stack trace to Sentry. If there's no exception, the current stack will be attached.
 - The debug message `"I am ignored"` will not be captured by Sentry. To capture it, set `level` to `DEBUG` or lower in `LoguruIntegration`.
 
+Loguru log records can additionally also be captured as [Sentry logs](/platforms/python/logs/) as long as the `enable_logs` experimental option is `True`.
+
+```python
+import sentry_sdk
+from loguru import logger
+
+sentry_sdk.init(
+    # ...
+    _experiments={
+        "enable_logs": True,
+    },
+)
+
+logger.info("I will be sent to Sentry logs")
+```
+
 ### Ignoring a logger
 
 Loggers can be noisy. You can ignore a logger by calling `ignore_logger`.
@@ -108,15 +124,14 @@ from loguru import logger
 from sentry_sdk.integrations.loguru import LoguruIntegration
 from sentry_sdk.integrations.loguru import LoggingLevels
 
-sentry_loguru = LoguruIntegration(
-    level=LoggingLevels.INFO.value,        # Capture info and above as breadcrumbs
-    event_level=LoggingLevels.ERROR.value  # Send errors as events
-)
-
 sentry_sdk.init(
     # ...
     integrations=[
-        sentry_loguru,
+        LoguruIntegration(
+            level=LoggingLevels.INFO.value,              # Capture INFO and above as breadcrumbs
+            event_level=LoggingLevels.ERROR.value,       # Send ERROR logs as events
+            sentry_logs_level=LoggingLevels.INFO.value,  # Capture INFO and above as logs
+        )
     ],
 )
 ```
@@ -132,6 +147,22 @@ sentry_sdk.init(
   The Sentry Python SDK will report log records with a level higher than or equal to `event_level` as events. If set to `None`, the SDK won't send log records as events.
 
   Default: `ERROR`
+
+- `sentry_logs_level`
+
+  The Sentry Python SDK will capture log records with a level higher than or equal to `sentry_logs_level` as [Sentry structured logs](/platforms/python/logs/). If set to `None`, the SDK won't send records as logs.
+
+  To capture Loguru log records as Sentry logs, you must enable the experimental `enable_logs` option when initializing the SDK (regardless of the `sentry_logs_level` setting).
+
+  ```python
+  sentry_sdk.init(
+      # ...
+      _experiments={"enable_logs": True},
+  )
+  ```
+
+  Default: `INFO`
+
 
 ## Supported Versions
 
