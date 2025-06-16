@@ -382,7 +382,7 @@ export async function getFileBySlug(slug: string) {
         remarkDefList,
         remarkFormatCodeBlocks,
         [remarkImageSize, {sourceFolder: cwd, publicFolder: path.join(root, 'public')}],
-        remarkMdxImages,
+        remarkMdxImages as any,
         remarkCodeTitles,
         remarkCodeTabs,
         remarkComponentSpacing,
@@ -399,12 +399,12 @@ export async function getFileBySlug(slug: string) {
             },
           },
         ],
-      ];
+      ] as any;
       options.rehypePlugins = [
         ...(options.rehypePlugins ?? []),
-        rehypeSlug,
+        rehypeSlug as any,
         [
-          rehypeAutolinkHeadings,
+          rehypeAutolinkHeadings as any,
           {
             behavior: 'wrap',
             properties: {
@@ -429,11 +429,11 @@ export async function getFileBySlug(slug: string) {
             ],
           },
         ],
-        [rehypePrismPlus, {ignoreMissing: true}],
-        rehypeOnboardingLines,
-        [rehypePrismDiff, {remove: true}],
-        rehypePresetMinify,
-      ];
+        [rehypePrismPlus as any, {ignoreMissing: true}],
+        rehypeOnboardingLines as any,
+        [rehypePrismDiff as any, {remove: true}],
+        rehypePresetMinify as any,
+      ] as any;
       return options;
     },
     esbuildOptions: options => {
