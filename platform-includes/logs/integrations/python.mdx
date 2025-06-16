@@ -1,6 +1,6 @@
-### Python Logger Integration
+### Standard library logging
 
-Sentry automatically instruments Python loggers via its `LoggingIntegration`.
+The SDK's `LoggingIntegration` instruments standard library loggers in order to send Sentry structured logs to Sentry.
 
 ```python
 import sentry_sdk
@@ -9,8 +9,8 @@ import logging
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     _experiments={
-        "enable_logs": True
-    }
+        "enable_logs": True,
+    },
 )
 
 # Your existing logging setup
@@ -22,7 +22,7 @@ my_logger.debug('In this example debug events will not be sent to Sentry logs. m
 my_logger.info('But info events will be sent to Sentry logs. my_value=%s', my_value)
 ```
 
-By default, the logging integration sends INFO-level logs and higher to Sentry logs. You can set a different threshold via the `LoggingIntegration`'s `sentry_logs_level` parameter. However, regardless of the `sentry_logs_level` setting, the SDK only sends logs if they are at or above the logger's level.
+By default, the logging integration sends `INFO`-level logs and higher to Sentry logs. You can set a different threshold via the `LoggingIntegration`'s `sentry_logs_level` parameter. However, regardless of the `sentry_logs_level` setting, the SDK only sends logs if they are at or above the logger's level.
 
 ```python
 import sentry_sdk
@@ -61,15 +61,79 @@ from sentry_sdk.integrations.logging import SentryLogsHandler
 from sentry_sdk.integrations.logging import LoggingIntegration
 
 sentry_sdk.init(
-  dsn="...",
-  _experiments={
-      "enable_logs": True
-  },
-  integrations=[
-    LoggingIntegration(sentry_logs_level=None),  # Do not monkeypatch the sentry handler
-  ]
+    dsn="___PUBLIC_DSN___",
+    _experiments={
+        "enable_logs": True
+    },
+    integrations=[
+        LoggingIntegration(sentry_logs_level=None),  # Do not monkeypatch the sentry handler
+    ],
 }
 
 # Instead, configure the root logger to send INFO-level logs to Sentry
 logging.basicConfig(level=logging.INFO, handlers=[SentryLogsHandler(level=logging.INFO)])
+```
+
+### Loguru
+
+Loguru logs can also be automatically captured and sent to Sentry.
+
+```python
+import sentry_sdk
+from loguru import logger
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    _experiments={
+        "enable_logs": True,
+    },
+)
+
+loguru.debug("In this example, debug events will not be sent to Sentry logs.")
+loguru.info("On the other hand, info events will be sent to Sentry logs.")
+```
+
+By default, the Loguru integration sends `INFO`-level and higher logs to Sentry logs as long as `enable_logs` is `True`. A different threshold can be set via the `LoguruIntegration`'s `sentry_logs_level` parameter.
+
+```python
+import sentry_sdk
+from loguru import logger
+from sentry_sdk.integrations.loguru import LoggingLevels, LoguruIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    _experiments={
+        "enable_logs": True
+    },
+    integrations=[
+        # Only send WARNING (and higher) logs to Sentry logs
+        LoguruIntegration(sentry_logs_level=LoggingLevels.WARNING.value),
+    ],
+)
+
+logger.info("This INFO log won't be sent to Sentry logs.")
+logger.warning("This WARNING log will be sent to Sentry logs.")
+```
+
+If you want other logging integrations to send logs to Sentry logs, but not Loguru, setting `sentry_logs_level` to `None` on the integration level will stop the Loguru integration for capturing Sentry logs.
+
+```python
+
+import sentry_sdk
+from loguru import logger
+from sentry_sdk.integrations.loguru import LoguruIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    _experiments={
+        # In general, we want to capture logs as Sentry logs...
+        "enable_logs": True,
+    },
+    integrations=[
+        # ...just not from Loguru
+        LoguruIntegration(sentry_logs_level=None),
+    ]
+)
+
+loguru.error("This won't be sent to Sentry logs.")
 ```

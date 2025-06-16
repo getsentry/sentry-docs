@@ -59,6 +59,15 @@ const optionDetails: Record<
       </span>
     ),
   },
+  logs: {
+    name: 'Logs (Beta)',
+    description: (
+      <span>
+        Send text-based log information from your applications to Sentry for viewing
+        alongside relevant errors and searching by text-string or individual attributes.
+      </span>
+    ),
+  },
   'source-context': {
     name: 'Source Context',
     description: (
@@ -98,6 +107,7 @@ const OPTION_IDS = [
   'profiling',
   'session-replay',
   'user-feedback',
+  'logs',
   'source-context',
   'dsym',
   'source-maps',
