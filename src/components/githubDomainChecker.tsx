@@ -9,17 +9,39 @@ interface GitHubDomainCheckerProps {
 export function GitHubDomainChecker({id}: GitHubDomainCheckerProps = {}) {
   const [domain, setDomain] = useState('');
   const [isValidDomain, setIsValidDomain] = useState(false);
+  
+  // Safe function to check if domain is github.com or its subdomain
+  const isValidGitHubDomain = (input_domain: string): boolean => {
+    try {
+      const url = new URL(input_domain.startsWith('http') ? input_domain : `https://${input_domain}`);
+      const hostname = url.hostname.toLowerCase();
+      
+      // Exact match for github.com or valid subdomain (like gist.github.com)
+      return hostname === 'github.com' || hostname.endsWith('.github.com');
+    } catch {
+      return false;
+    }
+  };
 
-  // Updated to handle github.com URLs with paths (e.g., github.com/user)
+  // Safe function to check if it's an enterprise GitHub domain
+  const isValidEnterpriseDomain = (input_domain: string): boolean => {
+    try {
+      const url = new URL(input_domain.startsWith('http') ? input_domain : `https://${input_domain}`);
+      const hostname = url.hostname.toLowerCase();
+      
+      // Must be a valid domain with TLD, but not github.com
+      const domainPattern = /^[\w\-\.]+\.[\w]{2,}$/;
+      return domainPattern.test(hostname) && !hostname.endsWith('.github.com') && hostname !== 'github.com';
+    } catch {
+      return false;
+    }
+  };
+
   const isGitHubCom = (() => {
     const trimmedDomain = domain.toLowerCase().trim();
     if (!trimmedDomain) return false;
-
-    // Remove protocol if present
-    const domainWithoutProtocol = trimmedDomain.replace(/^https?:\/\//, '');
-
-    // Check if it starts with github.com (with or without path)
-    return domainWithoutProtocol.startsWith('github.com');
+    
+    return isValidGitHubDomain(trimmedDomain);
   })();
 
   const hasInput = domain.trim().length > 0;
@@ -31,17 +53,20 @@ export function GitHubDomainChecker({id}: GitHubDomainCheckerProps = {}) {
       setIsValidDomain(false);
       return;
     }
-
-    // Check if it contains github.com (valid)
-    if (trimmedDomain.toLowerCase().includes('github.com')) {
+    
+    // Check if it's a valid GitHub.com domain or subdomain
+    if (isValidGitHubDomain(trimmedDomain)) {
       setIsValidDomain(true);
       return;
     }
 
-    // For enterprise, check if it's a valid URL or domain format
-    const urlPattern = /^(https?:\/\/)?([\w\-\.]+\.[\w]{2,})(\/.*)?$/;
-    const isValidUrl = urlPattern.test(trimmedDomain);
-    setIsValidDomain(isValidUrl);
+    // For enterprise, validate as proper domain
+    if (isValidEnterpriseDomain(trimmedDomain)) {
+      setIsValidDomain(true);
+      return;
+    }
+
+    setIsValidDomain(false);
   };
 
   const handleDomainChange = ev => {
