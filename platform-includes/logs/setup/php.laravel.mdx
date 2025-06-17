@@ -1,0 +1,33 @@
+To configure Sentry as a log channel, add the following config to the `channels` section in `config/logging.php`. If this file does not exist, run `php artisan config:publish logging` to publish it.
+
+```php {filename:config/logging.php}
+'channels' => [
+    // ...
+    'sentry' => [
+        'driver' => 'sentry',
+    ],
+],
+```
+
+After you configured the Sentry log channel, you can configure your app to both log to a log file and to Sentry by modifying the log stack:
+
+```bash {filename:.env}
+# ...
+LOG_STACK=single,sentry
+# ...
+```
+
+Optionally, you can set the logging level:
+
+```php {filename:config/logging.php}
+'channels' => [
+    // ...
+    'sentry' => [
+        'driver' => 'sentry_logs',
+        // The minimum logging level at which this handler will be triggered
+        // Available levels: debug, info, notice, warning, error, critical, alert, emergency
+        'level' => env('LOG_LEVEL', 'error'),
+    ],
+    // ...
+],
+```
