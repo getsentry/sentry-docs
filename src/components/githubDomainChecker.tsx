@@ -114,14 +114,14 @@ export function GitHubDomainChecker({id}: GitHubDomainCheckerProps = {}) {
               <div className="text-sm font-medium mb-2">Recommended Installation:</div>
               {isGitHubCom ? (
                 <div className="text-green-700 bg-green-50 dark:text-green-300 dark:bg-green-900/30 p-3 rounded-md">
-                  <div className="mb-2">
+                  <div>
                     <strong>GitHub</strong> - Use the standard GitHub integration for
                     github.com
                   </div>
                 </div>
               ) : (
                 <div className="text-blue-700 bg-blue-50 dark:text-blue-300 dark:bg-blue-900/30 p-3 rounded-md">
-                  <div className="mb-2">
+                  <div>
                     <strong>GitHub Enterprise</strong> - Use GitHub Enterprise integration
                     for your domain
                   </div>
