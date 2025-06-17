@@ -3,7 +3,7 @@
 By default, the session is terminated once the application is in the background for more than `30 seconds`. You can change this default by setting the `autoSessionTrackingInterval` option to a `Duration` of your choosing.
 
 ```dart {2}
-SentryFlutter.init((options) {
+await SentryFlutter.init((options) {
   options.autoSessionTrackingInterval = const Duration(seconds: 60)
 });
 ```
@@ -18,14 +18,20 @@ Requires SDK version `9.0.0` or higher.
 
 On web you're required to use the `SentryNavigatorObserver` since sessions are tied to navigation events and your navigation routes to have names, for example using `RouteSettings`.
 Read more [here](/platforms/dart/guides/flutter/integrations/routing-instrumentation/#1-add-sentrynavigationobserver) on how to add the `SentryNavigatorObserver` to your app.
-If the `SentryNavigatorObserver` is not used in your app or your routes don't have names, sessions will not be tracked for web.
+
+<Alert>
+
+If you don't use the `SentryNavigatorObserver` then sessions will not be tracked in your application.
+Once you have set up the `SentryNavigatorObserver` make sure every route has a unique name otherwise the release health could be inconsistent and inaccurate.
+
+</Alert>
 
 #### Disable Auto Session Tracking
 
 If you'd like to opt out of capturing sessions, set the `enableAutoSessionTracking` option to `false`. If you disable this feature, release health will not be available.
 
 ```dart {2}
-SentryFlutter.init((options) {
+await SentryFlutter.init((options) {
   options.enableAutoSessionTracking = false;
 });
 ```
