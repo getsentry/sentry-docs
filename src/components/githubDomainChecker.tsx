@@ -2,15 +2,26 @@
 
 import {useState} from 'react';
 
-const MAX_COMPONENTS_ON_PAGE = 100;
+interface GitHubDomainCheckerProps {
+  id?: string;
+}
 
-export function GitHubDomainChecker() {
+export function GitHubDomainChecker({id}: GitHubDomainCheckerProps = {}) {
   const [domain, setDomain] = useState('');
   const [isValidDomain, setIsValidDomain] = useState(false);
-
-  const isGitHubCom =
-    domain.toLowerCase().trim() === 'github.com' ||
-    domain.toLowerCase().trim() === 'https://github.com';
+  
+  // Updated to handle github.com URLs with paths (e.g., github.com/user)
+  const isGitHubCom = (() => {
+    const trimmedDomain = domain.toLowerCase().trim();
+    if (!trimmedDomain) return false;
+    
+    // Remove protocol if present
+    const domainWithoutProtocol = trimmedDomain.replace(/^https?:\/\//, '');
+    
+    // Check if it starts with github.com (with or without path)
+    return domainWithoutProtocol.startsWith('github.com');
+  })();
+  
   const hasInput = domain.trim().length > 0;
 
   // Validate domain format
@@ -20,12 +31,9 @@ export function GitHubDomainChecker() {
       setIsValidDomain(false);
       return;
     }
-
-    // Check if it's github.com (valid)
-    if (
-      trimmedDomain.toLowerCase() === 'github.com' ||
-      trimmedDomain.toLowerCase() === 'https://github.com'
-    ) {
+    
+    // Check if it contains github.com (valid)
+    if (trimmedDomain.toLowerCase().includes('github.com')) {
       setIsValidDomain(true);
       return;
     }
@@ -41,23 +49,24 @@ export function GitHubDomainChecker() {
     setDomain(newDomain);
     validateDomain(newDomain);
   };
-
+  
+  // Improved input styling with dark mode support
   const inputClassName =
-    'form-input w-full rounded-md border-[1.5px] focus:ring-2 focus:ring-accent-purple/20 border-gray-200';
-
-  // This is to avoid in case multiple instances of this component are used on the page
-  const randomCounter = Math.round(Math.random() * MAX_COMPONENTS_ON_PAGE);
+    'form-input w-full rounded-md border-[1.5px] focus:ring-2 focus:ring-accent-purple/20 border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400';
+  
+  // Use provided id or generate a fallback
+  const inputId = id || `gh-domain-${Date.now()}`;
 
   return (
-    <div className="space-y-4 p-6 border border-gray-100 rounded">
+    <div className="space-y-4 p-6 border border-gray-100 dark:border-gray-700 rounded">
       <div className="flex w-full">
         <div className="flex items-center min-w-[16ch] px-4">
-          <label htmlFor={`gh-domain-${randomCounter}`} className="text-nowrap">
+          <label htmlFor={inputId} className="text-nowrap">
             GitHub Domain
           </label>
         </div>
         <input
-          id={`gh-domain-${randomCounter}`}
+          id={inputId}
           value={domain}
           placeholder="https://github.com or https://ghe.example.com"
           className={inputClassName}
@@ -66,26 +75,28 @@ export function GitHubDomainChecker() {
       </div>
 
       {hasInput && (
-        <div className="mt-4 p-4 rounded-md border">
-          <div className="text-sm font-medium mb-2">Recommended Installation:</div>
+        <div className="mt-4 p-4 rounded-md border dark:border-gray-600">
           {isValidDomain ? (
-            isGitHubCom ? (
-              <div className="text-green-700 bg-green-50 p-3 rounded-md">
-                <div className="mb-2">
-                  <strong>GitHub</strong> - Use the standard GitHub integration for
-                  github.com
-                </div>
+            <div>
+              <div className="text-sm font-medium mb-2">
+                Recommended Installation:
               </div>
-            ) : (
-              <div className="text-blue-700 bg-blue-50 p-3 rounded-md">
-                <div className="mb-2">
-                  <strong>GitHub Enterprise</strong> - Use GitHub Enterprise integration
-                  for your domain
+              {isGitHubCom ? (
+                <div className="text-green-700 bg-green-50 dark:text-green-300 dark:bg-green-900/30 p-3 rounded-md">
+                  <div className="mb-2">
+                    <strong>GitHub</strong> - Use the standard GitHub integration for github.com
+                  </div>
                 </div>
-              </div>
-            )
+              ) : (
+                <div className="text-blue-700 bg-blue-50 dark:text-blue-300 dark:bg-blue-900/30 p-3 rounded-md">
+                  <div className="mb-2">
+                    <strong>GitHub Enterprise</strong> - Use GitHub Enterprise integration for your domain
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
-            <div className="text-red-700 bg-red-50 p-3 rounded-md">
+            <div className="text-red-700 bg-red-50 dark:text-red-300 dark:bg-red-900/30 p-3 rounded-md">
               <strong>Invalid Domain</strong> - Please enter a valid GitHub domain or URL
             </div>
           )}
