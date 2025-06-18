@@ -181,3 +181,25 @@ Clicks in replays can appear in the incorrect location due to rendering differen
 
 Text masking of variable-width fonts can also cause this because the size of the masking text ("*") will not necessarily have the same dimensions as the original character it replaced. There is currently no workaround; please [follow this GitHub Issue](https://github.com/getsentry/sentry-javascript/issues/15449) for updates.
 </Expandable>
+
+<Expandable title="Replay doesn't work in micro frontend application" permalink>
+
+If Session Replay is not working in your micro frontend application, it's likely due to Content Security Policy (CSP) restrictions. The Session Replay SDK uses web workers to process replay data, which requires specific CSP permissions.
+
+To resolve this issue, make sure to include `worker-src 'self' blob:` in your `Content-Security-Policy` header or meta tag. This directive allows the SDK to create and use web workers from the same origin (`'self'`) and from blob URLs (`blob:`), which are necessary for the replay functionality to work properly.
+
+For example, if you're setting the CSP via a meta tag:
+
+```html
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; worker-src 'self' blob:; ...">
+```
+
+Or if you're setting it via an HTTP header:
+
+```
+Content-Security-Policy: default-src 'self'; worker-src 'self' blob:; ...
+```
+
+Without the proper `worker-src` directive, the browser will block the web worker creation, preventing Session Replay from functioning correctly in your micro frontend setup.
+
+</Expandable>
