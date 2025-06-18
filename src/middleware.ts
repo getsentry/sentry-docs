@@ -19,11 +19,7 @@ export const config = {
 
 // This function can be marked `async` if using `await` inside
 export function middleware(request: NextRequest) {
-  // Check if the URL ends with llms.txt
-  if (request.nextUrl.pathname.endsWith('llms.txt')) {
-    return handleLlmsTxt(request);
-  }
-
+  // Remove the llms.txt handling - it's now handled by Next.js redirects
   return handleRedirects(request);
 }
 
@@ -65,32 +61,6 @@ const handleRedirects = (request: NextRequest) => {
   }
 
   return undefined;
-};
-
-const handleLlmsTxt = async (request: NextRequest) => {
-  try {
-    // Get the original path by removing llms.txt
-    const originalPath = request.nextUrl.pathname.replace(/\/llms\.txt$/, '') || '/';
-    const pathSegments = originalPath.split('/').filter(Boolean);
-
-    // Rewrite to the API route with path segments
-    const apiPath =
-      pathSegments.length > 0
-        ? `/api/llms-txt/${pathSegments.join('/')}`
-        : '/api/llms-txt';
-
-    const apiUrl = new URL(apiPath, request.url);
-
-    return NextResponse.rewrite(apiUrl);
-  } catch (error) {
-    console.error('Error handling llms.txt rewrite:', error);
-    return new Response('Error processing request', {
-      status: 500,
-      headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-      },
-    });
-  }
 };
 
 type Redirect = {

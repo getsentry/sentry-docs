@@ -2,6 +2,11 @@ const isDeveloperDocs = !!process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const developerDocsRedirects = [
+  // LLMs.txt redirect - converts any page to markdown format
+  {
+    source: '/:path*/llms.txt',
+    destination: '/api/llms-txt/:path*',
+  },
   {
     source: '/sdk/miscellaneous/unified-api/tracing/:path*',
     destination: '/sdk/performance/:path*',
@@ -218,6 +223,11 @@ const developerDocsRedirects = [
 
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
+  // LLMs.txt redirect - converts any page to markdown format
+  {
+    source: '/:path*/llms.txt',
+    destination: '/api/llms-txt/:path*',
+  },
   {
     source: '/organization/integrations/telegram-alerts-bot/',
     destination: '/organization/integrations/notification-incidents/telegram-alerts-bot/',
