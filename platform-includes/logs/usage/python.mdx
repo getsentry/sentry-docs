@@ -25,3 +25,30 @@ sentry_logger.warning('Rate limit reached for endpoint', endpoint='/api/results/
 sentry_logger.error('Failed to process payment', order_id="or_2342", amount=99.99)
 sentry_logger.fatal('Database connection pool exhausted', database="users", active_connections=100)
 ```
+
+For more advanced use cases, you can pass structured attributes using the `attributes` parameter. This allows you to set custom attribute names without automatic prefixing:
+
+```python
+from sentry_sdk import logger as sentry_logger
+
+sentry_logger.error(
+    'Payment processing failed', 
+    user_id=12345,
+    attributes={
+        'payment.provider': 'stripe',
+        'payment.method': 'credit_card',
+        'payment.currency': 'USD',
+        'user.subscription_tier': 'premium'
+    }
+)
+
+sentry_logger.warning(
+    'Database query slow',
+    attributes={
+        'db.operation': 'SELECT',
+        'db.table': 'users',
+        'db.duration_ms': 1500,
+        'service.instance': 'web-01'
+    }
+)
+```
