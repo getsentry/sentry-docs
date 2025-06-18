@@ -137,11 +137,14 @@ const Container = styled('div')`
   pre[class*='language-'] {
     padding: 10px 12px;
     border-radius: 0 0 3px 3px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-top: none;
   }
 `;
 
 const TabBar = styled('div')`
   background: var(--code-background);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-bottom: 1px solid #40364a;
   height: 36px;
   display: flex;
