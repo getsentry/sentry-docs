@@ -1,9 +1,13 @@
-<Expandable title="AI Rules for Cursor or Windsurf" copy={true}>
+<Expandable title="AI Rules for Code Editors" copy={true}>
 
-Sentry provides a set of rules you can use to help your LLM use Sentry correctly. Copy this file and add it to your projects rules configuration.
+Sentry provides a set of rules you can use to help your LLM use Sentry correctly. Copy this file and add it to your projects rules configuration. When created as a rules file this should be placed alongside other editor specific rule files. For example, if you are using Cursor, place this file in the `.cursorrules` directory.
+
+{/* ATTENTION: The rules defined here must match those in the app's onboarding documentation (see: https://github.com/getsentry/sentry/blob/master/static/app/gettingStartedDocs/javascript/javascript.tsx).
+If you make any changes, please update the getting started doc accordingly. */}
+
 
 ````markdown {filename:rules.md}
-These examples should be used as guidance when configuring Sentry functionlaity within a project.
+These examples should be used as guidance when configuring Sentry functionality within a project.
 
 # Error / Exception Tracking
 
@@ -109,13 +113,15 @@ Sentry.init({
 
 ## Logger Examples
 
+`logger.fmt` is a template literal function that should be used to bring variables into the structured logs.
+
 ```javascript
 import * as Sentry from "@sentry/browser";
 
 const { logger } = Sentry;
 
 logger.trace("Starting database connection", { database: "users" });
-logger.debug("Cache miss for user", { userId: 123 });
+logger.debug(logger.fmt`Cache miss for user: ${userId}`);
 logger.info("Updated profile", { profileId: 345 });
 logger.warn("Rate limit reached for endpoint", {
   endpoint: "/api/results/",

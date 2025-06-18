@@ -579,6 +579,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/dart/integrations/dio/',
   },
   {
+    from: '/platforms/dart/configuration/integrations/firebase-remote-config/',
+    to: '/platforms/dart/integrations/firebase-remote-config/',
+  },
+  {
     from: '/quickstart/',
     to: '/platforms/',
   },
@@ -3593,10 +3597,6 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/sdk/craft-quick-start/',
     to: '/sdk/processes/releases/',
-  },
-  {
-    from: '/sdk/metrics/',
-    to: '/sdk/telemetry/metrics/',
   },
   {
     from: '/sdk/check-ins/',
