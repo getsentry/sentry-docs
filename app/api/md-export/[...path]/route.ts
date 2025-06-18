@@ -8,6 +8,7 @@ import {getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {getFileBySlugWithCache} from 'sentry-docs/mdx';
 
+// This route handles .md export requests for any documentation page
 export async function GET(
   _request: Request,
   {params}: {params: Promise<{path: string[]}>}
@@ -198,7 +199,7 @@ For the complete content with full formatting, code examples, and interactive el
 
     return createResponse(pageTitle, cleanContent, `/${pathSegments.join('/')}`);
   } catch (error) {
-    console.error('Error generating llms.txt:', error);
+    console.error('Error generating .md export:', error);
     return new NextResponse('Internal server error', {status: 500});
   }
 }
@@ -328,7 +329,7 @@ async function resolvePlatformIncludes(
   // Build platform identifier for include files
   let platformId = platform;
   if (guide && guide !== platform) {
-    platformId = `${platform}.${guide}`;
+         platformId = `${platform}.${guide}`;
   }
 
   // Replace PlatformContent includes with actual content
@@ -383,4 +384,4 @@ async function resolvePlatformIncludes(
   }
 
   return result;
-}
+} 
