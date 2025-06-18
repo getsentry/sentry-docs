@@ -8,7 +8,10 @@ import {getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
 import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {getFileBySlugWithCache} from 'sentry-docs/mdx';
 
-export async function GET({params}: {params: Promise<{path: string[]}>}) {
+export async function GET(
+  request: Request,
+  {params}: {params: Promise<{path: string[]}>}
+) {
   try {
     const resolvedParams = await params;
     const pathSegments = resolvedParams.path || [];
