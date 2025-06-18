@@ -3,8 +3,8 @@ To configure Sentry as a log channel, add the following config to the `channels`
 ```php {filename:config/logging.php}
 'channels' => [
     // ...
-    'sentry' => [
-        'driver' => 'sentry',
+    'sentry_logs' => [
+        'driver' => 'sentry_logs',
     ],
 ],
 ```
@@ -13,7 +13,15 @@ After you configured the Sentry log channel, you can configure your app to both 
 
 ```bash {filename:.env}
 # ...
-LOG_STACK=single,sentry
+LOG_STACK=single,sentry_logs
+# ...
+```
+
+You will also need to configure the Sentry Laravel SDK to enable the logging integration. You can do this by updating your `.env` file to include the following:
+
+```bash {filename:.env}
+# ...
+SENTRY_ENABLE_LOGS=true
 # ...
 ```
 
@@ -22,11 +30,11 @@ Optionally, you can set the logging level:
 ```php {filename:config/logging.php}
 'channels' => [
     // ...
-    'sentry' => [
+    'sentry_logs' => [
         'driver' => 'sentry_logs',
         // The minimum logging level at which this handler will be triggered
         // Available levels: debug, info, notice, warning, error, critical, alert, emergency
-        'level' => env('LOG_LEVEL', 'error'),
+        'level' => env('LOG_LEVEL', 'info'), // defaults to `debug` if not set
     ],
     // ...
 ],
