@@ -337,10 +337,10 @@ function resolvePlatformIncludes(
   // Replace PlatformContent includes with actual content
   const includePattern = /<PlatformContent[^>]*includePath="([^"]*)"[^>]*\/>/g;
   let result = content;
-  let match;
+  let match = includePattern.exec(content);
 
   // Fix assignment in while condition by using a separate variable
-  while ((match = includePattern.exec(content)) !== null) {
+  while (match !== null) {
     const includePath = match[1];
     const fullMatch = match[0];
 
@@ -385,6 +385,9 @@ function resolvePlatformIncludes(
         `\n*[${sectionName.charAt(0).toUpperCase() + sectionName.slice(1)} instructions would appear here]*\n`
       );
     }
+
+    // Get the next match
+    match = includePattern.exec(content);
   }
 
   return Promise.resolve(result);
