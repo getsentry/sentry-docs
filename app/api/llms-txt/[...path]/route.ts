@@ -198,11 +198,7 @@ For the complete content with full formatting, code examples, and interactive el
 
     return createResponse(pageTitle, cleanContent, `/${pathSegments.join('/')}`);
   } catch (error) {
-    // Log error to stderr in server environments, avoid console in production
-    if (process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
-      console.error('Error generating llms.txt:', error);
-    }
+    console.error('Error generating llms.txt:', error);
     return new NextResponse('Internal server error', {status: 500});
   }
 }
@@ -313,7 +309,7 @@ async function cleanupMarkdown(
   );
 }
 
-function resolvePlatformIncludes(
+async function resolvePlatformIncludes(
   content: string,
   pathSegments: string[]
 ): Promise<string> {
@@ -340,8 +336,7 @@ function resolvePlatformIncludes(
   let result = content;
   let match = includePattern.exec(content);
 
-  // Fix assignment in while condition by using a separate variable
-  while (match !== null) {
+  while ((match = includePattern.exec(content)) !== null) {
     const includePath = match[1];
     const fullMatch = match[0];
 
@@ -375,11 +370,7 @@ function resolvePlatformIncludes(
         );
       }
     } catch (error) {
-      // Log error conditionally to avoid console warnings in production
-      if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
-        console.error(`Error loading include ${includePath}:`, error);
-      }
+      console.error(`Error loading include ${includePath}:`, error);
       const sectionName = includePath.split('/').pop() || 'content';
       result = result.replace(
         fullMatch,
@@ -391,5 +382,5 @@ function resolvePlatformIncludes(
     match = includePattern.exec(content);
   }
 
-  return Promise.resolve(result);
+  return result;
 }
