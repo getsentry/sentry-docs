@@ -32,7 +32,7 @@ export async function GET(
             '/'
           );
         }
-      } catch (e) {
+      } catch {
         // Fallback for home page
         const homeContent = `# Welcome to Sentry Documentation
 
@@ -91,7 +91,7 @@ Sentry helps developers monitor and fix crashes in real time. The platform suppo
           frontMatter.title ||
           doc.frontMatter.title ||
           `Developer Documentation: ${pathSegments.join(' / ')}`;
-      } catch (e) {
+      } catch {
         return new NextResponse('Page not found', {status: 404});
       }
     } else if (pathSegments[0] === 'api' && pathSegments.length > 1) {
@@ -187,7 +187,7 @@ This page exists in the documentation tree but the source markdown content could
 The content may be dynamically generated or processed through the MDX pipeline. 
 For the complete content with full formatting, code examples, and interactive elements, please visit the original page.`;
         }
-      } catch (e) {
+      } catch {
         return new NextResponse('Error processing page', {status: 500});
       }
     }
@@ -199,6 +199,7 @@ For the complete content with full formatting, code examples, and interactive el
   } catch (error) {
     // Log error to stderr in server environments, avoid console in production
     if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
       console.error('Error generating llms.txt:', error);
     }
     return new NextResponse('Internal server error', {status: 500});
@@ -338,8 +339,8 @@ function resolvePlatformIncludes(
   let result = content;
   let match;
 
-  // Fix assignment in while condition
-  while ((match = includePattern.exec(content))) {
+  // Fix assignment in while condition by using a separate variable
+  while ((match = includePattern.exec(content)) !== null) {
     const includePath = match[1];
     const fullMatch = match[0];
 
@@ -375,6 +376,7 @@ function resolvePlatformIncludes(
     } catch (error) {
       // Log error conditionally to avoid console warnings in production
       if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
         console.error(`Error loading include ${includePath}:`, error);
       }
       const sectionName = includePath.split('/').pop() || 'content';
