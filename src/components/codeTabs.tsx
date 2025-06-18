@@ -136,21 +136,21 @@ export function CodeTabs({children}: CodeTabProps) {
 const Container = styled('div')`
   pre[class*='language-'] {
     padding: 10px 12px;
-    border-radius: 0 0 3px 3px;
-    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0 0 8px 8px;
+    border: 3px solid white;
     border-top: none;
   }
 `;
 
 const TabBar = styled('div')`
   background: var(--code-background);
-  border: 3px solid rgba(255, 255, 255, 0.2);
+  border: 3px solid white;
   border-bottom: 1px solid #40364a;
   height: 36px;
   display: flex;
   align-items: center;
   padding: 0 0.5rem;
-  border-radius: 3px 3px 0 0;
+  border-radius: 8px 8px 0 0;
 `;
 
 const TabButton = styled('button')`
