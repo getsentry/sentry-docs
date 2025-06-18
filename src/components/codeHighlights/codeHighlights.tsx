@@ -132,9 +132,9 @@ const HighlightBlockContainer = styled('div')`
   background-color: rgba(239, 239, 239, 0.06);
   position: relative;
 
-  border: 3px solid white;
+  border: 1px solid var(--accent-11);
   border-left: 4px solid var(--accent-purple);
-  border-radius: 8px;
+  border-radius: 6px;
 
   .highlight-line {
     padding-left: 8px !important;
