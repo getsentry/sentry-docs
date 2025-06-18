@@ -8,7 +8,7 @@ description: "Learn how to enable Session Replay in your mobile app."
 
 <Alert>
 
-Flutter Session Replay is available on **iOS** and **Android**. This SDK support is still experimental as we iron out any bugs that are reported. If you encounter any issues please let us know via a GitHub ticket.
+Flutter Session Replay is available on **iOS** and **Android**.
 
 </Alert>
 
@@ -18,24 +18,24 @@ By default, our Session Replay SDK masks all text content, images, and user inpu
 
 ## Pre-requisites
 
-Make sure your Sentry Flutter SDK version is at least 8.9.0, which is required for Session Replay.
+Make sure your Sentry Flutter SDK version is at least `9.0.0`, which is required for Session Replay.
 You can update your `pubspec.yaml` to the matching version:
 
 ```yaml
 dependencies:
-  sentry_flutter: ^8.9.0
+  sentry_flutter: ^9.0.0
 ```
 
 ## Setup
 
-To set up replay, enable it by setting a non-zero sample rate. Also, make sure you've `SentryWidget` wrapping your app:
+To set up replay, enable it by setting a non-zero sample rate and wrapping your root widget with `SentryWidget`:
 
 ```dart
 await SentryFlutter.init(
   (options) {
-    ...
-    options.experimental.replay.sessionSampleRate = 1.0;
-    options.experimental.replay.onErrorSampleRate = 1.0;
+    options.dsn = '__DSN__';
+    options.replay.sessionSampleRate = 1.0;
+    options.replay.onErrorSampleRate = 1.0;
   },
   appRunner: () => runApp(
     SentryWidget(
@@ -61,17 +61,13 @@ Sampling allows you to control how much of your website's traffic will result in
 
 Sampling starts as soon as a session begins. The `sessionSampleRate` is then evaluated. If the session is sampled, replay recording will start immediately. If not, `onErrorSampleRate` will be evaluated. If the session is sampled at this point, the replay will be buffered and will only be uploaded to Sentry if an error occurs.
 
-## Redact Session Replay via `masking`
+## PII & Privacy Considerations
 
-By default, the SDK is recording and aggressively redacting (masking) all `Text`, `EditableText`, and `Image` widgets for <PlatformLink to="/session-replay/">`Session Replay`</PlatformLink>. To modify or disable this behavior, use the `options.experimental.privacy` parameter.
+Personally identifiable information (PII), and privacy are important considerations when enabling Session Replay. The Sentry Flutter SDK aggressively masks all `Text`, `EditableText`, `RichText` and `Image` widgets by default.
 
-<Alert level="warning">
-  Modifying this parameter will also affect `masking` for
-  <PlatformLink to="/enriching-events/screenshots/">`Screenshots`</PlatformLink>
-  .
-</Alert>
-
-<PlatformContent includePath="replay/privacy-configuration" />
+While we have default privacy considerations in place, there are additional settings you might need to configure to fully mask your app's content.
+We cannot detect the usage of third party widgets such as [FlutterMap](https://pub.dev/packages/flutter_map) so you need to manually configure the privacy configuration to mask the content of these widgets.
+To learn more about session replay privacy, [read our docs.](/platforms/dart/guides/flutter/session-replay/privacy/)
 
 ## Error Linking
 

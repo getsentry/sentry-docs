@@ -3,8 +3,6 @@ title: "View Hierarchy"
 description: "Learn more about debugging the view hierarchy when an error occurs. Sentry pairs the view hierarchy representation with the original event, giving you additional insight into issues."
 ---
 
-<Include name="feature-stage-beta.mdx" />
-
 Sentry makes it possible to render a JSON representation of the view hierarchy of an error and includes it as an <PlatformLink to="/enriching-events/attachments/">attachment</PlatformLink>.
 
 This feature only applies to SDKs with a user interface, such as the ones for mobile and desktop applications. In some environments like native iOS, rendering the view hierarchy requires the UI thread and in the event of a crash, that might not be available. Another example where the view hierarchy might not be available is when the event happens before the screen starts to load. So inherently, this feature is a best effort solution.
@@ -23,24 +21,34 @@ View hierarchy debugging is an opt-in feature. You can enable it as shown below:
 
 ### Customize View Hierarchy Capturing
 
+By default, Flutter limits view hierarchy captures to once every 2 seconds to minimize performance impact. While this debounce interval cannot be changed, you can customize capture behavior by implementing the `beforeCaptureViewHierarchy` callback in your `SentryFlutterOptions`.
+
+This callback gives you fine-grained control over view hierarchy captures based on event and hint data, allowing you to implement conditional logic.
+
 <Alert>
 
-Requires SDK version `8.13.0` or higher.
+The `shouldDebounce` parameter is `true` if the debounce is active.
+If you want to capture view hierarchies regardless of the debounce, you can ignore the `shouldDebounce` parameter.
 
 </Alert>
 
-Capturing view hierarchies on Flutter is limited to once every 2 seconds by default to minimize performance impact. While this debounce interval is fixed, you can override individual capture decisions by implementing the `beforeCaptureViewHierarchy` option in your `SentryFlutterOptions`.
-
-The `beforeCaptureViewHierarchy` option allows you to customize behavior based on event data so you can decide when to capture view hierarchy and when not to. For example, you can decide to only capture view hierarchy for fatal events:
-
-```flutter {2-9}
+```dart {tabTitle: Respect debounce} {2-9}
 await SentryFlutter.init((options) {
-  options.beforeCaptureViewHierarchy = (event, hint, debounce) async {
+  options.beforeCaptureViewHierarchy = (event, hint, shouldDebounce) async {
     // If debounce is active, skip capturing
-    if (debounce) {
+    if (shouldDebounce) {
       return false;
     }
-    // Capture if it's a fatal event
+    // Capture view hierarchy if it's a fatal event
+    return event.level == SentryLevel.fatal;
+  };
+});
+```
+
+```dart {tabTitle: Ignore debounce} {2-4}
+await SentryFlutter.init((options) {
+  options.beforeCaptureViewHierarchy = (event, hint, shouldDebounce) async {
+    // Capture view hierarchy if it's a fatal event regardless of debounce
     return event.level == SentryLevel.fatal;
   };
 });

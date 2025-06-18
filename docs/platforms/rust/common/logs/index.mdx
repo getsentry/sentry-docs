@@ -1,0 +1,210 @@
+---
+title: Set Up Logs in Rust
+sidebar_title: Logs
+description: "Structured logs allow you to send, view, and query logs sent from your applications within Sentry."
+sidebar_order: 5600
+---
+
+<Include name="feature-stage-beta-logs.mdx" />
+
+With Sentry Structured Logs, you can send text based log information from your applications to Sentry. Once in Sentry, these logs can be viewed alongside relevant errors, searched by text-string, or searched using their individual attributes.
+
+## Requirements
+
+Logs in Rust are supported in Sentry Rust SDK version `0.39.0` and above.
+Additionally, the `logs` feature flag needs to be enabled.
+
+```toml {filename:Cargo.toml}
+[dependencies]
+sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = ["logs"] }
+```
+
+## Setup
+
+To enable logging, you need to initialize the SDK with the `enable_logs` option set to `true`.
+
+```rust
+let _guard = sentry::init((
+    "___PUBLIC_DSN___",
+    sentry::ClientOptions {
+        release: sentry::release_name!(),
+        enable_logs: true,
+        ..Default::default()
+    }
+));
+```
+
+## Usage
+
+Once the feature is enabled on the SDK and the SDK is initialized, you can send logs by using the logging macros.
+The `sentry` crate exposes macros that support six different log levels:
+`logger_trace`, `logger_debug`, `logger_info`, `logger_warn`, `logger_error` and `logger_fatal`.
+The macros support logging a simple message, or a message with parameters, with `format` syntax:
+
+```rust
+use sentry::logger_info;
+
+logger_info!("Hello, world!");
+logger_info!("Hello, {}!", "world");
+```
+
+You can also attach additional attributes to a log using the `key = value` syntax before the message:
+
+```rust
+use sentry::logger_error;
+
+logger_error!(
+    database.host = "prod-db-01",
+    database.port = 5432,
+    database.name = "user_service",
+    retry_attempt = 2,
+    beta_features = false,
+    "Database connection failed"
+);
+```
+
+The supported attribute keys consist of any number of valid Rust identifiers, separated by dots.
+Attributes containing dots will be nested under their common prefix when displayed in the UI.
+
+The supported attribute values correspond to the values that can be converted to a `serde_json::Value`,
+which include primitive types for numbers, `bool`, and string types.
+As of today, array and object types will be converted to strings using their JSON representation.
+
+## Integrations
+
+### `tracing` Integration
+
+To use the `tracing` integration with logs, add the necessary dependencies to your `Cargo.toml`.
+
+```toml {filename:Cargo.toml}
+[dependencies]
+sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = ["tracing", "logs"] }
+tracing = "0.1.41"
+tracing-subscriber = "0.3.19"
+```
+
+Initialize the SDK with `enable_logs` set to `true`, and configure the `tracing` subscriber to map `tracing` events to logs based on metadata such as severity.
+Then, use standard `tracing` macros to capture logs.
+
+```rust {filename:main.rs}
+use sentry::integrations::tracing::EventFilter;
+use tracing::{error, info, warn};
+use tracing_subscriber::prelude::*;
+
+fn main() {
+    let _guard = sentry::init((
+        "___PUBLIC_DSN___",
+        sentry::ClientOptions {
+            release: sentry::release_name!(),
+            enable_logs: true,
+            ..Default::default()
+        },
+    ));
+
+    let sentry_layer =
+        sentry::integrations::tracing::layer().event_filter(|md| match *md.level() {
+            // Capture error events as Sentry events
+            // These are grouped into issues, representing high-severity errors to act upon
+            tracing::Level::ERROR => EventFilter::Event,
+            // Ignore trace level events, as they're too verbose
+            tracing::Level::TRACE => EventFilter::Ignore,
+            // Capture everything else as a traditional structured log
+            _ => EventFilter::Log,
+        });
+
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::fmt::layer())
+        .with(sentry_layer)
+        .init();
+
+    info!("Hello, world!");
+
+    warn!(
+        database.host = "prod-db-01",
+        database.port = 5432,
+        retry_attempt = 2,
+        "Database connection slow"
+    );
+
+    error!(error_code = 500, "Critical system failure");
+}
+```
+
+The fields of `tracing` events are automatically captured as attributes in Sentry logs.
+
+### `log` Integration
+
+To use the `log` integration with logs, add the necessary dependencies to your `Cargo.toml`.
+
+```toml {filename:Cargo.toml}
+[dependencies]
+sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = ["log", "logs"] }
+log = "0.4"
+# optional: use any log implementation you prefer
+env_logger = "0.11"
+```
+
+Initialize the SDK with `enable_logs` set to `true`, and configure the `log` integration to map `log` records to logs based on metadata such as severity.
+Then, use standard `log` macros to capture logs.
+
+```rust {filename:main.rs}
+use sentry_log::LogFilter;
+use log::{info, warn, error};
+
+fn main() {
+    let _guard = sentry::init((
+        "___PUBLIC_DSN___",
+        sentry::ClientOptions {
+            release: sentry::release_name!(),
+            enable_logs: true,
+            ..Default::default()
+        },
+    ));
+
+    let logger = sentry::integrations::log::SentryLogger::with_dest(
+        env_logger::Builder::from_default_env().build(),
+    )
+    .filter(|md| match md.level() {
+        // Capture error records as Sentry events
+        // These are grouped into issues, representing high-severity errors to act upon
+        log::Level::Error => LogFilter::Event,
+        // Ignore trace level records, as they're too verbose
+        log::Level::Trace => LogFilter::Ignore,
+        // Capture everything else as a log
+        _ => LogFilter::Log,
+    });
+
+    log::set_boxed_logger(Box::new(logger)).unwrap();
+    log::set_max_level(log::LevelFilter::Trace);
+
+    info!("Hello, world!");
+    warn!("Database connection slow");
+    error!("Critical system failure");
+}
+```
+
+### Additional Integrations
+
+We're always looking to expand integration support for Logs.
+If you'd like to see support for additional logging libraries, please open a [new issue](https://github.com/getsentry/sentry-rust/issues/new/choose) with your request.
+
+## Options
+
+### `before_send_log`
+
+To filter logs, or update them before they are sent to Sentry, you can use the `before_send_log` client option.
+
+```rust
+let _guard = sentry::init(("___PUBLIC_DSN___", sentry::ClientOptions {
+    release: sentry::release_name!(),
+    enable_logs: true,
+    before_send_log: Some(std::sync::Arc::new(|log| {
+        // filter out all trace level logs
+        if log.level == sentry::protocol::LogLevel::Trace {
+            return None;
+        }
+        Some(log)
+    })),
+    ..Default::default()
+}));
+```
