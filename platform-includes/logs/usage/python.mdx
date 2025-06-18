@@ -2,15 +2,26 @@ Once the feature is enabled on the SDK and the SDK is initialized, you can send 
 
 The `logger` namespace exposes six methods that you can use to log messages at different log levels: `trace`, `debug`, `info`, `warning`, `error`, and `fatal`.
 
-You can pass additional attributes directly to the logging functions. These properties will be sent to Sentry, and can be searched from within the Logs UI, and even added to the Logs views as a dedicated column.
+```python
+from sentry_sdk import logger as sentry_logger
+
+sentry_logger.trace('Starting database connection')
+sentry_logger.debug('Cache miss for user')
+sentry_logger.info('Updated global cache')
+sentry_logger.warning('Rate limit reached for endpoint')
+sentry_logger.error('Failed to process payment')
+sentry_logger.fatal('Database connection pool exhausted')
+```
+
+You can also pass additional attributes directly to the logging functions, avoiding the need to format strings manually. These properties will be sent to Sentry, and can be searched from within the Logs UI, and even added to the Logs views as a dedicated column.
 
 ```python
 from sentry_sdk import logger as sentry_logger
 
-sentry_logger.trace('Starting database connection {database}', database="users")
-sentry_logger.debug('Cache miss for user {user_id}', user_id=123)
-sentry_logger.info('Updated global cache')
-sentry_logger.warning('Rate limit reached for endpoint {endpoint}', endpoint='/api/results/')
-sentry_logger.error('Failed to process payment. Order: {order_id}. Amount: {amount}', order_id="or_2342", amount=99.99)
-sentry_logger.fatal('Database {database} connection pool exhausted', database="users")
+sentry_logger.trace('Starting database connection', database="users")
+sentry_logger.debug('Cache miss for user', user_id=123)
+sentry_logger.info('Updated profile', profile_id=345)
+sentry_logger.warning('Rate limit reached for endpoint', endpoint='/api/results/', is_enterprise=False)
+sentry_logger.error('Failed to process payment', order_id="or_2342", amount=99.99)
+sentry_logger.fatal('Database connection pool exhausted', database="users", active_connections=100)
 ```
