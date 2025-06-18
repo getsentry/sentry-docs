@@ -9,7 +9,7 @@ import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
 import {getFileBySlugWithCache} from 'sentry-docs/mdx';
 
 export async function GET(
-  request: Request,
+  _request: Request,
   {params}: {params: Promise<{path: string[]}>}
 ) {
   try {
