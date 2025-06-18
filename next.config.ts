@@ -55,6 +55,12 @@ const nextConfig = {
     DEVELOPER_DOCS_: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
   },
   redirects,
+  rewrites: async () => [
+    {
+      source: '/:path*.md',
+      destination: '/md-exports/:path*.md',
+    },
+  ],
   sassOptions: {
     silenceDeprecations: ['legacy-js-api'],
   },

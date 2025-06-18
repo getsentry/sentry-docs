@@ -19,13 +19,6 @@ export const config = {
 
 // This function can be marked `async` if using `await` inside
 export function middleware(request: NextRequest) {
-  // Handle .md export requests by rewriting to API route while preserving URL
-  if (request.nextUrl.pathname.endsWith('.md')) {
-    const pathWithoutMd = request.nextUrl.pathname.slice(0, -3); // Remove .md
-    const rewriteUrl = new URL(`/api/md-export${pathWithoutMd}`, request.url);
-    return NextResponse.rewrite(rewriteUrl);
-  }
-
   // Remove the llms.txt handling - it's now handled by Next.js redirects
   return handleRedirects(request);
 }
