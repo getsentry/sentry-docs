@@ -320,14 +320,49 @@ export function OnboardingOptionButtons({
 
             {optionDetails[option.id].name}
             {optionDetails[option.id] && (
-              <Tooltip.Provider>
+              <Tooltip.Provider delayDuration={300}>
                 <Tooltip.Root>
-                  <Tooltip.Trigger asChild>
-                    <QuestionMarkCircledIcon fontSize={20} strokeWidth="2" />
+                  <Tooltip.Trigger 
+                    asChild
+                    onMouseEnter={(e) => {
+                      // Explicit mouse enter handling for Firefox compatibility
+                      e.currentTarget.setAttribute('data-state', 'delayed-open');
+                    }}
+                    onMouseLeave={(e) => {
+                      // Explicit mouse leave handling for Firefox compatibility
+                      e.currentTarget.removeAttribute('data-state');
+                    }}
+                    onFocus={(e) => {
+                      // Ensure keyboard navigation works
+                      e.currentTarget.setAttribute('data-state', 'delayed-open');
+                    }}
+                    onBlur={(e) => {
+                      // Ensure keyboard navigation works
+                      e.currentTarget.removeAttribute('data-state');
+                    }}
+                  >
+                    <span 
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Help: ${optionDetails[option.id].name}`}
+                      style={{ 
+                        display: 'inline-flex', 
+                        alignItems: 'center',
+                        cursor: 'help',
+                        outline: 'none'
+                      }}
+                    >
+                      <QuestionMarkCircledIcon fontSize={20} strokeWidth="2" />
+                    </span>
                   </Tooltip.Trigger>
                   <Tooltip.Portal>
                     <Theme accentColor="iris">
-                      <Tooltip.Content className={styles.TooltipContent} sideOffset={5}>
+                      <Tooltip.Content 
+                        className={styles.TooltipContent} 
+                        sideOffset={5}
+                        align="center"
+                        side="top"
+                      >
                         {optionDetails[option.id].description}
                         <Tooltip.Arrow className={styles.TooltipArrow} />
                       </Tooltip.Content>
