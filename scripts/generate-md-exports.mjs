@@ -9,6 +9,7 @@ import rehypeRemark from 'rehype-remark';
 import remarkGfm from 'remark-gfm';
 import remarkStringify from 'remark-stringify';
 import {unified} from 'unified';
+import {remove} from 'unist-util-remove';
 
 let root = process.cwd();
 while (!existsSync(path.join(root, 'package.json'))) {
@@ -37,7 +38,15 @@ export const genMDFromHTML = async (source, target) => {
           properties: {},
           children: tree,
         }))
-        .use(rehypeRemark, {document: false})
+        .use(rehypeRemark, {
+          document: false,
+          handlers: {
+            // Remove buttons as they usually get confusing in markdown, especially since we use them as tab headers
+            button() {},
+          },
+        })
+        // We end up with empty inline code blocks, probably from some tab logic in the HTML, remove them
+        .use(() => tree => remove(tree, {type: 'inlineCode', value: ''}))
         .use(remarkGfm)
         .use(remarkStringify)
         .process(text)
