@@ -50,7 +50,6 @@ async function main() {
     // See https://github.com/nodejs/node/issues/48820
     const dir = await opendir(INPUT_DIR, {recursive: true, bufferSize: 1024});
     for await (const dirent of dir) {
-      if (counter >= 100) break;
       if (dirent.name.endsWith('.html') && dirent.isFile()) {
         const sourcePath = path.join(dirent.parentPath || dirent.path, dirent.name);
         const targetDir = path.join(
