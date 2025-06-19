@@ -38,7 +38,7 @@ async function createWork() {
   // Putting 4 as the minimum as Vercel has 4 cores per builder and it may help
   // us cut down some of the time there.
   // Source: https://vercel.com/docs/limits#build-container-resources
-  const numWorkers = Math.max(Math.floor(cpus().length / 2), 4);
+  const numWorkers = Math.max(Math.floor(cpus().length / 2), 2);
   const workerTasks = new Array(numWorkers).fill(null).map(() => []);
 
   console.log(`🔎 Discovering files to convert...`);
