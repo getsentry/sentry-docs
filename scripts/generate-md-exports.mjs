@@ -1,6 +1,5 @@
-#!/usr/bin/env ts-node
+#!/usr/bin/env node
 
-import type {PathLike} from 'node:fs';
 import {mkdir, opendir, readFile, rm, writeFile} from 'node:fs/promises';
 import * as path from 'node:path';
 import rehypeParse from 'rehype-parse';
@@ -14,7 +13,7 @@ const root = process.cwd(); // fix this
 const INPUT_DIR = path.join(root, '.next', 'server', 'app');
 const OUTPUT_DIR = path.join(root, 'public', 'md-exports');
 
-export const genMDFromHTML = async (source: PathLike, target: PathLike) => {
+export const genMDFromHTML = async (source, target) => {
   const text = await readFile(source, {encoding: 'utf8'});
   await writeFile(
     target,

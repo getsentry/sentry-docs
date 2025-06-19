@@ -1,7 +1,7 @@
 import {codecovNextJSWebpackPlugin} from '@codecov/nextjs-webpack-plugin';
 import {withSentryConfig} from '@sentry/nextjs';
 
-import {redirects} from './redirects.cjs';
+import {redirects} from './redirects.js';
 
 const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? {
