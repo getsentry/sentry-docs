@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import {selectAll} from 'hast-util-select';
+import {existsSync} from 'node:fs';
 import {mkdir, opendir, readFile, rm, writeFile} from 'node:fs/promises';
 import * as path from 'node:path';
 import rehypeParse from 'rehype-parse';
@@ -9,7 +10,14 @@ import remarkGfm from 'remark-gfm';
 import remarkStringify from 'remark-stringify';
 import {unified} from 'unified';
 
-const root = process.cwd(); // fix this
+let root = process.cwd();
+while (!existsSync(path.join(root, 'package.json'))) {
+  const parent = path.dirname(root);
+  if (parent === root) {
+    throw new Error('Could not find package.json in parent directories');
+  }
+  root = parent;
+}
 const INPUT_DIR = path.join(root, '.next', 'server', 'app');
 const OUTPUT_DIR = path.join(root, 'public', 'md-exports');
 
@@ -38,7 +46,7 @@ export const genMDFromHTML = async (source, target) => {
 };
 
 async function main() {
-  console.log('🚀 Starting markdown export generation...');
+  console.log(`🚀 Starting markdown generation from: ${INPUT_DIR}`);
   console.log(`📁 Output directory: ${OUTPUT_DIR}`);
 
   // Clear output directory
