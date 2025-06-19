@@ -60,7 +60,7 @@ async function createWork() {
     }
   }
 
-  console.log(`📄 Converting ${numFiles} files with ${numWorkers} workes...`);
+  console.log(`📄 Converting ${numFiles} files with ${numWorkers} workers...`);
 
   const selfPath = fileURLToPath(import.meta.url);
   const workerPromises = new Array(numWorkers - 1).fill(null).map((_, idx) => {
