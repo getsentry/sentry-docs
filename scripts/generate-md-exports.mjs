@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import {selectAll} from 'hast-util-select';
 import {mkdir, opendir, readFile, rm, writeFile} from 'node:fs/promises';
 import * as path from 'node:path';
 import rehypeParse from 'rehype-parse';
@@ -7,7 +8,6 @@ import rehypeRemark from 'rehype-remark';
 import remarkGfm from 'remark-gfm';
 import remarkStringify from 'remark-stringify';
 import {unified} from 'unified';
-import {remove} from 'unist-util-remove';
 
 const root = process.cwd(); // fix this
 const INPUT_DIR = path.join(root, '.next', 'server', 'app');
@@ -20,8 +20,16 @@ export const genMDFromHTML = async (source, target) => {
     String(
       await unified()
         .use(rehypeParse)
-        .use(rehypeRemark)
-        .use(() => tree => remove(tree, {type: 'text', value: 'Copied'}))
+        // Need the `main div > hgroup` selector for the headers
+        .use(() => tree => selectAll('main div > hgroup, div#main', tree))
+        // If we don't do this wrapping, rehypeRemark just returns an empty string -- yeah WTF?
+        .use(() => tree => ({
+          type: 'element',
+          tagName: 'div',
+          properties: {},
+          children: tree,
+        }))
+        .use(rehypeRemark, {document: false})
         .use(remarkGfm)
         .use(remarkStringify)
         .process(text)
@@ -42,6 +50,7 @@ async function main() {
     // See https://github.com/nodejs/node/issues/48820
     const dir = await opendir(INPUT_DIR, {recursive: true, bufferSize: 1024});
     for await (const dirent of dir) {
+      if (counter >= 100) break;
       if (dirent.name.endsWith('.html') && dirent.isFile()) {
         const sourcePath = path.join(dirent.parentPath || dirent.path, dirent.name);
         const targetDir = path.join(
