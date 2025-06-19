@@ -37,6 +37,7 @@ async function createWork() {
   // On a 16-core machine, 8 workers were optimal (and slightly faster than 16)
   // Putting 4 as the minimum as Vercel has 4 cores per builder and it may help
   // us cut down some of the time there.
+  // Source: https://vercel.com/docs/limits#build-container-resources
   const numWorkers = Math.max(Math.floor(cpus().length / 2), 4);
   const workerTasks = new Array(numWorkers).fill(null).map(() => []);
 
