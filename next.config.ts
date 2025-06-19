@@ -24,6 +24,7 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
     };
 
 if (
+  !process.env.NODE_ENV &&
   process.env.NODE_ENV !== 'development' &&
   (!process.env.NEXT_PUBLIC_SENTRY_DSN || !process.env.SENTRY_DSN)
 ) {
