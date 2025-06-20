@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
-import {fileURLToPath} from 'url';
-
 import {selectAll} from 'hast-util-select';
-import {existsSync} from 'node:fs';
-import {mkdir, opendir, readFile, rm, writeFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import {constants as fsConstants, existsSync} from 'node:fs';
+import {copyFile, mkdir, opendir, readFile, rm, writeFile} from 'node:fs/promises';
 import {cpus} from 'node:os';
 import * as path from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {isMainThread, parentPort, Worker, workerData} from 'node:worker_threads';
 import rehypeParse from 'rehype-parse';
 import rehypeRemark from 'rehype-remark';
@@ -26,6 +26,9 @@ async function createWork() {
   }
   const INPUT_DIR = path.join(root, '.next', 'server', 'app');
   const OUTPUT_DIR = path.join(root, 'public', 'md-exports');
+
+  const CACHE_VERSION = 1;
+  const CACHE_DIR = path.join(root, '.next', 'cache', 'md-exports', `v${CACHE_VERSION}`);
 
   console.log(`🚀 Starting markdown generation from: ${INPUT_DIR}`);
   console.log(`📁 Output directory: ${OUTPUT_DIR}`);
@@ -65,7 +68,9 @@ async function createWork() {
   const selfPath = fileURLToPath(import.meta.url);
   const workerPromises = new Array(numWorkers - 1).fill(null).map((_, idx) => {
     return new Promise((resolve, reject) => {
-      const worker = new Worker(selfPath, {workerData: workerTasks[idx]});
+      const worker = new Worker(selfPath, {
+        workerData: {cacheDir: CACHE_DIR, tasks: workerTasks[idx]},
+      });
       let hasErrors = false;
       worker.on('message', data => {
         if (data.failedTasks.length === 0) {
@@ -95,8 +100,20 @@ async function createWork() {
   console.log('✅ Markdown export generation complete!');
 }
 
-async function genMDFromHTML(source, target) {
+const md5 = data => createHash('md5').update(data).digest('hex');
+
+async function genMDFromHTML(source, target, {cacheDir, noCache}) {
   const text = await readFile(source, {encoding: 'utf8'});
+  const hash = md5(text);
+  const cacheFile = path.join(cacheDir, hash + '.md');
+  if (!noCache) {
+    try {
+      return await copyFile(cacheFile, target, fsConstants.COPYFILE_FICLONE);
+    } catch {
+      // pass
+    }
+  }
+
   await writeFile(
     target,
     String(
@@ -125,13 +142,18 @@ async function genMDFromHTML(source, target) {
         .process(text)
     )
   );
+  await mkdir(path.dirname(cacheFile), {recursive: true});
+  await copyFile(target, cacheFile, fsConstants.COPYFILE_FICLONE);
 }
 
-async function processTaskList(tasks) {
+async function processTaskList(tasks, cacheDir) {
   const failedTasks = [];
   for (const {sourcePath, targetPath} of tasks) {
     try {
-      await genMDFromHTML(sourcePath, targetPath);
+      await genMDFromHTML(sourcePath, targetPath, {
+        cacheDir,
+        noCache: !existsSync(cacheDir),
+      });
     } catch (error) {
       failedTasks.push({sourcePath, targetPath, error});
     }
@@ -139,8 +161,8 @@ async function processTaskList(tasks) {
   return {success: tasks.length - failedTasks.length, failedTasks};
 }
 
-async function doWork(tasks) {
-  parentPort.postMessage(await processTaskList(tasks));
+async function doWork({cacheDir, tasks}) {
+  parentPort.postMessage(await processTaskList(tasks, cacheDir));
 }
 
 if (isMainThread) {
