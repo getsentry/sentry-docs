@@ -115,15 +115,23 @@ This ensures that source maps are uploaded to Sentry immediately after a success
 
 Make sure your Sentry SDK configuration includes the release information:
 
-```javascript
+```typescript {filename:index.ts}
 import * as Sentry from "@sentry/cloudflare";
 
-Sentry.init({
-  dsn: "YOUR_DSN_HERE",
-  // The release name should match what's used during source map upload
-  release: env.SENTRY_RELEASE,
-  // other options...
-});
+export default Sentry.withSentry(
+  (env: Env) => ({
+    dsn: "YOUR_DSN_HERE",
+    // The release name should match what's used during source map upload
+    release: env.SENTRY_RELEASE,
+    // other options...
+  }),
+  {
+    async fetch(request, env, ctx) {
+      // Your worker logic here
+      return new Response("Hello World!");
+    },
+  } satisfies ExportedHandler<Env>
+);
 ```
 
 ### 7. Deploy Your Application
