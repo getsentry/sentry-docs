@@ -24,7 +24,26 @@ sentry_value_t event = sentry_value_new_event();
 sentry_capture_event_with_scope(event, scope);
 ```
 
-<Alert>☝ When using the `crashpad` backend on macOS, the list of attachments that will be added at the time of a hard crash will be frozen at the time of `sentry_init`, and later modifications will not be reflected.</Alert>
+Alternately, use `bytes` to initialize an attachment. When doing so, you also need to specify a filename.
+
+```c
+char *bytes = ...;
+size_t bytes_len = 123;
+
+// Global Scope
+sentry_attach_bytes(bytes, bytes_len, "global.bin");
+
+// Local Scope
+sentry_scope_t *scope = sentry_local_scope_new();
+sentry_scope_attach_bytes(scope, bytes, bytes_len, "local.bin");
+sentry_value_t event = sentry_value_new_event();
+/* ... */
+sentry_capture_event_with_scope(event, scope);
+```
+
+<Alert>When using the `crashpad` backend, it writes byte attachments to disk into a flat directory structure. If multiple buffers are attached with the same `filename`, it will internally ensure unique filenames for attachments by appending a unique suffix to the filename. Therefore, attachments may show up with altered names in Sentry.</Alert>
+
+<Alert>When using the `crashpad` backend on macOS, the list of attachments that will be added at the time of a hard crash will be frozen at the time of `sentry_init`, and later modifications will not be reflected.</Alert>
 
 ### Removing Scoped Attachments
 
