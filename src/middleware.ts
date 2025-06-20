@@ -2346,7 +2346,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/security-legal-pii/scrubbing/',
   },
   {
-    from: '/data-management-settings/advanced-datascrubbing/',
+    from: '/data-management/advanced-datascrubbing/',
     to: '/security-legal-pii/scrubbing/advanced-datascrubbing/',
   },
   {
