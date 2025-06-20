@@ -86,6 +86,7 @@ export function DocPage({
             <div className="overflow-hidden">
               {leafNode && <Breadcrumbs leafNode={leafNode} />}{' '}
               <Link
+                rel="nofollow"
                 className="float-right"
                 href={`/${pathname}.md`}
                 title="Markdown version of this page"
