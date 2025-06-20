@@ -1,0 +1,215 @@
+---
+title: "Account Provisioning API"
+description: "Learn how to automatically provision Sentry organizations for your customers using our provisioning API."
+sidebar_order: 1
+---
+
+# Account Provisioning API
+
+The Sentry Provisioning API allows partner platforms to automatically create Sentry organizations for their customers. This enables seamless onboarding of your users to Sentry's error monitoring and performance insights.
+
+## Overview
+
+When you call the Sentry provisioning API on behalf of your customer for the first time, the customer receives:
+
+- **A Sentry Organization** with the same name as their organization on your platform
+- **A Default Team** for collaboration within the organization
+- **Organization Ownership** assigned to the provided email address
+- **Subscription Plan** based on your partnership agreement
+- **Pre-configured Projects** (optional) that you specify
+- **Integration Token** (optional) for managing the organization programmatically
+
+## API Endpoint
+
+```
+POST https://sentry.io/remote/channel-provision/account/
+```
+
+## Authentication
+
+The API requires a custom `X-Request-Signature` header with a SHA256 HMAC signature. The signature is built using your `API_SECRET_KEY` and the request body.
+
+### Signature Generation
+
+```python
+import hmac
+import hashlib
+import json
+
+def generate_signature(data, secret_key):
+    secret_key_bytes = secret_key.encode("utf-8")
+    json_data = json.dumps(data)
+    data_bytes = json_data.encode("utf-8")
+    signature = hmac.new(
+        key=secret_key_bytes, 
+        msg=data_bytes, 
+        digestmod=hashlib.sha256
+    ).hexdigest()
+    return signature
+```
+
+## Request Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `channel` | string | Yes | Your partner name (case insensitive) |
+| `email` | string | Yes | Customer's email address (becomes org owner) |
+| `organizationName` | string | Yes | Customer's organization name (max 50 chars) |
+| `organizationID` | string | Yes | Unique ID for customer's organization on your platform |
+| `hasAgreedTerms` | boolean | Yes | Customer's agreement to Sentry terms |
+| `timestamp` | integer | Yes | Current timestamp for request expiration |
+| `url` | string | Yes | Must be `https://sentry.io/remote/channel-provision/account/` |
+| `projects` | array | No | List of projects to create |
+| `region` | string | No | Data residency (`us` or `de`, default: `us`) |
+| `isTest` | boolean | No | Set to `true` for testing (default: `false`) |
+
+### Project Object Structure
+
+```json
+{
+  "name": "project-name",
+  "platform": "java"
+}
+```
+
+### Supported Platforms
+
+The `platform` field supports all Sentry platform identifiers, including:
+- `javascript`, `python`, `java`, `csharp`, `php`, `ruby`, `go`, `rust`, `swift`, `kotlin`, `dart`, and more
+
+## Example Request
+
+```python
+import requests
+import json
+import time
+
+URL = "https://sentry.io/remote/channel-provision/account/"
+API_SECRET_KEY = "your-partner-specific-secret-key"
+
+DATA = {
+    "channel": "Your Platform Name",
+    "organizationName": "Customer Corp",
+    "organizationID": "unique-customer-id",
+    "email": "customer@example.com",
+    "projects": [
+        {"name": "web-app", "platform": "javascript"},
+        {"name": "api-service", "platform": "python"}
+    ],
+    "hasAgreedTerms": True,
+    "timestamp": int(time.time()),
+    "url": URL,
+    "isTest": False
+}
+
+# Generate signature
+signature = generate_signature(DATA, API_SECRET_KEY)
+
+# Make request
+response = requests.post(
+    URL, 
+    data=json.dumps(DATA), 
+    headers={"X-Request-Signature": signature}
+)
+
+print(response.json())
+```
+
+## Response
+
+### Success (200)
+
+```json
+{
+  "email": "customer@example.com",
+  "organization": {
+    "id": "123",
+    "slug": "customer-corp",
+    "name": "Customer Corp"
+  },
+  "projects": [
+    {
+      "dsn": "https://...@sentry.io/123",
+      "project": {
+        "id": "456",
+        "slug": "web-app",
+        "name": "web-app",
+        "platform": "javascript"
+      }
+    }
+  ],
+  "integration_api_token": "your-integration-token"
+}
+```
+
+### Error Responses
+
+- **400 Bad Request**: Invalid parameters (check response body for details)
+- **401 Unauthorized**: Invalid signature (check your API_SECRET_KEY)
+- **500 Server Error**: Internal server error (check response body for details)
+
+## Additional Operations
+
+### Adding Projects
+
+Call the API again with new projects to add them to an existing organization:
+
+```python
+DATA = {
+    # ... existing parameters ...
+    "projects": [
+        {"name": "new-service", "platform": "go"}
+    ]
+}
+```
+
+### Adding Managers
+
+Add additional users as managers to the organization:
+
+```python
+DATA = {
+    # ... existing parameters ...
+    "email": "manager@example.com"  # New manager email
+}
+```
+
+## Customer Experience
+
+### Welcome Email
+
+When you provision an organization, the customer receives:
+- A welcome email with organization details
+- Instructions for managing their Sentry organization
+- Information about your partnership integration
+- Support contact information
+
+### Partner-Specific Features
+
+Based on your partnership agreement, you can enable:
+
+- **Partner Presence**: Show your platform as an organization member
+- **Persistent Plan**: Allow customers to upgrade plans independently
+- **Quota Visibility**: Control visibility of usage quotas
+
+## Integration Token
+
+The response includes an `integration_api_token` that allows you to:
+- Create and manage projects
+- Manage organization members
+- Access Sentry APIs on behalf of the customer
+
+Token permissions are defined in your partnership agreement.
+
+## Best Practices
+
+1. **Store organization mappings**: Keep track of the relationship between your customer IDs and Sentry organization IDs
+2. **Handle errors gracefully**: Implement proper error handling for failed provisioning
+3. **Use test mode**: Set `isTest: true` during development and testing
+4. **Respect rate limits**: Implement appropriate delays between requests
+5. **Secure your secret key**: Store your API_SECRET_KEY securely and never expose it in client-side code
+
+## Support
+
+For questions about the provisioning API or partnership integration, contact:
+**Email:** partnership-platform@sentry.io 
