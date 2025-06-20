@@ -15,6 +15,16 @@ import remarkStringify from 'remark-stringify';
 import {unified} from 'unified';
 import {remove} from 'unist-util-remove';
 
+function taskFinishHandler(data) {
+  if (data.failedTasks.length === 0) {
+    console.log(`✅ Worker[${data.id}]: ${data.success} files successfully.`);
+  } else {
+    hasErrors = true;
+    console.error(`❌ Worker[${data.id}]: ${data.failedTasks.length} files failed:`);
+    console.error(data.failedTasks);
+  }
+}
+
 async function createWork() {
   let root = process.cwd();
   while (!existsSync(path.join(root, 'package.json'))) {
@@ -29,6 +39,10 @@ async function createWork() {
 
   const CACHE_VERSION = 1;
   const CACHE_DIR = path.join(root, '.next', 'cache', 'md-exports', `v${CACHE_VERSION}`);
+  const noCache = !existsSync(CACHE_DIR);
+  if (noCache) {
+    await mkdir(CACHE_DIR, {recursive: true});
+  }
 
   console.log(`🚀 Starting markdown generation from: ${INPUT_DIR}`);
   console.log(`📁 Output directory: ${OUTPUT_DIR}`);
@@ -66,33 +80,32 @@ async function createWork() {
   console.log(`📄 Converting ${numFiles} files with ${numWorkers} workers...`);
 
   const selfPath = fileURLToPath(import.meta.url);
-  const workerPromises = new Array(numWorkers - 1).fill(null).map((_, idx) => {
+  const workerPromises = new Array(numWorkers - 1).fill(null).map((_, id) => {
     return new Promise((resolve, reject) => {
       const worker = new Worker(selfPath, {
-        workerData: {cacheDir: CACHE_DIR, tasks: workerTasks[idx]},
+        workerData: {id, noCache, cacheDir: CACHE_DIR, tasks: workerTasks[id]},
       });
       let hasErrors = false;
-      worker.on('message', data => {
-        if (data.failedTasks.length === 0) {
-          console.log(`✅ Worker[${idx}]: ${data.success} files successfully.`);
-        } else {
-          hasErrors = true;
-          console.error(`❌ Worker[${idx}]: ${data.failedTasks.length} files failed:`);
-          console.error(data.failedTasks);
-        }
-      });
+      worker.on('message', taskFinishHandler);
       worker.on('error', reject);
       worker.on('exit', code => {
         if (code !== 0) {
-          reject(new Error(`Worker[${idx}] stopped with exit code ${code}`));
+          reject(new Error(`Worker[${id}] stopped with exit code ${code}`));
         } else {
-          hasErrors ? reject(new Error(`Worker[${idx}] had some errors.`)) : resolve();
+          hasErrors ? reject(new Error(`Worker[${id}] had some errors.`)) : resolve();
         }
       });
     });
   });
   // The main thread can also process tasks -- That's 65% more bullet per bullet! -Cave Johnson
-  workerPromises.push(processTaskList(workerTasks[workerTasks.length - 1]));
+  workerPromises.push(
+    processTaskList({
+      noCache,
+      cacheDir: CACHE_DIR,
+      tasks: workerTasks[workerTasks.length - 1],
+      id: workerTasks.length - 1,
+    }).then(taskFinishHandler)
+  );
 
   await Promise.all(workerPromises);
 
@@ -105,10 +118,11 @@ const md5 = data => createHash('md5').update(data).digest('hex');
 async function genMDFromHTML(source, target, {cacheDir, noCache}) {
   const text = await readFile(source, {encoding: 'utf8'});
   const hash = md5(text);
-  const cacheFile = path.join(cacheDir, hash + '.md');
+  const cacheFile = path.join(cacheDir, hash);
   if (!noCache) {
     try {
-      return await copyFile(cacheFile, target, fsConstants.COPYFILE_FICLONE);
+      await copyFile(cacheFile, target, fsConstants.COPYFILE_FICLONE);
+      return;
     } catch {
       // pass
     }
@@ -142,27 +156,26 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
         .process(text)
     )
   );
-  await mkdir(path.dirname(cacheFile), {recursive: true});
   await copyFile(target, cacheFile, fsConstants.COPYFILE_FICLONE);
 }
 
-async function processTaskList(tasks, cacheDir) {
+async function processTaskList({id, tasks, cacheDir, noCache}) {
   const failedTasks = [];
   for (const {sourcePath, targetPath} of tasks) {
     try {
       await genMDFromHTML(sourcePath, targetPath, {
         cacheDir,
-        noCache: !existsSync(cacheDir),
+        noCache,
       });
     } catch (error) {
       failedTasks.push({sourcePath, targetPath, error});
     }
   }
-  return {success: tasks.length - failedTasks.length, failedTasks};
+  return {id, success: tasks.length - failedTasks.length, failedTasks};
 }
 
-async function doWork({cacheDir, tasks}) {
-  parentPort.postMessage(await processTaskList(tasks, cacheDir));
+async function doWork(work) {
+  parentPort.postMessage(await processTaskList(work));
 }
 
 if (isMainThread) {
