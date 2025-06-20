@@ -19,7 +19,6 @@ export const config = {
 
 // This function can be marked `async` if using `await` inside
 export function middleware(request: NextRequest) {
-  // Remove the llms.txt handling - it's now handled by Next.js redirects
   return handleRedirects(request);
 }
 
