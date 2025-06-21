@@ -127,7 +127,7 @@ Specifies the types of errors captured as breadcrumbs. Accepts a single value or
 - `MASK_SCRIPT`: Script errors will be captured.
 - `MASK_SHADER`: Shader errors will be captured.
 
-```gdscript
+```GDScript
 var mask = SentryOptions.MASK_ERROR | SentryOptions.MASK_SCRIPT
 options.logger_breadcrumb_mask = mask
 ```
@@ -138,7 +138,7 @@ options.logger_breadcrumb_mask = mask
 
 Specifies the types of errors captured as events. Accepts a single value or a bitwise combination of `GodotErrorMask` masks.
 
-```gdscript
+```GDScript
 var mask = SentryOptions.MASK_ERROR | SentryOptions.MASK_SCRIPT
 options.logger_event_mask = mask
 ```
@@ -178,7 +178,7 @@ thread-safe APIs and only use Godot-specific APIs after you've checked that you'
 
 If assigned, this callback runs before a message or error event is sent to Sentry. It takes `SentryEvent` as a parameter and returns either the same event object, with or without modifications, or `null` to skip reporting the event. You can assign it in a [configuration script](#configuration-script). This can be used, for instance, for stripping PII before sending.
 
-```gdscript
+```GDScript
 func _before_send(event: SentryEvent) -> SentryEvent:
 	if event.environment.contains("editor"):
 		# Discard event if running from the editor.
@@ -191,19 +191,15 @@ func _before_send(event: SentryEvent) -> SentryEvent:
 
 </ConfigKey>
 
-<ConfigKey name="on-crash">
+<ConfigKey name="before-capture-screenshot">
 
-If assigned, this callback runs before a crash event is sent to Sentry. In contrast to `before_send`, it is only called when a crash occurred. It takes `SentryEvent` as a parameter and returns either the same event object, with or without modifications, or `null` to skip reporting the event. You can assign it in a [configuration script](#configuration-script).
+If assigned, this callback runs before a screenshot is captured. It takes `SentryEvent` as a parameter and returns `false` to skip capturing the screenshot, or `true` to capture the screenshot.
 
-```gdscript
-func _on_crash(event: SentryEvent) -> SentryEvent:
-	if event.environment.contains("editor"):
-		# Discard event if running from the editor.
-		return null
-	if event.message.contains("Bruno"):
-		# Remove sensitive information from the event.
-		event.message = event.message.replace("Bruno", "REDACTED")
-	return event
+```GDScript
+func _before_capture_screenshot(event: SentryEvent) -> bool:
+	if is_showing_sensitive_info():
+		return false # Don't capture screenshot!
+	return true
 ```
 
 </ConfigKey>

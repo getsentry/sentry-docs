@@ -1059,6 +1059,10 @@ const userDocsRedirects = [
     source: '/product/tracing/:path*',
     destination: '/concepts/key-terms/tracing/:path*',
   },
+  {
+    source: '/organization/integrations/shortcut/',
+    destination: '/organization/integrations/issue-tracking/shortcut/',
+  },
   // Redirects for JavaScript tracing docs
   {
     source: '/platforms/javascript/tracing/trace-propagation/:path*',
@@ -1169,6 +1173,18 @@ const userDocsRedirects = [
   {
     source: '/product/explore/new-trace-explorer',
     destination: '/product/explore/trace-explorer/',
+  },
+  {
+    source: '/organization/integrations/expo/',
+    destination: '/organization/integrations/deployment/expo/',
+  },
+  {
+    source: '/product/issues/issue-details/sentry-seer/',
+    destination: '/product/ai-in-sentry/seer/',
+  },
+  {
+    source: '/product/ai-in-sentry/seer/seer-privacy-and-security',
+    destination: '/product/ai-in-sentry/ai-privacy-and-security/',
   },
 ];
 

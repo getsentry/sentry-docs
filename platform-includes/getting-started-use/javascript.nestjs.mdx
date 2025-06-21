@@ -1,4 +1,6 @@
-```javascript {filename: main.ts}
+Make sure to import the `instrument.ts` file before any other modules:
+
+```typescript {filename: main.ts} {1-2}
 // Import this first!
 import "./instrument";
 
@@ -14,9 +16,9 @@ async function bootstrap() {
 bootstrap();
 ```
 
-Afterwards, add the `SentryModule` as a root module to your main module:
+Afterward, add the `SentryModule` as a root module to your main module:
 
-```javascript {filename: app.module.ts} {2, 8}
+```typescript {filename: app.module.ts} {2, 8}
 import { Module } from "@nestjs/common";
 import { SentryModule } from "@sentry/nestjs/setup";
 import { AppController } from "./app.controller";
@@ -33,85 +35,4 @@ import { AppService } from "./app.service";
 export class AppModule {}
 ```
 
-If you're using a global catch-all exception filter (which is either a filter registered with `app.useGlobalFilters()` or a filter registered in your app module providers annotated with a `@Catch()` decorator without arguments), add a `@SentryExceptionCaptured()` decorator to the filter's `catch()` method.
-This decorator will report all unexpected errors that are received by your global error filter to Sentry:
-
-```javascript {2, 6}
-import { Catch, ExceptionFilter } from '@nestjs/common';
-import { SentryExceptionCaptured } from '@sentry/nestjs';
-
-@Catch()
-export class YourCatchAllExceptionFilter implements ExceptionFilter {
-  @SentryExceptionCaptured()
-  catch(exception, host): void {
-    // your implementation here
-  }
-}
-```
-
-By default, only unhandled exceptions that are not caught by an error filter are reported to Sentry.
-`HttpException`s (including [derivatives](https://docs.nestjs.com/exception-filters#built-in-http-exceptions)) are also not captured by default because they mostly act as control flow vehicles.
-
-If you don't have a global catch-all exception filter, add the `SentryGlobalFilter` to the providers of your main module.
-This filter will report any unhandled errors that aren't caught by other error filters to Sentry.
-**Important:** The `SentryGlobalFilter` needs to be registered before any other exception filters.
-
-```javascript {3, 9}
-import { Module } from "@nestjs/common";
-import { APP_FILTER } from "@nestjs/core";
-import { SentryGlobalFilter } from "@sentry/nestjs/setup";
-
-@Module({
-  providers: [
-    {
-      provide: APP_FILTER,
-      useClass: SentryGlobalFilter,
-    },
-    // ..other providers
-  ],
-})
-export class AppModule {}
-```
-
-<Expandable title="Using Microservices?">
-
-If you are using `@nestjs/microservices` make sure to handle errors in RPC contexts correctly by providing your own `RpcExceptionFilter` (see https://docs.nestjs.com/microservices/exception-filters). 
-`SentryGlobalFilter` in a [hybrid application](https://docs.nestjs.com/faq/hybrid-application) does not extend `BaseRpcExceptionFilter` since this depends on `@nestjs/microservices`.
-
-Use `Sentry.captureException(exception)` in your custom filter in case you want to send these errors to Sentry:
-
-```typescript
-import { Catch, RpcExceptionFilter, ArgumentsHost } from '@nestjs/common';
-import { Observable, throwError } from 'rxjs';
-import { RpcException } from '@nestjs/microservices';
-import * as Sentry from '@sentry/nestjs';
-
-@Catch(RpcException)
-export class ExceptionFilter implements RpcExceptionFilter<RpcException> {
-  catch(exception: RpcException, host: ArgumentsHost): Observable<any> {
-    Sentry.captureException(exception); // optional
-    return throwError(() => exception.getError());
-  }
-}
-```
-
-
-</Expandable>
-
-
-If you have error filters for specific types of exceptions (for example `@Catch(HttpException)`, or any other `@Catch(...)` with arguments) and you want to capture errors caught by these filters, capture the errors in the `catch()` handler with `Sentry.captureException()`:
-
-```javascript {9}
-import { ArgumentsHost, BadRequestException, Catch } from '@nestjs/common';
-import { BaseExceptionFilter } from '@nestjs/core';
-import { ExampleException } from './example.exception';
-import * as Sentry from '@sentry/nestjs';
-
-@Catch(ExampleException)
-export class ExampleExceptionFilter extends BaseExceptionFilter {
-  catch(exception: unknown, host: ArgumentsHost) {
-    Sentry.captureException(exception);
-    return super.catch(new BadRequestException(exception.message), host)
-  }
-}
-```
+<PlatformContent includePath="getting-started-capture-errors" />

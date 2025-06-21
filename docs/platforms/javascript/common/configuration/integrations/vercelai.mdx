@@ -27,17 +27,23 @@ supported:
 
 <Alert>
 
-This integration only works in the Node.js and Bun runtimes. Requires SDK version `8.43.0` or higher.
+This integration only works in the Node.js and Bun runtimes. Requires SDK version `9.30.0` or higher.
 
 </Alert>
 
 _Import name: `Sentry.vercelAIIntegration`_
 
-The `vercelAIIntegration` adds instrumentation for the [`ai`](https://www.npmjs.com/package/ai) library by Vercel to capture spans using the [`AI SDK's built-in Telemetry`](https://sdk.vercel.ai/docs/ai-sdk-core/telemetry).
+The `vercelAIIntegration` adds instrumentation for the [`ai`](https://www.npmjs.com/package/ai) SDK by Vercel to capture spans using the [`AI SDK's built-in Telemetry`](https://sdk.vercel.ai/docs/ai-sdk-core/telemetry). Get started with the following snippet:
 
 ```javascript
 Sentry.init({
-  integrations: [new Sentry.vercelAIIntegration()],
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.vercelAIIntegration({
+      recordInputs: true,
+      recordOutputs: true,
+    }),
+  ],
 });
 ```
 
@@ -45,8 +51,61 @@ To enhance the spans collected by this integration, we recommend providing a `fu
 
 ```javascript
 const result = await generateText({
-  model: openai("gpt-4-turbo"),
-  experimental_telemetry: { functionId: "my-awesome-function" },
+  model: openai("gpt-4o"),
+  experimental_telemetry: {
+    isEnabled: true,
+    functionId: "my-awesome-function",
+  },
+});
+```
+
+## Options
+
+### `force`
+
+Requires SDK version `9.29.0` or higher.
+
+_Type: `boolean`_
+
+Forces the integration to be active, even when the `ai` module is not detected or available. This is useful when you want to ensure the integration is always enabled regardless of module detection.
+
+Defaults to `false`.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.vercelAIIntegration({ force: true })],
+});
+```
+
+### `recordInputs`
+
+Requires SDK version `9.27.0` or higher.
+
+_Type: `boolean`_
+
+Records inputs to the `ai` function call.
+
+Defaults to `true` if `sendDefaultPii` is `true` or if you explicitly set `experimental_telemetry.isEnabled` to `true` in your `ai` function callsites.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.vercelAIIntegration({ recordInputs: true })],
+});
+```
+
+### `recordOutputs`
+
+Requires SDK version `9.27.0` or higher.
+
+_Type: `boolean`_
+
+Records outputs to the `ai` function call.
+
+Defaults to `true` if `sendDefaultPii` is `true` or if you explicitly set `experimental_telemetry.isEnabled` to `true` in your `ai` function callsites.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.vercelAIIntegration({ recordOutputs: true })],
 });
 ```
 
@@ -56,16 +115,16 @@ By default this integration adds tracing support to all `ai` function callsites.
 
 ```javascript
 const result = await generateText({
-  model: openai("gpt-4-turbo"),
+  model: openai("gpt-4o"),
   experimental_telemetry: { isEnabled: false },
 });
 ```
 
-If you want to collect inputs and outputs for a specific call, you must specifically opt-in to each function call by setting `experimental_telemetry.recordInputs` and `experimental_telemetry.recordOutputs` to `true`.
+If you set `experimental_telemetry.recordInputs` and `experimental_telemetry.recordOutputs` it will override the default behavior of collecting inputs and outputs for that function call.
 
 ```javascript
 const result = await generateText({
-  model: openai("gpt-4-turbo"),
+  model: openai("gpt-4o"),
   experimental_telemetry: {
     isEnabled: true,
     recordInputs: true,
