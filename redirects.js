@@ -1178,6 +1178,14 @@ const userDocsRedirects = [
     source: '/organization/integrations/expo/',
     destination: '/organization/integrations/deployment/expo/',
   },
+  {
+    source: '/product/issues/issue-details/sentry-seer/',
+    destination: '/product/ai-in-sentry/seer/',
+  },
+  {
+    source: '/product/ai-in-sentry/seer/seer-privacy-and-security',
+    destination: '/product/ai-in-sentry/ai-privacy-and-security/',
+  },
 ];
 
 /**
