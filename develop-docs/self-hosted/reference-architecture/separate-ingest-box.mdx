@@ -4,11 +4,11 @@ sidebar_title: Separate Ingest Box
 sidebar_order: 2
 ---
 
-Other than having a [separate domain](/self-hosted/experimental/reverse-proxy/#expose-only-ingest-endpoint-publicly) to view the web UI and ingest data, you can also put a separate box (or server) for ingesting data, and have it relay data to the main box. This setup is recommended for high-traffic installations, and environment where you have multiple data centers.
+In addition to having a [separate domain](/self-hosted/experimental/reverse-proxy/#expose-only-ingest-endpoint-publicly) for viewing the web UI and ingesting data, you can deploy a dedicated server for data ingestion that relays information to your main server. This setup is recommended for high-traffic installations and environments with multiple data centers.
 
-Using this setup also prevents DDOS attacks against your Sentry installation, since we assume your main box can only be accessed using some kind of VPN. If there are any invalid payload being sent to your Relay instance, it will be dropped immediately. If your main box is not reachable, your Relay will keep retrying to send the data.
+This architecture helps mitigate DDoS attacks by distributing ingestion across multiple endpoints, while your main Sentry instance with the web UI should be protected on a private network (accessible via VPN). Invalid payloads sent to your Relay instances will be dropped immediately. If your main server becomes unreachable, your Relay will continue attempting to send the data.
 
-Please note that you don't need to have multiple data centers in different countries/regions. The region naming on the diagram is to make it easier to understand.
+Note that the region names in the diagram below are used for illustration purposes.
 
 ```mermaid
 graph TB
@@ -33,27 +33,27 @@ graph TB
     relay2[Sentry Relay]
   end
 
-    subgraph "Europe Ingest Server"
+  subgraph "Europe Ingest Server"
     direction TB
     internet3[Public Internet]
     relay3[Sentry Relay]
   end
 
-  internet1 --> relay1 -- Through VPN tunnel --> main
-  internet2 --> relay2 -- Through VPN tunnel --> main
-  internet3 --> relay3 -- Through VPN tunnel --> main
+  internet1 --> relay1 -- Through VPN or tunnel --> main
+  internet2 --> relay2 -- Through VPN or tunnel --> main
+  internet3 --> relay3 -- Through VPN or tunnel --> main
 ```
 
-To configure the relay, you can install Sentry Relay on your machine through the [Relay Getting Started Guide](https://docs.sentry.io/product/relay/getting-started/). You should configure the Relay to run on `proxy` mode, and point it to the main Sentry server. You can also configure it to use a different port, or a different protocol (HTTP or HTTPS). Make sure you are using the same version of your self-hosted Sentry version.
+To set up the relay, install Sentry Relay on your machine by following the [Relay Getting Started Guide](https://docs.sentry.io/product/relay/getting-started/). Configure the Relay to run in `managed` mode and point it to your main Sentry server. You can customize the port and protocol (HTTP or HTTPS) as needed.
 
-A simple configuration for the relay would be:
+After installing Relay (via Docker or executable) and running the `configure init` command, you can configure it with the following settings:
 
 ```yaml
 # Please see the relevant documentation.
 # Performance tuning: https://docs.sentry.io/product/relay/operating-guidelines/
 # All config options: https://docs.sentry.io/product/relay/options/
 relay:
-  mode: proxy
+  mode: managed
   instance: default
   upstream: https://sentry.yourcompany.com/
   host: 0.0.0.0
@@ -78,8 +78,8 @@ sentry:
   dsn: "https://xxx@sentry.yourcompany.com/1"
 ```
 
-Always remember to upgrade the Relay whenever you upgrade your self-hosted Sentry instance.
+While it's possible to run Relay on a different version than your self-hosted instance, we recommend keeping both Relay and Sentry on the same version. Remember to upgrade Relay whenever you upgrade your self-hosted Sentry installation.
 
 <Alert level="info" title="Fun Fact">
-  Sentry SaaS use this similar setup for their ingestion servers, behind Google Anycast IP address.
+  Sentry SaaS uses a similar setup for their ingestion servers, behind Google Anycast IP address.
 </Alert>
