@@ -10,6 +10,10 @@ The Sentry SDK offers a middleware for the [Actix Web](https://actix.rs/) framew
 
 ## Install
 
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance"]}
+/>
+
 To add Sentry with the Actix Web integration to your Rust project, add a new dependency to your `Cargo.toml`:
 
 ```toml {filename:Cargo.toml}
@@ -22,6 +26,8 @@ sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = 
 
 Initialize and configure the Sentry client. This will enable a set of default integrations, such as panic reporting.
 Then, initialize Actix Web with the Sentry middleware.
+
+This snippet sets up a service that always fails, so you can test that everything is working as soon as you set it up.
 
 <Alert level="warning">
 
@@ -44,8 +50,10 @@ fn main() -> io::Result<()> {
         "___PUBLIC_DSN___",
         sentry::ClientOptions {
             release: sentry::release_name!(),
+            # ___PRODUCT_OPTION_START___ performance
             // Capture all traces and spans. Set to a lower value in production
             traces_sample_rate: 1.0,
+            # ___PRODUCT_OPTION_END___ performance
             // Capture user IPs and potentially sensitive headers when using HTTP server integrations
             // see https://docs.sentry.io/platforms/rust/data-management/data-collected for more info
             send_default_pii: true,
@@ -61,7 +69,9 @@ fn main() -> io::Result<()> {
                 .wrap(
                     sentry::integrations::actix::Sentry::builder()
                         .capture_server_errors(true) // Capture server errors
+                        # ___PRODUCT_OPTION_START___ performance
                         .start_transaction(true) // Start a transaction (Sentry root span) for each request
+                        # ___PRODUCT_OPTION_END___ performance
                         .finish(),
                 )
                 .service(failing)
@@ -77,8 +87,6 @@ fn main() -> io::Result<()> {
 
 ## Verify
 
-The snippet above sets up a service that always fails, so you can test that everything is working as soon as you set it up.
-
 Send a request to the application. The response error will be captured by Sentry.
 
 ```bash
@@ -91,4 +99,4 @@ Learn more about manually capturing an error or message in our <PlatformLink to=
 
 </Alert>
 
-To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Select Issues, and then Errors & Outages in the sidebar, where you will find the newly created issue. Clicking on the issue's title will open a page where you can see detailed information and mark it as resolved.
