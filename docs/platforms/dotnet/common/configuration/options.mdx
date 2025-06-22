@@ -55,10 +55,17 @@ Broadly, the ExecutionContext passes to child tasks and threads, but not to pare
 
 When Global Mode is **enabled**, a single scope stack is shared by the whole application.
 
+<Alert title="💡 Note">
+
 Since version 5.0.0 the transaction is always set on the current ExecutionContext, regardless of the Global Mode, so that spans from the UI don't get mixed up with transactions in background services.
 
-See the <PlatformLink to="/enriching-events/scopes/">Scopes and Hubs documentation</PlatformLink> for more information.
+There may be situations in which this isn't what you want. For example, you could start a transaction and then run multiple tasks in parallel, each of which makes an HTTP Request. By default, Sentry's <PlatformLink to="/platforms/dotnet/tracing/instrumentation/automatic-instrumentation/">Automatic Instrumentation</PlatformLink> will create spans as children of the transaction it finds stored in `Scope.Transaction` (which is now ExecutionContext specific, even in Global Mode).
 
+You can override this behavior and force auto-instrumented spans to have a specific parent by setting `Scope.Span`. [An example of doing this](https://github.com/getsentry/symbol-collector/blob/8a0fdb2594c3028f63f180b9b56b1efea1cbce34/src/SymbolCollector.Core/Client.cs#L74-L83) can be found in the Symbol Collector.
+
+</Alert>
+
+See the <PlatformLink to="/enriching-events/scopes/">Scopes and Hubs documentation</PlatformLink> for more information.
 
 </ConfigKey>
 
