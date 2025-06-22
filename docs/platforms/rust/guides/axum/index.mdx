@@ -12,9 +12,13 @@ The integration actually supports any crate based on [tower](https://github.com/
 
 ## Install
 
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance"]}
+/>
+
 To add Sentry with the `axum` integration to your Rust project, add a new dependency to your `Cargo.toml`:
 
-```toml {filename:Cargo.toml} 
+```toml {filename:Cargo.toml}
 [dependencies]
 axum = "0.8.4"
 tower = "0.5.2"
@@ -26,6 +30,8 @@ sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = 
 
 Initialize and configure the Sentry client. This will enable a set of default integrations, such as panic reporting.
 Then, initialize `axum` with the Sentry middleware.
+
+This snippet sets up a service that always panics, so you can test that everything is working as soon as you set it up.
 
 <Alert level="warning">
 
@@ -48,8 +54,10 @@ fn main() -> io::Result<()> {
         "___PUBLIC_DSN___",
         sentry::ClientOptions {
             release: sentry::release_name!(),
+            # ___PRODUCT_OPTION_START___ performance
             // Capture all traces and spans. Set to a lower value in production
             traces_sample_rate: 1.0,
+            # ___PRODUCT_OPTION_END___ performance
             // Capture user IPs and potentially sensitive headers when using HTTP server integrations
             // see https://docs.sentry.io/platforms/rust/data-management/data-collected for more info
             send_default_pii: true,
@@ -61,7 +69,9 @@ fn main() -> io::Result<()> {
         ServiceBuilder::new()
             // If you're binding the layers directly on the `Router`, bind them in the opposite order, otherwise you might run into a memory leak
             .layer(NewSentryLayer::<Request<Body>>::new_from_top()) // Bind a new Hub per request, to ensure correct error <> request correlation
+            # ___PRODUCT_OPTION_START___ performance
             .layer(SentryHttpLayer::new().enable_transaction()), // Start a transaction (Sentry root span) for each request
+            # ___PRODUCT_OPTION_END___ performance
     );
 
     tokio::runtime::Builder::new_multi_thread()
@@ -82,8 +92,6 @@ fn main() -> io::Result<()> {
 
 ## Verify
 
-The snippet above sets up a service that always panics, so you can test that everything is working as soon as you set it up.
-
 Send a request to the application. The panic will be captured by Sentry.
 
 ```bash
@@ -96,4 +104,4 @@ Learn more about manually capturing an error or message in our <PlatformLink to=
 
 </Alert>
 
-To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Select Issues, and then Errors & Outages in the sidebar, where you will find the newly created issue. Clicking on the issue's title will open a page where you can see detailed information and mark it as resolved.
