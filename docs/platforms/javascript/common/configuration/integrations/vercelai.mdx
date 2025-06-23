@@ -47,16 +47,13 @@ Sentry.init({
 });
 ```
 
-To enhance the spans collected by this integration, we recommend providing a `functionId` to identify the function that the telemetry data is for. In order to make sure that the inputs and outputs are correctly captured, we recommend adding `recordInputs` and `recordOutputs` to all functions. For more details, see the [AI SDK Telemetry Metadata docs](https://sdk.vercel.ai/docs/ai-sdk-core/telemetry#telemetry-metadata).
+To correctly capture spans, pass the `experimental_telemetry` object with `isEnabled: true` to every `generateText`, `generateObject`, and `streamText` function call. For more details, see the [AI SDK Telemetry Metadata docs](https://sdk.vercel.ai/docs/ai-sdk-core/telemetry#telemetry-metadata).
 
 ```javascript
 const result = await generateText({
   model: openai("gpt-4o"),
   experimental_telemetry: {
     isEnabled: true,
-    functionId: "my-awesome-function",
-    recordInputs: true,
-    recordOutputs: true,
   },
 });
 ```
@@ -108,6 +105,17 @@ Defaults to `true` if `sendDefaultPii` is `true` or if you explicitly set `exper
 ```javascript
 Sentry.init({
   integrations: [Sentry.vercelAIIntegration({ recordOutputs: true })],
+});
+```
+
+## Identifying functions
+
+In order to make it easier to correlate captures spans with the function calls we recommend passing `functionId` to all generation funciton calls:
+
+```javascript
+const result = await generateText({
+  model: openai("gpt-4o"),
+  experimental_telemetry: { functionId: "my-awesome-function" },
 });
 ```
 
