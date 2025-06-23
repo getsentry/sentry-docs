@@ -429,9 +429,9 @@ export async function getFileBySlug(slug: string) {
             ],
           },
         ],
-        [rehypePrismPlus, {ignoreMissing: true}],
+        [rehypePrismPlus, {ignoreMissing: true}] as any,
         rehypeOnboardingLines,
-        [rehypePrismDiff, {remove: true}],
+        [rehypePrismDiff, {remove: true}] as any,
         rehypePresetMinify,
       ];
       return options;
