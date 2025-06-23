@@ -56,8 +56,7 @@ function withResolvers<T>() {
     reject = rej;
   });
   return {resolve, reject, promise};
-};
-
+}
 
 async function readCacheFile(file: string): Promise<string> {
   const {resolve, reject, promise} = withResolvers<string>();
