@@ -47,8 +47,20 @@ mkdirSync(CACHE_DIR, {recursive: true});
 
 const md5 = (data: BinaryLike) => createHash('md5').update(data).digest('hex');
 
+// TODO: Remove this shim when we upgrade to Node 22 on Vercel
+function withResolvers<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: any) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return {resolve, reject, promise};
+};
+
+
 async function readCacheFile(file: string): Promise<string> {
-  const {resolve, reject, promise} = Promise.withResolvers<string>();
+  const {resolve, reject, promise} = withResolvers<string>();
 
   const reader = createReadStream(file);
   reader.on('error', reject);
@@ -71,7 +83,7 @@ async function readCacheFile(file: string): Promise<string> {
 }
 
 async function writeCacheFile(file: string, data: string) {
-  const {resolve, reject, promise} = Promise.withResolvers<void>();
+  const {resolve, reject, promise} = withResolvers<void>();
 
   const reader = Readable.from(data);
   reader.pause();

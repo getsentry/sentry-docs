@@ -126,6 +126,14 @@ async function createWork() {
 }
 
 const md5 = data => createHash('md5').update(data).digest('hex');
+const withResolvers = () => {
+  let resolve, reject;
+  const promise = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return {resolve, reject, promise};
+};
 
 async function genMDFromHTML(source, target, {cacheDir, noCache}) {
   const text = await readFile(source, {encoding: 'utf8'});
@@ -133,7 +141,7 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
   const cacheFile = path.join(cacheDir, hash);
   if (!noCache) {
     try {
-      const {resolve, reject, promise} = Promise.withResolvers();
+      const {resolve, reject, promise} = withResolvers();
       const reader = createReadStream(cacheFile);
       reader.on('error', reject);
       reader.pause();
@@ -185,7 +193,7 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
   const reader = Readable.from(data);
   reader.pause();
 
-  const {resolve, reject, promise} = Promise.withResolvers();
+  const {resolve, reject, promise} = withResolvers();
   const writer = createWriteStream(target, {
     encoding: 'utf8',
   });
