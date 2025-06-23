@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-
+/* eslint-disable no-console */
 import {selectAll} from 'hast-util-select';
 import {createHash} from 'node:crypto';
 import {constants as fsConstants, existsSync} from 'node:fs';

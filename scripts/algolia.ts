@@ -64,9 +64,9 @@ indexAndUpload();
 async function indexAndUpload() {
   // the page front matters are the source of truth for the static doc routes
   // as they are used directly by generateStaticParams() on [[..path]] page
-  const pageFrontMatters = isDeveloperDocs
-    ? getDevDocsFrontMatter()
-    : await getDocsFrontMatter();
+  const pageFrontMatters = await(
+    isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter()
+  );
   const records = await generateAlogliaRecords(pageFrontMatters);
   console.log('🔥 Generated %d new Algolia records.', records.length);
   const existingRecordIds = await fetchExistingRecordIds(index);
