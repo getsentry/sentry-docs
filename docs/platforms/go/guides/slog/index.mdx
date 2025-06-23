@@ -49,8 +49,8 @@ func main() {
 	// Configure `slog` to use Sentry as a handler
 	ctx := context.Background()
 	handler := sentryslog.Option{
-		LogLevel:   slog.LevelInfo, // LogLevel is the minimum level for sending logs to Sentry.
-		EventLevel: slog.LevelError, // EventLevel is the minimum level for sending events to Sentry.
+		EventLevel: []slog.Level{slog.LevelError, sentryslog.LevelFatal}, // Only Error and Fatal as events
+		LogLevel:   []slog.Level{slog.LevelWarn, slog.LevelInfo},         // Only Warn and Info as logs
 	}.NewSentryHandler(ctx)
 	logger := slog.New(handler)
 	logger = logger.With("release", "v1.0.0")
@@ -105,13 +105,14 @@ ReplaceAttr func(groups []string, a slog.Attr) slog.Attr
 
 ### Sending Logs vs Events
 
-Sentry allows you to send logs either as log entries or as events. The minimum log level defaults to `slog.LevelDebug` and logs will be send if the `EnableLogs` option is set. The minimum event level defaults to `slog.LevelError`.
+Sentry allows you to send logs either as log entries or as events. The minimum log level defaults to `slog.LevelDebug` and logs will be sent if the `EnableLogs` option is set. The minimum event level defaults to `slog.LevelError`.
 
 ### Example: Sending Logs as Events
 
 ```go
-logger := slog.New(sentryslog.Options{
-	EventLevel: slog.LevelError,
+logger := slog.New(sentryslog.Options
+    EventLevel: []slog.Level{slog.LevelError, sentryslog.LevelFatal},
+    LogLevel: []slog.Level{}, // disable log entries
 	AttrFromContext: []func(ctx context.Context) []slog.Attr{
 		func(ctx context.Context) []slog.Attr {
 			return []slog.Attr{slog.String("request_id", "123")}
@@ -126,8 +127,8 @@ logger.Error("This log is sent as an event")
 
 ```go
 logger := slog.New(sentryslog.Options{
-  EventLevel: slog.LevelError + 1 // manually set level to disable event logs
-  LogLevel: slog.LevelDebug,
+	EventLevel: []slog.Level{}, // disable events
+    LogLevel:   []slog.Level{slog.LevelError},
   },
 }.NewSentryHandler())
 
@@ -135,12 +136,9 @@ logger.Error("This log is sent as a log")
 ```
 
 <Alert>
-  In order to properly attach the correct trace with each Log entry, a
-  `context.Context` is required. The `Write` function of the `io.Writer`
-  interface doesn't provide `context`, so wrapping the custom logger will not
-  get the trace and current span attached. We recommend using the
-  `sentry.Logger` to ensure your logs are connected to spans and errors in the
-  Sentry UI.
+    In order to properly attach the correct trace with each Log entry, a
+    `context.Context` is required. We recommend using `WithContext` functions to ensure your logs
+    are connected to spans and errors in the Sentry UI.
 </Alert>
 
 
