@@ -40,7 +40,7 @@ export function getDocsRootNode(): Promise<DocNode> {
 
 async function getDocsRootNodeUncached(): Promise<DocNode> {
   return frontmatterToTree(
-    await(isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter())
+    await (isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter())
   );
 }
 
