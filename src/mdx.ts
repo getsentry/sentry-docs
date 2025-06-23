@@ -349,8 +349,11 @@ export async function getFileBySlug(slug: string) {
   let configFrontmatter: PlatformConfig | undefined;
   try {
     configFrontmatter = yaml.load(await readFile(configPath, 'utf8')) as PlatformConfig;
-  } catch (e) {
+  } catch (err) {
     // If the config file does not exist, we can ignore it.
+    if (err.code !== 'ENOENT') {
+      throw err;
+    }
   }
 
   let mdxPath = path.join(root, `${slug}.mdx`);
@@ -391,8 +394,11 @@ export async function getFileBySlug(slug: string) {
         mdPath = path.join(root, `${commonFilePath}.md`);
         mdIndexPath = path.join(root, commonFilePath, 'index.md');
         versionedMdxIndexPath = getVersionedIndexPath(root, commonFilePath, '.mdx');
-      } catch {
+      } catch (err) {
         // If the common folder does not exist, we can ignore it.
+        if (err.code !== 'ENOENT') {
+          throw err;
+        }
       }
     }
   }
@@ -402,8 +408,11 @@ export async function getFileBySlug(slug: string) {
     try {
       await access(mdxIndexPath);
       mdxIndexPath = addVersionToFilePath(mdxIndexPath, slug.split(VERSION_INDICATOR)[1]);
-    } catch {
+    } catch (err) {
       // pass, the file does not exist
+      if (err.code !== 'ENOENT') {
+        throw err;
+      }
     }
   }
 
@@ -432,11 +441,11 @@ export async function getFileBySlug(slug: string) {
   try {
     const cached = JSON.parse(await readFile(cacheFile, 'utf8'));
     return cached;
-  } catch (e) {
-    if (e.code !== 'ENOENT') {
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
       // If cache is corrupted, ignore and proceed
       // eslint-disable-next-line no-console
-      console.warn(`Failed to read MDX cache: ${cacheFile}`, e);
+      console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
     }
   }
 
