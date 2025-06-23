@@ -141,9 +141,28 @@ logger.Error("This log is sent as a log")
     are connected to spans and errors in the Sentry UI.
 </Alert>
 
+## Correlating Logs with Traces
 
-<SignInNote />
+To correlate logs with transactions, you need to pass a `context.Context` that contains transaction information to your logger calls. The `sentryhttp` middleware automatically adds transaction information to the request's context.
+Here's an example of how to use `InfoContext` in an HTTP handler to ensure logs are associated with the correct trace.
 
+```go
+// Assume logger is initialized with the Sentry handler as shown above.
+// var logger *slog.Logger
+
+func myAsyncHandler(w http.ResponseWriter, r *http.Request) {
+	// The sentryhttp middleware adds a Hub with transaction information to the request context.
+	ctx := r.Context()
+	// By using InfoContext, the log entry will be associated with the transaction from the request.
+	logger.InfoContext(ctx, "Log inside handler")
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintln(w, "Handler finished, async task running in background.")
+}
+
+// Wrap your handler with sentryhttp to automatically start transactions for requests.
+sentryHandler := sentryhttp.New(sentryhttp.Options{})
+http.Handle("/async", sentryHandler.Handle(http.HandlerFunc(myAsyncHandler)))
+```
 
 Note: Ensure Sentry is flushed before the application exits to avoid losing any pending events.
 
