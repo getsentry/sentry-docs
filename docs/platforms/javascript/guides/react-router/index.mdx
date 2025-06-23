@@ -373,6 +373,38 @@ Update the `start` and `dev` script to include the instrumentation file:
 }
 ```
 
+### Alternative: Top level import (Limited Instrumentation)
+
+If you're unable to use the `NODE_OPTIONS` approach (for example, when deploying to **Vercel** or other hosting platforms that don't support Node.js CLI flags), you can import the instrumentation file directly at the top of your `entry.server.tsx`:
+
+```tsx {diff} {filename: entry.server.tsx}
++import './instrument.server';
+ import * as Sentry from '@sentry/react-router';
+ import { createReadableStreamFromReadable } from '@react-router/node';
+ import { renderToPipeableStream } from 'react-dom/server';
+ import { ServerRouter } from 'react-router';
+ import { type HandleErrorFunction } from 'react-router';
+
+// ... rest of your server setup
+```
+
+<Alert level='warning' title='Limitations of top level import'>
+
+**This approach results in incomplete instrumentation.** When you import the instrumentation file directly in your entry server instead of using `NODE_OPTIONS`, Sentry is initialized after some modules have already been loaded by the ESM module system.
+
+**What this means:**
+- Only some native Node.js APIs (like `fetch` and the `http` module) will be instrumented
+- You'll miss automatically captured spans and traces for some of your application's server-side operations
+
+**Why this happens with ESM:**
+In ECMAScript Modules (ESM), the module loading and initialization happen in a specific order. When Sentry is imported directly in your entry file, the ESM loader has already processed and cached many modules. Sentry's automatic instrumentation relies on intercepting module imports as they happen, but this can't work retroactively on already-loaded modules.
+
+The `--import` flag solves this by loading Sentry's instrumentation hooks before **any** application modules are processed, ensuring comprehensive coverage.
+
+**Recommendation:** Use this method only if the `--import` flag is not supported by your deployment platform.
+
+</Alert>
+
 ## Source Maps Upload
 
 Update `vite.config.ts` to include the `sentryReactRouter` plugin, making sure to pass both the Vite and Sentry configurations to it:
