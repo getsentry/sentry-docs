@@ -1,11 +1,13 @@
-import fs from 'fs';
-import path from 'path';
+import {createHash} from 'crypto';
 
 import {cache} from 'react';
 import matter from 'gray-matter';
 import {s} from 'hastscript';
 import yaml from 'js-yaml';
 import {bundleMDX} from 'mdx-bundler';
+import fs from 'node:fs';
+import {readFile, writeFile} from 'node:fs/promises';
+import path from 'node:path';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypePresetMinify from 'rehype-preset-minify';
 import rehypePrismDiff from 'rehype-prism-diff';
@@ -33,6 +35,10 @@ import {isNotNil} from './utils';
 import {isVersioned, VERSION_INDICATOR} from './versioning';
 
 const root = process.cwd();
+const CACHE_DIR = path.join(root, '.next', 'cache', 'mdx-bundler');
+fs.mkdirSync(CACHE_DIR, {recursive: true});
+
+const md5 = data => createHash('md5').update(data).digest('hex');
 
 function formatSlug(slug: string) {
   return slug.replace(/\.(mdx|md)/, '');
@@ -304,8 +310,10 @@ export async function getFileBySlug(slug: string) {
   const configPath = path.join(root, slug.split(VERSION_INDICATOR)[0], 'config.yml');
 
   let configFrontmatter: PlatformConfig | undefined;
-  if (fs.existsSync(configPath)) {
-    configFrontmatter = yaml.load(fs.readFileSync(configPath, 'utf8')) as PlatformConfig;
+  try {
+    configFrontmatter = yaml.load(await readFile(configPath, 'utf8')) as PlatformConfig;
+  } catch (e) {
+    // If the config file does not exist, we can ignore it.
   }
 
   let mdxPath = path.join(root, `${slug}.mdx`);
@@ -352,7 +360,20 @@ export async function getFileBySlug(slug: string) {
     [mdxPath, mdxIndexPath, mdPath, versionedMdxIndexPath].find(fs.existsSync) ??
     mdIndexPath;
 
-  const source = fs.readFileSync(sourcePath, 'utf8');
+  const source = await readFile(sourcePath, 'utf8');
+  const cacheKey = md5(source);
+  const cacheFile = path.join(CACHE_DIR, cacheKey);
+
+  try {
+    const cached = JSON.parse(await readFile(cacheFile, 'utf8'));
+    return cached;
+  } catch (e) {
+    if (e.code !== 'ENOENT') {
+      // If cache is corrupted, ignore and proceed
+      // eslint-disable-next-line no-console
+      console.warn(`Failed to read MDX cache: ${cacheFile}`, e);
+    }
+  }
 
   process.env.ESBUILD_BINARY_PATH = path.join(
     root,
@@ -469,7 +490,7 @@ export async function getFileBySlug(slug: string) {
     mergedFrontmatter = {...frontmatter, ...configFrontmatter};
   }
 
-  return {
+  const resultObj = {
     matter: result.matter,
     mdxSource: code,
     toc,
@@ -478,6 +499,13 @@ export async function getFileBySlug(slug: string) {
       slug,
     },
   };
+
+  writeFile(cacheFile, JSON.stringify(resultObj), 'utf8').catch(e => {
+    // eslint-disable-next-line no-console
+    console.warn(`Failed to write MDX cache: ${cacheFile}`, e);
+  });
+
+  return resultObj;
 }
 
 /**

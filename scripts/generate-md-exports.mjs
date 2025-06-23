@@ -156,7 +156,10 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
         .process(text)
     )
   );
-  await copyFile(target, cacheFile, fsConstants.COPYFILE_FICLONE);
+  copyFile(target, cacheFile, fsConstants.COPYFILE_FICLONE).catch(error => {
+    // eslint-disable-next-line no-console
+    console.error(`Failed to cache file ${cacheFile}:`, error);
+  });
 }
 
 async function processTaskList({id, tasks, cacheDir, noCache}) {
