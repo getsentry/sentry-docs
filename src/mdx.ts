@@ -5,9 +5,15 @@ import matter from 'gray-matter';
 import {s} from 'hastscript';
 import yaml from 'js-yaml';
 import {bundleMDX} from 'mdx-bundler';
-import {mkdirSync} from 'node:fs';
-import {access, opendir, readFile, writeFile} from 'node:fs/promises';
+import {createReadStream, createWriteStream, mkdirSync} from 'node:fs';
+import {access, opendir, readFile} from 'node:fs/promises';
 import path from 'node:path';
+import {Readable} from 'node:stream';
+import {
+  constants as zlibConstants,
+  createBrotliCompress,
+  createBrotliDecompress,
+} from 'node:zlib';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypePresetMinify from 'rehype-preset-minify';
 import rehypePrismDiff from 'rehype-prism-diff';
@@ -35,10 +41,60 @@ import {isNotNil} from './utils';
 import {isVersioned, VERSION_INDICATOR} from './versioning';
 
 const root = process.cwd();
+const CACHE_COMPRESS_LEVEL = 4;
 const CACHE_DIR = path.join(root, '.next', 'cache', 'mdx-bundler');
 mkdirSync(CACHE_DIR, {recursive: true});
 
 const md5 = (data: BinaryLike) => createHash('md5').update(data).digest('hex');
+
+async function readCacheFile(file: string): Promise<string> {
+  const {resolve, reject, promise} = Promise.withResolvers<string>();
+
+  const reader = createReadStream(file);
+  reader.on('error', reject);
+  reader.pause();
+
+  const decompressor = createBrotliDecompress();
+  decompressor.on('error', reject);
+
+  const buffers: Buffer[] = [];
+  const stream = reader.pipe(decompressor);
+  stream.on('data', chunk => {
+    buffers.push(chunk);
+  });
+  stream.on('finish', () => {
+    resolve(Buffer.concat(buffers).toString('utf8'));
+  });
+
+  reader.resume();
+  return await promise;
+}
+
+async function writeCacheFile(file: string, data: string) {
+  const {resolve, reject, promise} = Promise.withResolvers<void>();
+
+  const reader = Readable.from(data);
+  reader.pause();
+
+  const writer = createWriteStream(file);
+  writer.on('error', reject);
+
+  const compressor = createBrotliCompress({
+    chunkSize: 32 * 1024,
+    params: {
+      [zlibConstants.BROTLI_PARAM_MODE]: zlibConstants.BROTLI_MODE_TEXT,
+      [zlibConstants.BROTLI_PARAM_QUALITY]: CACHE_COMPRESS_LEVEL,
+      [zlibConstants.BROTLI_PARAM_SIZE_HINT]: data.length,
+    },
+  });
+  const stream = reader.pipe(compressor).pipe(writer);
+  stream.on('error', reject);
+  stream.on('finish', resolve);
+
+  reader.resume();
+
+  await promise;
+}
 
 function formatSlug(slug: string) {
   return slug.replace(/\.(mdx|md)/, '');
@@ -439,7 +495,7 @@ export async function getFileBySlug(slug: string) {
   const cacheFile = path.join(CACHE_DIR, cacheKey);
 
   try {
-    const cached = JSON.parse(await readFile(cacheFile, 'utf8'));
+    const cached = JSON.parse(await readCacheFile(cacheFile));
     return cached;
   } catch (err) {
     if (err.code !== 'ENOENT') {
@@ -574,7 +630,7 @@ export async function getFileBySlug(slug: string) {
     },
   };
 
-  writeFile(cacheFile, JSON.stringify(resultObj), 'utf8').catch(e => {
+  writeCacheFile(cacheFile, JSON.stringify(resultObj)).catch(e => {
     // eslint-disable-next-line no-console
     console.warn(`Failed to write MDX cache: ${cacheFile}`, e);
   });

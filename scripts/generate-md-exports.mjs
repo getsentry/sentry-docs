@@ -2,12 +2,18 @@
 /* eslint-disable no-console */
 import {selectAll} from 'hast-util-select';
 import {createHash} from 'node:crypto';
-import {constants as fsConstants, existsSync} from 'node:fs';
-import {copyFile, mkdir, opendir, readFile, rm, writeFile} from 'node:fs/promises';
+import {createReadStream, createWriteStream, existsSync} from 'node:fs';
+import {mkdir, opendir, readFile, rm} from 'node:fs/promises';
 import {cpus} from 'node:os';
 import * as path from 'node:path';
+import {Readable} from 'node:stream';
 import {fileURLToPath} from 'node:url';
 import {isMainThread, parentPort, Worker, workerData} from 'node:worker_threads';
+import {
+  constants as zlibConstants,
+  createBrotliCompress,
+  createBrotliDecompress,
+} from 'node:zlib';
 import rehypeParse from 'rehype-parse';
 import rehypeRemark from 'rehype-remark';
 import remarkGfm from 'remark-gfm';
@@ -15,14 +21,16 @@ import remarkStringify from 'remark-stringify';
 import {unified} from 'unified';
 import {remove} from 'unist-util-remove';
 
+const CACHE_COMPRESS_LEVEL = 4;
+
 function taskFinishHandler(data) {
   if (data.failedTasks.length === 0) {
     console.log(`✅ Worker[${data.id}]: ${data.success} files successfully.`);
-  } else {
-    hasErrors = true;
-    console.error(`❌ Worker[${data.id}]: ${data.failedTasks.length} files failed:`);
-    console.error(data.failedTasks);
+    return false;
   }
+  console.error(`❌ Worker[${data.id}]: ${data.failedTasks.length} files failed:`);
+  console.error(data.failedTasks);
+  return true;
 }
 
 async function createWork() {
@@ -37,7 +45,7 @@ async function createWork() {
   const INPUT_DIR = path.join(root, '.next', 'server', 'app');
   const OUTPUT_DIR = path.join(root, 'public', 'md-exports');
 
-  const CACHE_VERSION = 1;
+  const CACHE_VERSION = 2;
   const CACHE_DIR = path.join(root, '.next', 'cache', 'md-exports', `v${CACHE_VERSION}`);
   const noCache = !existsSync(CACHE_DIR);
   if (noCache) {
@@ -86,7 +94,7 @@ async function createWork() {
         workerData: {id, noCache, cacheDir: CACHE_DIR, tasks: workerTasks[id]},
       });
       let hasErrors = false;
-      worker.on('message', taskFinishHandler);
+      worker.on('message', data => (hasErrors = taskFinishHandler(data)));
       worker.on('error', reject);
       worker.on('exit', code => {
         if (code !== 0) {
@@ -104,7 +112,11 @@ async function createWork() {
       cacheDir: CACHE_DIR,
       tasks: workerTasks[workerTasks.length - 1],
       id: workerTasks.length - 1,
-    }).then(taskFinishHandler)
+    }).then(data => {
+      if (taskFinishHandler(data)) {
+        throw new Error(`Worker[${data.id}] had some errors.`);
+      }
+    })
   );
 
   await Promise.all(workerPromises);
@@ -121,45 +133,83 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
   const cacheFile = path.join(cacheDir, hash);
   if (!noCache) {
     try {
-      await copyFile(cacheFile, target, fsConstants.COPYFILE_FICLONE);
+      const {resolve, reject, promise} = Promise.withResolvers();
+      const reader = createReadStream(cacheFile);
+      reader.on('error', reject);
+      reader.pause();
+
+      const writer = createWriteStream(target, {
+        encoding: 'utf8',
+      });
+      writer.on('error', reject);
+
+      const decompressor = createBrotliDecompress();
+      const stream = reader.pipe(decompressor).pipe(writer);
+      stream.on('error', reject);
+      stream.on('finish', resolve);
+
+      reader.resume();
+
+      await promise;
       return;
     } catch {
       // pass
     }
   }
 
-  await writeFile(
-    target,
-    String(
-      await unified()
-        .use(rehypeParse)
-        // Need the `main div > hgroup` selector for the headers
-        .use(() => tree => selectAll('main div > hgroup, div#main', tree))
-        // If we don't do this wrapping, rehypeRemark just returns an empty string -- yeah WTF?
-        .use(() => tree => ({
-          type: 'element',
-          tagName: 'div',
-          properties: {},
-          children: tree,
-        }))
-        .use(rehypeRemark, {
-          document: false,
-          handlers: {
-            // Remove buttons as they usually get confusing in markdown, especially since we use them as tab headers
-            button() {},
-          },
-        })
-        // We end up with empty inline code blocks, probably from some tab logic in the HTML, remove them
-        .use(() => tree => remove(tree, {type: 'inlineCode', value: ''}))
-        .use(remarkGfm)
-        .use(remarkStringify)
-        .process(text)
-    )
+  const data = String(
+    await unified()
+      .use(rehypeParse)
+      // Need the `main div > hgroup` selector for the headers
+      .use(() => tree => selectAll('main div > hgroup, div#main', tree))
+      // If we don't do this wrapping, rehypeRemark just returns an empty string -- yeah WTF?
+      .use(() => tree => ({
+        type: 'element',
+        tagName: 'div',
+        properties: {},
+        children: tree,
+      }))
+      .use(rehypeRemark, {
+        document: false,
+        handlers: {
+          // Remove buttons as they usually get confusing in markdown, especially since we use them as tab headers
+          button() {},
+        },
+      })
+      // We end up with empty inline code blocks, probably from some tab logic in the HTML, remove them
+      .use(() => tree => remove(tree, {type: 'inlineCode', value: ''}))
+      .use(remarkGfm)
+      .use(remarkStringify)
+      .process(text)
   );
-  copyFile(target, cacheFile, fsConstants.COPYFILE_FICLONE).catch(error => {
-    // eslint-disable-next-line no-console
-    console.error(`Failed to cache file ${cacheFile}:`, error);
+  const reader = Readable.from(data);
+  reader.pause();
+
+  const {resolve, reject, promise} = Promise.withResolvers();
+  const writer = createWriteStream(target, {
+    encoding: 'utf8',
   });
+  writer.on('error', reject);
+
+  const compressor = createBrotliCompress({
+    chunkSize: 32 * 1024,
+    params: {
+      [zlibConstants.BROTLI_PARAM_MODE]: zlibConstants.BROTLI_MODE_TEXT,
+      [zlibConstants.BROTLI_PARAM_QUALITY]: CACHE_COMPRESS_LEVEL,
+      [zlibConstants.BROTLI_PARAM_SIZE_HINT]: data.length,
+    },
+  });
+  const cacheWriter = createWriteStream(cacheFile);
+
+  const writeStream = reader.pipe(writer);
+  writeStream.on('error', reject);
+  writeStream.on('finish', resolve);
+
+  const cacheWriteStream = reader.pipe(compressor).pipe(cacheWriter);
+  cacheWriteStream.on('error', err => console.warn('Error writing cache file:', err));
+  reader.resume();
+
+  await promise;
 }
 
 async function processTaskList({id, tasks, cacheDir, noCache}) {
