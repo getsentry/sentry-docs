@@ -67,12 +67,12 @@ error.value:"connection error (code: *)" -> connection-error
 error.value:"could not connect (*)" -> connection-error
 ```
 
-### `message`
+### `level`
 
-Matches on a log message. It will also automatically check for the additional exception value as they can be hard to keep apart. The matching is case insensitive.
+Matches on the log level. The match is case insensitive.
 
 ```bash {tabTitle:Fingerprinting Config}
-message:"system encountered a fatal problem: *" -> fatal-log
+logger:"com.myapp.FooLogger" level:"error" -> mylogger-error
 ```
 
 ### `logger`
@@ -83,20 +83,12 @@ Matches on the name of the logger, which is useful to combine all messages of a 
 logger:"com.myapp.mypackage.*" -> mypackage-logger
 ```
 
-### `level`
+### `message`
 
-Matches on the log level. The match is case insensitive.
-
-```bash {tabTitle:Fingerprinting Config}
-logger:"com.myapp.FooLogger" level:"error" -> mylogger-error
-```
-
-### `tags.tag_name`
-
-Matches on the value of the tag `tag_name`. This can be useful to filter down certain types of events. For instance, you can separate events caused by a specific server:
+Matches on a log message. It will also automatically check for the additional exception value as they can be hard to keep apart. The matching is case insensitive.
 
 ```bash {tabTitle:Fingerprinting Config}
-tags.server_name:"canary-*.mycompany.internal" -> canary-events
+message:"system encountered a fatal problem: *" -> fatal-log
 ```
 
 ### `stack.abs_path`
@@ -109,16 +101,6 @@ Matches on the path of an event and is case insensitive. It uses path globbing s
 stack.abs_path:"**/my-utils/*.js" -> my-utils, {{ error.type }}
 ```
 
-### `stack.module`
-
-alias: `module`
-
-Similar to `stack.abs_path` but matches on the module name instead. The match is case-sensitive and regular globbing rules apply (`*` also matches slashes).
-
-```bash {tabTitle:Fingerprinting Config}
-stack.module:"*/my-utils/*" -> my-utils, {{ error.type }}
-```
-
 ### `stack.function`
 
 alias: `function`
@@ -127,6 +109,16 @@ Checks if any of the functions in the stack trace match the glob. The match is c
 
 ```bash {tabTitle:Fingerprinting Config}
 stack.function:"my_assertion_failed" -> my-assertion-failed
+```
+
+### `stack.module`
+
+alias: `module`
+
+Similar to `stack.abs_path` but matches on the module name instead. The match is case-sensitive and regular globbing rules apply (`*` also matches slashes).
+
+```bash {tabTitle:Fingerprinting Config}
+stack.module:"*/my-utils/*" -> my-utils, {{ error.type }}
 ```
 
 ### `stack.package`
@@ -140,12 +132,12 @@ stack.package:"**/libcurl.dylib" -> libcurl
 stack.package:"**/libcurl.so" -> libcurl
 ```
 
-### `family`
+### `tags.tag_name`
 
-Used to "scope" down the matcher. The following families exist: `javascript` for any type of JavaScript event, `native` for any type of Native event. Any other platform is called `other`.
+Matches on the value of the tag `tag_name`. This can be useful to filter down certain types of events. For instance, you can separate events caused by a specific server:
 
 ```bash {tabTitle:Fingerprinting Config}
-family:native !stack.module:"myproject::*" -> not-from-my-project
+tags.server_name:"canary-*.mycompany.internal" -> canary-events
 ```
 
 Additionally, the folowing utility matchers are available:
@@ -156,6 +148,14 @@ Checks if the frame is in-app or not. It is particularly useful when combined wi
 
 ```bash {tabTitle:Fingerprinting Config}
 app:yes stack.function:"assert" -> assert
+```
+
+### `family`
+
+Used to "scope" down the matcher. The following families exist: `javascript` for any type of JavaScript event, `native` for any type of Native event. Any other platform is called `other`.
+
+```bash {tabTitle:Fingerprinting Config}
+family:native !stack.module:"myproject::*" -> not-from-my-project
 ```
 
 </DefinitionList>
@@ -188,14 +188,6 @@ This fills in the default fingerprint that would be produced by the normal group
 stack.function:"query_database" -> {{ default }}, {{ transaction }}
 ```
 
-### `{{ transaction }}`
-
-This fills in the name of the transaction into the fingerprint. It will force the creation of a group per transaction:
-
-```bash {tabTitle:Fingerprinting Config}
-error.type:"ApiError" -> api-error, {{ transaction }}
-```
-
 ### `{{ error.type }}`
 
 alias: `{{ type }}`
@@ -216,14 +208,30 @@ This fills in the stringified value of the error that occurred. When chained exc
 error.type:"ScriptError" -> script-evaluation, {{ error.value }}
 ```
 
-### `{{ stack.function }}`
+### `{{ level }}`
 
-alias: `{{ function }}`
-
-This fills in the function name of the "crashing frame," also known as the application code's topmost frame.
+This fills in the name of the log level that was used to create an event.
 
 ```bash {tabTitle:Fingerprinting Config}
-error.type:"ScriptError" -> script-evaluation, {{ stack.function }}
+message:"connection error*" -> connection-error, {{ logger }}, {{ level }}
+```
+
+### `{{ logger }}`
+
+This fills in the name of the logger that caused an event.
+
+```bash {tabTitle:Fingerprinting Config}
+message:"critical connection error*" -> connection-error, {{ logger }}
+```
+
+### `{{ message }}`
+
+This fills in the message of the event (similar to `error.value` but for
+captured messages). Note that this can produce groups with poor data quality if
+messages are changing frequently:
+
+```bash {tabTitle:Fingerprinting Config}
+logger:"com.foo.auditlogger.*" -> audit-log, {{ message }}
 ```
 
 ### `{{ stack.abs_path }}`
@@ -242,6 +250,16 @@ This is like `stack.abs_path` but will only fill in the relative file name:
 
 ```bash {tabTitle:Fingerprinting Config}
 error.type:"ScriptError" -> script-evaluation, {{ stack.filename }}
+```
+
+### `{{ stack.function }}`
+
+alias: `{{ function }}`
+
+This fills in the function name of the "crashing frame," also known as the application code's topmost frame.
+
+```bash {tabTitle:Fingerprinting Config}
+error.type:"ScriptError" -> script-evaluation, {{ stack.function }}
 ```
 
 ### `{{ stack.module }}`
@@ -264,22 +282,6 @@ This fills in the package name (object file) of the "crashing frame," also known
 stack.function:"assert" -> assertion, {{ stack.package }}
 ```
 
-### `{{ logger }}`
-
-This fills in the name of the logger that caused an event.
-
-```bash {tabTitle:Fingerprinting Config}
-message:"critical connection error*" -> connection-error, {{ logger }}
-```
-
-### `{{ level }}`
-
-This fills in the name of the log level that was used to create an event.
-
-```bash {tabTitle:Fingerprinting Config}
-message:"connection error*" -> connection-error, {{ logger }}, {{ level }}
-```
-
 ### `{{ tags.tag_name }}`
 
 This fills in the value of a tag into the fingerprint, which can, for instance, be used to split events by server name or something similar.
@@ -288,14 +290,12 @@ This fills in the value of a tag into the fingerprint, which can, for instance, 
 message:"connection error*" -> connection-error, {{ tags.server_name }}
 ```
 
-### `{{ message }}`
+### `{{ transaction }}`
 
-This fills in the message of the event (similar to `error.value` but for
-captured messages). Note that this can produce groups with poor data quality if
-messages are changing frequently:
+This fills in the name of the transaction into the fingerprint. It will force the creation of a group per transaction:
 
 ```bash {tabTitle:Fingerprinting Config}
-logger:"com.foo.auditlogger.*" -> audit-log, {{ message }}
+error.type:"ApiError" -> api-error, {{ transaction }}
 ```
 
 </DefinitionList>
