@@ -33,68 +33,80 @@ Before starting, ensure:
 
 Add an instance of `SentryNavigationObserver` to your application's `navigatorObservers`.
 
-```dart {8} {tabTitle: Flutter Routing}
+```dart {14-16} {tabTitle: Flutter Routing}
 import 'package:flutter/material.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-MaterialApp(
-  title: 'My Widget',
-  home: MyWidget(),
-  navigatorObservers: [
-    SentryNavigatorObserver()
-  ],
-);
+Future<void> main() async {
+  await SentryFlutter.init((options) {
+    options.dsn = '___DSN___';
+  }, appRunner: () => runApp(SentryWidget(child: MyApp())));
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+        navigatorObservers: [
+          SentryNavigatorObserver(),
+        ],
+        ...
+    );
+  }
+}
 ```
 
-```dart {6} {tabTitle: GoRouter}
-import 'package:go_router/go_router.dart';
+```dart {9} {tabTitle: GoRouter}
+import 'package:flutter/material.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:go_router/go_router.dart';
 
-final router = GoRouter(
-  routes: ...,
+final _router = GoRouter(
+  routes: [
+    ...
+  ],
   observers: [SentryNavigatorObserver()],
 );
+
+Future<void> main() async {
+  await SentryFlutter.init((options) {
+    options.dsn = '___DSN___';
+  }, appRunner: () => runApp(SentryWidget(child: MyApp())));
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp.router(
+      routerConfig: _router,
+    );
+  }
+}
+
 ```
 
 ### 2. Define Route Names
 
 By default the application's main route name is `"/"`.
 The instrumentation sets the span `operation` to `navigation` and the span `name` to the provided route name.
-For transactions to be created when navigation changes, you need to provide route names:
+For transactions to be created and breadcrumbs to be added when navigation changes, you need to provide route names:
 
 - Flutter routing: use `RouteSettings` and set the name in the constructor.
 - GoRouter: use the `name` parameter to set the route name.
 
-```dart {4} {tabTitle: Flutter Routing}
-/// Setting the route name is required
+```dart {tabTitle: Flutter Routing}
 MaterialPageRoute(
   builder: (BuildContext context) => MyWidget(),
   settings: RouteSettings(name: 'My Widget'),
 )
 ```
 
-```dart {13} {tabTitle: GoRouter}
-final GoRouter _router = GoRouter(
-  observers: [SentryNavigatorObserver()],
-  routes: <RouteBase>[
-    GoRoute(
-      path: '/',
-      name: 'Home',
-      builder: (BuildContext context, GoRouterState state) {
-        return const HomeScreen();
-      },
-      routes: <RouteBase>[
-        GoRoute(
-          path: 'mywidget',
-          name: 'MyWidget',
-          builder: (BuildContext context, GoRouterState state) {
-            return const MyWidget();
-          },
-        ),
-      ],
-    ),
-  ],
-);
+```dart {tabTitle: GoRouter}
+GoRoute(
+  name: 'My Widget',
+  ...
+),
+
 ```
 
 ## Time to Initial Display
