@@ -7,6 +7,10 @@ For a quick reference, there is a [complete example](https://github.com/getsentr
 
 Go API documentation for the [`sentryslog` package](https://pkg.go.dev/github.com/getsentry/sentry-go/slog) is also available.
 
+## Requirements
+
+Slog structured logging is supported in Sentry Go SDK version `0.34.0` and above.
+
 ## Install
 
 ```bash
@@ -49,8 +53,8 @@ func main() {
 	// Configure `slog` to use Sentry as a handler
 	ctx := context.Background()
 	handler := sentryslog.Option{
-		EventLevel: []slog.Level{slog.LevelError, sentryslog.LevelFatal}, // Only Error and Fatal as events
-		LogLevel:   []slog.Level{slog.LevelWarn, slog.LevelInfo},         // Only Warn and Info as logs
+		EventLevel: []slog.Level{slog.LevelError}, // Only Error level will be sent as events
+		LogLevel:   []slog.Level{slog.LevelWarn, slog.LevelInfo},         // Only Warn and Info levels will be sent as logs
 	}.NewSentryHandler(ctx)
 	logger := slog.New(handler)
 	logger = logger.With("release", "v1.0.0")
@@ -110,8 +114,14 @@ Sentry allows you to send logs either as log entries or as events. The minimum l
 ### Example: Sending Logs as Events
 
 ```go
-logger := slog.New(sentryslog.Options
-    EventLevel: []slog.Level{slog.LevelError, sentryslog.LevelFatal},
+logger := slog.New(sentryslog.Option{
+    // specify all event levels
+    EventLevel: []slog.Level{
+		slog.LevelDebug,
+        slog.LevelInfo,
+        slog.LevelWarn,
+        slog.LevelError,
+	},
     LogLevel: []slog.Level{}, // disable log entries
 	AttrFromContext: []func(ctx context.Context) []slog.Attr{
 		func(ctx context.Context) []slog.Attr {
@@ -126,10 +136,15 @@ logger.Error("This log is sent as an event")
 ### Example: Sending Logs as Logs
 
 ```go
-logger := slog.New(sentryslog.Options{
-	EventLevel: []slog.Level{}, // disable events
-    LogLevel:   []slog.Level{slog.LevelError},
-  },
+logger := slog.New(sentryslog.Option{
+    EventLevel: []slog.Level{}, // disable events
+    // specify all log levels
+    LogLevel: []slog.Level{
+        slog.LevelDebug,
+        slog.LevelInfo,
+        slog.LevelWarn,
+        slog.LevelError,
+    },
 }.NewSentryHandler())
 
 logger.Error("This log is sent as a log")
