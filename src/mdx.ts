@@ -54,6 +54,11 @@ type SlugFile = {
 };
 
 const root = process.cwd();
+// We need to limit this as we have code doing things like Promise.all(allFiles.map(...))
+// where `allFiles` is in the order of thousands. This not only slows down the build but
+// it also crashes the dynamic pages such as `/platform-redirect` as these run on Vercel
+// Functions which looks like AWS Lambda and we get `EMFILE` errors when trying to open
+// so many files at once.
 const FILE_CONCURRENCY_LIMIT = 200;
 const CACHE_COMPRESS_LEVEL = 4;
 const CACHE_DIR = path.join(root, '.next', 'cache', 'mdx-bundler');
