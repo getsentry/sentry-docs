@@ -25,6 +25,7 @@ To integrate Sentry with slog, you need to set up a Sentry handler and configure
 
 ```go
 import (
+    "context"
 	"fmt"
 	"log"
 	"time"
@@ -114,6 +115,7 @@ Sentry allows you to send logs either as log entries or as events. The minimum l
 ### Example: Sending Logs as Events
 
 ```go
+ctx := context.Background()
 logger := slog.New(sentryslog.Option{
     // specify all event levels
     EventLevel: []slog.Level{
@@ -128,7 +130,7 @@ logger := slog.New(sentryslog.Option{
 			return []slog.Attr{slog.String("request_id", "123")}
 		},
 	},
-}.NewSentryHandler())
+}.NewSentryHandler(ctx))
 
 logger.Error("This log is sent as an event")
 ```
@@ -136,6 +138,7 @@ logger.Error("This log is sent as an event")
 ### Example: Sending Logs as Logs
 
 ```go
+ctx := context.Background()
 logger := slog.New(sentryslog.Option{
     EventLevel: []slog.Level{}, // disable events
     // specify all log levels
@@ -145,7 +148,7 @@ logger := slog.New(sentryslog.Option{
         slog.LevelWarn,
         slog.LevelError,
     },
-}.NewSentryHandler())
+}.NewSentryHandler(ctx))
 
 logger.Error("This log is sent as a log")
 ```
@@ -169,14 +172,16 @@ func myAsyncHandler(w http.ResponseWriter, r *http.Request) {
 	// The sentryhttp middleware adds a Hub with transaction information to the request context.
 	ctx := r.Context()
 	// By using InfoContext, the log entry will be associated with the transaction from the request.
-	logger.InfoContext(ctx, "Log inside handler")
+	slog.InfoContext(ctx, "Log inside handler")
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintln(w, "Handler finished, async task running in background.")
 }
 
-// Wrap your handler with sentryhttp to automatically start transactions for requests.
-sentryHandler := sentryhttp.New(sentryhttp.Options{})
-http.Handle("/async", sentryHandler.Handle(http.HandlerFunc(myAsyncHandler)))
+func main() {
+	// Wrap your handler with sentryhttp to automatically start transactions for requests.
+	sentryHandler := sentryhttp.New(sentryhttp.Options{})
+	http.Handle("/async", sentryHandler.Handle(http.HandlerFunc(myAsyncHandler)))
+}
 ```
 
 Note: Ensure Sentry is flushed before the application exits to avoid losing any pending events.
