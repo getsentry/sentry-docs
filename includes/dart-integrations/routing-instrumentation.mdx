@@ -23,8 +23,9 @@ The routing instrumentation feature is shipped with Sentry's Flutter SDK automat
 
 Before starting, ensure:
 
-1. The Sentry Flutter SDK is initialized. Learn more [here](/platforms/dart/guides/flutter/#configure).
-2. Tracing is set up. Learn more [here](/platforms/dart/guides/flutter/tracing/).
+1. The Sentry Flutter SDK `9.1.0` or later is installed.
+2. The Sentry Flutter SDK is initialized. Learn more [here](/platforms/dart/guides/flutter/#configure).
+3. Tracing is set up. Learn more [here](/platforms/dart/guides/flutter/tracing/).
 
 ## Configure
 
@@ -36,7 +37,7 @@ Add an instance of `SentryNavigationObserver` to your application's `navigatorOb
 import 'package:flutter/material.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-return MaterialApp(
+MaterialApp(
   title: 'My Widget',
   home: MyWidget(),
   navigatorObservers: [
@@ -108,18 +109,69 @@ TTFD is disabled by default. To enable TTFD measurements, follow these steps:
 
 1. Enable the `enableTimeToFullDisplayTracing` option in the SDK configuration:
 
-```dart {3}
+```dart {4}
 await SentryFlutter.init(
   (options) {
+    options.dsn = '___DSN___';
     options.enableTimeToFullDisplayTracing = true;
   }, appRunner: () => runApp(MyApp()),
 );
 ```
 
-2. Report the span manually:
+2. Report the TTFD span in the widget that you navigate to - there are two ways to do this:
 
-```dart
-await SentryFlutter.reportFullyDisplayed();
+- Method 1: wrap your widget that you navigate to in `SentryDisplayWidget`
+- Method 2: use the API directly to report TTFD - this does not require wrapping your widget with `SentryDisplayWidget`
+
+<Alert>
+
+If you navigate to a `StatelessWidget` you must use method 1 and wrap the widget in `SentryDisplayWidget`.
+Wrapping a `StatelessWidget` in `SentryDisplayWidget` will automatically report the same time as TTID because the widget does not depend on any async operations to build.
+
+</Alert>
+
+```dart {5, 15-17} {tabTitle: Method 1: wrap Your Widget in SentryDisplayWidget}
+Navigator.push(
+  context,
+  MaterialPageRoute(
+    settings: const RouteSettings(name: 'MyWidget'),
+    builder: (context) => SentryDisplayWidget(child: MyWidget()),
+  ),
+);
+
+// Within the widget state:
+@override
+void initState() {
+  super.initState();
+  // Do some long running work...
+  Future.delayed(const Duration(seconds: 3), () {
+    if (mounted) {
+      SentryDisplayWidget.of(context).reportFullyDisplayed();
+    }
+  });
+}
+```
+
+```dart {14, 16} {tabTitle: Method 2: use the API directly}
+Navigator.push(
+  context,
+  MaterialPageRoute(
+    settings: const RouteSettings(name: 'MyWidget'),
+    builder: (context) => MyWidget(),
+  ),
+);
+
+// Within the widget state:
+@override
+void initState() {
+  super.initState();
+  // Get a reference to the current display before doing work.
+  final currentDisplay = SentryFlutter.currentDisplay();
+  // Do some long running work...
+  Future.delayed(const Duration(seconds: 3), () {
+    currentDisplay?.reportFullyDisplayed();
+  });
+}
 ```
 
 If the span finishes through the API, its status will be set to `SpanStatus.OK`.
@@ -136,7 +188,6 @@ Set up a new widget that executes an expensive operation.
 import 'package:flutter/material.dart';
 import 'package:sentry/sentry.dart';
 
-/// Widget that executes an expensive operation
 class MyWidget extends StatefulWidget {
   const MyWidget({super.key});
 
@@ -145,22 +196,14 @@ class MyWidget extends StatefulWidget {
 }
 
 class MyWidgetState extends State<MyWidget> {
-  static const delayInSeconds = 5;
-
   @override
   void initState() {
     super.initState();
-    _doComplexOperation();
-  }
-
-  /// Attach child spans to the routing transaction
-  /// or the transaction will not be sent to Sentry.
-  Future<void> _doComplexOperation() async {
-    final activeTransaction = Sentry.getSpan();
-    final childSpan = activeTransaction?.startChild('complex operation',
-    description: 'running a $delayInSeconds seconds operation');
-    await Future.delayed(const Duration(seconds: delayInSeconds));
-    childSpan?.finish();
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        SentryDisplayWidget.of(context).reportFullyDisplayed();
+      }
+    });
   }
 
   @override
@@ -183,7 +226,7 @@ Navigator.push(
   context,
   MaterialPageRoute(
     settings: const RouteSettings(name: 'MyWidget'),
-    builder: (context) => MyWidget(),
+    builder: (context) => SentryDisplayWidget(child: MyWidget()),
   ),
 );
 ```
