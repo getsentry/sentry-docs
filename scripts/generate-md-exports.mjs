@@ -28,7 +28,7 @@ function taskFinishHandler(data) {
     console.log(
       `💰 Worker[${data.id}]: Cache hits: ${data.cacheHits} (${Math.round((data.cacheHits / data.success) * 100)}%)`
     );
-    console.log(`✅ Worker[${data.id}]: ${data.success} files successfully.`);
+    console.log(`✅ Worker[${data.id}]: converted ${data.success} files successfully.`);
     return false;
   }
   console.error(`❌ Worker[${data.id}]: ${data.failedTasks.length} files failed:`);
@@ -132,7 +132,10 @@ async function createWork() {
 const md5 = data => createHash('md5').update(data).digest('hex');
 
 async function genMDFromHTML(source, target, {cacheDir, noCache}) {
-  const text = await readFile(source, {encoding: 'utf8'});
+  const text = (await readFile(source, {encoding: 'utf8'}))
+    // Remove all script tags, as they are not needed in markdown
+    // and they are not stable across builds, causing cache misses
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/g, '');
   const hash = md5(text);
   const cacheFile = path.join(cacheDir, hash);
   if (!noCache) {
