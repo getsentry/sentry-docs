@@ -212,25 +212,27 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
 
   await Promise.all(
     files.map(
-      limitFunction(async file => {
-        const fileName = file.slice(docsPath.length + 1);
-        if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
-          return;
-        }
+      limitFunction(
+        async file => {
+          const fileName = file.slice(docsPath.length + 1);
+          if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
+            return;
+          }
 
-        if (fileName.indexOf('/common/') !== -1) {
-          return;
-        }
+          if (fileName.indexOf('/common/') !== -1) {
+            return;
+          }
 
-        const source = await readFile(file, 'utf8');
-        const {data: frontmatter} = matter(source);
-        allFrontMatter.push({
-          ...(frontmatter as FrontMatter),
-          slug: formatSlug(fileName),
-          sourcePath: path.join('docs', fileName),
-        });
-      },
-      {concurrency: FILE_CONCURRENCY_LIMIT})
+          const source = await readFile(file, 'utf8');
+          const {data: frontmatter} = matter(source);
+          allFrontMatter.push({
+            ...(frontmatter as FrontMatter),
+            slug: formatSlug(fileName),
+            sourcePath: path.join('docs', fileName),
+          });
+        },
+        {concurrency: FILE_CONCURRENCY_LIMIT}
+      )
     )
   );
 
