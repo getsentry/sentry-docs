@@ -97,7 +97,10 @@ export const marketingUrlParams = (): URLQueryObject => {
  * @param additionalParams - Optional additional parameters to include
  * @returns URL with ferried parameters appended
  */
-export const ferryUrlParams = (targetUrl: string, additionalParams: URLQueryObject = {}): string => {
+export const ferryUrlParams = (
+  targetUrl: string,
+  additionalParams: URLQueryObject = {}
+): string => {
   if (typeof window === 'undefined') {
     return targetUrl;
   }
@@ -109,19 +112,19 @@ export const ferryUrlParams = (targetUrl: string, additionalParams: URLQueryObje
 
   const currentParams = marketingUrlParams();
   const allParams = {...currentParams, ...additionalParams};
-  
+
   if (Object.keys(allParams).length === 0) {
     return targetUrl;
   }
 
   try {
     const url = new URL(targetUrl, window.location.origin);
-    
+
     // Only add parameters to same-origin URLs
     if (url.origin !== window.location.origin) {
       return targetUrl;
     }
-    
+
     // Add parameters to the URL
     Object.entries(allParams).forEach(([key, value]) => {
       if (value && typeof value === 'string' && key && value.length < 200) {

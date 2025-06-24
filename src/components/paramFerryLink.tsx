@@ -1,16 +1,17 @@
 'use client';
 
 import Link from 'next/link';
+
 import {ferryUrlParams} from 'sentry-docs/utils';
 
 interface ParamFerryLinkProps {
-  href: string;
+  [key: string]: any;
   children: React.ReactNode;
+  href: string;
   className?: string;
   onClick?: (e: React.MouseEvent) => void;
   target?: string;
   title?: string;
-  [key: string]: any;
 }
 
 /**

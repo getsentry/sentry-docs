@@ -1,5 +1,6 @@
 import {Button} from '@radix-ui/themes';
 import Link, {LinkProps as NextLinkProps} from 'next/link';
+
 import {ferryUrlParams} from 'sentry-docs/utils';
 
 export type NavLinkProps = React.PropsWithChildren<Omit<NextLinkProps, 'passHref'>> & {
@@ -20,7 +21,9 @@ export function NavLink({children, href, ...props}: NavLinkProps) {
       radius="medium"
       className="font-medium text-[var(--foreground)] py-2 px-3 uppercase"
     >
-      <Link href={ferriedHref} {...props}>{children}</Link>
+      <Link href={ferriedHref} {...props}>
+        {children}
+      </Link>
     </Button>
   );
 }

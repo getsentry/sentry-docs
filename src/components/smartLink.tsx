@@ -3,8 +3,9 @@
 import {useCallback} from 'react';
 import Link from 'next/link';
 
-import {ExternalLink} from './externalLink';
 import {ferryUrlParams} from 'sentry-docs/utils';
+
+import {ExternalLink} from './externalLink';
 
 interface Props {
   activeClassName?: string;
