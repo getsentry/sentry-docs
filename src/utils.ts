@@ -92,6 +92,28 @@ export const marketingUrlParams = (): URLQueryObject => {
 };
 
 /**
+ * Validate URL is safe to process (blocks dangerous schemes)
+ * @param url - The URL to validate
+ * @returns true if URL is safe, false otherwise
+ */
+const isSafeUrl = (url: string): boolean => {
+  // Block dangerous schemes
+  const dangerousSchemes = ['javascript:', 'data:', 'vbscript:', 'file:', 'about:'];
+  const lowerUrl = url.toLowerCase().trim();
+  
+  if (dangerousSchemes.some(scheme => lowerUrl.startsWith(scheme))) {
+    return false;
+  }
+  
+  // Only allow http, https, and relative URLs
+  if (lowerUrl.startsWith('http://') || lowerUrl.startsWith('https://') || lowerUrl.startsWith('/') || !lowerUrl.includes(':')) {
+    return true;
+  }
+  
+  return false;
+};
+
+/**
  * Ferry URL parameters from current page to target URL
  * @param targetUrl - The URL to append parameters to
  * @param additionalParams - Optional additional parameters to include
@@ -102,6 +124,11 @@ export const ferryUrlParams = (targetUrl: string, additionalParams: URLQueryObje
     return targetUrl;
   }
 
+  // Validate URL safety first
+  if (!isSafeUrl(targetUrl)) {
+    return targetUrl;
+  }
+
   const currentParams = marketingUrlParams();
   const allParams = {...currentParams, ...additionalParams};
   
@@ -109,16 +136,39 @@ export const ferryUrlParams = (targetUrl: string, additionalParams: URLQueryObje
     return targetUrl;
   }
 
-  const url = new URL(targetUrl, window.location.origin);
-  
-  // Add parameters to the URL
-  Object.entries(allParams).forEach(([key, value]) => {
-    if (value && typeof value === 'string') {
-      url.searchParams.set(key, value);
+  try {
+    const url = new URL(targetUrl, window.location.origin);
+    
+    // Double-check the constructed URL is safe
+    if (!isSafeUrl(url.toString())) {
+      return targetUrl;
     }
-  });
+    
+    // Add parameters to the URL with validation
+    Object.entries(allParams).forEach(([key, value]) => {
+      if (value && typeof value === 'string') {
+        // Sanitize parameter key and value
+        const sanitizedKey = key.replace(/[^\w\-._~]/g, '');
+        const sanitizedValue = value.replace(/[\r\n\t]/g, '').substring(0, 500); // Limit length and remove control characters
+        
+        if (sanitizedKey && sanitizedValue) {
+          url.searchParams.set(sanitizedKey, sanitizedValue);
+        }
+      }
+    });
 
-  return url.toString();
+    const result = url.toString();
+    
+    // Final safety check
+    if (!isSafeUrl(result)) {
+      return targetUrl;
+    }
+
+    return result;
+  } catch (error) {
+    console.warn('Error ferrying parameters:', error);
+    return targetUrl;
+  }
 };
 
 export function captureException(exception: unknown): void {

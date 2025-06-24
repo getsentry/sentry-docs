@@ -99,6 +99,15 @@ import {NavLink} from 'sentry-docs/components/navlink';
 <NavLink href="/docs/guides/">Guides</NavLink>
 ```
 
+## Security Features
+
+The implementation includes comprehensive security measures:
+- **URL Scheme Validation**: Blocks dangerous URL schemes (`javascript:`, `data:`, `vbscript:`, `file:`, `about:`)
+- **Parameter Sanitization**: Sanitizes parameter keys and values to prevent injection attacks
+- **Length Limits**: Parameter values are limited to 500 characters
+- **Control Character Filtering**: Removes control characters from parameters
+- **Multiple Validation Layers**: URLs are validated at multiple stages of processing
+
 ## Browser Compatibility
 
 The implementation uses:

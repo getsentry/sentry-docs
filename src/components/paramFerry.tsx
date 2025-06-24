@@ -28,16 +28,45 @@ export default function ParamFerry(): null {
           return key === pattern;
         });
         
-        if (shouldSync) {
-          params[key] = value;
+        if (shouldSync && typeof value === 'string' && typeof key === 'string') {
+          // Sanitize parameter key and value during collection
+          const sanitizedKey = key.replace(/[^\w\-._~]/g, '');
+          const sanitizedValue = value.replace(/[\r\n\t]/g, '').substring(0, 500);
+          
+          if (sanitizedKey && sanitizedValue) {
+            params[sanitizedKey] = sanitizedValue;
+          }
         }
       });
       
       return params;
     };
 
+    // Validate URL is safe to process
+    const isSafeUrl = (url: string): boolean => {
+      // Block dangerous schemes
+      const dangerousSchemes = ['javascript:', 'data:', 'vbscript:', 'file:', 'about:'];
+      const lowerUrl = url.toLowerCase().trim();
+      
+      if (dangerousSchemes.some(scheme => lowerUrl.startsWith(scheme))) {
+        return false;
+      }
+      
+      // Only allow http, https, and relative URLs
+      if (lowerUrl.startsWith('http://') || lowerUrl.startsWith('https://') || lowerUrl.startsWith('/') || !lowerUrl.includes(':')) {
+        return true;
+      }
+      
+      return false;
+    };
+
     // Ferry parameters to a URL
     const ferryParams = (targetUrl: string) => {
+      // Validate URL safety first
+      if (!isSafeUrl(targetUrl)) {
+        return targetUrl;
+      }
+
       const params = getCurrentParams();
       
       if (Object.keys(params).length === 0) {
@@ -47,14 +76,32 @@ export default function ParamFerry(): null {
       try {
         const url = new URL(targetUrl, window.location.origin);
         
-        // Add parameters to the URL
+        // Double-check the constructed URL is safe
+        if (!isSafeUrl(url.toString())) {
+          return targetUrl;
+        }
+        
+        // Add parameters to the URL with validation
         Object.entries(params).forEach(([key, value]) => {
-          if (value) {
-            url.searchParams.set(key, value);
+          if (value && typeof value === 'string') {
+            // Sanitize parameter key and value
+            const sanitizedKey = key.replace(/[^\w\-._~]/g, '');
+            const sanitizedValue = value.replace(/[\r\n\t]/g, '').substring(0, 500); // Limit length and remove control characters
+            
+            if (sanitizedKey && sanitizedValue) {
+              url.searchParams.set(sanitizedKey, sanitizedValue);
+            }
           }
         });
 
-        return url.toString();
+        const result = url.toString();
+        
+        // Final safety check
+        if (!isSafeUrl(result)) {
+          return targetUrl;
+        }
+
+        return result;
       } catch (error) {
         console.warn('Error ferrying parameters:', error);
         return targetUrl;
@@ -73,12 +120,13 @@ export default function ParamFerry(): null {
         // Skip if already processed
         if (anchor.hasAttribute('data-param-ferried')) return;
 
-        // Skip external links, anchors, mailto, and tel links
+        // Skip external links, anchors, mailto, tel links, and unsafe URLs
         if (
           (href.startsWith('http') && !href.includes(window.location.hostname)) ||
           href.startsWith('#') ||
           href.startsWith('mailto:') ||
-          href.startsWith('tel:')
+          href.startsWith('tel:') ||
+          !isSafeUrl(href)
         ) {
           anchor.setAttribute('data-param-ferried', 'skip');
           return;
@@ -87,14 +135,20 @@ export default function ParamFerry(): null {
         try {
           const ferriedUrl = ferryParams(href);
           
-          if (ferriedUrl !== href) {
+          if (ferriedUrl !== href && isSafeUrl(ferriedUrl)) {
             // For relative URLs, extract just the path and search params
             if (!href.startsWith('http')) {
               const url = new URL(ferriedUrl);
               const newHref = url.pathname + url.search + url.hash;
-              anchor.setAttribute('href', newHref);
+              // Final validation before setting href
+              if (isSafeUrl(newHref)) {
+                anchor.setAttribute('href', newHref);
+              }
             } else {
-              anchor.setAttribute('href', ferriedUrl);
+              // Final validation before setting href
+              if (isSafeUrl(ferriedUrl)) {
+                anchor.setAttribute('href', ferriedUrl);
+              }
             }
           }
           
