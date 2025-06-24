@@ -72,10 +72,9 @@ const isSupported = (
 let getDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
 
 export function getDocsFrontMatter(): Promise<FrontMatter[]> {
-  if (getDocsFrontMatterCache) {
-    return getDocsFrontMatterCache;
+  if (!getDocsFrontMatterCache) {
+    getDocsFrontMatterCache = getDocsFrontMatterUncached();
   }
-  getDocsFrontMatterCache = getDocsFrontMatterUncached();
   return getDocsFrontMatterCache;
 }
 
