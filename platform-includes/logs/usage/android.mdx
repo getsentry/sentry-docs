@@ -2,8 +2,6 @@ Once the feature is enabled on the SDK and the SDK is initialized, you can send 
 
 The `Sentry.logger()` namespace exposes six methods that you can use to log messages at different log levels: `trace`, `debug`, `info`, `warn`, `error`, and `fatal`.
 
-For more advanced use cases, use the `Sentry.logger().log()` methods.
-
 These properties will be sent to Sentry, and can be searched from within the Logs UI, and even added to the Logs views as a dedicated column.
 
 ```java {tabTitle: Java}
@@ -18,4 +16,52 @@ import io.sentry.Sentry
 
 Sentry.logger().info("A simple log message")
 Sentry.logger().error("A %s log message", "formatted")
+```
+
+For more advanced use cases, like attaching custom attributes, use the `Sentry.logger().log()` methods:
+
+```java {tabTitle: Java}
+import io.sentry.Sentry;
+import io.sentry.SentryAttribute;
+import io.sentry.SentryAttributes;
+import io.sentry.SentryLogLevel;
+import io.sentry.logger.SentryLogParameters;
+
+Sentry.logger().log(
+    SentryLogLevel.FATAL,
+    SentryLogParameters.create(
+        SentryAttributes.of(
+            SentryAttribute.stringAttribute("my.string-attribute", "some-value"),
+            SentryAttribute.booleanAttribute("my.bool-attribute", true),
+            SentryAttribute.integerAttribute("my.int-attribute", 42),
+            SentryAttribute.doubleAttribute("my.double-attribute", 3.12),
+            SentryAttribute.named("my.attribute", new Point(1, 2))
+        )
+    ),
+    "log message %s",
+    "param1"
+);
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+import io.sentry.SentryAttribute
+import io.sentry.SentryAttributes
+import io.sentry.SentryLogLevel
+import io.sentry.logger.SentryLogParameters
+
+Sentry.logger().log(
+    SentryLogLevel.FATAL,
+    SentryLogParameters.create(
+    SentryAttributes.of(
+        SentryAttribute.stringAttribute("my.string-attribute", "some-value"),
+        SentryAttribute.booleanAttribute("my.bool-attribute", true),
+        SentryAttribute.integerAttribute("my.int-attribute", 42),
+        SentryAttribute.doubleAttribute("my.double-attribute", 3.12),
+        SentryAttribute.named("my.attribute", Point(1, 2))
+    )
+    ),
+    "log message %s",
+    "param1"
+)
 ```
