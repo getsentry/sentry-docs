@@ -103,11 +103,13 @@ Time to initial display (TTID) provides insight into how long it takes your Widg
 
 ## Time to Full Display
 
-Time to full display (TTFD) provides insight into how long it would take your Widget to launch and load all of its content. This is measured by adding a span for each navigation to a Widget. The SDK then sets the span operation to `ui.load.full-display` and the span description to the Widget's route name, followed by full display (for example, `MyWidget full display`).
+Time to full display (TTFD) provides insight into how long it would take your Widget to launch and load all of its content. 
+This is measured by adding a span for each navigation to a Widget. 
+The SDK then sets the span operation to `ui.load.full-display` and the span description to the Widget's route name, followed by full display (for example, `MyWidget full display`).
 
 TTFD is disabled by default. To enable TTFD measurements, follow these steps:
 
-1. Enable the `enableTimeToFullDisplayTracing` option in the SDK configuration:
+### 1. Enable the `enableTimeToFullDisplayTracing` option in the SDK configuration
 
 ```dart {4}
 await SentryFlutter.init(
@@ -118,19 +120,30 @@ await SentryFlutter.init(
 );
 ```
 
-2. Report the TTFD span in the widget that you navigate to - there are two ways to do this:
+### 2. Report the TTFD span
 
-- Method 1: wrap your widget that you navigate to in `SentryDisplayWidget`
-- Method 2: use the API directly to report TTFD - this does not require wrapping your widget with `SentryDisplayWidget`
+There are two ways to report when your widget is fully displayed:
+
+#### 1. Wrap with `SentryDisplayWidget`
+
+Embed your target widget in `SentryDisplayWidget` and call `reportFullyDisplayed()` from its state.
+
+#### 2. Call the API directly
+
+Retrieve the current display span via `SentryFlutter.currentDisplay()` in `initState()` and call `reportFullyDisplayed()` when ready — no wrapper needed.
+
 
 <Alert>
 
-If you navigate to a `StatelessWidget` you must use method 1 and wrap the widget in `SentryDisplayWidget`.
-Wrapping a `StatelessWidget` in `SentryDisplayWidget` will automatically report the same time as TTID because the widget does not depend on any async operations to build.
+**Important for `StatelessWidget`:**
+
+Always use Method 1 (wrapping) if you're navigating to a `StatelessWidget`. 
+`SentryDisplayWidget` automatically reports TTFD as soon as the build completes - this is the same as TTID. 
+You do not need to call `reportFullyDisplayed()` yourself.
 
 </Alert>
 
-```dart {5, 15-17} {tabTitle: Method 1: wrap Your Widget in SentryDisplayWidget}
+```dart {5, 15-17} {tabTitle: Wrap with SentryDisplayWidget}
 Navigator.push(
   context,
   MaterialPageRoute(
@@ -139,7 +152,7 @@ Navigator.push(
   ),
 );
 
-// Within the widget state:
+// Inside MyWidget’s State:
 @override
 void initState() {
   super.initState();
@@ -152,7 +165,7 @@ void initState() {
 }
 ```
 
-```dart {14, 16} {tabTitle: Method 2: use the API directly}
+```dart {14, 16} {tabTitle: Use the API Directly}
 Navigator.push(
   context,
   MaterialPageRoute(
@@ -161,7 +174,7 @@ Navigator.push(
   ),
 );
 
-// Within the widget state:
+// Inside MyWidget’s State:
 @override
 void initState() {
   super.initState();
