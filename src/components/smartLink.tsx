@@ -4,6 +4,7 @@ import {useCallback} from 'react';
 import Link from 'next/link';
 
 import {ExternalLink} from './externalLink';
+import {ferryUrlParams} from 'sentry-docs/utils';
 
 interface Props {
   activeClassName?: string;
@@ -45,9 +46,12 @@ export function SmartLink({
     );
   }
 
+  // Ferry URL parameters for internal links
+  const ferriedUrl = ferryUrlParams(realTo);
+
   return (
     <Link
-      href={to || href || ''}
+      href={ferriedUrl}
       onClick={handleAutolinkClick}
       className={`${isActive ? activeClassName : ''} ${className}`}
       {...props}

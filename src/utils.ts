@@ -74,7 +74,7 @@ type URLQueryObject = {
   [key: string]: string;
 };
 
-const paramsToSync = [/utm_/i, /promo_/i, /gclid/i, /original_referrer/i];
+const paramsToSync = [/^utm_/i, /^promo_/i, /code/, /ref/];
 
 export const marketingUrlParams = (): URLQueryObject => {
   const query = qs.parse(window.location.search);
@@ -89,6 +89,36 @@ export const marketingUrlParams = (): URLQueryObject => {
   }
 
   return marketingParams;
+};
+
+/**
+ * Ferry URL parameters from current page to target URL
+ * @param targetUrl - The URL to append parameters to
+ * @param additionalParams - Optional additional parameters to include
+ * @returns URL with ferried parameters appended
+ */
+export const ferryUrlParams = (targetUrl: string, additionalParams: URLQueryObject = {}): string => {
+  if (typeof window === 'undefined') {
+    return targetUrl;
+  }
+
+  const currentParams = marketingUrlParams();
+  const allParams = {...currentParams, ...additionalParams};
+  
+  if (Object.keys(allParams).length === 0) {
+    return targetUrl;
+  }
+
+  const url = new URL(targetUrl, window.location.origin);
+  
+  // Add parameters to the URL
+  Object.entries(allParams).forEach(([key, value]) => {
+    if (value && typeof value === 'string') {
+      url.searchParams.set(key, value);
+    }
+  });
+
+  return url.toString();
 };
 
 export function captureException(exception: unknown): void {
