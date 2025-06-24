@@ -159,7 +159,7 @@ const TabButton = styled('button')`
   display: inline-block;
   cursor: pointer;
   border: none;
-        font-size: 0.75rem;
+  font-size: 0.75rem;
   background: none;
   outline: none;
   border-bottom: 3px solid transparent;
