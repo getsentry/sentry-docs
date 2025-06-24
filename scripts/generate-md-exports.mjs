@@ -7,6 +7,7 @@ import {mkdir, opendir, readFile, rm} from 'node:fs/promises';
 import {cpus} from 'node:os';
 import * as path from 'node:path';
 import {Readable} from 'node:stream';
+import {pipeline} from 'node:stream/promises';
 import {fileURLToPath} from 'node:url';
 import {isMainThread, parentPort, Worker, workerData} from 'node:worker_threads';
 import {
@@ -140,24 +141,14 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
   const cacheFile = path.join(cacheDir, hash);
   if (!noCache) {
     try {
-      const {resolve, reject, promise} = Promise.withResolvers();
-      const reader = createReadStream(cacheFile);
-      reader.on('error', reject);
-      reader.pause();
+      await pipeline(
+        createReadStream(cacheFile),
+        createBrotliDecompress(),
+        createWriteStream(target, {
+          encoding: 'utf8',
+        })
+      );
 
-      const writer = createWriteStream(target, {
-        encoding: 'utf8',
-      });
-      writer.on('error', reject);
-
-      const decompressor = createBrotliDecompress();
-      const stream = reader.pipe(decompressor).pipe(writer);
-      stream.on('error', reject);
-      stream.on('finish', resolve);
-
-      reader.resume();
-
-      await promise;
       return true;
     } catch {
       // pass
@@ -190,33 +181,28 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
       .process(text)
   );
   const reader = Readable.from(data);
-  reader.pause();
 
-  const {resolve, reject, promise} = Promise.withResolvers();
-  const writer = createWriteStream(target, {
-    encoding: 'utf8',
-  });
-  writer.on('error', reject);
+  await Promise.all([
+    pipeline(
+      reader,
+      createWriteStream(target, {
+        encoding: 'utf8',
+      })
+    ),
+    pipeline(
+      reader,
+      createBrotliCompress({
+        chunkSize: 32 * 1024,
+        params: {
+          [zlibConstants.BROTLI_PARAM_MODE]: zlibConstants.BROTLI_MODE_TEXT,
+          [zlibConstants.BROTLI_PARAM_QUALITY]: CACHE_COMPRESS_LEVEL,
+          [zlibConstants.BROTLI_PARAM_SIZE_HINT]: data.length,
+        },
+      }),
+      createWriteStream(cacheFile)
+    ).catch(err => console.warn('Error writing cache file:', err)),
+  ]);
 
-  const compressor = createBrotliCompress({
-    chunkSize: 32 * 1024,
-    params: {
-      [zlibConstants.BROTLI_PARAM_MODE]: zlibConstants.BROTLI_MODE_TEXT,
-      [zlibConstants.BROTLI_PARAM_QUALITY]: CACHE_COMPRESS_LEVEL,
-      [zlibConstants.BROTLI_PARAM_SIZE_HINT]: data.length,
-    },
-  });
-  const cacheWriter = createWriteStream(cacheFile);
-
-  const writeStream = reader.pipe(writer);
-  writeStream.on('error', reject);
-  writeStream.on('finish', resolve);
-
-  const cacheWriteStream = reader.pipe(compressor).pipe(cacheWriter);
-  cacheWriteStream.on('error', err => console.warn('Error writing cache file:', err));
-  reader.resume();
-
-  await promise;
   return false;
 }
 

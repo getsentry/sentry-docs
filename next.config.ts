@@ -38,6 +38,10 @@ const nextConfig = {
   trailingSlash: true,
   serverExternalPackages: ['rehype-preset-minify'],
   outputFileTracingExcludes,
+  experimental: {
+    webpackBuildWorker: true,
+    parallelServerCompiles: true,
+  },
   webpack: (config, options) => {
     config.plugins.push(
       codecovNextJSWebpackPlugin({

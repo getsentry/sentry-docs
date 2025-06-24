@@ -8,7 +8,10 @@ import {bundleMDX} from 'mdx-bundler';
 import {createReadStream, createWriteStream, mkdirSync} from 'node:fs';
 import {access, opendir, readFile} from 'node:fs/promises';
 import path from 'node:path';
-import {Readable} from 'node:stream';
+// @ts-expect-error ts(2305) -- For some reason "compose" is not recognized in the types
+import {compose, Readable} from 'node:stream';
+import {json} from 'node:stream/consumers';
+import {pipeline} from 'node:stream/promises';
 import {
   constants as zlibConstants,
   createBrotliCompress,
@@ -40,6 +43,15 @@ import {FrontMatter, Platform, PlatformConfig} from './types';
 import {isNotNil} from './utils';
 import {isVersioned, VERSION_INDICATOR} from './versioning';
 
+type SlugFile = {
+  frontMatter: Platform & {slug: string};
+  matter: Omit<matter.GrayMatterFile<string>, 'data'> & {
+    data: Platform;
+  };
+  mdxSource: string;
+  toc: TocNode[];
+};
+
 const root = process.cwd();
 const CACHE_COMPRESS_LEVEL = 4;
 const CACHE_DIR = path.join(root, '.next', 'cache', 'mdx-bundler');
@@ -47,53 +59,26 @@ mkdirSync(CACHE_DIR, {recursive: true});
 
 const md5 = (data: BinaryLike) => createHash('md5').update(data).digest('hex');
 
-async function readCacheFile(file: string): Promise<string> {
-  const {resolve, reject, promise} = Promise.withResolvers<string>();
-
+async function readCacheFile<T>(file: string): Promise<T> {
   const reader = createReadStream(file);
-  reader.on('error', reject);
-  reader.pause();
-
   const decompressor = createBrotliDecompress();
-  decompressor.on('error', reject);
 
-  const buffers: Buffer[] = [];
-  const stream = reader.pipe(decompressor);
-  stream.on('data', chunk => {
-    buffers.push(chunk);
-  });
-  stream.on('finish', () => {
-    resolve(Buffer.concat(buffers).toString('utf8'));
-  });
-
-  reader.resume();
-  return await promise;
+  return (await json(compose(reader, decompressor))) as T;
 }
 
 async function writeCacheFile(file: string, data: string) {
-  const {resolve, reject, promise} = Promise.withResolvers<void>();
-
-  const reader = Readable.from(data);
-  reader.pause();
-
-  const writer = createWriteStream(file);
-  writer.on('error', reject);
-
-  const compressor = createBrotliCompress({
-    chunkSize: 32 * 1024,
-    params: {
-      [zlibConstants.BROTLI_PARAM_MODE]: zlibConstants.BROTLI_MODE_TEXT,
-      [zlibConstants.BROTLI_PARAM_QUALITY]: CACHE_COMPRESS_LEVEL,
-      [zlibConstants.BROTLI_PARAM_SIZE_HINT]: data.length,
-    },
-  });
-  const stream = reader.pipe(compressor).pipe(writer);
-  stream.on('error', reject);
-  stream.on('finish', resolve);
-
-  reader.resume();
-
-  await promise;
+  await pipeline(
+    Readable.from(data),
+    createBrotliCompress({
+      chunkSize: 32 * 1024,
+      params: {
+        [zlibConstants.BROTLI_PARAM_MODE]: zlibConstants.BROTLI_MODE_TEXT,
+        [zlibConstants.BROTLI_PARAM_QUALITY]: CACHE_COMPRESS_LEVEL,
+        [zlibConstants.BROTLI_PARAM_SIZE_HINT]: data.length,
+      },
+    }),
+    createWriteStream(file)
+  );
 }
 
 function formatSlug(slug: string) {
@@ -255,7 +240,7 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
       ) as PlatformConfig;
     } catch (err) {
       // the file may not exist and that's fine, for anything else we throw
-      if (err.code !== 'ENOENT') {
+      if (err.code !== 'ENOENT' && err.code !== 'ABORT_ERR') {
         throw err;
       }
     }
@@ -398,7 +383,7 @@ export const addVersionToFilePath = (filePath: string, version: string) => {
   return `${filePath}__v${version}`;
 };
 
-export async function getFileBySlug(slug: string) {
+export async function getFileBySlug(slug: string): Promise<SlugFile> {
   // no versioning on a config file
   const configPath = path.join(root, slug.split(VERSION_INDICATOR)[0], 'config.yml');
 
@@ -495,7 +480,7 @@ export async function getFileBySlug(slug: string) {
   const cacheFile = path.join(CACHE_DIR, cacheKey);
 
   try {
-    const cached = JSON.parse(await readCacheFile(cacheFile));
+    const cached = await readCacheFile<SlugFile>(cacheFile);
     return cached;
   } catch (err) {
     if (err.code !== 'ENOENT') {
@@ -620,7 +605,7 @@ export async function getFileBySlug(slug: string) {
     mergedFrontmatter = {...frontmatter, ...configFrontmatter};
   }
 
-  const resultObj = {
+  const resultObj: SlugFile = {
     matter: result.matter,
     mdxSource: code,
     toc,
