@@ -138,14 +138,14 @@ export function ApiExamples({api}: Props) {
           </div>
           {selectedTabView === 0 &&
             (exampleJson ? (
-              <code className="!text-[0.8rem]">
+              <code className="!text-[0.875rem]">
                 {codeToJsx(JSON.stringify(exampleJson, null, 2), 'json')}
               </code>
             ) : (
               strFormat(api.responses[selectedResponse].description)
             ))}
           {selectedTabView === 1 && (
-            <code className="!text-[0.8rem]">
+            <code className="!text-[0.875rem]">
               {codeToJsx(
                 JSON.stringify(api.responses[selectedResponse].content?.schema, null, 2),
                 'json'
