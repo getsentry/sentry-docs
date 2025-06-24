@@ -45,8 +45,7 @@ async function createWork() {
   const INPUT_DIR = path.join(root, '.next', 'server', 'app');
   const OUTPUT_DIR = path.join(root, 'public', 'md-exports');
 
-  const CACHE_VERSION = 2;
-  const CACHE_DIR = path.join(root, '.next', 'cache', 'md-exports', `v${CACHE_VERSION}`);
+  const CACHE_DIR = path.join(root, '.next', 'cache', 'md-exports');
   const noCache = !existsSync(CACHE_DIR);
   if (noCache) {
     await mkdir(CACHE_DIR, {recursive: true});
