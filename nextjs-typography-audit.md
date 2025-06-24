@@ -53,18 +53,17 @@ Applied clean, Supabase-inspired typography improvements to the main Next.js gui
 ## Technical Implementation
 
 ### Page Targeting
-Used specific CSS selectors to target only the main Next.js page:
-```css
-body:has([data-current-pathname*="/nextjs"]:not([data-current-pathname*="/nextjs/"])) .main-content,
-.main-content:has(h1:contains("Next.js")):not(:has(h1:contains("Manual Setup"))),
-[data-current-pathname="/platforms/javascript/guides/nextjs"] .main-content
-```
+Applied styles directly to the Next.js page using an inline `<style>` block in the MDX file:
+- Styles are scoped to the specific page only
+- Uses direct CSS injection for guaranteed application
+- No complex selectors needed - styles apply immediately to page content
 
 ### Key CSS Changes
 - Applied `!important` declarations to ensure specificity
-- Maintained dark mode compatibility
+- Maintained dark mode compatibility with `:global(.dark)` selectors
 - Added responsive breakpoints for mobile optimization
 - Used rem/px units for consistent scaling
+- Direct injection ensures styles override any global CSS
 
 ## Accessibility Considerations
 - ✅ Maintained proper heading hierarchy (H1 → H2 → H3 → H4)
@@ -101,7 +100,7 @@ body:has([data-current-pathname*="/nextjs"]:not([data-current-pathname*="/nextjs
 - **Touch-friendly**: Adequate tap targets for mobile interactions
 
 ## Files Modified
-1. `app/globals.css` - Added page-specific typography rules
+1. `docs/platforms/javascript/guides/nextjs/index.mdx` - Added inline typography styles
 2. `nextjs-typography-audit.md` - This documentation file
 
 ## Testing Recommendations
