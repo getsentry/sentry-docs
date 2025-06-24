@@ -20,38 +20,7 @@ Describes AI agent invocation.
 - The span `name` MUST be `"invoke_agent {gen_ai.agent.name}"`.
 - The `gen_ai.operation.name` attribute MUST be `"invoke_agent"`.
 - The `gen_ai.agent.name` attribute SHOULD be set to the agents name. (e.g. `"Weather Agent"`)
-
-### Execute Tool Span
-
-Describes a tool execution.
-
-- The spans `op` MUST be `"gen_ai.execute_tool"`.
-- The spans `name` MUST be `"gen_ai.execute_tool {gen_ai.tool.name}"`. (e.g. `"gen_ai.execute_tool query_database"`)
-- The `gen_ai.tool.name` attribute SHOULD be set to the name of the tool. (e.g. `"query_database"`)
-
-Additional attributes on the span:
-
-| Data Attribute            | Type   | Requirement Level | Description                                          | Example                                    |
-| :------------------------ | :----- | :---------------- | :--------------------------------------------------- | :----------------------------------------- |
-| `gen_ai.tool.description` | string | optional          | Description of the tool executed.                    | `"Tool returning a random number"`         |
-| `gen_ai.tool.input`       | string | optional          | Input that was given to the executed tool as string. | `"{\"max\":10}"`                           |
-| `gen_ai.tool.name:`       | string | optional          | Name of the tool executed.                           | `"random_number"`                          |
-| `gen_ai.tool.output`      | string | optional          | The output from the tool.                            | `"7"`                                      |
-| `gen_ai.tool.type`        | string | optional          | The type of the tools.                               | `"function"`; `"extension"`; `"datastore"` |
-
-### Handoff Span
-
-A span that describes the handoff from one agent to another agent.
-
-- The spans `op` MUST be `"gen_ai.handoff"`.
-- The spans `name` SHOULD be `"handoff from {from_agent} to {from_agent}"`.
-
-### AI Client Span
-
-This span represents a request to an AI model or service that generates a response or requests a tool call based on the input prompt.
-
-- The span `op` MUST be `"gen_ai.{gen_ai.operation.name}"`. (e.g. `"gen_ai.chat"`)
-- The span `name` MUST be `{gen_ai.operation.name} {gen_ai.request.model}"`. (e.g. `"chat o3-mini"`)
+- All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
 
 Additional attributes on the span:
 
@@ -75,18 +44,75 @@ Additional attributes on the span:
 - **[0]:** As span attributes only allow primitive data types this needs to be a stringified version of a list of dictionaries. Do NOT set `[{"foo": "bar"}]` but rather the string `"[{\"foo\": \"bar\"}]"`.
 - **[1]:** Each item in the list has the format `{role:"", content:""}` where `role` can be `"user"`, `"assistant"`, or `"system"` and `content` can either be a string or a list of dictionaries.
 
+### AI Client Span
+
+This span represents a request to an AI model or service that generates a response or requests a tool call based on the input prompt.
+
+- The span `op` MUST be `"gen_ai.{gen_ai.operation.name}"`. (e.g. `"gen_ai.chat"`)
+- The span `name` MUST be `{gen_ai.operation.name} {gen_ai.request.model}"`. (e.g. `"chat o3-mini"`)
+- All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
+
+Additional attributes on the span:
+
+| Data Attribute                         | Type   | Requirement Level | Description                                                                        | Example                                                                                                           |
+| :------------------------------------- | :----- | :---------------- | :--------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------- |
+| `gen_ai.request.available_tools`       | string | optional          | List of objects describing the available tools. **[0]**                            | `"[{\"name\": \"random_number\", \"description\": \"...\"}, {\"name\": \"query_db\", \"description\": \"...\"}]"` |
+| `gen_ai.request.frequency_penalty`     | float  | optional          | Model configuration parameter.                                                     | `0.5`                                                                                                             |
+| `gen_ai.request.max_tokens`            | int    | optional          | Model configuration parameter.                                                     | `500`                                                                                                             |
+| `gen_ai.request.messages`              | string | optional          | List of objects describing the messages (prompts) sent to the LLM **[0]**, **[1]** | `"[{\"role\": \"system\", \"content\": [{...}]}, {\"role\": \"system\", \"content\": [{...}]}]"`                  |
+| `gen_ai.request.presence_penalty`      | float  | optional          | Model configuration parameter.                                                     | `0.5`                                                                                                             |
+| `gen_ai.request.temperature`           | float  | optional          | Model configuration parameter.                                                     | `0.1`                                                                                                             |
+| `gen_ai.request.top_p`                 | float  | optional          | Model configuration parameter.                                                     | `0.7`                                                                                                             |
+| `gen_ai.response.tool_calls`           | string | optional          | The tool calls in the model’s response. **[0]**                                    | `"[{\"name\": \"random_number\", \"type\": \"function_call\", \"arguments\": \"...\"}]"`                          |
+| `gen_ai.response.text`                 | string | optional          | The text representation of the model’s responses. **[0]**                          | `"[\"The weather in Paris is rainy\", \"The weather in London is sunny\"]"`                                       |
+| `gen_ai.usage.input_tokens.cached`     | int    | optional          | The number of cached tokens used in the AI input (prompt)                          | `50`                                                                                                              |
+| `gen_ai.usage.input_tokens`            | int    | optional          | The number of tokens used in the AI input (prompt).                                | `10`                                                                                                              |
+| `gen_ai.usage.output_tokens.reasoning` | int    | optional          | The number of tokens used for reasoning.                                           | `30`                                                                                                              |
+| `gen_ai.usage.output_tokens`           | int    | optional          | The number of tokens used in the AI response.                                      | `100`                                                                                                             |
+| `gen_ai.usage.total_tokens`            | int    | optional          | The total number of tokens used to process the prompt. (input and output)          | `190`                                                                                                             |
+
+- **[0]:** As span attributes only allow primitive data types this needs to be a stringified version of a list of dictionaries. Do NOT set `[{"foo": "bar"}]` but rather the string `"[{\"foo\": \"bar\"}]"`.
+- **[1]:** Each item in the list has the format `{role:"", content:""}` where `role` can be `"user"`, `"assistant"`, or `"system"` and `content` can either be a string or a list of dictionaries.
+
+### Execute Tool Span
+
+Describes a tool execution.
+
+- The spans `op` MUST be `"gen_ai.execute_tool"`.
+- The spans `name` MUST be `"gen_ai.execute_tool {gen_ai.tool.name}"`. (e.g. `"gen_ai.execute_tool query_database"`)
+- The `gen_ai.tool.name` attribute SHOULD be set to the name of the tool. (e.g. `"query_database"`)
+- All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
+
+Additional attributes on the span:
+
+| Data Attribute            | Type   | Requirement Level | Description                                          | Example                                    |
+| :------------------------ | :----- | :---------------- | :--------------------------------------------------- | :----------------------------------------- |
+| `gen_ai.tool.description` | string | optional          | Description of the tool executed.                    | `"Tool returning a random number"`         |
+| `gen_ai.tool.input`       | string | optional          | Input that was given to the executed tool as string. | `"{\"max\":10}"`                           |
+| `gen_ai.tool.name:`       | string | optional          | Name of the tool executed.                           | `"random_number"`                          |
+| `gen_ai.tool.output`      | string | optional          | The output from the tool.                            | `"7"`                                      |
+| `gen_ai.tool.type`        | string | optional          | The type of the tools.                               | `"function"`; `"extension"`; `"datastore"` |
+
+### Handoff Span
+
+A span that describes the handoff from one agent to another agent.
+
+- The spans `op` MUST be `"gen_ai.handoff"`.
+- The spans `name` SHOULD be `"handoff from {from_agent} to {from_agent}"`.
+- All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
+
 ## Common Span Attributes
 
-Some attributes are common to all types of AI Agents spans:
+Some attributes are common to all AI Agents spans:
 
-| Data Attribute          | Type   | Requirement Level | Description                                                                          | Example           |
-| :---------------------- | :----- | :---------------- | :----------------------------------------------------------------------------------- | :---------------- |
-| `gen_ai.system`         | string | required          | The Generative AI product as identified by the client or server instrumentation. [1] | `"openai"`        |
-| `gen_ai.request.model`  | string | required          | The name of the AI model a request is being made to.                                 | `"o3-mini"`       |
-| `gen_ai.operation.name` | string | optional          | The name of the operation being performed. [2]                                       | `"chat"`          |
-| `gen_ai.agent.name`     | string | optional          | The name of the agent this span belongs to.                                          | `"Weather Agent"` |
+| Data Attribute          | Type   | Requirement Level | Description                                                                              | Example           |
+| :---------------------- | :----- | :---------------- | :--------------------------------------------------------------------------------------- | :---------------- |
+| `gen_ai.system`         | string | required          | The Generative AI product as identified by the client or server instrumentation. **[0]** | `"openai"`        |
+| `gen_ai.request.model`  | string | required          | The name of the AI model a request is being made to.                                     | `"o3-mini"`       |
+| `gen_ai.operation.name` | string | optional          | The name of the operation being performed. **[1]**                                       | `"chat"`          |
+| `gen_ai.agent.name`     | string | optional          | The name of the agent this span belongs to.                                              | `"Weather Agent"` |
 
-**[1]** Well defined values for data attribute `gen_ai.system`:
+**[0]** Well defined values for data attribute `gen_ai.system`:
 
 | Value             | Description                       |
 | :---------------- | :-------------------------------- |
@@ -106,7 +132,7 @@ Some attributes are common to all types of AI Agents spans:
 | `perplexity`      | Perplexity                        |
 | `xai`             | xAI                               |
 
-**[2]** Well defined values for data attribute `gen_ai.operation.name`:
+**[1]** Well defined values for data attribute `gen_ai.operation.name`:
 
 | Value              | Description                                                             |
 | :----------------- | :---------------------------------------------------------------------- |
@@ -116,61 +142,3 @@ Some attributes are common to all types of AI Agents spans:
 | `execute_tool`     | Execute a tool                                                          |
 | `generate_content` | Multimodal content generation operation such as Gemini Generate Content |
 | `invoke_agent`     | Invoke GenAI agent                                                      |
-
-### Attributes of Invoke Agent Span
-
-This span wraps one invocation of an agent.
-
-- `span.op` = `"gen_ai.invoke_agent"`
-- `span.name` = `"gen_ai.invoke_agent {gen_ai.agent.name}"` (Example: `"gen_ai.invoke_agent Weather Forecast Agent"`)
-
-- Span attributes:
-  - `gen_ai.request.model`: The model that is used.
-  - `gen_ai.request.available_tools`: An array of objects that describe the tools available to the agent.
-  - `gen_ai.request.frequency_penalty`: Model configuration
-  - `gen_ai.request.max_tokens`: Model configuration
-  - `gen_ai.request.presence_penalty`: Model configuration
-  - `gen_ai.request.temperature`: Model configuration
-  - `gen_ai.request.top_p`: Model configuration
-
-### Attributes of Execute Tool Span
-
-This span wraps the execution of a tool.
-
-- `span.op` = `"gen_ai.execute_tool"`
-- `span.name` = `"gen_ai.execute_tool {tool.name}"` (Example: `"gen_ai.execute_tool query_database"`)
-
-- Span attributes:
-  - `gen_ai.request.available_tools`:
-  - `gen_ai.request.frequency_penalty`: Model configuration
-  - `gen_ai.request.max_tokens`: Model configuration
-  - `gen_ai.request.model`:
-  - `gen_ai.request.presence_penalty`: Model configuration
-  - `gen_ai.request.temperature`: Model configuration
-  - `gen_ai.request.top_p`: Model configuration
-  - `gen_ai.tool.description`: Description of the tool executed
-  - `gen_ai.tool.input`: Input that was given to the executed too. (Example: \{"max":10\})
-  - `gen_ai.tool.name:`: Name of the tool executed. (Example: "random_number")
-  - `gen_ai.tool.output`: The output from the tool.
-  - `gen_ai.tool.type`: The type of the tools. Can be `function`, `extension`, `datastore`
-
-### Attributes of AI Client Span
-
-This span wraps the request to an LLM.
-
-- `span.op` = `"gen_ai.{gen_ai.operation.name}"` (Example: `"gen_ai.chat"`)
-- `span.name` = `"{gen_ai.operation.name} {model.name}"` (Example: `"chat gpt-4o-mini"`)
-- Span attributes:
-  - `gen_ai.request.available_tools`: Array of objects describing the available tools.
-  - `gen_ai.request.messages`: Array of objects describing the messages sent to the LLM (Each object has the format `{ role:"", content:""}` where role can be `user`, `assistant`, or `system` and `content` can either be a string or an array of objects.)
-  - `gen_ai.response.tool_calls`: Array of objects returned from the LLM with information about what tools need to be called.
-  - `gen_ai.request.frequency_penalty`
-  - `gen_ai.request.max_tokens`
-  - `gen_ai.request.presence_penalty`
-  - `gen_ai.request.temperature`
-  - `gen_ai.request.top_p`
-  - `gen_ai.usage.input_tokens`: Input tokens used for the request. (excluding cached tokens)
-  - `gen_ai.usage.input_tokens.cached`: Cached input tokens used for the request.
-  - `gen_ai.usage.output_tokens`: Output tokens used for the request.
-  - `gen_ai.usage.output_tokens.reasoning` Tokens used for reasoning.
-  - `gen_ai.usage.total_tokens`: Total number of tokens used in the request.
