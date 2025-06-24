@@ -25,6 +25,9 @@ const CACHE_COMPRESS_LEVEL = 4;
 
 function taskFinishHandler(data) {
   if (data.failedTasks.length === 0) {
+    console.log(
+      `💰 Worker[${data.id}]: Cache hits: ${data.cacheHits} (${Math.round((data.cacheHits / data.success) * 100)}%)`
+    );
     console.log(`✅ Worker[${data.id}]: ${data.success} files successfully.`);
     return false;
   }
@@ -45,18 +48,20 @@ async function createWork() {
   const INPUT_DIR = path.join(root, '.next', 'server', 'app');
   const OUTPUT_DIR = path.join(root, 'public', 'md-exports');
 
-  const CACHE_DIR = path.join(root, '.next', 'cache', 'md-exports');
-  const noCache = !existsSync(CACHE_DIR);
-  if (noCache) {
-    await mkdir(CACHE_DIR, {recursive: true});
-  }
-
   console.log(`🚀 Starting markdown generation from: ${INPUT_DIR}`);
   console.log(`📁 Output directory: ${OUTPUT_DIR}`);
 
   // Clear output directory
   await rm(OUTPUT_DIR, {recursive: true, force: true});
   await mkdir(OUTPUT_DIR, {recursive: true});
+
+  const CACHE_DIR = path.join(root, '.next', 'cache', 'md-exports');
+  console.log(`💰 Cache directory: ${CACHE_DIR}`);
+  const noCache = !existsSync(CACHE_DIR);
+  if (noCache) {
+    console.log(`ℹ️ No cache directory found, this will take a while...`);
+    await mkdir(CACHE_DIR, {recursive: true});
+  }
 
   // On a 16-core machine, 8 workers were optimal (and slightly faster than 16)
   const numWorkers = Math.max(Math.floor(cpus().length / 2), 2);
@@ -150,7 +155,7 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
       reader.resume();
 
       await promise;
-      return;
+      return true;
     } catch {
       // pass
     }
@@ -209,13 +214,15 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
   reader.resume();
 
   await promise;
+  return false;
 }
 
 async function processTaskList({id, tasks, cacheDir, noCache}) {
   const failedTasks = [];
+  let cacheHits = 0;
   for (const {sourcePath, targetPath} of tasks) {
     try {
-      await genMDFromHTML(sourcePath, targetPath, {
+      cacheHits += await genMDFromHTML(sourcePath, targetPath, {
         cacheDir,
         noCache,
       });
@@ -223,7 +230,7 @@ async function processTaskList({id, tasks, cacheDir, noCache}) {
       failedTasks.push({sourcePath, targetPath, error});
     }
   }
-  return {id, success: tasks.length - failedTasks.length, failedTasks};
+  return {id, success: tasks.length - failedTasks.length, failedTasks, cacheHits};
 }
 
 async function doWork(work) {
