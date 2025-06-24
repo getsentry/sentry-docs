@@ -66,7 +66,7 @@ ignore_transactions = ['GET /api/health','/api/v1/*']
 
 ## Rate Limiting
 
-Respect Sentry’s HTTP 429 `Retry-After` header, or, if the SDK supports multiple payload types (e.g. errors and transactions), the `X-Sentry-Rate-Limits` header. Outgoing SDK requests should be dropped during the backoff period.
+Respect Sentry's HTTP 429 `Retry-After` header, or, if the SDK supports multiple payload types (e.g. errors and transactions), the `X-Sentry-Rate-Limits` header. Outgoing SDK requests should be dropped during the backoff period.
 
 See <Link to="/sdk/expected-features/rate-limiting">Rate Limiting</Link> for details.
 
@@ -104,7 +104,7 @@ So users can easily spot errors during development, the SDK can automatically en
 
 ## In-App frames
 
-Stack parsing can tell which frames should be identified as part of the user’s application (as opposed to part of the language, a library, or a framework), either automatically or by user configuration at startup, often declared as a package/module prefix.
+Stack parsing can tell which frames should be identified as part of the user's application (as opposed to part of the language, a library, or a framework), either automatically or by user configuration at startup, often declared as a package/module prefix.
 
 ## Surrounding Source in Stack Trace
 
@@ -152,6 +152,16 @@ On mobile and desktop, it is common to prompt the user for feedback after a cras
 implement the `onCrashedLastRun` callback on the options. This callback gets called shortly after the initialization of the SDK when the last program execution
 terminated with a crash. The SDK should execute the callback only once during the entire run of the program to avoid multiple callbacks if there are multiple
 crash events to send.
+
+#### Session Replay Integration with Feedback Widgets
+
+When a feedback widget is added to an application and Session Replay's `onErrorSampleRate` is greater than 0, the SDK must sample the replay when the widget **opens**, not when the feedback is submitted. This timing is critical because:
+
+- Sampling when the widget opens captures the user's session leading up to the feedback moment
+- Sampling only when feedback is submitted would result in the replay buffer primarily showing the user typing their message, which provides minimal debugging context
+- The replay buffer should contain the user's actions and application state prior to encountering the issue they're reporting
+
+SDKs should trigger replay sampling and flushing as soon as the feedback widget becomes visible to the user, ensuring the complete context is captured regardless of whether the user ultimately submits the feedback.
 
 ### Backend Platforms
 
