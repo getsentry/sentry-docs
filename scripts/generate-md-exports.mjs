@@ -135,7 +135,7 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
   const text = (await readFile(source, {encoding: 'utf8'}))
     // Remove all script tags, as they are not needed in markdown
     // and they are not stable across builds, causing cache misses
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/g, '');
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
   const hash = md5(text);
   const cacheFile = path.join(cacheDir, hash);
   if (!noCache) {
