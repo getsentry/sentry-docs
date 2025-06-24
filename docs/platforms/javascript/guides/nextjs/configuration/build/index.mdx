@@ -74,6 +74,29 @@ Prints additional debug information about the SDK and uploading source maps when
 
 </SdkOption>
 
+<SdkOption name="errorHandler" type="(error: Error) => void">
+
+A callback function that will be invoked when errors occur during the Sentry build process. This is particularly useful for preventing CI/CD pipeline failures when Sentry services are experiencing downtime or connectivity issues.
+
+By default, build errors will cause the build to fail. You can use this option to handle errors gracefully:
+
+```javascript
+withSentryConfig(nextConfig, {
+  // ... other options
+  errorHandler: (error) => {
+    console.warn('Sentry build error occurred:', error);
+    // Optionally, you can still fail the build for specific errors
+    // if (error.message.includes('critical')) {
+    //   throw error;
+    // }
+  }
+});
+```
+
+This allows your builds to continue even when Sentry-related operations fail, ensuring that temporary Sentry outages don't block your deployments.
+
+</SdkOption>
+
 ## Source Maps Options
 
 <SdkOption name="sourcemaps.disable" type="boolean">
