@@ -7,7 +7,6 @@ import Script from 'next/script';
 import PlausibleProvider from 'next-plausible';
 
 import {ThemeProvider} from 'sentry-docs/components/theme-provider';
-import ParamFerry from 'sentry-docs/components/paramFerry';
 
 const rubik = Rubik({
   weight: ['400', '500', '700'],
@@ -45,7 +44,6 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
         >
           <Theme accentColor="iris" grayColor="sand" radius="large" scaling="95%">
             {children}
-            <ParamFerry />
           </Theme>
         </ThemeProvider>
         <Script

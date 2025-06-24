@@ -38,23 +38,19 @@ The parameter syncing patterns in `src/utils.ts` have been updated to focus on:
 - Navigation links now automatically include ferried parameters
 - Maintains the existing Button styling and behavior
 
-### 4. Automatic Parameter Ferrying Component
+### 4. Safe Parameter Ferrying Link Component
 
-**ParamFerry Component** (`src/components/paramFerry.tsx`):
-- A client-side component that automatically processes all links on the page
-- Uses MutationObserver to handle dynamically added links
-- Skips external links, anchors, mailto, and tel links
-- Marks processed links to avoid duplicate processing
-
-**Added to Layout** (`app/layout.tsx`):
-- The ParamFerry component is included in the root layout
-- Works automatically across all pages without additional setup
+**ParamFerryLink Component** (`src/components/paramFerryLink.tsx`):
+- A safe Link component that handles parameter ferrying at the component level
+- No DOM manipulation - parameters are ferried during rendering
+- Only processes internal links (starting with `/` or `#`)
+- Can be used as a drop-in replacement for Next.js Link component
 
 ## How It Works
 
-1. **Page Load**: When a page loads with URL parameters matching the patterns, the ParamFerry component identifies them
-2. **Link Processing**: All internal links on the page are processed to include the relevant parameters
-3. **Dynamic Updates**: New links added to the page (via JavaScript) are automatically processed
+1. **Component Rendering**: When link components render, they check for matching URL parameters in the current page
+2. **Parameter Extraction**: Parameters matching the specified patterns are extracted from the current URL
+3. **URL Construction**: Parameters are safely appended to internal link URLs during component rendering
 4. **Navigation**: When users click internal links, they carry forward the tracked parameters
 
 ## Examples
@@ -99,14 +95,22 @@ import {NavLink} from 'sentry-docs/components/navlink';
 <NavLink href="/docs/guides/">Guides</NavLink>
 ```
 
+### Using ParamFerryLink
+```tsx
+import {ParamFerryLink} from 'sentry-docs/components/paramFerryLink';
+
+// Safe component-level parameter ferrying
+<ParamFerryLink href="/docs/getting-started/">Get Started</ParamFerryLink>
+```
+
 ## Security Features
 
 The implementation includes comprehensive security measures:
-- **URL Scheme Validation**: Blocks dangerous URL schemes (`javascript:`, `data:`, `vbscript:`, `file:`, `about:`)
-- **Parameter Sanitization**: Sanitizes parameter keys and values to prevent injection attacks
-- **Length Limits**: Parameter values are limited to 500 characters
-- **Control Character Filtering**: Removes control characters from parameters
-- **Multiple Validation Layers**: URLs are validated at multiple stages of processing
+- **Same-Origin Policy**: Only processes URLs from the same origin to prevent cross-site attacks
+- **Internal Links Only**: Component-level ferrying only applies to internal links (starting with `/` or `#`)
+- **No DOM Manipulation**: Avoids security risks associated with modifying existing DOM elements
+- **Parameter Length Limits**: Parameter values are limited to 200 characters
+- **Type Validation**: Ensures all parameters are strings before processing
 
 ## Browser Compatibility
 
