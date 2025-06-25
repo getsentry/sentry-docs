@@ -43,6 +43,7 @@ import remarkVariables from './remark-variables';
 import {FrontMatter, Platform, PlatformConfig} from './types';
 import {isNotNil} from './utils';
 import {isVersioned, VERSION_INDICATOR} from './versioning';
+import remarkDsnComments from './remark-dsn-comments';
 
 type SlugFile = {
   frontMatter: Platform & {slug: string};
@@ -563,6 +564,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
         [remarkTocHeadings, {exportRef: toc}],
         remarkGfm,
         remarkDefList,
+        remarkDsnComments,
         remarkFormatCodeBlocks,
         [remarkImageSize, {sourceFolder: cwd, publicFolder: path.join(root, 'public')}],
         remarkMdxImages,

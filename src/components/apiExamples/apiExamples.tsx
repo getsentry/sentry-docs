@@ -1,6 +1,6 @@
 'use client';
 
-import {Fragment, useEffect, useState} from 'react';
+import {Fragment, useContext, useEffect, useState} from 'react';
 import {Clipboard} from 'react-feather';
 
 import {type API} from 'sentry-docs/build/resolveOpenAPI';
@@ -9,6 +9,7 @@ import codeBlockStyles from '../codeBlock/code-blocks.module.scss';
 import styles from './apiExamples.module.scss';
 
 import {CodeBlock} from '../codeBlock';
+import {CodeContext} from '../codeContext';
 import {CodeTabs} from '../codeTabs';
 import {codeToJsx} from '../highlightCode';
 
@@ -62,11 +63,31 @@ export function ApiExamples({api}: Props) {
   useEffect(() => {
     setShowCopyButton(true);
   }, []);
+
+  const codeContext = useContext(CodeContext);
+
   async function copyCode(code: string) {
     await navigator.clipboard.writeText(code);
     setShowCopied(true);
     setTimeout(() => setShowCopied(false), 1200);
   }
+
+  // Get the current project name for the copied message
+  const getCurrentProjectName = () => {
+    if (!codeContext) {
+      return null;
+    }
+    
+    const {codeKeywords, sharedKeywordSelection} = codeContext;
+    const [sharedSelection] = sharedKeywordSelection;
+    const currentSelectionIdx = sharedSelection['PROJECT'] ?? 0;
+    const currentProject = codeKeywords?.PROJECT?.[currentSelectionIdx];
+    
+    return currentProject?.title;
+  };
+
+  const projectName = getCurrentProjectName();
+  const copiedMessage = projectName ? `Copied for ${projectName}` : 'Copied';
 
   let exampleJson: any;
   if (api.responses[selectedResponse].content?.examples) {
@@ -134,7 +155,7 @@ export function ApiExamples({api}: Props) {
             className={codeBlockStyles.copied}
             style={{opacity: showCopied ? 1 : 0}}
           >
-            Copied
+            {copiedMessage}
           </div>
           {selectedTabView === 0 &&
             (exampleJson ? (
