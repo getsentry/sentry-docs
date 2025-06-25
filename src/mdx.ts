@@ -180,11 +180,11 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
   return frontMatter;
 }
 
-export async function getDevDocsFrontMatter(): Promise<FrontMatter[]> {
+export async function getDevDocsFrontMatterUncached(): Promise<FrontMatter[]> {
   const folder = 'develop-docs';
   const docsPath = path.join(root, folder);
   const files = await getAllFilesRecursively(docsPath);
-  const fmts = (
+  const frontMatters = (
     await Promise.all(
       files.map(
         limitFunction(
@@ -207,7 +207,16 @@ export async function getDevDocsFrontMatter(): Promise<FrontMatter[]> {
       )
     )
   ).filter(isNotNil);
-  return fmts;
+  return frontMatters;
+}
+
+let getDevDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
+
+export function getDevDocsFrontMatter(): Promise<FrontMatter[]> {
+  if (!getDevDocsFrontMatterCache) {
+    getDevDocsFrontMatterCache = getDevDocsFrontMatterUncached();
+  }
+  return getDevDocsFrontMatterCache;
 }
 
 async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
