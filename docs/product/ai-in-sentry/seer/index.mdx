@@ -1,47 +1,57 @@
 ---
 title: Seer
 description: "Learn about Seer, Sentry's AI agent, and managing generative AI features."
-sidebar_order: 21
+sidebar_order: 20
 ---
 
-Seer is Sentry's AI debugging agent that powers a set of features built on generative AI and ML that uses Sentry's rich context (issue details, tracing data, logs, and profiles) to help you troubleshoot and fix errors and performance issues faster.
+Seer is Sentry's AI debugging agent. It uses Sentry's rich context (issue details, tracing data, logs, and profiles) to help you troubleshoot and fix errors and performance issues faster.
 
 ## Seer Capabilities
 
-Seer provides two main capabilities to enhance your debugging:
+Seer provides three main capabilities to enhance your debugging:
 
-- [**Issue Fix**](#issue-fix): A collaborative workflow to find the root cause and solution of issues
-- **Issue Scan**: Intelligently analyzes your issues and provides actionability scores to help you prioritize what to work on.
+- [**Issue fix**](#issue-fix): A collaborative agent skilled at root cause analysis and solving issues
+- [**Issue scan**](#issue-scan): Automatically scans issues as they come in, feeding additional context to your alerts and automating triage
+- [**Automation**](#automation): Combines issue fix and scan into a powerful workflow: identifying actionable issues in real time and generating high quality fixes, automatically
 
 ### Issue Fix
 
-Issue Fix uses AI to find the root cause of your issues and suggest solutions. WIth Issue Fix, you can:
+Seer combines all of the relevant context from your code with Sentry's telemetry data to provide a best-in-class issue debugging experience. The workflow consists of three steps:
 
-- Get automated root cause analysis using Sentry's context and your codebase
-- Receive AI-generated code fixes and unit tests
-- Collaborate with Seer throughout the debugging process
-- Create pull requests directly from the Seer Interface
-- Benefit from Github integration for seamless code changes
+1. Root cause the issue using Sentry's context and your codebase
+2. Identify a solution based on the analysis
+3. Generate a code patch that implements the solution and open a PR
 
-Learn more about [Issue Fix](./issue-fix/).
+For a full product walk-through, see [issue fix](./issue-fix/).
+
+<VimeoEmbed id="1091964967?h=4f24769ccd" />
 
 ### Issue Scan
 
-Issue Scan intelligently analyzes your issues and helps you prioritize what to work on. With Issue Scan, you can:
+Seer is able to automatically analyze issues as they are ingested by Sentry. This initial review is used to:
 
-- Filter issues by their latest scan results
-- View actionability scores that indicate how likely an issue is to be resolvable
-- Se Seer labels in the issue stream for quick identification
-- Get insights into which issues need immediate attention
-- Enable Seer's Issue Fix to be started automatically once an issue is ingested in Sentry
+- Generate an "actionability" score, which indicates how likely it is that a particular issue can be fixed with a code change
+- Augment issue alerts with a helpful analysis about the problem
+- Add an initial guess for what the potential problem is to the issue details page
 
-## How Seer Works
+The actionability score is represented in the issue feed by a Seer icon, which indicate issues that are likely straightforward fixes.
 
-Seer leverages multiple data sources to provide accurate analysis and solutions:
+### Automation
+
+You can use automation to trigger issue scans and fixes. There are three automation settings you can configure:
+
+1. **Automate Issue Scans**: This enables Seer's issue scan functionality
+2. **Automate Issue Fixes**: This allows you to customize the degree of automation employed by Seer. For example, setting it to "Highly Actionable and Above" will automatically trigger issue fixes for all of your highly actionable Issues.
+3. **Stopping Point for Automatic Fixes**: Seer allows you to customize how far to go with automation. By default, it stops at the solution step, but you can choose to have it go all the way to code changes or even generate PRs automatically.
+
+## What Seer Uses
+
+Seer is a powerful debugging agent, with access to a wide variety of data sources and tools. While debugging issues, it may examine:
 
 - **Issue Context**: Error messages, stack traces, and event metadata from your [Issues](/product/issues/)
 - **Tracing Data**: Distributed [traces](/concepts/key-terms/tracing/#whats-a-trace) and span information
-- **Your Codebase**: Relevant code from linked GitHub repositories and [logs](/product/explore/logs/)
+- **Logs**: Structured [Logs](/product/explore/logs/) from your application (beta)
+- **Your Codebase**: Relevant code from linked GitHub repositories, with support for multiple repos for distributed services
 - **Performance Data**: Profiles and performance metrics
 - **Interactive Feedback**: Your input and guidance during the process
 
@@ -49,27 +59,20 @@ Seer leverages multiple data sources to provide accurate analysis and solutions:
 
 To start using Seer's capabilities:
 
-1. **Enable Seer**: Make sure AI features are enabled in your [organization settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/#hideAiFeatures)
-2. **Set up GitHub Integration**: For Issue Fix capabilities, [connect your GitHub repositories](/organization/integrations/source-code-mgmt/github/)
-3. **Configure Settings**: Customize Seer's behavior in your project settings
+1. **Enable generative AI features**: Make sure AI features are enabled in your [organization settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/#hideAiFeatures)
+2. **Set up GitHub Integration**: For issue fix capabilities, [connect your GitHub repositories](/organization/integrations/source-code-mgmt/github/)
+3. **Configure Settings**: Customize Seer's behavior in your project settings under `Seer Automation`. Seer is enabled by default using these settings:
+    - **Automatic issue scans**: Enabled
+    - **Automatic issue fixes**: Enabled for highly actionable issues and above
+
+    > **Note**: You can monitor your Seer usage in the [Stats & Usage tab](https://sentry.io/settings/stats/) and can learn more about managing your Seer budget [here](/pricing/quotas/manage-seer-budget/).
 4. **Start Using**: Look for Seer options in your issue details pages
 
-## Data Processing for Generative AI
+## Privacy and security
 
-We use the data listed below to provide insights, analysis, and solutions for your review. Your data will not be used to train any generative AI models without your express consent and AI-generated output from your data is shown only to you, not other customers. Our generative AI features are powered by generative AI models hosted by subprocessors identified on our [subprocessor list](https://sentry.io/legal/subprocessors/). Our subprocessors are only permitted to use the data as directed by us.
+Sentry includes strong guarantees for privacy and security of your data. At a glance:
 
-The data used for these features includes:
+- Sentry does not train generative AI models using your data by default and without your permission.
+- AI-generated output is shown only to you and other authorized users in your account.
 
-- Error messages
-- Stack traces
-- Sentry spans
-- DOM interactions
-- Logs
-- Profiles
-- Relevant code from linked repositories
-
-You can learn more about our data privacy practices [here](/security-legal-pii/security/ai-ml-policy/#use-of-identifying-data-for-generative-ai-features).
-
-## Disabling Generative AI Features
-
-If you don't find Seer useful and want to disable it for all users, you can do so in your organization's settings with the ["Show Generative AI Features" toggle](https://sentry.io/orgredirect/organizations/:orgslug/settings/#hideAiFeatures).
+You can learn more about our data privacy practices [in the security and legal docs](/security-legal-pii/security/ai-ml-policy/#use-of-identifying-data-for-generative-ai-features).

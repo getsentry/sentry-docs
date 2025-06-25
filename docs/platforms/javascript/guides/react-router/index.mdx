@@ -112,6 +112,11 @@ Initialize the Sentry React SDK in your `entry.client.tsx` file:
 +    }),
 +    // ___PRODUCT_OPTION_END___ user-feedback
 +  ],
++  // ___PRODUCT_OPTION_START___ logs
++
++  // Enable logs to be sent to Sentry
++  _experiments: { enableLogs: true },
++  // ___PRODUCT_OPTION_END___ logs
 +  // ___PRODUCT_OPTION_START___ performance
 +
 +  tracesSampleRate: 1.0, //  Capture 100% of the transactions
@@ -232,6 +237,11 @@ Sentry.init({
   // Adds request headers and IP for users, for more info visit:
   // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#sendDefaultPii
   sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ logs
+
+  // Enable logs to be sent to Sentry
+  _experiments: { enableLogs: true },
+  // ___PRODUCT_OPTION_END___ logs
   // ___PRODUCT_OPTION_START___ profiling
   
   integrations: [nodeProfilingIntegration()],
@@ -362,6 +372,24 @@ Update the `start` and `dev` script to include the instrumentation file:
   "start": "NODE_OPTIONS='--import ./instrument.server.mjs' react-router-serve ./build/server/index.js",
 }
 ```
+
+#### Alternative Setup for Hosting Platforms
+
+If you're deploying to platforms like **Vercel** or **Netlify** where setting the `NODE_OPTIONS` import flag is not possible, you can import the instrumentation file directly at the top of your `entry.server.tsx`:
+
+```tsx {diff} {filename: entry.server.tsx}
++import './instrument.server';
+ import * as Sentry from '@sentry/react-router';
+ import { createReadableStreamFromReadable } from '@react-router/node';
+ import { renderToPipeableStream } from 'react-dom/server';
+ // ... rest of your imports
+```
+
+<Alert title="Incomplete Auto-instrumentation" level="warning">
+
+  When importing the instrumentation file directly in `entry.server.tsx` instead of using the `--import` flag, automatic instrumentation will be incomplete and you'll miss automatically captured spans and traces for some of your application's server-side operations. This approach should only be used when the `NODE_OPTIONS` approach is not available on your hosting platform.
+
+</Alert>
 
 ## Source Maps Upload
 
