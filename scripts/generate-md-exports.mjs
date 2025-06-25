@@ -1,13 +1,20 @@
 #!/usr/bin/env node
-
+/* eslint-disable no-console */
 import {selectAll} from 'hast-util-select';
 import {createHash} from 'node:crypto';
-import {constants as fsConstants, existsSync} from 'node:fs';
-import {copyFile, mkdir, opendir, readFile, rm, writeFile} from 'node:fs/promises';
+import {createReadStream, createWriteStream, existsSync} from 'node:fs';
+import {mkdir, opendir, readFile, rm} from 'node:fs/promises';
 import {cpus} from 'node:os';
 import * as path from 'node:path';
+import {Readable} from 'node:stream';
+import {pipeline} from 'node:stream/promises';
 import {fileURLToPath} from 'node:url';
 import {isMainThread, parentPort, Worker, workerData} from 'node:worker_threads';
+import {
+  constants as zlibConstants,
+  createBrotliCompress,
+  createBrotliDecompress,
+} from 'node:zlib';
 import rehypeParse from 'rehype-parse';
 import rehypeRemark from 'rehype-remark';
 import remarkGfm from 'remark-gfm';
@@ -15,14 +22,19 @@ import remarkStringify from 'remark-stringify';
 import {unified} from 'unified';
 import {remove} from 'unist-util-remove';
 
+const CACHE_COMPRESS_LEVEL = 4;
+
 function taskFinishHandler(data) {
   if (data.failedTasks.length === 0) {
-    console.log(`✅ Worker[${data.id}]: ${data.success} files successfully.`);
-  } else {
-    hasErrors = true;
-    console.error(`❌ Worker[${data.id}]: ${data.failedTasks.length} files failed:`);
-    console.error(data.failedTasks);
+    console.log(
+      `💰 Worker[${data.id}]: Cache hits: ${data.cacheHits} (${Math.round((data.cacheHits / data.success) * 100)}%)`
+    );
+    console.log(`✅ Worker[${data.id}]: converted ${data.success} files successfully.`);
+    return false;
   }
+  console.error(`❌ Worker[${data.id}]: ${data.failedTasks.length} files failed:`);
+  console.error(data.failedTasks);
+  return true;
 }
 
 async function createWork() {
@@ -37,19 +49,20 @@ async function createWork() {
   const INPUT_DIR = path.join(root, '.next', 'server', 'app');
   const OUTPUT_DIR = path.join(root, 'public', 'md-exports');
 
-  const CACHE_VERSION = 1;
-  const CACHE_DIR = path.join(root, '.next', 'cache', 'md-exports', `v${CACHE_VERSION}`);
-  const noCache = !existsSync(CACHE_DIR);
-  if (noCache) {
-    await mkdir(CACHE_DIR, {recursive: true});
-  }
-
   console.log(`🚀 Starting markdown generation from: ${INPUT_DIR}`);
   console.log(`📁 Output directory: ${OUTPUT_DIR}`);
 
   // Clear output directory
   await rm(OUTPUT_DIR, {recursive: true, force: true});
   await mkdir(OUTPUT_DIR, {recursive: true});
+
+  const CACHE_DIR = path.join(root, '.next', 'cache', 'md-exports');
+  console.log(`💰 Cache directory: ${CACHE_DIR}`);
+  const noCache = !existsSync(CACHE_DIR);
+  if (noCache) {
+    console.log(`ℹ️ No cache directory found, this will take a while...`);
+    await mkdir(CACHE_DIR, {recursive: true});
+  }
 
   // On a 16-core machine, 8 workers were optimal (and slightly faster than 16)
   const numWorkers = Math.max(Math.floor(cpus().length / 2), 2);
@@ -86,7 +99,7 @@ async function createWork() {
         workerData: {id, noCache, cacheDir: CACHE_DIR, tasks: workerTasks[id]},
       });
       let hasErrors = false;
-      worker.on('message', taskFinishHandler);
+      worker.on('message', data => (hasErrors = taskFinishHandler(data)));
       worker.on('error', reject);
       worker.on('exit', code => {
         if (code !== 0) {
@@ -104,7 +117,11 @@ async function createWork() {
       cacheDir: CACHE_DIR,
       tasks: workerTasks[workerTasks.length - 1],
       id: workerTasks.length - 1,
-    }).then(taskFinishHandler)
+    }).then(data => {
+      if (taskFinishHandler(data)) {
+        throw new Error(`Worker[${data.id}] had some errors.`);
+      }
+    })
   );
 
   await Promise.all(workerPromises);
@@ -116,54 +133,85 @@ async function createWork() {
 const md5 = data => createHash('md5').update(data).digest('hex');
 
 async function genMDFromHTML(source, target, {cacheDir, noCache}) {
-  const text = await readFile(source, {encoding: 'utf8'});
+  const text = (await readFile(source, {encoding: 'utf8'}))
+    // Remove all script tags, as they are not needed in markdown
+    // and they are not stable across builds, causing cache misses
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
   const hash = md5(text);
   const cacheFile = path.join(cacheDir, hash);
   if (!noCache) {
     try {
-      await copyFile(cacheFile, target, fsConstants.COPYFILE_FICLONE);
-      return;
+      await pipeline(
+        createReadStream(cacheFile),
+        createBrotliDecompress(),
+        createWriteStream(target, {
+          encoding: 'utf8',
+        })
+      );
+
+      return true;
     } catch {
       // pass
     }
   }
 
-  await writeFile(
-    target,
-    String(
-      await unified()
-        .use(rehypeParse)
-        // Need the `main div > hgroup` selector for the headers
-        .use(() => tree => selectAll('main div > hgroup, div#main', tree))
-        // If we don't do this wrapping, rehypeRemark just returns an empty string -- yeah WTF?
-        .use(() => tree => ({
-          type: 'element',
-          tagName: 'div',
-          properties: {},
-          children: tree,
-        }))
-        .use(rehypeRemark, {
-          document: false,
-          handlers: {
-            // Remove buttons as they usually get confusing in markdown, especially since we use them as tab headers
-            button() {},
-          },
-        })
-        // We end up with empty inline code blocks, probably from some tab logic in the HTML, remove them
-        .use(() => tree => remove(tree, {type: 'inlineCode', value: ''}))
-        .use(remarkGfm)
-        .use(remarkStringify)
-        .process(text)
-    )
+  const data = String(
+    await unified()
+      .use(rehypeParse)
+      // Need the `main div > hgroup` selector for the headers
+      .use(() => tree => selectAll('main div > hgroup, div#main', tree))
+      // If we don't do this wrapping, rehypeRemark just returns an empty string -- yeah WTF?
+      .use(() => tree => ({
+        type: 'element',
+        tagName: 'div',
+        properties: {},
+        children: tree,
+      }))
+      .use(rehypeRemark, {
+        document: false,
+        handlers: {
+          // Remove buttons as they usually get confusing in markdown, especially since we use them as tab headers
+          button() {},
+        },
+      })
+      // We end up with empty inline code blocks, probably from some tab logic in the HTML, remove them
+      .use(() => tree => remove(tree, {type: 'inlineCode', value: ''}))
+      .use(remarkGfm)
+      .use(remarkStringify)
+      .process(text)
   );
-  await copyFile(target, cacheFile, fsConstants.COPYFILE_FICLONE);
+  const reader = Readable.from(data);
+
+  await Promise.all([
+    pipeline(
+      reader,
+      createWriteStream(target, {
+        encoding: 'utf8',
+      })
+    ),
+    pipeline(
+      reader,
+      createBrotliCompress({
+        chunkSize: 32 * 1024,
+        params: {
+          [zlibConstants.BROTLI_PARAM_MODE]: zlibConstants.BROTLI_MODE_TEXT,
+          [zlibConstants.BROTLI_PARAM_QUALITY]: CACHE_COMPRESS_LEVEL,
+          [zlibConstants.BROTLI_PARAM_SIZE_HINT]: data.length,
+        },
+      }),
+      createWriteStream(cacheFile)
+    ).catch(err => console.warn('Error writing cache file:', err)),
+  ]);
+
+  return false;
 }
 
 async function processTaskList({id, tasks, cacheDir, noCache}) {
   const failedTasks = [];
+  let cacheHits = 0;
   for (const {sourcePath, targetPath} of tasks) {
     try {
-      await genMDFromHTML(sourcePath, targetPath, {
+      cacheHits += await genMDFromHTML(sourcePath, targetPath, {
         cacheDir,
         noCache,
       });
@@ -171,7 +219,7 @@ async function processTaskList({id, tasks, cacheDir, noCache}) {
       failedTasks.push({sourcePath, targetPath, error});
     }
   }
-  return {id, success: tasks.length - failedTasks.length, failedTasks};
+  return {id, success: tasks.length - failedTasks.length, failedTasks, cacheHits};
 }
 
 async function doWork(work) {
