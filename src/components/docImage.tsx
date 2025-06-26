@@ -33,7 +33,7 @@ export default function DocImage({
   // parse the size from the URL hash (set by remark-image-size.js)
   const srcURL = new URL(src, 'https://example.com');
   const imgPath = srcURL.pathname;
-  
+
   // Debug: log the final URL (remove this after testing)
   console.log('DocImage - Final src:', src, 'imgPath:', imgPath);
   const [width, height] = srcURL.hash // #wxh
