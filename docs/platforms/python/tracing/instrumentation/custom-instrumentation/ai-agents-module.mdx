@@ -8,7 +8,7 @@ As a prerequisite to setting up AI Agents, you’ll need to first <PlatformLink 
 
 ## Manual Instrumentation
 
-For your AI agents data to show up in the Sentry [AI Agents Insights](https://sentry.io/orgredirect/organizations/:orgslug/insights/agents/), a couple of different spans must be created and have well-defined names and data attributes. See below.
+For your AI agents data to show up in the Sentry [AI Agents Insights](https://sentry.io/orgredirect/organizations/:orgslug/insights/agents/), a couple of spans must be created and have well-defined names and data attributes. See below.
 
 ## Spans
 
@@ -44,10 +44,12 @@ Additional attributes on the span:
 - **[0]:** Span attributes only allow primitive data types (like `int`, `float`, `boolean`, `string`). This means you need to use a stringified version of a list of dictionaries. Do NOT set `[{"foo": "bar"}]` but rather the string `"[{\"foo\": \"bar\"}]"`.
 - **[1]:** Each message item uses the format `{role:"", content:""}`. The `role` can be `"user"`, `"assistant"`, or `"system"`. The `content` can be either a string or a list of dictionaries.
 
-#### Example AI agent invocation span:
+#### Example Invoke Agent Span:
 
 ```python
 import sentry_sdk
+
+sentry_sdk.init(...)
 
 # some example agent implementation for demonstration
 my_agent = MyAgent(
@@ -110,6 +112,68 @@ Additional attributes on the span:
 - **[0]:** Span attributes only allow primitive data types. This means you need to use a stringified version of a list of dictionaries. Do NOT set `[{"foo": "bar"}]` but rather the string `"[{\"foo\": \"bar\"}]"`.
 - **[1]:** Each message item uses the format `{role:"", content:""}`. The `role` can be `"user"`, `"assistant"`, or `"system"`. The `content` can be either a string or a list of dictionaries.
 
+#### Example AI Client Span
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(...)
+
+# some example implementation for demonstration
+my_ai = MyAI(
+    model_provider="openai",
+    model="o3-mini",
+    model_config={
+        "temperature": 0.1,
+        "presence_penalty": 0.5,
+    }
+)
+
+with sentry_sdk.start_span(
+    op="gen_ai.chat",
+    name=f"chat {my_ai.model}",
+) as span:
+    # set data about LLM
+    span.set_data("gen_ai.operation.name", "chat")
+    span.set_data("gen_ai.system", my_ai.model_provider)
+    span.set_data("gen_ai.request.model", my_ai.model)
+
+    # set up messages for LLM
+    max_tokens = 1024
+    prompt = "Tell me a joke"
+    messages = [
+        {"role": "user", "content": prompt},
+    ]
+
+    # set chat request data
+    span.set_data("gen_ai.request.message", json.dumbs(messages))
+    span.set_data("gen_ai.request.max_tokens", max_tokens)
+    span.set_data(
+        "gen_ai.request.temperature",
+        my_ai.model_config.get("temperature"),
+    )
+    span.set_data(
+        "gen_ai.request.presence_penalty",
+        my_ai.model_config.get("presence_penalty"),
+    )
+
+    # ask the LLM
+    result = my_ai.messages.create(
+        messages=messages,
+        max_tokens=max_tokens,
+    )
+
+    # set response
+    # we assume result.output is a dictionary
+    # type of `gen_ai.response.text` needs to be a string
+    span.set_data("gen_ai.response.text", json.dumps([result.output]))
+
+    # set token usage
+    # we assume the result includes the tokens used
+    span.set_data("gen_ai.usage.input_tokens", result.usage.input_tokens)
+    span.set_data("gen_ai.usage.output.tokens", result.usage.output_tokens)
+```
+
 ### Execute Tool Span
 
 Describes a tool execution.
@@ -129,13 +193,95 @@ Additional attributes on the span:
 | `gen_ai.tool.output`      | string | optional          | The output from the tool.                            | `"7"`                                      |
 | `gen_ai.tool.type`        | string | optional          | The type of the tools.                               | `"function"`; `"extension"`; `"datastore"` |
 
+#### Example Execute Tool Span
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(...)
+
+# some example implementation for demonstration
+my_ai = MyAI(
+    model_provider="openai",
+    model="o3-mini",
+)
+
+with sentry_sdk.start_span(op="gen_ai.chat", ...):
+    #  .. some code ..
+    result = my_ai.messages.create(
+        messages=messages,
+        max_tokens=1024,
+    )
+    # .. some code ..
+
+# we assume the llm tells us to call a tool in the result
+if my_should_call_tool(result):
+    # we parse the result to know which tool to call
+    tool = my_get_tool_to_call(result)
+
+    with sentry_sdk.start_span(
+        op="gen_ai.execute_tool",
+        name=f"gen_ai.execute_tool {tool.name}"
+    ) as span:
+        # set data about LLM and tool
+        span.set_data("gen_ai.system", my_ai.model_provider)
+        span.set_data("gen_ai.request.model", my_ai.model)
+        span.set_data("gen_ai.tool.type", "function")
+        span.set_data("gen_ai.tool.name", tool.name)
+        span.set_data("gen_ai.tool.description", tool.description)
+
+        # run tool
+        tool_result = my_run_tool(tool)
+
+        # set tool result
+        span.set_data("gen_ai.tool.output", json.dumps(tool_result))
+```
+
 ### Handoff Span
 
 A span that describes the handoff from one agent to another agent.
 
 - The spans `op` MUST be `"gen_ai.handoff"`.
 - The spans `name` SHOULD be `"handoff from {from_agent} to {to_agent}"`.
-- All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
+- All [Common Span Attributes](#common-span-attributes) SHOULD be set.
+
+#### Example Handoff Span
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(...)
+
+# some example agent implementation for demonstration
+my_agent = MyAgent(
+    name="Weather Agent",
+    model_provider="openai",
+    model="o3-mini",
+)
+
+with sentry_sdk.start_span(op="gen_ai.invoke_agent", ...):
+    #  .. some code ..
+    result = my_agent.run()
+    #  .. some code ..
+
+
+# we assume the llm tells us to handoff to another agent
+if my_should_handoff(result):
+    # we parse the result to know which agent to handoff to
+    other_agent = my_get_agent(result)
+
+    with sentry_sdk.start_span(
+        op="gen_ai.handoff",
+        name=f"handoff from {my_agent.name} to {other_agent.name}",
+    ):
+        # the handoff span just marks the handoff
+        pass
+
+    with sentry_sdk.start_span(op="gen_ai.invoke_agent", ...):
+        #  .. some code ..
+        other_agent.run()
+        #  .. some code ..
+```
 
 ## Common Span Attributes
 
