@@ -41,7 +41,7 @@ export default function DocImage({
 
   return (
     <a href={imgPath} target="_blank" rel="noreferrer">
-      <Image
+      <img
         {...props}
         src={src}
         width={width}
