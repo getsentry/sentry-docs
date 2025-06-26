@@ -5,18 +5,8 @@ import matter from 'gray-matter';
 import {s} from 'hastscript';
 import yaml from 'js-yaml';
 import {bundleMDX} from 'mdx-bundler';
-import {createReadStream, createWriteStream, mkdirSync} from 'node:fs';
 import {access, opendir, readFile} from 'node:fs/promises';
 import path from 'node:path';
-// @ts-expect-error ts(2305) -- For some reason "compose" is not recognized in the types
-import {compose, Readable} from 'node:stream';
-import {json} from 'node:stream/consumers';
-import {pipeline} from 'node:stream/promises';
-import {
-  constants as zlibConstants,
-  createBrotliCompress,
-  createBrotliDecompress,
-} from 'node:zlib';
 import {limitFunction} from 'p-limit';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypePresetMinify from 'rehype-preset-minify';
@@ -60,33 +50,6 @@ const root = process.cwd();
 // Functions which looks like AWS Lambda and we get `EMFILE` errors when trying to open
 // so many files at once.
 const FILE_CONCURRENCY_LIMIT = 200;
-const CACHE_COMPRESS_LEVEL = 4;
-const CACHE_DIR = path.join(root, '.next', 'cache', 'mdx-bundler');
-mkdirSync(CACHE_DIR, {recursive: true});
-
-const md5 = (data: BinaryLike) => createHash('md5').update(data).digest('hex');
-
-async function readCacheFile<T>(file: string): Promise<T> {
-  const reader = createReadStream(file);
-  const decompressor = createBrotliDecompress();
-
-  return (await json(compose(reader, decompressor))) as T;
-}
-
-async function writeCacheFile(file: string, data: string) {
-  await pipeline(
-    Readable.from(data),
-    createBrotliCompress({
-      chunkSize: 32 * 1024,
-      params: {
-        [zlibConstants.BROTLI_PARAM_MODE]: zlibConstants.BROTLI_MODE_TEXT,
-        [zlibConstants.BROTLI_PARAM_QUALITY]: CACHE_COMPRESS_LEVEL,
-        [zlibConstants.BROTLI_PARAM_SIZE_HINT]: data.length,
-      },
-    }),
-    createWriteStream(file)
-  );
-}
 
 function formatSlug(slug: string) {
   return slug.replace(/\.(mdx|md)/, '');
@@ -523,25 +486,6 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     );
   }
 
-  let cacheKey: string | null = null;
-  let cacheFile: string | null = null;
-
-  if (process.env.CI === '1') {
-    cacheKey = md5(source);
-    cacheFile = path.join(CACHE_DIR, cacheKey);
-
-    try {
-      const cached = await readCacheFile<SlugFile>(cacheFile);
-      return cached;
-    } catch (err) {
-      if (err.code !== 'ENOENT' && err.code !== 'ABORT_ERR') {
-        // If cache is corrupted, ignore and proceed
-        // eslint-disable-next-line no-console
-        console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
-      }
-    }
-  }
-
   process.env.ESBUILD_BINARY_PATH = path.join(
     root,
     'node_modules',
@@ -666,13 +610,6 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       slug,
     },
   };
-
-  if (cacheFile) {
-    writeCacheFile(cacheFile, JSON.stringify(resultObj)).catch(e => {
-      // eslint-disable-next-line no-console
-      console.warn(`Failed to write MDX cache: ${cacheFile}`, e);
-    });
-  }
 
   return resultObj;
 }
