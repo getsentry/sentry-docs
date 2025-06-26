@@ -11,13 +11,13 @@ categories:
 
 <Alert title='SDK Limitations' level='warning'>
 
-  This SDK is considered **experimental and in an alpha state**. It may experience breaking changes. Please reach out on [GitHub](https://github.com/getsentry/sentry-javascript/issues/) if you have any feedback or concerns.
+This SDK is considered **experimental and in an alpha state**. It may experience breaking changes. Please reach out on [GitHub](https://github.com/getsentry/sentry-javascript/issues/) if you have any feedback or concerns.
 
 </Alert>
 
 <Alert title='Looking for library mode?' level='info'>
 
-  If you are using React Router in library mode, you can follow the instructions in the [React guide here](/platforms/javascript/guides/react/features/react-router/v7).
+If you are using React Router in library mode, you can follow the instructions in the [React guide here](/platforms/javascript/guides/react/features/react-router/v7).
 
 </Alert>
 
@@ -35,25 +35,25 @@ Sentry captures data by using an SDK within your application's runtime.
     "user-feedback",
     "logs",
     {
-      id: 'profiling',
-      checked: false
-    }
+      id: "profiling",
+      checked: false,
+    },
   ]}
 />
 
 <OnboardingOption optionId="profiling">
 
-  ```bash {tabTitle:npm}
-  npm install @sentry/react-router @sentry/profiling-node
-  ```
+```bash {tabTitle:npm}
+npm install @sentry/react-router @sentry/profiling-node
+```
 
-  ```bash {tabTitle:yarn}
-  yarn add @sentry/react-router @sentry/profiling-node
-  ```
+```bash {tabTitle:yarn}
+yarn add @sentry/react-router @sentry/profiling-node
+```
 
-  ```bash {tabTitle:pnpm}
-  pnpm add @sentry/react-router @sentry/profiling-node
-  ```
+```bash {tabTitle:pnpm}
+pnpm add @sentry/react-router @sentry/profiling-node
+```
 
 </OnboardingOption>
 
@@ -62,18 +62,20 @@ Sentry captures data by using an SDK within your application's runtime.
   npm install @sentry/react-router
   ```
 
-  ```bash {tabTitle:yarn}
-  yarn add @sentry/react-router
-  ```
+```bash {tabTitle:yarn}
+yarn add @sentry/react-router
+```
 
-  ```bash {tabTitle:pnpm}
-  pnpm add @sentry/react-router
-  ```
+```bash {tabTitle:pnpm}
+pnpm add @sentry/react-router
+```
+
 </OnboardingOption>
 
 ## Configure
 
 ### Expose Hooks
+
 React Router exposes two hooks in your `app` folder (`entry.client.tsx` and `entry.server.tsx`).
 If you do not see these two files, expose them with the following command:
 
@@ -93,11 +95,11 @@ Initialize the Sentry React SDK in your `entry.client.tsx` file:
 
 +Sentry.init({
 +  dsn: "___PUBLIC_DSN___",
-+  
++
 +  // Adds request headers and IP for users, for more info visit:
 +  // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#sendDefaultPii
 +  sendDefaultPii: true,
-+  
++
 +  integrations: [
 +    // ___PRODUCT_OPTION_START___ performance
 +    Sentry.reactRouterTracingIntegration(),
@@ -189,10 +191,10 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   Automatic server-side instrumentation is currently only supported on:
     - **Node 20:** Version \<20.19
     - **Node 22:** Version \<22.12
-  
-  
+
+
   If you are on a different version please make use of our manual server wrappers.
-  
+
   For server loaders use `wrapServerLoader`:
 ```ts
 import * as Sentry from '@sentry/react-router';
@@ -228,12 +230,12 @@ Create an `instrument.server.mjs` file in the root of your app:
 ```js {filename: instrument.server.mjs}
 import * as Sentry from "@sentry/react-router";
 // ___PRODUCT_OPTION_START___ profiling
-import { nodeProfilingIntegration } from '@sentry/profiling-node';
+import { nodeProfilingIntegration } from "@sentry/profiling-node";
 // ___PRODUCT_OPTION_END___ profiling
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  
+
   // Adds request headers and IP for users, for more info visit:
   // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#sendDefaultPii
   sendDefaultPii: true,
@@ -243,7 +245,7 @@ Sentry.init({
   _experiments: { enableLogs: true },
   // ___PRODUCT_OPTION_END___ logs
   // ___PRODUCT_OPTION_START___ profiling
-  
+
   integrations: [nodeProfilingIntegration()],
   // ___PRODUCT_OPTION_END___ profiling
   // ___PRODUCT_OPTION_START___ performance
@@ -287,11 +289,11 @@ export const handleError: HandleErrorFunction = (error, { request }) => {
 
 <Expandable title="Do you need to customize your handleRequest function?">
   If you need to update the logic of your `handleRequest` function you'll need to include the provided Sentry helper functions (`getMetaTagTransformer` and `wrapSentryHandleRequest`) manually:
-  
+
   ```tsx {1-4, 44-45, 69-70}
   import { getMetaTagTransformer, wrapSentryHandleRequest } from '@sentry/react-router';
   // ... other imports
-  
+
   const handleRequest = function handleRequest(
     request: Request,
     responseStatusCode: number,
@@ -350,13 +352,16 @@ export const handleError: HandleErrorFunction = (error, { request }) => {
       // Abort the rendering stream after the `streamTimeout`
       setTimeout(abort, streamTimeout);
     });
-  };
-  
-  // wrap the default export
-  export default wrapSentryHandleRequest(handleRequest);
 
-  // ... rest of your entry.server.ts file
-  ```
+    };
+
+    // wrap the default export
+    export default wrapSentryHandleRequest(handleRequest);
+
+    // ... rest of your entry.server.ts file
+
+    ```
+
 </Expandable>
 
 ### Update Scripts
@@ -368,8 +373,8 @@ Update the `start` and `dev` script to include the instrumentation file:
 
 ```json {filename: package.json}
 "scripts": {
-  "dev": "NODE_OPTIONS='--import ./instrument.server.mjs' react-router dev",
-  "start": "NODE_OPTIONS='--import ./instrument.server.mjs' react-router-serve ./build/server/index.js",
+"dev": "NODE_OPTIONS='--import ./instrument.server.mjs' react-router dev",
+"start": "NODE_OPTIONS='--import ./instrument.server.mjs' react-router-serve ./build/server/index.js",
 }
 ```
 
@@ -387,15 +392,13 @@ If you're deploying to platforms like **Vercel** or **Netlify** where setting th
 
 <Alert title="Incomplete Auto-instrumentation" level="warning">
 
-  When importing the instrumentation file directly in `entry.server.tsx` instead of using the `--import` flag, automatic instrumentation will be incomplete and you'll miss automatically captured spans and traces for some of your application's server-side operations. This approach should only be used when the `NODE_OPTIONS` approach is not available on your hosting platform.
+When importing the instrumentation file directly in `entry.server.tsx` instead of using the `--import` flag, automatic instrumentation will be incomplete and you'll miss automatically captured spans and traces for some of your application's server-side operations. This approach should only be used when the `NODE_OPTIONS` approach is not available on your hosting platform.
 
 </Alert>
 
 ## Source Maps Upload
 
 Update `vite.config.ts` to include the `sentryReactRouter` plugin, making sure to pass both the Vite and Sentry configurations to it:
-
-<OrgAuthTokenNote />
 
 ```typescript {filename: vite.config.ts} {diff}
 import { reactRouter } from '@react-router/dev/vite';
@@ -406,8 +409,9 @@ const sentryConfig: SentryReactRouterBuildOptions = {
   org: "___ORG_SLUG___",
   project: "___PROJECT_SLUG___",
 
-  // An auth token is required for uploading source maps.
-  authToken: "___ORG_AUTH_TOKEN___"
+  // An auth token is required for uploading source maps;
+  // store it in an environment variable to keep it secure.
+  authToken: import.meta.env.VITE_SENTRY_AUTH_TOKEN,
   // ...
 };
 
@@ -418,18 +422,26 @@ export default defineConfig(config => {
 });
 ```
 
+To keep your auth token secure, always store it in an environment variable instead of directly in your files:
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env}
+VITE_SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
 Include the `sentryOnBuildEnd` hook in `react-router.config.ts`:
 
 ```typescript {filename: react-router.config.ts} {diff}
-import type { Config } from '@react-router/dev/config';
-import { sentryOnBuildEnd } from '@sentry/react-router';
+import type { Config } from "@react-router/dev/config";
+import { sentryOnBuildEnd } from "@sentry/react-router";
 
 export default {
   ssr: true,
   buildEnd: async ({ viteConfig, reactRouterConfig, buildManifest }) => {
     // ...
     // Call this at the end of the hook
-+   await sentryOnBuildEnd({ viteConfig, reactRouterConfig, buildManifest });
+    +(await sentryOnBuildEnd({ viteConfig, reactRouterConfig, buildManifest }));
   },
 } satisfies Config;
 ```
@@ -449,13 +461,8 @@ export async function loader() {
 }
 
 export default function ExamplePage() {
-  return (
-    <div>
-      Loading this page will throw an error
-    </div>
-  );
+  return <div>Loading this page will throw an error</div>;
 }
-
 ```
 
 <Alert>
