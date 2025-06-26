@@ -6,9 +6,9 @@ The AI Agents module is agnostic to the library used. The SDK will instrument ex
 
 ## Spans Conventions
 
-For your AI agents data to show up in the Sentry [AI Agents Insights](https://sentry.io/orgredirect/organizations/:orgslug/insights/agents/) a couple of different spans must be created and have well defined names and data attributes. See below.
+For your AI agents data to show up in the Sentry [AI Agents Insights](https://sentry.io/orgredirect/organizations/:orgslug/insights/agents/), a couple of different spans must be created and have well-defined names and data attributes. See below.
 
-We try to follow the [OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/) for Generative AI as close as possible. Being 100% compatible is not yet possible, because OpenTelemetry as "Span Events" which Sentry does not support. The input/output to/from an AI model is stored in span events in OpenTelemetry, as this is not possible in Sentry we add this data onto span attributes as a list.
+We try to follow the [OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/) for Generative AI as close as possible. Being 100% compatible is not yet possible, because OpenTelemetry has "Span Events" which Sentry does not support. The input/output to/from an AI model is stored in span events in OpenTelemetry. Since this is not possible in Sentry, we add this data onto span attributes as a list.
 
 ### Invoke Agent Span
 
@@ -39,8 +39,8 @@ Additional attributes on the span:
 | `gen_ai.usage.output_tokens`           | int    | optional          | The number of tokens used in the AI response.                                           | `100`                                                                                                             |
 | `gen_ai.usage.total_tokens`            | int    | optional          | The total number of tokens used to process the prompt. (input and output)               | `190`                                                                                                             |
 
-- **[0]:** As span attributes only allow primitive data types (like `int`, `float`, `boolean`, `string`) this needs to be a stringified version of a list of dictionaries. Do NOT set `[{"foo": "bar"}]` but rather the string `"[{\"foo\": \"bar\"}]"`.
-- **[1]:** Each item in the list of messages has the format `{role:"", content:""}` where `role` can be `"user"`, `"assistant"`, or `"system"` and `content` can either be a string or a list of dictionaries.
+- **[0]:** Span attributes only allow primitive data types (like `int`, `float`, `boolean`, `string`). This means you need to use a stringified version of a list of dictionaries. Do NOT set `[{"foo": "bar"}]` but rather the string `"[{\"foo\": \"bar\"}]"`.
+- **[1]:** Each message item uses the format `{role:"", content:""}`. The `role` can be `"user"`, `"assistant"`, or `"system"`. The `content` can be either a string or a list of dictionaries.
 
 ### AI Client Span
 
@@ -69,8 +69,8 @@ Additional attributes on the span:
 | `gen_ai.usage.output_tokens`           | int    | optional          | The number of tokens used in the AI response.                                           | `100`                                                                                                             |
 | `gen_ai.usage.total_tokens`            | int    | optional          | The total number of tokens used to process the prompt. (input and output)               | `190`                                                                                                             |
 
-- **[0]:** As span attributes only allow primitive data types this needs to be a stringified version of a list of dictionaries. Do NOT set `[{"foo": "bar"}]` but rather the string `"[{\"foo\": \"bar\"}]"`.
-- **[1]:** Each item in the list has the format `{role:"", content:""}` where `role` can be `"user"`, `"assistant"`, or `"system"` and `content` can either be a string or a list of dictionaries.
+- **[0]:** Span attributes only allow primitive data types. This means you need to use a stringified version of a list of dictionaries. Do NOT set `[{"foo": "bar"}]` but rather the string `"[{\"foo\": \"bar\"}]"`.
+- **[1]:** Each message item uses the format `{role:"", content:""}`. The `role` can be `"user"`, `"assistant"`, or `"system"`. The `content` can be either a string or a list of dictionaries.
 
 ### Execute Tool Span
 
@@ -87,7 +87,7 @@ Additional attributes on the span:
 | :------------------------ | :----- | :---------------- | :--------------------------------------------------- | :----------------------------------------- |
 | `gen_ai.tool.description` | string | optional          | Description of the tool executed.                    | `"Tool returning a random number"`         |
 | `gen_ai.tool.input`       | string | optional          | Input that was given to the executed tool as string. | `"{\"max\":10}"`                           |
-| `gen_ai.tool.name:`       | string | optional          | Name of the tool executed.                           | `"random_number"`                          |
+| `gen_ai.tool.name`        | string | optional          | Name of the tool executed.                           | `"random_number"`                          |
 | `gen_ai.tool.output`      | string | optional          | The output from the tool.                            | `"7"`                                      |
 | `gen_ai.tool.type`        | string | optional          | The type of the tools.                               | `"function"`; `"extension"`; `"datastore"` |
 
@@ -96,7 +96,7 @@ Additional attributes on the span:
 A span that describes the handoff from one agent to another agent.
 
 - The spans `op` MUST be `"gen_ai.handoff"`.
-- The spans `name` SHOULD be `"handoff from {from_agent} to {from_agent}"`.
+- The spans `name` SHOULD be `"handoff from {from_agent} to {to_agent}"`.
 - All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
 
 ## Common Span Attributes
