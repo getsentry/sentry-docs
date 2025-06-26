@@ -277,7 +277,7 @@ async function processTaskList({id, tasks, cacheDir, noCache}) {
       if (!cacheHit) {
         cacheMisses.push(relativePath);
       }
-      
+
       if (r2Hash !== null) {
         const fileHash = md5(data);
         if (r2Hash !== fileHash) {
