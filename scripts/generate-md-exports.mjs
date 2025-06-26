@@ -95,6 +95,7 @@ async function createWork() {
 
   const existingFilesOnR2 = null;
   if (accessKeyId && secretAccessKey) {
+    existingFilesOnR2 = new Map();
     console.log(`☁️ Getting existing hashes from R2...`);
     const s3Client = getS3Client();
     let continuationToken = undefined;
