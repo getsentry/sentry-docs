@@ -1,4 +1,4 @@
-import path from 'path';
+// import path from 'path';
 
 // import Image from 'next/image';
 import {serverContext} from 'sentry-docs/serverContext';
