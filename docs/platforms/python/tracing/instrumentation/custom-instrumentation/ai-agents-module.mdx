@@ -44,6 +44,42 @@ Additional attributes on the span:
 - **[0]:** Span attributes only allow primitive data types (like `int`, `float`, `boolean`, `string`). This means you need to use a stringified version of a list of dictionaries. Do NOT set `[{"foo": "bar"}]` but rather the string `"[{\"foo\": \"bar\"}]"`.
 - **[1]:** Each message item uses the format `{role:"", content:""}`. The `role` can be `"user"`, `"assistant"`, or `"system"`. The `content` can be either a string or a list of dictionaries.
 
+#### Example AI agent invocation span:
+
+```python
+import sentry_sdk
+
+# some example agent implementation for demonstration
+my_agent = MyAgent(
+    name="Weather Agent",
+    model_provider="openai",
+    model="o3-mini",
+)
+
+with sentry_sdk.start_span(
+    op="gen_ai.invoke_agent",
+    name=f"invoke_agent {my_agent.name}",
+) as span:
+    # set data about LLM and agent
+    span.set_data("gen_ai.operation.name", "invoke_agent")
+    span.set_data("gen_ai.system", my_agent.model_provider)
+    span.set_data("gen_ai.request.model", my_agent.model)
+    span.set_data("gen_ai.agent.name", my_agent.name)
+
+    # run the agent
+    result = my_agent.run()
+
+    # set agent response
+    # we assume result.output is a dictionary
+    # type of `gen_ai.response.text` needs to be a string
+    span.set_data("gen_ai.response.text", json.dumps([result.output]))
+
+    # set token usage
+    # we assume the result includes the tokens used
+    span.set_data("gen_ai.usage.input_tokens", result.usage.input_tokens)
+    span.set_data("gen_ai.usage.output.tokens", result.usage.output_tokens)
+```
+
 ### AI Client Span
 
 This span represents a request to an AI model or service that generates a response or requests a tool call based on the input prompt.
