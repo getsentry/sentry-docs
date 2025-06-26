@@ -1,0 +1,41 @@
+---
+title: Cloudflare Workflows
+description: "Learn how to add Sentry instrumentation for Cloudflare Workflows."
+---
+
+_(Available in version [9.32.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.32.0) and above)_
+
+You can use the `instrumentWorkflowWithSentry` method to instrument [Cloudflare
+Workflows](https://developers.cloudflare.com/workflows/).
+
+Because workflows can be hibernated and loose all state, we use the workflows
+`instanceId` as the Sentry `trace_id` to link all steps together. We also use
+the last 4 characters of the `instanceId` for sampling to ensure all steps have
+the same sampling decision. If you are starting your workflows with a custom
+`instanceId`, ensure you use valid random UUIDs either with or without dashes.
+
+```typescript
+import { WorkflowEntrypoint, WorkflowStep, WorkflowEvent } from 'cloudflare:workers';
+import * as Sentry from "@sentry/cloudflare";
+
+class MyWorkflowBase extends WorkflowEntrypoint<Env, Params> {
+  async run(event: WorkflowEvent<Params>, step: WorkflowStep) {
+    await step.do('fetch data', async () => {
+      //
+    });
+
+    await step.do('process data', async () => {
+      //
+    });
+  }
+}
+
+// Export your named class as defined in your wrangler config
+export const MyWorkflow = Sentry.instrumentWorkflowWithSentry(
+  (env: Env) => ({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+  }),
+  MyWorkflowBase
+);
+```
