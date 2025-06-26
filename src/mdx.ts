@@ -17,7 +17,6 @@ import {
   createBrotliCompress,
   createBrotliDecompress,
 } from 'node:zlib';
-import {limitFunction} from 'p-limit';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypePresetMinify from 'rehype-preset-minify';
 import rehypePrismDiff from 'rehype-prism-diff';
@@ -28,7 +27,7 @@ import remarkMdxImages from 'remark-mdx-images';
 import getAppRegistry from './build/appRegistry';
 import getPackageRegistry from './build/packageRegistry';
 import {apiCategories} from './build/resolveOpenAPI';
-import getAllFilesRecursively from './files';
+import getAllFilesRecursively, {limitFunction} from './files';
 import remarkDefList from './mdx-deflist';
 import rehypeOnboardingLines from './rehype-onboarding-lines';
 import rehypeSlug from './rehype-slug.js';
