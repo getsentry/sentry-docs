@@ -523,17 +523,22 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     );
   }
 
-  const cacheKey = md5(source);
-  const cacheFile = path.join(CACHE_DIR, cacheKey);
+  let cacheKey: string | null = null;
+  let cacheFile: string | null = null;
 
-  try {
-    const cached = await readCacheFile<SlugFile>(cacheFile);
-    return cached;
-  } catch (err) {
-    if (err.code !== 'ENOENT' && err.code !== 'ABORT_ERR') {
-      // If cache is corrupted, ignore and proceed
-      // eslint-disable-next-line no-console
-      console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
+  if (process.env.CI === '1') {
+    cacheKey = md5(source);
+    cacheFile = path.join(CACHE_DIR, cacheKey);
+
+    try {
+      const cached = await readCacheFile<SlugFile>(cacheFile);
+      return cached;
+    } catch (err) {
+      if (err.code !== 'ENOENT' && err.code !== 'ABORT_ERR') {
+        // If cache is corrupted, ignore and proceed
+        // eslint-disable-next-line no-console
+        console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
+      }
     }
   }
 
@@ -662,10 +667,12 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     },
   };
 
-  writeCacheFile(cacheFile, JSON.stringify(resultObj)).catch(e => {
-    // eslint-disable-next-line no-console
-    console.warn(`Failed to write MDX cache: ${cacheFile}`, e);
-  });
+  if (cacheFile) {
+    writeCacheFile(cacheFile, JSON.stringify(resultObj)).catch(e => {
+      // eslint-disable-next-line no-console
+      console.warn(`Failed to write MDX cache: ${cacheFile}`, e);
+    });
+  }
 
   return resultObj;
 }
