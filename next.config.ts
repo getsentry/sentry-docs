@@ -9,8 +9,8 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         '**/*.map',
         './.git/**/*',
         './apps/**/*',
-        './next/cache/mdx-bundler/**/*',
-        './next/cache/md-exports/**/*',
+        './.next/cache/mdx-bundler/**/*',
+        './.next/cache/md-exports/**/*',
         'docs/**/*',
       ],
     }
@@ -18,8 +18,8 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
       '/**/*': [
         '**/*.map',
         './.git/**/*',
-        './next/cache/mdx-bundler/**/*',
-        './next/cache/md-exports/**/*',
+        './.next/cache/mdx-bundler/**/*',
+        './.next/cache/md-exports/**/*',
         './apps/**/*',
         'develop-docs/**/*',
         'node_modules/@esbuild/*',
