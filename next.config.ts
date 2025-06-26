@@ -24,12 +24,7 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         'develop-docs/**/*',
         'node_modules/@esbuild/*',
       ],
-      '/platform-redirect': [
-        '**/*.gif',
-        'public/mdx-images/**/*',
-        '**/*.pdf',
-        'docs/**/*',
-      ],
+      '/platform-redirect': ['**/*.gif', 'public/mdx-images/**/*', '**/*.pdf'],
       '\\[\\[\\.\\.\\.path\\]\\]': [
         'docs/**/*',
         'node_modules/prettier/plugins',
