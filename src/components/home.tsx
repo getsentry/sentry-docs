@@ -6,11 +6,13 @@ import PlugImage from 'sentry-docs/imgs/api.png';
 import ChatBubble from 'sentry-docs/imgs/chat-bubble.png';
 import TerminalImage from 'sentry-docs/imgs/cli.png';
 import ConceptsImage from 'sentry-docs/imgs/concepts-reference.png';
+import BgLinkedin from 'sentry-docs/imgs/Linkedin-1128x191.png';
 import OrganizationImage from 'sentry-docs/imgs/organization.png';
 import CalculatorImage from 'sentry-docs/imgs/pricing.png';
 import RocketImage from 'sentry-docs/imgs/rocket.png';
 import SecurityImage from 'sentry-docs/imgs/security.png';
 import SupportImage from 'sentry-docs/imgs/support.png';
+import YellowShape08 from 'sentry-docs/imgs/yellow-shape-08.png';
 
 import AskAiSearchParams from './askAiSearchParams';
 import {Card} from './card';
@@ -18,6 +20,7 @@ import Header from './header';
 import {NavLink, NavLinkProps} from './navlink';
 import {PlatformFilter} from './platformFilter';
 import {PlatformIcon} from './platformIcon';
+import {Search} from './search';
 import {SentryWordmarkLogo} from './wordmarkLogo';
 
 export default async function Home() {
@@ -49,41 +52,63 @@ export default async function Home() {
       <div className="mt-[var(--header-height)]">
         <Banner />
       </div>
-      <div className="flex justify-center mt-40 mb-0">
-        <input
-          type="text"
-          placeholder="Search Docs"
-          className="w-full max-w-xl px-5 py-3 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-accent-purple text-lg"
-        />
+      {/* Centered Welcome Header and Subheader at the top */}
+      <div
+        className="flex flex-col items-center justify-center w-full"
+        style={{
+          height: '250px',
+          backgroundImage: `url(${BgLinkedin.src})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          width: '100%',
+        }}
+      >
+        <h1 className="text-3xl font-bold mb-2 text-center" style={{color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.18)'}}>Welcome to Sentry Docs</h1>
+        <p className="text-lg text-center max-w-2xl" style={{color: '#fff', textShadow: '0 1px 6px rgba(0,0,0,0.16)'}}>
+          Sentry provides end-to-end distributed tracing, enabling developers to
+          identify and debug performance issues and errors across their systems and
+          services.
+        </p>
       </div>
-      <div className="hero max-w-screen-xl mx-auto px-6 lg:px-8 py-2">
-        {/* New Top Row: Docs intro + Most Viewed SDKs */}
+      {/* Search + SDKs row, same width as Sentry Products */}
+      <div className="max-w-screen-xl mx-auto px-6 lg:px-8 w-full">
         <div
-          className="w-full flex flex-col md:flex-row gap-8 items-start mb-12"
-          style={{paddingTop: '70px'}}
+          className="w-full flex flex-col md:flex-row items-stretch mb-3 justify-between relative"
         >
-          {/* Left column: Header and subheader */}
-          <div className="flex-1 flex flex-col">
-            <h1 className="text-3xl font-bold mb-2">Welcome to Sentry Docs</h1>
-            <p className="text-lg">
-              Sentry provides end-to-end distributed tracing, enabling developers to
-              identify and debug performance issues and errors across their systems and
-              services.
-            </p>
+          {/* Left column: Search Bar, left-aligned */}
+          <div className="flex-1 flex flex-col items-start justify-center w-full max-w-full relative">
+            <div className="home-search-bar w-full relative">
+              <Search path="/" searchPlatforms={[]} useStoredSearchPlatforms={false} />
+            </div>
           </div>
-          {/* Right column: Most Viewed SDKs */}
-          <div className="flex-1 flex flex-col items-center justify-center -mt-4">
+          {/* Decorative yellow-shape-08 line between search and SDKs */}
+          <img 
+            src={YellowShape08.src} 
+            alt="decorative line" 
+            className="hidden md:block pointer-events-none" 
+            style={{
+              position: 'absolute',
+              left: 'calc(20% + 90px)',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: '65%',
+              height: '120px',
+              zIndex: -1,
+              objectFit: 'contain',
+            }}
+          />
+          {/* Right column: Most Viewed SDKs, right-aligned */}
+          <div className="flex-1 flex flex-col items-end justify-end w-full self-stretch">
             <div
-              className="bg-white dark:bg-[var(--gray-2)] rounded-xl shadow-md dark:shadow-none p-6 pt-14 pb-14 w-full max-w-md aspect-square flex flex-col items-start"
+              className="bg-white dark:bg-[var(--gray-2)] rounded-xl shadow-md dark:shadow-none px-10 py-6 flex flex-col items-start"
               style={{
                 width: '350px',
-                minHeight: '350px',
-                aspectRatio: '1 / 1',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                margin: '0 auto',
+                marginRight: 0,
               }}
             >
               <h2 className="text-lg font-semibold mb-1 text-left w-full">
@@ -95,9 +120,9 @@ export default async function Home() {
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 50px)',
-                  gridTemplateRows: 'repeat(3, 50px)',
-                  gap: '10px',
+                  gridTemplateColumns: 'repeat(3, 70px)',
+                  rowGap: '12px',
+                  columnGap: '18px',
                   justifyContent: 'center',
                   alignContent: 'center',
                 }}
@@ -107,11 +132,13 @@ export default async function Home() {
                     <a
                       href={platform.url}
                       style={{
-                        width: 50,
-                        height: 50,
+                        width: 70,
+                        height: 80,
                         display: 'flex',
+                        flexDirection: 'column',
                         alignItems: 'center',
-                        justifyContent: 'center',
+                        justifyContent: 'flex-start',
+                        textDecoration: 'none',
                         padding: 0,
                         margin: 0,
                       }}
@@ -122,6 +149,20 @@ export default async function Home() {
                         format="lg"
                         style={{margin: 0, display: 'block'}}
                       />
+                      <span style={{
+                        marginTop: 6,
+                        fontSize: '0.85rem',
+                        color: '#6b7280',
+                        textAlign: 'center',
+                        width: '100%',
+                        fontWeight: 500,
+                        letterSpacing: 0.1,
+                        lineHeight: 1.1,
+                        display: 'block',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}>{platform.title}</span>
                     </a>
                   </Tooltip>
                 ))}
@@ -135,6 +176,8 @@ export default async function Home() {
             </div>
           </div>
         </div>
+      </div>
+      <div className="hero max-w-screen-xl mx-auto px-6 lg:px-8 py-2">
         {/* Sentry Products Header */}
         <h2 className="text-2xl mt-16 mb-6 font-medium">Sentry Products</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-8 md:items-start">
@@ -142,111 +185,35 @@ export default async function Home() {
           <div>
             <div className="flex flex-row items-center mb-4 gap-2">
               <PlatformIcon platform="sentry" size={24} format="lg" />
-              <h2 className="text-xl font-medium">Sentry</h2>
+              <a href="/product/sentry/" className="text-xl font-medium text-accent-purple hover:underline"><h2 className="inline font-medium">Sentry</h2></a>
             </div>
-            <div className="flex flex-col gap-3">
-              <Card
-                href="/issues"
-                title="Issues"
-                description=""
-                image={SupportImage}
-                imageAlt="Issues image"
-                className="min-h-[60px] h-[60px] card-large-icon card-align-center"
-              />
-              <Card
-                href="/logs"
-                title="Logs"
-                description=""
-                image={TerminalImage}
-                imageAlt="Logs image"
-                className="min-h-[60px] h-[60px] card-large-icon card-align-center"
-              />
-              <Card
-                href="/explore"
-                title="Explore"
-                description=""
-                image={ConceptsImage}
-                imageAlt="Explore image"
-                className="min-h-[60px] h-[60px] card-large-icon card-align-center"
-              />
-            </div>
-            <div className="px-4">
-              <hr className="my-2 border-gray-200" />
-              <a
-                href="#"
-                className="inline-block text-accent-purple hover:underline font-medium text-base"
-              >
-                More <span aria-hidden="true">→</span>
-              </a>
-            </div>
+            <p className="text-base text-left text-[var(--gray-500)] pl-2 pr-4">
+              Monitor, identify, and resolve errors and performance issues across your applications using
+              <a href="/product/sentry/issues/" className="text-accent-purple hover:underline"> error monitoring</a>,
+              <a href="/product/sentry/explore/trace-explorer/" className="text-accent-purple hover:underline"> tracing</a>,
+              <a href="/product/sentry/explore/session-replay/" className="text-accent-purple hover:underline"> session replay</a>, and
+              <a href="/product/" className="text-accent-purple hover:underline"> more</a>.
+            </p>
           </div>
           {/* Column 2: Sentry Prevent */}
           <div>
             <div className="flex flex-row items-center mb-4 gap-2">
               <PlatformIcon platform="sentry" size={24} format="lg" />
-              <h2 className="text-xl font-medium">Sentry Prevent</h2>
+              <a href="/product/sentry-prevent/" className="text-xl font-medium text-accent-purple hover:underline"><h2 className="inline font-medium">Sentry Prevent</h2></a>
             </div>
-            <div className="flex flex-col gap-3">
-              <Card
-                href="/test"
-                title="Test"
-                description=""
-                image={RocketImage}
-                imageAlt="Test image"
-                className="min-h-[60px] h-[60px] card-large-icon card-align-center"
-              />
-              <Card
-                href="/coverage"
-                title="Coverage"
-                description=""
-                image={CalculatorImage}
-                imageAlt="Coverage image"
-                className="min-h-[60px] h-[60px] card-large-icon card-align-center"
-              />
-            </div>
-            <div className="px-4">
-              <hr className="my-2 border-gray-200" />
-              <a
-                href="#"
-                className="inline-block text-accent-purple hover:underline font-medium text-base"
-              >
-                More <span aria-hidden="true">→</span>
-              </a>
-            </div>
+            <p className="text-base text-left text-[var(--gray-500)] pl-2 pr-4">
+              Proactively catch issues before they impact users with testing and code coverage tools.
+            </p>
           </div>
           {/* Column 3: Seer */}
           <div>
             <div className="flex flex-row items-center mb-4 gap-2">
               <PlatformIcon platform="sentry" size={24} format="lg" />
-              <h2 className="text-xl font-medium">Seer</h2>
+              <a href="/product/seer/" className="text-xl font-medium text-accent-purple hover:underline"><h2 className="inline font-medium">Seer</h2></a>
             </div>
-            <div className="flex flex-col gap-3">
-              <Card
-                href="/autofix"
-                title="Autofix"
-                description=""
-                image={PlugImage}
-                imageAlt="Autofix image"
-                className="min-h-[60px] h-[60px] card-large-icon card-align-center"
-              />
-              <Card
-                href="/issue-summary"
-                title="Issue Summary"
-                description=""
-                image={OrganizationImage}
-                imageAlt="Issue Summary image"
-                className="min-h-[60px] h-[60px] card-large-icon card-align-center"
-              />
-            </div>
-            <div className="px-4">
-              <hr className="my-2 border-gray-200" />
-              <a
-                href="#"
-                className="inline-block text-accent-purple hover:underline font-medium text-base"
-              >
-                More <span aria-hidden="true">→</span>
-              </a>
-            </div>
+            <p className="text-base text-left text-[var(--gray-500)] pl-2 pr-4">
+              Leverage AI-powered insights and automation to fix issues faster and summarize problems.
+            </p>
           </div>
         </div>
         <div id="all-sdks">
@@ -383,6 +350,24 @@ export default async function Home() {
         .card-align-center > div,
         .card-align-center .flex {
           align-items: center !important;
+        }
+        .home-search-bar input[type="text"], .home-search-bar input {
+          height: 64px !important;
+          min-height: 64px !important;
+          font-size: 1.25rem !important;
+          max-width: 480px !important;
+          width: 100% !important;
+          background: linear-gradient(90deg, #fff 80%, #f3e8ff 100%);
+          border: 2px solid #a78bfa !important;
+          box-shadow: 0 4px 24px 0 rgba(168,139,250,0.10), 0 1.5px 8px 0 rgba(168,139,250,0.08);
+          border-radius: 18px !important;
+          color: #1a1a1a;
+          transition: box-shadow 0.2s, border-color 0.2s;
+        }
+        .home-search-bar input[type="text"]:focus, .home-search-bar input:focus {
+          border-color: #7c3aed !important;
+          box-shadow: 0 6px 32px 0 rgba(124,58,237,0.18), 0 2px 12px 0 rgba(124,58,237,0.12);
+          outline: none !important;
         }
       `}</style>
     </div>

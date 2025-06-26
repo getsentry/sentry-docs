@@ -83,7 +83,10 @@ export async function Sidebar({path, versions}: SidebarProps) {
       <aside className={`${styles.sidebar} py-3`}>
         <input type="checkbox" id={sidebarToggleId} className="hidden" />
         <style>{':root { --sidebar-width: 300px; }'}</style>
-        <div className="md:flex flex-col items-stretch overflow-auto">
+        <div
+          className="md:flex flex-col items-stretch h-full"
+          style={{display: 'flex', flexDirection: 'column', height: '100%'}}
+        >
           <div className="platform-selector px-3">
             <div className="mb-3">
               <PlatformSelector
@@ -97,12 +100,12 @@ export async function Sidebar({path, versions}: SidebarProps) {
               </div>
             )}
           </div>
-          <div className={`${styles.toc} px-3`}>
+          <div className={`${styles.toc} px-3 flex-1`} style={{overflow: 'auto'}}>
             <ScrollActiveLink activeLinkSelector={activeLinkSelector} />
             <SidebarNavigation path={path} />
           </div>
           <SidebarSeparator />
-          <div className={`${styles.toc} px-3`}>
+          <div className={`${styles['sidebar-external-links']} px-3`} style={{flex: '0 0 auto', paddingBottom: 0}}>
             <ul data-sidebar-tree>
               <li className="mb-3" data-sidebar-branch>
                 <ul data-sidebar-tree>
@@ -145,15 +148,15 @@ export async function Sidebar({path, versions}: SidebarProps) {
       <input type="checkbox" id={sidebarToggleId} className="hidden" />
       <style>{':root { --sidebar-width: 300px; }'}</style>
       <div
-        className="md:flex flex-col items-stretch overflow-auto h-full"
+        className="md:flex flex-col items-stretch h-full"
         style={{display: 'flex', flexDirection: 'column', height: '100%'}}
       >
-        <div className={`${styles['sidebar-main']} px-3 flex-1`}>
+        <div className={`${styles['sidebar-main']} px-3 flex-1`} style={{overflow: 'auto'}}>
           <ScrollActiveLink activeLinkSelector={activeLinkSelector} />
           <SidebarNavigation path={path} />
         </div>
         <SidebarSeparator />
-        <div className={`${styles['sidebar-external-links']} px-3`}>
+        <div className={`${styles['sidebar-external-links']} px-3`} style={{flex: '0 0 auto', paddingBottom: 0}}>
           <ul data-sidebar-tree>
             <li className="mb-3" data-sidebar-branch>
               <ul data-sidebar-tree>
