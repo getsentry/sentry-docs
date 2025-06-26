@@ -24,7 +24,7 @@ export default function DocImage({
   // If the image src is not an absolute URL, we assume it's a relative path
   // and we prepend /mdx-images/ to it.
   if (src.startsWith('./')) {
-    src = path.join('/mdx-images', src);
+    src = '/mdx-images/' + src.slice(2); // Remove './' and prepend '/mdx-images/'
   }
   // account for the old way of doing things where the public folder structure mirrored the docs folder
   else if (!src?.startsWith('/') && !src?.includes('://')) {
@@ -34,6 +34,9 @@ export default function DocImage({
   // parse the size from the URL hash (set by remark-image-size.js)
   const srcURL = new URL(src, 'https://example.com');
   const imgPath = srcURL.pathname;
+  
+  // Debug: log the final URL (remove this after testing)
+  console.log('DocImage - Final src:', src, 'imgPath:', imgPath);
   const [width, height] = srcURL.hash // #wxh
     .slice(1)
     .split('x')
