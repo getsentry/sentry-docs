@@ -1,5 +1,3 @@
-import {BinaryLike, createHash} from 'crypto';
-
 import {cache} from 'react';
 import matter from 'gray-matter';
 import {s} from 'hastscript';
