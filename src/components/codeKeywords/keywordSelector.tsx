@@ -70,6 +70,11 @@ export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
     return <Fragment>keyword</Fragment>;
   }
 
+  // Enhanced tooltip text that makes it clear users can change projects
+  const tooltipText = choices.length > 1 
+    ? `Current project: ${currentSelection?.title}. Click to select a different project.`
+    : `Current project: ${currentSelection?.title}`;
+
   const selector = isOpen && (
     <PositionWrapper style={styles.popper} ref={setDropdownEl} {...attributes.popper}>
       <AnimatedContainer>
@@ -126,9 +131,15 @@ export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
         ref={setReferenceEl}
         role="button"
         tabIndex={0}
-        title={currentSelection?.title}
+        title={tooltipText}
         onClick={() => setIsOpen(!isOpen)}
         onKeyDown={e => e.key === 'Enter' && setIsOpen(!isOpen)}
+        style={{
+          // Add subtle visual cues to indicate this is clickable
+          cursor: 'pointer',
+          borderBottom: choices.length > 1 ? '1px dotted currentColor' : undefined,
+          position: 'relative'
+        }}
       >
         <KeywordIndicatorComponent isOpen={isOpen} />
         <span
@@ -149,6 +160,20 @@ export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
             </Keyword>
           </AnimatePresence>
         </span>
+        {/* Add a small indicator when multiple projects are available */}
+        {choices.length > 1 && (
+          <span 
+            style={{
+              fontSize: '0.75em',
+              opacity: 0.6,
+              marginLeft: '2px',
+              userSelect: 'none'
+            }}
+            title="Click to change project"
+          >
+            ▼
+          </span>
+        )}
       </KeywordDropdown>
       {isMounted &&
         createPortal(<AnimatePresence>{selector}</AnimatePresence>, document.body)}
