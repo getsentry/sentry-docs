@@ -34,7 +34,7 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         'docs/**/*',
         'public/mdx-images/**/*',
         '**/*.gif',
-        '**/*.pdf    ',
+        '**/*.pdf',
         '**/*.png',
       ],
     };
