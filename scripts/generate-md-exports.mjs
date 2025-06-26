@@ -283,9 +283,7 @@ async function processTaskList({id, tasks, cacheDir, noCache}) {
         const fileHash = md5(data);
         if (r2Hash !== fileHash) {
           r2CacheMisses.push(relativePath);
-          console.log(
-            `📤 Worker[${id}]: Uploading ${relativePath} to R2, hash mismatch: ${r2Hash} !== ${fileHash}`
-          );
+
           await uploadToCFR2(s3Client, relativePath, data);
         }
       }
@@ -296,7 +294,7 @@ async function processTaskList({id, tasks, cacheDir, noCache}) {
   const success = tasks.length - failedTasks.length;
   if (r2CacheMisses.length / tasks.length > 0.1) {
     console.warn(
-      `⚠️ Worker[${id}]: More than 10% of files had a different hash on R2, this might indicate a problem with the cache or the generation process.`
+      `⚠️ Worker[${id}]: More than 10% of files had a different hash on R2 with the generation process.`
     );
   } else if (r2CacheMisses.length > 0) {
     console.log(
