@@ -24,6 +24,8 @@ commands:
   update              Update devservices to the latest version
   purge               Purge the local devservices cache
   toggle              Toggle how a service is run
+  foreground          Foreground a background process for debugging
+  serve               Start the devserver
 ```
 
 ## Installation
@@ -70,17 +72,49 @@ docker volume rm sentry_postgres-data
 
 ## Running devservices with a specific mode
 
-Common modes:
+Common modes in sentry:
 
 - `symbolicator`: Bring up sentry dependencies and symbolicator
 - `chartcuterie`: Bring up sentry dependencies and chartcuterie
+- `taskbroker`: Bring up sentry dependencies, taskbroker, taskworker, and taskworker-scheduler
 - `minimal`: Bring up minimal services for local development
-- `profiling`: Bring up sentry dependencies and vroom
+- `profiling`: Bring up sentry dependencies, vroom, and profiling consumers
+- `crons`: Brings up sentry dependencies and monitor consumers
+- `tracing`: Brings up sentry dependencies and everything necessary for transactions, spans, and metrics
+- `ingest`: Brings up the most common sentry dependencies to support ingestion of errors and transactions
+- `ingest-all`: Brings up sentry dependencies to support ingesting everything
 - `full`: Bring up all services (symbolicator, taskbroker, snuba, vroom, etc)
 
 ```shell
 devservices up --mode symbolicator
 ```
+
+## Debugging a Background Process Interactively
+
+There are a couple groups of processes that are running in the background. These include ingest consumers, post process forwarders, and taskworkers. You'll want to use the devservices foreground command to debug these interactively if you cannot do so with the devserver itself.
+
+1. Bring up your development environment:
+``` sh
+devservices up --mode taskbroker
+devservices serve
+```
+
+2. Add a breakpoint
+
+``` python
+def example () -> None
+  ...
+  breakpoint() // After python 3.7
+  import pdb; pdb.set_trace() // Before python 3.7
+  ...
+```
+
+3. Bring a process to the foreground for debugging
+``` sh
+devservices foreground taskbroker
+```
+
+
 
 ## Running a dependency locally
 
