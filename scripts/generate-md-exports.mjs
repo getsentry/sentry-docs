@@ -93,7 +93,7 @@ async function createWork() {
   const numWorkers = Math.max(Math.floor(cpus().length / 2), 2);
   const workerTasks = new Array(numWorkers).fill(null).map(() => []);
 
-  const existingFilesOnR2 = null;
+  let existingFilesOnR2 = null;
   if (accessKeyId && secretAccessKey) {
     existingFilesOnR2 = new Map();
     console.log(`☁️ Getting existing hashes from R2...`);
