@@ -64,8 +64,14 @@ export default async function Home() {
           width: '100%',
         }}
       >
-        <h1 className="text-3xl font-bold mb-2 text-center" style={{color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.18)'}}>Welcome to Sentry Docs</h1>
-        <p className="text-lg text-center max-w-2xl" style={{color: '#fff', textShadow: '0 1px 6px rgba(0,0,0,0.16)'}}>
+        <h1 className="text-4xl font-bold mb-2 text-center" style={{color: '#fff', textShadow: '0 4px 16px #000, 0 0 8px #000, 0 0 2px #000'}}>
+          Welcome to Sentry Docs
+        </h1>
+        <p className="text-lg font-bold text-center max-w-2xl" style={{
+          color: '#fff',
+          textShadow: '0 2px 8px rgba(0,0,0,0.7), 0 0 2px #000',
+          letterSpacing: '0.03em'
+        }}>
           Sentry provides end-to-end distributed tracing, enabling developers to
           identify and debug performance issues and errors across their systems and
           services.
@@ -179,13 +185,13 @@ export default async function Home() {
       </div>
       <div className="hero max-w-screen-xl mx-auto px-6 lg:px-8 py-2">
         {/* Sentry Products Header */}
-        <h2 className="text-2xl mt-16 mb-6 font-medium">Sentry Products</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-8 md:items-start">
+        <h2 className="text-2xl mt-16 mb-6 font-medium">Sentry Features</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-8 md:items-start">
           {/* Column 1: Sentry */}
           <div>
-            <div className="flex flex-row items-center mb-4 gap-2">
+            <div className="flex items-center mb-4 gap-2 min-h-[32px]">
               <PlatformIcon platform="sentry" size={24} format="lg" />
-              <a href="/product/sentry/" className="text-xl font-medium text-accent-purple hover:underline"><h2 className="inline font-medium">Sentry</h2></a>
+              <a href="/product/sentry/" className="text-xl font-medium text-accent-purple hover:underline align-middle"><h2 className="inline font-medium align-middle">Sentry Error Monitoring</h2></a>
             </div>
             <p className="text-base text-left text-[var(--gray-500)] pl-2 pr-4">
               Monitor, identify, and resolve errors and performance issues across your applications using
@@ -195,24 +201,14 @@ export default async function Home() {
               <a href="/product/" className="text-accent-purple hover:underline"> more</a>.
             </p>
           </div>
-          {/* Column 2: Sentry Prevent */}
+          {/* Column 2: AI in Sentry */}
           <div>
-            <div className="flex flex-row items-center mb-4 gap-2">
+            <div className="flex items-center mb-4 gap-2 min-h-[32px]">
               <PlatformIcon platform="sentry" size={24} format="lg" />
-              <a href="/product/sentry-prevent/" className="text-xl font-medium text-accent-purple hover:underline"><h2 className="inline font-medium">Sentry Prevent</h2></a>
+              <a href="/product/ai-in-sentry/" className="text-xl font-medium text-accent-purple hover:underline align-middle"><h2 className="inline font-medium align-middle">AI in Sentry</h2></a>
             </div>
             <p className="text-base text-left text-[var(--gray-500)] pl-2 pr-4">
-              Proactively catch issues before they impact users with testing and code coverage tools.
-            </p>
-          </div>
-          {/* Column 3: Seer */}
-          <div>
-            <div className="flex flex-row items-center mb-4 gap-2">
-              <PlatformIcon platform="sentry" size={24} format="lg" />
-              <a href="/product/seer/" className="text-xl font-medium text-accent-purple hover:underline"><h2 className="inline font-medium">Seer</h2></a>
-            </div>
-            <p className="text-base text-left text-[var(--gray-500)] pl-2 pr-4">
-              Leverage AI-powered insights and automation to fix issues faster and summarize problems.
+              Fix code faster by having <a href="/product/ai-in-sentry/seer/" className="text-accent-purple hover:underline">Seer</a> automatically find and remedy the root cause of your issues. Ask <a href="/product/ai-in-sentry/sentry-prevent-ai/" className="text-accent-purple hover:underline">Sentry Prevent AI</a> to review your PRs, suggest improvements, and build tests.
             </p>
           </div>
         </div>
@@ -368,6 +364,16 @@ export default async function Home() {
           border-color: #7c3aed !important;
           box-shadow: 0 6px 32px 0 rgba(124,58,237,0.18), 0 2px 12px 0 rgba(124,58,237,0.12);
           outline: none !important;
+        }
+        .dark .home-search-bar input[type="text"], .dark .home-search-bar input {
+          background: linear-gradient(90deg, #18181b 80%, #312e38 100%) !important;
+          border: 2px solid #a78bfa !important;
+          color: #f3f3f3 !important;
+          box-shadow: 0 4px 24px 0 rgba(124,58,237,0.10), 0 1.5px 8px 0 rgba(124,58,237,0.08);
+        }
+        .dark .home-search-bar input[type="text"]:focus, .dark .home-search-bar input:focus {
+          border-color: #c4b5fd !important;
+          box-shadow: 0 6px 32px 0 rgba(124,58,237,0.18), 0 2px 12px 0 rgba(124,58,237,0.12);
         }
       `}</style>
     </div>

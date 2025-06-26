@@ -17,7 +17,7 @@ const productSections = [
 ];
 
 const mainSections = [
-  {label: 'Products', href: '/product/sentry'},
+  {label: 'Products', href: '/product/'},
   {label: 'SDKs', href: '/platforms/'},
   {
     label: 'Concepts & Reference',
@@ -240,42 +240,16 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
             {mainSections.map(section => (
               <li key={section.href} className="list-none relative">
                 {section.label === 'Products' ? (
-                  <div style={{display: 'inline-block'}}>
-                    <button
-                      ref={productsBtnRef}
-                      className={`text-[var(--gray-12)] transition-colors duration-150 inline-block py-2 px-1 rounded-t-md flex items-center gap-1 text-[0.875rem] font-normal ${
-                        productsDropdownOpen ||
-                        productSections.some(p => pathname?.startsWith(p.href))
-                          ? 'border-b-2 border-[var(--accent-purple)]'
-                          : 'hover:text-[var(--accent)]'
-                      }`}
-                      onClick={() => {
-                        setProductsDropdownOpen(v => !v);
-                        setConceptsDropdownOpen(false);
-                        setAdminDropdownOpen(false);
-                      }}
-                      aria-haspopup="true"
-                      aria-expanded={productsDropdownOpen}
-                    >
-                      {section.label}
-                      <svg
-                        className={`ml-1 transition-transform duration-150 ${productsDropdownOpen ? 'rotate-180' : ''}`}
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M4 6L8 10L12 6"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
+                  <Link
+                    href={section.href}
+                    className={`text-[var(--gray-12)] transition-colors duration-150 inline-block py-2 px-1 rounded-t-md text-[0.875rem] font-normal ${
+                      pathname?.startsWith(section.href)
+                        ? 'border-b-2 border-[var(--accent-purple)]'
+                        : 'hover:text-[var(--accent)]'
+                    }`}
+                  >
+                    {section.label}
+                  </Link>
                 ) : section.label === 'SDKs' ? (
                   <div style={{display: 'inline-block'}}>
                     <button
@@ -462,9 +436,15 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
             onClick={e => e.stopPropagation()}
           >
             <style>{`
+            .${platformSelectorStyles.popover} {
+              background: var(--gray-2) !important;
+              border: 1px solid var(--gray-4) !important;
+              box-shadow: var(--shadow-6);
+            }
             .dark .${platformSelectorStyles.popover} {
-              background: #000 !important;
-              color: #fff !important;
+              background: #18181b !important;
+              border: 1px solid #23232b !important;
+              box-shadow: var(--shadow-6);
             }
             .dark .${platformSelectorStyles.popover} .${platformSelectorStyles['combobox-wrapper']} {
               background: #18181b !important;

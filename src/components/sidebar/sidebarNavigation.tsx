@@ -1,5 +1,4 @@
 import {Fragment} from 'react';
-import {redirect} from 'next/navigation';
 
 import {getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
 
@@ -13,24 +12,9 @@ import {docNodeToNavNode, getNavNodes} from './utils';
 export async function SidebarNavigation({path}: {path: string[]}) {
   const rootNode = await getDocsRootNode();
 
-  // Redirect /product to /product/sentry
-  if (path[0] === 'product' && (!path[1] || path[1] === '')) {
-    redirect('/product/sentry');
-  }
-
-  // Product sections
-  if (
-    path[0] === 'product' ||
-    path[0] === 'product/sentry' ||
-    path[0] === 'product/sentry-prevent' ||
-    path[0] === 'product/seer'
-  ) {
-    const productItems = [
-      {title: 'Sentry', root: 'product/sentry'},
-      {title: 'Sentry Prevent', root: 'product/sentry-prevent'},
-      {title: 'Seer', root: 'product/seer'},
-    ];
-    return <ProductSidebar rootNode={rootNode} items={productItems} />;
+  // Product section: just show the sidebar for /product/ and its children
+  if (path[0] === 'product') {
+    return <ProductSidebar rootNode={rootNode} items={[{title: 'Product', root: 'product'}]} />;
   }
 
   // SDKs/Platforms

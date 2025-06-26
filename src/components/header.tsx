@@ -87,7 +87,7 @@ export default function Header({
                 color="gray"
                 size="3"
                 radius="medium"
-                className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer kapa-ai-class hidden md:flex mr-4"
+                className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer hidden md:flex mr-4"
               >
                 <a href="https://sentry.io/" target="_blank" rel="noopener noreferrer">
                   Go to Sentry
