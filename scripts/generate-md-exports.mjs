@@ -253,7 +253,10 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
       .use(RemarkLinkRewrite, {
         replacer: url => {
           const mdUrl = new URL(url, DOCS_BASE_URL);
-          mdUrl.pathname = mdUrl.pathname.replace(/\/?$/, '.md');
+          const newPathName = mdUrl.pathname.replace(/\/?$/, '');
+          if (path.extname(newPathName) === '') {
+            mdUrl.pathname = `${newPathName}.md`;
+          }
           return mdUrl;
         },
       })
