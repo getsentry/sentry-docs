@@ -24,6 +24,7 @@ import remarkStringify from 'remark-stringify';
 import {unified} from 'unified';
 import {remove} from 'unist-util-remove';
 
+const CACHE_VERSION = 2;
 const CACHE_COMPRESS_LEVEL = 4;
 const R2_BUCKET = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'sentry-develop-docs'
@@ -197,7 +198,7 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
     // Remove all script tags, as they are not needed in markdown
     // and they are not stable across builds, causing cache misses
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
-  const cacheKey = md5(leanHTML);
+  const cacheKey = `v${CACHE_VERSION}_${md5(leanHTML)}`;
   const cacheFile = path.join(cacheDir, cacheKey);
   if (!noCache) {
     try {
@@ -217,8 +218,8 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
   const data = String(
     await unified()
       .use(rehypeParse)
-      // Need the `main div > hgroup` selector for the headers
-      .use(() => tree => selectAll('main div > hgroup, div#main', tree))
+      // Need the `head > title` selector for the headers
+      .use(() => tree => selectAll('head > title, div#main', tree))
       // If we don't do this wrapping, rehypeRemark just returns an empty string -- yeah WTF?
       .use(() => tree => ({
         type: 'element',
@@ -231,6 +232,19 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
         handlers: {
           // Remove buttons as they usually get confusing in markdown, especially since we use them as tab headers
           button() {},
+          // Convert the title to the top level heading
+          // This is needed because the HTML title tag is not part of the main content
+          // and we want to have a top level heading in the markdown
+          title: (_state, node) => ({
+            type: 'heading',
+            depth: 1,
+            children: [
+              {
+                type: 'text',
+                value: node.children[0].value,
+              },
+            ],
+          }),
         },
       })
       // We end up with empty inline code blocks, probably from some tab logic in the HTML, remove them
