@@ -1,0 +1,56 @@
+---
+title: Migration Guide
+description: "Learn more about migrating to the current version."
+sidebar_order: 8000
+---
+
+## Migrating to 1.0.0
+
+### Breaking changes
+
+#### Sentry Classes Instantiation
+
+Sentry class objects created via `NewObject<T>` in C++ or `ConstructObjectFromClass` in Blueprints now require an explicit call to their `Initialize` method (if available) before use. In Blueprints, it's recommended to use the provided Sentry library functions to create these entities as they automatically call `Initialize` and return a fully initialized, ready-to-use object.
+
+#### Cleanup Public Classes
+
+We cleaned up our public API by removing a few functions and classes to streamline the SDK and remove ambiguities. The following changes were made:
+
+- Removed `USentryId` class and replaced its usages with `FString`
+- Removed `SentrySubsystem::ConfigureScope` function
+- Removed `USentryLibrary::StringToBytesArray` function
+- Removed `USentryLibrary::ByteArrayToString` function
+- Removed `USentryLibrary::SaveStringToFile` function
+- Removed `USentryScope::SetEnvironment` function
+- Removed `USentryScope::GetEnvironment` function
+- Removed `USentryScope::SetDist` function
+- Removed `USentryScope::GetDist` function
+
+### Issue Grouping
+
+The Unreal SDK no longer modifies call stacks for assertion events by trimming the topmost frames related to the engine's internal assertion handling logic. This was previously done to work around the case where all assertions were grouped into a single Sentry issue. With this change, issue grouping is now fully handled by the Sentry server.
+
+### SDK Configuration Changes
+
+- The <PlatformIdentifier name="environment" /> and <PlatformIdentifier name="dist" /> properties must now be set in the plugin settings and can no longer be modified programmatically via scope configuration.
+
+- Sentry can no longer be disabled for specific platforms using the Enable for Build Platform Types option in the plugin settings (`General -> Misc`) or the EnableTargetPlatforms property in the project configuration file.
+
+### Crash Reporter Changes
+
+The `Epic Account Id` and `Login Id` are no longer included in the `Crash Info` context for crashes captured on Windows and Linux using the default Crash Reporter. These fields are intended for internal use by Epic Games and provide no meaningful value externally.
+
+## Migrating to 0.19.0
+
+### Breaking changes
+
+- Renamed `OnError` delagate property of `FSentryOutputDeviceError` class to `OnAssert`
+
+## Migrating to 0.15.0
+
+### Breaking changes
+
+To enable capturing editor crashes `USentrySubsystem` base class has been changed to `UEngineSubsystem`.
+
+- If you're using the plugin's Blueprint API, you will need to recreate all `Get Sentry Subsystem` nodes.
+- If you're using the plugin's C++ API, update your implementation to access `USentrySubsystem` via the `GEngine` pointer.
