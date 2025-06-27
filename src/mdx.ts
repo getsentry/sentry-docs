@@ -523,9 +523,15 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
 
   const cacheKey = md5(source);
   const cacheFile = path.join(CACHE_DIR, `${cacheKey}.br`);
+  const assetsCacheDir = path.join(CACHE_DIR, cacheKey);
+  const outdir = path.join(root, 'public', 'mdx-images');
+  await mkdir(outdir, {recursive: true});
 
   try {
-    const cached = await readCacheFile<SlugFile>(cacheFile);
+    const [cached, _] = await Promise.all([
+      readCacheFile<SlugFile>(cacheFile),
+      cp(assetsCacheDir, outdir, {recursive: true}),
+    ]);
     return cached;
   } catch (err) {
     if (err.code !== 'ENOENT' && err.code !== 'ABORT_ERR' && err.code !== 'Z_BUF_ERROR') {
@@ -547,8 +553,6 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
 
   // cwd is how mdx-bundler knows how to resolve relative paths
   const cwd = path.dirname(sourcePath);
-  const assetsCacheDir = path.join(CACHE_DIR, cacheKey);
-  const outdir = path.join(root, 'public', 'mdx-images');
 
   const result = await bundleMDX<Platform>({
     source,
@@ -662,12 +666,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     },
   };
 
-  await mkdir(outdir, {recursive: true});
-  await cp(assetsCacheDir, outdir, {
-    recursive: true,
-    errorOnExist: false,
-    force: true,
-  });
+  await cp(assetsCacheDir, outdir, {recursive: true});
   writeCacheFile(cacheFile, JSON.stringify(resultObj)).catch(e => {
     // eslint-disable-next-line no-console
     console.warn(`Failed to write MDX cache: ${cacheFile}`, e);
