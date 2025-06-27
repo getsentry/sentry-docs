@@ -26,7 +26,7 @@ import {remove} from 'unist-util-remove';
 
 const CACHE_COMPRESS_LEVEL = 4;
 const R2_BUCKET = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
-  ? 'sentry-dev-docs'
+  ? 'sentry-develop-docs'
   : 'sentry-docs';
 const accessKeyId = process.env.R2_ACCESS_KEY_ID;
 const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
