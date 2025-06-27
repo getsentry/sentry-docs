@@ -646,7 +646,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
         '.svg': 'dataurl',
       };
       // Set the `outdir` to a public location for this bundle.
-      // this where this images will be copied
+      // this is where these images will be copied
       options.outdir = assetsCacheDir || outdir;
 
       // Set write to true so that esbuild will output the files.
