@@ -4,7 +4,7 @@ import yaml from 'js-yaml';
 import {bundleMDX} from 'mdx-bundler';
 import {BinaryLike, createHash} from 'node:crypto';
 import {createReadStream, createWriteStream, mkdirSync} from 'node:fs';
-import {access, cp, opendir, readFile} from 'node:fs/promises';
+import {access, cp, mkdir, opendir, readFile} from 'node:fs/promises';
 import path from 'node:path';
 // @ts-expect-error ts(2305) -- For some reason "compose" is not recognized in the types
 import {compose, Readable} from 'node:stream';
@@ -630,7 +630,6 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
         // inline svgs
         '.svg': 'dataurl',
       };
-      options.metafile = true;
       // Set the `outdir` to a public location for this bundle.
       // this where this images will be copied
       options.outdir = assetsCacheDir;
@@ -663,6 +662,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     },
   };
 
+  await mkdir(outdir, {recursive: true});
   await cp(assetsCacheDir, outdir, {
     recursive: true,
     errorOnExist: false,
