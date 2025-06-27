@@ -88,7 +88,10 @@ export default async function Home() {
         </p>
       </div>
       {/* Search + SDKs row, same width as Sentry Products */}
-      <div className="max-w-screen-xl mx-auto px-6 lg:px-8 w-full" style={{marginTop: 0, paddingTop: 0}}>
+      <div
+        className="max-w-screen-xl mx-auto px-6 lg:px-8 w-full"
+        style={{marginTop: 0, paddingTop: 0}}
+      >
         <div
           className="w-full flex flex-col md:flex-row items-stretch justify-between relative"
           style={{marginTop: 0, marginBottom: 0}}
