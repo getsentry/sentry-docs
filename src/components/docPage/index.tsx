@@ -7,7 +7,6 @@ import {
   getCurrentPlatform,
   nodeForPath,
 } from 'sentry-docs/docTree';
-import {getCurrentGuide, getCurrentPlatform, nodeForPath} from 'sentry-docs/docTree';
 import Markdown from 'sentry-docs/icons/Markdown';
 import {serverContext} from 'sentry-docs/serverContext';
 import {FrontMatter} from 'sentry-docs/types';
@@ -111,17 +110,6 @@ export function DocPage({
             )}
             <div className="mb-4">
               <Banner />
-            </div>
-            <div className="overflow-hidden">
-              {leafNode && <Breadcrumbs leafNode={leafNode} />}{' '}
-              <Link
-                rel="nofollow"
-                className="float-right"
-                href={`/${pathname}.md`}
-                title="Markdown version of this page"
-              >
-                <Markdown className="flex p-0 flex-wrap" width={24} height={24} />
-              </Link>
             </div>
             <div>
               <hgroup>
