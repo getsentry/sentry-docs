@@ -215,7 +215,7 @@ export default async function Home() {
                 </h2>
               </a>
             </div>
-            <p className="text-base text-left text-[var(--gray-500)] pl-2 pr-4">
+            <p className="text-base text-left text-[var(--gray-12)] dark:text-[var(--gray-12)] pl-2 pr-4">
               Monitor, identify, and resolve errors and performance issues across your
               applications using
               <a
@@ -260,7 +260,7 @@ export default async function Home() {
                 <h2 className="inline font-medium align-middle">AI in Sentry</h2>
               </a>
             </div>
-            <p className="text-base text-left text-[var(--gray-500)] pl-2 pr-4">
+            <p className="text-base text-left text-[var(--gray-12)] dark:text-[var(--gray-12)] pl-2 pr-4">
               Fix code faster by having{' '}
               <a
                 href="/product/ai-in-sentry/seer/"
