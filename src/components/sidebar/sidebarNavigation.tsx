@@ -14,7 +14,9 @@ export async function SidebarNavigation({path}: {path: string[]}) {
 
   // Product section: just show the sidebar for /product/ and its children
   if (path[0] === 'product') {
-    return <ProductSidebar rootNode={rootNode} items={[{title: 'Product', root: 'product'}]} />;
+    return (
+      <ProductSidebar rootNode={rootNode} items={[{title: 'Product', root: 'product'}]} />
+    );
   }
 
   // SDKs/Platforms
