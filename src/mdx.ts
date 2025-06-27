@@ -72,14 +72,15 @@ async function readCacheFile<T>(file: string): Promise<T> {
 }
 
 async function writeCacheFile(file: string, data: string) {
+  const bufferData = Buffer.from(data);
   await pipeline(
-    Readable.from(data),
+    Readable.from(bufferData),
     createBrotliCompress({
       chunkSize: 32 * 1024,
       params: {
         [zlibConstants.BROTLI_PARAM_MODE]: zlibConstants.BROTLI_MODE_TEXT,
         [zlibConstants.BROTLI_PARAM_QUALITY]: CACHE_COMPRESS_LEVEL,
-        [zlibConstants.BROTLI_PARAM_SIZE_HINT]: data.length,
+        [zlibConstants.BROTLI_PARAM_SIZE_HINT]: bufferData.length,
       },
     }),
     createWriteStream(file)
