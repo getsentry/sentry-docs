@@ -1,0 +1,44 @@
+#### beforeSendLog
+
+To filter logs, or update them before they are sent to Sentry, you can expose a bean implementing the `BeforeSendLogCallback`:
+
+```java {tabTitle: Java}
+import org.springframework.stereotype.Component;
+
+import io.sentry.SentryLogEvent;
+import io.sentry.SentryOptions;
+
+@Component
+public class CustomBeforeSendLogCallback implements SentryOptions.Logs.BeforeSendLogCallback {
+  @Override
+  public SentryLogEvent execute(SentryLogEvent event) {
+    // Modify or drop the log event here
+    if (event.getBody().contains("some PII")) {
+      // Don't send the log event to Sentry
+      return null;
+    }
+    return event;
+  }
+}
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.SentryLogEvent
+import io.sentry.SentryOptions.Logs.BeforeSendLogCallback
+import org.springframework.stereotype.Component
+
+@Component
+class CustomBeforeSendLogCallback : BeforeSendLogCallback {
+  override fun execute(event: SentryLogEvent): SentryLogEvent? {
+    // Modify or drop the log event here
+    if (event.body.contains("some PII")) {
+      // Don't send the log event to Sentry
+      return null
+    }
+    return event
+  }
+}
+```
+
+
+The `beforeSend` function receives a log object, and should return the log object if you want it to be sent to Sentry, or `null` if you want to discard it.

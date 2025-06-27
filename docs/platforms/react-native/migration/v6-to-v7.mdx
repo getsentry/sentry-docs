@@ -1,0 +1,86 @@
+---
+title: Migrate from 6.x to 7.x
+sidebar_order: 99
+description: "Learn how to migrate from version 6 to version 7 of the Sentry React Native SDK"
+---
+
+<Alert level="warning" title="Important">
+Version 7 is still under development, this documentation may change before the final release.
+</Alert>
+
+The main goal of version 7 of the Sentry React Native SDK is to provide compatibility with Sentry JavaScript version 9. This update includes breaking changes due to the upgrade to JavaScript SDK v9, the removal of deprecated APIs, and a reorganization of the npm package structure.
+
+## Important Changes in Dependencies
+
+The Sentry React Native SDK ships with the Sentry JavaScript SDK Version 9 as a dependency. This version includes a number of behavioral changes that will not be caught by type checkers, linters, or tests, so we recommend carefully reading through the entire migration guide instead of relying on automatic tooling. Please follow [the JavaScript migration guides](/platforms/javascript/guides/react/migration/v8-to-v9/) to complete the upgrade.
+
+The initial `@sentry/react-native@7.0.0` ships with `@sentry/core@9.1.0`. Always use the exact JavaScript SDK version if adding it manually to your project. Any other version might not be compatible with the React Native SDK.
+
+Version 7 also includes a major upgrade to the Android SDK dependency, introducing behavioral changes, breaking changes, and deprecations. If you are using the Android SDK directly, please follow the [Android SDK version 8 migration guide](/platforms/android/migration/#migrating-from-iosentrysentry-7x-to-iosentrysentry-800).
+
+### Major Changes in Sentry JS SDK v9
+
+Other general JavaScript SDK version 9 changes are described in the [JavaScript SDK 8.x to 9.x migration guide](/platforms/javascript/guides/react/migration/v8-to-v9/).
+
+### Self-Hosted Sentry Compatibility
+
+Beginning with version 7.0.0, the Sentry Capacitor SDK will only support self-hosted Sentry instances version 25.2.0 and above. This change does not affect users of `sentry.io`.
+
+## Important React Native SDK `7.x` Changes
+
+This section describes API changes in the Sentry React Native SDK, version 7.
+
+### `captureUserFeedback` is now removed
+
+You can use the updated snippet in order to capture user Feedback:
+
+```javascript diff
++ import { captureFeedback } from '@sentry/react-native';
+- import { captureUserFeedback } from '@sentry/react-native';
+
++ captureUserFeedback({
+- captureFeedback({
+    name: 'my name',
+    email: 'myemail@sentry.io',
+    message: 'it broke',
+    associatedEventId: 'eventID',
+  });
+```
+
+Additionally you can also see our new Feedback integration by checking the [User Feedback Configuration guide](../../user-feedback/configuration/)
+
+### `autoSessionTracking` united with `enableAutoSessionTracking`
+
+Option key `autoSessionTracking` was removed. Use `enableAutoSessionTracking` instead, enabled by default.
+
+```javascript diff
+Sentry.init({
++  enableAutoSessionTracking: true,
+-  autoSessionTracking: true,
+});
+```
+
+### `browserReplayIntegration` can be used directly without the `isWeb` check
+
+The check is now done inside of the integration, simplifying workflows.
+
+```javascript diff
+Sentry.init({
++  integrations: [ Sentry.browserReplayIntegration() ],
+-  integrations: (defaultIntegrations) => {
+-    if (Platform.OS === 'web') {
+-      defaultIntegrations.push(Sentry.browserReplayIntegration());
+-    }
+-    return defaultIntegrations;
+-  },
+});
+```
+
+### `Cold/Warm App Start` spans were renamed to `Cold/Warm Start`
+
+The `App` word was removed from the span description. If you have any logic in your application or in Sentry based on this span description, please, make sure to update.
+
+### Detection of Expo Go uses `ExpoGo` module
+
+Starting with version 7.0.0, the Sentry React Native SDK will use the `ExpoGo` module to detect if the application is running on Expo Go. This differs from the previous behavior, where the SDK would check for the deprecated `appOwnership` property. This new approach doesn't work for Expo SDK 49 and older.
+The minimum supported Expo SDK version is 50, same as in Sentry React Native SDK v6.
