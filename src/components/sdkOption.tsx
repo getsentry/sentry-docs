@@ -40,7 +40,7 @@ export function SdkOption({
           <OptionDefRow label="Default" value={defaultValue} note={defaultNote} />
         )}
         <PlatformCategorySection supported={['server', 'serverless']}>
-          <PlatformSection notSupported={['javascript.nextjs']}>
+          <PlatformSection notSupported={['javascript.nextjs', 'javascript.sveltekit']}>
             {envVar && <OptionDefRow label="ENV Variable" value={envVar} />}
           </PlatformSection>
         </PlatformCategorySection>
