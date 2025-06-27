@@ -109,7 +109,7 @@ async function createWork() {
         })
       );
       continuationToken = response.NextContinuationToken;
-      for (const {Key, ETag} of response.Contents) {
+      for (const {Key, ETag} of response.Contents || []) {
         existingFilesOnR2.set(Key, ETag.slice(1, -1)); // Remove quotes from ETag
       }
     } while (continuationToken);
