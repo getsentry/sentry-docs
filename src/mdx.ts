@@ -1,4 +1,3 @@
-import {cache} from 'react';
 import matter from 'gray-matter';
 import {s} from 'hastscript';
 import yaml from 'js-yaml';
@@ -666,6 +665,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
 
   await cp(assetsCacheDir, outdir, {
     recursive: true,
+    errorOnExist: false,
     force: true,
   });
   writeCacheFile(cacheFile, JSON.stringify(resultObj)).catch(e => {
@@ -676,9 +676,19 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   return resultObj;
 }
 
+const fileBySlugCache = new Map<string, Promise<SlugFile>>();
+
 /**
  * Cache the result of {@link getFileBySlug}.
  *
  * This is useful for performance when rendering the same file multiple times.
  */
-export const getFileBySlugWithCache = cache(getFileBySlug);
+export function getFileBySlugWithCache(slug: string): Promise<SlugFile> {
+  let cached = fileBySlugCache.get(slug);
+  if (!cached) {
+    cached = getFileBySlug(slug);
+    fileBySlugCache.set(slug, cached);
+  }
+
+  return cached;
+}
