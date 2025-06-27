@@ -521,23 +521,33 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     );
   }
 
-  const cacheKey = md5(source);
-  const cacheFile = path.join(CACHE_DIR, `${cacheKey}.br`);
-  const assetsCacheDir = path.join(CACHE_DIR, cacheKey);
+  let cacheKey: string | null = null;
+  let cacheFile: string | null = null;
+  let assetsCacheDir: string | null = null;
   const outdir = path.join(root, 'public', 'mdx-images');
   await mkdir(outdir, {recursive: true});
 
-  try {
-    const [cached, _] = await Promise.all([
-      readCacheFile<SlugFile>(cacheFile),
-      cp(assetsCacheDir, outdir, {recursive: true}),
-    ]);
-    return cached;
-  } catch (err) {
-    if (err.code !== 'ENOENT' && err.code !== 'ABORT_ERR' && err.code !== 'Z_BUF_ERROR') {
-      // If cache is corrupted, ignore and proceed
-      // eslint-disable-next-line no-console
-      console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
+  if (process.env.CI) {
+    cacheKey = md5(source);
+    cacheFile = path.join(CACHE_DIR, `${cacheKey}.br`);
+    assetsCacheDir = path.join(CACHE_DIR, cacheKey);
+
+    try {
+      const [cached, _] = await Promise.all([
+        readCacheFile<SlugFile>(cacheFile),
+        cp(assetsCacheDir, outdir, {recursive: true}),
+      ]);
+      return cached;
+    } catch (err) {
+      if (
+        err.code !== 'ENOENT' &&
+        err.code !== 'ABORT_ERR' &&
+        err.code !== 'Z_BUF_ERROR'
+      ) {
+        // If cache is corrupted, ignore and proceed
+        // eslint-disable-next-line no-console
+        console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
+      }
     }
   }
 
@@ -636,7 +646,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       };
       // Set the `outdir` to a public location for this bundle.
       // this where this images will be copied
-      options.outdir = assetsCacheDir;
+      options.outdir = assetsCacheDir || outdir;
 
       // Set write to true so that esbuild will output the files.
       options.write = true;
@@ -666,11 +676,13 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     },
   };
 
-  await cp(assetsCacheDir, outdir, {recursive: true});
-  writeCacheFile(cacheFile, JSON.stringify(resultObj)).catch(e => {
-    // eslint-disable-next-line no-console
-    console.warn(`Failed to write MDX cache: ${cacheFile}`, e);
-  });
+  if (assetsCacheDir && cacheFile) {
+    await cp(assetsCacheDir, outdir, {recursive: true});
+    writeCacheFile(cacheFile, JSON.stringify(resultObj)).catch(e => {
+      // eslint-disable-next-line no-console
+      console.warn(`Failed to write MDX cache: ${cacheFile}`, e);
+    });
+  }
 
   return resultObj;
 }
