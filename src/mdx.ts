@@ -5,7 +5,7 @@ import yaml from 'js-yaml';
 import {bundleMDX} from 'mdx-bundler';
 import {access, opendir, readFile} from 'node:fs/promises';
 import path from 'node:path';
-import {limitFunction} from 'p-limit';
+import pLimit from 'p-limit';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypePresetMinify from 'rehype-preset-minify';
 import rehypePrismDiff from 'rehype-prism-diff';
@@ -145,29 +145,27 @@ export async function getDevDocsFrontMatterUncached(): Promise<FrontMatter[]> {
   const folder = 'develop-docs';
   const docsPath = path.join(root, folder);
   const files = await getAllFilesRecursively(docsPath);
+  const limit = pLimit(FILE_CONCURRENCY_LIMIT);
   const frontMatters = (
     await Promise.all(
-      files.map(
-        limitFunction(
-          async file => {
-            const fileName = file.slice(docsPath.length + 1);
-            if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
-              return undefined;
-            }
+      files.map(file =>
+        limit(async () => {
+          const fileName = file.slice(docsPath.length + 1);
+          if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
+            return undefined;
+          }
 
-            const source = await readFile(file, 'utf8');
-            const {data: frontmatter} = matter(source);
-            return {
-              ...(frontmatter as FrontMatter),
-              slug: fileName.replace(/\/index.mdx?$/, '').replace(/\.mdx?$/, ''),
-              sourcePath: path.join(folder, fileName),
-            };
-          },
-          {concurrency: FILE_CONCURRENCY_LIMIT}
-        )
+          const source = await readFile(file, 'utf8');
+          const {data: frontmatter} = matter(source);
+          return {
+            ...(frontmatter as FrontMatter),
+            slug: fileName.replace(/\/index.mdx?$/, '').replace(/\.mdx?$/, ''),
+            sourcePath: path.join(folder, fileName),
+          };
+        })
       )
     )
-  ).filter(isNotNil);
+  ).filter(isNotNil) as FrontMatter[];
   return frontMatters;
 }
 
@@ -184,30 +182,28 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
   const docsPath = path.join(root, 'docs');
   const files = await getAllFilesRecursively(docsPath);
   const allFrontMatter: FrontMatter[] = [];
+  const limit = pLimit(FILE_CONCURRENCY_LIMIT);
 
   await Promise.all(
-    files.map(
-      limitFunction(
-        async file => {
-          const fileName = file.slice(docsPath.length + 1);
-          if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
-            return;
-          }
+    files.map(file =>
+      limit(async () => {
+        const fileName = file.slice(docsPath.length + 1);
+        if (path.extname(fileName) !== '.md' && path.extname(fileName) !== '.mdx') {
+          return;
+        }
 
-          if (fileName.indexOf('/common/') !== -1) {
-            return;
-          }
+        if (fileName.indexOf('/common/') !== -1) {
+          return;
+        }
 
-          const source = await readFile(file, 'utf8');
-          const {data: frontmatter} = matter(source);
-          allFrontMatter.push({
-            ...(frontmatter as FrontMatter),
-            slug: formatSlug(fileName),
-            sourcePath: path.join('docs', fileName),
-          });
-        },
-        {concurrency: FILE_CONCURRENCY_LIMIT}
-      )
+        const source = await readFile(file, 'utf8');
+        const {data: frontmatter} = matter(source);
+        allFrontMatter.push({
+          ...(frontmatter as FrontMatter),
+          slug: formatSlug(fileName),
+          sourcePath: path.join('docs', fileName),
+        });
+      })
     )
   );
 
@@ -244,50 +240,44 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
     );
 
     const commonFiles = await Promise.all(
-      commonFileNames.map(
-        limitFunction(
-          async commonFileName => {
-            const source = await readFile(commonFileName, 'utf8');
-            const {data: frontmatter} = matter(source);
-            return {commonFileName, frontmatter: frontmatter as FrontMatter};
-          },
-          {concurrency: FILE_CONCURRENCY_LIMIT}
-        )
+      commonFileNames.map(commonFileName =>
+        limit(async () => {
+          const source = await readFile(commonFileName, 'utf8');
+          const {data: frontmatter} = matter(source);
+          return {commonFileName, frontmatter: frontmatter as FrontMatter};
+        })
       )
     );
 
     await Promise.all(
-      commonFiles.map(
-        limitFunction(
-          async f => {
-            if (!isSupported(f.frontmatter, platformName)) {
-              return;
-            }
+      commonFiles.map(f =>
+        limit(async () => {
+          if (!isSupported(f.frontmatter, platformName)) {
+            return;
+          }
 
-            const subpath = f.commonFileName.slice(commonPath.length + 1);
-            const slug = f.commonFileName
-              .slice(docsPath.length + 1)
-              .replace(/\/common\//, '/');
-            const noFrontMatter = (
-              await Promise.allSettled([
-                access(path.join(docsPath, slug)),
-                access(path.join(docsPath, slug.replace('/index.mdx', '.mdx'))),
-              ])
-            ).every(r => r.status === 'rejected');
-            if (noFrontMatter) {
-              let frontmatter = f.frontmatter;
-              if (subpath === 'index.mdx') {
-                frontmatter = {...frontmatter, ...platformFrontmatter};
-              }
-              allFrontMatter.push({
-                ...frontmatter,
-                slug: formatSlug(slug),
-                sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
-              });
+          const subpath = f.commonFileName.slice(commonPath.length + 1);
+          const slug = f.commonFileName
+            .slice(docsPath.length + 1)
+            .replace(/\/common\//, '/');
+          const noFrontMatter = (
+            await Promise.allSettled([
+              access(path.join(docsPath, slug)),
+              access(path.join(docsPath, slug.replace('/index.mdx', '.mdx'))),
+            ])
+          ).every(r => r.status === 'rejected');
+          if (noFrontMatter) {
+            let frontmatter = f.frontmatter;
+            if (subpath === 'index.mdx') {
+              frontmatter = {...frontmatter, ...platformFrontmatter};
             }
-          },
-          {concurrency: FILE_CONCURRENCY_LIMIT}
-        )
+            allFrontMatter.push({
+              ...frontmatter,
+              slug: formatSlug(slug),
+              sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
+            });
+          }
+        })
       )
     );
 
@@ -317,40 +307,37 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
       }
 
       await Promise.all(
-        commonFiles.map(
-          limitFunction(
-            async f => {
-              if (!isSupported(f.frontmatter, platformName, guideName)) {
-                return;
-              }
+        commonFiles.map(f =>
+          limit(async () => {
+            if (!isSupported(f.frontmatter, platformName, guideName)) {
+              return;
+            }
 
-              const subpath = f.commonFileName.slice(commonPath.length + 1);
-              const slug = path.join(
-                'platforms',
-                platformName,
-                'guides',
-                guideName,
-                subpath
-              );
-              try {
-                await access(path.join(docsPath, slug));
-                return;
-              } catch {
-                // pass
-              }
+            const subpath = f.commonFileName.slice(commonPath.length + 1);
+            const slug = path.join(
+              'platforms',
+              platformName,
+              'guides',
+              guideName,
+              subpath
+            );
+            try {
+              await access(path.join(docsPath, slug));
+              return;
+            } catch {
+              // pass
+            }
 
-              let frontmatter = f.frontmatter;
-              if (subpath === 'index.mdx') {
-                frontmatter = {...frontmatter, ...guideFrontmatter};
-              }
-              allFrontMatter.push({
-                ...frontmatter,
-                slug: formatSlug(slug),
-                sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
-              });
-            },
-            {concurrency: FILE_CONCURRENCY_LIMIT}
-          )
+            let frontmatter = f.frontmatter;
+            if (subpath === 'index.mdx') {
+              frontmatter = {...frontmatter, ...guideFrontmatter};
+            }
+            allFrontMatter.push({
+              ...frontmatter,
+              slug: formatSlug(slug),
+              sourcePath: 'docs/' + f.commonFileName.slice(docsPath.length + 1),
+            });
+          })
         )
       );
     }

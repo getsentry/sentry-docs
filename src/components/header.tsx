@@ -1,17 +1,19 @@
 'use client';
 
 import {HamburgerMenuIcon} from '@radix-ui/react-icons';
+import {Button} from '@radix-ui/themes';
 import Image from 'next/image';
 import Link from 'next/link';
 
 import SentryLogoSVG from 'sentry-docs/logos/sentry-logo-dark.svg';
+import {Platform} from 'sentry-docs/types';
 
 import sidebarStyles from './sidebar/style.module.scss';
 
 import {MobileMenu} from './mobileMenu';
-import {NavLink} from './navlink';
 import {Search} from './search';
 import {ThemeToggle} from './theme-toggle';
+import TopNavClient from './TopNavClient';
 
 export const sidebarToggleId = sidebarStyles['navbar-menu-toggle'];
 
@@ -19,20 +21,21 @@ type Props = {
   pathname: string;
   searchPlatforms: string[];
   noSearch?: boolean;
+  platforms?: Platform[];
   useStoredSearchPlatforms?: boolean;
 };
 
-export function Header({
+export default function Header({
   pathname,
   searchPlatforms,
   noSearch,
   useStoredSearchPlatforms,
+  platforms = [],
 }: Props) {
   return (
     <header className="bg-[var(--gray-1)] h-[var(--header-height)] w-full z-50 border-b border-[var(--gray-a3)] fixed top-0">
-      {/* define a header-height variable for consumption by other components */}
-      <style>{':root { --header-height: 80px; }'}</style>
-      <nav className="mx-auto px-6 lg:px-8 py-2 flex items-center">
+      <style>{':root { --header-height: 64px; }'}</style>
+      <nav className="mx-auto px-4 lg:px-8 flex items-center gap-4 min-h-[64px]">
         {pathname !== '/' && (
           <button className="lg:hidden mr-3">
             <label
@@ -53,42 +56,52 @@ export function Header({
         <Link
           href="/"
           title="Sentry error monitoring"
-          className="flex flex-shrink-0 items-center lg:w-[calc(var(--sidebar-width,300px)-2rem)] text-2xl font-medium text-[var(--foreground)]"
+          className="flex flex-shrink-0 items-center text-lg font-medium text-[var(--foreground)] mr-2"
+          style={{minWidth: 0}}
         >
-          <div className="h-full pb-[6px]">
+          <div className="h-full pb-[2px] mr-2">
             <Image
               src={SentryLogoSVG}
               alt="Sentry's logo"
-              width={40}
-              className="h-16 dark:invert"
+              width={28}
+              className="h-10 dark:invert"
             />
           </div>
-          Docs
+          <span className="text-base font-semibold tracking-tight">Docs</span>
         </Link>
-        {!noSearch && (
-          <div className="hidden md:flex justify-center lg:justify-start w-full px-6">
-            <Search
-              path={pathname}
-              searchPlatforms={searchPlatforms}
-              showChatBot
-              useStoredSearchPlatforms={useStoredSearchPlatforms}
-            />
+        <div className="flex-1 min-w-0 flex items-center gap-4">
+          <div className="hidden sm:block flex-1 min-w-0">
+            <TopNavClient platforms={platforms} />
           </div>
-        )}
-        <div className="hidden lg-xl:flex justify-end flex-1 gap-6 items-center min-w-fit">
-          <NavLink href="https://sentry.io/changelog/">Changelog</NavLink>
-          <NavLink href="https://sandbox.sentry.io/">Sandbox</NavLink>
-          <NavLink href="https://sentry.io/">Go to Sentry</NavLink>
-          <NavLink
-            href="https://sentry.io/signup/"
-            className="transition-all duration-300 ease-in-out hover:bg-gradient-to-r hover:from-[#fa7faa] hover:via-[#ff9691] hover:to-[#ffb287]"
-          >
-            Get Started
-          </NavLink>
-          <ThemeToggle />
-        </div>
-        <div className="lg-xl:hidden ml-auto">
-          <MobileMenu pathname={pathname} searchPlatforms={searchPlatforms} />
+          {!noSearch && (
+            <div className="hidden sm:flex flex-shrink-0 items-center gap-2 min-w-[320px] max-w-lg ml-4">
+              <Search
+                path={pathname}
+                searchPlatforms={searchPlatforms}
+                showChatBot
+                useStoredSearchPlatforms={useStoredSearchPlatforms}
+              />
+              <Button
+                asChild
+                variant="ghost"
+                color="gray"
+                size="3"
+                radius="medium"
+                className="font-medium text-[var(--foreground)] py-2 px-3 uppercase cursor-pointer hidden md:flex mr-4"
+              >
+                <a href="https://sentry.io/" target="_blank" rel="noopener noreferrer">
+                  Go to Sentry
+                </a>
+              </Button>
+              <ThemeToggle />
+            </div>
+          )}
+          {!noSearch && (
+            <div className="flex items-center sm:hidden ml-2 gap-2 w-full justify-between">
+              <MobileMenu pathname={pathname} searchPlatforms={searchPlatforms || []} />
+              <ThemeToggle />
+            </div>
+          )}
         </div>
       </nav>
     </header>

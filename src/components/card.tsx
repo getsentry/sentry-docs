@@ -19,7 +19,7 @@ export function Card({
 }) {
   return (
     <Link href={href} className={className}>
-      <div className="flex flex-col md:flex-row shadow dark:bg-[var(--gray-4)] p-6 rounded gap-4 h-full text-[var(--foreground)]">
+      <div className="flex flex-row items-center gap-4 shadow dark:bg-[var(--gray-4)] p-6 rounded h-full text-[var(--foreground)]">
         <Image
           src={image}
           height={64}
