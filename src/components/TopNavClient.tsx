@@ -11,13 +11,32 @@ import platformSelectorStyles from './platformSelector/style.module.scss';
 import {PlatformSelector} from './platformSelector';
 
 const productSections = [
-  {label: 'Sentry', href: '/product/sentry/'},
-  {label: 'Sentry Prevent', href: '/product/sentry-prevent/'},
-  {label: 'Seer', href: '/product/seer/'},
+  {label: 'Sentry Basics', href: '/product/sentry-basics/'},
+  {label: 'AI in Sentry', href: '/product/ai-in-sentry/'},
+  {label: 'Insights', href: '/product/insights/'},
+  {label: 'User Feedback', href: '/product/user-feedback/'},
+  {label: 'Uptime Monitoring', href: '/product/uptime-monitoring/'},
+  {label: 'Dashboards', href: '/product/dashboards/'},
+  {label: 'Projects', href: '/product/projects/'},
+  {label: 'Explore', href: '/product/explore/'},
+  {label: 'Issues', href: '/product/issues/'},
+  {label: 'Alerts', href: '/product/alerts/'},
+  {label: 'Crons', href: '/product/crons/'},
+  {label: 'Releases', href: '/product/releases/'},
+  {label: 'Relay', href: '/product/relay/'},
+  {label: 'Sentry MCP', href: '/product/sentry-mcp/'},
+  {label: 'Sentry Toolbar', href: '/product/sentry-toolbar/'},
+  {label: 'Stats', href: '/product/stats/'},
+  {label: 'Codecov', href: '/product/codecov/'},
+  {label: 'Onboarding', href: '/product/onboarding/'},
 ];
 
 const mainSections = [
-  {label: 'Products', href: '/product/'},
+  {
+    label: 'Products',
+    href: '/product/',
+    dropdown: productSections,
+  },
   {label: 'SDKs', href: '/platforms/'},
   {
     label: 'Concepts & Reference',
@@ -240,16 +259,41 @@ export default function TopNavClient({platforms}: {platforms: Platform[]}) {
             {mainSections.map(section => (
               <li key={section.href} className="list-none relative">
                 {section.label === 'Products' ? (
-                  <Link
-                    href={section.href}
-                    className={`text-[var(--gray-12)] transition-colors duration-150 inline-block py-2 px-1 rounded-t-md text-[0.875rem] font-normal ${
-                      pathname?.startsWith(section.href)
-                        ? 'border-b-2 border-[var(--accent-purple)]'
-                        : 'hover:text-[var(--accent)]'
-                    }`}
-                  >
-                    {section.label}
-                  </Link>
+                  <div style={{display: 'inline-block'}}>
+                    <button
+                      ref={productsBtnRef}
+                      className={`text-[var(--gray-12)] transition-colors duration-150 inline-block py-2 px-1 rounded-t-md flex items-center gap-1 text-[0.875rem] font-normal ${
+                        productsDropdownOpen || pathname?.startsWith(section.href)
+                          ? 'border-b-2 border-[var(--accent-purple)]'
+                          : 'hover:text-[var(--accent)]'
+                      }`}
+                      onClick={() => {
+                        setProductsDropdownOpen(v => !v);
+                        setConceptsDropdownOpen(false);
+                        setAdminDropdownOpen(false);
+                      }}
+                      aria-haspopup="true"
+                      aria-expanded={productsDropdownOpen}
+                    >
+                      {section.label}
+                      <svg
+                        className={`ml-1 transition-transform duration-150 ${productsDropdownOpen ? 'rotate-180' : ''}`}
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M4 6L8 10L12 6"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                 ) : section.label === 'SDKs' ? (
                   <div style={{display: 'inline-block'}}>
                     <button

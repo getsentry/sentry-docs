@@ -52,16 +52,18 @@ export default async function Home() {
       <div className="mt-[var(--header-height)]">
         <Banner />
       </div>
-      {/* Centered Welcome Header and Subheader at the top */}
+      {/* Slanted Banner with Welcome Header and Subheader */}
       <div
-        className="flex flex-col items-center justify-center w-full"
+        className="flex flex-col items-center justify-center w-full relative"
         style={{
-          height: '250px',
+          height: '270px',
           backgroundImage: `url(${BgLinkedin.src})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
           width: '100%',
+          clipPath: 'polygon(0 0, 100% 0, 100% 85%, 0 100%)',
+          marginBottom: 0,
         }}
       >
         <h1 className="text-4xl font-bold mb-2 text-center" style={{color: '#fff', textShadow: '0 4px 16px #000, 0 0 8px #000, 0 0 2px #000'}}>
@@ -78,9 +80,10 @@ export default async function Home() {
         </p>
       </div>
       {/* Search + SDKs row, same width as Sentry Products */}
-      <div className="max-w-screen-xl mx-auto px-6 lg:px-8 w-full">
+      <div className="max-w-screen-xl mx-auto px-6 lg:px-8 w-full" style={{marginTop: 0, paddingTop: 0}}>
         <div
-          className="w-full flex flex-col md:flex-row items-stretch mb-3 justify-between relative"
+          className="w-full flex flex-col md:flex-row items-stretch justify-between relative"
+          style={{marginTop: 0, marginBottom: 0}}
         >
           {/* Left column: Search Bar, left-aligned */}
           <div className="flex-1 flex flex-col items-start justify-center w-full max-w-full relative">
