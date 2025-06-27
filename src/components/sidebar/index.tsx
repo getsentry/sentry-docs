@@ -105,7 +105,10 @@ export async function Sidebar({path, versions}: SidebarProps) {
             <SidebarNavigation path={path} />
           </div>
           <SidebarSeparator />
-          <div className={`${styles['sidebar-external-links']} px-3`} style={{flex: '0 0 auto', paddingBottom: 0}}>
+          <div
+            className={`${styles['sidebar-external-links']} px-3`}
+            style={{flex: '0 0 auto', paddingBottom: 0}}
+          >
             <ul data-sidebar-tree>
               <li className="mb-3" data-sidebar-branch>
                 <ul data-sidebar-tree>
@@ -151,12 +154,18 @@ export async function Sidebar({path, versions}: SidebarProps) {
         className="md:flex flex-col items-stretch h-full"
         style={{display: 'flex', flexDirection: 'column', height: '100%'}}
       >
-        <div className={`${styles['sidebar-main']} px-3 flex-1`} style={{overflow: 'auto'}}>
+        <div
+          className={`${styles['sidebar-main']} px-3 flex-1`}
+          style={{overflow: 'auto'}}
+        >
           <ScrollActiveLink activeLinkSelector={activeLinkSelector} />
           <SidebarNavigation path={path} />
         </div>
         <SidebarSeparator />
-        <div className={`${styles['sidebar-external-links']} px-3`} style={{flex: '0 0 auto', paddingBottom: 0}}>
+        <div
+          className={`${styles['sidebar-external-links']} px-3`}
+          style={{flex: '0 0 auto', paddingBottom: 0}}
+        >
           <ul data-sidebar-tree>
             <li className="mb-3" data-sidebar-branch>
               <ul data-sidebar-tree>

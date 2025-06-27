@@ -64,24 +64,30 @@ export default async function Home() {
           width: '100%',
         }}
       >
-        <h1 className="text-4xl font-bold mb-2 text-center" style={{color: '#fff', textShadow: '0 4px 16px #000, 0 0 8px #000, 0 0 2px #000'}}>
+        <h1
+          className="text-4xl font-bold mb-2 text-center"
+          style={{
+            color: '#fff',
+            textShadow: '0 4px 16px #000, 0 0 8px #000, 0 0 2px #000',
+          }}
+        >
           Welcome to Sentry Docs
         </h1>
-        <p className="text-lg font-bold text-center max-w-2xl" style={{
-          color: '#fff',
-          textShadow: '0 2px 8px rgba(0,0,0,0.7), 0 0 2px #000',
-          letterSpacing: '0.03em'
-        }}>
-          Sentry provides end-to-end distributed tracing, enabling developers to
-          identify and debug performance issues and errors across their systems and
-          services.
+        <p
+          className="text-lg font-bold text-center max-w-2xl"
+          style={{
+            color: '#fff',
+            textShadow: '0 2px 8px rgba(0,0,0,0.7), 0 0 2px #000',
+            letterSpacing: '0.03em',
+          }}
+        >
+          Sentry provides end-to-end distributed tracing, enabling developers to identify
+          and debug performance issues and errors across their systems and services.
         </p>
       </div>
       {/* Search + SDKs row, same width as Sentry Products */}
       <div className="max-w-screen-xl mx-auto px-6 lg:px-8 w-full">
-        <div
-          className="w-full flex flex-col md:flex-row items-stretch mb-3 justify-between relative"
-        >
+        <div className="w-full flex flex-col md:flex-row items-stretch mb-3 justify-between relative">
           {/* Left column: Search Bar, left-aligned */}
           <div className="flex-1 flex flex-col items-start justify-center w-full max-w-full relative">
             <div className="home-search-bar w-full relative">
@@ -89,10 +95,10 @@ export default async function Home() {
             </div>
           </div>
           {/* Decorative yellow-shape-08 line between search and SDKs */}
-          <img 
-            src={YellowShape08.src} 
-            alt="decorative line" 
-            className="hidden md:block pointer-events-none" 
+          <img
+            src={YellowShape08.src}
+            alt="decorative line"
+            className="hidden md:block pointer-events-none"
             style={{
               position: 'absolute',
               left: 'calc(20% + 90px)',
@@ -155,20 +161,24 @@ export default async function Home() {
                         format="lg"
                         style={{margin: 0, display: 'block'}}
                       />
-                      <span style={{
-                        marginTop: 6,
-                        fontSize: '0.85rem',
-                        color: '#6b7280',
-                        textAlign: 'center',
-                        width: '100%',
-                        fontWeight: 500,
-                        letterSpacing: 0.1,
-                        lineHeight: 1.1,
-                        display: 'block',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}>{platform.title}</span>
+                      <span
+                        style={{
+                          marginTop: 6,
+                          fontSize: '0.85rem',
+                          color: '#6b7280',
+                          textAlign: 'center',
+                          width: '100%',
+                          fontWeight: 500,
+                          letterSpacing: 0.1,
+                          lineHeight: 1.1,
+                          display: 'block',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {platform.title}
+                      </span>
                     </a>
                   </Tooltip>
                 ))}
@@ -191,24 +201,76 @@ export default async function Home() {
           <div>
             <div className="flex items-center mb-4 gap-2 min-h-[32px]">
               <PlatformIcon platform="sentry" size={24} format="lg" />
-              <a href="/product/sentry/" className="text-xl font-medium text-accent-purple hover:underline align-middle"><h2 className="inline font-medium align-middle">Sentry Error Monitoring</h2></a>
+              <a
+                href="/product/sentry/"
+                className="text-xl font-medium text-accent-purple hover:underline align-middle"
+              >
+                <h2 className="inline font-medium align-middle">
+                  Sentry Error Monitoring
+                </h2>
+              </a>
             </div>
             <p className="text-base text-left text-[var(--gray-500)] pl-2 pr-4">
-              Monitor, identify, and resolve errors and performance issues across your applications using
-              <a href="/product/sentry/issues/" className="text-accent-purple hover:underline"> error monitoring</a>,
-              <a href="/product/sentry/explore/trace-explorer/" className="text-accent-purple hover:underline"> tracing</a>,
-              <a href="/product/sentry/explore/session-replay/" className="text-accent-purple hover:underline"> session replay</a>, and
-              <a href="/product/" className="text-accent-purple hover:underline"> more</a>.
+              Monitor, identify, and resolve errors and performance issues across your
+              applications using
+              <a
+                href="/product/sentry/issues/"
+                className="text-accent-purple hover:underline"
+              >
+                {' '}
+                error monitoring
+              </a>
+              ,
+              <a
+                href="/product/sentry/explore/trace-explorer/"
+                className="text-accent-purple hover:underline"
+              >
+                {' '}
+                tracing
+              </a>
+              ,
+              <a
+                href="/product/sentry/explore/session-replay/"
+                className="text-accent-purple hover:underline"
+              >
+                {' '}
+                session replay
+              </a>
+              , and
+              <a href="/product/" className="text-accent-purple hover:underline">
+                {' '}
+                more
+              </a>
+              .
             </p>
           </div>
           {/* Column 2: AI in Sentry */}
           <div>
             <div className="flex items-center mb-4 gap-2 min-h-[32px]">
               <PlatformIcon platform="sentry" size={24} format="lg" />
-              <a href="/product/ai-in-sentry/" className="text-xl font-medium text-accent-purple hover:underline align-middle"><h2 className="inline font-medium align-middle">AI in Sentry</h2></a>
+              <a
+                href="/product/ai-in-sentry/"
+                className="text-xl font-medium text-accent-purple hover:underline align-middle"
+              >
+                <h2 className="inline font-medium align-middle">AI in Sentry</h2>
+              </a>
             </div>
             <p className="text-base text-left text-[var(--gray-500)] pl-2 pr-4">
-              Fix code faster by having <a href="/product/ai-in-sentry/seer/" className="text-accent-purple hover:underline">Seer</a> automatically find and remedy the root cause of your issues. Ask <a href="/product/ai-in-sentry/sentry-prevent-ai/" className="text-accent-purple hover:underline">Sentry Prevent AI</a> to review your PRs, suggest improvements, and build tests.
+              Fix code faster by having{' '}
+              <a
+                href="/product/ai-in-sentry/seer/"
+                className="text-accent-purple hover:underline"
+              >
+                Seer
+              </a>{' '}
+              automatically find and remedy the root cause of your issues. Ask{' '}
+              <a
+                href="/product/ai-in-sentry/sentry-prevent-ai/"
+                className="text-accent-purple hover:underline"
+              >
+                Sentry Prevent AI
+              </a>{' '}
+              to review your PRs, suggest improvements, and build tests.
             </p>
           </div>
         </div>
