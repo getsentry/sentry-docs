@@ -1,4 +1,5 @@
 import {ReactNode} from 'react';
+import Link from 'next/link';
 
 import {
   extractPlatforms,
@@ -6,6 +7,7 @@ import {
   getCurrentPlatform,
   nodeForPath,
 } from 'sentry-docs/docTree';
+import Markdown from 'sentry-docs/icons/Markdown';
 import {serverContext} from 'sentry-docs/serverContext';
 import {FrontMatter} from 'sentry-docs/types';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
@@ -93,7 +95,19 @@ export function DocPage({
               fullWidth ? 'max-w-none w-full' : 'w-[75ch] xl:max-w-[calc(100%-250px)]',
             ].join(' ')}
           >
-            {leafNode && <Breadcrumbs leafNode={leafNode} />}
+            {leafNode && (
+              <div className="overflow-hidden">
+                <Breadcrumbs leafNode={leafNode} />{' '}
+                <Link
+                  rel="nofollow"
+                  className="float-right"
+                  href={`/${pathname}.md`}
+                  title="Markdown version of this page"
+                >
+                  <Markdown className="flex p-0 flex-wrap" width={24} height={24} />
+                </Link>
+              </div>
+            )}
             <div className="mb-4">
               <Banner />
             </div>
