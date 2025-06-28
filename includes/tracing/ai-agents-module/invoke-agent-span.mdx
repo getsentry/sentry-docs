@@ -1,0 +1,29 @@
+Describes AI agent invocation.
+
+- The spans `op` MUST be `"gen_ai.invoke_agent"`.
+- The span `name` SHOULD be `"invoke_agent {gen_ai.agent.name}"`.
+- The `gen_ai.operation.name` attribute MUST be `"invoke_agent"`.
+- The `gen_ai.agent.name` attribute SHOULD be set to the agents name. (e.g. `"Weather Agent"`)
+- All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
+
+Additional attributes on the span:
+
+| Data Attribute                         | Type   | Requirement Level | Description                                                                        | Example                                                                                                           |
+| :------------------------------------- | :----- | :---------------- | :--------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------- |
+| `gen_ai.request.available_tools`       | string | optional          | List of objects describing the available tools. **[0]**                            | `"[{\"name\": \"random_number\", \"description\": \"...\"}, {\"name\": \"query_db\", \"description\": \"...\"}]"` |
+| `gen_ai.request.frequency_penalty`     | float  | optional          | Model configuration parameter.                                                     | `0.5`                                                                                                             |
+| `gen_ai.request.max_tokens`            | int    | optional          | Model configuration parameter.                                                     | `500`                                                                                                             |
+| `gen_ai.request.messages`              | string | optional          | List of objects describing the messages (prompts) sent to the LLM **[0]**, **[1]** | `"[{\"role\": \"system\", \"content\": [{...}]}, {\"role\": \"system\", \"content\": [{...}]}]"`                  |
+| `gen_ai.request.presence_penalty`      | float  | optional          | Model configuration parameter.                                                     | `0.5`                                                                                                             |
+| `gen_ai.request.temperature`           | float  | optional          | Model configuration parameter.                                                     | `0.1`                                                                                                             |
+| `gen_ai.request.top_p`                 | float  | optional          | Model configuration parameter.                                                     | `0.7`                                                                                                             |
+| `gen_ai.response.tool_calls`           | string | optional          | The tool calls in the model’s response. **[0]**                                    | `"[{\"name\": \"random_number\", \"type\": \"function_call\", \"arguments\": \"...\"}]"`                          |
+| `gen_ai.response.text`                 | string | optional          | The text representation of the model’s responses. **[0]**                          | `"[\"The weather in Paris is rainy\", \"The weather in London is sunny\"]"`                                       |
+| `gen_ai.usage.input_tokens.cached`     | int    | optional          | The number of cached tokens used in the AI input (prompt)                          | `50`                                                                                                              |
+| `gen_ai.usage.input_tokens`            | int    | optional          | The number of tokens used in the AI input (prompt).                                | `10`                                                                                                              |
+| `gen_ai.usage.output_tokens.reasoning` | int    | optional          | The number of tokens used for reasoning.                                           | `30`                                                                                                              |
+| `gen_ai.usage.output_tokens`           | int    | optional          | The number of tokens used in the AI response.                                      | `100`                                                                                                             |
+| `gen_ai.usage.total_tokens`            | int    | optional          | The total number of tokens used to process the prompt. (input and output)          | `190`                                                                                                             |
+
+- **[0]:** Span attributes only allow primitive data types (like `int`, `float`, `boolean`, `string`). This means you need to use a stringified version of a list of dictionaries. Do NOT set `[{"foo": "bar"}]` but rather the string `"[{\"foo\": \"bar\"}]"`.
+- **[1]:** Each message item uses the format `{role:"", content:""}`. The `role` can be `"user"`, `"assistant"`, or `"system"`. The `content` can be either a string or a list of dictionaries.
