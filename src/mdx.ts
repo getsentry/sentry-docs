@@ -647,6 +647,10 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       };
       // Set the `outdir` to a public location for this bundle.
       // this is where these images will be copied
+      // the reason we use the cache folder when it's
+      // enabled is because mdx-images is a dumping ground
+      // for all images, so we cannot filter it out only
+      // for this specific slug easily
       options.outdir = assetsCacheDir || outdir;
 
       // Set write to true so that esbuild will output the files.
