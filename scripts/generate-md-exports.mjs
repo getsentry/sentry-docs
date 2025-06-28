@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 import {ListObjectsV2Command, PutObjectCommand, S3Client} from '@aws-sdk/client-s3';
+import imgLinks from '@pondorasti/remark-img-links';
 import {selectAll} from 'hast-util-select';
 import {createHash} from 'node:crypto';
 import {createReadStream, createWriteStream, existsSync} from 'node:fs';
@@ -20,11 +21,13 @@ import {
 import rehypeParse from 'rehype-parse';
 import rehypeRemark from 'rehype-remark';
 import remarkGfm from 'remark-gfm';
+import RemarkLinkRewrite from 'remark-link-rewrite';
 import remarkStringify from 'remark-stringify';
 import {unified} from 'unified';
 import {remove} from 'unist-util-remove';
 
-const CACHE_VERSION = 2;
+const DOCS_BASE_URL = 'https://docs.sentry.io/';
+const CACHE_VERSION = 3;
 const CACHE_COMPRESS_LEVEL = 4;
 const R2_BUCKET = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'sentry-develop-docs'
@@ -247,6 +250,19 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
           }),
         },
       })
+      .use(RemarkLinkRewrite, {
+        // There's a chance we might be changing absolute URLs here
+        // We'll check the code base and fix that later
+        replacer: url => {
+          const mdUrl = new URL(url, DOCS_BASE_URL);
+          const newPathName = mdUrl.pathname.replace(/\/?$/, '');
+          if (path.extname(newPathName) === '') {
+            mdUrl.pathname = `${newPathName}.md`;
+          }
+          return mdUrl;
+        },
+      })
+      .use(imgLinks, {absolutePath: DOCS_BASE_URL})
       // We end up with empty inline code blocks, probably from some tab logic in the HTML, remove them
       .use(() => tree => remove(tree, {type: 'inlineCode', value: ''}))
       .use(remarkGfm)
