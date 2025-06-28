@@ -251,6 +251,8 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
         },
       })
       .use(RemarkLinkRewrite, {
+      // There's a chance we might be changing absolute URLs here
+      // We'll check the code base and fix that later
         replacer: url => {
           const mdUrl = new URL(url, DOCS_BASE_URL);
           const newPathName = mdUrl.pathname.replace(/\/?$/, '');
