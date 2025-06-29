@@ -449,14 +449,16 @@ Make sure to keep your auth token secret and out of version control.
 
 You can prevent ad blockers from blocking Sentry events using tunneling. Use the `tunnelRoute` option to add an API endpoint in your application that forwards Sentry events to Sentry servers.
 
-Update `withSentryConfig` in your `next.config.(js|mjs)` file with the following options:
+For better ad-blocker evasion, you can either:
+- Set `tunnelRoute: true` to automatically generate a random tunnel route for each build, making it harder for ad-blockers to detect and block monitoring requests
+- Set `tunnelRoute: "/my-tunnel-route"` to use a static route of your choosing
 
 ```javascript {tabTitle:ESM} {filename:next.config.mjs}
 export default withSentryConfig(nextConfig, {
   // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
   // This can increase your server load as well as your hosting bill.
   // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-side errors will fail.
-  tunnelRoute: "/monitoring",
+  tunnelRoute: true, // Generates a random route for each build (recommended)
 });
 ```
 
@@ -465,7 +467,7 @@ module.exports = withSentryConfig(nextConfig, {
   // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
   // This can increase your server load as well as your hosting bill.
   // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-side errors will fail.
-  tunnelRoute: "/monitoring",
+  tunnelRoute: true, // Generates a random route for each build (recommended)
 });
 ```
 
