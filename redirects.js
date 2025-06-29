@@ -332,7 +332,7 @@ const userDocsRedirects = [
   },
   {
     source: '/error-reporting/:path*',
-    destination: '/platform-redirect/',
+    destination: '/platform-redirect/:path*',
   },
   {
     source: '/product/cli/:path*',
