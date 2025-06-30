@@ -31,7 +31,7 @@ The legacy browser filters allow you to filter out certain legacy versions of br
 
 Legacy browser filters were updated in Feb 2024 and will be periodically evaluated to include additional legacy versions.
 
-If you had a legacy browser filter on before the update, the old filter will appear in your settings as "Deprecated". Deprecated legacy browser filters still work. However, if you turn them off, you won’t be able to turn them on again and will need to use the new filters instead.
+If you had a legacy browser filter on before the update, the old filter will appear in your settings as "Deprecated". Deprecated legacy browser filters still work. However, if you turn them off, you won't be able to turn them on again and will need to use the new filters instead.
 
 ### Browser Extension Errors
 
@@ -45,7 +45,7 @@ Due to their nature, web crawlers often encounter errors that normal users won't
 
 Filters events based on the **originating IP address of the client making the request**, not the user IP contained within the user data inside the request. This ensures that filtering decisions rely on the actual source of the request, as determined by network-level information, rather than data provided in the event payload.
 
-Sentry attempts to identify the request’s origin using the **forwarded IP address**. If no forwarded IP is available, it falls back to the **direct IP** of the client connecting to Sentry’s servers.
+Sentry attempts to identify the request's origin using the **forwarded IP address**. If no forwarded IP is available, it falls back to the **direct IP** of the client connecting to Sentry's servers.
 
 The supported IP address formats are:
 - **IPv4 Addresses**: Standard dotted-decimal notation (e.g., 1.2.3.4, 122.33.230.14, 127.0.0.1).
@@ -75,6 +75,29 @@ We consider a transaction to be a health check if its name matches one of the fo
 - `*/ping`
 - `*/up`
 
+## Session Replay Filtering
+
+Inbound data filters have partial support for [Session Replay](/product/explore/session-replay/). Only a subset of the available inbound filters apply to Session Replays.
+
+The following inbound filters **do** apply to Session Replays:
+
+- **IP Addresses** - Filters replays based on the originating IP address
+- **Releases** - Filters replays from specific release versions
+- **Request URLs** - Filters replays based on the URL where the replay was captured
+- **User-Agents** - Filters replays based on the browser's user-agent string
+
+The following inbound filters **do not** apply to Session Replays:
+
+- Error messages
+- Browser extension errors  
+- Web crawler errors
+- Legacy browser filters
+- React hydration errors
+- ChunkLoadErrors
+- Health check transactions
+
+**Note**: Because filtered outcomes are emitted per **segment** whereas successful outcomes are emitted per **replay** (a replay being a collection of segments), you may see a noticeable increase in filtered outcomes on your [Stats](https://sentry.io/orgredirect/organizations/:orgslug/stats) page when Session Replay filtering is active. This is expected behavior and not an error.
+
 <hr />
 
 <Alert title="Note" level="warning">
@@ -102,7 +125,7 @@ To use inbound data filters for error messages, keep the following in mind:
 - On message events, the filter matches the fully formatted message.
 - Transactions are never matched by this filter.
 
-To ensure you’re adding the correct message to the inbound filter setting, check the JSON for an event in the issue. The filter by error message setting matches the data found in the "title" field near the end of the file.
+To ensure you're adding the correct message to the inbound filter setting, check the JSON for an event in the issue. The filter by error message setting matches the data found in the "title" field near the end of the file.
 
 ### Releases
 
