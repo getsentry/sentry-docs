@@ -1,0 +1,38 @@
+---
+title: "Potential Query Injection Vulnerability"
+sidebar_order: 50
+description: "Learn more about Potential Query Injection Vulnerability issues and how to diagnose and fix them."
+---
+
+Potential Query Injection Vulnerability issues are raised when Sentry detects values taken directly from an incoming request being incorporated into a database query. Unsanitised interpolation of user input can lead to [SQL injection](https://owasp.org/www-community/attacks/SQL_Injection) and related attacks.
+
+## Detection criteria
+
+The detector evaluates each request in **two stages**:
+
+1. **Filter request values** – Discards tokens that are:
+
+   - too short,
+   - SQL keywords, or
+   - other frequently benign values.
+
+2. **Match against queries** – Scans executed queries. If **both** a payload key _and_ its value appear in the same query string, Sentry creates a _Potential Query Injection Vulnerability_ issue.
+
+### Example
+
+```
+Request →  GET /api?username=bob
+Query   →  SELECT * FROM users WHERE username = 'bob'
+```
+
+Because the value `'bob'` is inserted directly from the `username` parameter into the query, Sentry flags the operation as potentially vulnerable. **An issue indicates a _risk_, not that an exploit has already occurred.**
+
+### False positives
+
+Some ORMs or query‑builder libraries assemble SQL strings internally before parameterising them. We suppress many known libraries, but unrecognised ones may still trigger the detector. If you believe an issue is a false positive, leave feedback on the issue page.
+
+## Remediation
+
+- Use **parameterised queries / prepared statements** instead of string concatenation.
+- **Validate and sanitise** all external input.
+- Avoid **raw queries** when safe ORM APIs are available.
