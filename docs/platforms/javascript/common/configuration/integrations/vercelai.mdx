@@ -44,7 +44,21 @@ The `vercelAIIntegration` adds instrumentation for the [`ai`](https://www.npmjs.
 
 <PlatformSection notSupported={["javascript.cloudflare", "javascript.nextjs"]}>
   It is enabled by default and will automatically capture spans for all `ai`
-  function calls.
+  function calls. You can opt-in to capture inputs and outputs by setting `recordInputs` and `recordOutputs` in the integration config:
+
+```javascript
+Sentry.init({
+  dsn: "____PUBLIC_DSN____"
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.vercelAIIntegration({
+      recordInputs: true,
+      recordOutputs: true,
+    }),
+  ],
+});
+```
+
 </PlatformSection>
 
 <PlatformSection supported={['javascript.cloudflare']}>
@@ -52,6 +66,8 @@ This integration is not enabled by default. You need to manually enable it by pa
 
 ```javascript
 Sentry.init({
+  dsn: "____PUBLIC_DSN____"
+  tracesSampleRate: 1.0,
   integrations: [Sentry.vercelAIIntegration()],
 });
 ```
@@ -63,6 +79,8 @@ This integration is enabled by default in the Node runtime, but not in the Edge 
 
 ```javascript {filename: 'sentry.edge.config.(js|ts)'}
 Sentry.init({
+  dsn: "____PUBLIC_DSN____"
+  tracesSampleRate: 1.0,
   integrations: [Sentry.vercelAIIntegration()],
 });
 ```
@@ -77,6 +95,8 @@ const result = await generateText({
   model: openai("gpt-4o"),
   experimental_telemetry: {
     isEnabled: true,
+    recordInputs: true,
+    recordOutputs: true,
   },
 });
 ```
