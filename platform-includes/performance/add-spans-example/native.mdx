@@ -38,13 +38,21 @@ void perform_checkout() {
 
 This example will send a transaction named `checkout` to Sentry. The transaction will contain a `validation` span that measures how long `validate_shopping_cart()` took and a `process` span that measures `process_shopping_cart()`. Finally, the call to `sentry_transaction_finish()` will finish the transaction and send it to Sentry.
 
-By default, transactions will inherit the `trace_id` and `parent_span_id` from the `propagation_context` as generated during SDK initialization. These values can be overridden by calling `sentry_set_trace()`, for example from a downstream SDK or to define a manual trace boundary:
+## Trace Boundaries
+By default, transactions will inherit the `trace_id` and `parent_span_id` from the `propagation_context` as generated during SDK initialization. These values can be overridden by calling `sentry_set_trace()`, for example from a downstream SDK, or to define a manual trace boundary:
 
 ```c
 // Set the trace propagation_context which will be used
 //  for all events and transactions/spans
+
 const char *trace_id = "2674eb52d5874b13b560236d6c79ce8a";
 const char *parent_span_id = "a0f9fdf04f1a63df";
 
 sentry_set_trace(trace_id, parent_span_id);
+perform_checkout(); // trace set before checkout
+...
+sentry_set_trace(trace_id_2, parent_span_id_2);
 ```
+
+The format of the `trace_id` and `parent_span_id` should follow the ones defined in [the telemetry docs](https://develop.sentry.dev/sdk/telemetry/traces/#header-sentry-trace). The `trace_id` should consist of a 32 character hexadecimal string, and the `parent_span_id` should be a 16 character hexadecimal string. For downstream SDKs, these values should match the currently active trace (and span if there is one). For manual trace boundaries, these should be randomly generated.
+
