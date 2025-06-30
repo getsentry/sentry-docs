@@ -155,13 +155,19 @@ crash events to send.
 
 #### Session Replay Integration with Feedback Widgets
 
-When a feedback widget is added to an application and Session Replay's `onErrorSampleRate` is greater than 0, the SDK must sample the replay when the widget **opens**, not when the feedback is submitted. This timing is critical because:
+When Session Replay's `onErrorSampleRate` is greater than 0, SDKs must integrate replay capture with feedback functionality. The timing of replay sampling depends on how feedback is captured:
+
+**Feedback Widget Integration:**
+When a feedback widget is added to an application, the SDK must sample the replay when the widget **opens**, not when the feedback is submitted. This timing is critical because:
 
 - Sampling when the widget opens captures the user's session leading up to the feedback moment
 - Sampling only when feedback is submitted would result in the replay buffer primarily showing the user typing their message, which provides minimal debugging context
 - The replay buffer should contain the user's actions and application state prior to encountering the issue they're reporting
 
 SDKs should trigger replay sampling and flushing as soon as the feedback widget becomes visible to the user, ensuring the complete context is captured regardless of whether the user ultimately submits the feedback.
+
+**Manual API Integration:**
+When feedback is captured using the manual API (e.g., `captureFeedback()` method), the SDK must sample and flush the replay when the feedback capture method is called. Since there is no widget opening event to trigger replay capture, the SDK should call `captureReplay()` during the execution of the feedback capture API to ensure session context is preserved.
 
 ### Backend Platforms
 
