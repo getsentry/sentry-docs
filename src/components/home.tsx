@@ -222,32 +222,28 @@ export default async function Home() {
               Monitor, identify, and resolve errors and performance issues across your
               applications using
               <a
-                href="/product/sentry/issues/"
+                href="/product/issues/"
                 className="text-accent-purple hover:underline"
               >
-                {' '}
-                error monitoring
+                {' '}error monitoring
               </a>
               ,
               <a
-                href="/product/sentry/explore/trace-explorer/"
+                href="/product/explore/trace-explorer/"
                 className="text-accent-purple hover:underline"
               >
-                {' '}
-                tracing
+                {' '}tracing
               </a>
               ,
               <a
-                href="/product/sentry/explore/session-replay/"
+                href="/product/explore/session-replay/"
                 className="text-accent-purple hover:underline"
               >
-                {' '}
-                session replay
+                {' '}session replay
               </a>
               , and
               <a href="/product/" className="text-accent-purple hover:underline">
-                {' '}
-                more
+                {' '}more
               </a>
               .
             </p>
@@ -289,7 +285,7 @@ export default async function Home() {
         <div className="flex flex-wrap gap-6">
           <Card
             className="w-full"
-            href="/product/sentry/"
+            href="/product/"
             image={RocketImage}
             imageAlt="Rocket image"
             title="What is Sentry?"
