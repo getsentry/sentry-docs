@@ -1,0 +1,67 @@
+---
+title: Nuxt on Cloudflare
+description: "Learn how to add Cloudflare instrumentation to your Nuxt app."
+---
+
+If you're running your Nuxt app on Cloudflare Pages, you need to configure the SDK a little differently to the default setup. This guide will show you how to set up the Sentry Nuxt SDK with Nitro's `cloudflare-pages` deployment preset.
+
+## Install
+
+First, install the Sentry Nuxt SDK in your application. We recommend using the Sentry wizard to automatically install the SDK:
+
+```bash
+npx @sentry/wizard@latest -i nuxt
+```
+
+If the setup through the wizard doesn't work for you, you can also [set up the Nuxt SDK manually](/platforms/javascript/guides/nuxt/manual-setup/).
+
+<Alert>
+
+If you installed the SDK before, make sure that `@sentry/nuxt` version `9.34.0` or newer is installed.
+
+</Alert>
+
+Now you can install the Sentry Cloudflare SDK. First, install the SDK with your package manager:
+
+<PlatformContent includePath="getting-started-install" />
+
+## Setup
+
+<PlatformContent includePath="getting-started-config" />
+
+### Adding the Plugin
+
+To enable Sentry for your Nuxt app on Cloudflare, follow these steps:
+
+1. **Remove the previous server config file:**
+   Delete `sentry.server.config.ts` if it exists.
+
+2. **Add a Nitro plugin:**
+   Create a new file in `server/plugins` (for example, `server/plugins/sentry-cloudflare-setup.ts`).
+
+3. **Add the following code to your plugin file:**
+
+```TypeScript {filename:server/plugins/[custom-plugin-name].ts}
+import { sentryCloudflareNitroPlugin } from '@sentry/nuxt/module/plugins'
+
+export default defineNitroPlugin(sentryCloudflareNitroPlugin({
+  dsn: '___PUBLIC_DSN___',
+  tracesSampleRate: 1.0,
+}))
+```
+
+Or, if you need access to `nitroApp`:
+
+```TypeScript {filename:server/plugins/[custom-plugin-name].ts}
+import { sentryCloudflareNitroPlugin } from '@sentry/nuxt/module/plugins'
+
+export default defineNitroPlugin(sentryCloudflareNitroPlugin((nitroApp: NitroApp) => {
+  // You can access `nitroApp` here if needed
+  return {
+    dsn: '___PUBLIC_DSN___',
+    tracesSampleRate: 1.0,
+  }
+}))
+```
+
+
