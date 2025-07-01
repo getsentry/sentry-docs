@@ -7,6 +7,10 @@ For a quick reference, there is a [complete example](https://github.com/getsentr
 
 Go API documentation for the [`sentryslog` package](https://pkg.go.dev/github.com/getsentry/sentry-go/slog) is also available.
 
+## Requirements
+
+Slog structured logging is supported in Sentry Go SDK version `0.34.0` and above.
+
 ## Install
 
 ```bash
@@ -21,6 +25,7 @@ To integrate Sentry with slog, you need to set up a Sentry handler and configure
 
 ```go
 import (
+    "context"
 	"fmt"
 	"log"
 	"time"
@@ -49,8 +54,8 @@ func main() {
 	// Configure `slog` to use Sentry as a handler
 	ctx := context.Background()
 	handler := sentryslog.Option{
-		EventLevel: []slog.Level{slog.LevelError, sentryslog.LevelFatal}, // Only Error and Fatal as events
-		LogLevel:   []slog.Level{slog.LevelWarn, slog.LevelInfo},         // Only Warn and Info as logs
+		EventLevel: []slog.Level{slog.LevelError}, // Only Error level will be sent as events
+		LogLevel:   []slog.Level{slog.LevelWarn, slog.LevelInfo},         // Only Warn and Info levels will be sent as logs
 	}.NewSentryHandler(ctx)
 	logger := slog.New(handler)
 	logger = logger.With("release", "v1.0.0")
@@ -110,15 +115,22 @@ Sentry allows you to send logs either as log entries or as events. The minimum l
 ### Example: Sending Logs as Events
 
 ```go
-logger := slog.New(sentryslog.Options
-    EventLevel: []slog.Level{slog.LevelError, sentryslog.LevelFatal},
+ctx := context.Background()
+logger := slog.New(sentryslog.Option{
+    // specify all event levels
+    EventLevel: []slog.Level{
+        slog.LevelDebug,
+        slog.LevelInfo,
+        slog.LevelWarn,
+        slog.LevelError,
+	},
     LogLevel: []slog.Level{}, // disable log entries
 	AttrFromContext: []func(ctx context.Context) []slog.Attr{
 		func(ctx context.Context) []slog.Attr {
 			return []slog.Attr{slog.String("request_id", "123")}
 		},
 	},
-}.NewSentryHandler())
+}.NewSentryHandler(ctx))
 
 logger.Error("This log is sent as an event")
 ```
@@ -126,11 +138,17 @@ logger.Error("This log is sent as an event")
 ### Example: Sending Logs as Logs
 
 ```go
-logger := slog.New(sentryslog.Options{
-	EventLevel: []slog.Level{}, // disable events
-    LogLevel:   []slog.Level{slog.LevelError},
-  },
-}.NewSentryHandler())
+ctx := context.Background()
+logger := slog.New(sentryslog.Option{
+    EventLevel: []slog.Level{}, // disable events
+    // specify all log levels
+    LogLevel: []slog.Level{
+        slog.LevelDebug,
+        slog.LevelInfo,
+        slog.LevelWarn,
+        slog.LevelError,
+    },
+}.NewSentryHandler(ctx))
 
 logger.Error("This log is sent as a log")
 ```
@@ -154,14 +172,16 @@ func myAsyncHandler(w http.ResponseWriter, r *http.Request) {
 	// The sentryhttp middleware adds a Hub with transaction information to the request context.
 	ctx := r.Context()
 	// By using InfoContext, the log entry will be associated with the transaction from the request.
-	logger.InfoContext(ctx, "Log inside handler")
+	slog.InfoContext(ctx, "Log inside handler")
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintln(w, "Handler finished, async task running in background.")
 }
 
-// Wrap your handler with sentryhttp to automatically start transactions for requests.
-sentryHandler := sentryhttp.New(sentryhttp.Options{})
-http.Handle("/async", sentryHandler.Handle(http.HandlerFunc(myAsyncHandler)))
+func main() {
+	// Wrap your handler with sentryhttp to automatically start transactions for requests.
+	sentryHandler := sentryhttp.New(sentryhttp.Options{})
+	http.Handle("/async", sentryHandler.Handle(http.HandlerFunc(myAsyncHandler)))
+}
 ```
 
 Note: Ensure Sentry is flushed before the application exits to avoid losing any pending events.

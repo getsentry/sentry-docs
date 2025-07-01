@@ -103,7 +103,7 @@ fn main() {
 
     let sentry_layer =
         sentry::integrations::tracing::layer().event_filter(|md| match *md.level() {
-            // Capture error events as Sentry events
+            // Capture error level events as Sentry events
             // These are grouped into issues, representing high-severity errors to act upon
             tracing::Level::ERROR => EventFilter::Event,
             // Ignore trace level events, as they're too verbose
@@ -131,6 +131,22 @@ fn main() {
 ```
 
 The fields of `tracing` events are automatically captured as attributes in Sentry logs.
+
+To map a `tracing` event to multiple items in Sentry (e.g. both an event and a log), combine multiple event filters using the bitwise or operator.
+
+```rust
+use sentry::integrations::tracing::EventFilter;
+
+let sentry_layer =
+    sentry::integrations::tracing::layer().event_filter(|md| match *md.level() {
+        // Capture error and warn level events as both logs and events in Sentry
+        tracing::Level::ERROR | tracing::Level::WARN => EventFilter::Event | EventFilter::Log,
+        // Ignore trace level events, as they're too verbose
+        tracing::Level::TRACE => EventFilter::Ignore,
+        // Capture everything else just as a log
+        _ => EventFilter::Log,
+    });
+```
 
 ### `log` Integration
 
