@@ -129,7 +129,11 @@ export function ApiExamples({api}: Props) {
           </button>
         </div>
         <pre className={`${styles['api-block-example']} relative`}>
-          <div className={codeBlockStyles.copied} style={{opacity: showCopied ? 1 : 0}}>
+          <div
+            data-mdast="ignore"
+            className={codeBlockStyles.copied}
+            style={{opacity: showCopied ? 1 : 0}}
+          >
             Copied
           </div>
           {selectedTabView === 0 &&
