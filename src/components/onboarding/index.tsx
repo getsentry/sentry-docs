@@ -152,10 +152,7 @@ export function OnboardingOption({
   isStep?: boolean;
 }) {
   validateOptionIds([{id: optionId}]);
-  const className = [
-    hideForThisOption ? 'hidden' : '',
-    isStep ? 'onboarding-step' : '',
-  ]
+  const className = [hideForThisOption ? 'hidden' : '', isStep ? 'onboarding-step' : '']
     .filter(Boolean)
     .join(' ');
 
