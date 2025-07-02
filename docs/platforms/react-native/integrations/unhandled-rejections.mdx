@@ -1,0 +1,174 @@
+---
+title: Unhandled Promise Rejections
+description: "Learn about Sentry's Unhandled Promise Rejections handling in React Native."
+sidebar_order: 60
+---
+
+Sentry automatically tracks unhandled promise rejections in React Native applications. Since version `6.15.0` the SDK uses engine-specific implementations to ensure reliable tracking across different JavaScript engines including Hermes, JavaScriptCore (JSC), and React Native Web environments.
+
+## Configuration
+
+Promise rejection tracking is enabled by default when you initialize Sentry. You can control promise rejection tracking through the `reactNativeErrorHandlersIntegration`:
+
+```javascript
+import * as Sentry from '@sentry/react-native';
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.reactNativeErrorHandlersIntegration({
+      onunhandledrejection: false, // Disables promise rejection tracking
+    }),
+  ],
+});
+```
+
+## Engine-Specific Behavior
+
+### Hermes Engine
+
+When using Hermes, Sentry uses the engine's native promise rejection tracking capabilities.
+
+**Important Note:** Enabling Hermes rejection tracking will overwrite existing hooks due to limitations of the engine. Only one promise rejection tracker can be active at a time.
+
+### JavaScriptCore (JSC)
+
+For JSC environments, Sentry uses Promise polyfill with rejection tracking capabilities. This approach also overwrites existing hooks.
+
+#### Disable Auto Patching
+
+You can disable the global promise patching by passing `patchGlobalPromise: false` in either `Sentry.init` or the `ReactNativeErrorHandlers` integration. Note that if you disable our auto patching, to ensure that unhandled rejections are still caught, you will need to [manually force a package resolution](#manually-forcing-a-package-resolution).
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.reactNativeErrorHandlersIntegration({
+      patchGlobalPromise: false, // Disables Promise patching for JSC
+    }),
+  ],
+});
+```
+
+**Note:** The Promise polyfill is used to ensure compatibility and provide rejection tracking functionality that may not be available natively in older JSC versions.
+
+### React Native Web
+
+For React Native Web, Sentry leverages the browser's native promise rejection tracking capabilities, providing seamless integration with web debugging tools.
+
+## Multiple Tools and Logging
+
+When using multiple tools for promise rejection tracking, be aware that:
+
+- **Hermes**: Only one rejection tracker can be active. Sentry will take precedence.
+- **JSC**: Sentry's Promise polyfill will override existing handlers.
+- **React Native Web**: Can coexist better with other browser-based debugging tools.
+
+### Example: Using Sentry with Other Debugging Tools
+
+```javascript
+import * as Sentry from '@sentry/react-native';
+
+// For development, you might want to disable Sentry's tracking
+// to allow other debugging tools to handle promise rejections
+if (__DEV__) {
+  Sentry.init({
+    dsn: "___PUBLIC_DSN___",
+    integrations: [
+      Sentry.reactNativeErrorHandlersIntegration({
+        onunhandledrejection: false, // Let other tools handle in development
+      }),
+    ],
+  });
+} else {
+  // In production, use Sentry's tracking
+  Sentry.init({
+    dsn: "___PUBLIC_DSN___",
+    // Default configuration with promise tracking enabled
+  });
+}
+```
+
+## Troubleshooting (Legacy behavior and JavaScriptCore)
+
+Due to an issue with React Native's dependencies, unhandled promise rejections might not be correctly caught by Sentry. If the promise rejection handler was not correctly attached, our SDK might issue a warning:
+
+> WARN: Unhandled promise rejections might not be caught by Sentry. Read about how to fix this on our troubleshooting docs.
+
+Otherwise, we will let you know that the handler is attached:
+
+> [Sentry] Unhandled promise rejections will be caught by Sentry.
+
+### Auto Patching (Default Behavior)
+
+By default we will patch the global `Promise` instance to ensure it matches exactly with the version that React Native uses.
+
+#### Using With Other Polyfills
+
+If you use a polyfilling library that patches the global `Promise` instance, you'll need to make sure you run the polyfill **after** `Sentry.init` is called.
+
+
+```javascript
+import allSettled from "promise.allsettled";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+});
+// Any Promise polyfilling must occur AFTER Sentry.init
+// This step globally patches Promise.
+allSettled.shim();
+
+// Separate core-js example
+import "core-js/stable/promise/all-settled";
+```
+
+Your linter might throw some errors here, but this step is necessary.
+
+#### Disable Auto Patching
+
+You can disable the global promise patching by passing `patchGlobalPromise: false` in either `Sentry.init` or the `ReactNativeErrorHandlers` integration. Note that if you disable our auto patching, to ensure that unhandled rejections are still caught, you will need to [manually force a package resolution](#manually-forcing-a-package-resolution).
+
+### Manually Forcing a Package Resolution
+
+You don't need to perform the steps below if you don't disable [auto patching](#auto-patching-default-behavior). You'll need to ensure that the version of `promise` that you use matches exactly with the version that React Native uses.
+
+1. Check the version of `promise` that your version of `react-native` uses. You can do this by going into `node_modules/react-native/package.json` and checking the version there, for example we find that it uses `^8.0.3`:
+
+```json {filename:node_modules/react-native/package.json}
+{
+  "dependencies": {
+    // ...
+    "promise": "^8.0.3"
+  }
+}
+```
+
+2. Add a package resolution with the same version as `react-native`'s' to **your** `package.json` file, this will force this version to be used. You will then need to run a fresh `yarn install` or `npm install` to use the package resolution you just added.
+
+```json {filename:package.json}
+{
+  "resolutions": {
+    "promise": "^8.0.3"
+  }
+}
+```
+
+<Alert>
+
+Package resolutions are currently only supporred by `yarn`. If you use `npm`, you can use a third-party package called [npm-force-resolutions](https://www.npmjs.com/package/npm-force-resolutions) to achieve this.
+
+</Alert>
+
+3. If the fix is successful, our SDK will no longer display the above warning and will indicate that promise rejections will be caught.
+
+
+## Migration from Older Versions
+
+If you're upgrading from an older version of Sentry React Native:
+
+1. Remove any manual Promise polyfill resolutions from your `package.json`
+2. Remove any custom promise rejection handling code
+3. Update to the latest version of `@sentry/react-native`
+4. Test that promise rejections are being captured correctly
+
+The new engine-specific approach should resolve previous compatibility issues automatically.
