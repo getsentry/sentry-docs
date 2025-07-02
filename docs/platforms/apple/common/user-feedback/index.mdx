@@ -45,6 +45,92 @@ To start using the User Feedback widget in your Cocoa application, provide a fee
 
 This setup will insert the widget into your app's view hierarchy. By default, it appears in the bottom trailing corner of the screen, but you can fully customize its appearance and behavior.
 
+#### SwiftUI
+
+SwiftUI apps cannot currently use automatic injection of the widget upon SDK start. Several options exist to display the feedback form:
+
+##### Use your own button
+
+Place a `UIButton` somewhere in your app, then provide the reference to the feedback configuration in the options provided on SDK start:
+
+```swift
+import Sentry
+import SwiftUI
+import UIKit
+
+@main
+struct SwiftUIApp: App {
+    // a button displayed somewhere in your app
+    public let feedbackButton = {
+        let button = UIButton(type: .custom)
+        button.setTitle("BYOB Feedback", for: .normal)
+        return button
+    }()
+
+    init() {
+        // start the SentrySDK as usual, as early as possible in your app's launch sequence
+        SentrySDK.start { options in
+            options.configureFeedback { config in 
+                config.customButton = feedbackButton
+            }
+            
+            // your other SDK options
+        }
+    }
+}
+```
+
+##### Manually display the widget from a connected `UIWindowSceneDelegate`
+
+You must set up a `UIApplicationDelegateAdapter`, connect a `UIScene` to your app, and manually call `SentrySDK.feedback.showWidget()`: 
+
+```swift
+import Sentry
+import SwiftUI
+
+@main
+struct SwiftUIApp: App {
+    @UIApplicationDelegateAdaptor private var appDelegate: MyAppDelegate
+
+    init() {
+        // start the SentrySDK as usual, as early as possible in your app's launch sequence
+        SentrySDK.start { options in
+            // configure feedback and any other SDK options
+        }
+    }
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}
+
+class MyAppDelegate: NSObject, UIApplicationDelegate, ObservableObject {
+    func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
+        let configuration = UISceneConfiguration(
+            name: nil,
+            sessionRole: connectingSceneSession.role)
+        if connectingSceneSession.role == .windowApplication {
+            configuration.delegateClass = MySceneDelegate.self
+        }
+        return configuration
+    }
+}
+
+class MySceneDelegate: NSObject, UIWindowSceneDelegate, ObservableObject {
+    var initializedSentry = false
+    func sceneDidBecomeActive(_ scene: UIScene) {
+        guard !initializedSentry else { return }
+        
+        // display the feedback widget 
+        SentrySDK.feedback.showWidget()
+        
+        initializedSentry = true
+    }
+}
+```
+
 ### Session Replay
 
 The User Feedback widget integrates seamlessly with Session Replay. When the widget is opened, the Replay SDK buffers up to 30 seconds of the user's session. If feedback is submitted, this replay is sent along with the feedback, allowing you to view both the feedback and the user's actions leading up to the feedback submission.
