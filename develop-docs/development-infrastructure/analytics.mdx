@@ -23,51 +23,42 @@ Conventionally, the analytics events are stored in a file named `analytics` with
 The Event classes look like this:
 
 ```python
-from __future__ import absolute_import, print_function
+import abc
 
 from sentry import analytics
 
-class ExampleTutorialCreatedEvent(analytics.Event):
-  type = 'example_tutorial.created'
 
-   attributes = (
-      analytics.Attribute('id'),
-      analytics.Attribute('user_id'),
-  )
+# if we have several events that have common attributes, we can define a base class, 
+# that is not intended to be instantiated directly. To make sure it is not instantiated,
+# we also inherit from `abc.ABC`.
+@analytics.eventclass()
+class BaseExampleTutorialEvent(analytics.Event, abc.ABC):
+    # these are required attributes, which are also inherited to the child classes
+    id: int
+    user_id: int
 
-class ExampleTutorialDeletedEvent(analytics.Event):
-  type = 'example_tutorial.deleted'
 
-   attributes = (
-      analytics.Attribute('id'),
-      analytics.Attribute('user_id'),
-  )
+@analytics.eventclass('example_tutorial.created')
+class ExampleTutorialCreatedEvent(BaseExampleTutorialEvent):
+    # if we don't have additional attributes, we can simply use "pass" here
+    pass
 
+
+@analytics.eventclass('example_tutorial.deleted')
+class ExampleTutorialDeletedEvent(BaseExampleTutorialEvent):
+    reason: str | None = None  # this is an additional, optional attribute
+
+
+# we only register the concrete classes, not the base class
 analytics.register(ExampleTutorialCreatedEvent)
 analytics.register(ExampleTutorialDeletedEvent)
 ```
 
-Your event classes will inherit from [`analytics.Event`](https://github.com/getsentry/sentry/blob/master/src/sentry/analytics/event.py) as shown above. All events have a `type` and `attributes`.
+Your event classes will inherit from [`analytics.Event`](https://github.com/getsentry/sentry/blob/master/src/sentry/analytics/event.py) as shown above and must use the `analytics.eventclass` decorator. If the event is an abstract base class, it can be used without argument. If it is to be registered, it must be passed a unique event type string. This type string describes what the Event is, and this name should be unique across all analytics event classes.
 
-- `type`: Describes what the Event is, and this name should be unique across all analytics event classes.
+Additional attributes can be declared on the class with the appropriate typing syntax. This is similar to how you would declare attributes on a [`dataclass`](https://docs.python.org/3/library/dataclasses.html)(which are actually used underneath). If an attribute is optional, it can be declared with a default value, otherwise it is required and a value must always be provided.
 
-- `attributes`: Parameters what you would like to track, for example the `user_id` of the user performing the action. All `attributes` must be an `Attribute` object as shown above. Note that you cannot create an `attribute` named `'type'`.
-
-Finally, register your event classes so that the analytics [event_manager](https://github.com/getsentry/sentry/blob/master/src/sentry/analytics/event_manager.py) will pick them up.
-
-### If you are creating the [analytics.py](http://analytics.py) file for the first time:
-
-If you are creating a new analytics file for the first time, you will need to add an import to the package's `__init__.py`.
-
-If the Event classes are defined in a file named: `sentry/examples/analytics`, then the class below would be defined at `sentry/examples/__init__.py`:
-
-```python
-from __future__ import absolute_import
-
-from .analytics import *  # NOQA
-```
-
-Here, you have your usual `absolute_import` but in addition you will import every class in your [`analytics.py`](http://analytics.py) add `# NOQA` to avoid linter complaints.
+Finally, register your event classes so that the analytics [event_manager](https://github.com/getsentry/sentry/blob/master/src/sentry/analytics/event_manager.py) will pick them up. This is only necessary if you want to `record` your analytics event using the string type as discussed below.
 
 ### Step 2: Add it to the code you want to track
 
@@ -75,35 +66,52 @@ You'll be adding code in some user-facing area like an API endpoint.
 
 ```python
 from sentry import analytics
+from sentry.examples.analytics import ExampleTutorialCreatedEvent
 
 class ExampleEndpoint(Endpoint):
-
-  def post(self, request):
-    example = Example.objects.create(...)
-    analytics.record(
-        'example_tutorial.created',
-        id=example.id,
-        user_id=request.user.id,
-    )
-    return Response(serialize(example, request.user))
+    def post(self, request):
+        example = Example.objects.create(...)
+        analytics.record(
+            ExampleTutorialCreatedEvent(
+                id=example.id,
+                user_id=request.user.id,
+            )
+        )
+        return Response(serialize(example, request.user))
 ```
 
 Do whatever you would normally with the endpoint, then use the `analytics.record` method to gather the information you want. Note that it takes input of the form:
 
 ```python
 analytics.record(
-	'event_type_as_string',
-	<attribute_name_0>=<value>,
-		....
-	<attribute_name_n>=<value>,
+    <EventClass>(
+        <attribute_name_0>=<value>,
+          ....
+        <attribute_name_n>=<value>,
+    )
 )
 ```
+
+There is an older, deprecated, way to record analytics events using the `type` passed in the `eventclass` decorator: 
+
+```python
+analytics.record(
+    'event_type_as_string',
+    <attribute_name_0>=<value>,
+      ....
+    <attribute_name_n>=<value>,
+)
+```
+
+<Alert level='warning'>
+  This way of recording analytics events is deprecated and will be removed in a future release as it has several drawbacks. For one, it sidelines static type checking and cannot make guarantees about the passed attributes.
+</Alert>
 
 Run the tests that touch the endpoint to ensure everything is Gucci.
 
 ### Step 3:
 
-By default, a new event type is aggregated and sent to Amplitude as long as there is a user_id sent along with the event. If you would like to send events unaggregated, refer to [our Amplitude aggregation docs](https://github.com/getsentry/etl/blob/master/documentation/amplitude_analytics.md)
+By default, a new event type is aggregated and sent to Amplitude as long as there is a `user_id` sent along with the event. If you would like to send events unaggregated, refer to [our Amplitude aggregation docs](https://github.com/getsentry/etl/blob/master/documentation/amplitude_analytics.md)
 
 ## Route-Based Frontend Analytics
 
