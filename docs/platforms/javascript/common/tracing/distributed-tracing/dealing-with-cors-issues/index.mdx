@@ -16,7 +16,7 @@ notSupported:
   - javascript.nestjs
 ---
 
-If your frontend and backend are hosted on different domains (for example, your frontend is on `https://example.com` and your backend is on `https://api.example.com`), you may need to configure your backend [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers) headers to ensure distributed tracing works properly.
+If your frontend and backend are hosted on different domains (for example, your frontend is on `https://example.com` and your backend is on `https://api.example.com`), you need to configure your backend [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers) headers to prevent requests from being blocked by the browser.
 
 ## Understanding Trace Propagation
 
@@ -26,7 +26,7 @@ Sentry doesn't attach the `sentry-trace` and `baggage` headers to every outgoing
 - Requests containing `localhost` in their URL (e.g., `http://localhost:3000/api`)
 - Requests whose URL starts with `/` (e.g., `/api/users`, `/graphql`)
 
-This default behavior helps prevent sending trace data to third-party services and reduces potential CORS issues.
+This default behavior helps prevent sending trace data to third-party services and avoids potential CORS issues.
 
 ## Configuring Trace Propagation
 
@@ -55,48 +55,7 @@ Access-Control-Allow-Headers: sentry-trace, baggage
 
 Your server's exact configuration will depend on your setup, but the important part is allowing both the `sentry-trace` and `baggage` headers.
 
-## Example Scenarios
-
-### Single Backend Domain
-
-If your frontend calls a single backend domain:
-
-```javascript
-// Frontend configuration
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  tracePropagationTargets: [
-    "localhost",              // For development
-    "https://api.example.com" // Your backend
-  ],
-});
-```
-
-```
-# Backend CORS configuration
-Access-Control-Allow-Headers: sentry-trace, baggage
-```
-
-### Multiple Services
-
-If your frontend calls multiple backend services:
-
-```javascript
-// Frontend configuration
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  tracePropagationTargets: [
-    "localhost",
-    "https://api.example.com",
-    "https://auth.example.com",
-    "https://media.example.com"
-  ],
-});
-```
-
-Each backend service needs to allow the headers in their CORS configuration.
-
-### Disabling Trace Propagation
+## Disabling Trace Propagation
 
 If you want to disable distributed tracing entirely and ensure no trace headers are sent:
 
