@@ -1,12 +1,15 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
+import {ListObjectsV2Command, PutObjectCommand, S3Client} from '@aws-sdk/client-s3';
+import imgLinks from '@pondorasti/remark-img-links';
 import {selectAll} from 'hast-util-select';
 import {createHash} from 'node:crypto';
 import {createReadStream, createWriteStream, existsSync} from 'node:fs';
-import {mkdir, opendir, readFile, rm} from 'node:fs/promises';
+import {mkdir, opendir, readFile, rm, writeFile} from 'node:fs/promises';
 import {cpus} from 'node:os';
 import * as path from 'node:path';
-import {Readable} from 'node:stream';
+import {compose, Readable} from 'node:stream';
+import {text} from 'node:stream/consumers';
 import {pipeline} from 'node:stream/promises';
 import {fileURLToPath} from 'node:url';
 import {isMainThread, parentPort, Worker, workerData} from 'node:worker_threads';
@@ -18,22 +21,50 @@ import {
 import rehypeParse from 'rehype-parse';
 import rehypeRemark from 'rehype-remark';
 import remarkGfm from 'remark-gfm';
+import RemarkLinkRewrite from 'remark-link-rewrite';
 import remarkStringify from 'remark-stringify';
 import {unified} from 'unified';
 import {remove} from 'unist-util-remove';
 
+const DOCS_BASE_URL = 'https://docs.sentry.io/';
+const CACHE_VERSION = 3;
 const CACHE_COMPRESS_LEVEL = 4;
+const R2_BUCKET = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
+  ? 'sentry-develop-docs'
+  : 'sentry-docs';
+const accessKeyId = process.env.R2_ACCESS_KEY_ID;
+const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
 
-function taskFinishHandler(data) {
-  if (data.failedTasks.length === 0) {
-    console.log(
-      `💰 Worker[${data.id}]: Cache hits: ${data.cacheHits} (${Math.round((data.cacheHits / data.success) * 100)}%)`
-    );
-    console.log(`✅ Worker[${data.id}]: converted ${data.success} files successfully.`);
+function getS3Client() {
+  return new S3Client({
+    endpoint: 'https://773afa1f62ff86c80db4f24f7ff1e9c8.r2.cloudflarestorage.com',
+    region: 'auto',
+    credentials: {
+      accessKeyId,
+      secretAccessKey,
+    },
+    retryMode: 'adaptive',
+  });
+}
+
+async function uploadToCFR2(s3Client, relativePath, data) {
+  const command = new PutObjectCommand({
+    Bucket: R2_BUCKET,
+    Key: relativePath,
+    Body: data,
+    ContentType: 'text/markdown',
+  });
+  await s3Client.send(command);
+  return;
+}
+
+function taskFinishHandler({id, success, failedTasks}) {
+  if (failedTasks.length === 0) {
+    console.log(`✅ Worker[${id}]: converted ${success} files successfully.`);
     return false;
   }
-  console.error(`❌ Worker[${data.id}]: ${data.failedTasks.length} files failed:`);
-  console.error(data.failedTasks);
+  console.error(`❌ Worker[${id}]: ${failedTasks.length} files failed:`);
+  console.error(failedTasks);
   return true;
 }
 
@@ -68,6 +99,27 @@ async function createWork() {
   const numWorkers = Math.max(Math.floor(cpus().length / 2), 2);
   const workerTasks = new Array(numWorkers).fill(null).map(() => []);
 
+  let existingFilesOnR2 = null;
+  if (accessKeyId && secretAccessKey) {
+    existingFilesOnR2 = new Map();
+    console.log(`☁️ Getting existing hashes from R2...`);
+    const s3Client = getS3Client();
+    let continuationToken = undefined;
+    do {
+      const response = await s3Client.send(
+        new ListObjectsV2Command({
+          Bucket: R2_BUCKET,
+          ContinuationToken: continuationToken,
+        })
+      );
+      continuationToken = response.NextContinuationToken;
+      for (const {Key, ETag} of response.Contents || []) {
+        existingFilesOnR2.set(Key, ETag.slice(1, -1)); // Remove quotes from ETag
+      }
+    } while (continuationToken);
+    console.log(`✅ Found ${existingFilesOnR2.size} existing files on R2.`);
+  }
+
   console.log(`🔎 Discovering files to convert...`);
 
   let numFiles = 0;
@@ -75,6 +127,7 @@ async function createWork() {
   // Need a high buffer size here otherwise Node skips some subdirectories!
   // See https://github.com/nodejs/node/issues/48820
   const dir = await opendir(INPUT_DIR, {recursive: true, bufferSize: 1024});
+
   for await (const dirent of dir) {
     if (dirent.name.endsWith('.html') && dirent.isFile()) {
       const sourcePath = path.join(dirent.parentPath || dirent.path, dirent.name);
@@ -84,7 +137,13 @@ async function createWork() {
       );
       await mkdir(targetDir, {recursive: true});
       const targetPath = path.join(targetDir, dirent.name.slice(0, -5) + '.md');
-      workerTasks[workerIdx].push({sourcePath, targetPath});
+      const relativePath = path.relative(OUTPUT_DIR, targetPath);
+      workerTasks[workerIdx].push({
+        sourcePath,
+        targetPath,
+        relativePath,
+        r2Hash: existingFilesOnR2 ? existingFilesOnR2.get(relativePath) : null,
+      });
       workerIdx = (workerIdx + 1) % numWorkers;
       numFiles++;
     }
@@ -96,7 +155,12 @@ async function createWork() {
   const workerPromises = new Array(numWorkers - 1).fill(null).map((_, id) => {
     return new Promise((resolve, reject) => {
       const worker = new Worker(selfPath, {
-        workerData: {id, noCache, cacheDir: CACHE_DIR, tasks: workerTasks[id]},
+        workerData: {
+          id,
+          noCache,
+          cacheDir: CACHE_DIR,
+          tasks: workerTasks[id],
+        },
       });
       let hasErrors = false;
       worker.on('message', data => (hasErrors = taskFinishHandler(data)));
@@ -113,10 +177,10 @@ async function createWork() {
   // The main thread can also process tasks -- That's 65% more bullet per bullet! -Cave Johnson
   workerPromises.push(
     processTaskList({
-      noCache,
-      cacheDir: CACHE_DIR,
-      tasks: workerTasks[workerTasks.length - 1],
       id: workerTasks.length - 1,
+      tasks: workerTasks[workerTasks.length - 1],
+      cacheDir: CACHE_DIR,
+      noCache,
     }).then(data => {
       if (taskFinishHandler(data)) {
         throw new Error(`Worker[${data.id}] had some errors.`);
@@ -133,33 +197,32 @@ async function createWork() {
 const md5 = data => createHash('md5').update(data).digest('hex');
 
 async function genMDFromHTML(source, target, {cacheDir, noCache}) {
-  const text = (await readFile(source, {encoding: 'utf8'}))
+  const leanHTML = (await readFile(source, {encoding: 'utf8'}))
     // Remove all script tags, as they are not needed in markdown
     // and they are not stable across builds, causing cache misses
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
-  const hash = md5(text);
-  const cacheFile = path.join(cacheDir, hash);
+  const cacheKey = `v${CACHE_VERSION}_${md5(leanHTML)}`;
+  const cacheFile = path.join(cacheDir, cacheKey);
   if (!noCache) {
     try {
-      await pipeline(
-        createReadStream(cacheFile),
-        createBrotliDecompress(),
-        createWriteStream(target, {
-          encoding: 'utf8',
-        })
+      const data = await text(
+        compose(createReadStream(cacheFile), createBrotliDecompress())
       );
+      await writeFile(target, data, {encoding: 'utf8'});
 
-      return true;
-    } catch {
-      // pass
+      return {cacheHit: true, data};
+    } catch (err) {
+      if (err.code !== 'ENOENT') {
+        console.warn(`Error using cache file ${cacheFile}:`, err);
+      }
     }
   }
 
   const data = String(
     await unified()
       .use(rehypeParse)
-      // Need the `main div > hgroup` selector for the headers
-      .use(() => tree => selectAll('main div > hgroup, div#main', tree))
+      // Need the `head > title` selector for the headers
+      .use(() => tree => selectAll('head > title, div#main', tree))
       // If we don't do this wrapping, rehypeRemark just returns an empty string -- yeah WTF?
       .use(() => tree => ({
         type: 'element',
@@ -172,13 +235,39 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
         handlers: {
           // Remove buttons as they usually get confusing in markdown, especially since we use them as tab headers
           button() {},
+          // Convert the title to the top level heading
+          // This is needed because the HTML title tag is not part of the main content
+          // and we want to have a top level heading in the markdown
+          title: (_state, node) => ({
+            type: 'heading',
+            depth: 1,
+            children: [
+              {
+                type: 'text',
+                value: node.children[0].value,
+              },
+            ],
+          }),
         },
       })
+      .use(RemarkLinkRewrite, {
+        // There's a chance we might be changing absolute URLs here
+        // We'll check the code base and fix that later
+        replacer: url => {
+          const mdUrl = new URL(url, DOCS_BASE_URL);
+          const newPathName = mdUrl.pathname.replace(/\/?$/, '');
+          if (path.extname(newPathName) === '') {
+            mdUrl.pathname = `${newPathName}.md`;
+          }
+          return mdUrl;
+        },
+      })
+      .use(imgLinks, {absolutePath: DOCS_BASE_URL})
       // We end up with empty inline code blocks, probably from some tab logic in the HTML, remove them
       .use(() => tree => remove(tree, {type: 'inlineCode', value: ''}))
       .use(remarkGfm)
       .use(remarkStringify)
-      .process(text)
+      .process(leanHTML)
   );
   const reader = Readable.from(data);
 
@@ -203,23 +292,60 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
     ).catch(err => console.warn('Error writing cache file:', err)),
   ]);
 
-  return false;
+  return {cacheHit: false, data};
 }
 
 async function processTaskList({id, tasks, cacheDir, noCache}) {
+  const s3Client = getS3Client();
   const failedTasks = [];
-  let cacheHits = 0;
-  for (const {sourcePath, targetPath} of tasks) {
+  let cacheMisses = [];
+  let r2CacheMisses = [];
+  console.log(`🤖 Worker[${id}]: Starting to process ${tasks.length} files...`);
+  for (const {sourcePath, targetPath, relativePath, r2Hash} of tasks) {
     try {
-      cacheHits += await genMDFromHTML(sourcePath, targetPath, {
+      const {data, cacheHit} = await genMDFromHTML(sourcePath, targetPath, {
         cacheDir,
         noCache,
       });
+      if (!cacheHit) {
+        cacheMisses.push(relativePath);
+      }
+
+      if (r2Hash !== null) {
+        const fileHash = md5(data);
+        if (r2Hash !== fileHash) {
+          r2CacheMisses.push(relativePath);
+
+          await uploadToCFR2(s3Client, relativePath, data);
+        }
+      }
     } catch (error) {
       failedTasks.push({sourcePath, targetPath, error});
     }
   }
-  return {id, success: tasks.length - failedTasks.length, failedTasks, cacheHits};
+  const success = tasks.length - failedTasks.length;
+  if (r2CacheMisses.length / tasks.length > 0.1) {
+    console.warn(
+      `⚠️ Worker[${id}]: More than 10% of files had a different hash on R2 with the generation process.`
+    );
+  } else if (r2CacheMisses.length > 0) {
+    console.log(
+      `📤 Worker[${id}]: Updated the following files on R2: \n${r2CacheMisses.map(n => ` - ${n}`).join('\n')}`
+    );
+  }
+  if (cacheMisses.length / tasks.length > 0.1) {
+    console.warn(`⚠️ Worker[${id}]: More than 10% cache miss rate during build.`);
+  } else if (cacheMisses.length > 0) {
+    console.log(
+      `❇️ Worker[${id}]: Updated cache for the following files: \n${cacheMisses.map(n => ` - ${n}`).join('\n')}`
+    );
+  }
+
+  return {
+    id,
+    success,
+    failedTasks,
+  };
 }
 
 async function doWork(work) {
