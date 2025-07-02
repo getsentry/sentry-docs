@@ -1,0 +1,172 @@
+---
+title: Wrangler
+description: "Upload your Cloudflare Workers source maps using Wrangler and Sentry CLI."
+sidebar_order: 10
+supported:
+  - javascript.cloudflare
+---
+
+
+<Include name="debug-id-requirement.mdx" />
+
+<Alert level="info">
+
+This guide is specifically for Cloudflare Workers using Wrangler. For other build tools like Vite with Cloudflare, use the corresponding Vite guide instead.
+
+We recommend using Vite to build your worker for an easier and more reliable setup. Learn more about [Cloudflare's Vite setup](https://developers.cloudflare.com/workers/vite-plugin/get-started/).
+
+</Alert>
+
+## Automatic Setup
+
+The easiest way to configure source map uploading with Wrangler is by using the Sentry Wizard:
+
+<Include name="sourcemaps-wizard-instructions.mdx" />
+
+If you'd rather configure source maps manually, follow the steps below.
+
+## Manual Setup
+
+### 1. Install Sentry CLI
+
+First, install Sentry CLI as a dev dependency:
+
+```bash {tabTitle:npm}
+npm install --save-dev @sentry/cli
+```
+
+```bash {tabTitle:yarn}
+yarn add --dev @sentry/cli
+```
+
+```bash {tabTitle:pnpm}
+pnpm add --save-dev @sentry/cli
+```
+
+### 2. Configure Sentry CLI
+
+For more info on `sentry-cli` configuration visit the [Sentry CLI configuration docs](/cli/configuration/).
+
+Make sure `sentry-cli` is configured for your project. For that you can use environment variables:
+
+```bash {filename:.env.local}
+SENTRY_ORG=example-org
+SENTRY_PROJECT=example-project
+SENTRY_AUTH_TOKEN=sntrys_YOUR_TOKEN_HERE
+```
+
+### 3. Modify Your Deploy Script
+
+Update your Wrangler deploy script in `package.json` to include the necessary flags for source map generation and upload:
+
+```json {filename:package.json}
+{
+  "scripts": {
+    "deploy": "wrangler deploy --outdir dist --upload-source-maps --var SENTRY_RELEASE:$(sentry-cli releases propose-version)"
+  }
+}
+```
+
+The key flags are:
+
+- `--outdir dist`: Specifies the output directory where source maps will be generated
+- `--upload-source-maps`: Forces Wrangler to generate source maps
+- `--var SENTRY_RELEASE:$(sentry-cli releases propose-version)`: Injects the release version as an environment variable
+
+### 4. Create a Source Map Upload Script
+
+Add a script to upload source maps to Sentry in your `package.json`:
+
+```json {filename:package.json}
+{
+  "scripts": {
+    "sentry:sourcemaps": "_SENTRY_RELEASE=$(sentry-cli releases propose-version) && sentry-cli releases new $_SENTRY_RELEASE --org=your-org --project=your-project && sentry-cli sourcemaps upload --org=your-org --project=your-project --release=$_SENTRY_RELEASE --strip-prefix 'dist/..' dist"
+  }
+}
+```
+
+Replace `your-org` and `your-project` with your actual Sentry organization and project slugs.
+
+### 5. Add a Post-Deploy Hook
+
+Create a post-deploy script that automatically uploads source maps after deployment:
+
+```json {filename:package.json}
+{
+  "scripts": {
+    "deploy": "wrangler deploy --outdir dist --upload-source-maps --var SENTRY_RELEASE:$(sentry-cli releases propose-version)",
+    "postdeploy": "npm run sentry:sourcemaps"
+  }
+}
+```
+
+This ensures that source maps are uploaded to Sentry immediately after a successful deployment.
+
+### 6. Configure Your Sentry SDK
+
+Make sure your Sentry SDK configuration includes the release information:
+
+```typescript {filename:index.ts}
+import * as Sentry from "@sentry/cloudflare";
+
+export default Sentry.withSentry(
+  (env: Env) => ({
+    dsn: "YOUR_DSN_HERE",
+    // The release name should match what's used during source map upload
+    release: env.SENTRY_RELEASE,
+    // other options...
+  }),
+  {
+    async fetch(request, env, ctx) {
+      // Your worker logic here
+      return new Response("Hello World!");
+    },
+  } satisfies ExportedHandler<Env>
+);
+```
+
+### 7. Deploy Your Application
+
+Run your deploy command:
+
+```bash
+npm run deploy
+```
+
+This will:
+
+1. Build your worker with source maps enabled
+2. Deploy to Cloudflare with the release version injected
+3. Automatically upload source maps to Sentry via the post-deploy hook
+
+### 8. Verify Source Maps Upload
+
+You can verify that your source maps were uploaded successfully by:
+
+1. Going to **Project Settings > Source Maps** in Sentry
+2. Checking for your release in the "Artifact Bundles" tab
+3. Confirming that source maps are working by triggering an error and checking that the stack trace shows your original source code
+
+## Troubleshooting
+
+### Source Maps Not Working
+
+If your source maps aren't working as expected:
+
+1. Verify that the `SENTRY_RELEASE` environment variable is being set correctly in your worker
+2. Check that the release name in your Sentry SDK configuration matches the one used during upload
+3. Ensure that source maps are being generated in the specified `--outdir`
+
+### Build Errors
+
+If you encounter build errors when adding source map flags:
+
+1. Make sure you're using Wrangler `3.x` or above
+2. Verify that your project structure supports the `--outdir` flag
+3. Consider switching to Vite for a more robust build pipeline
+
+## Additional Resources
+
+- [Cloudflare Wrangler Documentation](https://developers.cloudflare.com/workers/wrangler/)
+- [Cloudflare Vite Plugin](https://developers.cloudflare.com/workers/vite-plugin/get-started/)
+- [Using sentry-cli to Upload Source Maps](/cli/releases/#sentry-cli-sourcemaps)

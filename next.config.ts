@@ -1,26 +1,42 @@
 import {codecovNextJSWebpackPlugin} from '@codecov/nextjs-webpack-plugin';
 import {withSentryConfig} from '@sentry/nextjs';
 
-import {redirects} from './redirects';
+import {redirects} from './redirects.js';
 
 const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? {
-      '/**/*': ['./.git/**/*', './apps/**/*', 'docs/**/*'],
+      '/**/*': [
+        '**/*.map',
+        './.git/**/*',
+        './apps/**/*',
+        './.next/cache/mdx-bundler/**/*',
+        './.next/cache/md-exports/**/*',
+        'docs/**/*',
+      ],
     }
   : {
       '/**/*': [
+        '**/*.map',
         './.git/**/*',
+        './.next/cache/mdx-bundler/**/*',
+        './.next/cache/md-exports/**/*',
         './apps/**/*',
         'develop-docs/**/*',
-        'node_modules/@esbuild/darwin-arm64',
+        'node_modules/@esbuild/*',
       ],
-      '/platform-redirect': ['**/*.gif', 'public/mdx-images/**/*', '*.pdf'],
+      '/platform-redirect': ['**/*.gif', 'public/mdx-images/**/*', '**/*.pdf'],
       '\\[\\[\\.\\.\\.path\\]\\]': [
         'docs/**/*',
         'node_modules/prettier/plugins',
         'node_modules/rollup/dist',
       ],
-      'sitemap.xml': ['docs/**/*', 'public/mdx-images/**/*', '*.gif', '*.pdf', '*.png'],
+      'sitemap.xml': [
+        'docs/**/*',
+        'public/mdx-images/**/*',
+        '**/*.gif',
+        '**/*.pdf',
+        '**/*.png',
+      ],
     };
 
 if (
@@ -55,6 +71,12 @@ const nextConfig = {
     DEVELOPER_DOCS_: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
   },
   redirects,
+  rewrites: async () => [
+    {
+      source: '/:path*.md',
+      destination: '/md-exports/:path*.md',
+    },
+  ],
   sassOptions: {
     silenceDeprecations: ['legacy-js-api'],
   },

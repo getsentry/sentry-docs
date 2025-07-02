@@ -55,7 +55,11 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
           </button>
         )}
       </div>
-      <div className={styles.copied} style={{opacity: showCopied ? 1 : 0}}>
+      <div
+        data-mdast="ignore"
+        className={styles.copied}
+        style={{opacity: showCopied ? 1 : 0}}
+      >
         Copied
       </div>
       <div ref={codeRef}>
