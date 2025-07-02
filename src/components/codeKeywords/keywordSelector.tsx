@@ -71,9 +71,10 @@ export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
   }
 
   // Enhanced tooltip text that makes it clear users can change projects
-  const tooltipText = choices.length > 1 
-    ? `Current project: ${currentSelection?.title}. Click to select a different project.`
-    : `Current project: ${currentSelection?.title}`;
+  const tooltipText =
+    choices.length > 1
+      ? `Current project: ${currentSelection?.title}. Click to select a different project.`
+      : `Current project: ${currentSelection?.title}`;
 
   const selector = isOpen && (
     <PositionWrapper style={styles.popper} ref={setDropdownEl} {...attributes.popper}>
@@ -138,7 +139,7 @@ export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
           // Add subtle visual cues to indicate this is clickable
           cursor: 'pointer',
           borderBottom: choices.length > 1 ? '1px dotted currentColor' : undefined,
-          position: 'relative'
+          position: 'relative',
         }}
       >
         <KeywordIndicatorComponent isOpen={isOpen} />
@@ -162,12 +163,12 @@ export function KeywordSelector({keyword, group, index}: KeywordSelectorProps) {
         </span>
         {/* Add a small indicator when multiple projects are available */}
         {choices.length > 1 && (
-          <span 
+          <span
             style={{
               fontSize: '0.75em',
               opacity: 0.6,
               marginLeft: '2px',
-              userSelect: 'none'
+              userSelect: 'none',
             }}
             title="Click to change project"
           >

@@ -53,12 +53,12 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
     if (!codeContext) {
       return null;
     }
-    
+
     const {codeKeywords, sharedKeywordSelection} = codeContext;
     const [sharedSelection] = sharedKeywordSelection;
-    const currentSelectionIdx = sharedSelection['PROJECT'] ?? 0;
+    const currentSelectionIdx = sharedSelection.PROJECT ?? 0;
     const currentProject = codeKeywords?.PROJECT?.[currentSelectionIdx];
-    
+
     return currentProject?.title;
   };
 

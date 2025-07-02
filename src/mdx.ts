@@ -1,12 +1,10 @@
-import {BinaryLike, createHash} from 'crypto';
-
-import {cache} from 'react';
 import matter from 'gray-matter';
 import {s} from 'hastscript';
 import yaml from 'js-yaml';
 import {bundleMDX} from 'mdx-bundler';
+import {BinaryLike, createHash} from 'node:crypto';
 import {createReadStream, createWriteStream, mkdirSync} from 'node:fs';
-import {access, opendir, readFile} from 'node:fs/promises';
+import {access, cp, mkdir, opendir, readFile} from 'node:fs/promises';
 import path from 'node:path';
 // @ts-expect-error ts(2305) -- For some reason "compose" is not recognized in the types
 import {compose, Readable} from 'node:stream';
@@ -34,6 +32,7 @@ import rehypeSlug from './rehype-slug.js';
 import remarkCodeTabs from './remark-code-tabs';
 import remarkCodeTitles from './remark-code-title';
 import remarkComponentSpacing from './remark-component-spacing';
+import remarkDsnComments from './remark-dsn-comments';
 import remarkExtractFrontmatter from './remark-extract-frontmatter';
 import remarkFormatCodeBlocks from './remark-format-code';
 import remarkImageSize from './remark-image-size';
@@ -42,7 +41,6 @@ import remarkVariables from './remark-variables';
 import {FrontMatter, Platform, PlatformConfig} from './types';
 import {isNotNil} from './utils';
 import {isVersioned, VERSION_INDICATOR} from './versioning';
-import remarkDsnComments from './remark-dsn-comments';
 
 type SlugFile = {
   frontMatter: Platform & {slug: string};
@@ -74,14 +72,15 @@ async function readCacheFile<T>(file: string): Promise<T> {
 }
 
 async function writeCacheFile(file: string, data: string) {
+  const bufferData = Buffer.from(data);
   await pipeline(
-    Readable.from(data),
+    Readable.from(bufferData),
     createBrotliCompress({
       chunkSize: 32 * 1024,
       params: {
         [zlibConstants.BROTLI_PARAM_MODE]: zlibConstants.BROTLI_MODE_TEXT,
         [zlibConstants.BROTLI_PARAM_QUALITY]: CACHE_COMPRESS_LEVEL,
-        [zlibConstants.BROTLI_PARAM_SIZE_HINT]: data.length,
+        [zlibConstants.BROTLI_PARAM_SIZE_HINT]: bufferData.length,
       },
     }),
     createWriteStream(file)
@@ -523,17 +522,33 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     );
   }
 
-  const cacheKey = md5(source);
-  const cacheFile = path.join(CACHE_DIR, cacheKey);
+  let cacheKey: string | null = null;
+  let cacheFile: string | null = null;
+  let assetsCacheDir: string | null = null;
+  const outdir = path.join(root, 'public', 'mdx-images');
+  await mkdir(outdir, {recursive: true});
 
-  try {
-    const cached = await readCacheFile<SlugFile>(cacheFile);
-    return cached;
-  } catch (err) {
-    if (err.code !== 'ENOENT' && err.code !== 'ABORT_ERR') {
-      // If cache is corrupted, ignore and proceed
-      // eslint-disable-next-line no-console
-      console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
+  if (process.env.CI) {
+    cacheKey = md5(source);
+    cacheFile = path.join(CACHE_DIR, `${cacheKey}.br`);
+    assetsCacheDir = path.join(CACHE_DIR, cacheKey);
+
+    try {
+      const [cached, _] = await Promise.all([
+        readCacheFile<SlugFile>(cacheFile),
+        cp(assetsCacheDir, outdir, {recursive: true}),
+      ]);
+      return cached;
+    } catch (err) {
+      if (
+        err.code !== 'ENOENT' &&
+        err.code !== 'ABORT_ERR' &&
+        err.code !== 'Z_BUF_ERROR'
+      ) {
+        // If cache is corrupted, ignore and proceed
+        // eslint-disable-next-line no-console
+        console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
+      }
     }
   }
 
@@ -632,8 +647,12 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
         '.svg': 'dataurl',
       };
       // Set the `outdir` to a public location for this bundle.
-      // this where this images will be copied
-      options.outdir = path.join(root, 'public', 'mdx-images');
+      // this is where these images will be copied
+      // the reason we use the cache folder when it's
+      // enabled is because mdx-images is a dumping ground
+      // for all images, so we cannot filter it out only
+      // for this specific slug easily
+      options.outdir = assetsCacheDir || outdir;
 
       // Set write to true so that esbuild will output the files.
       options.write = true;
@@ -663,17 +682,30 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     },
   };
 
-  writeCacheFile(cacheFile, JSON.stringify(resultObj)).catch(e => {
-    // eslint-disable-next-line no-console
-    console.warn(`Failed to write MDX cache: ${cacheFile}`, e);
-  });
+  if (assetsCacheDir && cacheFile) {
+    await cp(assetsCacheDir, outdir, {recursive: true});
+    writeCacheFile(cacheFile, JSON.stringify(resultObj)).catch(e => {
+      // eslint-disable-next-line no-console
+      console.warn(`Failed to write MDX cache: ${cacheFile}`, e);
+    });
+  }
 
   return resultObj;
 }
+
+const fileBySlugCache = new Map<string, Promise<SlugFile>>();
 
 /**
  * Cache the result of {@link getFileBySlug}.
  *
  * This is useful for performance when rendering the same file multiple times.
  */
-export const getFileBySlugWithCache = cache(getFileBySlug);
+export function getFileBySlugWithCache(slug: string): Promise<SlugFile> {
+  let cached = fileBySlugCache.get(slug);
+  if (!cached) {
+    cached = getFileBySlug(slug);
+    fileBySlugCache.set(slug, cached);
+  }
+
+  return cached;
+}
