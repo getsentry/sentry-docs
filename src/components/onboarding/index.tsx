@@ -144,21 +144,34 @@ export function OnboardingOption({
   children,
   optionId,
   hideForThisOption,
+  isStep = false,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   optionId: OptionId;
   hideForThisOption?: boolean;
+  isStep?: boolean;
 }) {
   validateOptionIds([{id: optionId}]);
+  const className = [
+    hideForThisOption ? 'hidden' : '',
+    isStep ? 'onboarding-step' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
     <div
       data-onboarding-option={optionId}
       data-hide-for-this-option={hideForThisOption}
-      className={hideForThisOption ? 'hidden' : ''}
+      className={className}
     >
       {children}
     </div>
   );
+}
+
+export function OnboardingSteps({children}: {children: ReactNode}) {
+  return <div className="onboarding-steps">{children}</div>;
 }
 
 /**
