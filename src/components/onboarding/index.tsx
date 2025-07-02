@@ -167,6 +167,10 @@ export function OnboardingOption({
   );
 }
 
+/**
+ * Wrapper component that provides CSS counter context for numbered onboarding steps
+ * @param children - OnboardingOption components that should be numbered as steps
+ */
 export function OnboardingSteps({children}: {children: ReactNode}) {
   return <div className="onboarding-steps">{children}</div>;
 }
