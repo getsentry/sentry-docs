@@ -50,7 +50,7 @@ To use the loader, go in the Sentry UI to **Settings > Projects > (select projec
 ></script>
 ```
 
-By default, Tracing and Session Replay are enabled.
+By default, Tracing and Session Replay are disabled.
 
 ## Source Maps
 
@@ -171,7 +171,7 @@ By default, the loader will make sure you can call these functions directly on `
 - `Sentry.showReportDialog()`
 
 If you want to call any other method when using the Loader, you have to guard it with `Sentry.onLoad()`. Any callback given to `onLoad()` will be called either immediately (if the SDK is already loaded), or later once the SDK has been loaded:
-```html 
+```html
 <script>
   window.sentryOnLoad = function () {
     Sentry.init({
@@ -179,9 +179,9 @@ If you want to call any other method when using the Loader, you have to guard it
     });
   };
 </script>
-  
+
 <script src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js" crossorigin="anonymous"></script>
-  
+
 <script>
   // Guard against window.Sentry not being available, e.g. due to Ad-blockers
   window.Sentry &&
@@ -203,10 +203,10 @@ If you want to understand the inner workings of the loader itself, you can read 
 ## Limitations of Tracing
 
 Because the loader script injects the actual SDK asynchronously to keep your pageload performance high, the SDK's tracing functionality is only available once the SDK is loaded and initialized.
-This means that if you e.g. have `fetch` calls right at the beginning of your application, they might not be traced. 
+This means that if you e.g. have `fetch` calls right at the beginning of your application, they might not be traced.
 If this is a critical issue for you, you have two options to ensure that all your `fetch` calls are traced:
 
-- Initialize the SDK in `window.sentryOnLoad` as described in [Custom Configuration](#custom-configuration). Then make your `fetch` call in the `Sentry.onload` callback. 
+- Initialize the SDK in `window.sentryOnLoad` as described in [Custom Configuration](#custom-configuration). Then make your `fetch` call in the `Sentry.onload` callback.
   <Expandable title="Example">
   ```html
   <script>
@@ -216,9 +216,9 @@ If this is a critical issue for you, you have two options to ensure that all you
       });
     };
   </script>
-  
+
   <script src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js" crossorigin="anonymous"></script>
-  
+
   <script>
     Sentry.onLoad(function () {
       fetch("/api/users");
@@ -230,7 +230,7 @@ If this is a critical issue for you, you have two options to ensure that all you
 
 <Alert level="warning">
 
-Please be aware that both of these options will add delay to your `fetch` calls or decrease your pageload performance. Ultimately, this is the trade-off between lazy and eagerly loading the Sentry SDK.  
+Please be aware that both of these options will add delay to your `fetch` calls or decrease your pageload performance. Ultimately, this is the trade-off between lazy and eagerly loading the Sentry SDK.
 
 </Alert>
 
