@@ -193,37 +193,40 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     - **Node 20:** Version \<20.19
     - **Node 22:** Version \<22.12
 
+If you are on a different version please make use of our manual server wrappers.
 
-  If you are on a different version please make use of our manual server wrappers.
+For server loaders use `wrapServerLoader`:
 
-  For server loaders use `wrapServerLoader`:
 ```ts
-import * as Sentry from '@sentry/react-router';
+import * as Sentry from "@sentry/react-router";
 
 export const loader = Sentry.wrapServerLoader(
   {
-    name: 'Load Some Data',
-    description: 'Loads some data from the db',
+    name: "Load Some Data",
+    description: "Loads some data from the db",
   },
   async ({ params }) => {
     // ... your loader logic
   }
 );
 ```
- For server actions use `wrapServerAction`:
+
+For server actions use `wrapServerAction`:
+
 ```ts
-import * as Sentry from '@sentry/react-router';
+import * as Sentry from "@sentry/react-router";
 
 export const action = Sentry.wrapServerAction(
   {
-    name: 'Submit Form Data',
-    description: 'Processes form submission data',
+    name: "Submit Form Data",
+    description: "Processes form submission data",
   },
   async ({ request }) => {
     // ... your action logic
   }
 );
 ```
+
 </Expandable>
 
 Create an `instrument.server.mjs` file in the root of your app:
@@ -291,77 +294,78 @@ export const handleError: HandleErrorFunction = (error, { request }) => {
 <Expandable title="Do you need to customize your handleRequest function?">
   If you need to update the logic of your `handleRequest` function you'll need to include the provided Sentry helper functions (`getMetaTagTransformer` and `wrapSentryHandleRequest`) manually:
 
-  ```tsx {1-4, 44-45, 69-70}
-  import { getMetaTagTransformer, wrapSentryHandleRequest } from '@sentry/react-router';
-  // ... other imports
+```tsx {1-4, 44-45, 69-70}
+import {
+  getMetaTagTransformer,
+  wrapSentryHandleRequest,
+} from "@sentry/react-router";
+// ... other imports
 
-  const handleRequest = function handleRequest(
-    request: Request,
-    responseStatusCode: number,
-    responseHeaders: Headers,
-    routerContext: EntryContext,
-    _loadContext: AppLoadContext,
-  ): Promise<Response> {
-    return new Promise((resolve, reject) => {
-      let shellRendered = false;
-      const userAgent = request.headers.get('user-agent');
+const handleRequest = function handleRequest(
+  request: Request,
+  responseStatusCode: number,
+  responseHeaders: Headers,
+  routerContext: EntryContext,
+  _loadContext: AppLoadContext
+): Promise<Response> {
+  return new Promise((resolve, reject) => {
+    let shellRendered = false;
+    const userAgent = request.headers.get("user-agent");
 
-      // Determine if we should use onAllReady or onShellReady
-      const isBot = typeof userAgent === 'string' && botRegex.test(userAgent);
-      const isSpaMode = !!(routerContext as { isSpaMode?: boolean }).isSpaMode;
+    // Determine if we should use onAllReady or onShellReady
+    const isBot = typeof userAgent === "string" && botRegex.test(userAgent);
+    const isSpaMode = !!(routerContext as { isSpaMode?: boolean }).isSpaMode;
 
-      const readyOption = isBot || isSpaMode ? 'onAllReady' : 'onShellReady';
+    const readyOption = isBot || isSpaMode ? "onAllReady" : "onShellReady";
 
-      const { pipe, abort } = renderToPipeableStream(
-        <ServerRouter context={routerContext} url={request.url} />,
-        {
-          [readyOption]() {
-            shellRendered = true;
-            const body = new PassThrough();
+    const { pipe, abort } = renderToPipeableStream(
+      <ServerRouter context={routerContext} url={request.url} />,
+      {
+        [readyOption]() {
+          shellRendered = true;
+          const body = new PassThrough();
 
-            const stream = createReadableStreamFromReadable(body);
+          const stream = createReadableStreamFromReadable(body);
 
-            responseHeaders.set('Content-Type', 'text/html');
+          responseHeaders.set("Content-Type", "text/html");
 
-            resolve(
-              new Response(stream, {
-                headers: responseHeaders,
-                status: responseStatusCode,
-              }),
-            );
+          resolve(
+            new Response(stream, {
+              headers: responseHeaders,
+              status: responseStatusCode,
+            })
+          );
 
-            // this enables distributed tracing between client and server
-            pipe(getMetaTagTransformer(body));
-          },
-          onShellError(error: unknown) {
-            reject(error);
-          },
-          onError(error: unknown) {
-            // eslint-disable-next-line no-param-reassign
-            responseStatusCode = 500;
-            // Log streaming rendering errors from inside the shell.  Don't log
-            // errors encountered during initial shell rendering since they'll
-            // reject and get logged in handleDocumentRequest.
-            if (shellRendered) {
-              // eslint-disable-next-line no-console
-              console.error(error);
-            }
-          },
+          // this enables distributed tracing between client and server
+          pipe(getMetaTagTransformer(body));
         },
-      );
+        onShellError(error: unknown) {
+          reject(error);
+        },
+        onError(error: unknown) {
+          // eslint-disable-next-line no-param-reassign
+          responseStatusCode = 500;
+          // Log streaming rendering errors from inside the shell.  Don't log
+          // errors encountered during initial shell rendering since they'll
+          // reject and get logged in handleDocumentRequest.
+          if (shellRendered) {
+            // eslint-disable-next-line no-console
+            console.error(error);
+          }
+        },
+      }
+    );
 
-      // Abort the rendering stream after the `streamTimeout`
-      setTimeout(abort, streamTimeout);
-    });
+    // Abort the rendering stream after the `streamTimeout`
+    setTimeout(abort, streamTimeout);
+  });
+};
 
-    };
+// wrap the default export
+export default wrapSentryHandleRequest(handleRequest);
 
-    // wrap the default export
-    export default wrapSentryHandleRequest(handleRequest);
-
-    // ... rest of your entry.server.ts file
-
-    ```
+// ... rest of your entry.server.ts file
+```
 
 </Expandable>
 
@@ -412,7 +416,7 @@ const sentryConfig: SentryReactRouterBuildOptions = {
 
   // An auth token is required for uploading source maps;
   // store it in an environment variable to keep it secure.
-  authToken: import.meta.env.VITE_SENTRY_AUTH_TOKEN,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
   // ...
 };
 
@@ -428,7 +432,7 @@ To keep your auth token secure, always store it in an environment variable inste
 <OrgAuthTokenNote />
 
 ```bash {filename:.env}
-VITE_SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
 
 Include the `sentryOnBuildEnd` hook in `react-router.config.ts`:
