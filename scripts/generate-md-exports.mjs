@@ -217,7 +217,7 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
       }
     }
   }
-
+  let baseUrl = DOCS_BASE_URL;
   const data = String(
     await unified()
       .use(rehypeParse)
@@ -233,6 +233,12 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
       .use(rehypeRemark, {
         document: false,
         handlers: {
+          // HACK: Extract the canonical URL during parsing
+          link: (_state, node) => {
+            if (node.properties.rel === 'canonical' && node.properties.href) {
+              baseUrl = node.properties.href;
+            }
+          },
           // Remove buttons as they usually get confusing in markdown, especially since we use them as tab headers
           button() {},
           // Convert the title to the top level heading
