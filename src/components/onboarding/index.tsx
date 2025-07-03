@@ -50,6 +50,24 @@ const optionDetails: Record<
       </span>
     ),
   },
+  'user-feedback': {
+    name: 'User Feedback',
+    description: (
+      <span>
+        Collect user feedback from anywhere in your application with an embeddable widget
+        that allows users to report bugs and provide insights.
+      </span>
+    ),
+  },
+  logs: {
+    name: 'Logs (Beta)',
+    description: (
+      <span>
+        Send text-based log information from your applications to Sentry for viewing
+        alongside relevant errors and searching by text-string or individual attributes.
+      </span>
+    ),
+  },
   'source-context': {
     name: 'Source Context',
     description: (
@@ -88,6 +106,8 @@ const OPTION_IDS = [
   'performance',
   'profiling',
   'session-replay',
+  'user-feedback',
+  'logs',
   'source-context',
   'dsym',
   'source-maps',
@@ -122,23 +142,40 @@ const validateOptionIds = (options: Pick<OnboardingOptionType, 'id'>[]) => {
 
 export function OnboardingOption({
   children,
-  optionId,
+  optionId = 'all',
   hideForThisOption,
+  isStep = false,
 }: {
-  children: React.ReactNode;
-  optionId: OptionId;
+  children: ReactNode;
+  optionId: OptionId | 'all';
   hideForThisOption?: boolean;
+  isStep?: boolean;
 }) {
-  validateOptionIds([{id: optionId}]);
+  if (optionId !== 'all') {
+    // Allow not passing an optionId when isStep is true
+    validateOptionIds([{id: optionId}]);
+  }
+  const className = [hideForThisOption ? 'hidden' : '', isStep ? 'onboarding-step' : '']
+    .filter(Boolean)
+    .join(' ');
+
   return (
     <div
       data-onboarding-option={optionId}
       data-hide-for-this-option={hideForThisOption}
-      className={hideForThisOption ? 'hidden' : ''}
+      className={className}
     >
       {children}
     </div>
   );
+}
+
+/**
+ * Wrapper component that provides CSS counter context for numbered onboarding steps
+ * @param children - OnboardingOption components that should be numbered as steps
+ */
+export function OnboardingSteps({children}: {children: ReactNode}) {
+  return <div className="onboarding-steps">{children}</div>;
 }
 
 /**
@@ -300,14 +337,49 @@ export function OnboardingOptionButtons({
 
             {optionDetails[option.id].name}
             {optionDetails[option.id] && (
-              <Tooltip.Provider>
+              <Tooltip.Provider delayDuration={300}>
                 <Tooltip.Root>
-                  <Tooltip.Trigger asChild>
-                    <QuestionMarkCircledIcon fontSize={20} strokeWidth="2" />
+                  <Tooltip.Trigger
+                    asChild
+                    onMouseEnter={e => {
+                      // Explicit mouse enter handling for Firefox compatibility
+                      e.currentTarget.setAttribute('data-state', 'delayed-open');
+                    }}
+                    onMouseLeave={e => {
+                      // Explicit mouse leave handling for Firefox compatibility
+                      e.currentTarget.removeAttribute('data-state');
+                    }}
+                    onFocus={e => {
+                      // Ensure keyboard navigation works
+                      e.currentTarget.setAttribute('data-state', 'delayed-open');
+                    }}
+                    onBlur={e => {
+                      // Ensure keyboard navigation works
+                      e.currentTarget.removeAttribute('data-state');
+                    }}
+                  >
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Help: ${optionDetails[option.id].name}`}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        cursor: 'help',
+                        outline: 'none',
+                      }}
+                    >
+                      <QuestionMarkCircledIcon fontSize={20} strokeWidth="2" />
+                    </span>
                   </Tooltip.Trigger>
                   <Tooltip.Portal>
                     <Theme accentColor="iris">
-                      <Tooltip.Content className={styles.TooltipContent} sideOffset={5}>
+                      <Tooltip.Content
+                        className={styles.TooltipContent}
+                        sideOffset={5}
+                        align="center"
+                        side="top"
+                      >
                         {optionDetails[option.id].description}
                         <Tooltip.Arrow className={styles.TooltipArrow} />
                       </Tooltip.Content>

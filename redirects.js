@@ -967,16 +967,8 @@ const userDocsRedirects = [
     destination: '/product/insights/backend/queue-monitoring/queues-page/',
   },
   {
-    source: '/product/insights/llm-monitoring/',
-    destination: '/product/insights/ai/llm-monitoring/',
-  },
-  {
-    source: '/product/insights/llm-monitoring/getting-started/',
-    destination: '/product/insights/ai/llm-monitoring/getting-started/',
-  },
-  {
-    source: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
-    destination: '/product/insights/ai/llm-monitoring/getting-started/the-dashboard/',
+    source: '/product/insights/llm-monitoring/:path*',
+    destination: '/product/insights/ai/:path*',
   },
   {
     source: '/product/insights/retention-priorities/',
@@ -1059,10 +1051,22 @@ const userDocsRedirects = [
     source: '/product/tracing/:path*',
     destination: '/concepts/key-terms/tracing/:path*',
   },
+  {
+    source: '/organization/integrations/shortcut/',
+    destination: '/organization/integrations/issue-tracking/shortcut/',
+  },
   // Redirects for JavaScript tracing docs
   {
     source: '/platforms/javascript/tracing/trace-propagation/:path*',
     destination: '/platforms/javascript/tracing/distributed-tracing/:path*',
+  },
+  {
+    source: '/platforms/javascript/metrics/:path*',
+    destination: '/platforms/javascript/tracing/span-metrics/:path*',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/metrics/:path*',
+    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/:path*',
   },
   {
     source: '/platforms/javascript/tracing/instrumentation/performance-metrics/',
@@ -1173,6 +1177,14 @@ const userDocsRedirects = [
   {
     source: '/organization/integrations/expo/',
     destination: '/organization/integrations/deployment/expo/',
+  },
+  {
+    source: '/product/issues/issue-details/sentry-seer/',
+    destination: '/product/ai-in-sentry/seer/',
+  },
+  {
+    source: '/product/ai-in-sentry/seer/seer-privacy-and-security',
+    destination: '/product/ai-in-sentry/ai-privacy-and-security/',
   },
 ];
 

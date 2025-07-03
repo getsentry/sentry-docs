@@ -38,3 +38,5 @@ if (process.env.NODE_ENV === 'development') {
     showClearEventsButton: true,
   });
 }
+
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

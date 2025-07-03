@@ -1,0 +1,25 @@
+Once you have configured Sentry as a log channel, you can use Laravel's built-in logging functionality to send logs to Sentry:
+
+```php
+use Illuminate\Support\Facades\Log;
+
+// Log to all channels in the stack (including Sentry)
+Log::info('This is an info message');
+Log::warning('User {id} failed to login.', ['id' => $user->id]);
+Log::error('This is an error message');
+
+// Log directly to the Sentry channel
+Log::channel('sentry')->error('This will only go to Sentry');
+```
+
+You can pass additional attributes directly to the logging functions. These properties will be sent to Sentry, and can be searched from within the Logs UI, and even added to the Logs views as a dedicated column.
+
+```php
+use Illuminate\Support\Facades\Log;
+
+Log::error('Something went wrong', [
+    'user_id' => auth()->id(),
+    'action' => 'update_profile',
+    'additional_data' => $data,
+]);
+```
