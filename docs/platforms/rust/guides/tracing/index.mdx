@@ -12,7 +12,7 @@ The Sentry SDK offers an integration for tokio's [tracing](https://github.com/to
 ## Install
 
 <OnboardingOptionButtons
-  options={["error-monitoring", "performance"]}
+  options={["error-monitoring", "performance", "logs"]}
 />
 
 To add Sentry with the `tracing` integration to your Rust project, add the necessary dependencies to your `Cargo.toml`:
@@ -21,7 +21,12 @@ To add Sentry with the `tracing` integration to your Rust project, add the neces
 [dependencies]
 tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
-sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = ["tracing"] }
+sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = [
+  "tracing",
+  # ___PRODUCT_OPTION_START___ logs
+  "logs",
+  # ___PRODUCT_OPTION_END___ logs
+] }
 ```
 
 ## Configure
@@ -41,6 +46,9 @@ fn main() {
             // Capture all traces and spans. Set to a lower value in production
             traces_sample_rate: 1.0,
             # ___PRODUCT_OPTION_END___ performance
+            # ___PRODUCT_OPTION_START___ logs
+            enable_logs:true
+            # ___PRODUCT_OPTION_END___ logs
             ..sentry::ClientOptions::default()
         },
     });
@@ -48,7 +56,7 @@ fn main() {
     // Register the Sentry tracing layer
     tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer())
-        .with(sentry::integrations::tracing::layer())
+        .with(sentry_layer)
         .init();
 
     fail();
@@ -61,6 +69,10 @@ fn fail() {
     tracing::error!("Everything is on fire!");
 }
 ```
+
+# ___PRODUCT_OPTION_START___ logs
+lol
+# ___PRODUCT_OPTION_END___ logs
 
 ## Verify
 
