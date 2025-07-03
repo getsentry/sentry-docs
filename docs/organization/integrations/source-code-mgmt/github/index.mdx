@@ -5,15 +5,22 @@ description: "Learn more about Sentry's GitHub integration and how it can track 
 ---
 
 There are two types of GitHub integrations, so make sure you're choosing the correct one:
-- [GitHub](#installing-github) - For regular GitHub accounts, these will have URLs like `https://github.com/org-name`. Follow the '[Installing GitHub](#installing-github)' instructions, **do not use the GitHub Enterprise integration**.
-- [GitHub Enterprise](#installing-github-enterprise) - For GitHub Enterprise Cloud or GitHub Enterprise Server instances. Some example URLs:
-  - `https://github.org-name.com`
-  - `https://github.com/enterprises/org-name`
-  - `https://org-name.ghe.com/`
+- [GitHub](#installing-github) - For individual GitHub users/organizations (as well as most GitHub Enterprise Cloud customers), so long as they are hosted on `github.com`. Follow the '[Installing GitHub](#installing-github)' instructions, **Please begin the installation from Sentry**.
 
-  These [can also be modified](https://docs.github.com/en/enterprise-cloud@latest/admin/managing-your-enterprise-account/changing-the-url-for-your-enterprise) so make sure you have have the correct URL during installation. For these accounts, follow the '[Installing GitHub Enterprise](#installing-github-enterprise)' instructions, **do not use the regular GitHub integration**.
+- [GitHub Enterprise](#installing-github-enterprise) - For GitHub Enterprise instances that **cannot be accessed from `github.com`**. Usually these will have a custom domain, for example:
+  - `https://github.example.com`
+  - `https://ghe.example.com/`
 
-## Installing GitHub
+  For these accounts, follow the '[Installing GitHub Enterprise](#installing-github-enterprise)' instructions.
+  
+
+### Check Your Domain
+
+To determine which integration to use, enter your GitHub domain below:
+
+<GitHubDomainChecker />
+
+<br />
 
 <Alert>
 
@@ -21,7 +28,10 @@ Sentry owner, manager, or admin permissions, and GitHub owner permissions are re
 
 </Alert>
 
-1. Navigate to **Settings > Integrations > [GitHub](https://sentry.io/orgredirect/organizations/:orgslug/settings/integrations/github)**.
+## Installing GitHub
+
+
+1. In Sentry, navigate to **Settings > Integrations > [GitHub](https://sentry.io/orgredirect/organizations/:orgslug/settings/integrations/github)**.
 
    ![Install GitHub integration](./img/github-install-page.png)
 
@@ -37,7 +47,29 @@ Sentry owner, manager, or admin permissions, and GitHub owner permissions are re
 
    ![Add repository](./img/github-global-add-repo.png)
 
+9. You can now [configure](#configure) the integration.
+
 The GitHub integration is available for all projects under your Sentry organization. You can connect multiple GitHub organizations to one Sentry organization, but you **cannot** connect a single GitHub organization to multiple Sentry organizations.
+
+While you can install the GitHub integration from [GitHub](https://github.com/apps/sentry-io), we recommend installing it from Sentry for a more streamlined process.
+
+### GitHub Permissions
+
+The following permissions are required for the GitHub integration to work correctly. You must fully opt in to these permissions to use the app. All permissions listed are repo-level permissions, unless otherwise indicated.
+
+| Permission Category | Access Level   | Why Sentry Needs It |
+|--------------------|---------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| Administration     | Read-only     | To respect branch protection rules, determine default branches, and enhance automation.                                            |
+| Checks             | Read & Write  | To show detailed pass/fail results (e.g. test coverage, release health) as GitHub Checks on PRs or commits.                        |
+| Commit Statuses    | Read & Write  | To post status checks (e.g. test analytics data) to commits in GitHub and integrate with branch protection rules.                  |
+| Contents           | Read-only     | To fetch source files, commits, and blame data for Suspect Commits, tracking files in Releases.                                            |
+| Issues             | Read & Write  | To create GitHub issues from Sentry events and update linked issues.                                                               |
+| <span>Members<br/><em>_[Org-level]_</em></span>          | Read-only     | To map organization users to GitHub identities for improved issue attribution and collaboration.                                   |
+| Metadata           | Read-only     | To identify repository structure, names, default branches, and visibility.                                                        |
+| Pull Requests      | Read & Write  | To write comments on pull requests for (1) issues caused by the pull request and (2) to highlight existing issues in the code diff.|
+| Webhooks           | Read & Write  | To subscribe to real-time updates like push events, PRs, and issues.     
+
+Occasionally, Sentry will request additional permissions to your GitHub account as new features are introduced. Denying or ignoring the request to update will not affect your current Sentry usage, but may prevent access to future features. 
 
 ## Installing GitHub Enterprise
 
@@ -194,13 +226,13 @@ Commit tracking allows you to hone in on problematic commits. Learn more about [
 
 ### Suspect Commits and Suggested Assignees
 
-Once you set up commit tracking, you’ll be able to see the most recent changes to files found in the issue’s stack trace with suspect commits.
+Once you set up commit tracking, you'll be able to see the most recent changes to files found in the issue's stack trace with suspect commits.
 
-For issues where the files in the stack trace match files included in commits sent to Sentry, you’ll see the suspect commit, with a link to the commit itself.
+For issues where the files in the stack trace match files included in commits sent to Sentry, you'll see the suspect commit, with a link to the commit itself.
 
 ![Suspect commits](./img/github-global-suspect-commits.png)
 
-You’ll also see that the author of the suspect commit will be listed as a suggested assignee for this issue. To assign the issue to the suggested assignee, click on their icon.
+You'll also see that the author of the suspect commit will be listed as a suggested assignee for this issue. To assign the issue to the suggested assignee, click on their icon.
 
 ### Issue Management
 
@@ -234,7 +266,7 @@ To configure issue management manually, once you've navigated to a specific Sent
 
 ![Link GitHub issue from Sentry issue](./img/github-global-link-issue.png)
 
-Here, you’ll be able to create or link GitHub issues.
+Here, you'll be able to create or link GitHub issues.
 
 ![Create GitHub issue form](./img/github-create-issue.png)
 
@@ -250,7 +282,7 @@ Fixes MYAPP-317
 
 You can also resolve issues with pull requests by including `fixes <SENTRY-SHORT-ID>` in the title or description.
 
-When Sentry sees this, we’ll automatically annotate the matching issue with a reference to the commit or pull request, and, later, when that commit or pull request is part of a release, we’ll mark the issue as resolved. The commit must be associated with a release. Otherwise, if the commit is squashed, Sentry won’t know when the commit has been released, and the issue may never be marked as a regression. With GitHub, we recommend using `fixes <SENTRY-SHORT-ID>` in the body of your pull request that is going to be merged to your main branch.
+When Sentry sees this, we'll automatically annotate the matching issue with a reference to the commit or pull request, and, later, when that commit or pull request is part of a release, we'll mark the issue as resolved. The commit must be associated with a release. Otherwise, if the commit is squashed, Sentry won't know when the commit has been released, and the issue may never be marked as a regression. With GitHub, we recommend using `fixes <SENTRY-SHORT-ID>` in the body of your pull request that is going to be merged to your main branch.
 
 ### Get Sentry Comments on Pull Requests
 
@@ -333,7 +365,7 @@ For certain native platforms, the stack trace will look different. In cases like
 
 ![Highlighting where in the UI to find the file path for native stack traces](./img/code-mappings-stacktrace-native.png)
 
-If you aren’t sure, you can look at the event JSON by clicking on the `{}` button in the event header. Find the text in the frame's `filename` or `abs_path`.
+If you aren't sure, you can look at the event JSON by clicking on the `{}` button in the event header. Find the text in the frame's `filename` or `abs_path`.
 
 <Include name="common-imgs/code-mappings-event-json" />
 
@@ -357,13 +389,13 @@ For more details, see the full documentation for [Code Owners](/product/issues/o
 
 ### GitHub Single Sign-On
 
-Single sign-on (or SSO) allows you to manage your organization’s entire membership via a third-party provider.
+Single sign-on (or SSO) allows you to manage your organization's entire membership via a third-party provider.
 
 For more details, see the full documentation for [Single Sign-on](/organization/authentication/sso/).
 
 ## Troubleshooting
 
-If you’re having issues adding a GitHub repository:
+If you're having issues adding a GitHub repository:
 
 - Make sure you are the Owner of your GitHub organization.
 - [Disconnect](https://sentry.io/account/settings/identities/), and then [reconnect](https://sentry.io/account/settings/social/associate/github/) your GitHub Identity.

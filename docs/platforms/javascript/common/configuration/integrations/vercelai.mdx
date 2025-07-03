@@ -9,6 +9,7 @@ supported:
   - javascript.express
   - javascript.fastify
   - javascript.gcp-functions
+  - javascript.cloudflare
   - javascript.hapi
   - javascript.hono
   - javascript.koa
@@ -27,26 +28,147 @@ supported:
 
 <Alert>
 
-This integration only works in the Node.js and Bun runtimes. Requires SDK version `8.43.0` or higher.
+This integration only works in the Node.js, Cloudflare Workers, Vercel Edge Functions and Bun runtimes. Requires SDK version `9.33.0` or higher.
 
 </Alert>
 
 _Import name: `Sentry.vercelAIIntegration`_
 
-The `vercelAIIntegration` adds instrumentation for the [`ai`](https://www.npmjs.com/package/ai) library by Vercel to capture spans using the [`AI SDK's built-in Telemetry`](https://sdk.vercel.ai/docs/ai-sdk-core/telemetry).
+The `vercelAIIntegration` adds instrumentation for the [`ai`](https://www.npmjs.com/package/ai) SDK by Vercel to capture spans using the [`AI SDK's built-in Telemetry`](https://sdk.vercel.ai/docs/ai-sdk-core/telemetry).
+
+<PlatformSection notSupported={["javascript.cloudflare", "javascript.nextjs"]}>
+  It is enabled by default and will automatically capture spans for all `ai`
+  function calls. You can opt-in to capture inputs and outputs by setting `recordInputs` and `recordOutputs` in the integration config:
 
 ```javascript
 Sentry.init({
+  dsn: "____PUBLIC_DSN____"
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.vercelAIIntegration({
+      recordInputs: true,
+      recordOutputs: true,
+    }),
+  ],
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={['javascript.cloudflare']}>
+This integration is not enabled by default. You need to manually enable it by passing `Sentry.vercelAIIntegration()` to `Sentry.init`:
+
+```javascript
+Sentry.init({
+  dsn: "____PUBLIC_DSN____"
+  tracesSampleRate: 1.0,
   integrations: [Sentry.vercelAIIntegration()],
 });
 ```
 
-To enhance the spans collected by this integration, we recommend providing a `functionId` to identify the function that the telemetry data is for. For more details, see the [AI SDK Telemetry Metadata docs](https://sdk.vercel.ai/docs/ai-sdk-core/telemetry#telemetry-metadata).
+</PlatformSection>
+
+<PlatformSection supported={['javascript.nextjs']}>
+This integration is enabled by default in the Node runtime, but not in the Edge runtime. You need to manually enable it by passing `Sentry.vercelAIIntegration()` to `Sentry.init` in your `sentry.edge.config.js` file:
+
+```javascript {filename: 'sentry.edge.config.(js|ts)'}
+Sentry.init({
+  dsn: "____PUBLIC_DSN____"
+  tracesSampleRate: 1.0,
+  integrations: [Sentry.vercelAIIntegration()],
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={['javascript.cloudflare', 'javascript.nextjs']}>
+To correctly capture spans, pass the `experimental_telemetry` object with `isEnabled: true` to every `generateText`, `generateObject`, and `streamText` function call. For more details, see the [AI SDK Telemetry Metadata docs](https://sdk.vercel.ai/docs/ai-sdk-core/telemetry#telemetry-metadata).
 
 ```javascript
 const result = await generateText({
-  model: openai("gpt-4-turbo"),
-  experimental_telemetry: { functionId: "my-awesome-function" },
+  model: openai("gpt-4o"),
+  experimental_telemetry: {
+    isEnabled: true,
+    recordInputs: true,
+    recordOutputs: true,
+  },
+});
+```
+
+</PlatformSection>
+
+<PlatformSection notSupported={['javascript.cloudflare']}>
+## Options
+
+### `force`
+
+Requires SDK version `9.29.0` or higher.
+
+_Type: `boolean`_
+
+Forces the integration to be active, even when the `ai` module is not detected or available. This is useful when you want to ensure the integration is always enabled regardless of module detection.
+
+Defaults to `false`.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.vercelAIIntegration({ force: true })],
+});
+```
+
+<PlatformSection supported={["javascript.nextjs"]}>
+  This option is not available in the Edge runtime. There, the integration is
+  forced when it is enabled.
+</PlatformSection>
+
+<PlatformSection notSupported={['javascript.nextjs']}>
+### `recordInputs`
+
+Requires SDK version `9.27.0` or higher.
+
+_Type: `boolean`_
+
+Records inputs to the `ai` function call.
+
+Defaults to `true` if `sendDefaultPii` is `true` or if you explicitly set `experimental_telemetry.isEnabled` to `true` in your `ai` function callsites.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.vercelAIIntegration({ recordInputs: true })],
+});
+```
+
+### `recordOutputs`
+
+Requires SDK version `9.27.0` or higher.
+
+_Type: `boolean`_
+
+Records outputs to the `ai` function call.
+
+Defaults to `true` if `sendDefaultPii` is `true` or if you explicitly set `experimental_telemetry.isEnabled` to `true` in your `ai` function callsites.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.vercelAIIntegration({ recordOutputs: true })],
+});
+```
+
+</PlatformSection>
+
+</PlatformSection>
+
+## Identifying functions
+
+In order to make it easier to correlate captured spans with the function calls we recommend setting `functionId` in `experimental_telemetry` in all generation function calls:
+
+```javascript
+const result = await generateText({
+  model: openai("gpt-4o"),
+  experimental_telemetry: {
+    isEnabled: true,
+    functionId: "my-awesome-function",
+  },
 });
 ```
 
@@ -56,16 +178,16 @@ By default this integration adds tracing support to all `ai` function callsites.
 
 ```javascript
 const result = await generateText({
-  model: openai("gpt-4-turbo"),
+  model: openai("gpt-4o"),
   experimental_telemetry: { isEnabled: false },
 });
 ```
 
-If you want to collect inputs and outputs for a specific call, you must specifically opt-in to each function call by setting `experimental_telemetry.recordInputs` and `experimental_telemetry.recordOutputs` to `true`.
+If you set `experimental_telemetry.recordInputs` and `experimental_telemetry.recordOutputs` it will override the default behavior of collecting inputs and outputs for that function call.
 
 ```javascript
 const result = await generateText({
-  model: openai("gpt-4-turbo"),
+  model: openai("gpt-4o"),
   experimental_telemetry: {
     isEnabled: true,
     recordInputs: true,

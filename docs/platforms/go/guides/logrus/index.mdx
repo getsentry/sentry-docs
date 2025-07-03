@@ -1,11 +1,15 @@
 ---
 title: Logrus
-description: "Logrus is a structured logger for Go, used to log messages in different formats and levels. This guide demonstrates how to integrate Logrus with Sentry to capture and send logs to Sentry."
+description: "Logrus is a structured logger for Go, used to log messages in different formats and levels. This guide demonstrates how to integrate Logrus with Sentry to capture and send both logs and events to Sentry."
 ---
 
 For a quick reference, there is a [complete example](https://github.com/getsentry/sentry-go/tree/master/_examples/logrus) at the Go SDK source code repository.
 
 Go API documentation for the [`sentrylogrus` package](https://pkg.go.dev/github.com/getsentry/sentry-go/logrus) is also available.
+
+## Requirements
+
+Logrus structured logging is supported in Sentry Go SDK version `0.34.0` and above.
 
 ## Install
 
@@ -17,6 +21,8 @@ go get github.com/getsentry/sentry-go/logrus
 
 <SignInNote />
 
+To integrate Sentry with Logrus, you can set up both log hooks and event hooks to capture different types of data at various log levels.
+
 ```go
 import (
 	"fmt"
@@ -25,61 +31,147 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-
 	"github.com/getsentry/sentry-go"
 	sentrylogrus "github.com/getsentry/sentry-go/logrus"
 )
 
-    logger := logrus.New()
+func main() {
+	// Initialize Logrus
+	logger := logrus.New()
 
 	// Log DEBUG and higher level logs to STDERR
 	logger.Level = logrus.DebugLevel
 	logger.Out = os.Stderr
 
-	// Send only ERROR and higher level logs to Sentry
-	sentryLevels := []logrus.Level{logrus.ErrorLevel, logrus.FatalLevel, logrus.PanicLevel}
+	// send logs on InfoLevel
+	logHook, err := sentrylogrus.NewLogHook(
+		[]logrus.Level{logrus.InfoLevel},
+		sentry.ClientOptions{
+			Dsn: "___PUBLIC_DSN___",
+			BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+				if hint.Context != nil {
+					if req, ok := hint.Context.Value(sentry.RequestContextKey).(*http.Request); ok {
+						// You have access to the original Request
+						fmt.Println(req)
+					}
+				}
+				fmt.Println(event)
+				return event
+			},
+			// need to have logs enabled
+			EnableLogs:       true,
+			AttachStacktrace: true,
+		})
 
-	// Initialize Sentry
-	sentryHook, err := sentrylogrus.New(sentryLevels, sentry.ClientOptions{
+	// send events on Error, Fatal, Panic levels
+	eventHook, err := sentrylogrus.NewEventHook([]logrus.Level{
+		logrus.ErrorLevel,
+		logrus.FatalLevel,
+		logrus.PanicLevel,
+	}, sentry.ClientOptions{
 		Dsn: "___PUBLIC_DSN___",
 		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
 			if hint.Context != nil {
 				if req, ok := hint.Context.Value(sentry.RequestContextKey).(*http.Request); ok {
-					// Access the original Request here
+					// You have access to the original Request
 					fmt.Println(req)
 				}
 			}
 			fmt.Println(event)
 			return event
 		},
-		Debug:            true,
 		AttachStacktrace: true,
 	})
 	if err != nil {
 		panic(err)
 	}
-	defer sentryHook.Flush(5 * time.Second)
-	logger.AddHook(sentryHook)
+	defer eventHook.Flush(5 * time.Second)
+	defer logHook.Flush(5 * time.Second)
+	logger.AddHook(eventHook)
+	logger.AddHook(logHook)
 
 	// Flushes before calling os.Exit(1) when using logger.Fatal
 	// (else all defers are not called, and Sentry does not have time to send the event)
-	logrus.RegisterExitHandler(func() { sentryHook.Flush(5 * time.Second) })
+	logrus.RegisterExitHandler(func() {
+		eventHook.Flush(5 * time.Second)
+		logHook.Flush(5 * time.Second)
+	})
 
-	// Log an InfoLevel entry to STDERR (not sent to Sentry)
-	logger.Infof("Application has started")
+    // Log a InfoLevel entry STDERR which is sent as a log to Sentry
+    logger.Infof("Application has started")
 
-	// Log an ErrorLevel entry to STDERR and Sentry
-	logger.Errorf("oh no!")
+    // Log an error to STDERR which is also sent to Sentry
+    logger.Errorf("oh no!")
 
-	// Log a FatalLevel entry to STDERR, send to Sentry, and terminate the application
-	logger.Fatalf("can't continue...")
-
+    // Log a fatal error to STDERR, which sends an event to Sentry and terminates the application
+    logger.Fatalf("can't continue...")
+	
+    // Example of logging with attributes
+	logger.WithField("user", "test-user").Error("An error occurred")
+}
 ```
 
 ## Configure
 
-`sentrylogrus` allows configuration via the `New` function, which accepts the levels to log and `sentry.ClientOptions`. The levels to log are the logrus levels that should be sent to Sentry. The `sentry.ClientOptions` are the same as the ones used in the `sentry.Init` function.
+`sentrylogrus` provides two types of hooks to configure the integration with Sentry. Both hooks accept these options:
+- **Levels**: A slice of `logrus.Level` specifying which log levels to capture
+- **ClientOptions**: Standard `sentry.ClientOptions` for configuration
 
-## Usage
+### LogHook
 
-Use `logrus` as you normally would, and it will automatically send logs at or above the specified levels to Sentry.
+Use `sentrylogrus.NewLogHook()` to send structured logs to Sentry. This hook captures log entries and sends them to Sentry's structured logging system.
+
+```go
+logHook, err := sentrylogrus.NewLogHook(
+    []logrus.Level{logrus.InfoLevel, logrus.WarnLevel},
+    sentry.ClientOptions{
+        Dsn: "___PUBLIC_DSN___",
+        EnableLogs: true, // Required for log entries
+    })
+```
+
+### EventHook
+
+Use `sentrylogrus.NewEventHook()` to send log entries as Sentry events. This is useful for error tracking and alerting.
+
+```go
+eventHook, err := sentrylogrus.NewEventHook(
+    []logrus.Level{logrus.ErrorLevel, logrus.FatalLevel, logrus.PanicLevel},
+    sentry.ClientOptions{
+        Dsn: "___PUBLIC_DSN___",
+        Debug: true,
+        AttachStacktrace: true,
+    })
+```
+
+<Alert>
+    When using both hooks, ensure you flush both of them before the application exits and register exit handlers for fatal logs to avoid losing pending events.
+</Alert>
+
+## Correlating Logs with Traces
+
+To correlate logs with transactions, you need to pass a `context.Context` that contains transaction information to your logger calls. The `sentryhttp` middleware automatically adds transaction information to the request's context.
+Here's an example of how to use `WithContext` in an HTTP handler to ensure logs are associated with the correct trace.
+
+```go
+// Assume logger is initialized and Sentry hooks are added as shown above.
+// var logger *logrus.Logger
+
+func myAsyncHandler(w http.ResponseWriter, r *http.Request) {
+	// The sentryhttp middleware adds a Hub with transaction information to the request context.
+	ctx := r.Context()
+	// By using WithContext, the log entry will be associated with the transaction from the request.
+    logger.WithContext(ctx).Info("Log inside handler")
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintln(w, "Handler finished, async task running in background.")
+}
+
+// In your main function, or wherever you set up your routes:
+// Wrap your handler with sentryhttp to automatically start transactions for requests.
+sentryHandler := sentryhttp.New(sentryhttp.Options{})
+http.Handle("/async", sentryHandler.Handle(http.HandlerFunc(myAsyncHandler)))
+```
+
+## Logs
+
+For comprehensive logging setup with Logrus, including advanced configuration options and best practices, see the [Go Logs documentation](/platforms/go/logs/). The Logrus integration shown above provides seamless integration with Sentry's structured logging features.
