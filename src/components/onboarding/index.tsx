@@ -142,18 +142,18 @@ const validateOptionIds = (options: Pick<OnboardingOptionType, 'id'>[]) => {
 
 export function OnboardingOption({
   children,
-  optionId,
+  optionId = 'all',
   hideForThisOption,
   isStep = false,
 }: {
   children: ReactNode;
-  optionId: OptionId;
+  optionId: OptionId | 'all';
   hideForThisOption?: boolean;
   isStep?: boolean;
 }) {
-  // Allow not passing an optionId when isStep is true
-  if (!isStep || optionId) {
-    validateOptionIds([{id: optionId}]);
+  if (!isStep || optionId !== 'all') {
+    // Allow not passing an optionId when isStep is true
+    validateOptionIds([{id: optionId as OptionId}]);
   }
   const className = [hideForThisOption ? 'hidden' : '', isStep ? 'onboarding-step' : '']
     .filter(Boolean)
