@@ -26,7 +26,7 @@ import remarkStringify from 'remark-stringify';
 import {unified} from 'unified';
 import {remove} from 'unist-util-remove';
 
-const DOCS_BASE_URL = 'https://docs.sentry.io/';
+const DOCS_ORIGIN = 'https://docs.sentry.io';
 const CACHE_VERSION = 3;
 const CACHE_COMPRESS_LEVEL = 4;
 const R2_BUCKET = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
@@ -217,12 +217,15 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
       }
     }
   }
-  let baseUrl = DOCS_BASE_URL;
+  let baseUrl = DOCS_ORIGIN;
   const data = String(
     await unified()
       .use(rehypeParse)
       // Need the `head > title` selector for the headers
-      .use(() => tree => selectAll('head > title, div#main', tree))
+      .use(
+        () => tree =>
+          selectAll('head > title, head > link[rel="canonical"], div#main', tree)
+      )
       // If we don't do this wrapping, rehypeRemark just returns an empty string -- yeah WTF?
       .use(() => tree => ({
         type: 'element',
@@ -235,7 +238,7 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
         handlers: {
           // HACK: Extract the canonical URL during parsing
           link: (_state, node) => {
-            if (node.properties.rel === 'canonical' && node.properties.href) {
+            if (node.properties.rel.includes('canonical') && node.properties.href) {
               baseUrl = node.properties.href;
             }
           },
@@ -261,6 +264,9 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
         // We'll check the code base and fix that later
         replacer: url => {
           const mdUrl = new URL(url, baseUrl);
+          if (mdUrl.origin !== DOCS_ORIGIN) {
+            return url;
+          }
           const newPathName = mdUrl.pathname.replace(/\/?$/, '');
           if (path.extname(newPathName) === '') {
             mdUrl.pathname = `${newPathName}.md`;
@@ -268,7 +274,7 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
           return mdUrl;
         },
       })
-      .use(imgLinks, {absolutePath: DOCS_BASE_URL})
+      .use(imgLinks, {absolutePath: DOCS_ORIGIN})
       // We end up with empty inline code blocks, probably from some tab logic in the HTML, remove them
       .use(() => tree => remove(tree, {type: 'inlineCode', value: ''}))
       .use(remarkGfm)
