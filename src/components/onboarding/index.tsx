@@ -151,9 +151,9 @@ export function OnboardingOption({
   hideForThisOption?: boolean;
   isStep?: boolean;
 }) {
-  if (!isStep || optionId !== 'all') {
+  if (optionId !== 'all') {
     // Allow not passing an optionId when isStep is true
-    validateOptionIds([{id: optionId as OptionId}]);
+    validateOptionIds([{id: optionId}]);
   }
   const className = [hideForThisOption ? 'hidden' : '', isStep ? 'onboarding-step' : '']
     .filter(Boolean)
