@@ -967,16 +967,8 @@ const userDocsRedirects = [
     destination: '/product/insights/backend/queue-monitoring/queues-page/',
   },
   {
-    source: '/product/insights/llm-monitoring/',
-    destination: '/product/insights/ai/llm-monitoring/',
-  },
-  {
-    source: '/product/insights/llm-monitoring/getting-started/',
-    destination: '/product/insights/ai/llm-monitoring/getting-started/',
-  },
-  {
-    source: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
-    destination: '/product/insights/ai/llm-monitoring/getting-started/the-dashboard/',
+    source: '/product/insights/llm-monitoring/:path*',
+    destination: '/product/insights/ai/:path*',
   },
   {
     source: '/product/insights/retention-priorities/',
