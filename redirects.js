@@ -347,6 +347,10 @@ const userDocsRedirects = [
     destination: '/concepts/key-terms/:path*',
   },
   {
+    source: '/security-legal-pii/security/ai-ml-policy/',
+    destination: '/security-legal-pii/security/service-data-usage/',
+  },
+  {
     source: '/product/security/:path*',
     destination: '/security-legal-pii/security/:path*',
   },
@@ -963,16 +967,8 @@ const userDocsRedirects = [
     destination: '/product/insights/backend/queue-monitoring/queues-page/',
   },
   {
-    source: '/product/insights/llm-monitoring/',
-    destination: '/product/insights/ai/llm-monitoring/',
-  },
-  {
-    source: '/product/insights/llm-monitoring/getting-started/',
-    destination: '/product/insights/ai/llm-monitoring/getting-started/',
-  },
-  {
-    source: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
-    destination: '/product/insights/ai/llm-monitoring/getting-started/the-dashboard/',
+    source: '/product/insights/llm-monitoring/:path*',
+    destination: '/product/insights/ai/:path*',
   },
   {
     source: '/product/insights/retention-priorities/',
@@ -1055,10 +1051,22 @@ const userDocsRedirects = [
     source: '/product/tracing/:path*',
     destination: '/concepts/key-terms/tracing/:path*',
   },
+  {
+    source: '/organization/integrations/shortcut/',
+    destination: '/organization/integrations/issue-tracking/shortcut/',
+  },
   // Redirects for JavaScript tracing docs
   {
     source: '/platforms/javascript/tracing/trace-propagation/:path*',
     destination: '/platforms/javascript/tracing/distributed-tracing/:path*',
+  },
+  {
+    source: '/platforms/javascript/metrics/:path*',
+    destination: '/platforms/javascript/tracing/span-metrics/:path*',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/metrics/:path*',
+    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/:path*',
   },
   {
     source: '/platforms/javascript/tracing/instrumentation/performance-metrics/',
@@ -1148,6 +1156,35 @@ const userDocsRedirects = [
   {
     source: '/platforms/dart/guides/flutter/usage/advanced-usage/:path*',
     destination: '/platforms/dart/guides/flutter/troubleshooting/:path*',
+  },
+  {
+    source: '/platforms/java/scope/',
+    destination: '/platforms/java/enriching-events/',
+  },
+  {
+    source: '/platforms/java/guides/:guide/scope/',
+    destination: '/platforms/java/guides/:guide/enriching-events/',
+  },
+  // Redirects for Trace Explorer
+  {
+    source: '/product/explore/traces',
+    destination: '/product/explore/trace-explorer/',
+  },
+  {
+    source: '/product/explore/new-trace-explorer',
+    destination: '/product/explore/trace-explorer/',
+  },
+  {
+    source: '/organization/integrations/expo/',
+    destination: '/organization/integrations/deployment/expo/',
+  },
+  {
+    source: '/product/issues/issue-details/sentry-seer/',
+    destination: '/product/ai-in-sentry/seer/',
+  },
+  {
+    source: '/product/ai-in-sentry/seer/seer-privacy-and-security',
+    destination: '/product/ai-in-sentry/ai-privacy-and-security/',
   },
 ];
 

@@ -1,11 +1,11 @@
 ---
-title: Cloudflare Sveltekit Framework Guide
+title: SvelteKit on Cloudflare
 description: "Learn how to add Cloudflare instrumentation to your SvelteKit app."
 ---
 
 If you're running your SvelteKit app on Cloudflare Pages, you need to configure the SDK a little differently to the default setup. This guide will show you how to set up the Sentry SvelteKit SDK for Cloudflare Pages.
 
-## 1. Install the SDK
+## Install
 
 First, install the Sentry SvelteKit SDK in your application. We recommend using the Sentry wizard to automatically install the SDK:
 
@@ -21,28 +21,15 @@ If you installed the SDK before, make sure that `@sentry/sveltekit` version `9.2
 
 </Alert>
 
-## 2. Cloudflare configuration
+Now you can install the Sentry Cloudflare SDK. First, install the SDK with your package manager:
 
-To use the SDK, you'll need to set either the `nodejs_als` or `nodejs_compat` compatibility flags in your `wrangler.jsonc`/`wrangler.toml` config. This is because the SDK
-needs access to the `AsyncLocalStorage` API to work correctly.
+<PlatformContent includePath="getting-started-install" />
 
-```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
-{
-  "compatibility_flags": [
-    "nodejs_als",
-    // "nodejs_compat"
-  ],
-}
-```
+## Setup
 
-```toml {tabTitle:Toml} {filename:wrangler.toml}
-compatibility_flags = ["nodejs_als"]
-# compatibility_flags = ["nodejs_compat"]
-```
+<PlatformContent includePath="getting-started-config" />
 
-## 3. Update Your Server Hooks File
-
-To use this SDK, update your `src/hooks.server.(ts|js)` file to use the `initCloudflareSentryHandle` method from the Sentry Cloudflare SDK and remove the `Sentry.init` call from `@sentry/sveltekit`.
+Next, update your `src/hooks.server.(ts|js)` file to use the `initCloudflareSentryHandle` method from the Sentry Cloudflare SDK and remove the `Sentry.init` call from `@sentry/sveltekit`.
 
 ```typescript diff {filename:hooks.server.(ts|js)}
 -import { handleErrorWithSentry, sentryHandle } from "@sentry/sveltekit";

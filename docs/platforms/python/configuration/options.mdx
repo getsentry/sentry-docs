@@ -119,6 +119,8 @@ When enabled, the SDK will capture a snapshot of local variables to send with th
 
 When capturing errors, Sentry stack traces typically only include frames that start the moment an error occurs. But if the `add_full_stack` option is enabled (set to `True`), all frames from the start of execution will be included in the stack trace sent to Sentry.
 
+Note: Grouping of issues in Sentry is based on stack traces. If you change this value in an existing Sentry setup new groups for already known errors will be created.
+
 </SdkOption>
 
 <SdkOption name="max_stack_frames" type='int' defaultValue='100'>
@@ -398,13 +400,18 @@ sentry_sdk.init(custom_repr=custom_repr)
 
 ## Profiling Options
 
-<SdkOption name="profiles_sample_rate" type='float' defaultValue='None'>
+<SdkOption name="profile_lifecycle" type='str' defaultValue='manual'>
 
-  A number between `0` and `1`, controlling the percentage chance a given sampled transaction will be profiled. (`0` represents 0% while `1` represents 100%.) Applies equally to all transactions created in the app. This is relative to the tracing sample rate - e.g. `0.5` means 50% of sampled transactions will be profiled.
+Determines how the profiler will run, accepts two values: `manual` or `trace`.
+
+In `manual` mode, you control when the profiler collects data by explicitly calling `sentry_sdk.profiler.start_profiler` and `sentry_sdk.profiler.stop_profiler`. You are entirely in control of when the profiler runs.
+
+In `trace` mode, the profiler starts and stops automatically based on active spans: the profiler continues to run while there is at least one active span, and stops when there are no active spans.
 
 </SdkOption>
 
-<SdkOption name="profiles_sampler" type='function' defaultValue='None'>
+<SdkOption name="profile_session_sample_rate" type='float' defaultValue='None'>
 
+A number between `0` and `1`, controlling the percentage chance a given session will be profiled. The sampling decision is evaluated only once at SDK initialization.
 
 </SdkOption>

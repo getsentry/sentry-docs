@@ -1,0 +1,111 @@
+---
+title: Supabase
+description: "Adds instrumentation for Supabase client operations."
+supported:
+  - javascript.browser
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.electron
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.react-router
+  - javascript.astro
+  - javascript.bun
+  - javascript.tanstackstart-react
+---
+
+_Import name: `Sentry.supabaseIntegration`_
+
+The `supabaseIntegration` adds instrumentation for the Supabase client to capture spans for both authentication and database operations.
+
+## Installation
+
+You need to have both the Sentry SDK and the Supabase library installed. For Supabase installation instructions, refer to the [Supabase JavaScript documentation](https://supabase.com/docs/reference/javascript/introduction).
+
+
+## Configuration
+
+This is the preferred method for most use cases. and follows Sentry's standard integration pattern.
+
+```javascript
+import * as Sentry from '@sentry/browser';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseClient = createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_KEY');
+
+Sentry.init({
+  dsn: 'YOUR_DSN',
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.supabaseIntegration({ supabaseClient })
+  ],
+  tracesSampleRate: 1.0,
+});
+```
+
+## Generated Spans
+
+The integration provides comprehensive monitoring for both authentication and database operations:
+
+### Authentication Spans
+
+The integration automatically instruments the following auth operations:
+- `signInWithPassword`
+- `signOut`
+- `signInAnonymously`
+- `signInWithOAuth`
+- `signInWithIdToken`
+- `signInWithOtp`
+- `signInWithSSO`
+- `signUp`
+- `verifyOtp`
+- `reauthenticate`
+
+Admin operations are also instrumented:
+- `createUser`
+- `deleteUser`
+- `listUsers`
+- `getUserById`
+- `updateUserById`
+- `inviteUserByEmail`
+
+### Database Operation Spans
+
+These spans are used to populate Sentry's [Query Insights](/product/insights/backend/queries/) feature, which provides performance metrics and analysis for your database operations. With Query Insights, you can identify slow queries, track query frequency, and optimize your database interactions.
+
+- `db.table`: The table being queried
+- `db.schema`: The database schema
+- `db.url`: The Supabase instance URL
+- `db.sdk`: Client information
+- `db.system`: Set to 'postgresql'
+- `db.query`: The query parameters
+- `db.body`: The request body (for mutations)
+
+### Queue Operation Spans (in progress)
+
+Coming soon, the Sentry SDK will also support generating spans for interactions with Supabase queues. For more information, please follow [this GitHub issue](https://github.com/getsentry/sentry-javascript/issues/14611).
+
+
+## Error Tracking
+
+The integration automatically:
+- Captures errors from failed operations
+- Adds breadcrumbs for database operations
+- Includes detailed context about the operation that failed
+
+
+## Supported Versions
+
+- `@supabase/supabase-js`: `>=2.0.0` 

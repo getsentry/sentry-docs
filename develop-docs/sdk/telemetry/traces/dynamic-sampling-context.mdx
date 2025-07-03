@@ -50,7 +50,7 @@ All of the attributes in the table below are required (non-optional) in a sense,
 
 At the moment, only `release`, `environment` and `transaction` are used by the product for dynamic sampling functionality.
 The rest of the context attributes, `trace_id`, `public_key`, `sampled` and `sample_rate`, are used by Relay for internal decisions and for extrapolation in the product.
-Additional entries such as `replay_id`, `org` and `sample_rand` are only using the DSC as a means of transport.
+Additional entries such as `replay_id`, `org_id` and `sample_rand` are only using the DSC as a means of transport.
 
 | Attribute                   | Type   | Description                                                                                                                  | Example                              | Required Level                       |
 | --------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ | ------------------------------------ |
@@ -62,7 +62,7 @@ Additional entries such as `replay_id`, `org` and `sample_rand` are only using t
 | `release`                   | string | The release name as specified in client options.                                                                             | `myapp@1.2.3`, `1.2.3`, `2025.4.107` | required                             |
 | `environment`               | string | The environment name as specified in client options.                                                                         | `production`, `staging`              | required                             |
 | `transaction`               | string | The transaction name set on the scope. **Only include** if name has [good quality](#note-on-good-quality-transaction-names). | `/login`, `myApp.myController.login` | required (if known and good quality) |
-| `org`                       | string | The org ID parsed from the DSN or received by a downstream SDK.                                                              | `1`                                  | required                             |
+| `org_id`                    | string | The org ID parsed from the DSN or received by a downstream SDK.                                                              | `1`                                  | required                             |
 | `user_segment` [DEPRECATED] | string | User segment as set by the user with `scope.set_user()`.                                                                     |                                      | deprecated                           |
 
 0: In any case, `trace_id`, `public_key`, and `sample_rate` should always be known to an SDK, so these values are strictly required.
@@ -170,8 +170,8 @@ Any values on the DSC should be propagated "as is" - this includes values like "
 
 SDKs should recognize incoming requests as "instrumented" or "traced" when at least one of the following applies:
 
-- The incoming request has a `sentry-trace` and/or `traceparent` header
-- The incoming request has a `baggage` header containing one or more keys starting with "`sentry-`"
+- The incoming request has a `sentry-trace` header
+- The incoming request has a `sentry-trace` header and `baggage` header containing one or more keys starting with "`sentry-`"
 
 After the DSC of a particular trace has been frozen, API calls like `set_user` should have no effect on the DSC.
 
@@ -189,11 +189,11 @@ def has_sentry_value_in_baggage_header(request):
   # header of `request`, for which the key starts with "sentry-". Otherwise, it returns False.
 
 def on_incoming_request(request):
-  if (request.has_header("sentry-trace") or request.has_header("traceparent")) and (not request.has_header("baggage") or not has_sentry_value_in_baggage_header(request)):
+  if request.has_header("sentry-trace") and (not request.has_header("baggage") or not has_sentry_value_in_baggage_header(request)):
     # Request comes from an old SDK which doesn't support Dynamic Sampling Context yet
     # --> we don't propagate baggage for this trace
     current_transaction.dynamic_sampling_context_frozen = True
-  elif request.has_header("baggage") and has_sentry_value_in_baggage_header(request):
+  elif request.has_header("sentry-trace") and request.has_header("baggage") and has_sentry_value_in_baggage_header(request):
     current_transaction.dynamic_sampling_context_frozen = True
     current_transaction.dynamic_sampling_context = baggage_header_to_dict(request.headers.baggage)
 
@@ -237,12 +237,12 @@ Here's an example of that flow:
 
 - Page starts loading
 - Sentry initializes and starts `pageload` transaction
-- Page makes HTTP request to user service to get user (propagates sentry-trace/traceparent/baggage to user service)
+- Page makes HTTP request to user service to get user (propagates sentry-trace/baggage to user service)
   - user service continues trace by automatically creating sampling transaction
-  - user service pings database service (propagates sentry-trace/traceparent/baggage to database service)
+  - user service pings database service (propagates sentry-trace/baggage to database service)
   - database service continues trace by automatically creating sampling transaction
 - Page gets data from user service, calls `Sentry.setUser` and sets `user_segment`
-- Page makes HTTP requests to service A, service B, and service C (propagates sentry-trace/traceparent/baggage to services A, B and C)
+- Page makes HTTP requests to service A, service B, and service C (propagates sentry-trace/baggage to services A, B and C)
   - DSC is propagated with baggage to service A, service B, and service C, so 3 child transactions
 - Page finishes loading, finishing `pageload` transaction, which is sent to Sentry
 
@@ -258,7 +258,7 @@ To illustrate this, let's look at another example:
 
 - Page starts loading
 - Sentry initializes and starts `pageload` transaction (with transaction name `/teams/123/user/456` - based on window URL)
-- Page makes HTTP request to service A (propagates sentry-trace/traceparent/baggage to user service)
+- Page makes HTTP request to service A (propagates sentry-trace/baggage to user service)
 - Page renders with react router, triggering parameterization of transaction name (`/teams/123/user/456` -> `/teams/:id/user/:id`).
 - Page finishes loading, finishing `pageload` transaction, which is sent to Sentry
 
@@ -273,12 +273,3 @@ Previously, we were using the [w3c Trace Context spec](https://www.w3.org/TR/tra
 We switched to the [w3c Baggage spec](https://www.w3.org/TR/baggage) though because it was easier to use, required less code on the SDK side, and had much more [liberal size limits](https://www.w3.org/TR/baggage/#limits) than the trace context spec.
 To make sure that we were not colliding with user defined keys as baggage is an open standard, we decided to prefix all sentry related keys with `sentry-` as a namespace.
 This allowed us to use baggage as an open standard while only having to worry about Sentry data.
-
-### Other Items
-
-TODO - Add some sort of Q&A section on the following questions, after evaluating if they still need to be answered:
-
-- Why must baggage be immutable before the second transaction has been started?
-- What are the consequences and impacts of the immutability of baggage on Dynamic Sampling UX?
-- Why can't we just make the decision for the whole trace in Relay after the trace is complete?
-- What are the differences between Dynamic Sampling on traces vs. transactions?

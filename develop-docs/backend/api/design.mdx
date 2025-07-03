@@ -31,8 +31,8 @@ Use the following guidelines for naming resources and their collections:
 
 - **Do** use lowercase and hyphenated collection names, e.g. `commit-files`.
 - **Do** use plural collection names. Avoid using uncountable words because the user can't know whether the GET returns one item or a list.
-- **Do** use `snake_case` for path parameters. e.g. `tags/\{tag_name}/`.
-- **Do** consistently shorten parameters that are excessively long when the term will unambiguous. e.g. `organization` -> `org`.
+- **Do** use `snake_case` for path parameters. e.g. `tags/{tag_name}/`.
+- **Do** consistently shorten parameters that are excessively long when the term is unambiguous. e.g. `organization` -> `org`.
 
 Standard path parameters that should be shortened in routes:
 
@@ -42,8 +42,8 @@ Standard path parameters that should be shortened in routes:
 
 Information in Sentry is typically constrained by tenants. That is, almost all information is scoped to an organization. All endpoints which query customer data **must** be scoped to an organization:
 
-- **Do** prefix resource organizations collections with `organizations/\{org}`.
-- **Do** prefix resource project collections with `projects/\{org}/\{project}`.
+- **Do** prefix organization resource collections with `/organizations/{org}/`.
+- **Do** prefix project resource collections with `/projects/{org}/{project}/`.
 - **Do not** expose endpoints which require `org` as a query parameter (it should always be a path parameter).
 
 Knowing when to choose which constraint to couple an endpoint to will be based on the purpose of an endpoint. For example, if an endpoint is only ever going to be used to query data for a single project, it should be prefixed with `/projects/{org}/{project}/things`. If an endpoint would need to exist to query multiple projects (which is common with cross-project queries), you likely should expose it as `/organizations/{org}/things`, and expose a query param to filter on the project(s).
@@ -57,34 +57,34 @@ Exceptions to these rules include:
 
 **Do not** exceed three levels of resource nesting.
 
-Nesting resources such as `/organizations/\{org}/projects/`, is **preferred** over flattened resources like `/0/projects/`. This improves readability and exposes a natural understanding of resource hierarchy and relationships. However, nesting can make URLs too long and hard to use. Sentry uses 3-level nesting as a hybrid solution.
+Nesting resources such as `/organizations/{org}/projects/`, is **preferred** over flattened resources like `/0/projects/`. This improves readability and exposes a natural understanding of resource hierarchy and relationships. However, nesting can make URLs too long and hard to use. Sentry uses 3-level nesting as a hybrid solution.
 
 Here are some possible urls for values with this resource hierarchy: organization -> project -> tag -> value:
 
-- 👍 `/projects/\{org}/\{project}/tags/\{tag}/values`
-- 👎 `/organizations/\{org}/projects/\{project}/tags/\{tag}/values/`
+- 👍 `/projects/{org}/{project}/tags/{tag}/values`
+- 👎 `/organizations/{org}/projects/{project}/tags/{tag}/values/`
 - 👎 `/values/`
 
 Hierarchy here does not necessarily mean that one collection belongs to a parent collection, it simply implies a relationship. For example:
 
-- `projects/\{project_identifier}/teams/` refers to the **teams** that have been added to specific project
-- `teams/\{team_identifier}/projects/` refers to the **projects** a specific team has been added to
+- `/projects/{project_identifier}/teams/` refers to the **teams** that have been added to specific project
+- `/teams/{team_identifier}/projects/` refers to the **projects** a specific team has been added to
 
 ## Parameter Design
 
 - **Do** use `camelCase` for query params and request body params. e.g. `/foo/?userId=123`.
-- **Do** use `camelCase` for all response attributes. e.g. `\{userId: "123"}`.
+- **Do** use `camelCase` for all response attributes. e.g. `{userId: "123"}`.
 
 For consistency, we also try to re-use well known parameters across endpoints.
 
-- **Do** use `sortBy` for sorting. e.g. `sortBy=-dateCreated`.
-- **Do** use `orderBy` for ordering. e.g. `orderBy=asc` or `orderBy=desc`.
-- **Do** use `limit` for limiting the number of results returned. e.g. `limit=10`.
+- **Do** use `sortBy` for sorting. e.g. `?sortBy=-dateCreated`.
+- **Do** use `orderBy` for ordering. e.g. `?orderBy=asc` or `?orderBy=desc`.
+- **Do** use `limit` for limiting the number of results returned. e.g. `?limit=10`.
 - **Do** use `cursor` for pagination.
 
 ### Resource Identifiers
 
-Identifiers exist both within the route (`/organizations/\{organization}/projects/`) as well as within other parameters such as query strings (`organization=123`) and request bodies (`\{organization: "123"}`).
+Identifiers exist both within the route (`/organizations/{organization}/projects/`) as well as within other parameters such as query strings (`?organization=123`) and request bodies (`{organization: "123"}`).
 
 The most important concern here is to ensure that a single identifier is exposed to key to resources. For example, it is preferred to use `organization` and accept both `organization_id` and `organization_slug` as valid identifiers.
 
@@ -119,24 +119,24 @@ POST /resources/{id}
 
 ### Batch Operations
 
-Resources can get complicated when you need to expose batch operations vs single resource operations. For batch operations it it is preferred to expose them as a `POST` request on the collection when possible.
+Resources can get complicated when you need to expose batch operations vs single resource operations. For batch operations it is preferred to expose them as a `PUT` request on the collection when possible.
 
 Let's say for example we have an endpoint that mutates an issue:
 
 ```
-POST /api/0/organizations/:org/issues/:issue/
+PUT /api/0/organizations/{org}/issues/{issue}/
 ```
 
 When designing a batch interface, we simply expose it on the collection instead of the individual resource:
 
 ```
-POST /api/0/organizations/:org/issues/
+PUT /api/0/organizations/{org}/issues/
 ```
 
 You may also need to expose selectors on batch resources, which can be done through normal request parameters:
 
 ```
-POST /api/0/organizations/:org/issues/
+PUT /api/0/organizations/{org}/issues/
 {
   "issues": [1, 2, 3]
 }
@@ -166,7 +166,7 @@ Here are some examples of how to use standard methods to represent complex tasks
 
 **Retrieve statistics for a resource**
 
-The best approach here is to encoded it as an attribute in the resource:
+The best approach here is to encode it as an attribute in the resource:
 
 ```
 GET /api/0/projects/{project}/
@@ -182,7 +182,7 @@ In some cases this will be returned as part of an HTTP header, specifically for 
 
 Order and filtering should happen as part of list api query parameters. Here's a [good read](https://www.moesif.com/blog/technical/api-design/REST-API-Design-Filtering-Sorting-and-Pagination/).
 
-- **Do** rely on `orderBy` and `sortBy`. e.g. `/api/0/issues/\{issue_id}/events?orderBy=-date`
+- **Do** rely on `orderBy` and `sortBy`. e.g. `/api/0/issues/{issue_id}/events?orderBy=-date`
 - **Do not** create dedicated routes for these behaviors.
 
 ## Responses
@@ -191,13 +191,13 @@ Each response object returned from an API should be a serialized version of the 
 
 Some guidelines around the shape of responses:
 
-- **Do** use `camelCase` for all response attributes. e.g. `\{numCount: "123"}`.
-- **Do** return a responses as a named resource (e.g. `\{"user": \{"id": "123"}}`).
-- **Do** indicate collections using plural nouns (e.g. `\{"users": []}`).
+- **Do** use `camelCase` for all response attributes. e.g. `{"numCount": "123"}`.
+- **Do** return a responses as a named resource (e.g. `{"user": {"id": "123"}}`).
+- **Do** indicate collections using plural nouns (e.g. `{"users": []}`).
 - **Do not** return custom objects. **Do** use a `Serializer` to serialize the resource.
 - **Do** return the smallest amount of data necessary to represent the resource.
 
-Additionally because JavaScript is a primary consumer, be mindful of the restrictions are things like numbers. Generally speaking:
+Additionally because JavaScript is a primary consumer, be mindful of the restrictions on things like numbers. Generally speaking:
 
 - **Do** return resource identifiers (even numbers) as strings.
 - **Do** return decimals as strings.
@@ -222,7 +222,7 @@ Whereas our guidelines state it should be nested:
 GET /api/0/projects/{project}/
 {
   "project": {
-    "id": 5,
+    "id": "5",
     "name": "foo",
     ...
   }
@@ -237,7 +237,7 @@ Expanding responses allow us to include relational information on a resource wit
 
 In general, endpoints should expose the fewest fields that will make the API usable in the general scenario. Doing one SQL request per API request is a good rule of thumb. To return information on a bounded relationship, endpoints should rely on the `expand` parameter. To return an unbounded relationship, it should be another endpoint.
 
-To take an example, let's talk about the projects list endpoint. A project belongs to an organizations but could be on multiple teams.
+To take an example, let's talk about the projects list endpoint. A project belongs to an organization but could be on multiple teams.
 
 By default, here's what the project endpoint should look like
 
@@ -273,13 +273,13 @@ GET /api/0/projects/{project}/teams
 [
   {
     "id": 1,
-		"name": "Team 1",
-		"slug": "team1",
+    "name": "Team 1",
+    "slug": "team1",
   },
-	{
+  {
     "id": 2,
-		"name": "Team 2",
-		"slug": "team2",
+    "name": "Team 2",
+    "slug": "team2",
   }
 ]
 
@@ -297,17 +297,11 @@ GET /api/0/projects/{project}/
   "id": 5,
   "name": "foo",
   "stats": {
-      "24h": [
-          [
-              1629064800,
-              27
-          ],
-          [
-              1629068400,
-              24
-          ],
-          ...
-      ]
+    "24h": [
+        [1629064800, 27],
+        [1629068400, 24],
+        ...
+    ]
   }
 }
 ```
@@ -330,7 +324,9 @@ This is typically only needed if the endpoint is already public and we do not wa
 >> APIs often need to provide collections of data, most commonly in the `List` standard method. However, collections can be arbitrarily sized, and tend to grow over time, increasing lookup time as well as the size of the responses being sent over the wire. This is why it's important for collections to be paginated.
 
 Paginating responses is a [standard practice for APIs](https://google.aip.dev/158), which Sentry follows.
+
 We've seen an example of a `List` endpoint above; these endpoints have two tell-tale signs:
+
 ```json
 GET /api/0/projects/{project}/teams
 [
@@ -347,12 +343,14 @@ GET /api/0/projects/{project}/teams
 ]
 
 ```
+
 1. The endpoint returns an array, or multiple, objects instead of just one.
 2. The endpoint can sometimes end in a plural (s), but more importantly, it does __not__ end in an identifier (`*_slug`, or `*_id`).
 
 To paginate a response at Sentry, you can leverage the [`self.paginate`](https://github.com/getsentry/sentry/blob/24.2.0/src/sentry/api/base.py#L463-L476) method as part of your endpoint.
 `self.paginate` is the standardized way we paginate at Sentry, and it helps us with unification of logging and monitoring.
 You can find multiple [examples of this](https://github.com/getsentry/sentry/blob/24.2.0/src/sentry/api/endpoints/api_applications.py#L22-L33) in the code base. They'll look something like:
+
 ```python
 def get(self, request: Request) -> Response:
     queryset = ApiApplication.objects.filter(

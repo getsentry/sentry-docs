@@ -76,8 +76,9 @@ There are some things we need to be careful about when running migrations.
 
 ### Testing
 
-Database migrations are risky operations that can lead to irreversible data loss or corruption. This is especially true for [data migrations](https://docs.djangoproject.com/en/4.0/topics/migrations/#data-migrations).
-For this reason, every migration should have a corresponding integration test.
+Note: Regular migrations that modify table structure don't need migration tests
+
+[Data migrations](https://docs.djangoproject.com/en/4.0/topics/migrations/#data-migrations) are particularly risky, since they operate on data and can lead to irreversible data loss or corruption. For this reason, every data migration should have a corresponding integration test.
 
 To test your migration, derive a test case from `TestMigrations` and add it to `tests/sentry/migrations`.
 For example:
@@ -135,10 +136,11 @@ generally prefer that, since it averages the load out over a longer period of ti
 
 ### Indexes
 
-We prefer to create indexes on large existing tables with `CREATE INDEX CONCURRENTLY`. Our migration framework will do this automatically when creating
-a new index. Note that when `CONCURRENTLY` is used we can't run the migration in a transaction, so it's important to use `atomic = False` to run these.
+These are automatically handled by the migration framework, you can just create them on the Django model and generate the migration.
 
 When adding indexes to large tables you should use a `is_post_deployment` migration as creating the index could take longer than the migration statement timeout of 5s.
+
+Note: These are created using `CONCURRENTLY`, so it's important to not set `atomic = True` for migrations that contain indexes. This is disabled by default.
 
 ### Deleting columns
 
@@ -419,7 +421,7 @@ This second PR will contain only the migration and related boilerplate.
 
 ### Foreign Keys
 
-Creating foreign keys is mostly fine, but for some large/busy tables like `Project`, `Group` it can cause problems due to difficulties in acquiring a lock. You can still create a Django level foreign key though, without creating a database constraint. To do so, set `db_constraint=False` when defining the key.
+Creating foreign keys is mostly fine, but for some large/busy tables like `Project` and `Group` the migration can fail due to difficulties in acquiring a lock on the table. The general procedure here is to retry the migration until it goes through - The migration framework adds a lock acquisition timeout, so it's safe to do this.
 
 ### Renaming Tables
 
@@ -564,7 +566,7 @@ Post-deploy migrations are run manually by engineers **after** a migration has b
 Post-deploy migrations are ideal for:
 
 * Adding indexes to large tables, where adding the index would take longer than
-  5 seconds in any given region.
+  10 seconds in any given region.
 * Doing data backfills or mutations on tables with more than 50,000 rows.
 
 Post-deploy migrations **should not** be used for:
