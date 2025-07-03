@@ -67,10 +67,10 @@ fn main() -> io::Result<()> {
 
     let app = Router::new().route("/", get(failing)).layer(
         ServiceBuilder::new()
-            // If you're binding the layers directly on the `Router`, bind them in the opposite order, otherwise you might run into a memory leak
             .layer(NewSentryLayer::<Request<Body>>::new_from_top()) // Bind a new Hub per request, to ensure correct error <> request correlation
             # ___PRODUCT_OPTION_START___ performance
             .layer(SentryHttpLayer::new().enable_transaction()), // Start a transaction (Sentry root span) for each request
+            // If you're binding the layers directly on the `Router`, bind them in the opposite order, otherwise you might run into a memory leak
             # ___PRODUCT_OPTION_END___ performance
     );
 
