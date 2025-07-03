@@ -3124,27 +3124,19 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/ai-monitoring/',
-    to: '/product/insights/llm-monitoring/',
+    to: '/product/insights/agents/',
   },
   {
-    from: '/product/ai-monitoring/getting-started/',
-    to: '/product/insights/llm-monitoring/getting-started/',
+    from: '/product/insights/llm-monitoring/',
+    to: '/product/insights/agents/',
   },
   {
-    from: '/product/ai-monitoring/getting-started/the-dashboard/',
-    to: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
+    from: '/product/insights/llm-monitoring/getting-started/',
+    to: '/product/insights/agents/getting-started/',
   },
   {
-    from: '/product/llm-monitoring/',
-    to: '/product/insights/llm-monitoring/',
-  },
-  {
-    from: '/product/llm-monitoring/getting-started/',
-    to: '/product/insights/llm-monitoring/getting-started/',
-  },
-  {
-    from: '/product/llm-monitoring/getting-started/the-dashboard/',
-    to: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
+    from: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
+    to: '/product/insights/agents/getting-started/the-dashboard/',
   },
   {
     from: '/product/metrics/',
