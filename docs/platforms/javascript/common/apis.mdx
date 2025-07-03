@@ -1089,6 +1089,79 @@ Wraps a callback with a cron monitor check in. The check in will be sent to Sent
 </SdkApi>
 </PlatformCategorySection>
 
+<PlatformSection supported={["javascript.sveltekit"]}>
+## Instrumenting Load Functions
+
+SvelteKit's universal and server `load` functions are instrumented automatically by default. If you don't want to use `load` auto-instrumentation, you can [disable it](/platforms/javascript/guides/sveltekit/configuration/build/#auto-instrumentation-options) and manually instrument specific `load` functions using the following function wrappers:
+
+<SdkApi
+  name="wrapLoadWithSentry"
+  signature={`function wrapLoadWithSentry<T extends (...args: any) => any>(
+  originalLoad: T
+  ): T`}
+>
+Wraps a SvelteKit `load` function declared in `+page.(js|ts)` or `+layout.(js|ts)` with Sentry error and performance monitoring.
+
+<Expandable title="Examples">
+```javascript
+import { wrapLoadWithSentry } from "@sentry/sveltekit";
+
+export const load = wrapLoadWithSentry(({ fetch }) => {
+    const res = await fetch("/api/data");
+    const data = await res.json();
+    return { data };
+});
+```
+
+</Expandable>
+</SdkApi>
+
+<SdkApi
+  name="wrapServerLoadWithSentry"
+  signature={`function wrapServerLoadWithSentry<T extends (...args: any) => any>(
+  originalServerLoad: T
+  ): T`}
+>
+Wraps a SvelteKit server-only `load` function declared in`+page.server.(js|ts)` or `+layout.server.(js|ts)` with Sentry error and performance monitoring.
+
+<Expandable title="Examples">
+```javascript
+import { wrapServerLoadWithSentry } from "@sentry/sveltekit";
+
+export const load = wrapServerLoadWithSentry(({ fetch }) => {
+  const res = await fetch("/api/data");
+  const data = await res.json();
+  return { data };
+});
+```
+</Expandable>
+
+</SdkApi>
+
+## Instrumenting Server Routes 
+
+<SdkApi
+  name="wrapServerRouteWithSentry"
+  signature={`function wrapServerRouteWithSentry<T extends RequestEvent>(
+  originalRouteHandler: (request: T) => Promise<Response>
+  ): (requestEvent: T) => Promise<Response>`}
+>
+Wraps a SvelteKit [server route handler](https://kit.svelte.dev/docs/routing#server) registered in `+server.(js|ts)` with Sentry error and performance monitoring. This is useful if you have custom server routes that you want to trace or if you want to capture `error()` calls within your server routes.
+
+<Expandable title="Examples">
+```javascript
+import { wrapServerRouteWithSentry } from "@sentry/sveltekit";
+
+export const GET = wrapServerRouteWithSentry(async () => {
+  // your endpoint logic
+  return new Response("Hello World");
+});
+```
+</Expandable>
+</SdkApi>
+
+</PlatformSection>
+
 <PlatformSection supported={["javascript.nextjs"]}>
 ## Server Actions
 

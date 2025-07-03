@@ -16,7 +16,13 @@ description: "Learn how to manually set up Sentry in your SvelteKit app and capt
 Choose the features you want to configure, and this guide will show you how:
 
 <OnboardingOptionButtons
-  options={["error-monitoring", "performance", "session-replay", "user-feedback", "logs"]}
+  options={[
+    "error-monitoring",
+    "performance",
+    "session-replay",
+    "user-feedback",
+    "logs",
+  ]}
 />
 
 <PlatformContent includePath="getting-started-features-expandable" />
@@ -216,131 +222,11 @@ export default {
 };
 ```
 
-## Step 4: Optional Configuration
-
-The points explain additional optional configuration or more in-depth customization of your Sentry SvelteKit SDK setup.
-
-### Auto-Instrumentation
-
-The SDK primarily uses [SvelteKit's hooks](https://kit.svelte.dev/docs/hooks) to collect error and performance data. However, SvelteKit doesn't yet offer a hook for universal or server-only `load` function calls. Therefore, the SDK uses a Vite plugin to auto-instrument `load` functions so that you don't have to add a Sentry wrapper to each function manually.
-
-Auto-instrumentation is enabled by default when you add the `sentrySvelteKit()` function call to your `vite.config.(js|ts)`. However, you can customize the behavior, or disable it entirely. If you disable it you can still manually wrap specific `load` functions with the `withSentry` function.
-
-<Alert>
-
-The SDK will only auto-instrument `load` functions in `+page` or `+layout` files that don't contain any Sentry code.
-If you have custom Sentry code in these files, you'll have to [manually](#instrument-load-functions-manually) add the Sentry wrapper to your `load` functions.
-
-</Alert>
-
-#### Customize Auto-instrumentation
-
-By passing the `autoInstrument` option to `sentrySvelteKit` you can disable auto-instrumentation entirely, or customize which `load` functions should be instrumented:
-
-```javascript {filename:vite.config.(js|ts)} {7-10}
-import { sveltekit } from "@sveltejs/kit/vite";
-import { sentrySvelteKit } from "@sentry/sveltekit";
-
-export default {
-  plugins: [
-    sentrySvelteKit({
-      autoInstrument: {
-        load: true,
-        serverLoad: false,
-      },
-    }),
-    sveltekit(),
-  ],
-  // ... rest of your Vite config
-};
-```
-
-#### Disable Auto-instrumentation
-
-If you set the `autoInstrument` option to `false`, the SDK won't auto-instrument any `load` functions. You can still [manually instrument](#instrument-load-functions-manually) specific `load` functions.
-
-```javascript {filename:vite.config.(js|ts)} {7}
-import { sveltekit } from '@sveltejs/kit/vite';
-import { sentrySvelteKit } from '@sentry/sveltekit';
-
-export default {
-  plugins: [
-    sentrySvelteKit({
-      autoInstrument: false;
-    }),
-    sveltekit(),
-  ],
-  // ... rest of your Vite config
-};
-```
-
-### Manual Instrumentation
-
-Instead or in addition to [Auto Instrumentation](#auto-instrumentation), you can manually instrument certain SvelteKit-specific features with the SDK:
-
-#### Instrument `load` Functions
-
-SvelteKit's universal and server `load` functions are instrumented automatically by default.
-If you don't want to use `load` auto-instrumentation, you can [disable it](#disable-auto-instrumentation), and manually instrument specific `load` functions with the SDK's `load` function wrappers.
-
-##### Universal `load` Functions
-
-Use the `wrapLoadWithSentry` function to wrap universal `load` functions declared in `+page.(js|ts)` or `+layout.(js|ts)`
-
-```javascript {filename:+(page|layout).(js|ts)} {1,3}
-import { wrapLoadWithSentry } from "@sentry/sveltekit";
-
-export const load = wrapLoadWithSentry(({ fetch }) => {
-  const res = await fetch("/api/data");
-  const data = await res.json();
-  return { data };
-});
-```
-
-##### Server-only `load` Functions
-
-Or use the `wrapServerLoadWithSentry` function to wrap server-only `load` functions declared in `+page.server.(js|ts)` or `+layout.server.(js|ts)`
-
-```javascript {filename:+(page|layout).server.(js|ts)} {1,3}
-import { wrapServerLoadWithSentry } from "@sentry/sveltekit";
-
-export const load = wrapServerLoadWithSentry(({ fetch }) => {
-  const res = await fetch("/api/data");
-  const data = await res.json();
-  return { data };
-});
-```
-
-#### Instrument Server Routes
-
-<Alert>
-
-Available since `8.25.0`
-
-</Alert>
-
-You can also manually instrument [server (API) routes ](https://kit.svelte.dev/docs/routing#server) with the SDK.
-This is useful if you have custom server routes that you want to trace or if you want to capture `error()` calls within your server routes:
-
-```javascript {filename:+server.(js|ts)} {1,3}
-import { wrapServerRouteWithSentry } from "@sentry/sveltekit";
-
-export const GET = wrapServerRouteWithSentry(async () => {
-  // your endpoint logic
-  return new Response("Hello World");
-});
-```
-
-## Step 5: Cloudflare Pages Configuration (Optional)
-
-If you're deploying your application to Cloudflare Pages, you need to adjust your server-side setup.
-Follow this guide to [configure Sentry for Cloudflare](/platforms/javascript/guides/cloudflare/frameworks/sveltekit/).
-
-## Step 6: Avoid Ad Blockers With Tunneling (Optional)
+## Step 4: Avoid Ad Blockers With Tunneling (Optional)
 
 <PlatformContent includePath="getting-started-tunneling" />
 
-## Step 7: Verify Your Setup
+## Step 5: Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
@@ -424,6 +310,8 @@ Our next recommended steps for you are:
 
 - Learn how to [manually capture errors](/platforms/javascript/guides/sveltekit/usage/)
 - Continue to [customize your configuration](/platforms/javascript/guides/sveltekit/configuration/)
+- Learn how to [manually instrument](/platforms/javascript/guides/sveltekit/apis#load-function-instrumentation) SvelteKit-specific features
+- Learn more about [deploying SvelteKit apps to Cloudflare Pages](/platforms/javascript/guides/cloudflare/frameworks/sveltekit/)
 - Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
