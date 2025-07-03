@@ -260,7 +260,7 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
         // There's a chance we might be changing absolute URLs here
         // We'll check the code base and fix that later
         replacer: url => {
-          const mdUrl = new URL(url, DOCS_BASE_URL);
+          const mdUrl = new URL(url, baseUrl);
           const newPathName = mdUrl.pathname.replace(/\/?$/, '');
           if (path.extname(newPathName) === '') {
             mdUrl.pathname = `${newPathName}.md`;
