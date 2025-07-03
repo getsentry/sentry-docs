@@ -39,21 +39,6 @@ Enabling Hermes rejection tracking will overwrite existing hooks due to limitati
 
 For JSC environments, Sentry uses Promise polyfill with rejection tracking capabilities. This approach also overwrites existing hooks.
 
-#### Disable Auto Patching
-
-You can disable the global promise patching by passing `patchGlobalPromise: false` in either `Sentry.init` or the `ReactNativeErrorHandlers` integration. Note that if you disable auto patching, to ensure that unhandled rejections are still caught, you will need to [manually force a package resolution](#manually-forcing-a-package-resolution).
-
-```javascript
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [
-    Sentry.reactNativeErrorHandlersIntegration({
-      patchGlobalPromise: false, // Disables Promise patching for JSC
-    }),
-  ],
-});
-```
-
 <Alert>
 
 The Promise polyfill is used to ensure compatibility and provide rejection tracking functionality that may not be available natively in older JSC versions.
@@ -97,9 +82,11 @@ if (__DEV__) {
 }
 ```
 
-## Troubleshooting (Legacy behavior and JavaScriptCore)
+## Troubleshooting
 
-Due to an issue with React Native's dependencies, unhandled promise rejections might not be correctly caught by Sentry. If the promise rejection handler was not correctly attached, our SDK might issue a warning:
+Due to an issue with React Native's dependencies, unhandled promise rejections might not be correctly caught by Sentry when using the JavaScriptCore (JSC) engine or an React Native SDK version before `6.15.0`.
+
+If the promise rejection handler was not correctly attached, our SDK might issue a warning:
 
 > WARN: Unhandled promise rejections might not be caught by Sentry. Read about how to fix this on our troubleshooting docs.
 
