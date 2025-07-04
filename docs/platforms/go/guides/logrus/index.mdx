@@ -11,30 +11,34 @@ Go API documentation for the [`sentrylogrus` package](https://pkg.go.dev/github.
 
 Logrus structured logging is supported in Sentry Go SDK version `0.34.0` and above.
 
-## Install
+## Setup
 
+Install the `sentrylogrus` package:
 ```bash
 go get github.com/getsentry/sentry-go/logrus
 ```
 
-<Break />
+To enable logging, you need to initialize the SDK with the `EnableLogs` option set to true.
 
-<SignInNote />
+```go
+sentry.Init(sentry.ClientOptions{
+    Dsn:        "___PUBLIC_DSN___",
+	// Enable logs to be sent to Sentry
+    EnableLogs: true,
+})
+```
+
+## Configure
+
+`sentrylogrus` provides two types of hooks to configure the integration with Sentry. Both hooks accept these options:
+- **Levels**: A slice of `logrus.Level` specifying which log levels to capture
+- **ClientOptions**: Standard `sentry.ClientOptions` for configuration
+
+## Usage
 
 To integrate Sentry with Logrus, you can set up both log hooks and event hooks to capture different types of data at various log levels.
 
 ```go
-import (
-	"fmt"
-	"net/http"
-	"os"
-	"time"
-
-	"github.com/sirupsen/logrus"
-	"github.com/getsentry/sentry-go"
-	sentrylogrus "github.com/getsentry/sentry-go/logrus"
-)
-
 func main() {
 	// Initialize Logrus
 	logger := logrus.New()
@@ -111,29 +115,47 @@ func main() {
 }
 ```
 
-## Configure
-
-`sentrylogrus` provides two types of hooks to configure the integration with Sentry. Both hooks accept these options:
-- **Levels**: A slice of `logrus.Level` specifying which log levels to capture
-- **ClientOptions**: Standard `sentry.ClientOptions` for configuration
-
 ### LogHook
 
-Use `sentrylogrus.NewLogHook()` to send structured logs to Sentry. This hook captures log entries and sends them to Sentry's structured logging system.
+You have two ways to create a new `LogHook`. Either by using `sentrylogrus.NewLogHook()` and passing the `sentry.ClientOptions` or
+by using `sentrylogrus.NewLogHookFromClient()` and passing an already created `sentry.Client`. These hook captures log entries and
+send them to Sentry's structured logging system.
 
+#### NewLogHook
 ```go
 logHook, err := sentrylogrus.NewLogHook(
     []logrus.Level{logrus.InfoLevel, logrus.WarnLevel},
     sentry.ClientOptions{
         Dsn: "___PUBLIC_DSN___",
         EnableLogs: true, // Required for log entries
-    })
+    },
+)
+```
+
+#### NewLogHookFromClient
+
+Use `NewLogHookFromClient` if you've already initialized the Sentry SDK.
+```go
+if err := sentry.Init(sentry.ClientOptions{
+    Dsn:        "https://examplePublicKey@o0.ingest.sentry.io/0",
+    EnableLogs: true,
+}); err != nil {
+    log.Fatalf("Sentry initialization failed: %v", err)
+}
+hub := sentry.CurrentHub()
+logHook := sentrylogrus.NewLogHookFromClient(
+    []logrus.Level{logrus.InfoLevel, logrus.WarnLevel},
+    hub.Client(),
+)
 ```
 
 ### EventHook
 
-Use `sentrylogrus.NewEventHook()` to send log entries as Sentry events. This is useful for error tracking and alerting.
+You also have two ways to create a new `EventHook`. Either by using `sentrylogrus.NewEventHook()` and passing the `sentry.ClientOptions` or
+by using `sentrylogrus.NewEventFromClient()` and passing an already created `sentry.Client`. These hook captures log entries and
+send them as events. This is helpful for error tracking and alerting.
 
+#### NewEventHook
 ```go
 eventHook, err := sentrylogrus.NewEventHook(
     []logrus.Level{logrus.ErrorLevel, logrus.FatalLevel, logrus.PanicLevel},
@@ -141,7 +163,24 @@ eventHook, err := sentrylogrus.NewEventHook(
         Dsn: "___PUBLIC_DSN___",
         Debug: true,
         AttachStacktrace: true,
-    })
+    },
+)
+```
+#### NewEventHookFromClient
+
+Use `NewEventHookFromClient` if you've already initialized the Sentry SDK.
+```go
+if err := sentry.Init(sentry.ClientOptions{
+    Dsn:        "https://examplePublicKey@o0.ingest.sentry.io/0",
+    EnableLogs: true,
+}); err != nil {
+    log.Fatalf("Sentry initialization failed: %v", err)
+}
+hub := sentry.CurrentHub()
+eventHook := sentrylogrus.NewEventHookFromClient(
+    []logrus.Level{logrus.InfoLevel, logrus.WarnLevel},
+    hub.Client(),
+)
 ```
 
 <Alert>
@@ -171,6 +210,8 @@ func myAsyncHandler(w http.ResponseWriter, r *http.Request) {
 sentryHandler := sentryhttp.New(sentryhttp.Options{})
 http.Handle("/async", sentryHandler.Handle(http.HandlerFunc(myAsyncHandler)))
 ```
+
+<Include name="logs/go-ctx-usage-alert.mdx"/>
 
 ## Logs
 
