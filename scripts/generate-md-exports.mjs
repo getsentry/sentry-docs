@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 import {ListObjectsV2Command, PutObjectCommand, S3Client} from '@aws-sdk/client-s3';
+import imgLinks from '@pondorasti/remark-img-links';
 import {selectAll} from 'hast-util-select';
 import {createHash} from 'node:crypto';
 import {createReadStream, createWriteStream, existsSync} from 'node:fs';
@@ -20,13 +21,16 @@ import {
 import rehypeParse from 'rehype-parse';
 import rehypeRemark from 'rehype-remark';
 import remarkGfm from 'remark-gfm';
+import RemarkLinkRewrite from 'remark-link-rewrite';
 import remarkStringify from 'remark-stringify';
 import {unified} from 'unified';
 import {remove} from 'unist-util-remove';
 
+const DOCS_BASE_URL = 'https://docs.sentry.io/';
+const CACHE_VERSION = 3;
 const CACHE_COMPRESS_LEVEL = 4;
 const R2_BUCKET = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
-  ? 'sentry-dev-docs'
+  ? 'sentry-develop-docs'
   : 'sentry-docs';
 const accessKeyId = process.env.R2_ACCESS_KEY_ID;
 const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
@@ -109,7 +113,7 @@ async function createWork() {
         })
       );
       continuationToken = response.NextContinuationToken;
-      for (const {Key, ETag} of response.Contents) {
+      for (const {Key, ETag} of response.Contents || []) {
         existingFilesOnR2.set(Key, ETag.slice(1, -1)); // Remove quotes from ETag
       }
     } while (continuationToken);
@@ -197,7 +201,7 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
     // Remove all script tags, as they are not needed in markdown
     // and they are not stable across builds, causing cache misses
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
-  const cacheKey = md5(leanHTML);
+  const cacheKey = `v${CACHE_VERSION}_${md5(leanHTML)}`;
   const cacheFile = path.join(cacheDir, cacheKey);
   if (!noCache) {
     try {
@@ -217,8 +221,8 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
   const data = String(
     await unified()
       .use(rehypeParse)
-      // Need the `main div > hgroup` selector for the headers
-      .use(() => tree => selectAll('main div > hgroup, div#main', tree))
+      // Need the `head > title` selector for the headers
+      .use(() => tree => selectAll('head > title, div#main', tree))
       // If we don't do this wrapping, rehypeRemark just returns an empty string -- yeah WTF?
       .use(() => tree => ({
         type: 'element',
@@ -231,8 +235,34 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
         handlers: {
           // Remove buttons as they usually get confusing in markdown, especially since we use them as tab headers
           button() {},
+          // Convert the title to the top level heading
+          // This is needed because the HTML title tag is not part of the main content
+          // and we want to have a top level heading in the markdown
+          title: (_state, node) => ({
+            type: 'heading',
+            depth: 1,
+            children: [
+              {
+                type: 'text',
+                value: node.children[0].value,
+              },
+            ],
+          }),
         },
       })
+      .use(RemarkLinkRewrite, {
+        // There's a chance we might be changing absolute URLs here
+        // We'll check the code base and fix that later
+        replacer: url => {
+          const mdUrl = new URL(url, DOCS_BASE_URL);
+          const newPathName = mdUrl.pathname.replace(/\/?$/, '');
+          if (path.extname(newPathName) === '') {
+            mdUrl.pathname = `${newPathName}.md`;
+          }
+          return mdUrl;
+        },
+      })
+      .use(imgLinks, {absolutePath: DOCS_BASE_URL})
       // We end up with empty inline code blocks, probably from some tab logic in the HTML, remove them
       .use(() => tree => remove(tree, {type: 'inlineCode', value: ''}))
       .use(remarkGfm)
