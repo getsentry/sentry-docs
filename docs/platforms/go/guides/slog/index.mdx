@@ -14,12 +14,73 @@ Slog structured logging is supported in Sentry Go SDK version `0.34.0` and above
 ## Install
 
 ```bash
+go get github.com/getsentry/sentry-go
 go get github.com/getsentry/sentry-go/slog
 ```
 
 <Break />
 
-<SignInNote />
+## Configure
+
+### Initialize the Sentry SDK
+
+<PlatformContent includePath="getting-started-config" />
+
+### Slog Integration
+
+`sentryslog` provides options to configure the integration with Sentry. It accepts a struct of `sentryslog.Options` that allows you to configure how the handler will behave. The options are:
+
+```go
+// EventLevel specifies the exact log levels to capture and send to Sentry as Events.
+// Only logs at these specific levels will be processed as events.
+// Defaults to []slog.Level{slog.LevelError, LevelFatal}.
+EventLevel slog.Leveler
+// LogLevel specifies the exact log levels to capture and send to Sentry as Log entries
+// Only logs at these specific levels will be processed as log entries.
+// Defaults to []slog.Level{slog.LevelDebug, slog.LevelInfo, slog.LevelWarn, slog.LevelError, LevelFatal}.
+LogLevel slog.Leveler
+// Hub specifies the Sentry Hub to use for capturing events.
+// If not provided, the current Hub is used by default.
+Hub *sentry.Hub
+// Converter is an optional function that customizes how log records
+// are converted into Sentry events. By default, the DefaultConverter is used.
+Converter Converter
+// AttrFromContext is an optional slice of functions that extract attributes
+// from the context. These functions can add additional metadata to the log entry.
+AttrFromContext []func(ctx context.Context) []slog.Attr
+// AddSource is an optional flag that, when set to true, includes the source
+// information (such as file and line number) in the Sentry event.
+// This can be useful for debugging purposes.
+AddSource bool
+// ReplaceAttr is an optional function that allows for the modification or
+// replacement of attributes in the log record. This can be used to filter
+// or transform attributes before they are sent to Sentry.
+ReplaceAttr func(groups []string, a slog.Attr) slog.Attr
+```
+
+## Verify
+
+```go
+// Configure `slog` to use Sentry as a handler
+ctx := context.Background()
+handler := sentryslog.Option{
+	EventLevel: []slog.Level{slog.LevelError}, // Only Error level will be sent as events
+	LogLevel:   []slog.Level{slog.LevelWarn, slog.LevelInfo},         // Only Warn and Info levels will be sent as logs
+}.NewSentryHandler(ctx)
+logger := slog.New(handler)
+
+// Test logging - this will be sent to Sentry as an event
+logger.Error("This error will be sent to Sentry!")
+
+// Example of logging with attributes
+logger.With("user", "test-user").Error("An error occurred")
+```
+
+## Usage
+
+### Sending Logs vs Events
+
+Sentry allows you to send logs either as log entries or as events. The minimum log level defaults to `slog.LevelDebug` and logs will be sent if the `EnableLogs` option is set. The minimum event level defaults to `slog.LevelError`.
 
 To integrate Sentry with slog, you need to set up a Sentry handler and configure the Sentry client.
 
@@ -73,44 +134,6 @@ func main() {
 		ErrorContext(ctx, "a message")
 }
 ```
-
-## Configure
-
-`sentryslog` provides options to configure the integration with Sentry. It accepts a struct of `sentryslog.Options` that allows you to configure how the handler will behave. The options are:
-
-```go
-// EventLevel specifies the exact log levels to capture and send to Sentry as Events.
-// Only logs at these specific levels will be processed as events.
-// Defaults to []slog.Level{slog.LevelError, LevelFatal}.
-EventLevel slog.Leveler
-// LogLevel specifies the exact log levels to capture and send to Sentry as Log entries
-// Only logs at these specific levels will be processed as log entries.
-// Defaults to []slog.Level{slog.LevelDebug, slog.LevelInfo, slog.LevelWarn, slog.LevelError, LevelFatal}.
-LogLevel slog.Leveler
-// Hub specifies the Sentry Hub to use for capturing events.
-// If not provided, the current Hub is used by default.
-Hub *sentry.Hub
-// Converter is an optional function that customizes how log records
-// are converted into Sentry events. By default, the DefaultConverter is used.
-Converter Converter
-// AttrFromContext is an optional slice of functions that extract attributes
-// from the context. These functions can add additional metadata to the log entry.
-AttrFromContext []func(ctx context.Context) []slog.Attr
-// AddSource is an optional flag that, when set to true, includes the source
-// information (such as file and line number) in the Sentry event.
-// This can be useful for debugging purposes.
-AddSource bool
-// ReplaceAttr is an optional function that allows for the modification or
-// replacement of attributes in the log record. This can be used to filter
-// or transform attributes before they are sent to Sentry.
-ReplaceAttr func(groups []string, a slog.Attr) slog.Attr
-```
-
-## Usage
-
-### Sending Logs vs Events
-
-Sentry allows you to send logs either as log entries or as events. The minimum log level defaults to `slog.LevelDebug` and logs will be sent if the `EnableLogs` option is set. The minimum event level defaults to `slog.LevelError`.
 
 ### Example: Sending Logs as Events
 
