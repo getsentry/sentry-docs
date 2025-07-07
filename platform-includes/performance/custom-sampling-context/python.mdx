@@ -1,20 +1,20 @@
 ```python
-sentry_sdk.start_transaction(
-    # kwargs passed to Transaction constructor - will be recorded on transaction
+sentry_sdk.start_span(
     name="GET /search",
     op="search",
     data={
-      "query_params": {
-        "animal": "dog",
-        "type": "very good"
-      }
+        "query_params": {
+            "animal": "dog",
+            "type": "very good"
+        }
     },
-    # `custom_sampling_context` - won't be recorded
-    custom_sampling_context={
-        # PII
+    # Attributes defined at root span start will be accessible in traces_sampler
+    # and they will be sent to Sentry unless filtered out manually.
+    # Note that these can only be primitive types or a list of a single primitive
+    # type.
+    attributes={
         "user_id": "12312012",
-        # too big to send
-        "search_results": { ... }
+        "foo": "bar",
     }
-);
+)
 ```

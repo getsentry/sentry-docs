@@ -75,35 +75,15 @@ By default, none of these options are set, meaning no transactions will be sent 
 
 ### Default Sampling Context Data
 
-The information contained in the <PlatformIdentifier name="sampling-context" /> object passed to the <PlatformIdentifier name="traces-sampler" /> when a transaction is created varies by platform and integration.
+The information contained in the <PlatformIdentifier name="sampling-context" /> object passed to the <PlatformIdentifier name="traces-sampler" /> when a transaction is created varies by integration.
 
 <PlatformContent includePath="performance/default-sampling-context" />
 
 ### Custom Sampling Context Data
 
-When using custom instrumentation to create a transaction, you can add data to the <PlatformIdentifier name="sampling-context" /> by passing it as an optional second argument to <PlatformIdentifier name="start-transaction" />. This is useful if there's data to which you want the sampler to have access but which you don't want to attach to the transaction as `tags` or `data`, such as information that's sensitive or that’s too large to send with the transaction. For example:
+When using custom instrumentation to create a transaction, you can add data to the <PlatformIdentifier name="sampling-context" /> by providing additional `attributes` to <PlatformIdentifier name="start-span" />. All span attributes provided at span start are accessible via the <PlatformIdentifier name="sampling-context" /> and will also ultimately be sent to Sentry. If you want to exclude an attribute, you can filter it out in a <PlatformLink to="/configuration/filtering">`before_send`</PlatformLink>.
 
-```python
-sentry_sdk.start_transaction(
-    # kwargs passed to Transaction constructor - will be recorded on transaction
-    name="GET /search",
-    op="search",
-    data={
-        "query_params": {
-            "animal": "dog",
-            "type": "very good"
-        }
-    },
-    # `custom_sampling_context` - won't be recorded
-    custom_sampling_context={
-        # PII
-        "user_id": "12312012",
-        # too big to send
-        "search_results": { ... }
-    }
-)
-```
-
+<PlatformContent includePath="performance/custom-sampling-context" />
 
 ## Inheritance
 
