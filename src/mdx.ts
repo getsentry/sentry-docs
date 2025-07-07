@@ -62,7 +62,7 @@ const CACHE_COMPRESS_LEVEL = 4;
 const CACHE_DIR = path.join(root, '.next', 'cache', 'mdx-bundler');
 if (process.env.CI) {
   mkdirSync(CACHE_DIR, {recursive: true});
-} 
+}
 
 const md5 = (data: BinaryLike) => createHash('md5').update(data).digest('hex');
 
