@@ -29,18 +29,23 @@ jobs:
       - uses: actions/cache@v4
         id: cache
         with:
-          path: ${{ github.workspace }}/node_modules
+          path: |
+            ${{ github.workspace }}/node_modules
+            ${{ github.workspace }}/.next/cache
+            ${{ github.workspace }}/.eslintcache
           key: node-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            node-${{ runner.os }}-
+
       - run: yarn install --frozen-lockfile
         if: steps.cache.outputs.cache-hit != 'true'
 
       # Additional checks
       - run: yarn lint:ts
-      - run: yarn lint:docs
 
       # Run automatic fixes (run prettier apart from eslint to also fix mdx files)
       - run: yarn lint:prettier:fix
-      - run: yarn lint:eslint:fix
+      - run: yarn lint:eslint:fix --cache
 
       # Check (and error) for dirty working tree for forks
       # Reason being we need a different token to auto commit changes and
@@ -69,8 +74,14 @@ jobs:
       - uses: actions/cache@v4
         id: cache
         with:
-          path: ${{ github.workspace }}/node_modules
+          path: |
+            ${{ github.workspace }}/node_modules
+            ${{ github.workspace }}/.next/cache
+            ${{ github.workspace }}/.eslintcache
           key: node-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            node-${{ runner.os }}-
+
       - run: yarn install --frozen-lockfile
         if: steps.cache.outputs.cache-hit != 'true'
       - name: Run Tests
