@@ -11,24 +11,20 @@ Go API documentation for the [`sentryslog` package](https://pkg.go.dev/github.co
 
 Slog structured logging is supported in Sentry Go SDK version `0.34.0` and above.
 
-## Setup
+## Install
 
-Install the `sentryslog` package:
 ```bash
+go get github.com/getsentry/sentry-go
 go get github.com/getsentry/sentry-go/slog
 ```
 
-To enable logging, you need to initialize the SDK with the `EnableLogs` option set to true.
-
-```go
-sentry.Init(sentry.ClientOptions{
-    Dsn:        "___PUBLIC_DSN___",
-	// Enable logs to be sent to Sentry
-    EnableLogs: true,
-})
-```
-
 ## Configure
+
+### Initialize the Sentry SDK
+
+<PlatformContent includePath="getting-started-config" />
+
+### Options
 
 `sentryslog` provides options to configure the integration with Sentry. It accepts a struct of `sentryslog.Options` that allows you to configure how the handler will behave. The options are:
 
@@ -68,45 +64,23 @@ type Option struct {
 }
 ```
 
-## Usage
-
-To integrate Sentry with slog, you need to set up a Sentry handler and configure the Sentry client:
+## Verify
 
 ```go
-func main() {
-	if err := sentry.Init(sentry.ClientOptions{
-		Dsn:        "___PUBLIC_DSN___",
-		EnableLogs: true,
-	}); err != nil {
-		log.Fatalf("Sentry initialization failed: %v", err)
-	}
-	// Flush buffered events before the program terminates.
-	// Set the timeout to the maximum duration the program can afford to wait.
-	defer sentry.Flush(2 * time.Second)
+// Configure `slog` to use Sentry as a handler
+ctx := context.Background()
+handler := sentryslog.Option{
+    // Explicitly specify the levels that you want to be captured.
+	EventLevel: []slog.Level{slog.LevelError}, // Captures only [slog.LevelError] as error events.
+	LogLevel:   []slog.Level{slog.LevelWarn, slog.LevelInfo}, // Captures only [slog.LevelWarn] and [slog.LevelInfo] as log entries.
+}.NewSentryHandler(ctx)
+logger := slog.New(handler)
 
-	ctx := context.Background()
-	// Configure the sentryslog handler.
-	// The handler lets you explicitly declare how to handle each log level.
-	// You can handle logs as events or as log entries by specifying the `EventLevel` and `LogLevel` slices.
-	handler := sentryslog.Option{
-		EventLevel: []slog.Level{slog.LevelError},                // Only LevelError entries will be sent as events
-		LogLevel:   []slog.Level{slog.LevelWarn, slog.LevelInfo}, // Only LevelWarn and LevelInfo entries will be sent as logs
-	}.NewSentryHandler(ctx)
-	logger := slog.New(handler)
-	logger = logger.With("release", "v1.0.0")
+// Send an error event to Sentry to verify functionality
+logger.Error("This error will be sent to Sentry!")
 
-	// Log messages with various attributes
-	logger.
-		With(
-			slog.Group("user",
-				slog.String("id", "user-123"),
-				slog.Time("created_at", time.Now()),
-			),
-		).
-		With("environment", "dev").
-		With("error", fmt.Errorf("an error")).
-		ErrorContext(ctx, "a message")
-}
+// Also a log entry
+logger.With("key.string", "value").Info("An error occurred")
 ```
 
 <Include name="logs/go-ctx-usage-alert.mdx"/>

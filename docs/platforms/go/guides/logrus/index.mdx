@@ -13,22 +13,16 @@ Logrus structured logging is supported in Sentry Go SDK version `0.34.0` and abo
 
 ## Install
 
-Install the `sentrylogrus` package:
 ```bash
+go get github.com/getsentry/sentry-go
 go get github.com/getsentry/sentry-go/logrus
 ```
 
 ## Configure
 
-To enable logging, you need to initialize the SDK with the `EnableLogs` option set to true.
+### Initialize the Sentry SDK
 
-```go
-sentry.Init(sentry.ClientOptions{
-    Dsn:        "___PUBLIC_DSN___",
-	// Enable logs to be sent to Sentry
-    EnableLogs: true,
-})
-```
+<PlatformContent includePath="getting-started-config" />
 
 ### Options
 
@@ -36,85 +30,69 @@ sentry.Init(sentry.ClientOptions{
 - **Levels**: A slice of `logrus.Level` specifying which log levels to capture
 - **ClientOptions**: Standard `sentry.ClientOptions` for configuration
 
-## Usage
+## Verify
 
 To integrate Sentry with Logrus, you can set up both log hooks and event hooks to capture different types of data at various log levels.
 
 ```go
-func main() {
-	// Initialize Logrus
-	logger := logrus.New()
-
-	// Log DEBUG and higher level logs to STDERR
-	logger.Level = logrus.DebugLevel
-	logger.Out = os.Stderr
-
-	// send logs on InfoLevel
-	logHook, err := sentrylogrus.NewLogHook(
-		[]logrus.Level{logrus.InfoLevel},
-		sentry.ClientOptions{
-			Dsn: "___PUBLIC_DSN___",
-			BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
-				if hint.Context != nil {
-					if req, ok := hint.Context.Value(sentry.RequestContextKey).(*http.Request); ok {
-						// You have access to the original Request
-						fmt.Println(req)
-					}
-				}
-				fmt.Println(event)
-				return event
-			},
-			// need to have logs enabled
-			EnableLogs:       true,
-			AttachStacktrace: true,
-		})
-
-	// send events on Error, Fatal, Panic levels
-	eventHook, err := sentrylogrus.NewEventHook([]logrus.Level{
-		logrus.ErrorLevel,
-		logrus.FatalLevel,
-		logrus.PanicLevel,
-	}, sentry.ClientOptions{
-		Dsn: "___PUBLIC_DSN___",
-		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
-			if hint.Context != nil {
-				if req, ok := hint.Context.Value(sentry.RequestContextKey).(*http.Request); ok {
-					// You have access to the original Request
-					fmt.Println(req)
-				}
-			}
-			fmt.Println(event)
-			return event
-		},
-		AttachStacktrace: true,
-	})
-	if err != nil {
-		panic(err)
-	}
-	defer eventHook.Flush(5 * time.Second)
-	defer logHook.Flush(5 * time.Second)
-	logger.AddHook(eventHook)
-	logger.AddHook(logHook)
-
-	// Flushes before calling os.Exit(1) when using logger.Fatal
-	// (else all defers are not called, and Sentry does not have time to send the event)
-	logrus.RegisterExitHandler(func() {
-		eventHook.Flush(5 * time.Second)
-		logHook.Flush(5 * time.Second)
-	})
-
-    // Log a InfoLevel entry STDERR which is sent as a log to Sentry
-    logger.Infof("Application has started")
-
-    // Log an error to STDERR which is also sent to Sentry
-    logger.Errorf("oh no!")
-
-    // Log a fatal error to STDERR, which sends an event to Sentry and terminates the application
-    logger.Fatalf("can't continue...")
-	
-    // Example of logging with attributes
-	logger.WithField("user", "test-user").Error("An error occurred")
+// Initialize Sentry SDK
+if err := sentry.Init(sentry.ClientOptions{
+    Dsn: "___PUBLIC_DSN___",
+    EnableLogs:       true,
+}); err != nil {
+    log.Fatalf("Sentry initialization failed: %v", err)
 }
+
+logger := logrus.New()
+logger.Level = logrus.DebugLevel
+logger.Out = os.Stderr
+
+// Get the Sentry client from the current hub
+hub := sentry.CurrentHub()
+client := hub.Client()
+if client == nil {
+    log.Fatalf("Sentry client is nil")
+}
+
+// Create log hook to send logs on Info level
+logHook := sentrylogrus.NewLogHookFromClient(
+    []logrus.Level{logrus.InfoLevel},
+    client,
+)
+
+// Create event hook to send events on Error, Fatal, Panic levels
+eventHook := sentrylogrus.NewEventHookFromClient(
+    []logrus.Level{
+        logrus.ErrorLevel,
+        logrus.FatalLevel,
+        logrus.PanicLevel,
+    },
+    client,
+)
+
+defer eventHook.Flush(5 * time.Second)
+defer logHook.Flush(5 * time.Second)
+logger.AddHook(eventHook)
+logger.AddHook(logHook)
+
+// Flushes before calling os.Exit(1) when using logger.Fatal
+// (else all defers are not called, and Sentry does not have time to send the event)
+logrus.RegisterExitHandler(func() {
+    eventHook.Flush(5 * time.Second)
+    logHook.Flush(5 * time.Second)
+})
+
+// Info level is sent as a log to Sentry
+logger.Infof("Application has started")
+
+// Example of logging with attributes
+logger.WithField("user", "test-user").Error("An error occurred")
+
+// Error level is sent as an error event to Sentry
+logger.Errorf("oh no!")
+
+// Fatal level is sent as an error event to Sentry and terminates the application
+logger.Fatalf("can't continue...")
 ```
 
 ### LogHook
@@ -139,16 +117,21 @@ logHook, err := sentrylogrus.NewLogHook(
 Use `NewLogHookFromClient` if you've already initialized the Sentry SDK.
 ```go
 if err := sentry.Init(sentry.ClientOptions{
-    Dsn:        "https://examplePublicKey@o0.ingest.sentry.io/0",
+    Dsn:        "___PUBLIC_DSN___",
     EnableLogs: true,
 }); err != nil {
     log.Fatalf("Sentry initialization failed: %v", err)
 }
 hub := sentry.CurrentHub()
-logHook := sentrylogrus.NewLogHookFromClient(
-    []logrus.Level{logrus.InfoLevel, logrus.WarnLevel},
-    hub.Client(),
-)
+client := hub.Client()
+if client != nil {
+    logHook := sentrylogrus.NewLogHookFromClient(
+        []logrus.Level{logrus.InfoLevel, logrus.WarnLevel},
+        client,
+    )
+} else {
+    log.Fatalf("Sentrylogrus initialization failed: nil client")
+}
 ```
 
 ### EventHook
@@ -179,10 +162,15 @@ if err := sentry.Init(sentry.ClientOptions{
     log.Fatalf("Sentry initialization failed: %v", err)
 }
 hub := sentry.CurrentHub()
-eventHook := sentrylogrus.NewEventHookFromClient(
-    []logrus.Level{logrus.InfoLevel, logrus.WarnLevel},
-    hub.Client(),
-)
+client := hub.Client()
+if client != nil {
+    eventHook := sentrylogrus.NewEventHookFromClient(
+        []logrus.Level{logrus.InfoLevel, logrus.WarnLevel},
+        client,
+    )
+} else {
+    log.Fatalf("Sentrylogrus initialization failed: nil client")
+}
 ```
 
 <Alert>
