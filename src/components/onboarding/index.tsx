@@ -142,23 +142,40 @@ const validateOptionIds = (options: Pick<OnboardingOptionType, 'id'>[]) => {
 
 export function OnboardingOption({
   children,
-  optionId,
+  optionId = 'all',
   hideForThisOption,
+  isStep = false,
 }: {
-  children: React.ReactNode;
-  optionId: OptionId;
+  children: ReactNode;
+  optionId: OptionId | 'all';
   hideForThisOption?: boolean;
+  isStep?: boolean;
 }) {
-  validateOptionIds([{id: optionId}]);
+  if (optionId !== 'all') {
+    // Allow not passing an optionId when isStep is true
+    validateOptionIds([{id: optionId}]);
+  }
+  const className = [hideForThisOption ? 'hidden' : '', isStep ? 'onboarding-step' : '']
+    .filter(Boolean)
+    .join(' ');
+
   return (
     <div
       data-onboarding-option={optionId}
       data-hide-for-this-option={hideForThisOption}
-      className={hideForThisOption ? 'hidden' : ''}
+      className={className}
     >
       {children}
     </div>
   );
+}
+
+/**
+ * Wrapper component that provides CSS counter context for numbered onboarding steps
+ * @param children - OnboardingOption components that should be numbered as steps
+ */
+export function OnboardingSteps({children}: {children: ReactNode}) {
+  return <div className="onboarding-steps">{children}</div>;
 }
 
 /**
