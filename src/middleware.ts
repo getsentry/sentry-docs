@@ -3575,10 +3575,6 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     to: '/application/feedback-architecture/',
   },
   {
-    from: '/feature-flags/options-backed-features/',
-    to: '/application/feature-flags/options-backed-features/',
-  },
-  {
     from: '/options/',
     to: '/backend/options/',
   },
@@ -3787,14 +3783,6 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/api-server/application-domains/feature-flags/flagpole/',
     to: '/develop/application-domains/feature-flags/flagpole/',
-  },
-  {
-    from: '/backend/feature-flags/options-backed-features/',
-    to: '/backend/application-domains/feature-flags/options-backed-features/',
-  },
-  {
-    from: '/api-server/application-domains/feature-flags/options-backed-features/',
-    to: '/develop/application-domains/feature-flags/options-backed-features/',
   },
   {
     from: '/backend/options/',
