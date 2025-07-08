@@ -189,30 +189,6 @@ eventHook := sentrylogrus.NewEventHookFromClient(
     When using both hooks, ensure you flush both of them before the application exits and register exit handlers for fatal logs to avoid losing pending events.
 </Alert>
 
-## Correlating Logs With Traces
-
-To correlate logs with transactions, you need to pass a `context.Context` that contains transaction information to your logger calls. The `sentryhttp` middleware automatically adds transaction information to the request's context.
-Here's an example of how to use `WithContext` in an HTTP handler to ensure logs are associated with the correct trace.
-
-```go
-// Assume logger is initialized and Sentry hooks are added as shown above.
-// var logger *logrus.Logger
-
-func myAsyncHandler(w http.ResponseWriter, r *http.Request) {
-	// The sentryhttp middleware adds a Hub with transaction information to the request context.
-	ctx := r.Context()
-	// By using WithContext, the log entry will be associated with the transaction from the request.
-    logger.WithContext(ctx).Info("Log inside handler")
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintln(w, "Handler finished, async task running in background.")
-}
-
-// In your main function, or wherever you set up your routes:
-// Wrap your handler with sentryhttp to automatically start transactions for requests.
-sentryHandler := sentryhttp.New(sentryhttp.Options{})
-http.Handle("/async", sentryHandler.Handle(http.HandlerFunc(myAsyncHandler)))
-```
-
 <Include name="logs/go-ctx-usage-alert.mdx"/>
 
 ## Logs
