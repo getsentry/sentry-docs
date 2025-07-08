@@ -246,7 +246,8 @@ const filterVisibleSiblings = (s: DocNode) =>
   (s.frontmatter.sidebar_title || s.frontmatter.title) &&
   !s.frontmatter.sidebar_hidden &&
   !s.frontmatter.draft &&
-  s.path;
+  s.path &&
+  !isVersioned(s.path);
 
 function nodeToPlatform(n: DocNode): Platform {
   const platformData = platformsData()[n.slug];
