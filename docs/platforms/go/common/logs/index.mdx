@@ -11,9 +11,9 @@ With Sentry Structured Logs, you can send text based log information from your a
 
 ## Requirements
 
-Logs in Go are supported in Sentry Go SDK version `0.33.0` and above. For using integrations of other log libraries, have a look at each specific page for more details on requirements.
+Logs in Go are supported in Sentry Go SDK version `0.33.0` and above. To use integrations with other logging libraries, check their specific documentation pages for detailed requirements.
 
-## Setup
+## Configure
 
 To enable logging, you need to initialize the SDK with the `EnableLogs` option set to true.
 
@@ -22,6 +22,31 @@ sentry.Init(sentry.ClientOptions{
     Dsn:        "___PUBLIC_DSN___",
 	// Enable logs to be sent to Sentry
     EnableLogs: true,
+})
+```
+
+### Options
+
+#### BeforeSendLog
+
+To filter logs, or update them before they are sent to Sentry, you can use the `BeforeSendLog` client option.
+
+```go
+sentry.Init(sentry.ClientOptions{
+    Dsn:        "___PUBLIC_DSN___",
+    EnableLogs: true,
+    BeforeSendLog: func(log *sentry.Log) *sentry.Log {
+        // filter out all trace logs
+        if log.Level == sentry.LogLevelTrace {
+            return nil
+        }
+
+        // filter all logs below warning
+        if log.Severity <= sentry.LogSeverityInfo {
+            return nil
+        }
+        return log
+    },
 })
 ```
 
@@ -104,31 +129,6 @@ link your traces you would need to create a new logger everytime you want to pas
 sentryLogger := sentry.NewLogger(ctx)
 logger := log.New(sentryLogger, "", log.LstdFlags)
 logger.Println("Implementing log.Logger")
-```
-
-## Options
-
-### BeforeSendLog
-
-To filter logs, or update them before they are sent to Sentry, you can use the `BeforeSendLog` client option.
-
-```go
-sentry.Init(sentry.ClientOptions{
-    Dsn:        "___PUBLIC_DSN___",
-    EnableLogs: true,
-    BeforeSendLog: func(log *sentry.Log) *sentry.Log {
-        // filter out all trace logs
-        if log.Level == sentry.LogLevelTrace {
-            return nil
-        }
-
-        // filter all logs below warning
-        if log.Severity <= sentry.LogSeverityInfo {
-            return nil
-        }
-        return log
-    },
-})
 ```
 
 ### Debug
