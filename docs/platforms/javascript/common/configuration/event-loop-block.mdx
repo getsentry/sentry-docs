@@ -1,7 +1,7 @@
 ---
-title: Application Not Responding (ANR)
+title: Event Loop Block Detection
 sidebar_order: 70
-description: "Learn how to turn off or specify ANRs for Node.js"
+description: "Monitor for blocked event loops in Node.js applications"
 supported:
   - javascript.node
   - javascript.aws-lambda
@@ -25,6 +25,7 @@ supported:
   - javascript.tanstackstart-react
 keywords:
   [
+    "event loop block",
     "anr",
     "Application Not Responding",
     "Event Loop Blocked",
@@ -32,19 +33,43 @@ keywords:
   ]
 ---
 
-Application Not Responding (ANR) errors, or Event Loop Stall errors, are triggered when the Node.js main thread event loop of an application is blocked for more than five seconds. The Node SDK reports ANR errors as Sentry events and can optionally attach a stack trace of the blocking code to the ANR event.
+Event Loop Block detection monitors when the Node.js main thread event loop is blocked for more than a specified threshold. The Node SDK reports these events to Sentry with automatically captured stack traces to help identify blocking code.
 
 <Include name="feature-stage-beta.mdx" />
 
 <Alert>
 
-ANR detection is not supported for [Node.js clusters](https://nodejs.org/api/cluster.html).
+Event loop block detection is not supported for [Node.js clusters](https://nodejs.org/api/cluster.html).
+
+</Alert>
+
+## Event Loop Block Integration (Recommended)
+
+For the best performance and comprehensive monitoring, we recommend using the [`eventLoopBlockIntegration`](./integrations/event-loop-block) from the `@sentry/node-native` package. Stack traces are automatically captured when blocking is detected. This integration can monitor all threads in your Node.js application and provides better performance compared to the deprecated ANR integration.
+
+```javascript
+import * as Sentry from "@sentry/node";
+import { eventLoopBlockIntegration } from "@sentry/node-native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [eventLoopBlockIntegration({ threshold: 1000 })],
+});
+```
+
+For detailed usage instructions and configuration options, see the [`eventLoopBlockIntegration`](./integrations/event-loop-block) documentation.
+
+## Deprecated Application Not Responding (ANR) Integration
+
+<Alert type="warning">
+
+**Deprecated**: The `anrIntegration` is deprecated. Please use the [`eventLoopBlockIntegration`](./integrations/event-loop-block) instead for better performance and more comprehensive monitoring.
 
 </Alert>
 
 _(Available in version 7.91.0 and above)_
 
-To enable ANR detection, add the `Anr` integration from the `@sentry/node` package.
+The legacy ANR integration is still available but deprecated. If you're currently using it, we recommend migrating to the new `eventLoopBlockIntegration`.
 
 <Alert>
 
@@ -61,9 +86,9 @@ Sentry.init({
 
 ![Example of an ANR error event](./img/anr-node-example.png)
 
-## Configuration options
+### Legacy ANR Configuration Options
 
-You can pass a configuration object to the `Anr` integration to customize the ANR detection behavior.
+The deprecated ANR integration supports the following configuration options:
 
 ```ts
 interface Options {
@@ -90,9 +115,9 @@ interface Options {
 }
 ```
 
-## ANR Implementation and Overhead
+### Legacy ANR Implementation and Overhead
 
-ANR detection with the Node SDK uses a worker thread to monitor the event loop
+ANR detection with the legacy Node SDK uses a worker thread to monitor the event loop
 in the main app thread. The main app thread sends a heartbeat message to the ANR
 worker thread every 50ms. If the ANR worker does not receive a heartbeat message
 for 5 seconds, it triggers an ANR event. If the `captureStackTrace` option is

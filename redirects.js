@@ -1108,6 +1108,17 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/:guide/tracing/distributed-tracing/:path*',
   },
   {
+    source:
+      '/platforms/javascript/common/configuration/application-not-responding/:path*',
+    destination: '/platforms/javascript/common/configuration/event-loop-block/:path*',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide/configuration/application-not-responding/:path*',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/event-loop-block/:path*',
+  },
+  {
     source: '/platforms/javascript/tracing/instrumentation/custom-instrumentation/:path*',
     destination: '/platforms/javascript/tracing/instrumentation/:path*',
   },
