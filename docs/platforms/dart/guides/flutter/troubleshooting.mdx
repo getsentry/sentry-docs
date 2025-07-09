@@ -71,6 +71,49 @@ By default the Sentry Flutter SDK will enable native crash reporting on Linux an
 The only exception is Windows ARM64 which uses `breakpad`.
 If you encounter any issues, you can set the `SENTRY_NATIVE_BACKEND` environment variable to an empty string to disable native crash reporting.
 
+### Crashpad Compile Error
+
+On Linux, compiling your Flutter Desktop app with the crashpad backend can fail if your clang toolchain is out of date.
+
+ - Update your clang to at least version 13, then try again.
+ - If you still encounter errors, please file an issue on our [Sentry Dart GitHub repository](https://github.com/getsentry/sentry-dart/issues/).
+
+### `SentryFlutter.init` throws an error `sentry_init` failed
+
+On Linux, `SentryFlutter.init` automatically tries to use the crashpad backend.
+There are cases where the Flutter tooling overrides the permission of the crashpad binary therefore failing the initialization.
+
+To resolve this:
+
+1. Search for the following code block in your `linux/CMakeLists.txt` file:
+
+```cmake {filename:<your-app>/linux/CMakeLists.txt}
+# Find this code block
+if(PLUGIN_BUNDLED_LIBRARIES)
+  install(FILES "${PLUGIN_BUNDLED_LIBRARIES}"
+    DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+    COMPONENT Runtime)
+endif()
+```
+
+2. Once you find it, replace it with the following code block:
+
+```cmake {filename:<your-app>/linux/CMakeLists.txt}
+foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
+  if("${bundled_library}" STREQUAL "$<TARGET_FILE:crashpad_handler>")
+    install(PROGRAMS "${bundled_library}"
+      DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+      COMPONENT Runtime)
+  else()
+    install(FILES "${bundled_library}"
+      DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+      COMPONENT Runtime)
+  endif()
+endforeach()
+```
+
+This allows cmake to use the correct install command `install(PROGRAMS ..)` instead of `install(FILES ..)` which strips the executable bit.
+
 ## Zone Mismatch Error on Web
 
 By default, the Sentry Flutter SDK creates a custom zone on web for automatic error and breadcrumb tracking. This can lead to zone mismatch errors when your application calls `WidgetsBinding.ensureInitialized()` before initializing Sentry.
