@@ -16,7 +16,13 @@ description: "Learn how to manually set up Sentry in your Next.js app and captur
 Choose the features you want to configure, and this guide will show you how:
 
 <OnboardingOptionButtons
-  options={["error-monitoring", "performance", "session-replay", "user-feedback", "logs"]}
+  options={[
+    "error-monitoring",
+    "performance",
+    "session-replay",
+    "user-feedback",
+    "logs",
+  ]}
 />
 
 <PlatformContent includePath="getting-started-features-expandable" />
@@ -90,6 +96,7 @@ export default withSentryConfig(nextConfig, {
 ### Initialize Sentry Client-Side and Server-Side SDKs
 
 Create three files in your application's root directory:
+
 - `sentry.server.config.(js|ts)`
 - `sentry.edge.config.(js|ts)`
 - `instrumentation-client.(js|ts)`
@@ -220,7 +227,8 @@ Sentry.init({
 ```
 
 <Alert title="Tip">
-  Include your DSN directly in these files, or use a _public_ environment variable like `NEXT_PUBLIC_SENTRY_DSN`.
+  Include your DSN directly in these files, or use a _public_ environment
+  variable like `NEXT_PUBLIC_SENTRY_DSN`.
 </Alert>
 
 ### Register Sentry Server-Side SDK Initialization
@@ -433,7 +441,7 @@ module.exports = withSentryConfig(nextConfig, {
 });
 ```
 
-Alternatively, set the `SENTRY_AUTH_TOKEN` environment variable in your `.env` file:
+Set the `SENTRY_AUTH_TOKEN` environment variable in your `.env` file:
 
 ```sh {filename:.env}
 SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
@@ -449,14 +457,16 @@ Make sure to keep your auth token secret and out of version control.
 
 You can prevent ad blockers from blocking Sentry events using tunneling. Use the `tunnelRoute` option to add an API endpoint in your application that forwards Sentry events to Sentry servers.
 
-Update `withSentryConfig` in your `next.config.(js|mjs)` file with the following options:
+For better ad-blocker evasion, you can either:
+- Set `tunnelRoute: true` to automatically generate a random tunnel route for each build, making it harder for ad-blockers to detect and block monitoring requests
+- Set `tunnelRoute: "/my-tunnel-route"` to use a static route of your choosing
 
 ```javascript {tabTitle:ESM} {filename:next.config.mjs}
 export default withSentryConfig(nextConfig, {
   // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
   // This can increase your server load as well as your hosting bill.
   // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-side errors will fail.
-  tunnelRoute: "/monitoring",
+  tunnelRoute: true, // Generates a random route for each build (recommended)
 });
 ```
 
@@ -465,15 +475,15 @@ module.exports = withSentryConfig(nextConfig, {
   // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
   // This can increase your server load as well as your hosting bill.
   // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-side errors will fail.
-  tunnelRoute: "/monitoring",
+  tunnelRoute: true, // Generates a random route for each build (recommended)
 });
 ```
 
-<Alert level="warning" title="Complications with Next.js middleware">
-  Client-side event recording will fail if your Next.js middleware intercepts
-  the configured route. To prevent this, exclude the tunnel route by adding a
-  negative matcher to your middleware like `(?!monitoring-tunnel)`.
-</Alert>
+<Expandable level="warning" title="Using Next.js middleware on Turbopack">
+  If you're using Turbopack, client-side event recording will fail if your Next.js middleware intercepts the configured tunnel route. To fix this, set the route to a fixed string (like `/error-monitoring`) and add a negative matcher like `(?!error-monitoring)` in your middleware to exclude the tunnel route.
+  
+  If you're not using Turbopack, Sentry will automatically skip the tunnel route in your middleware.
+</Expandable>
 
 ## Step 6: Instrument Vercel Cron Jobs (Optional)
 
