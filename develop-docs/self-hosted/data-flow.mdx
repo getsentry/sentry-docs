@@ -80,19 +80,19 @@ graph LR
 
 1. Events from the SDK is sent to the `relay` service.
 2. Relay parses the incoming envelope, validates whether the DSN and Project ID are valid. It reads project config data from `redis`.
-3. Relay build a new payload to be consumed by Sentry ingest consumers, and send it to `kafka`.
-4. Sentry `ingest-*` consumers ( with `*` [wildcard] being the event type [errors, transaction, profiles, etc]) consumes the event, cache it in `redis` and start the `preprocess_event` task.
-5. The `preprocess_event` task symbolicate stack traces with `symbolicator` service, and process event according to the event type's logic.
-6. The `preprocess_event` task saves the event payload to nodestore (the default is to `postgres`).
-7. The `preprocess_event` task publishes the event to `kafka` to `events` topic.
+3. Relay builds a new payload to be consumed by Sentry ingest consumers, and sends it to `kafka`.
+4. Sentry `ingest-*` consumers ( with `*` [wildcard] being the event type [errors, transaction, profiles, etc]) consumes the event, caches it in `redis` and starts the `preprocess_event` task.
+5. The `preprocess_event` task symbolicates stack traces with `symbolicator` service, and processes the event according to its event type.
+6. The `preprocess_event` task saves the event payload to nodestore (default nodestore backend is `postgres`).
+7. The `preprocess_event` task publishes the event to `kafka` under the `events` topic.
 
 ### Event Processing Pipeline
 
-1. The `snuba-consumer` service consumes events from `events` topic and process them. After being written to clickhouse, snuba publishes error & transaction events to `post-process-forwarder`.
+1. The `snuba-consumer` service consumes events from `events` topic and processes them. After the events are written to clickhouse, snuba publishes error & transaction events to `post-process-forwarder`.
 2. The Sentry `post-process-forwarder` consumer consumes messages and spawns a `post_process_group` task for each processed error & issue occurance.
 
 ### Web User Interface
 
-1. THe `web` service is what you see, it's the Django web UI and API that serves the Sentry's frontend.
-2. The `worker` service mainly consumes `redis` that acts as a celery queue to execute tasks. One notable task is to send emails to SMTP servers.
+1. The `web` service is what you see, it's the Django web UI and API that serves the Sentry's frontend.
+2. The `worker` service mainly consumes tasks from  `redis` that acts as a celery queue. One notable task is to send emails through the SMTP server.
 
