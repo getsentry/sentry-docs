@@ -971,6 +971,10 @@ const userDocsRedirects = [
     destination: '/product/insights/ai/:path*',
   },
   {
+    source: '/product/insights/ai/:path*',
+    destination: '/product/insights/aigents/',
+  },
+  {
     source: '/product/insights/retention-priorities/',
     destination: '/organization/dynamic-sampling/',
   },
