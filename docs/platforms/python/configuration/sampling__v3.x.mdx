@@ -41,7 +41,7 @@ You can define at most one of the <PlatformIdentifier name="error-sampler" /> an
 
 ## Sampling Transaction Events
 
-We recommend sampling your transactions (root spans) for two reasons:
+We recommend sampling your transactions for two reasons:
 
 1. Capturing a single trace involves minimal overhead, but capturing traces for _every_ page load or _every_ API request may add an undesirable load to your system.
 2. Enabling sampling allows you to better manage the number of events sent to Sentry, so you can tailor your volume to your organization's needs.
@@ -75,23 +75,23 @@ By default, none of these options are set, meaning no transactions will be sent 
 
 ### Default Sampling Context Data
 
-The information contained in the <PlatformIdentifier name="sampling-context" /> object passed to the <PlatformIdentifier name="traces-sampler" /> when a root span is created varies by integration.
+The information contained in the <PlatformIdentifier name="sampling-context" /> object passed to the <PlatformIdentifier name="traces-sampler" /> when a transaction is created varies by integration.
 
 <PlatformContent includePath="performance/default-sampling-context" />
 
 ### Custom Sampling Context Data
 
-When using custom instrumentation to create a root span, you can add data to the <PlatformIdentifier name="sampling-context" /> by providing additional `attributes` to <PlatformIdentifier name="start-span" />. All span attributes provided at span start are accessible via the <PlatformIdentifier name="sampling-context" /> and will also ultimately be sent to Sentry. If you want to exclude an attribute, you can filter it out in a <PlatformLink to="/configuration/filtering">`before_send`</PlatformLink>.
+When using custom instrumentation to create a transaction, you can add data to the <PlatformIdentifier name="sampling-context" /> by providing additional `attributes` to <PlatformIdentifier name="start-span" />. All span attributes provided at span start are accessible via the <PlatformIdentifier name="sampling-context" /> and will also ultimately be sent to Sentry. If you want to exclude an attribute, you can filter it out in a <PlatformLink to="/configuration/filtering">`before_send`</PlatformLink>.
 
 <PlatformContent includePath="performance/custom-sampling-context" />
 
 ## Inheritance
 
-Whatever a root span's sampling decision, that decision will be passed to its child spans and from there to any root spans they subsequently cause in other services.
+Whatever a transaction's sampling decision, that decision will be passed to its child spans and from there to any transactions they subsequently cause in other services.
 
 (See <PlatformLink to="/tracing/trace-propagation/">Distributed Tracing</PlatformLink> for more about how that propagation is done.)
 
-If the root span currently being created is one of those subsequent root spans (in other words, if it has a parent root span), the upstream (parent) sampling decision will be included in the sampling context data. Your <PlatformIdentifier name="traces-sampler" /> can use this information to choose whether to inherit that decision. In most cases, inheritance is the right choice, to avoid breaking distributed traces. A broken trace will not include all your services.
+If the transaction currently being created is one of those subsequent transactions (in other words, if it has a parent transaction), the upstream (parent) sampling decision will be included in the sampling context data. Your <PlatformIdentifier name="traces-sampler" /> can use this information to choose whether to inherit that decision. In most cases, inheritance is the right choice, to avoid breaking distributed traces. A broken trace will not include all your services.
 
 <PlatformContent includePath="performance/always-inherit-sampling-decision">
 
@@ -103,13 +103,13 @@ If you're using a <PlatformIdentifier name="traces-sample-rate" /> rather than a
 
 ## Forcing a Sampling Decision
 
-If you know at span creation time whether or not you want the root span (transaction) sent to Sentry, you also have the option of passing a sampling decision directly in the `start_span` API. If you do that, the root span won't be subject to the <PlatformIdentifier name="traces-sample-rate" />, nor will <PlatformIdentifier name="traces-sampler" /> be run, so you can count on the decision that's passed not to be overwritten.
+If you know at span creation time whether or not you want the transaction sent to Sentry, you also have the option of passing a sampling decision directly in the `start_span` API. If you do that, the transaction won't be subject to the <PlatformIdentifier name="traces-sample-rate" />, nor will <PlatformIdentifier name="traces-sampler" /> be run, so you can count on the decision that's passed not to be overwritten.
 
 <PlatformContent includePath="performance/force-sampling-decision" />
 
 ## Precedence
 
-There are multiple ways for a root span (transaction) to end up with a sampling decision.
+There are multiple ways for a transaction to end up with a sampling decision.
 
 - Random sampling according to a static sample rate set in <PlatformIdentifier name="traces-sample-rate" />
 - Random sampling according to a sample function rate returned by <PlatformIdentifier name="traces-sampler" />
