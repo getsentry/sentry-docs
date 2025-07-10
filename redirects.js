@@ -972,7 +972,7 @@ const userDocsRedirects = [
   },
   {
     source: '/product/insights/ai/:path*',
-    destination: '/product/insights/aigents/',
+    destination: '/product/insights/agents/',
   },
   {
     source: '/product/insights/retention-priorities/',
