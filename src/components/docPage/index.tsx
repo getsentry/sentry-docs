@@ -89,6 +89,7 @@ export function DocPage({
                 rel="nofollow"
                 className="float-right"
                 href={`/${pathname}.md`}
+                data-mdast="ignore"
                 title="Markdown version of this page"
               >
                 <Markdown className="flex p-0 flex-wrap" width={24} height={24} />
