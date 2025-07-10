@@ -54,14 +54,14 @@ public class MyCachingService
         var cacheSpan = SentrySdk.GetSpan()?.StartChild("cache.put");
 
         // Describe the cache server you are accessing
-        cacheSpan?.SetExtra("network.peer.address", "cache.example.com/supercache");
-        cacheSpan?.SetExtra("network.peer.port", 9000);
+        cacheSpan?.SetData("network.peer.address", "cache.example.com/supercache");
+        cacheSpan?.SetData("network.peer.port", 9000);
 
         // Set the key you're going to use to add to the cache
-        cacheSpan?.SetExtra("cache.key", cacheKey);
+        cacheSpan?.SetData("cache.key", cacheKey);
 
         // Optional: You can also provide the cached item's size
-        // cacheSpan?.SetExtra("cache.item_size", /* item size in bytes */);
+        // cacheSpan?.SetData("cache.item_size", /* item size in bytes */);
 
         // Add an item to your cache
         _cache.Set(cacheKey, value);
@@ -74,20 +74,20 @@ public class MyCachingService
         var cacheSpan = SentrySdk.GetSpan()?.StartChild("cache.get");
 
         // Describe the cache server you are accessing
-        cacheSpan?.SetExtra("network.peer.address", "cache.example.com/supercache");
-        cacheSpan?.SetExtra("network.peer.port", 9000);
+        cacheSpan?.SetData("network.peer.address", "cache.example.com/supercache");
+        cacheSpan?.SetData("network.peer.port", 9000);
 
         // Set the key you're going to use to retrieve from the cache
-        cacheSpan?.SetExtra("cache.key", cacheKey);
+        cacheSpan?.SetData("cache.key", cacheKey);
 
         // Attempt to retrieve the cached item
         if (_cache.TryGetValue(cacheKey, out var cachedValue))
         {
             // If you retrieved a value, the cache was hit
-            cacheSpan?.SetExtra("cache.hit", true);
+            cacheSpan?.SetData("cache.hit", true);
 
             // Optional: You can also provide the cached item's size
-            // cacheSpan.SetExtra("cache.item_size", /* item size in bytes */);
+            // cacheSpan.SetData("cache.item_size", /* item size in bytes */);
 
             cacheSpan?.Finish();
 
@@ -95,7 +95,7 @@ public class MyCachingService
         }
 
         // If you could not retrieve a value, it was a miss
-        cacheSpan?.SetExtra("cache.hit", false);
+        cacheSpan?.SetData("cache.hit", false);
         cacheSpan?.Finish();
         return null;
     }
