@@ -71,13 +71,9 @@ Transaction Sampling **does not guarantee complete traces** and instead **applie
 
 ## Biases for Sampling
 
-A bias is a set of one or more rules that are evaluated for each event. More specifically, when we define a bias, we want to achieve a specific objective, which **can be expressed as a set of rules**. You learn more about rules on the architecture page [here](/dynamic-sampling/architecture/).
+Dynamic Sampling uses biases to adjust how many events matching certain conditions are sampled. These biases are defined as a set of rules that Relay checks for each event. Learn more about these rules [on the architecture page](/dynamic-sampling/architecture/).
 
-Sentry has already defined a set of biases that are available to all customers. These biases have different goals, but they can be combined to express more complex semantics.
-
-Some of the biases defined by Sentry can be enabled or disabled in the UI, more specifically under **Project Settings -> Performance**, while others are enabled by default and cannot be disabled.
-
-An example of how the UI looks is shown in the following screenshot (the content of this screenshot is subject to change):
+Sentry defines a set of biases that are available to all customers. Some of the biases defined by Sentry can be enabled or disabled in the UI under **Project Settings -> Performance**, while others are enabled by default and cannot be disabled. See this example of the UI (the content of this screenshot is subject to change):
 
 ![Biases in the UI](./images/biasesUI.png)
 
@@ -85,19 +81,18 @@ An example of how the UI looks is shown in the following screenshot (the content
 
 ### Prioritize New Releases
 
-This bias is used to prioritize traces that are coming from a new release. The goal is to increase the sample rate in the time window that occurs between the creation of a release and its adoption by users. _The identification of a new release is done in the `event_manager` defined [here](https://github.com/getsentry/sentry/blob/43d7c41aee2b22ca9f51916afac40f6cbdcd2b15/src/sentry/event_manager.py#L739-L773)._
+This bias is used to prioritize traces that come from a new release. The goal is to increase the sample rate in the time window between the creation of a release and its adoption by users. _New releases are identified in the `event_manager` defined [here](https://github.com/getsentry/sentry/blob/43d7c41aee2b22ca9f51916afac40f6cbdcd2b15/src/sentry/event_manager.py#L739-L773)._
 
-Since the adoption of a release is not constant, we created a system of _decaying_ rules which can interpolate between two sample rates in a given time window with a given function (e.g. `linear`). The idea being that we want to reduce the sample rate since the amount of samples will increase as the release gets adopted by users.
+Because release adoption varies over time, a system of _decaying_ rules interpolates between two sample rates within a specified time window and using a specified interpolation function (e.g. `linear`). The sample rate is gradually lowered as user adoption increases and the volume of samples grows.
 
 ![Sample Rate and Adoption](./images/sampleRateAndAdoption.png)
 
-The latest release bias uses a decaying rule to interpolate between a starting sample rate and an ending sample rate over a time window that is statically defined for each platform (the list of time to adoptions is define [here](https://github.com/getsentry/sentry/blob/9b98be6b97323a78809a829e06dcbef26a16365c/src/sentry/dynamic_sampling/rules/helpers/time_to_adoptions.py#L25). For example, Android has a bigger time window than JavaScript because on average Android apps take more time to get adopted by users.
+The latest release bias uses a decaying rule to interpolate between a starting and ending sample rate over a time window that is statically defined for each platform. The list of adoption times is defined [here](https://github.com/getsentry/sentry/blob/9b98be6b97323a78809a829e06dcbef26a16365c/src/sentry/dynamic_sampling/rules/helpers/time_to_adoptions.py#L25). For example, Android has a longer time window than JavaScript because Android apps generally take more time to be adopted by users.
 
 ### Prioritize Dev Environments
 
-This bias is used to prioritize traces coming from a development environment in order to increase the amount of data retained for such environments, since they are more likely to be useful for debugging.
+This bias increases the sampling rate for traces from development environments, since this data is often more valuable for debugging. Sentry identifies development environments using a regularly maintained and updated list of known environment patterns. For these environments, the sample rate is set to 100%, so all traces are sampled.
 
-To mark a trace's root transaction as belonging to a development environment, we leverage a list of known development environments, which is maintained and updated regularly by Sentry.
 
 ```python
 ENVIRONMENT_GLOBS = [
@@ -112,19 +107,18 @@ ENVIRONMENT_GLOBS = [
 
 The list of development environments is available [here](https://github.com/getsentry/sentry/blob/4cb0d863de1ef8e3440153cb440eaca8025dee0d/src/sentry/dynamic_sampling/rules/biases/boost_environments_bias.py#L7).
 
-For prioritizing dev environments, we use a sample rate of `1.0` (100%), which results in all traces being sampled.
 
 ### Prioritize Low Volume Projects
 <Alert title="✨ Note">
 This bias is only active in Automatic Mode (and not in Manual Mode). It applies to any incoming trace and is defined on a per-project basis.
 </Alert>
 
-The algorithm used in this bias computes a new sample rate with the goal of prioritizing low-volume projects, which can be drowned out by high-volume projects. The mechanism used for prioritizing is similar to the low-volume transactions bias in which given the sample rate of the organization and the counts of each project, it computes a new sample rate for each project, assuming an ideal distribution of the counts. The sample rate of the boost low volume projects bias is computed using an algorithm that leverages a dynamic sample rate obtained by measuring the incoming volume of transactions in a sliding time window, known as the target fidelity rate. This rate is obtained by calling, at fixed intervals, the `get_sampling_tier_for_volume` function (defined [here](https://github.com/getsentry/sentry/blob/f3a2220ccd3a2118a1255a4c96a9ec2010dab0d8/src/sentry/quotas/base.py#L481)).
+This bias uses an algorithm to increase the sample rate for low-volume projects, which might otherwise be overshadowed by high-volume projects. It calculates a new sample rate for each project based on the organization’s overall sample rate and the number of transactions each project receives, aiming for a more balanced distribution. The algorithm dynamically adjusts these rates by measuring _the volume of incoming transactions over a sliding time window_ (also known as the target fidelity rate). At regular intervals, the system calls the `get_sampling_tier_for_volume` function (defined [here](https://github.com/getsentry/sentry/blob/f3a2220ccd3a2118a1255a4c96a9ec2010dab0d8/src/sentry/quotas/base.py#L481)) to determine the appropriate sample rate for each project.
 
 
 
 ### Prioritize Low Volume Transactions
-This bias is used to prioritize low-volume transactions that can be drowned out by high-volume transactions. The goal is to rebalance sample rates of the individual transactions so that low-volume transactions are more likely to have representative samples. The bias is of type trace, which means that the transaction considered for rebalancing will be the root transaction of the trace.
+Different transactions have different volumes, and this bias is used to prioritize low-volume transactions that can be drowned out by high-volume transactions. The goal is to rebalance sample rates of the individual transactions so that low-volume transactions are more likely to have representative samples. The transaction considered for rebalancing will be the root transaction of the trace.
 
 Prioritization of low volume transactions works slightly differently depending on the dynamic sampling mode:
 - In **Automatic Mode** (`sentry:sampling_mode` == `organization`), the output of the [boost_low_volume_projects](https://github.com/getsentry/sentry/blob/dee539472e999bf590cfc4e99b9b12981963defb/src/sentry/dynamic_sampling/tasks/boost_low_volume_transactions.py#L183) task is used as the base sample rate for the balancing algorithm.
@@ -140,9 +134,7 @@ The algorithms for boosting low volume events are run periodically (with cron jo
 
 ### Deprioritize Health Checks
 
-This bias is used to de-prioritize transactions that are classified as health checks. The goal is to reduce the amount of data retained for health checks, since they are not very useful for debugging.
-
-In order to mark a transaction as a health check, we leverage a list of known health check endpoints, which is maintained by Sentry and updated regularly.
+This bias reduces the sampling rate for transactions identified as health checks, since these transactions typically provide little value for debugging. Sentry maintains and regularly updates a list of known health check endpoints to identify such transactions and deprioritize them accordingly.
 
 ```python
 HEALTH_CHECK_GLOBS = [
