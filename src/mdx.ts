@@ -15,7 +15,6 @@ import {
   createBrotliCompress,
   createBrotliDecompress,
 } from 'node:zlib';
-import {limitFunction} from 'p-limit';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypePresetMinify from 'rehype-preset-minify';
 import rehypePrismDiff from 'rehype-prism-diff';
@@ -26,13 +25,14 @@ import remarkMdxImages from 'remark-mdx-images';
 import getAppRegistry from './build/appRegistry';
 import getPackageRegistry from './build/packageRegistry';
 import {apiCategories} from './build/resolveOpenAPI';
-import getAllFilesRecursively from './files';
+import getAllFilesRecursively, {limitFunction} from './files';
 import remarkDefList from './mdx-deflist';
 import rehypeOnboardingLines from './rehype-onboarding-lines';
 import rehypeSlug from './rehype-slug.js';
 import remarkCodeTabs from './remark-code-tabs';
 import remarkCodeTitles from './remark-code-title';
 import remarkComponentSpacing from './remark-component-spacing';
+import remarkDsnComments from './remark-dsn-comments';
 import remarkExtractFrontmatter from './remark-extract-frontmatter';
 import remarkFormatCodeBlocks from './remark-format-code';
 import remarkImageSize from './remark-image-size';
@@ -580,6 +580,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
         [remarkTocHeadings, {exportRef: toc}],
         remarkGfm,
         remarkDefList,
+        remarkDsnComments,
         remarkFormatCodeBlocks,
         [remarkImageSize, {sourceFolder: cwd, publicFolder: path.join(root, 'public')}],
         remarkMdxImages,

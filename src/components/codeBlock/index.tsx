@@ -1,10 +1,11 @@
 'use client';
 
-import {RefObject, useEffect, useRef, useState} from 'react';
+import {RefObject, useContext, useEffect, useRef, useState} from 'react';
 import {Clipboard} from 'react-feather';
 
 import styles from './code-blocks.module.scss';
 
+import {CodeContext} from '../codeContext';
 import {makeHighlightBlocks} from '../codeHighlights';
 import {makeKeywordsClickable} from '../codeKeywords';
 
@@ -26,6 +27,8 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
     setShowCopyButton(true);
   }, []);
 
+  const codeContext = useContext(CodeContext);
+
   useCleanSnippetInClipboard(codeRef, {language});
 
   async function copyCodeOnClick() {
@@ -45,6 +48,23 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
     }
   }
 
+  // Get the current project name for the copied message
+  const getCurrentProjectName = () => {
+    if (!codeContext) {
+      return null;
+    }
+
+    const {codeKeywords, sharedKeywordSelection} = codeContext;
+    const [sharedSelection] = sharedKeywordSelection;
+    const currentSelectionIdx = sharedSelection.PROJECT ?? 0;
+    const currentProject = codeKeywords?.PROJECT?.[currentSelectionIdx];
+
+    return currentProject?.title;
+  };
+
+  const projectName = getCurrentProjectName();
+  const copiedMessage = projectName ? `Copied for ${projectName}` : 'Copied';
+
   return (
     <div className={styles['code-block']}>
       <div className={styles['code-actions']}>
@@ -60,7 +80,7 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
         className={styles.copied}
         style={{opacity: showCopied ? 1 : 0}}
       >
-        Copied
+        {copiedMessage}
       </div>
       <div ref={codeRef}>
         {makeKeywordsClickable(makeHighlightBlocks(children, language))}
