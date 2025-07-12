@@ -14,6 +14,7 @@ import './type.scss';
 import {Banner} from '../banner';
 import {Breadcrumbs} from '../breadcrumbs';
 import {CodeContextProvider} from '../codeContext';
+import {CopyForLLMButton} from '../copyForLLMButton';
 import {DocFeedback} from '../docFeedback';
 import {GitHubCTA} from '../githubCTA';
 import {Header} from '../header';
@@ -94,6 +95,7 @@ export function DocPage({
               >
                 <Markdown className="flex p-0 flex-wrap" width={24} height={24} />
               </Link>
+              <CopyForLLMButton markdownPath={`/${pathname}.md`} />
             </div>
             <div>
               <hgroup>
