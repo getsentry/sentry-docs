@@ -10,29 +10,19 @@ declare module 'rolldown/dist/types/plugin';
 
 declare module '@spotlightjs/sidecar/constants';
 
-declare module '@sentry/types';
-
-declare module '@sentry/types' {
-  // Minimal Envelope type to satisfy imports
-  export type Envelope = unknown;
-}
-
-// -------------------- Rollup missing exports --------------------
-declare module 'rollup' {
-  export interface AcornNode extends Record<string, unknown> {}
-  // fallback placeholders
-  export interface SourceMapInput extends Record<string, unknown> {}
-  export interface EmittedAsset extends Record<string, unknown> {}
-  export interface PluginContextMeta extends Record<string, unknown> {}
-  export type Plugin<T = any> = any;
-}
-
+// rollup/parseAst helper (only this specific path is missing)
 declare module 'rollup/parseAst' {
   export function parseAst(code: string): unknown;
   export function parseAstAsync(code: string): Promise<unknown>;
 }
 
-// Generic placeholders for mdx-bundler generics
+// Augment rollup types to add removed interfaces used by older plugins
+declare module 'rollup' {
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  export interface AcornNode extends Record<string, unknown> {}
+}
+
+// Generic placeholders for mdx-bundler generics used in their .d.ts
 declare type ExportedObject = Record<string, unknown>;
 declare type Frontmatter = Record<string, unknown>;
 
