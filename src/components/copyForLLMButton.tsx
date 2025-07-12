@@ -1,7 +1,6 @@
 "use client";
 
-import * as React from 'react';
-import {useState, useCallback} from 'react';
+import {useState, useCallback, Fragment} from 'react';
 import {createPortal} from 'react-dom';
 import {CopyIcon, CheckIcon} from '@radix-ui/react-icons';
 
@@ -42,7 +41,7 @@ export default function CopyForLLMButton() {
   }, []);
 
   return (
-    <>
+    <Fragment>
       <button
         type="button"
         onClick={handleCopy}
@@ -66,6 +65,6 @@ export default function CopyForLLMButton() {
           </div>,
           document.body
         )}
-    </>
+    </Fragment>
   );
 }
