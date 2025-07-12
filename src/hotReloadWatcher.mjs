@@ -1,5 +1,7 @@
-import path from 'path';
+/* eslint-disable no-console, consistent-return, simple-import-sort/imports */
+
 import {watch} from 'node:fs/promises';
+import path from 'path';
 import {WebSocketServer} from 'ws';
 
 const watchedContent = new Set(['.mdx', '.md', '.png', '.jpg', '.jpeg', '.gif', '.svg']);
