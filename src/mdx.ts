@@ -694,22 +694,21 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   return resultObj;
 }
 
-const fileBySlugCache = new Map<string, Promise<SlugFile>>();
+
 
 /**
  * Cache the result of {@link getFileBySlug}.
  *
  * This is useful for performance when rendering the same file multiple times.
  */
-export function getFileBySlugWithCache(slug: string): Promise<SlugFile> {
-  if (process.env.NODE_ENV === 'development') {
-    // Bypass the cache in development to ensure hot reload works for MDX files
-    return getFileBySlug(slug);
-  }
-  let cached = fileBySlugCache.get(slug);
-  if (!cached) {
-    cached = getFileBySlug(slug);
-    fileBySlugCache.set(slug, cached);
-  }
-  return cached;
-}
+export const getFileBySlugWithCache: (slug: string) => Promise<SlugFile> =
+  process.env.NODE_ENV === 'development'
+    ? getFileBySlug
+    : (slug: string) => {
+        let cached = fileBySlugCache.get(slug);
+        if (!cached) {
+          cached = getFileBySlug(slug);
+          fileBySlugCache.set(slug, cached);
+        }
+        return cached;
+      };
