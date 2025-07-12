@@ -1,6 +1,7 @@
 "use client";
 
-import {useState, useCallback} from 'react';
+import React, {useState, useCallback, useEffect} from 'react';
+import {createPortal} from 'react-dom';
 import {CopyIcon, CheckIcon} from '@radix-ui/react-icons';
 
 /**
@@ -11,6 +12,7 @@ import {CopyIcon, CheckIcon} from '@radix-ui/react-icons';
  */
 export default function CopyForLLMButton() {
   const [copied, setCopied] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
   const handleCopy = useCallback(async () => {
     try {
@@ -26,27 +28,43 @@ export default function CopyForLLMButton() {
 
       // Show confirmation
       setCopied(true);
+      setShowToast(true);
+
       // Hide confirmation after 2 seconds
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => {
+        setCopied(false);
+        setShowToast(false);
+      }, 2000);
     } catch (err) {
       console.error('Failed to copy content for LLM', err);
     }
   }, []);
 
   return (
-    <button
-      type="button"
-      onClick={handleCopy}
-      title={copied ? 'Copied!' : 'Copy page content for LLM'}
-      aria-label="Copy for LLM"
-      className="float-right mr-2 flex items-center justify-center text-[var(--gray-12)] hover:text-[var(--accent)] focus:outline-none"
-      data-mdast="ignore"
-    >
-      {copied ? (
-        <CheckIcon width="24" height="24" />
-      ) : (
-        <CopyIcon width="24" height="24" />
-      )}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={handleCopy}
+        title={copied ? 'Copied!' : 'Copy page content for LLM'}
+        aria-label="Copy for LLM"
+        className="float-right mr-2 flex items-center justify-center text-[var(--gray-12)] hover:text-[var(--accent)] focus:outline-none"
+        data-mdast="ignore"
+      >
+        {copied ? (
+          <CheckIcon width="24" height="24" />
+        ) : (
+          <CopyIcon width="24" height="24" />
+        )}
+      </button>
+
+      {showToast &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-[var(--gray-2)] text-[var(--gray-12)] border border-[var(--gray-a4)] px-4 py-2 rounded shadow-lg z-50">
+            Copied to clipboard
+          </div>,
+          document.body
+        )}
+    </>
   );
 }
