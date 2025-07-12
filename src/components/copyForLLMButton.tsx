@@ -1,7 +1,8 @@
 'use client';
 
 import {useState} from 'react';
-import {Clipboard, Check} from 'react-feather';
+import {Check,Clipboard} from 'react-feather';
+import * as Sentry from '@sentry/nextjs';
 
 interface Props {
   /** Absolute path to the markdown version of this page (e.g. `/docs/page.md`) */
@@ -24,7 +25,7 @@ export function CopyForLLMButton({markdownPath}: Props) {
       }
     } catch (err) {
       // network error handled below in fallback
-      console.error(err);
+      Sentry.captureException(err);
     }
 
     // Fallback: copy the markdown URL if first attempt failed
@@ -33,7 +34,7 @@ export function CopyForLLMButton({markdownPath}: Props) {
         await navigator.clipboard.writeText(window.location.origin + markdownPath);
         didCopy = true;
       } catch (err) {
-        console.error('Failed to copy markdown URL as fallback', err);
+        Sentry.captureException(err);
       }
     }
 
