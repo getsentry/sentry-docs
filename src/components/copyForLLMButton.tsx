@@ -1,8 +1,20 @@
 'use client';
 
 import {useState} from 'react';
-import {Check, Clipboard} from 'react-feather';
+import {Check,Clipboard} from 'react-feather';
 import * as Sentry from '@sentry/nextjs';
+
+async function tryWriteClipboard(text: string): Promise<boolean> {
+  try {
+    if (navigator?.clipboard) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (err) {
+    Sentry.captureException(err);
+  }
+  return false;
+}
 
 interface Props {
   /** Absolute path to the markdown version of this page (e.g. `/docs/page.md`) */
@@ -20,8 +32,7 @@ export function CopyForLLMButton({markdownPath}: Props) {
       const response = await fetch(markdownPath);
       if (response.ok) {
         const text = await response.text();
-        await navigator.clipboard.writeText(text);
-        didCopy = true;
+        didCopy = await tryWriteClipboard(text);
       }
     } catch (err) {
       // network error handled below in fallback
@@ -31,8 +42,7 @@ export function CopyForLLMButton({markdownPath}: Props) {
     // Fallback: copy the markdown URL if first attempt failed
     if (!didCopy) {
       try {
-        await navigator.clipboard.writeText(window.location.origin + markdownPath);
-        didCopy = true;
+        didCopy = await tryWriteClipboard(window.location.origin + markdownPath);
       } catch (err) {
         Sentry.captureException(err);
       }
