@@ -1,12 +1,24 @@
 declare module '@farmfe/core';
 
-declare module '@rspack/core';
+declare module '@farmfe/core' {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  export type JsPlugin = any;
+}
 
-declare module '@rspack/core/dist/config/types';
+declare module '@rspack/core/dist/config/types' {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  export type RspackPluginInstance = any;
+}
 
-declare module 'rolldown';
+declare module 'rolldown' {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  export type Plugin<T = any> = any;
+}
 
-declare module 'rolldown/dist/types/plugin';
+declare module 'rolldown/dist/types/plugin' {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  export type Plugin<T = any> = any;
+}
 
 declare module '@spotlightjs/sidecar/constants';
 
