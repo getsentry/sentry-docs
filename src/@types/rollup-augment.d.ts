@@ -12,8 +12,21 @@ declare module 'rollup' {
   export interface PluginContextMeta extends Record<string, any> {}
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   export type AcornNode = any;
+  export type AstNode = any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   export type Plugin<T = any> = any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  export type PluginContextMeta = any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  export type PluginLog = any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  export type RollupLog = any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  export type OutputBundle = any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  export type OutputChunk = any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  export type ObjectHook<T = any> = any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   export type PluginHooks = any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
