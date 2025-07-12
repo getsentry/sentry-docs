@@ -694,7 +694,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   return resultObj;
 }
 
-
+const fileBySlugCache = new Map<string, Promise<SlugFile>>();
 
 /**
  * Cache the result of {@link getFileBySlug}.
