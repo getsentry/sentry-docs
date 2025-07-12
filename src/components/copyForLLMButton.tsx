@@ -61,6 +61,7 @@ export function CopyForLLMButton({markdownPath}: Props) {
       onClick={handleClick}
       title="Copy page content for LLM"
       className="mr-2 float-right flex items-center gap-1 border rounded px-2 py-1 text-xs hover:bg-[var(--gray-2)]"
+      style={{transform: 'scale(0.85)'}}
       data-mdast="ignore"
     >
       {copied ? <Check size={14} /> : <Clipboard size={14} />}
