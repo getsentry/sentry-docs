@@ -12,15 +12,33 @@ export function CopyForLLMButton({markdownPath}: Props) {
   const [copied, setCopied] = useState(false);
 
   async function handleClick() {
+    let didCopy = false;
+
+    // First attempt: fetch markdown file and copy its contents
     try {
-      // Attempt to fetch the markdown content and copy it
       const response = await fetch(markdownPath);
-      const text = await response.text();
-      await navigator.clipboard.writeText(text);
+      if (response.ok) {
+        const text = await response.text();
+        await navigator.clipboard.writeText(text);
+        didCopy = true;
+      }
     } catch (err) {
-      // Fallback: copy the markdown url itself
-      await navigator.clipboard.writeText(window.location.origin + markdownPath);
-    } finally {
+      // network error handled below in fallback
+      console.error(err);
+    }
+
+    // Fallback: copy the markdown URL if first attempt failed
+    if (!didCopy) {
+      try {
+        await navigator.clipboard.writeText(window.location.origin + markdownPath);
+        didCopy = true;
+      } catch (err) {
+        console.error('Failed to copy markdown URL as fallback', err);
+      }
+    }
+
+    // Visual feedback only when something was actually copied
+    if (didCopy) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1200);
     }
