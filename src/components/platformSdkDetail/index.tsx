@@ -6,7 +6,7 @@ import styles from './styles.module.scss';
 
 import {SmartLink} from '../smartLink';
 
-export async function PlatformSdkDetail() {
+export async function PlatformSdkDetail(): Promise<JSX.Element | null> {
   const {rootNode, path} = serverContext();
   const platformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
   if (!platformOrGuide) {

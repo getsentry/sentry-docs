@@ -22,7 +22,7 @@ const activeLinkSelector = `.${styles.sidebar} .toc-item .active`;
 
 export const sidebarToggleId = styles['navbar-menu-toggle'];
 
-export async function Sidebar({path, versions}: SidebarProps) {
+export async function Sidebar({path, versions}: SidebarProps): Promise<JSX.Element | null> {
   const rootNode = await getDocsRootNode();
 
   if (isDeveloperDocs) {
