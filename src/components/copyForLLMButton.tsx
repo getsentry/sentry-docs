@@ -1,6 +1,7 @@
 "use client";
 
 import {useState, useCallback} from 'react';
+import {CopyIcon, CheckIcon} from '@radix-ui/react-icons';
 
 /**
  * A small utility button that copies the visible content of the current documentation page
@@ -36,11 +37,16 @@ export default function CopyForLLMButton() {
     <button
       type="button"
       onClick={handleCopy}
-      title="Copy page content for LLM"
-      className="float-right mr-2 px-2 py-1 rounded border border-transparent text-sm hover:underline focus:outline-none"
+      title={copied ? 'Copied!' : 'Copy page content for LLM'}
+      aria-label="Copy for LLM"
+      className="float-right mr-2 flex items-center justify-center text-[var(--gray-12)] hover:text-[var(--accent)] focus:outline-none"
       data-mdast="ignore"
     >
-      {copied ? 'Copied ✓' : 'Copy for LLM'}
+      {copied ? (
+        <CheckIcon width="24" height="24" />
+      ) : (
+        <CopyIcon width="24" height="24" />
+      )}
     </button>
   );
 }
