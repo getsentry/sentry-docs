@@ -58,13 +58,18 @@ export default function CopyForLLMButton() {
         ) : (
           <ClipboardCopyIcon width="24" height="24" />
         )}
-        <span className="text-sm leading-none">{copied ? 'Copied' : 'Copy for LLM'}</span>
+        {/* Visually hidden text for screen readers */}
+        <span className="sr-only">{copied ? 'Copied' : 'Copy for LLM'}</span>
       </button>
 
       {showToast &&
         typeof document !== 'undefined' &&
         createPortal(
-          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-[var(--gray-2)] text-[var(--gray-12)] border border-[var(--gray-a4)] px-4 py-2 rounded shadow-lg z-50">
+          <div
+            role="status"
+            aria-live="polite"
+            className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-[var(--gray-2)] text-[var(--gray-12)] border border-[var(--gray-a4)] px-4 py-2 rounded shadow-lg z-50 transition-opacity duration-300"
+          >
             Copied to clipboard
           </div>,
           document.body

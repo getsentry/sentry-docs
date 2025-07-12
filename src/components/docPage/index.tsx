@@ -86,7 +86,7 @@ export function DocPage({
             </div>
             <div className="overflow-hidden">
               {leafNode && <Breadcrumbs leafNode={leafNode} />}{' '}
-              <div className="flex items-center justify-end space-x-[5px]">
+              <div className="ml-auto flex items-center gap-[5px]">
                 <CopyForLLMButton />
                 <Link
                   rel="nofollow"
