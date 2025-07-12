@@ -1,7 +1,7 @@
 'use client';
 
 import {useState} from 'react';
-import {Check,Clipboard} from 'react-feather';
+import {Check, Clipboard} from 'react-feather';
 import * as Sentry from '@sentry/nextjs';
 
 async function tryWriteClipboard(text: string): Promise<boolean> {
