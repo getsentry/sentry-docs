@@ -1,10 +1,11 @@
 "use client";
 
-// eslint-disable-next-line simple-import-sort/imports
+/* eslint-disable simple-import-sort/imports */
+
 import {useState, useCallback, Fragment} from 'react';
 
-import {createPortal} from 'react-dom';
 import {CopyIcon, CheckIcon} from '@radix-ui/react-icons';
+import {createPortal} from 'react-dom';
 
 /**
  * A small utility button that copies the visible content of the current documentation page
