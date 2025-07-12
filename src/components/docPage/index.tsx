@@ -86,16 +86,18 @@ export function DocPage({
             </div>
             <div className="overflow-hidden">
               {leafNode && <Breadcrumbs leafNode={leafNode} />}{' '}
-              <Link
-                rel="nofollow"
-                className="float-right"
-                href={`/${pathname}.md`}
-                data-mdast="ignore"
-                title="Markdown version of this page"
-              >
-                <Markdown className="flex p-0 flex-wrap" width={24} height={24} />
-              </Link>
-              <CopyForLLMButton />
+              <div className="flex items-center justify-end space-x-[5px]">
+                <CopyForLLMButton />
+                <Link
+                  rel="nofollow"
+                  className="flex"
+                  href={`/${pathname}.md`}
+                  data-mdast="ignore"
+                  title="Markdown version of this page"
+                >
+                  <Markdown className="flex p-0 flex-wrap" width={24} height={24} />
+                </Link>
+              </div>
             </div>
             <div>
               <hgroup>
