@@ -23,6 +23,7 @@ import {PlatformSdkDetail} from '../platformSdkDetail';
 import {Sidebar} from '../sidebar';
 import {SidebarTableOfContents} from '../sidebarTableOfContents';
 import {ReaderDepthTracker} from '../track-reader-depth';
+import {CopyForLLMButton} from '../copyForLLMButton';
 
 type Props = {
   children: ReactNode;
@@ -94,6 +95,7 @@ export function DocPage({
               >
                 <Markdown className="flex p-0 flex-wrap" width={24} height={24} />
               </Link>
+              <CopyForLLMButton markdownPath={`/${pathname}.md`} />
             </div>
             <div>
               <hgroup>
