@@ -85,7 +85,7 @@ export function DocPage({
               <Banner />
             </div>
             <div className="overflow-hidden">
-              {leafNode && <Breadcrumbs leafNode={leafNode} />} <CopyForLLMButton />
+              {leafNode && <Breadcrumbs leafNode={leafNode} />}{' '}
               <Link
                 rel="nofollow"
                 className="float-right"
@@ -95,6 +95,7 @@ export function DocPage({
               >
                 <Markdown className="flex p-0 flex-wrap" width={24} height={24} />
               </Link>
+              <CopyForLLMButton />
             </div>
             <div>
               <hgroup>
