@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 /* eslint-disable simple-import-sort/imports */
 

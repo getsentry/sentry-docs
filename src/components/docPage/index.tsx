@@ -85,8 +85,7 @@ export function DocPage({
               <Banner />
             </div>
             <div className="overflow-hidden">
-              {leafNode && <Breadcrumbs leafNode={leafNode} />}{' '}
-              <CopyForLLMButton />
+              {leafNode && <Breadcrumbs leafNode={leafNode} />} <CopyForLLMButton />
               <Link
                 rel="nofollow"
                 className="float-right"
