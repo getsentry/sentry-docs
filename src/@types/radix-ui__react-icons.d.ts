@@ -1,12 +1,12 @@
 declare module '@radix-ui/react-icons' {
-  import * as React from 'react';
+  import type {ForwardRefExoticComponent, SVGProps} from 'react';
 
-  export interface IconProps extends React.SVGProps<SVGSVGElement> {
-    width?: number | string;
+  export interface IconProps extends SVGProps<SVGSVGElement> {
     height?: number | string;
+    width?: number | string;
   }
 
-  type IconComponent = React.ForwardRefExoticComponent<IconProps>;
+  type IconComponent = ForwardRefExoticComponent<IconProps>;
 
   export const CopyIcon: IconComponent;
   export const CheckIcon: IconComponent;

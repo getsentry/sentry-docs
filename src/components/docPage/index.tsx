@@ -14,6 +14,7 @@ import './type.scss';
 import {Banner} from '../banner';
 import {Breadcrumbs} from '../breadcrumbs';
 import {CodeContextProvider} from '../codeContext';
+import CopyForLLMButton from '../copyForLLMButton';
 import {DocFeedback} from '../docFeedback';
 import {GitHubCTA} from '../githubCTA';
 import {Header} from '../header';
@@ -23,7 +24,6 @@ import {PlatformSdkDetail} from '../platformSdkDetail';
 import {Sidebar} from '../sidebar';
 import {SidebarTableOfContents} from '../sidebarTableOfContents';
 import {ReaderDepthTracker} from '../track-reader-depth';
-import CopyForLLMButton from '../copyForLLMButton';
 
 type Props = {
   children: ReactNode;

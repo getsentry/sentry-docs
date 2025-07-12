@@ -1,6 +1,8 @@
 "use client";
 
+// eslint-disable-next-line simple-import-sort/imports
 import {useState, useCallback, Fragment} from 'react';
+
 import {createPortal} from 'react-dom';
 import {CopyIcon, CheckIcon} from '@radix-ui/react-icons';
 
@@ -35,8 +37,8 @@ export default function CopyForLLMButton() {
         setCopied(false);
         setShowToast(false);
       }, 2000);
-    } catch (err) {
-      console.error('Failed to copy content for LLM', err);
+    } catch {
+      /* ignore clipboard errors */
     }
   }, []);
 
