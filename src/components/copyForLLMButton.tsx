@@ -4,7 +4,7 @@
 
 import {useState, useCallback, Fragment} from 'react';
 
-import {CopyIcon, CheckIcon} from '@radix-ui/react-icons';
+import {ClipboardCopyIcon, CheckIcon} from '@radix-ui/react-icons';
 import {createPortal} from 'react-dom';
 
 /**
@@ -50,13 +50,13 @@ export default function CopyForLLMButton() {
         onClick={handleCopy}
         title={copied ? 'Copied!' : 'Copy page content for LLM'}
         aria-label="Copy for LLM"
-        className="float-right mr-2 flex items-center justify-center text-[var(--gray-12)] hover:text-[var(--accent)] focus:outline-none"
+        className="float-right mr-[5px] flex items-center justify-center text-[var(--gray-12)] hover:text-[var(--accent)] focus:outline-none"
         data-mdast="ignore"
       >
         {copied ? (
           <CheckIcon width="24" height="24" />
         ) : (
-          <CopyIcon width="24" height="24" />
+          <ClipboardCopyIcon width="24" height="24" />
         )}
       </button>
 
