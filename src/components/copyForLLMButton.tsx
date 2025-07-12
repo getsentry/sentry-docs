@@ -1,7 +1,7 @@
 'use client';
 
 import {useState} from 'react';
-import {Check,Clipboard} from 'react-feather';
+import {Check, Clipboard} from 'react-feather';
 import * as Sentry from '@sentry/nextjs';
 
 interface Props {
@@ -53,11 +53,7 @@ export function CopyForLLMButton({markdownPath}: Props) {
       className="mr-2 float-right flex items-center gap-1 border rounded px-2 py-1 text-xs hover:bg-[var(--gray-2)]"
       data-mdast="ignore"
     >
-      {copied ? (
-        <Check size={14} />
-      ) : (
-        <Clipboard size={14} />
-      )}
+      {copied ? <Check size={14} /> : <Clipboard size={14} />}
       <span className="whitespace-nowrap">Copy for LLM</span>
     </button>
   );
