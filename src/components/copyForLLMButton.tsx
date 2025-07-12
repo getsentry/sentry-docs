@@ -1,6 +1,7 @@
 "use client";
 
-import React, {useState, useCallback, useEffect} from 'react';
+import * as React from 'react';
+import {useState, useCallback} from 'react';
 import {createPortal} from 'react-dom';
 import {CopyIcon, CheckIcon} from '@radix-ui/react-icons';
 
