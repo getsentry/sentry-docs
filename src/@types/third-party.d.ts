@@ -1,9 +1,3 @@
-declare module 'webpack';
-
-declare module 'rollup';
-
-declare module 'rollup/parseAst';
-
 declare module '@farmfe/core';
 
 declare module '@rspack/core';
