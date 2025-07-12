@@ -54,9 +54,9 @@ export default function CopyForLLMButton() {
         data-mdast="ignore"
       >
         {copied ? (
-          <CheckIcon width="24" height="24" />
+          <CheckIcon width="24" height="24" className="text-white" />
         ) : (
-          <ClipboardCopyIcon width="24" height="24" />
+          <ClipboardCopyIcon width="24" height="24" className="text-white" />
         )}
         {/* Visually hidden text for screen readers */}
         <span className="sr-only">{copied ? 'Copied' : 'Copy for LLM'}</span>
