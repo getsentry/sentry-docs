@@ -48,9 +48,9 @@ export default function CopyForLLMButton() {
       <button
         type="button"
         onClick={handleCopy}
-        title={copied ? 'Copied!' : 'Copy page content for LLM'}
+        title={copied ? 'Copied!' : 'Copy for LLM'}
         aria-label="Copy for LLM"
-        className="float-right mr-[5px] flex items-center justify-center text-[var(--gray-12)] hover:text-[var(--accent)] focus:outline-none"
+        className="float-right mr-[5px] flex items-center justify-center space-x-1 text-[var(--gray-12)] hover:text-[var(--accent)] focus:outline-none"
         data-mdast="ignore"
       >
         {copied ? (
@@ -58,6 +58,7 @@ export default function CopyForLLMButton() {
         ) : (
           <ClipboardCopyIcon width="24" height="24" />
         )}
+        <span className="text-sm leading-none">{copied ? 'Copied' : 'Copy for LLM'}</span>
       </button>
 
       {showToast &&
