@@ -48,7 +48,7 @@ const showSigninNote = (children: ReactNode) => {
     }
     if (isValidElement(node)) {
       const element = node as ReactElement;
-      return showSigninNote(element.props?.children);
+      return showSigninNote((element.props as any)?.children);
     }
     return false;
   });
