@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect,useRef, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {Check, Clipboard} from 'react-feather';
 import * as Sentry from '@sentry/nextjs';
 
