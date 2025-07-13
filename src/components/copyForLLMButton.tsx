@@ -60,12 +60,12 @@ export function CopyForLLMButton({markdownPath}: Props) {
       type="button"
       onClick={handleClick}
       title="Copy page content for LLM"
-      className="mr-2 float-right flex items-center gap-1 border rounded px-2 py-1 text-xs hover:bg-[var(--gray-2)]"
-      style={{transform: 'scale(0.85)'}}
+      className="mr-2 float-right flex items-center gap-1 rounded px-2 py-1 text-xs hover:bg-[var(--gray-2)]"
+      style={{height: '25px'}}
       data-mdast="ignore"
     >
       {copied ? <Check size={14} /> : <Clipboard size={14} />}
-      <span className="whitespace-nowrap">Copy for LLM</span>
+      <span className="hidden sm:inline whitespace-nowrap">Copy for LLM</span>
     </button>
   );
 }
