@@ -1,6 +1,6 @@
 'use client';
 
-import {Children, cloneElement, ReactElement, useEffect, useRef, useState} from 'react';
+import {Children, cloneElement, ReactElement, useEffect, useRef, useState, isValidElement} from 'react';
 import {Check, Clipboard} from 'react-feather';
 import styled from '@emotion/styled';
 import * as Sentry from '@sentry/nextjs';
@@ -19,20 +19,20 @@ export function makeHighlightBlocks(
   let highlightElementGroupCounter = 0;
 
   return items.reduce((arr: ChildrenItem[], child, index) => {
-    if (typeof child !== 'object') {
+    if (typeof child !== 'object' || !isValidElement(child)) {
       arr.push(child);
       return arr;
     }
 
     const element = child as ReactElement;
-    const classes = element.props.className;
+    const classes = element.props?.className;
 
     const isCodeLine = classes && classes.includes('code-line');
     if (!isCodeLine) {
       const updatedChild = cloneElement(
-        child as ReactElement,
+        element,
         element.props,
-        makeHighlightBlocks((child as ReactElement).props.children, language)
+        makeHighlightBlocks(element.props?.children, language)
       );
       arr.push(updatedChild);
       return arr;

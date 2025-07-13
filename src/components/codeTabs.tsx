@@ -8,6 +8,7 @@ import {
   useEffect,
   useRef,
   useState,
+  isValidElement,
 } from 'react';
 import styled from '@emotion/styled';
 
@@ -45,7 +46,11 @@ const showSigninNote = (children: ReactNode) => {
     if (typeof node === 'string') {
       return KEYWORDS_REGEX.test(node) || ORG_AUTH_TOKEN_REGEX.test(node);
     }
-    return showSigninNote((node as ReactElement).props.children);
+    if (isValidElement(node)) {
+      const element = node as ReactElement;
+      return showSigninNote(element.props?.children);
+    }
+    return false;
   });
 };
 

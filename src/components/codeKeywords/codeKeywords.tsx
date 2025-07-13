@@ -1,6 +1,6 @@
 'use client';
 
-import {Children, cloneElement, ReactElement} from 'react';
+import {Children, cloneElement, ReactElement, isValidElement} from 'react';
 
 import {KeywordSelector} from './keywordSelector';
 import {OrgAuthTokenCreator} from './orgAuthTokenCreator';
@@ -15,19 +15,24 @@ export function makeKeywordsClickable(children: React.ReactNode) {
   const items = Children.toArray(children);
 
   return items.reduce((arr: ChildrenItem[], child) => {
-    if (typeof child !== 'string') {
+    if (typeof child !== 'string' && isValidElement(child)) {
+      const element = child as ReactElement;
       const updatedChild = cloneElement(
-        child as ReactElement,
+        element,
         {},
-        makeKeywordsClickable((child as ReactElement).props.children)
+        makeKeywordsClickable(element.props?.children)
       );
       arr.push(updatedChild);
       return arr;
     }
-    if (ORG_AUTH_TOKEN_REGEX.test(child)) {
-      makeOrgAuthTokenClickable(arr, child);
-    } else if (KEYWORDS_REGEX.test(child)) {
-      makeProjectKeywordsClickable(arr, child);
+    if (typeof child === 'string') {
+      if (ORG_AUTH_TOKEN_REGEX.test(child)) {
+        makeOrgAuthTokenClickable(arr, child);
+      } else if (KEYWORDS_REGEX.test(child)) {
+        makeProjectKeywordsClickable(arr, child);
+      } else {
+        arr.push(child);
+      }
     } else {
       arr.push(child);
     }

@@ -1,12 +1,12 @@
-import {Fragment} from 'react';
+import {Fragment, ReactElement} from 'react';
 
 type Props = {
-  children: JSX.Element;
+  children: ReactElement;
   location: string;
   name: string;
 };
 
-const getDescriptiveLocation = (location: string): JSX.Element => {
+const getDescriptiveLocation = (location: string): ReactElement => {
   switch (location) {
     case 'env':
       return <Fragment>in System Environment</Fragment>;
@@ -29,7 +29,7 @@ const getDescriptiveLocation = (location: string): JSX.Element => {
   }
 };
 
-export function ConfigValue({name, location, children}: Props): JSX.Element {
+export function ConfigValue({name, location, children}: Props): ReactElement {
   return (
     <div style={{marginBottom: '2rem'}}>
       <h4 style={{marginBottom: 0, fontWeight: 'bold'}}>

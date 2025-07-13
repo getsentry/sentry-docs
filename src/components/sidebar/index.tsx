@@ -1,3 +1,4 @@
+import {ReactElement} from 'react';
 import {
   extractPlatforms,
   getCurrentGuide,
@@ -22,7 +23,7 @@ const activeLinkSelector = `.${styles.sidebar} .toc-item .active`;
 
 export const sidebarToggleId = styles['navbar-menu-toggle'];
 
-export async function Sidebar({path, versions}: SidebarProps): Promise<JSX.Element> {
+export async function Sidebar({path, versions}: SidebarProps): Promise<ReactElement> {
   const rootNode = await getDocsRootNode();
 
   if (isDeveloperDocs) {
