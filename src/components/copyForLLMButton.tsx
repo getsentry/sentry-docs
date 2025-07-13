@@ -1,6 +1,6 @@
 'use client';
 
-import {useState} from 'react';
+import {useEffect,useRef, useState} from 'react';
 import {Check, Clipboard} from 'react-feather';
 import * as Sentry from '@sentry/nextjs';
 
@@ -23,6 +23,15 @@ interface Props {
 
 export function CopyForLLMButton({markdownPath}: Props) {
   const [copied, setCopied] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   async function handleClick() {
     let didCopy = false;
@@ -51,7 +60,10 @@ export function CopyForLLMButton({markdownPath}: Props) {
     // Visual feedback only when something was actually copied
     if (didCopy) {
       setCopied(true);
-      setTimeout(() => setCopied(false), 1200);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => setCopied(false), 1200);
     }
   }
 
