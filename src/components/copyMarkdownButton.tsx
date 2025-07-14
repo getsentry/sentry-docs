@@ -43,7 +43,6 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy markdown to clipboard:', err);
       setError(true);
       setTimeout(() => setError(false), 3000);
     } finally {
@@ -92,17 +91,17 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
     };
   };
 
-  const buttonClass = "inline-flex items-center h-full text-gray-700 bg-transparent border-none cursor-pointer transition-colors duration-150 hover:bg-gray-50 active:bg-gray-100 focus:bg-gray-50 outline-none";
-  const dropdownItemClass = "flex items-center gap-3 w-full p-2 px-3 text-left bg-transparent rounded-md transition-colors hover:bg-gray-100 font-sans text-gray-900";
-  const iconContainerClass = "flex items-center justify-center w-7 h-7 bg-gray-100 rounded shrink-0";
+  const buttonClass = "inline-flex items-center h-full text-gray-700 dark:text-[var(--foreground)] bg-transparent border-none cursor-pointer transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-[var(--gray-a4)] active:bg-gray-100 dark:active:bg-[var(--gray-5)] focus:bg-gray-50 dark:focus:bg-[var(--gray-a4)] outline-none";
+  const dropdownItemClass = "flex items-center gap-3 w-full p-2 px-3 text-left bg-transparent rounded-md transition-colors hover:bg-gray-100 dark:hover:bg-[var(--gray-a4)] font-sans text-gray-900 dark:text-[var(--foreground)]";
+  const iconContainerClass = "flex items-center justify-center w-7 h-7 bg-gray-100 dark:bg-[var(--gray-a4)] rounded shrink-0";
 
   return (
     <Fragment>
       <div className="relative inline-block" ref={buttonRef}>
-        <div className="inline-flex items-center h-9 border border-gray-200 rounded-full overflow-hidden bg-white">
+        <div className="inline-flex items-center h-9 border border-gray-200 dark:border-[var(--gray-6)] rounded-full overflow-hidden bg-white dark:bg-[var(--gray-2)]">
           <button
             onClick={copyMarkdownToClipboard}
-            className={`${buttonClass} gap-2 px-3.5 text-sm font-medium disabled:opacity-50 ${error ? 'text-red-600' : ''}`}
+            className={`${buttonClass} gap-2 px-3.5 text-sm font-medium disabled:opacity-50`}
             style={{borderRadius: '9999px 0 0 9999px'}}
             disabled={isLoading}
           >
@@ -110,7 +109,7 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
             <span>{error ? 'Failed to copy' : copied ? 'Copied!' : 'Copy page'}</span>
           </button>
 
-          <div className="w-px h-full bg-gray-200" />
+          <div className="w-px h-full bg-gray-200 dark:bg-[var(--gray-6)]" />
 
           <button
             onClick={handleDropdownToggle}
@@ -130,8 +129,8 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
       {isMounted && isOpen && createPortal(
         <div
           ref={dropdownRef}
-          className="fixed w-80 bg-white rounded-xl shadow-lg overflow-hidden z-[9999]"
-          style={{...getDropdownPosition(), border: '1px solid #d1d5db'}}
+          className="fixed w-80 bg-white dark:bg-[var(--gray-2)] rounded-xl shadow-lg overflow-hidden z-[9999] border border-gray-300 dark:border-[var(--gray-6)]"
+          style={{...getDropdownPosition()}}
         >
           <div className="p-1">
             <button
@@ -143,10 +142,10 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
                 <Clipboard size={14} />
               </div>
               <div className="flex-1">
-                <div className={`font-medium text-sm leading-5 ${error ? 'text-red-600' : 'text-gray-900'}`}>
+                <div className={`font-medium text-sm leading-5`}>
                   {error ? 'Failed to copy' : 'Copy page'}
                 </div>
-                <div className="text-xs text-gray-500 leading-4">
+                <div className="text-xs leading-4 text-gray-500 dark:text-[var(--foreground-secondary)]">
                   {error ? 'Network error - please try again' : 'Copy page as Markdown for LLMs'}
                 </div>
               </div>
@@ -163,8 +162,8 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
                 <Markdown width={14} height={14} />
               </div>
               <div className="flex-1">
-                <div className="font-medium text-gray-900 text-sm leading-5">View as Markdown</div>
-                <div className="text-xs text-gray-500 leading-4">View this page as plain text</div>
+                <div className="font-medium text-sm leading-5 text-gray-900 dark:text-[var(--foreground)]">View as Markdown</div>
+                <div className="text-xs leading-4 text-gray-500 dark:text-[var(--foreground-secondary)]">View this page as plain text</div>
               </div>
             </Link>
           </div>
