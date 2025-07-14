@@ -1,8 +1,6 @@
 import {ReactNode} from 'react';
-import Link from 'next/link';
 
 import {getCurrentGuide, getCurrentPlatform, nodeForPath} from 'sentry-docs/docTree';
-import Markdown from 'sentry-docs/icons/Markdown';
 import {serverContext} from 'sentry-docs/serverContext';
 import {FrontMatter} from 'sentry-docs/types';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
@@ -14,6 +12,7 @@ import './type.scss';
 import {Banner} from '../banner';
 import {Breadcrumbs} from '../breadcrumbs';
 import {CodeContextProvider} from '../codeContext';
+import {CopyMarkdownButton} from '../copyMarkdownButton';
 import {DocFeedback} from '../docFeedback';
 import {GitHubCTA} from '../githubCTA';
 import {Header} from '../header';
@@ -85,15 +84,9 @@ export function DocPage({
             </div>
             <div className="overflow-hidden">
               {leafNode && <Breadcrumbs leafNode={leafNode} />}{' '}
-              <Link
-                rel="nofollow"
-                className="float-right"
-                href={`/${pathname}.md`}
-                data-mdast="ignore"
-                title="Markdown version of this page"
-              >
-                <Markdown className="flex p-0 flex-wrap" width={24} height={24} />
-              </Link>
+              <div className="float-right mt-4 sm:mt-0">
+                <CopyMarkdownButton pathname={pathname} />
+              </div>
             </div>
             <div>
               <hgroup>
