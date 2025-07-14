@@ -2,13 +2,13 @@
 
 import {
   Children,
+  isValidElement,
   ReactElement,
   ReactNode,
   useContext,
   useEffect,
   useRef,
   useState,
-  isValidElement,
 } from 'react';
 import styled from '@emotion/styled';
 
