@@ -13,8 +13,8 @@ type PlausibleEventProps = {
     source: string;
   };
   ['Copy Page Dropdown']: {
-    page: string;
     action: string;
+    page: string;
   };
   ['Doc Feedback']: {
     helpful: boolean;

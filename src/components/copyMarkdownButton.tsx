@@ -91,9 +91,12 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
     };
   };
 
-  const buttonClass = "inline-flex items-center h-full text-gray-700 dark:text-[var(--foreground)] bg-transparent border-none cursor-pointer transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-[var(--gray-a4)] active:bg-gray-100 dark:active:bg-[var(--gray-5)] focus:bg-gray-50 dark:focus:bg-[var(--gray-a4)] outline-none";
-  const dropdownItemClass = "flex items-center gap-3 w-full p-2 px-3 text-left bg-transparent rounded-md transition-colors hover:bg-gray-100 dark:hover:bg-[var(--gray-a4)] font-sans text-gray-900 dark:text-[var(--foreground)]";
-  const iconContainerClass = "flex items-center justify-center w-7 h-7 bg-gray-100 dark:bg-[var(--gray-a4)] rounded shrink-0";
+  const buttonClass =
+    'inline-flex items-center h-full text-gray-700 dark:text-[var(--foreground)] bg-transparent border-none cursor-pointer transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-[var(--gray-a4)] active:bg-gray-100 dark:active:bg-[var(--gray-5)] focus:bg-gray-50 dark:focus:bg-[var(--gray-a4)] outline-none';
+  const dropdownItemClass =
+    'flex items-center gap-3 w-full p-2 px-3 text-left bg-transparent rounded-md transition-colors hover:bg-gray-100 dark:hover:bg-[var(--gray-a4)] font-sans text-gray-900 dark:text-[var(--foreground)]';
+  const iconContainerClass =
+    'flex items-center justify-center w-7 h-7 bg-gray-100 dark:bg-[var(--gray-a4)] rounded shrink-0';
 
   return (
     <Fragment>
@@ -126,50 +129,58 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
         </div>
       </div>
 
-      {isMounted && isOpen && createPortal(
-        <div
-          ref={dropdownRef}
-          className="fixed w-80 bg-white dark:bg-[var(--gray-2)] rounded-xl shadow-lg overflow-hidden z-[9999] border border-gray-300 dark:border-[var(--gray-6)]"
-          style={{...getDropdownPosition()}}
-        >
-          <div className="p-1">
-            <button
-              onClick={copyMarkdownToClipboard}
-              className={`${dropdownItemClass} border-none cursor-pointer disabled:opacity-50`}
-              disabled={isLoading}
-            >
-              <div className={iconContainerClass}>
-                <Clipboard size={14} />
-              </div>
-              <div className="flex-1">
-                <div className={`font-medium text-sm leading-5`}>
-                  {error ? 'Failed to copy' : 'Copy page'}
+      {isMounted &&
+        isOpen &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            className="fixed w-80 bg-white dark:bg-[var(--gray-2)] rounded-xl shadow-lg overflow-hidden z-[9999] border border-gray-300 dark:border-[var(--gray-6)]"
+            style={{...getDropdownPosition()}}
+          >
+            <div className="p-1">
+              <button
+                onClick={copyMarkdownToClipboard}
+                className={`${dropdownItemClass} border-none cursor-pointer disabled:opacity-50`}
+                disabled={isLoading}
+              >
+                <div className={iconContainerClass}>
+                  <Clipboard size={14} />
                 </div>
-                <div className="text-xs leading-4 text-gray-500 dark:text-[var(--foreground-secondary)]">
-                  {error ? 'Network error - please try again' : 'Copy page as Markdown for LLMs'}
+                <div className="flex-1">
+                  <div className={`font-medium text-sm leading-5`}>
+                    {error ? 'Failed to copy' : 'Copy page'}
+                  </div>
+                  <div className="text-xs leading-4 text-gray-500 dark:text-[var(--foreground-secondary)]">
+                    {error
+                      ? 'Network error - please try again'
+                      : 'Copy page as Markdown for LLMs'}
+                  </div>
                 </div>
-              </div>
-            </button>
+              </button>
 
-            <Link
-              href={`/${pathname}.md`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`${dropdownItemClass} no-underline`}
-              onClick={handleViewMarkdownClick}
-            >
-              <div className={iconContainerClass}>
-                <Markdown width={14} height={14} />
-              </div>
-              <div className="flex-1">
-                <div className="font-medium text-sm leading-5 text-gray-900 dark:text-[var(--foreground)]">View as Markdown</div>
-                <div className="text-xs leading-4 text-gray-500 dark:text-[var(--foreground-secondary)]">View this page as plain text</div>
-              </div>
-            </Link>
-          </div>
-        </div>,
-        document.body
-      )}
+              <Link
+                href={`/${pathname}.md`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`${dropdownItemClass} no-underline`}
+                onClick={handleViewMarkdownClick}
+              >
+                <div className={iconContainerClass}>
+                  <Markdown width={14} height={14} />
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium text-sm leading-5 text-gray-900 dark:text-[var(--foreground)]">
+                    View as Markdown
+                  </div>
+                  <div className="text-xs leading-4 text-gray-500 dark:text-[var(--foreground-secondary)]">
+                    View this page as plain text
+                  </div>
+                </div>
+              </Link>
+            </div>
+          </div>,
+          document.body
+        )}
     </Fragment>
   );
 }
