@@ -16,6 +16,7 @@ interface CopyMarkdownButtonProps {
 export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const buttonRef = useRef<HTMLDivElement>(null);
@@ -25,12 +26,15 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
   const copyMarkdownToClipboard = async () => {
     setIsLoading(true);
     setCopied(false);
+    setError(false);
     setIsOpen(false);
 
     emit('Copy Page', {props: {page: pathname, source: 'copy_button'}});
 
     try {
-      const response = await fetch(`https://docs.sentry.io/${pathname}.md`);
+      // This doesn't work on local development since we need the generated markdown
+      // files, and we need to be aware of the origin since we have two different origins.
+      const response = await fetch(`${window.location.origin}/${pathname}.md`);
       if (!response.ok) {
         throw new Error(`Failed to fetch markdown content: ${response.status}`);
       }
@@ -38,8 +42,10 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
       await navigator.clipboard.writeText(await response.text());
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      console.error('Failed to copy markdown to clipboard:', error);
+    } catch (err) {
+      console.error('Failed to copy markdown to clipboard:', err);
+      setError(true);
+      setTimeout(() => setError(false), 3000);
     } finally {
       setIsLoading(false);
     }
@@ -96,12 +102,12 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
         <div className="inline-flex items-center h-9 border border-gray-200 rounded-full overflow-hidden bg-white">
           <button
             onClick={copyMarkdownToClipboard}
-            className={`${buttonClass} gap-2 px-3.5 text-sm font-medium disabled:opacity-50`}
+            className={`${buttonClass} gap-2 px-3.5 text-sm font-medium disabled:opacity-50 ${error ? 'text-red-600' : ''}`}
             style={{borderRadius: '9999px 0 0 9999px'}}
             disabled={isLoading}
           >
             <Clipboard size={16} />
-            <span>{copied ? 'Copied!' : 'Copy page'}</span>
+            <span>{error ? 'Failed to copy' : copied ? 'Copied!' : 'Copy page'}</span>
           </button>
 
           <div className="w-px h-full bg-gray-200" />
@@ -137,8 +143,12 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
                 <Clipboard size={14} />
               </div>
               <div className="flex-1">
-                <div className="font-medium text-gray-900 text-sm leading-5">Copy page</div>
-                <div className="text-xs text-gray-500 leading-4">Copy page as Markdown for LLMs</div>
+                <div className={`font-medium text-sm leading-5 ${error ? 'text-red-600' : 'text-gray-900'}`}>
+                  {error ? 'Failed to copy' : 'Copy page'}
+                </div>
+                <div className="text-xs text-gray-500 leading-4">
+                  {error ? 'Network error - please try again' : 'Copy page as Markdown for LLMs'}
+                </div>
               </div>
             </button>
 
