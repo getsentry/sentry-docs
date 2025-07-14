@@ -25,8 +25,8 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
   const {emit} = usePlausibleEvent();
 
   const fetchMarkdownContent = useCallback(async (): Promise<string> => {
-    // This doesn't work on local development since we need the generated markdown
-    // files, and we need to be aware of the origin since we have two different origins.
+    // PSA: It's expected that this doesn't work on local development since we need
+    // the generated markdown files, which only are generated in the deploy pipeline.
     const response = await fetch(`${window.location.origin}/${pathname}.md`);
     if (!response.ok) {
       throw new Error(`Failed to fetch markdown content: ${response.status}`);
