@@ -8,6 +8,14 @@ type PlausibleEventProps = {
     page: string;
     title: string;
   };
+  ['Copy Page']: {
+    page: string;
+    source: string;
+  };
+  ['Copy Page Dropdown']: {
+    page: string;
+    action: string;
+  };
   ['Doc Feedback']: {
     helpful: boolean;
     page: string;
@@ -19,6 +27,10 @@ type PlausibleEventProps = {
   ['Read Progress']: {
     page: string;
     readProgress: ReadProgressMilestone;
+  };
+  ['View Markdown']: {
+    page: string;
+    source: string;
   };
 };
 
