@@ -93,8 +93,8 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
     };
   }, []);
 
-  // Pre-fetch markdown content to avoid losing user gesture context
-  // On iOS we can't async fetch on tap because the user gesture is lost by the time we try to update the clipboard.
+  // Pre-fetch markdown content to avoid losing user gesture context. On iOS we can't async
+  // fetch on tap because the user gesture is lost by the time we try to update the clipboard.
   useEffect(() => {
     if (!prefetchedContent) {
       const prefetchContent = async () => {
