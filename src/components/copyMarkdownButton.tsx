@@ -19,9 +19,12 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
   const [error, setError] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [prefetchedContent, setPrefetchedContent] = useState<string | null>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const {emit} = usePlausibleEvent();
+
+
 
   const copyMarkdownToClipboard = async () => {
     setIsLoading(true);
@@ -32,14 +35,22 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
     emit('Copy Page', {props: {page: pathname, source: 'copy_button'}});
 
     try {
-      // This doesn't work on local development since we need the generated markdown
-      // files, and we need to be aware of the origin since we have two different origins.
-      const response = await fetch(`${window.location.origin}/${pathname}.md`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch markdown content: ${response.status}`);
+      let content: string;
+
+      // Use pre-fetched content if available (for mobile)
+      if (prefetchedContent) {
+        content = prefetchedContent;
+      } else {
+        // This doesn't work on local development since we need the generated markdown
+        // files, and we need to be aware of the origin since we have two different origins.
+        const response = await fetch(`${window.location.origin}/${pathname}.md`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch markdown content: ${response.status}`);
+        }
+        content = await response.text();
       }
 
-      await navigator.clipboard.writeText(await response.text());
+      await navigator.clipboard.writeText(content);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -81,6 +92,23 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Pre-fetch markdown content to avoid losing user gesture context
+  useEffect(() => {
+    if (!prefetchedContent) {
+      const prefetchContent = async () => {
+        try {
+          const response = await fetch(`${window.location.origin}/${pathname}.md`);
+          if (response.ok) {
+            setPrefetchedContent(await response.text());
+          }
+        } catch (err) {
+          // Silently fail - we'll fall back to regular fetch on click
+        }
+      };
+      prefetchContent();
+    }
+  }, [pathname, prefetchedContent]);
 
   const getDropdownPosition = () => {
     if (!buttonRef.current) return {top: 0, left: 0};
