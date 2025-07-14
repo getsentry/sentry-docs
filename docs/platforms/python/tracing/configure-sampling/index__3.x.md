@@ -53,19 +53,20 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
     # Use the parent sampling decision if we have an incoming trace.
     # Note: we strongly recommend respecting the parent sampling decision,
     # as this ensures your traces will be complete!
-    parent_sampling_decision = sampling_context.get("parent_sampled")
+    parent_sampling_decision = sampling_context["parent_sampled"]
     if parent_sampling_decision is not None:
         return float(parent_sampling_decision)
 
-    ctx = sampling_context.get("transaction_context", {})
-    name = ctx.get("name")
+    transaction_ctx = sampling_context["transaction_context"]
+    name = transaction_ctx["name"]
+    op = transaction_ctx["op"]
 
     # Sample all checkout transactions
-    if name and ('/checkout' in name or ctx.get("op") == 'checkout'):
+    if name and ('/checkout' in name or op == 'checkout'):
         return 1.0
 
     # Sample 50% of login transactions
-    if name and ('/login' in name or ctx.get("op") == 'login'):
+    if name and ('/login' in name or op == 'login'):
         return 0.5
 
     # Sample 10% of everything else
@@ -87,7 +88,7 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
     # Use the parent sampling decision if we have an incoming trace.
     # Note: we strongly recommend respecting the parent sampling decision,
     # as this ensures your traces will be complete!
-    parent_sampling_decision = sampling_context.get("parent_sampled")
+    parent_sampling_decision = sampling_context["parent_sampled"]
     if parent_sampling_decision is not None:
         return float(parent_sampling_decision)
 
@@ -99,7 +100,7 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
 
     # Sample more transactions if there are recent errors
     # Note: hasRecentErrors is a custom attribute that needs to be set
-    if sampling_context.get("hasRecentErrors") is True:
+    if sampling_context["hasRecentErrors"] is True:
         return 0.8
 
     # Sample based on environment
@@ -137,25 +138,23 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
     # Use the parent sampling decision if we have an incoming trace.
     # Note: we strongly recommend respecting the parent sampling decision,
     # as this ensures your traces will be complete!
-    parent_sampling_decision = sampling_context.get("parent_sampled")
+    parent_sampling_decision = sampling_context["parent_sampled"]
     if parent_sampling_decision is not None:
         return float(parent_sampling_decision)
 
-    ctx = sampling_context.get("transaction_context", {})
-
     # Always sample for premium users
     # Note: user.tier is a custom attribute that needs to be set
-    if sampling_context.get("user.tier") == "premium":
+    if sampling_context["user.tier"] == "premium":
         return 1.0
 
     # Sample more transactions for users experiencing errors
     # Note: hasRecentErrors is a custom attribute
-    if sampling_context.get("hasRecentErrors") is True:
+    if sampling_context["hasRecentErrors"] is True:
         return 0.8
 
     # Sample less for high-volume, low-value paths
-    # Note: name is an SDK-provided attribute
-    if (ctx.get("name") or "").startswith("/api/metrics"):
+    transaction_ctx = sampling_context["transaction_context"]
+    if transaction_ctx["name"].startswith("/api/metrics"):
         return 0.01
 
     # Default sampling rate
@@ -186,20 +185,18 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
     # Use the parent sampling decision if we have an incoming trace.
     # Note: we strongly recommend respecting the parent sampling decision,
     # as this ensures your traces will be complete!
-    parent_sampling_decision = sampling_context.get("parent_sampled")
+    parent_sampling_decision = sampling_context["parent_sampled"]
     if parent_sampling_decision is not None:
         return float(parent_sampling_decision)
 
-    ctx = sampling_context.get("transaction_context", {})
-
     # Always sample critical business operations
-    # Note: op is an SDK-provided attribute
-    if ctx.get("op") in ["payment.process", "order.create", "user.verify"]:
+    transaction_ctx = sampling_context["transaction_context"]
+    if transaction_ctx["op"] in ["payment.process", "order.create", "user.verify"]:
         return 1.0
 
     # Sample based on user segment
     # Note: user.segment is a custom attribute
-    user_segment = sampling_context.get("user.segment")
+    user_segment = sampling_context["user.segment"]
     if user_segment == "enterprise":
         return 0.8
     elif user_segment == "premium":
@@ -207,14 +204,14 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
 
     # Sample based on transaction value
     # Note: transaction.value is a custom attribute
-    transaction_value = sampling_context.get("transaction.value")
-    if transaction_value is not None and transaction_value > 1000:  # High-value transactions
+    transaction_value = sampling_context["transaction.value"]
+    if transaction_value > 1000:
         return 0.7
 
     # Sample based on error rate in the service
     # Note: service.error_rate is a custom attribute
-    error_rate = sampling_context.get("service.error_rate")
-    if error_rate is not None and error_rate > 0.05:  # Error rate above 5%
+    error_rate = sampling_context["service.error_rate"]
+    if error_rate > 0.05:
         return 0.9
 
     # Default sampling rate
@@ -245,23 +242,23 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
     # Use the parent sampling decision if we have an incoming trace.
     # Note: we strongly recommend respecting the parent sampling decision,
     # as this ensures your traces will be complete!
-    parent_sampling_decision = sampling_context.get("parent_sampled")
+    parent_sampling_decision = sampling_context["parent_sampled"]
     if parent_sampling_decision is not None:
         return float(parent_sampling_decision)
 
     # Sample more transactions with high memory usage
     # Note: memory_usage_mb is a custom attribute
-    if sampling_context.get("memory_usage_mb", 0) > 500:  # Over 500MB
+    if sampling_context["memory_usage_mb"] > 500:
         return 0.8
 
     # Sample more transactions with high CPU usage
     # Note: cpu_percent is a custom attribute
-    if sampling_context.get("cpu_percent", 0) > 80:  # Over 80% CPU
+    if sampling_context["cpu_percent"] > 80:
         return 0.8
 
     # Sample more transactions with high database load
     # Note: db_connections is a custom attribute
-    if sampling_context.get("db_connections", 0) > 100:  # Over 100 connections
+    if sampling_context["db_connections"] > 100:
         return 0.7
 
     # Default sampling rate
