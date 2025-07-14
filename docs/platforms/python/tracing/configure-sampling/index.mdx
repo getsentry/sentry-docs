@@ -158,7 +158,7 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
         return 0.8
 
     # Sample less for high-volume, low-value paths
-    transaction_name = transaction_ctx["name"]
+    name = transaction_ctx["name"]
     if name and name.startswith("/api/metrics"):
         return 0.01
 
@@ -259,17 +259,17 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
 
     # Sample more transactions with high memory usage
     # Note: memory_usage_mb is a custom attribute
-    if data["memory_usage_mb"] > 500:
+    if custom_sampling_ctx["memory_usage_mb"] > 500:
         return 0.8
 
     # Sample more transactions with high CPU usage
     # Note: cpu_percent is a custom attribute
-    if data["cpu_percent"] > 80:
+    if custom_sampling_ctx["cpu_percent"] > 80:
         return 0.8
 
     # Sample more transactions with high database load
     # Note: db_connections is a custom attribute
-    if data["db_connections"] > 100:
+    if custom_sampling_ctx["db_connections"] > 100:
         return 0.7
 
     # Default sampling rate
