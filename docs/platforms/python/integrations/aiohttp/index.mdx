@@ -62,6 +62,21 @@ It takes a couple of moments for the data to appear in [sentry.io](https://sentr
 - _The AIOHTTP integration currently does not attach the request body_, see [GitHub issue](https://github.com/getsentry/sentry-python/issues/220).
 - Logging with any logger will create breadcrumbs when the [Logging](/platforms/python/integrations/logging/) integration is enabled (done by default).
 
+### Tracing
+
+A set of predefined span attributes will be attached to AIOHTTP transactions by default. These can also be used for sampling since they will also be accessible via the `sampling_context` dictionary in the [`traces_sampler`](/platforms/python/configuration/options/#traces_sampler).
+
+- `url.path`
+- `url.query`
+- `url.scheme`
+- `url.full`
+- `http.request.method`
+- `http.request.header.{header}`
+- `server.address`
+- `server.port`
+
+These attributes will also be sent to Sentry. If you don't want that, you can filter them out using a custom [`traces_sampler`](/platforms/python/configuration/options/#before_send) function.
+
 ## Options
 
 By adding `AioHttpIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `AioHttpIntegration` to change its behavior:
