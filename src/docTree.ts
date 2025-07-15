@@ -393,15 +393,17 @@ const extractIntegrations = (p: DocNode): PlatformIntegration[] => {
   }
   const integrations = nodeForPath(p, 'integrations');
   return (
-    integrations?.children.map(integ => {
-      return {
-        key: integ.slug,
-        name: integ.frontmatter.title,
-        icon: p.slug + '.' + integ.slug,
-        url: ['', 'platforms', p.slug, 'integrations', integ.slug].join('/'),
-        platform: p.slug,
-        type: 'integration',
-      };
-    }) ?? []
+    integrations?.children
+      .filter(({path}) => !isVersioned(path))
+      .map(integ => {
+        return {
+          key: integ.slug,
+          name: integ.frontmatter.title,
+          icon: p.slug + '.' + integ.slug,
+          url: ['', 'platforms', p.slug, 'integrations', integ.slug].join('/'),
+          platform: p.slug,
+          type: 'integration',
+        };
+      }) ?? []
   );
 };
