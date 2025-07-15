@@ -1,0 +1,231 @@
+---
+title: NPM Package
+description: "Learn how to install the Sentry AWS NPM package to use Sentry in your Lambda functions"
+sidebar_order: 2
+---
+
+In this guide you will learn how to set up the `@sentry/aws-serverless` SDK for AWS Lambda functions using NPM.
+We recommend starting the SDK automatically via environment variables so that you only have to make minimal code changes to your lambda function.
+If you need more control over the SDK setup, you can also [initialize the SDK in code](#option-b-manual-setup).
+
+However, you need to modify your code and deploy the Sentry dependencies alongside your function code. If you're looking for the most simple way to set up Sentry, you might want to use the [Lambda Layer](../layer) instead.
+
+## 1. Prerequisites
+
+Before you begin, make sure you have the following:
+
+- You have a Lambda function deployed in AWS.
+- You're able to deploy dependencies (i.e. `node_modules`) alongside your function code to AWS Lambda.
+
+<Alert level="info" title="ESM vs. CommonJS">
+
+The setup instructions you should follow depend on how your Lambda function **runs** at runtime, not how it's written in your source code.
+
+- **Use CommonJS instructions** if your function runs with CommonJS modules (uses `require()` and `module.exports` at runtime)
+- **Use ESM instructions** if your function runs with ES modules (uses `import`/`export` at runtime)
+
+**Important:** Even if you write your code with `import`/`export` syntax, your function might still run as CommonJS if you're using TypeScript or a build tool that compiles to CommonJS. Check your build output or Lambda runtime configuration to determine which applies to your function.
+
+</Alert>
+
+## 2. Install
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "profiling"]}
+/>
+
+Install the `@sentry/aws-serverless` SDK using a package manager of your choice:
+
+<OnboardingOption optionId="profiling" hideForThisOption>
+
+```bash {tabTitle:npm}
+npm install @sentry/aws-serverless
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/aws-serverless
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/aws-serverless
+```
+
+</OnboardingOption>
+
+<OnboardingOption optionId="profiling">
+
+```bash {tabTitle:npm}
+npm install @sentry/aws-serverless @sentry/profiling-node
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/aws-serverless @sentry/profiling-node
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/aws-serverless @sentry/profiling-node
+```
+
+</OnboardingOption>
+
+## 3. Setup Options
+
+Choose your setup method based on your Lambda function type:
+
+### Option A: Automatic Setup
+
+**CommonJS functions** support fully automatic setup using environment variables - both SDK initialization and handler wrapping are handled automatically.
+
+**ESM functions** support automatic SDK initialization via environment variables, but require manual handler wrapping.
+
+Set the following environment variables in your Lambda function configuration:
+
+```bash {tabTitle:CommonJS}
+NODE_OPTIONS="-r @sentry/aws-serverless/awslambda-auto"
+SENTRY_DSN="___PUBLIC_DSN___"
+# ___PRODUCT_OPTION_START___ performance
+SENTRY_TRACES_SAMPLE_RATE="1.0"
+# ___PRODUCT_OPTION_END___ performance
+```
+
+```bash {tabTitle:ESM}
+NODE_OPTIONS="--import @sentry/aws-serverless/awslambda-auto"
+SENTRY_DSN="___PUBLIC_DSN___"
+# ___PRODUCT_OPTION_START___ performance
+SENTRY_TRACES_SAMPLE_RATE="1.0"
+# ___PRODUCT_OPTION_END___ performance
+```
+
+To set environment variables, navigate to your Lambda function, select **Configuration**, then **Environment variables**:
+
+![](./img/env_vars.png)
+
+**For ESM functions only:** You'll also need to manually wrap your handler as shown below:
+
+```javascript {tabTitle:ESM} {filename:index.mjs}{1,3}
+import * as Sentry from "@sentry/aws-serverless";
+
+export const handler = Sentry.wrapHandler(async (event, context) => {
+  // Your handler code
+});
+```
+
+That's it - make sure to re-deploy your function and you're all set!
+
+### Option B: Manual Setup
+
+To further customize the SDK setup, you can also manually initialize the SDK in your lambda function. The benefit of this installation method is that you can fully customize your Sentry SDK setup in a `Sentry.init` call.
+
+#### For CommonJS Functions
+
+You can initialize the SDK directly in your main handler file:
+
+```javascript {tabTitle:CommonJS} {filename:index.js}
+const Sentry = require("@sentry/aws-serverless");
+// ___PRODUCT_OPTION_START___ profiling
+const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+
+// ___PRODUCT_OPTION_END___ profiling
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/aws-lambda/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ profiling
+  integrations: [nodeProfilingIntegration()],
+
+  // ___PRODUCT_OPTION_END___ profiling
+  // ___PRODUCT_OPTION_START___ performance
+  // Add Tracing by setting tracesSampleRate and adding integration
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ profiling
+
+  // Set sampling rate for profiling - this is relative to tracesSampleRate
+  profilesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ profiling
+});
+
+exports.handler = Sentry.wrapHandler(async (event, context) => {
+  // Your handler code
+});
+```
+
+It's important to add both, the `Sentry.init` call outside the handler function and the `Sentry.wrapHandler` wrapper around your function to automatically catch errors and performance data.
+
+#### For ESM Functions
+
+First, wrap your handler:
+
+```javascript {tabTitle:ESM} {filename:index.mjs}{1,3}
+import * as Sentry from "@sentry/aws-serverless";
+
+export const handler = Sentry.wrapHandler(async (event, context) => {
+  // Your handler code
+});
+```
+
+Due to ESM limitations, you need to initialize the SDK in a separate file and load it before your function starts.
+
+Create a new file, for example `instrument.mjs` to initialize the SDK:
+
+```javascript {tabTitle:ESM} {filename:instrument.mjs}
+import * as Sentry from "@sentry/aws-serverless";
+// ___PRODUCT_OPTION_START___ profiling
+import { nodeProfilingIntegration } from "@sentry/profiling-node";
+// ___PRODUCT_OPTION_END___ profiling
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/aws-lambda/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ profiling
+  integrations: [nodeProfilingIntegration()],
+  // ___PRODUCT_OPTION_END___ profiling
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Add Tracing by setting tracesSampleRate and adding integration
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ profiling
+
+  // Set sampling rate for profiling - this is relative to tracesSampleRate
+  profilesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ profiling
+});
+```
+
+##### Load the SDK
+
+To load the SDK before your function starts, you need to set the `NODE_OPTIONS` environment variable:
+
+```bash {tabTitle:ESM}
+NODE_OPTIONS="--import ./instrument.mjs"
+```
+
+To set environment variables, navigate to your Lambda function, select **Configuration**, then **Environment variables**.
+
+That's it - make sure to re-deploy your function and you're all set!
+
+## Using the v7 SDK
+
+The instructions above are written for the latest SDK version.
+
+**For CommonJS functions:** In SDK versions prior to version 8, the `@sentry/aws-serverless` package was called `@sentry/serverless`. If you are using an older version, you can follow this guide but replace the package with `@sentry/serverless`.
+
+**For ESM functions:** The v7 `@sentry/serverless` SDK does not work correctly with ESM-based Lambda functions. Please upgrade to the latest SDK and follow the instructions above.
