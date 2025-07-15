@@ -4,11 +4,11 @@ description: "Learn how to configure the volume of error and transaction events 
 sidebar_order: 60
 ---
 
-Adding Sentry to your app gives you a great deal of very valuable information about errors and performance you wouldn't otherwise get. And lots of information is good -- as long as it's the right information, at a reasonable volume.
+Adding Sentry to your app gives you a great deal of valuable information about errors and performance you wouldn't otherwise get. And lots of information is good -- as long as it's the right information, at a reasonable volume.
 
 ## Sampling Error Events
 
-To send a representative sample of your errors to Sentry, set the <PlatformIdentifier name="sample-rate" /> option in your SDK configuration to a number between `0` (0% of errors sent) and `1` (100% of errors sent). This is a static rate, which will apply equally to all errors. For example, to sample 25% of your errors:
+To send a representative sample of your errors to Sentry, set the <PlatformIdentifier name="sample-rate" /> option in your SDK configuration to a number between `0.0` (0% of errors sent) and `1.0` (100% of errors sent). This is a static rate, which will apply equally to all errors. For example, to sample 25% of your errors:
 
 <PlatformContent includePath="configuration/sample-rate" />
 
@@ -75,35 +75,17 @@ By default, none of these options are set, meaning no transactions will be sent 
 
 ### Default Sampling Context Data
 
-The information contained in the <PlatformIdentifier name="sampling-context" /> object passed to the <PlatformIdentifier name="traces-sampler" /> when a transaction is created varies by platform and integration.
+The information contained in the <PlatformIdentifier name="sampling-context" /> object passed to the <PlatformIdentifier name="traces-sampler" /> when a transaction is created varies by integration.
 
 <PlatformContent includePath="performance/default-sampling-context" />
 
 ### Custom Sampling Context Data
 
-When using custom instrumentation to create a transaction, you can add data to the <PlatformIdentifier name="sampling-context" /> by passing it as an optional second argument to <PlatformIdentifier name="start-transaction" />. This is useful if there's data to which you want the sampler to have access but which you don't want to attach to the transaction as `tags` or `data`, such as information that's sensitive or that’s too large to send with the transaction. For example:
+When using custom instrumentation to create a transaction, you can add data to the <PlatformIdentifier name="sampling-context" /> by providing additional `attributes` to <PlatformIdentifier name="start-span" />.
 
-```python
-sentry_sdk.start_transaction(
-    # kwargs passed to Transaction constructor - will be recorded on transaction
-    name="GET /search",
-    op="search",
-    data={
-        "query_params": {
-            "animal": "dog",
-            "type": "very good"
-        }
-    },
-    # `custom_sampling_context` - won't be recorded
-    custom_sampling_context={
-        # PII
-        "user_id": "12312012",
-        # too big to send
-        "search_results": { ... }
-    }
-)
-```
+<PlatformContent includePath="performance/custom-sampling-context" />
 
+All span attributes provided at span start are accessible via the <PlatformIdentifier name="sampling-context" /> and will also ultimately be sent to Sentry. If you want to exclude an attribute, you can filter it out in a <PlatformLink to="/configuration/filtering">`before_send`</PlatformLink>.
 
 ## Inheritance
 
@@ -119,18 +101,13 @@ In some SDKs, for convenience, the <PlatformIdentifier name="traces-sampler" /> 
 
 </PlatformContent>
 
-If you're using a <PlatformIdentifier name="traces-sample-rate" /> rather than a <PlatformIdentifier name="traces-sampler" />, the decision will always be inherited.
+If you're using a <PlatformIdentifier name="traces-sample-rate" /> rather than a <PlatformIdentifier name="traces-sampler" />, the decision will always be inherited. The provided <PlatformIdentifier name="traces-sample-rate" /> will only be used to generate a sample rate if there is no sampling decision coming in from upstream.
 
 ## Forcing a Sampling Decision
 
-If you know at transaction creation time whether or not you want the transaction sent to Sentry, you also have the option of passing a sampling decision directly to the transaction constructor (note, not in the <PlatformIdentifier name="custom-sampling-context" /> object). If you do that, the transaction won't be subject to the <PlatformIdentifier name="traces-sample-rate" />, nor will <PlatformIdentifier name="traces-sampler" /> be run, so you can count on the decision that's passed not to be overwritten.
+If you know at span creation time whether or not you want the transaction sent to Sentry, you also have the option of passing a sampling decision directly in the `start_span` API. If you do that, the transaction won't be subject to the <PlatformIdentifier name="traces-sample-rate" />, nor will <PlatformIdentifier name="traces-sampler" /> be run, so you can count on the decision that's passed not to be overwritten.
 
-```python
-sentry_sdk.start_transaction(
-    name="GET /search",
-    sampled=True
-)
-```
+<PlatformContent includePath="performance/force-sampling-decision" />
 
 ## Precedence
 
@@ -140,7 +117,7 @@ There are multiple ways for a transaction to end up with a sampling decision.
 - Random sampling according to a sample function rate returned by <PlatformIdentifier name="traces-sampler" />
 - Absolute decision (100% chance or 0% chance) returned by <PlatformIdentifier name="traces-sampler" />
 - If the transaction has a parent, inheriting its parent's sampling decision
-- Absolute decision passed to <PlatformIdentifier name="start-transaction" />
+- Absolute decision passed to <PlatformIdentifier name="start-span" />
 
 When there's the potential for more than one of these to come into play, the following precedence rules apply:
 
