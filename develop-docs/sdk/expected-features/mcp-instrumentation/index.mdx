@@ -2,7 +2,26 @@
 title: MCP Instrumentation
 ---
 
-We have instrumented the MCP server from the Anthropic SDK, including both errors and tracing.
+The MCP Server module instruments Anthropic's Model Context Protocol (MCP) SDKs. At the moment it only supports the [MCP typescript sdk](https://github.com/modelcontextprotocol/typescript-sdk/).
+
+## Features
 
 - [Tracing](./tracing)
-- [Errors](./errors) 
+- [Errors](./errors)
+
+## Current limitations
+
+Currently, it doesn't support automatic instrumentation due to [this issue](https://github.com/getsentry/sentry-javascript/issues/16052) related to `import-in-the-middle`.
+
+Instrumentation has to be done by wrapping the MCP server instance. This is done by the `wrapMcpServerWithSentry` function. For example:
+
+```ts
+import * as Sentry from "@sentry/core";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+
+const mcpServer = new McpServer({
+  name: 'My MCP Server',
+});
+
+const server = Sentry.wrapMcpServerWithSentry(mcpServer);
+```
