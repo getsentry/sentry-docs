@@ -77,7 +77,7 @@ export function DocPage({
               'prose-blockquote:font-normal prose-blockquote:border-l-[3px] prose-em:font-normal prose-blockquote:text-[var(--gray-12)]',
               'prose-img:my-2',
               'prose-strong:text-[var(--gray-12)]',
-              fullWidth ? 'max-w-none w-full' : 'w-[75ch] xl:max-w-[calc(100%-250px)]',
+              fullWidth ? 'max-w-none w-full' : 'w-[85ch] xl:max-w-[calc(100%-220px)]',
             ].join(' ')}
           >
             <div className="mb-4">
