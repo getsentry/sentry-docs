@@ -144,17 +144,17 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
 
     # Always sample for premium users
     # Note: user.tier is a custom attribute that needs to be set
-    if sampling_context["user.tier"] == "premium":
+    if sampling_context.get("user.tier") == "premium":
         return 1.0
 
     # Sample more transactions for users experiencing errors
     # Note: hasRecentErrors is a custom attribute
-    if sampling_context["hasRecentErrors"] is True:
+    if sampling_context.get("hasRecentErrors") is True:
         return 0.8
 
     # Sample less for high-volume, low-value paths
-    transaction_ctx = sampling_context["transaction_context"]
-    if transaction_ctx["name"].startswith("/api/metrics"):
+    transaction_ctx = sampling_context.get("transaction_context")
+    if transaction_ctx and transaction_ctx["name"].startswith("/api/metrics"):
         return 0.01
 
     # Default sampling rate
@@ -196,7 +196,7 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
 
     # Sample based on user segment
     # Note: user.segment is a custom attribute
-    user_segment = sampling_context["user.segment"]
+    user_segment = sampling_context.get("user.segment")
     if user_segment == "enterprise":
         return 0.8
     elif user_segment == "premium":
@@ -204,14 +204,14 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
 
     # Sample based on transaction value
     # Note: transaction.value is a custom attribute
-    transaction_value = sampling_context["transaction.value"]
-    if transaction_value > 1000:
+    transaction_value = sampling_context.get("transaction.value")
+    if transaction_value is not None and transaction_value > 1000:
         return 0.7
 
     # Sample based on error rate in the service
     # Note: service.error_rate is a custom attribute
-    error_rate = sampling_context["service.error_rate"]
-    if error_rate > 0.05:
+    error_rate = sampling_context.get("service.error_rate")
+    if error_rate is not None and error_rate > 0.05:
         return 0.9
 
     # Default sampling rate
@@ -248,17 +248,20 @@ def traces_sampler(sampling_context: SamplingContext) -> float:
 
     # Sample more transactions with high memory usage
     # Note: memory_usage_mb is a custom attribute
-    if sampling_context["memory_usage_mb"] > 500:
+    memory_usage = sampling_context.get("memory_usage_mb")
+    if memory_usage is not None and memory_usage > 500:
         return 0.8
 
     # Sample more transactions with high CPU usage
     # Note: cpu_percent is a custom attribute
-    if sampling_context["cpu_percent"] > 80:
+    cpu_percent = sampling_context.get("cpu_percent")
+    if cpu_percent is not None and cpu_percent > 80:
         return 0.8
 
     # Sample more transactions with high database load
     # Note: db_connections is a custom attribute
-    if sampling_context["db_connections"] > 100:
+    db_connections = sampling_context.get("db_connections")
+    if db_connections is not None and db_connections > 100:
         return 0.7
 
     # Default sampling rate
