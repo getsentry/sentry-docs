@@ -701,12 +701,14 @@ const fileBySlugCache = new Map<string, Promise<SlugFile>>();
  *
  * This is useful for performance when rendering the same file multiple times.
  */
-export function getFileBySlugWithCache(slug: string): Promise<SlugFile> {
-  let cached = fileBySlugCache.get(slug);
-  if (!cached) {
-    cached = getFileBySlug(slug);
-    fileBySlugCache.set(slug, cached);
-  }
-
-  return cached;
-}
+export const getFileBySlugWithCache: (slug: string) => Promise<SlugFile> =
+  process.env.NODE_ENV === 'development'
+    ? getFileBySlug
+    : (slug: string) => {
+        let cached = fileBySlugCache.get(slug);
+        if (!cached) {
+          cached = getFileBySlug(slug);
+          fileBySlugCache.set(slug, cached);
+        }
+        return cached;
+      };
