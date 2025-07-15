@@ -89,4 +89,8 @@ export interface FrontMatter {
    * @example ['v7.119.0', 'next']
    */
   versions?: string[];
+  /**
+   * Set this to true to take all the available width for the page content.
+   */
+  fullWidth?: boolean;
 }
