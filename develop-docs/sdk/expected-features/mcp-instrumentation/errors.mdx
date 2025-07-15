@@ -1,0 +1,76 @@
+---
+title: Errors
+---
+
+MCP Server error instrumentation ensures that all errors occurring within the Model Context Protocol (MCP) server are captured and reported to Sentry, **without ever interfering with the operation of the MCP service itself**. 
+
+## Goals and Philosophy
+
+- **Comprehensive context:** Errors are always associated with the active Sentry span, so you get full context (method, tool, arguments, etc.) in Sentry.
+- **Categorized errors:** Errors are tagged by type (e.g., `validation`, `timeout`, `tool_execution`, `resource_operation`, `prompt_execution`, `transport`, etc.) for easy filtering and analysis in Sentry.
+- **Handler wrapping:** All MCP server handlers (`tool`, `resource`, `prompt`) are wrapped to ensure errors are captured and correlated with the correct request span.
+
+
+## Safe Error Capture
+
+The core utility is an error capture function:
+
+```ts
+import { getClient } from '../../currentScopes';
+import { captureException } from '../../exports';
+
+export function captureError(error: Error, errorType?: string): void {
+  try {
+    const client = getClient();
+    if (!client) return;
+    captureException(error, {
+      tags: {
+        mcp_error_type: errorType || 'handler_execution',
+      },
+    });
+  } catch {
+    // Silently ignore capture errors - never affect MCP operation
+  }
+}
+```
+
+- **Never throws:** All error capture is wrapped in a try/catch and will never throw.
+- **Tags errors:** Errors are tagged with `mcp_error_type` for later filtering.
+
+## Handler Wrapping for Error Capture
+
+All MCP server method handlers (`tool`, `resource`, `prompt`) are wrapped to:
+- Correlate handler execution with the correct Sentry span (using request/session data)
+- Capture both synchronous and asynchronous errors
+- Categorize errors by handler type and error nature
+
+### Error Categorization
+
+Errors are categorized and tagged based on the handler and error type:
+
+- **Tool handler errors:**
+  - `validation` (e.g., protocol/validation errors)
+  - `timeout` (e.g., server timeouts)
+  - `tool_execution` (all other tool errors)
+- **Resource handler errors:**
+  - `resource_operation`
+- **Prompt handler errors:**
+  - `prompt_execution`
+- **Transport errors:**
+  - `transport`
+- **Protocol errors:**
+  - `protocol`
+
+## Span Correlation
+
+All errors are captured within the context of the active Sentry span, so you can:
+- See which MCP method, tool, or resource caused the error
+- View all arguments and context for the failed request
+- Correlate errors with traces and performance data
+
+## Transport Layer Error Instrumentation
+
+The MCP transport layer is also instrumented to:
+- Create spans for incoming/outgoing messages
+- Capture errors in transport event handlers (e.g., `onerror`)
+- Correlate protocol errors with the correct request/response
