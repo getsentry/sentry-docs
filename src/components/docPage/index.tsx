@@ -84,7 +84,7 @@ export function DocPage({
             </div>
             <div className="overflow-hidden">
               {leafNode && <Breadcrumbs leafNode={leafNode} />}{' '}
-              <div className="float-right mt-4 sm:mt-0">
+              <div className="float-right mt-4 sm:mt-0 hidden sm:block">
                 <CopyMarkdownButton pathname={pathname} />
               </div>
             </div>
