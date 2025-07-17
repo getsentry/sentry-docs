@@ -338,11 +338,38 @@ plugins {
 
 #### Transaction Lifetime
 
-The transaction finishes automatically after it reaches the specified [idleTimeout](/platforms/android/configuration/options/#idle-timeout) and all of its child spans are finished. The `idleTimeoout` defaults to `3000` milliseconds (three seconds). You can also disable the idle timeout by setting it to `null`, but the transaction must be finished manually in this case.
+The transaction finishes automatically after it reaches the specified [idleTimeout](/platforms/android/configuration/options/#idle-timeout) and all of its child spans are finished, or after it reaches the specified [deadlineTimeout](/platforms/android/configuration/options/#deadline-timeout), even if child spans are still running.
+
+The `idleTimeout` defaults to `3000` milliseconds (three seconds), and the `deadlineTimeout` defaults to `30000` milliseconds (thirty seconds). You can also disable the idle timeout and deadline timeout by setting them to `null`, but the transaction must be finished manually in this case.
+
+To change the timeouts you can:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.traces.idle-timeout" android:value="10000" />
+    <meta-data android:name="io.sentry.traces.deadline-timeout" android:value="0" /> <!-- 0 disable deadline timeout -->
+</application>
+```
+```java
+import io.sentry.android.core.SentryAndroid;
+
+SentryAndroid.init(this, options -> {
+    options.setIdleTimeout(null); // disable idle timeout
+    options.setDeadlineTimeout(0); // disable deadline timeout
+});
+```
+```kotlin
+import io.sentry.android.core.SentryAndroid
+
+SentryAndroid.init(this) { options ->
+    options.idleTimeout = null // disable idle timeout
+    options.deadlineTimeout = 0 // disable deadline timeout
+}
+```
 
 <Alert>
 
-If the UI transaction has idled, but didn't have any child spans added, it will be dropped.
+If the UI transaction didn't have any child spans added, it will be dropped.
 
 </Alert>
 
