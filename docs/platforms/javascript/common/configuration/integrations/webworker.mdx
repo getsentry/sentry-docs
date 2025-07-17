@@ -1,0 +1,52 @@
+---
+title: WebWorker
+description: "Adds source code from inline JavaScript of the current page's HTML."
+notSupported:
+  - javascript.cordova
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.deno
+  - javascript.cloudflare
+  - javascript.bun
+---
+
+_Import name: `Sentry.webWorkerIntegration`_
+
+This integration, together with `Sentry.registerWorker()`, establishes communication between the browser's main thread and one or multiple [WebWorker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API)s.
+It listens to worker messages from the passed workers and forwards them to the main thread. 
+
+Read our <PlatformLink to="/best-practices/web-workers/">Web Worker Guide</PlatformLink> for more information. 
+
+<Expandable title="What does this integration do?">
+
+This integration listens to a message, sent from the worker when it calls `Sentry.registerWorker({ self })`.
+The purpose is to sync source map information (debugIds) between the main thread and the worker so that worker
+errors caught by the main thread SDK are properly mapped to the worker's source code.
+
+</Expandable>
+
+
+## Options
+
+### `worker`
+
+_Type: `Worker | Array<Worker>`_
+
+The web worker(s) to listen to. Every worker must call `Sentry.registerWorker({ self })` to register itself with the SDK.
+
+## Methods
+
+### `addWorker(worker: Worker)`
+
+Adds a worker to the integration, after it was initialized.
+This is useful if you have workers that are initialized at later point in your application's lifecycle.
+Note that every worker must call `Sentry.registerWorker({ self })` to register itself with the SDK.
