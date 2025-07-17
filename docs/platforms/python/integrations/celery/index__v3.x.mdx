@@ -21,9 +21,9 @@ uv add "sentry-sdk[celery]"
 If you have the `celery` package in your dependencies, the Celery integration will be enabled automatically when you initialize the Sentry SDK.
 
 <Alert>
-  Make sure that the call to `sentry_sdk.init()` is loaded on worker startup and
-  not only in the module where your tasks are defined. Otherwise, the
-  initialization may happen too late and events might not get reported.
+Make sure you call `sentry_sdk.init()` when the worker process starts, 
+  not just in the module that defines your tasks. Otherwise, the
+  initialization may happen too late, causing events to go unreported.
 </Alert>
 
 ### Set up Celery Without Django
@@ -184,7 +184,7 @@ You can pass the following keyword arguments to `CeleryIntegration()`:
 
   The default is `True`.
 
-  See [Distributed Traces](#distributed-traces) below to learn how to get more fine grained control over distributed tracing in Celery tasks.
+  See [Distributed Traces](#distributed-traces) below to learn how to get more fine-grained control over distributed tracing in Celery tasks.
 
 - `monitor_beat_tasks`:
 
@@ -208,7 +208,7 @@ You can pass the following keyword arguments to `CeleryIntegration()`:
 
 ### Distributed Traces
 
-Distributed tracing extends the trace from the code that's running your Celery task so that it includes the code that initiated the task.
+Distributed tracing connects the trace of your Celery task to the trace of the code that started the task, giving you a complete view of the entire workflow.
 
 You can disable this globally with the `propagate_traces` parameter, documented above. If you set `propagate_traces` to `False`, all Celery tasks will start their own trace.
 
