@@ -3,7 +3,7 @@ title: WSGI
 description: "Learn about the WSGI integration and how it adds support for WSGI applications."
 ---
 
-If you use a WSGI framework not directly supported by the SDK, or wrote a raw WSGI app, you can use this generic WSGI middleware. It captures errors and attaches a basic amount of information for incoming requests.
+If you use a WSGI framework not directly supported by the SDK, or you wrote a raw WSGI app, you can use this generic WSGI middleware. It captures errors and attaches a basic amount of information for incoming requests.
 
 <Alert>
 
@@ -20,7 +20,6 @@ uv add "sentry-sdk"
 ```
 
 ## Configure
-
 
 In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/).
 
@@ -90,14 +89,32 @@ make_server('', 8000, app).serve_forever()
 
 <Include name="python-uwsgi-warning.mdx" />
 
-- Request data is attached to all events: **HTTP method, URL, headers**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
+- Request data is attached to all events: **HTTP method, URL, headers**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user IDs, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
 
 Each request has a separate scope. Changes to the scope within a view, for example setting a tag, will only apply to events sent as part of the request being handled.
 
 - The WSGI middleware does not behave like a regular integration. It is not initialized through an extra parameter to `init` and is not attached to a client. When capturing or supplementing events, it just uses the currently active scopes.
 
+### Default Span Attributes
+
+A set of predefined span attributes will be attached to WSGI transactions by default. These can also be used for sampling since they will also be accessible via the `sampling_context` dictionary in the [`traces_sampler`](/platforms/python/configuration/options/#traces_sampler).
+
+    | Span Attribute                                    | Description                                                |
+    | ------------------------------------------------- | ---------------------------------------------------------- |
+    | `url.path`                                        | `PATH_INFO` from WSGI environ                              |
+    | `url.query`                                       | `QUERY_STRING` from WSGI environ                           |
+    | `http.request.method`                             | `REQUEST_METHOD` from WSGI environ                         |
+    | `server.address`                                  | `SERVER_NAME` from WSGI environ                            |
+    | `server.port`                                     | `SERVER_PORT` from WSGI environ                            |
+    | `server.protocol.name`, `server.protocol.version` | `SERVER_PROTOCOL` from WSGI environ                        |
+    | `url.scheme`                                      | `wsgi.url_scheme` from WSGI environ                        |
+    | `url.full`                                        | full URL, reconstructed from individual WSGI environ parts |
+    | `http.request.header.{header}`                    | `HTTP_*` from WSGI environ                                 |
+
+These attributes will also be sent to Sentry. If you don't want that, you can filter them out using a custom [`before_send`](/platforms/python/configuration/options/#before_send) function.
+
 ## Supported Versions
 
-- Python: 3.6+
+- Python: 3.7+
 
 <Include name="python-use-older-sdk-for-legacy-support.mdx" />
