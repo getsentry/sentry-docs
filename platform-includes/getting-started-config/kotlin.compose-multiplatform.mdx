@@ -1,19 +1,52 @@
-Initialize Sentry in your main application entry point, typically in your `main()` function or `App` composable:
+1. Add a function to initialize Sentry to your shared module (`commonMain`).
+2. Call the function in your iOS and Android app modules.
 
-```kotlin {filename:App.kt}
+```kotlin {filename:SentrySetup.kt}{tabTitle: commonMain}
 import io.sentry.kotlin.multiplatform.Sentry
-import androidx.compose.runtime.Composable
 
-@Composable
-fun App() {
-    // Initialize Sentry when your app starts
-    Sentry.init { options ->
-        options.dsn = "___PUBLIC_DSN___"
-        // Adds request headers and IP for users, for more info visit:
-        // https://docs.sentry.io/platforms/kotlin/guides/kotlin-multiplatform/data-management/data-collected/
-        options.sendDefaultPii = true
+fun initializeSentry() {
+  Sentry.init { options ->
+    options.dsn = "___PUBLIC_DSN___"
+    // Adds request headers and IP for users, for more info visit:
+    // https://docs.sentry.io/platforms/kotlin/guides/kotlin-multiplatform/data-management/data-collected/
+    options.sendDefaultPii = true
+  }
+}
+```
+```swift {tabTitle: iosApp}
+import ComposeApp // Replace this with the name of the shared framework
+
+@main
+struct iOSApp: App {
+    init() {
+        SentrySetupKt.initializeSentry()
     }
-    
-    // ... your compose UI content
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}
+
+// OR alternatively in AppDelegate:
+
+
+func application(
+    _ application: UIApplication,
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil
+) -> Bool {
+    SentrySetupKt.initializeSentry()
+    return true
+}
+
+```
+```kotlin {filename:MainActivity.kt}{tabTitle: androidApp}
+import your.kmp.app.initializeSentry
+
+class YourApplication : Application() {
+  override fun onCreate() {
+    super.onCreate()
+      initializeSentry()
+   }
 }
 ```
