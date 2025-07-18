@@ -152,6 +152,13 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/organization/integrations/session-replay/jam/',
   },
   {
+    from: '/product/integrations/cased/',
+    to: '/product/integrations/notification-incidents/cased/',
+  },  {
+    from: '/product/integrations/starsling-dev/',
+    to: '/product/integrations/issue-tracking/starsling-dev/',
+  },
+  {
     from: '/organization/integrations/kitemaker/',
     to: '/organization/integrations/issue-tracking/kitemaker/',
   },
