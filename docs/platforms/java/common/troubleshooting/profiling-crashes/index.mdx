@@ -1,0 +1,45 @@
+---
+title: Profiling Crashes
+description: "Troubleshoot and resolve crashes related to Java SDK profiling."
+sidebar_order: 1001
+---
+
+Profiling uses the Java runtime's `tracer` under the hood to sample threads. There are known issues that this `tracer` can cause crashes in certain circumstances. This page describes the problem and provides solutions.
+
+## Android Runtime Crashes During Profiling
+
+When profiling is activated, you may see an elevated number of crashes in the Android Runtime. This is caused by known issues with the Android runtime's `tracer` that can cause crashes in certain circumstances.
+
+### Known Issues and Fixes
+
+As of October 2024, several crashes have been identified and addressed:
+
+1. **Google Acknowledged Fixes**: Two crashes (see [GitHub issue #3561](https://github.com/getsentry/sentry-java/issues/3561#issuecomment-2361054644) and [GitHub issue #3653](https://github.com/getsentry/sentry-java/issues/3653)) have been acknowledged and fixed by Google. The fixes are being rolled out to affected devices, but the crashing behavior might still be present on devices that haven't received the fix yet.
+
+2. **Native Thread Handling Issue**: There is one [other issue](https://github.com/getsentry/sentry-java/issues/2604) where the likely root cause is incorrect native thread handling by app code or third party code. This cannot be fixed in the Sentry SDK itself.
+
+### Solutions
+
+#### For Google-Fixed Issues
+- **Wait for Google Updates**: The fixes are being rolled out by Google to affected devices
+- **Monitor Device Updates**: Ensure your test devices receive the latest Android runtime updates
+- **Follow GitHub Issues**: Subscribe to [GitHub issue #3679](https://github.com/getsentry/sentry-java/issues/3679) for updates
+
+#### For Native Thread Handling Issues
+- **Review Third-Party Code**: Check if any third-party libraries are incorrectly handling native threads
+- **Update Dependencies**: Ensure all native libraries and dependencies are up to date
+- **Report Issues**: If you experience this issue, please comment on the [GitHub issue](https://github.com/getsentry/sentry-java/issues/2604)
+
+### Workarounds
+
+If you're experiencing profiling-related crashes:
+
+1. **Disable Profiling Temporarily**: Consider disabling profiling until the issues are resolved
+2. **Use Custom Instrumentation**: Instead of automatic profiling, use [custom instrumentation](/platforms/java/tracing/instrumentation/custom-instrumentation/) for critical paths
+3. **Enable Debug Mode**: Enable [debug mode](/platforms/java/configuration/options/#debug) to get more detailed logs about the crashes
+
+### Monitoring
+
+- **Track Crash Patterns**: Monitor if crashes correlate with specific devices or Android versions
+- **Report New Issues**: If you encounter new profiling-related crashes, report them on the [Sentry Java GitHub repository](https://github.com/getsentry/sentry-java/issues/new/choose)
+- **Follow Updates**: Subscribe to the relevant GitHub issues for updates on fixes and workarounds
