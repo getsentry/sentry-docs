@@ -154,7 +154,8 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/product/integrations/cased/',
     to: '/product/integrations/notification-incidents/cased/',
-  },  {
+  },
+  {
     from: '/product/integrations/starsling-dev/',
     to: '/product/integrations/issue-tracking/starsling-dev/',
   },
@@ -650,6 +651,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/dart/configuration/integrations/dio/',
     to: '/platforms/dart/integrations/dio/',
+  },
+  {
+    from: '/platforms/dart/configuration/integrations/firebase-remote-config/',
+    to: '/platforms/dart/integrations/firebase-remote-config/',
   },
   {
     from: '/quickstart/',
@@ -3193,27 +3198,19 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/ai-monitoring/',
-    to: '/product/insights/llm-monitoring/',
+    to: '/product/insights/agents/',
   },
   {
-    from: '/product/ai-monitoring/getting-started/',
-    to: '/product/insights/llm-monitoring/getting-started/',
+    from: '/product/insights/llm-monitoring/',
+    to: '/product/insights/agents/',
   },
   {
-    from: '/product/ai-monitoring/getting-started/the-dashboard/',
-    to: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
+    from: '/product/insights/llm-monitoring/getting-started/',
+    to: '/product/insights/agents/getting-started/',
   },
   {
-    from: '/product/llm-monitoring/',
-    to: '/product/insights/llm-monitoring/',
-  },
-  {
-    from: '/product/llm-monitoring/getting-started/',
-    to: '/product/insights/llm-monitoring/getting-started/',
-  },
-  {
-    from: '/product/llm-monitoring/getting-started/the-dashboard/',
-    to: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
+    from: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
+    to: '/product/insights/agents/getting-started/the-dashboard/',
   },
   {
     from: '/product/metrics/',
@@ -3471,6 +3468,23 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/security-legal-pii/security/security-policy-reporting/',
     to: '/platform-redirect/?next=/security-policy-reporting/',
   },
+  /* Uptime Monitoring */
+  {
+    from: '/product/alerts/uptime-monitoring/',
+    to: '/product/uptime-monitoring/',
+  },
+  {
+    from: '/product/alerts/uptime-monitoring/automatic-detection/',
+    to: '/product/uptime-monitoring/automatic-detection/',
+  },
+  {
+    from: '/product/alerts/uptime-monitoring/uptime-tracing/',
+    to: '/product/uptime-monitoring/uptime-tracing/',
+  },
+  {
+    from: '/product/alerts/uptime-monitoring/troubleshooting/',
+    to: '/product/uptime-monitoring/troubleshooting/',
+  },
 ];
 
 const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
@@ -3635,10 +3649,6 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     to: '/application/feedback-architecture/',
   },
   {
-    from: '/feature-flags/options-backed-features/',
-    to: '/application/feature-flags/options-backed-features/',
-  },
-  {
     from: '/options/',
     to: '/backend/options/',
   },
@@ -3649,10 +3659,6 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/sdk/craft-quick-start/',
     to: '/sdk/processes/releases/',
-  },
-  {
-    from: '/sdk/metrics/',
-    to: '/sdk/telemetry/metrics/',
   },
   {
     from: '/sdk/check-ins/',
@@ -3851,14 +3857,6 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/api-server/application-domains/feature-flags/flagpole/',
     to: '/develop/application-domains/feature-flags/flagpole/',
-  },
-  {
-    from: '/backend/feature-flags/options-backed-features/',
-    to: '/backend/application-domains/feature-flags/options-backed-features/',
-  },
-  {
-    from: '/api-server/application-domains/feature-flags/options-backed-features/',
-    to: '/develop/application-domains/feature-flags/options-backed-features/',
   },
   {
     from: '/backend/options/',
