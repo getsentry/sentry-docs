@@ -1201,6 +1201,35 @@ const userDocsRedirects = [
     source: '/product/ai-in-sentry/seer/seer-privacy-and-security',
     destination: '/product/ai-in-sentry/ai-privacy-and-security/',
   },
+  // .NET profiling guide redirects - consolidate to main profiling page
+  {
+    source: '/platforms/dotnet/guides/uwp/profiling/:path*',
+    destination: '/platforms/dotnet/profiling/',
+  },
+  {
+    source: '/platforms/dotnet/guides/aws-lambda/profiling/:path*',
+    destination: '/platforms/dotnet/profiling/',
+  },
+  {
+    source: '/platforms/dotnet/guides/azure-functions-worker/profiling/:path*',
+    destination: '/platforms/dotnet/profiling/',
+  },
+  {
+    source: '/platforms/dotnet/guides/blazor-webassembly/profiling/:path*',
+    destination: '/platforms/dotnet/profiling/',
+  },
+  {
+    source: '/platforms/dotnet/guides/aspnet/profiling/:path*',
+    destination: '/platforms/dotnet/profiling/',
+  },
+  {
+    source: '/platforms/dotnet/guides/entityframework/profiling/:path*',
+    destination: '/platforms/dotnet/profiling/',
+  },
+  {
+    source: '/platforms/dotnet/guides/google-cloud-functions/profiling/:path*',
+    destination: '/platforms/dotnet/profiling/',
+  },
 ];
 
 /**
