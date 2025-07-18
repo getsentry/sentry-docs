@@ -155,6 +155,38 @@ A **Unified Cron Monitoring Experience** that clarifies the two-step process and
 - Scan for existing cron-related code patterns
 - Suggest optimal integration approach based on tech stack
 
+## 🔍 Open Questions
+
+**PRIORITY 1: What is the bare minimum to get working cron monitoring?**
+
+**Option A: Code-First Approach**
+- Developer adds `Sentry.captureCheckIn()` calls to existing cron job
+- Gets cron execution signals in Sentry immediately
+- ❓ **But does this create alerts by default? Or just raw data?**
+- ❓ **Do they need to finish setup in the UI afterwards for alerting?**
+
+**Option B: UI-First Approach** 
+- Developer creates monitor definition in Sentry UI (includes alert configuration)
+- Then adds minimal instrumentation code to their job
+- Gets both execution data AND configured alerts immediately
+
+**Key Questions:**
+1. **What's the ideal customer flow we want to encourage?** UI-first or code-first?
+2. **What does "easiest" actually mean?** Least code changes vs most value vs fastest time-to-alerts?
+3. **Should we position UI setup as "most complete" rather than "easiest"?**
+4. **Does bare-minimum code instrumentation provide enough value without UI configuration?**
+
+**PRIORITY 2: How do we define "easiest" vs "most valuable"?**
+
+Current documentation positions UI setup as "easiest" but this may be misleading:
+- **UI Setup**: More setup steps, but provides complete monitoring + alerting
+- **Code-only**: Fewer steps, but may provide incomplete monitoring experience
+
+We need to clarify whether we're optimizing for:
+- **Minimal code changes** (technical ease)
+- **Fastest time to value** (getting alerts working)
+- **Most complete monitoring** (full feature set)
+
 ## ❓ Frequently Asked Questions
 
 **Q: Why not just improve the existing documentation instead of changing the product?**
