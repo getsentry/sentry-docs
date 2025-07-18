@@ -1,0 +1,339 @@
+---
+alwaysApply: true
+---
+import {PlatformContent} from 'sentry-docs/components/platformContent';
+
+# Getting Started
+
+<PlatformContent includePath="getting-started-install" />
+
+Content here...
+```
+
+#### Processing Flow
+1. **Frontmatter extraction** for metadata and navigation
+2. **Content compilation** with MDX bundler
+3. **Component resolution** for shared content
+4. **Static generation** at build time
+5. **Dynamic routing** via `[[...path]]` pattern
+
+## 🎨 Component Architecture
+
+### Core Components
+
+#### Page Layout Components
+```typescript
+// DocPage - Main documentation page wrapper
+export function DocPage({
+  children,
+  frontMatter,
+  nextPage,
+  previousPage
+}: DocPageProps) {
+  return (
+    <div className="doc-page">
+      <Header />
+      <Sidebar />
+      <main>{children}</main>
+      <PaginationNav next={nextPage} previous={previousPage} />
+    </div>
+  );
+}
+
+// Sidebar - Auto-generated navigation
+export function Sidebar() {
+  const {rootNode, path} = useServerContext();
+  return <SidebarTree node={rootNode} currentPath={path} />;
+}
+```
+
+#### Content Components
+```typescript
+// PlatformContent - Include platform-specific shared content
+export function PlatformContent({includePath}: {includePath: string}) {
+  const platform = getCurrentPlatform();
+  const content = getPlatformInclude(includePath, platform);
+  return <MDXContent source={content} />;
+}
+
+// Include - Include general shared content
+export function Include({name}: {name: string}) {
+  const content = getInclude(name);
+  return <MDXContent source={content} />;
+}
+```
+
+### Navigation System
+
+#### Automatic Sidebar Generation
+```typescript
+// docTree.ts - Document tree management
+export interface DocNode {
+  path: string;
+  frontmatter: FrontMatter;
+  children: DocNode[];
+}
+
+export function buildDocTree(docs: FrontMatter[]): DocNode {
+  // Build hierarchical tree from flat file list
+  // Sort by sidebar_order and title
+  // Handle platform inheritance
+}
+```
+
+#### Dynamic Routing
+```typescript
+// app/[[...path]]/page.tsx - Catch-all routing
+export default async function Page({params}: {params: {path?: string[]}}) {
+  const pageNode = nodeForPath(rootNode, params.path ?? '');
+  
+  if (!pageNode) {
+    return notFound();
+  }
+
+  const doc = await getFileBySlugWithCache(pageNode.path);
+  return <MDXLayoutRenderer {...doc} />;
+}
+```
+
+## 🔄 Content Sharing System
+
+### Platform Includes
+Platform-specific shared content organized by functionality:
+```
+platform-includes/
+├── getting-started-install/
+│   ├── javascript.mdx
+│   ├── python.mdx
+│   └── java.mdx
+├── getting-started-config/
+│   ├── javascript.mdx
+│   └── python.mdx
+└── configuration/
+    ├── options/
+    └── advanced/
+```
+
+### Usage Pattern
+```mdx
+---
+title: "React Installation"
+---
+
+# Installing Sentry
+
+<PlatformContent includePath="getting-started-install" />
+
+## Next Steps
+
+<PlatformContent includePath="getting-started-verify" />
+```
+
+### Benefits
+- **Consistency** across all platform documentation
+- **Maintainability** with single source of truth
+- **Customization** per platform while sharing structure
+- **Scalability** for adding new platforms
+
+## 🚀 Build & Deployment
+
+### Dual Build System
+```javascript
+// Two separate builds for different audiences
+const isDeveloperDocs = process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
+
+const buildConfig = {
+  outputFileTracingExcludes: isDeveloperDocs
+    ? {'/**/*': ['docs/**/*']}      // Exclude user docs
+    : {'/**/*': ['develop-docs/**/*']} // Exclude dev docs
+};
+```
+
+### Static Generation
+```typescript
+// Generate static params for all documentation pages
+export async function generateStaticParams() {
+  const docs = await (isDeveloperDocs 
+    ? getDevDocsFrontMatter() 
+    : getDocsFrontMatter()
+  );
+  
+  return docs.map(doc => ({
+    path: doc.slug.split('/')
+  }));
+}
+```
+
+### Performance Optimizations
+- **File tracing exclusions** to reduce bundle size
+- **Static generation** for all documentation pages
+- **Image optimization** with Next.js built-in features
+- **Bundle analysis** with Codecov integration
+
+## 🔍 Search & Discovery
+
+### Algolia Integration
+```typescript
+// Search indexing configuration
+const searchConfig = {
+  indexName: isDeveloperDocs ? 'develop-sentry' : 'sentry-docs',
+  appId: process.env.ALGOLIA_APP_ID,
+  apiKey: process.env.ALGOLIA_API_KEY,
+};
+
+// Auto-generated search content
+export function generateSearchIndex() {
+  const docs = getAllDocumentation();
+  return docs.map(doc => ({
+    objectID: doc.slug,
+    title: doc.frontmatter.title,
+    content: doc.content,
+    url: doc.url,
+    hierarchy: doc.breadcrumbs,
+  }));
+}
+```
+
+### Content Discovery
+- **Auto-generated sitemaps** for SEO
+- **Breadcrumb navigation** for context
+- **Related content** suggestions
+- **Platform-specific filtering** in search
+
+## 📱 Mobile & Accessibility
+
+### Responsive Design
+```scss
+// Mobile-first responsive design
+.doc-page {
+  @media (max-width: 768px) {
+    .sidebar {
+      transform: translateX(-100%);
+      &.open {
+        transform: translateX(0);
+      }
+    }
+  }
+}
+```
+
+### Accessibility Features
+- **Keyboard navigation** for all interactive elements
+- **Screen reader optimization** with proper ARIA labels
+- **Focus management** for single-page navigation
+- **Color contrast** meeting WCAG guidelines
+
+## 🎯 SEO & Performance
+
+### Meta Data Management
+```typescript
+// Dynamic meta generation per page
+export async function generateMetadata({params}: MetadataProps): Promise<Metadata> {
+  const pageNode = nodeForPath(rootNode, params.path);
+  
+  return {
+    title: pageNode?.frontmatter.title,
+    description: pageNode?.frontmatter.description,
+    canonical: `${domain}/${params.path?.join('/')}/`,
+    openGraph: {
+      title: pageNode?.frontmatter.title,
+      description: pageNode?.frontmatter.description,
+    }
+  };
+}
+```
+
+### Performance Monitoring
+```typescript
+// Sentry integration for performance tracking
+Sentry.init({
+  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  tracesSampleRate: 0.1,
+  integrations: [
+    Sentry.browserTracingIntegration(),
+  ],
+});
+```
+
+## 🔧 Development Workflow
+
+### Local Development
+```bash
+# User documentation
+yarn dev                     # Serves user docs on localhost:3000
+
+# Developer documentation  
+yarn dev:developer-docs     # Serves dev docs on localhost:3000
+```
+
+### Content Validation
+```typescript
+// Frontmatter validation
+export interface FrontMatter {
+  title: string;
+  description?: string;
+  sidebar_order?: number;
+  draft?: boolean;
+  noindex?: boolean;
+}
+
+// Link validation during build
+export function validateInternalLinks(content: string): string[] {
+  const links = extractInternalLinks(content);
+  return links.filter(link => !linkExists(link));
+}
+```
+
+### Hot Reloading
+```javascript
+// Custom hot reload for MDX content
+if (process.env.NODE_ENV === 'development') {
+  const watcher = chokidar.watch(['docs/**/*.mdx', 'develop-docs/**/*.mdx']);
+  watcher.on('change', (path) => {
+    // Invalidate MDX cache and trigger recompilation
+    invalidateMDXCache(path);
+  });
+}
+```
+
+## 📊 Analytics & Insights
+
+### Content Analytics
+```typescript
+// Track content performance
+export function trackPageView(path: string, title: string) {
+  analytics.track('Documentation Page View', {
+    path,
+    title,
+    timestamp: new Date().toISOString(),
+  });
+}
+
+// Monitor search queries
+export function trackSearch(query: string, results: number) {
+  analytics.track('Documentation Search', {
+    query,
+    resultsCount: results,
+  });
+}
+```
+
+### Business Intelligence
+- **Page view tracking** for content optimization
+- **Search analytics** for content gap analysis
+- **User journey mapping** through documentation
+- **Conversion tracking** from docs to product signup
+
+---
+
+## 💡 Key Architectural Principles
+
+1. **Content First** - Architecture optimized for content creation and maintenance
+2. **Performance** - Static generation and optimized loading for global users
+3. **Scalability** - Support for hundreds of documentation pages across platforms
+4. **Maintainability** - Shared content system reduces duplication
+5. **Developer Experience** - Hot reloading and TypeScript for productive development
+6. **User Experience** - Fast, searchable, accessible documentation
+
+
+## 🏗️ Data Architecture

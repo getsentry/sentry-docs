@@ -1,0 +1,532 @@
+---
+alwaysApply: true
+---
+import {PlatformContent} from 'sentry-docs/components/platformContent';
+import {Alert} from 'sentry-docs/components/alert';
+
+# Getting Started
+
+<Alert level="info">
+  This guide assumes you have Node.js 16+ installed.
+</Alert>
+
+<PlatformContent includePath="getting-started-install" />
+
+## Next Steps
+
+<PlatformContent includePath="getting-started-verify" />
+```
+
+### Platform-Specific Content
+```mdx
+<!-- platform-includes/getting-started-install/javascript.mdx -->
+Install the Sentry JavaScript SDK:
+
+```bash
+npm install @sentry/browser
+```
+
+<!-- platform-includes/getting-started-install/python.mdx -->  
+Install the Sentry Python SDK:
+
+```bash
+pip install sentry-sdk
+```
+```
+
+## 🎨 Component Patterns
+
+### Content Sharing Components
+```typescript
+// PlatformContent - Include platform-specific shared content
+export function PlatformContent({includePath}: {includePath: string}) {
+  const platform = usePlatform();
+  const content = getPlatformInclude(includePath, platform?.key);
+  
+  if (!content) return null;
+  
+  const Component = getMDXComponent(content.code);
+  return <Component />;
+}
+
+// Usage in MDX
+<PlatformContent includePath="getting-started-config" />
+```
+
+### Alert Components
+```typescript
+// Alert component for callouts
+interface AlertProps {
+  level?: 'info' | 'warning' | 'error' | 'success';
+  children: ReactNode;
+}
+
+export function Alert({level = 'info', children}: AlertProps) {
+  return (
+    <div className={`alert alert-${level}`} role="alert">
+      {children}
+    </div>
+  );
+}
+
+// Usage in MDX
+<Alert level="warning">
+  Make sure to replace YOUR_DSN with your actual DSN.
+</Alert>
+```
+
+### Code Block Components
+```typescript
+// Enhanced code blocks with copy functionality
+interface CodeBlockProps {
+  language: string;
+  filename?: string;
+  children: string;
+}
+
+export function CodeBlock({language, filename, children}: CodeBlockProps) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(children);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="code-block">
+      {filename && <div className="code-filename">{filename}</div>}
+      <pre className={`language-${language}`}>
+        <code>{children}</code>
+        <button onClick={handleCopy} className="copy-button">
+          {copied ? 'Copied!' : 'Copy'}
+        </button>
+      </pre>
+    </div>
+  );
+}
+```
+
+## 🧭 Navigation Patterns
+
+### Sidebar Generation
+```typescript
+// Auto-generate sidebar from document tree
+export function generateSidebar(rootNode: DocNode, currentPath: string[]) {
+  return (
+    <nav className="sidebar">
+      {rootNode.children.map(node => (
+        <SidebarSection key={node.path} node={node} currentPath={currentPath} />
+      ))}
+    </nav>
+  );
+}
+
+function SidebarSection({node, currentPath}: {node: DocNode; currentPath: string[]}) {
+  const isActive = node.path === currentPath.join('/');
+  const isExpanded = isAncestorOf(node.path, currentPath);
+
+  return (
+    <div className={`sidebar-section ${isActive ? 'active' : ''}`}>
+      <SmartLink href={`/${node.path}/`}>
+        {node.frontmatter.sidebar_title || node.frontmatter.title}
+      </SmartLink>
+      {node.children.length > 0 && isExpanded && (
+        <div className="sidebar-children">
+          {node.children.map(child => (
+            <SidebarSection key={child.path} node={child} currentPath={currentPath} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+### Breadcrumb Navigation
+```typescript
+// Generate breadcrumbs from current path
+export function Breadcrumbs({path}: {path: string[]}) {
+  const breadcrumbs = useMemo(() => {
+    return path.reduce((acc, segment, index) => {
+      const href = '/' + path.slice(0, index + 1).join('/') + '/';
+      const node = nodeForPath(rootNode, path.slice(0, index + 1));
+      
+      acc.push({
+        href,
+        title: node?.frontmatter.title || segment,
+        isLast: index === path.length - 1,
+      });
+      
+      return acc;
+    }, [] as BreadcrumbItem[]);
+  }, [path]);
+
+  return (
+    <nav aria-label="Breadcrumb">
+      <ol className="breadcrumbs">
+        {breadcrumbs.map((crumb, index) => (
+          <li key={index}>
+            {crumb.isLast ? (
+              <span>{crumb.title}</span>
+            ) : (
+              <SmartLink href={crumb.href}>{crumb.title}</SmartLink>
+            )}
+          </li>
+        ))}
+      </ol>
+    </nav>
+  );
+}
+```
+
+## 🔍 Search Patterns
+
+### Search Integration
+```typescript
+// Algolia search integration
+import {InstantSearch, SearchBox, Hits} from 'react-instantsearch';
+
+export function DocSearch() {
+  return (
+    <InstantSearch searchClient={searchClient} indexName="sentry-docs">
+      <SearchBox
+        placeholder="Search documentation..."
+        classNames={{
+          root: 'search-box',
+          input: 'search-input',
+        }}
+      />
+      <SearchModal>
+        <Hits hitComponent={SearchResult} />
+      </SearchModal>
+    </InstantSearch>
+  );
+}
+
+function SearchResult({hit}: {hit: any}) {
+  return (
+    <div className="search-result">
+      <h3>
+        <SmartLink href={hit.url}>{hit.title}</SmartLink>
+      </h3>
+      <p>{hit.description}</p>
+      <div className="search-breadcrumbs">
+        {hit.hierarchy.join(' › ')}
+      </div>
+    </div>
+  );
+}
+```
+
+## 📱 Responsive Patterns
+
+### Mobile Navigation
+```typescript
+// Mobile-friendly sidebar
+export function MobileSidebar() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <>
+      <button 
+        className="mobile-menu-toggle"
+        onClick={() => setIsOpen(true)}
+        aria-label="Open navigation menu"
+      >
+        ☰
+      </button>
+      
+      {isOpen && (
+        <div className="mobile-sidebar-overlay" onClick={() => setIsOpen(false)}>
+          <nav className="mobile-sidebar" onClick={e => e.stopPropagation()}>
+            <button 
+              className="close-button"
+              onClick={() => setIsOpen(false)}
+              aria-label="Close navigation menu"
+            >
+              ✕
+            </button>
+            <Sidebar />
+          </nav>
+        </div>
+      )}
+    </>
+  );
+}
+```
+
+### Responsive Layout
+```scss
+// Mobile-first responsive design
+.doc-layout {
+  display: grid;
+  grid-template-areas: "main";
+  grid-template-columns: 1fr;
+
+  @media (min-width: 768px) {
+    grid-template-areas: "sidebar main";
+    grid-template-columns: 300px 1fr;
+  }
+
+  @media (min-width: 1200px) {
+    grid-template-areas: "sidebar main toc";
+    grid-template-columns: 300px 1fr 200px;
+  }
+}
+
+.sidebar {
+  grid-area: sidebar;
+  
+  @media (max-width: 767px) {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    
+    &.open {
+      transform: translateX(0);
+    }
+  }
+}
+```
+
+## 🎯 Performance Patterns
+
+### Static Generation
+```typescript
+// Generate static params for all docs
+export async function generateStaticParams() {
+  const docs = await getAllDocsFrontMatter();
+  
+  return docs.map(doc => ({
+    path: doc.slug.split('/').filter(Boolean),
+  }));
+}
+
+// Cache expensive operations
+import {cache} from 'react';
+
+export const getDocTreeCached = cache(async (): Promise<DocNode> => {
+  const docs = await getAllDocsFrontMatter();
+  return buildDocTree(docs);
+});
+```
+
+### Image Optimization
+```typescript
+// Optimized images in MDX
+import Image from 'next/image';
+
+export function OptimizedImage({
+  src,
+  alt,
+  width,
+  height,
+  ...props
+}: ImageProps) {
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      width={width}
+      height={height}
+      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+      placeholder="blur"
+      blurDataURL="data:image/jpeg;base64,..."
+      {...props}
+    />
+  );
+}
+```
+
+## 🔗 Link Patterns
+
+### Smart Link Component
+```typescript
+// Intelligent link component for internal/external links
+import Link from 'next/link';
+
+interface SmartLinkProps {
+  href: string;
+  children: ReactNode;
+  className?: string;
+}
+
+export function SmartLink({href, children, ...props}: SmartLinkProps) {
+  const isInternal = href.startsWith('/') || href.startsWith('#');
+  const isHash = href.startsWith('#');
+
+  if (isHash) {
+    return <a href={href} {...props}>{children}</a>;
+  }
+
+  if (isInternal) {
+    return (
+      <Link href={href} {...props}>
+        {children}
+      </Link>
+    );
+  }
+
+  return (
+    <a 
+      href={href} 
+      target="_blank" 
+      rel="noopener noreferrer"
+      {...props}
+    >
+      {children}
+    </a>
+  );
+}
+```
+
+## 📊 Analytics Patterns
+
+### Page View Tracking
+```typescript
+// Track documentation page views
+export function usePageTracking() {
+  const pathname = usePathname();
+
+  useEffect(() => {
+    // Track page view
+    analytics.track('Documentation Page View', {
+      path: pathname,
+      timestamp: new Date().toISOString(),
+    });
+  }, [pathname]);
+}
+
+// Track search interactions
+export function useSearchTracking() {
+  const trackSearch = useCallback((query: string, results: number) => {
+    analytics.track('Documentation Search', {
+      query,
+      resultsCount: results,
+      timestamp: new Date().toISOString(),
+    });
+  }, []);
+
+  return {trackSearch};
+}
+```
+
+## 🧪 Testing Patterns
+
+### Component Testing
+```typescript
+// Test documentation components
+import {render, screen} from '@testing-library/react';
+import {PlatformContent} from '../platformContent';
+
+const mockPlatform = {key: 'javascript', name: 'JavaScript'};
+
+describe('PlatformContent', () => {
+  it('renders platform-specific content', () => {
+    render(
+      <PlatformContent includePath="getting-started-install" />,
+      {wrapper: createPlatformWrapper(mockPlatform)}
+    );
+
+    expect(screen.getByText(/npm install/)).toBeInTheDocument();
+  });
+
+  it('handles missing content gracefully', () => {
+    render(
+      <PlatformContent includePath="nonexistent" />,
+      {wrapper: createPlatformWrapper(mockPlatform)}
+    );
+
+    expect(screen.queryByText(/npm install/)).not.toBeInTheDocument();
+  });
+});
+```
+
+### MDX Content Testing
+```typescript
+// Test MDX content processing
+describe('MDX Processing', () => {
+  it('processes valid frontmatter', async () => {
+    const result = await processMDXContent(`
+      ---
+      title: "Test Page"
+      description: "Test description"
+      ---
+      # Content
+    `);
+
+    expect(result.frontMatter.title).toBe('Test Page');
+    expect(result.content).toContain('Content');
+  });
+
+  it('validates required frontmatter fields', async () => {
+    await expect(
+      processMDXContent('---\ndescription: "Missing title"\n---\n# Content')
+    ).rejects.toThrow('Missing required field: title');
+  });
+});
+```
+
+## 🔧 Development Patterns
+
+### Hot Reloading for Content
+```typescript
+// Hot reload MDX content in development
+if (process.env.NODE_ENV === 'development') {
+  const chokidar = require('chokidar');
+  
+  const watcher = chokidar.watch([
+    'docs/**/*.mdx',
+    'develop-docs/**/*.mdx',
+    'platform-includes/**/*.mdx',
+    'includes/**/*.mdx',
+  ]);
+
+  watcher.on('change', (path: string) => {
+    console.log(`Content changed: ${path}`);
+    // Invalidate cache and trigger recompilation
+    invalidateContentCache(path);
+  });
+}
+```
+
+### Error Handling
+```typescript
+// Graceful error handling for missing content
+export function withErrorBoundary<T extends object>(
+  Component: React.ComponentType<T>
+) {
+  return function WrappedComponent(props: T) {
+    return (
+      <ErrorBoundary
+        fallback={
+          <div className="content-error">
+            <p>Failed to load content. Please try refreshing the page.</p>
+          </div>
+        }
+      >
+        <Component {...props} />
+      </ErrorBoundary>
+    );
+  };
+}
+```
+
+---
+
+## 💡 Key Patterns Summary
+
+1. **Content First** - Use MDX with proper frontmatter for all content
+2. **Shared Content** - Leverage PlatformContent and Include components
+3. **Static Generation** - Optimize for performance with SSG
+4. **Responsive Design** - Mobile-first approach with progressive enhancement
+5. **Type Safety** - TypeScript interfaces for all data structures
+6. **Error Handling** - Graceful degradation when content fails to load
+7. **Testing** - Comprehensive testing for both components and content
+
+export SENTRY_DSN="your_development_dsn"
+```

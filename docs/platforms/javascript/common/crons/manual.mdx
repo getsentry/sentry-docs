@@ -1,0 +1,598 @@
+---
+title: Manual Integration
+description: "Full SDK integration with custom status updates and error handling."
+sidebar_order: 5753
+supported:
+  - javascript.nextjs
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.react-router
+  - javascript.astro
+  - javascript.bun
+  - javascript.deno
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.cloudflare
+---
+
+Full SDK integration for cron monitoring with custom status updates and error handling. This approach gives you maximum control over what gets monitored and how.
+
+## When to Use Manual Integration
+
+✅ **Perfect for:**
+- Custom cron logic not using standard libraries
+- Need fine-grained control over monitoring
+- Want to customize error handling and reporting
+- Serverless functions or cloud-based scheduling (AWS Lambda, Vercel, etc.)
+- Complex job workflows with multiple steps
+
+❌ **Consider other approaches if:**
+- Using `node-cron`, `cron`, or `node-schedule` → Try [Automatic](automatic) instead
+- Just need basic failure notifications → Try [UI Setup](ui-setup) instead
+- Managing many monitors programmatically → Try [Advanced Setup](advanced) instead
+
+## Prerequisites
+
+1. [Install and configure the Sentry SDK](/platforms/javascript/guides/node/)
+2. Create monitors in Sentry (or use programmatic creation)
+
+## Quick Start
+
+### Step 1: Create Monitor in Sentry
+
+First, create your monitor in Sentry:
+1. Go to **Alerts** → **Create Alert** → **Cron Monitor**
+2. Configure your monitor settings (name, schedule, timezone)
+3. Note the monitor slug for use in your code
+
+### Step 2: Instrument Your Job
+
+```javascript {tabTitle: withMonitor (Recommended)}
+import * as Sentry from '@sentry/node';
+
+// Wrap your job function
+Sentry.withMonitor(
+  'my-monitor-slug', // Monitor slug from Sentry
+  async () => {
+    console.log('Starting data processing...');
+    
+    // Your job logic here
+    await processData();
+    await generateReports();
+    
+    console.log('Job completed successfully');
+  }
+);
+```
+
+**Requirements**: SDK version `7.76.0` or higher.
+
+```javascript {tabTitle: Manual Check-ins}
+import * as Sentry from '@sentry/node';
+
+async function runMyJob() {
+  // 🟡 Notify Sentry your job is starting
+  const checkInId = Sentry.captureCheckIn({
+    monitorSlug: 'my-monitor-slug',
+    status: 'in_progress',
+  });
+
+  try {
+    console.log('Starting data processing...');
+    
+    // Your job logic here  
+    await processData();
+    await generateReports();
+    
+    // 🟢 Notify Sentry your job completed successfully
+    Sentry.captureCheckIn({
+      checkInId,
+      monitorSlug: 'my-monitor-slug',
+      status: 'ok',
+    });
+    
+    console.log('Job completed successfully');
+  } catch (error) {
+    // 🔴 Notify Sentry your job failed
+    Sentry.captureCheckIn({
+      checkInId,
+      monitorSlug: 'my-monitor-slug', 
+      status: 'error',
+    });
+    
+    // Also capture the error details
+    Sentry.captureException(error);
+    
+    throw error; // Re-throw to maintain normal error handling
+  }
+}
+
+// Schedule your job (with your preferred method)
+setInterval(runMyJob, 60 * 60 * 1000); // Every hour
+```
+
+```javascript {tabTitle: Heartbeat Monitoring}
+import * as Sentry from '@sentry/node';
+
+async function runSimpleJob() {
+  try {
+    // Your job logic here
+    await doWork();
+    
+    // 🟢 Notify Sentry the job completed
+    Sentry.captureCheckIn({
+      monitorSlug: 'simple-job-slug',
+      status: 'ok',
+    });
+  } catch (error) {
+    // 🔴 Notify Sentry the job failed
+    Sentry.captureCheckIn({
+      monitorSlug: 'simple-job-slug',
+      status: 'error',
+    });
+    
+    Sentry.captureException(error);
+    throw error;
+  }
+}
+```
+
+**Note**: Heartbeat monitoring only detects missed runs, not runtime timeouts.
+
+### Step 3: Schedule Your Job
+
+Use your preferred scheduling method:
+
+```javascript {tabTitle: Node.js setInterval}
+// Run every hour
+setInterval(() => {
+  Sentry.withMonitor('hourly-job', async () => {
+    await runHourlyTask();
+  });
+}, 60 * 60 * 1000);
+```
+
+```bash {tabTitle: System Cron}
+# In your crontab (crontab -e)
+0 */2 * * * cd /path/to/app && node scheduled-job.js
+```
+
+```javascript {tabTitle: System Cron}
+// scheduled-job.js
+import * as Sentry from '@sentry/node';
+
+// Initialize Sentry
+Sentry.init({ dsn: 'YOUR_DSN' });
+
+// Run the job
+Sentry.withMonitor('cron-job', async () => {
+  await runScheduledTask();
+});
+```
+
+```javascript {tabTitle: AWS Lambda}
+// AWS Lambda handler
+import * as Sentry from '@sentry/aws-serverless';
+
+Sentry.AWSLambda.init({ dsn: 'YOUR_DSN' });
+
+export const handler = Sentry.AWSLambda.wrapHandler(async (event, context) => {
+  return Sentry.withMonitor('lambda-job', async () => {
+    // Your scheduled job logic
+    await processS3Files();
+    return { statusCode: 200, body: 'Success' };
+  });
+});
+```
+
+```javascript {tabTitle: Vercel Cron}
+// api/cron/daily-job.js
+import * as Sentry from '@sentry/nextjs';
+
+export default async function handler(req, res) {
+  return Sentry.withMonitor('daily-vercel-job', async () => {
+    try {
+      await runDailyTask();
+      res.status(200).json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+}
+```
+
+## Advanced Use Cases
+
+<Expandable title="Multi-Step Jobs with Detailed Reporting">
+
+For complex jobs with multiple phases:
+
+```javascript
+import * as Sentry from '@sentry/node';
+
+async function runComplexJob() {
+  const checkInId = Sentry.captureCheckIn({
+    monitorSlug: 'complex-job',
+    status: 'in_progress',
+  });
+
+  try {
+    // Phase 1: Data extraction
+    console.log('Phase 1: Extracting data...');
+    Sentry.addBreadcrumb({
+      message: 'Starting data extraction phase',
+      level: 'info',
+    });
+    await extractData();
+    
+    // Phase 2: Data processing
+    console.log('Phase 2: Processing data...');
+    Sentry.addBreadcrumb({
+      message: 'Starting data processing phase', 
+      level: 'info',
+    });
+    await processData();
+    
+    // Phase 3: Report generation
+    console.log('Phase 3: Generating reports...');
+    Sentry.addBreadcrumb({
+      message: 'Starting report generation phase',
+      level: 'info', 
+    });
+    await generateReports();
+    
+    // Success
+    Sentry.captureCheckIn({
+      checkInId,
+      monitorSlug: 'complex-job',
+      status: 'ok',
+    });
+    
+  } catch (error) {
+    // Capture detailed error context
+    Sentry.withScope(scope => {
+      scope.setTag('job_phase', getCurrentPhase());
+      scope.setContext('job_details', {
+        startTime: jobStartTime,
+        recordsProcessed: recordCount,
+      });
+      
+      Sentry.captureException(error);
+    });
+    
+    Sentry.captureCheckIn({
+      checkInId,
+      monitorSlug: 'complex-job',
+      status: 'error',
+    });
+    
+    throw error;
+  }
+}
+```
+
+</Expandable>
+
+<Expandable title="Environment-Specific Monitoring">
+
+Monitor the same job across multiple environments:
+
+```javascript
+import * as Sentry from '@sentry/node';
+
+const environment = process.env.NODE_ENV || 'production';
+
+async function runEnvironmentAwareJob() {
+  // Include environment in monitor context
+  const checkInId = Sentry.captureCheckIn({
+    monitorSlug: 'environment-job',
+    status: 'in_progress',
+    // Environment is automatically included from SDK config
+  });
+
+  try {
+    // Environment-specific logic
+    if (environment === 'production') {
+      await runProductionJob();
+    } else {
+      await runDevelopmentJob(); 
+    }
+    
+    Sentry.captureCheckIn({
+      checkInId,
+      monitorSlug: 'environment-job',
+      status: 'ok',
+    });
+    
+  } catch (error) {
+    Sentry.withScope(scope => {
+      scope.setTag('environment', environment);
+      Sentry.captureException(error);
+    });
+    
+    Sentry.captureCheckIn({
+      checkInId,
+      monitorSlug: 'environment-job',
+      status: 'error',
+    });
+    
+    throw error;
+  }
+}
+```
+
+</Expandable>
+
+<Expandable title="Overlapping Jobs">
+
+Handle jobs that might run longer than their interval:
+
+```javascript
+import * as Sentry from '@sentry/node';
+import { v4 as uuidv4 } from 'uuid';
+
+async function runOverlappingJob() {
+  // Generate a unique check-in ID for this execution
+  const checkInId = uuidv4();
+  
+  Sentry.captureCheckIn({
+    checkInId,
+    monitorSlug: 'long-running-job',
+    status: 'in_progress',
+  });
+
+  try {
+    // Long-running job logic that might take longer than the interval
+    await processLargeDataset();
+    
+    Sentry.captureCheckIn({
+      checkInId,
+      monitorSlug: 'long-running-job',
+      status: 'ok',
+    });
+    
+  } catch (error) {
+    Sentry.captureCheckIn({
+      checkInId,
+      monitorSlug: 'long-running-job',
+      status: 'error',
+    });
+    
+    Sentry.captureException(error);
+    throw error;
+  }
+}
+```
+
+</Expandable>
+
+<Expandable title="Job Performance Monitoring">
+
+Track job performance metrics:
+
+```javascript
+import * as Sentry from '@sentry/node';
+
+async function runPerformanceTrackedJob() {
+  const transaction = Sentry.startTransaction({
+    name: 'cron-job-execution',
+    op: 'cron',
+  });
+  
+  const checkInId = Sentry.captureCheckIn({
+    monitorSlug: 'performance-job',
+    status: 'in_progress',
+  });
+
+  try {
+    // Track individual spans for job phases
+    const extractSpan = transaction.startChild({
+      op: 'data-extraction',
+      description: 'Extract data from database',
+    });
+    
+    await extractData();
+    extractSpan.finish();
+    
+    const processSpan = transaction.startChild({
+      op: 'data-processing', 
+      description: 'Process extracted data',
+    });
+    
+    await processData();
+    processSpan.finish();
+    
+    // Success
+    Sentry.captureCheckIn({
+      checkInId,
+      monitorSlug: 'performance-job',
+      status: 'ok',
+    });
+    
+  } catch (error) {
+    transaction.setStatus('internal_error');
+    Sentry.captureException(error);
+    
+    Sentry.captureCheckIn({
+      checkInId,
+      monitorSlug: 'performance-job',
+      status: 'error',
+    });
+    
+    throw error;
+  } finally {
+    transaction.finish();
+  }
+}
+```
+
+</Expandable>
+
+## Error Handling Best Practices
+
+### Capturing Contextual Information
+
+```javascript
+async function runJobWithContext() {
+  const checkInId = Sentry.captureCheckIn({
+    monitorSlug: 'contextual-job',
+    status: 'in_progress',
+  });
+
+  try {
+    const records = await fetchRecords();
+    
+    for (const record of records) {
+      // Set context for each record
+      Sentry.withScope(scope => {
+        scope.setTag('record_id', record.id);
+        scope.setContext('record_data', {
+          type: record.type,
+          size: record.data.length,
+        });
+        
+        // Process record - any errors will include this context
+        await processRecord(record);
+      });
+    }
+    
+    Sentry.captureCheckIn({
+      checkInId,
+      monitorSlug: 'contextual-job',
+      status: 'ok',
+    });
+    
+  } catch (error) {
+    // Error already has context from withScope
+    Sentry.captureCheckIn({
+      checkInId,
+      monitorSlug: 'contextual-job',
+      status: 'error',
+    });
+    
+    throw error;
+  }
+}
+```
+
+### Partial Failure Handling
+
+```javascript
+async function runJobWithPartialFailures() {
+  const checkInId = Sentry.captureCheckIn({
+    monitorSlug: 'partial-failure-job',
+    status: 'in_progress',
+  });
+
+  let hasErrors = false;
+  const results = [];
+  
+  try {
+    const tasks = await getTasks();
+    
+    for (const task of tasks) {
+      try {
+        const result = await processTask(task);
+        results.push({ success: true, task: task.id, result });
+      } catch (error) {
+        hasErrors = true;
+        results.push({ success: false, task: task.id, error: error.message });
+        
+        // Report individual task failures without failing the whole job
+        Sentry.captureException(error, {
+          tags: { task_id: task.id },
+          extra: { partial_failure: true },
+        });
+      }
+    }
+    
+    // Report overall job status
+    if (hasErrors) {
+      // Job completed but with some failures
+      Sentry.addBreadcrumb({
+        message: `Job completed with ${results.filter(r => !r.success).length} failures`,
+        level: 'warning',
+      });
+    }
+    
+    Sentry.captureCheckIn({
+      checkInId,
+      monitorSlug: 'partial-failure-job',
+      status: hasErrors ? 'error' : 'ok',
+    });
+    
+  } catch (error) {
+    // Complete job failure
+    Sentry.captureException(error);
+    Sentry.captureCheckIn({
+      checkInId,
+      monitorSlug: 'partial-failure-job',
+      status: 'error',
+    });
+    
+    throw error;
+  }
+  
+  return results;
+}
+```
+
+## Migration from Other Methods
+
+<Expandable title="From UI Setup">
+
+**Before:**
+```javascript
+// Manual HTTP notifications
+async function myJob() {
+  await doWork();
+  await fetch('https://sentry.io/api/.../cron/.../');
+}
+```
+
+**After:**
+```javascript
+// SDK integration
+async function myJob() {
+  Sentry.withMonitor('my-job', async () => {
+    await doWork();
+  });
+}
+```
+
+</Expandable>
+
+<Expandable title="From Automatic Instrumentation">
+
+**Before:**
+```javascript
+// Library instrumentation
+const cronWithCheckIn = Sentry.cron.instrumentNodeCron(cron);
+cronWithCheckIn.schedule("0 2 * * *", doWork, { name: "my-job" });
+```
+
+**After:**
+```javascript
+// Manual control
+cron.schedule("0 2 * * *", () => {
+  Sentry.withMonitor('my-job', doWork);
+});
+```
+
+</Expandable>
+
+## Next Steps
+
+- **Managing many monitors?** See [Advanced Setup](advanced) for programmatic management
+- **Want easier setup?** Consider [Automatic](automatic) if you're using supported libraries
+- **Need help?** Check [Troubleshooting](troubleshooting)
+- **Complex workflows?** Explore Sentry's [Performance Monitoring](/platforms/javascript/tracing/) integration 

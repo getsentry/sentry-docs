@@ -1,0 +1,729 @@
+---
+title: Advanced Setup
+description: "Programmatically create and manage monitors via code."
+sidebar_order: 5754
+supported:
+  - javascript.nextjs
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.react-router
+  - javascript.astro
+  - javascript.bun
+  - javascript.deno
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.cloudflare
+---
+
+Programmatically create and manage monitors via code. This approach is ideal for CI/CD pipelines, managing many monitors, or when you need dynamic monitor configuration.
+
+## When to Use Advanced Setup
+
+✅ **Perfect for:**
+- CI/CD pipelines and infrastructure as code
+- Managing 10+ monitors across multiple services
+- Dynamic monitor creation based on configuration
+- Microservices with many scheduled jobs
+- Teams that need standardized monitor configurations
+
+❌ **Consider other approaches if:**
+- Just getting started with cron monitoring → Try [UI Setup](ui-setup) instead
+- Using standard cron libraries → Try [Automatic](automatic) instead
+- Need simple manual integration → Try [Manual Integration](manual) instead
+
+## Prerequisites
+
+1. [Install and configure the Sentry SDK](/platforms/javascript/guides/node/)
+2. Understanding of your job scheduling requirements
+
+## Quick Start
+
+### Creating Monitors with Code
+
+You can create and update monitors programmatically using either `Sentry.withMonitor()` or `Sentry.captureCheckIn()` with monitor configuration:
+
+<Tabs>
+<Tab title="withMonitor()">
+
+```javascript
+import * as Sentry from '@sentry/node';
+
+// Define monitor configuration
+const monitorConfig = {
+  schedule: {
+    type: "crontab",
+    value: "0 2 * * *", // Daily at 2 AM
+  },
+  checkinMargin: 5,     // 5 minute grace period
+  maxRuntime: 30,       // 30 minute timeout
+  timezone: "America/Los_Angeles",
+  failureIssueThreshold: 2,  // Alert after 2 failures
+  recoveryThreshold: 1,      // Resolve after 1 success
+};
+
+// Create/update monitor and run job
+Sentry.withMonitor(
+  'data-processing-job',
+  async () => {
+    console.log('Processing daily data...');
+    await processData();
+    await generateReports();
+    console.log('Data processing complete');
+  },
+  monitorConfig
+);
+```
+
+</Tab>
+<Tab title="captureCheckIn()">
+
+```javascript
+import * as Sentry from '@sentry/node';
+
+const monitorConfig = {
+  schedule: {
+    type: "crontab", 
+    value: "*/15 * * * *", // Every 15 minutes
+  },
+  checkinMargin: 2,
+  maxRuntime: 10,
+  timezone: "UTC",
+};
+
+async function runMonitoredJob() {
+  // 🟡 Start check-in with monitor creation/update
+  const checkInId = Sentry.captureCheckIn(
+    {
+      monitorSlug: 'api-health-check',
+      status: 'in_progress',
+    },
+    monitorConfig // Monitor config parameter
+  );
+
+  try {
+    // Your job logic
+    await checkApiHealth();
+    
+    // 🟢 Success check-in
+    Sentry.captureCheckIn({
+      checkInId,
+      monitorSlug: 'api-health-check',
+      status: 'ok',
+    });
+    
+  } catch (error) {
+    // 🔴 Failure check-in
+    Sentry.captureCheckIn({
+      checkInId,
+      monitorSlug: 'api-health-check',
+      status: 'error',
+    });
+    
+    throw error;
+  }
+}
+```
+
+</Tab>
+</Tabs>
+
+### Monitor Configuration Properties
+
+Configure your monitors with these options:
+
+```javascript
+const monitorConfig = {
+  // Required: Job schedule
+  schedule: {
+    // Crontab format
+    type: "crontab",
+    value: "0 * * * *"  // Every hour
+  },
+  // OR interval format
+  schedule: {
+    type: "interval",
+    value: 2,
+    unit: "hour"        // Every 2 hours
+  },
+  
+  // Optional: Grace period before marking as missed (minutes)
+  checkinMargin: 5,
+  
+  // Optional: Maximum runtime before marking as failed (minutes)
+  maxRuntime: 30,
+  
+  // Optional: Timezone (IANA timezone name)
+  timezone: "America/Los_Angeles",
+  
+  // Optional: Consecutive failures before creating issue (SDK 8.7.0+)
+  failureIssueThreshold: 2,
+  
+  // Optional: Consecutive successes before resolving issue (SDK 8.7.0+)
+  recoveryThreshold: 1,
+};
+```
+
+## Advanced Use Cases
+
+<Expandable title="Bulk Monitor Management">
+
+Manage multiple monitors from a configuration file:
+
+```javascript
+import * as Sentry from '@sentry/node';
+import fs from 'fs/promises';
+
+// Load monitor configurations
+const monitorConfigs = JSON.parse(
+  await fs.readFile('./monitor-configs.json', 'utf8')
+);
+
+// Create/update all monitors
+async function setupMonitors() {
+  for (const config of monitorConfigs) {
+    console.log(`Setting up monitor: ${config.name}`);
+    
+    try {
+      // Test run to create/update the monitor
+      await Sentry.withMonitor(
+        config.slug,
+        async () => {
+          console.log(`Monitor ${config.name} is configured`);
+        },
+        {
+          schedule: config.schedule,
+          checkinMargin: config.checkinMargin || 5,
+          maxRuntime: config.maxRuntime || 30,
+          timezone: config.timezone || 'UTC',
+          failureIssueThreshold: config.failureIssueThreshold || 1,
+          recoveryThreshold: config.recoveryThreshold || 1,
+        }
+      );
+      
+      console.log(`✅ Monitor ${config.name} ready`);
+    } catch (error) {
+      console.error(`❌ Failed to setup ${config.name}:`, error);
+    }
+  }
+}
+
+await setupMonitors();
+```
+
+Example `monitor-configs.json`:
+```json
+[
+  {
+    "name": "Daily Data Backup",
+    "slug": "daily-data-backup",
+    "schedule": {
+      "type": "crontab",
+      "value": "0 2 * * *"
+    },
+    "checkinMargin": 10,
+    "maxRuntime": 60,
+    "timezone": "America/Los_Angeles"
+  },
+  {
+    "name": "Hourly Health Check", 
+    "slug": "hourly-health-check",
+    "schedule": {
+      "type": "interval",
+      "value": 1,
+      "unit": "hour"
+    },
+    "checkinMargin": 5,
+    "maxRuntime": 10
+  }
+]
+```
+
+</Expandable>
+
+<Expandable title="Environment-Specific Configuration">
+
+Configure different monitors for different environments:
+
+```javascript
+import * as Sentry from '@sentry/node';
+
+const environment = process.env.NODE_ENV || 'production';
+
+// Environment-specific configurations
+const envConfigs = {
+  production: {
+    checkinMargin: 5,
+    maxRuntime: 60,
+    failureIssueThreshold: 1, // Alert immediately in prod
+  },
+  staging: {
+    checkinMargin: 10,
+    maxRuntime: 120,
+    failureIssueThreshold: 3, // More tolerant in staging
+  },
+  development: {
+    checkinMargin: 30,
+    maxRuntime: 300,
+    failureIssueThreshold: 5, // Very tolerant in dev
+  }
+};
+
+function createEnvironmentAwareMonitor(baseConfig, slug) {
+  const envConfig = envConfigs[environment] || envConfigs.production;
+  
+  return {
+    ...baseConfig,
+    ...envConfig,
+    // Environment-specific monitor slug
+    slug: `${slug}-${environment}`,
+  };
+}
+
+// Usage
+const baseJobConfig = {
+  schedule: { type: "crontab", value: "0 */6 * * *" },
+  timezone: "UTC",
+};
+
+const monitorConfig = createEnvironmentAwareMonitor(baseJobConfig, 'data-sync');
+
+Sentry.withMonitor(
+  monitorConfig.slug,
+  async () => {
+    await syncData();
+  },
+  monitorConfig
+);
+```
+
+</Expandable>
+
+<Expandable title="CI/CD Pipeline Integration">
+
+Set up monitors as part of your deployment process:
+
+```javascript
+// scripts/setup-monitoring.js
+import * as Sentry from '@sentry/node';
+
+// Initialize Sentry with server-side DSN
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  environment: process.env.DEPLOY_ENV,
+});
+
+const monitors = [
+  {
+    slug: 'daily-report-generator',
+    name: 'Daily Report Generator',
+    schedule: { type: 'crontab', value: '0 9 * * *' },
+    checkinMargin: 15,
+    maxRuntime: 45,
+  },
+  {
+    slug: 'hourly-data-sync',
+    name: 'Hourly Data Sync',
+    schedule: { type: 'interval', value: 1, unit: 'hour' },
+    checkinMargin: 5,
+    maxRuntime: 20,
+  },
+];
+
+async function deployMonitors() {
+  console.log('🚀 Deploying cron monitors...');
+  
+  for (const monitor of monitors) {
+    try {
+      // Create/update monitor with a test check-in
+      const checkInId = Sentry.captureCheckIn(
+        {
+          monitorSlug: monitor.slug,
+          status: 'ok',
+        },
+        {
+          schedule: monitor.schedule,
+          checkinMargin: monitor.checkinMargin,
+          maxRuntime: monitor.maxRuntime,
+          timezone: 'UTC',
+        }
+      );
+      
+      console.log(`✅ Deployed monitor: ${monitor.name}`);
+    } catch (error) {
+      console.error(`❌ Failed to deploy ${monitor.name}:`, error);
+      process.exit(1);
+    }
+  }
+  
+  console.log('🎉 All monitors deployed successfully');
+}
+
+// Run if called directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  await deployMonitors();
+}
+```
+
+Add to your `package.json`:
+```json
+{
+  "scripts": {
+    "deploy:monitors": "node scripts/setup-monitoring.js"
+  }
+}
+```
+
+Add to your CI/CD pipeline:
+```yaml
+# .github/workflows/deploy.yml
+- name: Deploy Cron Monitors
+  run: npm run deploy:monitors
+  env:
+    SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+    DEPLOY_ENV: production
+```
+
+</Expandable>
+
+<Expandable title="Dynamic Monitor Creation">
+
+Create monitors based on runtime configuration or service discovery:
+
+```javascript
+import * as Sentry from '@sentry/node';
+
+class MonitorManager {
+  constructor() {
+    this.activeMonitors = new Map();
+  }
+  
+  async registerService(serviceName, config) {
+    const monitorSlug = `service-${serviceName.toLowerCase()}`;
+    
+    const monitorConfig = {
+      schedule: config.schedule,
+      checkinMargin: config.checkinMargin || 5,
+      maxRuntime: config.maxRuntime || 30,
+      timezone: config.timezone || 'UTC',
+    };
+    
+    // Create monitor with test check-in
+    Sentry.captureCheckIn(
+      {
+        monitorSlug,
+        status: 'ok',
+      },
+      monitorConfig
+    );
+    
+    this.activeMonitors.set(serviceName, {
+      slug: monitorSlug,
+      config: monitorConfig,
+    });
+    
+    console.log(`📊 Registered monitor for service: ${serviceName}`);
+  }
+  
+  async runServiceJob(serviceName, jobFunction) {
+    const monitor = this.activeMonitors.get(serviceName);
+    if (!monitor) {
+      throw new Error(`No monitor registered for service: ${serviceName}`);
+    }
+    
+    return Sentry.withMonitor(monitor.slug, jobFunction);
+  }
+  
+  listMonitors() {
+    return Array.from(this.activeMonitors.entries()).map(([name, monitor]) => ({
+      serviceName: name,
+      monitorSlug: monitor.slug,
+      config: monitor.config,
+    }));
+  }
+}
+
+// Usage
+const monitorManager = new MonitorManager();
+
+// Register services dynamically
+await monitorManager.registerService('user-notifications', {
+  schedule: { type: 'crontab', value: '*/5 * * * *' },
+  maxRuntime: 10,
+});
+
+await monitorManager.registerService('data-cleanup', {
+  schedule: { type: 'crontab', value: '0 3 * * *' },
+  maxRuntime: 120,
+});
+
+// Run monitored jobs
+await monitorManager.runServiceJob('user-notifications', async () => {
+  await sendPendingNotifications();
+});
+
+await monitorManager.runServiceJob('data-cleanup', async () => {
+  await cleanupOldData();
+});
+```
+
+</Expandable>
+
+<Expandable title="Monitor Configuration Validation">
+
+Validate monitor configurations before deployment:
+
+```javascript
+import * as Sentry from '@sentry/node';
+
+class MonitorConfigValidator {
+  static validateSchedule(schedule) {
+    if (!schedule || !schedule.type) {
+      throw new Error('Schedule type is required');
+    }
+    
+    if (schedule.type === 'crontab') {
+      if (!schedule.value || typeof schedule.value !== 'string') {
+        throw new Error('Crontab schedule must have a valid value string');
+      }
+      
+      // Basic crontab validation (5 fields)
+      const fields = schedule.value.trim().split(/\s+/);
+      if (fields.length !== 5) {
+        throw new Error('Crontab schedule must have exactly 5 fields');
+      }
+    } else if (schedule.type === 'interval') {
+      if (!schedule.value || !schedule.unit) {
+        throw new Error('Interval schedule must have value and unit');
+      }
+      
+      if (!['minute', 'hour', 'day', 'month', 'year'].includes(schedule.unit)) {
+        throw new Error('Invalid interval unit');
+      }
+    } else {
+      throw new Error('Schedule type must be "crontab" or "interval"');
+    }
+  }
+  
+  static validateConfig(config) {
+    // Validate schedule
+    this.validateSchedule(config.schedule);
+    
+    // Validate optional fields
+    if (config.checkinMargin && (config.checkinMargin < 1 || config.checkinMargin > 1440)) {
+      throw new Error('Checkin margin must be between 1 and 1440 minutes');
+    }
+    
+    if (config.maxRuntime && (config.maxRuntime < 1 || config.maxRuntime > 1440)) {
+      throw new Error('Max runtime must be between 1 and 1440 minutes');
+    }
+    
+    if (config.failureIssueThreshold && config.failureIssueThreshold < 1) {
+      throw new Error('Failure issue threshold must be at least 1');
+    }
+    
+    if (config.recoveryThreshold && config.recoveryThreshold < 1) {
+      throw new Error('Recovery threshold must be at least 1');
+    }
+    
+    return true;
+  }
+}
+
+// Safe monitor creation with validation
+async function createValidatedMonitor(slug, config) {
+  try {
+    MonitorConfigValidator.validateConfig(config);
+    
+    // Create monitor
+    Sentry.captureCheckIn(
+      { monitorSlug: slug, status: 'ok' },
+      config
+    );
+    
+    console.log(`✅ Monitor ${slug} created successfully`);
+    return true;
+  } catch (error) {
+    console.error(`❌ Failed to create monitor ${slug}:`, error.message);
+    return false;
+  }
+}
+
+// Usage
+const monitorConfig = {
+  schedule: { type: 'crontab', value: '0 */2 * * *' },
+  checkinMargin: 10,
+  maxRuntime: 45,
+  timezone: 'America/New_York',
+};
+
+await createValidatedMonitor('validated-job', monitorConfig);
+```
+
+</Expandable>
+
+## Integration Patterns
+
+### Infrastructure as Code
+
+```javascript
+// terraform-monitors.js - Generate Terraform configs
+import fs from 'fs/promises';
+
+const monitors = [
+  {
+    name: 'daily-backup',
+    schedule: '0 2 * * *',
+    checkinMargin: 10,
+    maxRuntime: 60,
+  },
+  // ... more monitors
+];
+
+function generateTerraform(monitors) {
+  const resources = monitors.map(monitor => `
+resource "sentry_monitor" "${monitor.name}" {
+  organization = var.sentry_organization
+  project      = var.sentry_project
+  name         = "${monitor.name}"
+  slug         = "${monitor.name}"
+  
+  config {
+    schedule_type   = "crontab"
+    schedule        = "${monitor.schedule}"
+    checkin_margin  = ${monitor.checkinMargin}
+    max_runtime     = ${monitor.maxRuntime}
+  }
+}`).join('\n');
+
+  return `
+variable "sentry_organization" {}
+variable "sentry_project" {}
+
+${resources}
+`;
+}
+
+await fs.writeFile(
+  'monitors.tf', 
+  generateTerraform(monitors)
+);
+```
+
+### Kubernetes CronJob Integration
+
+```yaml
+# k8s-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: monitored-job
+spec:
+  schedule: "0 2 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: job
+            image: myapp:latest
+            env:
+            - name: SENTRY_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: sentry-secret
+                  key: dsn
+            - name: MONITOR_SLUG
+              value: "k8s-daily-job"
+            command: ["node", "monitored-job.js"]
+          restartPolicy: OnFailure
+```
+
+```javascript
+// monitored-job.js
+import * as Sentry from '@sentry/node';
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  environment: process.env.NODE_ENV,
+});
+
+const monitorSlug = process.env.MONITOR_SLUG;
+
+Sentry.withMonitor(
+  monitorSlug,
+  async () => {
+    console.log('Running Kubernetes cron job...');
+    await runJob();
+  },
+  {
+    schedule: { type: 'crontab', value: '0 2 * * *' },
+    checkinMargin: 10,
+    maxRuntime: 45,
+  }
+);
+```
+
+## Best Practices
+
+### 1. Monitor Naming Convention
+```javascript
+// Good: Descriptive, consistent naming
+const monitorSlugs = {
+  'user-data-backup-daily',
+  'email-queue-processor-hourly', 
+  'cleanup-temp-files-weekly',
+};
+
+// Avoid: Generic or unclear names
+const badSlugs = {
+  'job1',
+  'daily',
+  'backup',
+};
+```
+
+### 2. Configuration Management
+```javascript
+// Store configs in version control
+const monitorConfigs = {
+  production: {
+    checkinMargin: 5,
+    failureIssueThreshold: 1,
+  },
+  staging: {
+    checkinMargin: 15,
+    failureIssueThreshold: 3,
+  },
+};
+```
+
+### 3. Error Handling
+```javascript
+// Always handle monitor creation failures gracefully
+async function safeMonitorSetup(slug, config) {
+  try {
+    await setupMonitor(slug, config);
+  } catch (error) {
+    console.error(`Monitor setup failed for ${slug}:`, error);
+    // Don't let monitor setup failure break the application
+    return false;
+  }
+  return true;
+}
+```
+
+## Next Steps
+
+- **Need simpler setup?** Check [Automatic](automatic) for library instrumentation
+- **Want manual control?** See [Manual Integration](manual) for custom monitoring
+- **Having issues?** Visit [Troubleshooting](troubleshooting)
+- **Complex deployments?** Explore Sentry's [Management API](https://docs.sentry.io/api/) 
