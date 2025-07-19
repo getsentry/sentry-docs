@@ -9,24 +9,22 @@ This checklist guides the application of our proven cron documentation improveme
 
 ## 🎯 Platforms to Update
 
-### ✅ Completed Platforms
-- [x] **JavaScript Frameworks** - ✅ **Phase 1 Complete**
-  - [x] Next.js ⭐ *Special: Needs Vercel automatic integration page*
+### ✅ Completed Platforms (Phase 1)
+- [x] **JavaScript** - ✅ **Phase 1 Complete**
+  - [x] Node.js (base)
+  - [x] Next.js ✅ **Vercel Auto Integration Page Created**
   - [x] SvelteKit  
   - [x] Remix
   - [x] NestJS
-  - [x] Node.js (base patterns established)
 
-### 🔄 Pending JavaScript Platforms
-- [ ] **Node.js Additional Frameworks**
-  - [ ] Koa
-  - [ ] Hapi
-  - [ ] Express (basic patterns may exist, needs review)
-- [ ] **JavaScript Runtimes**
-  - [ ] Deno
-  - [ ] Bun
+### 🔄 Pending Platforms
 
-### 🔄 Pending SDK Platforms
+#### JavaScript Frameworks (Remaining)
+- [ ] **Nuxt**
+- [ ] **Koa**
+- [ ] **Hapi**
+- [ ] **Deno**
+- [ ] **Bun**
 
 #### High-Priority SDK Platforms
 - [ ] **Python** 
@@ -174,6 +172,20 @@ Brief intro to cron monitoring for {platform}.
 
 ## 🔧 Platform-Specific Considerations
 
+### ✅ Next.js Special Requirements - COMPLETED
+**Status:** ✅ All Next.js requirements completed
+
+**Completed Actions:**
+- ✅ **Created Vercel Automatic Integration Page** - `docs/platforms/javascript/guides/nextjs/crons/vercel-automatic.mdx`
+- ✅ **Created Main Next.js Crons Page** - `docs/platforms/javascript/guides/nextjs/crons/index.mdx`  
+- ✅ **Content includes:**
+  - Automatic Check-Ins (Vercel Only) configuration
+  - `automaticVercelMonitors: true` setup in `next.config.js`
+  - Pages Router vs App Router support clarification
+  - `vercel.json` crons field integration
+  - Next.js-specific API route examples
+  - Proper navigation and cross-references
+
 ### High Auto-Instrumentation Platforms
 **Platforms:** Node.js, Python
 - [ ] Emphasize automatic integration as preferred method
@@ -191,55 +203,6 @@ Brief intro to cron monitoring for {platform}.
 - [ ] Acknowledge SDK feature limitations upfront
 - [ ] Focus on the available functionality
 - [ ] Clear setup instructions specific to CLI/HTTP approach
-
-### ⭐ Next.js Special Requirements - Vercel Integration
-
-**Platforms:** Next.js specifically
-- [ ] **Create dedicated Vercel integration page** - `automatic-vercel.mdx`
-- [ ] **Link only from Next.js crons main page** - Not shown for other JavaScript frameworks
-- [ ] **Content source combination:**
-  - [Automatic Check-Ins (Vercel Only)](https://docs.sentry.io/platforms/javascript/guides/nextjs/crons/#automatic-check-ins-vercel-only)
-  - [Instrument Vercel Cron Jobs](https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/#step-6-instrument-vercel-cron-jobs-optional)
-
-**Required Content Structure:**
-```markdown
-# Automatic Vercel Integration
-
-Automatic cron monitoring for Next.js applications deployed on Vercel.
-
-## Prerequisites
-- Next.js application hosted on Vercel
-- Vercel Cron Jobs configured in vercel.json
-- Pages Router (App Router not yet supported)
-
-## Configuration
-
-Add to your next.config.js:
-
-```javascript
-module.exports = withSentryConfig(nextConfig, {
-  automaticVercelMonitors: true,
-});
-```
-
-## How It Works
-- Instrumented cron jobs decided at runtime by examining crons field in vercel.json
-- Automatically creates Check-Ins in Sentry
-- Currently supports Pages Router only
-
-## Limitations
-- Vercel hosting required
-- Pages Router only (App Router route handlers not yet supported)
-- Requires vercel.json cron configuration
-```
-
-**Implementation Checklist:**
-- [ ] Create `docs/platforms/javascript/guides/nextjs/crons/automatic-vercel.mdx`
-- [ ] Add link from main Next.js crons page only
-- [ ] Include clear prerequisites and limitations
-- [ ] Working code example with next.config.js
-- [ ] Link to Vercel cron jobs documentation
-- [ ] Note about Pages Router vs App Router support
 
 ## 📊 Quality Assurance Checklist
 
@@ -325,24 +288,21 @@ module.exports = withSentryConfig(nextConfig, {
 
 ## 🔄 Platform Rollout Schedule
 
-### JavaScript Platform Completion (Q1)
-1. **Next.js Vercel Integration** - Create automatic-vercel.mdx page
-2. **Node.js Frameworks** - Koa, Hapi, Express (review needed)
-3. **JavaScript Runtimes** - Deno, Bun
-
 ### Immediate Priority (Q1)
-4. **Python** - High usage, good auto-instrumentation support
-5. **PHP** - High usage, Laravel integration important
-6. **Java** - Enterprise focus, Spring Boot integration
+1. ✅ **Next.js Vercel Integration** - Completed 
+2. **JavaScript Frameworks** - Apply patterns to Nuxt, Koa, Hapi, Deno, Bun
+3. **Python** - High usage, good auto-instrumentation support
+4. **PHP** - High usage, Laravel integration important  
+5. **Java** - Enterprise focus, Spring Boot integration
 
 ### Secondary Priority (Q2)  
-7. **Go** - Growing adoption, manual methods focus
-8. **Ruby** - Established user base
-9. **Elixir** - Smaller but dedicated user base
+6. **Go** - Growing adoption, manual methods focus
+7. **Ruby** - Established user base
+8. **Elixir** - Smaller but dedicated user base
 
 ### Final Priority (Q3)
-10. **HTTP Documentation** - Language-agnostic approach
-11. **CLI Documentation** - Developer tooling focus
+7. **HTTP Documentation** - Language-agnostic approach
+8. **CLI Documentation** - Developer tooling focus
 
 ## 📝 PR Template for Each Platform
 

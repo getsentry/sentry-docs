@@ -1,0 +1,107 @@
+---
+title: Set Up Crons
+sidebar_title: Crons
+description: "Monitor your scheduled jobs with Sentry in Next.js applications."
+sidebar_order: 5750
+supported:
+  - javascript.nextjs
+---
+
+Monitor the uptime and performance of your scheduled jobs in Next.js. Get alerts when jobs fail, timeout, or don't run as expected.
+
+## Setup Methods
+
+Choose the method that matches your current setup:
+
+* [UI Setup](/platforms/javascript/common/crons/ui-setup) - Create monitors in Sentry's web interface, then add instrumentation
+
+### Automatic Integration
+
+* [Vercel Automatic Integration](vercel-automatic) - Auto-instrument Vercel Cron Jobs (Pages Router only)
+* [node-cron](/platforms/javascript/common/crons/node-cron) - Auto-instrument node-cron library
+* [cron](/platforms/javascript/common/crons/cron-library) - Auto-instrument cron library  
+* [node-schedule](/platforms/javascript/common/crons/node-schedule) - Auto-instrument node-schedule library
+
+If you're using one of these popular cron libraries, use the automatic integration for seamless monitoring.
+
+#### Manual Methods
+
+* [Job Monitoring](/platforms/javascript/common/crons/job-monitoring) - Use withMonitor wrapper for automatic status tracking
+* [Check-Ins](/platforms/javascript/common/crons/check-ins) - Full control with manual status updates
+* [Heartbeat](/platforms/javascript/common/crons/heartbeat) - Simple success/failure notifications
+* [Upserting Monitors](/platforms/javascript/common/crons/upserting-monitors) - Programmatic monitor creation and management
+
+### Alternative Methods (Not Recommended)
+
+These methods work but don't provide the full benefits of SDK integration like tracing and error context:
+
+* [Sentry CLI](https://docs.sentry.io/cli/crons/) - Command-line tool for basic monitoring
+* [HTTP API](https://docs.sentry.io/product/crons/getting-started/http/) - Direct API calls for check-ins
+
+## Next.js-Specific Considerations
+
+### Server and Edge Runtimes
+
+Cron monitoring is only supported in **Server and Edge runtimes** for Next.js. Client-side monitoring is not available.
+
+### App Router vs Pages Router
+
+- **Vercel Automatic Integration**: Only works with Pages Router
+- **All other methods**: Work with both App Router and Pages Router
+
+### API Routes Example
+
+For App Router route handlers:
+
+```typescript {filename:app/api/cron/route.ts}
+import * as Sentry from '@sentry/nextjs';
+
+export async function GET() {
+  return Sentry.withMonitor('daily-report', async () => {
+    // Your cron job logic here
+    await generateDailyReport();
+    return new Response('Report generated', { status: 200 });
+  });
+}
+```
+
+For Pages Router API routes:
+
+```typescript {filename:pages/api/cron.ts}
+import * as Sentry from '@sentry/nextjs';
+import type { NextApiRequest, NextApiResponse } from 'next';
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  return Sentry.withMonitor('daily-report', async () => {
+    // Your cron job logic here
+    await generateDailyReport();
+    res.status(200).json({ message: 'Report generated' });
+  });
+}
+```
+
+## Alerts
+
+When your recurring job fails to check in (missed), runs beyond its configured maximum runtime (failed), or manually reports a failure, Sentry will create an error event with a tag to your monitor.
+
+To receive alerts about these events:
+
+1. Navigate to **Alerts** in the sidebar.
+2. Create a new alert and select "Issues" under "Errors" as the alert type.
+3. Configure your alert and define a filter match to use: `The event's tags match {key} {match} {value}`.
+
+Example: `The event's tags match monitor.slug equals my-monitor-slug-here`
+
+Learn more in [Issue Alert Configuration](/product/alerts/alert-types/#issue-alerts).
+
+## Rate Limits
+
+Crons imposes a rate limit on check-ins to prevent abuse and resource overuse. Specifically, you can only send a maximum of **6 check-ins per minute per existing monitor environment**. This limit is enforced on a per-project basis, meaning that the rate limit applies collectively to all monitor environments within a given project. You can check if any of your check-ins are being dropped in the [Usage Stats](/product/stats/) page.
+
+To avoid dropped check-ins, it is crucial to manage and distribute your check-ins efficiently within the rate limits. This will help maintain accurate monitoring and ensure that all critical check-ins are captured and processed.
+
+## Additional Resources
+
+* [Troubleshooting Cron Monitoring](/platforms/javascript/common/crons/troubleshooting)
+* [Cron Monitoring Best Practices](https://blog.sentry.io/cron-monitoring-best-practices)
+* [Debugging Failed Cron Jobs](https://blog.sentry.io/debugging-cron-jobs) 
