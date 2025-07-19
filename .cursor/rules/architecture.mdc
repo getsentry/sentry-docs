@@ -1,339 +1,207 @@
----
-alwaysApply: true
----
-import {PlatformContent} from 'sentry-docs/components/platformContent';
+# Documentation System Architecture
 
-# Getting Started
+Language-agnostic system design for the Sentry documentation platform.
 
-<PlatformContent includePath="getting-started-install" />
+## 🏗️ Content Architecture
 
-Content here...
+### Documentation Structure
+```
+docs/
+├── platforms/                    # SDK-specific documentation
+│   ├── {platform}/
+│   │   ├── common/              # Shared across frameworks
+│   │   └── guides/              # Framework-specific guides
+├── product/                     # Product feature documentation
+├── api/                        # API reference documentation
+└── concepts/                   # Conceptual documentation
+
+platform-includes/              # Shared content across platforms
+├── {feature-name}/
+│   ├── {platform}.mdx         # Platform-specific implementation
+│   ├── _default.mdx           # Fallback content
+│   └── {platform}.{guide}.mdx # Guide-specific overrides
+
+includes/                       # General shared content
 ```
 
-#### Processing Flow
-1. **Frontmatter extraction** for metadata and navigation
-2. **Content compilation** with MDX bundler
-3. **Component resolution** for shared content
-4. **Static generation** at build time
-5. **Dynamic routing** via `[[...path]]` pattern
+### Content Resolution Hierarchy
+1. **Guide-specific:** `{feature}/{platform}.{guide}.mdx`
+2. **Platform-specific:** `{feature}/{platform}.mdx`  
+3. **Default fallback:** `{feature}/_default.mdx`
 
-## 🎨 Component Architecture
+## 📄 Content Processing Flow
 
-### Core Components
+### 1. Frontmatter Extraction
+- Metadata parsing for navigation structure
+- Platform and guide targeting rules
+- Content categorization and indexing
 
-#### Page Layout Components
-```typescript
-// DocPage - Main documentation page wrapper
-export function DocPage({
-  children,
-  frontMatter,
-  nextPage,
-  previousPage
-}: DocPageProps) {
-  return (
-    <div className="doc-page">
-      <Header />
-      <Sidebar />
-      <main>{children}</main>
-      <PaginationNav next={nextPage} previous={previousPage} />
-    </div>
-  );
-}
+### 2. Content Compilation
+- MDX processing with component resolution
+- Platform-specific content inclusion
+- Cross-reference link resolution
 
-// Sidebar - Auto-generated navigation
-export function Sidebar() {
-  const {rootNode, path} = useServerContext();
-  return <SidebarTree node={rootNode} currentPath={path} />;
-}
+### 3. Static Generation
+- Build-time page generation for performance
+- Navigation tree construction
+- Search index creation
+
+### 4. Dynamic Routing
+- Catch-all routing for flexible URL structure
+- Platform detection and context switching
+- Breadcrumb and navigation generation
+
+## 🎯 Platform Support Strategy
+
+### Multi-Platform Content Sharing
+
+#### Shared Content Patterns
+- **Common concepts** - Same across all platforms
+- **Platform-specific implementations** - Different syntax, same concept
+- **Framework adaptations** - Platform + framework combinations
+
+#### Content Targeting
+```yaml
+# Example frontmatter
+supported:
+  - javascript.react
+  - javascript.nextjs
+notSupported:
+  - javascript.electron
 ```
 
-#### Content Components
-```typescript
-// PlatformContent - Include platform-specific shared content
-export function PlatformContent({includePath}: {includePath: string}) {
-  const platform = getCurrentPlatform();
-  const content = getPlatformInclude(includePath, platform);
-  return <MDXContent source={content} />;
-}
+### Progressive Enhancement
+1. **Core content** - Works for all platforms
+2. **Platform enhancements** - Added functionality where supported
+3. **Framework specifics** - Detailed integration guidance
 
-// Include - Include general shared content
-export function Include({name}: {name: string}) {
-  const content = getInclude(name);
-  return <MDXContent source={content} />;
-}
-```
+## 🔍 Navigation Architecture
 
-### Navigation System
-
-#### Automatic Sidebar Generation
-```typescript
-// docTree.ts - Document tree management
-export interface DocNode {
-  path: string;
-  frontmatter: FrontMatter;
-  children: DocNode[];
-}
-
-export function buildDocTree(docs: FrontMatter[]): DocNode {
-  // Build hierarchical tree from flat file list
-  // Sort by sidebar_order and title
-  // Handle platform inheritance
-}
-```
-
-#### Dynamic Routing
-```typescript
-// app/[[...path]]/page.tsx - Catch-all routing
-export default async function Page({params}: {params: {path?: string[]}}) {
-  const pageNode = nodeForPath(rootNode, params.path ?? '');
-  
-  if (!pageNode) {
-    return notFound();
-  }
-
-  const doc = await getFileBySlugWithCache(pageNode.path);
-  return <MDXLayoutRenderer {...doc} />;
-}
-```
-
-## 🔄 Content Sharing System
-
-### Platform Includes
-Platform-specific shared content organized by functionality:
-```
-platform-includes/
-├── getting-started-install/
-│   ├── javascript.mdx
-│   ├── python.mdx
-│   └── java.mdx
-├── getting-started-config/
-│   ├── javascript.mdx
-│   └── python.mdx
-└── configuration/
-    ├── options/
-    └── advanced/
-```
-
-### Usage Pattern
-```mdx
----
-title: "React Installation"
----
-
-# Installing Sentry
-
-<PlatformContent includePath="getting-started-install" />
-
-## Next Steps
-
-<PlatformContent includePath="getting-started-verify" />
-```
-
-### Benefits
-- **Consistency** across all platform documentation
-- **Maintainability** with single source of truth
-- **Customization** per platform while sharing structure
-- **Scalability** for adding new platforms
-
-## 🚀 Build & Deployment
-
-### Dual Build System
-```javascript
-// Two separate builds for different audiences
-const isDeveloperDocs = process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
-
-const buildConfig = {
-  outputFileTracingExcludes: isDeveloperDocs
-    ? {'/**/*': ['docs/**/*']}      // Exclude user docs
-    : {'/**/*': ['develop-docs/**/*']} // Exclude dev docs
-};
-```
-
-### Static Generation
-```typescript
-// Generate static params for all documentation pages
-export async function generateStaticParams() {
-  const docs = await (isDeveloperDocs 
-    ? getDevDocsFrontMatter() 
-    : getDocsFrontMatter()
-  );
-  
-  return docs.map(doc => ({
-    path: doc.slug.split('/')
-  }));
-}
-```
-
-### Performance Optimizations
-- **File tracing exclusions** to reduce bundle size
-- **Static generation** for all documentation pages
-- **Image optimization** with Next.js built-in features
-- **Bundle analysis** with Codecov integration
-
-## 🔍 Search & Discovery
-
-### Algolia Integration
-```typescript
-// Search indexing configuration
-const searchConfig = {
-  indexName: isDeveloperDocs ? 'develop-sentry' : 'sentry-docs',
-  appId: process.env.ALGOLIA_APP_ID,
-  apiKey: process.env.ALGOLIA_API_KEY,
-};
-
-// Auto-generated search content
-export function generateSearchIndex() {
-  const docs = getAllDocumentation();
-  return docs.map(doc => ({
-    objectID: doc.slug,
-    title: doc.frontmatter.title,
-    content: doc.content,
-    url: doc.url,
-    hierarchy: doc.breadcrumbs,
-  }));
-}
-```
+### Auto-Generated Structure
+- **Sidebar navigation** - Built from frontmatter and file structure
+- **Hierarchical organization** - Respects platform → guide relationships
+- **Context-aware** - Shows relevant content for current platform
 
 ### Content Discovery
-- **Auto-generated sitemaps** for SEO
-- **Breadcrumb navigation** for context
-- **Related content** suggestions
-- **Platform-specific filtering** in search
+- **Search integration** - Full-text search across all content
+- **Cross-references** - Automated linking between related topics
+- **Platform filtering** - Show content relevant to selected platform
 
-## 📱 Mobile & Accessibility
+## 📊 Information Architecture Principles
 
-### Responsive Design
-```scss
-// Mobile-first responsive design
-.doc-page {
-  @media (max-width: 768px) {
-    .sidebar {
-      transform: translateX(-100%);
-      &.open {
-        transform: translateX(0);
-      }
-    }
-  }
-}
+### Content Organization
+1. **Platform-first** - Primary organization by programming language
+2. **Feature-based** - Secondary organization by Sentry features
+3. **Progressive disclosure** - Basic → advanced content structure
+4. **Cross-platform consistency** - Same concepts, different implementations
+
+### User Journey Design
+1. **Entry points** - Multiple paths to same information
+2. **Contextual guidance** - Help users choose appropriate approach
+3. **Implementation focus** - Prioritize working examples
+4. **Troubleshooting support** - Common issues and solutions
+
+## 🔧 Platform Agnostic Patterns
+
+### Content Structure Templates
+
+#### Feature Documentation Pattern
+```markdown
+# Feature Name
+
+Brief description of what this feature does (platform-agnostic).
+
+## Platform Support
+[Matrix of platform support levels]
+
+## Integration Methods
+### Method 1: [Automatic/Guided approach]
+### Method 2: [Manual configuration]
+### Method 3: [Advanced customization]
+
+## Implementation
+[Platform-specific examples via includes]
+
+## Troubleshooting
+[Common issues across platforms]
 ```
 
-### Accessibility Features
-- **Keyboard navigation** for all interactive elements
-- **Screen reader optimization** with proper ARIA labels
-- **Focus management** for single-page navigation
-- **Color contrast** meeting WCAG guidelines
+#### Platform Guide Pattern
+```markdown
+# {Platform} - {Feature}
 
-## 🎯 SEO & Performance
+Platform-specific implementation of [feature].
 
-### Meta Data Management
-```typescript
-// Dynamic meta generation per page
-export async function generateMetadata({params}: MetadataProps): Promise<Metadata> {
-  const pageNode = nodeForPath(rootNode, params.path);
-  
-  return {
-    title: pageNode?.frontmatter.title,
-    description: pageNode?.frontmatter.description,
-    canonical: `${domain}/${params.path?.join('/')}/`,
-    openGraph: {
-      title: pageNode?.frontmatter.title,
-      description: pageNode?.frontmatter.description,
-    }
-  };
-}
+## Prerequisites
+[Platform-specific requirements]
+
+## Quick Start
+[Minimal working example]
+
+## Configuration
+[Platform-specific options]
+
+## Advanced Usage
+[Platform-specific patterns]
 ```
 
-### Performance Monitoring
-```typescript
-// Sentry integration for performance tracking
-Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-  tracesSampleRate: 0.1,
-  integrations: [
-    Sentry.browserTracingIntegration(),
-  ],
-});
-```
+### Shared Content Management
 
-## 🔧 Development Workflow
+#### Content Types
+- **Installation instructions** - Platform-specific package managers
+- **Configuration examples** - Platform-specific syntax
+- **Integration patterns** - Framework-specific implementations
+- **Troubleshooting** - Platform-specific common issues
 
-### Local Development
-```bash
-# User documentation
-yarn dev                     # Serves user docs on localhost:3000
+#### Maintenance Strategy
+- **Single source of truth** - Each concept documented once
+- **Cross-platform updates** - Changes propagate to all platforms
+- **Version consistency** - Synchronized across all implementations
+- **Quality assurance** - Consistent testing across platforms
 
-# Developer documentation  
-yarn dev:developer-docs     # Serves dev docs on localhost:3000
-```
+## 🚀 Deployment Architecture
 
-### Content Validation
-```typescript
-// Frontmatter validation
-export interface FrontMatter {
-  title: string;
-  description?: string;
-  sidebar_order?: number;
-  draft?: boolean;
-  noindex?: boolean;
-}
+### Build Strategy
+- **Dual documentation sites** - User docs vs developer docs
+- **Platform-specific builds** - Optimized content per platform
+- **Static generation** - Pre-built for performance
+- **CDN distribution** - Global content delivery
 
-// Link validation during build
-export function validateInternalLinks(content: string): string[] {
-  const links = extractInternalLinks(content);
-  return links.filter(link => !linkExists(link));
-}
-```
+### Content Management
+- **Version control** - Git-based content management
+- **Review process** - PR-based content updates
+- **Automated testing** - Link validation, example verification
+- **Performance monitoring** - Page load times, search performance
 
-### Hot Reloading
-```javascript
-// Custom hot reload for MDX content
-if (process.env.NODE_ENV === 'development') {
-  const watcher = chokidar.watch(['docs/**/*.mdx', 'develop-docs/**/*.mdx']);
-  watcher.on('change', (path) => {
-    // Invalidate MDX cache and trigger recompilation
-    invalidateMDXCache(path);
-  });
-}
-```
+## 📈 Scalability Considerations
 
-## 📊 Analytics & Insights
+### Adding New Platforms
+1. **Content structure** - Follow established patterns
+2. **Platform includes** - Create platform-specific implementations
+3. **Navigation integration** - Automatic inclusion in navigation
+4. **Quality assurance** - Testing and validation process
 
-### Content Analytics
-```typescript
-// Track content performance
-export function trackPageView(path: string, title: string) {
-  analytics.track('Documentation Page View', {
-    path,
-    title,
-    timestamp: new Date().toISOString(),
-  });
-}
+### Content Maintenance
+- **Automated link checking** - Prevent broken references
+- **Content auditing** - Regular review of outdated information
+- **Performance optimization** - Bundle size and load time monitoring
+- **User feedback integration** - Content improvement based on usage
 
-// Monitor search queries
-export function trackSearch(query: string, results: number) {
-  analytics.track('Documentation Search', {
-    query,
-    resultsCount: results,
-  });
-}
-```
+## 🎯 Design Principles
 
-### Business Intelligence
-- **Page view tracking** for content optimization
-- **Search analytics** for content gap analysis
-- **User journey mapping** through documentation
-- **Conversion tracking** from docs to product signup
+### Language Agnostic
+- **Conceptual focus** - What, not just how
+- **Multiple implementations** - Same concept, different languages
+- **Consistent terminology** - Cross-platform vocabulary
+- **Universal patterns** - Applicable across all platforms
 
----
+### User-Centered
+- **Task-oriented** - Organized around user goals
+- **Progressive complexity** - Simple to advanced progressions
+- **Context-aware** - Relevant to user's current platform/framework
+- **Outcome-focused** - Emphasis on achieving results
 
-## 💡 Key Architectural Principles
-
-1. **Content First** - Architecture optimized for content creation and maintenance
-2. **Performance** - Static generation and optimized loading for global users
-3. **Scalability** - Support for hundreds of documentation pages across platforms
-4. **Maintainability** - Shared content system reduces duplication
-5. **Developer Experience** - Hot reloading and TypeScript for productive development
-6. **User Experience** - Fast, searchable, accessible documentation
-
+For implementation details, see [Common Patterns](./common-patterns.mdc).
+For content guidelines, see [LLM Documentation Style Guide](./llms/documentation-style-guide.mdc).
 
 ## 🏗️ Data Architecture

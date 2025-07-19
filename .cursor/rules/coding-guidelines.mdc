@@ -1,624 +1,201 @@
----
-alwaysApply: true
----
-title: "Getting Started with React"
-description: "Learn how to add Sentry to your React application"
-sidebar_order: 1
-supported:
-  - javascript.react
-notSupported:
-  - javascript.nextjs
----
+# Coding Guidelines
 
-import {PlatformContent} from 'sentry-docs/components/platformContent';
-import {Alert} from 'sentry-docs/components/alert';
+Code quality and style standards for the Sentry documentation project.
 
-# Getting Started
+## TypeScript Standards
 
-<PlatformContent includePath="getting-started-install" />
-
-<Alert level="info">
-  Make sure you have React 16.8+ for hooks support.
-</Alert>
-
-## Configuration
-
-<PlatformContent includePath="getting-started-config" />
-```
-
-### Frontmatter Standards
-```yaml
-# Required fields
-title: "Page Title"                    # SEO and navigation title
-description: "Page description"        # Meta description
-
-# Optional organization
-sidebar_order: 10                      # Sidebar sort order (default: 10)
-sidebar_title: "Short Title"           # Sidebar display title
-sidebar_hidden: false                  # Hide from sidebar
-
-# Content control
-draft: false                          # Hide from production
-noindex: false                        # Disable search indexing
-notoc: false                          # Disable table of contents
-
-# Platform targeting
-supported:                            # Platforms this applies to
-  - javascript.react
-  - javascript.nextjs
-notSupported:                         # Platforms to exclude
-  - javascript.electron
-
-# Navigation
-customCanonicalTag: "/custom-path/"   # Custom canonical URL
-keywords:                             # Search keywords
-  - "react"
-  - "installation"
-```
-
-## 🎨 React Component Patterns
-
-### Component Structure
+### Type Definitions
 ```typescript
-// src/components/docPage/index.tsx
-import {ReactNode} from 'react';
-import {FrontMatter} from 'sentry-docs/types';
-
-interface DocPageProps {
-  children: ReactNode;
-  frontMatter: FrontMatter;
-  nextPage?: {path: string; title: string};
-  previousPage?: {path: string; title: string};
+// Use strict TypeScript configuration
+interface FrontMatter {
+  title: string;
+  description?: string;
+  sidebar_order?: number;
+  supported?: string[];
 }
 
-export function DocPage({
-  children,
-  frontMatter,
-  nextPage,
-  previousPage
-}: DocPageProps) {
+// Prefer interfaces over types for object shapes
+interface ComponentProps {
+  children: ReactNode;
+  className?: string;
+}
+```
+
+### Component Patterns
+```typescript
+// Use function declarations for components
+export function DocPage({children, frontMatter}: DocPageProps) {
+  return <div className="doc-page">{children}</div>;
+}
+
+// Use proper typing for hooks
+const [state, setState] = useState<State | null>(null);
+```
+
+## File Organization
+
+### Directory Structure
+```
+src/
+├── components/         # Reusable React components
+├── types/             # TypeScript type definitions  
+├── utils/             # Utility functions
+└── pages/             # Page components
+```
+
+### Import Order
+```typescript
+// 1. React and external libraries
+import {ReactNode} from 'react';
+import {getMDXComponent} from 'mdx-bundler/client';
+
+// 2. Internal imports (absolute paths)
+import {FrontMatter} from 'sentry-docs/types';
+import {usePlatform} from 'sentry-docs/hooks';
+
+// 3. Relative imports
+import './styles.scss';
+```
+
+## Component Standards
+
+### Props Interface
+```typescript
+// Always define props interface
+interface AlertProps {
+  level?: 'info' | 'warning' | 'error';
+  children: ReactNode;
+  className?: string;
+}
+
+export function Alert({level = 'info', children, className}: AlertProps) {
   return (
-    <div className="doc-page">
-      <Header />
-      <div className="doc-content">
-        <Sidebar />
-        <main className="doc-main">
-          <article className="doc-article">
-            {children}
-          </article>
-          <PaginationNav next={nextPage} previous={previousPage} />
-        </main>
-        {!frontMatter.notoc && <TableOfContents />}
-      </div>
+    <div className={`alert alert-${level} ${className || ''}`}>
+      {children}
     </div>
   );
 }
 ```
 
-### Custom Hooks
+### Error Handling
 ```typescript
-// src/hooks/useServerContext.tsx
-import {useContext} from 'react';
-import {ServerContext} from 'sentry-docs/serverContext';
-
-export function useServerContext() {
-  const context = useContext(ServerContext);
-  if (!context) {
-    throw new Error('useServerContext must be used within ServerContextProvider');
-  }
-  return context;
+// Use error boundaries for component errors
+export function ErrorBoundary({children}: {children: ReactNode}) {
+  return (
+    <ErrorBoundaryComponent
+      fallback={<div>Something went wrong</div>}
+    >
+      {children}
+    </ErrorBoundaryComponent>
+  );
 }
 
-// src/hooks/usePlatform.tsx
-export function usePlatform(): Platform | null {
-  const {rootNode, path} = useServerContext();
-  return getCurrentPlatform(rootNode, path);
-}
-```
-
-### Error Boundaries
-```typescript
-// src/components/errorBoundary.tsx
-'use client';
-
-import {Component, ReactNode} from 'react';
-import * as Sentry from '@sentry/nextjs';
-
-interface Props {
-  children: ReactNode;
-  fallback?: ReactNode;
-}
-
-interface State {
-  hasError: boolean;
-}
-
-export class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = {hasError: false};
-  }
-
-  static getDerivedStateFromError(): State {
-    return {hasError: true};
-  }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    Sentry.captureException(error, {
-      contexts: {react: errorInfo},
-      tags: {component: 'ErrorBoundary'},
-    });
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return this.props.fallback || (
-        <div className="error-boundary">
-          <h2>Something went wrong</h2>
-          <p>This error has been reported to our team.</p>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-```
-
-## 🔗 Content Sharing Components
-
-### Platform Content
-```typescript
-// src/components/platformContent.tsx
-import {useMemo} from 'react';
-import {getMDXComponent} from 'mdx-bundler/client';
-import {usePlatform} from 'sentry-docs/hooks/usePlatform';
-
-interface PlatformContentProps {
-  includePath: string;
-  platform?: string;
-}
-
-export function PlatformContent({includePath, platform}: PlatformContentProps) {
-  const currentPlatform = usePlatform();
-  const targetPlatform = platform || currentPlatform?.key;
-
-  const content = useMemo(() => {
-    if (!targetPlatform) return null;
-    return getPlatformInclude(includePath, targetPlatform);
-  }, [includePath, targetPlatform]);
-
-  if (!content) {
+// Handle async errors gracefully
+async function loadContent() {
+  try {
+    return await fetchContent();
+  } catch (error) {
+    console.error('Failed to load content:', error);
     return null;
   }
-
-  const Component = getMDXComponent(content.code);
-  return <Component />;
 }
 ```
 
-### General Includes
+## MDX Processing
+
+### Content Validation
 ```typescript
-// src/components/include.tsx
-import {useMemo} from 'react';
-import {getMDXComponent} from 'mdx-bundler/client';
-
-interface IncludeProps {
-  name: string;
-}
-
-export function Include({name}: IncludeProps) {
-  const content = useMemo(() => {
-    return getIncludeContent(name);
-  }, [name]);
-
-  if (!content) {
-    console.warn(`Include not found: ${name}`);
-    return null;
+// Validate frontmatter
+function validateFrontMatter(data: unknown): FrontMatter {
+  if (!data || typeof data !== 'object') {
+    throw new Error('Invalid frontmatter');
   }
-
-  const Component = getMDXComponent(content.code);
-  return <Component />;
-}
-```
-
-## 🎯 Performance Optimization
-
-### Static Generation Patterns
-```typescript
-// src/mdx.ts - MDX processing with caching
-import {bundleMDX} from 'mdx-bundler';
-import {cache} from 'react';
-
-export const getFileBySlugWithCache = cache(async (slug: string) => {
-  const source = await fs.readFile(`${slug}.mdx`, 'utf8');
   
-  const {code, frontmatter} = await bundleMDX({
-    source,
-    mdxOptions: {
-      remarkPlugins: [remarkGfm],
-      rehypePlugins: [rehypeSlug, rehypeAutolinkHeadings],
-    },
-  });
-
-  return {
-    mdxSource: code,
-    frontMatter: frontmatter as FrontMatter,
-  };
-});
+  if (!('title' in data) || typeof data.title !== 'string') {
+    throw new Error('Missing required field: title');
+  }
+  
+  return data as FrontMatter;
+}
 ```
 
-### Component Optimization
+### Component Registration
+```typescript
+// Register custom MDX components
+const mdxComponents = {
+  Alert,
+  PlatformContent,
+  Include,
+  // Add new components here
+};
+```
+
+## Performance Standards
+
+### React Optimization
 ```typescript
 // Use React.memo for expensive components
-import {memo} from 'react';
-
-export const ExpensiveComponent = memo(function ExpensiveComponent({
-  data
-}: {
-  data: ComplexData;
-}) {
-  const processedData = useMemo(() => {
-    return expensiveCalculation(data);
-  }, [data]);
-
+export const ExpensiveComponent = memo(function ExpensiveComponent({data}: Props) {
+  const processedData = useMemo(() => processData(data), [data]);
   return <div>{processedData}</div>;
 });
 
-// Use dynamic imports for large components
-import {lazy, Suspense} from 'react';
-
-const HeavyComponent = lazy(() => import('./heavyComponent'));
-
-export function ConditionalComponent({showHeavy}: {showHeavy: boolean}) {
-  if (!showHeavy) return null;
-
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <HeavyComponent />
-    </Suspense>
-  );
-}
+// Use callbacks to prevent re-renders
+const handleClick = useCallback((id: string) => {
+  setState(prev => ({...prev, active: id}));
+}, []);
 ```
 
-## 🎨 Styling Standards
+### Bundle Optimization
+- Use dynamic imports for large components
+- Optimize images with Next.js Image component
+- Minimize JavaScript bundle size
 
-### CSS Modules Pattern
-```scss
-// src/components/docPage/docPage.module.scss
-.docPage {
-  display: grid;
-  grid-template-columns: 300px 1fr 200px;
-  grid-template-areas: 
-    "sidebar main toc";
-  min-height: 100vh;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-    grid-template-areas: 
-      "main";
-
-    .sidebar {
-      position: fixed;
-      transform: translateX(-100%);
-      transition: transform 0.3s ease;
-
-      &.open {
-        transform: translateX(0);
-      }
-    }
-  }
-}
-
-.main {
-  grid-area: main;
-  padding: 2rem;
-  max-width: 100%;
-  overflow-x: auto;
-}
-```
-
-### Component with Styles
-```typescript
-// src/components/docPage/index.tsx
-import styles from './docPage.module.scss';
-import {clsx} from 'clsx';
-
-interface DocPageProps {
-  sidebarOpen?: boolean;
-}
-
-export function DocPage({sidebarOpen = false}: DocPageProps) {
-  return (
-    <div className={styles.docPage}>
-      <aside className={clsx(styles.sidebar, {
-        [styles.open]: sidebarOpen
-      })}>
-        <Sidebar />
-      </aside>
-      <main className={styles.main}>
-        {/* Content */}
-      </main>
-    </div>
-  );
-}
-```
-
-## 🔍 Search & Navigation
-
-### Search Integration
-```typescript
-// src/components/search.tsx
-import {useState, useCallback} from 'react';
-import {InstantSearch, SearchBox, Hits} from 'react-instantsearch';
-import {searchClient} from 'sentry-docs/search';
-
-export function Search() {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const handleClose = useCallback(() => {
-    setIsOpen(false);
-  }, []);
-
-  return (
-    <InstantSearch searchClient={searchClient} indexName="sentry-docs">
-      <SearchBox
-        placeholder="Search documentation..."
-        onFocus={() => setIsOpen(true)}
-      />
-      {isOpen && (
-        <SearchResults onClose={handleClose} />
-      )}
-    </InstantSearch>
-  );
-}
-```
-
-### Navigation Components
-```typescript
-// src/components/sidebar.tsx
-import {DocNode} from 'sentry-docs/types';
-import {SmartLink} from './smartLink';
-
-interface SidebarProps {
-  node: DocNode;
-  currentPath: string[];
-}
-
-export function Sidebar({node, currentPath}: SidebarProps) {
-  const isActive = node.path === currentPath.join('/');
-  const isExpanded = currentPath.some(segment => 
-    node.path.includes(segment)
-  );
-
-  return (
-    <nav className="sidebar">
-      <ul>
-        <li className={isActive ? 'active' : ''}>
-          <SmartLink href={`/${node.path}/`}>
-            {node.frontmatter.sidebar_title || node.frontmatter.title}
-          </SmartLink>
-          {node.children.length > 0 && isExpanded && (
-            <ul>
-              {node.children.map(child => (
-                <Sidebar
-                  key={child.path}
-                  node={child}
-                  currentPath={currentPath}
-                />
-              ))}
-            </ul>
-          )}
-        </li>
-      </ul>
-    </nav>
-  );
-}
-```
-
-## 🧪 Testing Standards
+## Testing Standards
 
 ### Component Testing
 ```typescript
-// src/components/__tests__/docPage.test.tsx
+// Test component behavior
 import {render, screen} from '@testing-library/react';
-import {DocPage} from '../docPage';
 
-const mockFrontMatter = {
-  title: 'Test Page',
-  description: 'Test description',
-};
-
-describe('DocPage', () => {
-  it('renders with frontmatter title', () => {
-    render(
-      <DocPage frontMatter={mockFrontMatter}>
-        <p>Test content</p>
-      </DocPage>
-    );
-
-    expect(screen.getByText('Test Page')).toBeInTheDocument();
-    expect(screen.getByText('Test content')).toBeInTheDocument();
-  });
-
-  it('shows table of contents by default', () => {
-    render(
-      <DocPage frontMatter={mockFrontMatter}>
-        Content
-      </DocPage>
-    );
-
-    expect(screen.getByRole('navigation', {name: /table of contents/i}))
-      .toBeInTheDocument();
-  });
-
-  it('hides table of contents when notoc is true', () => {
-    render(
-      <DocPage frontMatter={{...mockFrontMatter, notoc: true}}>
-        Content
-      </DocPage>
-    );
-
-    expect(screen.queryByRole('navigation', {name: /table of contents/i}))
-      .not.toBeInTheDocument();
+describe('Alert', () => {
+  it('renders with correct level class', () => {
+    render(<Alert level="warning">Test message</Alert>);
+    expect(screen.getByRole('alert')).toHaveClass('alert-warning');
   });
 });
 ```
 
-### MDX Processing Tests
+### Content Testing
 ```typescript
-// src/__tests__/mdx.test.ts
-import {getFileBySlugWithCache} from '../mdx';
-
-describe('MDX processing', () => {
-  it('processes valid MDX file', async () => {
-    const result = await getFileBySlugWithCache('test-content');
-    
-    expect(result.frontMatter.title).toBe('Test Title');
-    expect(result.mdxSource).toContain('function MDXContent');
-  });
-
-  it('validates required frontmatter', async () => {
-    await expect(
-      getFileBySlugWithCache('invalid-frontmatter')
-    ).rejects.toThrow('Missing required field: title');
+// Test MDX processing
+describe('MDX Processing', () => {
+  it('validates required frontmatter', () => {
+    expect(() => validateFrontMatter({})).toThrow('Missing required field: title');
   });
 });
 ```
 
-## 📊 Error Handling & Monitoring
+## Quality Checklist
 
-### Error Tracking
-```typescript
-// src/utils/errorTracking.ts
-import * as Sentry from '@sentry/nextjs';
+### Before Committing
+- [ ] TypeScript compiles without errors
+- [ ] Components are properly typed
+- [ ] No console errors in development
+- [ ] Components are tested
+- [ ] Code follows import order standards
+- [ ] Error handling is implemented
+- [ ] Performance optimizations applied where needed
 
-export function captureDocumentationError(
-  error: Error,
-  context: {
-    page?: string;
-    platform?: string;
-    action?: string;
-  }
-) {
-  Sentry.captureException(error, {
-    tags: {
-      component: 'documentation',
-      page: context.page,
-      platform: context.platform,
-    },
-    extra: context,
-  });
-}
+### Code Review Standards
+- [ ] Code is readable and well-documented
+- [ ] TypeScript types are accurate
+- [ ] Components are reusable where appropriate
+- [ ] No unnecessary re-renders
+- [ ] Error states are handled gracefully
 
-// Usage in components
-try {
-  const content = await loadContent();
-} catch (error) {
-  captureDocumentationError(error, {
-    page: 'getting-started',
-    platform: 'javascript',
-    action: 'load_content',
-  });
-}
-```
-
-### Custom Error Pages
-```typescript
-// app/not-found.tsx
-import {Metadata} from 'next';
-
-export const metadata: Metadata = {
-  title: 'Page Not Found',
-  robots: 'noindex',
-};
-
-export default function NotFound() {
-  return (
-    <div className="error-page">
-      <h1>Page Not Found</h1>
-      <p>The page you're looking for doesn't exist.</p>
-      <a href="/">Return to documentation home</a>
-    </div>
-  );
-}
-
-// app/error.tsx
-'use client';
-
-import {useEffect} from 'react';
-import * as Sentry from '@sentry/nextjs';
-
-export default function Error({
-  error,
-  reset,
-}: {
-  error: Error & {digest?: string};
-  reset: () => void;
-}) {
-  useEffect(() => {
-    Sentry.captureException(error);
-  }, [error]);
-
-  return (
-    <div className="error-page">
-      <h2>Something went wrong!</h2>
-      <button onClick={reset}>Try again</button>
-    </div>
-  );
-}
-```
-
-## 📋 Quality Checklist
-
-### Before Submitting Code
-
-#### TypeScript
-- [ ] All components have proper TypeScript interfaces
-- [ ] No `any` types without good reason
-- [ ] Strict mode enabled and passing
-- [ ] All imports properly typed
-
-#### Next.js Best Practices
-- [ ] Use App Router patterns consistently
-- [ ] Static generation where possible
-- [ ] Proper metadata for SEO
-- [ ] Error boundaries for resilience
-
-#### MDX Content
-- [ ] Valid frontmatter with required fields
-- [ ] Proper heading hierarchy (h1 -> h2 -> h3)
-- [ ] Working code examples
-- [ ] Accessibility considerations
-
-#### Performance
-- [ ] Components memoized appropriately
-- [ ] Images optimized with Next.js Image
-- [ ] Bundle size impact considered
-- [ ] Loading states for async content
-
-#### Testing
-- [ ] Unit tests for complex logic
-- [ ] Component tests for UI behavior
-- [ ] Accessibility tests with axe
-- [ ] Content validation tests
-
-#### Accessibility
-- [ ] Semantic HTML structure
-- [ ] Proper ARIA labels
-- [ ] Keyboard navigation support
-- [ ] Color contrast compliance
-
----
-
-## 💡 Key Guidelines
-
-1. **Content First** - Optimize for content creation and maintenance
-2. **Performance** - Static generation and fast loading
-3. **Accessibility** - Inclusive design for all users
-4. **TypeScript** - Type safety throughout the codebase
-5. **Testing** - Comprehensive test coverage
-6. **Error Handling** - Graceful degradation and error reporting
+For architecture decisions, see [Architecture Guidelines](./architecture.mdc).
+For reusable code patterns, see [Common Patterns](./common-patterns.mdc).
 
 - [ ] Code is formatted with Prettier
 - [ ] Linting passes without errors
