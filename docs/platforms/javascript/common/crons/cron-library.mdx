@@ -1,0 +1,49 @@
+---
+title: cron Library Integration
+description: "Automatically monitor your cron library scheduled jobs with seamless instrumentation."
+sidebar_order: 5749
+supported:
+  - javascript.nextjs
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.react-router
+  - javascript.astro
+  - javascript.bun
+  - javascript.deno
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.cloudflare
+---
+
+Use `Sentry.cron.instrumentCron` to instrument the `CronJob` constructor or `CronJob.from` method in the cron library. Pass the name of the cron monitor as a second argument to the function.
+
+Requires SDK version `7.92.0` or higher.
+
+```javascript
+import * as Sentry from '@sentry/node';
+import { CronJob } from "cron";
+
+const CronJobWithCheckIn = Sentry.cron.instrumentCron(CronJob, "my-cron-job");
+
+// use the constructor
+const job = new CronJobWithCheckIn("* * * * *", () => {
+  console.log("You will see this message every minute");
+});
+
+// or from method
+const job = CronJobWithCheckIn.from({
+  cronTime: "* * * * *",
+  onTick: () => {
+    console.log("You will see this message every minute");
+  },
+});
+``` 

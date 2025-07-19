@@ -27,46 +27,61 @@ supported:
 
 Monitor the uptime and performance of your scheduled jobs in Node.js. Get alerts when jobs fail, timeout, or don't run as expected.
 
-{/* ![Cron Monitoring Setup](placeholder-cron-setup.gif) */}
-
-## UI Setup (Recommended)
-
-The most complete way to monitor your crons is by creating monitors in Sentry's web interface:
-
-1. Create monitor in Sentry UI with your cron schedule
-2. Add notification code to your job
-3. Get alerts when jobs fail or don't run
-
-This approach gives you complete monitoring setup including alerts configuration.
+{/* Placeholder for interactive arcade GIF showing UI creation flow */}
 
 ## Setup Methods
 
 Choose the method that matches your current setup:
 
-* [UI Setup](ui-setup) - Create monitors in Sentry's web interface
-* [Automatic Integration](automatic) - Auto-instrument existing cron libraries  
-* [Manual Integration](manual) - Full SDK integration with custom handling
-* [Advanced Setup](advanced) - Programmatically create and manage monitors
+* [UI Setup](ui-setup) - Create monitors in Sentry's web interface, then add instrumentation
 
 ### Automatic Integration
 
-* [node-cron](automatic#node-cron)
-* [cron](automatic#cron-library) 
-* [node-schedule](automatic#node-schedule)
+* [node-cron](node-cron) - Auto-instrument node-cron library
+* [cron](cron-library) - Auto-instrument cron library
+* [node-schedule](node-schedule) - Auto-instrument node-schedule library
 
 If you're using one of these popular cron libraries, use the automatic integration for seamless monitoring.
 
-### Manual Integration
+### Manual Methods
 
-* [withMonitor() wrapper](manual#withmonitor)
-* [captureCheckIn() calls](manual#capturecheckin)
-* [Custom error handling](manual#error-handling)
+* [Job Monitoring](job-monitoring) - Use withMonitor wrapper for automatic status tracking
+* [Check-Ins](check-ins) - Full control with manual status updates
+* [Heartbeat](heartbeat) - Simple success/failure notifications
+* [Upserting Monitors](upserting-monitors) - Programmatic monitor creation and management
 
-## Other Tools
+### Alternative Methods (Not Recommended)
 
-If you have custom cron logic or use a different scheduling library, we recommend the [manual integration approach](manual) which gives you full control over when and how check-ins are sent.
+These methods work but don't provide the full benefits of SDK integration like tracing and error context:
 
-For advanced use cases like CI/CD pipelines or managing many monitors, consider the [programmatic setup](advanced) which lets you create monitors via code.
+* [Sentry CLI](https://docs.sentry.io/cli/crons/) - Command-line tool for basic monitoring
+* [HTTP API](https://docs.sentry.io/product/crons/getting-started/http/) - Direct API calls for check-ins
+
+### Other Tools
+
+If you have custom cron logic or use a different scheduling library, we recommend [Check-Ins](check-ins) which gives you full control over when and how status updates are sent.
+
+For advanced use cases like CI/CD pipelines or managing many monitors, consider [Upserting Monitors](upserting-monitors) which lets you create monitors programmatically via code.
+
+## Alerts
+
+When your recurring job fails to check in (missed), runs beyond its configured maximum runtime (failed), or manually reports a failure, Sentry will create an error event with a tag to your monitor.
+
+To receive alerts about these events:
+
+1. Navigate to **Alerts** in the sidebar.
+2. Create a new alert and select "Issues" under "Errors" as the alert type.
+3. Configure your alert and define a filter match to use: `The event's tags match {key} {match} {value}`.
+
+Example: `The event's tags match monitor.slug equals my-monitor-slug-here`
+
+Learn more in [Issue Alert Configuration](/product/alerts/alert-types/#issue-alerts).
+
+## Rate Limits
+
+Crons imposes a rate limit on check-ins to prevent abuse and resource overuse. Specifically, you can only send a maximum of **6 check-ins per minute per existing monitor environment**. This limit is enforced on a per-project basis, meaning that the rate limit applies collectively to all monitor environments within a given project. You can check if any of your check-ins are being dropped in the [Usage Stats](/product/stats/) page.
+
+To avoid dropped check-ins, it is crucial to manage and distribute your check-ins efficiently within the rate limits. This will help maintain accurate monitoring and ensure that all critical check-ins are captured and processed.
 
 ## Additional Resources
 

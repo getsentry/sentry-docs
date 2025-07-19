@@ -27,345 +27,38 @@ supported:
 
 Common issues and solutions for JavaScript cron monitoring setup.
 
-## Setup Issues
+<Expandable title="Why aren't recurring job errors showing up on my monitor details page?">
 
-<Expandable title="Check-ins aren't appearing in Sentry">
-
-**Possible causes:**
-
-1. **Monitor doesn't exist** - Make sure you've created the monitor in Sentry first (except for automatic instrumentation)
-2. **Wrong monitor slug** - Verify the monitor slug matches exactly (case-sensitive) 
-3. **Network issues** - Check if your server can reach Sentry's ingest domain
-4. **SDK not initialized** - Ensure Sentry SDK is properly configured with valid DSN
-
-**Solutions:**
-
-```javascript
-// Verify your Sentry configuration
-import * as Sentry from '@sentry/node';
-
-Sentry.init({
-  dsn: 'YOUR_DSN', // Make sure this is correct
-  debug: true,     // Enable for troubleshooting
-});
-
-// Test with a simple check-in
-Sentry.captureCheckIn({
-  monitorSlug: 'your-monitor-slug',
-  status: 'ok',
-});
-```
+Errors that happen outside of job execution aren't linked to cron monitors. The most common situation is an error occurring in an external service, like a database or API call, that isn't directly part of the job function. In such cases, make sure the job function execution includes any external service calls. If you have a job that starts a service outside of the job function, you should execute the service call directly within the job function.
 
 </Expandable>
 
-<Expandable title="Getting 404 errors for check-ins">
+<Expandable title="Why am I not receiving alerts when my monitor fails?">
 
-**Possible causes:**
+Alert notifications are based on notification settings. If you're not receiving alerts when a monitor fails or experiences an issue, make sure you've configured an alert rule for the monitor.
 
-1. **Incorrect ingest domain** - Using wrong Sentry domain
-2. **Wrong project ID** - Check your project settings  
-3. **Invalid monitor slug** - Monitor doesn't exist or name is wrong
+To configure an alert rule:
 
-**Solutions:**
+1. Go to **Alerts** and click "Create Alert Rule".
+2. Set "Issues" as the alert type under **Errors**.
+3. Set the conditions to: `The event's tags match monitor.slug equals your-monitor-slug-here`
 
-1. Verify your ingest domain from Sentry settings
-2. Check project ID in your Sentry dashboard URL
-3. Ensure monitor was created successfully in Sentry
+Learn more about [Issue Alert Configuration](/product/alerts/alert-types/#issue-alerts).
 
 </Expandable>
 
-<Expandable title="Automatic instrumentation not working">
-
-**Requirements check:**
-
-- **SDK Version**: node-cron requires `7.92.0+`, node-schedule requires `7.93.0+`
-- **Proper Import**: Use the instrumented version, not the original library
-- **Monitor Name**: Provide a `name` parameter for the job
-
-**Solution:**
-
-```javascript
-// Check SDK version
-console.log(require('@sentry/node/package.json').version);
-
-// Correct usage
-import * as Sentry from '@sentry/node';
-import cron from "node-cron";
-
-const cronWithCheckIn = Sentry.cron.instrumentNodeCron(cron);
-
-// Must include name parameter
-cronWithCheckIn.schedule("0 * * * *", myJob, { 
-  name: "my-job-name" // Required!
-});
-```
-
-</Expandable>
-
-## Monitor Behavior Issues
-
-<Expandable title="Jobs showing as missed when they ran successfully">
-
-**Possible causes:**
-
-1. **Schedule mismatch** - Sentry schedule doesn't match when job actually runs
-2. **Timezone issues** - Server timezone differs from monitor timezone
-3. **Late check-ins** - Notification happens after the grace period
-4. **Clock drift** - Server time is out of sync
-
-**Solutions:**
-
-1. Verify cron schedule matches exactly: `crontab -l` vs Sentry monitor
-2. Check server timezone: `date` and compare with monitor timezone
-3. Send check-ins immediately after job completion
-4. Sync server time with NTP
-
-</Expandable>
-
-<Expandable title="Jobs running but runtime not tracked">
-
-**For runtime tracking, you need:**
-
-- Start AND end check-ins (not just end)
-- Use `in_progress` status at job start
-- Use `ok` or `error` status at job end
-
-```javascript
-// Correct runtime tracking
-const checkInId = Sentry.captureCheckIn({
-  monitorSlug: 'my-job',
-  status: 'in_progress', // Start tracking
-});
-
-try {
-  await runJob();
-  
-  Sentry.captureCheckIn({
-    checkInId,
-    monitorSlug: 'my-job',
-    status: 'ok', // End tracking
-  });
-} catch (error) {
-  Sentry.captureCheckIn({
-    checkInId,
-    monitorSlug: 'my-job',
-    status: 'error',
-  });
-}
-```
-
-</Expandable>
-
-<Expandable title="Not receiving alerts when monitors fail">
-
-**Check these settings:**
-
-1. **Alert Rules**: Navigate to **Alerts** → **Create Alert** → **Issues**
-2. **Filter Setup**: Use `monitor.slug` equals your monitor slug
-3. **Notification Settings**: Verify email/Slack integration
-4. **Issue Creation**: Check if issues are being created for failures
-
-**Example alert setup:**
-- Alert Type: Issues
-- Filter: `The event's tags match monitor.slug equals my-monitor-slug`
-- Conditions: When an issue is first seen or seen more than X times
-
-</Expandable>
-
-## Error Tracking Issues
-
-<Expandable title="Runtime errors not appearing in monitor details">
-
-**To link errors to monitors:**
-
-1. **Use SDK methods**: Errors captured via SDK are automatically linked
-2. **Check error timing**: Errors must occur during job execution
-3. **Verify error capture**: Ensure `Sentry.captureException()` is called
-
-```javascript
-Sentry.withMonitor('my-job', async () => {
-  try {
-    await riskyOperation();
-  } catch (error) {
-    // This error will be linked to the monitor
-    Sentry.captureException(error);
-    throw error; // Re-throw to mark job as failed
-  }
-});
-```
-
-</Expandable>
-
-<Expandable title="Too many errors being captured">
-
-**To reduce noise:**
-
-1. **Filter by error level**: Only capture important errors
-2. **Use sampling**: Reduce error reporting volume
-3. **Scope errors properly**: Use `withScope` for context
-
-```javascript
-Sentry.withScope(scope => {
-  scope.setTag('job_context', 'data_processing');
-  scope.setLevel('warning'); // Only warnings and above
-  
-  if (isCriticalError(error)) {
-    Sentry.captureException(error);
-  }
-});
-```
-
-</Expandable>
-
-## Environment-Specific Issues
-
-<Expandable title="Development vs Production differences">
-
-**Common differences:**
-
-- **Schedule frequency**: Dev jobs often run more frequently
-- **Timeout settings**: Dev environments may be slower
-- **Error tolerance**: Production should be less tolerant
-
-**Solution - Environment configs:**
-
-```javascript
-const configs = {
-  production: {
-    checkinMargin: 5,
-    maxRuntime: 30,
-    failureIssueThreshold: 1,
-  },
-  development: {
-    checkinMargin: 15,
-    maxRuntime: 120,
-    failureIssueThreshold: 3,
-  },
-};
-
-const config = configs[process.env.NODE_ENV] || configs.production;
-```
-
-</Expandable>
-
-<Expandable title="Serverless function timeouts">
-
-**For AWS Lambda, Vercel, etc.:**
-
-1. **Platform limits**: Respect function timeout limits
-2. **Cold starts**: Account for initialization time
-3. **Concurrency**: Handle multiple executions properly
-
-```javascript
-// AWS Lambda example
-export const handler = Sentry.AWSLambda.wrapHandler(async (event) => {
-  return Sentry.withMonitor('lambda-job', async () => {
-    // Your job logic here
-    await processEvent(event);
-  }, {
-    maxRuntime: 5, // Much shorter for Lambda
-    checkinMargin: 2,
-  });
-});
-```
-
-</Expandable>
-
-## Debugging Tips
-
-<Expandable title="Enable debug logging">
-
-```javascript
-// Enable Sentry debug mode
-Sentry.init({
-  dsn: 'YOUR_DSN',
-  debug: true, // Shows Sentry internal logs
-});
-
-// Add custom logging
-console.log('Job starting...');
-const checkInId = Sentry.captureCheckIn({
-  monitorSlug: 'debug-job',
-  status: 'in_progress',
-});
-console.log('Check-in ID:', checkInId);
-```
-
-</Expandable>
-
-<Expandable title="Test monitor setup manually">
-
-```javascript
-// Quick test script
-import * as Sentry from '@sentry/node';
-
-Sentry.init({ dsn: 'YOUR_DSN' });
-
-async function testMonitor() {
-  console.log('Testing monitor...');
-  
-  const checkInId = Sentry.captureCheckIn({
-    monitorSlug: 'test-monitor',
-    status: 'in_progress',
-  });
-  
-  // Simulate work
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  Sentry.captureCheckIn({
-    checkInId,
-    monitorSlug: 'test-monitor',
-    status: 'ok',
-  });
-  
-  console.log('Test complete - check Sentry dashboard');
-}
-
-testMonitor();
-```
-
-</Expandable>
-
-## General Information
-
-<Expandable title="What is the check-in data retention policy?">
+<Expandable title="What is the crons data retention policy for check-ins?">
 
 Check-in data is retained for **90 days**. After this period, check-in history is automatically removed.
 
 </Expandable>
 
-<Expandable title="Do you support six-field crontab expressions?">
+<Expandable title="Do you support a monitor schedule with a six-field crontab expression?">
 
 Currently, Sentry only supports **five-field crontab expressions** (minute, hour, day, month, weekday). Six-field expressions with seconds are not supported.
 
 **Supported**: `0 */2 * * *` (every 2 hours)  
 **Not supported**: `0 0 */2 * * *` (every 2 hours with seconds field)
-
-</Expandable>
-
-<Expandable title="Can I monitor jobs that run longer than their interval?">
-
-Yes! Use **overlapping job handling** with unique check-in IDs:
-
-```javascript
-import { v4 as uuidv4 } from 'uuid';
-
-const checkInId = uuidv4(); // Unique ID for this execution
-
-Sentry.captureCheckIn({
-  checkInId,
-  monitorSlug: 'long-job',
-  status: 'in_progress',
-});
-
-// Long-running job logic...
-
-Sentry.captureCheckIn({
-  checkInId,
-  monitorSlug: 'long-job', 
-  status: 'ok',
-});
-```
 
 </Expandable>
 
@@ -380,9 +73,9 @@ If you're still experiencing issues:
 
 ## Setup Method Troubleshooting
 
-Having trouble with your specific setup method? Check the troubleshooting sections in:
+Having trouble with your specific setup method? Return to the relevant documentation:
 
-- **[UI Setup Troubleshooting](ui-setup#troubleshooting)**
-- **[Automatic Instrumentation Troubleshooting](automatic#troubleshooting)**  
-- **[Manual Integration Help](manual#migration-from-other-methods)**
-- **[Advanced Setup Best Practices](advanced#best-practices)**
+- **[Job Monitoring](job-monitoring)** - For `withMonitor()` wrapper issues
+- **[Check-Ins](check-ins)** - For manual check-in problems  
+- **[Heartbeat](heartbeat)** - For simple notification issues
+- **[Upserting Monitors](upserting-monitors)** - For programmatic monitor creation

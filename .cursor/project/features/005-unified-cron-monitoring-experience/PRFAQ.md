@@ -4,13 +4,13 @@
 
 **What is the problem we are solving?**
 
-Setting up cron job monitoring in Sentry is currently a fragmented, confusing experience that leaves users unsure of the best approach and frustrated with the complexity. The experience is broken across multiple disconnected touchpoints:
+Setting up cron job monitoring in Sentry suffers from unclear positioning of different approaches and overwhelming documentation that doesn't match how users actually think about the problem. The core issues are:
 
-1. **Confusing Product UI Flow**: After creating a monitor in the UI, users are only shown one instrumentation method despite documentation suggesting multiple approaches
-2. **Overwhelming Documentation**: Platform-specific setup guides [1][2] present 4+ instrumentation methods on a single overwhelming page (275+ lines) without clear guidance on which to use
-3. **Disconnected UI and Docs**: The UI doesn't guide users through the full two-step process: (1) Create monitor definition, (2) Choose instrumentation approach
-4. **Missing Decision Framework**: No clear "when to use automatic vs manual" guidance, forcing users to read through all options to understand differences
-5. **Cognitive Overload**: Users face choice paralysis when presented with multiple complex options simultaneously
+1. **Misleading "Easiest" Positioning**: Documentation positions "UI Setup" as "easiest" when it's actually the most complete approach requiring both UI configuration AND instrumentation. This creates false expectations.
+2. **Overwhelming Card-Heavy Documentation**: The main crons page uses heavy styled components and decision-heavy text that overwhelms users instead of helping them find their path quickly  
+3. **Instrumentation Always Required**: The fundamental misunderstanding that some approaches don't require code changes, when in fact ALL approaches require instrumentation - just different types
+4. **Missing Core Product Strategy**: No clear answer to "What's the bare minimum to get working cron monitoring?" and whether we encourage UI-first or code-first flows
+5. **Alternative Methods Poorly Positioned**: CLI and HTTP options are mixed in with SDK approaches despite lacking critical features like tracing and error context
 
 **Customer Pain Points (Recital Feedback [6]):**
 - "What is the schedule? Is what you expect from your server or what Sentry expects? Or what Sentry is doing?" - fundamental confusion about the core concept
@@ -46,58 +46,58 @@ Cron monitoring is a critical reliability feature, but the current experience:
 
 **What is our proposed solution?**
 
-A **Unified Cron Monitoring Experience** that clarifies the two-step process and provides clear guidance for each step.
+A **Simplified Cron Documentation Experience** that clarifies the fundamental truth: instrumentation is always required, and provides clean guidance for choosing the right approach.
 
 ### Core Components:
 
-1. **Clear Two-Step Process**
-   - **Step 1**: Create monitor definition in Sentry UI (includes schedule, alerts, thresholds)
-   - **Step 2**: Choose instrumentation approach based on your setup (automatic vs manual)
-   - UI flow guides users seamlessly from Step 1 to Step 2
+1. **Clean, Scannable Documentation**
+   - Simple bullet-point structure like sourcemaps documentation
+   - Remove heavy styled card components that overwhelm users
+   - Focus on getting users to the right path quickly
 
-2. **Simplified Method Selection**
-   - **Automatic**: For users with supported cron libraries (node-cron, cron, node-schedule)
-   - **Manual**: For custom setups, serverless functions, or when you need full control
-   - Clear "when to use each" decision framework instead of overwhelming technical details
+2. **Clear Method Positioning**
+   - **UI Setup**: Position as "recommended" for most complete monitoring (not "easiest")
+   - **Automatic/Manual**: SDK-based approaches with full feature benefits
+   - **CLI/HTTP**: Clearly positioned as alternatives without SDK benefits
 
-3. **Progressive Documentation**
-   - Simple landing page with method picker (like sourcemaps docs)
-   - Dedicated focused pages for each approach
-   - Eliminate 275-line overwhelming single page
+3. **Honest About Requirements**
+   - All approaches require some form of instrumentation
+   - UI setup provides complete configuration but still needs code integration
+   - Make it clear that monitor slug must match between UI and code
 
-4. **Connected UI Experience**
-   - After UI monitor creation, direct users to choose instrumentation method
-   - Show multiple instrumentation options in UI flow, not just one
-   - Seamless handoff from product to documentation
+4. **Proper Feature Guidance**
+   - SDK approaches enable tracing, error context, and full Sentry features
+   - CLI/HTTP approaches work but lack advanced features
+   - Clear tradeoffs help users make informed decisions
 
 ## 🎯 Success Criteria
 
 **How will we measure success?**
 
-> "The old cron setup was confusing because I'd create a monitor in the UI, but then the documentation would show me 4+ different ways to instrument it. I never knew which approach was right for our setup. Some devs used automatic detection, others manual SDK calls, and we ended up with inconsistent monitoring across our services.
+> "The old cron documentation was overwhelming - big styled cards everywhere and confusing messaging about what was 'easiest' when everything actually required code changes. I spent way too much time trying to figure out the difference between all the approaches.
 >
-> The new two-step process is so much clearer. Step 1: Create the monitor in the UI (which also sets up alerts). Step 2: Pick your instrumentation method based on your actual setup. The automatic approach worked perfectly for our standard Node.js crons, and manual gave us the control we needed for our serverless functions."
+> The simplified docs are so much better. Clean bullet points, clear descriptions, and honest about what each approach does. I can quickly scan and find the right method for my setup. The fact that they positioned CLI and HTTP as 'not recommended' actually helped me understand why the SDK approaches are better."
 
 **Customer Quote: Alex, Solo Developer**
 
-> "I created a cron monitor in the Sentry UI, but then got lost in a 275-line documentation page with 4 different setup methods. I just wanted to monitor my daily report job - I didn't need to become an expert in every possible way to instrument crons.
+> "I was confused by the old 'UI Setup (Easiest)' messaging because it still required me to add code to my job. It wasn't actually easier, just more complete.
 >
-> The updated docs are perfect. After creating the monitor in the UI, I was directed to pick between 'automatic' and 'manual'. Since I use node-cron, the automatic page showed me exactly the 3 lines of code I needed. No more scrolling through irrelevant setup methods."
+> The new 'UI Setup (Recommended)' makes way more sense. It's clear that this gives me the full monitoring setup including alerts, but I still need to add instrumentation. The page is so much cleaner now - I can actually find what I need without scrolling through tons of decision-making content."
 
 ## 📋 Detailed Requirements
 
 ### Must Have (P0):
-1. **Clear Schedule Explanation**: Prominent clarification that "schedule" refers to when the customer's cron job runs
-2. **Smart Defaults**: Project name defaults, reasonable timeouts based on schedule frequency
-3. **Grouped Settings**: Margins, thresholds, and notifications logically organized
-4. **Guided Navigation**: Clear path from setup through monitoring to alerts
-5. **Platform Detection**: Automatically suggest setup method based on detected platform/framework
+1. **Clean Documentation Structure**: Remove heavy card components, use simple bullet-point navigation like sourcemaps.md
+2. **Honest Positioning**: Position UI Setup as "recommended" (most complete) not "easiest" 
+3. **Clear Alternative Methods**: Separate CLI/HTTP as alternatives that lack SDK features like tracing
+4. **Instrumentation Clarity**: Make it clear that all approaches require some form of code integration
+5. **Placeholder for Visual Guide**: Space for interactive GIF showing UI creation flow
 
 ### Should Have (P1):
-1. **Setup Wizard**: Step-by-step guided experience for first-time users
-2. **Code Generation**: Auto-generated SDK code snippets based on user's configuration
-3. **Validation**: Real-time validation of settings with helpful error messages
-4. **Documentation Integration**: Contextual help that doesn't require leaving the product
+1. **Monitor Slug Matching**: Clear guidance that UI monitor slug must match instrumentation code
+2. **Feature Comparison**: Clear explanation of what SDK approaches provide vs CLI/HTTP alternatives
+3. **Path-Specific Pages**: Focused pages for each approach without overwhelming decision content
+4. **Progressive Disclosure**: Simple index page that gets users to their specific path quickly
 
 ### Nice to Have (P2):
 1. **Bulk Import**: Easy migration from competitor products
