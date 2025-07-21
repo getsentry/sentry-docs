@@ -5,13 +5,18 @@ sidebar_order: 10
 
 Options are a way to store generic system-wide configuration. They serve a similar purpose to configuration files, but they are backed by a database, so it's possible to change them at runtime without a deploy. Options are stored in the database and cached, so they are performant and reliable. This makes options well-suited for rates, quotas, and limits.
 
+While the process for creating and using options in the codebase is universal, the method for *managing their values* differs between Sentry's internal SaaS platform and self-hosted instances.
+
+> **For Sentry Employees**
+>
+> Option management for Sentry's internal SaaS environments is handled via a GitOps workflow. All changes to option values are proposed, reviewed, and deployed through pull requests. For complete details on changing values, handling drift, and deployment, please see the **[sentry-options-automator](https://github.com/getsentry/sentry-options-automator)** repository.
+
 ## Adding New Options
 
-To add a new system option, add it to [`sentry/options/defaults.py`](https://github.com/getsentry/sentry/blob/master/src/sentry/options/defaults.py) by registering it. e.g.,
+The process for registering a new option is the same for all environments and is done in the Sentry codebase. Add your option to [`sentry/options/defaults.py`](https://github.com/getsentry/sentry/blob/master/sentry/options/defaults.py).
 
 ```python
 register("performance.some-feature-rate", default=0.0)
-```
 
 Follow these rules when adding new options:
 
@@ -23,11 +28,11 @@ Follow these rules when adding new options:
 The value of an option can be any pickleable value.
 
 <Alert>
-  It is safe to declare and use an option in the same pull request, you don't need to
-  split them up.
+It is safe to declare and use an option in the same pull request; you don't need to split them up.
 </Alert>
 
 ## Using Options
+To check the value of an option, import the options module and use the get method. This is universal across all environments.
 
 To check the value of an option, import the `options` module and use the `get` method. e.g.,
 
@@ -37,10 +42,10 @@ feature_rate = options.get("performance.some-feature-rate")
 ```
 
 ## Setting Options
-
-You can change the value of an option using `sentry shell`, or by using the [options UI](#options-ui).
+For self-hosted instances, you can change the value of an option using `sentry shell`, or by using the [options UI](#options-ui).
 
 ### Sentry Shell
+For direct database manipulation, you can set option values using sentry shell.
 
 You can set option values using `sentry shell`. e.g.,
 
@@ -110,7 +115,9 @@ def test_some_feature(self):
 
 ## Removing Options
 
-If your option is short-lived, you should remove it once it's no longer needed. First, create a pull request to remove the option and its usage. Once it's merged and deployed, remove the option from the database. To do this, you can use the Sentry shell. e.g.,
+If your option is short-lived, you should remove it once it's no longer needed. First, create a pull request to remove the option and its usage. Once it's merged and deployed, remove the option from the database. For self-hosted instances, this is done via the Sentry shell. Otherwise, remove it from the Options Automator repository.
+
+For self hosted instances, you can use the Sentry shell. e.g.,
 
 ```bash
 sentry shell
@@ -122,8 +129,3 @@ then,
 from sentry import options
 options.delete("performance.some-feature-rate")
 ```
-
-<Alert>
-  If you do not have access to the shell, you'll need to contact OPS to remove the option
-  for you.
-</Alert>
