@@ -115,6 +115,26 @@ configurations.configureEach {
 Unsymbolicated stack traces may be caused by module-caching on the SDK side. Be sure to clear any existing module cache if your modules are loaded dynamically:
 
 ```cpp
-// load a new module
+// 1. Load a new module
+load_my_module();
+
+// 2. Clear the module cache
 sentry_clear_modulecache();
+```
+
+```kotlin
+// 1. Manually initialize the SDK, 
+// in order to keep a reference to the SDK options
+var optionsRef: SentryAndroidOptions? = null
+SentryAndroid.init(this) { options ->
+    options.dsn = "___PUBLIC_DSN___"
+    // ...
+    optionsRef = options
+}
+
+// 2. Load a new module
+System.loadLibrary("<library>")
+
+// 3. Clear the cache
+optionsRef?.debugImagesLoader?.clearDebugImages()
 ```
