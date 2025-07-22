@@ -10,7 +10,7 @@ MCP Server error instrumentation ensures that all errors occurring within the Mo
 - **Comprehensive context:** Errors are always associated with the active Sentry span, so you get full context (method, tool, arguments, etc.) in Sentry.
 - **Categorized errors:** Errors are tagged by type (e.g., `validation`, `timeout`, `tool_execution`, `resource_operation`, `prompt_execution`, `transport`, etc.) for easy filtering and analysis in Sentry.
 - **Handler wrapping:** All MCP server handlers (`tool`, `resource`, `prompt`) are wrapped to ensure errors are captured and correlated with the correct request span.
-
+- **Span status tracking:** When errors occur, the active span status is automatically set to error for better trace correlation.
 
 ## Safe Error Capture
 
@@ -19,14 +19,31 @@ The core utility is an error capture function:
 ```ts
 import { getClient } from '../../currentScopes';
 import { captureException } from '../../exports';
+import { SPAN_STATUS_ERROR } from '../../tracing';
+import { getActiveSpan } from '../../utils/spanUtils';
+import type { McpErrorType } from './types';
 
-export function captureError(error: Error, errorType?: string): void {
+export function captureError(error: Error, errorType?: McpErrorType, extraData?: Record<string, unknown>): void {
   try {
     const client = getClient();
     if (!client) return;
+
+    const activeSpan = getActiveSpan();
+    if (activeSpan?.isRecording()) {
+      activeSpan.setStatus({
+        code: SPAN_STATUS_ERROR,
+        message: 'internal_error',
+      });
+    }
+
     captureException(error, {
-      tags: {
-        mcp_error_type: errorType || 'handler_execution',
+      mechanism: {
+        type: 'mcp_server',
+        handled: false,
+        data: {
+          error_type: errorType || 'handler_execution',
+          ...extraData,
+        },
       },
     });
   } catch {
@@ -36,7 +53,8 @@ export function captureError(error: Error, errorType?: string): void {
 ```
 
 - **Never throws an exception:** All error capture is wrapped in a try/catch and will never throw an exception.
-- **Tags errors:** [WIP] will be removed as tags are intended for users.
+- **Mechanism-based categorization:** Error metadata is attached using the `mechanism` object.
+- **Flexible context:** Additional context can be passed via `extraData` and will be included in the mechanism data.
 
 ## Handler Wrapping for Error Capture
 
@@ -44,10 +62,11 @@ All MCP server method handlers (`tool`, `resource`, `prompt`) are wrapped to:
 - Correlate handler execution with the correct Sentry span (using request/session data)
 - Capture both synchronous and asynchronous errors
 - Categorize errors by handler type and error nature
+- Set span status to error for failed operations
 
 ### Error Categorization
 
-Errors are categorized and tagged according to the handler and type of error:
+Errors are categorized using the mechanism's data field according to the handler and type of error:
 
 - **Tool handler errors:**
   - `validation` (e.g., protocol/validation errors)
@@ -61,6 +80,10 @@ Errors are categorized and tagged according to the handler and type of error:
   - `transport`
 - **Protocol errors:**
   - `protocol`
+
+The mechanism approach ensures that error classification information is available in the Sentry UI for debugging and analysis.
+
+**Note**: this mechanism data is not indexed so it is not searchable.
 
 ## Span Correlation
 
