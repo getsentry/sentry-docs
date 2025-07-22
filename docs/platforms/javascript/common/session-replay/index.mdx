@@ -157,17 +157,30 @@ Sampling allows you to control how much of your website's traffic will result in
    record up to a minute of events prior to the error and continue recording
    until the session ends.
 
-### Recommended Sample Rate Values
+```javascript {5-6} {filename:instrumentation-client.ts}
+Sentry.init({
+  // ... other configuration
+  
+  // Session Replay sampling rates
+  replaysSessionSampleRate: 0.1, // Capture 10% of all sessions
+  replaysOnErrorSampleRate: 1.0,  // Capture 100% of error sessions
+  
+  // For development/testing, you can set replaysSessionSampleRate to 1.0
+  // to capture all sessions for complete visibility
+});
+```
 
-**For Development/Testing:**
-- `replaysSessionSampleRate: 1.0` (100%) - Capture all sessions for complete visibility
-- `replaysOnErrorSampleRate: 1.0` (100%) - Capture all error sessions
+### Recommended Production Sample Rates
 
-**For Production:**
-- `replaysSessionSampleRate: 0.01` (1%) for high-traffic sites (100k+ sessions/day)
-- `replaysSessionSampleRate: 0.1` (10%) for medium-traffic sites (10k-100k sessions/day)
-- `replaysSessionSampleRate: 0.25` (25%) for low-traffic sites (under 10k sessions/day)
-- `replaysOnErrorSampleRate: 1.0` (100%) - Always capture sessions with errors for debugging
+Choose your `replaysSessionSampleRate` based on your traffic volume:
+
+| Traffic Volume | Session Sample Rate | Error Sample Rate | Description |
+|---|---|---|---|
+| **High** (100k+ sessions/day) | `0.01` (1%) | `1.0` (100%) | Minimal session capture, all errors |
+| **Medium** (10k-100k sessions/day) | `0.1` (10%) | `1.0` (100%) | Balanced approach |
+| **Low** (under 10k sessions/day) | `0.25` (25%) | `1.0` (100%) | Higher session capture for better insights |
+
+**Why keep `replaysOnErrorSampleRate` at 1.0?** Error sessions provide the most valuable debugging context, so capturing all of them is recommended regardless of traffic volume.
 
 ### How Sampling Works
 
