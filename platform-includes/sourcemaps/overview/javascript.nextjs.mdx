@@ -1,0 +1,67 @@
+### Manual Configuration
+If you installed the SDK manually or the wizard failed, follow the steps below to manually configure source maps upload.
+
+#### 1. Configure Source Maps Upload
+
+To automatically upload source maps, you need to provide your Sentry auth token, organization, and project slugs in your Next.js configuration:
+
+<OrgAuthTokenNote />
+
+Add your auth token to your environment:
+
+```bash {filename:.env.local}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+```javascript {filename:next.config.js}
+const { withSentryConfig } = require("@sentry/nextjs");
+
+module.exports = withSentryConfig(
+  {
+    // your existing Next.js config
+  },
+  {
+    org: "___ORG_SLUG___",
+    project: "___PROJECT_SLUG___",
+    authToken: process.env.SENTRY_AUTH_TOKEN,
+  }
+);
+```
+
+#### 2. Source Map Options
+
+Configure source map behavior using the [source maps options](/platforms/javascript/guides/nextjs/configuration/build/#source-maps-options) in your Next.js config:
+
+```javascript {filename:next.config.js}
+const { withSentryConfig } = require("@sentry/nextjs");
+
+module.exports = withSentryConfig(
+  {
+    // your existing Next.js config
+  },
+  {
+    org: "___ORG_SLUG___",
+    project: "___PROJECT_SLUG___",
+    authToken: process.env.SENTRY_AUTH_TOKEN,
+    sourcemaps: {
+      disable: false, // Enable source maps (default: false)
+      assets: ["**/*.js", "**/*.js.map"], // Specify which files to upload
+      ignore: ["**/node_modules/**"], // Files to exclude
+      deleteSourcemapsAfterUpload: true, // Security: delete after upload
+    },
+  }
+);
+```
+### Turbopack Considerations
+
+**Important:** The Sentry SDK doesn't yet fully support Turbopack production builds (`next build --turbopack`) as Turbopack production builds are still in alpha.
+
+- **Turbopack dev mode** (`next dev --turbopack`) is fully supported for Next.js 15.3.0+
+- **Turbopack production builds** are not currently supported for source map upload
+- If you're using Turbopack, remove the `--turbo` flag for production builds until full support is available
+
+Check the latest information on [Sentry's support for Turbopack on GitHub](https://github.com/getsentry/sentry-javascript/issues).
+
+### Troubleshooting
+
+If you're experiencing issues with source maps, see [Troubleshooting Source Maps](/platforms/javascript/guides/nextjs/sourcemaps/troubleshooting_js/).
