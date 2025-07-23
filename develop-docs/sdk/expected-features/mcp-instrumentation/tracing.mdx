@@ -1,0 +1,52 @@
+---
+title: MCP Tracing
+sidebar_title: Tracing
+---
+
+The MCP Server module is the instrumentation for the [anthropic MCP](https://www.anthropic.com/news/model-context-protocol) SDKs. At the moment it only supports the [MCP Typescript SDK](https://github.com/modelcontextprotocol/typescript-sdk/).
+
+## Spans Conventions
+
+For your MCP Server data to show up in Sentry, specific spans must be created with well-defined names and data attributes. See below.
+
+We follow the draft [OpenTelemetry MCP Semantic Conventions](https://github.com/open-telemetry/semantic-conventions/pull/2083) as closely as possible, with some opinionated additions for improved MCP observability. We should keep an eye on the conventions and update this guide as needed as they are currently in draft and subject to change.
+
+### Common Span Attributes
+
+All MCP Server spans share common attributes and follow consistent patterns:
+
+| Data Attribute              | Type   | Requirement Level | Description                                                                   | Example                                |
+| :-------------------------- | :----- | :---------------- | :---------------------------------------------------------------------------- | :------------------------------------- |
+| `mcp.method.name`           | string | required          | The name of the request or notification method.                               | `"tools/call"`                         |
+| `mcp.transport`             | string | required          | The transport method used for MCP communication. **[2]**                      | `"stdio"`                              |
+| `network.transport`         | string | required          | OSI transport layer protocol. **[3]**                                         | `"pipe"`                               |
+| `mcp.request.id`            | string | optional          | A unique identifier for the request.                                          | `"42"`                                 |
+| `mcp.session.id`            | string | optional          | Identifies the MCP session. Can be undefined as MCP servers can be stateless. | `"191c4850af6c49..."`   |
+| `network.protocol.version`  | string | optional          | The version of JSON RPC protocol used.                                        | `"2.0"`                                |
+
+### Session Data Attributes
+
+For stateful MCP servers with session IDs, additional context attributes are automatically attached to spans. These attributes are extracted from the MCP initialize request and response, providing information about the client, server, and protocol version used in the session:
+
+| Data Attribute              | Type   | Requirement Level | Description                                                                   | Example                                |
+| :-------------------------- | :----- | :---------------- | :---------------------------------------------------------------------------- | :------------------------------------- |
+| `mcp.client.name`           | string | optional          | Name of the MCP client application. **[4]**                                  | `"claude-desktop"`                     |
+| `mcp.client.title`          | string | optional          | Display title of the MCP client application. **[4]**                         | `"Claude Desktop App"`                 |
+| `mcp.client.version`        | string | optional          | Version of the MCP client application. **[4]**                               | `"1.0.0"`                              |
+| `mcp.server.name`           | string | optional          | Name of the MCP server application. **[5]**                                  | `"weather-server"`                     |
+| `mcp.server.title`          | string | optional          | Display title of the MCP server application. **[5]**                         | `"Weather Information Server"`         |
+| `mcp.server.version`        | string | optional          | Version of the MCP server application. **[5]**                               | `"2.1.0"`                              |
+| `mcp.protocol.version`      | string | optional          | MCP protocol version used in the session. **[5]**                            | `"1.0"`                                |
+
+**[2]** Well-defined values for data attribute `mcp.transport`:
+
+**[3]** Well-defined values for data attribute `network.transport`:
+
+| Value    | Description                           |
+| :------- | :------------------------------------ |
+| `"pipe"` | Named pipe (for stdio transport)      |
+| `"tcp"`  | TCP (for HTTP/SSE transport)          |
+
+**[4]** Client information is extracted from the `initialize` request message sent by the MCP client.
+
+**[5]** Server information and protocol version are extracted from the `initialize` response message sent by the MCP server.
