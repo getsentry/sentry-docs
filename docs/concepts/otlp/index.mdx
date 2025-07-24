@@ -1,0 +1,41 @@
+---
+title: OTLP
+sidebar_order: 400
+description: "Learn how to send OpenTelemetry trace data directly to Sentry from OpenTelemetry SDKs."
+keywords: ["otlp", "otel", "opentelemetry"]
+---
+
+<Include name="feature-available-for-user-group-limited-avail.mdx" />
+
+Sentry can ingest [OpenTelemetry](https://opentelemetry.io) traces directly via the  [OpenTelemetry Protocol](https://opentelemetry.io/docs/specs/otel/protocol/). If you have existing OpenTelemetry trace instrumentation, you can configure your OpenTelemetry exporter to send traces to Sentry directly.
+
+The easiest way to configure an OpenTelemetry Exporter is with environment variables. You'll need to configure the trace endpoint URL, as well as the authentication headers.
+
+```bash {filename: .env}
+export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="___OTLP_TRACES_URL___""
+export OTEL_EXPORTER_OTLP_TRACES_HEADERS="x-sentry-auth=sentry sentry_key=___PUBLIC_KEY___"
+```
+
+If you don't want to use environment variables, you can configure the OpenTelemetry Exporter directly in your application code.
+
+```typescript {filename: app.ts}
+import { NodeSDK } from "@opentelemetry/sdk-node";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+
+const sdk = new NodeSDK({
+  traceExporter: new OTLPTraceExporter({
+    url: "___OTLP_TRACES_URL___",
+    headers: {
+      "x-sentry-auth": "sentry sentry_key=___PUBLIC_KEY___",
+    },
+  }),
+});
+
+sdk.start();
+```
+
+You can find the values of Sentry's OTLP endpoint and public key in your Sentry project settings.
+
+1. Go to the [Settings > Projects](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/) page in Sentry.
+2. Select a project from the list.
+3. Go to the "Client Keys (DSN)" sub-page for this project under the "SDK Setup" heading.
