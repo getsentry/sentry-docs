@@ -23,7 +23,6 @@ import sentry_sdk
 
 # Start a span for a task
 with sentry_sdk.start_span(op="task", name="Create User"):
-    # Your code here
     # The span will automatically end when exiting this block
     user = create_user(email="user@example.com")
     send_welcome_email(user)
@@ -136,7 +135,7 @@ with sentry_sdk.start_span(name="Background Task", op="task", only_as_child_span
 
 ### Adding Span Attributes
 
-Span attributes customize information you can get through tracing. This information can be found in the traces views in Sentry, once you drill into a span. You can capture additional context with span attributes. These can be key-value pairs of various Python types.
+Span attributes customize information you can get through tracing. This information can be found in the traces views in Sentry, once you drill into a span. You can capture additional context with span attributes. These are key-value pairs where the keys are non-empty strings and the values are either primitive Python types (excluding `None`), or a list of a single primitive Python type.
 
 ```python
 import sentry_sdk
@@ -146,7 +145,7 @@ with sentry_sdk.start_span(op="db", name="Query Users") as span:
     users = db.query("SELECT * FROM users WHERE active = true")
 
     # You can add more data during execution
-    span.set_data("result_count", len(users))
+    span.set_attribute("result_count", len(users))
 ```
 
 You can also add attributes to an existing span:
@@ -158,8 +157,8 @@ import sentry_sdk
 span = sentry_sdk.get_current_span()
 if span:
     # Set individual data points
-    span.set_data("user_id", user.id)
-    span.set_data("request_size", len(request.body))
+    span.set_attribute("user_id", user.id)
+    span.set_attribute("request_size", len(request.body))
 ```
 
 ### Adding Attributes to All Spans
@@ -214,7 +213,7 @@ with sentry_sdk.start_span(op="http.client", name="Fetch User Data"):
 
 # Database operation
 with sentry_sdk.start_span(op="db", name="Save User"):
-        db.execute(
+    db.execute(
         "INSERT INTO users (name, email) VALUES (%s, %s)",
         (user.name, user.email),
     )
@@ -241,7 +240,7 @@ with sentry_sdk.start_span(op="task", name="Process Payment") as span:
         else:
             # Mark the span as failed
             span.set_status("error")
-            span.set_data("error_reason", result.error)
+            span.set_attribute("error_reason", str(result.error))
     except Exception:
         # Span will automatically be marked as failed when an exception occurs
         raise
