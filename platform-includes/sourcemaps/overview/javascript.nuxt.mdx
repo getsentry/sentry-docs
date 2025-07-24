@@ -1,0 +1,80 @@
+## Uploading Source Maps in a Nuxt Project
+
+`@sentry/nuxt` will generate and upload source maps automatically during production builds, so that errors in Sentry contain readable stack traces.
+
+### Automatic Setup
+
+The easiest way to configure uploading source maps is by using the [Sentry Wizard](/platforms/javascript/guides/nuxt/#step-1-install).
+
+### Manual Configuration
+
+If you installed the SDK manually or the wizard failed, follow the steps below to manually configure source maps upload.
+
+#### 1. Configure Source Maps Upload
+
+To automatically upload source maps, you need to provide your Sentry auth token, organization, and project slugs in your Nuxt configuration:
+
+<OrgAuthTokenNote />
+
+**Make sure you add your auth token to your CI, if you are using one to deploy your application.**
+
+Add your auth token to your environment:
+
+```bash {filename:.env}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+```javascript {filename:nuxt.config.ts}
+export default defineNuxtConfig({
+  modules: ["@sentry/nuxt/module"],
+  sentry: {
+    sourceMapsUploadOptions: {
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    },
+  },
+});
+```
+
+#### 2. Enable Client-side Source Map Generation
+
+To enable client-side source maps, you need to do so explicitly. Nuxt applies default [source map settings](https://nuxt.com/docs/api/nuxt-config#sourcemap), and the Sentry Nuxt Module respects these when they are defined.
+
+To enable client-side source map generation, add the following to your Nuxt configuration:
+
+```javascript {filename:nuxt.config.ts}
+export default defineNuxtConfig({
+  sourcemap: { client: "hidden" },
+});
+```
+
+The `hidden` option functions the same as `true`, by enabling source map generation. However, it also suppresses the source map reference comments that normally appear at the end of each generated file in the build output. This option keeps the source maps available without exposing their references in the files.
+
+When you open your browser's developer tools, the browser tries to fetch source maps using the reference comments found in bundled files. If the source maps are uploaded to Sentry and removed from the client side, these references cause 404 errors in the developer tools. The `hidden` option stops these comments from being generated, preventing browsers from trying to fetch missing files and avoiding unnecessary errors.
+
+#### 3. Source Map Options
+
+Configure source map behavior using the [source maps options](/platforms/javascript/guides/nuxt/configuration/build/#source-maps-options) in your Nuxt config:
+
+```javascript {filename:nuxt.config.ts}
+export default defineNuxtConfig({
+  modules: ["@sentry/nuxt/module"],
+  sentry: {
+    sourceMapsUploadOptions: {
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      sourcemaps: {
+        assets: ["./output/**/*"],
+        ignore: ["**/node_modules/**"],
+        filesToDeleteAfterUpload: ["./output/**/*.map"],
+      },
+    },
+  },
+});
+```
+
+### Troubleshooting
+
+If you're experiencing issues with source maps, see [Troubleshooting Source Maps](/platforms/javascript/guides/nuxt/troubleshooting/).
