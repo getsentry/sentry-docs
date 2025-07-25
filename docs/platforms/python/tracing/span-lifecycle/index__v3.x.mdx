@@ -23,7 +23,6 @@ import sentry_sdk
 
 # Start a span for a task
 with sentry_sdk.start_span(op="task", name="Create User"):
-    # Your code here
     # The span will automatically end when exiting this block
     user = create_user(email="user@example.com")
     send_welcome_email(user)
@@ -72,8 +71,8 @@ with sentry_sdk.start_span(op="db", name="Query Users") as span:
     # Perform a database query
     users = db.query("SELECT * FROM users")
 
-    # You can set data on the span
-    span.set_data("user_count", len(users))
+    # You can set an attribute on the span
+    span.set_attribute("user_count", len(users))
 ```
 
 The context manager also correctly handles exceptions, marking the span as failed if an exception occurs:
@@ -101,17 +100,17 @@ import sentry_sdk
 # Get the current active span
 current_span = sentry_sdk.get_current_span()
 if current_span:
-    current_span.set_data("key", "value")
+    current_span.set_attribute("key", "value")
 ```
 
 ## Working with Transactions
 
-[Transactions](/product/insights/overview/transaction-summary/#what-is-a-transaction) are a special type of span that represent a complete operation in your application, such as a web request. You can create transactions explicitly:
+[Transactions](/product/insights/overview/transaction-summary/#what-is-a-transaction), also known as root spans, are a special type of span that represent a complete operation in your application, such as a web request. A top-level span (without any parent spans in the current service) will automatically become a transaction:
 
 ```python
 import sentry_sdk
 
-with sentry_sdk.start_transaction(name="Background Task", op="task") as transaction:
+with sentry_sdk.start_span(name="Background Task", op="task") as transaction:
     # Your code here
 
     # You can add child spans to the transaction
@@ -120,11 +119,23 @@ with sentry_sdk.start_transaction(name="Background Task", op="task") as transact
         pass
 ```
 
+If you want to prevent a span from becoming a transaction, you can use
+the `only_as_child_span` argument:
+
+```python
+import sentry_sdk
+
+# This span will never be promoted to a transaction, but if there is a running
+# span when this span starts, it'll be attached to it as a child span
+with sentry_sdk.start_span(name="Background Task", op="task", only_as_child_span=True):
+    # Your code here
+```
+
 ## Improving Span Data
 
 ### Adding Span Attributes
 
-Span attributes customize information you can get through tracing. This information can be found in the traces views in Sentry, once you drill into a span. You can capture additional context with span attributes. These can be key-value pairs of various Python types.
+Span attributes customize information you can get through tracing. This information can be found in the traces views in Sentry, once you drill into a span. You can capture additional context with span attributes. These are key-value pairs where the keys are non-empty strings and the values are either primitive Python types (excluding `None`), or a list of a single primitive Python type.
 
 ```python
 import sentry_sdk
@@ -134,7 +145,7 @@ with sentry_sdk.start_span(op="db", name="Query Users") as span:
     users = db.query("SELECT * FROM users WHERE active = true")
 
     # You can add more data during execution
-    span.set_data("result_count", len(users))
+    span.set_attribute("result_count", len(users))
 ```
 
 You can also add attributes to an existing span:
@@ -146,8 +157,8 @@ import sentry_sdk
 span = sentry_sdk.get_current_span()
 if span:
     # Set individual data points
-    span.set_data("user_id", user.id)
-    span.set_data("request_size", len(request.body))
+    span.set_attribute("user_id", user.id)
+    span.set_attribute("request_size", len(request.body))
 ```
 
 ### Adding Attributes to All Spans
@@ -229,7 +240,7 @@ with sentry_sdk.start_span(op="task", name="Process Payment") as span:
         else:
             # Mark the span as failed
             span.set_status("error")
-            span.set_data("error_reason", result.error)
+            span.set_attribute("error_reason", str(result.error))
     except Exception:
         # Span will automatically be marked as failed when an exception occurs
         raise
