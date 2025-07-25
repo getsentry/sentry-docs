@@ -172,3 +172,22 @@ The other sub-item is the replay recording's instructions set. This payload shou
 {"segment_id":0}
 /* gzipped JSON payload */
 ```
+
+## SDK Behavior
+
+### Session mode
+
+When an SDK records Session Replay in `session` mode (`sessionSampleRate` is specified), the recording should start when the SDK is initialized and it should be continuously streamed to the Sentry servers. The SDK should send a replay envelope every 5 seconds. The maximum duration of the recording should not exceed 60 minutes (or 15 minutes without an activity on Web).
+
+For the SDKs that support disk cache, the recording should pause when there's no internet connection or the SDK is getting rate-limited. This is necessary to prevent overflowing the disk cache, which can potentially result in losing more critical envelopes. When internet connection is restored or rate limit is lifted, the recording should resume.
+
+### Buffer mode
+
+When an SDK records Session Replay in `buffer` mode (`onErrorSampleRate` is specified), the recording should start when the SDK is initialized and should be buffered in-memory (and to disk if an SDK supports disk cache) in a ring buffer for up to 30 seconds back. The capturing of the recording may be triggered when one of the following conditions is met:
+
+- A crash or error event occurs and is captured by the SDK
+- `flush` API has been called manually on the replay (for SDKs that support manual API)
+
+After the initial (buffered) segment has been captured, the SDK should continue recording in `session` mode. Note, however, that the `replay_type` field of the following segments should still be set to `buffer` to reflect the original `replay_type`.
+
+If the crash or error event has been dropped in `beforeSend`, the replay should **not** be captured.
