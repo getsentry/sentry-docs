@@ -9,10 +9,18 @@ You can use the `instrumentWorkflowWithSentry` method to instrument [Cloudflare
 Workflows](https://developers.cloudflare.com/workflows/).
 
 Because workflows can be hibernated and lose all state, we use the workflows
-`instanceId` as the Sentry `trace_id` to link all steps together. We also use
-the last 4 characters of the `instanceId` for sampling to ensure all steps have
-the same sampling decision. If you are starting your workflows with a custom
-`instanceId`, ensure you use valid random UUIDs either with or without dashes.
+`instanceId` to generate the Sentry `trace_id` to link all steps together into a
+single trace. If `instanceId` is a UUID (with or without dashes), it will be
+used directly as the `trace_id`. If not, we SHA1 hash the `instanceId` to
+generate a deterministic `trace_id`. 
+
+We use the last 4 characters of the `trace_id` for sampling to ensure all steps
+have the same sampling decision. 
+
+Because the `instanceId` is used for both the `trace_id` and for sampling
+decisions, you should ensure that the `instanceId` is unique for each workflow
+instance. If you are using custom UUIDs, you should ensure the last 4 digits are
+sufficiently random to ensure a good distribution of sampling decisions.
 
 ```typescript
 import { WorkflowEntrypoint, WorkflowStep, WorkflowEvent } from 'cloudflare:workers';
