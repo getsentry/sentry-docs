@@ -12,34 +12,73 @@ keywords:
 ---
 
 Event Loop Block errors, or Application Not Responding (ANR) errors are
-triggered when the Electron main or renderer processes event loop is blocked for more than
-five seconds. The Electron SDK reports ANR errors as Sentry events and can
-optionally attach a stack trace of the blocking code to the ANR event.
+triggered when the Electron main or renderer processes event loop is blocked for
+more than the configured threshold. The Electron SDK reports ANR errors as
+Sentry events and can attach a stack trace of the blocking code to the ANR
+event.
 
 <Include name="feature-stage-beta.mdx" />
 
-_(Available in version 4.17.0 and above)_
+_(Available in version 6.9.0 and above)_
 
-<Alert>
+Event loop blocked detection can be individually enabled for the main and
+renderer processes.
 
-ANR detection requires Electron v22 or higher.
+# Main Process:
 
-</Alert>
+## Installation
 
-ANR tracking can be individually enabled for the main and renderer processes.
+Install `@sentry/node-native` to use the `eventLoopBlockIntegration` in the main
+process.
 
-For the main process:
+```bash {tabTitle:npm}
+npm install @sentry/node-native
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/node-native
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/node-native
+```
+
+## Usage
 
 ```javascript
 import * as Sentry from "@sentry/electron/main";
+import { eventLoopBlockIntegration } from "@sentry/electron/native";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [Sentry.anrIntegration({ captureStackTrace: true })],
+  integrations: [eventLoopBlockIntegration({ threshold: 500 })],
 });
 ```
 
-For renderer processes:
+## Configuration options
+
+```typescript
+export interface ThreadBlockedIntegrationOptions {
+  /**
+   * Threshold in milliseconds to trigger an event.
+   *
+   * Defaults to 1000ms.
+   */
+  threshold: number;
+  /**
+   * Maximum number of blocked events to send per clock hour.
+   *
+   * Defaults to 1.
+   */
+  maxEventsPerHour: number;
+  /**
+   * Tags to include with blocked events.
+   */
+  staticTags: { [key: string]: Primitive };
+}
+```
+
+# Renderer Processes:
 
 ```javascript
 import * as Sentry from "@sentry/electron/renderer";
@@ -52,8 +91,8 @@ Sentry.init({
 
 ## Configuration options
 
-You can pass a configuration object to both the `Anr` integration and the
-`anrDetection` renderer option to customize the ANR detection behavior.
+You can pass a configuration object for `anrDetection` in the renderer to
+customize the ANR detection behavior.
 
 ```Typescript
 interface Options {
@@ -79,21 +118,21 @@ interface Options {
 }
 ```
 
-## Application Not Responding (ANR) Implementation and Overhead
+## Event Loop Block Detection Implementation and Overhead
 
-ANR detection in the Electron main process uses a worker thread to monitor the event loop
-in the main app thread. The main app thread sends a heartbeat message to the ANR
-worker thread every 50ms. If the ANR worker does not receive a heartbeat message
-for 5 seconds, it triggers an ANR event. If the `captureStackTrace` option is
-enabled, the ANR worker uses the `inspector` module to capture stack traces via the [v8
-inspector API](https://nodejs.org/api/inspector.html).
+In the main process, the `eventLoopBlockIntegration` uses a native module to
+track threads and capture stack traces via v8's native APIs. A worker thread is
+used to capture events even if the main thread is blocked. Overhead with no
+event loop blocking should be minimal. Each thread notifies the native module
+that it is alive every `threshold / 2` milliseconds. Once an event loop block is
+detected, v8's native APIs are used to pause all threads and capture stack
+traces. The pause time is considered inconsequential if the event loop has
+already been blocked for hundreds of milliseconds.
 
-Once an ANR event is reported, the ANR worker thread exits to prevent further
-duplicate events and the main app thread will continue to run as usual.
-
-Overhead from Node.js ANR tracking should be minimal. With no ANR detected, the
-only overhead in the main app thread is polling the ANR worker over IPC every 50ms by
-default. The ANR worker thread consumes around 10-20 MB of RAM to keep track of
-the polling. Once an ANR has been detected, the main thread is paused briefly
-in the debugger to capture the stack trace frames. At this point, the event loop
-has been blocked for seconds so the debugging overhead is negligible.
+In the renderer processes, a similar polling mechanism is used to detect event
+loop blocks. In Electron v34 or newer, the `frame.collectJavaScriptCallStack()`
+API is used to capture stack traces when an event loop block is detected. In
+older Electron versions, the `v8` inspector API is used to capture stack traces.
+The inspector API can have a slight negative impact on performance since it can
+cause v8 to de-optimize some code paths. For this reason we recommend updating
+to Electron v34 or newer to use this feature in production.
