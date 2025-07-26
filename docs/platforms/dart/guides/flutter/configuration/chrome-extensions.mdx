@@ -1,0 +1,150 @@
+---
+title: Chrome Extensions
+description: "Learn how to set up the Sentry Flutter SDK for Chrome Extensions with Flutter Web."
+sidebar_order: 10
+---
+
+When building Flutter Web applications that will be packaged as Chrome Extensions, there are specific configuration requirements due to Chrome's Content Security Policy (CSP) restrictions. This guide walks you through the necessary setup steps.
+
+## Overview
+
+Chrome Extensions enforce strict Content Security Policy (CSP) rules that prevent dynamically loaded scripts. Since the Sentry Flutter SDK typically loads the Sentry JavaScript SDK dynamically for web platforms, this approach won't work in Chrome Extension environments.
+
+## Required Setup
+
+### 1. Download the Sentry JavaScript Bundle
+
+Instead of loading the Sentry JavaScript SDK dynamically, you need to include it as a static asset:
+
+1. Download the minified Sentry JavaScript bundle. For example, for version 9.40.0:
+   ```
+   https://browser.sentry-cdn.com/9.40.0/bundle.tracing.min.js
+   ```
+
+2. Save this file to your Flutter web project's `web/` directory.
+
+### 2. Include the Script in Your HTML
+
+Add the Sentry JavaScript bundle to your `web/index.html` file:
+
+```html {filename:web/index.html}
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- Other head elements -->
+  <script src="bundle.tracing.min.js" type="application/javascript"></script>
+</head>
+<body>
+  <!-- Your app content -->
+</body>
+</html>
+```
+
+### 3. Configure Your Flutter Build
+
+When building your Flutter web app for Chrome Extensions, use the following build command to ensure compatibility:
+
+```bash
+flutter build web --no-web-resources-cdn --pwa-strategy=none --source-maps
+```
+
+**Build flags explained:**
+- `--no-web-resources-cdn`: Prevents Flutter from loading resources from external CDNs, which may be blocked by CSP
+- `--pwa-strategy=none`: Disables Progressive Web App features that may conflict with extension policies
+- `--source-maps`: Generates source maps for better debugging and error reporting
+
+### 4. Upload Source Maps
+
+After building your application, upload the generated source maps to Sentry for better debugging:
+
+```bash
+sentry_dart_plugin
+```
+
+Make sure you have the [Sentry Dart Plugin](/platforms/dart/guides/flutter/configuration/options/#sentry-dart-plugin) properly configured in your project.
+
+## Complete Example
+
+Here's a minimal example of the required files:
+
+<details>
+<summary><code>web/index.html</code></summary>
+
+```html {filename:web/index.html}
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="My Chrome Extension">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="My Extension">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <title>My Chrome Extension</title>
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- Sentry JavaScript SDK -->
+  <script src="bundle.tracing.min.js" type="application/javascript"></script>
+  
+  <script>
+    // Required for Chrome Extensions
+    var serviceWorkerVersion = null;
+  </script>
+  <script src="flutter_service_worker.js?v=$FLUTTER_SERVICE_WORKER_VERSION" defer></script>
+</head>
+<body id="app-container">
+  <script src="main.dart.js" type="application/javascript"></script>
+</body>
+</html>
+```
+
+</details>
+
+<details>
+<summary><code>pubspec.yaml</code> dependencies</summary>
+
+```yaml {filename:pubspec.yaml}
+dependencies:
+  flutter:
+    sdk: flutter
+  sentry_flutter: ^{{@inject packages.version('sentry.dart.flutter') }}
+
+dev_dependencies:
+  sentry_dart_plugin: ^{{@inject packages.version('sentry.dart.plugin') }}
+```
+
+</details>
+
+## Build and Deploy
+
+1. Build your Flutter web app:
+   ```bash
+   flutter build web --no-web-resources-cdn --pwa-strategy=none --source-maps
+   ```
+
+2. Upload source maps:
+   ```bash
+   dart run sentry_dart_plugin
+   ```
+
+3. Package your Chrome Extension using the built files in the `build/web/` directory.
+
+## Troubleshooting
+
+**Script loading errors**: If you encounter script loading errors, ensure that:
+- The Sentry JavaScript bundle is properly downloaded and placed in the `web/` directory
+- The script tag in `index.html` has the correct path
+- Your Chrome Extension's `manifest.json` allows the necessary permissions
+
+**CSP violations**: If you're still seeing CSP violations:
+- Verify that you're not loading any external resources
+- Check that the `--no-web-resources-cdn` flag is being used during build
+- Ensure your extension's `manifest.json` has appropriate CSP settings
+
+**Source maps not uploading**: If source maps fail to upload:
+- Verify your Sentry project configuration in `pubspec.yaml`
+- Check that you have proper authentication configured for the Sentry CLI
+- Ensure the `--source-maps` flag is included in your build command
