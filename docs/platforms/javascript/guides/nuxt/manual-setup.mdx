@@ -18,40 +18,18 @@ description: "Learn how to manually set up Sentry in your Nuxt app and capture y
 
 <PlatformContent includePath="getting-started-prerequisites" />
 
-<Expandable title="Are you using Nuxt version < 3.14.0?">
-Add the following overrides:
-
-```json {tabTitle:npm} {filename:package.json}
-"overrides": {
-  "ofetch": "^1.4.0",
-  "@vercel/nft": "^0.27.4"
-}
-```
-
-```json {tabTitle:yarn} {filename:package.json}
-"resolutions": {
-  "ofetch": "^1.4.0",
-  "@vercel/nft": "^0.27.4"
-}
-```
-
-```json {tabTitle:pnpm} {filename:package.json}
-"pnpm": {
-  "overrides": {
-    "ofetch": "^1.4.0",
-    "@vercel/nft": "^0.27.4"
-  }
-}
-```
-
-</Expandable>
-
 ## Step 1: Install
 
 Choose the features you want to configure, and this guide will show you how:
 
 <OnboardingOptionButtons
-  options={["error-monitoring", "performance", "session-replay", "user-feedback", "logs"]}
+  options={[
+    "error-monitoring",
+    "performance",
+    "session-replay",
+    "user-feedback",
+    "logs",
+  ]}
 />
 
 <PlatformContent includePath="getting-started-features-expandable" />
@@ -134,7 +112,7 @@ Sentry.init({
   // ___PRODUCT_OPTION_START___ logs
 
   // Enable logs to be sent to Sentry
-  _experiments: { enableLogs: true },
+  enableLogs: true,
   // ___PRODUCT_OPTION_END___ logs
 });
 ```
@@ -177,7 +155,7 @@ Sentry.init({
   // ___PRODUCT_OPTION_START___ logs
 
   // Enable logs to be sent to Sentry
-  _experiments: { enableLogs: true },
+  enableLogs: true,
   // ___PRODUCT_OPTION_END___ logs
 });
 ```
@@ -218,20 +196,29 @@ Check out the <PlatformLink to="/install/cli-import">`--import` CLI flag</Platfo
 
 To upload source maps for clear error stack traces, add your Sentry auth token, organization, and project slugs in the `sentry.sourceMapsUploadOptions` inside your configuration file:
 
-```javascript {filename:nuxt.config.ts} {3-9}
+<Alert>These `sentry` options only affect the **build time** of the SDK.</Alert>
+
+```javascript {filename:nuxt.config.ts} {3-10}
 export default defineNuxtConfig({
   modules: ["@sentry/nuxt/module"],
   sentry: {
     sourceMapsUploadOptions: {
       org: "___ORG_SLUG___",
       project: "___PROJECT_SLUG___",
-      authToken: "___ORG_AUTH_TOKEN___",
+      // store your auth token in an environment variable
+      authToken: process.env.SENTRY_AUTH_TOKEN,
     },
   },
 });
 ```
 
-<Alert>These `sentry` options only affect the **build time** of the SDK.</Alert>
+To keep your auth token secure, always store it in an environment variable instead of directly in your files:
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
 
 While Nuxt generates source maps on the server side by default, you need to explicitly enable client-side source maps in your Nuxt configuration:
 
