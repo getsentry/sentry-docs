@@ -1,7 +1,7 @@
 ---
 title: Set Up Crons
 sidebar_title: Crons
-description: "Sentry Crons allows you to monitor the uptime and performance of any scheduled, recurring job in your application."
+description: "Monitor your scheduled jobs with Sentry - choose the setup method that works best for you."
 sidebar_order: 5750
 supported:
   - javascript.nextjs
@@ -25,235 +25,43 @@ supported:
   - javascript.cloudflare
 ---
 
-Once implemented, it'll allow you to get alerts and metrics to help you solve errors, detect timeouts, and prevent disruptions to your service.
+Monitor the uptime and performance of your scheduled jobs in Node.js. Get alerts when jobs fail, timeout, or don't run as expected.
 
-<PlatformSection supported={['javascript.nextjs', 'javascript.sveltekit', 'javascript.remix', 'javascript.astro', 'javascript.bun', 'javascript.deno', 'javascript.cloudflare', 'javascript.node', 'javascript.aws-lambda', 'javascript.azure-functions', 'javascript.connect', 'javascript.express', "javascript.fastify", 'javascript.gcp-functions', 'javascript.hapi', 'javascript.hono', 'javascript.koa', 'javascript.nestjs', 'javascript.tanstackstart-react']}>
+{/* Placeholder for interactive arcade GIF showing UI creation flow */}
 
-## Requirements
+## Setup Methods
 
-<PlatformContent includePath="crons/requirements" />
+Choose the method that matches your current setup:
 
-<PlatformContent includePath="crons/setup" />
+* [UI Setup](ui-setup) - Create monitors in Sentry's web interface, then add instrumentation
 
-</PlatformSection>
+### Automatic Integration
 
-<PlatformSection notSupported={['javascript.nextjs', 'javascript.sveltekit', 'javascript.remix', 'javascript.astro', 'javascript.bun', 'javascript.deno', 'javascript.cloudflare', 'javascript.node', 'javascript.aws-lambda', 'javascript.azure-functions', 'javascript.connect', 'javascript.express', 'javascript.fastify', 'javascript.gcp-functions', 'javascript.hapi', 'javascript.hono', 'javascript.koa', 'javascript.nestjs', 'javascript.tanstackstart-react']}>
+* [node-cron](node-cron) - Auto-instrument node-cron library
+* [cron](cron-library) - Auto-instrument cron library
+* [node-schedule](node-schedule) - Auto-instrument node-schedule library
 
-## Requirements
+If you're using one of these popular cron libraries, use the automatic integration for seamless monitoring.
 
-To begin monitoring your recurring, scheduled job:
+### Manual Methods
 
-1. [Create a new monitor](https://sentry.io/crons/create/) in Sentry.
-2. Configure check-ins or a heartbeat for your job.
+* [Job Monitoring](job-monitoring) - Use withMonitor wrapper for automatic status tracking
+* [Check-Ins](check-ins) - Full control with manual status updates
+* [Heartbeat](heartbeat) - Simple success/failure notifications
+* [Upserting Monitors](upserting-monitors) - Programmatic monitor creation and management
 
-Optionally, you can skip the first step and [create or update (upsert) a monitor through a check-in](#creating-or-updating-a-monitor-through-a-check-in-optional). See more below.
+### Alternative Methods (Not Recommended)
 
-## Check-Ins (Recommended)
+These methods work but don't provide the full benefits of SDK integration like tracing and error context:
 
-Check-in monitoring allows you to track a job's progress by completing two check-ins: one at the start of your job and another at the end of your job. This two-step process allows Sentry to notify you if your job didn't start when expected (missed) or if it exceeded its maximum runtime (failed).
+* [Sentry CLI](https://docs.sentry.io/cli/crons/) - Command-line tool for basic monitoring
+* [HTTP API](https://docs.sentry.io/product/crons/getting-started/http/) - Direct API calls for check-ins
 
-```bash {tabTitle: cURL}
-SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
-SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
+### Other Tools
 
-# 🟡 Notify Sentry your job is running:
-curl "${SENTRY_CRONS}?status=in_progress"
+If you have custom cron logic or use a different scheduling library, we recommend [Check-Ins](check-ins) which gives you full control over when and how status updates are sent.
 
-# Execute your scheduled task here...
-
-# 🟢 Notify Sentry your job has completed successfully:
-curl "${SENTRY_CRONS}?status=ok"
-```
-
-```http {tabTitle: HTTP}
-GET /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/?status=in_progress HTTP/1.1
-Host: ___ORG_INGEST_DOMAIN___
-
-GET /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/?status=ok HTTP/1.1
-Host: ___ORG_INGEST_DOMAIN___
-```
-
-If your job execution fails:
-
-```bash {tabTitle: cURL}
-# 🔴 Notify Sentry your job has failed:
-curl "${SENTRY_CRONS}?status=error"
-```
-
-```http {tabTitle: HTTP}
-GET /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/?status=error HTTP/1.1
-Host: ___ORG_INGEST_DOMAIN___
-```
-
-<Alert>
-
-If you expect your scheduled jobs to overlap, read about [Overlapping Jobs](#overlapping-jobs-optional) below.
-
-</Alert>
-
-### Specifying monitor environments (Optional)
-
-When sending check-ins to your monitor you may specify the `environment` of the
-check-in. This allows you to monitor a single schedule across multiple
-environments.
-
-If you don't specify an environment with your check-ins the default is `production`.
-
-<Alert>
-
-Monitor environments are still early in development. Currently, after a check-in
-occurs for a specific environment, you must continue sending check-ins on
-schedule or delete the monitor environment; otherwise, it will be marked as missed.
-
-</Alert>
-
-```bash {tabTitle: cURL}
-SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
-SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
-
-# 🟡 Notify Sentry your job is running in the dev environment:
-curl "${SENTRY_CRONS}?environment=dev&status=in_progress"
-
-# Execute your scheduled task here...
-
-# 🟢 Notify Sentry your dev environment job has completed successfully:
-curl "${SENTRY_CRONS}?environment=dev&status=ok"
-```
-
-### Creating or Updating a Monitor Through a Check-In (Optional)
-
-Sentry enables the automatic creation or update of a monitor (upsert) through the check-in payload. This can be useful if you have many scheduled tasks or need to create them dynamically.
-
-```bash {tabTitle: cURL}
-SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
-SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
-
-# 🟡 Notify Sentry your job is running:
-curl -X POST "${SENTRY_CRONS}" \
-    --header 'Content-Type: application/json' \
-    --data-raw '{"monitor_config": {"schedule": {"type": "crontab", "value": "0 * * * *"}}, "status": "in_progress"}'
-```
-
-```http {tabTitle: HTTP}
-POST /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/ HTTP/1.1
-Host: ___ORG_INGEST_DOMAIN___
-Content-Type: application/json
-
-{
-    "monitor_config": {
-        "schedule": {"type": "crontab", "value": "0 * * * *"},
-        "checkin_margin": 1,
-        "max_runtime": 20,
-        "timezone": "America/Los_Angeles"
-    },
-    "status": "in_progress"
-}
-```
-
-Monitor `monitor_config` parameters:
-
-`schedule_type`:
-
-The schedule representation for your monitor, either `crontab` or `interval`.
-
-`schedule`:
-
-The job's schedule :
-
-This is an object specifying a `schedule_type` of either `crontab` or `interval`. The structure will vary depending on the type:
-
-```json
-{"type": "crontab", "value": "0 * * * *"}
-{"type": "interval", "value": "2", "unit": "hour"}
-```
-
-`checkin_margin`:
-
-The amount of time (in minutes) Sentry should wait for your check-in before it's considered missed ("grace period"). Optional.
-
-<Alert>
-
-We recommend that your check-in margin be less than or equal to your interval.
-
-</Alert>
-
-`max_runtime`:
-
-The amount of time (in minutes) your job is allowed to run before it's considered failed. Optional.
-
-`failure_issue_threshold`:
-
-The number of consecutive failed check-ins it takes before an issue is created. Optional.
-
-`recovery_threshold`:
-
-The number of consecutive OK check-ins it takes before an issue is resolved. Optional.
-
-`timezone`
-
-The `tz` where your job is running. This is usually your server's timezone, (such as `America/Los_Angeles`). See [list of tz database time zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). Optional.
-
-<Alert level="warning">
-
-It's important to provide a timezone for non-repeating crontab schedules, such as `0 17 * * *` (every day at 5pm).
-
-</Alert>
-
-### Overlapping Jobs (Optional)
-
-A job execution that begins before the previous job execution has been completed is called an overlapping job. This happens if you have a job with a runtime duration longer than your job's interval schedule.
-
-A simple example is if you have a job that runs every minute (1), but takes five (5) minutes to complete each execution.
-
-If this happens, you have to provide a stable check-in ID for your execution with each request to prevent unintended consequences.
-
-Usage example:
-
-```bash {tabTitle: cURL}
-CHECK_IN_ID="$(uuidgen)"
-
-SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
-SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
-
-# 🟡 Notify Sentry your job is running with a check-in ID:
-curl "${SENTRY_CRONS}?check_in_id=${CHECK_IN_ID}&status=in_progress"
-
-# Execute your scheduled task here...
-
-# 🟢 Notify Sentry your job has completed successfully with a check-in ID:
-curl "${SENTRY_CRONS}?check_in_id=${CHECK_IN_ID}&status=ok"
-```
-
-## Heartbeat
-
-Heartbeat monitoring notifies Sentry of a job's status through one check-in. This setup will only notify you if your job didn't start when expected (missed). If you need to track a job to see if it exceeded its maximum runtime (failed), use check-ins instead.
-
-```bash {tabTitle: cURL}
-SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
-SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
-
-# 🟢 Notify Sentry your job has completed successfully:
-curl "${SENTRY_CRONS}?status=ok"
-```
-
-```http {tabTitle: HTTP}
-GET /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/?status=ok HTTP/1.1
-Host: ___ORG_INGEST_DOMAIN___
-```
-
-If your job execution fails:
-
-```bash {tabTitle: cURL}
-# 🔴 Notify Sentry your job has failed:
-curl "${SENTRY_CRONS}?status=error"
-```
-
-```http {tabTitle: HTTP}
-GET /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/?status=error HTTP/1.1
-Host: ___ORG_INGEST_DOMAIN___
-```
-
-</PlatformSection>
+For advanced use cases like CI/CD pipelines or managing many monitors, consider [Upserting Monitors](upserting-monitors) which lets you create monitors programmatically via code.
 
 ## Alerts
 
@@ -267,8 +75,18 @@ To receive alerts about these events:
 
 Example: `The event's tags match monitor.slug equals my-monitor-slug-here`
 
-<Include name="common-imgs/crons-alerts-example" />
+Learn more in [Issue Alert Configuration](/product/alerts/alert-types/#issue-alerts).
 
-Learn more in [Issue Alert Configuration](/product/alerts/create-alerts/issue-alert-config/).
+## Rate Limits
 
-<Include name="crons-rate-limits" />
+Crons imposes a rate limit on check-ins to prevent abuse and resource overuse. Specifically, you can only send a maximum of **6 check-ins per minute per existing monitor environment**. This limit is enforced on a per-project basis, meaning that the rate limit applies collectively to all monitor environments within a given project. You can check if any of your check-ins are being dropped in the [Usage Stats](/product/stats/) page.
+
+To avoid dropped check-ins, it is crucial to manage and distribute your check-ins efficiently within the rate limits. This will help maintain accurate monitoring and ensure that all critical check-ins are captured and processed.
+
+## Additional Resources
+
+* [Troubleshooting Cron Monitoring](troubleshooting)
+* [Cron Monitoring Best Practices](https://blog.sentry.io/cron-monitoring-best-practices)
+* [Debugging Failed Cron Jobs](https://blog.sentry.io/debugging-cron-jobs)
+
+<PageGrid />

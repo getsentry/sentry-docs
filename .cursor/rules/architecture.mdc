@@ -1,0 +1,207 @@
+# Documentation System Architecture
+
+Language-agnostic system design for the Sentry documentation platform.
+
+## 🏗️ Content Architecture
+
+### Documentation Structure
+```
+docs/
+├── platforms/                    # SDK-specific documentation
+│   ├── {platform}/
+│   │   ├── common/              # Shared across frameworks
+│   │   └── guides/              # Framework-specific guides
+├── product/                     # Product feature documentation
+├── api/                        # API reference documentation
+└── concepts/                   # Conceptual documentation
+
+platform-includes/              # Shared content across platforms
+├── {feature-name}/
+│   ├── {platform}.mdx         # Platform-specific implementation
+│   ├── _default.mdx           # Fallback content
+│   └── {platform}.{guide}.mdx # Guide-specific overrides
+
+includes/                       # General shared content
+```
+
+### Content Resolution Hierarchy
+1. **Guide-specific:** `{feature}/{platform}.{guide}.mdx`
+2. **Platform-specific:** `{feature}/{platform}.mdx`  
+3. **Default fallback:** `{feature}/_default.mdx`
+
+## 📄 Content Processing Flow
+
+### 1. Frontmatter Extraction
+- Metadata parsing for navigation structure
+- Platform and guide targeting rules
+- Content categorization and indexing
+
+### 2. Content Compilation
+- MDX processing with component resolution
+- Platform-specific content inclusion
+- Cross-reference link resolution
+
+### 3. Static Generation
+- Build-time page generation for performance
+- Navigation tree construction
+- Search index creation
+
+### 4. Dynamic Routing
+- Catch-all routing for flexible URL structure
+- Platform detection and context switching
+- Breadcrumb and navigation generation
+
+## 🎯 Platform Support Strategy
+
+### Multi-Platform Content Sharing
+
+#### Shared Content Patterns
+- **Common concepts** - Same across all platforms
+- **Platform-specific implementations** - Different syntax, same concept
+- **Framework adaptations** - Platform + framework combinations
+
+#### Content Targeting
+```yaml
+# Example frontmatter
+supported:
+  - javascript.react
+  - javascript.nextjs
+notSupported:
+  - javascript.electron
+```
+
+### Progressive Enhancement
+1. **Core content** - Works for all platforms
+2. **Platform enhancements** - Added functionality where supported
+3. **Framework specifics** - Detailed integration guidance
+
+## 🔍 Navigation Architecture
+
+### Auto-Generated Structure
+- **Sidebar navigation** - Built from frontmatter and file structure
+- **Hierarchical organization** - Respects platform → guide relationships
+- **Context-aware** - Shows relevant content for current platform
+
+### Content Discovery
+- **Search integration** - Full-text search across all content
+- **Cross-references** - Automated linking between related topics
+- **Platform filtering** - Show content relevant to selected platform
+
+## 📊 Information Architecture Principles
+
+### Content Organization
+1. **Platform-first** - Primary organization by programming language
+2. **Feature-based** - Secondary organization by Sentry features
+3. **Progressive disclosure** - Basic → advanced content structure
+4. **Cross-platform consistency** - Same concepts, different implementations
+
+### User Journey Design
+1. **Entry points** - Multiple paths to same information
+2. **Contextual guidance** - Help users choose appropriate approach
+3. **Implementation focus** - Prioritize working examples
+4. **Troubleshooting support** - Common issues and solutions
+
+## 🔧 Platform Agnostic Patterns
+
+### Content Structure Templates
+
+#### Feature Documentation Pattern
+```markdown
+# Feature Name
+
+Brief description of what this feature does (platform-agnostic).
+
+## Platform Support
+[Matrix of platform support levels]
+
+## Integration Methods
+### Method 1: [Automatic/Guided approach]
+### Method 2: [Manual configuration]
+### Method 3: [Advanced customization]
+
+## Implementation
+[Platform-specific examples via includes]
+
+## Troubleshooting
+[Common issues across platforms]
+```
+
+#### Platform Guide Pattern
+```markdown
+# {Platform} - {Feature}
+
+Platform-specific implementation of [feature].
+
+## Prerequisites
+[Platform-specific requirements]
+
+## Quick Start
+[Minimal working example]
+
+## Configuration
+[Platform-specific options]
+
+## Advanced Usage
+[Platform-specific patterns]
+```
+
+### Shared Content Management
+
+#### Content Types
+- **Installation instructions** - Platform-specific package managers
+- **Configuration examples** - Platform-specific syntax
+- **Integration patterns** - Framework-specific implementations
+- **Troubleshooting** - Platform-specific common issues
+
+#### Maintenance Strategy
+- **Single source of truth** - Each concept documented once
+- **Cross-platform updates** - Changes propagate to all platforms
+- **Version consistency** - Synchronized across all implementations
+- **Quality assurance** - Consistent testing across platforms
+
+## 🚀 Deployment Architecture
+
+### Build Strategy
+- **Dual documentation sites** - User docs vs developer docs
+- **Platform-specific builds** - Optimized content per platform
+- **Static generation** - Pre-built for performance
+- **CDN distribution** - Global content delivery
+
+### Content Management
+- **Version control** - Git-based content management
+- **Review process** - PR-based content updates
+- **Automated testing** - Link validation, example verification
+- **Performance monitoring** - Page load times, search performance
+
+## 📈 Scalability Considerations
+
+### Adding New Platforms
+1. **Content structure** - Follow established patterns
+2. **Platform includes** - Create platform-specific implementations
+3. **Navigation integration** - Automatic inclusion in navigation
+4. **Quality assurance** - Testing and validation process
+
+### Content Maintenance
+- **Automated link checking** - Prevent broken references
+- **Content auditing** - Regular review of outdated information
+- **Performance optimization** - Bundle size and load time monitoring
+- **User feedback integration** - Content improvement based on usage
+
+## 🎯 Design Principles
+
+### Language Agnostic
+- **Conceptual focus** - What, not just how
+- **Multiple implementations** - Same concept, different languages
+- **Consistent terminology** - Cross-platform vocabulary
+- **Universal patterns** - Applicable across all platforms
+
+### User-Centered
+- **Task-oriented** - Organized around user goals
+- **Progressive complexity** - Simple to advanced progressions
+- **Context-aware** - Relevant to user's current platform/framework
+- **Outcome-focused** - Emphasis on achieving results
+
+For implementation details, see [Common Patterns](./common-patterns.mdc).
+For content guidelines, see [LLM Documentation Style Guide](./llms/documentation-style-guide.mdc).
+
+## 🏗️ Data Architecture
