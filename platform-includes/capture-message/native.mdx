@@ -20,15 +20,7 @@ To create and capture a manual event, follow these steps:
 2. Add custom attributes to the event, like a `message` or an `exception`.
 3. Send the event to Sentry by invoking `sentry_capture_event`.
 
-The custom attribute data must be of type `sentry_value_t`, which can store:
-* 32-bit signed integers,
-* 64-bit signed and unsigned integers,
-* double-precision floating-points,
-* null-terminated strings, as well as
-* lists and string-keyed maps containing `sentry_value_t` entries
-
 In a more complex example, it looks like this:
-
 ```c
 sentry_value_t event = sentry_value_new_event();
 sentry_value_set_by_key(event, "message", sentry_value_new_string("Hello!"));
@@ -36,15 +28,9 @@ sentry_value_set_by_key(event, "message", sentry_value_new_string("Hello!"));
 sentry_value_t screen = sentry_value_new_object();
 sentry_value_set_by_key(screen, "width", sentry_value_new_int32(1920));
 sentry_value_set_by_key(screen, "height", sentry_value_new_int32(1080));
-sentry_value_set_by_key(screen, "refresh_rate", sentry_value_new_double(29.97));
-
-sentry_value_t processed_files = sentry_value_new_list();
-sentry_value_append(processed_files, sentry_value_new_uint64(1073741824ULL));
-sentry_value_append(processed_files, sentry_value_new_uint64(2147483648ULL));
 
 sentry_value_t contexts = sentry_value_new_object();
 sentry_value_set_by_key(contexts, "screen_size", screen);
-sentry_value_set_by_key(contexts, "processed_files", processed_files);
 
 sentry_value_set_by_key(event, "contexts", contexts);
 sentry_capture_event(event);
