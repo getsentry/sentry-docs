@@ -1,0 +1,181 @@
+---
+title: Ktor Client
+caseStyle: camelCase
+supportLevel: production
+sdk: sentry.java.ktor-client
+description: "Learn more about the Sentry Ktor Client integration for the Android SDK."
+categories:
+  - mobile
+---
+
+The `sentry-ktor-client` library provides [Ktor Client](https://ktor.io/) support for Sentry via the Sentry Ktor Client Plugin.
+
+On this page, we get you up and running with Sentry's Ktor Client Integration.
+The integration supports:
+- Adding breadcrumbs for each HTTP request.
+- Capturing spans for each HTTP Request, with support for distributed tracing. The span will be created as a child of the current span bound to the scope (if any).
+- Capturing certain request failures as errors in Sentry.
+
+The Sentry Ktor Client integration supports Ktor Client version `3.x`.
+
+<Alert level="warning">
+  If you're using Ktor Client with OKHttp as the engine, and you're already using the [Sentry OkHttp integration](/platforms/android/integrations/okhttp/),
+  either with manual or automatic installation (via the Sentry Android Gradle Plugin), you should avoid using this integration, otherwise the SDK will produce duplicate data, instrumenting each HTTP request twice.
+  Use the [Sentry OkHttp integration](/platforms/android/integrations/okhttp/) instead, as it provides more detailed information about HTTP request.
+</Alert>
+
+## Install
+
+Add a dependency to the Sentry SDK and to the Sentry Ktor Client Plugin:
+
+```groovy
+implementation 'io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '8.18.0') }}'
+implementation 'io.sentry:sentry-ktor-client:{{@inject packages.version('sentry.java.ktor-client', '8.18.0') }}'
+```
+
+## Configure
+
+Create the Ktor HTTP Client with your preferred engine, and install the Sentry Ktor Client Plugin:
+
+
+```kotlin
+import io.ktor.client.*
+import io.ktor.client.engine.android.*
+import io.sentry.ktorClient.SentryKtorClientPlugin
+
+val ktorClient = HttpClient(Android) {
+    install(SentryKtorClientPlugin)
+}
+```
+
+## Verify
+
+This snippet includes an HTTP Request and captures an intentional message, so you can verify that everything is working as soon as you set it up:
+
+```kotlin
+import io.ktor.client.*
+import io.ktor.client.engine.android.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.sentry.ktorClient.SentryKtorClientPlugin
+import io.sentry.Sentry
+
+suspend fun run(url: String): String? {
+  val ktorClient = HttpClient(Android) {
+    install(SentryKtorClientPlugin)
+  }
+
+  val response = ktorClient.get(url)
+  val bodyStr = response.bodyAsText()
+
+  Sentry.captureMessage("The Message $bodyStr")
+
+  return bodyStr
+}
+```
+
+<Alert>
+
+  Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+
+</Alert>
+
+To view and resolve the recorded message, log into [sentry.io](https://sentry.io) and open your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+
+## Customize the Recorded Span
+
+The captured span can be customized or dropped with a `BeforeSpanCallback`:
+
+```kotlin
+import io.ktor.client.*
+import io.ktor.client.engine.android.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.sentry.ISpan
+import io.sentry.ktorClient.SentryKtorClientPlugin
+
+val ktorClient = HttpClient(Android) {
+  install(SentryKtorClientPlugin) {
+    beforeSpan = { span, request ->
+      // Drop spans for admin requests
+      if (request.url.toString().contains("/admin")) {
+        null
+      } else {
+        span
+      }
+    }
+  }
+}
+```
+
+## HTTP Client Errors
+
+This feature automatically captures HTTP client errors (like bad response codes) as error events and reports them to Sentry. The error event will contain the `request` and `response` data, including the `url`, `status_code`, and so on.
+
+HTTP client error capturing is enabled by default. The SDK captures HTTP client errors with a response code between `500` and `599` by default, but you can change this behavior by configuring the plugin:
+
+```kotlin
+import io.ktor.client.*
+import io.ktor.client.engine.android.*
+import io.sentry.HttpStatusCodeRange
+import io.sentry.ktorClient.SentryKtorClientPlugin
+
+val ktorClient = HttpClient(Android) {
+  install(SentryKtorClientPlugin) {
+    captureFailedRequests = true
+    failedRequestStatusCodes = listOf(HttpStatusCodeRange(400, 599))
+  }
+}
+```
+
+HTTP client errors from every target (`.*` regular expression) are automatically captured, but you can change this behavior by setting the `failedRequestTargets` option with either a regular expression or a plain `String`. A plain string must contain at least one of the items from the list. Plain strings don’t need to match the entire URL — a match occurs as long as the URL contains the string provided in the option.
+
+```kotlin
+import io.ktor.client.*
+import io.ktor.client.engine.android.*
+import io.sentry.ktorClient.SentryKtorClientPlugin
+
+val ktorClient = HttpClient(Android) {
+  install(SentryKtorClientPlugin) {
+    captureFailedRequests = true
+    failedRequestTargets = listOf("myapi.com")
+  }
+}
+```
+
+By default, error events won't contain any PII data, such as `Headers` and `Cookies`, but you can change this behavior by setting the `sendDefaultPii` option to `true`:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+  <meta-data android:name="io.sentry.send-default-pii" android:value="true" />
+</application>
+```
+
+Those events are searchable and you can set alerts on them if you use the `http.url` and `http.status_code` properties. Learn more in our full [Searchable Properties](/concepts/search/searchable-properties/) documentation.
+
+### Customize or Drop the Error Event
+
+To customize or drop the error event, you need to do a [manual initialization](/platforms/android/configuration/manual-init/#manual-initialization) of the Sentry Android SDK.
+
+The captured error event can be customized or dropped with a `BeforeSendCallback`:
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+import io.sentry.SentryOptions.BeforeSendCallback
+import io.sentry.TypeCheckHint.KTOR_CLIENT_REQUEST
+import io.sentry.TypeCheckHint.KTOR_CLIENT_RESPONSE
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+
+SentryAndroid.init(this) { options ->
+  // Add a callback that will be used before the event is sent to Sentry.
+  // With this callback, you can modify the event or, when returning null, also discard the event.
+  options.beforeSend = BeforeSendCallback { event, hint ->
+    val request = hint.getAs(KTOR_CLIENT_REQUEST, HttpRequest::class.java)
+    val response = hint.getAs(KTOR_CLIENT_RESPONSE, HttpResponse::class.java)
+
+    // customize or drop the event
+    event
+  }
+}
+```

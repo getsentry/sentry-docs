@@ -50,6 +50,8 @@ pnpm add @sentry/node-native
 
 ## Usage
 
+<PlatformSection notSupported={["javascript.electron"]}>
+
 If you instrument your application via the Node.js `--import` flag, Sentry will be started and this instrumentation will be automatically applied to all worker threads.
 
 `instrument.mjs`
@@ -88,6 +90,24 @@ node --import instrument.mjs app.mjs
 
 If a thread is blocked for more than the configured threshold, stack traces are automatically captured for all threads and sent to Sentry.
 
+</PlatformSection>
+
+<PlatformSection supported={["javascript.electron"]}>
+
+_(Available in version 6.9.0 and above)_
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+import { eventLoopBlockIntegration } from "@sentry/electron/native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [eventLoopBlockIntegration({ threshold: 500 })],
+});
+```
+
+</PlatformSection>
+
 ## Configuration Options
 
 You can pass a configuration object to the `eventLoopBlockIntegration` to customize the behavior:
@@ -112,6 +132,7 @@ interface ThreadBlockedIntegrationOptions {
   staticTags: { [key: string]: Primitive };
 }
 ```
+<PlatformSection notSupported={["javascript.electron"]}>
 
 ## Example Configuration
 
@@ -132,3 +153,5 @@ Sentry.init({
   ],
 });
 ```
+
+</PlatformSection>
