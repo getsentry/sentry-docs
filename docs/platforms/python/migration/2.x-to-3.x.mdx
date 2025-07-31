@@ -71,7 +71,7 @@ The `profiles_sample_rate` and `profiler_mode` options previously nested under `
 
 Using `sentry_sdk.add_attachment()` directly also makes sure the attachment is added to the correct scope internally.
 
-### Custom Tracing API
+### Tracing
 
 Tracing in the Sentry Python SDK `3.x` is powered by [OpenTelemetry](https://opentelemetry.io/) in the background, which also means we're moving away from the Sentry-specific concept of transactions and towards a span-only future. `sentry_sdk.start_transaction()` is now deprecated in favor of `sentry_sdk.start_span()`.
 
@@ -79,6 +79,19 @@ Tracing in the Sentry Python SDK `3.x` is powered by [OpenTelemetry](https://ope
 - with sentry_sdk.start_transaction():
 + with sentry_sdk.start_span():
       ...
+```
+
+If you start a span, it will automatically become the child of the currently active span. If you want to create a span that should instead start its own trace, use the `new_trace()` context manager.
+
+```python
+with sentry_sdk.start_span(name="parent"):
+    with sentry_sdk.start_span(name="child-of-parent"):    
+        with sentry_sdk.new_trace():
+            # The first span started in this context manager will become
+            # a new transaction (root span) with its own trace
+            with sentry_sdk.start_span(name="new-parent"):
+                with sentry_sdk.start_span(name="child-of-new-parent"):
+                    ...
 ```
 
 Any spans without a parent span will become transactions by default. If you want to avoid promoting a span without a parent to a transaction, you can pass the `only_as_child_span=True` keyword argument to `sentry_sdk.start_span()`.

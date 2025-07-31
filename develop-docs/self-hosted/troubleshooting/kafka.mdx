@@ -16,33 +16,89 @@ This happens where Kafka and the consumers get out of sync. Possible reasons are
 2. Having a sustained event spike that causes very long processing times, causing Kafka to drop messages as they go past the retention time
 3. Date/time out of sync issues due to a restart or suspend/resume cycle
 
+### Visualize
+
+You can visualize the Kafka consumers and their offsets by bringing an additional container, such as [Kafka UI](https://github.com/provectus/kafka-ui) or [Redpanda Console](https://github.com/redpanda-data/console) into your Docker Compose.
+
+Kafka UI:
+```yaml
+kafka-ui:
+  image: provectuslabs/kafka-ui:latest
+  restart: on-failure
+  environment:
+    KAFKA_CLUSTERS_0_NAME: "local"
+    KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka:9092"
+    DYNAMIC_CONFIG_ENABLED: "true"
+  ports:
+    - "8080:8080"
+  depends_on:
+    - kafka
+```
+
+Or, you can use Redpanda Console:
+```yaml
+redpanda-console:
+  image: docker.redpanda.com/redpandadata/console:latest
+  restart: on-failure
+  entrypoint: /bin/sh
+  command: -c "echo \"$$CONSOLE_CONFIG_FILE\" > /tmp/config.yml; /app/console"
+  environment:
+    CONFIG_FILEPATH: "/tmp/config.yml"
+    CONSOLE_CONFIG_FILE: |
+      kafka:
+        brokers: ["kafka:9092"]
+        sasl:
+          enabled: false
+      schemaRegistry:
+        enabled: false
+      kafkaConnect:
+        enabled: false
+  ports:
+    - "8080:8080"
+  depends_on:
+    - kafka
+```
+
+Ideally, you want to have zero lag for all consumer groups. If a consumer group has a lot of lag, you need to investigate whether it's caused by a disconnected consumer (e.g., a Sentry/Snuba container that's disconnected from Kafka) or a consumer that's stuck processing a certain message. If it's a disconnected consumer, you can either restart the container or reset the Kafka offset to 'earliest.' Otherwise, you can reset the Kafka offset to 'latest.'
+
 ### Recovery
 
-Note: These solutions may result in data loss when resetting the offset of the snuba consumers.
+<Alert level="warning" title="Warning">
+These solutions may result in data loss for the duration of your Kafka event retention (defaults to 24 hours) when resetting the offset of the consumers.
+</Alert>
 
 #### Proper solution
 
-The _proper_ solution is as follows ([reported](https://github.com/getsentry/self-hosted/issues/478#issuecomment-666254392) by [@rmisyurev](https://github.com/rmisyurev)):
+The _proper_ solution is as follows ([reported](https://github.com/getsentry/self-hosted/issues/478#issuecomment-666254392) by [@rmisyurev](https://github.com/rmisyurev)). This example uses `snuba-consumers` with `events` topic. Your consumer group name and topic name may be different.
 
-1. Receive consumers list:
+1. Shutdown the corresponding Sentry/Snuba container that's using the consumer group (You can see the corresponding containers by inspecting the `docker-compose.yml` file):
+   ```shell
+   docker compose stop snuba-errors-consumer snuba-outcomes-consumer snuba-outcomes-billing-consumer
+   ```
+2. Receive consumers list:
    ```shell
    docker compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --list
    ```
-2. Get group info:
+3. Get group info:
    ```shell
    docker compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers --describe
    ```
-3. Watching what is going to happen with offset by using dry-run (optional):
+4. Watching what is going to happen with offset by using dry-run (optional):
    ```shell
    docker compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers --topic events --reset-offsets --to-latest --dry-run
    ```
-4. Set offset to latest and execute:
+5. Set offset to latest and execute:
    ```shell
    docker compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers --topic events --reset-offsets --to-latest --execute
    ```
-
-<Alert title="Tip">
-You can replace <code>snuba-consumers</code> with other consumer groups or <code>events</code> with other topics when needed.
+6. Start the previously stopped Sentry/Snuba containers:
+   ```shell
+   docker compose start snuba-errors-consumer snuba-outcomes-consumer snuba-outcomes-billing-consumer
+   ```
+<Alert level="info" title="Tips">
+* You can replace <code>snuba-consumers</code> with other consumer groups or <code>events</code> with other topics when needed.
+* You can reset the offset to "earliest" instead of "latest" if you want to start from the beginning.
+* If you have Kafka UI or Redpanda Console, you can reset the offsets through the web UI instead of the CLI.
 </Alert>
 
 #### Another option
