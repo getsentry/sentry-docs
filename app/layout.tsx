@@ -16,7 +16,7 @@ const rubik = Rubik({
 });
 
 export const metadata: Metadata = {
-  title: 'Home',
+  title: 'Gavin',
   icons: {
     icon:
       process.env.NODE_ENV === 'production' ? '/favicon.ico' : '/favicon_localhost.png',

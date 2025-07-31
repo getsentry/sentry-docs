@@ -5,7 +5,7 @@ import type {Metadata} from 'next';
 import {HotReload} from 'sentry-docs/components/hotReload';
 
 export const metadata: Metadata = {
-  title: {template: '%s | Sentry Documentation', default: 'Home'},
+  title: {template: '%s | Gavin', default: 'Gavin'},
 };
 
 export default function DocsLayout({children}: {children: React.ReactNode}) {
