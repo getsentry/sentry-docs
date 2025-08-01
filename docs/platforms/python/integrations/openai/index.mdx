@@ -1,0 +1,115 @@
+---
+title: OpenAI
+description: "Learn about using Sentry for OpenAI."
+sidebar_hidden: true
+---
+
+This integration connects Sentry with the [OpenAI Python SDK](https://github.com/openai/openai-python).
+
+Once you've installed this SDK, you can use Sentry AI Agents Monitoring, a Sentry dashboard that helps you understand what's going on with your AI requests.
+
+Sentry AI Monitoring will automatically collect information about prompts, tools, tokens, and models. Learn more about the [AI Agents Dashboard](/product/insights/agents).
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `openai` extra:
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[openai]"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk[openai]"
+```
+
+## Configure
+
+If you have the `openai` package in your dependencies, the OpenAI integration will be enabled automatically when you initialize the Sentry SDK.
+
+An additional dependency, `tiktoken`, is required if you want to calculate token usage for streaming chat responses.
+
+<PlatformContent includePath="getting-started-config" />
+
+## Verify
+
+Verify that the integration works by making a chat request to OpenAI.
+
+```python
+import sentry_sdk
+from openai import OpenAI
+
+sentry_sdk.init(...)  # same as above
+
+client = OpenAI(api_key="(your OpenAI key)")
+
+def my_llm_stuff():
+    with sentry_sdk.start_transaction(
+        name="The result of the AI inference",
+        op="ai-inference",
+    ):
+      print(
+          client.chat.completions.create(
+              model="gpt-3.5", messages=[{"role": "system", "content": "say hello"}]
+          )
+          .choices[0]
+          .message.content
+      )
+```
+
+After running this script, the resulting data should show up in the `"AI Spans"` tab on the `"Explore" > "Traces"` page on Sentry.io.
+
+If you manually created an <PlatformLink to="/tracing/instrumentation/custom-instrumentation/ai-agents-module/#invoke-agent-span">Invoke Agent Span</PlatformLink> (not done in the example above) the data will also show up in the [AI Agents Dashboard](/product/insights/agents).
+
+It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Behavior
+
+- The OpenAI integration will connect Sentry with all supported OpenAI methods automatically.
+
+- All exceptions leading to an `OpenAIException` are reported.
+
+- The supported modules are currently `responses.create`, `chat.completions.create`, and `embeddings.create`.
+
+- Sentry considers LLM and tokenizer inputs/outputs as PII (Personally identifiable information) and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below.
+
+## Options
+
+By adding `OpenAIIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `OpenAIIntegration` to change its behavior:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.openai import OpenAIIntegration
+
+sentry_sdk.init(
+    # ...
+    # Add data like inputs and responses;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    integrations=[
+        OpenAIIntegration(
+            include_prompts=False,  # LLM/tokenizer inputs/outputs will be not sent to Sentry, despite send_default_pii=True
+            tiktoken_encoding_name="cl100k_base",
+        ),
+    ],
+)
+```
+
+You can pass the following keyword arguments to `OpenAIIntegration()`:
+
+- `include_prompts`:
+
+  Whether LLM and tokenizer inputs and outputs should be sent to Sentry. Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
+
+  The default is `True`.
+
+- `tiktoken_encoding_name`:
+
+  If you want to calculate token usage for streaming chat responses you need to have an additional dependency, [tiktoken](https://pypi.org/project/tiktoken/) installed and specify the `tiktoken_encoding_name` that you use for tokenization. See the [OpenAI Cookbook](https://cookbook.openai.com/examples/how_to_count_tokens_with_tiktoken) for possible values.
+
+  The default is `None`.
+
+## Supported Versions
+
+- OpenAI: 1.0+
+- tiktoken: 0.6.0+
+- Python: 3.9+
