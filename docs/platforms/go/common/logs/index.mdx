@@ -138,7 +138,7 @@ To filter logs, or update them before they are sent to Sentry, you can use the `
 if err := sentry.Init(sentry.ClientOptions{
   Dsn:        "___PUBLIC_DSN___",
   EnableLogs: true,
-  BeforeSendLog: func(log *Log) *Log {
+  BeforeSendLog: func(log *sentry.Log) *sentry.Log {
     // filter out all trace logs
     if log.Level == sentry.LogLevelTrace {
       return nil
@@ -148,6 +148,8 @@ if err := sentry.Init(sentry.ClientOptions{
     if log.Severity <= LogSeverityInfo {
       return nil
     }
+
+    return log
   },
 }); err != nil {
   fmt.Printf("Sentry initialization failed: %v\n", err)
