@@ -28,6 +28,21 @@ export function SdkOption({
   categorySupported = [],
 }: Props) {
   const {showBrowserOnly, showServerLikeOnly} = getPlatformHints(categorySupported);
+  const {rootNode, path} = serverContext();
+  const currentPlatformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
+  const shouldShowEnvVar = () => {
+    if (!currentPlatformOrGuide) return false;
+
+    const isServerPlatform =
+      currentPlatformOrGuide.categories?.includes('server') ||
+      currentPlatformOrGuide.categories?.includes('serverless');
+
+    const isExcludedPlatform =
+      currentPlatformOrGuide.key === 'javascript.nextjs' ||
+      currentPlatformOrGuide.key === 'javascript.svelte';
+
+    return isServerPlatform && !isExcludedPlatform;
+  };
 
   return (
     <SdkDefinition name={name} categorySupported={categorySupported}>
@@ -39,11 +54,10 @@ export function SdkOption({
         {defaultValue && (
           <OptionDefRow label="Default" value={defaultValue} note={defaultNote} />
         )}
-        <PlatformCategorySection supported={['server', 'serverless']}>
-          <PlatformSection notSupported={['javascript.nextjs', 'javascript.sveltekit']}>
-            {envVar && <OptionDefRow label="ENV Variable" value={envVar} />}
-          </PlatformSection>
-        </PlatformCategorySection>
+
+        {shouldShowEnvVar() && envVar && (
+          <OptionDefRow label="ENV Variable" value={envVar} />
+        )}
 
         {showBrowserOnly && <OptionDefRow label="Only available on" value="Client" />}
         {showServerLikeOnly && <OptionDefRow label="Only available on" value="Server" />}
@@ -78,6 +92,8 @@ export function getPlatformHints(categorySupported: PlatformCategory[]) {
   const {rootNode, path} = serverContext();
   const currentPlatformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
   const currentCategories = currentPlatformOrGuide?.categories || [];
+
+  console.log('yoo', currentPlatformOrGuide?.key);
 
   // We only handle browser, server & serverless here for now
   const currentIsBrowser = currentCategories.includes('browser');
