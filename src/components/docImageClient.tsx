@@ -43,12 +43,7 @@ export function DocImageClient({
 
   return (
     <div onContextMenu={handleContextMenu} onClick={handleClick}>
-      <ImageLightbox
-        src={src}
-        alt={alt}
-        width={width}
-        height={height}
-      >
+      <ImageLightbox src={src} alt={alt} width={width} height={height}>
         <Image
           src={src}
           width={width}
