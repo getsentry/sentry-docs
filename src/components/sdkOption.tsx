@@ -2,8 +2,6 @@ import {getCurrentPlatformOrGuide} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 import {PlatformCategory} from 'sentry-docs/types';
 
-import {PlatformCategorySection} from './platformCategorySection';
-import {PlatformSection} from './platformSection';
 import {SdkDefinition, SdkDefinitionTable} from './sdkDefinition';
 
 type Props = {
