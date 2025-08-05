@@ -1,16 +1,16 @@
 'use client';
 
 import {useState} from 'react';
-import * as Dialog from '@radix-ui/react-dialog';
 import {X} from 'react-feather';
+import * as Dialog from '@radix-ui/react-dialog';
 import Image from 'next/image';
 
 interface ImageLightboxProps {
-  src: string;
   alt: string;
-  width: number;
-  height: number;
   children: React.ReactNode;
+  height: number;
+  src: string;
+  width: number;
 }
 
 export function ImageLightbox({src, alt, width, height, children}: ImageLightboxProps) {

@@ -1,6 +1,7 @@
 import path from 'path';
 
 import {serverContext} from 'sentry-docs/serverContext';
+
 import {DocImageClient} from './docImageClient';
 
 export default function DocImage({

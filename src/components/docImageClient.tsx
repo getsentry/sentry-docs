@@ -1,16 +1,17 @@
 'use client';
 
 import Image from 'next/image';
+
 import {ImageLightbox} from './imageLightbox';
 
 interface DocImageClientProps {
-  src: string;
-  imgPath: string;
-  width: number;
-  height: number;
   alt: string;
-  style?: React.CSSProperties;
+  height: number;
+  imgPath: string;
+  src: string;
+  width: number;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 export function DocImageClient({
@@ -22,7 +23,7 @@ export function DocImageClient({
   style,
   className,
 }: DocImageClientProps) {
-  const handleContextMenu = (e: React.MouseEvent) => {
+  const handleContextMenu = (_e: React.MouseEvent) => {
     // Allow right-click to open in new tab
     const link = document.createElement('a');
     link.href = imgPath;
