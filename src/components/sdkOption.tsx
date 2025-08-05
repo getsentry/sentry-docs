@@ -39,7 +39,7 @@ export function SdkOption({
 
     const isExcludedPlatform =
       currentPlatformOrGuide.key === 'javascript.nextjs' ||
-      currentPlatformOrGuide.key === 'javascript.svelte';
+      currentPlatformOrGuide.key === 'javascript.sveltekit';
 
     return isServerPlatform && !isExcludedPlatform;
   };
