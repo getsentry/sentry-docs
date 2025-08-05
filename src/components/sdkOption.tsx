@@ -93,8 +93,6 @@ export function getPlatformHints(categorySupported: PlatformCategory[]) {
   const currentPlatformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
   const currentCategories = currentPlatformOrGuide?.categories || [];
 
-  console.log('yoo', currentPlatformOrGuide?.key);
-
   // We only handle browser, server & serverless here for now
   const currentIsBrowser = currentCategories.includes('browser');
   const currentIsServer = currentCategories.includes('server');
