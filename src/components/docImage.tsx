@@ -1,8 +1,7 @@
 import path from 'path';
 
-import Image from 'next/image';
-
 import {serverContext} from 'sentry-docs/serverContext';
+import {DocImageClient} from './docImageClient';
 
 export default function DocImage({
   src,
@@ -40,18 +39,14 @@ export default function DocImage({
     .map(s => parseInt(s, 10));
 
   return (
-    <a href={imgPath} target="_blank" rel="noreferrer">
-      <Image
-        {...props}
-        src={src}
-        width={width}
-        height={height}
-        style={{
-          width: '100%',
-          height: 'auto',
-        }}
-        alt={props.alt ?? ''}
-      />
-    </a>
+    <DocImageClient
+      src={src}
+      imgPath={imgPath}
+      width={width}
+      height={height}
+      alt={props.alt ?? ''}
+      style={props.style}
+      className={props.className}
+    />
   );
 }
