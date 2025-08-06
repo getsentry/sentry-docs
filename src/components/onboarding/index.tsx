@@ -21,6 +21,24 @@ const optionDetails: Record<
     name: 'Error Monitoring',
     description: "Let's admit it, we all have errors.",
   },
+  logs: {
+    name: 'Logs (Beta)',
+    description: (
+      <span>
+        Send text-based log information from your applications to Sentry for viewing
+        alongside relevant errors and searching by text-string or individual attributes.
+      </span>
+    ),
+  },
+  'session-replay': {
+    name: 'Session Replay',
+    description: (
+      <span>
+        Video-like reproductions of user sessions with debugging context to help you
+        confirm issue impact and troubleshoot faster.
+      </span>
+    ),
+  },
   performance: {
     name: 'Tracing',
     description: (
@@ -41,30 +59,12 @@ const optionDetails: Record<
     ),
     deps: ['performance'],
   },
-  'session-replay': {
-    name: 'Session Replay',
-    description: (
-      <span>
-        Video-like reproductions of user sessions with debugging context to help you
-        confirm issue impact and troubleshoot faster.
-      </span>
-    ),
-  },
   'user-feedback': {
     name: 'User Feedback',
     description: (
       <span>
         Collect user feedback from anywhere in your application with an embeddable widget
         that allows users to report bugs and provide insights.
-      </span>
-    ),
-  },
-  logs: {
-    name: 'Logs (Beta)',
-    description: (
-      <span>
-        Send text-based log information from your applications to Sentry for viewing
-        alongside relevant errors and searching by text-string or individual attributes.
       </span>
     ),
   },
@@ -101,20 +101,20 @@ const optionDetails: Record<
   },
 };
 
-const OPTION_IDS = [
+const OPTION_IDS = new Set([
   'error-monitoring',
+  'logs',
+  'session-replay',
   'performance',
   'profiling',
-  'session-replay',
+  'source-maps',
   'user-feedback',
-  'logs',
   'source-context',
   'dsym',
-  'source-maps',
   'opentelemetry',
-] as const;
+] as const);
 
-type OptionId = (typeof OPTION_IDS)[number];
+type OptionId = typeof OPTION_IDS extends Set<infer T> ? T : never;
 
 export type OnboardingOptionType = {
   /**
@@ -132,9 +132,11 @@ export type OnboardingOptionType = {
 
 const validateOptionIds = (options: Pick<OnboardingOptionType, 'id'>[]) => {
   options.forEach(option => {
-    if (!OPTION_IDS.includes(option.id)) {
+    if (!OPTION_IDS.has(option.id)) {
       throw new Error(
-        `Invalid option id: ${option.id}.\nValid options are: ${OPTION_IDS.map(opt => `"${opt}"`).join(', ')}`
+        `Invalid option id: ${option.id}.\nValid options are: ${Array.from(OPTION_IDS)
+          .map(opt => `"${opt}"`)
+          .join(', ')}`
       );
     }
   });
