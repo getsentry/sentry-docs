@@ -3124,19 +3124,19 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/ai-monitoring/',
-    to: '/product/insights/agents/',
+    to: '/product/insights/ai/agents/',
   },
   {
     from: '/product/insights/llm-monitoring/',
-    to: '/product/insights/agents/',
+    to: '/product/insights/ai/agents/',
   },
   {
     from: '/product/insights/llm-monitoring/getting-started/',
-    to: '/product/insights/agents/getting-started/',
+    to: '/product/insights/ai/agents/getting-started/',
   },
   {
     from: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
-    to: '/product/insights/agents/getting-started/the-dashboard/',
+    to: '/product/insights/ai/agents/getting-started/the-dashboard/',
   },
   {
     from: '/product/metrics/',
