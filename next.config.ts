@@ -54,6 +54,9 @@ const nextConfig = {
   trailingSlash: true,
   serverExternalPackages: ['rehype-preset-minify'],
   outputFileTracingExcludes,
+  images: {
+    contentDispositionType: 'inline', // "open image in new tab" instead of downloading
+  },
   webpack: (config, options) => {
     config.plugins.push(
       codecovNextJSWebpackPlugin({
@@ -71,7 +74,7 @@ const nextConfig = {
     DEVELOPER_DOCS_: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
   },
   redirects,
-  rewrites: async () => [
+  rewrites: () => [
     {
       source: '/:path*.md',
       destination: '/md-exports/:path*.md',
