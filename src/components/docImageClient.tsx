@@ -30,8 +30,16 @@ export function DocImageClient({
 
   // For external images or invalid dimensions, fall back to regular img tag
   if (src.startsWith('http') || !isValidDimensions) {
+    const handleClick = (e: React.MouseEvent) => {
+      // If Ctrl/Cmd+click, open image in new tab
+      if (e.ctrlKey || e.metaKey) {
+        window.open(imgPath, '_blank', 'noreferrer');
+        return;
+      }
+    };
+
     return (
-      <a href={imgPath} target="_blank" rel="noreferrer">
+      <div onClick={handleClick} className="cursor-pointer">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}
@@ -44,7 +52,7 @@ export function DocImageClient({
           className={className}
           {...props}
         />
-      </a>
+      </div>
     );
   }
 

@@ -25,28 +25,24 @@ export function ImageLightbox({
   const [open, setOpen] = useState(false);
 
   const handleClick = (e: React.MouseEvent) => {
-    // If Ctrl/Cmd+click, let the link handle it naturally (opens in new tab)
+    // If Ctrl/Cmd+click, open image in new tab
     if (e.ctrlKey || e.metaKey) {
-      // Allow default link behavior
+      window.open(imgPath, '_blank', 'noreferrer');
       return;
     }
-    // Normal click - prevent link navigation and open lightbox
-    e.preventDefault();
+    // Normal click - open lightbox
     setOpen(true);
   };
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       {/* Custom trigger that handles modifier keys properly */}
-      <a
-        href={imgPath}
-        target="_blank"
-        rel="noreferrer"
+      <div
         className="cursor-pointer border-none bg-transparent p-0 block w-full no-underline"
         onClick={handleClick}
       >
         {children}
-      </a>
+      </div>
 
       <Dialog.Portal>
         <Dialog.Overlay className="image-lightbox-overlay fixed inset-0 bg-black/80 backdrop-blur-sm z-50" />
