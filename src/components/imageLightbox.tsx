@@ -25,9 +25,9 @@ export function ImageLightbox({src, alt, width, height, children}: ImageLightbox
       </Dialog.Trigger>
 
       <Dialog.Portal>
-        <Dialog.Overlay className="dialog-overlay fixed inset-0 bg-black/80 backdrop-blur-sm z-50" />
+        <Dialog.Overlay className="image-lightbox-overlay fixed inset-0 bg-black/80 backdrop-blur-sm z-50" />
 
-        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 max-h-[90vh] max-w-[90vw] translate-x-[-50%] translate-y-[-50%]">
+        <Dialog.Content className="image-lightbox-content fixed left-[50%] top-[50%] z-50 max-h-[90vh] max-w-[90vw] translate-x-[-50%] translate-y-[-50%]">
           {/* Close button */}
           <Dialog.Close className="absolute right-4 top-4 z-10 rounded-sm bg-black/50 p-2 text-white opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
             <X className="h-4 w-4" />
