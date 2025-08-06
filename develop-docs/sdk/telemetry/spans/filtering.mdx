@@ -19,16 +19,48 @@ Any APIs exposed to the user to filter spans MUST adhere to the following design
 
 ## Filter with `ignoreSpans`
 
-The `ignoreSpans` option accepts a glob pattern or string.
+The `ignoreSpans` option MUST accept a string, RegExp or glob pattern (whichever of the two the platform supports). Furthermore, it SHOULD accept an Object with the patterns matching at least one of or both, the span name and op. 
+
+```ts
+type IgnoreSpanPattern = string | RegExp | GlobPattern;
+
+type IgnoreSpanFilter = {
+  name: IgnoreSpanPattern;
+  op?: IgnoreSpanPattern;
+} | {
+  name?: IgnoreSpanPattern;
+  op: IgnoreSpanPattern;
+}
+
+type IgnoreSpans = Array<IgnoreSpanPattern | IgnoreSpanFilter>
+```
+(Note: `GlobPattern` is used as an illustrative type. It is not a valid TypeScript type.)
+
+Example:
 
 ```js
 Sentry.init({
   ignoreSpans: [
     'GET /about',
     'events.signal *',
+    /api\/\d+/,
+    {
+      op: 'fs.read',
+    },
+    {
+      name: 'health',
+      op: 'http.client',
+    }
   ]
 })
 ```
+(Note: The glob pattern serves an illustrative purpose. It is not supported in JavaScript.)
+
+### Implementation Requirements
+
+The `ignoreSpans` patterns MUST be applied to all spans, including the root or segment span.
+- If a pattern matches the root span, the span and all its children MUST be ignored.
+- If a pattern matches a child span, the span MUST be ignored but any potential child spans MUST be attempted to be reparented to the parent span of the ignored span.
 
 ## Filter with `integrations`
 
