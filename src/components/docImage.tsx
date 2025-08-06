@@ -6,6 +6,8 @@ import {DocImageClient} from './docImageClient';
 
 export default function DocImage({
   src,
+  width: propsWidth,
+  height: propsHeight,
   ...props
 }: Omit<React.HTMLProps<HTMLImageElement>, 'ref' | 'placeholder'>) {
   const {path: pagePath} = serverContext();
@@ -34,10 +36,18 @@ export default function DocImage({
   // parse the size from the URL hash (set by remark-image-size.js)
   const srcURL = new URL(src, 'https://example.com');
   const imgPath = srcURL.pathname;
-  const [width, height] = srcURL.hash // #wxh
+  const dimensions = srcURL.hash // #wxh
     .slice(1)
     .split('x')
     .map(s => parseInt(s, 10));
+  
+  // Use parsed dimensions, fallback to props, then default to 800
+  const width = !isNaN(dimensions[0]) ? dimensions[0] : 
+    (typeof propsWidth === 'number' ? propsWidth : 
+     typeof propsWidth === 'string' ? parseInt(propsWidth, 10) || 800 : 800);
+  const height = !isNaN(dimensions[1]) ? dimensions[1] : 
+    (typeof propsHeight === 'number' ? propsHeight : 
+     typeof propsHeight === 'string' ? parseInt(propsHeight, 10) || 800 : 800);
 
   return (
     <DocImageClient
@@ -45,9 +55,7 @@ export default function DocImage({
       imgPath={imgPath}
       width={width}
       height={height}
-      alt={props.alt ?? ''}
-      style={props.style}
-      className={props.className}
+      {...props}
     />
   );
 }

@@ -4,14 +4,11 @@ import Image from 'next/image';
 
 import {ImageLightbox} from './imageLightbox';
 
-interface DocImageClientProps {
-  alt: string;
+interface DocImageClientProps extends Omit<React.HTMLProps<HTMLImageElement>, 'ref' | 'placeholder' | 'src' | 'width' | 'height'> {
   height: number;
   imgPath: string;
   src: string;
   width: number;
-  className?: string;
-  style?: React.CSSProperties;
 }
 
 export function DocImageClient({
@@ -22,6 +19,7 @@ export function DocImageClient({
   alt,
   style,
   className,
+  ...props
 }: DocImageClientProps) {
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent default context menu
@@ -42,9 +40,32 @@ export function DocImageClient({
     }
   };
 
+  // Check if dimensions are valid (not NaN) for Next.js Image
+  const isValidDimensions = !isNaN(width) && !isNaN(height) && width > 0 && height > 0;
+  
+  // For external images or invalid dimensions, fall back to regular img tag
+  if (src.startsWith('http') || !isValidDimensions) {
+    return (
+      <div onContextMenu={handleContextMenu} onClick={handleClick}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={alt ?? ''}
+          style={{
+            width: '100%',
+            height: 'auto',
+            ...style,
+          }}
+          className={className}
+          {...props}
+        />
+      </div>
+    );
+  }
+
   return (
     <div onContextMenu={handleContextMenu} onClick={handleClick}>
-      <ImageLightbox src={src} alt={alt} width={width} height={height}>
+      <ImageLightbox src={src} alt={alt ?? ''} width={width} height={height}>
         <Image
           src={src}
           width={width}
@@ -55,7 +76,8 @@ export function DocImageClient({
             ...style,
           }}
           className={className}
-          alt={alt}
+          alt={alt ?? ''}
+          {...props}
         />
       </ImageLightbox>
     </div>
