@@ -49,13 +49,6 @@ export function ImageLightbox({src, alt, width, height, children}: ImageLightbox
               priority
             />
           </div>
-
-          {/* Image caption */}
-          {alt && (
-            <div className="absolute bottom-0 left-0 right-0 bg-black/75 p-4 text-center text-white">
-              <p className="text-sm">{alt}</p>
-            </div>
-          )}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
