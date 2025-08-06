@@ -22,7 +22,7 @@ const optionDetails: Record<
     description: "Let's admit it, we all have errors.",
   },
   logs: {
-    name: 'Logs (Beta)',
+    name: 'Logs',
     description: (
       <span>
         Send text-based log information from your applications to Sentry for viewing
