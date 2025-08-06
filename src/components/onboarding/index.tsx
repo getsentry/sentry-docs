@@ -251,6 +251,9 @@ export function OnboardingOptionButtons({
       }
       return option;
     })
+    // sort options by their index in OPTION_IDS
+    // so that the order of the options is consistent
+    // regardless of how the user passes them in
     .sort((a, b) => {
       const indexA = OPTION_IDS.indexOf(a.id);
       const indexB = OPTION_IDS.indexOf(b.id);
