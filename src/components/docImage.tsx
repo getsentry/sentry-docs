@@ -40,14 +40,22 @@ export default function DocImage({
     .slice(1)
     .split('x')
     .map(s => parseInt(s, 10));
-  
+
   // Use parsed dimensions, fallback to props, then default to 800
-  const width = !isNaN(dimensions[0]) ? dimensions[0] : 
-    (typeof propsWidth === 'number' ? propsWidth : 
-     typeof propsWidth === 'string' ? parseInt(propsWidth, 10) || 800 : 800);
-  const height = !isNaN(dimensions[1]) ? dimensions[1] : 
-    (typeof propsHeight === 'number' ? propsHeight : 
-     typeof propsHeight === 'string' ? parseInt(propsHeight, 10) || 800 : 800);
+  const width = !isNaN(dimensions[0])
+    ? dimensions[0]
+    : typeof propsWidth === 'number'
+      ? propsWidth
+      : typeof propsWidth === 'string'
+        ? parseInt(propsWidth, 10) || 800
+        : 800;
+  const height = !isNaN(dimensions[1])
+    ? dimensions[1]
+    : typeof propsHeight === 'number'
+      ? propsHeight
+      : typeof propsHeight === 'string'
+        ? parseInt(propsHeight, 10) || 800
+        : 800;
 
   return (
     <DocImageClient

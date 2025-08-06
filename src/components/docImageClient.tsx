@@ -4,7 +4,11 @@ import Image from 'next/image';
 
 import {ImageLightbox} from './imageLightbox';
 
-interface DocImageClientProps extends Omit<React.HTMLProps<HTMLImageElement>, 'ref' | 'placeholder' | 'src' | 'width' | 'height'> {
+interface DocImageClientProps
+  extends Omit<
+    React.HTMLProps<HTMLImageElement>,
+    'ref' | 'placeholder' | 'src' | 'width' | 'height'
+  > {
   height: number;
   imgPath: string;
   src: string;
@@ -23,7 +27,7 @@ export function DocImageClient({
 }: DocImageClientProps) {
   // Check if dimensions are valid (not NaN) for Next.js Image
   const isValidDimensions = !isNaN(width) && !isNaN(height) && width > 0 && height > 0;
-  
+
   // For external images or invalid dimensions, fall back to regular img tag
   if (src.startsWith('http') || !isValidDimensions) {
     return (
@@ -45,7 +49,13 @@ export function DocImageClient({
   }
 
   return (
-    <ImageLightbox src={src} alt={alt ?? ''} width={width} height={height} imgPath={imgPath}>
+    <ImageLightbox
+      src={src}
+      alt={alt ?? ''}
+      width={width}
+      height={height}
+      imgPath={imgPath}
+    >
       <Image
         src={src}
         width={width}

@@ -14,7 +14,14 @@ interface ImageLightboxProps {
   width: number;
 }
 
-export function ImageLightbox({src, alt, width, height, imgPath, children}: ImageLightboxProps) {
+export function ImageLightbox({
+  src,
+  alt,
+  width,
+  height,
+  imgPath,
+  children,
+}: ImageLightboxProps) {
   const [open, setOpen] = useState(false);
 
   const handleClick = (e: React.MouseEvent) => {
