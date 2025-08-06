@@ -9,6 +9,23 @@ import styles from './styles.module.scss';
 
 import {CodeContext} from '../codeContext';
 
+const OPTION_IDS = [
+  'error-monitoring',
+  'logs',
+  'session-replay',
+  'performance',
+  'profiling',
+  'source-maps',
+  'user-feedback',
+  'source-context',
+  'dsym',
+  'opentelemetry',
+] as const;
+
+const OPTION_IDS_SET = new Set(OPTION_IDS);
+
+type OptionId = (typeof OPTION_IDS)[number];
+
 const optionDetails: Record<
   OptionId,
   {
@@ -59,6 +76,15 @@ const optionDetails: Record<
     ),
     deps: ['performance'],
   },
+  'source-maps': {
+    name: 'Source Maps',
+    description: (
+      <span>
+        Source maps for web applications that help translate minified code back to the
+        original source for better error reporting.
+      </span>
+    ),
+  },
   'user-feedback': {
     name: 'User Feedback',
     description: (
@@ -86,35 +112,11 @@ const optionDetails: Record<
       </span>
     ),
   },
-  'source-maps': {
-    name: 'Source Maps',
-    description: (
-      <span>
-        Source maps for web applications that help translate minified code back to the
-        original source for better error reporting.
-      </span>
-    ),
-  },
   opentelemetry: {
     name: 'OpenTelemetry',
     description: <span>Combine Sentry with OpenTelemetry.</span>,
   },
 };
-
-const OPTION_IDS = new Set([
-  'error-monitoring',
-  'logs',
-  'session-replay',
-  'performance',
-  'profiling',
-  'source-maps',
-  'user-feedback',
-  'source-context',
-  'dsym',
-  'opentelemetry',
-] as const);
-
-type OptionId = typeof OPTION_IDS extends Set<infer T> ? T : never;
 
 export type OnboardingOptionType = {
   /**
@@ -132,11 +134,9 @@ export type OnboardingOptionType = {
 
 const validateOptionIds = (options: Pick<OnboardingOptionType, 'id'>[]) => {
   options.forEach(option => {
-    if (!OPTION_IDS.has(option.id)) {
+    if (!OPTION_IDS_SET.has(option.id)) {
       throw new Error(
-        `Invalid option id: ${option.id}.\nValid options are: ${Array.from(OPTION_IDS)
-          .map(opt => `"${opt}"`)
-          .join(', ')}`
+        `Invalid option id: ${option.id}.\nValid options are: ${OPTION_IDS.map(opt => `"${opt}"`).join(', ')}`
       );
     }
   });
@@ -239,17 +239,23 @@ export function OnboardingOptionButtons({
 }) {
   const codeContext = useContext(CodeContext);
 
-  const normalizedOptions = initialOptions.map(option => {
-    if (typeof option === 'string') {
-      return {
-        id: option,
-        // error monitoring is always needs to be checked and disabled
-        disabled: option === 'error-monitoring',
-        checked: option === 'error-monitoring',
-      };
-    }
-    return option;
-  });
+  const normalizedOptions = initialOptions
+    .map(option => {
+      if (typeof option === 'string') {
+        return {
+          id: option,
+          // error monitoring is always needs to be checked and disabled
+          disabled: option === 'error-monitoring',
+          checked: option === 'error-monitoring',
+        };
+      }
+      return option;
+    })
+    .sort((a, b) => {
+      const indexA = OPTION_IDS.indexOf(a.id);
+      const indexB = OPTION_IDS.indexOf(b.id);
+      return indexA - indexB;
+    });
 
   validateOptionIds(normalizedOptions);
 
