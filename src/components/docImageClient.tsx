@@ -23,7 +23,8 @@ export function DocImageClient({
   style,
   className,
 }: DocImageClientProps) {
-  const handleContextMenu = (_e: React.MouseEvent) => {
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent default context menu
     // Allow right-click to open in new tab
     const link = document.createElement('a');
     link.href = imgPath;
