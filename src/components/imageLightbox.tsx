@@ -9,20 +9,37 @@ interface ImageLightboxProps {
   alt: string;
   children: React.ReactNode;
   height: number;
+  imgPath: string;
   src: string;
   width: number;
 }
 
-export function ImageLightbox({src, alt, width, height, children}: ImageLightboxProps) {
+export function ImageLightbox({src, alt, width, height, imgPath, children}: ImageLightboxProps) {
   const [open, setOpen] = useState(false);
+
+  const handleClick = (e: React.MouseEvent) => {
+    // If Ctrl/Cmd+click, let the link handle it naturally (opens in new tab)
+    if (e.ctrlKey || e.metaKey) {
+      // Allow default link behavior
+      return;
+    }
+    // Normal click - prevent link navigation and open lightbox
+    e.preventDefault();
+    setOpen(true);
+  };
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger asChild>
-        <button className="cursor-pointer border-none bg-transparent p-0 block w-full">
-          {children}
-        </button>
-      </Dialog.Trigger>
+      {/* Custom trigger that handles modifier keys properly */}
+      <a
+        href={imgPath}
+        target="_blank"
+        rel="noreferrer"
+        className="cursor-pointer border-none bg-transparent p-0 block w-full no-underline"
+        onClick={handleClick}
+      >
+        {children}
+      </a>
 
       <Dialog.Portal>
         <Dialog.Overlay className="image-lightbox-overlay fixed inset-0 bg-black/80 backdrop-blur-sm z-50" />
