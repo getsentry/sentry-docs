@@ -54,28 +54,42 @@ export default function DocImage({
   }
 
   // parse the size from the URL hash (set by remark-image-size.js)
-  const srcURL = new URL(src, 'https://example.com');
-  const imgPath = srcURL.pathname;
-  const dimensions = srcURL.hash // #wxh
-    .slice(1)
-    .split('x')
-    .map(s => parseInt(s, 10));
+  let srcURL: URL;
+  let imgPath: string;
+  let dimensions: number[] = [];
+
+  try {
+    srcURL = new URL(src, 'https://example.com');
+    imgPath = srcURL.pathname;
+    dimensions = srcURL.hash // #wxh
+      .slice(1)
+      .split('x')
+      .map(s => {
+        const parsed = parseInt(s, 10);
+        return isNaN(parsed) ? 0 : parsed;
+      });
+  } catch (_error) {
+    // Failed to parse URL, fallback to using src directly
+    imgPath = src;
+    dimensions = [];
+  }
+
+  // Helper function to safely parse dimension values
+  const parseDimension = (
+    value: string | number | undefined,
+    fallback: number = 800
+  ): number => {
+    if (typeof value === 'number' && value > 0) return value;
+    if (typeof value === 'string') {
+      const parsed = parseInt(value, 10);
+      return parsed > 0 ? parsed : fallback;
+    }
+    return fallback;
+  };
 
   // Use parsed dimensions, fallback to props, then default to 800
-  const width = !isNaN(dimensions[0])
-    ? dimensions[0]
-    : typeof propsWidth === 'number'
-      ? propsWidth
-      : typeof propsWidth === 'string'
-        ? parseInt(propsWidth, 10) || 800
-        : 800;
-  const height = !isNaN(dimensions[1])
-    ? dimensions[1]
-    : typeof propsHeight === 'number'
-      ? propsHeight
-      : typeof propsHeight === 'string'
-        ? parseInt(propsHeight, 10) || 800
-        : 800;
+  const width = dimensions[0] > 0 ? dimensions[0] : parseDimension(propsWidth);
+  const height = dimensions[1] > 0 ? dimensions[1] : parseDimension(propsHeight);
 
   return (
     <DocImageClient

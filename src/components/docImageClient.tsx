@@ -1,7 +1,5 @@
 'use client';
 
-import Image from 'next/image';
-
 import {ImageLightbox} from './imageLightbox';
 
 interface DocImageClientProps
@@ -25,38 +23,6 @@ export function DocImageClient({
   className,
   ...props
 }: DocImageClientProps) {
-  // Check if dimensions are valid (not NaN) for Next.js Image
-  const isValidDimensions = !isNaN(width) && !isNaN(height) && width > 0 && height > 0;
-
-  // For images with invalid dimensions, fall back to regular img tag
-  if (!isValidDimensions) {
-    const handleClick = () => {
-      // Always open image in new tab
-      const url = src.startsWith('http') ? src : imgPath;
-      const newWindow = window.open(url, '_blank');
-      if (newWindow) {
-        newWindow.opener = null; // Security: prevent opener access
-      }
-    };
-
-    return (
-      <div onClick={handleClick} className="cursor-pointer">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={src}
-          alt={alt ?? ''}
-          style={{
-            width: '100%',
-            height: 'auto',
-            ...style,
-          }}
-          className={className}
-          {...props}
-        />
-      </div>
-    );
-  }
-
   return (
     <ImageLightbox
       src={src}
@@ -64,20 +30,9 @@ export function DocImageClient({
       width={width}
       height={height}
       imgPath={imgPath}
-    >
-      <Image
-        src={src}
-        width={width}
-        height={height}
-        style={{
-          width: '100%',
-          height: 'auto',
-          ...style,
-        }}
-        className={className}
-        alt={alt ?? ''}
-        {...props}
-      />
-    </ImageLightbox>
+      style={style}
+      className={className}
+      {...props}
+    />
   );
 }

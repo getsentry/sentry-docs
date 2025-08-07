@@ -7,11 +7,12 @@ import Image from 'next/image';
 
 interface ImageLightboxProps {
   alt: string;
-  children: React.ReactNode;
   height: number;
   imgPath: string;
   src: string;
   width: number;
+  className?: string;
+  style?: React.CSSProperties;
 }
 
 export function ImageLightbox({
@@ -20,9 +21,13 @@ export function ImageLightbox({
   width,
   height,
   imgPath,
-  children,
+  style,
+  className,
 }: ImageLightboxProps) {
   const [open, setOpen] = useState(false);
+
+  // Check if dimensions are valid (not NaN) for Next.js Image
+  const isValidDimensions = !isNaN(width) && !isNaN(height) && width > 0 && height > 0;
 
   const handleClick = (e: React.MouseEvent) => {
     // If Ctrl/Cmd+click, open image in new tab
@@ -56,6 +61,39 @@ export function ImageLightbox({
     }
   };
 
+  // Render the appropriate image component based on dimension validity
+  const renderImage = () => {
+    if (isValidDimensions) {
+      return (
+        <Image
+          src={src}
+          width={width}
+          height={height}
+          style={{
+            width: '100%',
+            height: 'auto',
+            ...style,
+          }}
+          className={className}
+          alt={alt}
+        />
+      );
+    }
+    return (
+      /* eslint-disable-next-line @next/next/no-img-element */
+      <img
+        src={src}
+        alt={alt}
+        style={{
+          width: '100%',
+          height: 'auto',
+          ...style,
+        }}
+        className={className}
+      />
+    );
+  };
+
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       {/* Custom trigger that handles modifier keys properly */}
@@ -67,7 +105,7 @@ export function ImageLightbox({
         onKeyDown={handleKeyDown}
         aria-label={`View image: ${alt}`}
       >
-        {children}
+        {renderImage()}
       </div>
 
       <Dialog.Portal>
@@ -82,18 +120,31 @@ export function ImageLightbox({
 
           {/* Image container */}
           <div className="relative flex items-center justify-center">
-            <Image
-              src={src}
-              alt={alt}
-              width={width}
-              height={height}
-              className="max-h-[90vh] max-w-[90vw] object-contain"
-              style={{
-                width: 'auto',
-                height: 'auto',
-              }}
-              priority
-            />
+            {isValidDimensions ? (
+              <Image
+                src={src}
+                alt={alt}
+                width={width}
+                height={height}
+                className="max-h-[90vh] max-w-[90vw] object-contain"
+                style={{
+                  width: 'auto',
+                  height: 'auto',
+                }}
+                priority
+              />
+            ) : (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={src}
+                alt={alt}
+                className="max-h-[90vh] max-w-[90vw] object-contain"
+                style={{
+                  width: 'auto',
+                  height: 'auto',
+                }}
+              />
+            )}
           </div>
         </Dialog.Content>
       </Dialog.Portal>
