@@ -38,12 +38,34 @@ export function ImageLightbox({
     setOpen(true);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Handle Enter and Space keys
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      // If Ctrl/Cmd+key, open image in new tab
+      if (e.ctrlKey || e.metaKey) {
+        const url = src.startsWith('http') ? src : imgPath;
+        const newWindow = window.open(url, '_blank');
+        if (newWindow) {
+          newWindow.opener = null; // Security: prevent opener access
+        }
+        return;
+      }
+      // Normal key press - open lightbox
+      setOpen(true);
+    }
+  };
+
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       {/* Custom trigger that handles modifier keys properly */}
       <div
+        role="button"
+        tabIndex={0}
         className="cursor-pointer border-none bg-transparent p-0 block w-full no-underline"
         onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        aria-label={`View image: ${alt}`}
       >
         {children}
       </div>
