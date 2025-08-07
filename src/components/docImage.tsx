@@ -19,19 +19,17 @@ export default function DocImage({
   // Handle external images early - pass through without processing
   if (src.startsWith('http')) {
     // Use provided props or defaults for external images
-    const width =
-      typeof propsWidth === 'number'
-        ? propsWidth
-        : typeof propsWidth === 'string'
-          ? parseInt(propsWidth, 10) || 800
-          : 800;
-    const height =
-      typeof propsHeight === 'number'
-        ? propsHeight
-        : typeof propsHeight === 'string'
-          ? parseInt(propsHeight, 10) || 600
-          : 600;
-
+    const width = typeof propsWidth === 'number'
+      ? propsWidth
+      : typeof propsWidth === 'string'
+        ? parseInt(propsWidth, 10) || 800
+        : 800;
+    const height = typeof propsHeight === 'number'
+      ? propsHeight
+      : typeof propsHeight === 'string'
+        ? parseInt(propsHeight, 10) || 800
+        : 800;
+        
     return (
       <DocImageClient
         src={src}

@@ -28,8 +28,8 @@ export function DocImageClient({
   // Check if dimensions are valid (not NaN) for Next.js Image
   const isValidDimensions = !isNaN(width) && !isNaN(height) && width > 0 && height > 0;
 
-  // For external images or invalid dimensions, fall back to regular img tag
-  if (src.startsWith('http') || !isValidDimensions) {
+  // For images with invalid dimensions, fall back to regular img tag
+  if (!isValidDimensions) {
     const handleClick = () => {
       // Always open image in new tab
       const url = src.startsWith('http') ? src : imgPath;
