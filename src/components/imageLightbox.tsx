@@ -5,14 +5,16 @@ import {X} from 'react-feather';
 import * as Dialog from '@radix-ui/react-dialog';
 import Image from 'next/image';
 
-interface ImageLightboxProps {
+interface ImageLightboxProps
+  extends Omit<
+    React.HTMLProps<HTMLImageElement>,
+    'ref' | 'src' | 'width' | 'height' | 'alt'
+  > {
   alt: string;
   height: number;
   imgPath: string;
   src: string;
   width: number;
-  className?: string;
-  style?: React.CSSProperties;
 }
 
 export function ImageLightbox({
@@ -23,6 +25,7 @@ export function ImageLightbox({
   imgPath,
   style,
   className,
+  ...props
 }: ImageLightboxProps) {
   const [open, setOpen] = useState(false);
 
@@ -61,6 +64,13 @@ export function ImageLightbox({
     }
   };
 
+  // Filter out props that are incompatible with Next.js Image component
+  // Next.js Image has stricter typing for certain props like 'placeholder'
+  const {
+    placeholder: _placeholder, 
+    ...imageCompatibleProps
+  } = props;
+
   // Render the appropriate image component based on dimension validity
   const renderImage = () => {
     if (isValidDimensions) {
@@ -76,6 +86,7 @@ export function ImageLightbox({
           }}
           className={className}
           alt={alt}
+          {...imageCompatibleProps}
         />
       );
     }
@@ -90,6 +101,7 @@ export function ImageLightbox({
           ...style,
         }}
         className={className}
+        {...props}
       />
     );
   };
@@ -132,6 +144,7 @@ export function ImageLightbox({
                   height: 'auto',
                 }}
                 priority
+                {...imageCompatibleProps}
               />
             ) : (
               /* eslint-disable-next-line @next/next/no-img-element */
@@ -143,6 +156,7 @@ export function ImageLightbox({
                   width: 'auto',
                   height: 'auto',
                 }}
+                {...props}
               />
             )}
           </div>
