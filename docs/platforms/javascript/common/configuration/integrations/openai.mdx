@@ -36,6 +36,7 @@ _Import name: `Sentry.openAIIntegration`_
 
 The `openAIIntegration` adds instrumentation for the `openai` API to capture spans by automatically wrapping OpenAI client calls and recording LLM interactions with configurable input/output recording.
 
+<PlatformSection notSupported={["javascript.cloudflare", "javascript.nextjs"]}>
 It is enabled by default and will automatically capture spans for OpenAI API method calls. You can opt-in to capture inputs and outputs by setting `recordInputs` and `recordOutputs` in the integration config:
 
 ```javascript
@@ -51,7 +52,53 @@ Sentry.init({
 });
 ```
 
-<PlatformSection>
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+For Cloudflare Workers, you need to manually instrument the OpenAI client using the `instrumentOpenAiClient` helper:
+
+```javascript
+import * as Sentry from "@sentry/cloudflare";
+import OpenAI from "openai";
+
+const openai = new OpenAI();
+const client = Sentry.instrumentOpenAiClient(openai, {
+  recordInputs: true,
+  recordOutputs: true,
+});
+
+// Use the wrapped client instead of the original openai instance
+const response = await client.chat.completions.create({
+  model: "gpt-4o",
+  messages: [{ role: "user", content: "Hello!" }],
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={['javascript.nextjs']}>
+
+This integration is automatically instrumented in the Node.js runtime. For Next.js applications using the Edge runtime, you need to manually instrument the OpenAI client:
+
+```javascript
+import * as Sentry from "@sentry/nextjs";
+import OpenAI from "openai";
+
+const openai = new OpenAI();
+const client = Sentry.instrumentOpenAiClient(openai, {
+  recordInputs: true,
+  recordOutputs: true,
+});
+
+// Use the wrapped client instead of the original openai instance
+const response = await client.chat.completions.create({
+  model: "gpt-4o",
+  messages: [{ role: "user", content: "Hello!" }],
+});
+```
+
+</PlatformSection>
+
 ## Options
 
 ### `recordInputs`
@@ -81,8 +128,6 @@ Sentry.init({
   integrations: [Sentry.openAIIntegration({ recordOutputs: true })],
 });
 ```
-
-</PlatformSection>
 
 ## Configuration
 
