@@ -27,7 +27,11 @@ export function ImageLightbox({
   const handleClick = (e: React.MouseEvent) => {
     // If Ctrl/Cmd+click, open image in new tab
     if (e.ctrlKey || e.metaKey) {
-      window.open(imgPath, '_blank', 'noreferrer');
+      const url = src.startsWith('http') ? src : imgPath;
+      const newWindow = window.open(url, '_blank');
+      if (newWindow) {
+        newWindow.opener = null; // Security: prevent opener access
+      }
       return;
     }
     // Normal click - open lightbox

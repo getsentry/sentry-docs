@@ -30,11 +30,12 @@ export function DocImageClient({
 
   // For external images or invalid dimensions, fall back to regular img tag
   if (src.startsWith('http') || !isValidDimensions) {
-    const handleClick = (e: React.MouseEvent) => {
-      // If Ctrl/Cmd+click, open image in new tab
-      if (e.ctrlKey || e.metaKey) {
-        window.open(imgPath, '_blank', 'noreferrer');
-        return;
+    const handleClick = () => {
+      // Always open image in new tab
+      const url = src.startsWith('http') ? src : imgPath;
+      const newWindow = window.open(url, '_blank');
+      if (newWindow) {
+        newWindow.opener = null; // Security: prevent opener access
       }
     };
 

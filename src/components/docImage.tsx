@@ -16,11 +16,29 @@ export default function DocImage({
     return null;
   }
 
-  // Next.js Image component only supports images from the public folder
-  // or from a remote server with properly configured domain
+  // Handle external images early - pass through without processing
   if (src.startsWith('http')) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} {...props} />;
+    // Use provided props or defaults for external images
+    const width = typeof propsWidth === 'number'
+      ? propsWidth
+      : typeof propsWidth === 'string'
+        ? parseInt(propsWidth, 10) || 800
+        : 800;
+    const height = typeof propsHeight === 'number'
+      ? propsHeight
+      : typeof propsHeight === 'string'
+        ? parseInt(propsHeight, 10) || 600
+        : 600;
+        
+    return (
+      <DocImageClient
+        src={src}
+        imgPath={src} // For external images, imgPath should be the same as src
+        width={width}
+        height={height}
+        {...props}
+      />
+    );
   }
 
   // If the image src is not an absolute URL, we assume it's a relative path
