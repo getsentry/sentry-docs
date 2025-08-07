@@ -27,11 +27,18 @@ sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = 
   "logs",
   # ___PRODUCT_OPTION_END___ logs
 ] }
+tokio = { version = "1.45.0", features = ["full"] }
 ```
 
 ## Configure
 
 Initialize the Sentry SDK and register the Sentry layer to start sending `tracing` events and spans to Sentry:
+
+<Alert level="warning">
+
+Macros like `#[tokio::main]` and `#[actix_web::main]` are not supported. The Sentry client must be initialized before the async runtime is started, as shown below.
+
+</Alert>
 
 ```rust
 use tracing_subscriber::prelude::*;
@@ -56,12 +63,17 @@ fn main() {
     // Register the Sentry tracing layer
     tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer())
-        .with(sentry_layer)
+        .with(sentry::integrations::tracing::layer())
         .init();
-
-    // Futures should to be bound to a Hub
-    // Learn more at https://docs.rs/sentry-core/latest/sentry_core/#parallelism-concurrency-and-async
-    fail().bind_hub(sentry::Hub::current()).await;
+        
+    tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()?
+        .block_on(async {
+            // Futures should to be bound to a Hub
+            // Learn more at https://docs.rs/sentry-core/latest/sentry_core/#parallelism-concurrency-and-async
+            fail().bind_hub(sentry::Hub::current()).await;
+        });
 }
 
 # ___PRODUCT_OPTION_START___ performance
