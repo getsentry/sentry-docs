@@ -59,7 +59,7 @@ fn main() {
         .with(sentry_layer)
         .init();
 
-    // Futures need to be bound to a Hub
+    // Futures should to be bound to a Hub
     // Learn more at https://docs.rs/sentry-core/latest/sentry_core/#parallelism-concurrency-and-async
     fail().bind_hub(sentry::Hub::current()).await;
 }
@@ -68,6 +68,7 @@ fn main() {
 #[tracing::instrument] // Captures a root span (transaction) around this function execution
 # ___PRODUCT_OPTION_END___ performance
 async fn fail() {
+    tracing::debug!("Doing work"); // Adds a breadrcumb
     # ___PRODUCT_OPTION_START___ performance
     let _span = tracing::info_span("Child span").entered(); // Captures a child span
     # ___PRODUCT_OPTION_END___ performance
@@ -75,11 +76,13 @@ async fn fail() {
 }
 ```
 
+By default, error level events are captured as Sentry events, while anything at or above info is added as a breadcrumb.
+
 {/* ___PRODUCT_OPTION_START___ logs */}
 
-To capture logs for `tracing` events, you need to set up a custom event filter, like so:
+To capture structured logs for `tracing` events instead, you need to set up the Sentry layer with a custom event filter that maps to logs, like so:
 
-```rs
+```rust
 use sentry::integrations::tracing::EventFilter;
 
 sentry::integrations::tracing::layer().event_filter(|md| match *md.level() {
