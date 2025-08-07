@@ -967,16 +967,12 @@ const userDocsRedirects = [
     destination: '/product/insights/backend/queue-monitoring/queues-page/',
   },
   {
-    source: '/product/insights/llm-monitoring/',
-    destination: '/product/insights/ai/llm-monitoring/',
+    source: '/product/insights/llm-monitoring/:path*',
+    destination: '/product/insights/ai/',
   },
   {
-    source: '/product/insights/llm-monitoring/getting-started/',
-    destination: '/product/insights/ai/llm-monitoring/getting-started/',
-  },
-  {
-    source: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
-    destination: '/product/insights/ai/llm-monitoring/getting-started/the-dashboard/',
+    source: '/product/insights/agents/:path*',
+    destination: '/product/insights/ai/agents/:path*',
   },
   {
     source: '/product/insights/retention-priorities/',
@@ -1069,6 +1065,14 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/tracing/distributed-tracing/:path*',
   },
   {
+    source: '/platforms/javascript/metrics/:path*',
+    destination: '/platforms/javascript/tracing/span-metrics/:path*',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/metrics/:path*',
+    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/:path*',
+  },
+  {
     source: '/platforms/javascript/tracing/instrumentation/performance-metrics/',
     destination: '/platforms/javascript/tracing/span-metrics/',
   },
@@ -1106,6 +1110,17 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/:guide/tracing/trace-propagation/:path*',
     destination: '/platforms/javascript/guides/:guide/tracing/distributed-tracing/:path*',
+  },
+  {
+    source:
+      '/platforms/javascript/common/configuration/application-not-responding/:path*',
+    destination: '/platforms/javascript/common/configuration/event-loop-block/:path*',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide/configuration/application-not-responding/:path*',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/event-loop-block/:path*',
   },
   {
     source: '/platforms/javascript/tracing/instrumentation/custom-instrumentation/:path*',
@@ -1185,6 +1200,35 @@ const userDocsRedirects = [
   {
     source: '/product/ai-in-sentry/seer/seer-privacy-and-security',
     destination: '/product/ai-in-sentry/ai-privacy-and-security/',
+  },
+  // .NET profiling guide redirects - consolidate to main profiling page
+  {
+    source: '/platforms/dotnet/guides/uwp/profiling/:path*',
+    destination: '/platforms/dotnet/profiling/',
+  },
+  {
+    source: '/platforms/dotnet/guides/aws-lambda/profiling/:path*',
+    destination: '/platforms/dotnet/profiling/',
+  },
+  {
+    source: '/platforms/dotnet/guides/azure-functions-worker/profiling/:path*',
+    destination: '/platforms/dotnet/profiling/',
+  },
+  {
+    source: '/platforms/dotnet/guides/blazor-webassembly/profiling/:path*',
+    destination: '/platforms/dotnet/profiling/',
+  },
+  {
+    source: '/platforms/dotnet/guides/aspnet/profiling/:path*',
+    destination: '/platforms/dotnet/profiling/',
+  },
+  {
+    source: '/platforms/dotnet/guides/entityframework/profiling/:path*',
+    destination: '/platforms/dotnet/profiling/',
+  },
+  {
+    source: '/platforms/dotnet/guides/google-cloud-functions/profiling/:path*',
+    destination: '/platforms/dotnet/profiling/',
   },
 ];
 

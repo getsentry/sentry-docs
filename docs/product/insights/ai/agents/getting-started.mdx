@@ -1,0 +1,207 @@
+---
+title: Set Up
+sidebar_order: 0
+description: "Learn how to set up Sentry AI Agent Monitoring"
+---
+
+Sentry AI Agent Monitoring helps you track and debug AI agent applications using our supported SDKs and integrations. Monitor your complete agent workflows from user interaction to final response, including tool calls, model interactions, and custom logic.
+
+To start sending AI agent data to Sentry, make sure you've created a Sentry project for your AI-enabled repository and follow one of the guides below:
+
+## Supported SDKs
+
+### JavaScript - Vercel AI SDK
+
+The Sentry JavaScript SDK supports AI agent monitoring through the Vercel AI integration, which works with Node.js and Bun runtimes. This integration automatically captures spans for your AI agent workflows using the AI SDK's built-in telemetry.
+
+#### Supported Platforms
+
+- <LinkWithPlatformIcon
+    platform="javascript.node"
+    label="Node.js"
+    url="/platforms/javascript/guides/node/configuration/integrations/vercelai/"
+  />
+- <LinkWithPlatformIcon
+    platform="javascript.nextjs"
+    label="Next.js"
+    url="/platforms/javascript/guides/nextjs/configuration/integrations/vercelai/"
+  />
+- <LinkWithPlatformIcon
+    platform="javascript.sveltekit"
+    label="SvelteKit"
+    url="/platforms/javascript/guides/sveltekit/configuration/integrations/vercelai/"
+  />
+- <LinkWithPlatformIcon
+    platform="javascript.nuxt"
+    label="Nuxt"
+    url="/platforms/javascript/guides/nuxt/configuration/integrations/vercelai/"
+  />
+- <LinkWithPlatformIcon
+    platform="javascript.astro"
+    label="Astro"
+    url="/platforms/javascript/guides/astro/configuration/integrations/vercelai/"
+  />
+- <LinkWithPlatformIcon
+    platform="javascript.remix"
+    label="Remix"
+    url="/platforms/javascript/guides/remix/configuration/integrations/vercelai/"
+  />
+- <LinkWithPlatformIcon
+    platform="javascript.solidstart"
+    label="SolidStart"
+    url="/platforms/javascript/guides/solidstart/configuration/integrations/vercelai/"
+  />
+- <LinkWithPlatformIcon
+    platform="javascript.express"
+    label="Express"
+    url="/platforms/javascript/guides/express/configuration/integrations/vercelai/"
+  />
+- <LinkWithPlatformIcon
+    platform="javascript.fastify"
+    label="Fastify"
+    url="/platforms/javascript/guides/fastify/configuration/integrations/vercelai/"
+  />
+- <LinkWithPlatformIcon
+    platform="javascript.nestjs"
+    label="Nest.js"
+    url="/platforms/javascript/guides/nestjs/configuration/integrations/vercelai/"
+  />
+- <LinkWithPlatformIcon
+    platform="javascript.hapi"
+    label="Hapi"
+    url="/platforms/javascript/guides/hapi/configuration/integrations/vercelai/"
+  />
+- <LinkWithPlatformIcon
+    platform="javascript.koa"
+    label="Koa"
+    url="/platforms/javascript/guides/koa/configuration/integrations/vercelai/"
+  />
+- <LinkWithPlatformIcon
+    platform="javascript.connect"
+    label="Connect"
+    url="/platforms/javascript/guides/connect/configuration/integrations/vercelai/"
+  />
+- <LinkWithPlatformIcon
+    platform="javascript.cloudflare"
+    label="Cloudflare"
+    url="/platforms/javascript/guides/cloudflare/configuration/integrations/vercelai/"
+  />
+- <LinkWithPlatformIcon
+    platform="javascript.hono"
+    label="Hono"
+    url="/platforms/javascript/guides/hono/configuration/integrations/vercelai/"
+  />
+- <LinkWithPlatformIcon
+    platform="javascript.bun"
+    label="Bun"
+    url="/platforms/javascript/guides/bun/configuration/integrations/vercelai/"
+  />
+- <LinkWithPlatformIcon
+    platform="javascript.aws-lambda"
+    label="AWS Lambda"
+    url="/platforms/javascript/guides/aws-lambda/configuration/integrations/vercelai/"
+  />
+- <LinkWithPlatformIcon
+    platform="javascript.azure-functions"
+    label="Azure Functions"
+    url="/platforms/javascript/guides/azure-functions/configuration/integrations/vercelai/"
+  />
+- <LinkWithPlatformIcon
+    platform="javascript.gcp-functions"
+    label="Google Cloud Functions"
+    url="/platforms/javascript/guides/gcp-functions/configuration/integrations/vercelai/"
+  />
+- <LinkWithPlatformIcon
+    platform="javascript.electron"
+    label="Electron"
+    url="/platforms/javascript/guides/electron/configuration/integrations/vercelai/"
+  />
+
+#### Quick Start with Vercel AI SDK
+
+```javascript
+import { Sentry } from "@sentry/node";
+
+// Sentry init needs to be above everything else
+Sentry.init({
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.vercelAIIntegration(),
+  ],
+});
+
+import { generateText } from "ai";
+import { openai } from "@ai-sdk/openai";
+
+// Your AI agent function
+async function aiAgent(userQuery) {
+  const result = await generateText({
+    model: openai("gpt-4o"),
+    prompt: userQuery,
+    experimental_telemetry: {
+      isEnabled: true,
+      functionId: "ai-agent-main",
+      recordInputs: true,
+      recordOutputs: true,
+    },
+  });
+
+  return result.text;
+}
+```
+
+<Alert title="Don't see your SDK?">
+
+We'll be adding AI agent integrations continuously. Please vote on [GitHub](https://github.com/getsentry/sentry-javascript/issues/16960) which one you'd like to see next. You can also instrument AI agents manually by following our [manual instrumentation guide](/platforms/javascript/tracing/instrumentation/ai-agents-module).
+
+</Alert>
+
+### Python - OpenAI Agents
+
+The Sentry Python SDK supports OpenAI Agents SDK.
+
+#### Supported Platforms
+
+- <LinkWithPlatformIcon
+    platform="python"
+    label="Python"
+    url="/platforms/python/integrations/openai-agents/"
+  />
+
+#### Quick Start with OpenAI Agents
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.openai_agents import OpenAIAgentsIntegration
+import agents
+from pydantic import BaseModel
+
+sentry_sdk.init(
+    dsn="YOUR_DSN",
+    traces_sample_rate=1.0,
+    send_default_pii=True,  # Include LLM inputs/outputs
+    integrations=[
+        OpenAIAgentsIntegration(),
+    ],
+)
+
+# Create your AI agent
+my_agent = agents.Agent(
+    name="My Agent",
+    instructions="You are a helpful assistant.",
+    model="gpt-4o-mini",
+)
+
+# Your AI agent function
+result = await agents.Runner.run(
+    my_agent,
+    input=user_query,
+)
+
+```
+
+<Alert title="Don't see your SDK?">
+
+You can also instrument AI agents manually by following our [manual instrumentation guides](/platforms/python/tracing/instrumentation/custom-instrumentation/ai-agents-module).
+
+</Alert>

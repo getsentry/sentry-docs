@@ -129,6 +129,7 @@ import SvelteSVG from 'platformicons/svg/svelte.svg';
 import SwiftSVG from 'platformicons/svg/swift.svg';
 import SymfonySVG from 'platformicons/svg/symfony.svg';
 import TanstackSVG from 'platformicons/svg/tanstack.svg';
+import TokioSVG from 'platformicons/svg/tokio.svg';
 import TornadoSVG from 'platformicons/svg/tornado.svg';
 import TracingSVG from 'platformicons/svg/tracing.svg';
 import TrytonSVG from 'platformicons/svg/tryton.svg';
@@ -273,6 +274,7 @@ import SvelteSVGLarge from 'platformicons/svg_80x80/svelte.svg';
 import SwiftSVGLarge from 'platformicons/svg_80x80/swift.svg';
 import SymfonySVGLarge from 'platformicons/svg_80x80/symfony.svg';
 import TanstackSVGLarge from 'platformicons/svg_80x80/tanstack.svg';
+import TokioSVGLarge from 'platformicons/svg_80x80/tokio.svg';
 import TornadoSVGLarge from 'platformicons/svg_80x80/tornado.svg';
 import TracingSVGLarge from 'platformicons/svg_80x80/tracing.svg';
 import TrytonSVGLarge from 'platformicons/svg_80x80/tryton.svg';
@@ -347,6 +349,10 @@ const formatToSVG = {
   awslambda: {
     sm: AwslambdaSVG,
     lg: AwslambdaSVGLarge,
+  },
+  axum: {
+    sm: TokioSVG,
+    lg: TokioSVGLarge,
   },
   'azure-functions': {
     sm: AzurefunctionsSVG,
@@ -1040,6 +1046,7 @@ export const PLATFORM_TO_ICON = {
   rust: 'rust',
   'rust-actix-web': 'actix',
   'rust-tracing': 'tracing',
+  'rust-axum': 'axum',
   scala: 'scala',
   stride3d: 'stride3d',
   sql: 'sql',

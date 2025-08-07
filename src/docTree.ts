@@ -40,7 +40,7 @@ export function getDocsRootNode(): Promise<DocNode> {
 
 async function getDocsRootNodeUncached(): Promise<DocNode> {
   return frontmatterToTree(
-    isDeveloperDocs ? getDevDocsFrontMatter() : await getDocsFrontMatter()
+    await (isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter())
   );
 }
 
@@ -246,7 +246,8 @@ const filterVisibleSiblings = (s: DocNode) =>
   (s.frontmatter.sidebar_title || s.frontmatter.title) &&
   !s.frontmatter.sidebar_hidden &&
   !s.frontmatter.draft &&
-  s.path;
+  s.path &&
+  !isVersioned(s.path);
 
 function nodeToPlatform(n: DocNode): Platform {
   const platformData = platformsData()[n.slug];
@@ -392,15 +393,17 @@ const extractIntegrations = (p: DocNode): PlatformIntegration[] => {
   }
   const integrations = nodeForPath(p, 'integrations');
   return (
-    integrations?.children.map(integ => {
-      return {
-        key: integ.slug,
-        name: integ.frontmatter.title,
-        icon: p.slug + '.' + integ.slug,
-        url: ['', 'platforms', p.slug, 'integrations', integ.slug].join('/'),
-        platform: p.slug,
-        type: 'integration',
-      };
-    }) ?? []
+    integrations?.children
+      .filter(({path}) => !isVersioned(path))
+      .map(integ => {
+        return {
+          key: integ.slug,
+          name: integ.frontmatter.title,
+          icon: p.slug + '.' + integ.slug,
+          url: ['', 'platforms', p.slug, 'integrations', integ.slug].join('/'),
+          platform: p.slug,
+          type: 'integration',
+        };
+      }) ?? []
   );
 };
