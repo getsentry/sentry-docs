@@ -1,0 +1,47 @@
+#### Experimental.EnableLogs
+Set to `true` in order to enable the `SentrySdk.Experimental.Logger` APIs, as well as logging integrations via the [ILogger<T>](https://learn.microsoft.com/dotnet/api/microsoft.extensions.logging.ilogger-1) API.
+
+#### Experimental.SetBeforeSendLog(Func<SentryLog, SentryLog?>)
+
+To filter logs, or update them before they are sent to Sentry, you can use the `Experimental.SetBeforeSendLog()` option.
+
+```csharp
+options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.Experimental.EnableLogs = true;
+    // a callback that is invoked before sending a log to Sentry
+    options.Experimental.SetBeforeSendLog(static log =>
+    {
+        // filter out all info logs
+        if (log.Level is SentryLogLevel.Info)
+        {
+            return null;
+        }
+
+        // filter out logs based on some attribute they have
+        if (log.TryGetAttribute("suppress", out var attribute) && attribute is true)
+        {
+            return null;
+        }
+
+        // set a custom attribute for all other logs sent to Sentry
+        log.SetAttribute("my.attribute", "value");
+
+        return log;
+    });
+});
+```
+
+The callback function set via `Experimental.SetBeforeSendLog()` receives a log object, and should return the log object if you want it to be sent to Sentry, or `null` if you want to discard it.
+
+The log object of type `SentryLog` has the following members:
+- `Timestamp` Property: (`DateTimeOffset`) The timestamp of the log.
+- `TraceId` Property: (`SentryId`) The trace id of the log.
+- `Level` Property: (`SentryLogLevel`) The severity level of the log. Either `Trace`, `Debug`, `Info`, `Warning`, `Error`, or `Fatal`.
+- `Message` Property: (`string`) The formatted log message.
+- `Template` Property: (`string?`) The parameterized template string.
+- `Parameters` Property: (`ImmutableArray<KeyValuePair<string, object>>`) The parameters to the template string.
+- `ParentSpanId` Property: (`SpanId?`) The span id of the span that was active when the log was collected.
+- `TryGetAttribute(string key, out object value)` Method: Gets the attribute value associated with the specified key. Returns `true` if the log contains an attribute with the specified key and it's value is not `null`, otherwise `false`.
+- `SetAttribute(string key, object value)` Method: Set a key-value pair of data attached to the log. Supported types are `string`, `bool`, integers up to a size of 64-bit signed, and floating-point numbers up to a size of 64-bit.
