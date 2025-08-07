@@ -66,10 +66,7 @@ export function ImageLightbox({
 
   // Filter out props that are incompatible with Next.js Image component
   // Next.js Image has stricter typing for certain props like 'placeholder'
-  const {
-    placeholder: _placeholder, 
-    ...imageCompatibleProps
-  } = props;
+  const {placeholder: _placeholder, ...imageCompatibleProps} = props;
 
   // Render the appropriate image component based on dimension validity
   const renderImage = () => {
