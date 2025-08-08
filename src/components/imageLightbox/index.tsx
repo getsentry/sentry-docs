@@ -13,10 +13,10 @@ interface ImageLightboxProps
     'ref' | 'src' | 'width' | 'height' | 'alt'
   > {
   alt: string;
-  height: number;
   imgPath: string;
   src: string;
-  width: number;
+  height?: number;
+  width?: number;
 }
 
 export function ImageLightbox({
@@ -31,8 +31,17 @@ export function ImageLightbox({
 }: ImageLightboxProps) {
   const [open, setOpen] = useState(false);
 
-  // Check if dimensions are valid (not NaN) for Next.js Image
-  const isValidDimensions = !isNaN(width) && !isNaN(height) && width > 0 && height > 0;
+  // Check if we should use Next.js Image or regular img
+  // Use Next.js Image for internal images with valid dimensions
+  // Use regular img for external images or when dimensions are invalid/missing
+  const shouldUseNextImage =
+    !src.startsWith('http') && // Internal image
+    width != null &&
+    height != null && // Dimensions provided
+    !isNaN(width) &&
+    !isNaN(height) && // Valid numbers
+    width > 0 &&
+    height > 0; // Positive values
 
   const handleClick = (e: React.MouseEvent) => {
     // If Ctrl/Cmd+click, open image in new tab
@@ -70,14 +79,14 @@ export function ImageLightbox({
   // Next.js Image has stricter typing for certain props like 'placeholder'
   const {placeholder: _placeholder, ...imageCompatibleProps} = props;
 
-  // Render the appropriate image component based on dimension validity
+  // Render the appropriate image component
   const renderImage = () => {
-    if (isValidDimensions) {
+    if (shouldUseNextImage) {
       return (
         <Image
           src={src}
-          width={width}
-          height={height}
+          width={width!}
+          height={height!}
           style={{
             width: '100%',
             height: 'auto',
@@ -131,12 +140,12 @@ export function ImageLightbox({
 
           {/* Image container */}
           <div className="relative flex items-center justify-center">
-            {isValidDimensions ? (
+            {shouldUseNextImage ? (
               <Image
                 src={src}
                 alt={alt}
-                width={width}
-                height={height}
+                width={width!}
+                height={height!}
                 className="max-h-[90vh] max-w-[90vw] object-contain"
                 style={{
                   width: 'auto',

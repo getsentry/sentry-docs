@@ -18,19 +18,20 @@ export default function DocImage({
 
   // Handle external images early - pass through without processing
   if (src.startsWith('http')) {
-    // Use provided props or defaults for external images
+    // For external images, let ImageLightbox decide whether to use Next.js Image or regular img
+    // Parse dimensions if provided
     const width =
       typeof propsWidth === 'number'
         ? propsWidth
         : typeof propsWidth === 'string'
-          ? parseInt(propsWidth, 10) || 800
-          : 800;
+          ? parseInt(propsWidth, 10) || undefined
+          : undefined;
     const height =
       typeof propsHeight === 'number'
         ? propsHeight
         : typeof propsHeight === 'string'
-          ? parseInt(propsHeight, 10) || 800
-          : 800;
+          ? parseInt(propsHeight, 10) || undefined
+          : undefined;
 
     return (
       <ImageLightbox
