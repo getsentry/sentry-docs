@@ -1,0 +1,43 @@
+```javascript
+import * as Sentry from "@sentry/bun";
+import { validateOpenTelemetrySetup } from "@sentry/node-core";
+import { wrapSamplingDecision } from "@sentry/opentelemetry";
+import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
+
+// implements Sampler from "@opentelemetry/sdk-trace-node"
+class CustomSampler {
+  shouldSample(context, _traceId, _spanName, _spanKind, attributes, _links) {
+    const decision = yourDecisionLogic();
+
+    // wrap the result
+    return wrapSamplingDecision({
+      decision,
+      context,
+      spanAttributes: attributes,
+    });
+  }
+
+  toString() {
+    return CustomSampler.name;
+  }
+}
+
+const sentryClient = Sentry.init({
+  dsn: "___DSN___",
+  skipOpenTelemetrySetup: true,
+
+  // By defining any sample rate,
+  // tracing intergations will be added by default
+  // omit this if you do not want any performance integrations to be added
+  tracesSampleRate: 0,
+});
+
+const provider = new NodeTracerProvider({
+  sampler: new CustomSampler(),
+});
+
+// ...rest of your setup
+
+// Validate that the setup is correct
+validateOpenTelemetrySetup();
+```

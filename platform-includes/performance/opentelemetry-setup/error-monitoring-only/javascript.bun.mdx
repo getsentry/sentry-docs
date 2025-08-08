@@ -1,5 +1,6 @@
-```javascript {tabTitle: ESM}
-import * as Sentry from "@sentry/node";
+```javascript
+import * as Sentry from "@sentry/bun";
+import { SentryContextManager } from "@sentry/node-core";
 import { SentryPropagator, SentrySampler } from "@sentry/opentelemetry";
 
 import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
@@ -39,57 +40,7 @@ provider.addSpanProcessor(
 // Initialize the provider
 provider.register({
   propagator: new SentryPropagator(),
-  contextManager: new Sentry.SentryContextManager(),
-});
-
-registerInstrumentations({
-  instrumentations: [
-    // Add OTEL instrumentation here
-  ],
-});
-```
-```javascript {tabTitle: CJS}
-const Sentry = require("@sentry/node");
-const { SentryPropagator, SentrySampler } = require("@sentry/opentelemetry");
-
-const { NodeTracerProvider } = require("@opentelemetry/sdk-trace-node");
-const { BatchSpanProcessor } = require("@opentelemetry/sdk-trace-base");
-const { OTLPTraceExporter } = require("@opentelemetry/exporter-otlp-http");
-const { registerInstrumentations } = require("@opentelemetry/instrumentation");
-
-const sentryClient = Sentry.init({
-  dsn: "___DSN___",
-  skipOpenTelemetrySetup: true,
-
-  // Important: We do not define a tracesSampleRate here at all!
-  // This leads to tracing being disabled
-
-  integrations: (integrations) =>
-    integrations
-       // Filter out the BunServer integration to avoid emitting spans from there
-      .filter((i) => i.name !== "Http" && i.name !== "BunServer")
-      // Add the httpIntegration again and disable emitting spans
-      .concat(Sentry.httpIntegration({ spans: false }))
-});
-
-// Create and configure e.g. NodeTracerProvider
-const provider = new NodeTracerProvider({
-  // This ensures trace propagation works as expected
-  sampler: sentryClient ? new SentrySampler(sentryClient) : undefined,
-});
-
-provider.addSpanProcessor(
-  new BatchSpanProcessor(
-    new OTLPTraceExporter({
-      url: "http://OTLP-ENDPOINT.com/api",
-    })
-  )
-);
-
-// Initialize the provider
-provider.register({
-  propagator: new SentryPropagator(),
-  contextManager: new Sentry.SentryContextManager(),
+  contextManager: new SentryContextManager(),
 });
 
 registerInstrumentations({
