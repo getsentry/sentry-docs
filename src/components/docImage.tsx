@@ -39,7 +39,7 @@ export default function DocImage({
         imgPath={src} // For external images, imgPath should be the same as src
         width={width}
         height={height}
-        alt=""
+        alt={props.alt ?? ""}
         {...props}
       />
     );
@@ -96,7 +96,7 @@ export default function DocImage({
       imgPath={imgPath}
       width={width}
       height={height}
-      alt=""
+      alt={props.alt ?? ""}
       {...props}
     />
   );
