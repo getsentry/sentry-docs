@@ -1,0 +1,42 @@
+---
+title: Sentry CLI Execution Failure when using Sentry Maven plugin
+description: "Troubleshoot and resolve Sentry CLI execution failures when using the Sentry Maven plugin."
+sidebar_order: 1001
+---
+
+The Sentry Maven plugin may fail to execute Sentry CLI in certain environments.
+
+## Symptoms
+
+- A build using `sentry-maven-plugin` fails during execution of `sentry-cli` (e.g. to collect and upload a source bundle).
+- Enabling debug logs for `sentry-cli` doesn't show meaningful errors from `sentry-cli` itself.
+
+To enable debug logs, set
+
+```xml
+<debug>false</debug>
+<debugSentryCli>true</debugSentryCli>
+```
+
+in your `<configuration>` for `sentry-maven-plugin`.
+
+You might see similar lines in the logs:
+
+```
+[ERROR] Error while attempting to run Sentry CLI:
+org.apache.maven.plugin.MojoExecutionException: An Ant BuildException has occured: Execute failed: java.io.IOException: Cannot run program "/bin/sh" [...]
+```
+
+## Solution
+
+Add the following JVM option to switch the process launch mechanism to `vfork`:
+
+```bash
+-Djdk.lang.Process.launchMechanism=vfork
+```
+
+## Related Issue
+
+For more details about this issue and the investigation process, see [GitHub Issue #169](https://github.com/getsentry/sentry-maven-plugin/issues/169).
+
+If this doesn't solve the problem, please [open a new issue on GitHub](https://github.com/getsentry/sentry-maven-plugin/issues/new/choose).

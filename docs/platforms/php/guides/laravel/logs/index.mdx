@@ -24,3 +24,33 @@ With Sentry Structured Logs, you can send text based log information from your L
 ## Options
 
 <PlatformContent includePath="logs/options" />
+
+## Troubleshooting
+
+If your logs are not appearing in Sentry, check or test the following:
+
+Check your `config/logging.php` and ensure the default log channel and stack channel allow configuration using environment variables:
+
+```php {filename:config/logging.php}
+    // ...
+    'default' => env('LOG_CHANNEL', 'stack'),
+    // ...
+    'channels' => [
+        'stack' => [
+            'driver' => 'stack',
+            'channels' => explode(',', (string) env('LOG_STACK', 'single')),
+            'ignore_exceptions' => false,
+        ],
+    // ...
+```
+
+Ensure that if you have defined the `LOG_LEVEL` in your `.env` file, it is set to a level that allows the logs you are expecting to be sent to Sentry.
+
+To test your setup regardless of the Laravel configuration, you can send a test log message to Sentry with the following snippet:
+
+```php
+\Sentry\logger()->info('A test log message');
+\Sentry\logger()->flush();
+```
+
+If that does not work, check your DSN configuration using `php artisan sentry:test`.

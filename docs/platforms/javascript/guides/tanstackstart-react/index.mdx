@@ -3,6 +3,16 @@ title: TanStack Start React
 description: "Learn how to set up and configure Sentry in your TanStack Start React application, capturing your first errors, and viewing them in Sentry."
 ---
 
+<Alert>
+
+This SDK is currently in **ALPHA**. Alpha features are still in progress, may have bugs and might include breaking changes.
+Please reach out on [GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose) if you have any feedback or concerns.
+This SDK is for [TanStack Start (React)](https://tanstack.com/start/latest/docs/framework/react/overview), for
+using [TanStack Router (React)](https://tanstack.com/router/latest/docs/framework/react/overview) see our React docs for
+[TanStack Router](/platforms/javascript/guides/react/features/tanstack-router).
+
+</Alert>
+
 <PlatformContent includePath="getting-started-prerequisites" />
 
 ## Step 1: Install
@@ -10,7 +20,13 @@ description: "Learn how to set up and configure Sentry in your TanStack Start Re
 Choose the features you want to configure, and this guide will show you how:
 
 <OnboardingOptionButtons
-  options={["error-monitoring", "performance", "session-replay", "user-feedback", "logs"]}
+  options={[
+    "error-monitoring",
+    "performance",
+    "session-replay",
+    "user-feedback",
+    "logs",
+  ]}
 />
 
 <PlatformContent includePath="getting-started-features-expandable" />
@@ -44,11 +60,11 @@ const router = createRouter();
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  
+
   // Adds request headers and IP for users, for more info visit:
   // https://docs.sentry.io/platforms/javascript/guides/tanstackstart-react/configuration/options/#sendDefaultPii
   sendDefaultPii: true,
-  
+
   integrations: [
     // ___PRODUCT_OPTION_START___ performance
     Sentry.tanstackRouterBrowserTracingIntegration(router),
@@ -66,7 +82,7 @@ Sentry.init({
   // ___PRODUCT_OPTION_START___ logs
 
   // Enable logs to be sent to Sentry
-  _experiments: { enableLogs: true },
+  enableLogs: true,
   // ___PRODUCT_OPTION_END___ logs
 
   // ___PRODUCT_OPTION_START___ performance
@@ -96,14 +112,14 @@ import * as Sentry from "@sentry/tanstackstart-react";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  
+
   // Adds request headers and IP for users, for more info visit:
   // https://docs.sentry.io/platforms/javascript/guides/tanstackstart-react/configuration/options/#sendDefaultPii
   sendDefaultPii: true,
   // ___PRODUCT_OPTION_START___ logs
 
   // Enable logs to be sent to Sentry
-  _experiments: { enableLogs: true },
+  enableLogs: true,
   // ___PRODUCT_OPTION_END___ logs
 
   // ___PRODUCT_OPTION_START___ performance
@@ -122,7 +138,7 @@ Wrap TanStack Start's `createRootRoute` function using `wrapCreateRootRouteWithS
 ```tsx {filename:src/routes/__root.tsx} {3,6}
 import type { ReactNode } from "react";
 import { createRootRoute } from "@tanstack/react-router";
-import { wrapCreateRootRouteWithSentry } from "@sentry/tanstackstart-router";
+import { wrapCreateRootRouteWithSentry } from "@sentry/tanstackstart-react";
 
 // (Wrap `createRootRoute`, not its return value!)
 export const Route = wrapCreateRootRouteWithSentry(createRootRoute)({
@@ -164,12 +180,20 @@ import * as Sentry from "@sentry/tanstackstart-react";
 
 registerGlobalMiddleware({
   middleware: [
-    createMiddleware({ type: 'function' }).server(Sentry.sentryGlobalServerMiddlewareHandler()),
+    createMiddleware({ type: "function" }).server(
+      Sentry.sentryGlobalServerMiddlewareHandler()
+    ),
   ],
 });
 ```
 
 ### Capture Errors in your Error Boundaries and Components
+
+<Alert level="info">
+  Automatic error monitoring is not yet supported on the on the server-side of
+  TanStack Start. Use `captureException` to manually capture errors in your
+  server-side code.
+</Alert>
 
 The Sentry SDK cannot capture errors that you manually caught yourself with error boundaries.
 
@@ -183,9 +207,12 @@ class MyErrorBoundary extends React.Component {
   // ...
 }
 
-export const MySentryWrappedErrorBoundary = Sentry.withErrorBoundary(MyErrorBoundary, {
-  // ... sentry error wrapper options
-});
+export const MySentryWrappedErrorBoundary = Sentry.withErrorBoundary(
+  MyErrorBoundary,
+  {
+    // ... sentry error wrapper options
+  }
+);
 ```
 
 If you defined `errorComponent`s in your Code-Based TanStack Router routes, capture the `error` argument with `captureException` inside a `useEffect` hook:
