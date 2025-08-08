@@ -19,4 +19,3 @@ export function isAllowedRemoteImage(src: string): boolean {
     return false;
   }
 }
-
