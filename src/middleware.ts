@@ -1645,7 +1645,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/android/metrics/',
-    to: '//concepts/key-terms/tracing/span-metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
   },
   {
     from: '/platforms/apple/metrics/',
