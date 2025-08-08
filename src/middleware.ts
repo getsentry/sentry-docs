@@ -1639,7 +1639,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/platforms/php/metrics/',
     to: '/concepts/key-terms/tracing/span-metrics/',
   },
-  
+
   // END redirecting deprecated generic metrics docs to concepts
   {
     from: '/learn/cli/configuration/',
