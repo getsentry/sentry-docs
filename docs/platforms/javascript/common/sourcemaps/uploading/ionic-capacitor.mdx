@@ -18,7 +18,7 @@ This guide is only applicable if you're using the command `ionic capacitor build
 
 ## Automatic Setup
 
-You can use Sentry Wizard to give you an initial setup, but manual changes will still be required in order to setup sourcemaps
+You can use the Sentry Wizard to give you an initial setup, but manual changes will still be required in order to set up sourcemaps
 for this build setup.
 
 <Include name="sourcemaps-wizard-instructions.mdx" />
@@ -50,7 +50,7 @@ Generating sourcemaps may expose them to the public, potentially causing your so
 
 <Alert>
 
-You can find installation instructions for Sentry CLI here: https://docs.sentry.io/cli/installation/
+See the [installation instructions for Sentry CLI](/cli/installation/).
 
 For more info on `sentry-cli` configuration visit the [Sentry CLI configuration docs](/cli/configuration/).
 
@@ -68,7 +68,7 @@ SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 
 ### 3. Inject Debug IDs Into Artifacts
 
-Debug IDs are used to match the stack frame of an event with its corresponding minified source and source map file. Visit [What are Debug IDs](/platforms/javascript/sourcemaps/troubleshooting_js/debug-ids/) if you want to learn more about Debug IDs.
+Debug IDs are used to match the stack frame of an event with its corresponding minified source and source map file. Visit [What are Debug IDs](/platforms/javascript/sourcemaps/troubleshooting_js/debug-ids/) to learn more.
 
 To inject Debug IDs, use the following command after you build your project:
 
@@ -80,7 +80,7 @@ sentry-cli sourcemaps inject /path/to/directory/ios/App/public
 
 #### Verify Debug IDs Were Injected in Artifacts
 
-Minified source files should contain at the end a comment named `debugId` like:
+At the end of minified source files, you should include a comment named `debugId`, like this:
 
 ```javascript {filename:example_minified_file.js}
 ...
@@ -88,7 +88,7 @@ Minified source files should contain at the end a comment named `debugId` like:
 //# sourceMappingURL=<sourcemap_url>
 ```
 
-Source maps should contain a field named `debug_id` like:
+Source maps should also contain a field named `debug_id`:
 
 ```json {filename:example_source_map.js.map}
 {
@@ -100,7 +100,7 @@ Source maps should contain a field named `debug_id` like:
 
 ### 4. Upload Artifact Bundle
 
-After you've injected Debug IDs into your artifacts, upload them using the following command.
+After you've injected Debug IDs into your artifacts, upload them using the following command:
 
 ```bash
 // Paths can vary so check where your assets/public and App/public folder are.
@@ -113,7 +113,7 @@ sentry-cli sourcemaps upload /path/to/directory/ios/App/public
 
 Open up Sentry and navigate to **Project Settings > Source Maps**. If you choose “Artifact Bundles” in the tabbed navigation, you'll see all the artifact bundles that have been successfully uploaded to Sentry.
 
-### 5. Deploy your Application
+### 5. Deploy Your Application
 
 If you're following this guide from your local machine, then you've successfully:
 
@@ -132,7 +132,7 @@ Using `release` and `dist` values will make your artifact upload more specific, 
 
 </Alert>
 
-#### Associating `release` with Artifact Bundle
+#### Associating `release` With Artifact Bundle
 
 Provide a `release` property in your SDK options.
 
@@ -159,9 +159,9 @@ Either wait until the first event with the new release set in `Sentry.init` is s
 
 </Alert>
 
-#### Associating `dist` with Artifact Bundle
+#### Associating `dist` With Your Artifact Bundle
 
-In addition to `release`, you can also add a `dist` to your uploaded artifacts, to set the distribution identifier for uploaded files. To do so, run the `sourcemaps upload` command with the additional `--dist` option.
+In addition to `release`, you can also add a `dist` to your uploaded artifacts to set the distribution identifier for uploaded files. To do so, run the `sourcemaps upload` command with the additional `--dist` option.
 
 Provide `release` and `dist` properties in your SDK options.
 
@@ -183,14 +183,14 @@ sentry-cli sourcemaps upload --release=<release_name> --dist=<dist_name> /path/t
 sentry-cli sourcemaps upload --release=<release_name> --dist=<dist_name> /path/to/directory/ios/App/public
 ```
 
-## Dealing with TSLib
+## Dealing With TSLib
 
 During compilation, TypeScript will inject some of its runtime dependencies into the output files it produces if needed. It can include things like polyfills for function generators or APIs that may not be available in all the environments. However, the fact that there aren't any original sources makes it impossible to map frames from compiled code to the original sources.
 
 As a workaround, you'll need to tell the TypeScript compiler to use `tslib`, its own 3rd party package, (which is internally the part of a compiler) instead of injecting runtime dependencies. You'll only need to change what's inside the TypeScript config file, not your source code. Here's how:
 
-1. Make sure that `tslib` is listed as the dependency in your `package.json` file.
-2. Once that's done, add two entries in `compilerOptions` section of your `tsconfig.json`:
+1. Make sure that `tslib` is listed as a dependency in your `package.json` file.
+2. Once that's done, add two entries in the `compilerOptions` section of your `tsconfig.json`:
 - `"noEmitHelpers": true` and
 -`"importHelpers": true`.
 
