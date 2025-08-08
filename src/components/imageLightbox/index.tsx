@@ -25,13 +25,27 @@ const isExternalImage = (src: string): boolean => src.startsWith('http');
 const getImageUrl = (src: string, imgPath: string): string =>
   isExternalImage(src) ? src : imgPath;
 
-const hasValidDimensions = (width?: number, height?: number): width is number =>
-  width != null &&
-  height != null &&
-  !isNaN(width) &&
-  !isNaN(height) &&
-  width > 0 &&
-  height > 0;
+type ValidDimensions = {
+  height: number;
+  width: number;
+};
+
+const getValidDimensions = (
+  width?: number,
+  height?: number
+): ValidDimensions | null => {
+  if (
+    width != null &&
+    height != null &&
+    !isNaN(width) &&
+    !isNaN(height) &&
+    width > 0 &&
+    height > 0
+  ) {
+    return {width, height};
+  }
+  return null;
+};
 
 export function ImageLightbox({
   src,
@@ -48,7 +62,7 @@ export function ImageLightbox({
   // Check if we should use Next.js Image or regular img
   // Use Next.js Image for internal images with valid dimensions
   // Use regular img for external images or when dimensions are invalid/missing
-  const shouldUseNextImage = !isExternalImage(src) && hasValidDimensions(width, height);
+  const validDimensions = !isExternalImage(src) ? getValidDimensions(width, height) : null;
 
   const handleClick = (e: React.MouseEvent) => {
     // If Ctrl/Cmd+click, open image in new tab
@@ -88,13 +102,13 @@ export function ImageLightbox({
 
   // Render the appropriate image component
   const renderImage = () => {
-    if (shouldUseNextImage) {
-      // Type assertion is safe here because hasValidDimensions guarantees these are valid numbers
+    if (validDimensions) {
+      // TypeScript knows validDimensions.width and validDimensions.height are both numbers
       return (
         <Image
           src={src}
-          width={width as number}
-          height={height as number}
+          width={validDimensions.width}
+          height={validDimensions.height}
           style={{
             width: '100%',
             height: 'auto',
@@ -148,12 +162,12 @@ export function ImageLightbox({
 
           {/* Image container */}
           <div className="relative flex items-center justify-center">
-            {shouldUseNextImage ? (
+            {validDimensions ? (
               <Image
                 src={src}
                 alt={alt}
-                width={width as number}
-                height={height as number}
+                width={validDimensions.width}
+                height={validDimensions.height}
                 className="max-h-[90vh] max-w-[90vw] object-contain"
                 style={{
                   width: 'auto',
