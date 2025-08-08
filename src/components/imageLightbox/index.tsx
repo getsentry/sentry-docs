@@ -22,7 +22,8 @@ interface ImageLightboxProps
 }
 
 // Helper functions
-const isExternalImage = (src: string): boolean => src.startsWith('http');
+const isExternalImage = (src: string): boolean =>
+  src.startsWith('http') || src.startsWith('//');
 
 const getImageUrl = (src: string, imgPath: string): string =>
   isExternalImage(src) ? src : imgPath;
