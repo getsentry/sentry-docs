@@ -8,49 +8,38 @@
  * </Lightbox.Root>
  *
  * @example
- * // Advanced usage with custom trigger and controlled state
+ * // Advanced usage with Lightbox.Trigger and controlled state
  * const [open, setOpen] = useState(false);
  *
- * <Lightbox.Root
- *   open={open}
- *   onOpenChange={setOpen}
- *   content={<MyLargeContent />}
- *   trigger={
- *     <Lightbox.Trigger onClick={handleClick}>
+ * <Lightbox.Root open={open} onOpenChange={setOpen} content={<MyLargeContent />}>
+ *   <Lightbox.Trigger asChild>
+ *     <button onClick={handleClick}>
  *       <MyThumbnail />
- *     </Lightbox.Trigger>
- *   }
- * />
+ *     </button>
+ *   </Lightbox.Trigger>
+ * </Lightbox.Root>
  */
 
 'use client';
 
-import {useState} from 'react';
+import {Fragment, useState} from 'react';
 import {X} from 'react-feather';
 import * as Dialog from '@radix-ui/react-dialog';
 
 import styles from './lightbox.module.scss';
 
 interface LightboxProps {
-  children?: React.ReactNode;
   content: React.ReactNode;
-  trigger?: React.ReactNode;
+  children?: React.ReactNode;
+  closeButton?: boolean;
   onOpenChange?: (open: boolean) => void;
   open?: boolean;
-  closeButton?: boolean;
+  trigger?: React.ReactNode;
 }
 
 interface LightboxTriggerProps {
   children: React.ReactNode;
-  onClick?: (e: React.MouseEvent) => void;
-  onKeyDown?: (e: React.KeyboardEvent) => void;
-  className?: string;
-  'aria-label'?: string;
-}
-
-interface LightboxContentProps {
-  children: React.ReactNode;
-  className?: string;
+  asChild?: boolean;
 }
 
 interface LightboxCloseProps {
@@ -92,31 +81,9 @@ function LightboxRoot({
   );
 }
 
-// Trigger component for custom triggers
-function LightboxTrigger({
-  children,
-  onClick,
-  onKeyDown,
-  className = '',
-  'aria-label': ariaLabel,
-}: LightboxTriggerProps) {
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      className={`cursor-pointer border-none bg-transparent p-0 block w-full no-underline ${className}`}
-      onClick={onClick}
-      onKeyDown={onKeyDown}
-      aria-label={ariaLabel}
-    >
-      {children}
-    </div>
-  );
-}
-
-// Content wrapper (optional, for additional styling)
-function LightboxContent({children, className = ''}: LightboxContentProps) {
-  return <div className={className}>{children}</div>;
+// Trigger component
+function LightboxTrigger({children, asChild = false}: LightboxTriggerProps) {
+  return <Dialog.Trigger asChild={asChild}>{children}</Dialog.Trigger>;
 }
 
 // Close button component
@@ -124,22 +91,19 @@ function LightboxClose({children, className = ''}: LightboxCloseProps) {
   return (
     <Dialog.Close className={className}>
       {children || (
-        <>
+        <Fragment>
           <X className="h-4 w-4 stroke-[2.5]" />
           <span className="sr-only">Close</span>
-        </>
+        </Fragment>
       )}
     </Dialog.Close>
   );
 }
 
-// Compound component exports
 export const Lightbox = {
   Root: LightboxRoot,
   Trigger: LightboxTrigger,
-  Content: LightboxContent,
   Close: LightboxClose,
 };
 
-// For backward compatibility, export the root as default
 export default LightboxRoot;

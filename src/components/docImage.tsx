@@ -1,5 +1,6 @@
 import path from 'path';
 
+import {isExternalImage} from 'sentry-docs/config/images';
 import {serverContext} from 'sentry-docs/serverContext';
 
 import {ImageLightbox} from './imageLightbox';
@@ -64,12 +65,12 @@ export default function DocImage({
     return null;
   }
 
-  const isExternalImage = src.startsWith('http') || src.startsWith('//');
+  const isExternal = isExternalImage(src);
   let finalSrc = src;
   let imgPath = src;
 
   // For internal images, process the path
-  if (!isExternalImage) {
+  if (!isExternal) {
     if (src.startsWith('./')) {
       finalSrc = path.join('/mdx-images', src);
     } else if (!src?.startsWith('/') && !src?.includes('://')) {

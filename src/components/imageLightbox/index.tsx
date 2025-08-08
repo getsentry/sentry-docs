@@ -1,11 +1,10 @@
 'use client';
 
 import {useState} from 'react';
-import * as Dialog from '@radix-ui/react-dialog';
 import Image from 'next/image';
 
 import {Lightbox} from 'sentry-docs/components/lightbox';
-import {isAllowedRemoteImage} from 'sentry-docs/config/images';
+import {isAllowedRemoteImage, isExternalImage} from 'sentry-docs/config/images';
 
 interface ImageLightboxProps
   extends Omit<
@@ -19,14 +18,8 @@ interface ImageLightboxProps
   width?: number;
 }
 
-// Helper functions
-const isExternalImage = (src: string): boolean =>
-  src.startsWith('http') || src.startsWith('//');
-
 const getImageUrl = (src: string, imgPath: string): string =>
   isExternalImage(src) ? src : imgPath;
-
-// Using shared allowlist logic from src/config/images
 
 type ValidDimensions = {
   height: number;
@@ -59,46 +52,36 @@ export function ImageLightbox({
 }: ImageLightboxProps) {
   const [open, setOpen] = useState(false);
 
-  // Check if we should use Next.js Image or regular img
-  // Use Next.js Image for internal images with valid dimensions
-  // Use regular img for external images or when dimensions are invalid/missing
   const dimensions = getValidDimensions(width, height);
   const shouldUseNextImage =
     !!dimensions && (!isExternalImage(src) || isAllowedRemoteImage(src));
 
-  const handleModifierClick = (e: React.MouseEvent) => {
-    // If Ctrl/Cmd+click, open image in new tab instead of lightbox
-    if (e.ctrlKey || e.metaKey) {
-      e.preventDefault();
-      e.stopPropagation();
-      const url = getImageUrl(src, imgPath);
-      const newWindow = window.open(url, '_blank');
-      if (newWindow) {
-        newWindow.opener = null; // Security: prevent opener access
-      }
-    }
-    // Normal click will be handled by Dialog.Trigger
+  const openInNewTab = () => {
+    window.open(getImageUrl(src, imgPath), '_blank');
   };
 
-  const handleModifierKeyDown = (e: React.KeyboardEvent) => {
-    // Handle Ctrl/Cmd+Enter or Ctrl/Cmd+Space to open in new tab
+  const handleClick = (e: React.MouseEvent) => {
+    // Middle-click or Ctrl/Cmd+click opens in new tab
+    if (e.button === 1 || e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      openInNewTab();
+      return;
+    }
+    // Regular click falls through to Dialog.Trigger
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if ((e.key === 'Enter' || e.key === ' ') && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
-      e.stopPropagation();
-      const url = getImageUrl(src, imgPath);
-      const newWindow = window.open(url, '_blank');
-      if (newWindow) {
-        newWindow.opener = null; // Security: prevent opener access
-      }
+      openInNewTab();
     }
-    // Normal key presses will be handled by Dialog.Trigger
+    // Regular Enter/Space falls through to Dialog.Trigger
   };
 
   // Filter out props that are incompatible with Next.js Image component
   // Next.js Image has stricter typing for certain props like 'placeholder'
   const {placeholder: _placeholder, ...imageCompatibleProps} = props;
 
-  // Render the appropriate image component
   const renderImage = (isInline: boolean = true) => {
     const renderedSrc = getImageUrl(src, imgPath);
     const imageClassName = isInline
@@ -127,27 +110,30 @@ export function ImageLightbox({
       <img
         src={renderedSrc}
         alt={alt}
-        loading={isInline ? 'lazy' : 'lazy'}
+        loading={isInline ? 'lazy' : 'eager'}
         decoding="async"
         style={imageStyle}
         className={imageClassName}
-        {...props}
+        {...imageCompatibleProps}
       />
     );
   };
 
   return (
     <Lightbox.Root open={open} onOpenChange={setOpen} content={renderImage(false)}>
-      <Dialog.Trigger asChild>
+      <Lightbox.Trigger asChild>
         <div
-          onClick={handleModifierClick}
-          onKeyDown={handleModifierKeyDown}
+          onClick={handleClick}
+          onAuxClick={handleClick}
+          onKeyDown={handleKeyDown}
           className="cursor-pointer border-none bg-transparent p-0 block w-full no-underline"
           aria-label={`View image: ${alt}`}
+          role="button"
+          tabIndex={0}
         >
           {renderImage()}
         </div>
-      </Dialog.Trigger>
+      </Lightbox.Trigger>
     </Lightbox.Root>
   );
 }

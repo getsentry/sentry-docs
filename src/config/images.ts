@@ -8,9 +8,15 @@ export const REMOTE_IMAGE_PATTERNS = REMOTE_IMAGE_HOSTNAMES.map(hostname => ({
   hostname,
 }));
 
+export function isExternalImage(src: string): boolean {
+  return src.startsWith('http') || src.startsWith('//');
+}
+
 export function isAllowedRemoteImage(src: string): boolean {
   try {
-    const url = new URL(src);
+    // Handle protocol-relative URLs by adding https: protocol
+    const normalizedSrc = src.startsWith('//') ? `https:${src}` : src;
+    const url = new URL(normalizedSrc);
     return (
       url.protocol === 'https:' &&
       (REMOTE_IMAGE_HOSTNAMES as readonly string[]).includes(url.hostname)
