@@ -1,0 +1,35 @@
+## Improving Data on Transactions and Spans
+
+### Adding Data Attributes to Transactions
+
+You can add data attributes to your transactions. This data is visible and __queryable__ in the trace explorer in Sentry. Data attributes can be of type _string_, _number_ or _boolean_, as well as arrays and maps of these types:
+
+```cpp
+USentryTransaction* transaction = SentrySubsystem->StartTransaction(TEXT("Automation transaction"), TEXT("Automation operation"));
+
+transaction->SetData(TEXT("key"), {{TEXT("data_key1"), TEXT("value")}});
+transaction->SetData(TEXT("key"), {{TEXT("data_key2"), 123}});
+transaction->SetData(TEXT("key"), {{TEXT("data_key3"), 123.456f}});
+transaction->SetData(TEXT("key"), {{TEXT("data_key4"), TArray<FSentryVariant>{{123, 456}}}});
+transaction->SetData(TEXT("key"), {{TEXT("data_key5"), TMap<FString, FSentryVariant>{{TEXT("inner_key1"), 123}}}});
+
+transaction->Finish();
+```
+
+### Adding Data Attributes to Spans
+
+You can add data attributes to your transactions. This data is visible and __queryable__ in the trace explorer in Sentry. Data attributes can be of type _string_, _number_ or _boolean_, as well as arrays and maps of these types:
+
+```cpp
+USentryTransaction* transaction = SentrySubsystem->StartTransaction(TEXT("Automation transaction"), TEXT("Automation operation"));
+USentrySpan* span = transaction->StartChildSpan(TEXT("Automation span"), TEXT("Description text"));
+
+span->SetData(TEXT("key"), {{TEXT("data_key1"), TEXT("value")}});
+span->SetData(TEXT("key"), {{TEXT("data_key2"), 123}});
+span->SetData(TEXT("key"), {{TEXT("data_key3"), 123.456f}});
+span->SetData(TEXT("key"), {{TEXT("data_key4"), TArray<FSentryVariant>{{123, 456}}}});
+span->SetData(TEXT("key"), {{TEXT("data_key5"), TMap<FString, FSentryVariant>{{TEXT("inner_key1"), 123}}}});
+
+span->Finish();
+transaction->Finish();
+```
