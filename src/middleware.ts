@@ -1652,7 +1652,19 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/apple/tracing/instrumentation/performance-metrics/',
   },
   {
+    from: '/platforms/unity/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
     from: '/platforms/php/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    from: '/platforms/php/guides/laravel/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    from: '/platforms/php/guides/symfony/metrics/',
     to: '/concepts/key-terms/tracing/span-metrics/',
   },
   // END redirecting deprecated generic metrics docs to concepts
