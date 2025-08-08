@@ -2,7 +2,7 @@ import path from 'path';
 
 import {serverContext} from 'sentry-docs/serverContext';
 
-import {DocImageClient} from './docImageClient';
+import {ImageLightbox} from './imageLightbox';
 
 export default function DocImage({
   src,
@@ -33,11 +33,12 @@ export default function DocImage({
           : 800;
 
     return (
-      <DocImageClient
+      <ImageLightbox
         src={src}
         imgPath={src} // For external images, imgPath should be the same as src
         width={width}
         height={height}
+        alt=""
         {...props}
       />
     );
@@ -92,11 +93,12 @@ export default function DocImage({
   const height = dimensions[1] > 0 ? dimensions[1] : parseDimension(propsHeight);
 
   return (
-    <DocImageClient
+    <ImageLightbox
       src={src}
       imgPath={imgPath}
       width={width}
       height={height}
+      alt=""
       {...props}
     />
   );
