@@ -1,13 +1,11 @@
 'use client';
 
 import {useState} from 'react';
-import {X} from 'react-feather';
 import * as Dialog from '@radix-ui/react-dialog';
 import Image from 'next/image';
 
+import {Lightbox} from 'sentry-docs/components/lightbox';
 import {isAllowedRemoteImage} from 'sentry-docs/config/images';
-
-import styles from './imageLightbox.module.scss';
 
 interface ImageLightboxProps
   extends Omit<
@@ -68,36 +66,32 @@ export function ImageLightbox({
   const shouldUseNextImage =
     !!dimensions && (!isExternalImage(src) || isAllowedRemoteImage(src));
 
-  const handleClick = (e: React.MouseEvent) => {
-    // If Ctrl/Cmd+click, open image in new tab
+  const handleModifierClick = (e: React.MouseEvent) => {
+    // If Ctrl/Cmd+click, open image in new tab instead of lightbox
     if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      e.stopPropagation();
       const url = getImageUrl(src, imgPath);
       const newWindow = window.open(url, '_blank');
       if (newWindow) {
         newWindow.opener = null; // Security: prevent opener access
       }
-      return;
     }
-    // Normal click - open lightbox
-    setOpen(true);
+    // Normal click will be handled by Dialog.Trigger
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Handle Enter and Space keys
-    if (e.key === 'Enter' || e.key === ' ') {
+  const handleModifierKeyDown = (e: React.KeyboardEvent) => {
+    // Handle Ctrl/Cmd+Enter or Ctrl/Cmd+Space to open in new tab
+    if ((e.key === 'Enter' || e.key === ' ') && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
-      // If Ctrl/Cmd+key, open image in new tab
-      if (e.ctrlKey || e.metaKey) {
-        const url = getImageUrl(src, imgPath);
-        const newWindow = window.open(url, '_blank');
-        if (newWindow) {
-          newWindow.opener = null; // Security: prevent opener access
-        }
-        return;
+      e.stopPropagation();
+      const url = getImageUrl(src, imgPath);
+      const newWindow = window.open(url, '_blank');
+      if (newWindow) {
+        newWindow.opener = null; // Security: prevent opener access
       }
-      // Normal key press - open lightbox
-      setOpen(true);
     }
+    // Normal key presses will be handled by Dialog.Trigger
   };
 
   // Filter out props that are incompatible with Next.js Image component
@@ -105,22 +99,25 @@ export function ImageLightbox({
   const {placeholder: _placeholder, ...imageCompatibleProps} = props;
 
   // Render the appropriate image component
-  const renderImage = () => {
+  const renderImage = (isInline: boolean = true) => {
     const renderedSrc = getImageUrl(src, imgPath);
+    const imageClassName = isInline
+      ? className
+      : 'max-h-[90vh] max-w-[90vw] object-contain';
+    const imageStyle = isInline
+      ? {width: '100%', height: 'auto', ...style}
+      : {width: 'auto', height: 'auto'};
+
     if (shouldUseNextImage && dimensions) {
-      // TypeScript knows validDimensions.width and validDimensions.height are both numbers
       return (
         <Image
           src={renderedSrc}
           width={dimensions.width}
           height={dimensions.height}
-          style={{
-            width: '100%',
-            height: 'auto',
-            ...style,
-          }}
-          className={className}
+          style={imageStyle}
+          className={imageClassName}
           alt={alt}
+          priority={!isInline}
           {...imageCompatibleProps}
         />
       );
@@ -130,77 +127,27 @@ export function ImageLightbox({
       <img
         src={renderedSrc}
         alt={alt}
-        loading="lazy"
+        loading={isInline ? 'lazy' : 'lazy'}
         decoding="async"
-        style={{
-          width: '100%',
-          height: 'auto',
-          ...style,
-        }}
-        className={className}
+        style={imageStyle}
+        className={imageClassName}
         {...props}
       />
     );
   };
 
   return (
-    <Dialog.Root open={open} onOpenChange={setOpen}>
-      {/* Custom trigger that handles modifier keys properly */}
-      <div
-        role="button"
-        tabIndex={0}
-        className="cursor-pointer border-none bg-transparent p-0 block w-full no-underline"
-        onClick={handleClick}
-        onKeyDown={handleKeyDown}
-        aria-label={`View image: ${alt}`}
-      >
-        {renderImage()}
-      </div>
-
-      <Dialog.Portal>
-        <Dialog.Overlay className={styles.lightboxOverlay} />
-
-        <Dialog.Content className={styles.lightboxContent}>
-          {/* Close button */}
-          <Dialog.Close className="absolute right-4 top-4 z-10 rounded-sm bg-[var(--flame0)] border border-white/20 p-2 text-white opacity-90 transition-all duration-200 hover:opacity-100 hover:bg-[var(--flame1)] hover:border-white/30 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white active:scale-95 flex items-center justify-center">
-            <X className="h-4 w-4 stroke-[2.5]" />
-            <span className="sr-only">Close</span>
-          </Dialog.Close>
-
-          {/* Image container */}
-          <div className="relative flex items-center justify-center">
-            {shouldUseNextImage && dimensions ? (
-              <Image
-                src={getImageUrl(src, imgPath)}
-                alt={alt}
-                width={dimensions.width}
-                height={dimensions.height}
-                className="max-h-[90vh] max-w-[90vw] object-contain"
-                style={{
-                  width: 'auto',
-                  height: 'auto',
-                }}
-                priority
-                {...imageCompatibleProps}
-              />
-            ) : (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={getImageUrl(src, imgPath)}
-                alt={alt}
-                loading="lazy"
-                decoding="async"
-                className="max-h-[90vh] max-w-[90vw] object-contain"
-                style={{
-                  width: 'auto',
-                  height: 'auto',
-                }}
-                {...props}
-              />
-            )}
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+    <Lightbox.Root open={open} onOpenChange={setOpen} content={renderImage(false)}>
+      <Dialog.Trigger asChild>
+        <div
+          onClick={handleModifierClick}
+          onKeyDown={handleModifierKeyDown}
+          className="cursor-pointer border-none bg-transparent p-0 block w-full no-underline"
+          aria-label={`View image: ${alt}`}
+        >
+          {renderImage()}
+        </div>
+      </Dialog.Trigger>
+    </Lightbox.Root>
   );
 }
