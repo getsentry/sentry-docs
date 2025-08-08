@@ -30,10 +30,7 @@ type ValidDimensions = {
   width: number;
 };
 
-const getValidDimensions = (
-  width?: number,
-  height?: number
-): ValidDimensions | null => {
+const getValidDimensions = (width?: number, height?: number): ValidDimensions | null => {
   if (
     width != null &&
     height != null &&
@@ -62,7 +59,9 @@ export function ImageLightbox({
   // Check if we should use Next.js Image or regular img
   // Use Next.js Image for internal images with valid dimensions
   // Use regular img for external images or when dimensions are invalid/missing
-  const validDimensions = !isExternalImage(src) ? getValidDimensions(width, height) : null;
+  const validDimensions = !isExternalImage(src)
+    ? getValidDimensions(width, height)
+    : null;
 
   const handleClick = (e: React.MouseEvent) => {
     // If Ctrl/Cmd+click, open image in new tab
