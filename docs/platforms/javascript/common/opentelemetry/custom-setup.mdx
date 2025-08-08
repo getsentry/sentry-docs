@@ -6,6 +6,7 @@ supported:
   - javascript.node
   - javascript.aws-lambda
   - javascript.azure-functions
+  - javascript.bun
   - javascript.connect
   - javascript.express
   - javascript.fastify
@@ -103,11 +104,26 @@ _Available since SDK version 8.35.0_
 
 You can add your own `@opentelemetry/instrumentation-http` instance in your OpenTelemetry setup. However, in this case, you need to disable span creation in Sentry's `httpIntegration`:
 
-```javascript
-const sentryClient = Sentry.init({
+<PlatformSection notSupported={["javascript.bun"]}>
+  ```javascript
+  const sentryClient = Sentry.init({
   dsn: "___DSN___",
   skipOpenTelemetrySetup: true,
   integrations: [Sentry.httpIntegration({ spans: false })],
+});
+  ```
+</PlatformSection>
+
+<PlatformSection supported={["javascript.bun"]}>
+```javascript
+  const sentryClient = Sentry.init({
+  dsn: "___DSN___",
+  skipOpenTelemetrySetup: true,
+  integrations: (integrations) =>
+    integrations
+       // Also filter out the BunServer integration to avoid emitting duplicated spans from Sentry AND your custom OTel instrumentation
+      .filter((i) => i.name !== "Http" && i.name !== "BunServer")
+      .concat(Sentry.httpIntegration({ spans: false })),
 });
 ```
 </PlatformSection>
