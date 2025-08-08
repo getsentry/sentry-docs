@@ -76,20 +76,17 @@ export default function DocImage({
     dimensions = [];
   }
 
-  // Helper function to safely parse dimension values
-  const parseDimension = (
-    value: string | number | undefined,
-    fallback: number = 800
-  ): number => {
+  // Helper function to safely parse dimension values - only return valid numbers or undefined
+  const parseDimension = (value: string | number | undefined): number | undefined => {
     if (typeof value === 'number' && value > 0) return value;
     if (typeof value === 'string') {
       const parsed = parseInt(value, 10);
-      return parsed > 0 ? parsed : fallback;
+      return parsed > 0 ? parsed : undefined;
     }
-    return fallback;
+    return undefined;
   };
 
-  // Use parsed dimensions, fallback to props, then default to 800
+  // Use parsed dimensions, fallback to props - let ImageLightbox decide on defaults
   const width = dimensions[0] > 0 ? dimensions[0] : parseDimension(propsWidth);
   const height = dimensions[1] > 0 ? dimensions[1] : parseDimension(propsHeight);
 

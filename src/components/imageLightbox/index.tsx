@@ -19,6 +19,20 @@ interface ImageLightboxProps
   width?: number;
 }
 
+// Helper functions
+const isExternalImage = (src: string): boolean => src.startsWith('http');
+
+const getImageUrl = (src: string, imgPath: string): string =>
+  isExternalImage(src) ? src : imgPath;
+
+const hasValidDimensions = (width?: number, height?: number): width is number =>
+  width != null &&
+  height != null &&
+  !isNaN(width) &&
+  !isNaN(height) &&
+  width > 0 &&
+  height > 0;
+
 export function ImageLightbox({
   src,
   alt,
@@ -34,19 +48,12 @@ export function ImageLightbox({
   // Check if we should use Next.js Image or regular img
   // Use Next.js Image for internal images with valid dimensions
   // Use regular img for external images or when dimensions are invalid/missing
-  const shouldUseNextImage =
-    !src.startsWith('http') && // Internal image
-    width != null &&
-    height != null && // Dimensions provided
-    !isNaN(width) &&
-    !isNaN(height) && // Valid numbers
-    width > 0 &&
-    height > 0; // Positive values
+  const shouldUseNextImage = !isExternalImage(src) && hasValidDimensions(width, height);
 
   const handleClick = (e: React.MouseEvent) => {
     // If Ctrl/Cmd+click, open image in new tab
     if (e.ctrlKey || e.metaKey) {
-      const url = src.startsWith('http') ? src : imgPath;
+      const url = getImageUrl(src, imgPath);
       const newWindow = window.open(url, '_blank');
       if (newWindow) {
         newWindow.opener = null; // Security: prevent opener access
@@ -63,7 +70,7 @@ export function ImageLightbox({
       e.preventDefault();
       // If Ctrl/Cmd+key, open image in new tab
       if (e.ctrlKey || e.metaKey) {
-        const url = src.startsWith('http') ? src : imgPath;
+        const url = getImageUrl(src, imgPath);
         const newWindow = window.open(url, '_blank');
         if (newWindow) {
           newWindow.opener = null; // Security: prevent opener access
@@ -82,11 +89,12 @@ export function ImageLightbox({
   // Render the appropriate image component
   const renderImage = () => {
     if (shouldUseNextImage) {
+      // Type assertion is safe here because hasValidDimensions guarantees these are valid numbers
       return (
         <Image
           src={src}
-          width={width!}
-          height={height!}
+          width={width as number}
+          height={height as number}
           style={{
             width: '100%',
             height: 'auto',
@@ -144,8 +152,8 @@ export function ImageLightbox({
               <Image
                 src={src}
                 alt={alt}
-                width={width!}
-                height={height!}
+                width={width as number}
+                height={height as number}
                 className="max-h-[90vh] max-w-[90vw] object-contain"
                 style={{
                   width: 'auto',
