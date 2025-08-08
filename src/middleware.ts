@@ -1633,23 +1633,23 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/ruby/metrics/',
-    to: '/ruby/tracing/instrumentation/performance-metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
   },
   {
     from: '/platforms/react-native/metrics/',
-    to: '/platforms/react-native/tracing/instrumentation/performance-metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
   },
   {
     from: '/platforms/java/metrics/',
-    to: '/platforms/java/tracing/instrumentation/performance-metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
   },
   {
     from: '/platforms/android/metrics/',
-    to: '/platforms/android/tracing/instrumentation/performance-metrics/',
+    to: '//concepts/key-terms/tracing/span-metrics/',
   },
   {
     from: '/platforms/apple/metrics/',
-    to: '/platforms/apple/tracing/instrumentation/performance-metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
   },
   {
     from: '/platforms/unity/metrics/',
