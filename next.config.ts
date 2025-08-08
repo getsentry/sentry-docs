@@ -52,6 +52,9 @@ if (
 const nextConfig = {
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx', 'mdx'],
   trailingSlash: true,
+  images: {
+    contentDispositionType: 'inline', // "open image in new tab" instead of downloading
+  },
   serverExternalPackages: ['rehype-preset-minify'],
   outputFileTracingExcludes,
   webpack: (config, options) => {
@@ -71,7 +74,7 @@ const nextConfig = {
     DEVELOPER_DOCS_: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
   },
   redirects,
-  rewrites: async () => [
+  rewrites: () => [
     {
       source: '/:path*.md',
       destination: '/md-exports/:path*.md',
