@@ -5,6 +5,8 @@ import {X} from 'react-feather';
 import * as Dialog from '@radix-ui/react-dialog';
 import Image from 'next/image';
 
+import {isAllowedRemoteImage} from 'sentry-docs/config/images';
+
 import styles from './imageLightbox.module.scss';
 
 interface ImageLightboxProps
@@ -24,6 +26,8 @@ const isExternalImage = (src: string): boolean => src.startsWith('http');
 
 const getImageUrl = (src: string, imgPath: string): string =>
   isExternalImage(src) ? src : imgPath;
+
+// Using shared allowlist logic from src/config/images
 
 type ValidDimensions = {
   height: number;
@@ -59,9 +63,9 @@ export function ImageLightbox({
   // Check if we should use Next.js Image or regular img
   // Use Next.js Image for internal images with valid dimensions
   // Use regular img for external images or when dimensions are invalid/missing
-  const validDimensions = !isExternalImage(src)
-    ? getValidDimensions(width, height)
-    : null;
+  const dimensions = getValidDimensions(width, height);
+  const shouldUseNextImage =
+    !!dimensions && (!isExternalImage(src) || isAllowedRemoteImage(src));
 
   const handleClick = (e: React.MouseEvent) => {
     // If Ctrl/Cmd+click, open image in new tab
@@ -101,13 +105,14 @@ export function ImageLightbox({
 
   // Render the appropriate image component
   const renderImage = () => {
-    if (validDimensions) {
+    const renderedSrc = getImageUrl(src, imgPath);
+    if (shouldUseNextImage && dimensions) {
       // TypeScript knows validDimensions.width and validDimensions.height are both numbers
       return (
         <Image
-          src={src}
-          width={validDimensions.width}
-          height={validDimensions.height}
+          src={renderedSrc}
+          width={dimensions.width}
+          height={dimensions.height}
           style={{
             width: '100%',
             height: 'auto',
@@ -122,8 +127,10 @@ export function ImageLightbox({
     return (
       /* eslint-disable-next-line @next/next/no-img-element */
       <img
-        src={src}
+        src={renderedSrc}
         alt={alt}
+        loading="lazy"
+        decoding="async"
         style={{
           width: '100%',
           height: 'auto',
@@ -161,12 +168,12 @@ export function ImageLightbox({
 
           {/* Image container */}
           <div className="relative flex items-center justify-center">
-            {validDimensions ? (
+            {shouldUseNextImage && dimensions ? (
               <Image
-                src={src}
+                src={getImageUrl(src, imgPath)}
                 alt={alt}
-                width={validDimensions.width}
-                height={validDimensions.height}
+                width={dimensions.width}
+                height={dimensions.height}
                 className="max-h-[90vh] max-w-[90vw] object-contain"
                 style={{
                   width: 'auto',
@@ -178,8 +185,10 @@ export function ImageLightbox({
             ) : (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
-                src={src}
+                src={getImageUrl(src, imgPath)}
                 alt={alt}
+                loading="lazy"
+                decoding="async"
                 className="max-h-[90vh] max-w-[90vw] object-contain"
                 style={{
                   width: 'auto',

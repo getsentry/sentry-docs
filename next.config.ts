@@ -2,6 +2,7 @@ import {codecovNextJSWebpackPlugin} from '@codecov/nextjs-webpack-plugin';
 import {withSentryConfig} from '@sentry/nextjs';
 
 import {redirects} from './redirects.js';
+import {REMOTE_IMAGE_PATTERNS} from './src/config/images';
 
 const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? {
@@ -56,16 +57,7 @@ const nextConfig = {
   outputFileTracingExcludes,
   images: {
     contentDispositionType: 'inline', // "open image in new tab" instead of downloading
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'user-images.githubusercontent.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'sentry-brand.storage.googleapis.com',
-      },
-    ],
+    remotePatterns: REMOTE_IMAGE_PATTERNS,
   },
   webpack: (config, options) => {
     config.plugins.push(
