@@ -1641,15 +1641,15 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/java/metrics/',
-    to: '/platforms/java/tracing/instrumentation/performance-metrics/'
+    to: '/platforms/java/tracing/instrumentation/performance-metrics/',
   },
   {
     from: '/platforms/android/metrics/',
-    to: '/platforms/android/tracing/instrumentation/performance-metrics/'
+    to: '/platforms/android/tracing/instrumentation/performance-metrics/',
   },
   {
     from: '/platforms/apple/metrics/',
-    to: '/platforms/apple/tracing/instrumentation/performance-metrics/'
+    to: '/platforms/apple/tracing/instrumentation/performance-metrics/',
   },
   {
     from: '/platforms/php/metrics/',
