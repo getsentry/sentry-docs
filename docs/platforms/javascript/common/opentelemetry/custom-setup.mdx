@@ -34,51 +34,7 @@ If you are looking to simply add individual OpenTelemetry instrumentation to you
 
 </Alert>
 
-To use an existing OpenTelemetry setup, set `skipOpenTelemetrySetup: true` in your `init({})` config, then set up all the components that Sentry needs yourself. Finish by installing `@sentry/opentelemetry` and adding the following:
-
-```javascript
-const { NodeTracerProvider } = require("@opentelemetry/sdk-trace-node");
-const Sentry = require("@sentry/node");
-const {
-  SentrySpanProcessor,
-  SentryPropagator,
-  SentrySampler,
-} = require("@sentry/opentelemetry");
-
-const sentryClient = Sentry.init({
-  dsn: "___DSN___",
-  skipOpenTelemetrySetup: true,
-
-  // The SentrySampler will use this to determine which traces to sample
-  tracesSampleRate: 1.0,
-});
-
-// Note: This could be BasicTracerProvider or any other provider depending on
-// how you are using the OpenTelemetry SDK
-const provider = new NodeTracerProvider({
-  // Ensure the correct subset of traces is sent to Sentry
-  // This also ensures trace propagation works as expected
-  sampler: sentryClient ? new SentrySampler(sentryClient) : undefined,
-  spanProcessors: [
-    // Ensure spans are correctly linked & sent to Sentry
-    new SentrySpanProcessor(),
-    // Add additional processors here
-  ],
-});
-
-provider.register({
-  // Ensure trace propagation works
-  // This relies on the SentrySampler for correct propagation
-  propagator: new SentryPropagator(),
-  // Ensure context & request isolation are correctly managed
-  contextManager: new Sentry.SentryContextManager(),
-});
-
-// Validate that the setup is correct
-Sentry.validateOpenTelemetrySetup();
-```
-
-Make sure that all [Required OpenTelemetry Instrumentation](./#required-instrumentation) is set up correctly. Otherwise, the Sentry SDK may not work as expected.
+<PlatformContent includePath="performance/opentelemetry-setup" />
 
 ## Using Sentry for Error Monitoring Only
 
