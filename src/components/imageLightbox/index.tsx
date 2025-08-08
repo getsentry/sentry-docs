@@ -18,8 +18,13 @@ interface ImageLightboxProps
   width?: number;
 }
 
-const getImageUrl = (src: string, imgPath: string): string =>
-  isExternalImage(src) ? src : imgPath;
+const getImageUrl = (src: string, imgPath: string): string => {
+  if (isExternalImage(src)) {
+    // Normalize protocol-relative URLs to use https:
+    return src.startsWith('//') ? `https:${src}` : src;
+  }
+  return imgPath;
+};
 
 type ValidDimensions = {
   height: number;
@@ -57,25 +62,32 @@ export function ImageLightbox({
     !!dimensions && (!isExternalImage(src) || isAllowedRemoteImage(src));
 
   const openInNewTab = () => {
-    window.open(getImageUrl(src, imgPath), '_blank');
+    window.open(getImageUrl(src, imgPath), '_blank', 'noopener,noreferrer');
   };
 
   const handleClick = (e: React.MouseEvent) => {
     // Middle-click or Ctrl/Cmd+click opens in new tab
     if (e.button === 1 || e.ctrlKey || e.metaKey) {
       e.preventDefault();
+      e.stopPropagation();
       openInNewTab();
       return;
     }
-    // Regular click falls through to Dialog.Trigger
+    // Regular click opens lightbox - let it bubble to Dialog.Trigger
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if ((e.key === 'Enter' || e.key === ' ') && (e.ctrlKey || e.metaKey)) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        openInNewTab();
+        return;
+      }
+      // Regular Enter/Space should open lightbox
       e.preventDefault();
-      openInNewTab();
+      setOpen(true);
     }
-    // Regular Enter/Space falls through to Dialog.Trigger
   };
 
   // Filter out props that are incompatible with Next.js Image component

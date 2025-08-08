@@ -1,14 +1,17 @@
 /**
- * Reusable Lightbox component built on top of Radix UI Dialog
+ * Reusable Lightbox component built on top of Radix UI Dialog.
+ * Provides a modal overlay for displaying images or other content.
  *
  * @example
- * // Simple usage with children as trigger
+ * // Basic usage - you must provide Lightbox.Trigger as children
  * <Lightbox.Root content={<img src="large.jpg" />}>
- *   <img src="thumbnail.jpg" alt="Click to expand" />
+ *   <Lightbox.Trigger asChild>
+ *     <img src="thumbnail.jpg" alt="Click to expand" />
+ *   </Lightbox.Trigger>
  * </Lightbox.Root>
  *
  * @example
- * // Advanced usage with Lightbox.Trigger and controlled state
+ * // Controlled state with custom trigger
  * const [open, setOpen] = useState(false);
  *
  * <Lightbox.Root open={open} onOpenChange={setOpen} content={<MyLargeContent />}>
@@ -34,7 +37,6 @@ interface LightboxProps {
   closeButton?: boolean;
   onOpenChange?: (open: boolean) => void;
   open?: boolean;
-  trigger?: React.ReactNode;
 }
 
 interface LightboxTriggerProps {
@@ -51,7 +53,6 @@ interface LightboxCloseProps {
 function LightboxRoot({
   children,
   content,
-  trigger,
   onOpenChange,
   open: controlledOpen,
   closeButton = true,
@@ -63,7 +64,7 @@ function LightboxRoot({
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
-      {trigger || (children && <Dialog.Trigger asChild>{children}</Dialog.Trigger>)}
+      {children}
 
       <Dialog.Portal>
         <Dialog.Overlay className={styles.lightboxOverlay} />
