@@ -10,7 +10,9 @@ sidebar_order: 6000
 The User Feedback feature allows you to collect user feedback from anywhere inside your application at any time, without needing an error event to occur first.
 
 <Alert>
-If you're using a self-hosted Sentry instance, you'll need to be on version 24.4.2 or higher in order to use the full functionality of the User Feedback feature. Lower versions may have limited functionality.
+  If you're using a self-hosted Sentry instance, you'll need to be on version
+  24.4.2 or higher in order to use the full functionality of the User Feedback
+  feature. Lower versions may have limited functionality.
 </Alert>
 
 ## User Feedback Widget
@@ -70,10 +72,10 @@ struct SwiftUIApp: App {
     init() {
         // start the SentrySDK as usual, as early as possible in your app's launch sequence
         SentrySDK.start { options in
-            options.configureFeedback { config in 
+            options.configureFeedback { config in
                 config.customButton = feedbackButton
             }
-            
+
             // your other SDK options
         }
     }
@@ -82,7 +84,7 @@ struct SwiftUIApp: App {
 
 ##### Manually display the widget from a connected `UIWindowSceneDelegate`
 
-You must set up a `UIApplicationDelegateAdaptor`, connect a `UIScene` to your app, and manually call `SentrySDK.feedback.showWidget()`: 
+You must set up a `UIApplicationDelegateAdaptor`, connect a `UIScene` to your app, and manually call `SentrySDK.feedback.showWidget()`:
 
 ```swift
 import Sentry
@@ -122,11 +124,33 @@ class MySceneDelegate: NSObject, UIWindowSceneDelegate, ObservableObject {
     var initializedSentry = false
     func sceneDidBecomeActive(_ scene: UIScene) {
         guard !initializedSentry else { return }
-        
-        // display the feedback widget 
+
+        // display the feedback widget
         SentrySDK.feedback.showWidget()
-        
+
         initializedSentry = true
+    }
+}
+```
+
+##### Manually display the widget from an `onAppear` view modifier
+
+You can manually call `SentrySDK.feedback.showWidget()` from an `onAppear` view modifier:
+
+```swift
+import Sentry
+import SwiftUI
+
+@main
+struct SwiftUIApp: App {
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .onAppear {
+                    SentrySDK.feedback.showWidget()
+                }
+        }
     }
 }
 ```
