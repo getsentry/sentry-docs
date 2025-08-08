@@ -39,9 +39,8 @@ interface LightboxProps {
   open?: boolean;
 }
 
-interface LightboxTriggerProps {
+interface LightboxTriggerProps extends React.ComponentProps<typeof Dialog.Trigger> {
   children: React.ReactNode;
-  asChild?: boolean;
 }
 
 interface LightboxCloseProps {
@@ -83,8 +82,8 @@ function LightboxRoot({
 }
 
 // Trigger component
-function LightboxTrigger({children, asChild = false}: LightboxTriggerProps) {
-  return <Dialog.Trigger asChild={asChild}>{children}</Dialog.Trigger>;
+function LightboxTrigger({children, ...props}: LightboxTriggerProps) {
+  return <Dialog.Trigger {...props}>{children}</Dialog.Trigger>;
 }
 
 // Close button component

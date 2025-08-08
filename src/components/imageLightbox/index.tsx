@@ -71,22 +71,17 @@ export function ImageLightbox({
       e.preventDefault();
       e.stopPropagation();
       openInNewTab();
-      return;
     }
-    // Regular click opens lightbox - let it bubble to Dialog.Trigger
+    // Regular click is handled by Dialog.Trigger
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      if (e.ctrlKey || e.metaKey) {
-        e.preventDefault();
-        e.stopPropagation();
-        openInNewTab();
-        return;
-      }
-      // Regular Enter/Space should open lightbox
+    // Ctrl/Cmd+Enter/Space opens in new tab
+    // Regular Enter/Space is handled by Dialog.Trigger
+    if ((e.key === 'Enter' || e.key === ' ') && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
-      setOpen(true);
+      e.stopPropagation();
+      openInNewTab();
     }
   };
 
@@ -133,18 +128,14 @@ export function ImageLightbox({
 
   return (
     <Lightbox.Root open={open} onOpenChange={setOpen} content={renderImage(false)}>
-      <Lightbox.Trigger asChild>
-        <div
-          onClick={handleClick}
-          onAuxClick={handleClick}
-          onKeyDown={handleKeyDown}
-          className="cursor-pointer border-none bg-transparent p-0 block w-full no-underline"
-          aria-label={`View image: ${alt}`}
-          role="button"
-          tabIndex={0}
-        >
-          {renderImage()}
-        </div>
+      <Lightbox.Trigger
+        onClick={handleClick}
+        onAuxClick={handleClick}
+        onKeyDown={handleKeyDown}
+        className="cursor-pointer border-none bg-transparent p-0 block w-full no-underline"
+        aria-label={`View image: ${alt}`}
+      >
+        {renderImage()}
       </Lightbox.Trigger>
     </Lightbox.Root>
   );
