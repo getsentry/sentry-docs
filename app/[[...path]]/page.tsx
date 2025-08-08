@@ -1,7 +1,7 @@
+import {useMemo} from 'react';
 import {getMDXComponent} from 'mdx-bundler/client';
 import {Metadata} from 'next';
 import {notFound} from 'next/navigation';
-import {useMemo} from 'react';
 
 import {apiCategories} from 'sentry-docs/build/resolveOpenAPI';
 import {ApiCategoryPage} from 'sentry-docs/components/apiCategoryPage';
