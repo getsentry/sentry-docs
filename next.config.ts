@@ -56,6 +56,16 @@ const nextConfig = {
   outputFileTracingExcludes,
   images: {
     contentDispositionType: 'inline', // "open image in new tab" instead of downloading
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'user-images.githubusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'sentry-brand.storage.googleapis.com',
+      },
+    ],
   },
   webpack: (config, options) => {
     config.plugins.push(
