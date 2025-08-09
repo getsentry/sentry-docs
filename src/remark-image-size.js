@@ -13,7 +13,7 @@ export default function remarkImageSize(options) {
   return tree =>
     visit(tree, 'image', node => {
       // don't process external images
-      if (node.url.startsWith('http')) {
+      if (node.url.startsWith('http') || node.url.startsWith('//')) {
         return;
       }
       const fullImagePath = path.join(
