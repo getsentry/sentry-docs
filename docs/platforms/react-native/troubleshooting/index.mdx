@@ -344,6 +344,43 @@ You can also use [Advanced Data Scrubbing](/security-legal-pii/scrubbing/advance
 [Replace] [Anything] from [contexts.trace.data.previousRoute.params]
 ```
 
+## Sentry Android Gradle Plugin Circular Dependency
+
+If you encounter a circular dependency error when building your Android app with the Sentry Android Gradle Plugin, this is typically caused by using an older version of the Android Gradle Plugin (AGP).
+
+### Error Example
+
+You might see an error similar to:
+```
+Circular dependency between the following tasks:
+:app:compileReleaseJavaWithJavac
+:app:generateSentryProguardUuidProductionRelease
+```
+
+### Solution
+
+Update your Android Gradle Plugin to version **7.4** or higher. In your `android/build.gradle` (project-level) file:
+
+```groovy {filename:android/build.gradle}
+buildscript {
+    dependencies {
+        classpath("com.android.tools.build:gradle:7.4.0") // or higher
+    }
+}
+```
+
+Or if using the plugins block in your `android/app/build.gradle`:
+
+```groovy {filename:android/app/build.gradle}
+plugins {
+    id "com.android.application" version "7.4.0" // or higher
+}
+```
+
+AGP 7.4+ introduced new APIs for injecting into assets that the Sentry Android Gradle Plugin uses to avoid this circular dependency. Since AGP 7.4 was released in 2023, we recommend upgrading to the latest stable version.
+
+For more information, see [GitHub issue #756](https://github.com/getsentry/sentry-android-gradle-plugin/issues/756).
+
 ## Uninstalling the SDK
 
 To remove the SDK from your project, run the following commands:

@@ -968,11 +968,11 @@ const userDocsRedirects = [
   },
   {
     source: '/product/insights/llm-monitoring/:path*',
-    destination: '/product/insights/ai/:path*',
+    destination: '/product/insights/ai/',
   },
   {
-    source: '/product/insights/ai/:path*',
-    destination: '/product/insights/agents/',
+    source: '/product/insights/agents/:path*',
+    destination: '/product/insights/ai/agents/:path*',
   },
   {
     source: '/product/insights/retention-priorities/',
