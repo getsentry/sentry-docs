@@ -1,7 +1,8 @@
 ---
 title: Hono
-description: Learn how to set up Hono with Sentry.
+description: Learn how to manually set up Sentry in your Hono app and capture your first errors.
 sdk: sentry.javascript.hono
+fallbackGuide: javascript.node
 categories:
   - javascript
   - server
@@ -10,148 +11,10 @@ categories:
 
 <PlatformContent includePath="getting-started-primer" />
 
-This guide explains how to set up Sentry in your Hono application.
+<Alert type="warning" title="Important">
+  This guide assumes you're using the **Node.js runtime** for Hono. For setup
+  instructions on Cloudflare Workers, see our [Hono on Cloudflare
+  guide](/platforms/javascript/guides/cloudflare/frameworks/hono/).
+</Alert>
 
-If you don't already have an account and a Sentry project established, sign up for [Sentry](https://sentry.io/signup/) for free, then return to this page.
-
-## Features
-
-In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also collect and analyze performance profiles from real users with [profiling](/product/explore/profiling/). Note that profiling currently only works in the Node.js runtime.
-
-Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
-
-<OnboardingOptionButtons
-  options={["error-monitoring", "performance", "profiling"]}
-/>
-
-## Setup
-
-Since Hono is a framework designed to run in all kinds of JavaScript runtimes, different setups for different platforms are outlined below.
-
-### Setup On Cloudflare Workers
-
-```bash {tabTitle:npm}
-npm install @sentry/cloudflare --save
-```
-
-```bash {tabTitle:yarn}
-yarn add @sentry/cloudflare
-```
-
-```bash {tabTitle:pnpm}
-pnpm add @sentry/cloudflare
-```
-
-To use the SDK, you'll need to set either the `nodejs_als` or `nodejs_compat` compatibility flags in your `wrangler.jsonc`/`wrangler.toml` config. This is because the SDK
-needs access to the `AsyncLocalStorage` API to work correctly.
-
-```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
-{
-  "compatibility_flags": [
-    "nodejs_als",
-    // "nodejs_compat"
-  ],
-}
-```
-
-```toml {tabTitle:Toml} {filename:wrangler.toml}
-compatibility_flags = ["nodejs_als"]
-# compatibility_flags = ["nodejs_compat"]
-```
-
-Next, wrap your handler with the `withSentry` function. This will initialize the SDK and hook into the
-environment. Note that you can turn off almost all side effects using the respective options.
-
-
-
-```typescript {filename:index.ts}
-import { Hono } from "hono";
-import * as Sentry from "@sentry/cloudflare";
-
-const app = new Hono();
-
-// Your routes...
-app.get("/", () => {
-  // ...
-});
-
-export default Sentry.withSentry(
-  (env) => ({
-    dsn: "___PUBLIC_DSN___",
-
-    
-    // Adds request headers and IP for users, for more info visit:
-    // https://docs.sentry.io/platforms/javascript/guides/hono/configuration/options/#sendDefaultPii
-    sendDefaultPii: true,
-
-    // ___PRODUCT_OPTION_START___ performance
-    // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
-    // Learn more at
-    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
-    tracesSampleRate: 1.0,
-    // ___PRODUCT_OPTION_END___ performance
-  }),
-  app
-);
-```
-
-### Setup On Cloudflare Pages
-
-```bash {tabTitle:npm}
-npm install @sentry/cloudflare --save
-```
-
-```bash {tabTitle:yarn}
-yarn add @sentry/cloudflare
-```
-
-```bash {tabTitle:pnpm}
-pnpm add @sentry/cloudflare
-```
-
-To use the SDK, you'll need to set either the `nodejs_compat` or `nodejs_als` compatibility flags in your `wrangler.toml`/`wrangler.json`.
-This is because the SDK needs access to the `AsyncLocalStorage` API to work correctly.
-
-```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
-{
-  "compatibility_flags": [
-    "nodejs_compat",
-    // "nodejs_als"
-  ],
-}
-```
-
-```toml {tabTitle:Toml} {filename:wrangler.toml}
-compatibility_flags = ["nodejs_compat"]
-# compatibility_flags = ["nodejs_als"]
-```
-
-Next, add the `sentryPagesPlugin` as
-[middleware to your Cloudflare Pages application](https://developers.cloudflare.com/pages/functions/middleware/).
-
-We recommend adding a `functions/_middleware.js` for the middleware setup so that Sentry is initialized for your entire
-app.
-
-```javascript {filename:functions/_middleware.js}
-import * as Sentry from "@sentry/cloudflare";
-
-export const onRequest = [
-  // Make sure Sentry is the first middleware
-  Sentry.sentryPagesPlugin((context) => ({
-    dsn: "___PUBLIC_DSN___",
-    // ___PRODUCT_OPTION_START___ performance
-
-    // Set tracesSampleRate to 1.0 to capture 100% of spans for tracing.
-    // Learn more at
-    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
-    tracesSampleRate: 1.0,
-    // ___PRODUCT_OPTION_END___ performance
-  })),
-  // Add more middlewares here
-];
-```
-
-### Setup On Other Runtimes
-
-We currently limit support for Hono to Cloudflare.
-If you need support for other runtimes [reach out on GitHub with a feature request](https://github.com/getsentry/sentry-javascript/issues/new/choose).
+<PlatformContent includePath="getting-started-node" />

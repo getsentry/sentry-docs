@@ -33,7 +33,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <PlausibleProvider domain="docs.sentry.io,rollup.sentry.io" />
+        <PlausibleProvider taggedEvents domain="docs.sentry.io,rollup.sentry.io" />
       </head>
       <body className={rubik.variable} suppressHydrationWarning>
         <ThemeProvider
@@ -58,6 +58,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
           data-font-family="var(--font-rubik)"
           data-modal-disclaimer="Please note: This is a tool that searches publicly available sources. Do not include any sensitive or personal information in your queries. For more on how Sentry handles your data, see our [Privacy Policy](https://sentry.io/privacy/)."
           data-modal-example-questions="How to set up Sentry for Next.js?,What are tracePropagationTargets?"
+          data-user-analytics-cookie-enabled="false"
         />
       </body>
     </html>

@@ -85,10 +85,10 @@ To see which repos are available for the organization, you can run `sentry-cli r
 
 Note that you need to refer to releases you need to use the actual full commit SHA. If you want to refer to tags or references (like _HEAD_), the repository needs to be checked out and reachable from the path where you invoke _sentry-cli_.
 
-If you also want to set a previous commit instead of letting the server use the previous release as the base point you can do that by setting a commit range:
+If you also want to set a previous commit instead of letting the server use the previous release as the base point you can do that by setting a commit range. Replace `<commit_of_previous_release>` and `<commit_of_current_release>` with the last commit of the previous release and the release you are creating, respectively.
 
 ```bash
-sentry-cli releases set-commits "$VERSION" --commit "repo-owner/repo-name@from..to"
+sentry-cli releases set-commits "$VERSION" --commit "repo-owner/repo-name@<commit_of_previous_release>..<commit_of_current_release>"
 ```
 
 ### Alternatively: Without a Repository Integration
@@ -116,29 +116,9 @@ which is creating a release with a specified number of commits (see the section 
 sentry-cli releases set-commits "$VERSION" --auto --ignore-missing
 ```
 
-## Managing Release Artifacts
+## Upload Source Maps
 
-When you are working with JavaScript and other platforms, you can upload release artifacts to Sentry which are then considered during processing. The most common release artifact are [source maps](/platforms/javascript/sourcemaps/) for which `sentry-cli` has specific support.
-
-To manage release artifacts the `sentry-cli files` command can be used which itself provides various sub commands.
-
-### Upload Files
-
-The most common use case is to upload files. For the generic upload the `sentry-cli files upload` command can be used. However since most release artifacts are JavaScript source map related we have a [Upload Source Maps](#sentry-cli-sourcemaps) convenience method for that.
-
-Files uploaded are typically named with a full (eg: `http://example.com/foo.js`) or truncated URL (eg: `~/foo.js`).
-
-Release artifacts are only considered at time of event processing. So while it’s possible to modify release artifacts after the fact they will only be considered for future events of that release.
-
-The first argument to `upload` is the path to the file, the second is an optional URL we should associate it with. Note that if you want to use an abbreviated URL (eg: `~/foo.js`) make sure to use single quotes to avoid the expansion by the shell to your home folder.
-
-```bash
-sentry-cli files upload --release "$VERSION" /path/to/file '~/file.js'
-```
-
-### Upload Source Maps
-
-For source map upload, a separate command is provided which assists you in uploading and verifying source maps:
+You can upload sourcemaps via the `sentry-cli sourcemaps upload` command:
 
 ```bash
 sentry-cli sourcemaps upload /path/to/sourcemaps
@@ -210,25 +190,6 @@ sentry-cli sourcemaps upload /path/to/sourcemaps --url-prefix '~/static/js' \
 
 # Omit all files specified in .sentryignore
 sentry-cli sourcemaps upload /path/to/sourcemaps --ignore-file .sentryignore
-```
-
-### List Files
-
-To list uploaded files, the following command can be used:
-
-```bash
-sentry-cli files list --release "$VERSION"
-```
-
-This will return a list of all uploaded files for that release.
-
-### Delete Files
-
-You can also delete already uploaded files. Either by name or all files at once:
-
-```bash
-sentry-cli files delete --release "$VERSION" NAME_OF_FILE
-sentry-cli files delete --release "$VERSION" --all
 ```
 
 ## Creating Deploys

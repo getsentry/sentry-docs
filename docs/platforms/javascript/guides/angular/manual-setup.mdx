@@ -9,7 +9,6 @@ description: "Learn how to set up the Sentry Angular SDK manually."
   installer](/platforms/javascript/guides/angular).
 </Alert>
 
-
 If you can't (or prefer not to) use the installation wizard, follow the instructions below to configure the Sentry Angular SDK in your application. This guide is also useful to adjust the pre-set configuration if you used the installation wizard for automatic setup.
 
 ## Prerequisites
@@ -24,7 +23,15 @@ You need:
 
 Choose the features you want to configure, and this guide will show you how:
 
-<OnboardingOptionButtons options={["error-monitoring", "performance", "session-replay"]} />
+<OnboardingOptionButtons
+  options={[
+    "error-monitoring",
+    "performance",
+    "session-replay",
+    "user-feedback",
+    "logs",
+  ]}
+/>
 
 <PlatformContent includePath="getting-started-features-expandable" />
 
@@ -43,7 +50,6 @@ pnpm add @sentry/angular
 ```
 
 <Expandable title="Which SDK version should you use with your Angular version?" permalink="true" level="warning">
-
 
 In its current major version, the Sentry Angular SDK supports Angular 14 and newer.
 
@@ -102,6 +108,12 @@ Sentry.init({
     // which automatically captures Session Replays
     Sentry.replayIntegration(),
     // ___PRODUCT_OPTION_END___ session-replay
+    // ___PRODUCT_OPTION_START___ user-feedback
+    Sentry.feedbackIntegration({
+      // Additional SDK configuration goes in here, for example:
+      colorScheme: "system",
+    }),
+    // ___PRODUCT_OPTION_END___ user-feedback
   ],
   // ___PRODUCT_OPTION_START___ performance
 
@@ -124,6 +136,11 @@ Sentry.init({
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
   // ___PRODUCT_OPTION_END___ session-replay
+  // ___PRODUCT_OPTION_START___ logs
+
+  // Enable logs to be sent to Sentry
+  enableLogs: true,
+  // ___PRODUCT_OPTION_END___ logs
 });
 
 bootstrapApplication(AppComponent, appConfig).catch((err) =>
@@ -156,6 +173,12 @@ Sentry.init({
     // which automatically captures Session Replays
     Sentry.replayIntegration(),
     // ___PRODUCT_OPTION_END___ session-replay
+    // ___PRODUCT_OPTION_START___ user-feedback
+    Sentry.feedbackIntegration({
+      // Additional SDK configuration goes in here, for example:
+      colorScheme: "system",
+    }),
+    // ___PRODUCT_OPTION_END___ user-feedback
   ],
   // ___PRODUCT_OPTION_START___ performance
 
@@ -178,6 +201,11 @@ Sentry.init({
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
   // ___PRODUCT_OPTION_END___ session-replay
+  // ___PRODUCT_OPTION_START___ logs
+
+  // Enable logs to be sent to Sentry
+  enableLogs: true,
+  // ___PRODUCT_OPTION_END___ logs
 });
 
 platformBrowserDynamic()
@@ -186,7 +214,6 @@ platformBrowserDynamic()
 ```
 
 ### Register Sentry Providers
-
 
 The Sentry Angular SDK exports a couple of Angular providers that are necessary to fully instrument your application. We recommend registering them in your `app.config.ts` or main `app.module.ts`:
 
@@ -284,6 +311,7 @@ import * as Sentry from "@sentry/angular";
 })
 export class AppModule {}
 ```
+
 <Alert>
 
 If your Angular app is configured for SSR, make sure that the Sentry providers are not accidentally passed to the SSR config (`app.config.server.ts`). The Sentry Angular SDK can only be used in the browser.
@@ -315,14 +343,17 @@ export class AppModule {
 
 Alternatively, take a look at our <PlatformLink to="/sourcemaps">Uploading Source Maps</PlatformLink> docs
 
-## Step 4: Verify
+## Step 4: Avoid Ad Blockers With Tunneling (Optional)
+
+<PlatformContent includePath="getting-started-tunneling" />
+
+## Step 5: Verify
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
 ### Issues
 
 To verify that Sentry captures errors and creates issues in your Sentry project, add the following test button to one of your components (e.g. `app.component.ts`), which will trigger an error that Sentry will capture when you click it:
-
 
 ```javascript {filename: app.component.ts} {5, 9-11}
 @Component({

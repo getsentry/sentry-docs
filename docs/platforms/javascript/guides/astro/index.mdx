@@ -17,18 +17,27 @@ This page walks you through adding Sentry to your Astro project, configuring it,
 
 Before we get started, make sure you have the following:
 
-* You need a Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
-* An Astro project that uses Astro `3.0.0` or newer.
-* A Node runtime:
-  * This SDK currently only works on Node runtimes (e.g. Node adapter, Vercel with Lambda functions).
-Non-Node runtimes, like Vercel's Edge runtime or Cloudflare Pages, are currently not supported.
-* If you're using Astro's Netflify adapter (`@astrojs/netlify`), you need version `5.0.0` or newer.
+- You need a Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- An Astro project that uses Astro `3.0.0` or newer.
+- A Node runtime:
+  - This SDK currently only works on Node runtimes (e.g. Node adapter, Vercel with Lambda functions).
+    Non-Node runtimes, like Vercel's Edge runtime or Cloudflare Pages, are currently not supported.
+- If you're using Astro's Netflify adapter (`@astrojs/netlify`), you need version `5.0.0` or newer.
 
 ## Install
 
-<OnboardingOptionButtons options={["error-monitoring", "performance", "profiling", "session-replay"]} />
+<OnboardingOptionButtons
+  options={[
+    "error-monitoring",
+    "performance",
+    "profiling",
+    "session-replay",
+    "user-feedback",
+    "logs",
+  ]}
+/>
 
-Sentry captures data by using an SDK within your application’s runtime.
+Sentry captures data by using an SDK within your application's runtime.
 
 Install the SDK by using the `astro` CLI:
 
@@ -70,7 +79,6 @@ To set up the Sentry SDK, register the Sentry integration and initialize the SDK
 
 ### Astro Integration Setup
 
-
 ```javascript {filename:astro.config.mjs}
 import { defineConfig } from "astro/config";
 import sentry from "@sentry/astro";
@@ -89,8 +97,12 @@ export default defineConfig({
 ```
 
 <Alert level="warning">
-  Passing runtime-specific configuration options (`dsn`, `release`, `environment`, `sampleRate`, `tracesSampleRate`, `replaysSessionSampleRate`, `replaysOnErrorSampleRate`) to the Sentry integration will be deprecated in future versions.
-  We recommend passing your configuration directly to the respective `Sentry.init()` calls in `sentry.client.config.js` and `sentry.server.config.js` instead.
+  Passing runtime-specific configuration options (`dsn`, `release`,
+  `environment`, `sampleRate`, `tracesSampleRate`, `replaysSessionSampleRate`,
+  `replaysOnErrorSampleRate`) to the Sentry integration will be deprecated in
+  future versions. We recommend passing your configuration directly to the
+  respective `Sentry.init()` calls in `sentry.client.config.js` and
+  `sentry.server.config.js` instead.
 </Alert>
 
 ### Client-Side Setup
@@ -112,9 +124,20 @@ Sentry.init({
     // ___PRODUCT_OPTION_START___ session-replay
     Sentry.replayIntegration(),
     // ___PRODUCT_OPTION_END___ session-replay
+    // ___PRODUCT_OPTION_START___ user-feedback
+    Sentry.feedbackIntegration({
+      // Additional SDK configuration goes in here, for example:
+      colorScheme: "system",
+    }),
+    // ___PRODUCT_OPTION_END___ user-feedback
   ],
-  // ___PRODUCT_OPTION_START___ performance
+  // ___PRODUCT_OPTION_START___ logs
 
+  // Enable logs to be sent to Sentry
+  enableLogs: true,
+  // ___PRODUCT_OPTION_END___ logs
+
+  // ___PRODUCT_OPTION_START___ performance
   // Define how likely traces are sampled. Adjust this value in production,
   // or use tracesSampler for greater control.
   tracesSampleRate: 1.0,
@@ -137,7 +160,7 @@ Sentry.init({
 ```javascript {filename:sentry.server.config.js}
 import * as Sentry from "@sentry/astro";
 // ___PRODUCT_OPTION_START___ profiling
-import { nodeProfilingIntegration } from '@sentry/profiling-node';
+import { nodeProfilingIntegration } from "@sentry/profiling-node";
 // ___PRODUCT_OPTION_END___ profiling
 
 Sentry.init({
@@ -153,8 +176,13 @@ Sentry.init({
     nodeProfilingIntegration(),
   ],
   // ___PRODUCT_OPTION_END___ profiling
-  // ___PRODUCT_OPTION_START___ performance
+  // ___PRODUCT_OPTION_START___ logs
 
+  // Enable logs to be sent to Sentry
+  enableLogs: true,
+  // ___PRODUCT_OPTION_END___ logs
+
+  // ___PRODUCT_OPTION_START___ performance
   // Define how likely traces are sampled. Adjust this value in production,
   // or use tracesSampler for greater control.
   tracesSampleRate: 1.0,
@@ -163,7 +191,7 @@ Sentry.init({
 
   // Set sampling rate for profiling
   // This is relative to tracesSampleRate
-  profilesSampleRate: 1.0
+  profilesSampleRate: 1.0,
   // ___PRODUCT_OPTION_END___ profiling
 });
 ```
@@ -195,13 +223,13 @@ Trigger a test error somewhere in your Astro app, for example in one of your pag
 ```
 
 <Alert>
-  Errors triggered from within Browser DevTools are sandboxed and won't trigger an error handler.
-  Place the snippet directly in your code instead.
+  Errors triggered from within Browser DevTools are sandboxed and won't trigger
+  an error handler. Place the snippet directly in your code instead.
 </Alert>
 
 <Alert>
-  Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage
-  documentation</PlatformLink>.
+  Learn more about manually capturing an error or message in our{" "}
+  <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
 </Alert>
 
 To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
@@ -229,7 +257,7 @@ export default defineConfig({
 
 <Alert>
 
-  Auto instrumentation only works for Astro 3.5.2 or newer. If you're using an older version, you need to [manually add the Sentry middleware](#manually-add-server-instrumentation) instead.
+Auto instrumentation only works for Astro 3.5.2 or newer. If you're using an older version, you need to [manually add the Sentry middleware](#manually-add-server-instrumentation) instead.
 
 </Alert>
 

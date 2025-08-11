@@ -12,6 +12,7 @@ import './type.scss';
 import {Banner} from '../banner';
 import {Breadcrumbs} from '../breadcrumbs';
 import {CodeContextProvider} from '../codeContext';
+import {CopyMarkdownButton} from '../copyMarkdownButton';
 import {DocFeedback} from '../docFeedback';
 import {GitHubCTA} from '../githubCTA';
 import {Header} from '../header';
@@ -81,7 +82,12 @@ export function DocPage({
             <div className="mb-4">
               <Banner />
             </div>
-            {leafNode && <Breadcrumbs leafNode={leafNode} />}
+            <div className="overflow-hidden">
+              {leafNode && <Breadcrumbs leafNode={leafNode} />}{' '}
+              <div className="float-right mt-4 sm:mt-0 hidden sm:block">
+                <CopyMarkdownButton pathname={pathname} />
+              </div>
+            </div>
             <div>
               <hgroup>
                 <h1>{frontMatter.title}</h1>
