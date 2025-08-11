@@ -18,7 +18,7 @@ interface ImageLightboxProps
   width?: number;
 }
 
-const getImageUrl = (src: string, imgPath: string): string => {
+export const getImageUrl = (src: string, imgPath: string): string => {
   if (isExternalImage(src)) {
     // Normalize protocol-relative URLs to use https:
     return src.startsWith('//') ? `https:${src}` : src;
@@ -26,12 +26,12 @@ const getImageUrl = (src: string, imgPath: string): string => {
   return imgPath;
 };
 
-type ValidDimensions = {
+export type ValidDimensions = {
   height: number;
   width: number;
 };
 
-const getValidDimensions = (width?: number, height?: number): ValidDimensions | null => {
+export const getValidDimensions = (width?: number, height?: number): ValidDimensions | null => {
   if (
     width != null &&
     height != null &&
