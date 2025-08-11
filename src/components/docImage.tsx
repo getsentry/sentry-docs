@@ -78,7 +78,9 @@ export default function DocImage({
   // For internal images, process the path
   if (!isExternal) {
     if (src.startsWith('./')) {
-      finalSrc = path.join('/mdx-images', src);
+      // Remove ./ prefix and properly join with mdx-images path
+      const cleanSrc = src.slice(2);
+      finalSrc = path.join('/mdx-images', cleanSrc);
     } else if (!src?.startsWith('/') && !src?.includes('://')) {
       finalSrc = `/${pagePath.join('/')}/${src}`;
     }
