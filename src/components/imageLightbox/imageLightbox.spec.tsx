@@ -6,7 +6,15 @@ import {isAllowedRemoteImage, isExternalImage} from 'sentry-docs/config/images';
 // Mock image config functions
 vi.mock('sentry-docs/config/images', () => ({
   isExternalImage: vi.fn((src: string) => src.startsWith('http') || src.startsWith('//')),
-  isAllowedRemoteImage: vi.fn((src: string) => src.includes('allowed-domain.com')),
+  isAllowedRemoteImage: vi.fn((src: string) => {
+    try {
+      // Handle protocol-relative URLs
+      const url = src.startsWith('//') ? new URL('https:' + src) : new URL(src);
+      return url.hostname === 'allowed-domain.com';
+    } catch {
+      return false;
+    }
+  }),
 }));
 
 const shouldUseNextImage = (width?: number, height?: number, src?: string) => {
