@@ -14,7 +14,7 @@ vi.mock('sentry-docs/serverContext', () => ({
 }));
 
 // Mock the ImageLightbox component
-vi.mock('./imageLightbox', () => ({
+vi.mock('../imageLightbox', () => ({
   ImageLightbox: vi.fn(({src, alt, width, height, imgPath}) => ({
     type: 'ImageLightbox',
     props: {src, alt, width, height, imgPath},

@@ -3,7 +3,7 @@ import path from 'path';
 import {isExternalImage} from 'sentry-docs/config/images';
 import {serverContext} from 'sentry-docs/serverContext';
 
-import {ImageLightbox} from './imageLightbox';
+import {ImageLightbox} from '../imageLightbox';
 
 // Helper function to safely parse dimension values
 const parseDimension = (value: string | number | undefined): number | undefined => {
