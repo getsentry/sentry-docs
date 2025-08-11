@@ -21,11 +21,11 @@ Select which Sentry features you'd like to install in addition to Error Monitori
 
 <OnboardingOptionButtons
   options={[
-    "error-monitoring",
-    "performance",
-    "session-replay",
-    "user-feedback",
-    "logs",
+    {id: "error-monitoring", checked: true},
+    {id: "performance", checked: true},
+    {id: "session-replay", checked: true},
+    {id: "user-feedback", checked: true},
+    {id: "logs", checked: true},
   ]}
 />
 
@@ -39,9 +39,24 @@ npx @sentry/wizard@latest -i nextjs
 
 The wizard then guides you through the setup process, asking you to enable additional (optional) Sentry features for your application beyond error monitoring.
 
-<PlatformContent includePath="getting-started-features-expandable" />
-
 This guide assumes that you enable all features and allow the wizard to create an example page and route. You can add or remove features at any time, but setting them up now will save you the effort of configuring them manually later.
+
+### Configure Source Maps (Optional)
+
+For readable stack traces in production, configure source map uploads by adding your Sentry auth token to your environment:
+
+```bash
+# Add to your .env.local file
+SENTRY_AUTH_TOKEN=your_auth_token_here
+```
+
+You can get your auth token from [Sentry Settings > Auth Tokens](https://sentry.io/settings/auth-tokens/). The wizard automatically configures source map upload in your `next.config.js`, but requires this token to work in production.
+
+<Alert level="warning" title="Important">
+
+Make sure to keep your auth token secret and add `.env.local` to your `.gitignore` file to avoid committing it to version control.
+
+</Alert>
 
 <Expandable title="What does the installation wizard change inside your application?">
 
@@ -54,9 +69,11 @@ This guide assumes that you enable all features and allow the wizard to create a
 
 </Expandable>
 
-## Step 2: Configure
+## Step 2: Verify Your Setup
 
-If you prefer to configure Sentry manually, here are the configuration files the wizard would create:
+<Include name="nextjs-turbopack-warning-expandable.mdx" />
+
+The installation wizard creates configuration files in your application. Here are the key files that were created:
 
 ### Client-Side Configuration
 
@@ -138,11 +155,170 @@ Sentry.init({
 });
 ```
 
-For detailed manual setup instructions, see our [manual setup guide](/platforms/javascript/guides/nextjs/manual-setup/).
 
-## Step 3: Verify Your Setup
+<OnboardingOption optionId="logs">
 
-<Include name="nextjs-turbopack-warning-expandable.mdx" />
+## Step 3: Sending Logs
+
+Now let's add structured logging to capture application insights. Logs are enabled in your configuration files created by the wizard.
+
+Use Sentry's logger to capture structured logs with meaningful attributes that help you debug issues and understand user behavior.
+
+```javascript
+import * as Sentry from "@sentry/nextjs";
+
+const { logger } = Sentry;
+
+// Send structured logs with attributes
+logger.info("User completed checkout", { 
+  userId: 123, 
+  orderId: "order_456", 
+  amount: 99.99 
+});
+
+logger.error("Payment processing failed", {
+  errorCode: "CARD_DECLINED",
+  userId: 123,
+  attemptCount: 3
+});
+
+// Using template literals for dynamic data
+logger.warn(logger.fmt`Rate limit exceeded for user: ${userId}`);
+```
+
+</OnboardingOption>
+
+<OnboardingOption optionId="session-replay">
+
+## Step 4: Customizing Replays
+
+By default, Session Replay masks sensitive data for privacy. Let's customize this to show specific content that's safe to display.
+
+You can unmask specific elements while keeping sensitive data protected. Add CSS classes or data attributes to elements you want to reveal in replays.
+
+```javascript {tabTitle:Client} {filename:instrumentation-client.(js|ts)}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.replayIntegration({
+      // Unmask specific elements to show actual content
+      unmask: ['.reveal-content', '[data-safe-to-show]'],
+      // Optionally disable blanket masking for non-sensitive apps
+      maskAllText: false,
+      blockAllMedia: false,
+    }),
+  ],
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  // ... your existing config
+});
+```
+
+```html
+<div className="reveal-content">This content will be visible in replays</div>
+<span data-safe-to-show>Safe user data: {username}</span>
+```
+
+</OnboardingOption>
+
+<OnboardingOption optionId="performance">
+
+## Step 5: Distributed Tracing Configuration
+
+Enable trace propagation to connect performance data across your services. This allows you to follow requests as they move between your frontend, backend, and external APIs.
+
+Configure `tracePropagationTargets` to specify which services should be connected in your traces.
+
+```javascript {tabTitle:Client} {filename:instrumentation-client.(js|ts)}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.browserTracingIntegration()],
+  tracesSampleRate: 1.0,
+  // Configure trace propagation for your backend services
+  tracePropagationTargets: [
+    'https://api.yourapp.com',
+    'https://auth.yourapp.com', 
+    /^\\/api\\//  // Local API routes
+  ],
+  // ... your existing config
+});
+```
+
+```typescript {filename:app/layout.tsx}
+import * as Sentry from "@sentry/nextjs";
+import type { Metadata } from "next";
+
+export function generateMetadata(): Metadata {
+  return {
+    // ... your existing metadata
+    other: {
+      ...Sentry.getTraceData(),
+    },
+  };
+}
+```
+
+## Step 6: Custom Traces with Attributes
+
+Create custom spans to measure specific operations and add meaningful attributes. This helps you understand performance bottlenecks and debug issues with detailed context.
+
+Use nested spans to break down complex operations and add attributes that provide business context.
+
+```javascript
+import * as Sentry from "@sentry/nextjs";
+
+// Create custom spans to measure specific operations
+async function processUserData(userId: string) {
+  return await Sentry.startSpan(
+    {
+      name: "Process User Data",
+      op: "function",
+      attributes: {
+        userId: userId,
+        operation: "data_processing",
+        version: "2.1"
+      }
+    },
+    async () => {
+      // Your business logic here
+      const userData = await fetchUserData(userId);
+      
+      // Nested span for specific operations
+      return await Sentry.startSpan(
+        { 
+          name: "Transform Data", 
+          op: "transform",
+          attributes: { 
+            recordCount: userData.length,
+            transformType: "normalize" 
+          }
+        },
+        () => {
+          return transformUserData(userData);
+        }
+      );
+    }
+  );
+}
+
+// Add attributes to existing spans
+const span = Sentry.getActiveSpan();
+if (span) {
+  span.setAttributes({
+    cacheHit: true,
+    region: "us-west-2",
+    performanceScore: 0.95
+  });
+}
+```
+
+</OnboardingOption>
+
+## Verify Your Setup
 
 If you haven't tested your Sentry configuration yet, let's do it now. You can confirm that Sentry is working properly and sending data to your Sentry project by using the example page and route created by the installation wizard:
 
@@ -172,14 +348,36 @@ Now, head over to your project on [Sentry.io](https://sentry.io) to view the col
 
 At this point, you should have integrated Sentry into your Next.js application and should already be sending error and performance data to your Sentry project.
 
-Now's a good time to customize your setup and look into more advanced topics.
-Our next recommended steps for you are:
+Now's a good time to customize your setup and look into more advanced topics:
 
 - Learn about [instrumenting Next.js server actions](/platforms/javascript/guides/nextjs/apis/#server-actions)
 - Learn how to [manually capture errors](/platforms/javascript/guides/nextjs/usage/)
 - Continue to [customize your configuration](/platforms/javascript/guides/nextjs/configuration/)
 - Get familiar with [Sentry's product features](/product) like tracing, insights, and alerts
 - Learn more about our [Vercel integration](/organization/integrations/deployment/vercel/)
+
+## Additional Resources
+
+<Expandable title="What does the installation wizard change inside your application?">
+
+The installation wizard creates several files and configurations in your application:
+
+- Creates config files with the default `Sentry.init()` calls for all runtimes (Node.js, Browser, and Edge)
+- Adds a Next.js instrumentation hook to your project (`instrumentation.ts`)
+- Creates or updates your Next.js config with the default Sentry settings
+- Creates error handling components (`global-error.(jsx|tsx)` and `_error.jsx` for the Pages Router) if they don't already exist
+- Creates `.sentryclirc` with an auth token to upload source maps (this file is automatically added to `.gitignore`)
+- Adds an example page and route to your application to help verify your Sentry setup
+
+</Expandable>
+
+<Expandable title="Manual Setup Guide">
+
+For comprehensive manual setup instructions including detailed configuration options, advanced features like source maps, tunneling, and Vercel cron monitoring, see our [manual setup guide](/platforms/javascript/guides/nextjs/manual-setup/).
+
+</Expandable>
+
+<PlatformContent includePath="getting-started-features-expandable" />
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
