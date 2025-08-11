@@ -167,99 +167,208 @@ What to monitor with span metrics:
 - p95 span.duration of `op:ui.action` checkout by `cart.item_count` bucket.
 - Error rate for `op:payment` by `payment.provider`.
 
-## Media Upload with Background Processing (React + Worker)
+## Media Upload with Background Processing (React + Express)
 
-**Challenge:** Understand user-perceived upload time vs. server-side processing (scan, transcode, thumbnail) and link the async worker back to the initiating request.
+Example Repository: [SnapTrace](https://github.com/getsentry/snaptrace)
 
-**Solution:** Start a client span when the upload begins; on the backend, create spans for signed-URL issuance, enqueue a job, and instrument worker phases. Propagate trace context via job metadata to stitch the traces.
+**Challenge:** Track user-perceived upload time, server-side validation, and async media processing (optimization, thumbnail generation) while maintaining trace continuity across async boundaries.
 
-**Frontend (React) — instrument upload begin and completion:**
+**Solution:** Start a client span for the entire upload experience, create a backend span for upload validation, and a separate span for async media processing. Use rich attributes instead of excessive spans to capture processing details.
 
-```javascript
-Sentry.startSpan(
-  {
-    name: "Upload media",
-    op: "file.upload",
-    attributes: {
-      "file.size_bytes": file.size,
-      "file.mime_type": file.type,
+**Frontend (React) — Instrument Upload Action**
+
+```typescript
+// In your UploadForm component's upload handler
+const handleUpload = async () => {
+  if (!selectedFile) return;
+
+  // Start Sentry span for entire upload operation
+  await Sentry.startSpan(
+    {
+      name: 'Upload media',
+      op: 'file.upload',
+      attributes: {
+        'file.size_bytes': selectedFile.size,
+        'file.mime_type': selectedFile.type,
+      }
     },
-  },
-  async (span) => {
-    const t0 = performance.now();
-    try {
-      const urlRes = await fetch("/api/uploads/signed-url", { method: "POST" });
-      const { uploadUrl, objectKey } = await urlRes.json();
+    async (span) => {
+      const uploadStartTime = Date.now();
+      
+      try {
+        // Single API call to upload and start processing
+        const uploadResponse = await fetch(`${API_BASE_URL}/api/upload`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            fileName: selectedFile.name,
+            fileType: selectedFile.type,
+            fileSize: selectedFile.size
+          })
+        });
 
-      // Upload file to storage (signed URL)
-      await fetch(uploadUrl, { method: "PUT", body: file });
+        if (!uploadResponse.ok) {
+          throw new Error(`Upload failed: ${uploadResponse.statusText}`);
+        }
 
-      // Tell backend to start async processing
-      await fetch("/api/uploads/start-processing", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ key: objectKey }),
-      });
-
-      span.setAttributes({
-        "upload.success": true,
-        "upload.duration_ms": Math.round(performance.now() - t0),
-      });
-    } catch (e) {
-      span.setStatus?.("error");
-      Sentry.captureException(e);
-    } finally {
-      span.finish?.();
+        const uploadData = await uploadResponse.json();
+        
+        // Set success attributes
+        span?.setAttribute('upload.success', true);
+        span?.setAttribute('upload.duration_ms', Date.now() - uploadStartTime);
+        span?.setAttribute('job.id', uploadData.jobId);
+        
+        // Update UI to show processing status
+        updateUploadStatus(uploadId, 'processing');
+        
+      } catch (error) {
+        span?.setAttribute('upload.success', false);
+        span?.setAttribute('upload.error', error instanceof Error ? error.message : 'Unknown error');
+        setUploadStatus('error');
+      }
     }
-  }
-);
+  );
+};
 ```
 
-Place this where the user triggers an upload (dropzone onDrop, file input onChange, or explicit Upload button).
+Where to put this in your app:
+- In the upload button click handler or form submit handler
+- In drag-and-drop onDrop callback
+- Auto-instrumentation will capture fetch spans; the explicit span adds business context
 
-**Backend — single span per handler; single span in worker:**
+**Backend — Upload Validation and Async Processing**
 
-```javascript
-// Issue signed URL
-app.post("/api/uploads/signed-url", async (req, res) => {
-  await Sentry.startSpan({ name: "Signed URL", op: "storage.sign" }, async (span) => {
-    span.setAttributes({ "storage.provider": "s3", "storage.bucket": "media" });
-    res.json({ uploadUrl: "https://s3...", objectKey: "uploads/abc.jpg" });
-  });
+```typescript
+// Import Sentry instrumentation first (required for v10)
+import './instrument';
+import express from 'express';
+import * as Sentry from '@sentry/node';
+
+// POST /api/upload - Receive and validate upload, then trigger async processing
+app.post('/api/upload', async (req: Request<{}, {}, UploadRequest>, res: Response) => {
+  const { fileName, fileType, fileSize } = req.body;
+
+  // Span 2: Backend validates and accepts upload
+  await Sentry.startSpan(
+    {
+      op: 'upload.receive',
+      name: 'Receive upload',
+      attributes: {
+        'file.name': fileName,
+        'file.size_bytes': fileSize,
+        'file.mime_type': fileType,
+        'validation.passed': true
+      }
+    },
+    async (span) => {
+      try {
+        // Validate the upload
+        if (!fileName || !fileType || !fileSize) {
+          span?.setAttribute('validation.passed', false);
+          span?.setAttribute('validation.error', 'Missing required fields');
+          return res.status(400).json({ error: 'Missing required fields' });
+        }
+
+        if (fileSize > 50 * 1024 * 1024) { // 50MB limit
+          span?.setAttribute('validation.passed', false);
+          span?.setAttribute('validation.error', 'File too large');
+          return res.status(400).json({ error: 'File too large (max 50MB)' });
+        }
+
+        // Create a job for processing
+        const job = createJob(fileName, fileType, fileSize);
+        span?.setAttribute('job.id', job.id);
+
+        // Start async processing (Span 3 will be created here)
+        setImmediate(async () => {
+          await processMedia(job);
+        });
+
+        // Respond immediately with job ID
+        res.json({
+          jobId: job.id,
+          status: 'accepted',
+          message: 'Upload received and processing started'
+        });
+
+      } catch (error) {
+        span?.setAttribute('validation.passed', false);
+        span?.setAttribute('error.message', error instanceof Error ? error.message : 'Unknown error');
+        Sentry.captureException(error);
+        res.status(500).json({ error: 'Failed to process upload' });
+      }
+    }
+  );
 });
 
-// Enqueue processing job and propagate context
-app.post("/api/uploads/start-processing", async (req, res) => {
-  await Sentry.startSpan({ name: "Enqueue media job", op: "queue.enqueue" }, async (span) => {
-    const trace = Sentry.getCurrentScope()?.getPropagationContext?.();
-    queue.publish("media.process", { key: req.body.key, trace });
-    span.setAttribute("queue.name", "media.process");
-    res.json({ ok: true });
-  });
-});
-
-// Worker
-worker.on("message", async (msg) => {
-  const parentContext = msg.trace; // restore trace/parent if available
-  await Sentry.startSpan({ name: "Process media", op: "worker.job", parentContext }, async (span) => {
-    // Do work (scan, transcode, thumbnail) — rely on auto-instrumentation for sub-operations
-    span.setAttributes({
-      "scan.engine": "clamav",
-      "transcode.preset": "720p",
-      "thumbnail.created": true,
-    });
-  });
-});
+// Async media processing (runs in background via setImmediate)
+export async function processMedia(job: ProcessingJob): Promise<void> {
+  await Sentry.startSpan(
+    {
+      op: 'media.process',
+      name: 'Process media',
+      attributes: {
+        'media.size_bytes': job.fileSize,
+        'media.mime_type': job.fileType,
+        'media.size_bucket': getSizeBucket(job.fileSize),
+        'job.id': job.id
+      }
+    },
+    async (span) => {
+      try {
+        const startTime = Date.now();
+        const operations: string[] = [];
+        
+        // Simulate image optimization and thumbnail generation
+        if (job.fileType.startsWith('image/')) {
+          // Note: No separate spans for these operations - use attributes instead
+          await optimizeImage(); // Simulated delay
+          operations.push('optimize');
+          
+          await generateThumbnail(); // Simulated delay
+          operations.push('thumbnail');
+        }
+        
+        // Calculate results
+        const sizeSaved = Math.floor(job.fileSize * 0.3); // 30% reduction
+        const thumbnailCreated = Math.random() > 0.05; // 95% success rate
+        
+        // Rich attributes instead of multiple spans
+        span?.setAttribute('processing.operations', operations);
+        span?.setAttribute('processing.optimization_level', 'high');
+        span?.setAttribute('processing.thumbnail_created', thumbnailCreated);
+        span?.setAttribute('processing.duration_ms', Date.now() - startTime);
+        span?.setAttribute('result.size_saved_bytes', sizeSaved);
+        span?.setAttribute('result.size_reduction_percent', 30);
+        span?.setAttribute('result.status', 'success');
+        
+        // Update job status
+        job.status = 'completed';
+        
+      } catch (error) {
+        span?.setAttribute('result.status', 'failed');
+        span?.setAttribute('error.message', error instanceof Error ? error.message : 'Unknown error');
+        Sentry.captureException(error);
+      }
+    }
+  );
+}
 ```
 
 **How the trace works together:**
-- Client span covers upload + API calls; backend spans cover signing and enqueue; worker spans show processing phases.
-- Linking the worker trace to the enqueue span maintains end-to-end visibility across async boundaries.
+- Frontend span (`file.upload`) captures the entire user experience from file selection to server response.
+- Backend validation span (`upload.receive`) tracks server-side validation and job creation.
+- Async processing span (`media.process`) runs in background with rich attributes for all processing operations.
+- No unnecessary spans for individual operations — prefer attributes for details.
+- Trace continuity is maintained via Sentry’s automatic context propagation.
 
 What to monitor with span metrics:
-- p90 transcode time by `transcode.preset`.
-- Failure counts for `op:security.scan` by `scan.engine`.
-- Time-to-ready (sum of worker phases) by `file.size_bucket`.
+- p95 upload duration by `file.size_bucket`.
+- Processing success rate by `media.mime_type`.
+- Average storage saved via `result.size_saved_bytes` where `result.status = success`.
+- Validation failure reasons grouped by `validation.error`.
 
 ## Search Autocomplete (debounced, cancellable, performance monitoring)
 
