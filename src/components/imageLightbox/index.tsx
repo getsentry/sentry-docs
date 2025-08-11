@@ -31,7 +31,10 @@ export type ValidDimensions = {
   width: number;
 };
 
-export const getValidDimensions = (width?: number, height?: number): ValidDimensions | null => {
+export const getValidDimensions = (
+  width?: number,
+  height?: number
+): ValidDimensions | null => {
   if (
     width != null &&
     height != null &&
