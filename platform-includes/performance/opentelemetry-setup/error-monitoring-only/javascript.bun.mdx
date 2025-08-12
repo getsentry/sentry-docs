@@ -10,17 +10,15 @@ import { registerInstrumentations } from "@opentelemetry/instrumentation";
 
 const sentryClient = Sentry.init({
   dsn: "___DSN___",
+  // Skipping the OpenTelemetry setup automatically disables emitting spans in the httpIntegration with `spans: false`
   skipOpenTelemetrySetup: true,
 
   // Important: We do not define a tracesSampleRate here at all!
   // This leads to tracing being disabled
 
   integrations: (integrations) =>
-    integrations
-       // Filter out the BunServer integration to avoid emitting spans from there
-      .filter((i) => i.name !== "Http" && i.name !== "BunServer")
-      // Add the httpIntegration again and disable emitting spans
-      .concat(Sentry.httpIntegration({ spans: false }))
+    // Filter out the BunServer integration to avoid emitting spans from there
+    integrations.filter((i) => i.name !== "BunServer")
 });
 
 // Create and configure e.g. NodeTracerProvider
