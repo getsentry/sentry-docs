@@ -5,7 +5,11 @@ sidebar_order: 35
 
 ## Telemetry Buffer Layer: Prioritized, Bounded, Rate-Aware Envelope Delivery
 
-### Summary
+### Current State
+
+The current transport implementation of most of the SDKs uses a simple FIFO queue that processes all envelope types with equal priority. As our SDKs collect more and more telemetry with different types, it may become a problem that critical telemetry (such as errors/crashes) get delayed and de-prioritized due to other telemetry (traces, replays, logs) occupying the queue. This is especially relevant with replays, logs and continuous profiling which we periodically flush to the queue.
+
+### Proposal
 
 Introduce a per-telemetry buffer layer between `Client` and `Transport` to:
 - Batch telemetry when protocol-safe (all types, not only logs)
