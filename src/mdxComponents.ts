@@ -43,8 +43,8 @@ import {SdkOption} from './components/sdkOption';
 import {SignInNote} from './components/signInNote';
 import {SmartLink} from './components/smartLink';
 import {TableOfContents} from './components/tableOfContents';
-import {VimeoEmbed} from './components/video';
 import {VersionRequirement} from './components/version-requirement';
+import {VimeoEmbed} from './components/video';
 
 export function mdxComponents(
   dynamicComponents: any = {},

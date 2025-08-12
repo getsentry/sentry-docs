@@ -3,11 +3,14 @@ import {ReactNode} from 'react';
 import {Alert} from './alert';
 
 export type VersionRequirementProps = {
-  product: string; // e.g., "Logs for React Native"
-  sdk: string; // e.g., "Sentry React Native SDK"
-  minVersion: string; // e.g., "7.0.0-beta.1"
-  level?: 'info' | 'warning' | 'success';
-  children?: ReactNode; // additional details, upgrade notes, links
+  // e.g., "Sentry React Native SDK"
+  minVersion: string; 
+  product: string; 
+  // e.g., "Logs for React Native"
+  sdk: string; 
+  children?: ReactNode;
+  // e.g., "7.0.0-beta.1"
+  level?: 'info' | 'warning' | 'success'; // additional details, upgrade notes, links
 };
 
 /**
