@@ -4,10 +4,10 @@ import {Alert} from './alert';
 
 export type VersionRequirementProps = {
   // e.g., "Sentry React Native SDK"
-  minVersion: string; 
-  product: string; 
+  minVersion: string;
+  product: string;
   // e.g., "Logs for React Native"
-  sdk: string; 
+  sdk: string;
   children?: ReactNode;
   // e.g., "7.0.0-beta.1"
   level?: 'info' | 'warning' | 'success'; // additional details, upgrade notes, links
