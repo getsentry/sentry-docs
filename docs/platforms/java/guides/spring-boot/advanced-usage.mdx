@@ -150,7 +150,14 @@ import org.springframework.stereotype.Component;
 @Component
 class CustomOnDiscardCallback implements SentryOptions.OnDiscardCallback {
   @Override 
-  public void execute(DiscardReason reason, DataCategory category, Long count) {}
+  public void execute(DiscardReason reason, DataCategory category, Long count) {
+    // Only record the number of lost spans due to overflow conditions
+    if ((reason == DiscardReason.CACHE_OVERFLOW
+            || reason == DiscardReason.QUEUE_OVERFLOW)
+        && category == DataCategory.Span) {
+      System.out.println("Discarded " + number + " spans due to overflow.");
+    }
+  }
 }
 ```
 
@@ -162,6 +169,13 @@ import org.springframework.stereotype.Component
 
 @Component
 class CustomOnDiscardCallback : SentryOptions.OnDiscardCallback {
-  override fun execute(reason: DiscardReason, category: DataCategory, countToAdd: Long) {}
+  override fun execute(reason: DiscardReason, category: DataCategory, countToAdd: Long) {
+    // Only record the number of lost spans due to overflow conditions
+    if ((reason == DiscardReason.CACHE_OVERFLOW
+            || reason == DiscardReason.QUEUE_OVERFLOW)
+        && category == DataCategory.Span) {
+      println("Discarded " + number + " spans due to overflow.")
+    }
+  }
 }
 ```
