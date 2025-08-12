@@ -115,6 +115,19 @@ The `maxSpans` should be implemented as an internal, non-configurable, constant 
 
 The `maxSpans` limit may also help avoiding transactions that never finish (in platforms that keep a transaction open for as long as spans are open), preventing OOM errors, and generally avoiding degraded application performance.
 
+
+### `propagateTraceparent`
+
+This must be a boolean value. The default is `false`. This option is used to enable the propagation of the W3C Trace Context HTTP header `traceparent` on outgoing HTTP requests. This is useful when the receiving services only support OTel/W3C propagation.
+
+The `traceparent` header is only emitted when `propagateTraceparent` is `true` and the request matches `tracePropagationTargets` (same condition as for `sentry-trace`/`baggage`).
+
+Header Format:
+- Key: `traceparent`
+- Value: `00-<traceId>-<spanId>-<sampled>` where `<sampled>` is `01` if sampled, otherwise `00`.
+
+The full spec is available in the [W3C Trace Context](https://www.w3.org/TR/trace-context/) specification.
+
 ## `Event` Changes
 
 As of writing, transactions are implemented as an extension of the `Event`

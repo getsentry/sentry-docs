@@ -6,7 +6,7 @@ This document describes how an SDK should propagate information between differen
 
 For an overview see [Distributed Tracing](https://docs.sentry.io/product/performance/distributed-tracing/) in the product docs.
 
-Sentry uses two containers to hold trace information [`sentry-trace`](/sdk/performance/#header-sentry-trace) and [`baggage`](/sdk/performance/dynamic-sampling-context/#baggage-header).
+Sentry uses three containers to hold trace information [`sentry-trace`](/sdk/performance/#header-sentry-trace), [`baggage`](/sdk/performance/dynamic-sampling-context/#baggage-header) and optionally [`traceparent`](/sdk/performance/distributed-tracing/#w3c-trace-context-header).
 
 With these containers you can propagate a trace to a down-stream service by either:
 - adding `sentry-trace` and `baggage` HTTP headers (when making outgoing HTTP requests),
@@ -16,6 +16,15 @@ With these containers you can propagate a trace to a down-stream service by eith
 The SDK running in the receiving service needs to make sure to pick up incoming trace information by
 - reading `sentry-trace` and `baggage` headers for each incoming HTTP request,
 - reading `sentry-trace` and `baggage` meta data when retrieving an item from a queue, or
-- reading the environment variables `SENTRY_TRACE` and `SENTRY_BAGGAGE` on startup.
+- reading the environment variables `SENTRY_TRACE` and `SENTRY_BAGGAGE` on startup, or
+- using OTel to read the `traceparent` header on incoming HTTP requests.
 
 This trace information should be stored in the "propagation context" of the current scope. This makes sure that all telemetry that is emitted from the receiving service to Sentry will include the correct trace information.
+
+## W3C Trace Context Header
+
+To interoperate with OpenTelemetry (OTel) services, SDKs can optionally emit the W3C Trace Context `traceparent` HTTP header on outgoing requests in addition to Sentry’s own `sentry-trace` and `baggage`. This enables traces originating from a Sentry SDK to be continued by components that only use OTel/W3C propagation.
+
+The `traceparent` header must only be emitted when [`propagateTraceparent`](/sdk/telemetry/traces/#propagatetraceparent) is `true` and the request matches `tracePropagationTargets` (same condition as for `sentry-trace`/`baggage`).
+
+The full spec is available in the [W3C Trace Context](https://www.w3.org/TR/trace-context/) document.
