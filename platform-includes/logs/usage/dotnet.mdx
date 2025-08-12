@@ -14,7 +14,7 @@ During the experimental phase of the feature, we will provide more method overlo
 Additionally, we may provide method overloads that are not based on _composite format strings_, but on _interpolated strings_.
 </Alert>
 
-<PlatformSection supported={["dotnet.aspnetcore, dotnet.azure-functions-worker, dotnet.blazor-webassembly, dotnet.extensions-logging, dotnet.maui"]}>
+<PlatformSection supported={["dotnet.aspnetcore", "dotnet.azure-functions-worker", "dotnet.blazor-webassembly", "dotnet.extensions-logging", "dotnet.maui"]}>
 
 Additionally, when enabled and initialized, the SDK registers a [ILoggerProvider](https://learn.microsoft.com/dotnet/api/microsoft.extensions.logging.iloggerprovider)
 that allows sending logs to Sentry via [ILogger](https://learn.microsoft.com/dotnet/api/microsoft.extensions.logging.ilogger-1) instances resolved through _.NET dependency injection_.
@@ -22,20 +22,18 @@ that allows sending logs to Sentry via [ILogger](https://learn.microsoft.com/dot
 ```csharp
 public sealed class MyService(ILogger<MyService> logger)
 {
-    public async Task InvokeAsync(HttpContext context)
+    public void Invoke()
     {
         logger.LogInformation("A simple log message");
-        await Task.Yield();
         logger.LogError("A {Parameter} log message", "formatted");
-        await Task.Delay(TimeSpan.FromSeconds(1));
-        logger.LogWarning(new EventId(1, nameof(InvokeAsync)), "Message with EventId");
+        logger.LogWarning(new EventId(1, nameof(Invoke)), "Message with EventId");
     }
 }
 ```
 
 The `ILogger`'s _CategoryName_, as well as the `EventId` (if provided), are attached as attributes to the logs.
 
-For more information, see article on [Logging in C# and .NET](https://learn.microsoft.com//dotnet/core/extensions/logging).
+For more information, see the article on [Logging in C# and .NET](https://learn.microsoft.com//dotnet/core/extensions/logging).
 Sentry Structured Logs also work with [High-performance logging in .NET](https://learn.microsoft.com/dotnet/core/extensions/high-performance-logging) and [Compile-time logging source generation](https://learn.microsoft.com/dotnet/core/extensions/logger-message-generator) alike.
 
 </PlatformSection>
@@ -60,4 +58,4 @@ Supported attribute types are:
 - Integral: `sbyte`, `byte`, `short`, `ushort`, `int`, `uint`, `long` and `nint`
 - Floating-point: `float` and `double`
 
-Unsupported numeric types such as `ulong`, `nuint`, `decimal`, as well as all other types including `object`, are treated as `string` via `ToString`.
+Unsupported numeric types such as `ulong`, `nuint`, `decimal`, as well as all other types including `object`, are treated as `string` via `ToString()`.
