@@ -753,7 +753,7 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/guides/remix/frameworks/hydrogen/',
-    destination: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen/',
+    destination: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
   },
   {
     source: '/product/metrics/:path*',
