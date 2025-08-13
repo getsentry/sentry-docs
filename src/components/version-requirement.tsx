@@ -27,7 +27,7 @@ export function VersionRequirement({
 }: VersionRequirementProps) {
   return (
     <Alert title="Version requirement" level={level}>
-      {product} requires {sdk} version <code>{minVersion}</code> or newer.
+      <p>{product} requires {sdk} version <code>{minVersion}</code> or newer.</p>
       {children ? <div className="mt-2">{children}</div> : null}
     </Alert>
   );
