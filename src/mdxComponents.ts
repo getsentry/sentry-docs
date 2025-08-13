@@ -43,6 +43,7 @@ import {SdkOption} from './components/sdkOption';
 import {SignInNote} from './components/signInNote';
 import {SmartLink} from './components/smartLink';
 import {TableOfContents} from './components/tableOfContents';
+import {VersionRequirement} from './components/version-requirement';
 import {VimeoEmbed} from './components/video';
 
 export function mdxComponents(
@@ -93,6 +94,7 @@ export function mdxComponents(
     SandboxLink,
     SignInNote,
     VimeoEmbed,
+    VersionRequirement,
     a: SmartLink,
     img: DocImage,
     ...dynamicComponents,
