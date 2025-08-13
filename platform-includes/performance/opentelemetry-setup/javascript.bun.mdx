@@ -1,10 +1,11 @@
 To use an existing OpenTelemetry setup, set `skipOpenTelemetrySetup: true` in your `init({})` config, then set up all the components that Sentry needs yourself. Finish by installing `@sentry/opentelemetry` and adding the following:
 
 ```javascript {tabTitle: NodeTracerProvider}
-const Sentry = require("@sentry/node");
-const { SentrySpanProcessor, SentryPropagator, SentrySampler } = require("@sentry/opentelemetry");
+import * as Sentry from "@sentry/bun";
+import { SentryContextManager, validateOpenTelemetrySetup } from "@sentry/node-core";
+import { SentrySpanProcessor, SentryPropagator, SentrySampler } from "@sentry/opentelemetry";
 
-const { NodeTracerProvider } = require("@opentelemetry/sdk-trace-node");
+import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
 
 const sentryClient = Sentry.init({
   dsn: "___DSN___",
@@ -12,6 +13,9 @@ const sentryClient = Sentry.init({
 
   // The SentrySampler will use this to determine which traces to sample
   tracesSampleRate: 1.0,
+  // Filter out the BunServer integration in case you want to avoid sending spans from there:
+  // integrations: (integrations) =>
+  //    integrations.filter((i) => i.name !== "BunServer")
 });
 
 // Note: This could be BasicTracerProvider or any other provider depending on
@@ -32,25 +36,29 @@ provider.register({
   // This relies on the SentrySampler for correct propagation
   propagator: new SentryPropagator(),
   // Ensure context & request isolation are correctly managed
-  contextManager: new Sentry.SentryContextManager(),
+  contextManager: new SentryContextManager(),
 });
 
 // Validate that the setup is correct
-Sentry.validateOpenTelemetrySetup();
+validateOpenTelemetrySetup();
 ```
 
 ```javascript {tabTitle: NodeSDK}
-const Sentry = require("@sentry/node");
+import * as Sentry from "@sentry/bun";
+import { SentryContextManager, validateOpenTelemetrySetup } from "@sentry/node-core";
+import { SentryPropagator, SentrySampler } from "@sentry/opentelemetry";
 
-const { NodeSDK } = require("@opentelemetry/sdk-node")
-const { SentrySpanProcessor, SentryPropagator, SentrySampler } = require("@sentry/opentelemetry");
+import { NodeSDK } from "@opentelemetry/sdk-node";
 
 const sentryClient = Sentry.init({
   dsn: "___PUBLIC_DSN___",
   skipOpenTelemetrySetup: true,
 
-  // The SentrySampler will use this to determine which traces to sample
+   // The SentrySampler will use this to determine which traces to sample
   tracesSampleRate: 1.0,
+  // Filter out the BunServer integration in case you want to avoid sending spans from there:
+  // integrations: (integrations) =>
+  //    integrations.filter((i) => i.name !== "BunServer")
 });
 
 const sdk = new NodeSDK({
@@ -66,13 +74,13 @@ const sdk = new NodeSDK({
   // This relies on the SentrySampler for correct propagation
   textMapPropagator: new SentryPropagator(),
   // Ensure context & request isolation are correctly managed
-  contextManager: new Sentry.SentryContextManager()
+  contextManager: new SentryContextManager()
 });
 
 sdk.start();
 
 // Validate that the setup is correct
-Sentry.validateOpenTelemetrySetup();
+validateOpenTelemetrySetup();
 ```
 
 Make sure that all [Required OpenTelemetry Instrumentation](./#required-instrumentation) is set up correctly. Otherwise, the Sentry SDK may not work as expected.
