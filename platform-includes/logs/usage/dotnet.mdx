@@ -1,3 +1,5 @@
+<PlatformSection notSupported={["dotnet.aspnetcore", "dotnet.azure-functions-worker", "dotnet.blazor-webassembly", "dotnet.extensions-logging", "dotnet.maui"]}>
+
 Once the feature is enabled on the SDK and the SDK is initialized, you can send logs using the `SentrySdk.Experimental.Logger` APIs.
 
 The `SentrySdk.Experimental.Logger` instance exposes six methods that you can use to log messages at different log levels: `Trace`, `Debug`, `Info`, `Warning`, `Error`, and `Fatal`.
@@ -14,10 +16,25 @@ During the experimental phase of the feature, we will provide more method overlo
 Additionally, we may provide method overloads that are not based on _composite format strings_, but on _interpolated strings_.
 </Alert>
 
+</PlatformSection>
+
 <PlatformSection supported={["dotnet.aspnetcore", "dotnet.azure-functions-worker", "dotnet.blazor-webassembly", "dotnet.extensions-logging", "dotnet.maui"]}>
 
-Additionally, when enabled and initialized, the SDK registers a [ILoggerProvider](https://learn.microsoft.com/dotnet/api/microsoft.extensions.logging.iloggerprovider)
-that allows sending logs to Sentry via [ILogger](https://learn.microsoft.com/dotnet/api/microsoft.extensions.logging.ilogger-1) instances resolved through _.NET dependency injection_.
+Once the feature is enabled on the SDK and the SDK is initialized, you can send logs using instances of the [ILogger](https://learn.microsoft.com/dotnet/api/microsoft.extensions.logging.ilogger-1) interface,
+resolved through _.NET dependency injection_.
+
+The `LoggerExtensions` extension methods expose various overloads that you can use to log messages at six different log levels automatically mapped to Sentry's severity:
+
+| Microsoft.Extensions.Logging.LogLevel | Sentry.SentryLogLevel | Sentry Logs UI Severity |
+| --- | --- | --- |
+| Trace | Trace | TRACE |
+| Debug | Debug | DEBUG |
+| Information | Info | INFO |
+| Warning | Warning | WARN |
+| Error | Error | ERROR |
+| Critical | Fatal | FATAL |
+
+These properties will be sent to Sentry, and can be searched from within the Logs UI, and even added to the Logs views as a dedicated column.
 
 ```csharp
 public sealed class MyService(ILogger<MyService> logger)
@@ -37,6 +54,8 @@ For more information, see the article on [Logging in C# and .NET](https://learn.
 Sentry Structured Logs also work with [High-performance logging in .NET](https://learn.microsoft.com/dotnet/core/extensions/high-performance-logging) and [Compile-time logging source generation](https://learn.microsoft.com/dotnet/core/extensions/logger-message-generator) alike.
 
 </PlatformSection>
+
+<PlatformSection notSupported={["dotnet.aspnetcore", "dotnet.azure-functions-worker", "dotnet.blazor-webassembly", "dotnet.extensions-logging", "dotnet.maui"]}>
 
 The SDK automatically provides a set of default attributes attached to your logs.
 Additionally, you can attach custom attributes via a delegate.
@@ -59,3 +78,5 @@ Supported attribute types are:
 - Floating-point: `float` and `double`
 
 Unsupported numeric types such as `ulong`, `nuint`, `decimal`, as well as all other types including `object`, are treated as `string` via `ToString()`.
+
+</PlatformSection>
