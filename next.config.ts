@@ -2,6 +2,7 @@ import {codecovNextJSWebpackPlugin} from '@codecov/nextjs-webpack-plugin';
 import {withSentryConfig} from '@sentry/nextjs';
 
 import {redirects} from './redirects.js';
+import {REMOTE_IMAGE_PATTERNS} from './src/config/images';
 
 const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? {
@@ -54,6 +55,10 @@ const nextConfig = {
   trailingSlash: true,
   serverExternalPackages: ['rehype-preset-minify'],
   outputFileTracingExcludes,
+  images: {
+    contentDispositionType: 'inline', // "open image in new tab" instead of downloading
+    remotePatterns: REMOTE_IMAGE_PATTERNS,
+  },
   webpack: (config, options) => {
     config.plugins.push(
       codecovNextJSWebpackPlugin({
@@ -71,7 +76,7 @@ const nextConfig = {
     DEVELOPER_DOCS_: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
   },
   redirects,
-  rewrites: async () => [
+  rewrites: () => [
     {
       source: '/:path*.md',
       destination: '/md-exports/:path*.md',
