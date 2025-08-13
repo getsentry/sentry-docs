@@ -22,7 +22,11 @@ yarn remove sentry-expo
 pnpm remove sentry-expo
 ```
 
-### Install `@sentry/react-native`
+### Remove `sentry-expo/upload-sourcemaps` from `postPublish` hooks
+
+Remove the Sentry Source Maps Upload hook from your Expo Application configuration, `expo.hooks.postPublish`. The new methods of uploading source maps are described in the [new Expo guide](/platforms/react-native/manual-setup/expo/), as part of the final step of the migration [at the bottom of the page](/platforms/react-native/migration/sentry-expo/#set-up-the-sentryreact-native-expo-and-metro-plugins).
+
+## Install `@sentry/react-native`
 
 Install the `@sentry/react-native` package:
 
@@ -70,10 +74,17 @@ Replace `sentry-expo` export `Native` with `@sentry/react-native`:
 
 The `enableInExpoDevelopment` option is no longer supported. If you were using it, remove it and replace it with a `__DEV__` check, or leave the SDK enabled in development.
 
-```javascript {tabTitle:JavaScript} diff
+```javascript {tabTitle:Disabled in development} diff
+Sentry.init({
+-  enableInExpoDevelopment: false,
++  enabled: !__DEV__,
+});
+```
+
+```javascript {tabTitle:Enabled in development} diff
 Sentry.init({
 -  enableInExpoDevelopment: true,
-+  enabled: __DEV__,
++  enabled: true,
 });
 ```
 
@@ -83,6 +94,7 @@ Expo-specific tags are no longer added by default. If you were using them, you c
 
 ```javascript
 import Constants from "expo-constants";
+import * as Application from 'expo-application';
 import * as Device from "expo-device";
 import * as Updates from "expo-updates";
 
@@ -94,16 +106,12 @@ Sentry.setExtras({
   linkingUri: Constants.linkingUri,
 });
 
-Sentry.setTag("expoReleaseChannel", Updates.manifest.releaseChannel);
-Sentry.setTag("appVersion", Updates.manifest.version);
-Sentry.setTag("appPublishedTime", Updates.manifest.publishedTime);
-Sentry.setTag("expoSdkVersion", Updates.manifest.sdkVersion);
-Sentry.setTag("deviceId", Constants.sessionId);
-Sentry.setTag("appOwnership", Constants.appOwnership || "N/A");
-if (Constants.appOwnership === "expo" && Constants.expoVersion) {
-  Sentry.setTag("expoAppVersion", Constants.expoVersion);
-}
 Sentry.setTag("expoChannel", Updates.channel);
+Sentry.setTag("appVersion", Application.nativeApplicationVersion);
+Sentry.setTag("deviceId", Constants.sessionId);
+Sentry.setTag("executionEnvironment", Constants.executionEnvironment);
+Sentry.setTag("expoGoVersion", Constants.expoVersion);
+Sentry.setTag("expoRuntimeVersion", Constants.expoRuntimeVersion);
 ```
 
 ## Review `react-native-web` Compatibility

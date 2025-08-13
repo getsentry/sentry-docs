@@ -17,9 +17,11 @@ The difference only resides on a few things that are impossible to be hosted by 
 - Pricing tiers & Billing system.
 - [Spike protection](https://docs.sentry.io/pricing/quotas/spike-protection/), as it is tightly coupled with Billing Quotas.
 - [Spend Allocation](https://docs.sentry.io/pricing/quotas/spend-allocation/), as it is tightly coupled with Billing Quotas.
-- AI & ML features (such as autofix), although the code is open at [getsentry/seer](https://github.com/getsentry/seer).
+- Seer and other AI & ML features, as these are currently closed source.
 - [Data Storage Location](https://docs.sentry.io/organization/data-storage-location/), because you own your data.
 - [iOS Symbolication](https://docs.sentry.io/platforms/apple/data-management/debug-files/symbol-servers#built-in-repositories), because Apple does not provide a public symbol server, nor do they allow us to distribute the Debug Information Files (DIFs) ourselves.
+- Android system symbols, with symbols collected using its [symbol-collector service](https://github.com/getsentry/symbol-collector/), but cannot be redestributed. This helps give better quality stack traces for native Android crashes.
+- [PlayStation](https://docs.sentry.io/platforms/playstation/) support involves components part of a partnership with Sony which cannot be made public or redistributed.
 
 To put things simply, consider self-hosted as the Business plan without any software limitations and no paid tier.
 
@@ -38,7 +40,13 @@ Depending on your traffic volume, you may want to increase your system specifica
 
 If increasing the disk storage space isn't possible, you can migrate your storage to use external storage such as AWS S3 or Google Cloud Storage (GCS). Decreasing your `SENTRY_RETENTION_DAYS` environment variable to lower numbers will save some storage space from being full, at the cost of having shorter data retention period. See [Event Retention](/self-hosted/configuration#event-retention) section.
 
-There are known issues on installing self-hosted Sentry on RHEL-based Linux distros, such as CentOS, Rocky Linux, and Alma Linux. It is also not possible to install on an Alpine Linux distro. Most people succeed with Debian/Ubuntu-based distros. If you successfully install on another distro, please let us know on the [Sentry's Discord](https://discord.gg/sentry)!
+Below is a breakdown of self-hosted Sentry installation compatibility with various Linux distributions:
+* **Debian/Ubuntu-based** distros are preferred; most users succeed with them, and they're used on Sentry's dogfood instance.
+* **RHEL-based Linux** distributions (e.g., CentOS, Rocky Linux, Alma Linux) have known installation issues. While some users have made it work by disabling SELinux, this is highly discouraged.
+* **Amazon Linux 2023**, a Fedora Linux derivative, has seen one person successfully run self-hosted Sentry. This was achieved with SELinux enabled and by adding their user to the `docker` group.
+* **Alpine Linux** is unsupported due to install script compatibility.
+
+If you successfully install Sentry on a different distribution, please share your experience on the [Sentry's Discord](https://discord.gg/sentry)!
 
 ## Getting Started
 
@@ -128,7 +136,7 @@ By default Sentry sends anonymous usage statistics to the Sentry team. It helps 
   "proxies": {
     "httpProxy": "http://proxy:3128",
     "httpsProxy": "http://proxy:3128",
-    "noProxy": "smtp,memcached,redis,postgres,kafka,clickhouse,snuba-api,symbolicator,web,worker,nginx,relay,vroom,172.17.0.0/16,127.0.0.0/8"
+    "noProxy": "smtp,memcached,redis,postgres,kafka,clickhouse,snuba-api,symbolicator,web,worker,nginx,relay,vroom,taskbroker,172.17.0.0/16,127.0.0.0/8"
   }
 }
 ```

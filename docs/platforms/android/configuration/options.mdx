@@ -175,6 +175,22 @@ This only affects [user interaction transactions](/platforms/android/tracing/ins
 
 </ConfigKey>
 
+<ConfigKey name="deadline-timeout">
+
+The deadline time, measured in ms, to wait until a transaction will be automatically forcefully finished, even if a child span is currently running.
+
+The default is `30000`.
+
+_(New in version 8.18.0)_
+
+<Alert>
+
+This only affects [automatic transactions](/platforms/android/tracing/instrumentation/automatic-instrumentation/).
+
+</Alert>
+
+</ConfigKey>
+
 <ConfigKey name="enabled">
 
 Specifies whether this SDK should send events to Sentry. Defaults to `true`. Setting this to `enabled: false` doesn't prevent all overhead from Sentry instrumentation. To disable Sentry completely, depending on environment, call `SentryAndroid.init` conditionally.
@@ -215,7 +231,7 @@ This can be used to disable integrations that are enabled by default if the SDK 
 
 ## Hooks
 
-These options can be used to hook the SDK in various ways to customize the reporting of events.
+These options can be used to hook the SDK in various ways to customize the reporting of events or to monitor the type and amount of discarded data.
 
 <ConfigKey name="before-send">
 
@@ -239,6 +255,12 @@ The callback typically gets a second argument (called a "hint") which contains t
 
 </ConfigKey>
 
+<ConfigKey name="on-discard">
+
+This function is called when data is discarded, for reasons including sampling, network errors, or queue overflows. The function arguments give the user insight into the reason for discarding, the type of data discarded, and the number of items discarded.
+
+</ConfigKey>
+
 ## Transport Options
 
 Transports are used to send events to Sentry. Transports can be customized to some degree to better support highly specific deployments.
@@ -249,9 +271,9 @@ Switches out the transport used to send events. How this works depends on the SD
 
 </ConfigKey>
 
-<ConfigKey name="http-proxy">
+<ConfigKey name="proxy">
 
-When set, a proxy can be configured that should be used for outbound requests. This is also used for HTTPS requests unless a separate `https-proxy` is configured. However, not all SDKs support a separate HTTPS proxy. SDKs will attempt to default to the system-wide configured proxy, if possible. For instance, on Unix systems, the `http_proxy` environment variable will be picked up.
+When set, a proxy can be configured that should be used for outbound requests. This is also used for HTTPS requests.
 
 </ConfigKey>
 

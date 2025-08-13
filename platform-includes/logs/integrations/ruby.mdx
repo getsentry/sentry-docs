@@ -1,0 +1,35 @@
+To enable logging for all loggers that use Ruby [Logger](https://ruby-doc.org/3.4.1/stdlibs/logger/Logger.html) you can enable `:logger` patch:
+
+```ruby
+Sentry.init do |config|
+  config.dsn = "___PUBLIC_DSN___"
+  config.enable_logs = true
+  config.enabled_patches = [:logger]
+end
+```
+
+Then all logs from `Logger` instances will be sent to Sentry, for example:
+
+```ruby
+logger = Logger.new($stdout)
+
+logger.debug("Hello from stdlib logger")
+logger.info("Hello from stdlib logger")
+logger.error("Hello from stdlib logger")
+```
+
+<Alert level="info" title="Note on structured logging">
+Ruby's stdlib logger does not support structured logging, that's why logs are sent to Sentry as plain messages with default attributes added automatically by the SDK.
+</Alert>
+
+## Ruby on Rails
+
+If you enable `:logger` patch like explained above, this will affect Rails' built-in logger. This means that anything that Rails logs, and any custom usage of the Rails logger, will result in sending log entries to Sentry, for example:
+
+```ruby
+# All these calls will result in log entries in Sentry
+# if :logger patch is enabled
+Rails.logger.debug("Hello from Rails logger")
+Rails.logger.info("Hello from Rails logger")
+Rails.logger.error("Hello from Rails logger")
+```

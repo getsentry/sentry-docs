@@ -108,7 +108,7 @@ function sentryInterceptor(methodDescriptor, nextCall) {
       if (span) {
         // Update status based on the gRPC result
         if (status.code !== grpc.status.OK) {
-          span.setStatus({ code: 'error' });
+          span.setStatus({ code: 2, message: 'error' });
           span.setAttribute('grpc.status_code', status.code);
           span.setAttribute('grpc.status_description', status.details);
         }
@@ -157,25 +157,26 @@ const serviceImplementation = {
 function createGrpcClient() {
   // Create client with interceptor
   return new MyServiceClient(address, grpc.credentials.createInsecure(), {
-    interceptors: [(options, nextCall) => {
-      // Create metadata for the call
-      const metadata = new grpc.Metadata();
-      
-      // Get current trace information
-      const traceData = Sentry.getTraceData();
-      
-      // Add trace headers to metadata
-      if (traceData) {
-        metadata.set('sentry-trace', traceData['sentry-trace']);
-        metadata.set('baggage', traceData['baggage']);
-      }
-      
-      // Add metadata to the call
-      return new grpc.InterceptingCall(nextCall(options), {
-        start: (metadata_, listener, next) => {
-          next(metadata, listener);
-        }
-      });
+    interceptors: [
+      (options, nextCall) => {
+        return new grpc.InterceptingCall(nextCall(options), {
+          start: (callMetadata, listener, next) => {
+            // `callMetadata` is the metadata object for the outgoing gRPC call.
+            // We will add our Sentry tracing headers to this object.
+            
+            // Get current trace information from Sentry
+            const traceData = Sentry.getTraceData();
+            
+            // Add Sentry trace and baggage headers to the call's metadata
+            if (traceData) {
+              callMetadata.set('sentry-trace', traceData['sentry-trace']);
+              callMetadata.set('baggage', traceData['baggage']);
+            }
+            
+            // Proceed with the call, now including the Sentry headers in its metadata
+            next(callMetadata, listener);
+          }
+        });
     }]
   });
 }

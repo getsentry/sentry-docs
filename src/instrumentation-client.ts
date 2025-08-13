@@ -7,6 +7,9 @@ Sentry.init({
   // Adjust this value in production, or use tracesSampler for greater control
   tracesSampleRate: 1,
 
+  // Enable logs to be sent to Sentry
+  enableLogs: true,
+
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: false,
 
@@ -30,6 +33,7 @@ Sentry.init({
     Sentry.browserTracingIntegration({
       linkPreviousTrace: 'session-storage',
     }),
+    Sentry.consoleLoggingIntegration(),
   ],
 });
 
@@ -38,3 +42,5 @@ if (process.env.NODE_ENV === 'development') {
     showClearEventsButton: true,
   });
 }
+
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

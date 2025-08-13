@@ -2,8 +2,6 @@
 title: Data Collected
 description: "See what data is collected by the Sentry SDK."
 sidebar_order: 1
-notSupported:
-  - javascript.electron
 ---
 
 Sentry takes data privacy very seriously and has default settings in place that prioritize data safety, especially when it comes to personally identifiable information (PII) data. When you add the Sentry SDK to your application, you allow it to collect data and send it to Sentry during the runtime and build time of your application.
@@ -27,6 +25,12 @@ If you want to send cookies, set `sendDefaultPii: true` in the `Sentry.init()` c
 By default, the Sentry SDK doesn't send any information about the logged-in user, such as email address, user ID, or username.
 
 The type of logged-in user information you'll be able to send depends on the integrations you enable in Sentry's SDK. Most integrations won't send any user information. Some integrations (e.g. <PlatformLink to="/user-feedback/">User Feedback</PlatformLink>) make it possible to send data like the user ID, username, and email address.
+
+<PlatformSection supported={["javascript.electron"]}>
+  ### Local Device User
+  
+  By default, the Sentry SDK doesn't send any information about the user currently logged-in to the device where the app is running. However, you should exercise caution when logging file system errors as paths may contain the current username.
+</PlatformSection>
 
 ## Users' IP Address and Location
 
@@ -72,7 +76,7 @@ To disable source map upload, see <PlatformLink to="/sourcemaps">the Source Maps
 
 The Sentry SDK does not send local variables in the error stack trace in client-side JavaScript SDKs.
 
-<PlatformSection notSupported={["javascript", "javascript.angular", "javascript.capacitor", "javascript.cordova", "javascript.ember", "javascript.gatsby", "javascript.react", "javascript.solid", "javascript.svelte", "javascript.vue", "javascript.wasm"]}>
+<PlatformSection notSupported={["javascript", "javascript.angular", "javascript.capacitor", "javascript.cordova", "javascript.ember", "javascript.gatsby", "javascript.react", "javascript.solid", "javascript.svelte", "javascript.vue", "javascript.wasm", "javascript.bun", "javascript.cloudflare", "javascript.deno"]}>
   You can enable sending local variables by setting `includeLocalVariables: true` in the `Sentry.init()` call. This activates the <PlatformLink to="/configuration/integrations/localvariables">Local Variables Integration</PlatformLink>. The integration is added by default in Node.js-based runtimes.
 </PlatformSection>
 
@@ -80,9 +84,21 @@ The Sentry SDK does not send local variables in the error stack trace in client-
 
 By default, the Sentry SDK sends information about the device and runtime to Sentry.
 
-In browser environments, this information is obtained by the User Agent string. The User Agent string contains information about the browser, operating system, and device type.
+<PlatformSection notSupported={["javascript.electron"]}>
+  In browser environments, this information is obtained by the User Agent string. The User Agent string contains information about the browser, operating system, and device type.
 
-In server-side environments, the Sentry SDK uses the `os` module to get information about the operating system and architecture.
+  In server-side environments, the Sentry SDK uses the `os` module to get information about the operating system and architecture.
+</PlatformSection>
+
+<PlatformSection supported={["javascript.electron"]}>
+  The Sentry Electron SDK collects information about the device, such as the platform, architecture, available memory and version and build of your operating system or Linux distribution. 
+  
+  By default, the <PlatformLink to="/configuration/integrations/additionalcontext">Additional Context Integration</PlatformLink> collects dimensions and resolution of the device screen. It can optionally collect the device's manufacturer and model name if the `deviceModelManufacturer` option is enabled. 
+  
+  By default, the <PlatformLink to="/configuration/integrations/gpucontext">GPU Context Integration</PlatformLink> collects GPU information. It can optionally collect more detailed information if the `infoLevel` option is set to `complete`.
+  
+  
+</PlatformSection>
 
 <PlatformSection notSupported={["javascript.azure-functions", "javascript.bun", "javascript.deno", "javascript.node", "javascript.aws-lambda", "javascript.connect", "javascript.cloudflare", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi",  "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.wasm"]}>
   <PlatformSection notSupported={["javascript.cordova"]}>
@@ -101,10 +117,11 @@ In server-side environments, the Sentry SDK uses the `os` module to get informat
 
   To disable sending console messages, set `console: false` in your `Sentry.breadcrumbsIntegration` config, see <PlatformLink to="/configuration/integrations/breadcrumbs/">the Breadcrumbs documentation</PlatformLink>.
 
-  ## Referrer URL
+  <PlatformSection notSupported={["javascript.electron"]}>
+    ## Referrer URL
 
-  By default, the Sentry SDK sends the referrer URL to Sentry. This is the URL of the page that linked to the current page.
-
+    By default, the Sentry SDK sends the referrer URL to Sentry. This is the URL of the page that linked to the current page.
+  </PlatformSection>
 </PlatformSection>
 
 <PlatformSection notSupported={["javascript", "javascript.angular", "javascript.capacitor", "javascript.cloudflare", "javascript.cordova", "javascript.ember", "javascript.gatsby", "javascript.react", "javascript.solid", "javascript.svelte", "javascript.vue", "javascript.wasm"]}>
@@ -133,4 +150,17 @@ In server-side environments, the Sentry SDK uses the `os` module to get informat
 
   If you want to send the tRPC input you can enable it by setting `sendDefaultPii: true` in the `Sentry.init()` call or by setting `attachRpcInput: true` in the <PlatformLink to="/configuration/integrations/trpc/">`Sentry.trpcMiddleware()`</PlatformLink> options.
 
+</PlatformSection>
+
+<PlatformSection supported={["javascript.electron"]}>
+
+  ## Window Titles
+  
+  The <PlatformLink to="/configuration/integrations/electronbreadcrumbs/">Electron Breadcrumbs Integration</PlatformLink> can optionally capture the window titles for breadcrumbs related to windows events. These can potentially contain PII so are disabled by default but can be enabled via the `captureWindowTitles` option.
+
+  ## Native Crashes
+  
+  At the time of a native crash, the stack of each thread is collected and sent to Sentry as part of the Minidump snapshot. This information is sent to Sentry by default, but dropped after processing the event in the backend.
+
+  These files are not stored by default, but you can [enable Minidump Storage](https://docs.sentry.io/platforms/native/guides/minidumps/enriching-events/attachments/#store-minidumps-as-attachments) in the Sentry organization or project settings.
 </PlatformSection>

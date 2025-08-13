@@ -9,6 +9,8 @@ The Native SDK lets users decide at compile-time between three crash backends:
 * `breakpad`
 * `inproc`
 
+### Why is `crashpad` the default?
+
 Currently, `crashpad` is the default on all desktop platforms because it
 
 * has an external `handler` process that allows for external snapshots and sending crash reports immediately (instead of on the next successful start of your application)
@@ -26,6 +28,9 @@ Currently, `crashpad` is the default on all desktop platforms because it
   * cooperation with Epic's Easy Anti-Cheat
   * CMake build scripts (some users use our backend handler forks solely because of this reason)
 
+<Alert>
+When your deployment scenario should wait for the `crashpad_handler` to finish its work before a shutdown-after-crash (systemd, Docker), in Linux environments since SDK version [0.8.3](https://github.com/getsentry/sentry-native/releases/tag/0.8.3), and Windows environments since SDK version [0.9.0](https://github.com/getsentry/sentry-native/releases/tag/0.9.0), you can enable the [option `crashpad_wait_for_upload`](/platforms/native/configuration/options/#crashpad-wait-for-upload) to delay application shutdown until the upload of the crash report is completed.
+</Alert>
 ### When shouldn't I use the `crashpad` backend?
 
 Sentry decided on `crashpad` as the default on all platforms because it offers numerous advantages. However, there are use cases where `crashpad` cannot be used or makes distribution or deployment much harder. We provide other backends for situations when
@@ -37,8 +42,6 @@ Sentry decided on `crashpad` as the default on all platforms because it offers n
 * you want to define crash hooks on macOS because there, error handling happens entirely in the `crashpad_handler`, whereas on Linux and Windows, at least the initial handling happens in your process, after which `crashpad_handler` takes over and snapshots the process to send a crash report
 
 In the above cases, if you cannot loosen the requirements of your environment, you have to choose an in-process backend (meaning either `breakpad` or `inproc`).
-
-When your deployment scenario should wait for the `crashpad_handler` to finish its work before a shutdown-after-crash (systemd, Docker), you can enable the option [`crashpad_wait_for_upload`](/platforms/native/configuration/options/#crashpad-wait-for-upload) to delay application shutdown until the upload of the crash report is completed.
 
 ### How do I decide between `breakpad` or `inproc`?
 

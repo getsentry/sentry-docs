@@ -436,6 +436,10 @@ GPU context describes the GPU of the device.
 
 Examples: `"Apple Metal"` or `"Direct3D11"`
 
+`driver_version`
+
+: _Optional_. The driver version of the graphics device.
+
 `multi_threaded_rendering`
 
 : _Optional_. Whether the GPU has multi-threaded rendering or not.
@@ -744,13 +748,66 @@ envelope endpoint.
 }
 ```
 
+## Page Context
+
+Page context contains information about the page that the event occurred on.
+
+`url`
+
+: **Required.** The URL of the page that the event occurred on, excluding query parameters & fragment.
+
+- Example: `https://sentry.io/issues`
+
+`http.query`
+
+: **Optional.** The query parameters of the page that the event occurred on.
+
+- Example: `?page=1`
+
+`http.fragment`
+
+: **Optional.** The fragment of the page that the event occurred on.
+
+- Example: `#123`
+
+`referer`
+
+: _Optional_. The referer of the page that the event occurred on.
+
+- Example: `https://sentry.io/`
+
+**Example Page Context**
+
+```json
+{
+  "contexts": {
+    "page": {
+      "url": "https://sentry.io/issues",
+      "http.query": "?page=1",
+      "http.fragment": "#123",
+      "referer": "https://sentry.io/"
+    }
+  }
+}
+```
+
 ## Response Context
 
 Response context contains information about the HTTP response associated with the event.
 
-The only and required field is `status_code`.
-
 This is mostly set on transactions in a web server environment where one transaction represents a HTTP request/response cycle.
+
+`cookies`
+
+: _Optional_. The cookie values. Can be passed, unparsed, as a string, as a dictionary, or as a list of tuples.
+
+- Example: `{ "PHPSESSID": "12345", "csrftoken": "1234567" }`
+
+`headers`
+
+: _Optional_. A dictionary of submitted headers. If a header appears multiple times it, needs to be merged according to the HTTP standard for header merging. Sentry treats header names as case-insensitive.
+
+- Example: `{ "Content-Type": "text/plain" }`
 
 `status_code`
 
@@ -758,13 +815,34 @@ This is mostly set on transactions in a web server environment where one transac
 
 - Example: `200`
 
+`body_size`
+
+: _Optional_. HTTP response body size in bytes.
+
+- Example: `1000`
+
+`data`
+
+: _Optional_. Response data in any format that makes sense. SDKs should discard large and binary bodies by default. Can be given as a string or structural data of any format.
+
+- Example: `"Invalid request"`
+
 **Example Response Context**
 
 ```json
 {
   "contexts": {
     "response": {
-      "status_code": 404
+      "cookies": {
+        "PHPSESSID": "12345",
+        "csrftoken": "1234567"
+      },
+      "headers": {
+        "Content-Type": "text/plain"
+      },
+      "status_code": 500,
+      "body_size": 1000,
+      "data": "Invalid request"
     }
   }
 }
@@ -795,7 +873,7 @@ The required field is `package` which should contain the package or framework wh
   "contexts": {
     "missing_instrumentation": {
       "package": "express",
-      "javascript.is_cjs": true,
+      "javascript.is_cjs": true
     }
   }
 }
