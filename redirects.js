@@ -776,6 +776,10 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/configuration/integrations/browserapierrors/',
   },
   {
+    source: '/platforms/javascript/guides/remix/frameworks/hydrogen/',
+    destination: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen/',
+  },
+  {
     source: '/api/releases/post-organization-release-files/',
     destination: '/api/releases/update-an-organization-release-file/',
   },
