@@ -1,0 +1,200 @@
+---
+title: LangChain
+description: "Learn about using Sentry for LangChain."
+---
+
+This integration connects Sentry with [LangChain](https://github.com/langchain-ai/langchain) in Python.
+
+Once you've installed this SDK, you can use Sentry AI Agents Monitoring, a Sentry dashboard that helps you understand what's going on with your AI requests. Sentry AI Monitoring will automatically collect information about prompts, tools, tokens, and models. Learn more about the [AI Agents Dashboard](/product/insights/ai/agents).
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `langchain` extra:
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[langchain]"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk[langchain]"
+```
+
+## Configure
+
+If you have the `langchain` package in your dependencies, the LangChain integration will be enabled automatically when you initialize the Sentry SDK. For correct token accounting, you need to disable the integration for the model provider you are using (e.g. OpenAI or Anthropic).
+
+```python {tabTitle:OpenAI}
+import sentry_sdk
+from sentry_sdk.integrations.langchain import LangchainIntegration
+from sentry_sdk.integrations.openai import OpenAIIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    environment=os.getenv("ENV", "local"),
+    traces_sample_rate=1.0,
+    send_default_pii=True,
+    debug=True,
+    integrations=[
+        LangchainIntegration(),
+    ],
+    disabled_integrations=[OpenAIIntegration()],
+)
+```
+
+```python {tabTitle:Anthropic}
+import sentry_sdk
+from sentry_sdk.integrations.langchain import LangchainIntegration
+from sentry_sdk.integrations.anthropic import AnthropicIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    environment=os.getenv("ENV", "local"),
+    traces_sample_rate=1.0,
+    send_default_pii=True,
+    debug=True,
+    integrations=[
+        LangchainIntegration(),
+    ],
+    disabled_integrations=[AnthropicIntegration()],
+)
+
+```
+
+## Verify
+
+Verify that the integration works by initializing a transaction and invoking an agent. In these examples, we're providing a function tool to roll a die.
+
+```python {tabTitle:OpenAI}
+import random
+
+from langchain.agents import AgentExecutor, create_openai_functions_agent
+from langchain.chat_models import init_chat_model
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.tools import tool
+
+@tool
+def roll_die(sides: int = 6) -> str:
+    """Roll a die with a given number of sides"""
+    return f"Rolled a {random.randint(1, sides)} on a {sides}-sided die."
+
+
+with sentry_sdk.start_transaction(name="langchain-openai"):
+    model = init_chat_model(
+        "gpt-4o-mini",
+        model_provider="openai",
+        model_kwargs={"stream_options": {"include_usage": True}},
+    )
+    tools = [roll_die]
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            SystemMessage(
+                content="Greet the user and use the die roll tool. Do not terminate before using the tool."
+            ),
+            HumanMessage(content="{input}"),
+            MessagesPlaceholder("agent_scratchpad"),
+        ]
+    )
+
+    agent = create_openai_functions_agent(model, tools, prompt)
+    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+
+    result = agent_executor.invoke(
+        {
+            "input": "Hello, my name is Alice! Please roll a six-sided die.",
+            "chat_history": [],
+        }
+    )
+    print(result)
+```
+
+```python {tabTitle:Anthropic}
+import random
+
+from langchain.agents import AgentExecutor, create_tool_calling_agent
+from langchain.chat_models import init_chat_model
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.tools import tool
+
+@tool
+def roll_die(sides: int = 6) -> str:
+    """Roll a die with a given number of sides"""
+    return f"Rolled a {random.randint(1, sides)} on a {sides}-sided die."
+
+
+with sentry_sdk.start_transaction(name="langchain-anthropic"):
+    model = init_chat_model(
+        "claude-3-5-sonnet-20241022",
+        model_provider="anthropic",
+    )
+    tools = [roll_die]
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            SystemMessage(
+                content="Greet the user and use the die roll tool. Do not terminate before using the tool."
+            ),
+            HumanMessage(content="{input}"),
+            MessagesPlaceholder("agent_scratchpad"),
+        ]
+    )
+
+    agent = create_tool_calling_agent(model, tools, prompt)
+    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+
+    result = agent_executor.invoke(
+        {
+            "input": "Hello, my name is Alice! Please roll a six-sided die.",
+            "chat_history": [],
+        }
+    )
+    print(result)
+```
+
+After running this script, the resulting data should show up in the `"AI Spans"` tab on the `"Explore" > "Traces"` page on Sentry.io, and in the [AI Agents Dashboard](/product/insights/ai/agents).
+
+It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Behavior
+
+- The LangChain integration will connect Sentry with all supported LangChain methods automatically.
+
+- All exceptions are reported.
+
+- Sentry considers LLM and tokenizer inputs/outputs as PII (Personally identifiable information) and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below.
+
+## Options
+
+By adding `LangchainIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `LangchainIntegration` to change its behavior:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.openai import OpenAIIntegration
+
+sentry_sdk.init(
+    # ...
+    # Add data like inputs and responses;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    integrations=[
+        LangchainIntegration(
+            include_prompts=False,  # LLM inputs/outputs will be not sent to Sentry, despite send_default_pii=True
+        ),
+    ],
+)
+```
+
+You can pass the following keyword arguments to `LangchainIntegration()`:
+
+- `include_prompts`:
+
+  Whether LLM and tokenizer inputs and outputs should be sent to Sentry. Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
+
+  The default is `True`.
+
+## Supported Versions
+
+- OpenAI: 1.0+
+- tiktoken: 0.6.0+
+- Python: 3.9+
+    
