@@ -1,0 +1,123 @@
+---
+title: "User Feedback Basics"
+sidebar_order: 2
+description: "Learn how to implement and operationalize Sentry's User Feedback widget to capture qualitative insights from your users."
+---
+
+Sentry's [User Feedback widget](/product/user-feedback/) is a powerful tool for capturing qualitative insights from real users, and is especially valuable during the rollout of new or beta features. Alternatively, it can be used to collect feedback from your fellow team members during an internal release. 
+
+This guide outlines how to effectively implement and operationalize User Feedback.
+
+## 1. Embed the Widget Contextually
+_Bring the widget to the user, don't make them go find it._
+
+Embed the feedback widget directly into experimental or high-impact feature areas. For example, on your checkout screen.
+
+🖼️🖼️🖼️
+
+An approach you can take is using thumbs up/down buttons placed contextually within the feature that will trigger the feedback form to open. You can track whether a user clicked on the 👍 or 👎 for each feedback with [custom tags](/platforms/javascript/enriching-events/tags/). The tag will appear on the User Feedback Details page, and optionally on the feedback alert itself after feedback is submitted.
+
+🖼️🖼️🖼️
+
+
+<details>
+<summary>**See Example JavaScript Code Snippet**</summary>
+
+```javascript
+"use client";
+
+import * as Sentry from "@sentry/react";
+import { Fragment } from "react";
+
+export default function ThumbsUpDownButtons() {
+  const feedback = Sentry.getFeedback();
+  
+  return (
+    <Fragment>
+      <strong>Was this helpful?</strong>
+      <button
+        title="I like this"
+        onClick={async () =>{
+          const form = await feedback?.createForm({
+            messagePlaceholder: 'What did you like most?',
+            tags: {
+              component: 'ThumbsUpDownButtons',
+              'feedback.type': 'positive',
+            }
+          });
+          form?.appendToDom();
+          form?.open();
+        }}
+      >
+        Yes 👍
+      </button>
+
+      <button
+        title="I don't like this"
+        onClick={async () =>{
+          const form = await feedback?.createForm({
+            messagePlaceholder: 'How can we improve?',
+            tags: {
+              component: 'ThumbsUpDownButtons',
+              'feedback.type': 'negative',
+            }
+          });
+          form?.appendToDom();
+          form?.open();
+        }}
+      >
+        No 👎
+      </button>
+    </Fragment>
+  );
+}
+```
+
+</details>
+
+
+
+## 2. Customize Placeholder Text
+_Personalized prompts lead to better feedback. Tailor the placeholder text to the feature’s context._
+
+🖼️🖼️🖼️
+
+Here are examples of placeholder text to guide users:
+
+> How was your experience with [your feature's name]?
+
+> How can we make your experience better? 
+
+> We're still building out [your feature's name] - how can we make it better?
+
+It's best if you can customize for clarity and relevance; this will guide the user to provide useful input. Use friendly language to encourage honest, casual feedback.
+
+
+## 3. Add Custom Tags to Feedback Submissions For Better Routing
+
+_If you have multiple feedback buttons in your application that are embedded into different features, tags are critical in order to enable faster alert routing and triaging for the right teams._
+
+You can auto-apply tags programmatically based on the widget’s placement. For example, using a custom tag like `feedback.source:checkout`. This allows for routing in Slack and filtering in dashboards. We recommend you define and standardize tags using a single key: `feedback.source`.
+
+
+## 4. Set Up Alerts to Relevant Channels
+_Feedback is only useful if seen by the right folks._ 
+
+You can send User Feedback directly into the appropriate team’s channel—whether you use Slack, Microsoft Teams, or Discord (see [complete list of integrations](/product/alerts/create-alerts/routing-alerts/#integrations)). For example, you can have you can have feedback tagged `feedback.source:checkout` always go to your `#proj-billing` channel in Slack. With this workflow, engineers see feedback in near-real time and take ownership.
+
+Follow the steps below to set up feedback alerts to relevant channels:
+
+1. Create a [New Alert Rule](https://sentry.io/alerts/new/issue/) in Sentry.
+2. Scroll to the "Set conditions" section and set the "IF" filter to `The issue's category is equal to… "Feedback"` and `The event's tags match... [your custom tag]`.
+3. In the “THEN” filter, select `Send a [your integration] notification` and then add details of the channel you'd like to send the feedback to. You can also add tags you’d like to see on the feedback alert. For example, `user.email`.
+4. Add an alert name and owner.
+
+
+🖼️🖼️🖼️
+
+
+## 5. Use Feedback as Input Into Product Roadmap
+Treat User Feedback as a core signal in product development, especially for betas and early adopter programs. We recommend you integrate feedback review into planning, stand-ups, or retros. Use feedback trends to inform product direction and roadmap decisions.
+
+## Learn More
+<PageGrid />
