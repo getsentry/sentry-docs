@@ -1,0 +1,71 @@
+---
+title: Troubleshooting
+sidebar_order: 5503
+notSupported:
+description: "Troubleshoot and resolve common issues with the iOS Session Replay."
+---
+
+## Session Replay is not recording with custom window setup
+
+If you have a custom window setup (e.g., multiple instances of `UIWindow`), you need to ensure that the Sentry SDK is able to find the correct window.
+
+When using window scenes, make sure that the main window is assigned in your `UIWindowSceneDelegate`'s [`window` property](https://developer.apple.com/documentation/uikit/uiwindowscenedelegate/window).
+
+```swift
+final class SceneDelegate: NSObject, UIWindowSceneDelegate {
+
+    var window: UIWindow?
+
+    func scene(
+        _ scene: UIScene,
+        willConnectTo session: UISceneSession,
+        options connectionOptions: UIScene.ConnectionOptions
+    ) {
+        guard let scene = scene as? UIWindowScene else { return }
+
+        // Configure your windows here, e.g.
+        let mainWindow = UIWindow(windowScene: scene)
+        mainWindow.rootViewController = UIViewController()
+        mainWindow.makeKeyAndVisible()
+
+        // Do not forget to assign the window to the SceneDelegate's window property:
+        self.window = mainWindow
+    }
+}
+```
+
+Alternatively, you can also create a custom proxy variable for the window:
+
+```swift
+final class SceneDelegate: NSObject, UIWindowSceneDelegate {
+
+    var mainWindow: UIWindow?
+
+    func scene(
+        _ scene: UIScene,
+        willConnectTo session: UISceneSession,
+        options connectionOptions: UIScene.ConnectionOptions
+    ) {
+        guard let scene = scene as? UIWindowScene else { return }
+
+        // Configure your windows here, e.g.
+        let mainWindow = UIWindow(windowScene: scene)
+        mainWindow.rootViewController = UIViewController()
+        mainWindow.makeKeyAndVisible()
+
+        // Do not forget to assign the window to the SceneDelegate's window property:
+        self.window = mainWindow
+    }
+
+    // This is required to make sure that the Sentry SDK can find the correct window:
+
+    var window: UIWindow? {
+        get {
+            return mainWindow
+        }
+        set {
+            mainWindow = newValue
+        }
+    }
+}
+```
