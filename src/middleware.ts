@@ -1681,6 +1681,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/cli/releases/',
   },
   {
+    from: '/cli/metrics/',
+    to: '/cli/send-event/',
+  },
+  {
     from: '/workflow/alerts-notifications/',
     to: '/product/alerts/',
   },

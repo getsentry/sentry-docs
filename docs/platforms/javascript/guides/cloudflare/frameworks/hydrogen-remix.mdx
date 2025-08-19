@@ -1,11 +1,17 @@
 ---
-title: Hydrogen Guide
-description: "Learn how to use the Sentry Remix SDK to instrument your Hydrogen app."
+title: Hydrogen with Remix (Legacy)
+description: Learn how to use the Sentry Remix SDK to instrument your Hydrogen app (versions before 2025.5.0).
 ---
 
-If you're using the Shopify's Hydrogen framework, you can use the Sentry Remix SDK to add Sentry instrumentation to your app.
+<Alert level="info" title="Hydrogen Version">
 
-## 1. Installing Sentry Remix and Clouflare SDKs
+This guide applies to Hydrogen versions **before 2025.5.0** that use Remix v2. For newer versions of Hydrogen (2025.5.0+) that use React Router 7, see the [React Router guide](/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/).
+
+</Alert>
+
+If you're using Shopify's Hydrogen framework with Remix v2, you can use the Sentry Remix SDK to add Sentry instrumentation to your app.
+
+## Installing Sentry Remix and Cloudflare SDKs
 
 First, install the Sentry Remix and Cloudflare SDKs with your package manager:
 
@@ -21,13 +27,14 @@ yarn add @sentry/remix @sentry/cloudflare
 pnpm add @sentry/remix @sentry/cloudflare
 ```
 
-## 2. Instrumenting Your Server
+## Instrumenting Your Server
 
-Then update your `server.ts` file to use the `wrapRequestHandler` method:
+Update your `server.ts` file to use the `wrapRequestHandler` method from `@sentry/cloudflare/request` and `instrumentBuild` from `@sentry/remix/cloudflare`:
 
 ```ts {filename:server.ts}
 import { wrapRequestHandler } from "@sentry/cloudflare/request";
 import { instrumentBuild } from "@sentry/remix/cloudflare";
+import { createRequestHandler } from "@remix-run/cloudflare";
 // Virtual entry point for the app
 import * as remixBuild from 'virtual:remix/server-build';
 
@@ -53,33 +60,45 @@ export default {
       async () => {
         // Instrument your server build with Sentry
         // and use the instrumented build inside the fetch handler
-        const instrumentedBuild = instrumentBuild(remixBuild)
+        const instrumentedBuild = instrumentBuild(remixBuild);
 
-        // request handling logic
+        const handleRequest = createRequestHandler({
+          build: instrumentedBuild,
+          mode: process.env.NODE_ENV,
+          getLoadContext: (): AppLoadContext => ({
+            // your load context
+          }),
+        });
+
+        return handleRequest(request);
       }
     );
   },
 };
 ```
 
-## 3. Instrumenting Your Client
+## Instrumenting Your Client
 
 Wrap your Remix root component using `withSentry`:
 
-```tsx {filename:root.tsx}
-import { withSentry } from "@sentry/remix/cloudflare";
+```tsx {filename:app/root.tsx}
+import * as Sentry from "@sentry/remix/cloudflare";
+import { useEffect } from "react";
+import { useLocation, useMatches } from "@remix-run/react";
 
-function App({ children }) {
-  return <>{children}</>;
+function App() {
+  return (
+    // Your app content
+  );
 }
 
 // Pass `useEffect`, `useLocation` and `useMatches` hooks to `withSentry`
-export default withSentry(App, useEffect, useLocation, useMatches);
+export default Sentry.withSentry(App, useEffect, useLocation, useMatches);
 ```
 
 Finally, update your `entry.client.tsx` file to initialize Sentry SDK on the client:
 
-```tsx {filename:entry.client.tsx}
+```tsx {filename:app/entry.client.tsx}
 import * as Sentry from "@sentry/remix";
 
 Sentry.init({
