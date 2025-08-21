@@ -1,0 +1,54 @@
+## Monitor Configuration Properties
+
+When creating or updating monitors, you can configure the following properties:
+
+### Required Properties
+
+- **`monitorSlug`**: Unique identifier for your monitor (must match the slug created in Sentry UI)
+- **`status`**: Current check-in status (`'in_progress'`, `'ok'`, `'error'`)
+
+### Optional Properties
+
+- **`checkInId`**: Unique identifier for this specific check-in (auto-generated if not provided)
+- **`duration`**: How long the job took to run (in milliseconds)
+- **`environment`**: Environment where the job is running (`'production'`, `'staging'`, `'development'`)
+
+### Monitor Definition Properties (for Upserting)
+
+When creating monitors programmatically, you can also specify:
+
+- **`schedule`**: Cron schedule expression (e.g., `'0 2 * * *'` for daily at 2 AM)
+- **`checkinMargin`**: Grace period in minutes after expected check-in time before marking as missed
+- **`maxRuntime`**: Maximum runtime in minutes before marking as failed due to timeout
+- **`timezone`**: Timezone for the schedule (e.g., `'America/Los_Angeles'`)
+- **`failureIssueThreshold`**: Number of consecutive failures before creating an issue (default: 1)
+- **`recoveryThreshold`**: Number of consecutive successes before resolving an issue (default: 1)
+
+### Example Configuration
+
+```javascript
+// Basic check-in
+Sentry.captureCheckIn({
+  monitorSlug: 'my-job',
+  status: 'ok',
+  duration: 1500, // 1.5 seconds
+  environment: 'production'
+});
+
+// Monitor creation/update with configuration
+Sentry.captureCheckIn({
+  monitorSlug: 'new-job',
+  status: 'ok',
+  monitorConfig: {
+    schedule: {
+      type: 'crontab',
+      value: '0 2 * * *'
+    },
+    checkinMargin: 5,
+    maxRuntime: 30,
+    timezone: 'America/Los_Angeles',
+    failureIssueThreshold: 2,
+    recoveryThreshold: 1
+  }
+});
+``` 

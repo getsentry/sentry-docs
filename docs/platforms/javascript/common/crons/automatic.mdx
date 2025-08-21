@@ -1,0 +1,369 @@
+---
+title: Automatic Instrumentation  
+description: "Auto-instrument your existing cron libraries with minimal code changes."
+sidebar_order: 5752
+supported:
+  - javascript.nextjs
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.react-router
+  - javascript.astro
+  - javascript.bun
+  - javascript.deno
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.cloudflare
+---
+
+Automatically monitor your existing cron jobs with minimal code changes. Sentry can instrument popular Node.js cron libraries to send status updates automatically.
+
+## When to Use Automatic Instrumentation
+
+✅ **Perfect for:**
+- Apps using `node-cron`, `cron`, or `node-schedule`
+- Existing cron setups you don't want to modify heavily
+- Teams wanting comprehensive monitoring with minimal effort
+- Quick migration from other monitoring solutions
+
+❌ **Consider Manual Integration if:**
+- Using custom cron logic or other libraries
+- Need fine-grained control over what gets monitored
+- Want to customize error handling
+- Using serverless functions or cloud-based scheduling
+
+## Prerequisites
+
+1. [Install and configure the Sentry SDK](/platforms/javascript/guides/node/)
+2. Ensure you're using a supported cron library
+
+## Quick Start
+
+### Step 1: Install Your Cron Library
+
+If you haven't already, install one of the supported libraries:
+
+```bash
+# Choose one:
+npm install node-cron
+npm install cron  
+npm install node-schedule
+```
+
+### Step 2: Instrument Your Cron Library
+
+```javascript {tabTitle: node-cron}
+import * as Sentry from '@sentry/node';
+import cron from "node-cron";
+
+// Instrument the cron library
+const cronWithCheckIn = Sentry.cron.instrumentNodeCron(cron);
+
+// Use it exactly like regular node-cron
+cronWithCheckIn.schedule(
+  "0 */2 * * *", // Every 2 hours
+  () => {
+    console.log("Processing data...");
+    // Your job logic here
+  },
+  { 
+    name: "data-processor", // This becomes your monitor name in Sentry
+    timezone: "America/Los_Angeles" 
+  }
+);
+```
+
+**Requirements**: SDK version `7.92.0` or higher.
+
+```javascript {tabTitle: cron}
+import * as Sentry from '@sentry/node';
+import { CronJob } from "cron";
+
+// Instrument the CronJob constructor
+const CronJobWithCheckIn = Sentry.cron.instrumentCron(CronJob, "daily-report");
+
+// Use the constructor
+const job = new CronJobWithCheckIn("0 9 * * *", () => {
+  console.log("Generating daily report...");
+  // Your job logic here
+});
+
+job.start();
+
+// Or use the from method
+const job2 = CronJobWithCheckIn.from({
+  cronTime: "* * * * *",
+  onTick: () => {
+    console.log("You will see this message every minute");
+  },
+});
+```
+
+**Requirements**: SDK version `7.92.0` or higher.
+
+```javascript {tabTitle: node-schedule}
+import * as Sentry from '@sentry/node';
+import * as schedule from "node-schedule";
+
+// Instrument the schedule export
+const scheduleWithCheckIn = Sentry.cron.instrumentNodeSchedule(schedule);
+
+// Use it like regular node-schedule
+scheduleWithCheckIn.scheduleJob(
+  "backup-job",        // Monitor name
+  "0 3 * * *",        // Daily at 3 AM  
+  () => {
+    console.log("Running backup...");
+    // Your job logic here
+  }
+);
+```
+
+**Requirements**: SDK version `7.93.0` or higher.
+**Note**: Currently only supports cron strings as the second argument to `scheduleJob`.
+
+### Step 3: Verify Setup
+
+1. Run your application and let the cron jobs execute
+2. Monitors will be automatically created in Sentry when jobs first run
+3. Check **Alerts** → **Cron Monitors** in Sentry to see your monitors
+4. View the monitor details to see check-in history and status
+
+## Features You Get
+
+With automatic instrumentation, you get all these benefits without extra configuration:
+
+- ✅ **Automatic monitor creation** - No need to create monitors in UI first
+- ✅ **Status tracking** - Start, success, and failure states automatically tracked  
+- ✅ **Runtime monitoring** - Track how long jobs take to complete
+- ✅ **Error integration** - Exceptions during jobs are captured and linked
+- ✅ **Smart defaults** - Reasonable timeouts and margins based on your schedule
+
+## Advanced Configuration
+
+<Expandable title="Custom Monitor Settings">
+
+Override default settings for specific jobs by passing Sentry configuration:
+
+```javascript
+// node-cron example
+cronWithCheckIn.schedule(
+  "0 */6 * * *",
+  () => { 
+    // Heavy job logic that might take a while
+  },
+  { 
+    name: "heavy-processing-job",
+    timezone: "UTC",
+    // Advanced Sentry monitor config
+    sentryMonitorConfig: {
+      checkinMargin: 10,             // 10 minute grace period
+      maxRuntime: 30,                // 30 minute timeout
+      failureIssueThreshold: 2,      // Alert after 2 consecutive failures
+      recoveryThreshold: 1,          // Resolve after 1 success
+    }
+  }
+);
+```
+
+Available monitor configuration options:
+- `checkinMargin`: Grace period in minutes before marking as missed
+- `maxRuntime`: Maximum allowed runtime in minutes
+- `failureIssueThreshold`: Consecutive failures before creating an issue
+- `recoveryThreshold`: Consecutive successes before resolving an issue
+
+</Expandable>
+
+<Expandable title="Environment-Specific Monitoring">
+
+Monitor the same job across different environments:
+
+```javascript
+const environment = process.env.NODE_ENV || 'production';
+
+// The monitor will automatically track different environments
+cronWithCheckIn.schedule(
+  "0 */4 * * *",
+  () => {
+    console.log(`Running in ${environment} environment`);
+    // Your job logic here
+  },
+  { 
+    name: "environment-aware-job",
+    // Environment is automatically detected from Sentry SDK configuration
+  }
+);
+```
+
+</Expandable>
+
+<Expandable title="Multiple Jobs in One File">
+
+You can instrument multiple jobs in the same file:
+
+```javascript
+import * as Sentry from '@sentry/node';
+import cron from "node-cron";
+
+const cronWithCheckIn = Sentry.cron.instrumentNodeCron(cron);
+
+// Job 1: Data processing
+cronWithCheckIn.schedule("0 2 * * *", processData, { 
+  name: "daily-data-processing" 
+});
+
+// Job 2: Send reports  
+cronWithCheckIn.schedule("0 9 * * 1", sendWeeklyReport, {
+  name: "weekly-report-sender"
+});
+
+// Job 3: Cleanup task
+cronWithCheckIn.schedule("0 0 * * 0", cleanupOldFiles, {
+  name: "weekly-cleanup",
+  sentryMonitorConfig: {
+    maxRuntime: 60, // Cleanup might take longer
+  }
+});
+
+async function processData() {
+  // Your data processing logic
+}
+
+async function sendWeeklyReport() {
+  // Your reporting logic
+}
+
+async function cleanupOldFiles() {
+  // Your cleanup logic
+}
+```
+
+</Expandable>
+
+## Migration from Other Methods
+
+<Expandable title="From UI Setup">
+
+If you're currently using UI setup:
+
+1. Remove manual HTTP calls from your scripts
+2. Add automatic instrumentation as shown above  
+3. The existing monitors will be updated automatically when jobs run
+4. You can delete the old manual notification code
+
+**Before:**
+```javascript
+// Old manual approach
+cron.schedule("0 2 * * *", async () => {
+  await doWork();
+  // Manual notification
+  await fetch('https://sentry.io/api/.../cron/monitor-slug/.../');
+});
+```
+
+**After:**  
+```javascript
+// New automatic approach
+const cronWithCheckIn = Sentry.cron.instrumentNodeCron(cron);
+cronWithCheckIn.schedule("0 2 * * *", doWork, { name: "my-job" });
+```
+
+</Expandable>
+
+<Expandable title="From Manual Integration">
+
+If you're currently using manual `captureCheckIn` calls:
+
+1. Remove manual `captureCheckIn` calls from your job functions
+2. Add library instrumentation as shown above
+3. The automatic instrumentation will handle all check-ins for you
+
+**Before:**
+```javascript
+// Old manual approach
+cron.schedule("0 2 * * *", async () => {
+  const checkInId = Sentry.captureCheckIn({
+    monitorSlug: "my-job",
+    status: "in_progress",
+  });
+  
+  try {
+    await doWork();
+    Sentry.captureCheckIn({
+      checkInId,
+      monitorSlug: "my-job", 
+      status: "ok",
+    });
+  } catch (error) {
+    Sentry.captureCheckIn({
+      checkInId,
+      monitorSlug: "my-job",
+      status: "error", 
+    });
+  }
+});
+```
+
+**After:**
+```javascript
+// New automatic approach
+const cronWithCheckIn = Sentry.cron.instrumentNodeCron(cron);
+cronWithCheckIn.schedule("0 2 * * *", doWork, { name: "my-job" });
+```
+
+</Expandable>
+
+## Troubleshooting
+
+<Expandable title="Monitors aren't being created">
+
+1. Verify you're using a supported SDK version (see requirements above)
+2. Check that your Sentry SDK is properly configured and initialized
+3. Ensure the cron job is actually running (check your application logs)
+4. Verify the `name` parameter is provided for the job
+
+</Expandable>
+
+<Expandable title="Jobs are running but not being tracked">
+
+1. Make sure you're using the instrumented version of the library
+2. Check that the instrumentation is called before scheduling jobs
+3. Verify there are no errors in your Sentry configuration
+4. Look for any console errors related to Sentry
+
+</Expandable>
+
+<Expandable title="Want to disable monitoring for specific jobs">
+
+You can selectively disable monitoring:
+
+```javascript
+// Use the original library for jobs you don't want to monitor
+import cron from "node-cron";
+import * as Sentry from '@sentry/node';
+
+const cronWithCheckIn = Sentry.cron.instrumentNodeCron(cron);
+
+// Monitored job
+cronWithCheckIn.schedule("0 2 * * *", importantJob, { name: "critical-job" });
+
+// Not monitored job  
+cron.schedule("* * * * *", debugLogging); // Use original cron
+```
+
+</Expandable>
+
+## Next Steps
+
+- **Need custom error handling?** See [Manual Integration](manual)
+- **Managing many services?** Consider [Advanced Setup](advanced) for programmatic management
+- **Want more control?** Check out [Manual Integration](manual) for fine-grained monitoring
+- **Having issues?** Visit [Troubleshooting](troubleshooting) 
