@@ -1,4 +1,4 @@
-<PlatformSection notSupported={["dotnet.aspnetcore", "dotnet.azure-functions-worker", "dotnet.blazor-webassembly", "dotnet.extensions-logging", "dotnet.maui"]}>
+<PlatformSection notSupported={["dotnet.aspnetcore", "dotnet.azure-functions-worker", "dotnet.blazor-webassembly", "dotnet.extensions-logging", "dotnet.maui", "dotnet.serilog"]}>
 
 Once the feature is enabled on the SDK and the SDK is initialized, you can send logs using the `SentrySdk.Experimental.Logger` APIs.
 
@@ -27,12 +27,12 @@ The `LoggerExtensions` extension methods expose various overloads that you can u
 
 | Microsoft.Extensions.Logging.LogLevel | Sentry.SentryLogLevel | Sentry Logs UI Severity |
 | --- | --- | --- |
-| Trace | Trace | TRACE |
-| Debug | Debug | DEBUG |
-| Information | Info | INFO |
-| Warning | Warning | WARN |
-| Error | Error | ERROR |
-| Critical | Fatal | FATAL |
+| Trace | Trace | trace |
+| Debug | Debug | debug |
+| Information | Info | info |
+| Warning | Warning | warn |
+| Error | Error | error |
+| Critical | Fatal | fatal |
 
 These properties will be sent to Sentry, and can be searched from within the Logs UI, and even added to the Logs views as a dedicated column.
 
@@ -55,7 +55,37 @@ Sentry Structured Logs also work with [High-performance logging in .NET](https:/
 
 </PlatformSection>
 
-<PlatformSection notSupported={["dotnet.aspnetcore", "dotnet.azure-functions-worker", "dotnet.blazor-webassembly", "dotnet.extensions-logging", "dotnet.maui"]}>
+<PlatformSection supported={["dotnet.serilog"]}>
+
+Once the feature is enabled on the SDK and the SDK is initialized, you can send logs using the _Serilog_ APIs.
+
+The static `Log` and instance `Logger` types expose various methods that you can use to log messages at six different log levels automatically mapped to Sentry's severity:
+
+| Serilog.Events.LogEventLevel | Sentry.SentryLogLevel | Sentry Logs UI Severity |
+| --- | --- | --- |
+| Verbose | Trace | trace |
+| Debug | Debug | debug |
+| Information | Info | info |
+| Warning | Warning | warn |
+| Error | Error | error |
+| Fatal | Fatal | fatal |
+
+These properties will be sent to Sentry, and can be searched from within the Logs UI, and even added to the Logs views as a dedicated column.
+
+```csharp
+using (LogContext.PushProperty("Version", 5150))
+{
+    Log.Information("A simple log message");
+    Log.Error("A {Parameter} log message", "formatted");
+    Log.ForContext("Property", "Value").Warning("Message with Property");
+}
+```
+
+The _Enrichments_ of _log events_ are attached as attributes to the logs, alongside a set of default attributes automatically provided by the SDK.
+
+</PlatformSection>
+
+<PlatformSection notSupported={["dotnet.aspnetcore", "dotnet.azure-functions-worker", "dotnet.blazor-webassembly", "dotnet.extensions-logging", "dotnet.maui", "dotnet.serilog"]}>
 
 The SDK automatically provides a set of default attributes attached to your logs.
 Additionally, you can attach custom attributes via a delegate.
