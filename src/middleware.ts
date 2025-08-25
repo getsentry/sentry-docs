@@ -3327,8 +3327,8 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/explore/session-replay/',
   },
   {
-    from: '/product/explore/session-replay/replay-page-and-filters/',
-    to: '/product/explore/session-replay/web/replay-page-and-filters/',
+    from: '/product/explore/session-replay/web/replay-page-and-filters/',
+    to: '/product/explore/session-replay/replay-page-and-filters/',
   },
   {
     from: '/product/teams/roles/',
