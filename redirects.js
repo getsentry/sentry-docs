@@ -263,8 +263,16 @@ const userDocsRedirects = [
     destination: '/organization/integrations/feature-flag/launchdarkly/',
   },
   {
-    source: '/product/explore/session-replay/replay-details/',
-    destination: '/product/explore/session-replay/web/replay-details/',
+    source: '/product/explore/session-replay/web/getting-started/',
+    destination: '/product/explore/session-replay/web/',
+  },
+  {
+    source: '/product/explore/session-replay/web/replay-page-and-filters/',
+    destination: '/product/explore/session-replay/replay-page-and-filters/',
+  },
+  {
+    source: '/product/explore/session-replay/web/replay-details/',
+    destination: '/product/explore/session-replay/replay-details/',
   },
   {
     source: '/platforms/javascript/guides/nextjs/sourcemaps/uploading/',

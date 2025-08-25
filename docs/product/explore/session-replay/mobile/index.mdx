@@ -20,33 +20,7 @@ To redact anything potentially sensitive and preserve maximum user privacy, the 
 
 ![Session Replay Redacted](./img/session-replay-redacted.png)
 
-## Replay Details
-
-Every replay has a detailed view that contains the embedded video player and rich debugging context. Playing back the video will allow you to see every user interaction in relation to network requests, frontend and backend errors, backend spans, and more.  Almost every component on this page is connected through timestamps.
-
-The below list shows the breakdown of each component and why it’s valuable:
-
-- **Breadcrumbs:** The replay breadcrumbs show when key user interactions took place, specifically: user taps with the relevant component, navigations, when the user put the app in background or foreground, and [custom breadcrumbs](/product/sentry-basics/integrate-backend/configuration-options/#breadcrumbs) set by your organization. Breadcrumbs also provide insight into the device of a given user session at particular timestamps:
-      - `device battery` (when battery level or charging status changes)
-      - `orientation` (when the user rotates the device)
-      - `connectivity` (when this status changes between wifi, cellular, and offline).
-
-These breadcrumbs are synced with the replay player and will auto-scroll as the video plays. Some [breadcrumb types](/product/issues/issue-details/breadcrumbs/) visible in Issue Details are not 1:1 to the replay breadcrumbs list. On the Replay Details page, the trail of events typically seen in the Issue Details page are instead displayed in the Network and Console components.
-
-
-- **Timeline:** This is the section at the bottom of the Replay Details page that illustrates where significant events (such as errors, device battery, and user interactions) happen over the course of the replay. This allows users to easily scrub to key events by dragging across the timeline. It also visually conveys the amount of time that took place between events and has a zoom functionality so you can easily zoom-in to distinguish between events that happened close together.
-
-- **Network:** This is a list of all network requests that were initiated by the app while the replay recording was active. As the video plays, there’s a visual indicator that tracks through the table of network requests, highlighting which requests happened prior to, or next to this point in the video. When a request fails, it is highlighted in red. You can also click the timestamp on the far right of each request to bring yourself to that point in the replay player.
-
-- **Console:** Some debugging messages that don't belong in the breadcrumb list will show up here. For example, a custom `console.log` in React Native. Logs from [Logcat](https://docs.sentry.io/platforms/android/integrations/logcat/) and [Timber](https://docs.sentry.io/platforms/android/integrations/timber/) are also supported and will show up here.
-
-- **Errors:** All the errors that occurred in the replay (including in your backend), with links to the corresponding events and [issue(s)](/product/issues/issue-details/error-issues/), as well as the impact these issues have had holistically across all users on your application, seen when you hover over the issue ID.
-
-- **Tags:** A complete list of built-in fields and custom tags associated with a replay, such as operating system version and name, device specs, release, and user details.
-
-- **Trace:** A view that connects all the [trace(s)](/product/sentry-basics/tracing/distributed-tracing/#traces-transactions-and-spans) that happened during the replay.
-
-## SDKs Supported
+## Supported SDKs
 
 Session Replay for mobile is currently available for Android and iOS on both native SDKs, as well as for React Native and Flutter.
 
@@ -56,6 +30,23 @@ We recommend updating to the latest version, but the minimum versions supported 
 - [Android](/platforms/android/session-replay/), [7.20.0](https://github.com/getsentry/sentry-java/releases)
 - [React Native](/platforms/react-native/session-replay/), [6.5.0](https://github.com/getsentry/sentry-react-native/releases)
 - [Flutter](/platforms/dart/guides/flutter/session-replay/), [8.12.0](https://github.com/getsentry/sentry-dart/releases)
+
+## Replays for Backend Errors
+
+Replays are integrated with Sentry's tracing data model, enabling you to see replays associated with backend errors. For these replays, you'll be able to view backend errors in the Timeline, Breadcrumbs, Errors tab, and other places when you go to the **Replay Details** view. You'll also see a Replays tab and replay previews in the **Issue Details** page for any backend error that has a linked replay.
+
+To see replays for backend errors, you need to have Sentry set up for both your frontend and backend, along with [distributed tracing](/product/sentry-basics/concepts/tracing/). This provides end-to-end data connectivity on your APIs, allowing Sentry to link replays to backend endpoints. Make sure you've set up trace propagation in your backend projects. For example:
+
+Currently, replays for backend errors is supported for the following SDK versions or newer:
+
+- JavaScript (or related framework) [7.51.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.51.0)
+- Python [1.26.0](https://github.com/getsentry/sentry-python/releases/tag/1.26.0)
+- Node [7.48.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.48.0)
+- PHP [3.18.0](https://github.com/getsentry/sentry-php/releases/tag/3.18.0)
+- .NET [3.31.0](https://github.com/getsentry/sentry-dotnet/releases/tag/3.31.0)
+- Java [6.17.0](https://github.com/getsentry/sentry-java/releases/tag/6.17.0)
+- Ruby [5.9.0](https://github.com/getsentry/sentry-ruby/releases/tag/5.9.0)
+- Go [0.21.0](https://github.com/getsentry/sentry-go/releases/tag/v0.21.0)
 
 ## Frequently Asked Questions
 
