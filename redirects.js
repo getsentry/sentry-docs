@@ -246,33 +246,10 @@ const userDocsRedirects = [
     source: '/product/dev-toolbar/:path*',
     destination: '/product/sentry-toolbar/:path*',
   },
-  {
-    source: '/product/explore/session-replay/hydration-errors/',
-    destination: '/product/issues/issue-details/replay-issues/hydration-error/',
-  },
-  {
-    source: '/product/explore/session-replay/privacy/',
-    destination: '/security-legal-pii/scrubbing/protecting-user-privacy/',
-  },
-  {
-    source: '/product/explore/session-replay/rage-dead-clicks/',
-    destination: '/product/issues/issue-details/replay-issues/rage-clicks/',
-  },
+  
   {
     source: '/organization/integrations/launchdarkly/',
     destination: '/organization/integrations/feature-flag/launchdarkly/',
-  },
-  {
-    source: '/product/explore/session-replay/web/getting-started/',
-    destination: '/product/explore/session-replay/web/',
-  },
-  {
-    source: '/product/explore/session-replay/web/replay-page-and-filters/',
-    destination: '/product/explore/session-replay/replay-page-and-filters/',
-  },
-  {
-    source: '/product/explore/session-replay/web/replay-details/',
-    destination: '/product/explore/session-replay/replay-details/',
   },
   {
     source: '/platforms/javascript/guides/nextjs/sourcemaps/uploading/',
