@@ -3349,7 +3349,7 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/product/explore/session-replay/privacy/',
     to: '/security-legal-pii/scrubbing/protecting-user-privacy/',
-  },  
+  },
   {
     from: '/product/teams/roles/',
     to: '/organization/membership/#team-level-roles',
