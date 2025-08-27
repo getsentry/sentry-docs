@@ -1,0 +1,36 @@
+Connect traces across your frontend, API routes, and external services by configuring trace propagation:
+
+```javascript {tabTitle:Client} {filename:instrumentation-client.(js|ts)}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  // Configure which requests should propagate traces
+  tracePropagationTargets: [
+    "localhost",
+    "your-domain.com",
+    /^https:\/\/api\.your-domain\.com/,
+    /^\/api\//,  // Local API routes
+  ],
+  // ... rest of your config
+});
+```
+
+Add trace data to your page metadata for better frontend-backend connection:
+
+```typescript {filename:app/layout.tsx}
+import * as Sentry from "@sentry/nextjs";
+
+export function generateMetadata() {
+  return {
+    title: "My App",
+    // Connect frontend and backend traces
+    other: {
+      ...Sentry.getTraceData(),
+    },
+  };
+}
+```
+
+Now requests between your frontend and backend will be connected in a single distributed trace!
