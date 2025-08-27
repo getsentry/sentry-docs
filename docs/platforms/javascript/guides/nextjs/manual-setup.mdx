@@ -263,154 +263,15 @@ To capture React render errors, you need to add error components for the App Rou
 
 ### App Router
 
-Create or update the `global-error.(tsx|jsx)` file to define a [custom Next.js GlobalError component](https://nextjs.org/docs/app/building-your-application/routing/error-handling):
-
-```tsx {filename:global-error.tsx}
-"use client";
-
-import * as Sentry from "@sentry/nextjs";
-import NextError from "next/error";
-import { useEffect } from "react";
-
-export default function GlobalError({
-  error,
-}: {
-  error: Error & { digest?: string };
-}) {
-  useEffect(() => {
-    Sentry.captureException(error);
-  }, [error]);
-
-  return (
-    <html>
-      <body>
-        {/* `NextError` is the default Next.js error page component. Its type
-        definition requires a `statusCode` prop. However, since the App Router
-        does not expose status codes for errors, we simply pass 0 to render a
-        generic error message. */}
-        <NextError statusCode={0} />
-      </body>
-    </html>
-  );
-}
-```
-
-```jsx {filename:global-error.jsx}
-"use client";
-
-import * as Sentry from "@sentry/nextjs";
-import NextError from "next/error";
-import { useEffect } from "react";
-
-export default function GlobalError({ error }) {
-  useEffect(() => {
-    Sentry.captureException(error);
-  }, [error]);
-
-  return (
-    <html>
-      <body>
-        {/* This is the default Next.js error component. */}
-        <NextError />
-      </body>
-    </html>
-  );
-}
-```
+<PlatformContent includePath="getting-started-capture-errors/app-router-global-error" />
 
 #### Errors from Nested React Server Components
 
-<Alert type="info">
-  Requires `@sentry/nextjs` version `8.28.0` or higher and Next.js 15.
-</Alert>
-
-To capture errors from nested React Server Components, use the [`onRequestError`](https://nextjs.org/docs/app/api-reference/file-conventions/instrumentation#onrequesterror-optional) hook in `instrumentation.(js|ts)` and pass all arguments to the `captureRequestError` function:
-
-```TypeScript {filename:instrumentation.ts}
-import * as Sentry from "@sentry/nextjs";
-
-export const onRequestError = Sentry.captureRequestError;
-```
-
-```JavaScript {filename:instrumentation.js}
-import * as Sentry from "@sentry/nextjs";
-
-export const onRequestError = Sentry.captureRequestError;
-```
-
-<Expandable level="info" title="Need additional logic within `onRequestError`?">
-You can call `captureRequestError` with all arguments passed to `onRequestError`:
-
-```TypeScript {filename:instrumentation.ts}
-import * as Sentry from "@sentry/nextjs";
-import type { Instrumentation } from "next";
-
-export const onRequestError: Instrumentation.onRequestError = (...args) => {
-    Sentry.captureRequestError(...args);
-
-    // ... additional logic here
-};
-```
-
-```JavaScript {filename:instrumentation.js}
-import * as Sentry from "@sentry/nextjs";
-
-export const onRequestError = (...args) => {
-    Sentry.captureRequestError(...args);
-
-    // ... additional logic here
-};
-```
-
-</Expandable>
+<PlatformContent includePath="getting-started-capture-errors/nested-server-components" />
 
 ### Pages Router
 
-Create or update the `_error.(tsx|jsx)` file to define a [custom Next.js error page](https://nextjs.org/docs/pages/building-your-application/routing/custom-error) for the Pages Router like so:
-
-```tsx {filename:_error.tsx}
-import * as Sentry from "@sentry/nextjs";
-import type { NextPage } from "next";
-import type { ErrorProps } from "next/error";
-import Error from "next/error";
-
-const CustomErrorComponent: NextPage<ErrorProps> = (props) => {
-  return <Error statusCode={props.statusCode} />;
-};
-
-CustomErrorComponent.getInitialProps = async (contextData) => {
-  // In case this is running in a serverless function, await this in order to give Sentry
-  // time to send the error before the lambda exits
-  await Sentry.captureUnderscoreErrorException(contextData);
-
-  // This will contain the status code of the response
-  return Error.getInitialProps(contextData);
-};
-
-export default CustomErrorComponent;
-```
-
-```jsx {filename:_error.jsx}
-import * as Sentry from "@sentry/nextjs";
-import type { NextPage } from "next";
-import type { ErrorProps } from "next/error";
-import Error from "next/error";
-
-const CustomErrorComponent: NextPage<ErrorProps> = (props) => {
-  return <Error statusCode={props.statusCode} />;
-};
-
-CustomErrorComponent.getInitialProps = async (contextData) => {
-  // In case this is running in a serverless function, await this in order to give Sentry
-  // time to send the error before the lambda exits
-  await Sentry.captureUnderscoreErrorException(contextData);
-
-  // This will contain the status code of the response
-  return Error.getInitialProps(contextData);
-};
-
-export default CustomErrorComponent;
-```
+<PlatformContent includePath="getting-started-capture-errors/pages-router-error" />
 
 ## Step 4: Add Readable Stack Traces With Source Maps (Optional)
 
