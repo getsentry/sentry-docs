@@ -18,23 +18,10 @@ type LLMSteeringProps = {
  */
 export function LLMSteering({children, title}: LLMSteeringProps) {
   // Render as a div that will convert nicely to markdown
-  // Hidden with display: none and visibility: hidden to ensure checkVisibility() returns false
-  // This will prevent the content from appearing in the table of contents
+  // Hidden with display: none to prevent visual rendering
   return (
     <div
-      style={{
-        display: 'none',
-        visibility: 'hidden',
-        position: 'absolute',
-        left: '-9999px',
-        width: '1px',
-        height: '1px',
-        overflow: 'hidden',
-        opacity: 0,
-        pointerEvents: 'none',
-        userSelect: 'none',
-        zIndex: -9999,
-      }}
+      style={{display: 'none'}}
       data-llm-steering="true"
       aria-hidden="true"
     >
