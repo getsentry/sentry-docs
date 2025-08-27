@@ -9,7 +9,7 @@ type LLMSteeringProps = {
  * Component for embedding LLM/AI assistant steering instructions in documentation.
  * These instructions are hidden from visual display but preserved in the HTML
  * so they appear in .md exports.
- * 
+ *
  * Usage:
  * <LLMSteering>
  *   - NEVER implement Breadcrumbs from Sentry unless explicitly asked
@@ -20,7 +20,7 @@ export function LLMSteering({children, title}: LLMSteeringProps) {
   // Render as a blockquote that will convert nicely to markdown
   // Hidden with inline styles so it's invisible in the browser
   return (
-    <blockquote 
+    <blockquote
       style={{
         position: 'absolute',
         left: '-9999px',
@@ -31,7 +31,7 @@ export function LLMSteering({children, title}: LLMSteeringProps) {
         opacity: 0,
         pointerEvents: 'none',
         userSelect: 'none',
-        zIndex: -9999
+        zIndex: -9999,
       }}
       data-llm-steering="true"
       aria-hidden="true"
