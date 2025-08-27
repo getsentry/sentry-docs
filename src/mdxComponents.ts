@@ -18,6 +18,7 @@ import {GuideGrid} from './components/guideGrid';
 import {JsBundleList} from './components/jsBundleList';
 import {LambdaLayerDetail} from './components/lambdaLayerDetail';
 import {LinkWithPlatformIcon} from './components/linkWithPlatformIcon';
+import {LLMSteering} from './components/llmSteering';
 import {
   OnboardingOption,
   OnboardingOptionButtons,
@@ -74,6 +75,7 @@ export function mdxComponents(
     LambdaLayerDetail,
     Link: SmartLink,
     LinkWithPlatformIcon,
+    LLMSteering,
     OrgAuthTokenNote,
     PageGrid,
     ParamTable,
