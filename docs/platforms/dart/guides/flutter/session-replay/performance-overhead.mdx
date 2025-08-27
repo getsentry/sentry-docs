@@ -1,0 +1,74 @@
+---
+title: Performance Overhead
+sidebar_order: 4300
+notSupported:
+description: "Learn about how enabling Session Replay impacts the performance of your Flutter app."
+---
+
+If you're considering enabling Session Replay, it's important to understand the potential performance impact to your app. Learn more about Replay SDK optimizations in the [Replay Performance Overhead](/product/explore/session-replay/mobile/performance-overhead/) product docs.
+
+Meaningful metrics require realistic testing where you apply typical access patterns and correlate the results with your business metrics. To provide a baseline, we measure replay overhead using the Open Food Facts [open-source app](https://github.com/openfoodfacts/smooth-app/).
+ 
+
+## Benchmarking the Android Replay SDK
+
+The Open Food Facts app onboarding flow is full of scrollable, interactable lists of text and images, making it a good candidate for testing. 
+
+[Here's](https://github.com/getsentry/sentry-dart/issues/3035#issuecomment-3215794102) how the benchmarks were conducted:
+
+- **Configuration:** Default (Full) masking was enabled, and optimized release builds were used.
+- **User Flow:** The same flow was executed 10 times to ensure consistency.
+- **Real-World Representation:** This approach closely mirrors performance in real-world scenarios.
+
+The benchmarks were run on a Pixel Fold (2023) running Android 15.
+
+### Results
+Below are the results of the benchmarking tests, presented as average values across all runs.
+
+| Metric                           | Sentry SDK only | Sentry + Replay SDK |
+| -------------------------------- | --------------- | ------------------- |
+| FPS                              | 42.6 fps        | 42.6 fps            |
+| Total CPU Usage                  | 93.2%           | 105.5% (+13%)       |
+| UI Thread CPU Usage              | 30.7%           | 30.7%               |
+| Memory                           | 372.5 MB        | 391.6 MB (+5%)      |
+{/* | App Startup Time (Cold)          | 1533.35 ms      | 1539.55 ms          | */}
+{/* | Network Bandwidth                | n/a             | 7 KB/s of recording | */}
+
+
+## Reducing Performance Overhead
+
+To minimize the performance impact of the Replay SDK, consider the following steps:
+
+### Change Replay quality
+
+Lowering the quality of captured screenshots and videos can significantly reduce CPU, memory, and network bandwidth usage. Here's how you can do it:
+
+```dart
+await SentryFlutter.init(
+  (options) {
+    ...
+    options.replay.quality = SentryReplayQuality.low // defaults to medium
+  },
+  ...
+);
+```
+
+### Disable Replay for Low-End Devices
+
+If the Replay SDK causes performance issues on lower-end devices, you can disable it specifically for those devices (For example,by looking at [how Sentry determines the device class](https://github.com/getsentry/relay/blob/695b459e03481f7d799f07b2b901b140e5d5753d/relay-event-schema/src/protocol/device_class.rs#L21-L37), or using a [Flutter plugin](https://pub.dev/packages/device_info_plus)):
+
+```dart
+Future<bool> isLowEnd();
+...
+await SentryFlutter.init(
+  (options) {
+    ...
+    // Enable session replay for non low-end devices only
+    final isLowEnd = await isLowEnd();
+    options.replay.sessionSampleRate = isLowEnd ? 0 : 1.0;
+    options.replay.onErrorSampleRate = isLowEnd ? 0 : 0.1;
+    
+  },
+  ...
+);
+```
