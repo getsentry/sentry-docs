@@ -1,0 +1,90 @@
+Create custom spans to measure specific operations that matter to your business:
+
+```javascript
+// Measure a synchronous operation
+const result = Sentry.startSpan(
+  {
+    name: "Process User Data",
+    op: "function",
+    attributes: {
+      "user.id": userId,
+      "operation.type": "data_processing",
+    }
+  },
+  () => {
+    return processUserData(userData);
+  }
+);
+```
+
+```javascript
+// Measure an async operation and add attributes from API response
+const userProfile = await Sentry.startSpan(
+  {
+    name: "Fetch User Profile",
+    op: "http.client",
+    attributes: {
+      "user.id": userId,
+      "request.method": "GET",
+    }
+  },
+  async (span) => {
+    const response = await fetch(`/api/users/${userId}`);
+    const data = await response.json();
+    
+    // Add attributes based on the response
+    span.setAttributes({
+      "response.status": response.status,
+      "user.tier": data.tier,
+      "user.last_active": data.lastActive,
+      "response.size": JSON.stringify(data).length
+    });
+    
+    return data;
+  }
+);
+```
+
+```javascript
+// Measure an async operation with nested spans
+const finalResult = await Sentry.startSpan(
+  {
+    name: "Complete Checkout",
+    op: "transaction",
+    attributes: {
+      "checkout.total": orderTotal,
+      "user.type": "premium",
+    }
+  },
+  async () => {
+    // Nested span for payment
+    const paymentResult = await Sentry.startSpan(
+      { 
+        name: "Process Payment", 
+        op: "payment",
+        attributes: { 
+          "payment.method": paymentMethod,
+          "payment.amount": orderTotal 
+        }
+      },
+      () => processPayment(paymentData)
+    );
+
+    // Nested span for inventory update
+    await Sentry.startSpan(
+      { 
+        name: "Update Inventory", 
+        op: "database",
+        attributes: { 
+          "inventory.items_count": orderItems.length 
+        }
+      },
+      () => updateInventory(orderItems)
+    );
+
+    return { paymentResult, orderItems };
+  }
+);
+```
+
+Custom spans help you identify exactly where performance bottlenecks occur in your critical business flows!

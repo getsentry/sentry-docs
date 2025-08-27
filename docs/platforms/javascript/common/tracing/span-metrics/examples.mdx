@@ -12,299 +12,277 @@ These examples assume you have already <PlatformLink to="/tracing/">set up traci
 
 This guide provides practical examples of using span attributes and metrics to solve common monitoring and debugging challenges across your entire application stack. Each example demonstrates how to instrument both frontend and backend components, showing how they work together within a distributed trace to provide end-to-end visibility.
 
-## File Upload and Processing Pipeline
+## E-Commerce Checkout Flow (React + Backend)
 
-**Challenge:** Understanding bottlenecks and failures in multi-step file processing operations across client and server components.
+**Challenge:** Capture end-to-end checkout health and diagnose where time is spent or failures occur across UI, API, payments, inventory, and fulfillment.
 
-**Solution:** Track the entire file processing pipeline with detailed metrics at each stage, from client-side upload preparation through server-side processing.
+**Solution:** Start a client span on the checkout action and continue the trace on the backend with spans for each business step. Add low-cardinality business attributes (no PII) to power span metrics.
 
-**Frontend Instrumentation:**
+<Arcade src="https://demo.arcade.software/tGYGb3qewR6i4xjRt2Tg?embed" />
+
+**Frontend (React) — instrument the Checkout click handler:**
 
 ```javascript
-// Client-side file upload handling
+// In your Checkout button click handler
 Sentry.startSpan(
   {
-    name: "Client File Upload",
-    op: "file.upload.client",
+    name: "Checkout",
+    op: "ui.action",
     attributes: {
-      // Static details available at the start
-      "file.size_bytes": 15728640, // 15MB
-      "file.type": "image/jpeg",
-      "file.name": "user-profile.jpg",
-      "client.compression_applied": true,
+      // cart.* values known at click time; prefer minor units + currency
+      "cart.item_count": cart.items.length,
+      "cart.value_minor": cart.totalMinor, // e.g., cents
+      "cart.currency": cart.currency || "USD",
     },
   },
   async (span) => {
     try {
-      // Begin upload process
-      const uploader = new FileUploader(file);
-
-      // Update progress as upload proceeds
-      uploader.on("progress", (progressEvent) => {
-        span.setAttribute("upload.percent_complete", progressEvent.percent);
-        span.setAttribute("upload.bytes_transferred", progressEvent.loaded);
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          // Avoid PII; internal IDs only
+          items: cart.items.map((i) => ({ sku: i.sku, qty: i.qty })),
+          coupon: cart.coupon || null,
+        }),
       });
 
-      uploader.on("retry", (retryCount) => {
-        span.setAttribute("upload.retry_count", retryCount);
-      });
+      if (!res.ok) throw new Error("Checkout failed");
+      const data = await res.json();
 
-      const result = await uploader.start();
-
-      // Set final attributes after completion
-      span.setAttribute("upload.total_time_ms", result.totalTime);
-      span.setAttribute("upload.success", true);
-      span.setAttribute("upload.server_file_id", result.fileId);
-
-      return result;
+      // Record server-assigned order id after success
+      span.setAttribute("order.id", data.orderId);
+      span.setAttribute("payment.provider", data.paymentProvider);
     } catch (error) {
-      // Record failure information
-      span.setAttribute("upload.success", false);
+      span.setStatus?.("error");
       Sentry.captureException(error);
+    } finally {
+      span.finish?.();
     }
   }
 );
 ```
 
-**Backend Instrumentation:**
+Where to put this in your app:
+- In the `onClick` for the checkout CTA, or inside the submit handler of your checkout form/container component.
+- Auto-instrumentation will add client `fetch` spans; keep the explicit UI span for business context.
+
+**Backend — single span per request; rely on auto-instrumentation:**
 
 ```javascript
-// Server-side processing
+// Example: Node/Express
+app.post("/api/checkout", async (req, res) => {
+  await Sentry.startSpan({ name: "Checkout (server)", op: "http.server" }, async (span) => {
+    try {
+      // validate, authorize payment, reserve inventory, create order, send email
+      const orderId = await createOrder(req.body);
+
+      // Keep attributes low-cardinality and business-focused
+      span.setAttributes({
+        "order.id": orderId,
+        "payment.provider": "stripe",
+        "payment.status": "authorized",
+        "inventory.reserved": true,
+        "email.enqueued": true,
+      });
+
+      res.json({ orderId, paymentProvider: "stripe" });
+    } catch (e) {
+      span.setStatus?.("error");
+      res.status(500).json({ error: "Checkout failed" });
+    }
+  });
+});
+```
+
+**How the trace works together:**
+- UI span starts on click → fetch carries trace headers → backend continues the trace.
+- Rely on your SDK's auto-instrumentation for HTTP/DB/external calls; keep this example span simple.
+- Span metrics let you track latency percentiles and failure rates by attributes like `payment.provider`, `cart.item_count`.
+
+What to monitor with span metrics:
+- p95 duration of `op:ui.action` Checkout by `cart.item_count` bucket.
+- Error rate for `op:payment` by `payment.provider`.
+- Self time of `op:db.*` spans by table to spot slow queries.
+
+## Media Upload with Background Processing (React + Worker)
+
+**Challenge:** Understand user-perceived upload time vs. server-side processing (scan, transcode, thumbnail) and link the async worker back to the initiating request.
+
+**Solution:** Start a client span when the upload begins; on the backend, create spans for signed-URL issuance, enqueue a job, and instrument worker phases. Propagate trace context via job metadata to stitch the traces.
+
+**Frontend (React) — instrument upload begin and completion:**
+
+```javascript
 Sentry.startSpan(
   {
-    name: "Server File Processing",
-    op: "file.process.server",
+    name: "Upload media",
+    op: "file.upload",
     attributes: {
-      // Server processing steps
-      "processing.steps_completed": [
-        "virus_scan",
-        "resize",
-        "compress",
-        "metadata",
-      ],
-
-      // Storage operations
-      "storage.provider": "s3",
-      "storage.region": "us-west-2",
-      "storage.upload_time_ms": 850,
-
-      // CDN configuration
-      "cdn.provider": "cloudfront",
-      "cdn.propagation_ms": 1500,
+      "file.size_bytes": file.size,
+      "file.mime_type": file.type,
     },
   },
-  async () => {
-    // Server-side processing implementation
+  async (span) => {
+    const t0 = performance.now();
+    try {
+      const urlRes = await fetch("/api/uploads/signed-url", { method: "POST" });
+      const { uploadUrl, objectKey } = await urlRes.json();
+
+      // Upload file to storage (signed URL)
+      await fetch(uploadUrl, { method: "PUT", body: file });
+
+      // Tell backend to start async processing
+      await fetch("/api/uploads/start-processing", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ key: objectKey }),
+      });
+
+      span.setAttributes({
+        "upload.success": true,
+        "upload.duration_ms": Math.round(performance.now() - t0),
+      });
+    } catch (e) {
+      span.setStatus?.("error");
+      Sentry.captureException(e);
+    } finally {
+      span.finish?.();
+    }
   }
 );
 ```
 
-**How the Trace Works Together:**
-The frontend span initiates the trace and handles the file upload process. It propagates the trace context to the backend through the upload request headers. The backend span continues the trace, processing the file and storing it. This creates a complete picture of the file's journey from client to CDN, allowing you to:
+Place this where the user triggers an upload (dropzone onDrop, file input onChange, or explicit Upload button).
 
-- Identify bottlenecks at any stage (client prep, upload, server processing, CDN propagation)
-- Track end-to-end processing times and success rates
-- Monitor resource usage across the stack
-- Correlate client-side upload issues with server-side processing errors
-
-## LLM Integration Monitoring
-
-**Challenge:** Managing cost (token usage) and performance of LLM integrations across frontend and backend components.
-
-**Solution:** Tracking of the entire LLM interaction flow, from user input to response rendering.
-
-**Frontend Instrumentation:**
+**Backend — single span per handler; single span in worker:**
 
 ```javascript
-// Client-side LLM interaction handling
-Sentry.startSpan(
-  {
-    name: "LLM Client Interaction",
-    op: "gen_ai.generate_text",
-    attributes: {
-      // Initial metrics available at request time
-      "input.char_count": 280,
-      "input.language": "en",
-      "input.type": "question",
-    },
-  },
-  async (span) => {
-    const startTime = performance.now();
+// Issue signed URL
+app.post("/api/uploads/signed-url", async (req, res) => {
+  await Sentry.startSpan({ name: "Signed URL", op: "storage.sign" }, async (span) => {
+    span.setAttributes({ "storage.provider": "s3", "storage.bucket": "media" });
+    res.json({ uploadUrl: "https://s3...", objectKey: "uploads/abc.jpg" });
+  });
+});
 
-    // Begin streaming response from LLM API
-    const stream = await llmClient.createCompletion({
-      prompt: userInput,
-      stream: true,
+// Enqueue processing job and propagate context
+app.post("/api/uploads/start-processing", async (req, res) => {
+  await Sentry.startSpan({ name: "Enqueue media job", op: "queue.enqueue" }, async (span) => {
+    const trace = Sentry.getCurrentScope()?.getPropagationContext?.();
+    queue.publish("media.process", { key: req.body.key, trace });
+    span.setAttribute("queue.name", "media.process");
+    res.json({ ok: true });
+  });
+});
+
+// Worker
+worker.on("message", async (msg) => {
+  const parentContext = msg.trace; // restore trace/parent if available
+  await Sentry.startSpan({ name: "Process media", op: "worker.job", parentContext }, async (span) => {
+    // Do work (scan, transcode, thumbnail) — rely on auto-instrumentation for sub-operations
+    span.setAttributes({
+      "scan.engine": "clamav",
+      "transcode.preset": "720p",
+      "thumbnail.created": true,
+    });
+  });
+});
+```
+
+**How the trace works together:**
+- Client span covers upload + API calls; backend spans cover signing and enqueue; worker spans show processing phases.
+- Linking the worker trace to the enqueue span maintains end-to-end visibility across async boundaries.
+
+What to monitor with span metrics:
+- p90 transcode time by `transcode.preset`.
+- Failure counts for `op:security.scan` by `scan.engine`.
+- Time-to-ready (sum of worker phases) by `file.size_bucket`.
+
+## Search Autocomplete (debounced, cancellable, cached)
+
+**Challenge:** Users type quickly; you need to debounce requests, cancel in-flight calls, and rely on cache where possible while keeping latency low.
+
+**Solution:** Start a client span for each debounced request; mark aborted requests; on the server, instrument cache lookup, search engine query, and ranking.
+
+**Frontend (React) — instrument debounced search:**
+
+```javascript
+let abortController;
+
+async function runSearch(query, debounceMs = 150) {
+  clearTimeout(runSearch._t);
+  return new Promise((resolve) => {
+    runSearch._t = setTimeout(() => {
+      if (abortController) abortController.abort();
+      abortController = new AbortController();
+
+      Sentry.startSpan(
+        {
+          name: "Search autocomplete",
+          op: "http.client",
+          attributes: {
+            "query.length": (query || "").length,
+            "ui.debounce_ms": debounceMs,
+          },
+        },
+        async (span) => {
+          try {
+            const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`,
+              { signal: abortController.signal }
+            );
+            const data = await res.json();
+            span.setAttribute("results.count", data.results.length);
+            resolve(data);
+          } catch (e) {
+            if (e.name === "AbortError") {
+              span.setAttribute("ui.aborted", true);
+              span.setStatus?.("cancelled");
+              resolve({ results: [] });
+            } else {
+              span.setStatus?.("error");
+              Sentry.captureException(e);
+              resolve({ results: [] });
+            }
+          } finally {
+            span.finish?.();
+          }
+        }
+      );
+    }, debounceMs);
+  });
+}
+```
+
+Place this in your search input hook/component after applying a debounce.
+
+**Backend — single span with useful attributes:**
+
+```javascript
+app.get("/api/search", async (req, res) => {
+  const q = String(req.query.q || "");
+  await Sentry.startSpan({ name: "Search", op: "search" }, async (span) => {
+    const hit = await cache.get(q);
+    span.setAttribute("cache.hit", Boolean(hit));
+    if (hit) return res.json(hit);
+
+    const results = await searchEngine.query(q);
+    span.setAttributes({
+      "search.engine": "elasticsearch",
+      "search.mode": q.length < 3 ? "prefix" : "fuzzy",
+      "results.count": results.length,
     });
 
-    // Record time to first token when received
-    let firstTokenReceived = false;
-    let tokensReceived = 0;
-
-    for await (const chunk of stream) {
-      tokensReceived++;
-
-      // Record time to first token
-      if (!firstTokenReceived && chunk.content) {
-        firstTokenReceived = true;
-        const timeToFirstToken = performance.now() - startTime;
-
-        span.setAttribute("ui.time_to_first_token_ms", timeToFirstToken);
-      }
-
-      // Process and render the chunk
-      renderChunkToUI(chunk);
-    }
-
-    // Record final metrics after stream completes
-    const totalRequestTime = performance.now() - startTime;
-
-    span.setAttribute("ui.total_request_time_ms", totalRequestTime);
-    span.setAttribute("stream.rendering_mode", "markdown");
-    span.setAttribute("stream.tokens_received", tokensReceived);
-  }
-);
+    res.json({ results });
+  });
+});
 ```
 
-**Backend Instrumentation:**
+**How the trace works together:**
+- Each debounced request becomes a client span; aborted ones are marked and short.
+- The server span shows cache effectiveness and search mode; auto-instrumentation will cover network/DB latency.
 
-```javascript
-// Server-side LLM processing
-Sentry.startSpan(
-  {
-    name: "LLM API Processing",
-    op: "gen_ai.generate_text",
-    attributes: {
-      // Model configuration - known at start
-      "llm.model": "claude-3-5-sonnet-20241022",
-      "llm.temperature": 0.5,
-      "llm.max_tokens": 4096,
-    },
-  },
-  async (span) => {
-    const startTime = Date.now();
-
-    try {
-      // Check rate limits before processing
-      const rateLimits = await getRateLimits();
-      span.setAttribute("llm.rate_limit_remaining", rateLimits.remaining);
-
-      // Make the actual API call to the LLM provider
-      const response = await llmProvider.generateCompletion({
-        model: "claude-3-5-sonnet-20241022",
-        prompt: preparedPrompt,
-        temperature: 0.5,
-        max_tokens: 4096,
-      });
-
-      // Record token usage and performance metrics
-      span.setAttribute("llm.prompt_tokens", response.usage.prompt_tokens);
-      span.setAttribute(
-        "llm.completion_tokens",
-        response.usage.completion_tokens
-      );
-      span.setAttribute("llm.total_tokens", response.usage.total_tokens);
-      span.setAttribute("llm.api_latency_ms", Date.now() - startTime);
-
-      // Calculate and record cost based on token usage
-      const cost = calculateCost(
-        response.usage.prompt_tokens,
-        response.usage.completion_tokens,
-        "claude-3-5-sonnet-20241022"
-      );
-      span.setAttribute("llm.cost_usd", cost);
-
-      return response;
-    } catch (error) {
-      // Record error details
-      span.setAttribute("error", true);
-      Sentry.captureException(error);
-    }
-  }
-);
-```
-
-**How the Trace Works Together:**
-The frontend span captures the user interaction and UI rendering performance, while the backend span tracks the actual LLM API interaction. The distributed trace shows the complete flow from user input to rendered response, enabling you to:
-
-- Analyze end-to-end response times and user experience
-- Track costs and token usage patterns
-- Optimize streaming performance and UI rendering
-- Monitor rate limits and queue times
-- Correlate user inputs with model performance
-
-## E-Commerce Transaction Flow
-
-**Challenge:** Understanding the complete purchase flow and identifying revenue-impacting issues across the entire stack.
-
-**Solution:** Track the full checkout process from cart interaction to order fulfillment.
-
-**Frontend Instrumentation:**
-
-```javascript
-// Client-side checkout process
-Sentry.startSpan(
-  {
-    name: "Checkout UI Flow",
-    op: "commerce.checkout.client",
-    attributes: {
-      // Cart interaction metrics
-      "cart.items_added": 3,
-      "cart.items_removed": 0,
-      "cart.update_count": 2,
-
-      // User interaction tracking
-      "ui.form_completion_time_ms": 45000,
-      "ui.payment_method_changes": 1,
-      "ui.address_validation_retries": 0,
-    },
-  },
-  async () => {
-    // Client-side checkout implementation
-  }
-);
-```
-
-**Backend Instrumentation:**
-
-```javascript
-// Server-side order processing
-Sentry.startSpan(
-  {
-    name: "Order Processing",
-    op: "commerce.order.server",
-    attributes: {
-      // Order details
-      "order.id": "ord_123456789",
-      "order.total_amount": 159.99,
-      "order.currency": "USD",
-      "order.items": ["SKU123", "SKU456", "SKU789"],
-
-      // Payment processing
-      "payment.provider": "stripe",
-      "payment.method": "credit_card",
-      "payment.processing_time_ms": 1200,
-
-      // Inventory checks
-      "inventory.all_available": true,
-
-      // Fulfillment
-      "fulfillment.warehouse": "WEST-01",
-      "fulfillment.shipping_method": "express",
-      "fulfillment.estimated_delivery": "2024-03-20",
-    },
-  },
-  async () => {
-    // Server-side order processing
-  }
-);
-```
-
-**How the Trace Works Together:**
-The frontend span tracks the user's checkout experience, while the backend span handles order processing and fulfillment. The distributed trace provides visibility into the entire purchase flow, allowing you to:
-
-- Analyze checkout funnel performance and drop-off points
-- Track payment processing success rates and timing
-- Monitor inventory availability impact on conversions
-- Measure end-to-end order completion times
-- Identify friction points in the user experience
+What to monitor with span metrics:
+- p95 latency of `op:http.client` by `query.length` bucket.
+- Cancellation rate via `ui.aborted=true`.
+- Cache hit rate for `op:cache`.

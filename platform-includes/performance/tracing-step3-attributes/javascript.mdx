@@ -1,0 +1,42 @@
+Add business context to existing spans to make debugging easier:
+
+```javascript
+// Get the current span and add contextual information
+const span = Sentry.getActiveSpan();
+if (span) {
+  // Add user context
+  span.setAttribute("user.id", userId);
+  span.setAttribute("user.subscription", "premium");
+  
+  // Add request context
+  span.setAttribute("request.size", requestData.length);
+  span.setAttribute("cache.hit", true);
+  
+  // Add business metrics
+  span.setAttributes({
+    "order.total": 99.99,
+    "order.items_count": 3,
+    "feature.enabled": "checkout_v2",
+  });
+}
+```
+
+Add attributes during error handling:
+
+```javascript
+try {
+  await processPayment(paymentData);
+} catch (error) {
+  const span = Sentry.getActiveSpan();
+  if (span) {
+    span.setAttributes({
+      "error.type": "payment_failed",
+      "payment.method": paymentData.method,
+      "retry.attempt": attemptNumber,
+    });
+  }
+  throw error;
+}
+```
+
+These attributes will appear in your Sentry trace view, making it easy to filter and understand what happened!

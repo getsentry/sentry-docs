@@ -1,0 +1,34 @@
+Connect traces across your React frontend and backend services:
+
+```javascript {filename:instrument.js}
+import * as Sentry from "@sentry/react";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.browserTracingIntegration(),
+  ],
+  tracesSampleRate: 1.0,
+  // Configure which requests should propagate traces
+  tracePropagationTargets: [
+    "localhost",
+    "your-api-domain.com",
+    /^https:\/\/api\.your-domain\.com/,
+  ],
+  // ... rest of your config
+});
+```
+
+Now API calls from your React app will be connected to your backend traces:
+
+```javascript
+// This fetch request will automatically include trace headers
+const response = await fetch('https://api.your-domain.com/user/profile', {
+  method: 'GET',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+  },
+});
+```
+
+If you're using React Router, make sure to [set up the integration](../features/react-router/) to trace navigation events!
