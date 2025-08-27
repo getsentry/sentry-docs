@@ -9,6 +9,8 @@ categories:
   - server-node
 ---
 
+<PlatformContent includePath="llm-steering" />
+
 <PlatformContent includePath="llm-rules-platform" />
 
 <PlatformContent includePath="getting-started-prerequisites" />
@@ -158,39 +160,17 @@ For detailed manual setup instructions, see our [manual setup guide](/platforms/
 
 Make sure runtime errors are surfaced to Sentry using Next.js error components.
 
-<Expandable title="App Router (app/)">
+### App Router
 
-Create `app/global-error.(tsx|jsx)` to catch uncaught errors:
+<PlatformContent includePath="getting-started-capture-errors/app-router-global-error" />
 
-```tsx {filename:app/global-error.tsx}
-"use client";
+#### Errors from Nested React Server Components
 
-export default function GlobalError({ error }: { error: Error }) {
-  return (
-    <html>
-      <body>
-        <h2>Something went wrong!</h2>
-        <p>{error.message}</p>
-        <button onClick={() => window.location.reload()}>Try again</button>
-      </body>
-    </html>
-  );
-}
-```
+<PlatformContent includePath="getting-started-capture-errors/nested-server-components" />
 
-</Expandable>
+### Pages Router
 
-<Expandable title="Pages Router (pages/)">
-
-Add `_error.(js|tsx)` to capture render errors:
-
-```tsx {filename:pages/_error.tsx}
-import NextErrorComponent from "next/error";
-
-export default NextErrorComponent;
-```
-
-</Expandable>
+<PlatformContent includePath="getting-started-capture-errors/pages-router-error" />
 
 <Alert level="info">
   The installation wizard will scaffold these files for you if they are missing.
@@ -202,7 +182,7 @@ export default NextErrorComponent;
 
 ## Step 4: Sending Logs
 
-Now let's add structured logging to capture application insights. Logs are enabled in your configuration above.
+[Structured logging](/platforms/javascript/guides/nextjs/logs/) lets users send text-based log information from their applications to Sentry. Once in Sentry, these logs can be viewed alongside relevant errors, searched by text-string, or searched using their individual attributes.
 
 Use Sentry's logger to capture structured logs with meaningful attributes that help you debug issues and understand user behavior.
 
@@ -232,7 +212,9 @@ logger.warn(logger.fmt`Rate limit exceeded for user: ${123}`);
 
 ## Step 5: Customizing Replays
 
-By default, Session Replay masks sensitive data for privacy. Customize this to show specific content that's safe to display by adjusting the client-side integration.
+[Replays](/product/explore/session-replay/web/getting-started/) allow you to see video-like reproductions of user sessions. 
+
+By default, Session Replay masks sensitive data for privacy and to protect PII data. You can modify the replay configurations in your client-side Sentry initialization to show (unmask) specific content that's safe to display.
 
 ```javascript {filename:instrumentation-client.(js|ts)}
 import * as Sentry from "@sentry/nextjs";
@@ -241,12 +223,17 @@ Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
     Sentry.replayIntegration({
+      // This will show the content of the div with the class "reveal-content" and the span with the data-safe-to-show attribute
       unmask: [".reveal-content", "[data-safe-to-show]"],
+      // This will show all text content in replays. Use with caution.
       maskAllText: false,
+      // This will show all media content in replays. Use with caution.
       blockAllMedia: false,
     }),
   ],
+  // Only capture replays for 10% of sessions
   replaysSessionSampleRate: 0.1,
+  // Capture replays for 100% of sessions with an error
   replaysOnErrorSampleRate: 1.0,
 });
 ```
@@ -260,7 +247,7 @@ Sentry.init({
 
 ## Step 6: Custom Traces with Attributes
 
-Create custom spans to measure specific operations and add meaningful attributes. This helps you understand performance bottlenecks and debug issues with detailed context.
+[Tracing](/platforms/javascript/guides/nextjs/tracing/) allows you to monitor interactions between multiple services or applications. Create custom spans to measure specific operations and add meaningful attributes. This helps you understand performance bottlenecks and debug issues with detailed context.
 
 ```javascript
 import * as Sentry from "@sentry/nextjs";
