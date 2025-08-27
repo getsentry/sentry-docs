@@ -17,17 +17,19 @@ type LLMSteeringProps = {
  * </LLMSteering>
  */
 export function LLMSteering({children, title}: LLMSteeringProps) {
-  // Render as a blockquote that will convert nicely to markdown
-  // Hidden with inline styles so it's invisible in the browser
+  // Render as a div that will convert nicely to markdown
+  // Hidden with display: none and visibility: hidden to ensure checkVisibility() returns false
+  // This will prevent the content from appearing in the table of contents
   return (
-    <blockquote
+    <div
       style={{
+        display: 'none',
+        visibility: 'hidden',
         position: 'absolute',
         left: '-9999px',
         width: '1px',
         height: '1px',
         overflow: 'hidden',
-        // Additional hiding for extra safety
         opacity: 0,
         pointerEvents: 'none',
         userSelect: 'none',
@@ -36,10 +38,12 @@ export function LLMSteering({children, title}: LLMSteeringProps) {
       data-llm-steering="true"
       aria-hidden="true"
     >
-      <p>
-        <strong>🤖 LLM STEERING INSTRUCTIONS{title ? `: ${title}` : ''}</strong>
-      </p>
-      {children}
-    </blockquote>
+      <blockquote>
+        <p>
+          <strong>🤖 LLM STEERING INSTRUCTIONS{title ? `: ${title}` : ''}</strong>
+        </p>
+        {children}
+      </blockquote>
+    </div>
   );
 }
