@@ -1,37 +1,37 @@
 ---
 title: React
-description: "Learn how to manually set up Sentry in your React app and capture your first errors."
+description: Learn how to set up and configure Sentry in your React application.
 sdk: sentry.javascript.react
+fallbackPlatform: javascript
 categories:
-  - javascript
   - browser
+  - javascript
+  - javascript-popular
 ---
+
+<PlatformContent includePath="llm-steering" />
 
 <PlatformContent includePath="llm-rules-platform" />
 
 <PlatformContent includePath="getting-started-prerequisites" />
 
-<OnboardingSteps>
+## Features
 
-<OnboardingOption isStep>
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also get to the root of an error or performance issue faster, by watching a video-like reproduction of a user session with [session replay](/product/explore/session-replay/web/getting-started/).
 
-## Install
-
-Choose the features you want to configure, and this guide will show you how:
+Select which Sentry features you'd like to configure to get the corresponding setup instructions below.
 
 <OnboardingOptionButtons
   options={[
-    "error-monitoring",
-    "performance",
-    "session-replay",
-    "user-feedback",
-    "logs",
+    {id: "error-monitoring", checked: true},
+    {id: "performance", checked: true},
+    {id: "session-replay", checked: true},
+    {id: "user-feedback", checked: false},
+    {id: "logs", checked: true},
   ]}
 />
 
-<PlatformContent includePath="getting-started-features-expandable" />
-
-### Install the Sentry SDK
+## Step 1: Install
 
 Run the command for your preferred package manager to add the Sentry SDK to your application:
 
@@ -47,31 +47,73 @@ yarn add @sentry/react
 pnpm add @sentry/react
 ```
 
-</OnboardingOption>
+### Configure Source Maps (Optional)
 
-<OnboardingOption isStep>
+For readable stack traces in production, you can set up automatic source map uploads using the Sentry Vite plugin or Webpack plugin depending on your build setup.
 
-## Configure
+#### For Vite Projects
+
+```bash
+npm install @sentry/vite-plugin --save-dev
+```
+
+Add to your `vite.config.js`:
+
+```javascript {filename:vite.config.js}
+import { sentryVitePlugin } from "@sentry/vite-plugin";
+
+export default {
+  plugins: [
+    sentryVitePlugin({
+      org: "your-org",
+      project: "your-project",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }),
+  ],
+};
+```
+
+#### For Webpack Projects
+
+```bash
+npm install @sentry/webpack-plugin --save-dev
+```
+
+Add your Sentry auth token to your environment:
+
+```bash
+# Add to your .env file
+SENTRY_AUTH_TOKEN=your_auth_token_here
+```
+
+You can get your auth token from [Sentry Settings > Auth Tokens](https://sentry.io/settings/auth-tokens/).
+
+<Alert level="warning" title="Important">
+
+Make sure to keep your auth token secret and add your `.env` file to `.gitignore` to avoid committing it to version control.
+
+</Alert>
+
+## Step 2: Configure
 
 ### Initialize the Sentry SDK
 
-To import and initialize Sentry, create a file in your project's root directory, for example, `instrument.js`, and add the following code:
+<OnboardingOption optionId="error-monitoring">
+
+Add the following to your application's entry point (typically `index.js`, `main.js`, or `App.js`) or to the file before you use any other Sentry method:
 
 ```javascript {filename:instrument.js}
 import * as Sentry from "@sentry/react";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-
+  
   // Adds request headers and IP for users, for more info visit:
   // https://docs.sentry.io/platforms/javascript/guides/react/configuration/options/#sendDefaultPii
   sendDefaultPii: true,
-
+  
   integrations: [
     // ___PRODUCT_OPTION_START___ performance
-    // If you're using react router, use the integration for your react router version instead.
-    // Learn more at
-    // https://docs.sentry.io/platforms/javascript/guides/react/configuration/integrations/react-router/
     Sentry.browserTracingIntegration(),
     // ___PRODUCT_OPTION_END___ performance
     // ___PRODUCT_OPTION_START___ session-replay
@@ -83,143 +125,228 @@ Sentry.init({
       colorScheme: "system",
     }),
     // ___PRODUCT_OPTION_END___ user-feedback
+    // ___PRODUCT_OPTION_START___ logs
+    Sentry.consoleLoggingIntegration({ levels: ["log", "warn", "error"] }),
+    // ___PRODUCT_OPTION_END___ logs
   ],
+  
   // ___PRODUCT_OPTION_START___ logs
-
-  // Enable logs to be sent to Sentry
-  enableLogs: true,
-  // ___PRODUCT_OPTION_END___ logs
+    // For help logging, see: https://docs.sentry.io/platforms/javascript/guides/react/logging/
+    enableLogs: true,
+    // ___PRODUCT_OPTION_END___ logs
 
   // ___PRODUCT_OPTION_START___ performance
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for tracing.
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  // Set sample rate for performance monitoring
+  // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
-
-  // Set `tracePropagationTargets` to control for which URLs trace propagation should be enabled
-  tracePropagationTargets: [/^\//, /^https:\/\/yourserver\.io\/api/],
   // ___PRODUCT_OPTION_END___ performance
-  // ___PRODUCT_OPTION_START___ session-replay
 
-  // Capture Replay for 10% of all sessions,
-  // plus for 100% of sessions with an error
-  // Learn more at
-  // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
+  // ___PRODUCT_OPTION_START___ session-replay
+  // For session replay
+  // See: https://docs.sentry.io/platforms/javascript/session-replay/
+  replaysSessionSampleRate: 0.1, // Sample 10% of sessions
+  replaysOnErrorSampleRate: 1.0, // Sample 100% of sessions with an error
   // ___PRODUCT_OPTION_END___ session-replay
+
+  // ___PRODUCT_OPTION_START___ logs
+  // For help logging, see: https://docs.sentry.io/platforms/javascript/guides/react/logging/
+  extraErrorDataIntegration: false,
+  // ___PRODUCT_OPTION_END___ logs
 });
 ```
 
-### Apply Instrumentation to Your App
+</OnboardingOption>
 
-Initialize Sentry as early as possible in your application. We recommend putting the import of your initialization code as the first import in your app's entry point:
+### Import & Use the Instrument file
 
-```javascript
-// Sentry initialization should be imported first!
-import "./instrument";
-import App from "./App";
+Import the `instrument.js` file in your application's entry point _before all other imports_ to initialize the SDK:
+
+```javascript {filename:index.jsx} {1}
+import "./instrument.js";
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import App from "./App";
 
-const container = document.getElementById(“app”);
+const container = document.getElementById("root");
 const root = createRoot(container);
 root.render(<App />);
 ```
 
-</OnboardingOption>
-<OnboardingOption isStep>
-## Capture React Errors
+## Step 3: Capture React Errors
 
 To make sure Sentry captures all your app's errors, configure error handling based on your React version.
 
-### Configure Error Hooks (React 19+)
+### React 19+
 
-The `createRoot` and `hydrateRoot` methods provide error hooks to capture errors automatically. These hooks apply to all React components mounted to the root container.
-Integrate Sentry with these hooks and customize error handling:
+Starting with React 19, use the `onCaughtError` and `onUncaughtError` root options to capture React errors:
 
-```javascript
+```javascript {9-15} {filename:index.jsx}
+import "./instrument.js";
+import * as Sentry from "@sentry/react";
 import { createRoot } from "react-dom/client";
-import * as Sentry from '@sentry/react';
+import App from "./App";
 
-const container = document.getElementById(“app”);
+const container = document.getElementById("root");
 const root = createRoot(container, {
-  // Callback called when an error is thrown and not caught by an ErrorBoundary.
-  onUncaughtError: Sentry.reactErrorHandler((error, errorInfo) => {
-    console.warn('Uncaught error', error, errorInfo.componentStack);
+  // Callback for errors caught by React error boundaries
+  onCaughtError: Sentry.reactErrorHandler((error, errorInfo) => {
+    console.error("Caught error:", error, errorInfo.componentStack);
   }),
-  // Callback called when React catches an error in an ErrorBoundary.
-  onCaughtError: Sentry.reactErrorHandler(),
-  // Callback called when React automatically recovers from errors.
-  onRecoverableError: Sentry.reactErrorHandler(),
+  // Callback for errors not caught by React error boundaries  
+  onUncaughtError: Sentry.reactErrorHandler(),
 });
-root.render();
+root.render(<App />);
 ```
 
-### Add Error Boundary Components (React \<19)
+### React 16 - 18
 
-Use the [`ErrorBoundary`](features/error-boundary/) component to automatically send errors from specific component trees to Sentry and provide a fallback UI:
+Use the Sentry Error Boundary to wrap your application:
 
-```javascript
+```javascript {filename:index.jsx}
 import React from "react";
 import * as Sentry from "@sentry/react";
 
-<Sentry.ErrorBoundary fallback={<p>An error has occurred</p>}>
-  <Example />
+<Sentry.ErrorBoundary fallback={<p>An error has occurred</p>} showDialog>
+  <App />
 </Sentry.ErrorBoundary>;
 ```
 
-<Alert level="info">
-  To capture errors manually with your own error boundary, use the
-  `captureReactException` function as described
+<Alert>
+  Alternatively, if you're using a class component, you can wrap your application
+  with `Sentry.withErrorBoundary`. Find out more
   [here](features/error-boundary/#manually-capturing-errors).
 </Alert>
 
-</OnboardingOption>
+<OnboardingOption optionId="performance">
 
-<OnboardingOption optionId="performance" isStep>
-## Set Up React Router
-If you're using `react-router` in your application, you need to set up the Sentry integration for your specific React Router version to trace `navigation` events.\
-Select your React Router version to start instrumenting your routing:
+<OnboardingOption optionId="logs">
 
-- [React Router v7 (library mode)](features/react-router/v7)
-- [React Router v6](features/react-router/v6)
-- [Older React Router versions](features/react-router)
-- [TanStack Router](features/tanstack-router)
+## Step 4: Sending Logs
 
-</OnboardingOption>
+[Structured logging](/platforms/javascript/guides/react/logs/) lets users send text-based log information from their applications to Sentry. Once in Sentry, these logs can be viewed alongside relevant errors, searched by text-string, or searched using their individual attributes.
 
-<OnboardingOption isStep>
-## Capture Redux State Data (Optional)
+Use Sentry's logger to capture structured logs with meaningful attributes that help you debug issues and understand user behavior.
 
-To capture Redux state data, use `Sentry.createReduxEnhancer` when initializing your Redux store.
+```javascript
+import * as Sentry from "@sentry/react";
 
-<PlatformContent includePath="configuration/redux-init" />
+const { logger } = Sentry;
 
-</OnboardingOption>
+// Send structured logs with attributes
+logger.info("User completed checkout", { 
+  userId: 123, 
+  orderId: "order_456", 
+  amount: 99.99 
+});
 
-<OnboardingOption isStep>
-## Add Readable Stack Traces With Source Maps (Optional)
+logger.error("Payment processing failed", {
+  errorCode: "CARD_DECLINED",
+  userId: 123,
+  attemptCount: 3
+});
 
-<PlatformContent includePath="getting-started-sourcemaps-short-version" />
-
-</OnboardingOption>
-
-<OnboardingOption isStep>
-## Avoid Ad Blockers With Tunneling (Optional)
-
-<PlatformContent includePath="getting-started-tunneling" />
+// Using template literals for dynamic data
+logger.warn(logger.fmt`Rate limit exceeded for user: ${userId}`);
+```
 
 </OnboardingOption>
 
-<OnboardingOption isStep>
+<OnboardingOption optionId="session-replay">
+
+## Step 5: Customizing Replays
+
+[Replays](/product/explore/session-replay/web/getting-started/) allow you to see video-like reproductions of user sessions. 
+
+By default, Session Replay masks sensitive data for privacy and to protect PII data. You can modify the replay configurations in your client-side Sentry initialization to show (unmask) specific content that's safe to display.
+
+```javascript {filename:instrument.js}
+import * as Sentry from "@sentry/react";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.replayIntegration({
+      // Unmask specific elements to show actual content
+      unmask: ['.reveal-content', '[data-safe-to-show]'],
+      // Optionally disable blanket masking for non-sensitive apps
+      maskAllText: false,
+      blockAllMedia: false,
+    }),
+  ],
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  // ... your existing config
+});
+```
+
+```jsx
+<div className="reveal-content">This content will be visible in replays</div>
+<span data-safe-to-show>Safe user data: {username}</span>
+```
+
+</OnboardingOption>
+
+## Step 6: Custom Traces with Attributes
+
+[Tracing](/platforms/javascript/guides/react/tracing/) allows you to monitor interactions between multiple services or applications. Create custom spans to measure specific operations and add meaningful attributes. This helps you understand performance bottlenecks and debug issues with detailed context.
+
+```javascript
+import * as Sentry from "@sentry/react";
+
+// Create custom spans to measure specific operations
+async function processUserData(userId) {
+  return await Sentry.startSpan(
+    {
+      name: "Process User Data",
+      op: "function",
+      attributes: {
+        userId: userId,
+        operation: "data_processing",
+        version: "2.1"
+      }
+    },
+    async () => {
+      // Your business logic here
+      const userData = await fetchUserData(userId);
+      
+      // Nested span for specific operations
+      return await Sentry.startSpan(
+        { 
+          name: "Transform Data", 
+          op: "transform",
+          attributes: { 
+            recordCount: userData.length,
+            transformType: "normalize" 
+          }
+        },
+        () => {
+          return transformUserData(userData);
+        }
+      );
+    }
+  );
+}
+
+// Add attributes to existing spans
+const span = Sentry.getActiveSpan();
+if (span) {
+  span.setAttributes({
+    cacheHit: true,
+    region: "us-west-2",
+    performanceScore: 0.95
+  });
+}
+```
+
+</OnboardingOption>
+
 ## Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
-### Issues
+### Test Error Capturing
 
-To verify that Sentry captures errors and creates issues in your Sentry project, add the following test button to one of your pages, which will trigger an error that Sentry will capture when you click it:
+Add the following test button to one of your pages, which will trigger an error that Sentry will capture when you click it:
 
 ```javascript
 <button
@@ -232,40 +359,9 @@ To verify that Sentry captures errors and creates issues in your Sentry project,
 </button>
 ```
 
-<OnboardingOption optionId="performance" hideForThisOption>
-  Open the page in a browser (for most React applications, this will be at
-  localhost) and click the button to trigger a frontend error.
-</OnboardingOption>
+Open the page in a browser (for most React applications, this will be at localhost) and click the button to trigger a frontend error.
 
 <PlatformContent includePath="getting-started-browser-sandbox-warning" />
-
-</OnboardingOption>
-
-<OnboardingOption optionId="performance">
-### Tracing
-
-To test your tracing configuration, update the previous code snippet to start a performance trace to measure the time it takes for the execution of your code:
-
-```javascript
-<button
-  type="button"
-  onClick={() => {
-    Sentry.startSpan({ op: "test", name: "Example Frontend Span" }, () => {
-      setTimeout(() => {
-        throw new Error("Sentry Test Error");
-      }, 99);
-    });
-  }}
->
-  Break the world
-</button>
-```
-
-Open the page in a browser (for most React applications, this will be at localhost) and click the button to trigger a frontend error and performance trace.
-
-</OnboardingOption>
-
-<OnboardingOption>
 
 ### View Captured Data in Sentry
 
@@ -275,22 +371,45 @@ Now, head over to your project on [Sentry.io](https://sentry.io/) to view the co
 
 ## Next Steps
 
-At this point, you should have integrated Sentry into your React application and should already be sending data to your Sentry project.
+At this point, you should have integrated Sentry into your React application and should already be sending error and performance data to your Sentry project.
 
-Now's a good time to customize your setup and look into more advanced topics. Our next recommended steps for you are:
+Now's a good time to customize your setup and look into more advanced topics:
 
 - Extend Sentry to your backend using one of our [SDKs](/)
 - Continue to <PlatformLink to="/configuration">customize your configuration</PlatformLink>
-- Make use of <PlatformLink to="/features/redux">React-specific features</PlatformLink>
+- <PlatformLink to="/features/error-boundary">Learn more about the React Error Boundary</PlatformLink>
 - Learn how to <PlatformLink to="/usage">manually capture errors</PlatformLink>
 - Avoid ad-blockers with <PlatformLink to="/troubleshooting/#using-the-tunnel-option">tunneling</PlatformLink>
+
+## Additional Resources
+
+<Expandable title="Set Up React Router (Optional)">
+
+If you're using `react-router` in your application, you need to set up the Sentry integration for your specific React Router version to trace `navigation` events.
+
+Select your React Router version to start instrumenting your routing:
+
+- [React Router v7 (library mode)](features/react-router/v7)
+- [React Router v6](features/react-router/v6)
+- [Older React Router versions](features/react-router)
+- [TanStack Router](features/tanstack-router)
+
+</Expandable>
+
+<Expandable title="Capture Redux State Data (Optional)">
+
+To capture Redux state data, use `Sentry.createReduxEnhancer` when initializing your Redux store.
+
+<PlatformContent includePath="configuration/redux-init" />
+
+</Expandable>
+
+<PlatformContent includePath="getting-started-features-expandable" />
+
+<PlatformContent includePath="getting-started-tunneling" />
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
 - [Get support](https://sentry.zendesk.com/hc/en-us/)
 
 </Expandable>
-
-</OnboardingOption>
-
-</OnboardingSteps>
