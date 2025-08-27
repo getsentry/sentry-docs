@@ -17,13 +17,13 @@ categories:
 
 ## Features
 
-In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also get to the root of an error or performance issue faster, by watching a video-like reproduction of a user session with [session replay](/product/explore/session-replay/web/getting-started/).
-
 Select which Sentry features you'd like to configure to get the corresponding setup instructions below.
+
+<PlatformContent includePath="getting-started-features-expandable" />
 
 <OnboardingOptionButtons
   options={[
-    {id: "error-monitoring", checked: true},
+    {id: "error-monitoring", checked: true, disabled: true},
     {id: "performance", checked: true},
     {id: "session-replay", checked: true},
     {id: "user-feedback", checked: false},
@@ -39,60 +39,9 @@ Run the command for your preferred package manager to add the Sentry SDK to your
 npm install @sentry/react --save
 ```
 
-```bash {tabTitle:yarn}
-yarn add @sentry/react
-```
+### Add Readable Stack Traces With Source Maps (Optional)
 
-```bash {tabTitle:pnpm}
-pnpm add @sentry/react
-```
-
-### Configure Source Maps (Optional)
-
-For readable stack traces in production, you can set up automatic source map uploads using the Sentry Vite plugin or Webpack plugin depending on your build setup.
-
-#### For Vite Projects
-
-```bash
-npm install @sentry/vite-plugin --save-dev
-```
-
-Add to your `vite.config.js`:
-
-```javascript {filename:vite.config.js}
-import { sentryVitePlugin } from "@sentry/vite-plugin";
-
-export default {
-  plugins: [
-    sentryVitePlugin({
-      org: "your-org",
-      project: "your-project",
-      authToken: process.env.SENTRY_AUTH_TOKEN,
-    }),
-  ],
-};
-```
-
-#### For Webpack Projects
-
-```bash
-npm install @sentry/webpack-plugin --save-dev
-```
-
-Add your Sentry auth token to your environment:
-
-```bash
-# Add to your .env file
-SENTRY_AUTH_TOKEN=your_auth_token_here
-```
-
-You can get your auth token from [Sentry Settings > Auth Tokens](https://sentry.io/settings/auth-tokens/).
-
-<Alert level="warning" title="Important">
-
-Make sure to keep your auth token secret and add your `.env` file to `.gitignore` to avoid committing it to version control.
-
-</Alert>
+<PlatformContent includePath="getting-started-sourcemaps-short-version" />
 
 ## Step 2: Configure
 
@@ -266,10 +215,11 @@ Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
     Sentry.replayIntegration({
-      // Unmask specific elements to show actual content
-      unmask: ['.reveal-content', '[data-safe-to-show]'],
-      // Optionally disable blanket masking for non-sensitive apps
+      // This will show the content of the div with the class "reveal-content" and the span with the data-safe-to-show attribute
+      unmask: [".reveal-content", "[data-safe-to-show]"],
+      // This will show all text content in replays. Use with caution.
       maskAllText: false,
+      // This will show all media content in replays. Use with caution.
       blockAllMedia: false,
     }),
   ],
@@ -340,6 +290,10 @@ if (span) {
 
 </OnboardingOption>
 
+## Step 7: Avoid Ad Blockers With Tunneling (Optional)
+
+<PlatformContent includePath="getting-started-tunneling" />
+
 ## Verify Your Setup
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
@@ -403,10 +357,6 @@ To capture Redux state data, use `Sentry.createReduxEnhancer` when initializing 
 <PlatformContent includePath="configuration/redux-init" />
 
 </Expandable>
-
-<PlatformContent includePath="getting-started-features-expandable" />
-
-<PlatformContent includePath="getting-started-tunneling" />
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
