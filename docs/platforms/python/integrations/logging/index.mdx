@@ -68,6 +68,35 @@ sentry_sdk.init(
 logging.info("I will be sent to Sentry logs")
 ```
 
+### Working with Extra Fields
+
+When sending log records as Sentry logs, any fields provided in the `extra` dictionary are automatically promoted to top-level attributes on the log entry. This makes them searchable and filterable in the Sentry UI.
+
+```python
+import logging
+import sentry_sdk
+
+sentry_sdk.init(
+    # ...
+    enable_logs=True,
+)
+
+logger = logging.getLogger(__name__)
+
+# Extra fields become top-level searchable attributes
+logger.error(
+    "Payment processing failed", 
+    extra={
+        "user_id": 12345,
+        "transaction_id": "txn_abc123", 
+        "payment_method": "credit_card",
+        "amount": 99.99
+    }
+)
+```
+
+In this example, `user_id`, `transaction_id`, `payment_method`, and `amount` will appear as separate, searchable attributes in the Sentry logs interface, not nested within an `extra` object. You can filter and query logs using these attributes directly, such as `user_id:12345` or `payment_method:credit_card`.
+
 ## Options
 
 To change the default behavior of the logging integration, instantiate the integration manually and pass it to Sentry's `init` function:

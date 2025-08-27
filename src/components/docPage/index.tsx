@@ -82,9 +82,9 @@ export function DocPage({
             <div className="mb-4">
               <Banner />
             </div>
-            <div className="overflow-hidden">
+            <div className="flex items-center">
               {leafNode && <Breadcrumbs leafNode={leafNode} />}{' '}
-              <div className="float-right mt-4 sm:mt-0 hidden sm:block">
+              <div className="ml-auto hidden sm:block">
                 <CopyMarkdownButton pathname={pathname} />
               </div>
             </div>
