@@ -20,11 +20,7 @@ export function LLMSteering({children, title}: LLMSteeringProps) {
   // Render as a div that will convert nicely to markdown
   // Hidden with display: none to prevent visual rendering
   return (
-    <div
-      style={{display: 'none'}}
-      data-llm-steering="true"
-      aria-hidden="true"
-    >
+    <div style={{display: 'none'}} data-llm-steering="true" aria-hidden="true">
       <blockquote>
         <p>
           <strong>🤖 LLM STEERING INSTRUCTIONS{title ? `: ${title}` : ''}</strong>
