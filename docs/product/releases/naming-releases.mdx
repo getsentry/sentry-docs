@@ -1,0 +1,48 @@
+---
+title: Naming Releases
+sidebar_order: 3
+description: "Learn about release naming conventions."
+---
+
+## Creating Releases
+
+Releases are created directly via [automatic release management](/product/releases/setup/release-automation/), the [Sentry CLI](/cli/releases/), or manually via the [Sentry API](/api/releases/create-a-new-release-for-an-organization/).
+
+Releases can also be auto created by different systems. For instance upon uploading a source map, or by some clients when an event that is tagged with a release is ingested. Therefore it's important to set the release name when building and deploying your application. Learn more in our [Releases](/platform-redirect/?next=/configuration/releases/) documentation.
+
+## Release Names
+
+Release IDs, (often called a "version", or "name") are used to uniquely identify a release across the entire Sentry organization. A Release Name may be associated with builds, events, sessions, etc from multiple projects. 
+
+<Alert>
+
+Releases are global per organization; prefix them with something project-specific for easy differentiation.
+
+</Alert>
+
+The value can be arbitrary, but there are a few restrictions. In all cases, the release name cannot:
+- contain newlines, tabulator characters, forward slashes(`/`) or back slashes(`\`)
+- be (in their entirety) period (`.`), double period (`..`), or space ( )
+- exceed 200 characters
+
+While the value can be arbitrary, we do recommend these naming strategies:
+
+### Semantic Versioning
+Use the format `package@version` or `package@version+build` (for example, `my.project.name@2.3.12+1234`)
+- `package` is the unique identifier of the project/app (`CFBundleIdentifier` on iOS, `packageName` on Android)
+- `version` is the semver-like structure `<major>.<minor?>.<patch?>.<revision?>-<prerelease?>` (`CFBundleShortVersionString` on iOS, `versionName` on Android)
+- `build` is the number that identifies an iteration of your app (`CFBundleVersion` on iOS, `versionCode` on Android)
+**Do not** use `VERSION_NUMBER (BUILD_NUMBER)` as the parenthesis are used for display purposes (foo@1.0+2 becomes 1.0 (2)), so invoking them will cause an error.
+
+We automatically detect whether a project is using semantic or time-based versioning based on:
+
+- If ≤ 2 releases total: we look at most recent release.
+- If 3-9 releases (inclusive): if any of the most recent 3 releases is semver, project is semver.
+- If 10 or more releases: if any of the most recent 3 releases is semver, and 3 out of the most recent 10 releases is semver, then the project is semver.
+
+### Commit SHA
+If you use a version control system like Git, we recommend using the identifying hash (for example, the commit SHA, `da39a3ee5e6b4b0d3255bfef95601890afd80709`). You can let Sentry CLI automatically determine this hash for supported version control systems; and pass it in at build time to your codebase so it can be used to tag events.
+
+## Related Features
+
+Regression Detection and `release:latest` sorting strategies will changed depending on whether a project is using semantic or SHA/time-based versioning. 
