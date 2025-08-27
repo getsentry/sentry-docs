@@ -25,14 +25,14 @@ export function makeHighlightBlocks(
     }
 
     const element = child as ReactElement;
-    const classes = element.props.className;
+    const classes = (element.props as any).className;
 
     const isCodeLine = classes && classes.includes('code-line');
     if (!isCodeLine) {
       const updatedChild = cloneElement(
         child as ReactElement,
-        element.props,
-        makeHighlightBlocks((child as ReactElement).props.children, language)
+        element.props as any,
+        makeHighlightBlocks(((child as ReactElement).props as any).children, language)
       );
       arr.push(updatedChild);
       return arr;

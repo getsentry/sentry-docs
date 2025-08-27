@@ -134,7 +134,7 @@ export function Expandable({
     [emit, title]
   );
 
-  function toggleIsExpanded(event: React.MouseEvent<HTMLDetailsElement>) {
+  function toggleIsExpanded(event: React.SyntheticEvent<HTMLDetailsElement>) {
     const newVal = event.currentTarget.open;
     setIsExpanded(newVal);
 

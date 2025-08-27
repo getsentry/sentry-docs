@@ -119,7 +119,7 @@ export function cleanCodeSnippet(rawCodeSnippet: string, options?: CleanCopyOpti
  * @param options - Configuration options for cleaning
  */
 export function useCleanSnippetInClipboard(
-  codeRef: RefObject<HTMLElement>,
+  codeRef: RefObject<HTMLDivElement | null>,
   options: CleanCopyOptions = {}
 ) {
   const {cleanDiffMarkers = true, cleanBashPrompt = true, language = ''} = options;

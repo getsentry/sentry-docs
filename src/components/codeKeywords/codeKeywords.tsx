@@ -19,7 +19,7 @@ export function makeKeywordsClickable(children: React.ReactNode) {
       const updatedChild = cloneElement(
         child as ReactElement,
         {},
-        makeKeywordsClickable((child as ReactElement).props.children)
+        makeKeywordsClickable(((child as ReactElement).props as any).children)
       );
       arr.push(updatedChild);
       return arr;

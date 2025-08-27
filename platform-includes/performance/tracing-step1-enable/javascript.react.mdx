@@ -1,0 +1,42 @@
+Tracing is already enabled if you added performance to your configuration. Verify it's working:
+
+```javascript {filename:instrument.js}
+import * as Sentry from "@sentry/react";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.browserTracingIntegration(),
+  ],
+  // This enables tracing - start with 100% in development
+  tracesSampleRate: 1.0,
+  // ... rest of your config
+});
+```
+
+**For production, reduce the sample rate:**
+
+```javascript
+// Sample 10% of transactions in production
+tracesSampleRate: 0.1,
+```
+
+**Or use tracesSampler for dynamic control:**
+
+```javascript
+// Dynamic sampling based on transaction context
+tracesSampler: (samplingContext) => {
+  // Never sample health check endpoints
+  if (samplingContext.transactionContext.name?.includes('/health')) {
+    return 0;
+  }
+  
+  // Sample API routes at 20%
+  if (samplingContext.transactionContext.name?.startsWith('/api/')) {
+    return 0.2;
+  }
+  
+  // Sample everything else at 10%
+  return 0.1;
+},
+```

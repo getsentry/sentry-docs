@@ -1,0 +1,53 @@
+Track custom metrics within your spans to monitor business KPIs and performance:
+
+```javascript
+// Track business metrics on existing spans
+const span = Sentry.getActiveSpan();
+if (span) {
+  span.setAttributes({
+    // Performance metrics
+    "database.query_time": 127,
+    "cache.hit_rate": 0.85,
+    "memory.heap_used": 1024000,
+    
+    // Business metrics  
+    "revenue.generated": 199.99,
+    "conversion.rate": 0.12,
+    "user.satisfaction_score": 4.8,
+  });
+}
+```
+
+```javascript
+// Create dedicated metric spans for important business operations
+await Sentry.startSpan(
+  {
+    name: "Calculate Recommendation Score",
+    op: "ml.inference",
+    attributes: {
+      "ml.model_version": "v2.1",
+      "user.segments": ["premium", "frequent_buyer"],
+    }
+  },
+  async () => {
+    const startTime = Date.now();
+    const recommendations = await generateRecommendations(userId);
+    const processingTime = Date.now() - startTime;
+    
+    // Add metrics to track ML performance
+    const span = Sentry.getActiveSpan();
+    if (span) {
+      span.setAttributes({
+        "ml.inference_time": processingTime,
+        "ml.recommendations_count": recommendations.length,
+        "ml.confidence_avg": recommendations.reduce((a, b) => a + b.confidence, 0) / recommendations.length,
+        "ml.cache_hit": recommendations.fromCache,
+      });
+    }
+    
+    return recommendations;
+  }
+);
+```
+
+These metrics will be available in Sentry's Performance monitoring, allowing you to create alerts and dashboards around your custom business metrics!
