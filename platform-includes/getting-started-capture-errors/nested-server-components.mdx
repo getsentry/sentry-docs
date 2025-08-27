@@ -1,0 +1,43 @@
+<Alert type="info">
+  Requires `@sentry/nextjs` version `8.28.0` or higher and Next.js 15.
+</Alert>
+
+To capture errors from nested React Server Components, use the [`onRequestError`](https://nextjs.org/docs/app/api-reference/file-conventions/instrumentation#onrequesterror-optional) hook in `instrumentation.(js|ts)` and pass all arguments to the `captureRequestError` function:
+
+```TypeScript {filename:instrumentation.ts}
+import * as Sentry from "@sentry/nextjs";
+
+export const onRequestError = Sentry.captureRequestError;
+```
+
+```JavaScript {filename:instrumentation.js}
+import * as Sentry from "@sentry/nextjs";
+
+export const onRequestError = Sentry.captureRequestError;
+```
+
+<Expandable level="info" title="Need additional logic within `onRequestError`?">
+You can call `captureRequestError` with all arguments passed to `onRequestError`:
+
+```TypeScript {filename:instrumentation.ts}
+import * as Sentry from "@sentry/nextjs";
+import type { Instrumentation } from "next";
+
+export const onRequestError: Instrumentation.onRequestError = (...args) => {
+    Sentry.captureRequestError(...args);
+
+    // ... additional logic here
+};
+```
+
+```JavaScript {filename:instrumentation.js}
+import * as Sentry from "@sentry/nextjs";
+
+export const onRequestError = (...args) => {
+    Sentry.captureRequestError(...args);
+
+    // ... additional logic here
+};
+```
+
+</Expandable>

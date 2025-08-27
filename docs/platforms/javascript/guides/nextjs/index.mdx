@@ -17,21 +17,25 @@ categories:
 
 In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also get to the root of an error or performance issue faster, by watching a video-like reproduction of a user session with [session replay](/product/explore/session-replay/web/getting-started/).
 
-Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+Send <PlatformLink to="/platforms/javascript/guides/nextjs/logs/">structured logs</PlatformLink> to Sentry and correlate them with errors and traces.
+
+Select which Sentry features you'd like to configure to get the corresponding setup instructions below.
 
 <OnboardingOptionButtons
   options={[
-    "error-monitoring",
-    "performance",
-    "session-replay",
-    "user-feedback",
-    "logs",
+    {id: "error-monitoring", checked: true, disabled: true},
+    {id: "performance", checked: true},
+    {id: "session-replay", checked: true},
+    {id: "user-feedback", checked: false},
+    {id: "logs", checked: true},
   ]}
 />
 
-## Step 1: Install
+## Install
 
-To install Sentry using the installation wizard, run the following command within your project:
+Run the command for your preferred path to add Sentry to your application.
+
+### Use the Installation Wizard (Recommended)
 
 ```bash
 npx @sentry/wizard@latest -i nextjs
@@ -40,8 +44,6 @@ npx @sentry/wizard@latest -i nextjs
 The wizard then guides you through the setup process, asking you to enable additional (optional) Sentry features for your application beyond error monitoring.
 
 <PlatformContent includePath="getting-started-features-expandable" />
-
-This guide assumes that you enable all features and allow the wizard to create an example page and route. You can add or remove features at any time, but setting them up now will save you the effort of configuring them manually later.
 
 <Expandable title="What does the installation wizard change inside your application?">
 
@@ -54,9 +56,9 @@ This guide assumes that you enable all features and allow the wizard to create a
 
 </Expandable>
 
-## Step 2: Configure
+## Configure
 
-If you prefer to configure Sentry manually, here are the configuration files the wizard would create:
+If you want to expand on your Sentry configuration by adding additional functionality, or manually instrument your application, here are the configuration files the wizard would create. Initialize Sentry as early as possible.
 
 ### Client-Side Configuration
 
@@ -71,6 +73,9 @@ Sentry.init({
   sendDefaultPii: true,
 
   integrations: [
+    // ___PRODUCT_OPTION_START___ performance
+    Sentry.browserTracingIntegration(),
+    // ___PRODUCT_OPTION_END___ performance
     // ___PRODUCT_OPTION_START___ session-replay
     // Replay may only be enabled for the client-side
     Sentry.replayIntegration(),
@@ -105,10 +110,6 @@ Sentry.init({
   replaysOnErrorSampleRate: 1.0,
   // ___PRODUCT_OPTION_END___ session-replay
 });
-
-// ___PRODUCT_OPTION_START___ performance
-export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
-// ___PRODUCT_OPTION_END___ performance
 ```
 
 ### Server-Side Configuration
@@ -141,9 +142,137 @@ Sentry.init({
 
 For detailed manual setup instructions, see our [manual setup guide](/platforms/javascript/guides/nextjs/manual-setup/).
 
-## Step 3: Verify Your Setup
+## Capture Next.js Errors
 
-<Include name="nextjs-turbopack-warning-expandable.mdx" />
+Make sure runtime errors are surfaced to Sentry using Next.js error components.
+
+### App Router
+
+<PlatformContent includePath="getting-started-capture-errors/app-router-global-error" />
+
+#### Errors from Nested React Server Components
+
+<PlatformContent includePath="getting-started-capture-errors/nested-server-components" />
+
+### Pages Router
+
+<PlatformContent includePath="getting-started-capture-errors/pages-router-error" />
+
+<Alert level="info">
+  The installation wizard will scaffold these files for you if they are missing.
+</Alert>
+
+<OnboardingOption optionId="performance">
+
+<OnboardingOption optionId="logs">
+
+## Sending Logs
+
+[Structured logging](/platforms/javascript/guides/nextjs/logs/) lets users send text-based log information from their applications to Sentry. Once in Sentry, these logs can be viewed alongside relevant errors, searched by text-string, or searched using their individual attributes.
+
+Use Sentry's logger to capture structured logs with meaningful attributes that help you debug issues and understand user behavior.
+
+```javascript
+import * as Sentry from "@sentry/nextjs";
+
+const { logger } = Sentry;
+
+logger.info("User completed checkout", {
+  userId: 123,
+  orderId: "order_456",
+  amount: 99.99,
+});
+
+logger.error("Payment processing failed", {
+  errorCode: "CARD_DECLINED",
+  userId: 123,
+  attemptCount: 3,
+});
+
+logger.warn(logger.fmt`Rate limit exceeded for user: ${123}`);
+```
+
+</OnboardingOption>
+
+<OnboardingOption optionId="session-replay">
+
+## Customizing Replays
+
+[Replays](/product/explore/session-replay/web/getting-started/) allow you to see video-like reproductions of user sessions. 
+
+By default, Session Replay masks sensitive data for privacy and to protect PII data. You can modify the replay configurations in your client-side Sentry initialization to show (unmask) specific content that's safe to display.
+
+```javascript {filename:instrumentation-client.(js|ts)}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.replayIntegration({
+      // This will show the content of the div with the class "reveal-content" and the span with the data-safe-to-show attribute
+      unmask: [".reveal-content", "[data-safe-to-show]"],
+      // This will show all text content in replays. Use with caution.
+      maskAllText: false,
+      // This will show all media content in replays. Use with caution.
+      blockAllMedia: false,
+    }),
+  ],
+  // Only capture replays for 10% of sessions
+  replaysSessionSampleRate: 0.1,
+  // Capture replays for 100% of sessions with an error
+  replaysOnErrorSampleRate: 1.0,
+});
+```
+
+```jsx
+<div className="reveal-content">This content will be visible in replays</div>
+<span data-safe-to-show>Safe user data</span>
+```
+
+</OnboardingOption>
+
+## Custom Traces with Attributes
+
+[Tracing](/platforms/javascript/guides/nextjs/tracing/) allows you to monitor interactions between multiple services or applications. Create custom spans to measure specific operations and add meaningful attributes. This helps you understand performance bottlenecks and debug issues with detailed context.
+
+```javascript
+import * as Sentry from "@sentry/nextjs";
+
+async function processUserData(userId) {
+  return await Sentry.startSpan(
+    {
+      name: "Process User Data",
+      op: "function",
+      attributes: {
+        userId: userId,
+        operation: "data_processing",
+        version: "2.1",
+      },
+    },
+    async () => {
+      const userData = await fetch(`/api/user?id=${userId}`).then((r) => r.json());
+
+      return await Sentry.startSpan(
+        {
+          name: "Transform Data",
+          op: "transform",
+          attributes: { recordCount: userData.length, transformType: "normalize" },
+        },
+        () => transformUserData(userData)
+      );
+    }
+  );
+}
+
+const span = Sentry.getActiveSpan();
+if (span) {
+  span.setAttributes({ cacheHit: true, region: "us-west-2", performanceScore: 0.95 });
+}
+```
+
+</OnboardingOption>
+
+## Verify Your Setup
 
 If you haven't tested your Sentry configuration yet, let's do it now. You can confirm that Sentry is working properly and sending data to your Sentry project by using the example page and route created by the installation wizard:
 
@@ -169,6 +298,8 @@ Now, head over to your project on [Sentry.io](https://sentry.io) to view the col
 
 <PlatformContent includePath="getting-started-verify-locate-data" />
 
+<Include name="nextjs-turbopack-warning-expandable.mdx" />
+
 ## Next Steps
 
 At this point, you should have integrated Sentry into your Next.js application and should already be sending error and performance data to your Sentry project.
@@ -181,6 +312,8 @@ Our next recommended steps for you are:
 - Continue to [customize your configuration](/platforms/javascript/guides/nextjs/configuration/)
 - Get familiar with [Sentry's product features](/product) like tracing, insights, and alerts
 - Learn more about our [Vercel integration](/organization/integrations/deployment/vercel/)
+
+<PlatformContent includePath="getting-started-features-expandable" />
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
