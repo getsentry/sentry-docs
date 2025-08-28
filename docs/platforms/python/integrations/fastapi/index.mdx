@@ -195,25 +195,25 @@ import sentry_sdk
 def process_user_data(user_id):
     with sentry_sdk.start_span(
         op="function",
-        description="Process User Data",
-        data={
-            "user_id": user_id,
-            "operation": "data_processing",
-            "version": "2.1"
-        }
+        description="Process User Data"
     ) as span:
+        # Set data attributes after span creation
+        span.set_data("user_id", user_id)
+        span.set_data("operation", "data_processing")
+        span.set_data("version", "2.1")
+
         # Your business logic here
         user_data = fetch_user_data(user_id)
 
         # Nested span for specific operations
         with sentry_sdk.start_span(
             op="transform",
-            description="Transform Data",
-            data={
-                "record_count": len(user_data),
-                "transform_type": "normalize"
-            }
+            description="Transform Data"
         ) as inner_span:
+            # Set nested span data
+            inner_span.set_data("record_count", len(user_data))
+            inner_span.set_data("transform_type", "normalize")
+
             result = transform_user_data(user_data)
 
         return result
