@@ -31,16 +31,22 @@ We require at least **Docker 19.03.6** and **Docker Compose 2.32.2**. It is reco
 
 These are the minimum requirements:
 - 4 CPU Cores
-- 16 GB RAM
+- 16 GB RAM + 16 GB swap
 - 20 GB Free Disk Space
 
-We also recommend using a swapfile whenever applicable.
+We recommend using 32 GB RAM, but it works with 16 GB RAM + 16 GB swap as well. You will not notice a downside if your 16 GB swap is on a high speed disk.
 
 Depending on your traffic volume, you may want to increase your system specification to handle increased load. Although most of the times, this is not the case for self-hosted Sentry, since no matter how small or big the traffic is, you will most likely hover around the same used resources.
 
 If increasing the disk storage space isn't possible, you can migrate your storage to use external storage such as AWS S3 or Google Cloud Storage (GCS). Decreasing your `SENTRY_RETENTION_DAYS` environment variable to lower numbers will save some storage space from being full, at the cost of having shorter data retention period. See [Event Retention](/self-hosted/configuration#event-retention) section.
 
-There are known issues on installing self-hosted Sentry on RHEL-based Linux distros, such as CentOS, Rocky Linux, and Alma Linux. It is also not possible to install on an Alpine Linux distro. Most people succeed with Debian/Ubuntu-based distros. If you successfully install on another distro, please let us know on the [Sentry's Discord](https://discord.gg/sentry)!
+Below is a breakdown of self-hosted Sentry installation compatibility with various Linux distributions:
+* **Debian/Ubuntu-based** distros are preferred; most users succeed with them, and they're used on Sentry's dogfood instance.
+* **RHEL-based Linux** distributions (e.g., CentOS, Rocky Linux, Alma Linux) have known installation issues. While some users have made it work by disabling SELinux, this is highly discouraged.
+* **Amazon Linux 2023**, a Fedora Linux derivative, has seen one person successfully run self-hosted Sentry. This was achieved with SELinux enabled and by adding their user to the `docker` group.
+* **Alpine Linux** is unsupported due to install script compatibility.
+
+If you successfully install Sentry on a different distribution, please share your experience on the [Sentry's Discord](https://discord.gg/sentry)!
 
 ## Getting Started
 
@@ -130,7 +136,7 @@ By default Sentry sends anonymous usage statistics to the Sentry team. It helps 
   "proxies": {
     "httpProxy": "http://proxy:3128",
     "httpsProxy": "http://proxy:3128",
-    "noProxy": "smtp,memcached,redis,postgres,kafka,clickhouse,snuba-api,symbolicator,web,worker,nginx,relay,vroom,172.17.0.0/16,127.0.0.0/8"
+    "noProxy": "smtp,memcached,redis,postgres,kafka,clickhouse,snuba-api,symbolicator,web,worker,nginx,relay,vroom,taskbroker,172.17.0.0/16,127.0.0.0/8"
   }
 }
 ```

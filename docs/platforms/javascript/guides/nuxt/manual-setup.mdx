@@ -9,13 +9,6 @@ description: "Learn how to manually set up Sentry in your Nuxt app and capture y
   installer](/platforms/javascript/guides/nuxt).
 </Alert>
 
-<Alert level="warning">
-  This SDK is currently in **beta**. Beta features are still in progress and may
-  have bugs. Please reach out on
-  [GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose) if
-  you have any feedback or concerns.
-</Alert>
-
 <PlatformContent includePath="getting-started-prerequisites" />
 
 ## Step 1: Install
@@ -112,7 +105,7 @@ Sentry.init({
   // ___PRODUCT_OPTION_START___ logs
 
   // Enable logs to be sent to Sentry
-  _experiments: { enableLogs: true },
+  enableLogs: true,
   // ___PRODUCT_OPTION_END___ logs
 });
 ```
@@ -136,6 +129,11 @@ This allows you to access the DSN using `useRuntimeConfig().public.sentry.dsn`.
 
 ### Configure Server-side Sentry
 
+<Alert>
+  Are you deploying to Cloudflare? Continue with the [Cloudflare-specific
+  setup](/platforms/javascript/guides/cloudflare/frameworks/nuxt/#setup).
+</Alert>
+
 Add a `sentry.server.config.ts` file to the root of your project and add the following initialization code to it:
 
 ```javascript {filename:sentry.server.config.ts}
@@ -155,7 +153,7 @@ Sentry.init({
   // ___PRODUCT_OPTION_START___ logs
 
   // Enable logs to be sent to Sentry
-  _experiments: { enableLogs: true },
+  enableLogs: true,
   // ___PRODUCT_OPTION_END___ logs
 });
 ```
@@ -303,8 +301,34 @@ Then update the test page by including a new button that executes a function to 
 </template>
 ```
 
-Once you have your test code in place, you need to build your project since Sentry's server-side monitoring doesn't work in development mode.
-Then start your app and make sure to load Sentry on the server side by explicitly adding the Sentry server config in the build output via <PlatformLink to="/install/cli-import">`--import`</PlatformLink>.
+Once you have your test code in place, you can run your Nuxt application in either production or development mode.
+We **recommend testing in production mode** as it most closely resembles your deployed application's environment.
+
+<Alert>
+  By default, the SDK will add the server config as `sentry.server.config.mjs` to the build.
+  To find the exact path to this file, enable `debug` mode in your Sentry configuration within `nuxt.config.ts`.
+  Sentry will then print the exact path during the build process.
+</Alert>
+
+### Run in Production Mode (Recommended)
+
+After building with `nuxi build`, run your project and make sure to load Sentry on the server side by explicitly adding it via `--import` (read more about this flag in [Installation Methods](/platforms/javascript/guides/nuxt/install)).
+
+```
+# Start your app after building your project with `nuxi build`
+node --import ./.output/server/sentry.server.config.mjs .output/server/index.mjs
+```
+
+### Run in Development Mode
+
+The server config file is generated in the `.nuxt` directory the first time you run `nuxt dev`. If you delete your `.nuxt` directory, you'll need to run `nuxt dev` once without the `NODE_OPTIONS` variable to regenerate it.
+
+If you only want to use Sentry on the client-side or only need basic error monitoring on the server side, you can omit the `--import` flag when running your application.
+
+```
+# Run the dev server with the --import flag after running `nuxt dev` once (without the flag)
+NODE_OPTIONS='--import ./.nuxt/dev/sentry.server.config.mjs' nuxt dev
+```
 
 After running your project:
 

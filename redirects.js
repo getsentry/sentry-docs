@@ -752,6 +752,10 @@ const userDocsRedirects = [
     destination: '/platforms/:platform/user-feedback/',
   },
   {
+    source: '/platforms/javascript/guides/remix/frameworks/hydrogen/',
+    destination: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+  },
+  {
     source: '/product/metrics/:path*',
     destination: '/product/explore/metrics/:path*',
   },
@@ -968,11 +972,11 @@ const userDocsRedirects = [
   },
   {
     source: '/product/insights/llm-monitoring/:path*',
-    destination: '/product/insights/ai/:path*',
+    destination: '/product/insights/ai/',
   },
   {
-    source: '/product/insights/ai/:path*',
-    destination: '/product/insights/agents/',
+    source: '/product/insights/agents/:path*',
+    destination: '/product/insights/ai/agents/:path*',
   },
   {
     source: '/product/insights/retention-priorities/',

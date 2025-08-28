@@ -18,6 +18,21 @@ sidebar_order: 1
 
 </SdkOption>
 
+<PlatformCategorySection supported={["server", "serverless"]}>
+  <SdkOption name="orgId" type='`${number}` | number'>
+
+    The organization ID for your Sentry project.
+
+    The SDK will try to extract the organization ID from the DSN. If it cannot be found, or if you need to override it,
+    you can provide the ID with this option. The organization ID is used for trace propagation and features like `strictTraceContinuation`.
+
+    <Alert level="info">
+      The organization ID is used for features like <PlatformLink to="/configuration/options#strictTraceContinuation">strict trace continuation</PlatformLink>.
+    </Alert>
+
+  </SdkOption>
+</PlatformCategorySection>
+
 <SdkOption name="debug" type='boolean' defaultValue='false'>
 
 Turns debug mode on or off. If debug is enabled SDK will attempt to print out useful debugging information about what the SDK is doing.
@@ -379,6 +394,21 @@ If you want to disable trace propagation, you can set this option to `[]`.
 
 </SdkOption>
 
+
+<PlatformCategorySection supported={["server", "serverless"]}>
+  <SdkOption name="strictTraceContinuation" type='boolean' defaultValue='false'>
+
+    If set to `true`, the SDK will only continue a trace if the organization ID of the incoming trace found in the
+    `baggage` header matches the organization ID of the current Sentry client.
+
+    The client's organization ID is extracted from the DSN or can be set with the <PlatformLink to={'/configuration/options#orgId'}>`orgId` option</PlatformLink>.
+
+    If the organization IDs do not match, the SDK will start a new trace instead of continuing the incoming one.
+    This is useful to prevent traces of unknown third-party services from being continued in your application.
+
+  </SdkOption>
+</PlatformCategorySection>
+
 <PlatformCategorySection supported={['browser']}>
 
 <SdkOption name="beforeSendTransaction" type='(event: TransactionEvent, hint: EventHint) => TransactionEvent | null'>
@@ -400,6 +430,16 @@ Please note that the `span` you receive as an argument is a serialized object, n
 <SdkOption name="ignoreTransactions" type='Array<string | RegExp>' defaultValue='[]'>
 
 <Include name="platforms/configuration/options/ignore-transactions.mdx" />
+
+</SdkOption>
+
+<SdkOption name="ignoreSpans" type='Array<string | RegExp | {name?: string | RegExp, op?: string | RegExp}>' defaultValue='[]'>
+
+A list of strings or regex patterns matching span names that shouldn't be sent to Sentry. When using strings, partial matches will be filtered out, so if you need to filter by exact match, use regex patterns instead. You can also provide an object with a `name` and `op` property to match both the span name and the operation name. Note that at least `name` or `op` must be provided.
+
+If a root span matches any of the specified patterns, the entire local trace will be dropped. If a child span matches, its children will be reparented to the dropped span's parent span. 
+
+By default, no spans are ignored.
 
 </SdkOption>
 

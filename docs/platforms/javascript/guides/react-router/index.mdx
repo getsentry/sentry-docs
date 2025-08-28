@@ -118,7 +118,7 @@ Initialize the Sentry React SDK in your `entry.client.tsx` file:
 +  // ___PRODUCT_OPTION_START___ logs
 +
 +  // Enable logs to be sent to Sentry
-+  _experiments: { enableLogs: true },
++  enableLogs: true,
 +  // ___PRODUCT_OPTION_END___ logs
 +  // ___PRODUCT_OPTION_START___ performance
 +
@@ -246,7 +246,7 @@ Sentry.init({
   // ___PRODUCT_OPTION_START___ logs
 
   // Enable logs to be sent to Sentry
-  _experiments: { enableLogs: true },
+  enableLogs: true,
   // ___PRODUCT_OPTION_END___ logs
   // ___PRODUCT_OPTION_START___ profiling
 
@@ -276,17 +276,11 @@ Update your `entry.server.tsx` file:
 +  createReadableStreamFromReadable,
 +});
 
-export default handleRequest;
+ export default handleRequest;
 
-export const handleError: HandleErrorFunction = (error, { request }) => {
-  // React Router may abort some interrupted requests, don't log those
-  if (!request.signal.aborted) {
-+   Sentry.captureException(error);
-    // optionally log the error so you can see it
-    console.error(error);
-  }
-};
-
++export const handleError = Sentry.createSentryHandleError({
++  logErrors: false
++});
 
 // ... rest of your server entry
 ```
@@ -363,6 +357,35 @@ const handleRequest = function handleRequest(
 
 // wrap the default export
 export default wrapSentryHandleRequest(handleRequest);
+
+// ... rest of your entry.server.ts file
+```
+
+</Expandable>
+
+<Expandable title="Do you need to customize your handleError function?">
+  If you have custom logic in your `handleError` function, you'll need to capture errors manually:
+
+```tsx {12}
+import {
+  getMetaTagTransformer,
+  wrapSentryHandleRequest,
+} from "@sentry/react-router";
+// ... other imports
+
+export function handleError(
+  error: unknown,
+  {
+    request,
+    params,
+    context,
+  }: LoaderFunctionArgs | ActionFunctionArgs
+) {
+  if (!request.signal.aborted) {
+    Sentry.captureException(error);
+    console.error(formatErrorForJsonLogging(error));
+  }
+}
 
 // ... rest of your entry.server.ts file
 ```
@@ -446,7 +469,7 @@ export default {
   buildEnd: async ({ viteConfig, reactRouterConfig, buildManifest }) => {
     // ...
     // Call this at the end of the hook
-+   (await sentryOnBuildEnd({ viteConfig, reactRouterConfig, buildManifest }));
+    +(await sentryOnBuildEnd({ viteConfig, reactRouterConfig, buildManifest }));
   },
 } satisfies Config;
 ```

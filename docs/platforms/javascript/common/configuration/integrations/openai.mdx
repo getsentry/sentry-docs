@@ -1,0 +1,143 @@
+---
+title: OpenAI
+description: "Adds instrumentation for OpenAI API."
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.electron
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.react-router
+  - javascript.remix
+  - javascript.astro
+  - javascript.bun
+  - javascript.tanstackstart-react
+  - javascript.cloudflare
+---
+
+<Alert>
+
+This integration works in the Node.js, Cloudflare Workers, Vercel Edge Functions runtimes. It requires SDK version `10.2.0` or higher.
+
+</Alert>
+
+_Import name: `Sentry.openAIIntegration`_
+
+The `openAIIntegration` adds instrumentation for the `openai` API to capture spans by automatically wrapping OpenAI client calls and recording LLM interactions with configurable input/output recording.
+
+<PlatformSection notSupported={["javascript.cloudflare", "javascript.nextjs"]}>
+It is enabled by default and will automatically capture spans for OpenAI API method calls. You can opt-in to capture inputs and outputs by setting `recordInputs` and `recordOutputs` in the integration config:
+
+```javascript
+Sentry.init({
+  dsn: "____PUBLIC_DSN____",
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.openAIIntegration({
+      recordInputs: true,
+      recordOutputs: true,
+    }),
+  ],
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+For Cloudflare Workers, you need to manually instrument the OpenAI client using the `instrumentOpenAiClient` helper:
+
+```javascript
+import * as Sentry from "@sentry/cloudflare";
+import OpenAI from "openai";
+
+const openai = new OpenAI();
+const client = Sentry.instrumentOpenAiClient(openai, {
+  recordInputs: true,
+  recordOutputs: true,
+});
+
+// Use the wrapped client instead of the original openai instance
+const response = await client.chat.completions.create({
+  model: "gpt-4o",
+  messages: [{ role: "user", content: "Hello!" }],
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={['javascript.nextjs']}>
+
+This integration is automatically instrumented in the Node.js runtime. For Next.js applications using the Edge runtime, you need to manually instrument the OpenAI client:
+
+```javascript
+import * as Sentry from "@sentry/nextjs";
+import OpenAI from "openai";
+
+const openai = new OpenAI();
+const client = Sentry.instrumentOpenAiClient(openai, {
+  recordInputs: true,
+  recordOutputs: true,
+});
+
+// Use the wrapped client instead of the original openai instance
+const response = await client.chat.completions.create({
+  model: "gpt-4o",
+  messages: [{ role: "user", content: "Hello!" }],
+});
+```
+
+</PlatformSection>
+
+## Options
+
+### `recordInputs`
+
+_Type: `boolean`_
+
+Records inputs to OpenAI API method calls (such as prompts and messages).
+
+Defaults to `true` if `sendDefaultPii` is `true`.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.openAIIntegration({ recordInputs: true })],
+});
+```
+
+### `recordOutputs`
+
+_Type: `boolean`_
+
+Records outputs from OpenAI API method calls (such as generated text and responses).
+
+Defaults to `true` if `sendDefaultPii` is `true`.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.openAIIntegration({ recordOutputs: true })],
+});
+```
+
+## Configuration
+
+By default this integration adds tracing support to OpenAI API method calls including:
+
+- `chat.completions.create()` - Chat completion requests
+- `responses.create()` - Response API requests
+
+The integration will automatically detect streaming vs non-streaming requests and handle them appropriately.
+
+## Supported Versions
+
+- `openai`: `>=4.0.0 <6`
