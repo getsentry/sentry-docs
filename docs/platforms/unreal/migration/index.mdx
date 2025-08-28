@@ -36,6 +36,39 @@ We have reworked the user feedback feature so now it no longer needs to be assoc
 - Replace `USentrySubsystem::CaptureUserFeedback` function usages with `USentrySubsystem::CaptureFeedback`
 - Replace `USentryLibrary::CreateSentryUserFeedback` function usages with `USentryLibrary::CreateSentryFeedback`
 
+```cpp
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+FString Message = TEXT("Feedback message");
+FString Name = TEXT("John Doe");
+FString Email = TEXT("test@email.com");
+FString EventId = TEXT("c3829f10764848442d813c4124cf44a0");
+
+// Submitting user feedback before v1.0.0
+
+USentryUserFeedback* Feedback = NewObject<USentryUserFeedback>();
+
+Feedback->Initialize(EventId);
+
+Feedback->SetName(Name);        // optional
+Feedback->SetEmail(Email);      // optional
+Feedback->SetComment(Message);  // optional
+
+SentrySubsystem->CaptureUserFeedback(Feedback);
+
+// Submitting user feedback in v1.0.0
+
+USentryFeedback* Feedback = NewObject<USentryFeedback>();
+
+Feedback->Initialize(Message);
+
+Feedback->SetName(Name);                // optional
+Feedback->SetContactEmail(Email);       // optional
+Feedback->SetAssociatedEvent(Feedback); // optional
+
+SentrySubsystem->CaptureFeedback(Feedback);
+```
+
 #### Tracing
 
 The `USentrySubsystem::StartTransactionWithContextAndOptions` function now takes an `FSentryTransactionOptions` struct instead of a `TMap<FString, FString>`, improving clarity and allowing better extensibility in the future.
@@ -54,6 +87,7 @@ With the removal of `USentrySubsystem::ConfigureScope` global scope values (tags
 USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
 
 // Configuring global scope before v1.0.0
+
 SentrySubsystem->ConfigureScope(FConfigureScopeNativeDelegate::CreateLambda([](USentryScope* Scope)
 {
     Scope->SetTag(...);
@@ -62,6 +96,7 @@ SentrySubsystem->ConfigureScope(FConfigureScopeNativeDelegate::CreateLambda([](U
 }));
 
 // Configuring global scope in v1.0.0
+
 SentrySubsystem->SetTag(...);
 SentrySubsystem->SetContext(...);
 SentrySubsystem->AddAttachment(...);
