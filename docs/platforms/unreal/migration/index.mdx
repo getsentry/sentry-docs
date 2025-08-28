@@ -50,6 +50,23 @@ On Windows and Linux, `ToString` function of `SentryId` class now returns the sa
 
 With the removal of `USentrySubsystem::ConfigureScope` global scope values (tags, context, attachments, etc.) should now be configured directly via the subsystem interface.
 
+```cpp
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+// Configuring global scope before v1.0.0
+SentrySubsystem->ConfigureScope(FConfigureScopeNativeDelegate::CreateLambda([](USentryScope* Scope)
+{
+    Scope->SetTag(...);
+    Scope->SetContext(...);
+    Scope->AddAttachment(...);
+}));
+
+// Configuring global scope in v1.0.0
+SentrySubsystem->SetTag(...);
+SentrySubsystem->SetContext(...);
+SentrySubsystem->AddAttachment(...);
+```
+
 ### Issue Grouping
 
 The Unreal SDK no longer modifies call stacks for assertion events by trimming the topmost frames related to the engine's internal assertion handling logic. This was previously done to work around the case where all assertions were grouped into a single Sentry issue. With this change, issue grouping is now fully handled by the Sentry server.
