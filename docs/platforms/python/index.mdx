@@ -56,7 +56,7 @@ sentry_sdk.init(
     
     # ___PRODUCT_OPTION_START___ logs
     # Enable logs to be sent to Sentry
-    _experiments={"enable_logs": True},
+    enable_logs=True,
     # ___PRODUCT_OPTION_END___ logs
     
     # ___PRODUCT_OPTION_START___ performance
@@ -70,7 +70,7 @@ sentry_sdk.init(
 )
 ```
 
-## Step 3: Capture Python Errors
+## Capture Python Errors
 
 The Sentry SDK automatically captures unhandled exceptions. You can also manually capture errors and add context:
 
@@ -126,50 +126,36 @@ sentry_sdk.set_context("character", {
 
 <OnboardingOption optionId="logs">
 
-## Step 4: Sending Logs
+## Sending Logs
 
 Now let's add structured logging to capture application insights. Logs are enabled in your configuration above.
 
 Use Python's logging module to capture structured logs with meaningful attributes that help you debug issues and understand user behavior.
 
 ```python
-import logging
+from sentry_sdk import logger as sentry_logger
 
-# Configure Python logging
-logger = logging.getLogger(__name__)
+sentry_logger.trace('Starting database connection {database}', database="users")
+sentry_logger.debug('Cache miss for user {user_id}', user_id=123)
+sentry_logger.info('Updated global cache')
+sentry_logger.warning('Rate limit reached for endpoint {endpoint}', endpoint='/api/results/')
+sentry_logger.error('Failed to process payment. Order: {order_id}. Amount: {amount}', order_id="or_2342", amount=99.99)
+sentry_logger.fatal('Database {database} connection pool exhausted', database="users")
 
-# Send structured logs with attributes
-logger.info(
-    "User completed checkout",
-    extra={
-        "user_id": 123,
-        "order_id": "order_456",
-        "amount": 99.99
-    }
-)
-
-logger.error(
-    "Payment processing failed",
-    extra={
-        "error_code": "CARD_DECLINED",
-        "user_id": 123,
-        "attempt_count": 3
-    }
-)
 
 # Log with exception information
 try:
     process_payment()
 except PaymentError as e:
-    logger.exception(
+    sentry_logger.error(
         "Payment failed with exception",
-        extra={"transaction_id": "txn_789"}
+        attributes={"transaction_id": "txn_789"}
     )
 ```
 
 </OnboardingOption>
 
-## Step 5: Custom Traces with Attributes
+## Custom Traces with Attributes
 
 Create custom spans to measure specific operations and add meaningful attributes. This helps you understand performance bottlenecks and debug issues with detailed context.
 
