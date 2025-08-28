@@ -75,6 +75,30 @@ The `USentrySubsystem::StartTransactionWithContextAndOptions` function now takes
 
 Also, the `USentrySamplingContext` class now utilizes `FSentryVariant` instead of strings for custom sampling context values.
 
+```cpp
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+// Starting transaction with context and options before v1.0.0
+
+USentryTransactionContext* TransactionContext = ...
+
+TMap<FString, FString> Options;
+Options.Add("key1", "value1");
+Options.Add("key2", "value2");
+
+SentrySubsystem->StartTransactionWithContextAndOptions(TransactionContext, Options);
+
+// Starting transaction with context and options in v1.0.0
+
+USentryTransactionContext* TransactionContext = ...
+
+FSentryTransactionOptions Options;
+Options.CustomSamplingContext.Add("key1", FSentryVariant("value1"));
+Options.CustomSamplingContext.Add("key2", FSentryVariant("value2"));
+
+SentrySubsystem->StartTransactionWithContextAndOptions(TransactionContext, Options);
+```
+
 #### Event ID format (Windows/Linux)
 
 On Windows and Linux, `ToString` function of `SentryId` class now returns the sanitized string that doesn't contain dashes.
