@@ -1,6 +1,6 @@
 ---
 title: Python
-description: Sentry's Python SDK enables automatic reporting of errors and performance data in your application.
+description: Learn how to set up and configure Sentry in your Python application, capture your first errors, and view them in Sentry.
 caseStyle: snake_case
 supportLevel: production
 sdk: sentry.python
@@ -10,21 +10,24 @@ categories:
   - serverless
 ---
 
-## Prerequisites
+<PlatformContent includePath="llm-steering" />
 
-- You need a Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
-- Read one of our dedicated guides if you use any of the <PlatformLink to="/integrations/#web-frameworks">frameworks</PlatformLink> we support
+<PlatformContent includePath="getting-started-prerequisites" />
 
 ## Features
 
-<p className="mb-5">
-  Select which Sentry features you'd like to install in addition to Error
-  Monitoring to get the corresponding installation and configuration
-  instructions below.
-</p>
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). 
+
+Send <PlatformLink to="/platforms/python/logs/">structured logs</PlatformLink> to Sentry and correlate them with errors and traces.
+
+Select which Sentry features you'd like to configure to get the corresponding setup instructions below.
 
 <OnboardingOptionButtons
-  options={["error-monitoring", "performance", "profiling", "logs"]}
+  options={[
+    {id: "error-monitoring", checked: true, disabled: true},
+    {id: "performance", checked: true},
+    {id: "logs", checked: true},
+  ]}
 />
 
 ## Install
@@ -35,75 +38,216 @@ Install the Sentry SDK using [`pip`](https://pip.pypa.io/en/stable/):
 pip install "sentry-sdk"
 ```
 
-```bash {tabTitle:uv}
-uv add "sentry-sdk"
-```
-
 ## Configure
 
 Configuration should happen as **early as possible** in your application's lifecycle.
 
-```python
+
+
+```python {filename:main.py}
 import sentry_sdk
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    # Add request headers and IP for users,
-    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    
+    # Adds request headers and IP for users, for more info visit:
+    # https://docs.sentry.io/platforms/python/data-management/data-collected/
     send_default_pii=True,
-    # ___PRODUCT_OPTION_START___ performance
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for tracing.
-    traces_sample_rate=1.0,
-    # ___PRODUCT_OPTION_END___ performance
-    # ___PRODUCT_OPTION_START___ profiling
-    # To collect profiles for all profile sessions,
-    # set `profile_session_sample_rate` to 1.0.
-    profile_session_sample_rate=1.0,
-    # Profiles will be automatically collected while
-    # there is an active span.
-    profile_lifecycle="trace",
-    # ___PRODUCT_OPTION_END___ profiling
+    
     # ___PRODUCT_OPTION_START___ logs
-
     # Enable logs to be sent to Sentry
     enable_logs=True,
     # ___PRODUCT_OPTION_END___ logs
+    
+    # ___PRODUCT_OPTION_START___ performance
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    # We recommend adjusting this value in production
+    # Learn more at
+    # https://docs.sentry.io/platforms/python/configuration/options/#traces-sample-rate
+    traces_sample_rate=1.0,
+    # ___PRODUCT_OPTION_END___ performance
 )
 ```
 
-However, in async applications, you need to call `sentry_sdk.init()` inside an `async` function to ensure async code is instrumented properly. We recommend calling `sentry_sdk.init()` at the beginning of the first `async` function you call, as demonstrated in the example below.
+## Capture Python Errors
+
+The Sentry SDK automatically captures unhandled exceptions. You can also manually capture errors and add context:
+
+### Automatic Error Capture
 
 ```python
-import asyncio
-import sentry_sdk
-
-async def main():
-    sentry_sdk.init(
-        ...  # same as above
-    )
-
-asyncio.run(main())
-```
-
-## Verify
-
-Add this intentional error to your application to test that everything is working right away.
-
-```py
+# This will be automatically captured by Sentry
 division_by_zero = 1 / 0
 ```
 
+### Manual Error Capture
+
+```python
+import sentry_sdk
+
+try:
+    risky_operation()
+except Exception as e:
+    # Capture the exception with additional context
+    sentry_sdk.capture_exception(e)
+```
+
 <Alert>
 
-Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+Learn more about manually capturing errors in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
 
 </Alert>
 
-To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+### Adding User Context
 
-<Alert>
+```python
+import sentry_sdk
 
-Not seeing your error in Sentry? Make sure you're running the above example from a file and not from a Python shell like IPython.
+# Set user context for all future events
+sentry_sdk.set_user({
+    "id": "123",
+    "username": "jane.doe",
+    "email": "jane.doe@example.com"
+})
 
-</Alert>
+# Add custom tags
+sentry_sdk.set_tag("page_locale", "en-us")
+
+# Add custom context
+sentry_sdk.set_context("character", {
+    "name": "Mighty Fighter",
+    "age": 19,
+    "attack_type": "melee"
+})
+```
+
+<OnboardingOption optionId="performance">
+
+<OnboardingOption optionId="logs">
+
+## Sending Logs
+
+Now let's add structured logging to capture application insights. Logs are enabled in your configuration above.
+
+Use Python's logging module to capture structured logs with meaningful attributes that help you debug issues and understand user behavior.
+
+```python
+from sentry_sdk import logger as sentry_logger
+
+sentry_logger.trace('Starting database connection {database}', database="users")
+sentry_logger.debug('Cache miss for user {user_id}', user_id=123)
+sentry_logger.info('Updated global cache')
+sentry_logger.warning('Rate limit reached for endpoint {endpoint}', endpoint='/api/results/')
+sentry_logger.error('Failed to process payment. Order: {order_id}. Amount: {amount}', order_id="or_2342", amount=99.99)
+sentry_logger.fatal('Database {database} connection pool exhausted', database="users")
+
+
+# Log with exception information
+try:
+    process_payment()
+except PaymentError as e:
+    sentry_logger.error(
+        "Payment failed with exception",
+        attributes={"transaction_id": "txn_789"}
+    )
+```
+
+</OnboardingOption>
+
+## Custom Traces with Attributes
+
+Create custom spans to measure specific operations and add meaningful attributes. This helps you understand performance bottlenecks and debug issues with detailed context.
+
+```python
+import sentry_sdk
+
+# Create custom spans to measure specific operations
+def process_user_data(user_id):
+    with sentry_sdk.start_span(
+        op="function",
+        description="Process User Data"
+    ) as span:
+        # Set data attributes after span creation
+        span.set_data("user_id", user_id)
+        span.set_data("operation", "data_processing")
+        span.set_data("version", "2.1")
+
+        # Your business logic here
+        user_data = fetch_user_data(user_id)
+
+        # Nested span for specific operations
+        with sentry_sdk.start_span(
+            op="transform",
+            description="Transform Data"
+        ) as inner_span:
+            # Set nested span data
+            inner_span.set_data("record_count", len(user_data))
+            inner_span.set_data("transform_type", "normalize")
+
+            result = transform_user_data(user_data)
+
+        return result
+
+  # Add attributes to existing spans
+span = sentry_sdk.get_current_span()
+if span:
+    span.set_data("cache_hit", True)
+    span.set_data("region", "us-west-2")
+    span.set_data("performance_score", 0.95)
+```
+
+</OnboardingOption>
+
+## Verify Your Setup
+
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+### Test Error Capturing
+
+Add the following test code to one of your Python files to trigger an error that Sentry will capture:
+
+```python
+def trigger_error():
+    # ___PRODUCT_OPTION_START___ logs
+    division_by_zero = 1 / 0
+    # ___PRODUCT_OPTION_END___ logs
+
+# Call this function to test
+trigger_error()
+```
+
+Run your application and trigger the error to send it to Sentry.
+
+
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
+
+<PlatformContent includePath="getting-started-verify-locate-data" />
+
+## Next Steps
+
+At this point, you should have integrated Sentry into your Python application and should already be sending error and performance data to your Sentry project.
+
+Now's a good time to customize your setup and look into more advanced topics:
+
+- Extend Sentry to your frontend using one of our [JavaScript SDKs](/)
+- Continue to <PlatformLink to="/configuration">customize your configuration</PlatformLink>
+- Learn about [instrumenting your specific framework](/platforms/python/integrations/)
+- Learn how to <PlatformLink to="/usage">manually capture errors</PlatformLink>
+- Set up <PlatformLink to="/configuration/releases/">release tracking</PlatformLink>
+
+<PlatformContent includePath="getting-started-features-expandable" />
+
+<PlatformContent includePath="getting-started-tunneling" />
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Check our [troubleshooting guide](/platforms/python/troubleshooting/)
+- Search for your issue in our [GitHub issues](https://github.com/getsentry/sentry-python/issues)
+- [Get support](https://sentry.zendesk.com/hc/en-us/)
+
+</Expandable>
