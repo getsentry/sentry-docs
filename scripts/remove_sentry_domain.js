@@ -86,7 +86,6 @@ function isInCommentBlock(lines, currentIndex) {
 function processMdxFile(filePath, dryRun = false) {
     try {
         const content = fs.readFileSync(filePath, 'utf8');
-        const originalContent = content;
         const lines = content.split('\n');
         const modifiedLines = [];
         let replacements = 0;
@@ -117,10 +116,11 @@ function processMdxFile(filePath, dryRun = false) {
             // Reset regex state for each line
             urlPattern.lastIndex = 0;
 
-            while ((match = urlPattern.exec(line)) !== null) {
+            match = urlPattern.exec(line);
+            while (match !== null) {
                 const fullUrl = match[0];
-                const path = match[1];
-                const newUrl = path;
+                const urlPath = match[1];
+                const newUrl = urlPath;
 
                 // Replace the URL
                 newLine = newLine.replace(fullUrl, newUrl);
@@ -129,6 +129,8 @@ function processMdxFile(filePath, dryRun = false) {
                 if (dryRun) {
                     console.log(`  Would replace: ${fullUrl} -> ${newUrl}`);
                 }
+                
+                match = urlPattern.exec(line);
             }
 
             modifiedLines.push(newLine);
@@ -168,25 +170,25 @@ function processMdxFile(filePath, dryRun = false) {
 function findMdxFiles(folders) {
     const mdxFiles = [];
 
+    function walkDir(dir) {
+        const files = fs.readdirSync(dir);
+        
+        for (const file of files) {
+            const filePath = path.join(dir, file);
+            const stat = fs.statSync(filePath);
+            
+            if (stat.isDirectory()) {
+                walkDir(filePath);
+            } else if (file.endsWith('.mdx')) {
+                mdxFiles.push(filePath);
+            }
+        }
+    }
+
     for (const folder of folders) {
         if (!fs.existsSync(folder)) {
             console.log(`Warning: Folder ${folder} does not exist`);
             continue;
-        }
-
-        function walkDir(dir) {
-            const files = fs.readdirSync(dir);
-            
-            for (const file of files) {
-                const filePath = path.join(dir, file);
-                const stat = fs.statSync(filePath);
-                
-                if (stat.isDirectory()) {
-                    walkDir(filePath);
-                } else if (file.endsWith('.mdx')) {
-                    mdxFiles.push(filePath);
-                }
-            }
         }
 
         walkDir(folder);
