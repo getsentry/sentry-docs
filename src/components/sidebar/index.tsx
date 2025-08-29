@@ -81,7 +81,7 @@ export async function Sidebar({path, versions}: SidebarProps) {
       });
 
   return (
-    <aside className={`${styles.sidebar} py-3`}>
+    <aside className={`${styles.sidebar} py-3`} data-layout-anchor="left">
       <input type="checkbox" id={sidebarToggleId} className="hidden" />
       <style>{':root { --sidebar-width: 300px; }'}</style>
       <div className="md:flex flex-col items-stretch overflow-auto">
