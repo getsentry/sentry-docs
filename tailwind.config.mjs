@@ -58,7 +58,7 @@ export default {
       },
       screens: {
         'lg-xl': {min: '1130px'},
-        toc: '1400px',
+        toc: '1490px',
       },
     },
   },
