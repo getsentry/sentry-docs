@@ -46,7 +46,7 @@ These breadcrumbs are synced with the replay player and will auto-scroll as the 
 
 - **Trace:** A view that connects all the [trace(s)](/product/sentry-basics/tracing/distributed-tracing/#traces-transactions-and-spans) that happened during the replay.
 
-## SDKs Supported
+## Supported SDKs
 
 Session Replay for mobile is currently available for Android and iOS on both native SDKs, as well as for React Native and Flutter.
 
@@ -56,6 +56,56 @@ We recommend updating to the latest version, but the minimum versions supported 
 - [Android](/platforms/android/session-replay/), [7.20.0](https://github.com/getsentry/sentry-java/releases)
 - [React Native](/platforms/react-native/session-replay/), [6.5.0](https://github.com/getsentry/sentry-react-native/releases)
 - [Flutter](/platforms/dart/guides/flutter/session-replay/), [8.12.0](https://github.com/getsentry/sentry-dart/releases)
+
+<Include name="session-replay-for-backend-errors.mdx" />
+
+Make sure you've set up [trace propagation](/product/sentry-basics/concepts/tracing/#trace-propagation) in your backend projects. For example:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.tracePropagationTargets = ["MyAppDomain.com"]
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.tracePropagationTargets = @[@"MyAppDomain.com"]
+}];
+```
+
+```java {tabTitle:Java}
+SentryAndroid.init(context, options -> {
+    final ArrayList<String> tracePropagationTargets = new ArrayList<>();
+    tracePropagationTargets.add("https://api.myproject.org/");
+
+    options.setDsn("___PUBLIC_DSN___");
+    options.setTracePropagationTargets(tracePropagationTargets);
+});
+```
+
+```kotlin {tabTitle:Kotlin}
+SentryAndroid.init(context, { options ->
+    options.setDsn("___PUBLIC_DSN___")
+    options.setTracePropagationTargets(listOf(
+        "https://api.myproject.org/"
+    ))
+})
+```
+
+```javascript {tabTitle:JavaScript}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___";
+  tracePropagationTargets: ["https://myproject.org", /^\/api\//],
+});
+```
+
+<Include name="session-replay-for-backend-support.mdx" />
 
 ## Frequently Asked Questions
 
