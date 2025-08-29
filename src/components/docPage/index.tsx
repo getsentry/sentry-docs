@@ -126,11 +126,11 @@ export function DocPage({
           </aside>
         )}
       </section>
-      <style>{`:root { --doc-content-w: 100ch; } #doc-content { max-width: var(--doc-content-w); }`}</style>
+      <style>{`:root { --doc-content-w: 1200px; } #doc-content { max-width: var(--doc-content-w); }`}</style>
       <style>{`
         @media (min-width: 2057px) {
           :root {
-            --doc-content-w: 100ch;
+            --doc-content-w: 1200px;
             --toc-w: 250px;
             --gap: 24px;
           }
