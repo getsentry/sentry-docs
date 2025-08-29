@@ -12,21 +12,26 @@ import styles from './style.module.scss';
 import {VersionBanner} from '../versionBanner';
 
 function sortVersions(versions: string[]) {
-  return versions
-    .sort((a, b) => {
-      const aSegments = parseInt(a.split('.')[0], 10);
-      const bSegments = parseInt(b.split('.')[0], 10);
+  return versions.sort((a, b) => {
+    const aMajor = parseInt(a.split('.')[0], 10);
+    const bMajor = parseInt(b.split('.')[0], 10);
 
-      if (isNaN(aSegments) || isNaN(bSegments)) {
-        return a.localeCompare(b);
-      }
+    if (isNaN(aMajor) || isNaN(bMajor)) {
+      return a.localeCompare(b);
+    }
 
-      if (aSegments < bSegments) {
-        return -1;
-      }
+    if (aMajor < bMajor) {
       return 1;
-    })
-    .reverse();
+    }
+
+    if (aMajor === bMajor) {
+      // yes, this is flawed. But for now there's no case where we need to order
+      // by minor or patch so I wanna avoid pulling in semver as a dependency
+      return a.localeCompare(b);
+    }
+
+    return -1;
+  });
 }
 
 export function VersionSelector({versions, sdk}: {sdk: string; versions: string[]}) {
