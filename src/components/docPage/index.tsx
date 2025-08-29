@@ -113,7 +113,6 @@ export function DocPage({
               {hasGithub && <GitHubCTA />}
             </div>
           </div>
-
         </main>
         {hasToc && (
           <aside
@@ -157,7 +156,7 @@ export function DocPage({
           }
         }
       `}</style>
-      
+
       <Mermaid />
       <ReaderDepthTracker />
     </div>
