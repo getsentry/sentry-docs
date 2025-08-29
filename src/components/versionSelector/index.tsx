@@ -11,8 +11,26 @@ import styles from './style.module.scss';
 
 import {VersionBanner} from '../versionBanner';
 
+function sortVersions(versions: string[]) {
+  return versions
+    .sort((a, b) => {
+      const aSegments = parseInt(a.split('.')[0], 10);
+      const bSegments = parseInt(b.split('.')[0], 10);
+
+      if (isNaN(aSegments) || isNaN(bSegments)) {
+        return a.localeCompare(b);
+      }
+
+      if (aSegments < bSegments) {
+        return -1;
+      }
+      return 1;
+    })
+    .reverse();
+}
+
 export function VersionSelector({versions, sdk}: {sdk: string; versions: string[]}) {
-  const availableVersions = ['latest', ...versions];
+  const availableVersions = ['latest', ...sortVersions(versions)];
   const router = useRouter();
   const pathname = usePathname();
 
