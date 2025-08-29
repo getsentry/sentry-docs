@@ -6,6 +6,7 @@ import {CliChecksumTable} from './components/cliChecksumTable';
 import {CodeBlock} from './components/codeBlock';
 import {CodeTabs} from './components/codeTabs';
 import {CommunitySupportedPlatforms} from './components/communitySupportedPlatforms';
+import {ContentSeparator} from './components/contentSeparator';
 import {ConfigKey} from './components/configKey';
 import {ConfigValue} from './components/configValue';
 import {CreateGitHubAppForm} from './components/createGitHubAppForm';
@@ -58,6 +59,7 @@ export function mdxComponents(
     Card,
     CliChecksumTable,
     CommunitySupportedPlatforms,
+    ContentSeparator,
     DevDocsCardGrid,
     PlatformFilter,
     CodeBlock,
