@@ -1681,6 +1681,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/cli/releases/',
   },
   {
+    from: '/cli/metrics/',
+    to: '/cli/send-event/',
+  },
+  {
     from: '/workflow/alerts-notifications/',
     to: '/product/alerts/',
   },
@@ -3323,8 +3327,28 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/explore/session-replay/',
   },
   {
-    from: '/product/explore/session-replay/replay-page-and-filters/',
-    to: '/product/explore/session-replay/web/replay-page-and-filters/',
+    from: '/product/explore/session-replay/web/getting-started/',
+    to: '/product/explore/session-replay/web/',
+  },
+  {
+    from: '/product/explore/session-replay/web/replay-page-and-filters/',
+    to: '/product/explore/session-replay/replay-page-and-filters/',
+  },
+  {
+    from: '/product/explore/session-replay/web/replay-details/',
+    to: '/product/explore/session-replay/replay-details/',
+  },
+  {
+    from: '/product/explore/session-replay/hydration-errors/',
+    to: '/product/issues/issue-details/replay-issues/hydration-error/',
+  },
+  {
+    from: '/product/explore/session-replay/rage-dead-clicks/',
+    to: '/product/issues/issue-details/replay-issues/rage-clicks/',
+  },
+  {
+    from: '/product/explore/session-replay/privacy/',
+    to: '/security-legal-pii/scrubbing/protecting-user-privacy/',
   },
   {
     from: '/product/teams/roles/',
