@@ -35,7 +35,7 @@ function sortVersions(versions: string[]) {
 }
 
 export function VersionSelector({versions, sdk}: {sdk: string; versions: string[]}) {
-  const availableVersions = ['latest', ...sortVersions(versions)];
+  const availableVersions = ['latest', ...sortVersions([...versions])];
   const router = useRouter();
   const pathname = usePathname();
 
