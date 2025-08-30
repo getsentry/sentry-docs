@@ -1,19 +1,35 @@
 ---
 title: Wasm
 sdk: sentry.javascript.wasm
-description: "Learn how to use Sentry's Wasm integration and how it automatically reports errors and exceptions in your Wasm module."
+description: "Learn how to manually set up Sentry in your JavaScript application with WebAssembly modules and capture your first errors."
 keywords: ["wasm", "webassembly"]
 categories:
   - javascript
   - browser
 ---
 
-Sentry's Wasm integration enhances the Browser SDK, and allows it to provide more detailed debug information not only for the error itself, but also for the entire module it was executed from. It includes things like Debug IDs, Debug Files, Code IDs, Code Files and memory addresses.
+<Alert title="Are you using a JavaScript framework?">
+  This guide focuses on configuring Sentry for WebAssembly modules. If your
+  application uses a specific framework, start by following that framework's
+  guide to set up the SDK. Then return here to add the WebAssembly-specific
+  configuration.
+</Alert>
 
-## Install
+<PlatformContent includePath="getting-started-prerequisites" />
 
-Install `@sentry/browser` and `@sentry/wasm` using your package manager:
+## Step 1: Install
 
+Choose the features you want to configure, and this guide will show you how:
+
+<OnboardingOptionButtons
+  options={["error-monitoring", "performance", "logs"]}
+/>
+
+<PlatformContent includePath="getting-started-features-expandable" />
+
+### Install the Sentry SDK
+
+Run the command for your preferred package manager to add the Sentry SDK to your application:
 
 ```bash {tabTitle:npm}
 npm install @sentry/browser @sentry/wasm --save
@@ -27,8 +43,9 @@ yarn add @sentry/browser @sentry/wasm
 pnpm add @sentry/browser @sentry/wasm
 ```
 
-## Configure
+## Step 2: Configure
 
+To use the SDK, initialize it in your application's entry point before loading your WebAssembly modules. Sentry's Wasm integration enhances the Browser SDK and allows it to provide more detailed debug information for WebAssembly modules, including Debug IDs, Debug Files, Code IDs, Code Files and memory addresses.
 
 ```javascript
 import * as Sentry from "@sentry/browser";
@@ -36,57 +53,155 @@ import { wasmIntegration } from "@sentry/wasm";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  
+
   // Adds request headers and IP for users, for more info visit:
   // https://docs.sentry.io/platforms/javascript/guides/wasm/configuration/options/#sendDefaultPii
   sendDefaultPii: true,
 
   integrations: [
-    wasmIntegration()
+    // ___PRODUCT_OPTION_START___ performance
+    Sentry.browserTracingIntegration(),
+    // ___PRODUCT_OPTION_END___ performance
+    wasmIntegration(),
   ],
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for tracing.
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/guides/wasm/configuration/options/#tracesSampleRate
+  tracesSampleRate: 1.0,
+
+  // Set `tracePropagationTargets` to control for which URLs trace propagation should be enabled
+  tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ logs
+
+  // Enable logs to be sent to Sentry
+  enableLogs: true,
+  // ___PRODUCT_OPTION_END___ logs
 });
 ```
 
-## Verify
+## Step 3: Verify Your Setup
 
-Now, whenever any code from WebAssembly module will throw an error, it'll get captured, and it'll contain all the necessary information.
+Let's test your setup and confirm that Sentry is working correctly and sending data from your WebAssembly modules to your Sentry project.
 
-```javascript
-function executeInternalWasmStuff() {
-  throw new Error("whoops");
-}
+### Issues
 
-const { instance } = await WebAssembly.instantiateStreaming(
-  fetch("very-complex-module.wasm"), {
-    env: {
-      external_func: executeInternalWasmStuff,
-    }
-  }
-);
+To verify that Sentry captures errors from WebAssembly modules and creates issues in your Sentry project, add a function to your WebAssembly module that you can then call to cause an error (for example, division by zero).
 
-instance.exports.internal_func();
-```
-
-If you are curious how Wasm modules look from the inside, here's a quick example written in Rust:
+Here's what this could look like in Rust:
 
 ```rust
-#![no_std]
-
-#[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
-    loop {}
-}
-
-extern "C" {
-    pub fn external_func();
-}
-
 #[no_mangle]
-pub fn internal_func() {
-    unsafe {
-        external_func();
-    }
+pub extern "C" fn divide(a: i32, b: i32) -> i32 {
+    // This will cause a division by zero trap when b is 0
+    a / b
 }
 ```
 
-For more details on how to compile Rust to Wasm, see [Compiling from Rust to WebAssembly](https://developer.mozilla.org/en-US/docs/WebAssembly/Rust_to_wasm) MDN documentation.
+Then add a button to one of your app pages that, when pressed, calls the WebAssembly function to throw an error. Here's a simple HTML button:
+
+```html
+<button type="button" onclick="testWasmError()">
+  Trigger WebAssembly error
+</button>
+```
+
+Here's the JavaScript that calls the WebAssembly function. Make sure that you adjust it for your JavaScript framework. Note that, depending on how you compile modules, you can either call the function directly or access it through the WebAssembly API.
+
+```javascript
+function testWasmError() {
+  try {
+    // Assuming you already have your WebAssembly module loaded as 'wasmModule'
+    // Replace this with your actual WebAssembly module instance
+
+    // depening on how your module is compiled, call function directly
+    const result = wasmModule.divide(10, 0);
+    // or via WebAssembly API
+    //const result = wasmModule.instance.exports.divide(10, 0);
+  } catch (e) {
+    Sentry.captureException(e);
+  }
+}
+```
+
+<OnboardingOption optionId="performance" hideForThisOption>
+  Open your app in the browser and click the button you just created to trigger
+  an error in your WebAssembly module.
+</OnboardingOption>
+
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
+
+<OnboardingOption optionId="performance">
+### Tracing
+
+To test your tracing configuration, add a function to your WebAssembly module that does some calculations. Here's what it could look like in Rust:
+
+```rust
+#[no_mangle]
+pub extern "C" fn compute_intensive_function(iterations: i32) -> i32 {
+    // Add some computation to make tracing more visible
+    let mut sum = 0;
+    for i in 0..iterations * 1000 {
+        sum += i;
+    }
+    sum
+}
+```
+
+Next, add a new button to your app:
+
+```html
+<button type="button" onclick="testWasmTracing()">
+  Test WebAssembly with tracing
+</button>
+```
+
+Finally, create the JavaScript function that wraps your WebAssembly function calls in a Sentry span to measure the execution time. Again, make sure to adapt the code to fit your setup:
+
+```javascript
+function testWasmTracing() {
+  Sentry.startSpan({ op: "test", name: "Example Span" }, () => {
+    try {
+      // Assuming you already have your WebAssembly module loaded as 'wasmModule'
+      // Replace this with your actual WebAssembly module instance
+
+      // depening on how your module is compiled, call function directly
+      const result = wasmModule.compute_intensive_function(1000);
+      // or via WebAssembly API
+      // const result = wasmModule.instance.exports.compute_intensive_function(1000);
+      console.log("Result:", result);
+    } catch (e) {
+      Sentry.captureException(e);
+    }
+  });
+}
+```
+
+</OnboardingOption>
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io/) to view the collected data (it takes a couple of moments for the data to appear).
+
+<PlatformContent includePath="getting-started-verify-locate-data" />
+
+## Next Steps
+
+At this point, you should have integrated Sentry into your JavaScript application with WebAssembly modules and should already be sending data to your Sentry project.
+
+Now's a good time to customize your setup and look into more advanced topics. Our next recommended steps for you are:
+
+- Instrument your frontend and backend using our [SDKs](/)
+- Continue to [customize your configuration](/platforms/javascript/guides/wasm/configuration)
+- Learn how to [manually capture errors](/platforms/javascript/guides/wasm/usage)
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Find various topics in <PlatformLink to="/platforms/javascript/guides/wasm/troubleshooting">Troubleshooting</PlatformLink>
+- [Get support](https://sentry.zendesk.com/hc/en-us/)
+
+</Expandable>
