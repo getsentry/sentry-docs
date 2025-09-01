@@ -126,7 +126,7 @@ export function DocPage({
           </aside>
         )}
       </section>
-      <style>{`:root { --doc-content-w: 1200px; } #doc-content { max-width: var(--doc-content-w); }`}</style>
+      <style>{`:root { --doc-content-w: 1200px; } #doc-content { max-width: var(--doc-content-w); box-sizing: border-box; }`}</style>
       <style>{`
         @media (min-width: 2057px) {
           :root {
@@ -137,8 +137,8 @@ export function DocPage({
           /* Cap content width and center (reinforced at this breakpoint) */
           #doc-content {
             max-width: var(--doc-content-w);
-            padding-left: 5rem; /* increase from px-6 (24px) to 5rem (80px) */
-            padding-right: 5rem;
+            padding-left: 2rem;
+            padding-right: 2rem;
           }
           /* Cancel default push so content can center */
           [data-layout-anchor="left"] + .main-content {
