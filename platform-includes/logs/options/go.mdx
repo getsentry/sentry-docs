@@ -1,0 +1,22 @@
+#### BeforeSendLog
+
+To filter logs, or update them before they are sent to Sentry, you can use the `BeforeSendLog` client option.
+
+```go
+sentry.Init(sentry.ClientOptions{
+    Dsn:        "___PUBLIC_DSN___",
+    EnableLogs: true,
+    BeforeSendLog: func(log *sentry.Log) *sentry.Log {
+        // filter out all trace logs
+        if log.Level == sentry.LogLevelTrace {
+            return nil
+        }
+
+        // filter all logs below warning
+        if log.Severity <= sentry.LogSeverityInfo {
+            return nil
+        }
+        return log
+    },
+})
+```

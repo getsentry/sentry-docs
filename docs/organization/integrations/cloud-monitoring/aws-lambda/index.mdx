@@ -4,13 +4,6 @@ sidebar_order: 1
 description: "Learn more about Sentry's AWS Lambda integration and how you can automatically instrument your Node or Python Lambda functions with Sentry without changing your code."
 ---
 
-<Alert>
-
-This method of setting up Sentry in your Lambda functions only works if your Lambda functions are run in Node CommonJS (`require` syntax) or in Python.
-For all other setups, check out these docs for [Node](/platforms/javascript/guides/aws-lambda/) or [Python](/platforms/python/integrations/aws-lambda/) instead.
-
-</Alert>
-
 Connect Sentry to your AWS account to automatically add Sentry error and performance monitoring to your Node/Python Lambda functions.
 
 ## Install
@@ -111,7 +104,7 @@ If you're using [Serverless framework](https://www.serverless.com/), note that t
 
 You can confirm that the output works by inputting `aws lambda get-function-configuration --function-name <yourFunctionName>`. However, when you perform a subsequent `sls deploy` the environment variables aren't maintained even though it looks like the reference to the layer is retained.
 
-You can set the layer definition and environment variables in `serverless.yml` as a workaround, but you'll have to do two things manually: maintain the latest layer version and add the reference to the SDK layer for every function you want "Sentrified".
+You can set the layer definition and environment variables in `serverless.yml` as a workaround, but you'll have to do two things manually: maintain the latest layer version and add the reference to the SDK layer for every function you want to add Sentry to.
 
 **Serverless Framework Using Node:**
 
@@ -123,12 +116,12 @@ provider:
   region: <AWS_REGION>
   environment:
     SENTRY_TRACES_SAMPLE_RATE: "1.0"
-    SENTRY_DSN: "<SENTRY_DSN>"
-    NODE_OPTIONS: "-r @sentry/aws-serverless/dist/awslambda-auto"
+    SENTRY_DSN: "___PUBLIC_DSN___"
+    NODE_OPTIONS: "--import @sentry/aws-serverless/awslambda-auto"
 
 custom:
   layers:
-    - arn:aws:lambda:${self:provider.region}:943013980633:layer:SentryNodeServerlessSDK:26
+    - arn:aws:lambda:${self:provider.region}:943013980633:layer:SentryNodeServerlessSDKv10:15
 #    - arn:aws:lambda:${self:provider.region}:943013980633:layer:SentryNodeServerlessSDK:latest
 
 functions:
@@ -147,11 +140,11 @@ provider:
   region: <AWS_REGION>
   environment:
     SENTRY_TRACES_SAMPLE_RATE: "1.0"
-    SENTRY_DSN: "<SENTRY_DSN>"
+    SENTRY_DSN: "___PUBLIC_DSN___"
 
 custom:
   layers:
-    - arn:aws:lambda:${self:provider.region}:943013980633:layer:SentryPythonServerlessSDK:6
+    - arn:aws:lambda:${self:provider.region}:943013980633:layer:SentryPythonServerlessSDK:167
 #    - arn:aws:lambda:${self:provider.region:943013980633:layer:SentryPythonServerlessSDK:latest
 
 functions:

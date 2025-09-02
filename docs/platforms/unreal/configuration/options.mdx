@@ -30,7 +30,7 @@ Turns debug mode on or off. If debug is enabled SDK will attempt to print out us
 
 Sets the release. Some SDKs will try to automatically configure a release out of the box but it's a better idea to manually set it to guarantee that the release is in sync with your deploy integrations or source map uploads. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
 
-By default the SDK will try to read this value from the `SENTRY_RELEASE` environment variable (in the browser SDK, this will be read off of the `window.SENTRY_RELEASE.id` if available).
+By default the SDK will try to read this value from the `SENTRY_RELEASE` environment variable if it's not set explicitly in the plugin settings. Otherwise, the release name is automatically derived from the current project name and version to match the format `<ProjectName>@<Version>`.
 
 </ConfigKey>
 
@@ -38,7 +38,13 @@ By default the SDK will try to read this value from the `SENTRY_RELEASE` environ
 
 Sets the environment. This string is freeform and not set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
 
-By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable (except for the browser SDK where this is not applicable).
+By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable if it's not set explicitly in the plugin settings. Otherwise, the default environment is the current application's build configuration, i.e. `Editor` or `Development`.
+
+</ConfigKey>
+
+<ConfigKey name="dist">
+
+Sets the distribution of the application. Distributions are used to disambiguate build or deployment variants of the same release of an application. For example, the dist can be the build number of an Xcode build or the version code of an Android build. The dist has a max length of 64 characters.
 
 </ConfigKey>
 
@@ -185,11 +191,5 @@ A number between `0` and `1`, controlling the percentage chance a given transact
 <ConfigKey name="traces-sampler">
 
 A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="traces-sample-rate" /> must be defined to enable tracing.
-
-<Alert>
-
-Currently, there is no support for sampling functions on Windows or Linux (<PlatformIdentifier name="traces-sampler" />).
-
-</Alert>
 
 </ConfigKey>
