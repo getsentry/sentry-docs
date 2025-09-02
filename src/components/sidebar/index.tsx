@@ -15,11 +15,10 @@ import {PlatformSelector} from '../platformSelector';
 import {VersionSelector} from '../versionSelector';
 
 import {DevelopDocsSidebar} from './developDocsSidebar';
-import {SidebarLinks} from './sidebarLinks';
+import {SidebarNavigation} from './sidebarNavigation';
 import {SidebarProps} from './types';
 
 const activeLinkSelector = `.${styles.sidebar} .toc-item .active`;
-const headerClassName = `${styles['sidebar-title']} flex items-center`;
 
 export const sidebarToggleId = styles['navbar-menu-toggle'];
 
@@ -29,7 +28,6 @@ export async function Sidebar({path, versions}: SidebarProps) {
   if (isDeveloperDocs) {
     return (
       <DevelopDocsSidebar
-        headerClassName={headerClassName}
         sidebarToggleId={sidebarToggleId}
         path={'/' + path.join('/') + '/'}
         rootNode={rootNode}
@@ -60,9 +58,10 @@ export async function Sidebar({path, versions}: SidebarProps) {
 
         return {
           ...platform,
-          url: platformPageForCurrentPath
-            ? '/' + platformPageForCurrentPath.path + '/'
-            : platform.url,
+          url:
+            platformPageForCurrentPath && !platformPageForCurrentPath.missing
+              ? '/' + platformPageForCurrentPath.path + '/'
+              : platform.url,
           guides: platform.guides.map(guide => {
             const guidePageForCurrentPath = nodeForPath(rootNode, [
               'platforms',
@@ -71,7 +70,7 @@ export async function Sidebar({path, versions}: SidebarProps) {
               guide.name,
               ...path.slice(currentGuide ? 4 : 2),
             ]);
-            return guidePageForCurrentPath
+            return guidePageForCurrentPath && !guidePageForCurrentPath.missing
               ? {
                   ...guide,
                   url: '/' + guidePageForCurrentPath.path + '/',
@@ -82,11 +81,11 @@ export async function Sidebar({path, versions}: SidebarProps) {
       });
 
   return (
-    <aside className={styles.sidebar}>
+    <aside className={`${styles.sidebar} py-3`} data-layout-anchor="left">
       <input type="checkbox" id={sidebarToggleId} className="hidden" />
       <style>{':root { --sidebar-width: 300px; }'}</style>
-      <div className="md:flex flex-col items-stretch">
-        <div className="platform-selector">
+      <div className="md:flex flex-col items-stretch overflow-auto">
+        <div className="platform-selector px-3">
           <div className="mb-3">
             <PlatformSelector
               platforms={platforms}
@@ -99,9 +98,9 @@ export async function Sidebar({path, versions}: SidebarProps) {
             </div>
           )}
         </div>
-        <div className={styles.toc}>
+        <div className={`${styles.toc} px-3`}>
           <ScrollActiveLink activeLinkSelector={activeLinkSelector} />
-          <SidebarLinks path={path} headerClassName={headerClassName} />
+          <SidebarNavigation path={path} />
         </div>
       </div>
     </aside>

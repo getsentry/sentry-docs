@@ -35,7 +35,7 @@ All `ASP.NET Core` configurations are valid here. But one configuration in parti
 `FlushOnCompletedRequest` ensures all events are flushed out. This is because the general ASP.NET Core hooks for when the process is exiting are not guaranteed to run in a serverless environment. This setting ensures that no event is lost if AWS recycles the process.
 
 
-```csharp {"onboardingOptions": {"performance": "12-15"}}
+```csharp
 public class LambdaEntryPoint : Amazon.Lambda.AspNetCoreServer.APIGatewayProxyFunction
 {
     protected override void Init(IWebHostBuilder builder)
@@ -47,10 +47,14 @@ public class LambdaEntryPoint : Amazon.Lambda.AspNetCoreServer.APIGatewayProxyFu
                 options.Dsn = "___PUBLIC_DSN___";
                 // When configuring for the first time, to see what the SDK is doing:
                 o.Debug = true;
+                // Adds request URL and headers, IP and name for users, etc.
+                o.SendDefaultPii = true;
+                // ___PRODUCT_OPTION_START___ performance
                 // Set TracesSampleRate to 1.0 to capture 100%
                 // of transactions for tracing.
                 // We recommend adjusting this value in production
                 o.TracesSampleRate = 1.0;
+                // ___PRODUCT_OPTION_END___ performance
                 // Required in Serverless environments
                 options.FlushOnCompletedRequest = true;
             })

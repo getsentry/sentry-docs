@@ -30,7 +30,7 @@ Turns debug mode on or off. If debug is enabled SDK will attempt to print out us
 
 Sets the release. Some SDKs will try to automatically configure a release out of the box but it's a better idea to manually set it to guarantee that the release is in sync with your deploy integrations or source map uploads. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
 
-By default the SDK will try to read this value from the `SENTRY_RELEASE` environment variable (in the browser SDK, this will be read off of the `window.SENTRY_RELEASE.id` if available).
+By default the SDK will try to read this value from the `SENTRY_RELEASE` environment variable if it's not set explicitly in the plugin settings. Otherwise, the release name is automatically derived from the current project name and version to match the format `<ProjectName>@<Version>`.
 
 </ConfigKey>
 
@@ -38,7 +38,13 @@ By default the SDK will try to read this value from the `SENTRY_RELEASE` environ
 
 Sets the environment. This string is freeform and not set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
 
-By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable (except for the browser SDK where this is not applicable).
+By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable if it's not set explicitly in the plugin settings. Otherwise, the default environment is the current application's build configuration, i.e. `Editor` or `Development`.
+
+</ConfigKey>
+
+<ConfigKey name="dist">
+
+Sets the distribution of the application. Distributions are used to disambiguate build or deployment variants of the same release of an application. For example, the dist can be the build number of an Xcode build or the version code of an Android build. The dist has a max length of 64 characters.
 
 </ConfigKey>
 
@@ -76,6 +82,22 @@ Grouping in Sentry is different for events with stack traces and without. As a r
 
 </ConfigKey>
 
+<ConfigKey name="send-default-pii">
+
+If this flag is enabled, certain personally identifiable information (PII) is added by active integrations. By default, no such data is sent.
+
+<Alert>
+
+If you are using Sentry in your mobile app, read our [frequently asked questions about mobile data privacy](/security-legal-pii/security/mobile-privacy/) to assist with Apple App Store and Google Play app privacy details.
+
+</Alert>
+
+This option is turned off by default.
+
+If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
+
+</ConfigKey>
+
 <ConfigKey name="attach-screenshot">
 
 Takes a screenshot of the application when an error happens and includes it as an attachment.
@@ -83,7 +105,49 @@ Learn more about enriching events with screenshots in our <PlatformLink to="/enr
 
 <Alert>
 
-The support for screenshot attachment on crash events is limited to Windows and Linux.
+Attaching screenshots to crash events is currently not supported on Android.
+
+</Alert>
+
+</ConfigKey>
+
+<ConfigKey name="attach-game-log">
+
+When enabled, game log file is automatically attached to all events captured if the current build configuration allows logging.
+
+This option is turned off by default.
+
+</ConfigKey>
+
+<ConfigKey name="attach-gpu-dump">
+
+When enabled, [Nsight Aftermath](https://developer.nvidia.com/nsight-aftermath) mini-dump file is automatically attached to GPU crash events captured.
+
+This option is turned on by default.
+
+<Alert>
+
+This feature is currently supported only for Nvidia GPUs.
+
+</Alert>
+
+<Alert>
+
+On Windows, capturing GPU crashes requires [modifying the Unreal Engine source code](https://github.com/getsentry/sentry-unreal/issues/673).
+
+</Alert>
+
+</ConfigKey>
+
+<ConfigKey name="crashpad-wait-for-upload">
+
+When enabled, application shutdown is delayed until the upload of the crash report is complete. This is useful for deployment in `Docker` environment (Linux and Windows containers) where the life cycle of all processes is bound by the root process (typically the application being monitored).
+
+This option is turned off by default.
+
+<Alert>
+
+This feature is supported only for Crashpad backend on Windows and Linux (default for the `github` plugin package).
 
 </Alert>
 
@@ -93,11 +157,26 @@ The support for screenshot attachment on crash events is limited to Windows and 
 
 These options can be used to hook the SDK in various ways to customize the reporting of events.
 
+The callbacks you set as hooks will be called on the thread where the event happened. If the event occurs on a non-game thread during garbage collection the callback will not be invoked.
+
 <ConfigKey name="before-send">
 
 This function is called with an SDK-specific message or error event object, and can return a modified event object, or `null` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
 
 By the time <PlatformIdentifier name="before-send" /> is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
+
+</ConfigKey>
+
+<ConfigKey name="before-breadcrumb">
+
+This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
+The callback typically gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
+
+<Alert>
+
+Currently, hints are supported only on Android.
+
+</Alert>
 
 </ConfigKey>
 
@@ -112,11 +191,5 @@ A number between `0` and `1`, controlling the percentage chance a given transact
 <ConfigKey name="traces-sampler">
 
 A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="traces-sample-rate" /> must be defined to enable tracing.
-
-<Alert>
-
-Currently, there is no support for sampling functions on Windows or Linux (<PlatformIdentifier name="traces-sampler" />).
-
-</Alert>
 
 </ConfigKey>

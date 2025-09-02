@@ -15,3 +15,94 @@ To capture transactions and spans customized to your organization's needs, you m
 <PlatformContent includePath="performance/add-spans-example" />
 
 <PlatformContent includePath="performance/retrieve-transaction" />
+
+## Adding Span & Transaction Data Attributes
+
+You can capture data attributes along with your spans and transactions. You can specify data attributes when starting a span or transaction:
+
+```go
+http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+  ctx := r.Context()
+
+  options := []sentry.SpanOption{
+    // Set the OP based on values from https://develop.sentry.dev/sdk/performance/span-operations/
+    sentry.WithOpName("http.server"),
+    sentry.ContinueFromRequest(r),
+    sentry.WithTransactionSource(sentry.SourceURL),
+  }
+
+  // Create a transaction and assign data attributes
+  transaction := sentry.StartTransaction(ctx,
+    fmt.Sprintf("%s %s", r.Method, r.URL.Path),
+    options...,
+  )
+  transaction.SetData("dataAttr1", 42)
+  transaction.SetData("dataAttr2", true)
+  // omitted code ...
+  transaction.Finish()
+
+  // ... or create a span and assign data attributes
+  span := sentry.StartSpan(ctx, "span1")
+  span.SetData("dataAttr1", 42)
+  span.SetData("dataAttr2", true)
+  // omitted code ...
+  span.Finish()
+})
+```
+
+Or you can add data attributes to an existing transaction or span:
+
+```go
+http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+  ctx := r.Context()
+  transaction := sentry.TransactionFromContext(ctx)
+
+  if transaction != nil {
+    transaction.SetData("dataAttr1", 42)
+    transaction.SetData("dataAttr2", true)
+  }
+
+  span := sentry.SpanFromContext(ctx)
+  span.SetData("dataAttr1", 42)
+  span.SetData("dataAttr2", true)
+})
+```
+
+Or you can update existing transaction and span data by:
+
+```go
+if d, found := transaction.Data["dataAttr1"]; found {
+  if dataAttr1, ok := d.(int); ok {
+    transaction.SetData("dataAttr1", dataAttr1.(int)+42)
+  }
+}
+
+if d, found := span.Data["dataAttr1"]; found {
+  if dataAttr1, ok := d.(int); ok {
+    span.SetData("dataAttr1", dataAttr1.(int)+42)
+  }
+}
+})
+```
+
+To attach data attributes to the transaction and all its spans, you can use `BeforeSendTransaction`:
+
+```go
+sentry.Init(sentry.ClientOptions{
+  Dsn: "___PUBLIC_DSN___",
+  BeforeSendTransaction: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+    for _, sp := range event.Spans {
+      sp.SetData("dataAttr1", 42)
+      sp.SetData("dataAttr2", true)
+    }
+
+    dataCtx, ok := event.Contexts["trace"]["data"].(map[string]any)
+    if !ok {
+      dataCtx = make(map[string]any)
+      event.Contexts["trace"]["data"] = dataCtx
+    }
+    dataCtx["num"] = 42
+    return event
+  },
+})
+```

@@ -7,70 +7,24 @@ For a quick reference, there is a [complete example](https://github.com/getsentr
 
 [Go Dev-style API documentation](https://pkg.go.dev/github.com/getsentry/sentry-go/fasthttp) is also available.
 
-## Features
-
-In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/).
-
-Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
-
 ## Install
 
-<OnboardingOptionButtons
-  options={[
-    'error-monitoring',
-    'performance'
-  ]}
-/>
-
-```shell
+```bash
+go get github.com/getsentry/sentry-go
 go get github.com/getsentry/sentry-go/fasthttp
 ```
 
 <Break />
 
-
-```go {"onboardingOptions": {"performance": "12-16"}}
-import (
-	"fmt"
-	"net/http"
-
-	"github.com/getsentry/sentry-go"
-	sentryfasthttp "github.com/getsentry/sentry-go/fasthttp"
-)
-
-// To initialize Sentry's handler, you need to initialize Sentry itself beforehand
-if err := sentry.Init(sentry.ClientOptions{
-	Dsn: "___PUBLIC_DSN___",
-	EnableTracing: true,
-	// Set TracesSampleRate to 1.0 to capture 100%
-	// of transactions for tracing.
-	// We recommend adjusting this value in production,
-	TracesSampleRate: 1.0,
-}); err != nil {
-	fmt.Printf("Sentry initialization failed: %v\n", err)
-}
-
-// Create an instance of sentryfasthttp
-sentryHandler := sentryfasthttp.New(sentryfasthttp.Options{})
-
-// After creating the instance, you can attach the handler as one of your middleware
-fastHTTPHandler := sentryHandler.Handle(func(ctx *fasthttp.RequestCtx) {
-	panic("y tho")
-})
-
-fmt.Println("Listening and serving HTTP on :3000")
-
-// And run it
-if err := fasthttp.ListenAndServe(":3000", fastHTTPHandler); err != nil {
-	panic(err)
-}
-```
-
 ## Configure
 
-`sentryfasthttp` accepts a struct of `Options` that allows you to configure how the handler will behave.
+### Initialize the Sentry SDK
 
-Currently, it respects three options:
+<PlatformContent includePath="getting-started-config" />
+
+### Options
+
+`sentryfasthttp` accepts a struct of `Options` that allows you to configure how the handler will behave.
 
 ```go
 // Repanic configures whether Sentry should repanic after recovery, in most cases, it defaults to false,
@@ -82,6 +36,41 @@ Repanic bool
 WaitForDelivery bool
 // Timeout for the event delivery requests.
 Timeout time.Duration
+```
+
+<Break />
+
+```go
+// Create an instance of sentryfasthttp
+sentryHandler := sentryfasthttp.New(sentryfasthttp.Options{
+    Repanic:         false,
+    WaitForDelivery: true,
+    Timeout:         5 * time.Second,
+})
+```
+
+## Verify
+
+```go
+// Create an instance of sentryfasthttp
+sentryHandler := sentryfasthttp.New(sentryfasthttp.Options{
+// specify options here...
+})
+
+// After creating the instance, you can attach the handler as one of your middleware
+fastHTTPHandler := sentryHandler.Handle(func(ctx *fasthttp.RequestCtx) {
+	// capturing an error intentionally to simulate usage
+	sentry.CaptureMessage("It works!")
+	
+	ctx.SetStatusCode(fasthttp.StatusOK)
+})
+
+fmt.Println("Listening and serving HTTP on :3000")
+
+// And run it
+if err := fasthttp.ListenAndServe(":3000", fastHTTPHandler); err != nil {
+	panic(err)
+}
 ```
 
 ## Usage

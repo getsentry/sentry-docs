@@ -28,6 +28,8 @@ The following options can be configured for the integration in `feedbackIntegrat
 
 ### Auto-Inject vs. Manual Injection
 
+Whether you want to use auto-injection, or manually control things, the integration must first be passed via the `integrations` array into `Sentry.init()`.
+
 If you have `autoInject: true` a button will be inserted into the page that triggers the form to pop up so the user can enter their feedback. If instead you want to control when this injection happens, call the `feedback.createWidget()` method to get a reference to an `Actor` object, and then call `appendToDom()` to insert it into the page.
 
 <PlatformContent includePath="user-feedback/manual-injection" />
@@ -59,11 +61,16 @@ Sentry.setUser({
   email: "foo@example.com",
 });
 
-feedbackIntegration({
-  useSentryUser: {
-    name: "fullName",
-    email: "email",
-  },
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.feedbackIntegration({
+      useSentryUser: {
+        name: "fullName",
+        email: "email",
+      },
+    }),
+  ],
 });
 ```
 
@@ -95,10 +102,15 @@ The following options can be configured for the integration in `feedbackIntegrat
 Example of customization:
 
 ```javascript
-feedbackIntegration({
-  buttonLabel: "Feedback",
-  submitButtonLabel: "Send Feedback",
-  formTitle: "Send Feedback",
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.feedbackIntegration({
+      buttonLabel: "Feedback",
+      submitButtonLabel: "Send Feedback",
+      formTitle: "Send Feedback",
+    })
+  ],
 });
 ```
 
@@ -124,13 +136,18 @@ The example below shows how to customize the background color for the light and 
 Alternatively, you can also do the same thing by setting theme values in JavaScript:
 
 ```javascript
-feedbackIntegration({
-  themeLight: {
-    background: "#cccccc",
-  },
-  themeDark: {
-    background: "#222222",
-  },
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.feedbackIntegration({
+      themeLight: {
+        background: "#cccccc",
+      },
+      themeDark: {
+        background: "#222222",
+      },
+    }),
+  ],
 });
 ```
 
@@ -163,19 +180,24 @@ CSS variables take priority over configuration values in `feedbackIntegration()`
 
 ```html
 <script>
-  feedbackIntegration({
-    themeLight: {
-      foreground: "black",
-    },
-    themeDark: {
-      foreground: "white",
-    },
+  Sentry.init({
+    dsn: "___PUBLIC_DSN___",
+    integrations: [
+      Sentry.feedbackIntegration({
+        themeLight: {
+          foreground: "#000",
+        },
+        themeDark: {
+          foreground: "#fff",
+        },
+      }),
+    ],
   });
 </script>
 
 <style>
   #sentry-feedback {
-    --foreground: "red"; /* overrides both `white` and `black` colors */
+    --foreground: "red"; /* overrides both `#fff` and `#000` above */
   }
 </style>
 ```
@@ -186,14 +208,19 @@ It’s possible to set the `id` configuration value to something other than the 
 
 ```html
 <script>
-  feedbackIntegration({
-    id: "feedback-theme", // The default is 'sentry-feedback'
+  Sentry.init({
+    dsn: "___PUBLIC_DSN___",
+    integrations: [
+      Sentry.feedbackIntegration({
+        id: "feedback-theme", // The default is 'sentry-feedback'
+      }),
+    ],
   });
 </script>
 
 <style>
+  /* Target the custom id */
   #feedback-theme {
-    /* Target the custom id */
     --foreground: "red";
   }
 </style>
@@ -206,30 +233,57 @@ Because it’s sometimes useful to know when a user started interacting with the
 The following options can be configured for the integration in `feedbackIntegration({})`:
 
 ```javascript
-feedbackIntegration({
-  onFormOpen: () => {},
-  onFormClose: () => {},
-  onSubmitSuccess: (data: FeedbackFormData) => {},
-  onSubmitError: (error: Error) => {},
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.feedbackIntegration({
+      onFormOpen: () => {},
+      onFormClose: () => {},
+      onSubmitSuccess: (data: FeedbackFormData, eventID: string) => {},
+      onSubmitError: (error: Error) => {},
+    }),
+  ],
 });
 ```
+
+You can link directly to a saved feedback item by implementing the `onSubmitSuccess` callback. The URL you need to construct is `https://${orgSlug}.sentry.io/issues/feedback/?projectSlug=${projectSlug}&eventId=${eventId}`.
+
+*Note:* In v9 and below of the SDK, the signature of `onSubmitSuccess` was `(data: FeedbackFormData) => {}`.
 
 ### Bring Your Own Button
 
 You can use your own button instead of the default injected button to trigger the form being displayed, by calling `feedback.attachTo()` to have the SDK attach a click listener to your button. You can also supply the same customization options that the constructor accepts (for example, for text labels and colors).
 
 ```javascript
-const feedback = feedbackIntegration({
-  // Disable the injection of the default widget
-  autoInject: false,
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.feedbackIntegration({
+      // Disable the injection of the default widget
+      autoInject: false,
+    })
+  ],
 });
 
-feedback.attachTo(document.querySelector("#your-button"), {
+// Get the instance returned by `feedbackIntegration()`
+const feedback = Sentry.getFeedback();
+
+feedback?.attachTo(document.querySelector("#your-button"), {
   formTitle: "Report a Bug!",
 });
 ```
 
 ```typescript {tabTitle: NextJs}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.feedbackIntegration({
+      // Disable the injection of the default widget
+      autoInject: false,
+    })
+  ],
+});
+
 function AttachToFeedbackButton() {
   const [feedback, setFeedback] = useState();
   // Read `getFeedback` on the client only, to avoid hydration errors during server rendering
@@ -257,12 +311,20 @@ function AttachToFeedbackButton() {
 Alternatively, you can call `feedback.createForm()` and have full control over when the form gets loaded, added to the dom, and finally shown to the user.
 
 ```javascript
-const feedback = feedbackIntegration({
-  // Disable the injection of the default widget
-  autoInject: false,
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.feedbackIntegration({
+      // Disable the injection of the default widget
+      autoInject: false,
+    })
+  ],
 });
 
-const form = await feedback.createForm();
+// Get the instance returned by `feedbackIntegration()`
+const feedback = Sentry.getFeedback();
+
+const form = await feedback?.createForm();
 form.appendToDom();
 form.open();
 ```

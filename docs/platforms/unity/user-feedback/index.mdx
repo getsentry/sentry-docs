@@ -1,31 +1,60 @@
 ---
 title: Set Up User Feedback
+sidebar_title: User Feedback
 description: "Learn more about collecting user feedback when an event occurs. Sentry pairs the feedback with the original event, giving you additional insight into issues."
 sidebar_order: 6000
 ---
 
-When a user experiences an error, Sentry provides the ability to collect additional feedback. You can collect feedback according to the method supported by the SDK.
+<Alert level="info">
 
-## Use the .NET SDK
-
-<Alert>
-
-User Feedback for **[ASP.NET](/platforms/dotnet/guides/aspnet/user-feedback/#integration)** or **[ASP.NET Core](/platforms/dotnet/guides/aspnetcore/user-feedback/#integration)** supply integrations specific to supporting those SDKs.
+The User Feedback Prefab is available in version `4.0.0` of the Sentry SDK for Unity, which is currently in beta.
 
 </Alert>
 
-You can create a form to collect the user input in your preferred framework, and use the SDK's API to send the information to Sentry. You can also use the widget, as described below. If you'd prefer an alternative to the widget or do not have a JavaScript frontend, you can use this API:
+When a user experiences an error, Sentry provides the ability to collect additional feedback. The Unity SDK provides both a simple prefab-based solution and a programmatic API for collecting user feedback.
+
+## Use the User Feedback Prefab
+
+The Unity SDK includes a ready-to-use prefab that provides a complete user feedback solution. This prefab contains:
+
+- A feedback button (megaphone icon) that opens the feedback form
+- A feedback form with fields for:
+  - Name (optional)
+  - Email (optional)
+  - Message/feedback (required)
+  - Screenshot (optional, taken automatically)
+
+### Adding the Prefab to Your Scene
+
+To add the prefab, drag and drop the User Feedback prefab from the Unity SDK package into any scene. The prefab is ready to use immediately without any additional configuration, and includes a scaling canvas that works across different screen sizes and resolutions.
+
+### Default Appearance
+
+The User Feedback prefab includes a megaphone button that triggers the feedback form:
+
+![Megaphone Button](./img/Megahpone.png)
+
+When clicked, the feedback form appears with fields for user input:
+
+![Feedback Form](./img/FeedbackForm.png)
+
+### Customization
+
+You can customize the feedback form by:
+
+- Creating a prefab variant to inherit from the original while allowing updates
+- Removing optional fields (name, email) by deleting them from the VerticalLayoutGroup
+- Modifying the appearance and styling of the form elements
+- The prefab comes with a custom inspector that highlights missing or broken references:
+  - Missing optional fields are highlighted in yellow
+  - Missing required fields are highlighted in red
+
+## Use the .NET SDK API
+
+If you prefer to create your own feedback form or need programmatic control, you can use the SDK's API to send feedback to Sentry:
 
 ```csharp {tabTitle:C#}
 var eventId = SentrySdk.CaptureMessage("An event that will receive user feedback.");
 
-SentrySdk.CaptureUserFeedback(eventId, "user@example.com", "It broke.", "The User");
-```
-
-```fsharp {tabTitle:F#}
-open Sentry
-
-let eventId = SentrySdk.CaptureMessage("An event that will receive user feedback.")
-
-SentrySdk.CaptureUserFeedback(eventId, "user@example.com", "It broke.", "The User")
+SentrySdk.CaptureFeedback("It broke.", "user@example.com", "The User", associatedEventId: eventId);
 ```

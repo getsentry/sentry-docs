@@ -2,14 +2,13 @@ import {DocNode, nodeForPath} from 'sentry-docs/docTree';
 
 import styles from './style.module.scss';
 
-import {DynamicNav, toTree} from '../dynamicNav';
-import {SidebarLink} from '../sidebarLink';
-
+import {DynamicNav, toTree} from './dynamicNav';
+import {SidebarLink, SidebarSeparator} from './sidebarLink';
 import {NavNode} from './types';
 import {docNodeToNavNode, getNavNodes} from './utils';
 
-const devDocsMenuItems: {root: string; title: string; hideChevron?: boolean}[] = [
-  {root: 'getting-started', title: 'Getting Started', hideChevron: true},
+const devDocsMenuItems: {root: string; title: string}[] = [
+  {root: 'getting-started', title: 'Getting Started'},
   {root: 'engineering-practices', title: 'Engineering Practices'},
   {root: 'application-architecture', title: 'Application Architecture'},
   {root: 'development-infrastructure', title: 'Development Infrastructure'},
@@ -23,12 +22,9 @@ const devDocsMenuItems: {root: string; title: string; hideChevron?: boolean}[] =
 ];
 
 export function DevelopDocsSidebar({
-  path,
   rootNode,
   sidebarToggleId,
-  headerClassName,
 }: {
-  headerClassName: string;
   path: string;
   rootNode: DocNode;
   sidebarToggleId: string;
@@ -41,36 +37,29 @@ export function DevelopDocsSidebar({
     return toTree(apiNodes);
   };
   return (
-    <aside className={styles.sidebar}>
+    <aside className={`${styles.sidebar} p-3`} data-layout-anchor="left">
       <input type="checkbox" id={sidebarToggleId} className="hidden" />
       <style>{':root { --sidebar-width: 300px; }'}</style>
       <div className="md:flex flex-col items-stretch">
         <div className={styles.toc}>
           <ul data-sidebar-tree>
-            {devDocsMenuItems.map(({root, title, hideChevron}) => (
+            {devDocsMenuItems.map(({root, title}) => (
               <DynamicNav
                 key={root}
                 root={root}
                 title={title}
                 tree={getNavTree(root)}
-                headerClassName={headerClassName}
-                collapse
-                withChevron={!hideChevron}
+                collapsible
               />
             ))}
           </ul>
-          <hr />
+          <SidebarSeparator />
           <ul data-sidebar-tree>
             <SidebarLink
-              to="https://open.sentry.io/code-of-conduct/"
+              href="https://open.sentry.io/code-of-conduct/"
               title="Code of Conduct"
-              path={path}
             />
-            <SidebarLink
-              to="https://docs.sentry.io"
-              title="User Documentation"
-              path={path}
-            />
+            <SidebarLink href="https://docs.sentry.io" title="User Documentation" />
           </ul>
         </div>
       </div>

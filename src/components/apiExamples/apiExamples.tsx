@@ -1,13 +1,7 @@
 'use client';
 
 import {Fragment, useEffect, useState} from 'react';
-import {jsx, jsxs} from 'react/jsx-runtime';
 import {Clipboard} from 'react-feather';
-import {toJsxRuntime} from 'hast-util-to-jsx-runtime';
-import {Nodes} from 'hastscript/lib/create-h';
-import bash from 'refractor/lang/bash.js';
-import json from 'refractor/lang/json.js';
-import {refractor} from 'refractor/lib/core.js';
 
 import {type API} from 'sentry-docs/build/resolveOpenAPI';
 
@@ -16,9 +10,7 @@ import styles from './apiExamples.module.scss';
 
 import {CodeBlock} from '../codeBlock';
 import {CodeTabs} from '../codeTabs';
-
-refractor.register(bash);
-refractor.register(json);
+import {codeToJsx} from '../highlightCode';
 
 const strFormat = (str: string) => {
   const s = str.trim();
@@ -30,10 +22,6 @@ const strFormat = (str: string) => {
 
 type Props = {
   api: API;
-};
-
-const codeToJsx = (code: string, lang = 'json') => {
-  return toJsxRuntime(refractor.highlight(code, lang) as Nodes, {Fragment, jsx, jsxs});
 };
 
 export function ApiExamples({api}: Props) {
@@ -141,7 +129,11 @@ export function ApiExamples({api}: Props) {
           </button>
         </div>
         <pre className={`${styles['api-block-example']} relative`}>
-          <div className={codeBlockStyles.copied} style={{opacity: showCopied ? 1 : 0}}>
+          <div
+            data-mdast="ignore"
+            className={codeBlockStyles.copied}
+            style={{opacity: showCopied ? 1 : 0}}
+          >
             Copied
           </div>
           {selectedTabView === 0 &&

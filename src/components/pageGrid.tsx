@@ -5,6 +5,7 @@ import Link from 'next/link';
 import {DocNode, nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 import {isNotNil, sortPages} from 'sentry-docs/utils';
+import {isVersioned} from 'sentry-docs/versioning';
 
 type Props = {
   exclude?: string[];
@@ -34,7 +35,8 @@ export function PageGrid({header, exclude}: Props) {
             c =>
               !c.frontmatter.sidebar_hidden &&
               c.frontmatter.title &&
-              !exclude?.includes(c.slug)
+              !exclude?.includes(c.slug) &&
+              !isVersioned(c.slug)
           ),
           // a hacky adapter to reuse the same sidebar sorter
           node => ({...node, context: node.frontmatter})

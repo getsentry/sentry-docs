@@ -1,0 +1,133 @@
+---
+title: Troubleshooting
+sidebar_order: 5503
+description: "Troubleshoot and resolve common issues with the iOS Session Replay."
+notSupported:
+  - apple.macos
+  - apple.watchos
+  - apple.tvos
+  - apple.visionos
+---
+
+<PlatformSection notSupported={["apple.ios"]}>
+
+<Include name="apple-session-replay-support-alert" />
+
+</PlatformSection>
+
+<PlatformSection notSupported={["apple", "apple.macos", "apple.tvos", "apple.watchos", "apple.visionos"]}>
+
+<Expandable title="Does Session Replay work with UIKit, SwiftUI or AppKit?" permalink>
+
+Session Replay works with both UIKit and SwiftUI.
+
+</Expandable>
+
+<Expandable title="Does Session Replay work on macOS, watchOS, tvOS and visionOS?" permalink>
+
+We don't actively prevent you from using Session Replay on these platforms, but we only officially [support it on iOS](/platforms/apple/guides/ios/session-replay/). As a consequence, we can't make guarantees about its functionality and performance on other platforms.
+
+</Expandable>
+
+<Expandable title="Why are parts of my replay not masked?" permalink>
+
+Text views, input views, images, video players and webviews are all masked by default. Images with bundled assets aren't masked because the likelihood of these assets containing PII is low. If you encounter a view that should be masked by default, consider opening a [GitHub issue](https://github.com/getsentry/sentry-cocoa/issues).
+
+</Expandable>
+
+<Expandable title="What's the lowest version of iOS supported?" permalink>
+
+Session Replay recording happens even on the lowest version supported by the Sentry SDK, which is aligend with appstore support.
+
+</Expandable>
+
+<Expandable title="Why is my issue missing a replay?" permalink>
+
+An issue may be missing a replay because the user's device was [offline](/product/explore/session-replay/mobile#frequently-asked-questions) while `sessionSampleRate` was specified, your project/organization was rate-limited, or (in rare cases) the device failed to capture the replay video.
+
+</Expandable>
+
+<Expandable title="AVFoundation views and layers are not rendered" permalink>
+
+Session Replay currently cannot capture content from AVFoundation views and layers. This includes:
+
+- `AVPlayerLayer` and other AVFoundation-backed video content
+- `AVCaptureVideoPreviewLayer` used for camera previews
+- Any media content rendered using AVFoundation components
+
+As a result, camera views, video players, and other AVFoundation-based UI elements will not appear in session replays, even when using `unmaskedViewClasses` configuration.
+
+We are aware of this limitation and are exploring potential solutions to support AVFoundation content in future releases.
+
+You can follow the progress in [this GitHub issue](https://github.com/getsentry/sentry-cocoa/issues/5835).
+
+</Expandable>
+
+<Expandable title="Session Replay is not recording with custom window setup" permalink>
+
+If you have a custom window setup (e.g., multiple instances of `UIWindow`), you need to ensure that the Sentry SDK is able to find the correct window.
+
+When using window scenes, make sure that the main window is assigned in your `UIWindowSceneDelegate`'s [`window` property](https://developer.apple.com/documentation/uikit/uiwindowscenedelegate/window).
+
+```swift
+final class SceneDelegate: NSObject, UIWindowSceneDelegate {
+
+    var window: UIWindow?
+
+    func scene(
+        _ scene: UIScene,
+        willConnectTo session: UISceneSession,
+        options connectionOptions: UIScene.ConnectionOptions
+    ) {
+        guard let scene = scene as? UIWindowScene else { return }
+
+        // Configure your windows here, e.g.
+        let mainWindow = UIWindow(windowScene: scene)
+        mainWindow.rootViewController = UIViewController()
+        mainWindow.makeKeyAndVisible()
+
+        // Do not forget to assign the window to the SceneDelegate's window property:
+        self.window = mainWindow
+    }
+}
+```
+
+Alternatively, you can also create a custom proxy variable for the window:
+
+```swift
+final class SceneDelegate: NSObject, UIWindowSceneDelegate {
+
+    var mainWindow: UIWindow?
+
+    func scene(
+        _ scene: UIScene,
+        willConnectTo session: UISceneSession,
+        options connectionOptions: UIScene.ConnectionOptions
+    ) {
+        guard let scene = scene as? UIWindowScene else { return }
+
+        // Configure your windows here, e.g.
+        let mainWindow = UIWindow(windowScene: scene)
+        mainWindow.rootViewController = UIViewController()
+        mainWindow.makeKeyAndVisible()
+
+        // Do not forget to assign the window to the SceneDelegate's window property:
+        self.window = mainWindow
+    }
+
+    // This is required to make sure that the Sentry SDK can find the correct window:
+
+    var window: UIWindow? {
+        get {
+            return mainWindow
+        }
+        set {
+            mainWindow = newValue
+        }
+    }
+}
+```
+
+</Expandable>
+
+</PlatformSection>

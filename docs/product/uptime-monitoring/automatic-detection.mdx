@@ -1,0 +1,26 @@
+---
+title: Automatic Detection
+sidebar_order: 51
+description: "Learn how automatic detection of uptime monitoring works."
+---
+
+In order to be able to automatically detect uptime alerts, we analyze all the URLs detected in your project's captured error data to find the hostname that appears most frequently. This helps ensure that your most critical hostname is continuously monitored, enhancing the reliability and availability of your web services. We then create an uptime alert if it passes our [uptime check criteria](/product/uptime-monitoring/#uptime-check-criteria). Automatic uptime checks are configured to run once a minute as GET requests.
+
+The automatic creation of Uptime Monitors only happens if there are no other existing uptime monitors configured.
+
+To avoid creating flaky alerts, the hostname undergoes an "onboarding period" of three days. During this period, we send HTTP requests to the hostname every hour. If the request fails three times or more, the hostname will be dropped and re-evaluated after seven days.
+
+<Alert>
+  Sentry will execute uptime checks against the hostname root path of the most
+  frequently-seen URLs. For example, if the most frequently-seen URL in your
+  events is `GET https://www.example.com/docs/introduction`, the check will be
+  `GET https://www.example.com/`.
+</Alert>
+
+Once an automatically detected uptime alert has been created, you'll be able to [customize its configuration](/product/alerts/create-alerts/uptime-alert-config/), including the HTTP request method, headers, and request body.
+
+## Disabling Automatic Detection
+
+If you prefer not to use automatically detected uptime alerts, you can delete them directly from your [Alerts page](https://sentry.io/orgredirect/organizations/:orgslug/alerts/rules).
+
+**Once deleted, these automatically detected uptime alerts will not be re-created in the future.**

@@ -12,11 +12,26 @@ sidebar_order: 1
 ## Core Options
 
 <SdkOption name='dsn' type='string' envVar='SENTRY_DSN'>
-  The DSN tells the SDK where to send the events. If this is not set, the SDK will not send any events. Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
-
-  <PlatformContent includePath="configuration/dsn" />
+  The DSN tells the SDK where to send the events. If this is not set, the SDK will not send any events.
+  Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
+<PlatformContent includePath="configuration/dsn" />
 
 </SdkOption>
+
+<PlatformCategorySection supported={["server", "serverless"]}>
+  <SdkOption name="orgId" type='`${number}` | number'>
+
+    The organization ID for your Sentry project.
+
+    The SDK will try to extract the organization ID from the DSN. If it cannot be found, or if you need to override it,
+    you can provide the ID with this option. The organization ID is used for trace propagation and features like `strictTraceContinuation`.
+
+    <Alert level="info">
+      The organization ID is used for features like <PlatformLink to="/configuration/options#strictTraceContinuation">strict trace continuation</PlatformLink>.
+    </Alert>
+
+  </SdkOption>
+</PlatformCategorySection>
 
 <SdkOption name="debug" type='boolean' defaultValue='false'>
 
@@ -60,6 +75,12 @@ Environments are case-sensitive. The environment name can't contain newlines, sp
 <SdkOption name="tunnel" type='string'>
 
 Sets the URL that will be used to transport captured events. This can be used to work around ad-blockers or to have more granular control over events sent to Sentry. Adding your DSN is still required when using this option so necessary attributes can be set on the generated Sentry data. This option **requires the implementation** of a custom server endpoint. Learn more and find examples in [Dealing with Ad-Blockers](/platforms/javascript/troubleshooting/#dealing-with-ad-blockers).
+
+</SdkOption>
+
+<SdkOption name="sendDefaultPii" type='boolean' defaultValue='false'>
+
+Set this option to `true` to send default PII data to Sentry. Among other things, enabling this will enable automatic IP address collection on events.
 
 </SdkOption>
 
@@ -153,7 +174,9 @@ Set this option to `false` to disable sending of client reports. Client reports 
 
 Set this option to `true` to add stack local variables to stack traces.
 
+<PlatformSection notSupported={["javascript.bun", "javascript.cloudflare", "javascript.deno"]}>
 For more advanced configuration options, see the documentation on the <PlatformLink to="/configuration/integrations/localvariables">Local Variables integration options</PlatformLink>.
+</PlatformSection>
 
 </SdkOption>
 
@@ -207,7 +230,7 @@ Options used to configure the transport. This is an object with the following po
 - `headers`: An object containing headers to be sent with every request.
 - `proxy`: A proxy used for outbound requests. Can be http or https.
 - `caCerts`: A path or list of paths to a CA certificate, or a buffer of CA certificates.
-- `httpModule`: A custom HTTP module to use for requests. Defaults to the the native `http` and `https` modules.
+- `httpModule`: A custom HTTP module to use for requests. Defaults to the native `http` and `https` modules.
 - `keepAlive`: Determines whether to keep the socket alive between requests. Defaults to `false`.
 
 </PlatformCategorySection>
@@ -228,6 +251,20 @@ Options used to configure the transport. This is an object with the following po
 <SdkOption name="shutdownTimeout" type='number' defaultValue='2000' categorySupported={['server', 'serverless']}>
 
 Controls how many seconds to wait before shutting down. Sentry SDKs send events from a background queue. This queue is given a certain amount to drain pending events. The default is SDK specific but typically around two seconds. Setting this value too low may cause problems for sending events from command line applications. Setting the value too high will cause the application to block for a long time for users experiencing network connectivity problems.
+
+</SdkOption>
+
+<SdkOption name="disableInstrumentationWarnings" type='boolean' defaultValue='false' categorySupported={['server']}>
+
+Depending on your setup, the Sentry SDK will try to detect if it has been incorrectly set up. This can result in warnings like this being logged:
+
+> [Sentry] < libraryName > is not instrumented. This is likely because you required/imported < libraryName > before calling `Sentry.init()`.
+
+Or
+
+> [Sentry] < libraryName > is not instrumented. Please make sure to initialize Sentry in a separate file that you \`--import\` when running node, see: < docs link >.
+
+This means the SDK detected that the library hasn't been wrapped for automatic performance instrumentation. This may result in some spans not being reported correctly. If this is not affecting you (for example because the warning is a false positive or you do not care about these specific spans), you can disable this warning by setting this option to `true`.
 
 </SdkOption>
 
@@ -292,6 +329,26 @@ By the time `beforeSend` is executed, all scope data has already been applied to
 
 </SdkOption>
 
+<PlatformSection supported={["javascript.vue", "javascript.nuxt"]}>
+
+<SdkOption name="attachProps" type='boolean' defaultValue='true' categorySupported={['browser']}>
+
+When enabled, all props of the Vue component where the error was thrown in are attached to the event.
+
+</SdkOption>
+
+<SdkOption name="attachErrorHandler" type='boolean' defaultValue='true' categorySupported={['browser']}>
+  By default, the SDK attaches a [Vue error handler](https://vuejs.org/api/application.html#app-config-errorhandler)
+  to capture Vue exceptions and report them to Sentry.
+  When `attachErrorHandler` is set to `false`, automatic error reporting is disabled.
+
+Usually, this option should stay enabled, unless you want to set up Sentry error reporting yourself.
+For example, the Sentry Nuxt SDK does not attach an error handler as it's capturing errors through the error hooks provided by Nuxt.
+
+</SdkOption>
+
+</PlatformSection>
+
 ## Tracing Options
 
 <SdkOption name="tracesSampleRate" type='number' envVar='SENTRY_TRACES_SAMPLE_RATE'>
@@ -337,6 +394,21 @@ If you want to disable trace propagation, you can set this option to `[]`.
 
 </SdkOption>
 
+
+<PlatformCategorySection supported={["server", "serverless"]}>
+  <SdkOption name="strictTraceContinuation" type='boolean' defaultValue='false'>
+
+    If set to `true`, the SDK will only continue a trace if the organization ID of the incoming trace found in the
+    `baggage` header matches the organization ID of the current Sentry client.
+
+    The client's organization ID is extracted from the DSN or can be set with the <PlatformLink to={'/configuration/options#orgId'}>`orgId` option</PlatformLink>.
+
+    If the organization IDs do not match, the SDK will start a new trace instead of continuing the incoming one.
+    This is useful to prevent traces of unknown third-party services from being continued in your application.
+
+  </SdkOption>
+</PlatformCategorySection>
+
 <PlatformCategorySection supported={['browser']}>
 
 <SdkOption name="beforeSendTransaction" type='(event: TransactionEvent, hint: EventHint) => TransactionEvent | null'>
@@ -345,17 +417,29 @@ This function is called with a transaction event object, and can return a modifi
 
 </SdkOption>
 
-<SdkOption name="beforeSendSpan" type='(span: SpanJSON) => SpanJSON | null'>
+<SdkOption name="beforeSendSpan" type='(span: SpanJSON) => SpanJSON'>
 
 This function is called with a serialized span object, and can return a modified span object. This might be useful for manually stripping PII from spans.
-This function is only called for root spans and all children.
+This function is called for root spans as well as for all child spans.
 If you want to drop the root span, including all of its child spans, use [`beforeSendTransaction`](#beforeSendTransaction) instead.
+
+Please note that the `span` you receive as an argument is a serialized object, not a `Span` class instance.
 
 </SdkOption>
 
 <SdkOption name="ignoreTransactions" type='Array<string | RegExp>' defaultValue='[]'>
 
 <Include name="platforms/configuration/options/ignore-transactions.mdx" />
+
+</SdkOption>
+
+<SdkOption name="ignoreSpans" type='Array<string | RegExp | {name?: string | RegExp, op?: string | RegExp}>' defaultValue='[]'>
+
+A list of strings or regex patterns matching span names that shouldn't be sent to Sentry. When using strings, partial matches will be filtered out, so if you need to filter by exact match, use regex patterns instead. You can also provide an object with a `name` and `op` property to match both the span name and the operation name. Note that at least `name` or `op` must be provided.
+
+If a root span matches any of the specified patterns, the entire local trace will be dropped. If a child span matches, its children will be reparented to the dropped span's parent span. 
+
+By default, no spans are ignored.
 
 </SdkOption>
 
@@ -398,14 +482,6 @@ An optional property that configures which features are in experimental mode. Th
 <SdkOption name="enableNative" type='boolean' defaultValue='true'>
 
 Set this option to `false` to disable the native SDK. This will disable all native crash and error handling and, instead, the SDK will only capture errors on the upper layer.
-
-</SdkOption>
-
-<SdkOption name="autoInitializeNativeSdk" type='boolean' defaultValue='true'>
-
-Set this option to `false` to disable the auto initialization of the native layer SDK. Doing so means you will need to initialize the native SDK manually. Do not use this to disable the native layer.
-
-To disable the native layer, use [enableNative](#enableNative).
 
 </SdkOption>
 

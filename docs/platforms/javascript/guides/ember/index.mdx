@@ -8,7 +8,7 @@ categories:
 
 <Alert>
 
-  Sentry's Ember addon enables automatic reporting of errors, exceptions, and transactions.
+Sentry's Ember addon enables automatic reporting of errors, exceptions, and transactions.
 
 </Alert>
 
@@ -24,9 +24,17 @@ Select which Sentry features you'd like to install in addition to Error Monitori
 
 ## Install
 
-<OnboardingOptionButtons options={["error-monitoring", "performance", "session-replay"]} />
+<OnboardingOptionButtons
+  options={[
+    "error-monitoring",
+    "performance",
+    "session-replay",
+    "user-feedback",
+    "logs",
+  ]}
+/>
 
-Sentry captures data by using an SDK within your application’s runtime.
+Sentry captures data by using an SDK within your application's runtime.
 
 <PlatformContent includePath="getting-started-install" />
 
@@ -36,7 +44,7 @@ Configuration should happen as early as possible in your application's lifecycle
 
 This snippet includes automatic instrumentation to monitor the performance of your application, which registers and configures the Tracing integration, including custom [Ember instrumentation](./configuration/ember-options/).
 
-```javascript {"onboardingOptions": {"performance": "11-17", "session-replay": "10, 18-24"}}
+```javascript
 import Application from "@ember/application";
 import Resolver from "ember-resolver";
 import loadInitializers from "ember-load-initializers";
@@ -46,14 +54,37 @@ import * as Sentry from "@sentry/ember";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [Sentry.replayIntegration()],
 
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/ember/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+
+  // ___PRODUCT_OPTION_START___ session-replay
+  integrations: [
+    Sentry.replayIntegration(),
+    // ___PRODUCT_OPTION_START___ user-feedback
+    Sentry.feedbackIntegration({
+      // Additional SDK configuration goes in here, for example:
+      colorScheme: "system",
+    }),
+    // ___PRODUCT_OPTION_END___ user-feedback
+  ],
+  // ___PRODUCT_OPTION_END___ session-replay
+  // ___PRODUCT_OPTION_START___ logs
+
+  // Enable logs to be sent to Sentry
+  enableLogs: true,
+  // ___PRODUCT_OPTION_END___ logs
+
+  // ___PRODUCT_OPTION_START___ performance
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for tracing.
   // We recommend adjusting this value in production
   // Learn more at
   // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
   tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ session-replay
 
   // Capture Replay for 10% of all sessions,
   // plus for 100% of sessions with an error
@@ -61,6 +92,7 @@ Sentry.init({
   // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ session-replay
 });
 
 export default class App extends Application {
@@ -72,7 +104,7 @@ export default class App extends Application {
 
 <Alert>
 
-  This SDK uses Ember configuration conventions to manage its automatic instrumentation and other Sentry options. This additional configuration can be found under <PlatformLink to="/configuration/ember-options/">Ember options</PlatformLink>.
+This SDK uses Ember configuration conventions to manage its automatic instrumentation and other Sentry options. This additional configuration can be found under <PlatformLink to="/configuration/ember-options/">Ember options</PlatformLink>.
 
 </Alert>
 

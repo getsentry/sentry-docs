@@ -1,0 +1,176 @@
+---
+title: MCP Tracing
+sidebar_title: Tracing
+---
+
+The MCP Server module is the instrumentation for the [anthropic MCP](https://www.anthropic.com/news/model-context-protocol) SDKs. At the moment it only supports the [MCP Typescript SDK](https://github.com/modelcontextprotocol/typescript-sdk/).
+
+## Spans Conventions
+
+For your MCP Server data to show up in Sentry, specific spans must be created with well-defined names and data attributes. See below.
+
+We follow the draft [OpenTelemetry MCP Semantic Conventions](https://github.com/open-telemetry/semantic-conventions/pull/2083) as closely as possible, with some opinionated additions for improved MCP observability. We should keep an eye on the conventions and update this guide as needed as they are currently in draft and subject to change.
+
+### Common Span Attributes
+
+All MCP Server spans share common attributes and follow consistent patterns:
+
+| Data Attribute              | Type   | Requirement Level | Description                                                                   | Example                                |
+| :-------------------------- | :----- | :---------------- | :---------------------------------------------------------------------------- | :------------------------------------- |
+| `mcp.method.name`           | string | required          | The name of the request or notification method.                               | `"tools/call"`                         |
+| `mcp.transport`             | string | required          | The transport method used for MCP communication. **[2]**                      | `"stdio"`                              |
+| `network.transport`         | string | required          | OSI transport layer protocol. **[3]**                                         | `"pipe"`                               |
+| `mcp.request.id`            | string | optional          | A unique identifier for the request.                                          | `"42"`                                 |
+| `mcp.session.id`            | string | optional          | Identifies the MCP session. Can be undefined as MCP servers can be stateless. | `"191c4850af6c49..."`   |
+| `network.protocol.version`  | string | optional          | The version of JSON RPC protocol used.                                        | `"2.0"`                                |
+
+**[2]** Well-defined values for data attribute `mcp.transport`:
+
+| Value        | Description                              |
+| :-------     | :------------------------------------    |
+| `"http"`     | HTTP transport                           |
+| `"sse"`      | Server-Sent Events transport             |
+| `"stdio"`    | Standard input/output transport          |
+| `"unknown"`* | Unknown transport (for custom transports)|
+
+*`"unknown"` is a placeholder for custom transports. We could try to infer the name from the transport object.
+
+**[3]** Well-defined values for data attribute `network.transport`:
+
+| Value    | Description                           |
+| :------- | :------------------------------------ |
+| `"pipe"` | Named pipe (for stdio transport)      |
+| `"tcp"`  | TCP (for HTTP/SSE transport)          |
+
+### Session Management
+
+MCP servers can be either stateless or stateful. Understanding this distinction is important for proper tracing implementation and session data handling. (See [MCP Server Session Management](https://modelcontextprotocol.io/docs/concepts/transports#session-management) for more details.)
+
+#### Stateless vs Stateful Servers
+
+**Stateless Servers**: These servers treat each request independently without maintaining session state between requests. The `mcp.session.id` attribute may be undefined or not meaningful for such servers.
+
+**Stateful Servers**: These servers maintain session state across multiple requests from the same client. They use a consistent `mcp.session.id` that is shared across all messages within the same session lifecycle. All MCP request from the client should always have the HTTP header `X-MCP-Session-Id` set to the same value.
+
+#### Session Data Attributes
+
+For stateful servers, additional session metadata is collected during the initialization phase and attached to all subsequent spans within the same session. This provides observability and context for the entire session lifecycle.
+
+| Data Attribute              | Type   | Requirement Level | Description                                                                   | Example                                |
+| :-------------------------- | :----- | :---------------- | :---------------------------------------------------------------------------- | :------------------------------------- |
+| `mcp.client.name`           | string | optional          | Name of the MCP client application.                                           | `"claude-desktop"`                     |
+| `mcp.client.title`          | string | optional          | Display title of the MCP client application.                                  | `"Claude Desktop"`                     |
+| `mcp.client.version`        | string | optional          | Version of the MCP client application.                                        | `"1.0.0"`                              |
+| `mcp.server.name`           | string | optional          | Name of the MCP server application.                                           | `"my-mcp-server"`                      |
+| `mcp.server.title`          | string | optional          | Display title of the MCP server application.                                  | `"My MCP Server"`                      |
+| `mcp.server.version`        | string | optional          | Version of the MCP server application.                                        | `"2.1.3"`                              |
+| `mcp.protocol.version`      | string | optional          | MCP protocol version used in the session.                                     | `"2024-11-05"`                         |
+
+#### Session Lifecycle
+
+1. **Initialization**: During the `initialize` request, session metadata (client info, server info, protocol version) is established and stored.
+
+2. **Session Propagation**: For all subsequent requests within the same session (tool calls, prompt requests, resource access), the session metadata is automatically attached to each span.
+
+3. **Evolution**: As the MCP specification evolves, additional session-level metadata may be captured and propagated, providing richer context for observability.
+
+This session-based approach allows us to:
+- Track client and server versions across infrastructure
+- Analyze protocol version adoption and compatibility
+- Group and correlate all operations within a single client session
+- Monitor session duration and patterns
+
+### MCP Server Span Types
+
+MCP Server spans use the operation value `"mcp.server"` and fall into these categories:
+
+**Server Methods** (op: `"mcp.server"`):
+- **Tool calls** - `tools/call {tool_name}` - Execute client-requested tools
+- **Prompt requests** - `prompts/get {prompt_name}` - Provide prompt templates to clients  
+- **Resource access** - `resources/read {resource_uri}` - Serve resources to clients
+
+**Notifications** (op: `"mcp.notification.client_to_server"` or `"mcp.notification.server_to_client"`):
+- One-way messages that don't expect responses (e.g., `notifications/cancelled`)
+
+**Others** (op: `"mcp.server"`):
+- **Initialization** - `initialize` - Handle client connection setup
+
+### Tool Call Span
+
+Describes MCP tool execution requests from clients.
+
+- The spans `op` MUST be `"mcp.server"`.
+- The span `name` SHOULD follow the pattern `"tools/call {mcp.tool.name}"`. (e.g. `"tools/call get_weather"`)
+- The `mcp.method.name` attribute MUST be `"tools/call"`.
+- The `mcp.tool.name` attribute SHOULD be set to the tool name. (e.g. `"get_weather"`)
+- All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
+
+Additional attributes on the span:
+
+| Data Attribute                        | Type    | Requirement Level | Description                                                                   | Example                                |
+| :------------------------------------ | :------ | :---------------- | :---------------------------------------------------------------------------- | :------------------------------------- |
+| `mcp.tool.result.is_error`            | boolean | optional          | Whether the tool execution resulted in an error.                              | `true`                                 |
+| `mcp.tool.result.content_count`       | int     | optional          | Number of content items in the tool result.                                   | `3`                                    |
+| `mcp.tool.result.content`             | string  | optional          | Serialized content of the tool result. **[0]**                                | `"[{\"type\":\"text\"}]"`              |
+| `mcp.request.argument.<key>`          | string  | optional          | Arguments passed to the tool. **[1]**                                         | `"Seattle, WA"`                        |
+
+**[0]**: Span attributes only allow primitive data types. This means you need to use a stringified version of a list of dictionaries. Do NOT set `[{"type": "text"}]` but rather the string `"[{\"type\": \"text\"}]"`.
+**[1]**: Arguments are prefixed with `mcp.request.argument.` followed by the argument key. For example, if a tool receives `{location: "Seattle, WA"}`, it becomes `mcp.request.argument.location`.
+
+### Prompt Span
+
+Describes MCP prompt requests from clients.
+
+- The spans `op` MUST be `"mcp.server"`.
+- The span `name` SHOULD follow the pattern `"prompts/get {mcp.prompt.name}"`. (e.g. `"prompts/get analyze-code"`)
+- The `mcp.method.name` attribute MUST be `"prompts/get"`.
+- The `mcp.prompt.name` attribute SHOULD be set to the prompt name. (e.g. `"analyze-code"`)
+- All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
+
+Additional attributes on the span:
+
+| Data Attribute                        | Type   | Requirement Level | Description                                                                   | Example                                |
+| :------------------------------------ | :----- | :---------------- | :---------------------------------------------------------------------------- | :------------------------------------- |
+| `mcp.request.argument.<key>`          | string | optional          | Additional arguments passed to the prompt. **[1]**                           | `"javascript"`                         |
+
+### Resource Span
+
+Describes MCP resource access requests from clients.
+
+- The spans `op` MUST be `"mcp.server"`.
+- The span `name` SHOULD follow the pattern `"resources/read {mcp.resource.uri}"`. (e.g. `"resources/read file:///path/to/file"`)
+- The `mcp.method.name` attribute MUST be `"resources/read"`.
+- The `mcp.resource.uri` attribute SHOULD be set to the resource URI. (e.g. `"file:///path/to/file"`)
+- All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
+
+Additional attributes on the span:
+
+| Data Attribute                        | Type   | Requirement Level | Description                                                                   | Example                                |
+| :------------------------------------ | :----- | :---------------- | :---------------------------------------------------------------------------- | :------------------------------------- |
+| `mcp.resource.name`                   | string | optional          | The name of the resource being accessed.                                      | `"sentry-docs-platform"`               |
+
+### Initialize Span
+
+Describes MCP initialization requests from clients.
+
+- The spans `op` MUST be `"mcp.server"`.
+- The span `name` SHOULD be `"initialize"`.
+- The `mcp.method.name` attribute MUST be `"initialize"`.
+- All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
+
+Additional attributes on the span:
+
+| Data Attribute                        | Type   | Requirement Level | Description                                                                   | Example                                |
+| :------------------------------------ | :----- | :---------------- | :---------------------------------------------------------------------------- | :------------------------------------- |
+| `client.address`                      | string | optional          | Client address - domain name or IP address.                                   | `"127.0.0.1"`                          |
+| `client.port`                         | int    | optional          | Client port number.                                                           | `8080`                                 |
+
+### Notification Span
+
+Describes MCP notification messages (one-way messages that don't expect a response).
+
+- The spans `op` MUST be `"mcp.notification.client_to_server"` or `"mcp.notification.server_to_client"`.
+- The span `name` SHOULD be the notification method name. (e.g. `"notifications/cancelled"`)
+- The `mcp.method.name` attribute MUST be set to the notification method. (e.g. `"notifications/cancelled"`)
+- All [Common Span Attributes](#common-span-attributes) SHOULD be set (all `required` common attributes MUST be set).
+

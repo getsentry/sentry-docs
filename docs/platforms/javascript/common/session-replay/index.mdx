@@ -1,5 +1,6 @@
 ---
 title: Set Up Session Replay
+sidebar_title: Session Replay
 sidebar_order: 5500
 notSupported:
   - javascript.cordova
@@ -90,7 +91,7 @@ Sentry.replayCanvasIntegration({
 ```
 
 **Step 2**
-Call the the following `snapshot()` method inside your application's paint loop. `snapshot()` needs to be called in the same execution loop as the canvas draw commands, otherwise you may be snapshotting empty canvas buffers. This is due to how WebGL works when `preserveDrawingBuffer` is `false`.
+Call the following `snapshot()` method inside your application's paint loop. `snapshot()` needs to be called in the same execution loop as the canvas draw commands, otherwise you may be snapshotting empty canvas buffers. This is due to how WebGL works when `preserveDrawingBuffer` is `false`.
 
 ```javascript
 function paint() {
@@ -98,7 +99,6 @@ function paint() {
   Sentry.getClient().getIntegrationByName("ReplayCanvas").snapshot(canvasRef);
 }
 ```
-
 </PlatformSection>
 
 ### Content Security Policy (CSP)
@@ -157,6 +157,33 @@ Sampling allows you to control how much of your website's traffic will result in
    record up to a minute of events prior to the error and continue recording
    until the session ends.
 
+```javascript {5-6} {filename:instrumentation-client.ts}
+Sentry.init({
+  // ... other configuration
+  
+  // Session Replay sampling rates
+  replaysSessionSampleRate: 0.1, // Capture 10% of all sessions
+  replaysOnErrorSampleRate: 1.0,  // Capture 100% of error sessions
+  
+  // For development/testing, you can set replaysSessionSampleRate to 1.0
+  // to capture all sessions for complete visibility
+});
+```
+
+### Recommended Production Sample Rates
+
+Choose your `replaysSessionSampleRate` based on your traffic volume:
+
+| Traffic Volume | Session Sample Rate | Error Sample Rate | Description |
+|---|---|---|---|
+| **High** (100k+ sessions/day) | `0.01` (1%) | `1.0` (100%) | Minimal session capture, all errors |
+| **Medium** (10k-100k sessions/day) | `0.1` (10%) | `1.0` (100%) | Balanced approach |
+| **Low** (under 10k sessions/day) | `0.25` (25%) | `1.0` (100%) | Higher session capture for better insights |
+
+**Why keep `replaysOnErrorSampleRate` at 1.0?** Error sessions provide the most valuable debugging context, so capturing all of them is recommended regardless of traffic volume.
+
+### How Sampling Works
+
 Sampling begins as soon as a session starts. <PlatformIdentifier name="replays-session-sample-rate" /> is evaluated first. If it's sampled, the replay recording will begin. Otherwise, <PlatformIdentifier name="replays-on-error-sample-rate" /> is evaluated and if it's sampled, the integration will begin buffering the replay and will only upload it to Sentry if an error occurs. The remainder of the replay will behave similarly to a whole-session replay.
 
 ## Error Linking
@@ -176,3 +203,4 @@ Once testing is complete, **we recommend lowering this value in production**. We
 ## Next Steps
 
 <PageGrid />
+

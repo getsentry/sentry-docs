@@ -579,6 +579,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/dart/integrations/dio/',
   },
   {
+    from: '/platforms/dart/configuration/integrations/firebase-remote-config/',
+    to: '/platforms/dart/integrations/firebase-remote-config/',
+  },
+  {
     from: '/quickstart/',
     to: '/platforms/',
   },
@@ -1332,15 +1336,11 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/platforms/javascript/guides/:guide/sourcemaps/multiple-origins/',
-    to: '/platforms/javascript/sourcemaps/',
-  },
-  {
-    from: '/platforms/javascript/guides/:guide/sourcemaps/uploading/hosting-publicly/',
-    to: '/platforms/javascript/sourcemaps/',
+    to: '/platforms/javascript/guides/:guide/sourcemaps/',
   },
   {
     from: '/platforms/javascript/guides/:guide/sourcemaps/uploading-without-debug-ids/',
-    to: '/platforms/javascript/sourcemaps/',
+    to: '/platforms/javascript/guides/:guide/sourcemaps/',
   },
   {
     from: '/platforms/javascript/sourcemaps/uploading-without-debug-ids/',
@@ -1626,32 +1626,48 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/platforms/javascript/guides/:guide/tracing/instrumentation/opentelemetry/',
     to: '/platforms/javascript/guides/:guide/opentelemetry/',
   },
-  // START  bandaid fix for #11870
+  // START redirecting deprecated generic metrics docs to concepts
   {
-    from: '/platforms/java/performance/instrumentation/opentelemetry/',
-    to: '/platforms/java/tracing/instrumentation/opentelemetry/',
-  },
-  {
-    from: '/platforms/go/performance/instrumentation/opentelemetry/',
-    to: '/platforms/go/tracing/instrumentation/opentelemetry/',
-  },
-  {
-    from: '/platforms/javascript/guides/node/performance/instrumentation/opentelemetry/',
-    to: '/platforms/javascript/guides/node/opentelemetry/',
-  },
-  {
-    from: '/platforms/python/performance/instrumentation/opentelemetry/',
-    to: '/platforms/python/tracing/instrumentation/opentelemetry/',
-  },
-  {
-    from: '/platforms/ruby/performance/instrumentation/opentelemetry/',
-    to: '/platforms/ruby/tracing/instrumentation/opentelemetry/',
+    from: '/platforms/python/metrics/',
+    to: '/platforms/python/tracing/span-metrics/',
   },
   {
     from: '/platforms/ruby/metrics/',
-    to: '/platforms/ruby/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
   },
-  // END  bandaid fix for #11870
+  {
+    from: '/platforms/react-native/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    from: '/platforms/java/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    from: '/platforms/android/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    from: '/platforms/apple/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    from: '/platforms/unity/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    from: '/platforms/php/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    from: '/platforms/php/guides/laravel/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    from: '/platforms/php/guides/symfony/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  // END redirecting deprecated generic metrics docs to concepts
   {
     from: '/learn/cli/configuration/',
     to: '/cli/configuration/',
@@ -1663,6 +1679,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/learn/cli/releases/',
     to: '/cli/releases/',
+  },
+  {
+    from: '/cli/metrics/',
+    to: '/cli/send-event/',
   },
   {
     from: '/workflow/alerts-notifications/',
@@ -2660,11 +2680,15 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/issues/issue-details/suggested-fix/',
-    to: '/product/issues/issue-details/sentry-ai/',
+    to: '/product/issues/issue-details/sentry-seer/',
   },
   {
     from: '/product/issues/issue-details/ai-suggested-solution/',
-    to: '/product/issues/issue-details/sentry-ai/',
+    to: '/product/issues/issue-details/sentry-seer/',
+  },
+  {
+    from: '/product/issues/issue-details/sentry-ai/',
+    to: '/product/issues/issue-details/sentry-seer/',
   },
   {
     from: '/guides/grouping-and-fingerprints/',
@@ -2907,14 +2931,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/platforms/android/performance/',
   },
   {
-    from: '/platforms/elixir/usage/set-level/',
-    to: '/platforms/elixir/usage/',
-  },
-  {
-    from: '/platforms/elixir/usage/sdk-fingerprinting/',
-    to: '/platforms/elixir/usage/',
-  },
-  {
     from: '/platforms/elixir/data-management/event-grouping/',
     to: '/platforms/elixir/data-management/',
   },
@@ -3128,27 +3144,19 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/ai-monitoring/',
-    to: '/product/insights/llm-monitoring/',
+    to: '/product/insights/ai/agents/',
   },
   {
-    from: '/product/ai-monitoring/getting-started/',
-    to: '/product/insights/llm-monitoring/getting-started/',
+    from: '/product/insights/llm-monitoring/',
+    to: '/product/insights/ai/agents/',
   },
   {
-    from: '/product/ai-monitoring/getting-started/the-dashboard/',
-    to: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
+    from: '/product/insights/llm-monitoring/getting-started/',
+    to: '/product/insights/ai/agents/getting-started/',
   },
   {
-    from: '/product/llm-monitoring/',
-    to: '/product/insights/llm-monitoring/',
-  },
-  {
-    from: '/product/llm-monitoring/getting-started/',
-    to: '/product/insights/llm-monitoring/getting-started/',
-  },
-  {
-    from: '/product/llm-monitoring/getting-started/the-dashboard/',
-    to: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
+    from: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
+    to: '/product/insights/ai/agents/getting-started/the-dashboard/',
   },
   {
     from: '/product/metrics/',
@@ -3319,12 +3327,28 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/explore/session-replay/',
   },
   {
-    from: '/product/explore/session-replay/replay-page-and-filters/',
-    to: '/product/explore/session-replay/web/replay-page-and-filters/',
+    from: '/product/explore/session-replay/web/getting-started/',
+    to: '/product/explore/session-replay/web/',
   },
   {
-    from: '/platforms/nintendo-switch/',
-    to: '/platforms/unity/native-support/',
+    from: '/product/explore/session-replay/web/replay-page-and-filters/',
+    to: '/product/explore/session-replay/replay-page-and-filters/',
+  },
+  {
+    from: '/product/explore/session-replay/web/replay-details/',
+    to: '/product/explore/session-replay/replay-details/',
+  },
+  {
+    from: '/product/explore/session-replay/hydration-errors/',
+    to: '/product/issues/issue-details/replay-issues/hydration-error/',
+  },
+  {
+    from: '/product/explore/session-replay/rage-dead-clicks/',
+    to: '/product/issues/issue-details/replay-issues/rage-clicks/',
+  },
+  {
+    from: '/product/explore/session-replay/privacy/',
+    to: '/security-legal-pii/scrubbing/protecting-user-privacy/',
   },
   {
     from: '/product/teams/roles/',
@@ -3409,6 +3433,23 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/security-legal-pii/security/security-policy-reporting/',
     to: '/platform-redirect/?next=/security-policy-reporting/',
+  },
+  /* Uptime Monitoring */
+  {
+    from: '/product/alerts/uptime-monitoring/',
+    to: '/product/uptime-monitoring/',
+  },
+  {
+    from: '/product/alerts/uptime-monitoring/automatic-detection/',
+    to: '/product/uptime-monitoring/automatic-detection/',
+  },
+  {
+    from: '/product/alerts/uptime-monitoring/uptime-tracing/',
+    to: '/product/uptime-monitoring/uptime-tracing/',
+  },
+  {
+    from: '/product/alerts/uptime-monitoring/troubleshooting/',
+    to: '/product/uptime-monitoring/troubleshooting/',
   },
 ];
 
@@ -3574,10 +3615,6 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     to: '/application/feedback-architecture/',
   },
   {
-    from: '/feature-flags/options-backed-features/',
-    to: '/application/feature-flags/options-backed-features/',
-  },
-  {
     from: '/options/',
     to: '/backend/options/',
   },
@@ -3588,10 +3625,6 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/sdk/craft-quick-start/',
     to: '/sdk/processes/releases/',
-  },
-  {
-    from: '/sdk/metrics/',
-    to: '/sdk/telemetry/metrics/',
   },
   {
     from: '/sdk/check-ins/',
@@ -3792,14 +3825,6 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     to: '/develop/application-domains/feature-flags/flagpole/',
   },
   {
-    from: '/backend/feature-flags/options-backed-features/',
-    to: '/backend/application-domains/feature-flags/options-backed-features/',
-  },
-  {
-    from: '/api-server/application-domains/feature-flags/options-backed-features/',
-    to: '/develop/application-domains/feature-flags/options-backed-features/',
-  },
-  {
     from: '/backend/options/',
     to: '/backend/application-domains/options/',
   },
@@ -3979,6 +4004,71 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/relay/relay-best-practices/',
     to: '/ingestion/relay/relay-best-practices/',
+  },
+  /*  integration platform    */
+  {
+    from: '/organization/integrations/kitemaker/',
+    to: '/organization/integrations/issue-tracking/kitemaker/',
+  },
+  {
+    from: '/organization/integrations/pagertree/',
+    to: '/organization/integrations/notification-incidents/pagertree/',
+  },
+  {
+    from: '/organization/integrations/goast/',
+    to: '/organization/integrations/issue-tracking/goast/',
+  },
+  {
+    from: '/organization/integrations/betterbugs/',
+    to: '/organization/integrations/session-replay/betterbugs/',
+  },
+  {
+    from: '/organization/integrations/blar/',
+    to: '/organization/integrations/notification-incidents/blar/',
+  },
+  {
+    from: '/organization/integrations/apigene/',
+    to: '/organization/integrations/debugging/apigene/',
+  },
+  {
+    from: '/organization/integrations/revisedev/',
+    to: '/organization/integrations/debugging/revisedev/',
+  },
+  {
+    from: '/organization/integrations/foamai/',
+    to: '/organization/integrations/debugging/foamai/',
+  },
+  {
+    from: '/organization/integrations/telegram-alerts-bot/',
+    to: '/organization/integrations/notification-incidents/telegram-alerts-bot/',
+  },
+  {
+    from: '/organization/integrations/vanta-eu/',
+    to: '/organization/integrations/compliance/vanta-eu/',
+  },
+  {
+    from: '/organization/integrations/sourcery/',
+    to: '/organization/integrations/debugging/sourcery/',
+  },
+  {
+    from: '/organization/integrations/codecomet/',
+    to: '/organization/integrations/debugging/codecomet/',
+  },
+  {
+    from: '/organization/integrations/glueai/',
+    to: '/organization/integrations/notification-incidents/glueai/',
+  },
+  {
+    from: '/organization/integrations/factory/',
+    to: '/organization/integrations/issue-tracking/factory/',
+  },
+  {
+    from: '/organization/integrations/teamcamp/',
+    to: '/organization/integrations/issue-tracking/teamcamp/',
+  },
+  {
+    from: '/organization/integrations/elba/',
+    to: '/organization/integrations/compliance/elba/',
   },
 ];
 

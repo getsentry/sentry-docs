@@ -22,9 +22,17 @@ Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-uti
 
 <ConfigKey name="debug">
 
-Turns debug mode on or off. If `debug` is enabled, the SDK will print useful debugging information to standard output. These messages do not appear in the Godot console or log file but can be seen when launching Godot application from a terminal. It's generally not recommended to turn it on in production, though turning `debug` mode on will not cause any safety concerns.
+Turns debug mode on or off. If `debug` is enabled, the SDK will print useful debugging information. You can see it in the Output panel of the Godot editor. It's generally not recommended to turn it on in production, though turning `debug` mode on will not cause any safety concerns.
 
 In the Project Settings, this option appears as `Debug Printing` and defaults to `Auto`. When set to `Auto`, the `debug` is enabled in debug builds (such as the editor and debug exports), and disabled in release export.
+
+You can control the verbosity using the `diagnostic_level` option.
+
+</ConfigKey>
+
+<ConfigKey name="diagnostic_level">
+
+Specifies the minimum level of messages to be printed if `debug` is turned on.
 
 </ConfigKey>
 
@@ -76,9 +84,9 @@ If `false`, the SDK will not initialize. This is useful for temporarily disablin
 
 </ConfigKey>
 
-<ConfigKey name="disabled-in-editor">
+<ConfigKey name="disabled-in-editor-play">
 
-If `true`, the SDK will not initialize in the Godot editor.
+If `true`, the SDK will not initialize when you play/run your project from within the Godot editor (using the play button or F5).
 
 </ConfigKey>
 
@@ -88,15 +96,27 @@ If enabled, the SDK will attach the Godot log file to the event.
 
 </ConfigKey>
 
-## Error Logger Options
+<ConfigKey name="attach-screenshot">
 
-<ConfigKey name="error-logger-enabled">
-
-If `true`, the SDK will capture logged errors as events and/or breadcrumbs, as defined by `error_logger_event_mask` and `error_logger_breadcrumb_mask` options. Crashes are always captured.
+If enabled, the SDK will try to take a screenshot and attach it to the event.
 
 </ConfigKey>
 
-<ConfigKey name="error-logger-breadcrumb-mask">
+<ConfigKey name="attach-scene-tree">
+
+If enabled, the SDK will capture and attach scene tree information to events. The scene tree data is attached as a `view-hierarchy.json` file, and you can explore it in the "Scene Tree" section of each issue that includes this attachment. This provides valuable context about your game's scene tree at the time of the error. See <PlatformLink to="/enriching-events/view-hierarchy/">Scene Tree</PlatformLink> for more details.
+
+</ConfigKey>
+
+## Error Logger Options
+
+<ConfigKey name="logger-enabled">
+
+If `true`, the SDK will capture logged errors as events and/or breadcrumbs, as defined by `logger_event_mask` and `logger_breadcrumb_mask` options. Crashes are always captured.
+
+</ConfigKey>
+
+<ConfigKey name="logger-breadcrumb-mask">
 
 Specifies the types of errors captured as breadcrumbs. Accepts a single value or a bitwise combination of `GodotErrorMask` masks.
 
@@ -107,31 +127,31 @@ Specifies the types of errors captured as breadcrumbs. Accepts a single value or
 - `MASK_SCRIPT`: Script errors will be captured.
 - `MASK_SHADER`: Shader errors will be captured.
 
-```gdscript
+```GDScript
 var mask = SentryOptions.MASK_ERROR | SentryOptions.MASK_SCRIPT
-options.error_logger_breadcrumb_mask = mask
+options.logger_breadcrumb_mask = mask
 ```
 
 </ConfigKey>
 
-<ConfigKey name="error-logger-event-mask">
+<ConfigKey name="logger-event-mask">
 
 Specifies the types of errors captured as events. Accepts a single value or a bitwise combination of `GodotErrorMask` masks.
 
-```gdscript
+```GDScript
 var mask = SentryOptions.MASK_ERROR | SentryOptions.MASK_SCRIPT
-options.error_logger_event_mask = mask
+options.logger_event_mask = mask
 ```
 
 </ConfigKey>
 
-<ConfigKey name="error-logger-include-source">
+<ConfigKey name="logger-include-source">
 
 If `true`, the SDK will include the surrounding source code of logged errors, if available in the exported project.
 
 </ConfigKey>
 
-<ConfigKey name="error-logger-limits">
+<ConfigKey name="logger-limits">
 
 Defines throttling limits for the error logger. These limits are used to prevent the SDK from sending too many non-critical and repeating error events.
 
@@ -158,7 +178,7 @@ thread-safe APIs and only use Godot-specific APIs after you've checked that you'
 
 If assigned, this callback runs before a message or error event is sent to Sentry. It takes `SentryEvent` as a parameter and returns either the same event object, with or without modifications, or `null` to skip reporting the event. You can assign it in a [configuration script](#configuration-script). This can be used, for instance, for stripping PII before sending.
 
-```gdscript
+```GDScript
 func _before_send(event: SentryEvent) -> SentryEvent:
 	if event.environment.contains("editor"):
 		# Discard event if running from the editor.
@@ -171,19 +191,15 @@ func _before_send(event: SentryEvent) -> SentryEvent:
 
 </ConfigKey>
 
-<ConfigKey name="on-crash">
+<ConfigKey name="before-capture-screenshot">
 
-If assigned, this callback runs before a crash event is sent to Sentry. In contrast to `before_send`, it is only called when a crash occurred. It takes `SentryEvent` as a parameter and returns either the same event object, with or without modifications, or `null` to skip reporting the event. You can assign it in a [configuration script](#configuration-script).
+If assigned, this callback runs before a screenshot is captured. It takes `SentryEvent` as a parameter and returns `false` to skip capturing the screenshot, or `true` to capture the screenshot.
 
-```gdscript
-func _on_crash(event: SentryEvent) -> SentryEvent:
-	if event.environment.contains("editor"):
-		# Discard event if running from the editor.
-		return null
-	if event.message.contains("Bruno"):
-		# Remove sensitive information from the event.
-		event.message = event.message.replace("Bruno", "REDACTED")
-	return event
+```GDScript
+func _before_capture_screenshot(event: SentryEvent) -> bool:
+	if is_showing_sensitive_info():
+		return false # Don't capture screenshot!
+	return true
 ```
 
 </ConfigKey>

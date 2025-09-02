@@ -1,5 +1,6 @@
 ---
 title: SvelteKit
+description: "Learn how to set up and configure Sentry in your SvelteKit application using the installation wizard, capture your first errors, and view them in Sentry."
 sdk: sentry.javascript.sveltekit
 categories:
   - javascript
@@ -8,110 +9,77 @@ categories:
   - server-node
 ---
 
-Sentry's SvelteKit SDK enables automatic reporting of errors and performance data.
-
-## Compatibility
-
-The minimum supported SvelteKit version is `2.0.0`.
-This SDK works best with **Vite 4.2** and newer. Older Vite versions might not generate source maps correctly.
-
-<Alert>
-
-  The SvelteKit SDK is designed to work out of the box with the following SvelteKit adapters:
-
-  - [Adapter-auto](https://kit.svelte.dev/docs/adapter-auto) - for Vercel; other platforms might work but we don't guarantee compatibility at this time.
-  - [Adapter-vercel](https://kit.svelte.dev/docs/adapter-vercel) - only for Node (Lambda) runtimes, not yet Vercel's edge runtime.
-  - [Adapter-cloudflare](https://kit.svelte.dev/docs/adapter-cloudflare) - supported but requires [additional Setup](/platforms/javascript/guides/cloudflare/frameworks/sveltekit/).
-  - [Adapter-node](https://kit.svelte.dev/docs/adapter-node).
-
-  Other adapters may work but aren't currently supported.
-  We're looking into extending first-class support to [more adapters](https://kit.svelte.dev/docs/adapters) in the future.
-
-  The SvelteKit SDK does not yet work with all non-node server runtimes, such as Vercel's edge runtime.
-
-</Alert>
-
 <PlatformContent includePath="getting-started-prerequisites" />
 
-## Install
+## Step 1: Install
 
-Sentry captures data by using an SDK within your application’s runtime.
-
-We recommend installing the SDK by running our installation wizard in the root directory of your project:
+To install Sentry using the installation wizard, run the following command within your project:
 
 ```bash
 npx @sentry/wizard@latest -i sveltekit
 ```
 
-The wizard will prompt you to log in to Sentry. It will then automatically do the following steps for you:
+The wizard then guides you through the setup process, asking you to enable additional (optional) Sentry features for your application beyond error monitoring.
 
-- create or update SvelteKit files with the default Sentry configuration:
-  - `hooks.(client|server).js` to initialize the SDK and instrument [SvelteKit's hooks](https://kit.svelte.dev/docs/hooks)
-  - `vite.config.js` to add source maps upload and auto-instrumentation via Vite plugins.
-- create a `.sentryclirc` file with an auth token to upload source maps (this file is automatically added to `.gitignore`)
-- add an example page to your app to verify your Sentry setup
+<PlatformContent includePath="getting-started-features-expandable" />
 
-After the wizard setup is completed, the SDK will automatically capture unhandled errors, and monitor performance.
-You can also <PlatformLink to="/usage/">manually capture errors</PlatformLink>.
+This guide assumes that you enable all features and allow the wizard to create an example page. You can add or remove features at any time, but setting them up now will save you the effort of configuring them manually later.
 
-<Alert>
+<Expandable title="What does the installation wizard change inside your application?">
 
-  If the setup through the wizard doesn't work for you, you can also <PlatformLink to="/manual-setup/">set up the SDK manually</PlatformLink>.
+- Creates or updates `hooks.(client|server).js` to initialize the SDK and instrument [SvelteKit's hooks](https://kit.svelte.dev/docs/hooks)
+- Creates or updates `vite.config.js` to add source maps upload and auto-instrumentation via Vite plugins
+- Creates `.sentryclirc` with an auth token to upload source maps (this file is automatically added to `.gitignore`)
+- Adds an example page to your application to help verify your Sentry setup
 
-</Alert>
+</Expandable>
 
-## Configure
+## Step 2: Avoid Ad Blockers With Tunneling (Optional)
 
-Configuration should happen as early as possible in your application's lifecycle.
+<PlatformContent includePath="getting-started-tunneling" />
 
-To complete your configuration, add <PlatformLink to="/configuration/options/">options</PlatformLink> to your `Sentry.init()` calls.
-Here you can also set context data - data about the <PlatformLink to="/enriching-events/identify-user/">user</PlatformLink>, for example, or <PlatformLink to="/enriching-events/tags/">tags</PlatformLink>, or even <PlatformLink to="/enriching-events/context/">arbitrary data</PlatformLink> - which will be added to every event sent to Sentry.
+## Step 3: Verify Your Setup
 
+If you haven't tested your Sentry configuration yet, let's do it now. You can confirm that Sentry is working properly and sending data to your Sentry project by using the example page and route created by the installation wizard:
 
-## Verify
+1. Open the example page `/sentry-example-page` in your browser
+2. Click the "Throw Sample Error" button. This triggers two errors:
+   - a frontend error
+   - an error within the API route
 
-This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+Sentry captures both of these errors for you. Additionally, the button click starts a trace to measure the time it takes for the API request to complete.
 
-Add a button to a frontend component that throws an error:
+<Alert level="success" title="Tip">
 
-```javascript {filename:src/routes/sentry/+page.svelte} {3}
-<button
-  on:click={() => {
-    throw new Error("Sentry Frontend Error");
-  }}
->
-  Throw error
-</button>
-```
-
-Or throw an error in one of your `load` functions:
-
-```javascript {filename:src/routes/sentry/+page.js} {2}
-export const load = () => {
-  throw new Error("Sentry Load Error");
-};
-```
-
-Or throw an error in an API route:
-
-```javascript {filename:src/routes/sentry/+server.js} {2}
-export const GET = () => {
-  throw new Error("Sentry API Error");
-};
-```
-
-The possibilities are endless!
-
-<Alert>
-
-  Errors triggered from within Browser DevTools are sandboxed and will not trigger error monitoring. Keep this in mind when verifying your Sentry SDK installation.
+Don't forget to explore the example files' code in your project to understand what's happening after your button click.
 
 </Alert>
 
-<Alert>
+### View Captured Data in Sentry
 
-  Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
 
-</Alert>
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
 
-To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+<PlatformContent includePath="getting-started-verify-locate-data" />
+
+## Next Steps
+
+At this point, you should have integrated Sentry into your SvelteKit application and should already be sending error and performance data to your Sentry project.
+
+Now's a good time to customize your setup and look into more advanced topics.
+Our next recommended steps for you are:
+
+- Learn how to [manually capture errors](/platforms/javascript/guides/sveltekit/usage/)
+- Continue to [customize your configuration](/platforms/javascript/guides/sveltekit/configuration/)
+- Learn how to [manually instrument](/platforms/javascript/guides/sveltekit/apis#load-function-instrumentation) SvelteKit-specific features
+- Learn more about [deploying SvelteKit apps to Cloudflare Pages](/platforms/javascript/guides/cloudflare/frameworks/sveltekit/)
+- Get familiar with [Sentry's product features](/product) like tracing, insights, and alerts
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- If you encountered issues with our installation wizard, try [setting up Sentry manually](/platforms/javascript/guides/sveltekit/manual-setup/)
+- Find various support topics in [troubleshooting](/platforms/javascript/guides/sveltekit/troubleshooting/)
+- [Get support](https://sentry.zendesk.com/hc/en-us/)
+
+</Expandable>

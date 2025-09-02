@@ -49,12 +49,23 @@ Example scenarios where it should be explicitly set to true:
 
 Defaults to `false`, unless in Blazor WASM, MAUI, Unity, or Xamarin where the default is `true`.
 
-In server applications, when Global Mode is **disabled**, data stored in the scope is only available in the context of the particular request in which it is created.
+When Global Mode is **disabled** data stored in the scope is set on the current [ExecutionContext](https://learn.microsoft.com/en-us/dotnet/api/system.threading.executioncontext).
+In server applications data stored in the scope is only available in the context of the particular request in which it is created.
+Broadly, the ExecutionContext passes to child tasks and threads, but not to parent tasks and threads.
 
-For UI applications (like MAUI) when Global mode is **enabled**, a single scope stack is shared by the whole application.
+When Global Mode is **enabled**, a single scope stack is shared by the whole application.
+
+<Alert title="💡 Note">
+
+Since version 5.0.0 the transaction is always set on the current ExecutionContext, regardless of the Global Mode, so that spans from the UI don't get mixed up with transactions in background services.
+
+There may be situations in which this isn't what you want. For example, you could start a transaction and then run multiple tasks in parallel, each of which makes an HTTP Request. By default, Sentry's <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/">Automatic Instrumentation</PlatformLink> will create spans as children of the transaction it finds stored in `Scope.Transaction` (which is now ExecutionContext specific, even in Global Mode).
+
+You can override this behavior and force auto-instrumented spans to have a specific parent by setting `Scope.Span`. [An example of doing this](https://github.com/getsentry/symbol-collector/blob/8a0fdb2594c3028f63f180b9b56b1efea1cbce34/src/SymbolCollector.Core/Client.cs#L74-L83) can be found in the Symbol Collector.
+
+</Alert>
 
 See the <PlatformLink to="/enriching-events/scopes/">Scopes and Hubs documentation</PlatformLink> for more information.
-
 
 </ConfigKey>
 
@@ -213,6 +224,8 @@ These options can be used to hook the SDK in various ways to customize the repor
 This function is called with an SDK-specific message or error event object, and can return a modified event object, or `null` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
 
 By the time <PlatformIdentifier name="set-before-send" /> is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
+
+When filtering based on exception types, the original exception (including any `AggregateException`) will be stored in `SentryEvent.Exception`. However, Sentry's `MainExceptionProcessor` unpacks AggregateExceptions automatically, and so what you will see in Sentry will be the various inner exceptions. These are also available in the SDK by inspecting the `SentryEvent.SentryExceptions` collection.
 
 </ConfigKey>
 

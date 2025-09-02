@@ -1,0 +1,33 @@
+
+Retrieve the `last_event_id` on your server and pass it to the HTML template to use during template rendering (this example uses Flask but the principle is the same on every framework):
+
+```python
+import sentry_sdk
+from flask import render_template
+
+@app.errorhandler(500)
+def server_error_handler(error):
+    event_id=sentry_sdk.last_event_id()
+    return render_template("500.html", sentry_event_id=event_id), 500
+```
+
+Make sure you've got the JavaScript SDK available:
+
+```html
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/bundle.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'bundle.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+```
+
+And the code that brings up the dialog in your template:
+
+```html
+{% if sentry_event_id %}
+<script>
+  Sentry.init({ dsn: "___PUBLIC_DSN___" });
+  Sentry.showReportDialog({ eventId: "{{ sentry_event_id }}" });
+</script>
+{% endif %}
+```

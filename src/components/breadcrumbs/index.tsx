@@ -9,20 +9,26 @@ type BreadcrumbsProps = {
 };
 
 export function Breadcrumbs({leafNode}: BreadcrumbsProps) {
-  const nodes: DocNode[] = [];
+  const breadcrumbs: {title: string; to: string}[] = [];
+
   for (let node: DocNode | undefined = leafNode; node; node = node.parent) {
     if (node && !node.missing) {
-      nodes.unshift(node);
+      const to = node.path === '/' ? node.path : `/${node.path}/`;
+      const title = node.frontmatter.sidebar_title ?? node.frontmatter.title;
+
+      breadcrumbs.unshift({
+        to,
+        title,
+      });
     }
   }
 
   return (
-    <ul className="list-none flex p-0 flex-wrap" style={{margin: 0}}>
-      {nodes.map(n => {
-        const to = n.path === '/' ? n.path : `/${n.path}/`;
+    <ul className="not-prose list-none flex flex-wrap" style={{margin: 0}}>
+      {breadcrumbs.map(b => {
         return (
-          <li className={styles['breadcrumb-item']} key={n.path}>
-            <SmartLink to={to}>{n.frontmatter.title}</SmartLink>
+          <li className={styles['breadcrumb-item']} key={b.to}>
+            <SmartLink to={b.to}>{b.title}</SmartLink>
           </li>
         );
       })}

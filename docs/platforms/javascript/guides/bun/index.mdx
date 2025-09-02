@@ -16,9 +16,9 @@ In addition to capturing errors, you can monitor interactions between multiple s
 
 Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
 
-<OnboardingOptionButtons options={["error-monitoring", "performance"]} />
+<OnboardingOptionButtons options={["error-monitoring", "performance", "logs"]} />
 
-Sentry captures data by using an SDK within your application’s runtime.
+Sentry captures data by using an SDK within your application's runtime.
 
 ```bash {tabTitle:Bun}
 bun add @sentry/bun
@@ -34,12 +34,17 @@ Once this is done, Sentry's Bun SDK captures unhandled exceptions as well as tra
 
 You need to create a file named `instrument.js` that imports and initializes Sentry:
 
-```javascript {filename: instrument.js} {"onboardingOptions": {"performance": "6-12"}}
+```javascript {filename: instrument.js}
 import * as Sentry from "@sentry/bun";
 
 // Ensure to call this before importing any other modules!
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/bun/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
 
   // Add Performance Monitoring by setting tracesSampleRate
   // Set tracesSampleRate to 1.0 to capture 100% of transactions
@@ -47,6 +52,7 @@ Sentry.init({
   // Learn more at
   // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
   tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
 });
 ```
 
@@ -58,7 +64,11 @@ You can also manually capture performance data - see <PlatformLink to="/tracing/
 
 ## Use
 
-You need to import the `instrument.js` file before importing any other modules in your application. This is necessary to ensure that Sentry can automatically instrument all modules in your application:
+<Alert level='warning'>
+
+Import `instrument.js` before any other modules to ensure Sentry initializes early. If you initialize later, auto-instrumentation and modules like database monitoring, agent monitoring, tracing may not work.
+
+</Alert>
 
 ```javascript {filename: app.js}
 // Import this first!
@@ -74,10 +84,12 @@ import http from "http";
 
 This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
 
-```javascript {"onboardingOptions": {"performance": "1-4, 12"}}
+```javascript
+// ___PRODUCT_OPTION_START___ performance
 Sentry.startSpan({
   op: "test",
   name: "My First Test Transaction",
+// ___PRODUCT_OPTION_END___ performance
 }, () => {
   setTimeout(() => {
     try {
@@ -86,7 +98,9 @@ Sentry.startSpan({
       Sentry.captureException(e);
     }
   }, 99);
+// ___PRODUCT_OPTION_START___ performance
 });
+// ___PRODUCT_OPTION_END___ performance
 ```
 
 <Alert>

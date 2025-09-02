@@ -219,6 +219,10 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/organization/integrations/telegram-alerts-bot/',
+    destination: '/organization/integrations/notification-incidents/telegram-alerts-bot/',
+  },
+  {
     source: '/platforms/php/configuration/integrations/',
     destination: '/platforms/php/integrations/',
   },
@@ -242,25 +246,10 @@ const userDocsRedirects = [
     source: '/product/dev-toolbar/:path*',
     destination: '/product/sentry-toolbar/:path*',
   },
-  {
-    source: '/product/explore/session-replay/hydration-errors/',
-    destination: '/product/issues/issue-details/replay-issues/hydration-error/',
-  },
-  {
-    source: '/product/explore/session-replay/privacy/',
-    destination: '/security-legal-pii/scrubbing/protecting-user-privacy/',
-  },
-  {
-    source: '/product/explore/session-replay/rage-dead-clicks/',
-    destination: '/product/issues/issue-details/replay-issues/rage-clicks/',
-  },
+  
   {
     source: '/organization/integrations/launchdarkly/',
     destination: '/organization/integrations/feature-flag/launchdarkly/',
-  },
-  {
-    source: '/product/explore/session-replay/replay-details/',
-    destination: '/product/explore/session-replay/web/replay-details/',
   },
   {
     source: '/platforms/javascript/guides/nextjs/sourcemaps/uploading/',
@@ -341,6 +330,10 @@ const userDocsRedirects = [
   {
     source: '/product/sentry-basics/concepts/:path*',
     destination: '/concepts/key-terms/:path*',
+  },
+  {
+    source: '/security-legal-pii/security/ai-ml-policy/',
+    destination: '/security-legal-pii/security/service-data-usage/',
   },
   {
     source: '/product/security/:path*',
@@ -499,6 +492,30 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/guides/:guide/configuration/options/#environment',
   },
   {
+    source: '/platforms/javascript/configuration/draining/',
+    destination: '/platforms/javascript/apis/#flush',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/configuration/draining/',
+    destination: '/platforms/javascript/guides/:guide/apis/#flush',
+  },
+  {
+    source: '/platforms/javascript/enriching-events/identify-user/',
+    destination: '/platforms/javascript/apis/#setUser',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/enriching-events/identify-user/',
+    destination: '/platforms/javascript/guides/:guide/apis/#setUser',
+  },
+  {
+    source: '/platforms/javascript/enriching-events/context/',
+    destination: '/platforms/javascript/apis/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/enriching-events/context/',
+    destination: '/platforms/javascript/guides/:guide/enriching-events/',
+  },
+  {
     source: '/platforms/:platform/context/',
     destination: '/platforms/:platform/enriching-events/context/',
   },
@@ -584,6 +601,16 @@ const userDocsRedirects = [
     source:
       '/platforms/:platform/guides/:guide/sourcemaps/:section(generating|validating|best-practices|artifact-and-release-bundles)/',
     destination: '/platforms/:platform/guides/:guide/sourcemaps/',
+  },
+  {
+    source: '/platforms/javascript/sourcemaps/troubleshooting_js/artifact-bundles/',
+    destination: '/platforms/javascript/sourcemaps/troubleshooting_js/debug-ids/',
+  },
+  {
+    source:
+      '/platforms/:platform/guides/:guide/sourcemaps/troubleshooting_js/artifact-bundles/',
+    destination:
+      '/platforms/:platform/guides/:guide/sourcemaps/troubleshooting_js/debug-ids/',
   },
   {
     source: '/platforms/minidump/crashpad/:path*',
@@ -708,6 +735,14 @@ const userDocsRedirects = [
   {
     source: '/platforms/:platform/enriching-events/user-feedback/',
     destination: '/platforms/:platform/user-feedback/',
+  },
+  {
+    source: '/platforms/javascript/guides/remix/frameworks/hydrogen/',
+    destination: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen/',
+    destination: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
   },
   {
     source: '/product/metrics/:path*',
@@ -925,16 +960,16 @@ const userDocsRedirects = [
     destination: '/product/insights/backend/queue-monitoring/queues-page/',
   },
   {
-    source: '/product/insights/llm-monitoring/',
-    destination: '/product/insights/ai/llm-monitoring/',
+    source: '/product/insights/llm-monitoring/:path*',
+    destination: '/product/insights/ai/',
   },
   {
-    source: '/product/insights/llm-monitoring/getting-started/',
-    destination: '/product/insights/ai/llm-monitoring/getting-started/',
+    source: '/product/insights/agents/:path*',
+    destination: '/product/insights/ai/agents/:path*',
   },
   {
-    source: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
-    destination: '/product/insights/ai/llm-monitoring/getting-started/the-dashboard/',
+    source: '/product/insights/retention-priorities/',
+    destination: '/organization/dynamic-sampling/',
   },
   // End of Insights reduirects.
   {
@@ -978,8 +1013,12 @@ const userDocsRedirects = [
     destination: '/platforms/kotlin/guides/kotlin-multiplatform/:path*',
   },
   {
-    source: '/platforms/python/:productfeature/troubleshooting/:path*',
-    destination: '/platforms/python/troubleshooting/:path*',
+    source: '/platforms/python/tracing/trace-propagation/:path*',
+    destination: '/platforms/python/tracing/distributed-tracing/:path*',
+  },
+  {
+    source: '/platforms/python/tracing/distributed-tracing/custom-instrumentation',
+    destination: '/platforms/python/tracing/distributed-tracing/custom-trace-propagation',
   },
   {
     source: '/platforms/ruby/guides/:guide/:productfeature/troubleshooting/:path*',
@@ -997,7 +1036,7 @@ const userDocsRedirects = [
     source: '/platforms/php/:productfeature/troubleshooting/:path*',
     destination: '/platforms/php/troubleshooting/:path*',
   },
-   {
+  {
     source: '/product/explore/feature-flags/:path*',
     destination: '/product/issues/issue-details/feature-flags/:path*',
   },
@@ -1009,25 +1048,80 @@ const userDocsRedirects = [
     source: '/product/tracing/:path*',
     destination: '/concepts/key-terms/tracing/:path*',
   },
-  // Redirects for JavaScript tracing docs 
+  {
+    source: '/organization/integrations/shortcut/',
+    destination: '/organization/integrations/issue-tracking/shortcut/',
+  },
+  // Redirects for JavaScript tracing docs
   {
     source: '/platforms/javascript/tracing/trace-propagation/:path*',
     destination: '/platforms/javascript/tracing/distributed-tracing/:path*',
   },
   {
-    source: '/platforms/javascript/guides/:guide/tracing/instrumentation/performance-metrics/',
-    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/performance-metrics/',
+    source: '/platforms/javascript/metrics/:path*',
+    destination: '/platforms/javascript/tracing/span-metrics/:path*',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/metrics/:path*',
+    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/:path*',
+  },
+  {
+    source: '/platforms/javascript/tracing/instrumentation/performance-metrics/',
+    destination: '/platforms/javascript/tracing/span-metrics/',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/performance-metrics/',
+    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/',
+  },
+  {
+    source:
+      '/platforms/javascript//tracing/instrumentation/span-metrics/performance-metrics/',
+    destination: '/platforms/javascript/tracing/span-metrics/',
+  },
+  {
+    source: '/platforms/javascript/profiling/browser-profiling/',
+    destination: '/platforms/javascript/profiling/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/profiling/browser-profiling/',
+    destination: '/platforms/javascript/guides/:guide/profiling/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/profiling/node-profiling/',
+    destination: '/platforms/javascript/guides/:guide/profiling/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide/profiling/browser-profiling/',
+    destination: '/platforms/javascript/guides/:guide/profiling/',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide/tracing/span-metrics/performance-metrics/',
+    destination: '/platforms/javascript/guides/:guide/tracing/span-metrics/',
   },
   {
     source: '/platforms/javascript/guides/:guide/tracing/trace-propagation/:path*',
     destination: '/platforms/javascript/guides/:guide/tracing/distributed-tracing/:path*',
   },
   {
+    source:
+      '/platforms/javascript/common/configuration/application-not-responding/:path*',
+    destination: '/platforms/javascript/common/configuration/event-loop-block/:path*',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide/configuration/application-not-responding/:path*',
+    destination:
+      '/platforms/javascript/guides/:guide/configuration/event-loop-block/:path*',
+  },
+  {
     source: '/platforms/javascript/tracing/instrumentation/custom-instrumentation/:path*',
     destination: '/platforms/javascript/tracing/instrumentation/:path*',
   },
   {
-    source: '/platforms/javascript/guides/:guide/tracing/instrumentation/custom-instrumentation/:path*',
+    source:
+      '/platforms/javascript/guides/:guide/tracing/instrumentation/custom-instrumentation/:path*',
     destination: '/platforms/javascript/guides/:guide/tracing/instrumentation/:path*',
   },
   {
@@ -1040,22 +1134,27 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/dart/guides/flutter/upload-debug/#when-to-upload',
-    destination: '/platforms/dart/guides/flutter/debug-symbols/#when-to-upload-debug-symbols',
+    destination:
+      '/platforms/dart/guides/flutter/debug-symbols/#when-to-upload-debug-symbols',
   },
   {
     source: '/platforms/dart/guides/flutter/upload-debug/#source-context',
-    destination: '/platforms/dart/guides/flutter/debug-symbols/dart-plugin/#configuration',
+    destination:
+      '/platforms/dart/guides/flutter/debug-symbols/dart-plugin/#configuration',
   },
   {
-    source: '/platforms/dart/guides/flutter/upload-debug/#uploading-source-code-context-for-flutter-android-ios-and-macos',
+    source:
+      '/platforms/dart/guides/flutter/upload-debug/#uploading-source-code-context-for-flutter-android-ios-and-macos',
     destination: '/platforms/dart/guides/flutter/debug-symbols/manual-upload/',
   },
   {
     source: '/platforms/dart/guides/flutter/upload-debug/#uploading-for-android-ndk',
-    destination: '/platforms/dart/guides/flutter/debug-symbols/manual-upload/#android-ndk',
+    destination:
+      '/platforms/dart/guides/flutter/debug-symbols/manual-upload/#android-ndk',
   },
   {
-    source: '/platforms/dart/guides/flutter/upload-debug/#automatically-upload-debug-symbols',
+    source:
+      '/platforms/dart/guides/flutter/upload-debug/#automatically-upload-debug-symbols',
     destination: '/dart/guides/flutter/debug-symbols/dart-plugin/',
   },
   {
@@ -1065,6 +1164,64 @@ const userDocsRedirects = [
   {
     source: '/platforms/dart/guides/flutter/usage/advanced-usage/:path*',
     destination: '/platforms/dart/guides/flutter/troubleshooting/:path*',
+  },
+  {
+    source: '/platforms/java/scope/',
+    destination: '/platforms/java/enriching-events/',
+  },
+  {
+    source: '/platforms/java/guides/:guide/scope/',
+    destination: '/platforms/java/guides/:guide/enriching-events/',
+  },
+  // Redirects for Trace Explorer
+  {
+    source: '/product/explore/traces',
+    destination: '/product/explore/trace-explorer/',
+  },
+  {
+    source: '/product/explore/new-trace-explorer',
+    destination: '/product/explore/trace-explorer/',
+  },
+  {
+    source: '/organization/integrations/expo/',
+    destination: '/organization/integrations/deployment/expo/',
+  },
+  {
+    source: '/product/issues/issue-details/sentry-seer/',
+    destination: '/product/ai-in-sentry/seer/',
+  },
+  {
+    source: '/product/ai-in-sentry/seer/seer-privacy-and-security',
+    destination: '/product/ai-in-sentry/ai-privacy-and-security/',
+  },
+  // .NET profiling guide redirects - consolidate to main profiling page
+  {
+    source: '/platforms/dotnet/guides/uwp/profiling/:path*',
+    destination: '/platforms/dotnet/profiling/',
+  },
+  {
+    source: '/platforms/dotnet/guides/aws-lambda/profiling/:path*',
+    destination: '/platforms/dotnet/profiling/',
+  },
+  {
+    source: '/platforms/dotnet/guides/azure-functions-worker/profiling/:path*',
+    destination: '/platforms/dotnet/profiling/',
+  },
+  {
+    source: '/platforms/dotnet/guides/blazor-webassembly/profiling/:path*',
+    destination: '/platforms/dotnet/profiling/',
+  },
+  {
+    source: '/platforms/dotnet/guides/aspnet/profiling/:path*',
+    destination: '/platforms/dotnet/profiling/',
+  },
+  {
+    source: '/platforms/dotnet/guides/entityframework/profiling/:path*',
+    destination: '/platforms/dotnet/profiling/',
+  },
+  {
+    source: '/platforms/dotnet/guides/google-cloud-functions/profiling/:path*',
+    destination: '/platforms/dotnet/profiling/',
   },
 ];
 

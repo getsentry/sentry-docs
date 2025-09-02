@@ -3,6 +3,12 @@ title: Rust Tracing
 description: "Learn about the Rust Tracing integration and how to get performance data for Rust native extensions."
 ---
 
+<Alert>
+
+Are you using Rust (without Python) and looking for Sentry's integration with the `tracing` crate? You can find it [here](/platforms/rust/tracing/instrumentation/automatic-instrumentation/).
+
+</Alert>
+
 `RustTracingIntegration` acts as a bridge between the Sentry Python SDK and Rust's [`tracing` framework](https://tracing.rs/). With this integration, traces that begin in Python can extend into Rust seamlessly.
 
 <Alert level="warning">
@@ -23,8 +29,11 @@ In your Rust native extension, you'll need three crates as dependencies in `Carg
 
 ### Python
 In your Python project, you'll need to install the Sentry SDK from PyPI.
-```bash
-pip install --upgrade sentry-sdk
+```bash {tabTitle:pip}
+pip install "sentry-sdk"
+```
+```bash {tabTitle:uv}
+uv add "sentry-sdk"
 ```
 
 ## Configure
@@ -62,7 +71,7 @@ Create an instance of `RustTracingIntegration` and add it to your list of integr
   ]}
 />
 
-```python {filename:main.py} {"onboardingOptions": {"performance": "12-14", "profiling": "15-18"}}
+```python {filename:main.py}
 import sentry_sdk
 from sentry_sdk.integrations.rust_tracing import RustTracingIntegration
 
@@ -74,13 +83,19 @@ async def main():
         # Add data like request headers and IP for users, if applicable;
         # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
         send_default_pii=True,
+        # ___PRODUCT_OPTION_START___ performance
         # Set traces_sample_rate to 1.0 to capture 100%
         # of transactions for tracing.
         traces_sample_rate=1.0,
-        # Set profiles_sample_rate to 1.0 to profile 100%
-        # of sampled transactions.
-        # We recommend adjusting this value in production.
-        profiles_sample_rate=1.0,
+        # ___PRODUCT_OPTION_END___ performance
+        # ___PRODUCT_OPTION_START___ profiling
+        # To collect profiles for all profile sessions,
+        # set `profile_session_sample_rate` to 1.0.
+        profile_session_sample_rate=1.0,
+        # Profiles will be automatically collected while
+        # there is an active span.
+        profile_lifecycle="trace",
+        # ___PRODUCT_OPTION_END___ profiling
         integrations=[
             RustTracingIntegration(
                 "my_rust_extension",

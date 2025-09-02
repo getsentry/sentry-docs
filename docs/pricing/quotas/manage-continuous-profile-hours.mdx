@@ -1,0 +1,61 @@
+---
+title: Manage Your Continuous Profile Hours
+keywords: ["best practices"]
+sidebar_order: 51
+description: Learn how to use Sentry's tools to manage the amount of Continuous Profile hours you pay for.
+---
+
+You can control when Continuous Profiling is active as well as use sampling to control the number of Continuous Profile hours you are billed for. See below to learn how.
+
+## Before You Begin: Check Your Usage       
+
+You can look at your Continuous Profile hours in aggregate in the "Usage Stats" tab of the **Stats** page to understand the breakdown of your incoming profiles and see which projects are consuming your quota. This may help you figure out where you need to further fine-tune your configuration.
+
+## How Can I Sample Profiles?
+
+Continuous Profiling only supports **client-side** sampling. To control client-side sampling behavior, you can set the `profile_session_sample_rate` configuration parameter to a value between 0.0-1.0 to control the number of profiling sessions that are sampled (the default is 0.0.)
+
+For Continuous Profiling, the session starts when the Sentry SDK is initialized and stops when the service or process is **terminated**. Sampling is only evaluated once during the process lifetime (during initialization). 
+
+For example: If you are using Continuous Profiling with a backend service where there are `N` instances of the same service that are deployed (such as containers or pods), the `profile_session_sample_rate` controls the percentage of those instances that will have profiling enabled. Setting the `profile_session_sample_rate` to 0.5 means that a randomly selected 50% of the `N` instances would have profiling enabled. This sampling rate will only be re-evaluated when the instance restarts or is re-deployed.
+
+## How Can I Control When Profiling Is Active?
+
+Continuous profiling provides two "lifecycle" modes that can be used to control when the profiler is running. These lifecycle modes are controlled by setting the `profile_lifecycle` SDK configuration option to one of two values:
+
+- `manual` (default) - This provides fully manual control over when the profile is running. You can use the `start_profile_session` and `stop_profile_session` functions to precisely control this. Note that a profile session has to be sampled based on the value of `profile_session_sample_rate` for `start_profiler` to have any effect. Calling `start_profile_session` will have no effect on un-sampled sessions.
+
+- `trace` - This provides a behavior similar to the previous transaction-based profiling product, where the profiler will automatically be started and stopped based on the trace lifecycle. In this mode, the profiler will automatically be started when there is at least one root span/transaction active, and automatically stopped when there are no root spans/transactions active. This lifecycle mode only works if both of the following conditions are met: 
+
+    - The profile session is sampled (via `profile_session_sample_rate`)
+    - The trace is sampled (via `traces_sample_rate` or `traces_sampler`)
+
+ ## How Can I Estimate Usage For Continuous Profiling On The Backend?
+
+ To estimate monthly usage for Continuous Profiling when used on the backend, the calculation is **730 hours per month * the number of service instances being sampled**. For example, if service A has 5 instances and service B has 10 instances, the total usage would be **(5 + 10) instances x 730 hours = 10,950 hours per month.** In this context, an "instance" is a single deployment of the same service -- for example, you could have a single service that is deployed within N Kubernetes pods, and each pod would contain at least one instance of the service. Since each instance is independent of the others, they can be profiled independently. You can reduce cost by not profiling multiple instances of the same service (reducing `profile_session_sample_rate`) -- if they were to only profile 1 instance of each service in this example, it would be **2 instances * 730 hours = 1,460 hours per month.** If there are multiple services, customers could also choose to not profile services that are not performance sensitive (such as those with low throughput).
+
+ ## How Do You Purchase Continuous Profiling?
+
+ Set your Pay-As-You-Go (PAYG) budget, which can be used to allocate spend towards Continuous Profiling and other Sentry products. See the [pricing docs](/pricing/) for more info.
+
+ ## What If I'm Already Using Transaction-Based Profiling?
+
+ Continuous Profiling and the previous transaction-based profiling are **mutually exclusive** within the same service, meaning you **cannot** use both at the same time. If you are setting `profiles_sample_rate` or `profiles_sampler` in your Sentry SDK configuration options, you are using transaction-based profiling. If you are setting `profile_session_sample_rate`, you are using Continuous Profiling.
+
+  ### What If I Try To Activate Both At Once?
+
+ If you set `profile_session_sample_rate` while either `profiles_sample_rate` or `profiles_sampler` are configured, `profile_session_sample_rate` will have no effect and transaction-based profiling will take precedence.
+
+  ### Can I Use Both Transaction-Based Profiling and Continuous Profiling On Separate Services?
+
+ Across **separate** applications or services you **can** choose to use a mix of both transaction-based profiling APIs and the new Continuous Profiling APIs. We recommend that all users migrate to Continuous Profiling APIs, since transaction-based APIs will eventually be deprecated and removed in a major SDK release. We will continue to support ingesting transaction-based profiles sent by older SDKs for backward compatibility.
+
+ ## How Do I Migrate From Transaction-Based Profiling to Continuous Profiling?
+
+- Replace usage of `profiles_sample_rate` and `profiles_sampler` with `profile_session_sample_rate`
+- If you're using the `manual` profile lifecycle mode, add calls to `start_profile_session` and `stop_profile_session`
+- If you're using the `trace` profile lifecycle mode, ensure that `traces_sample_rate` or `traces_sampler` are configured appropriately in addition to `profile_session_sample_rate`
+
+See the detailed [migration guide](/product/explore/profiling/continuous-ui-profiling-migration-guide/) for more information.
+
+

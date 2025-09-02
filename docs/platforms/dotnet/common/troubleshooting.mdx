@@ -4,6 +4,42 @@ sidebar_order: 9000
 description: "Learn more about how to troubleshoot common issues with the .NET SDK. "
 ---
 
+<PlatformSection supported={["dotnet.maui", "dotnet.apple"]}>
+
+## Stack traces are not symbolicated on iOS, macOS and Mac Catalyst
+
+When building .NET MAUI applications in release mode for iOS, macOS, or Mac Catalyst, you may see unsymbolicated stack traces in Sentry, where function names appear as memory addresses instead of readable method names.
+
+This is due to **a problem in the .NET SDK** that affects how debug information is handled when building for Apple platforms in release mode. This issue has been reported to Microsoft and is being tracked in the .NET runtime repository.
+
+If this issue affects your application, please:
+1. Visit the [.NET runtime issue](https://github.com/dotnet/runtime/issues/118700)
+2. Add a reaction (👍) to indicate this affects you
+3. Consider adding a comment describing your use case
+
+This will help Microsoft prioritize the fix based on community impact.
+
+### Workarounds
+
+Until the issue is resolved properly, symbolication on Apple platforms is only possible by disabling stripping. For example, by adding the following to your `*.csproj` file(s):
+
+```xml
+<PropertyGroup>
+  <EnableAssemblyILStripping>false</EnableAssemblyILStripping>
+</PropertyGroup>
+```
+
+**Important Note**: This may significantly increase the size of your application.
+
+### Affected versions
+
+This issue affects:
+- .NET 9 applications targeting iOS, macOS, and Mac Catalyst
+- Applications built in release mode with trimming enabled
+- Specifically impacts the `net9.0-ios*` target frameworks
+
+</PlatformSection>
+
 ## Sentry CLI not configured
 
 The following message may appear in your build output:
@@ -25,6 +61,49 @@ Keep in mind that if the Sentry CLI is disabled, then debug information files su
 will not be sent to Sentry. If Sentry cannot locate symbols, then it cannot perform symbolication of stack traces.
 This means that for some types of projects (depending on configuration), you may not see filenames and line numbers
 to help you locate the source of an exception.
+
+## Detected package version outside of dependency constraint
+
+In .NET for Android applications the Sentry SDK needs to make use of a limited number of Android APIs that form part of the operating system. Implicitly, Sentry depends on [various Java packages](https://github.com/getsentry/sentry-dotnet/blob/ebc1115d6c928ff56244afa3a1ce1d79b078fbf4/src/Sentry.Bindings.Android/Sentry.Bindings.Android.csproj#L45-L56) then.
+
+If you are using third party libraries that depend on different versions of these same Java packages, you may see `NU1605`, `NU1608` and/or `NU1107` warnings when trying to run `dotnet restore`.
+
+Sentry itself only specifies a minimum version of the Java packages that it depends on, so is compatible with any higher versions of the same Java packages. However, these Java packages come with their own dependencies, which are therefore transitive dependencies for Sentry. The transitive dependencies of the Sentry SDK can sometimes be incompatible with the transitive dependencies of other third party libraries and NuGet isn't smart enough to resolve those conflicts without a bit of guidance.
+
+Such problems need to be resolved on a case by case basis but the following example should demonstrate how you can resolve these issues if you run into them in your own application.
+
+### Example Problem
+
+If you use `Sentry` `5.7.0` in a .NET for Android application targeting `net9.0-android` then Sentry will have various [direct dependencies](https://www.nuget.org/packages/Sentry/5.7.0#dependencies-body-tab). However those direct dependencies come with their own dependencies, which for Sentry are transitive dependencies.
+
+If you also use `Microsoft.Maui.Essentials` version `9.0.50`, ultimately it depends on conflicting version of those same transitive dependencies.
+
+In this scenario you would see a warning or an error like the following when running `dotnet restore`:
+```
+NU1608: Detected package version outside of dependency constraint: Xamarin.AndroidX.Lifecycle.Common.Java8 2.8.5.1 requires Xamarin.AndroidX.Lifecycle.Common (>= 2.8.5.1 && < 2.8.6) but version Xamarin.AndroidX.Lifecycle.Common 2.8.7.2 was resolved.
+```
+
+### Example Solution
+
+To resolve the problem above, you can use [Transitive Pinning](https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management#transitive-pinning) to resolve explicit versions of transitive dependencies (rather than letting NuGet resolve these automatically).
+
+To enable Transitive Pinning, add the following to your `csproj` or `Directory.Build.props` file:
+
+```xml
+<PropertyGroup>
+  <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+</PropertyGroup>
+```
+
+You can then pin the appropriate versions of the transitive dependency that's causing you problems:
+
+```xml
+<ItemGroup>
+    <PackageReference Include="Xamarin.AndroidX.Lifecycle.Common.Java8" Version="2.8.7.2" />
+</ItemGroup>
+```
+
+Although the Sentry SDK only needs `Xamarin.AndroidX.Lifecycle.Common.Java8 2.8.5.1`, that version is problematic since it locks the transitive dependency `Xamarin.AndroidX.Lifecycle.Common` into the range `(>= 2.8.5.1 && < 2.8.6)`. By explicitly pinning `Xamarin.AndroidX.Lifecycle.Common.Java8` to `2.8.7.2` to match the version used by `Microsoft.Maui.Essentials`, we can resolve the conflict.
 
 ## Updating to 4.12.0 broke my .NET iOS App
 
@@ -78,5 +157,27 @@ If you're working with obfuscated code, you have several options:
 2. **Preserve method names**: Many obfuscation tools allow you to disable method name obfuscation while still obfuscating the code inside methods. This approach results in more readable stack traces while maintaining code protection. Configure your obfuscator to preserve method names if this balance of readability and security meets your needs.
 
 3. **Contribute to Symbolic**: [Our symbolication library is open source](https://github.com/getsentry/symbolic). You could create a ticket to discuss adding support to it with the maintainers.
+
+## Proxy Server
+
+Often, your server can only access the internet through a proxy server.
+If that's the case, make sure your proxy server is configured so the `HttpClient`
+used by Sentry's SDK can pick it up.
+
+```csharp
+(SentryOptions options) =>
+{
+    // Read the proxy's address from, for example, your Configuration
+    options.HttpProxy = new WebProxy(new Uri("http://proxyserver:80/"));
+};
+```
+
+Alternatively, you may configure the default proxy that all `HttpClient` instances use if no proxy is set explicitly.
+
+```csharp
+System.Net.Http.HttpClient.DefaultProxy = new WebProxy(new Uri("http://proxyserver:80/"));
+```
+
+For more information, see the [HttpClient.DefaultProxy Property](https://learn.microsoft.com/dotnet/api/system.net.http.httpclient.defaultproxy).
 
 <PlatformContent includePath="troubleshooting" />

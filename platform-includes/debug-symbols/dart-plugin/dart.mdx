@@ -19,17 +19,21 @@ The Sentry Dart Plugin requires basic configuration in your `pubspec.yaml` file:
   ]}
 />
 
-```yaml {filename:pubspec.yaml} {"onboardingOptions": {"source-context": "7-8", "source-maps": "9-10"}}
+```yaml {filename:pubspec.yaml}
 sentry:
   project: ___PROJECT_SLUG___
   org: ___ORG_SLUG___
   auth_token: ___ORG_AUTH_TOKEN___
   # Disable automatic upload of debug symbols
   # upload_debug_symbols: false
+  # ___PRODUCT_OPTION_START___ source-context
   # Enable source context
-  upload_source_context: true
-  # Enable source maps
+  upload_sources: true
+  # ___PRODUCT_OPTION_END___ source-context
+  # ___PRODUCT_OPTION_START___ source-maps
+  # Enable source maps (only relevant for Flutter Web)
   upload_source_maps: true
+  # ___PRODUCT_OPTION_END___ source-maps
 ```
 
 <OnboardingOption optionId="dsym">
@@ -82,7 +86,7 @@ If you don't obfuscate your build, the plugin won't upload debug symbols. Additi
 If you have ProGuard (`minifyEnabled`) enabled and you want to see proper native Android stacktraces, you must upload Android Proguard/R8 mapping files. You have two options:
 
 1. **Use the Sentry Android Gradle Plugin (Recommended)**
-   
+
    After installing the [Sentry Android Gradle Plugin](/platforms/android/configuration/gradle/), set `autoInstallation` to `false` in your `app/build.gradle` file:
 
    ```groovy {filename: app/build.gradle}
@@ -92,13 +96,13 @@ If you have ProGuard (`minifyEnabled`) enabled and you want to see proper native
        }
    }
    ```
-   
+
    This is necessary because Sentry Flutter already ships with a compatible Sentry Android SDK, so we need to avoid conflicts.
-   
+
    Follow the [Android Gradle Plugin guide](/platforms/android/configuration/gradle/#proguardr8--dexguard) to complete the ProGuard mapping setup.
 
 2. **Use the Sentry CLI**
-   
+
    Alternatively, you can use the [Sentry CLI](/cli/dif/#uploading-files) to manually upload mapping files.
 
 <Alert>
@@ -122,6 +126,7 @@ The following table lists all available configuration options for the Sentry Dar
 | `upload_source_maps` | boolean | `false` | Enables or disables automatic upload of source maps | |
 | `upload_sources` | boolean | `false` | Enables or disables source code upload | |
 | `url` | string | | The URL of your Sentry instance | `SENTRY_URL` |
+| `url_prefix` | URL prefix for JS source maps | e.g. ~/app/ (string) | no | - |
 | `wait_for_processing` | boolean | `false` | Whether to wait for server-side processing of uploaded files | |
 | `log_level` | string | `warn` | Configures the log level for sentry-cli (`trace`, `debug`, `info`, `warn`, `error`) | `SENTRY_LOG_LEVEL` |
 | `release` | string | `name@version` from pubspec | The release version for source maps | `SENTRY_RELEASE` |

@@ -69,7 +69,7 @@ The framework takes configuration settings from `appsettings.json`, environment 
 An example of some of the options that can be configured via `appsettings.json`:
 
 
-```json {filename:appsettings.json} {"onboardingOptions": {"performance": "10"}}
+```json {filename:appsettings.json}
   "Sentry": {
     "Dsn": "___PUBLIC_DSN___",
     "SendDefaultPii": true,
@@ -79,7 +79,9 @@ An example of some of the options that can be configured via `appsettings.json`:
     "AttachStackTrace": true,
     "Debug": true,
     "DiagnosticLevel": "Error",
+    // ___PRODUCT_OPTION_START___ performance
     "TracesSampleRate": 1.0
+    // ___PRODUCT_OPTION_END___ performance
   },
 ```
 
@@ -107,10 +109,13 @@ ASP.NET Core will automatically read this environment variable and bind it to th
 
 Finally, any settings that can be configured via `appsettings.json` or environment variables can also be configured via code. Some settings can only be configured in code, such as the `BeforeSend` callback:
 
-```csharp {"onboardingOptions": {"performance": "3"}}
+```csharp
 .UseSentry(options =>
 {
-    options.TracesSampleRate = 1.0; // <- Set this to configure automatic tracing
+    options.SendDefaultPii = true; // Adds request URL and headers, IP and name for users, etc.
+    // ___PRODUCT_OPTION_START___ performance
+    options.TracesSampleRate = 1.0; // Set this to configure automatic tracing
+    // ___PRODUCT_OPTION_END___ performance
     options.SetBeforeSend((@event, hint) =>
     {
         // Never report server names
@@ -120,9 +125,12 @@ Finally, any settings that can be configured via `appsettings.json` or environme
 })
 ```
 
-```fsharp {"onboardingOptions": {"performance": "2"}}
+```fsharp
 .UseSentry (fun options ->
-    options.TracesSampleRate <- 1.0   // <- Set this to configure automatic tracing
+    options.SendDefaultPii <- true // Adds request URL and headers, IP and name for users, etc.
+    // ___PRODUCT_OPTION_START___ performance
+    options.TracesSampleRate <- 1.0 // Set this to configure automatic tracing
+    // ___PRODUCT_OPTION_END___ performance
     options.SetBeforeSend(fun event hint ->
         // Never report server names
         event.ServerName <- null
@@ -259,6 +267,7 @@ A tunnel is an HTTP endpoint that acts as a proxy between Sentry and your applic
 ```javascript
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  sendDefaultPii: true,
   tunnel: "/tunnel",
 });
 ```

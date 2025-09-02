@@ -40,7 +40,7 @@ export function getDocsRootNode(): Promise<DocNode> {
 
 async function getDocsRootNodeUncached(): Promise<DocNode> {
   return frontmatterToTree(
-    isDeveloperDocs ? getDevDocsFrontMatter() : await getDocsFrontMatter()
+    await (isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter())
   );
 }
 
@@ -246,7 +246,8 @@ const filterVisibleSiblings = (s: DocNode) =>
   (s.frontmatter.sidebar_title || s.frontmatter.title) &&
   !s.frontmatter.sidebar_hidden &&
   !s.frontmatter.draft &&
-  s.path;
+  s.path &&
+  !isVersioned(s.path);
 
 function nodeToPlatform(n: DocNode): Platform {
   const platformData = platformsData()[n.slug];
@@ -259,10 +260,11 @@ function nodeToPlatform(n: DocNode): Platform {
     name: n.slug,
     type: 'platform',
     url: '/' + n.path + '/',
-    title: n.frontmatter.title,
+    title: n.frontmatter.platformTitle ?? n.frontmatter.title,
     caseStyle,
     sdk: n.frontmatter.sdk,
     fallbackPlatform: n.frontmatter.fallbackPlatform,
+    language: n.frontmatter.language,
     categories: n.frontmatter.categories,
     keywords: n.frontmatter.keywords,
     guides,
@@ -369,9 +371,20 @@ function extractGuides(platformNode: DocNode): PlatformGuide[] {
   if (!guidesNode) {
     return [];
   }
-  return guidesNode.children
+
+  // If a `platformTitle` is defined, we add a virtual guide
+  const defaultGuide = platformNode.frontmatter.platformTitle
+    ? {
+        ...nodeToGuide(platformNode.slug, platformNode),
+        key: platformNode.slug,
+      }
+    : undefined;
+
+  const childGuides = guidesNode.children
     .filter(({path}) => !isVersioned(path))
     .map(n => nodeToGuide(platformNode.slug, n));
+
+  return defaultGuide ? [defaultGuide, ...childGuides] : childGuides;
 }
 
 const extractIntegrations = (p: DocNode): PlatformIntegration[] => {
@@ -380,15 +393,17 @@ const extractIntegrations = (p: DocNode): PlatformIntegration[] => {
   }
   const integrations = nodeForPath(p, 'integrations');
   return (
-    integrations?.children.map(integ => {
-      return {
-        key: integ.slug,
-        name: integ.frontmatter.title,
-        icon: p.slug + '.' + integ.slug,
-        url: ['', 'platforms', p.slug, 'integrations', integ.slug].join('/'),
-        platform: p.slug,
-        type: 'integration',
-      };
-    }) ?? []
+    integrations?.children
+      .filter(({path}) => !isVersioned(path))
+      .map(integ => {
+        return {
+          key: integ.slug,
+          name: integ.frontmatter.title,
+          icon: p.slug + '.' + integ.slug,
+          url: ['', 'platforms', p.slug, 'integrations', integ.slug].join('/'),
+          platform: p.slug,
+          type: 'integration',
+        };
+      }) ?? []
   );
 };

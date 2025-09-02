@@ -1,0 +1,52 @@
+Once the feature is enabled on the SDK and the SDK is initialized, you can send logs using the `Sentry.logger` APIs.
+
+The `logger` namespace exposes six methods that you can use to log messages at different log levels: `trace`, `debug`, `info`, `warning`, `error`, and `fatal`.
+
+You can pass additional attributes directly to the logging functions. These properties will be sent to Sentry, and can be searched from within the Logs UI, and even added to the Logs views as a dedicated column.
+
+```ruby
+Sentry.logger.info("Updated global cache")
+
+Sentry.logger.debug("Cache miss for user %{user_id}", user_id: 123)
+
+Sentry.logger.trace(
+  "Starting database connection %{database}",
+  database: "users"
+)
+
+Sentry.logger.warn(
+  "Rate limit reached for endpoint %{endpoint}",
+  endpoint: "/api/results/"
+)
+
+Sentry.logger.error(
+  "Failed to process payment. Order: %{order_id}. Amount: %{amount}",
+  order_id: "or_2342", amount: 99.99
+)
+
+Sentry.logger.fatal(
+  "Database %{database} connection pool exhausted",
+  database: "users"
+)
+```
+
+You can also use message templates with positional or hash parameters:
+
+```ruby
+# Using named parameters
+Sentry.logger.info("User %{name} logged in", name: "Jane Doe")
+
+# Using positional parameters
+Sentry.logger.info("User %s logged in", ["Jane Doe"])
+```
+
+Any other arbitrary attributes will be sent as part of the log event payload:
+
+```ruby
+# Here `user_id` and `action` will be sent as extra attributes that
+# Sentry Logs UI displays
+Sentry.logger.info(
+  "User %{user} logged in",
+  user: "Jane", user_id: 123, action: "create"
+)
+```

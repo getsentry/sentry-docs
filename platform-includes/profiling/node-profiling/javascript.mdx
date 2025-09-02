@@ -1,0 +1,125 @@
+By default, Sentry error events will not get trace context unless you configure the scope with the transaction, as illustrated in the example below.
+
+<Alert>
+
+If you're adopting Profiling in a high-throughput environment, we recommend testing prior to deployment to ensure that your service's performance characteristics maintain expectations.
+
+</Alert>
+
+## Installation
+
+You have to install the `@sentry/profiling-node` package in addition to your main SDK package:
+
+```bash {tabTitle:npm}
+npm install @sentry/profiling-node --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/profiling-node
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/profiling-node
+```
+
+The version of the `@sentry/profiling-node` package must match the version of the main SDK package exactly.
+
+## Enabling Profiling
+
+Profiling supports two modes - `manual` and `trace`. The two modes are mutually exclusive, and cannot be used at the same time.
+
+In `manual` mode, the profiling data collection can be managed via calls to `Sentry.profiler.startProfiler` and `Sentry.profiler.stopProfiler`. You are entirely in the in control of when the profiler runs.
+
+In `trace` mode, the profiler manages its own start and stop calls, which are based on spans: the profiler continues to run while there is at least one active span, and stops when there are no active spans.
+
+### Enabling Trace Lifecycle Profiling
+
+To enable profiling, add `@sentry/profiling-node` to your imports and set up `nodeProfilingIntegration` in your Sentry config.
+
+```javascript {diff}
+const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    // Add our Profiling integration
++   nodeProfilingIntegration(),
+  ],
+  tracesSampleRate: 1.0,
++ profileSessionSampleRate: 1.0,
++ profileLifecycle: 'trace',
+});
+
+// Profiling happens automatically after setting it up with `Sentry.init()`.
+// All spans (unless those discarded by sampling) will have profiling data attached to them.
+Sentry.startSpan(
+  {
+    op: "rootSpan",
+    name: "My root span",
+  },
+  () => {
+    // The code executed here will be profiled
+  }
+);
+```
+
+### Enabling Manual Lifecycle Profiling
+
+To enable profiling, add `@sentry/profiling-node` to your imports and set up `nodeProfilingIntegration` in your Sentry config.
+
+```javascript {diff}
+const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    // Add our Profiling integration
++   nodeProfilingIntegration(),
+  ],
+  tracesSampleRate: 1.0,
++ profileSessionSampleRate: 1.0,
++ profileLifecycle: 'manual',
+});
+
+// All spans (unless those discarded by sampling) will have profiling data attached to them.
+Sentry.profiler.startProfiler();
+// Code executed between these two calls will be profiled
+Sentry.profiler.stopProfiler();
+```
+
+### Managing profile sampling rates
+
+Sentry SDK supports an additional `profileSessionSampleRate` that will enable or disable profiling for the entire session. This can be used if you want to control session sampling rates at the service level as the sampling decision is evaluated only once at SDK init.
+
+This is useful for cases where you deploy your service many times, but would only like a subset of those services to be profiled.
+
+```javascript {diff}
+const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    // Add our Profiling integration
+    nodeProfilingIntegration(),
+  ],
+  tracesSampleRate: 1.0,
++ profileSessionSampleRate: 0.0
+});
+```
+
+## How Does It Work?
+
+Under the hood, the Sentry profiler uses V8's [CpuProfiler](https://v8docs.nodesource.com/node-18.2/d2/d34/classv8_1_1_cpu_profiler.html) to collect stack samples. This means that `sentry/profiling-node` is written as a [native add-on](https://nodejs.org/docs/latest-v18.x/api/addons.html) for Node and won't run in environments like Deno or Bun. Profiling enhances tracing by providing profiles for individual transactions. This allows you to look at higher level performance information like transaction and span durations before diving deeper and looking at profiles.
+
+<Include name="profiling-node-runtime-flags.mdx" />
+
+## Precompiled Binaries
+
+The `@sentry/profiling-node` package precompiles binaries for a number of common architectures. This minimizes the tooling required to run the package and avoids compiling the package from source in most cases, which speeds up installation. Currently, we ship prebuilt binaries for the following architectures and Node versions:
+
+- macOS x64: Node v18, v20, v22, v24
+- Linux ARM64 (musl): Node v18, v20, v22, v24
+- Linux x64 (glibc): Node v18, v20, v22, v24
+- Windows x64: Node v18, v20, v22, v24
+
+The set of common architectures should cover a wide variety of use cases, but if you have feedback or experience different behavior, please open an issue in the [Sentry JavaScript SDK](https://github.com/getsentry/sentry-javascript) repository.

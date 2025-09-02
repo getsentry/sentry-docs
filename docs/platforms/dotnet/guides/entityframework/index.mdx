@@ -45,7 +45,7 @@ Add the Entity Framework 6 support to your project in one step:
 
 For example, configuring an ASP.NET app with _global.asax_:
 
-```csharp {filename:global.asax} {"onboardingOptions": {"performance": "15-17, 26-35"}}
+```csharp {filename:global.asax}
 using System;
 using System.Configuration;
 using Sentry.AspNet;
@@ -60,9 +60,13 @@ public class MvcApplication : System.Web.HttpApplication
         {
             // We store the DSN inside Web.config
             options.Dsn = ConfigurationManager.AppSettings["SentryDsn"];
+            // Adds request URL and headers, IP and name for users, etc.
+            options.SendDefaultPii = true;
+            // ___PRODUCT_OPTION_START___ performance
             // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
             // We recommend adjusting this value in production.
             options.TracesSampleRate = 1.0;
+            // ___PRODUCT_OPTION_END___ performance
             // Add the EntityFramework integration
             options.AddEntityFramework();
         });
@@ -71,6 +75,7 @@ public class MvcApplication : System.Web.HttpApplication
     // Global error catcher
     protected void Application_Error() => Server.CaptureLastError();
 
+    // ___PRODUCT_OPTION_START___ performance
     protected void Application_BeginRequest()
     {
         Context.StartSentryTransaction();
@@ -81,6 +86,7 @@ public class MvcApplication : System.Web.HttpApplication
         Context.FinishSentryTransaction();
     }
 
+    // ___PRODUCT_OPTION_END___ performance
     public override void Dispose()
     {
         _sentrySdk.Dispose();

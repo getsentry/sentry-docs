@@ -93,6 +93,24 @@ This option can be overridden using `in_app_include`.
 
 </SdkOption>
 
+<SdkOption name="prefixes" type='string[]' defaultValue='[]'>
+
+A list of prefixes that should be stripped from the filenames of captured stacktraces to make them relative. This helps in normalizing file paths across different environments.
+
+For example, if your code is deployed in different locations across environments (e.g., `/var/www/app` in production and `/home/user/projects/app` in development), you can use this option to strip these prefixes and make the paths consistent.
+
+```php
+\Sentry\init([
+    'dsn' => '___DSN___',
+    'prefixes' => [
+        '/var/www/',
+        '/home/user/projects/',
+    ],
+]);
+```
+
+</SdkOption>
+
 <SdkOption name="max_request_body_size"type='string' defaultValue='medium'>
 
 This parameter controls whether integrations should capture HTTP request bodies. It can be set to one of the following values:
@@ -146,11 +164,11 @@ Checks whether the provided class name is of a given type or subtype.
 
 </SdkOption>
 
-<SdkOption name="error_types" type='int' defaultValue='E_ALL'>
+<SdkOption name="error_types" type='int' defaultValue='error_reporting()'>
 
 Sets which errors are reported. It takes the same values as PHP's [`error_reporting`](https://www.php.net/manual/errorfunc.configuration.php#ini.error-reporting) configuration parameter.
 
-By default all types of errors are be reported (equivalent to `E_ALL`).
+By default, the error types reported are determined by the value returned by the `error_reporting()` function.
 
 </SdkOption>
 
@@ -208,6 +226,20 @@ To disable sending trace data to any downstream service, set this option to an e
 <SdkOption name="before_send_check_in" type='function (Event $checkIn): Event'>
 
 This function is called with an SDK-specific check-in event object, and can return a modified check-in event object, or `null` to skip reporting the event.
+
+</SdkOption>
+
+## Logs Options
+
+<SdkOption name="enable_logs" type='bool' defaultValue='false'>
+
+This option enables the logging integration, which allows the SDK to capture logs and send them to Sentry. This is disabled by default.
+
+</SdkOption>
+
+<SdkOption name="before_send_log" type='function (\Sentry\Logs\Log $log): ?\Sentry\Logs\Log'>
+
+This function is called with an SDK-specific log object, and can return a modified log event object, or `null` to skip reporting the event.
 
 </SdkOption>
 

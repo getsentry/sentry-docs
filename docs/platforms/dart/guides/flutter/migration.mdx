@@ -3,6 +3,99 @@ title: Migration Guide
 sidebar_order: 8000
 ---
 
+## Migrating from `sentry_flutter` `8.x` to `sentry_flutter` `9.x`
+
+### General
+
+#### Dart and Flutter versions
+
+The required minimum Dart and Flutter versions are now `3.5.0` and `3.24.0` respectively. 
+This change allows us to use safer APIs and better support for features such as Session Replay and WASM compilation.
+
+#### Android API version
+
+The required minimum Android API is now `21`.
+
+#### API Removals and Renames
+
+- The `beforeScreenshot` method has been replaced by `beforeCaptureScreenshot`. 
+- Manual TTID implementation has been removed as the automatic TTID instrumentation has proven to be accurate enough so a manual one is not needed anymore.
+- `LoadImagesListIntegration` has been renamed to `LoadNativeDebugImagesIntegration`.
+- The `enableTracing` option has been removed. Use `options.traceSampleRate` or `options.tracesSampler` instead.
+- Both `options.autoAppStart` and `setAppStartEnd` have been removed. The [App Start Instrumentation](/platforms/dart/guides/flutter/integrations/app-start-instrumentation/) will now determine the end of app start and is enabled by default.
+- Usage of `dart:html` has been removed in favor of `package:web`. The SDK is now packaged with the `package:web` dependency for better interoperability with web APIs.
+- The `beforeSendTransaction` callback now has a `Hint` parameter.
+- The option `attachScreenshotOnlyWhenResumed` has been removed.
+- The `segment` field from `SentryUser` has been removed.
+- The old user feedback API has been removed and replaced by `Sentry.captureFeedback`.
+
+#### Response Body Handling
+
+Due to PII concerns, response bodies will no longer be added to Sentry events by the SDK automatically. 
+Responses are now attached to the `Hint` object, which can be read in `beforeSend`/`beforeSendTransaction` callbacks via `hint.response` so you can manually attach the response to your event.
+Response bodies with a size greater than 0.15MB are not added to the hint object.
+Currently as of version `9.0.0`, only the `dio` integration is supported.
+
+#### Screenshots
+
+Screenshots are now masked by default for privacy reasons.
+For example, text fields are automatically masked to prevent sensitive information from being leaked.
+Read the guide [here](/platforms/dart/guides/flutter/enriching-events/screenshots/#redact-screenshots-via-masking) for more information on how to customize the masking.
+
+#### Logging
+
+The default log level is now `warning` when `debug = true`. 
+This can be adjusted by setting `options.diagnosticLevel = SentryLevel.info` in `SentryFlutter.init`.
+
+#### SDK Data Classes
+
+SDK data classes are now mutable which makes it easier to manipulate them. 
+For backwards-compatibility, `copyWith` and `clone` can still be used but are officially deprecated.
+
+```dart
+// old
+options.beforeSend = (event, hint) {
+  event = event.copyWith(release: 'my-release');
+  return event;
+}
+
+// new
+options.beforeSend = (event, hint) {
+  event.release = 'my-release';
+  return event;
+}
+```
+
+### Flutter Desktop
+
+Native crash handling is now enabled by default for Flutter Desktop. 
+Windows ARM64 uses [breakpad](https://chromium.googlesource.com/breakpad/breakpad) and all other desktop platforms use [crashpad](https://chromium.googlesource.com/crashpad/crashpad).
+You can disable this feature by setting the `SENTRY_NATIVE_BACKEND` environment variable to "none". e.g `export SENTRY_NATIVE_BACKEND=none`
+
+If you encounter any issues, please refer to the [troubleshooting guide](/platforms/dart/guides/flutter/troubleshooting/#issues-with-native-crashes-on-linux-andor-windows).
+
+### Flutter Web
+
+The interop with the [Sentry Browser Javascript SDK](/platforms/javascript/) is now enabled by default.
+During `SentryFlutter.init` the SDK will inject the CDN script into the HTML's head.
+This change allows us to utilize existing SDK functionality such as native JS Errors, add new features such as release health and makes it easier to develop features such as debug ids in the future.
+
+If you initialize the native SDKs separately with `options.autoInitializeNativeSdk = false` you will also need to add the Sentry Browser Javascript SDK to your website's HTML head.
+[Read this guide](https://docs.sentry.io/platforms/javascript/install/loader/#cdn) on how to install the SDK into your application via CDN bundles.
+
+### Drift Integration
+
+We have bumped the required Drift version to `2.24.0` and have changed the API on how to use the integration.
+Instead of a `SentryQueryExecutor`, Sentry now provides a `SentryQueryInterceptor` that you can use like so:
+
+```dart
+final executor = NativeDatabase.memory().interceptWith(
+  SentryQueryInterceptor(databaseName: 'your_db_name')
+);
+```
+
+For more information on how to use `QueryInterceptor` read the [Drift documentation](https://drift.simonbinder.eu/examples/tracing/).
+
 ## Migrating From `sentry_flutter` `6.18.x` to `sentry_flutter` `7.0.0`
 
 In addition to the changes introduced in [sentry](/platforms/dart/migration/):
@@ -42,7 +135,7 @@ There are no Flutter specific breaking changes. However there are some in [sentr
 
 You may remove `android:extractNativeLibs="true"` meta-data in the `AndroidManifest` file or `android.bundle.enableUncompressedNativeLibs=false` in the `gradle.properties` file if you're using the [Android Native Development Kit](/platforms/android/configuration/using-ndk/). Sentry can now symbolicate events with the default value of [extractNativeLibs](https://developer.android.com/studio/releases/gradle-plugin#extractNativeLibs) and [android.bundle.enableUncompressedNativeLibs](https://developer.android.com/studio/releases/gradle-plugin#behavior-changes).
 
-A random generated installationId replaces [Settings.Secure.ANDROID_ID](https://developer.android.com/reference/android/provider/Settings.Secure#ANDROID_ID), which has been removed. This may affect the number of unique users displayed on the the Issues page and Alerts. If you always set a custom user using Sentry.setUser(customUser), the behavior has not changed. While you don't have to make any update, if you want to maintain the old behavior, use the following code snippet.
+A random generated installationId replaces [Settings.Secure.ANDROID_ID](https://developer.android.com/reference/android/provider/Settings.Secure#ANDROID_ID), which has been removed. This may affect the number of unique users displayed on the Issues page and Alerts. If you always set a custom user using Sentry.setUser(customUser), the behavior has not changed. While you don't have to make any update, if you want to maintain the old behavior, use the following code snippet.
 It makes use of the [device_info_plus](https://pub.dev/packages/device_info_plus) plugin:
 
 

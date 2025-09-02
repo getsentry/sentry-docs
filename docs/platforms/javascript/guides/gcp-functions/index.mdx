@@ -23,7 +23,7 @@ Select which Sentry features you'd like to install in addition to Error Monitori
 ## Install
 
 <OnboardingOptionButtons
-  options={["error-monitoring", "performance", "profiling"]}
+  options={["error-monitoring", "performance", "profiling", "logs"]}
 />
 
 Add `@sentry/google-cloud-serverless` as a dependency to `package.json`:
@@ -35,11 +35,16 @@ Add `@sentry/google-cloud-serverless` as a dependency to `package.json`:
 To set up Sentry for a Google Cloud Function:
 
 
-```javascript {tabTitle:Http functions} {"onboardingOptions": {"performance": "5-11"}}
+```javascript {tabTitle:Http functions}
 const Sentry = require("@sentry/google-cloud-serverless");
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/gcp-functions/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
 
   // Add Tracing by setting tracesSampleRate and adding integration
   // Set tracesSampleRate to 1.0 to capture 100% of transactions
@@ -47,6 +52,7 @@ Sentry.init({
   // Learn more at
   // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
   tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
 });
 
 exports.helloHttp = Sentry.wrapHttpFunction((req, res) => {
@@ -54,12 +60,14 @@ exports.helloHttp = Sentry.wrapHttpFunction((req, res) => {
 });
 ```
 
-```javascript {tabTitle:Background functions} {"onboardingOptions": {"performance": "5"}}
+```javascript {tabTitle:Background functions}
 const Sentry = require("@sentry/google-cloud-serverless");
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  // ___PRODUCT_OPTION_START___ performance
   tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
 });
 
 exports.helloEvents = Sentry.wrapEventFunction(
@@ -69,12 +77,14 @@ exports.helloEvents = Sentry.wrapEventFunction(
 );
 ```
 
-```javascript {tabTitle:CloudEvent functions} {"onboardingOptions": {"performance": "5"}}
+```javascript {tabTitle:CloudEvent functions}
 const Sentry = require("@sentry/google-cloud-serverless");
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  // ___PRODUCT_OPTION_START___ performance
   tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
 });
 
 exports.helloEvents = Sentry.wrapCloudEventFunction(

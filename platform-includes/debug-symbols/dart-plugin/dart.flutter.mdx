@@ -1,0 +1,145 @@
+## Installation
+
+In your `pubspec.yaml`, add `sentry_dart_plugin` as a new dev dependency:
+
+```yaml {filename: pubspec.yaml}
+dev_dependencies:
+  sentry_dart_plugin: ^{{@inject packages.version('sentry.dart.plugin', '2.0.0') }}
+```
+
+## Configuration
+
+The Sentry Dart Plugin requires basic configuration in your `pubspec.yaml` file:
+
+<OnboardingOptionButtons
+  options={[
+    {id: 'dsym', checked: true, disabled: true},
+    'source-context',
+    'source-maps'
+  ]}
+/>
+
+```yaml {filename:pubspec.yaml}
+sentry:
+  project: ___PROJECT_SLUG___
+  org: ___ORG_SLUG___
+  auth_token: ___ORG_AUTH_TOKEN___
+  # Disable automatic upload of debug symbols
+  # upload_debug_symbols: false
+  # ___PRODUCT_OPTION_START___ source-context
+  # Enable source context
+  upload_sources: true
+  # ___PRODUCT_OPTION_END___ source-context
+  # ___PRODUCT_OPTION_START___ source-maps
+  # Enable source maps (only relevant for Flutter Web)
+  upload_source_maps: true
+  # ___PRODUCT_OPTION_END___ source-maps
+```
+
+<OnboardingOption optionId="dsym">
+The `upload_debug_symbols` option defaults to `true` when not specified.
+</OnboardingOption>
+
+### Alternative Configuration Methods
+
+In addition to configuring the plugin in `pubspec.yaml`, you can use:
+- Environment variables
+- Properties file
+
+For more information, read the [Sentry Dart Plugin README](https://github.com/getsentry/sentry-dart-plugin/tree/main?tab=readme-ov-file#configuration-optional).
+
+## Building Your Application
+
+Before running the plugin, build your Flutter application with one of the following commands. Obfuscated is encouraged for production builds, and will make uploading debug symbols necessary to get readable stack traces.
+
+```bash {tabTitle: Obfuscated}
+flutter build apk --obfuscate --split-debug-info=<output-directory>
+flutter build ios --obfuscate --split-debug-info=<output-directory>
+flutter build macos --obfuscate --split-debug-info=<output-directory>
+flutter build windows --obfuscate --split-debug-info=<output-directory>
+flutter build linux --obfuscate --split-debug-info=<output-directory>
+```
+
+```bash {tabTitle: Flutter Web}
+flutter build web --release --source-maps
+```
+<Alert>
+For Flutter web run `flutter build web --release --source-maps` to generate source maps.
+</Alert>
+
+## Running the Plugin
+
+After building your application, run the plugin to upload debug symbols:
+
+```bash
+flutter pub run sentry_dart_plugin
+```
+
+<Alert>
+
+If you don't obfuscate your build, the plugin won't upload debug symbols. Additionally, source context (viewing source code in stack trace frames on Sentry) is not currently supported for non-obfuscated builds. GitHub Issue: [sentry-dart/#1314](https://github.com/getsentry/sentry-dart/issues/1314)
+
+</Alert>
+
+## Android ProGuard Integration
+
+If you have ProGuard (`minifyEnabled`) enabled, you must upload Android Proguard/R8 mapping files. You have two options:
+
+1. **Use the Sentry Android Gradle Plugin (Recommended)**
+
+   After installing the [Sentry Android Gradle Plugin](/platforms/android/configuration/gradle/), set `autoInstallation` to `false` in your `app/build.gradle` file:
+
+   ```groovy {filename: app/build.gradle}
+   sentry {
+       autoInstallation {
+         enabled = false
+       }
+   }
+   ```
+
+   This is necessary because Sentry Flutter already ships with a compatible Sentry Android SDK, so we need to avoid conflicts.
+
+   Follow the [Android Gradle Plugin guide](/platforms/android/configuration/gradle/#proguardr8--dexguard) to complete the ProGuard mapping setup.
+
+2. **Use the Sentry CLI**
+
+   Alternatively, you can use the [Sentry CLI](/cli/dif/#uploading-files) to manually upload mapping files.
+
+<Alert>
+
+Sentry's Flutter SDK doesn't currently support the `uploadNativeSymbols` flag from the Sentry Gradle Plugin.
+
+</Alert>
+
+## Configuration Reference
+
+The following table lists all available configuration options for the Sentry Dart Plugin:
+
+<div style={{overflowX: 'auto', display: 'block', width: '100%'}}>
+
+| Option | Type | Default | Description | Environment Variable |
+|--------|------|---------|-------------|---------------------|
+| `project` | string | | **Required.** Your project's name (e.g., `sentry-flutter`) | `SENTRY_PROJECT` |
+| `org` | string | | **Required.** Your organization's slug (e.g., `sentry-sdks`) | `SENTRY_ORG` |
+| `auth_token` | string | | **Required.** The Sentry auth token | `SENTRY_AUTH_TOKEN` |
+| `upload_debug_symbols` | boolean | `true` | Enables or disables automatic upload of debug symbols | |
+| `upload_source_maps` | boolean | `false` | Enables or disables automatic upload of source maps | |
+| `upload_sources` | boolean | `false` | Enables or disables source code upload | |
+| `url` | string | | The URL of your Sentry instance | `SENTRY_URL` |
+| `url_prefix` | URL prefix for JS source maps | e.g. ~/app/ (string) | no | - |
+| `wait_for_processing` | boolean | `false` | Whether to wait for server-side processing of uploaded files | |
+| `log_level` | string | `warn` | Configures the log level for sentry-cli (`trace`, `debug`, `info`, `warn`, `error`) | `SENTRY_LOG_LEVEL` |
+| `release` | string | `name@version` from pubspec | The release version for source maps | `SENTRY_RELEASE` |
+| `dist` | string | | Custom distribution identifier | `SENTRY_DIST` |
+| `web_build_path` | string | `build/web` | The web build folder path | |
+| `commits` | string | `auto` | Release commits integration | |
+| `ignore_missing` | boolean | `false` | Ignore missing commits previously used in the release | |
+| `bin_dir` | string | `.dart_tool/pub/bin/sentry_dart_plugin` | The folder where the plugin downloads the sentry-cli binary | |
+| `bin_path` | string | | Path to a sentry-cli binary to use instead of downloading | |
+| `sentry_cli_cdn_url` | string | `https://downloads.sentry-cdn.com/sentry-cli` | Alternative place to download sentry-cli | `SENTRYCLI_CDNURL` |
+
+</div>
+
+## Troubleshooting
+
+If you encounter any issues with the Sentry Dart Plugin, refer to [Troubleshooting - Sentry Dart Plugin](/platforms/dart/guides/flutter/troubleshooting#sentry-dart-plugin) for solutions to common problems.

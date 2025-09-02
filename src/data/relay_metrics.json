@@ -1,5 +1,11 @@
 [
   {
+    "type": "Gauge",
+    "name": "async_pool.activity",
+    "description": "Tracks the activity of the async pool.\n\nThe activity is a value between 0.0 and 100.0 which determines how busy is the pool\nw.r.t. to its provisioned capacity.\n\nThis metric is tagged with:\n- `pool`: the name of the pool.",
+    "features": []
+  },
+  {
     "type": "Counter",
     "name": "async_pool.finished_tasks",
     "description": "Tracks the number of tasks driven to completion by the async pool.\n\nThis metric is tagged with:\n- `pool`: the name of the pool.",
@@ -14,7 +20,7 @@
   {
     "type": "Gauge",
     "name": "async_pool.utilization",
-    "description": "Tracks the utilization of the async pool.\n\nThe utilization is a value between 0.0 and 100.0 which determines how busy is the pool\nw.r.t. to its provisioned capacity.\n\nThis metric is tagged with:\n- `pool`: the name of the pool.",
+    "description": "Tracks the utilization of the async pool.\n\nThe utilization is a value between 0.0 and 100.0 which determines how busy the pool is doing\nCPU-bound work.\n\nThis metric is tagged with:\n- `pool`: the name of the pool.",
     "features": []
   },
   {
@@ -162,6 +168,12 @@
     "features": []
   },
   {
+    "type": "Timer",
+    "name": "envelope.span_v2_expansion",
+    "description": "The time in milliseconds it takes to expand a Span V2 container into Spans V1.",
+    "features": []
+  },
+  {
     "type": "Counter",
     "name": "event.accepted",
     "description": "Number of envelopes accepted in the current time slot.\n\nThis represents requests that have successfully passed rate limits and filters, and have\nbeen sent to the upstream.\n\nThis metric is tagged with:\n- `handling`: Either `\"success\"` if the envelope was handled correctly, or `\"failure\"` if\nthere was an error or bug.",
@@ -176,19 +188,19 @@
   {
     "type": "Counter",
     "name": "event.item_bytes",
-    "description": "Number of bytes we processed per envelope item.",
+    "description": "Number of bytes we processed per envelope item.\n\nThis metric is tagged with:\n- `item_type`: The type of the items being counted.\n- `is_container`: Whether this item is a container holding multiple items.\n- `sdk`: The name of the Sentry SDK sending the envelope. This tag is only set for\nSentry's SDKs and defaults to \"proprietary\".",
     "features": []
   },
   {
     "type": "Histogram",
     "name": "event.item_size",
-    "description": "The number of bytes received by Relay for each individual envelope item type.\n\nMetric is tagged by the item type.",
+    "description": "The number of bytes received by Relay for each individual envelope item type.\n\nThis metric is tagged with:\n- `item_type`: The type of the items being counted.\n- `is_container`: Whether this item is a container holding multiple items.",
     "features": []
   },
   {
     "type": "Counter",
     "name": "event.items",
-    "description": "Number of items we processed per envelope.",
+    "description": "Number of total envelope items we received.\n\nNote: This does not count raw items, it counts the logical amount of items,\ne.g. a single item container counts all its contained items.\n\nThis metric is tagged with:\n- `item_type`: The type of the items being counted.\n- `is_container`: Whether this item is a container holding multiple items.\n- `sdk`: The name of the Sentry SDK sending the envelope. This tag is only set for\nSentry's SDKs and defaults to \"proprietary\".",
     "features": []
   },
   {
@@ -273,14 +285,18 @@
     "type": "Timer",
     "name": "event_processing.rate_limiting",
     "description": "Time in milliseconds spent checking for organization, project, and DSN rate limits.\n\nNot all events reach this point. After an event is rate limited for the first time, the rate\nlimit is cached. Events coming in after this will be discarded earlier in the request queue\nand do not reach the processing queue.",
-    "features": [
-      "processing"
-    ]
+    "features": []
   },
   {
     "type": "Timer",
     "name": "event_processing.serialization",
     "description": "Time spent converting the event from its in-memory reprsentation into a JSON string.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "events.outcome_quantity",
+    "description": "The number of individual outcomes including their quantity.\n\nWhile [`RelayCounters::Outcomes`] tracks the number of times aggregated outcomes\nhave been emitted, this counter tracks the total quantity of individual outcomes.",
     "features": []
   },
   {
@@ -328,73 +344,115 @@
   {
     "type": "Gauge",
     "name": "kafka.in_flight_count",
-    "description": "The number of messages waiting to be sent to, or acknowledged by, the broker.\n\nSee <https://docs.confluent.io/platform/7.5/clients/librdkafka/html/rdkafka_8h.html#ad4b3b7659cf9a79d3353810d6b625bb7>.\n\nThis metric is tagged with:\n- `topic`: The Kafka topic being produced to.\n- `variant`: The Kafka message variant.",
+    "description": "The number of messages waiting to be sent to, or acknowledged by, the broker.\n\nSee <https://docs.confluent.io/platform/7.5/clients/librdkafka/html/rdkafka_8h.html#ad4b3b7659cf9a79d3353810d6b625bb7>.\n\nThis metric is tagged with:\n- `topic`: The Kafka topic being produced to.\n- `variant`: The Kafka message variant.\n- `producer_name`: The configured producer name/deployment identifier.",
     "features": []
   },
   {
     "type": "Histogram",
     "name": "kafka.message_size",
-    "description": "Size of emitted kafka message in bytes, tagged by message type.",
+    "description": "Size of emitted kafka message in bytes.\n\nThis metric is tagged with:\n- `topic`: The Kafka topic being produced to.\n- `variant`: The Kafka message variant.\n- `producer_name`: The configured producer name/deployment identifier.",
     "features": []
   },
   {
     "type": "Gauge",
     "name": "kafka.stats.broker.connects",
-    "description": "The number of connection attempts, including successful and failed attempts, and name resolution failures.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.",
+    "description": "The number of connection attempts, including successful and failed attempts, and name resolution failures.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
     "features": []
   },
   {
     "type": "Gauge",
     "name": "kafka.stats.broker.disconnects",
-    "description": "The number of disconnections, whether triggered by the broker, the network, the load balancer, or something else.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.",
+    "description": "The number of disconnections, whether triggered by the broker, the network, the load balancer, or something else.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
     "features": []
   },
   {
     "type": "Gauge",
-    "name": "kafka.stats.broker.int_latency",
-    "description": "Maximum internal producer queue latency, in microseconds.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.",
+    "name": "kafka.stats.broker.int_latency.avg",
+    "description": "Average internal producer queue latency, in milliseconds.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.broker.int_latency.p99",
+    "description": "99th percentile internal producer queue latency, in milliseconds.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
     "features": []
   },
   {
     "type": "Gauge",
     "name": "kafka.stats.broker.outbuf.messages",
-    "description": "The number of messages awaiting transmission to the broker.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.",
+    "description": "The number of messages awaiting transmission to the broker.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
     "features": []
   },
   {
     "type": "Gauge",
     "name": "kafka.stats.broker.outbuf.requests",
-    "description": "The number of requests awaiting transmission to the broker.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.",
+    "description": "The number of requests awaiting transmission to the broker.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
     "features": []
   },
   {
     "type": "Gauge",
-    "name": "kafka.stats.broker.outbuf_latency",
-    "description": "Maximum internal request queue latency, in microseconds.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.",
+    "name": "kafka.stats.broker.outbuf_latency.avg",
+    "description": "Average output buffer latency, in milliseconds.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.broker.outbuf_latency.p99",
+    "description": "99th percentile output buffer latency, in milliseconds.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.broker.rtt.avg",
+    "description": "Average round-trip time to the broker, in milliseconds.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.broker.rtt.p99",
+    "description": "99th percentile round-trip time to the broker, in milliseconds.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.broker.tx",
+    "description": "Total number of requests sent to the broker.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.broker.txbytes",
+    "description": "Total number of bytes sent to the broker.\n\nThis metric is tagged with:\n- `broker_name`: The broker hostname, port, and ID, in the form HOSTNAME:PORT/ID.\n- `producer_name`: The configured producer name/deployment identifier.",
     "features": []
   },
   {
     "type": "Gauge",
     "name": "kafka.stats.message_count",
-    "description": "The current number of messages in producer queues.",
+    "description": "The current number of messages in producer queues.\n\nThis metric is tagged with:\n- `producer_name`: The configured producer name/deployment identifier.",
     "features": []
   },
   {
     "type": "Gauge",
     "name": "kafka.stats.message_count_max",
-    "description": "The maximum number of messages allowed in the producer queues.",
+    "description": "The maximum number of messages allowed in the producer queues.\n\nThis metric is tagged with:\n- `producer_name`: The configured producer name/deployment identifier.",
     "features": []
   },
   {
     "type": "Gauge",
     "name": "kafka.stats.message_size",
-    "description": "The current total size of messages in producer queues.",
+    "description": "The current total size of messages in producer queues.\n\nThis metric is tagged with:\n- `producer_name`: The configured producer name/deployment identifier.",
     "features": []
   },
   {
     "type": "Gauge",
     "name": "kafka.stats.message_size_max",
-    "description": "The maximum total size of messages allowed in the producer queues.",
+    "description": "The maximum total size of messages allowed in the producer queues.\n\nThis metric is tagged with:\n- `producer_name`: The configured producer name/deployment identifier.",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "kafka.stats.txmsgs",
+    "description": "The total number of messages transmitted (produced) to all brokers.\n\nThis metric is tagged with:\n- `producer_name`: The configured producer name/deployment identifier.",
     "features": []
   },
   {
@@ -533,9 +591,12 @@
   },
   {
     "type": "Counter",
-    "name": "processing.produce.error",
-    "description": "Number of producer errors occurred after an envelope was already enqueued for sending to\nKafka.\n\nThese errors include, for example, _\"MessageTooLarge\"_ errors when the broker does not\naccept the requests over a certain size, which is usually due to invalid or inconsistent\nbroker/producer configurations.\n\nThis metric is tagged with:\n- `topic`: The Kafka topic being produced to.",
-    "features": []
+    "name": "processing.playstation",
+    "description": "The amount of times PlayStation processing was attempted.",
+    "features": [
+      "sentry",
+      "processing"
+    ]
   },
   {
     "type": "Timer",
@@ -554,7 +615,25 @@
   {
     "type": "Counter",
     "name": "producer.enqueue.error",
-    "description": "Number of messages that failed to be enqueued in the Kafka producer's memory buffer.\n\nThese errors include, for example, _\"UnknownTopic\"_ errors when attempting to send a\nmessage a topic that does not exist.\n\nThis metric is tagged with:\n- `topic`: The Kafka topic being produced to.\n- `variant`: The Kafka message variant.",
+    "description": "Number of messages that failed to be enqueued in the Kafka producer's memory buffer.\n\nThese errors include, for example, _\"UnknownTopic\"_ errors when attempting to send a\nmessage a topic that does not exist.\n\nThis metric is tagged with:\n- `topic`: The Kafka topic being produced to.\n- `variant`: The Kafka message variant.\n- `producer_name`: The configured producer name/deployment identifier.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "producer.partition_key.rate_limit",
+    "description": "Number of messages that were written to the wrong partition because of configured rate limits.\n\nEach topic in Relay can optionally be configured with a per-partition-key rate limit. This\nrate limit does not drop messages, but instead disables semantic partitioning. Everytime\nthis happens for a message, this counter is incremented.\n\nThis metric is tagged with:\n- `topic`: The Kafka topic being produced to.\n- `variant`: The Kafka message variant.\n- `producer_name`: The configured producer name/deployment identifier.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "producer.produce_status.error",
+    "description": "Number of failed message produce operations.\n\nThis metric is tagged with:\n- `topic`: The Kafka topic being produced to.\n- `producer_name`: The configured producer name/deployment identifier.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "producer.produce_status.success",
+    "description": "Number of successful message produce operations.\n\nThis metric is tagged with:\n- `topic`: The Kafka topic being produced to.\n- `producer_name`: The configured producer name/deployment identifier.",
     "features": []
   },
   {
@@ -564,9 +643,27 @@
     "features": []
   },
   {
+    "type": "Timer",
+    "name": "project_cache.fetch.duration",
+    "description": "Total time spent from starting to fetch a project config update to completing the fetch.",
+    "features": []
+  },
+  {
     "type": "Gauge",
     "name": "project_cache.fetches.size",
     "description": "The number of scheduled and in progress fetches in the project cache.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "project_cache.latency",
+    "description": "Latency of project config updates until they reach Relay.\n\nThe metric is calculated by using the creation timestamp of the project config\nand when Relay updates its local cache with the new project config.\n\nNo metric is emitted when Relay fetches a project config for the first time.\n\nThis metric is tagged with:\n- `delay`: Bucketed amount of seconds passed between fetches.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "project_cache.refresh",
+    "description": "Number of refreshes for stale projects in the cache.",
     "features": []
   },
   {
@@ -669,6 +766,22 @@
     "type": "Gauge",
     "name": "redis.pool.idle_connections",
     "description": "The number of idle connections in the Redis Pool.",
+    "features": [
+      "processing"
+    ]
+  },
+  {
+    "type": "Gauge",
+    "name": "redis.pool.max_connections",
+    "description": "The maximum number of connections in the Redis pool.",
+    "features": [
+      "processing"
+    ]
+  },
+  {
+    "type": "Gauge",
+    "name": "redis.pool.waiting_for_connection",
+    "description": "The number of futures waiting to grab a connection.",
     "features": [
       "processing"
     ]
@@ -881,6 +994,12 @@
     "type": "Gauge",
     "name": "service.utilization",
     "description": "Estimated percentage [0-100] of how busy Relay's internal services are.\n\nThis metric is tagged with:\n- `service`: the service name.\n- `instance_id`: a for the service name unique identifier for the running service",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "signature.create.duration",
+    "description": "The time it needs to create a signature. Includes both the signature used for\ntrusted relays and for register challenges.",
     "features": []
   },
   {

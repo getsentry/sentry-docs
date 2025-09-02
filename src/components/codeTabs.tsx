@@ -134,22 +134,23 @@ export function CodeTabs({children}: CodeTabProps) {
 }
 
 const Container = styled('div')`
-  margin-bottom: 1.5rem;
-
   pre[class*='language-'] {
     padding: 10px 12px;
-    border-radius: 0 0 3px 3px;
+    border-radius: 0 0 6px 6px;
+    border: 1px solid var(--accent-11);
+    border-top: none;
   }
 `;
 
 const TabBar = styled('div')`
   background: var(--code-background);
+  border: 1px solid var(--accent-11);
   border-bottom: 1px solid #40364a;
   height: 36px;
   display: flex;
   align-items: center;
   padding: 0 0.5rem;
-  border-radius: 3px 3px 0 0;
+  border-radius: 6px 6px 0 0;
 `;
 
 const TabButton = styled('button')`

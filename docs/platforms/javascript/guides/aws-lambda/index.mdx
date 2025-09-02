@@ -20,12 +20,16 @@ On this page you'll get an overview how to install, configure and use Sentry in 
 
 ## Installation
 
-Depending on your setup, there are different ways to install and use Sentry in your Lambda functions. We recommend one of the following options:
+Depending on your preferences, you can install Sentry in your Lambda functions using the [Sentry AWS Lambda Layer](./install/layer) (recommended) or the [Sentry AWS NPM package](./install/npm).
 
-- [Install the Sentry AWS Lambda Layer](./install/cjs-layer) if your Lambda functions are written in CommonJS (CJS) using `require` syntax.
-- [Install the Sentry AWS NPM package](./install/esm-npm) if your Lambda functions are running in EcmaScript Modules (ESM) using `import` syntax.
+### Should I use the Lambda Layer or the NPM package?
 
-If you're not sure which installation method to use or want an overview of all available options to use Sentry in your Lambda functions, read the [installation methods overview](./install).
+We generally recommend using the Lambda layer as it doesn't require you to deploy any Sentry dependency alongside your function.
+With the layer, you can achieve the same level of customization as with the NPM package.
+There are two reasons why you still might want to use the NPM package instead:
+
+1. You want to minimize lambda function size and tree-shake parts of the SDK code that you don't need. A related reason might be because you're transpiling your code and want to transpile your dependencies as well.
+2. You already use NPM packages and deploy `node_modules` with your function and you don't want to add a (or another) Lambda layer to your functions.
 
 ## Configuration
 
@@ -41,8 +45,10 @@ exports.handler = async (event, context) => {
 };
 ```
 
-```javascript {filename:index.mjs}{tabTitle:ESM}{2}
-export const handler = async (event, context) => {
+```javascript {filename:index.mjs}{tabTitle:ESM}{4}
+import * as Sentry from "@sentry/aws-serverless";
+
+export const handler = Sentry.wrapHandler(async (event, context) => {
   throw new Error("This is a test error");
-};
+}));
 ```

@@ -1,0 +1,54 @@
+Masking in the Sentry Flutter SDK is based on Widget _types_, e.g. `Image`, not the string representation of the type (i.e. we check whether
+a `widgetInstance` should be masked by checking `if (widgetInstance is Image)` instead of `if (widgetInstance.runtimeType == 'Image')`).
+This means we can ensure masking works regardless of obfuscation in release builds and also works for subclasses.
+This approach allows the SDK to automatically mask widgets that are part of the Flutter SDK itself. However, for third-party widgets, you need to manually configure the privacy settings to mask their content. Read more about [Third Party Widgets](#third-party-widgets) below.
+
+## Privacy Configuration
+
+The following options can be configured in the `options.privacy` field of your Sentry Flutter SDK, in `SentryFlutter.init((options) { ... })`:
+
+| Key                      | Type     | Default | Description                                                                                                                                                                                                                                                       |
+| ------------------------ | -------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| maskAllText | `bool` | `true`     | Mask all text content. Draws a rectangle of text bounds with text color on top. Currently `Text`, `EditableText` and `RichText` widgets are masked.                                                                                                      |
+| maskAllImages | `bool` | `true`     | Mask content of all images. Draws a rectangle of image bounds with image's dominant color on top. Currently `Image` widgets are masked.                                                                                                      |
+| maskAssetImages | `bool` | `true`     | Mask asset images coming from the root asset bundle.                                                                                                      |
+| mask&lt;T extends Widget&gt;() | `void` | /     | Mask given widget type `T` (or subclasses of `T`). Note: masking rules are called in the order they're added so if a previous rule already makes a decision, this rule won't be called. |
+| unmask&lt;T extends Widget&gt;() | `void` | /     | Unmask given widget type `T` (or subclasses of `T`). Note: masking rules are called in the order they're added so if a previous rule already makes a decision, this rule won't be called. |
+| maskCallback&lt;T extends Widget&gt;() | `void` | /     | Provide a custom callback to decide whether to mask the widget of class `T` (or subclasses of `T`). Note: masking rules are called in the order they're added so if a previous rule already makes a decision, this rule won't be called. |
+
+For example, you can explicitly mask or unmask widgets by type,
+or you can even have a callback to decide whether a specific widget instance should be masked:
+
+```dart
+options.privacy.mask<IconButton>();
+options.privacy.unmask<Image>();
+options.privacy.maskCallback<Text>(
+    (Element element, Text widget) =>
+        (widget.data?.contains('secret') ?? false)
+            ? SentryMaskingDecision.mask
+            : SentryMaskingDecision.continueProcessing);
+```
+
+<Alert>
+
+If you find that data isn't being masked with the default settings, please let us know by creating a [GitHub issue](https://github.com/getsentry/sentry-dart/issues/new?template=BUG_REPORT.yml).
+
+</Alert>
+
+To disable masking for <PlatformLink to="/enriching-events/screenshots/">`Screenshots`</PlatformLink> and <PlatformLink to="/session-replay/">`Session Replay`</PlatformLink> (not to be used on applications with sensitive data):
+
+```dart
+options.privacy.maskAllText = false;
+options.privacy.maskAllImages = false;
+```
+
+## Third Party Widgets
+
+The Sentry Flutter SDK cannot automatically mask widgets from third party packages.
+You need to manually configure the privacy configuration to mask the content of these widgets.
+
+For example, if you are using the [FlutterMap](https://pub.dev/packages/flutter_map) package, you need to add the following privacy configuration:
+
+```dart
+options.privacy.mask<FlutterMap>();
+```

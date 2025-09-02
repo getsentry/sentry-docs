@@ -12,8 +12,11 @@ Please check our list of [supported integrations](/platforms/python/integrations
 
 ## Install
 
-```bash
-pip install --upgrade 'sentry-sdk'
+```bash {tabTitle:pip}
+pip install "sentry-sdk"
+```
+```bash {tabTitle:uv}
+uv add "sentry-sdk"
 ```
 
 ## Configure
@@ -31,7 +34,7 @@ Select which Sentry features you'd like to install in addition to Error Monitori
   ]}
 />
 
-```python {"onboardingOptions": {"performance": "11-13", "profiling": "14-17"}}
+```python
 import sentry_sdk
 from sentry_sdk.integrations.wsgi import SentryWsgiMiddleware
 
@@ -42,13 +45,19 @@ sentry_sdk.init(
     # Add data like request headers and IP for users, if applicable;
     # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
     send_default_pii=True,
+    # ___PRODUCT_OPTION_START___ performance
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for tracing.
     traces_sample_rate=1.0,
-    # Set profiles_sample_rate to 1.0 to profile 100%
-    # of sampled transactions.
-    # We recommend adjusting this value in production.
-    profiles_sample_rate=1.0,
+    # ___PRODUCT_OPTION_END___ performance
+    # ___PRODUCT_OPTION_START___ profiling
+    # To collect profiles for all profile sessions,
+    # set `profile_session_sample_rate` to 1.0.
+    profile_session_sample_rate=1.0,
+    # Profiles will be automatically collected while
+    # there is an active span.
+    profile_lifecycle="trace",
+    # ___PRODUCT_OPTION_END___ profiling
 )
 
 app = SentryWsgiMiddleware(app)
@@ -56,7 +65,7 @@ app = SentryWsgiMiddleware(app)
 
 ## Verify
 
-This minimal WSGI application will create a transaction and send it to Sentry. The error will also be sent to Sentry and associated with the transaction:
+This minimal WSGI application will create a transaction and send it to Sentry as long as you have tracing enabled. The error will also be sent to Sentry and associated with the transaction:
 
 ```python
 import sentry_sdk

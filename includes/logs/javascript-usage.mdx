@@ -1,0 +1,38 @@
+Once the feature is enabled on the SDK and the SDK is initialized, you can send logs using the `Sentry.logger` APIs.
+
+The `Sentry.logger` namespace exposes six methods that you can use to log messages at different log levels: `trace`, `debug`, `info`, `warn`, `error`, and `fatal`.
+
+Aside from the primary logging methods, we've provided a format text function, `Sentry.logger.fmt`, that you can use to insert properties into to your log entries.
+
+These properties will be sent to Sentry, and can be searched from within the Logs UI, and even added to the Logs views as a dedicated column.
+
+```js
+Sentry.logger.error(
+  Sentry.logger.fmt`Uh on, something broke, here's the error: '${error}'`
+);
+Sentry.logger.info(
+  Sentry.logger.fmt`'${user.username}' added '${product.name}' to cart.`
+);
+```
+
+You can also pass additional attributes directly to the logging functions, avoiding the need to use the `fmt` function.
+
+```js
+Sentry.logger.trace("Starting database connection", { database: "users" });
+Sentry.logger.debug("Cache miss for user", { userId: 123 });
+Sentry.logger.info("Updated profile", { profileId: 345 });
+Sentry.logger.warn("Rate limit reached for endpoint", {
+  endpoint: "/api/results/",
+  isEnterprise: false,
+});
+Sentry.logger.error("Failed to process payment", {
+  orderId: "order_123",
+  amount: 99.99,
+});
+Sentry.logger.fatal("Database connection pool exhausted", {
+  database: "users",
+  activeConnections: 100,
+});
+```
+
+Setting a log message is required for the Sentry SDK to send the log to Sentry.

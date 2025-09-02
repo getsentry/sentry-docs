@@ -1,0 +1,58 @@
+Enable screenshots by setting the `attachScreenshot` option to `true` and wrap your root widget with `SentryWidget`.
+
+```dart {3, 6-8}
+await SentryFlutter.init(
+  (options) {
+    options.attachScreenshot = true;
+  },
+  appRunner: () => runApp(
+    SentryWidget(
+      child: MyApp(),
+    ),
+  ),
+);
+```
+
+## Customize Screenshot Capturing
+
+By default, Flutter limits screenshot captures to once every 2 seconds to minimize performance impact. While this debounce interval cannot be changed, you can customize capture behavior by implementing the `beforeCaptureScreenshot` callback in `SentryFlutter.init`.
+
+This callback gives you fine-grained control over screenshot captures based on event and hint data, allowing you to implement conditional logic.
+
+Return `true` to capture the screenshot, or `false` to skip it.
+
+<Alert>
+
+The `shouldDebounce` flag is set to `true` when debounce is active, meaning it will block the screenshot from being taken.
+If you want to capture screenshots regardless of the debounce, you can ignore the `shouldDebounce` flag.
+
+</Alert>
+
+```dart {tabTitle: Respect debounce}
+options.beforeCaptureScreenshot = (event, hint, shouldDebounce) async {
+  // If shouldDebounce is active, skip capturing
+  if (shouldDebounce) {
+    return false;
+  }
+  // Capture screenshot if it's a fatal event
+  return event.level == SentryLevel.fatal;
+};
+```
+
+```dart {tabTitle: Ignore debounce}
+options.beforeCaptureScreenshot = (event, hint, shouldDebounce) async {
+  // Capture screenshot if it's a fatal event regardless of debounce
+  return event.level == SentryLevel.fatal;
+};
+```
+
+## Redact Screenshots via `masking`
+
+The masking feature is enabled by default for screenshots, but can be disabled or configured by adjusting the `options.privacy` option.
+
+<Alert level="warning">
+  Modifying this parameter will also affect `masking` for{" "}
+  <PlatformLink to="/session-replay/">`Session Replay`</PlatformLink>.
+</Alert>
+
+<PlatformContent includePath="replay/privacy-configuration" />

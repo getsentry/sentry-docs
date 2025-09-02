@@ -1,0 +1,110 @@
+---
+title: Logging Integration
+description: "Integrate Sentry with the Dart Logging package to capture events, breadcrumbs, and automatically send structured logs to Sentry."
+caseStyle: canonical
+supportLevel: production
+sidebar_order: 3
+platforms:
+  - dart
+  - flutter
+---
+
+This integration connects Sentry with the popular [Dart logging package](https://pub.dev/packages/logging), providing the following capabilities:
+
+- If `enableLogs` is set to `true`, Sentry will send your log messages as [Sentry Structured Logs](/platforms/dart/logs/) (new in `9.5.0`)
+- Captures breadcrumbs from your log calls
+- Converts error-level logs into Sentry error events
+- Works with your existing logging code
+
+<Alert level="info">
+
+This page covers the instrumentation of the **Dart Logging package**.
+This integration also supports creating structured logs. However, if you're looking to set up Sentry structured logs in general, visit our [Structured Logs](/platforms/dart/logs/) documentation. 
+
+</Alert>
+
+## Install
+
+To add the Logging integration, add the `sentry_logging` dependency.
+
+```yml {filename:pubspec.yaml}
+dependencies:
+  sentry: ^{{@inject packages.version('sentry.dart', '6.3.0') }}
+  sentry_logging: ^{{@inject packages.version('sentry.dart.logging', '6.3.0') }}
+  logging: ^1.0.2
+```
+
+## Configure
+
+Add the `LoggingIntegration` to your `Sentry.init` call:
+
+```dart
+import 'package:sentry_logging/sentry_logging.dart';
+import 'package:sentry/sentry.dart';
+
+Future<void> main() async {
+  await Sentry.init(
+    (options) {
+      options.dsn = '___PUBLIC_DSN___';
+      options.addIntegration(LoggingIntegration());
+      // If you want to enable sending structured logs, set `enableLogs` to `true`
+      options.enableLogs = true;
+    },
+    appRunner: initApp, // Init your App.
+  );
+}
+```
+
+### Configuration Options
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `minBreadcrumbLevel` | `Level.INFO` | Minimum level for creating breadcrumbs |
+| `minEventLevel` | `Level.SEVERE` | Minimum level for creating error events |
+| `minSentryLogLevel` | `Level.INFO` | Minimum level for sending structured logs (requires `enableLogs` to be `true`) |
+
+You can customize which log levels trigger different Sentry features:
+
+```dart
+await Sentry.init(
+  (options) {
+    options.dsn = '___PUBLIC_DSN___';
+    options.addIntegration(LoggingIntegration(
+      minBreadcrumbLevel: Level.INFO,    // Breadcrumbs for INFO and above
+      minEventLevel: Level.SEVERE,       // Error events for SEVERE and above  
+      minSentryLogLevel: Level.INFO,     // Structured logs for INFO and above
+    ));
+  },
+  appRunner: initApp,
+);
+```
+
+## Verify
+
+Add the following snippet to your app and execute it to verify that Sentry is capturing your logs:
+
+```dart
+import 'package:logging/logging.dart';
+
+void testLogging() {
+  final log = Logger('MyAwesomeLogger');
+
+  // This creates a breadcrumb AND a structured log (Level.INFO >= defaults)
+  log.info('User logged in successfully');
+  
+  // This creates a breadcrumb AND a structured log (Level.WARNING >= defaults)  
+  log.warning('Rate limit approaching');
+
+  try {
+    throw StateError('Something went wrong');
+  } catch (error, stackTrace) {
+    // This creates a breadcrumb, structured log, AND error event (Level.SEVERE >= all defaults)
+    log.severe('Critical error occurred', error, stackTrace);
+  }
+}
+```
+
+### What You'll See in Sentry:
+- **Breadcrumbs**: All three log calls will appear as breadcrumbs on the error event
+- **Error Event**: The `severe` log creates a full error event with stack trace
+- **Structured Logs**: (if `enableLogs` is `true`) Navigate to **Logs** in your Sentry project to see all three entries as searchable structured logs

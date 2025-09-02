@@ -16,7 +16,15 @@ If you set up the Sentry SDK and it's not sending any data to Sentry:
 
 - Check that you have disabled any ad-blockers.
 - Set `debug: true` in the `Sentry.init()` options and observe your console output when you start your application. The SDK may tell you why it is not sending any data.
-- Check the [Stats](https://sentry.io/orgredirect/organizations/:orgslug/stats/) and [Suscription](https://sentry.io/orgredirect/organizations/:orgslug/settings/billing/overview/) pages in Sentry. You may have ran out of quota.
+- Check the [Stats](https://sentry.io/orgredirect/organizations/:orgslug/stats/) and [Subscription](https://sentry.io/orgredirect/organizations/:orgslug/settings/billing/overview/) pages in Sentry. You may have ran out of quota.
+
+<PlatformSection supported={["javascript.nextjs"]}>
+  - Check that you didn't set `sideEffects: false` in your `package.json`.
+  Setting `sideEffects` to false in your `package.json` will cause Next.js to
+  tree shake the SDK code too agressively - effectively deleting any
+  `Sentry.init()` calls. Setting `sideEffects: false` is incorrect when you are
+  using the Sentry SDK.
+</PlatformSection>
 
 </Expandable>
 
@@ -85,6 +93,63 @@ Most community CDNs properly set an `Access-Control-Allow-Origin` header.
 
 </PlatformCategorySection>
 
+<PlatformSection supported={["javascript.sveltekit"]}>
+
+<Expandable permalink title="Configure CSP for Client-side `fetch` Instrumentation">
+
+If you're using a SvelteKit version older than `sveltejs/kit@2.16.0`, the Sentry SDK injects an inline `<script>` tag into the HTML response of the server.
+This script proxies all client-side `fetch` calls so that `fetch` calls inside your `load` functions are captured by the SDK.
+However, if you configured CSP rules to block inline fetch scripts by default, this script will be [blocked by the browser](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src#unsafe_inline_script).
+
+You have multiple options to solve this CSP issue:
+
+#### Option 1: Upgrade SvelteKit
+
+The easiest option is to update `@sveltejs/kit` to at least version `2.16.0` (or newer). The SDK will not inject the fetch proxy script as it's no longer necessary.
+
+#### Option 2: Add Script Hash to CSP Policy
+
+To enable the script, add an exception for the `sentryHandle` script by adding the hash of the script to your CSP script source rules.
+
+If your CSP is defined in `svelte.config.js`, you can add the hash to the `csp.directives.script-src` array:
+
+```javascript {filename:svelte.config.js} {5-7}
+const config = {
+  kit: {
+    csp: {
+      directives: {
+        "script-src": ["sha256-y2WkUILyE4eycy7x+pC0z99aZjTZlWfVwgUAfNc1sY8="], // + rest of your values
+      },
+    },
+  },
+};
+```
+
+For external CSP configurations, add the following hash to your `script-src` directive:
+
+```txt
+'sha256-y2WkUILyE4eycy7x+pC0z99aZjTZlWfVwgUAfNc1sY8='
+```
+
+<Alert>
+  We will not change this script any time soon, so the hash will stay
+  consistent.
+</Alert>
+
+#### Option 3: Disable the `fetch` Proxy Script
+
+If you don't want to inject the script responsible for instrumenting client-side `fetch` calls, you can disable injection by passing `injectFetchProxyScript: false` to `sentryHandle`:
+
+```javascript {filename:hooks.server.(js|ts)}
+export const handle = sentryHandle({ injectFetchProxyScript: false });
+```
+
+Note that if you disable the `fetch` proxy script, the SDK will not be able to capture spans for `fetch` calls made by SvelteKit when your route has a server load function. This also means that potential spans created on the server for these `fetch` calls will not be connected to the client-side trace.
+
+</Expandable>
+
+</PlatformSection>
+
 <PlatformCategorySection supported={['browser']}>
 
 <Expandable permalink title="Unexpected OPTIONS request">
@@ -97,7 +162,7 @@ To fix this, change the `tracePropagationTargets` option during SDK initializati
 </PlatformCategorySection>
 
 <PlatformCategorySection notSupported={['browser']}>
-<PlatformSection notSupported={['javascript.aws-lambda', 'javascript.azure-functions', 'javascript.bun', 'javascript.cloudflare', 'javascript.deno', 'javascript.electron', 'javascript.gcp-functions']}>
+<PlatformSection notSupported={['javascript.aws-lambda', 'javascript.azure-functions', 'javascript.bun', 'javascript.cloudflare', 'javascript.deno', 'javascript.electron', 'javascript.gcp-functions', 'javascript.tanstackstart-react']}>
 <Expandable permalink title="Error: 'import-in-the-middle' failed to wrap">
  When using ESM, by default all packages are wrapped under the hood by
  [import-in-the-middle](https://www.npmjs.com/package/import-in-the-middle).
@@ -138,8 +203,8 @@ You can work around our CDN bundles being blocked by [using our NPM packages](#u
 <PlatformSection supported={["javascript.nextjs"]}>
 
 The Sentry Next.js SDK has a separate option to make setting up tunnels very
-straight-forward, allowing you to skip the setup below. See <PlatformLink to="/manual-setup/#configure-tunneling-to-avoid-ad-blockers">
-Configure Tunneling to avoid Ad-Blockers</PlatformLink> to learn how to set up tunneling on Next.js.
+straight-forward, allowing you to skip the setup below. See <PlatformLink to="/configuration/build/#tunnelRoute">
+`tunnelRoute`</PlatformLink> to learn how to set up tunneling on Next.js.
 
 If you do not want to configure `tunnelRoute`, you can follow the guide below.
 
@@ -151,7 +216,7 @@ A tunnel is an HTTP endpoint that acts as a proxy between Sentry and your applic
 
 Starting with version `6.7.0` of the JavaScript SDK, you can use the `tunnel` option to tell the SDK to deliver events to the configured URL, instead of using the DSN. This allows the SDK to remove `sentry_key` from the query parameters, which is one of the main reasons ad-blockers prevent sending events in the first place. This option also stops the SDK from sending preflight requests, which was one of the requirements that necessitated sending the `sentry_key` in the query parameters.
 
-To enable the `tunnel` option, provide either a relative or an absolute URL in your `Sentry.init` call. When you use a relative URL, it's relative to the current origin, and this is the form that we recommend. Using a relative URL will not trigger a preflight CORS request, so no events will be blocked, because the ad-blocker will not treat these events as third-party requests.
+To enable the `tunnel` option, provide either a relative or an absolute URL in your `Sentry.init` call. When you use a relative URL, it's relative to the current origin, and this is the form that we recommend. Using a relative URL will not trigger a preflight CORS request, so no events will be blocked, because the ad-blocker will not treat these events as third-party requests. When using tunneling with server-side SDKs like `@sentry/node` or `@sentry/bun` you must provide an absolute URL.
 
 ```javascript
 Sentry.init({
@@ -381,6 +446,18 @@ Remember to pass in `true` as the second parameter to `addEventListener()`. With
 </Expandable>
 </PlatformCategorySection>
 
+<PlatformCategorySection supported={['browser']}>
+
+<Expandable permalink title="SDK causes double invocations of `addEventListener` (e.g. duplicated click events)">
+
+In very rare cases, the SDK can cause callbacks added via `addEventListener` to an event target (such as a button) to be invoked twice.
+This is usually a sign of the SDK being intialized too late in the lifecycle of the page. If you can, try initializing the SDK earlier in your application.
+
+If this is not possible or doesn't apply to your use case, set the `unregisterOriginalCallbacks` option in the [`browserApiErrors` integration](../configuration/integrations/browserapierrors) to `true`.
+
+</Expandable>
+</PlatformCategorySection>
+
 <Expandable permalink title="Build errors with vite">
 
 If you're using the [Vite Bundler](https://vitejs.dev/) and a Sentry NPM package, and you see the following error:
@@ -441,14 +518,24 @@ While adding these packages as direct dependencies might remove the warning mess
 pnpm add import-in-the-middle require-in-the-middle
 ```
 
-As a workaround, create or modify `.npmrc` in your project root:
+As a workaround, create or modify `.npmrc` in your project root. First, try to specifially hoist the dependencies in question:
 
-```npmrc
+```ini {filename:.npmrc}
+public-hoist-pattern[]=*import-in-the-middle*
+public-hoist-pattern[]=*require-in-the-middle*
+```
+
+If that doesn't work, you can also tell pnpm to hoist all dependencies:
+
+```ini {filename:.npmrc}
 shamefully-hoist=true
 ```
 
 <Alert level="warning">
-  **Note**: While `shamefully-hoist=true` usually isn't the ideal solution from a dependency management perspective, it's sometimes necessary for compatibility with certain packages that expect Node.js module resolution behavior similar to npm or yarn.
+  **Note**: While `shamefully-hoist=true` usually isn't the ideal solution from
+  a dependency management perspective, it's sometimes necessary for
+  compatibility with certain packages that expect Node.js module resolution
+  behavior similar to npm or yarn.
 </Alert>
 
   </Expandable>
@@ -582,6 +669,14 @@ shamefully-hoist=true
       module.exports = withSentryConfig(module.exports)
     ```
 
+  </Expandable>
+  
+  <Expandable permalink title="Client Instrumentation Hook - Slow execution detected">
+    Seeing this warning in your dev build might be misleading due to Next.js dev server internals.
+    
+    In case you are using Session Replay and experience performance issues with the client instrumentation hook, you can try lazy-loading session replay as described [here](https://docs.sentry.io/platforms/javascript/guides/nextjs/session-replay/#lazy-loading-replay).
+
+    If you want to init the SDK itself at a later point, this will result in tracing data loosing accuracy and errors could happen before the SDK is initialized. This should be a tradeoff you make based on your use case, although we recommend initializing the SDK as early as possible.
   </Expandable>
 </PlatformSection>
 

@@ -1,5 +1,6 @@
 ---
-title: Set Up Profiling for Python
+title: Set Up Python Profiling
+sidebar_title: Profiling
 description: "Learn how to enable profiling in your app if it is not already set up."
 sidebar_order: 5000
 ---
@@ -8,86 +9,64 @@ sidebar_order: 5000
 
 With [profiling](/product/explore/profiling/), Sentry tracks your software's performance by sampling your program's call stack in a variety of environments. This feature collects function-level information about your code and enables you to fine-tune your program's performance. [Sentry's profiler](https://sentry.io/for/profiling/) captures function calls and their exact locations, aggregates them, and shows you the most common code paths of your program. This highlights areas you could optimize to help increase both the performance of your code and increase user satisfaction, as well as drive down costs. Learn how to enable and configure profiling in Python with Sentry's stable [Python SDK](https://sentry.io/for/python/)
 
-## Enable Profiling in Python
+## Enabling Continuous Profiling
 
 <Alert>
 
-Python profiling is stable as of SDK version `1.18.0`.
+Continuous profiling is available starting in SDK version `2.24.1`.
+
+<PlatformLink to="/profiling/#enable-transaction-based-profiling">Transaction-based profiling</PlatformLink> is available starting in SDK version `1.18.0`.
 
 </Alert>
 
+Continuous profiling supports two modes - `manual` and `trace`. The two modes are mutually exclusive, and cannot be used at the same time.
+
+In `manual` mode, the profiling data collection can be managed via calls to `sentry_sdk.profiler.start_profiler` and `sentry_sdk.profiler.stop_profiler`. You are entirely in control of when the profiler runs.
+
+In `trace` mode, the profiler manages its own start and stop calls, which are based on spans: the profiler continues to run while there is at least one active span, and stops when there are no active spans.
+
+### Enabling Trace Lifecycle Profiling
 
 ```python
 import sentry_sdk
 
-def profiles_sampler(sampling_context):
-    # ...
-    # return a number between 0 and 1 or a boolean
-
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-
     # Add data like request headers and IP for users, if applicable;
     # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
     send_default_pii=True,
-
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
     traces_sample_rate=1.0,
-
-    # To set a uniform sample rate
-    # Set profiles_sample_rate to 1.0 to profile 100%
-    # of sampled transactions.
-    # We recommend adjusting this value in production,
-    profiles_sample_rate=1.0,
-
-    # Alternatively, to control sampling dynamically
-    profiles_sampler=profiles_sampler
+    # To collect profiles for all profile sessions,
+    # set `profile_session_sample_rate` to 1.0.
+    profile_session_sample_rate=1.0,
+    # Profiles will be automatically collected while
+    # there is an active span.
+    profile_lifecycle="trace",
 )
 ```
 
-<Alert>
-
-The <PlatformIdentifier name="profiles_sample_rate" /> setting is _relative_ to the <PlatformIdentifier name="traces_sample_rate" /> setting.
-
-For Profiling to work, you have to first enable [Sentry’s tracing](/concepts/key-terms/tracing/) via `traces_sample_rate` (like in the example above). Read our <PlatformLink to="/tracing/">tracing setup documentation</PlatformLink> to learn how to configure sampling. If you set your sample rate to 1.0, all transactions will be captured.
-
-</Alert>
-
-### Upgrading from Older Python SDK Versions
-
-Profiling was experimental in SDK versions `1.17.0` and older. Learn how to upgrade <PlatformLink to="/profiling/troubleshooting/#ipgrading-from-older-sdk-versions">here</PlatformLink>.
-
-## Enable Continuous Profiling
-
-<Include name="feature-stage-beta.mdx" />
-
-_(New in version 2.21.0)_
-
-The current profiling implementation stops the profiler automatically after 30 seconds (unless you manually stop it earlier). Naturally, this limitation makes it difficult to get full coverage of your app's execution. We now offer an experimental continuous mode, where profiling data is periodically uploaded while running, with no limit on how long the profiler may run.
-
-To get started with continuous profiling, you can start and stop the profiler directly with `sentry_sdk.profiler.start_profiler` and `sentry_sdk.profiler.stop_profiler`.
-
-### Sampling
-
-Sampling for continuous profiling is determined only once when the SDK is configured. That sampling decision is used to decide if the profiles will be collected or not for the entirety of the process.
-
-Set `profile_session_sample_rate=1.0` to collect continuous profiles for 100% of profile sessions.
-
-<Alert>
-
-If you previously set `profiles_sample_rate` or `profilers_sampler` to use transaction-based profiling, you must remove those lines of code from your configuration in order to use continuous profiling.
-
-</Alert>
+### Enabling Manual Lifecycle Profiling
 
 ```python
 import sentry_sdk
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
+    # Add data like request headers and IP for users, if applicable;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
     send_default_pii=True,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
     traces_sample_rate=1.0,
-
-    # To collect profiles for all profile sessions, set `profile_session_sample_rate` to 1.0.
+    # To collect profiles for all profile sessions,
+    # set `profile_session_sample_rate` to 1.0.
     profile_session_sample_rate=1.0,
+    # Profiles will be collected when
+    # `sentry_sdk.profiler.start_profiler` is called and
+    # stopped when `sentry_sdk.profiler.stop_profiler` is called.
+    profile_lifecycle="manual",
 )
 
 sentry_sdk.profiler.start_profiler()
@@ -97,21 +76,60 @@ sentry_sdk.profiler.start_profiler()
 sentry_sdk.profiler.stop_profiler()
 ```
 
-For some applications such as web servers, it may be difficult to call `sentry_sdk.profiler.start_profiler` in every process. Instead, you can use the `continuous_profiling_auto_start` option to automatically start the continuous profiler when a transaction is started.
+### Managing Profile Sampling Rates
+
+Sentry SDK supports an additional `profile_session_sample_rate` that must be set to a non-zero value to enable continuous profiling. This can be used to control session sampling rates at the service level as the sampling decision is evaluated only once at SDK initialization.
+
+This is useful for cases where you deploy your service many times, but would only like a subset of those deployments to be profiled.
+
+### Upgrading From Older SDK Versions
+
+Continuous profiling was experimental in SDK versions prior to `2.24.1` and will be deprecated. Data sent by these older versions will not be accepted in the near future. Learn how to upgrade <PlatformLink to="/troubleshooting/#continuous-profiling">here</PlatformLink>.
+
+## Enable Transaction-Based Profiling
+
+<Alert>
+
+Transaction-based profiling is available starting in SDK version `1.18.0`.
+
+</Alert>
+
+Transaction-based profiling only runs in tandem with performance transactions that were started either automatically or manually with `sentry_sdk.start_transaction`, and stops after the transaction ends or after 30 seconds.
 
 ```python
 import sentry_sdk
+from sentry_sdk.types import SamplingContext
+
+def profiles_sampler(sampling_context: SamplingContext) -> float:
+    # ...
+    # return a number between 0 and 1 or a boolean
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
+    # Add data like request headers and IP for users, if applicable;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
     send_default_pii=True,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
     traces_sample_rate=1.0,
-    _experiments={
-      "continuous_profiling_auto_start": True,
-    },
+    # To set a uniform sample rate
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
+    # Alternatively, to control sampling dynamically
+    profiles_sampler=profiles_sampler
 )
 ```
 
-These new APIs do not offer any sampling functionality—every call to start the profiler will start it, and the same goes for launch profiles if you've configured that. If you are interested in reducing the amount of profiles that run, you must take care to do it at the callsites.
+<Alert>
 
-Continuous profiling has implications for your org's billing structure. This feature is only available for subscription plans that enrolled after June 5, 2024.
+The <PlatformIdentifier name="profiles_sample_rate" /> setting is _relative_ to the <PlatformIdentifier name="traces_sample_rate" /> setting.
+
+For transaction-based profiling to work, you have to first enable [Sentry's tracing](/concepts/key-terms/tracing/) via `traces_sample_rate` (like in the example above). Read our <PlatformLink to="/tracing/">tracing setup documentation</PlatformLink> to learn how to configure sampling. If you set your sample rate to 1.0, all transactions will be captured.
+
+</Alert>
+
+### Upgrading From Older Python SDK Versions
+
+Transaction-based profiling was experimental in SDK versions prior to `1.18.0`. Learn how to upgrade <PlatformLink to="/troubleshooting/#transaction-based-profiling">here</PlatformLink>.

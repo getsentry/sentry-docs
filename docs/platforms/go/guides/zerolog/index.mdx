@@ -9,24 +9,76 @@ For a complete example, visit the [Go SDK source code repository](https://github
 
 ## Install
 
-<OnboardingOptionButtons
-  options={[
-    'error-monitoring',
-  ]}
-/>
-
 ```bash
+go get github.com/getsentry/sentry-go
 go get github.com/getsentry/sentry-go/zerolog
 ```
 
 <Break />
 
-<SignInNote />
+## Configure
+
+### Initialize the Sentry SDK
+
+<PlatformContent includePath="getting-started-config" />
+
+### Options
+
+sentryzerolog provides options to configure the integration with Sentry. It expects a `sentryzerolog.Config` that has `sentry.ClientOptions` and `sentryzerolog.Options`.
+The sentryzerolog.Options struct has the following fields:
+
+```go
+// Levels specifies the log levels that will trigger event sending to Sentry.
+// Only log messages at these levels will be sent. By default, the levels are
+// Error, Fatal, and Panic.
+Levels []zerolog.Level
+
+// WithBreadcrumbs, when enabled, adds log entries as breadcrumbs in Sentry.
+// Breadcrumbs provide a trail of events leading up to an error, which can
+// be invaluable for understanding the context of issues.
+WithBreadcrumbs bool
+
+// FlushTimeout sets the maximum duration allowed for flushing events to Sentry.
+// This is the time limit within which all pending events must be sent to Sentry
+// before the application exits. A typical use is ensuring all logs are sent before
+// application shutdown. The default timeout is usually 3 seconds.
+FlushTimeout time.Duration
+```
+
+## Verify
+
+```go
+// Configure Zerolog to use Sentry as a writer
+sentryWriter, err := sentryzerolog.New(sentryzerolog.Config{
+	ClientOptions: sentry.ClientOptions{
+		Dsn: "___PUBLIC_DSN___",
+	},
+	Options: sentryzerolog.Options{
+		Levels:          []zerolog.Level{zerolog.ErrorLevel, zerolog.FatalLevel, zerolog.PanicLevel},
+		WithBreadcrumbs: true,
+		FlushTimeout:    3 * time.Second,
+	},
+})
+if err != nil {
+	log.Fatal().Err(err).Msg("failed to create sentry writer")
+}
+defer sentryWriter.Close()
+
+// Use Sentry writer in Zerolog
+log.Logger = log.Output(zerolog.MultiLevelWriter(zerolog.ConsoleWriter{Out: os.Stderr}, sentryWriter))
+
+// Test logging - this will be sent to Sentry as an event
+log.Error().Msg("This error will be sent to Sentry!")
+
+// Example of logging with error context
+log.Error().Err(errors.New("test error")).Msg("An error occurred")
+```
+
+## Usage
 
 To integrate Sentry with Zerolog, you need to set up a custom writer that sends logs to Sentry based on the configured levels.
 
-
-```go {"onboardingOptions": {"performance": "12-16"}}
+```go
 import (
 	"errors"
 	"time"
@@ -42,6 +94,9 @@ func main() {
 	// Initialize Sentry
 	err := sentry.Init(sentry.ClientOptions{
 		Dsn: "___PUBLIC_DSN___",
+		// Adds request headers and IP for users,
+		// visit: https://docs.sentry.io/platforms/go/data-management/data-collected/ for more info
+		SendDefaultPII: true,
 		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
 			// Modify or filter events before sending them to Sentry
 			return event
@@ -84,32 +139,8 @@ func main() {
 }
 ```
 
-## Configure
 
-sentryzerolog provides options to configure the integration with Sentry. It expects a `sentryzerolog.Config` that has `sentry.ClientOptions` and `sentryzerolog.Options`. The `sentry.ClientOptions` are used to initialize the Sentry client, and the `sentryzerolog.Options` are used to configure the Zerolog integration.
-
-The sentryzerolog.Options struct has the following fields:
-
-
-```go
-// Levels specifies the log levels that will trigger event sending to Sentry.
-// Only log messages at these levels will be sent. By default, the levels are
-// Error, Fatal, and Panic.
-Levels []zerolog.Level
-
-// WithBreadcrumbs, when enabled, adds log entries as breadcrumbs in Sentry.
-// Breadcrumbs provide a trail of events leading up to an error, which can
-// be invaluable for understanding the context of issues.
-WithBreadcrumbs bool
-
-// FlushTimeout sets the maximum duration allowed for flushing events to Sentry.
-// This is the time limit within which all pending events must be sent to Sentry
-// before the application exits. A typical use is ensuring all logs are sent before
-// application shutdown. The default timeout is usually 3 seconds.
-FlushTimeout time.Duration
-```
-
-- Using `hubProvider` for Scoped Sentry Hubs
+### Using `hubProvider` for Scoped Sentry Hubs
 
 The hubProvider allows you to configure the Sentry hook to use a custom Sentry hub. This can be particularly useful when you want to scope logs to specific goroutines or operations, enabling more precise grouping and context in Sentry.
 
@@ -124,7 +155,6 @@ sentryHook.SetHubProvider(func() *sentry.Hub {
 
 This ensures that logs from specific contexts or threads use the appropriate Sentry hub and scope.
 
-## Usage
 
 Use Zerolog as you normally would, and it will automatically send logs at or above the specified levels to Sentry.
 

@@ -54,6 +54,32 @@ _Type: `boolean`_
 
 If set to false, no breadcrumbs will be captured.
 
+### `maxIncomingRequestBodySize`
+
+_Type: `'none' | 'small' | 'medium' | 'always'`_ (Defaults to `'medium'`)
+
+Controls the maximum size of incoming HTTP request bodies attached to events.
+
+Available options:
+- 'none': No request bodies will be attached
+- 'small': Request bodies up to 1,000 bytes will be attached
+- 'medium': Request bodies up to 10,000 bytes will be attached (default)
+- 'always': Request bodies will always be attached
+
+Note that even with the `'always'` setting, bodies exceeding 1 MB will never be attached for performance and security reasons.
+
+### `ignoreIncomingRequestBody`
+
+_Type: `(url: string, request: RequestOptions) => boolean`_
+
+Allows you to ignore the request body for incoming HTTP requests to URLs where the given callback returns `true`.
+This can be useful for long running requests where the body is not needed and we want to avoid capturing it.
+
+The callback function receives two arguments:
+
+- `url`: The full URL of the incoming request, including the protocol, host, port, path and query string. For example: `https://example.com/users?name=John`.
+- `request`: An object of type `RequestOptions` containing the incoming request's options. You can use this to filter on properties like the request method or headers.
+
 ### `ignoreOutgoingRequests`
 
 _Type: `(url: string, request: RequestOptions) => boolean`_
@@ -75,6 +101,13 @@ The callback function receives two arguments:
 
 - `urlPath`: The URL path of the incoming request, including the query string if available. For example: `/users?name=John`.
 - `request`: An object of type `IncomingMessage` containing the incoming request. You can use this to filter on properties like the request method or headers.
+
+### `ignoreStaticAssets`
+
+_Type: `boolean`_ (Defaults to `true`)
+
+If set to true, no spans will be captured for static assets like images, fonts, and other files.
+
 
 ### `trackIncomingRequestsAsSessions`
 
