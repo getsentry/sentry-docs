@@ -22,6 +22,36 @@ my_logger.info('But info events will be sent to Sentry logs. my_value=%s', my_va
 
 By default, the logging integration sends `INFO`-level logs and higher to Sentry logs. You can set a different threshold via the `LoggingIntegration`'s `sentry_logs_level` parameter. However, regardless of the `sentry_logs_level` setting, the SDK only sends logs if they are at or above the logger's level.
 
+#### Extra Fields as Searchable Attributes
+
+When using the standard library logging with Sentry logs, any fields provided in the `extra` dictionary are automatically promoted to top-level attributes on the log entry, making them searchable and filterable in the Sentry UI.
+
+```python
+import sentry_sdk
+import logging
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    enable_logs=True,
+)
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# Extra fields become searchable attributes
+logger.info(
+    "User action completed",
+    extra={
+        "user_id": 12345,
+        "action": "purchase",
+        "item_count": 3,
+        "total_amount": 29.97
+    }
+)
+```
+
+In this example, `user_id`, `action`, `item_count`, and `total_amount` will appear as separate, searchable attributes in the Sentry logs interface. You can filter logs using these attributes directly, such as `user_id:12345` or `action:purchase`.
+
 ```python
 import sentry_sdk
 import logging
@@ -80,8 +110,8 @@ sentry_sdk.init(
     enable_logs=True,
 )
 
-loguru.debug("In this example, debug events will not be sent to Sentry logs.")
-loguru.info("On the other hand, info events will be sent to Sentry logs.")
+logger.debug("In this example, debug events will not be sent to Sentry logs.")
+logger.info("On the other hand, info events will be sent to Sentry logs.")
 ```
 
 By default, the Loguru integration sends `INFO`-level and higher logs to Sentry logs as long as `enable_logs` is `True`. A different threshold can be set via the `LoguruIntegration`'s `sentry_logs_level` parameter.
@@ -122,5 +152,5 @@ sentry_sdk.init(
     ]
 )
 
-loguru.error("This won't be sent to Sentry logs.")
+logger.error("This won't be sent to Sentry logs.")
 ```
