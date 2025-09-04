@@ -20,7 +20,7 @@ If your frontend and backend are hosted on different domains (for example, your 
 
 ## Understanding Trace Propagation
 
-Sentry doesn't attach the `sentry-trace` and `baggage` headers to every outgoing request. Instead, it only attaches these headers to requests whose URLs match the patterns specified in the `tracePropagationTargets` configuration option.
+Sentry doesn't attach the `sentry-trace` and `baggage` (and optionally `traceparent`) headers to every outgoing request. Instead, it only attaches these headers to requests whose URLs match the patterns specified in the `tracePropagationTargets` configuration option.
 
 By default, `tracePropagationTargets` is set to `['localhost', /^\//]`, which means trace headers are only attached to:
 - Requests containing `localhost` in their URL (e.g., `http://localhost:3000/api`)
@@ -54,6 +54,14 @@ Access-Control-Allow-Headers: sentry-trace, baggage
 ```
 
 Your server's exact configuration will depend on your setup, but the important part is allowing both the `sentry-trace` and `baggage` headers.
+
+### W3C traceparent header
+
+If you set <PlatformLink to="/configuration/options#propagateTraceparent">`propagateTraceparent` option</PlatformLink> to `true`, you also need to allow the `traceparent` header:
+
+```
+Access-Control-Allow-Headers: sentry-trace, baggage, traceparent
+```
 
 ## Disabling Trace Propagation
 
