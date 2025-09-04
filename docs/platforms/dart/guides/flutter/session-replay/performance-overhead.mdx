@@ -10,7 +10,7 @@ If you're considering enabling Session Replay, it's important to understand the 
 Meaningful metrics require realistic testing where you apply typical access patterns and correlate the results with your business metrics. To provide a baseline, we measure replay overhead using the Open Food Facts [open-source app](https://github.com/openfoodfacts/smooth-app/).
  
 
-## Benchmarking the Android Replay SDK
+## Benchmarking Setup
 
 The Open Food Facts app onboarding flow is full of scrollable, interactable lists of text and images, making it a good candidate for testing. 
 
@@ -23,6 +23,7 @@ The Open Food Facts app onboarding flow is full of scrollable, interactable list
 The benchmarks were run on a Pixel Fold (2023) running Android 15.
 
 ### Results
+
 Below are the results of the benchmarking tests, presented as average values across all runs.
 
 | Metric                           | Sentry SDK only | Sentry + Replay SDK |
@@ -55,20 +56,21 @@ await SentryFlutter.init(
 
 ### Disable Replay for Low-End Devices
 
-If the Replay SDK causes performance issues on lower-end devices, you can disable it specifically for those devices (For example,by looking at [how Sentry determines the device class](https://github.com/getsentry/relay/blob/695b459e03481f7d799f07b2b901b140e5d5753d/relay-event-schema/src/protocol/device_class.rs#L21-L37), or using a [Flutter plugin](https://pub.dev/packages/device_info_plus)):
+If the Replay SDK causes performance issues on lower-end devices, you can disable it specifically for those devices (For example, by looking at [how Sentry determines the device class](https://github.com/getsentry/relay/blob/695b459e03481f7d799f07b2b901b140e5d5753d/relay-event-schema/src/protocol/device_class.rs#L21-L37), or using a [Flutter plugin](https://pub.dev/packages/device_info_plus)):
 
 ```dart
-Future<bool> isLowEnd();
-...
+Future<bool> isLowEndDevice() {
+  // You can use device_info_plus to retrieve the device info
+  ...
+}
+
 await SentryFlutter.init(
   (options) {
     ...
     // Enable session replay for non low-end devices only
-    final isLowEnd = await isLowEnd();
+    final isLowEnd = await isLowEndDevice();
     options.replay.sessionSampleRate = isLowEnd ? 0 : 1.0;
     options.replay.onErrorSampleRate = isLowEnd ? 0 : 0.1;
-    
   },
   ...
 );
-```
