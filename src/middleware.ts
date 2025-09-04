@@ -2438,16 +2438,8 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/relay/',
   },
   {
-    from: '/meta/relay/projects/',
-    to: '/product/relay/projects/',
-  },
-  {
     from: '/meta/relay/getting-started/',
     to: '/product/relay/getting-started/',
-  },
-  {
-    from: '/meta/relay/pii-and-data-scrubbing/',
-    to: '/product/relay/pii-and-data-scrubbing/',
   },
   {
     from: '/meta/relay/options/',
@@ -3575,22 +3567,6 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
     to: '/application/grouping/',
   },
   {
-    from: '/pii/',
-    to: '/application/pii/',
-  },
-  {
-    from: '/pii/types/',
-    to: '/application/pii/types/',
-  },
-  {
-    from: '/pii/methods/',
-    to: '/application/pii/methods/',
-  },
-  {
-    from: '/pii/selectors/',
-    to: '/application/pii/selectors/',
-  },
-  {
     from: '/transaction-clustering/',
     to: '/application/transaction-clustering/',
   },
@@ -3931,38 +3907,6 @@ const DEVELOPER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/api-server/application-domains/tsdb/',
     to: '/develop/application-domains/tsdb/',
-  },
-  {
-    from: '/backend/pii/',
-    to: '/backend/application-domains/pii/',
-  },
-  {
-    from: '/api-server/application-domains/pii/',
-    to: '/develop/application-domains/pii/',
-  },
-  {
-    from: '/backend/pii/methods/',
-    to: '/backend/application-domains/pii/methods/',
-  },
-  {
-    from: '/api-server/application-domains/pii/methods/',
-    to: '/develop/application-domains/pii/methods/',
-  },
-  {
-    from: '/backend/pii/types/',
-    to: '/backend/application-domains/pii/types/',
-  },
-  {
-    from: '/api-server/application-domains/pii/types/',
-    to: '/develop/application-domains/pii/types/',
-  },
-  {
-    from: '/backend/pii/selectors/',
-    to: '/backend/application-domains/pii/selectors/',
-  },
-  {
-    from: '/api-server/application-domains/pii/selectors/',
-    to: '/develop/application-domains/pii/selectors/',
   },
   {
     from: '/backend/buffers/',
