@@ -8,29 +8,21 @@ description: "Learn more about how to troubleshoot common issues with the Unity 
 
 ### Disabling the Sentry SDK for selected platforms
 
-By adding the snippet below to an `Editor` directory inside your Unity project, you can set up the ability to automatically disable the Sentry SDK for any targeted platform.
+If you want to disable the SDK for a specific platform, you can use the [programmatic configuration](/platforms/unity/configuration/options/programmatic-configuration/) to have your own code run as part of the initialization and disable the SDK like in the example below:
 
 ```csharp
 using Sentry.Unity;
-using UnityEditor;
-using UnityEditor.Build;
-using UnityEditor.Build.Reporting;
 
-public class PreBuildProcessor : IPreprocessBuildWithReport
+public class SentryOptionConfiguration : SentryOptionsConfiguration
 {
-    public int callbackOrder => 0;
-
-    public void OnPreprocessBuild(BuildReport report)
+    public override void Configure(SentryUnityOptions options)
     {
-        if (report.summary.platform is BuildTarget.Android)
-        {
-            var sentryOptions =
-                AssetDatabase.LoadAssetAtPath<ScriptableSentryUnityOptions>("Assets/Resources/Sentry/SentryOptions.asset");
-            sentryOptions.Enabled = false;
-            EditorUtility.SetDirty(sentryOptions);
-        }
+#if UNITY_ANDROID
+        options.Enabled = false;
+#endif
     }
 }
+
 ```
 
 ### Build input file cannot be found: '\*\*/Libraries/io.sentry.unity/Plugins/iOS/SentryNativeBridge.m'
@@ -42,6 +34,34 @@ You can resolve this issue by creating a clean build or choosing "Replace" when 
 This happens if you've copied some of the SDK files directly to the Assets folder. You can resolve this issue by installing the SDK with UPM.
 
 ## Runtime issues
+
+### Android: Initialization fails - APK+OBB
+
+When exporting your Unity project as APK+OBB, the `ScriptableSentryOptions` configuration file stored in `/Resources/Sentry` may end up in the OBB file instead of the main APK. This can cause initialization issues if the OBB file is not available when the SDK attempts to auto-initialize.
+
+**Workaround (requires Unity SDK version `4.0.0 or later`):**
+
+Instead of relying on the ScriptableObject configuration and auto-initialization, you can manually initialize the SDK from your code:
+
+```csharp
+using Sentry;
+
+public class GameInitializer : MonoBehaviour
+{
+    private void Start()
+    {
+        SentrySdk.Init(options =>
+        {
+            options.Dsn = "YOUR_DSN_HERE";
+            options.Debug = true;
+            // Add other configuration options as needed
+        });
+    }
+}
+```
+
+Since this way the options are embedded in code, the reliance on the `/Resources` being available at the time of initialization falls away.
+Prior to version `4.0.0`, native support is limited when programmatically initializing the SDK.
 
 ### Library not loaded: @rpath/Sentry.framework/Sentry
 

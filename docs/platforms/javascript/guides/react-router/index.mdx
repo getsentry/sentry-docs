@@ -9,7 +9,7 @@ categories:
   - server-node
 ---
 
-<Alert level="warning">
+<Alert level="warning" title="Important">
   This SDK is currently in **beta**. Beta features are still in progress and may
   have bugs. Please reach out on
   [GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose) if
@@ -18,7 +18,7 @@ categories:
 
 <Alert title='Looking for library mode?' level='info'>
 
-  If you are using React Router in library mode, you can follow the instructions in the [React guide here](/platforms/javascript/guides/react/features/react-router/v7).
+If you are using React Router in library mode, you can follow the instructions in the [React guide here](/platforms/javascript/guides/react/features/react-router/v7).
 
 </Alert>
 
@@ -36,25 +36,25 @@ Sentry captures data by using an SDK within your application's runtime.
     "user-feedback",
     "logs",
     {
-      id: 'profiling',
-      checked: false
-    }
+      id: "profiling",
+      checked: false,
+    },
   ]}
 />
 
 <OnboardingOption optionId="profiling">
 
-  ```bash {tabTitle:npm}
-  npm install @sentry/react-router @sentry/profiling-node
-  ```
+```bash {tabTitle:npm}
+npm install @sentry/react-router @sentry/profiling-node
+```
 
-  ```bash {tabTitle:yarn}
-  yarn add @sentry/react-router @sentry/profiling-node
-  ```
+```bash {tabTitle:yarn}
+yarn add @sentry/react-router @sentry/profiling-node
+```
 
-  ```bash {tabTitle:pnpm}
-  pnpm add @sentry/react-router @sentry/profiling-node
-  ```
+```bash {tabTitle:pnpm}
+pnpm add @sentry/react-router @sentry/profiling-node
+```
 
 </OnboardingOption>
 
@@ -63,18 +63,20 @@ Sentry captures data by using an SDK within your application's runtime.
   npm install @sentry/react-router
   ```
 
-  ```bash {tabTitle:yarn}
-  yarn add @sentry/react-router
-  ```
+```bash {tabTitle:yarn}
+yarn add @sentry/react-router
+```
 
-  ```bash {tabTitle:pnpm}
-  pnpm add @sentry/react-router
-  ```
+```bash {tabTitle:pnpm}
+pnpm add @sentry/react-router
+```
+
 </OnboardingOption>
 
 ## Configure
 
 ### Expose Hooks
+
 React Router exposes two hooks in your `app` folder (`entry.client.tsx` and `entry.server.tsx`).
 If you do not see these two files, expose them with the following command:
 
@@ -94,11 +96,11 @@ Initialize the Sentry React SDK in your `entry.client.tsx` file:
 
 +Sentry.init({
 +  dsn: "___PUBLIC_DSN___",
-+  
++
 +  // Adds request headers and IP for users, for more info visit:
 +  // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#sendDefaultPii
 +  sendDefaultPii: true,
-+  
++
 +  integrations: [
 +    // ___PRODUCT_OPTION_START___ performance
 +    Sentry.reactRouterTracingIntegration(),
@@ -116,7 +118,7 @@ Initialize the Sentry React SDK in your `entry.client.tsx` file:
 +  // ___PRODUCT_OPTION_START___ logs
 +
 +  // Enable logs to be sent to Sentry
-+  _experiments: { enableLogs: true },
++  enableLogs: true,
 +  // ___PRODUCT_OPTION_END___ logs
 +  // ___PRODUCT_OPTION_START___ performance
 +
@@ -190,38 +192,41 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   Automatic server-side instrumentation is currently only supported on:
     - **Node 20:** Version \<20.19
     - **Node 22:** Version \<22.12
-  
-  
-  If you are on a different version please make use of our manual server wrappers.
-  
-  For server loaders use `wrapServerLoader`:
+
+If you are on a different version please make use of our manual server wrappers.
+
+For server loaders use `wrapServerLoader`:
+
 ```ts
-import * as Sentry from '@sentry/react-router';
+import * as Sentry from "@sentry/react-router";
 
 export const loader = Sentry.wrapServerLoader(
   {
-    name: 'Load Some Data',
-    description: 'Loads some data from the db',
+    name: "Load Some Data",
+    description: "Loads some data from the db",
   },
   async ({ params }) => {
     // ... your loader logic
   }
 );
 ```
- For server actions use `wrapServerAction`:
+
+For server actions use `wrapServerAction`:
+
 ```ts
-import * as Sentry from '@sentry/react-router';
+import * as Sentry from "@sentry/react-router";
 
 export const action = Sentry.wrapServerAction(
   {
-    name: 'Submit Form Data',
-    description: 'Processes form submission data',
+    name: "Submit Form Data",
+    description: "Processes form submission data",
   },
   async ({ request }) => {
     // ... your action logic
   }
 );
 ```
+
 </Expandable>
 
 Create an `instrument.server.mjs` file in the root of your app:
@@ -229,22 +234,22 @@ Create an `instrument.server.mjs` file in the root of your app:
 ```js {filename: instrument.server.mjs}
 import * as Sentry from "@sentry/react-router";
 // ___PRODUCT_OPTION_START___ profiling
-import { nodeProfilingIntegration } from '@sentry/profiling-node';
+import { nodeProfilingIntegration } from "@sentry/profiling-node";
 // ___PRODUCT_OPTION_END___ profiling
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  
+
   // Adds request headers and IP for users, for more info visit:
   // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#sendDefaultPii
   sendDefaultPii: true,
   // ___PRODUCT_OPTION_START___ logs
 
   // Enable logs to be sent to Sentry
-  _experiments: { enableLogs: true },
+  enableLogs: true,
   // ___PRODUCT_OPTION_END___ logs
   // ___PRODUCT_OPTION_START___ profiling
-  
+
   integrations: [nodeProfilingIntegration()],
   // ___PRODUCT_OPTION_END___ profiling
   // ___PRODUCT_OPTION_START___ performance
@@ -271,93 +276,120 @@ Update your `entry.server.tsx` file:
 +  createReadableStreamFromReadable,
 +});
 
-export default handleRequest;
+ export default handleRequest;
 
-export const handleError: HandleErrorFunction = (error, { request }) => {
-  // React Router may abort some interrupted requests, don't log those
-  if (!request.signal.aborted) {
-+   Sentry.captureException(error);
-    // optionally log the error so you can see it
-    console.error(error);
-  }
-};
-
++export const handleError = Sentry.createSentryHandleError({
++  logErrors: false
++});
 
 // ... rest of your server entry
 ```
 
 <Expandable title="Do you need to customize your handleRequest function?">
   If you need to update the logic of your `handleRequest` function you'll need to include the provided Sentry helper functions (`getMetaTagTransformer` and `wrapSentryHandleRequest`) manually:
-  
-  ```tsx {1-4, 44-45, 69-70}
-  import { getMetaTagTransformer, wrapSentryHandleRequest } from '@sentry/react-router';
-  // ... other imports
-  
-  const handleRequest = function handleRequest(
-    request: Request,
-    responseStatusCode: number,
-    responseHeaders: Headers,
-    routerContext: EntryContext,
-    _loadContext: AppLoadContext,
-  ): Promise<Response> {
-    return new Promise((resolve, reject) => {
-      let shellRendered = false;
-      const userAgent = request.headers.get('user-agent');
 
-      // Determine if we should use onAllReady or onShellReady
-      const isBot = typeof userAgent === 'string' && botRegex.test(userAgent);
-      const isSpaMode = !!(routerContext as { isSpaMode?: boolean }).isSpaMode;
+```tsx {1-4, 44-45, 69-70}
+import {
+  getMetaTagTransformer,
+  wrapSentryHandleRequest,
+} from "@sentry/react-router";
+// ... other imports
 
-      const readyOption = isBot || isSpaMode ? 'onAllReady' : 'onShellReady';
+const handleRequest = function handleRequest(
+  request: Request,
+  responseStatusCode: number,
+  responseHeaders: Headers,
+  routerContext: EntryContext,
+  _loadContext: AppLoadContext
+): Promise<Response> {
+  return new Promise((resolve, reject) => {
+    let shellRendered = false;
+    const userAgent = request.headers.get("user-agent");
 
-      const { pipe, abort } = renderToPipeableStream(
-        <ServerRouter context={routerContext} url={request.url} />,
-        {
-          [readyOption]() {
-            shellRendered = true;
-            const body = new PassThrough();
+    // Determine if we should use onAllReady or onShellReady
+    const isBot = typeof userAgent === "string" && botRegex.test(userAgent);
+    const isSpaMode = !!(routerContext as { isSpaMode?: boolean }).isSpaMode;
 
-            const stream = createReadableStreamFromReadable(body);
+    const readyOption = isBot || isSpaMode ? "onAllReady" : "onShellReady";
 
-            responseHeaders.set('Content-Type', 'text/html');
+    const { pipe, abort } = renderToPipeableStream(
+      <ServerRouter context={routerContext} url={request.url} />,
+      {
+        [readyOption]() {
+          shellRendered = true;
+          const body = new PassThrough();
 
-            resolve(
-              new Response(stream, {
-                headers: responseHeaders,
-                status: responseStatusCode,
-              }),
-            );
+          const stream = createReadableStreamFromReadable(body);
 
-            // this enables distributed tracing between client and server
-            pipe(getMetaTagTransformer(body));
-          },
-          onShellError(error: unknown) {
-            reject(error);
-          },
-          onError(error: unknown) {
-            // eslint-disable-next-line no-param-reassign
-            responseStatusCode = 500;
-            // Log streaming rendering errors from inside the shell.  Don't log
-            // errors encountered during initial shell rendering since they'll
-            // reject and get logged in handleDocumentRequest.
-            if (shellRendered) {
-              // eslint-disable-next-line no-console
-              console.error(error);
-            }
-          },
+          responseHeaders.set("Content-Type", "text/html");
+
+          resolve(
+            new Response(stream, {
+              headers: responseHeaders,
+              status: responseStatusCode,
+            })
+          );
+
+          // this enables distributed tracing between client and server
+          pipe(getMetaTagTransformer(body));
         },
-      );
+        onShellError(error: unknown) {
+          reject(error);
+        },
+        onError(error: unknown) {
+          // eslint-disable-next-line no-param-reassign
+          responseStatusCode = 500;
+          // Log streaming rendering errors from inside the shell.  Don't log
+          // errors encountered during initial shell rendering since they'll
+          // reject and get logged in handleDocumentRequest.
+          if (shellRendered) {
+            // eslint-disable-next-line no-console
+            console.error(error);
+          }
+        },
+      }
+    );
 
-      // Abort the rendering stream after the `streamTimeout`
-      setTimeout(abort, streamTimeout);
-    });
-  };
-  
-  // wrap the default export
-  export default wrapSentryHandleRequest(handleRequest);
+    // Abort the rendering stream after the `streamTimeout`
+    setTimeout(abort, streamTimeout);
+  });
+};
 
-  // ... rest of your entry.server.ts file
-  ```
+// wrap the default export
+export default wrapSentryHandleRequest(handleRequest);
+
+// ... rest of your entry.server.ts file
+```
+
+</Expandable>
+
+<Expandable title="Do you need to customize your handleError function?">
+  If you have custom logic in your `handleError` function, you'll need to capture errors manually:
+
+```tsx {12}
+import {
+  getMetaTagTransformer,
+  wrapSentryHandleRequest,
+} from "@sentry/react-router";
+// ... other imports
+
+export function handleError(
+  error: unknown,
+  {
+    request,
+    params,
+    context,
+  }: LoaderFunctionArgs | ActionFunctionArgs
+) {
+  if (!request.signal.aborted) {
+    Sentry.captureException(error);
+    console.error(formatErrorForJsonLogging(error));
+  }
+}
+
+// ... rest of your entry.server.ts file
+```
+
 </Expandable>
 
 ### Update Scripts
@@ -369,8 +401,8 @@ Update the `start` and `dev` script to include the instrumentation file:
 
 ```json {filename: package.json}
 "scripts": {
-  "dev": "NODE_OPTIONS='--import ./instrument.server.mjs' react-router dev",
-  "start": "NODE_OPTIONS='--import ./instrument.server.mjs' react-router-serve ./build/server/index.js",
+"dev": "NODE_OPTIONS='--import ./instrument.server.mjs' react-router dev",
+"start": "NODE_OPTIONS='--import ./instrument.server.mjs' react-router-serve ./build/server/index.js",
 }
 ```
 
@@ -388,15 +420,13 @@ If you're deploying to platforms like **Vercel** or **Netlify** where setting th
 
 <Alert title="Incomplete Auto-instrumentation" level="warning">
 
-  When importing the instrumentation file directly in `entry.server.tsx` instead of using the `--import` flag, automatic instrumentation will be incomplete and you'll miss automatically captured spans and traces for some of your application's server-side operations. This approach should only be used when the `NODE_OPTIONS` approach is not available on your hosting platform.
+When importing the instrumentation file directly in `entry.server.tsx` instead of using the `--import` flag, automatic instrumentation will be incomplete and you'll miss automatically captured spans and traces for some of your application's server-side operations. This approach should only be used when the `NODE_OPTIONS` approach is not available on your hosting platform.
 
 </Alert>
 
 ## Source Maps Upload
 
 Update `vite.config.ts` to include the `sentryReactRouter` plugin, making sure to pass both the Vite and Sentry configurations to it:
-
-<OrgAuthTokenNote />
 
 ```typescript {filename: vite.config.ts} {diff}
 import { reactRouter } from '@react-router/dev/vite';
@@ -407,8 +437,9 @@ const sentryConfig: SentryReactRouterBuildOptions = {
   org: "___ORG_SLUG___",
   project: "___PROJECT_SLUG___",
 
-  // An auth token is required for uploading source maps.
-  authToken: "___ORG_AUTH_TOKEN___"
+  // An auth token is required for uploading source maps;
+  // store it in an environment variable to keep it secure.
+  authToken: process.env.SENTRY_AUTH_TOKEN,
   // ...
 };
 
@@ -419,18 +450,26 @@ export default defineConfig(config => {
 });
 ```
 
+To keep your auth token secure, always store it in an environment variable instead of directly in your files:
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
 Include the `sentryOnBuildEnd` hook in `react-router.config.ts`:
 
 ```typescript {filename: react-router.config.ts} {diff}
-import type { Config } from '@react-router/dev/config';
-import { sentryOnBuildEnd } from '@sentry/react-router';
+import type { Config } from "@react-router/dev/config";
+import { sentryOnBuildEnd } from "@sentry/react-router";
 
 export default {
   ssr: true,
   buildEnd: async ({ viteConfig, reactRouterConfig, buildManifest }) => {
     // ...
     // Call this at the end of the hook
-+   await sentryOnBuildEnd({ viteConfig, reactRouterConfig, buildManifest });
+    +(await sentryOnBuildEnd({ viteConfig, reactRouterConfig, buildManifest }));
   },
 } satisfies Config;
 ```
@@ -450,13 +489,8 @@ export async function loader() {
 }
 
 export default function ExamplePage() {
-  return (
-    <div>
-      Loading this page will throw an error
-    </div>
-  );
+  return <div>Loading this page will throw an error</div>;
 }
-
 ```
 
 <Alert>

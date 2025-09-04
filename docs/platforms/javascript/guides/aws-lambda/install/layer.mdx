@@ -1,0 +1,115 @@
+---
+title: Lambda Layer
+description: "Learn how to add the Sentry Node Lambda Layer to use Sentry in your Lambda functions"
+sidebar_order: 1
+---
+
+The easiest way to get started with Sentry is to use the Sentry [Lambda Layer](https://docs.aws.amazon.com/lambda/latest/dg/adding-layers.html) instead of installing `@sentry/aws-serverless` with a package manager manually.
+If you follow this guide, you don't have to worry about deploying Sentry dependencies alongside your function code.
+
+## Prerequisites
+
+Before you begin, make sure you have the following:
+
+- You have a Lambda function deployed in AWS.
+- You know the AWS region that your function is deployed to.
+
+## 1. Add the Sentry Lambda Layer
+
+Add the Sentry Layer by navigating to your Lambda function. Select **Layers**, then **Add a Layer**.
+
+![](./img/lambda_view.png)
+
+**Specify an ARN** tab as illustrated:
+
+![](./img/add_layer.png)
+
+Finally, set the region and copy the provided ARN value into the input.
+
+<LambdaLayerDetail canonical="aws-layer:node" />
+
+<br />
+
+## 2. Setup Options
+
+### Option A: Automatic Setup (recommended)
+
+In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/).
+
+Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+
+<OnboardingOptionButtons options={["error-monitoring", "performance"]} />
+
+Set the following environment variables in your Lambda function configuration:
+
+```bash
+NODE_OPTIONS="--import @sentry/aws-serverless/awslambda-auto"
+SENTRY_DSN="___PUBLIC_DSN___"
+# ___PRODUCT_OPTION_START___ performance
+SENTRY_TRACES_SAMPLE_RATE="1.0"
+# ___PRODUCT_OPTION_END___ performance
+```
+
+To set environment variables, navigate to your Lambda function, select **Configuration**, then **Environment variables**:
+
+![](./img/env_vars.png)
+
+### Option B: Manual Setup
+
+To further customize the SDK setup, you can also manually initialize the SDK in your lambda function. The benefit of this installation method is that you can fully customize your Sentry SDK setup in a `Sentry.init` call.
+
+Note that you don't have to actually install an NPM package for this to work, as the package is already included in the Lambda Layer.
+
+Create a new file, for example `instrument.js` to initialize the SDK:
+
+```javascript {filename:instrument.js} {tabTitle:CommonJS}
+const Sentry = require("@sentry/aws-serverless");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/aws-lambda/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Add Tracing by setting tracesSampleRate and adding integration
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+});
+```
+
+```javascript {filename:instrument.mjs} {tabTitle:ESM}
+import * as Sentry from "@sentry/aws-serverless";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/aws-lambda/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Add Tracing by setting tracesSampleRate and adding integration
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+});
+```
+
+##### Load the SDK
+
+To load the SDK before your function starts, you need to preload the `instrument.js` by setting the `NODE_OPTIONS` environment variable:
+
+```bash
+NODE_OPTIONS="--import ./instrument.js"
+```
+
+That's it — make sure to re-deploy your function and you're all set!

@@ -89,7 +89,7 @@ It consists of the following fields:
 
 : **Object, optional**. A dictionary of key-value pairs of arbitrary data attached to the log. Attributes must also declare the type of the value. The following types are supported: `string`, `boolean`, `integer`, `double`. In the future arrays will be supported (`string[]`, `boolean[]`, `integer[]`, `double[]`).
 
-Integers should be a 64-bit signed integer, while doubles should be a 64-bit floating point number. For 64-bit unsigned integers, use the `string` type to avoid overflow issues. In the future we will support 64-bit unsigned integers.
+Integers should be a 64-bit signed integer, while doubles should be a 64-bit floating point number. For 64-bit unsigned integers, use the `string` type to avoid overflow issues. Make sure to always convert 64-bit unsigned integers to strings regardless of if they are in or out of the 64-bit signed range. In the future we will support sending 64-bit unsigned integers without converting them to strings.
 
 Example:
 
@@ -298,6 +298,8 @@ If the log was paramaterized the SDK should attach the following
   "sentry.message.parameter.1": "user_id"
 }
 ```
+
+If there are no `sentry.message.parameter.X` attributes included in the log, then the SDK MUST NOT attach a `sentry.message.template` attribute. This is important because it reduces duplicate content in the log and makes PII processing in Sentry much easier as only we don't have to duplicate processing between the log message and the `sentry.message.template` attribute.
 
 #### SDK Integration Attributes
 

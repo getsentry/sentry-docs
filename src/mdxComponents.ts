@@ -18,7 +18,12 @@ import {GuideGrid} from './components/guideGrid';
 import {JsBundleList} from './components/jsBundleList';
 import {LambdaLayerDetail} from './components/lambdaLayerDetail';
 import {LinkWithPlatformIcon} from './components/linkWithPlatformIcon';
-import {OnboardingOption, OnboardingOptionButtons} from './components/onboarding';
+import {LLMSteering} from './components/llmSteering';
+import {
+  OnboardingOption,
+  OnboardingOptionButtons,
+  OnboardingSteps,
+} from './components/onboarding';
 import {OrgAuthTokenNote} from './components/orgAuthTokenNote';
 import {PageGrid} from './components/pageGrid';
 import {ParamTable} from './components/paramTable';
@@ -39,6 +44,7 @@ import {SdkOption} from './components/sdkOption';
 import {SignInNote} from './components/signInNote';
 import {SmartLink} from './components/smartLink';
 import {TableOfContents} from './components/tableOfContents';
+import {VersionRequirement} from './components/version-requirement';
 import {VimeoEmbed} from './components/video';
 
 export function mdxComponents(
@@ -70,6 +76,7 @@ export function mdxComponents(
     LambdaLayerDetail,
     Link: SmartLink,
     LinkWithPlatformIcon,
+    LLMSteering,
     OrgAuthTokenNote,
     PageGrid,
     ParamTable,
@@ -84,10 +91,12 @@ export function mdxComponents(
     PlatformSdkPackageName,
     OnboardingOption,
     OnboardingOptionButtons,
+    OnboardingSteps,
     RelayMetrics,
     SandboxLink,
     SignInNote,
     VimeoEmbed,
+    VersionRequirement,
     a: SmartLink,
     img: DocImage,
     ...dynamicComponents,

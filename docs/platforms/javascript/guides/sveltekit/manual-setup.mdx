@@ -9,7 +9,46 @@ description: "Learn how to manually set up Sentry in your SvelteKit app and capt
   installer](/platforms/javascript/guides/sveltekit).
 </Alert>
 
-<PlatformContent includePath="getting-started-prerequisites" />
+## Prerequisites
+
+You need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- Your application up and running
+- SvelteKit version `2.31.0` or newer (see Note below)
+- Vite version `4.2` or newer
+
+<Expandable title="I'm on an older SvelteKit version than 2.31.0">
+
+Version `2.31.0` of SvelteKit, introduces [official support for observability and tracing](https://svelte.dev/docs/kit/observability). This means that Sentry can now follow the official best practise for how the SDK should be set up.
+For you this means:
+- The Sentry SDK will be initialized at the correct, earliest possible time on the server, allowing for all its auto instrumentation to work correctly.
+- The Sentry SDK picks up spans emitted from SvelteKit directly. You'll get more accurate insights into the performance of your handlers, server actions, `load` and remote functions.
+
+SvelteKit observability is still an experimental feature in SvelteKit 2.x but we recommend giving it a try. 
+The Sentry wizard, as well as this guide, will use it as the default way of setting up the SDK.
+
+If you've already set up the SDK and don't want to migrate to the new setup, or don't want to upgrade to SvelteKit `2.31.0` or higher, that's fine too. Just follow [this guide](../manual-setup__v10.7.0) instead.   
+
+</Expandable>
+
+
+<Expandable title="Notes on SvelteKit adapter compatibility">
+The SvelteKit Sentry SDK is designed to work out of the box with several SvelteKit adapters and their underlying server runtimes.
+Here's an overview of the current support:
+
+- **Fully supported Node.js runtimes**
+  - [Adapter-auto](https://kit.svelte.dev/docs/adapter-auto) for Vercel; other Node.js-based platforms might work, but we don't guarantee compatibility at this time
+  - [Adapter-vercel](https://kit.svelte.dev/docs/adapter-vercel) when used with Vercel's Node.js Lambda runtime
+  - [Adapter-node](https://kit.svelte.dev/docs/adapter-node)
+- **Supported non-Node.js runtimes**
+  - [Adapter-cloudflare](https://kit.svelte.dev/docs/adapter-cloudflare) requires [additional setup](/platforms/javascript/guides/cloudflare/frameworks/sveltekit/)
+- **Currently not supported**
+  - Non-Node.js server runtimes, such as Vercel's edge runtime, are not yet supported.
+- **Other adapters**
+  - Other SvelteKit adapters might work, but they're not currently officially supported. We're looking into extending first-class support to more adapters in the future.
+
+</Expandable>
 
 ## Step 1: Install
 
@@ -53,7 +92,7 @@ You need to initialize and configure the Sentry SDK in three places: the client 
 
 Create a client hooks file `src/hooks.client.(js|ts)` in the `src` folder of your project if you don't have one already. In this file, import and initialize the Sentry SDK and add the `handleErrorWithSentry` function to the [`handleError` hook](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError).
 
-```javascript {filename:hooks.client.(js|ts)} {1, 3-28, 34}
+```javascript {filename:src/hooks.client.(js|ts)} {1, 3-43, 49}
 import * as Sentry from "@sentry/sveltekit";
 
 Sentry.init({
@@ -94,7 +133,7 @@ Sentry.init({
   // ___PRODUCT_OPTION_START___ logs
 
   // Enable logs to be sent to Sentry
-  _experiments: { enableLogs: true },
+  enableLogs: true,
   // ___PRODUCT_OPTION_END___ logs
 });
 
@@ -110,9 +149,32 @@ export const handleError = Sentry.handleErrorWithSentry(myErrorHandler);
 
 ### Configure Server-Side Sentry
 
-Create a server hooks file `src/hooks.server.(js|ts)` in the `src` folder of your project if you don't have one already. In this file, import and initialize the Sentry SDK and add the `handleErrorWithSentry` function to the [`handleError` hook](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) and the Sentry request handler to the [`handle` hook](https://kit.svelte.dev/docs/hooks#server-hooks-handle).
+_Requires SvelteKit `2.31.0` or higher and `@sentry/sveltekit` `10.8.0` or higher._ If you're using older versions, check out [this guide](../manual-setup__v10.7.0#configure-server-side-sentry) instead.
 
-```javascript {filename:hooks.server.(js|ts)} {1, 3-18, 24, 28}
+Configure server-side instrumentation and tracing in your `svelte.config.js` file:
+
+```js {filename:svelte.config.js} {3-12}
+const config = {
+  kit: {
+    experimental: {
+      instrumentation: {
+        server: true
+      },
+      // ___PRODUCT_OPTION_START___ performance
+      tracing: {
+        server: true
+      },
+      // ___PRODUCT_OPTION_END___ performance
+    }
+  }
+};
+
+export default config;
+```
+
+Create an `src/instrumentation.server.(js|ts)` file (if you don't have one already) to initialize the server-side SDK:
+
+```js {filename:src/instrumentation.server.(js|ts)} {1, 3-23}
 import * as Sentry from "@sentry/sveltekit";
 
 Sentry.init({
@@ -133,9 +195,15 @@ Sentry.init({
   // ___PRODUCT_OPTION_START___ logs
 
   // Enable logs to be sent to Sentry
-  _experiments: { enableLogs: true },
+  enableLogs: true,
   // ___PRODUCT_OPTION_END___ logs
 });
+```
+
+Create a server hooks file `src/hooks.server.(js|ts)` in the `src` folder of your project if you don't have one already. In this file, add the `handleErrorWithSentry` function to the [`handleError` hook](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) and the Sentry request handler to the [`handle` hook](https://kit.svelte.dev/docs/hooks#server-hooks-handle).
+
+```javascript {filename:src/hooks.server.(js|ts)} {1,7,11}
+import * as Sentry from "@sentry/sveltekit";
 
 const myErrorHandler = ({ error, event }) => {
   console.error("An error occurred on the server side:", error, event);
@@ -175,7 +243,7 @@ export default defineConfig({
 
 To upload source maps for clear error stack traces, add your Sentry auth token, organization, and project slug in your `vite.config.(js|ts)` file:
 
-```javascript {filename:vite.config.(js|ts)} {6-11}
+```javascript {filename:vite.config.(js|ts)} {6-13}
 import { sveltekit } from "@sveltejs/kit/vite";
 import { sentrySvelteKit } from "@sentry/sveltekit";
 

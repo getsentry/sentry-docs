@@ -60,7 +60,9 @@ const root = process.cwd();
 const FILE_CONCURRENCY_LIMIT = 200;
 const CACHE_COMPRESS_LEVEL = 4;
 const CACHE_DIR = path.join(root, '.next', 'cache', 'mdx-bundler');
-mkdirSync(CACHE_DIR, {recursive: true});
+if (process.env.CI) {
+  mkdirSync(CACHE_DIR, {recursive: true});
+}
 
 const md5 = (data: BinaryLike) => createHash('md5').update(data).digest('hex');
 
@@ -699,12 +701,14 @@ const fileBySlugCache = new Map<string, Promise<SlugFile>>();
  *
  * This is useful for performance when rendering the same file multiple times.
  */
-export function getFileBySlugWithCache(slug: string): Promise<SlugFile> {
-  let cached = fileBySlugCache.get(slug);
-  if (!cached) {
-    cached = getFileBySlug(slug);
-    fileBySlugCache.set(slug, cached);
-  }
-
-  return cached;
-}
+export const getFileBySlugWithCache: (slug: string) => Promise<SlugFile> =
+  process.env.NODE_ENV === 'development'
+    ? getFileBySlug
+    : (slug: string) => {
+        let cached = fileBySlugCache.get(slug);
+        if (!cached) {
+          cached = getFileBySlug(slug);
+          fileBySlugCache.set(slug, cached);
+        }
+        return cached;
+      };

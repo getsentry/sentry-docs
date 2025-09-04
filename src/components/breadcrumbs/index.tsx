@@ -24,7 +24,7 @@ export function Breadcrumbs({leafNode}: BreadcrumbsProps) {
   }
 
   return (
-    <ul className="list-none flex p-0 flex-wrap float-left" style={{margin: 0}}>
+    <ul className="not-prose list-none flex flex-wrap" style={{margin: 0}}>
       {breadcrumbs.map(b => {
         return (
           <li className={styles['breadcrumb-item']} key={b.to}>
