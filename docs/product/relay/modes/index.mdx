@@ -6,7 +6,7 @@ sidebar_order: 2
 
 Relay can operate in one of several major modes, and it is critical to understand the modes prior if you are configuring the Relay server rather than using the default settings.
 
-The mode is stored in the configuration file, which contains the `relay.mode` field. This field specifies the mode in which Relay will run: `managed`, `static`, or `proxy`. The Relay mode controls the way Relay obtains project settings for events.
+The mode is stored in the configuration file, which contains the `relay.mode` field. This field specifies the mode in which Relay will run: `managed` or `proxy`. The Relay mode controls the way Relay obtains project settings for events.
 
 In Sentry, event processing is configured according to both project and organization settings. Some settings, such as privacy controls, are set at the organization level, then inherited by all projects in that organization; other settings are specified per project. For Relay, events are processed according to the inherited project settings to which the event is sent.
 
@@ -28,43 +28,13 @@ relay:
   mode: managed
 ```
 
-## Static Mode
-
-In static mode, projects must be configured manually. In this mode, Relay will process events for only statically configured projects, and reject events for all other projects.
-
-This mode is useful when you know the projects sending events and you need to explicitly control the projects allowed to send events through this Relay.
-
-<Alert title="Note">
-
-In `static` mode, Relay does not register with upstream since it does not query
-information from it. After processing events for configured projects, it
-forwards them upstream with the authentication information (DSN) set by
-the client that sent the original request.
-
-</Alert>
-
-To activate static mode, set this configuration:
-
-```yaml
-relay:
-  mode: static
-```
-
-To configure projects, add files using the format `projects/<PROJECT_ID>.json` to your Relay configuration folder. For a description of the contents of this file,
-refer to.
-
 ## Proxy Mode
 
-Proxy mode is similar to `static` mode, but it forwards events from unknown
-projects. In this mode, events for statically configured projects are handled
-identically to `static` mode. Events for unknown projects -- projects for which
-there are no statically configured settings -- are forwarded (proxied) with
-minimal processing.
+Proxy mode forwards the all events with minimal processing.
 
 <Alert title="Rate Limiting">
 
-Rate limiting is still applied in `proxy` mode for all projects,
-regardless of whether they are statically configured or proxied.
+Rate limiting is still applied in `proxy` mode for all projects.
 
 </Alert>
 
@@ -74,3 +44,7 @@ To activate proxy mode, set this configuration:
 relay:
   mode: proxy
 ```
+
+## Static Mode
+
+Static mode has been deprecated as of Relay version 25.9.0. Pleas use `managed` or `proxy` mode instead. When switching to `managed` mode don't forget to migrate any local scrubbing rules by configuring them in the Sentry UI.
