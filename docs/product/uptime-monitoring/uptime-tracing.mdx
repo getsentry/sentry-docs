@@ -4,9 +4,15 @@ sidebar_order: 52
 description: "Learn how to use distributed tracing to troubleshoot downtime."
 ---
 
-Sentry's Uptime Monitoring uses [distributed tracing](/product/tracing/#whats-distributed-tracing) to track the flow and timing of requests and operations during uptime checks. This helps you quickly find the root cause of downtime by connecting related errors and performance data.
+Sentry's Uptime Monitoring uses [distributed tracing](/product/tracing/#whats-distributed-tracing) to track the flow and timing of requests and operations during uptime checks. This helps you quickly find the root cause of downtime by connecting related errors and performance data. 
 
-You can trace errors to identify and diagnose issues like crashes or exceptions. This is automatically enabled for all Uptime Alerts. You can also trace spans to monitor the performance and flow of operations, such as API calls or database queries. Span tracing is disabled by default, but can be enabled by allowing sampling in your Uptime Alert settings. Errors focus on problems, while spans focus on performance.
+When uptime checks are performed, Sentry creates a **trace** that shows the complete request lifecycle. This trace contains:
+
+- **Uptime request spans**: A [default set of root spans](/product/uptime-monitoring/#uptime-request-spans) that identifies this as an uptime check
+- **Application spans**: Individual operations like database queries, API calls, and cache operations, configured through distributed tracing
+- **Error events**: Any exceptions or failures that occur during the request
+
+**Error tracing** captures when things go wrong, while **span tracing** shows the performance and flow of operations. Together, they provide complete visibility into why an uptime check failed. Span tracing is disabled by default for uptime checks, but can be enabled by allowing sampling in your [Uptime Alert settings](/product/alerts/create-alerts/uptime-alert-config/). Errors plus spans focus on problems, while uptime monitoring plus spans focus on performance.
 
 ## How Uptime Tracing Works
 
@@ -56,7 +62,11 @@ Sentry.init({
 
 ## Tracing Spans
 
-Unlike error tracing, span tracing is **disabled** by default for uptime checks, but can be enabled by allowing sampling in your Uptime Alert settings. Enabling span tracing can be helpful because it provides a detailed view of the timing and flow of requests and operations during uptime checks, which is especially useful for diagnosing timeouts or performance issues.
+There are two sets of spans avaialble for uptime checks: 
+1. **Uptime request spans**. These are automatically created by Sentry for every uptime check request. You can find them as the root of any uptime issue's trace.
+2. **Application spans**. These are spans that are configured through distributed tracing. You can find them as the children of uptime request spans.
+ 
+Unlike error tracing, span tracing that you configure is **disabled** by default for uptime checks, but can be enabled by allowing sampling in your [Uptime Alert settings](/product/alerts/create-alerts/uptime-alert-config/). Enabling span tracing can be helpful because it provides a detailed view of the timing and flow of requests and operations during uptime checks, which is especially useful for diagnosing timeouts or performance issues.
 
 ### Enabling Uptime Tracing for Spans
 
@@ -64,7 +74,11 @@ To enable span tracing, modify your Uptime Alert settings with the "Allow Sampli
 
 Because uptime requests won't override your SDK’s error sampling rate, some errors may not appear in traces if that rate is set to below 1.
 
-![Uptime Alert Allow Sampling Configuration](./img/uptime-allow-sampling.png)
+![Uptime Alert Allow Sampling Configuration](./img/allow-sampling-new.png)
+
+<Alert>
+  Uptime request spans will always be on, even if sampling is disabled. Uptime request spans are free and will not count against your [span quota](/pricing/quotas/manage-transaction-quota/). 
+</Alert>
 
 ### Custom Sampling
 
