@@ -143,6 +143,10 @@ const developerDocsRedirects = [
     destination: '/backend/translations/',
   },
   {
+    source: '/application/pii/:path*',
+    destination: '/backend/pii/:path*',
+  },
+  {
     source: '/backend/control-silo/',
     destination: '/application/control-silo/',
   },
