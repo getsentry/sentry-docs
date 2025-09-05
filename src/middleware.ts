@@ -2438,16 +2438,8 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/relay/',
   },
   {
-    from: '/meta/relay/projects/',
-    to: '/product/relay/projects/',
-  },
-  {
     from: '/meta/relay/getting-started/',
     to: '/product/relay/getting-started/',
-  },
-  {
-    from: '/meta/relay/pii-and-data-scrubbing/',
-    to: '/product/relay/pii-and-data-scrubbing/',
   },
   {
     from: '/meta/relay/options/',
