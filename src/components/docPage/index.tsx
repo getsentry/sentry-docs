@@ -76,6 +76,7 @@ export function DocPage({
               'prose-blockquote:font-normal prose-blockquote:border-l-[3px] prose-em:font-normal prose-blockquote:text-[var(--gray-12)]',
               'prose-img:my-2',
               'prose-strong:text-[var(--gray-12)]',
+              'prose-pre:overflow-x-auto prose-pre:max-w-full prose-code:break-words',
               fullWidth ? 'max-w-none w-full' : 'w-full',
             ].join(' ')}
             id="doc-content"
@@ -117,7 +118,7 @@ export function DocPage({
         {hasToc && (
           <aside
             data-layout-anchor="right"
-            className="sticky h-[calc(100vh-var(--header-height))] top-[var(--header-height)] overflow-y-auto hidden toc:block w-[250px]"
+            className="sticky h-[calc(100vh-var(--header-height))] top-[var(--header-height)] overflow-y-auto hidden toc:block w-[220px] toc-lg:w-[250px]"
           >
             <div className="sidebar">
               <SidebarTableOfContents />
@@ -128,6 +129,25 @@ export function DocPage({
       </section>
       <style>{`:root { --doc-content-w: 1200px; } #doc-content { max-width: var(--doc-content-w); box-sizing: border-box; }`}</style>
       <style>{`
+        /* Responsive content width constraints */
+        @media (min-width: 1400px) and (max-width: 1649px) {
+          /* Laptop screens with TOC visible but limited width */
+          #doc-content {
+            max-width: calc(100vw - 300px - 220px - 3rem); /* sidebar - toc - padding */
+            margin-left: auto;
+            margin-right: auto;
+          }
+        }
+        
+        @media (min-width: 1650px) and (max-width: 2056px) {
+          /* Larger laptop/desktop screens */
+          #doc-content {
+            max-width: calc(100vw - 300px - 250px - 4rem); /* sidebar - toc - padding */
+            margin-left: auto;
+            margin-right: auto;
+          }
+        }
+        
         @media (min-width: 2057px) {
           :root {
             --doc-content-w: 1200px;
