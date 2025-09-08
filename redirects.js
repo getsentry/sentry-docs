@@ -969,7 +969,7 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/tracing/instrumentation/ai-agents-module',
-  destination: '/platforms/javascript/guides/node/tracing/instrumentation/ai-agents-module',
+    destination: '/platforms/javascript/guides/node/tracing/instrumentation/ai-agents-module',
   },
   {
     source: '/product/insights/retention-priorities/',
