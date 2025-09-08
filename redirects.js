@@ -968,6 +968,10 @@ const userDocsRedirects = [
     destination: '/product/insights/ai/agents/:path*',
   },
   {
+    source: '/platforms/javascript/tracing/instrumentation/ai-agents-module',
+  destination: '/platforms/javascript/guides/node/tracing/instrumentation/ai-agents-module',
+  },
+  {
     source: '/product/insights/retention-priorities/',
     destination: '/organization/dynamic-sampling/',
   },
