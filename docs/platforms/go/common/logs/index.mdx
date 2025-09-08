@@ -5,130 +5,34 @@ description: "Structured logs allow you to send, view, and query logs sent from 
 sidebar_order: 5600
 ---
 
-<Include name="feature-stage-beta-logs.mdx" />
-
-With Sentry Structured Logs, you can send text based log information from your applications to Sentry. Once in Sentry, these logs can be viewed alongside relevant errors, searched by text-string, or searched using their individual attributes.
+With Sentry Structured Logs, you can send text-based log information from your applications to Sentry. Once in Sentry, these logs can be viewed alongside relevant errors, searched by text-string, or searched using their individual attributes.
 
 ## Requirements
 
-Logs in Go are supported in Sentry Go SDK version `0.33.0` and above. To use integrations with other logging libraries, check their specific documentation pages for detailed requirements.
+<PlatformContent includePath="logs/requirements" />
 
-## Configure
+## Setup
 
-### Initialize the Sentry SDK
-
-To enable logging, you need to initialize the SDK with the `EnableLogs` option set to true.
-
-<PlatformContent includePath="getting-started-include-logs-config" />
-
-### Options
-
-#### BeforeSendLog
-
-To filter logs, or update them before they are sent to Sentry, you can use the `BeforeSendLog` client option.
-
-```go
-sentry.Init(sentry.ClientOptions{
-    Dsn:        "___PUBLIC_DSN___",
-    EnableLogs: true,
-    BeforeSendLog: func(log *sentry.Log) *sentry.Log {
-        // filter out all trace logs
-        if log.Level == sentry.LogLevelTrace {
-            return nil
-        }
-
-        // filter all logs below warning
-        if log.Severity <= sentry.LogSeverityInfo {
-            return nil
-        }
-        return log
-    },
-})
-```
+<PlatformContent includePath="logs/setup" />
 
 ## Usage
 
-Once the feature is enabled on the SDK and the SDK is initialized, you can send logs by using the `sentry.Logger` API or our different integrations.
-
-The `sentry.Logger` API exposes methods that support six different log levels:
-- `trace`
-- `debug`
-- `info`
-- `warn`
-- `error`
-- `fatal`
-
-The methods support both `fmt.Print` and `fmt.Printf` like syntax. If you pass in format specifiers like `%v`, these will be
-sent to Sentry, and can be searched from within the Logs UI, and even added to the Logs views as a dedicated column.
-
-```go
-func main() {
-	if err := sentry.Init(sentry.ClientOptions{
-		Dsn:        "___PUBLIC_DSN___",
-		EnableLogs: true,
-	}); err != nil {
-		log.Fatalf("Sentry initialization failed: %v", err)
-	}
-	// Flush buffered events before the program terminates.
-	// Set the timeout to the maximum duration the program can afford to wait.
-	defer sentry.Flush(2 * time.Second)
-
-    // The SentryLogger requires context, to link logs with the appropriate traces. You can either create a new logger
-	// by providing the context, or use WithCtx() to pass the context inline.
-	ctx := context.Background()
-	logger := sentry.NewLogger(ctx)
-
-	// Or inline using WithCtx()
-    newCtx := context.Background()
-    // WithCtx() does not modify the original context attached on the logger.
-	logger.Info().WithCtx(newCtx).Emit("context passed")
-
-	// You can use the logger like [fmt.Print]
-	logger.Info().Emit("Hello ", "world!")
-	// Or like [fmt.Printf]
-	logger.Info().Emitf("Hello %v!", "world")
-}
-```
-
-You can also pass additional permanent attributes to the logger via `SetAttributes`, or attach certain attributes to the `LogEntry` itself.
-These attributes do not persist after Emitting the `LogEntry`. All attributes will be searchable in the Logs UI.
-
-```go
-logger.SetAttributes(
-    attribute.Int("key.int", 42),
-    attribute.Bool("key.boolean", true),
-    attribute.Float64("key.float", 42.4),
-    attribute.String("key.string", "string"),
-)
-logger.Warn().Emitf("I have params: %v and attributes", "example param")
-
-// This entry would contain all attributes attached to the logger.
-// However, it's also possible to overwrite them.
-logger.Info().String("key.string", "newstring").Emit("overwriting key.string")
-```
-
-Currently, the `attribute` API supports only these value types: `int`, `string`, `bool`, and `float`.
+<PlatformContent includePath="logs/usage" />
 
 ## Integrations
 
-### Supported libraries
-- [Slog](/platforms/go/guides/slog)
-- [Logrus](/platforms/go/guides/logrus)
+<PlatformContent includePath="logs/integrations" />
 
-### `io.Writer` interface
+## Options
 
-The `sentry.Logger` implements the `io.Writer` interface, so you can easily inject the logger into your existing setup. However, to correctly
-link your traces you would need to create a new logger everytime you want to pass a new context. Due to this limitation we recommend using the
-`sentry.Logger` or any of the other supported integrations.
-
-```go
-sentryLogger := sentry.NewLogger(ctx)
-logger := log.New(sentryLogger, "", log.LstdFlags)
-logger.Println("Implementing log.Logger")
-```
+<PlatformContent includePath="logs/options" />
 
 ### Debug
 
 If the `Debug` init option is set to true, calls to the `sentry.Logger` will also print to the console with the appropriate log level.
 
-<Include name="logs/go-ctx-usage-alert.mdx"/>
+<Include name="logs/go-ctx-usage-alert.mdx" />
+
+## Default Attributes
+
+<PlatformContent includePath="logs/default-attributes" />

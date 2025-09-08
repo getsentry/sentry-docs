@@ -18,6 +18,7 @@ import {GuideGrid} from './components/guideGrid';
 import {JsBundleList} from './components/jsBundleList';
 import {LambdaLayerDetail} from './components/lambdaLayerDetail';
 import {LinkWithPlatformIcon} from './components/linkWithPlatformIcon';
+import {LLMSteering} from './components/llmSteering';
 import {
   OnboardingOption,
   OnboardingOptionButtons,
@@ -43,6 +44,7 @@ import {SdkOption} from './components/sdkOption';
 import {SignInNote} from './components/signInNote';
 import {SmartLink} from './components/smartLink';
 import {TableOfContents} from './components/tableOfContents';
+import {VersionRequirement} from './components/version-requirement';
 import {VimeoEmbed} from './components/video';
 
 export function mdxComponents(
@@ -74,6 +76,7 @@ export function mdxComponents(
     LambdaLayerDetail,
     Link: SmartLink,
     LinkWithPlatformIcon,
+    LLMSteering,
     OrgAuthTokenNote,
     PageGrid,
     ParamTable,
@@ -93,6 +96,7 @@ export function mdxComponents(
     SandboxLink,
     SignInNote,
     VimeoEmbed,
+    VersionRequirement,
     a: SmartLink,
     img: DocImage,
     ...dynamicComponents,
