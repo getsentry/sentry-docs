@@ -1,0 +1,66 @@
+To enable logging, you need to initialize the SDK with the `enable_logs` option set to `true`.
+
+```ruby
+Sentry.init do |config|
+  config.dsn = "___PUBLIC_DSN___"
+  config.enable_logs = true
+end
+```
+
+### Structured Logging with Log Subscribers
+
+<Alert level="info" title="Note on structured logging">
+Structured logging with Log Subscribers provides rich context and metadata compared to plain logger messages. This enables better filtering, searching, and analysis of your application's behavior in Sentry.
+</Alert>
+
+Rails applications can benefit from structured logging using ActiveSupport's Log Subscribers. This feature captures Rails instrumentation events and sends them as structured logs to Sentry with relevant context and metadata.
+
+#### Default Setup
+
+To enable structured logging with default subscribers:
+
+```ruby
+Sentry.init do |config|
+  config.dsn = "___PUBLIC_DSN___"
+  config.enable_logs = true
+  config.rails.structured_logging.enabled = true
+end
+```
+
+By default, this enables structured logging for:
+
+- **ActiveRecord**: Database queries with SQL, duration, connection info, and caching status
+- **ActionController**: HTTP requests with controller, action, parameters, response status, and timing
+
+Additional subscribers are available but not enabled by default:
+
+- **ActiveJob**: Background job execution (`perform`), enqueueing (`enqueue`), retry failures (`retry_stopped`), and job discarding (`discard`)
+- **ActionMailer**: Email delivery (`deliver`) and processing (`process`) events
+
+See the [Options](#options) section for information on how to enable additional subscribers.
+
+### Basic Rails Logger Integration
+
+If you enable `:logger` patch, this will affect Rails' built-in logger. This means that anything that Rails logs, and any custom usage of the Rails logger, will result in sending log entries to Sentry:
+
+```ruby
+Sentry.init do |config|
+  config.dsn = "___PUBLIC_DSN___"
+  config.enable_logs = true
+  config.enabled_patches = [:logger]
+end
+```
+
+Then all logs from Rails logger will be sent to Sentry, for example:
+
+```ruby
+# All these calls will result in log entries in Sentry
+# if :logger patch is enabled
+Rails.logger.debug("Hello from Rails logger")
+Rails.logger.info("Hello from Rails logger")
+Rails.logger.error("Hello from Rails logger")
+```
+
+<Alert level="warning" title="Note on logger patch">
+Enabling `:logger` patch will send all logs from Rails logger to Sentry. This includes logs from Rails framework itself, which might not be desired. In that case we recommend using [Sentry logger](#using-sentry-logger) or [structured logging with log subscribers](#structured-logging-with-log-subscribers).
+</Alert>
