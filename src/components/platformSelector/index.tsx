@@ -63,7 +63,7 @@ export function PlatformSelector({
   const currentPlatformKey = currentPlatform?.key;
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
-  
+
   // Stabilize search value updates to prevent focus issues
   const handleSearchValueChange = useCallback((value: string) => {
     setSearchValue(value);
