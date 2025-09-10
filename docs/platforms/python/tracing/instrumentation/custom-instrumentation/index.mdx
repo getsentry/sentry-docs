@@ -179,6 +179,86 @@ The parameters of `start_span()` and `start_child()` are the same. See the [API 
 
 When you create your span manually, make sure to call `span.finish()` after the block of code you want to wrap in a span to finish the span. If you do not finish the span it will not be sent to Sentry.
 
+
+## @sentry_sdk.trace decorator
+
+The `@sentry_sdk.trace` decorator can do more than shown in the example above.
+
+You can set `op`, `name` and `attributes` parameters in the `@sentry_sdk.trace` decorator to customize your spans. The `attributes` will be saved in the spans `data` object. (The `data` object will be renamed to `attributes` in the future.)
+<Alert title="Static & Class Methods">
+
+When tracing a static or class method, you **must** add the `@sentry_sdk.trace` decorator **after** the `@staticmethod` or `@classmethod` decorator (i.e., **closer** to the function definition). Otherwise, your function will break!
+
+</Alert>
+
+```python {diff}
+ import sentry_sdk
+
++@sentry_sdk.trace(op="my_op", name="Paul", attributes={"x": True})
+ def my_function(i):
+     ...
+
+ @sentry_sdk.trace
+ def root_function():
+     for i in range(3):
+         my_function(i)
+
+ root_function()
+```
+
+The code above will customize the `my_function` spans like this:
+```mermaid
+gantt
+    dateFormat DD
+    todayMarker off
+    axisFormat %
+    SPAN(op=function, name=root_function)   :a1, 01, 7d
+    SPAN(op=my_op, name=Paul, x=True)    :a2, 02, 2d
+    SPAN(op=my_op, name=Paul, x=True)    :a3, 04, 2d
+    SPAN(op=my_op, name=Paul, x=True)    :a4, 06, 2d
+```
+
+### Span Templates
+
+In the `@sentry_sdk.trace` decorator you can also specify a `template`. This helps create spans that follow a certain template. Currently this is available for spans that are created for the [AI Agents instrumentation](/platforms/python/tracing/instrumentation/custom-instrumentation/ai-agents-module/#spans) of Sentry.
+
+Available templates are `AI_AGENT`, `AI_TOOL`, and `AI_CHAT`.
+
+```python {diff}
+ import sentry_sdk
+ from sentry_sdk.consts import SPANTEMPLATE
+
++@sentry_sdk.trace(template=SPANTEMPLATE.AI_AGENT)
+ def my_function(i):
+     ...
+
+ @sentry_sdk.trace
+ def root_function():
+     for i in range(3):
+         my_function(i)
+
+ root_function()
+```
+
+This will treat `my_function` as an AI agent and will create the following span tree that is compatible with the [OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-agent-spans/) and the Sentry conventions for [AI Agents instrumentation](/platforms/python/tracing/instrumentation/custom-instrumentation/ai-agents-module/#spans). There will also be a couple of attributes set, but those are omitted in the graph below for readability reasons:
+```mermaid
+gantt
+    dateFormat DD
+    todayMarker off
+    axisFormat %
+    SPAN(op=function, name=root_function)   :a1, 01, 7d
+    SPAN(op=gen_ai.invoke_agent, name="invoke_agent my_function")    :a2, 02, 2d
+    SPAN(op=gen_ai.invoke_agent, name="invoke_agent my_function")    :a3, 04, 2d
+    SPAN(op=gen_ai.invoke_agent, name="invoke_agent my_function")    :a4, 06, 2d
+```
+
+For the span attributes that are set for the different available templates, see the AI Agents instrumentation documentation:
+- `SPANTEMPLATE.AI_AGENT` -> [Invoke Agent Span](/platforms/python/tracing/instrumentation/custom-instrumentation/ai-agents-module/#invoke-agent-span)
+- `SPANTEMPLATE.AI_CHAT` -> [AI Client Span](/platforms/python/tracing/instrumentation/custom-instrumentation/ai-agents-module/#ai-client-span)
+- `SPANTEMPLATE.AI_TOOL` -> [Execute Tool Span](/platforms/python/tracing/instrumentation/custom-instrumentation/ai-agents-module/#execute-tool-span)
+
+Currently it is not possible to define custom span templates.
+
 ## Define Span Creation in a Central Place
 
 To avoid having custom performance instrumentation code scattered all over your code base, pass a parameter <PlatformIdentifier name="functions-to-trace" /> to your `sentry_sdk.init()` call.
@@ -291,4 +371,39 @@ sentry_sdk.init(
     traces_sample_rate=1.0,
     before_send_transaction=before_send_transaction,
 )
+```
+
+## Update Current Span Shortcut
+
+You can update the data of the currently running span using the `sentry_sdk.update_current_span()` function:
+```python {diff}
+ import sentry_sdk
+
+ @sentry_sdk.trace(op="my_op", name="Paul", attributes={"x": True})
+ def my_function(i):
++    sentry_sdk.update_current_span(
++        op="myOp",
++        name=f"Paul{i}",
++        attributes={"y": i},
++    )
+     ...
+
+ @sentry_sdk.trace
+ def root_function():
+     for i in range(3):
+         my_function(i)
+
+ root_function()
+```
+
+The code above will update the `my_function` (now `my_op`) spans with custom data like this:
+```mermaid
+gantt
+    dateFormat DD
+    todayMarker off
+    axisFormat %
+    SPAN(op=function, name=root_function)   :a1, 01, 7d
+    SPAN(op=myOp, name=Paul0, x=True, y=0)    :a2, 02, 2d
+    SPAN(op=myOp, name=Paul1, x=True, y=1)    :a3, 04, 2d
+    SPAN(op=myOp, name=Paul2, x=True, y=2)    :a4, 06, 2d
 ```
