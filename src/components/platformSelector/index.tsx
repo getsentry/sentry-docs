@@ -1,5 +1,5 @@
 'use client';
-import {Fragment, Ref, useEffect, useMemo, useRef, useState} from 'react';
+import {Fragment, Ref, useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {Combobox, ComboboxItem, ComboboxList, ComboboxProvider} from '@ariakit/react';
 import {CaretRightIcon, CaretSortIcon, MagnifyingGlassIcon} from '@radix-ui/react-icons';
 import * as RadixSelect from '@radix-ui/react-select';
@@ -63,6 +63,11 @@ export function PlatformSelector({
   const currentPlatformKey = currentPlatform?.key;
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
+  
+  // Stabilize search value updates to prevent focus issues
+  const handleSearchValueChange = useCallback((value: string) => {
+    setSearchValue(value);
+  }, []);
 
   const matches = useMemo(() => {
     if (!searchValue) {
@@ -143,7 +148,7 @@ export function PlatformSelector({
           open={open}
           setOpen={setOpen}
           includesBaseElement={false}
-          setValue={setSearchValue}
+          setValue={handleSearchValueChange}
         >
           <RadixSelect.Trigger aria-label="Platform" className={styles.select}>
             <RadixSelect.Value placeholder="Choose your SDK" />
