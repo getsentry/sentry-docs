@@ -223,6 +223,10 @@ const userDocsRedirects = [
     destination: '/organization/integrations/notification-incidents/telegram-alerts-bot/',
   },
   {
+    source: '/platforms/python-fastapi/logs/',
+    destination: '/platforms/python/integrations/fastapi/',
+  },
+  {
     source: '/platforms/php/configuration/integrations/',
     destination: '/platforms/php/integrations/',
   },
@@ -246,7 +250,7 @@ const userDocsRedirects = [
     source: '/product/dev-toolbar/:path*',
     destination: '/product/sentry-toolbar/:path*',
   },
-  
+
   {
     source: '/organization/integrations/launchdarkly/',
     destination: '/organization/integrations/feature-flag/launchdarkly/',
@@ -738,11 +742,13 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/guides/remix/frameworks/hydrogen/',
-    destination: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+    destination:
+      '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
   },
   {
     source: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen/',
-    destination: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+    destination:
+      '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
   },
   {
     source: '/product/metrics/:path*',
@@ -969,7 +975,8 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/tracing/instrumentation/ai-agents-module',
-    destination: '/platforms/javascript/guides/node/tracing/instrumentation/ai-agents-module',
+    destination:
+      '/platforms/javascript/guides/node/tracing/instrumentation/ai-agents-module',
   },
   {
     source: '/product/insights/retention-priorities/',
