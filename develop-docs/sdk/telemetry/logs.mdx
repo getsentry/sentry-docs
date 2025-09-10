@@ -275,6 +275,7 @@ By default the SDK should attach the following attributes to a log:
 3. `sentry.trace.parent_span_id`: The span id of the span that was active when the log was collected. This should not be set if there was no active span.
 4. `sentry.sdk.name`: The name of the SDK that sent the log
 5. `sentry.sdk.version`: The version of the SDK that sent the log
+6. `sentry.replay_id`: The replay id of the replay that was active when the log was collected. This should not be set if there was no active replay.
 
 ```json
 {
@@ -282,7 +283,8 @@ By default the SDK should attach the following attributes to a log:
   "sentry.release": "1.0.0",
   "sentry.trace.parent_span_id": "b0e6f15b45c36b12",
   "sentry.sdk.name": "sentry.javascript.node",
-  "sentry.sdk.version": "9.11.0"
+  "sentry.sdk.version": "9.11.0",
+  "sentry.replay_id": "36b75d9fa11f45459412a96c41bdf691"
 }
 ```
 
@@ -392,6 +394,16 @@ SDKS should NOT release logging capabilities to users if a buffering implementat
 SDKs should aim to have it so that console/logger integrations create logs as per the appropriate log level if `enableLogs`/`enable_logs` is set to true. Examples of this include JavaScript's `console` object and Pythons `logging` standard library.
 
 If SDK authors feel the need, they can also introduce additional options to beyond `enableLogs`/`enable_logs` to gate this functionality. For example an option to control log appenders added via external config like with `Log4j` in the Java SDK.
+
+### Behaviour with other Sentry Telemetry
+
+#### Tracing
+
+Logs should be associated with traces if possible. If a log is recorded during an active span, the SDK should set the `sentry.trace.parent_span_id` attribute to the span id of the span that was active when the log was collected.
+
+#### Replays
+
+Logs should be associated with replays if possible. If a log is recorded during an active replay, the SDK should set the `sentry.replay_id` attribute to the replay id of the replay that was active when the log was collected.
 
 ### Other
 
