@@ -376,7 +376,7 @@ function extractGuides(platformNode: DocNode): PlatformGuide[] {
   const defaultGuide = platformNode.frontmatter.platformTitle
     ? {
         ...nodeToGuide(platformNode.slug, platformNode),
-        key: `${platformNode.slug}-platform`,
+        key: platformNode.slug,
       }
     : undefined;
 

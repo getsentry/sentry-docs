@@ -2,7 +2,6 @@
 import {
   Fragment,
   Ref,
-  startTransition,
   useEffect,
   useMemo,
   useRef,
@@ -151,7 +150,7 @@ export function PlatformSelector({
           open={open}
           setOpen={setOpen}
           includesBaseElement={false}
-          setValue={v => startTransition(() => setSearchValue(v))}
+          setValue={setSearchValue}
         >
           <RadixSelect.Trigger aria-label="Platform" className={styles.select}>
             <RadixSelect.Value placeholder="Choose your SDK" />
