@@ -117,7 +117,7 @@ export function DocPage({
         {hasToc && (
           <aside
             data-layout-anchor="right"
-            className="sticky h-[calc(100vh-var(--header-height))] top-[var(--header-height)] overflow-y-auto hidden toc:block w-[250px]"
+            className="sticky h-[calc(100vh-var(--header-height))] top-[var(--header-height)] overflow-y-auto hidden toc:block flex-none w-[250px] min-w-[250px]"
           >
             <div className="sidebar">
               <SidebarTableOfContents />
