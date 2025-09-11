@@ -1,5 +1,14 @@
 'use client';
-import {Fragment, Ref, startTransition, useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {
+  Fragment,
+  Ref,
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {Combobox, ComboboxItem, ComboboxList, ComboboxProvider} from '@ariakit/react';
 import {CaretRightIcon, CaretSortIcon, MagnifyingGlassIcon} from '@radix-ui/react-icons';
 import * as RadixSelect from '@radix-ui/react-select';
@@ -63,40 +72,43 @@ export function PlatformSelector({
   const currentPlatformKey = currentPlatform?.key;
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
-  
+
   // Controlled search handler for virtual guide stability
-  const handleSearchValueChange = useCallback((value: string) => {
-    // Use startTransition for virtual guides to prevent focus issues
-    if (currentPlatformKey === 'javascript-platform') {
-      startTransition(() => setSearchValue(value));
-    } else {
-      setSearchValue(value);
-    }
-  }, [currentPlatformKey]);
+  const handleSearchValueChange = useCallback(
+    (value: string) => {
+      // Use startTransition for virtual guides to prevent focus issues
+      if (currentPlatformKey === 'javascript-platform') {
+        startTransition(() => setSearchValue(value));
+      } else {
+        setSearchValue(value);
+      }
+    },
+    [currentPlatformKey]
+  );
 
   const matches = useMemo(() => {
     if (!searchValue) {
       return platformsAndGuides;
     }
-    
+
     // Find the currently selected platform/guide first
     const selectedPlatform = platformsAndGuides.find(
       lang => lang.key === currentPlatformKey
     );
-    
+
     // any of these fields can be used to match the search value
     const keys = ['title', 'name', 'aliases', 'sdk', 'keywords'];
     let matches_ = matchSorter(platformsAndGuides, searchValue, {
       keys,
       threshold: matchSorter.rankings.ACRONYM,
     });
-    
+
     // For virtual guides (like javascript-platform), ensure they're always included
     // when they're the current selection, to prevent focus/display issues
     if (selectedPlatform && !matches_.includes(selectedPlatform)) {
       matches_ = [selectedPlatform, ...matches_];
     }
-    
+
     return matches_;
   }, [searchValue, currentPlatformKey, platformsAndGuides]);
 
