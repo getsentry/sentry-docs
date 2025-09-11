@@ -377,6 +377,10 @@ function extractGuides(platformNode: DocNode): PlatformGuide[] {
     ? {
         ...nodeToGuide(platformNode.slug, platformNode),
         key: `${platformNode.slug}-platform`,
+        // Enhance searchable properties for virtual guides
+        title: platformNode.frontmatter.title || platformNode.frontmatter.platformTitle,
+        aliases: [...(platformNode.frontmatter.aliases || []), platformNode.slug],
+        keywords: [...(platformNode.frontmatter.keywords || []), 'browser', 'client'],
       }
     : undefined;
 
