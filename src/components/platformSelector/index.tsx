@@ -89,7 +89,7 @@ export function PlatformSelector({
   const onPlatformChange = (platformKey: string) => {
     const cleanKey = platformKey.replace('-redirect', '');
     const targetPlatform = platformsAndGuides.find(platform => platform.key === cleanKey);
-    
+
     if (targetPlatform) {
       localStorage.setItem('active-platform', targetPlatform.key);
       router.push(targetPlatform.url);
