@@ -84,15 +84,14 @@ export function PlatformSelector({
     });
     // Radix Select does not work if we don't render the selected item, so we
     // make sure to include it in the list of matches.
-    // Match by both key AND type to handle key collisions (e.g., javascript platform vs guide)
     const selectedPlatform = platformsAndGuides.find(
-      lang => lang.key === currentPlatformKey && lang.type === currentPlatform?.type
+      lang => lang.key === currentPlatformKey
     );
     if (selectedPlatform && !matches_.includes(selectedPlatform)) {
       matches_.push(selectedPlatform);
     }
     return matches_;
-  }, [searchValue, currentPlatformKey, platformsAndGuides, currentPlatform?.type]);
+  }, [searchValue, currentPlatformKey, platformsAndGuides]);
 
   const router = useRouter();
   const onPlatformChange = (platformKey: string) => {
