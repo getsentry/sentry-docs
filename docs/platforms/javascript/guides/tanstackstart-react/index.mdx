@@ -1,17 +1,16 @@
 ---
 title: TanStack Start React
-description: "Learn how to set up and configure Sentry in your TanStack Start React application, capturing your first errors, and viewing them in Sentry."
 ---
 
 <Alert>
 
 This SDK is currently in **ALPHA**. Alpha features are still in progress, may have bugs and might include breaking changes.
 Please reach out on [GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose) if you have any feedback or concerns.
-This SDK is for [TanStack Start (React)](https://tanstack.com/start/latest/docs/framework/react/overview), for
-using [TanStack Router (React)](https://tanstack.com/router/latest/docs/framework/react/overview) see our React docs for
-[TanStack Router](/platforms/javascript/guides/react/features/tanstack-router).
 
 </Alert>
+
+This guide walks you through setting up Sentry in a [TanStack Start (React)](https://tanstack.com/start/latest/docs/framework/react/overview) app.
+For [TanStack Router (React)](https://tanstack.com/router/latest/docs/framework/react/overview), see our [React TanStack Router guide](/platforms/javascript/guides/react/features/tanstack-router).
 
 <PlatformContent includePath="getting-started-prerequisites" />
 
@@ -31,6 +30,8 @@ Choose the features you want to configure, and this guide will show you how:
 
 <PlatformContent includePath="getting-started-features-expandable" />
 
+### Install the Sentry SDK
+
 Run the command for your preferred package manager to add the SDK package to your application:
 
 ```bash {tabTitle:npm}
@@ -47,7 +48,9 @@ pnpm add @sentry/tanstackstart-react
 
 ## Step 2: Configure
 
-Add the following initialization code to your `src/client.tsx` file to initialize Sentry on the client:
+### Configure Client-Side Sentry
+
+Create a `src/client.tsx` file (if you don't already have one) and initialize Sentry:
 
 ```tsx {filename:src/client.tsx}
 import { hydrateRoot } from "react-dom/client";
@@ -105,7 +108,9 @@ Sentry.init({
 hydrateRoot(document, <StartClient router={router} />);
 ```
 
-Add the following initialization code anywhere in your `src/server.tsx` file to initialize Sentry on the server:
+### Configure Server-Side Sentry
+
+Next, import and initialize Sentry in `src/server.tsx`:
 
 ```tsx {filename:src/server.tsx}
 import * as Sentry from "@sentry/tanstackstart-react";
@@ -133,7 +138,11 @@ Sentry.init({
 });
 ```
 
-Wrap TanStack Start's `createRootRoute` function using `wrapCreateRootRouteWithSentry` to apply tracing to Server-Side Rendering (SSR):
+<OnboardingOption optionId="performance">
+
+### Apply Tracing to SSR
+
+Wrap `createRootRoute` with `wrapCreateRootRouteWithSentry` in `src/routes/__root.tsx` to apply tracing to Server-Side Rendering (SSR):
 
 ```tsx {filename:src/routes/__root.tsx} {3,6}
 import type { ReactNode } from "react";
@@ -146,7 +155,13 @@ export const Route = wrapCreateRootRouteWithSentry(createRootRoute)({
 });
 ```
 
-Wrap TanStack Start's `defaultStreamHandler` function using `wrapStreamHandlerWithSentry` to instrument requests to your server:
+</OnboardingOption>
+
+## Step 3: Capture TanStack Start React Errors
+
+### Instrument Server Requests
+
+Wrap the default stream handler with `wrapStreamHandlerWithSentry` in `src/server.tsx` to instrument requests to your server:
 
 ```tsx {filename:src/server.tsx} {12}
 import {
@@ -163,11 +178,13 @@ export default createStartHandler({
 })(Sentry.wrapStreamHandlerWithSentry(defaultStreamHandler));
 ```
 
-Add the `sentryGlobalServerMiddlewareHandler` to your global middlewares to instrument your server function invocations:
+### Instrument Server Functions
+
+Add the Sentry middleware handler to your global middlewares in `src/global-middleware.ts` to instrument your server function invocations:
 
 <Alert level="info">
 
-If you haven't done so, create a `src/global-middleware.ts` file as outlined in the [TanStack Start Docs for Global Middleware](https://tanstack.com/start/latest/docs/framework/react/middleware#global-middleware).
+If you haven't created `src/global-middleware.ts` file, follow the [TanStack Start documentation for Global Middleware](https://tanstack.com/start/latest/docs/framework/react/middleware#global-middleware) to set it up.
 
 </Alert>
 
@@ -187,17 +204,19 @@ registerGlobalMiddleware({
 });
 ```
 
-### Capture Errors in your Error Boundaries and Components
+### Client-Side Error Boundaries (Optional)
 
 <Alert level="info">
-  Automatic error monitoring is not yet supported on the on the server-side of
-  TanStack Start. Use `captureException` to manually capture errors in your
-  server-side code.
+  Automatic error monitoring is not yet supported on the server side of TanStack
+  Start. Use `captureException` to manually capture errors in your server-side
+  code.
 </Alert>
 
-The Sentry SDK cannot capture errors that you manually caught yourself with error boundaries.
+Sentry automatically captures unhandled client-side errors. Errors caught by your own error boundaries aren't captured unless you report them manually:
 
-If you have React error boundaries in your app and you want to report errors that these boundaries catch to Sentry, apply the [`withErrorBoundary` wrapper](/platforms/javascript/guides/react/features/error-boundary/) to your `ErrorBoundary`:
+#### Custom Error Boundary
+
+Wrap your custom `ErrorBoundary` component with [`withErrorBoundary`](/platforms/javascript/guides/react/features/error-boundary/):
 
 ```tsx
 import React from "react";
@@ -215,7 +234,9 @@ export const MySentryWrappedErrorBoundary = Sentry.withErrorBoundary(
 );
 ```
 
-If you defined `errorComponent`s in your Code-Based TanStack Router routes, capture the `error` argument with `captureException` inside a `useEffect` hook:
+#### TanStack Router `errorComponent`
+
+Use Sentry's `captureException` function inside a `useEffect` hook within your `errorComponent`:
 
 ```tsx {2,6-8}
 import { createRoute } from "@tanstack/react-router";
@@ -234,13 +255,13 @@ const route = createRoute({
 })
 ```
 
-## Step 3: Verify
+## Step 4: Verify
 
 Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
 
 ### Issues
 
-To verify that Sentry captures errors and creates issues in your Sentry project, add a test button to an existing page or create a new one:
+To verify that Sentry captures errors and creates issues in your Sentry project, add a test button to one of your pages, which will trigger an error that Sentry will capture when you click it:
 
 ```tsx
 <button
@@ -262,16 +283,15 @@ To verify that Sentry captures errors and creates issues in your Sentry project,
 <OnboardingOption optionId="performance">
 ### Tracing
 
-To test tracing, create a test API route like `/api/sentry-example-api`:
+To test tracing, create a new file like `src/routes/sentry-example.ts` to create a test route `/sentry-example`:
 
-```typescript {filename:src/routes/api/sentry-example-api.ts}
+```typescript {filename:src/routes/sentry-example.ts}
+import { createServerFileRoute } from "@tanstack/react-start/server";
 import { json } from "@tanstack/react-start";
-import { createAPIFileRoute } from "@tanstack/react-start/api";
 
-// A faulty API route to test Sentry's error monitoring
-export const APIRoute = createAPIFileRoute("/api/sentry-example-api")({
-  GET: ({ request, params }) => {
-    throw new Error("Sentry Example API Route Error");
+export const ServerRoute = createServerFileRoute("/sentry-example").methods({
+  GET: async ({ request }) => {
+    throw new Error("Sentry Example Route Error");
     return json({ message: "Testing Sentry Error..." });
   },
 });
@@ -289,7 +309,7 @@ Next, update your test button to call this route and throw an error if the respo
         op: "test",
       },
       async () => {
-        const res = await fetch("/api/sentry-example-api");
+        const res = await fetch("/sentry-example");
         if (!res.ok) {
           throw new Error("Sentry Example Frontend Error");
         }
@@ -318,16 +338,18 @@ Now, head over to your project on [Sentry.io](https://sentry.io) to view the col
 
 ## Next Steps
 
-At this point, you should have integrated Sentry into your TanStack Start application and should already be sending data to your Sentry project.
+At this point, you should have integrated Sentry into your TanStack Start React application and should already be sending data to your Sentry project.
 
 Now's a good time to customize your setup and look into more advanced topics.
 Our next recommended steps for you are:
 
 - Learn how to [manually capture errors](/platforms/javascript/guides/tanstackstart-react/usage/)
 - Continue to [customize your configuration](/platforms/javascript/guides/tanstackstart-react/configuration/)
+- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 
+- Find various topics in <PlatformLink to="/troubleshooting">Troubleshooting</PlatformLink>
 - [Get support](https://sentry.zendesk.com/hc/en-us/)
 
 </Expandable>
