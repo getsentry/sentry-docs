@@ -68,42 +68,28 @@ export function PlatformSelector({
     if (!searchValue) {
       return platformsAndGuides;
     }
-
-    // Find the currently selected platform/guide first
-    const selectedPlatform = platformsAndGuides.find(
-      lang => lang.key === currentPlatformKey
-    );
-
     // any of these fields can be used to match the search value
     const keys = ['title', 'name', 'aliases', 'sdk', 'keywords'];
-    let matches_ = matchSorter(platformsAndGuides, searchValue, {
+    const matches_ = matchSorter(platformsAndGuides, searchValue, {
       keys,
       threshold: matchSorter.rankings.ACRONYM,
     });
-
-    // For virtual guides (like javascript-platform), ensure they're always included
-    // when they're the current selection, to prevent focus/display issues
+    // Radix Select does not work if we don't render the selected item, so we
+    // make sure to include it in the list of matches.
+    const selectedPlatform = platformsAndGuides.find(
+      lang => lang.key === currentPlatformKey
+    );
     if (selectedPlatform && !matches_.includes(selectedPlatform)) {
-      matches_ = [selectedPlatform, ...matches_];
+      matches_.push(selectedPlatform);
     }
-
     return matches_;
   }, [searchValue, currentPlatformKey, platformsAndGuides]);
 
   const router = useRouter();
   const onPlatformChange = (platformKey: string) => {
     const cleanKey = platformKey.replace('-redirect', '');
-    let targetPlatform = platformsAndGuides.find(platform => platform.key === cleanKey);
-
-    // Special handling for JavaScript: when platform "javascript" is selected,
-    // redirect to the virtual guide "javascript.browser" instead
-    if (cleanKey === 'javascript' && targetPlatform?.type === 'platform') {
-      const virtualGuide = platformsAndGuides.find(p => p.key === 'javascript.browser');
-      if (virtualGuide) {
-        targetPlatform = virtualGuide;
-      }
-    }
-
+    const targetPlatform = platformsAndGuides.find(platform => platform.key === cleanKey);
+    
     if (targetPlatform) {
       localStorage.setItem('active-platform', targetPlatform.key);
       router.push(targetPlatform.url);
@@ -120,17 +106,9 @@ export function PlatformSelector({
   }, [open]);
 
   const [storedPlatformKey, setStoredPlatformKey] = useState<string | null>(null);
-  let storedPlatform = platformsAndGuides.find(
+  const storedPlatform = platformsAndGuides.find(
     platform => platform.key === storedPlatformKey
   );
-
-  // Handle stored JavaScript platform: redirect to virtual guide
-  if (storedPlatformKey === 'javascript' && storedPlatform?.type === 'platform') {
-    const virtualGuide = platformsAndGuides.find(p => p.key === 'javascript.browser');
-    if (virtualGuide) {
-      storedPlatform = virtualGuide;
-    }
-  }
 
   useEffect(() => {
     if (currentPlatformKey) {
@@ -157,7 +135,7 @@ export function PlatformSelector({
     <div>
       <RadixSelect.Root
         defaultValue={currentPlatformKey}
-        value={showStoredPlatform ? storedPlatform?.key : undefined}
+        value={showStoredPlatform ? storedPlatformKey : undefined}
         onValueChange={onPlatformChange}
         open={open}
         onOpenChange={setOpen}
