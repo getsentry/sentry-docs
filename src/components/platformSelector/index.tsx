@@ -1,5 +1,5 @@
 'use client';
-import {Fragment, Ref, useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {Fragment, Ref, startTransition, useEffect, useMemo, useRef, useState} from 'react';
 import {Combobox, ComboboxItem, ComboboxList, ComboboxProvider} from '@ariakit/react';
 import {CaretRightIcon, CaretSortIcon, MagnifyingGlassIcon} from '@radix-ui/react-icons';
 import * as RadixSelect from '@radix-ui/react-select';
@@ -64,11 +64,6 @@ export function PlatformSelector({
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
 
-  // Stabilize search value updates to prevent focus issues
-  const handleSearchValueChange = useCallback((value: string) => {
-    setSearchValue(value);
-  }, []);
-
   const matches = useMemo(() => {
     if (!searchValue) {
       return platformsAndGuides;
@@ -81,14 +76,15 @@ export function PlatformSelector({
     });
     // Radix Select does not work if we don't render the selected item, so we
     // make sure to include it in the list of matches.
+    // Match by both key AND type to handle key collisions (e.g., javascript platform vs guide)
     const selectedPlatform = platformsAndGuides.find(
-      lang => lang.key === currentPlatformKey
+      lang => lang.key === currentPlatformKey && lang.type === currentPlatform?.type
     );
     if (selectedPlatform && !matches_.includes(selectedPlatform)) {
       matches_.push(selectedPlatform);
     }
     return matches_;
-  }, [searchValue, currentPlatformKey, platformsAndGuides]);
+  }, [searchValue, currentPlatformKey, platformsAndGuides, currentPlatform?.type]);
 
   const router = useRouter();
   const onPlatformChange = (platformKey: string) => {
@@ -148,7 +144,7 @@ export function PlatformSelector({
           open={open}
           setOpen={setOpen}
           includesBaseElement={false}
-          setValue={handleSearchValueChange}
+          setValue={v => startTransition(() => setSearchValue(v))}
         >
           <RadixSelect.Trigger aria-label="Platform" className={styles.select}>
             <RadixSelect.Value placeholder="Choose your SDK" />
