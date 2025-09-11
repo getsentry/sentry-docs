@@ -2,8 +2,6 @@
 import {
   Fragment,
   Ref,
-  startTransition,
-  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -73,18 +71,6 @@ export function PlatformSelector({
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
 
-  // Controlled search handler for virtual guide stability
-  const handleSearchValueChange = useCallback(
-    (value: string) => {
-      // Use startTransition for virtual guides to prevent focus issues
-      if (currentPlatformKey === 'javascript-platform') {
-        startTransition(() => setSearchValue(value));
-      } else {
-        setSearchValue(value);
-      }
-    },
-    [currentPlatformKey]
-  );
 
   const matches = useMemo(() => {
     if (!searchValue) {
@@ -118,9 +104,9 @@ export function PlatformSelector({
     let targetPlatform = platformsAndGuides.find(platform => platform.key === cleanKey);
 
     // Special handling for JavaScript: when platform "javascript" is selected,
-    // redirect to the virtual guide "javascript-platform" instead
+    // redirect to the virtual guide "javascript.browser" instead
     if (cleanKey === 'javascript' && targetPlatform?.type === 'platform') {
-      const virtualGuide = platformsAndGuides.find(p => p.key === 'javascript-platform');
+      const virtualGuide = platformsAndGuides.find(p => p.key === 'javascript.browser');
       if (virtualGuide) {
         targetPlatform = virtualGuide;
       }
@@ -148,7 +134,7 @@ export function PlatformSelector({
 
   // Handle stored JavaScript platform: redirect to virtual guide
   if (storedPlatformKey === 'javascript' && storedPlatform?.type === 'platform') {
-    const virtualGuide = platformsAndGuides.find(p => p.key === 'javascript-platform');
+    const virtualGuide = platformsAndGuides.find(p => p.key === 'javascript.browser');
     if (virtualGuide) {
       storedPlatform = virtualGuide;
     }
@@ -188,7 +174,7 @@ export function PlatformSelector({
           open={open}
           setOpen={setOpen}
           includesBaseElement={false}
-          setValue={handleSearchValueChange}
+          setValue={setSearchValue}
         >
           <RadixSelect.Trigger aria-label="Platform" className={styles.select}>
             <RadixSelect.Value placeholder="Choose your SDK" />
