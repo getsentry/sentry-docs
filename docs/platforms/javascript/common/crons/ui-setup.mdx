@@ -1,0 +1,93 @@
+---
+title: UI Setup
+description: "Create cron monitors in Sentry's interface, then add simple notification code to your app."
+sidebar_order: 20
+supported:
+  - javascript.nextjs
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.react-router
+  - javascript.astro
+  - javascript.bun
+  - javascript.deno
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.cloudflare
+---
+
+The **UI Setup** approach is a two-step process: first create your monitor definition in Sentry's interface (including alerts), then add simple notification code to your application.
+
+## When to Use UI Setup
+
+Choose UI setup when you want:
+- **Pre-configured alerts** - monitor creation includes alert setup
+- **Visual schedule management** - update schedules without code changes  
+- **Simple integration** - minimal code changes to existing cron jobs
+
+## Step 1: Create Monitor in Sentry UI
+
+1. Navigate to **Crons** in your Sentry project
+2. Click **Create Monitor** 
+3. Configure your settings:
+   - **Name**: `daily-report-generator`
+   - **Schedule**: `0 9 * * 1-5` (9 AM weekdays)
+   - **Timezone**: `America/New_York`
+
+Sentry automatically sets up alerts for missed and failed jobs.
+
+## Step 2: Add Notification Code
+
+After creating the monitor, add simple check-in calls to your cron job:
+
+```javascript
+import * as Sentry from '@sentry/node';
+
+async function runDailyReport() {
+  // Notify Sentry the job started
+  const checkInId = Sentry.captureCheckIn({
+    monitorSlug: 'daily-report-generator',
+    status: 'in_progress',
+  });
+
+  try {
+    // Your existing job logic
+    await generateReport();
+    
+    // Notify success
+    Sentry.captureCheckIn({
+      checkInId,
+      monitorSlug: 'daily-report-generator', 
+      status: 'ok',
+    });
+  } catch (error) {
+    // Notify failure
+    Sentry.captureCheckIn({
+      checkInId,
+      monitorSlug: 'daily-report-generator',
+      status: 'error',
+    });
+  }
+}
+```
+
+## Verification
+
+1. **Run your cron job** manually or wait for next execution
+2. **Check Crons dashboard** in Sentry to see the check-in
+3. **Test alerts** by skipping a scheduled run
+
+## Choose Your Integration Method
+
+Now that you understand the two-step process, choose the best instrumentation approach for your setup:
+
+- **[Automatic Integration](./automatic/)** - For node-cron, cron, or node-schedule libraries
+- **[Manual Integration](./manual/)** - For custom setups, serverless functions, or full control 

@@ -1,0 +1,367 @@
+import {PlatformContent} from 'sentry-docs/components/platformContent';
+import {Alert} from 'sentry-docs/components/alert';
+
+# Common Patterns
+
+Reusable code patterns and utilities for the Sentry documentation project.
+
+## MDX Component Patterns
+
+### Platform-Specific Content
+```typescript
+// Render content based on current platform
+export function PlatformContent({includePath, platform}: {
+  includePath: string;
+  platform?: string;
+}) {
+  const currentPlatform = usePlatform();
+  const targetPlatform = platform || currentPlatform?.key;
+  
+  const content = useMemo(() => {
+    if (!targetPlatform) return null;
+    return getPlatformInclude(includePath, targetPlatform);
+  }, [includePath, targetPlatform]);
+
+  if (!content) return null;
+  
+  const Component = getMDXComponent(content.code);
+  return <Component />;
+}
+```
+
+### Alert Component
+```typescript
+// Standardized alert component for documentation
+interface AlertProps {
+  level?: 'info' | 'warning' | 'error' | 'success';
+  title?: string;
+  children: ReactNode;
+}
+
+export function Alert({level = 'info', title, children}: AlertProps) {
+  return (
+    <div className={`alert alert-${level}`} role="alert">
+      {title && <div className="alert-title">{title}</div>}
+      <div className="alert-content">{children}</div>
+    </div>
+  );
+}
+```
+
+### Expandable Sections
+```typescript
+// Collapsible content sections
+export function Expandable({title, children}: {
+  title: string;
+  children: ReactNode;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  return (
+    <details className="expandable" open={isOpen}>
+      <summary 
+        className="expandable-title"
+        onClick={(e) => {
+          e.preventDefault();
+          setIsOpen(!isOpen);
+        }}
+      >
+        {title}
+      </summary>
+      {isOpen && (
+        <div className="expandable-content">{children}</div>
+      )}
+    </details>
+  );
+}
+```
+
+## Content Processing Patterns
+
+### Frontmatter Validation
+```typescript
+// Standard frontmatter validation
+export function validateFrontMatter(data: unknown): FrontMatter {
+  if (!data || typeof data !== 'object') {
+    throw new Error('Invalid frontmatter: must be an object');
+  }
+  
+  const fm = data as Record<string, unknown>;
+  
+  // Required fields
+  if (!fm.title || typeof fm.title !== 'string') {
+    throw new Error('Missing required field: title');
+  }
+  
+  // Optional fields with validation
+  if (fm.sidebar_order && typeof fm.sidebar_order !== 'number') {
+    throw new Error('sidebar_order must be a number');
+  }
+  
+  return fm as FrontMatter;
+}
+```
+
+### Content Loading Pattern
+```typescript
+// Standard content loading with error handling
+export async function loadContent(slug: string): Promise<ProcessedContent | null> {
+  try {
+    const filePath = path.join(CONTENT_DIR, `${slug}.mdx`);
+    const source = await fs.readFile(filePath, 'utf8');
+    
+    const {code, frontmatter} = await bundleMDX({
+      source,
+      mdxOptions: {
+        remarkPlugins: [remarkGfm],
+        rehypePlugins: [rehypeSlug, rehypeAutolinkHeadings],
+      },
+    });
+
+    return {
+      mdxSource: code,
+      frontMatter: validateFrontMatter(frontmatter),
+      slug,
+    };
+  } catch (error) {
+    console.error(`Failed to load content for ${slug}:`, error);
+    return null;
+  }
+}
+```
+
+## Navigation Patterns
+
+### Breadcrumb Generation
+```typescript
+// Generate breadcrumbs from current path
+export function generateBreadcrumbs(path: string[], rootNode: DocNode): BreadcrumbItem[] {
+  return path.reduce((acc, segment, index) => {
+    const currentPath = path.slice(0, index + 1);
+    const href = '/' + currentPath.join('/') + '/';
+    const node = nodeForPath(rootNode, currentPath);
+    
+    acc.push({
+      href,
+      title: node?.frontmatter.sidebar_title || node?.frontmatter.title || segment,
+      isLast: index === path.length - 1,
+    });
+    
+    return acc;
+  }, [] as BreadcrumbItem[]);
+}
+```
+
+### Sidebar Tree Building
+```typescript
+// Build hierarchical sidebar from flat doc list
+export function buildDocTree(docs: FrontMatter[]): DocNode {
+  const sortedDocs = docs.sort((a, b) => {
+    // Sort by sidebar_order, then by title
+    const orderA = a.sidebar_order ?? 10;
+    const orderB = b.sidebar_order ?? 10;
+    
+    if (orderA !== orderB) {
+      return orderA - orderB;
+    }
+    
+    return a.title.localeCompare(b.title);
+  });
+
+  return buildHierarchy(sortedDocs);
+}
+```
+
+## Error Handling Patterns
+
+### Component Error Boundary
+```typescript
+// Standard error boundary for documentation components
+export function withErrorBoundary<T extends object>(
+  Component: React.ComponentType<T>,
+  fallback?: ReactNode
+) {
+  return function WrappedComponent(props: T) {
+    return (
+      <ErrorBoundary
+        fallback={fallback || <div className="content-error">Failed to load content</div>}
+      >
+        <Component {...props} />
+      </ErrorBoundary>
+    );
+  };
+}
+```
+
+### Async Error Handling
+```typescript
+// Standard async operation error handling
+export async function withErrorHandling<T>(
+  operation: () => Promise<T>,
+  context: string
+): Promise<T | null> {
+  try {
+    return await operation();
+  } catch (error) {
+    console.error(`Error in ${context}:`, error);
+    
+    // Report to Sentry if available
+    if (typeof Sentry !== 'undefined') {
+      Sentry.captureException(error, {
+        tags: { context },
+      });
+    }
+    
+    return null;
+  }
+}
+```
+
+## Performance Patterns
+
+### Memoized Content Processing
+```typescript
+// Cache processed content to avoid re-processing
+const contentCache = new Map<string, ProcessedContent>();
+
+export function getCachedContent(slug: string): ProcessedContent | null {
+  if (contentCache.has(slug)) {
+    return contentCache.get(slug)!;
+  }
+  
+  return null;
+}
+
+export function setCachedContent(slug: string, content: ProcessedContent): void {
+  contentCache.set(slug, content);
+}
+```
+
+### Lazy Component Loading
+```typescript
+// Dynamic component loading pattern
+export function createLazyComponent<T extends object>(
+  importFn: () => Promise<{ default: React.ComponentType<T> }>
+) {
+  return lazy(() => importFn().catch(() => 
+    Promise.resolve({ 
+      default: () => <div>Failed to load component</div> 
+    })
+  ));
+}
+
+// Usage
+const HeavyComponent = createLazyComponent(() => import('./HeavyComponent'));
+```
+
+## Search & Discovery Patterns
+
+### Content Indexing
+```typescript
+// Generate search index from content
+export function generateSearchIndex(docs: ProcessedContent[]): SearchIndex[] {
+  return docs.map(doc => ({
+    objectID: doc.slug,
+    title: doc.frontMatter.title,
+    description: doc.frontMatter.description || '',
+    content: extractTextContent(doc.mdxSource),
+    url: `/${doc.slug}/`,
+    hierarchy: generateHierarchy(doc.slug),
+    platform: extractPlatform(doc.frontMatter.supported),
+  }));
+}
+```
+
+### Link Validation
+```typescript
+// Validate internal links during build
+export function validateInternalLinks(content: string, allSlugs: string[]): string[] {
+  const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+  const brokenLinks: string[] = [];
+  
+  let match;
+  while ((match = linkRegex.exec(content)) !== null) {
+    const [, linkText, linkUrl] = match;
+    
+    // Check internal links
+    if (linkUrl.startsWith('/') && !linkUrl.startsWith('http')) {
+      const slug = linkUrl.replace(/^\/|\/$/g, '');
+      if (slug && !allSlugs.includes(slug)) {
+        brokenLinks.push(`"${linkText}" -> ${linkUrl}`);
+      }
+    }
+  }
+  
+  return brokenLinks;
+}
+```
+
+## Utility Functions
+
+### Platform Detection
+```typescript
+// Determine current platform from context
+export function getCurrentPlatform(rootNode: DocNode, path: string[]): Platform | null {
+  const platformPath = path.find(segment => segment === 'platforms');
+  if (!platformPath) return null;
+  
+  const platformIndex = path.indexOf('platforms');
+  const platformKey = path[platformIndex + 1];
+  
+  return platforms.find(p => p.key === platformKey) || null;
+}
+```
+
+### URL Utilities
+```typescript
+// Generate clean URLs for documentation pages
+export function generatePageUrl(slug: string): string {
+  return `/${slug.split('/').filter(Boolean).join('/')}/`;
+}
+
+// Extract slug from file path
+export function extractSlug(filePath: string): string {
+  return filePath
+    .replace(/\.mdx?$/, '')
+    .replace(/\/index$/, '')
+    .replace(/^\//, '');
+}
+```
+
+## Type Definitions
+
+### Common Interfaces
+```typescript
+interface ProcessedContent {
+  mdxSource: string;
+  frontMatter: FrontMatter;
+  slug: string;
+}
+
+interface DocNode {
+  path: string;
+  frontmatter: FrontMatter;
+  children: DocNode[];
+}
+
+interface BreadcrumbItem {
+  href: string;
+  title: string;
+  isLast: boolean;
+}
+
+interface SearchIndex {
+  objectID: string;
+  title: string;
+  description: string;
+  content: string;
+  url: string;
+  hierarchy: string[];
+  platform?: string;
+}
+```
+
+For coding standards, see [Coding Guidelines](./coding-guidelines.mdc).
+For system architecture, see [Architecture Guidelines](./architecture.mdc).
+export SENTRY_DSN="your_development_dsn"
+```
