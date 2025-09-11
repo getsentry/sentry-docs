@@ -1,0 +1,32 @@
+## Connect Errors With Spans
+
+Sentry errors can be linked to transactions and spans. Errors that are sent to Sentry while the transaction or span bound to the scope is running, will be linked automatically:
+
+```cpp
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+// Transaction bound to the current scope
+USentryTransaction* transaction = SentrySubsystem->StartTransaction(
+    TEXT("transaction name"),
+    TEXT("transaction operation"),
+    true
+);
+
+// Child span bound to the current scope
+USentrySpan* span = transaction->StartChildSpan(
+    TEXT("span name"),
+    TEXT("span description"),
+    true
+);
+
+USentryEvent* ErrorEvent = NewObject<USentryEvent>();
+ErrorEvent->Initialize();
+ErrorEvent->SetLevel(ESentryLevel::Error);
+ErrorEvent->SetMessage(TEXT("Error message"));
+
+// Error event will be linked to the span
+SentrySubsystem->CaptureEvent(ErrorEvent);
+
+span->Finish();
+transaction->Finish();
+```
