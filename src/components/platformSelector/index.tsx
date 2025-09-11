@@ -89,7 +89,7 @@ export function PlatformSelector({
   const onPlatformChange = (platformKey: string) => {
     const cleanKey = platformKey.replace('-redirect', '');
     let targetPlatform = platformsAndGuides.find(platform => platform.key === cleanKey);
-    
+
     // Special handling for JavaScript: when platform "javascript" is selected,
     // redirect to the virtual guide "javascript-platform" instead
     if (cleanKey === 'javascript' && targetPlatform?.type === 'platform') {
@@ -98,7 +98,7 @@ export function PlatformSelector({
         targetPlatform = virtualGuide;
       }
     }
-    
+
     if (targetPlatform) {
       localStorage.setItem('active-platform', targetPlatform.key);
       router.push(targetPlatform.url);
@@ -118,7 +118,7 @@ export function PlatformSelector({
   let storedPlatform = platformsAndGuides.find(
     platform => platform.key === storedPlatformKey
   );
-  
+
   // Handle stored JavaScript platform: redirect to virtual guide
   if (storedPlatformKey === 'javascript' && storedPlatform?.type === 'platform') {
     const virtualGuide = platformsAndGuides.find(p => p.key === 'javascript-platform');
@@ -126,7 +126,7 @@ export function PlatformSelector({
       storedPlatform = virtualGuide;
     }
   }
-  
+
   useEffect(() => {
     if (currentPlatformKey) {
       localStorage.setItem('active-platform', currentPlatformKey);
