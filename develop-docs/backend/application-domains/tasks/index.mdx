@@ -129,7 +129,11 @@ seconds, but won’t be shorter.
 
 ## Processing Deadlines
 
-Every task has a ‘processing deadline’ which is the maximum expected runtime for a task. The default duration is **10 seconds**
+Every task has a 'processing deadline' which is the maximum expected runtime for a task. If
+a task does not define a processing deadline, it will inherit the deadline
+defined on the task's namespace or use the default of **10 seconds**. Task
+deadlines are intended to be generous and are intended to prevent workers being
+saturated by tasks running for unbounded amounts of time.
 
 ```python
 @instrumented_task(
@@ -142,11 +146,19 @@ def fetch_commits(repository_id: int) -> None:
     ...
 ```
 
-After this a task has run for the length of its processing deadline, it will be interrupted by `SIGALRM` which raises a `ProcessingDeadlineExceeded` error which will interrupt your task’s logic.
+After this a task has run for the length of its processing deadline, it will be
+interrupted by `SIGALRM` which raises a `ProcessingDeadlineExceeded` error which
+will interrupt your task’s logic.
 
 ### Resolving deadline issues
 
-In most scenarios the simplest solution is to extend the deadline for a task. This is the recommended solution until you get above 20min of duration. After this duration the chances of your task being terminated by a deploy increase quickly. Instead of extending the deadline further, you should rethink your logic and partition the workload into smaller batches, or individual jobs that can be processed independently. Instead of mapping all projects in a single task, spawn multiple tasks.
+In most scenarios the simplest solution is to extend the deadline for a task.
+This is the recommended solution until you get above 20min of duration. After
+this duration the chances of your task being terminated by a deploy increase
+quickly. Instead of extending the deadline further, you should rethink your
+logic and partition the workload into smaller batches, or individual jobs that
+can be processed independently. Instead of mapping all projects in a single
+task, spawn multiple tasks.
 
 ## Expiration deadlines
 
