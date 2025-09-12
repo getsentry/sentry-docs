@@ -155,8 +155,9 @@ considered expired and should not be executed. This mechanism allows tasks to be
 skipped if they are stale and their results are no longer relevant.
 
 ```python
-@task_app.register(
+@instrumented_tasks(
     name="sentry.issues.tasks.deliver_issue_webhook",
+    namespace=issues_tasks,
     expires=timedelta("5 minutes"),
 )
 def deliver_issue_webhook(organization_id: int, group_id: int):
@@ -188,8 +189,9 @@ executions, tasks can enable `at_most_once` which enables at-most-once
 execution.
 
 ```python
-@task_app.register(
+@instrumented_task(
     name="sentry.issues.tasks.deliver_issue_webhook",
+    namespace=issues_tasks,
     at_most_once=True,
 )
 def deliver_issue_webhook(organization_id: int, group_id: int) -> None:
@@ -238,13 +240,13 @@ namespace when it is declared.
 from sentry.taskworker.config import taskregistry
 from sentry.taskworker.retry import LastAction, Retry
 
-task_app = taskregistry.create_namespace(
+issues_tasks = taskregistry.create_namespace(
     "issues",
     retry=Retry(times=3, times_exceeded=LastAction.Discard)
 )
 
 # register tasks within a namespace
-@instrumented_task(name="tasks.do_work", namespace=task_app)
+@instrumented_task(name="tasks.do_work", namespace=issues_tasks)
 def do_work(**kwargs):
    ...
 ```
