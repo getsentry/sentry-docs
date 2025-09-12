@@ -372,24 +372,12 @@ function extractGuides(platformNode: DocNode): PlatformGuide[] {
     return [];
   }
 
-  // If a `platformTitle` is defined, we add a virtual guide
-  const defaultGuide = platformNode.frontmatter.platformTitle
-    ? {
-        ...nodeToGuide(platformNode.slug, platformNode),
-        key: `${platformNode.slug}.browser`,
-        name: 'browser',
-        // Enhance searchable properties for virtual guides
-        title: platformNode.frontmatter.title || platformNode.frontmatter.platformTitle,
-        aliases: [...(platformNode.frontmatter.aliases || []), platformNode.slug],
-        keywords: [...(platformNode.frontmatter.keywords || []), 'browser', 'client'],
-      }
-    : undefined;
-
+  // No virtual guide needed - we now have a real browser guide
   const childGuides = guidesNode.children
     .filter(({path}) => !isVersioned(path))
     .map(n => nodeToGuide(platformNode.slug, n));
 
-  return defaultGuide ? [defaultGuide, ...childGuides] : childGuides;
+  return childGuides;
 }
 
 const extractIntegrations = (p: DocNode): PlatformIntegration[] => {

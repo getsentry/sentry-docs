@@ -1,5 +1,5 @@
 'use client';
-import {Fragment, Ref, useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {Fragment, Ref, useEffect, useMemo, useRef, useState} from 'react';
 import {Combobox, ComboboxItem, ComboboxList, ComboboxProvider} from '@ariakit/react';
 import {CaretRightIcon, CaretSortIcon, MagnifyingGlassIcon} from '@radix-ui/react-icons';
 import * as RadixSelect from '@radix-ui/react-select';
@@ -63,47 +63,42 @@ export function PlatformSelector({
   const currentPlatformKey = currentPlatform?.key;
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
-  const debounceRef = useRef<NodeJS.Timeout>();
-
-  // Debounced search handler to prevent rapid re-renders
-  const debouncedSetSearchValue = useCallback((value: string) => {
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-    debounceRef.current = setTimeout(() => setSearchValue(value), 100);
-  }, []);
 
   const matches = useMemo(() => {
     if (!searchValue) {
       return platformsAndGuides;
     }
-
-    // Find currently selected platform first to ensure it's never filtered out
-    const selectedPlatform = platformsAndGuides.find(
-      lang => lang.key === currentPlatformKey
-    );
-
-    // Filter out the selected platform from search, then add it back at the end
-    const otherPlatforms = platformsAndGuides.filter(
-      lang => lang.key !== currentPlatformKey
-    );
-
     // any of these fields can be used to match the search value
     const keys = ['title', 'name', 'aliases', 'sdk', 'keywords'];
-    const matches_ = matchSorter(otherPlatforms, searchValue, {
+    const matches_ = matchSorter(platformsAndGuides, searchValue, {
       keys,
       threshold: matchSorter.rankings.ACRONYM,
     });
-
-    // Always include the selected platform at the beginning
-    return selectedPlatform ? [selectedPlatform, ...matches_] : matches_;
+    // Radix Select does not work if we don't render the selected item, so we
+    // make sure to include it in the list of matches.
+    const selectedPlatform = platformsAndGuides.find(
+      lang => lang.key === currentPlatformKey
+    );
+    if (selectedPlatform && !matches_.includes(selectedPlatform)) {
+      matches_.push(selectedPlatform);
+    }
+    return matches_;
   }, [searchValue, currentPlatformKey, platformsAndGuides]);
 
   const router = useRouter();
   const onPlatformChange = (platformKey: string) => {
     const cleanKey = platformKey.replace('-redirect', '');
-    const targetPlatform = platformsAndGuides.find(platform => platform.key === cleanKey);
-
+    let targetPlatform = platformsAndGuides.find(platform => platform.key === cleanKey);
+    
+    // Special handling for JavaScript: when platform "javascript" is selected,
+    // redirect to the real browser guide "javascript.browser" instead
+    if (cleanKey === 'javascript' && targetPlatform?.type === 'platform') {
+      const browserGuide = platformsAndGuides.find(p => p.key === 'javascript.browser');
+      if (browserGuide) {
+        targetPlatform = browserGuide;
+      }
+    }
+    
     if (targetPlatform) {
       localStorage.setItem('active-platform', targetPlatform.key);
       router.push(targetPlatform.url);
@@ -120,9 +115,17 @@ export function PlatformSelector({
   }, [open]);
 
   const [storedPlatformKey, setStoredPlatformKey] = useState<string | null>(null);
-  const storedPlatform = platformsAndGuides.find(
+  let storedPlatform = platformsAndGuides.find(
     platform => platform.key === storedPlatformKey
   );
+  
+  // Handle stored JavaScript platform: redirect to browser guide
+  if (storedPlatformKey === 'javascript' && storedPlatform?.type === 'platform') {
+    const browserGuide = platformsAndGuides.find(p => p.key === 'javascript.browser');
+    if (browserGuide) {
+      storedPlatform = browserGuide;
+    }
+  }
 
   useEffect(() => {
     if (currentPlatformKey) {
@@ -131,15 +134,6 @@ export function PlatformSelector({
       setStoredPlatformKey(localStorage.getItem('active-platform'));
     }
   }, [currentPlatformKey]);
-
-  // Cleanup debounce timer on unmount
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-    };
-  }, []);
 
   const path = usePathname();
   const isPlatformPage = Boolean(
@@ -158,7 +152,7 @@ export function PlatformSelector({
     <div>
       <RadixSelect.Root
         defaultValue={currentPlatformKey}
-        value={showStoredPlatform ? storedPlatformKey : undefined}
+        value={showStoredPlatform ? storedPlatform?.key : undefined}
         onValueChange={onPlatformChange}
         open={open}
         onOpenChange={setOpen}
@@ -167,7 +161,7 @@ export function PlatformSelector({
           open={open}
           setOpen={setOpen}
           includesBaseElement={false}
-          setValue={debouncedSetSearchValue}
+          setValue={setSearchValue}
         >
           <RadixSelect.Trigger aria-label="Platform" className={styles.select}>
             <RadixSelect.Value placeholder="Choose your SDK" />
