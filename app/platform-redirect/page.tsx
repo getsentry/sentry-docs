@@ -57,8 +57,10 @@ export default async function Page(props: {
           ...pathname.split('/').filter(Boolean),
         ]);
         if (node) {
-          // Update the platform URL to point to the guide
-          platform_.url = guide.url;
+          // Create a copy of the platform with the guide URL to avoid mutating the original
+          const platformCopy = {...platform_, url: guide.url};
+          // Update the platform reference to use the copy
+          Object.assign(platform_, platformCopy);
           break;
         }
       }
@@ -77,9 +79,8 @@ export default async function Page(props: {
   const expandedPlatformList = [...platformList];
   
   // Find JavaScript platform and add its supported frameworks
-  // Check both the filtered platformList and all platforms to find JavaScript
-  const javascriptPlatform = platformList.find(p => p.key === 'javascript') || 
-                            extractPlatforms(rootNode).find(p => p.key === 'javascript');
+  // Only use JavaScript platform if it's already in the filtered list (has relevant content)
+  const javascriptPlatform = platformList.find(p => p.key === 'javascript');
   
   if (javascriptPlatform && (
     pathname.startsWith('/session-replay/') ||
@@ -101,7 +102,7 @@ export default async function Page(props: {
       const otherPlatforms = expandedPlatformList.filter(p => p.key !== 'javascript');
       
       // Add supported JavaScript frameworks as separate entries
-      const jsFrameworks = [];
+      const jsFrameworks: typeof platformList = [];
       javascriptPlatform.guides?.forEach(guide => {
         const guideKey = `javascript.${guide.name}`;
         if (!notSupported.includes(guideKey)) {
