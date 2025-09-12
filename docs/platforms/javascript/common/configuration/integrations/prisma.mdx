@@ -1,6 +1,6 @@
 ---
 title: Prisma
-description: "Adds instrumentation for Prisma."
+description: "Adds instrumentation for Prisma. (default)"
 supported:
   - javascript.node
   - javascript.aws-lambda
@@ -36,13 +36,13 @@ Sentry supports tracing [Prisma ORM](https://www.prisma.io/) queries with the Pr
 
 The Prisma Integrations creates a spans for each query and reports to Sentry with relevant details inside the`description` if available.
 
-This integration is enabled by default when using Prisma version 6 or higher.
-When using Prisma version 5 this integration requires additional setup, which you can read about below.
+This integration is enabled by default and supports Prisma versions 5 & 6. In Prisma v5, you need to follow the instructions below to enable tracing.
+
 If you'd like to learn how to modify your default integrations, visit the docs on <PlatformLink to="/configuration/integrations/#modifying-default-integrations">Modifying Default Integrations</PlatformLink>.
 
 ## Prisma Version >=6
 
-To use the integration with Prisma version >=6, add the `prismaIntegration` to your Sentry initialization as follows:
+To use the integration with Prisma version >=6, no configuration is required - tracing in Prisma v6 is enabled by default.
 
 ```javascript {3}
 Sentry.init({
@@ -62,29 +62,14 @@ generator client {
 }
 ```
 
-For Prisma version 5 compatibility you must pass a specific version of the Prisma instrumentation to the Sentry Prisma integration. Add the `prismaIntegration` to your Sentry initialization as follows:
+Then, the `prismaIntegration` will automatically capture spans for Prisma queries.
 
-```javascript {1,6-9}
-import { PrismaInstrumentation } from "@prisma/instrumentation";
-
+```javascript {3}
 Sentry.init({
   tracesSampleRate: 1.0,
-  integrations: [
-    Sentry.prismaIntegration({
-      // Override the default instrumentation that Sentry uses
-      prismaInstrumentation: new PrismaInstrumentation(),
-    }),
-  ],
+  integrations: [Sentry.prismaIntegration()],
 });
 ```
-
-## Options
-
-### `prismaInstrumentation`
-
-_Type: `Instrumentation`_ (An OpenTelemetry type)
-
-Overrides the instrumentation used by the Sentry SDK with the passed in instrumentation instance.
 
 ## Supported Versions
 
