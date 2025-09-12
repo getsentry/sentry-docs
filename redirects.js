@@ -219,6 +219,10 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/account/cli/configuration/',
+    destination: '/cli/configuration/',
+  },
+  {
     source: '/organization/integrations/telegram-alerts-bot/',
     destination: '/organization/integrations/notification-incidents/telegram-alerts-bot/',
   },
