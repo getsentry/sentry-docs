@@ -1,0 +1,110 @@
+## Uploading Source Maps in a TanStack Start Project
+
+### Manual Configuration
+
+#### 1. Install Sentry Vite Plugin
+
+Install the Sentry Vite plugin as a development dependency:
+
+```bash {tabTitle:npm}
+npm install @sentry/vite-plugin --save-dev
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/vite-plugin --dev
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/vite-plugin --save-dev
+```
+
+#### 2. Configure Source Maps Upload
+
+To automatically upload source maps, you need to provide your Sentry auth token, organization, and project slugs in your Vite configuration:
+
+<OrgAuthTokenNote />
+
+**Make sure you add your auth token to your CI, if you are using one to deploy your application.**
+
+Add your auth token to your environment:
+
+```bash {filename:.env}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+```javascript {filename:vite.config.ts}
+import { defineConfig } from "vite";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
+
+export default defineConfig({
+  plugins: [
+    // Your other plugins
+    sentryVitePlugin({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }),
+  ],
+  build: {
+    sourcemap: true,
+  },
+});
+```
+
+#### 3. Source Map Options
+
+Configure source map behavior using the [Vite plugin options](https://www.npmjs.com/package/@sentry/vite-plugin/#configuration):
+
+```javascript {filename:vite.config.ts}
+import { defineConfig } from "vite";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
+
+export default defineConfig({
+  plugins: [
+    sentryVitePlugin({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      sourcemaps: {
+        assets: ["./dist/**/*"],
+        ignore: ["**/node_modules/**"],
+        filesToDeleteAfterUpload: ["./dist/**/*.map"],
+      },
+    }),
+  ],
+  build: {
+    sourcemap: true,
+  },
+});
+```
+
+### Alternative: Using Sentry CLI
+
+If you prefer more control over the upload process, you can use the Sentry CLI instead:
+
+```bash {tabTitle:npm}
+npm install @sentry/cli --save-dev
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/cli --dev
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/cli --save-dev
+```
+
+Then add a script to your `package.json`:
+
+```json {filename:package.json}
+{
+  "scripts": {
+    "build": "vite build",
+    "upload-sourcemaps": "sentry-cli sourcemaps upload --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ ./dist"
+  }
+}
+```
+
+### Troubleshooting
+
+If you're experiencing issues with source maps, see [Troubleshooting Source Maps](/platforms/javascript/guides/tanstackstart-react/sourcemaps/troubleshooting_js/).
