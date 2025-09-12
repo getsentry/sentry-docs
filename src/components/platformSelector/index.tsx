@@ -64,7 +64,7 @@ export function PlatformSelector({
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const debounceRef = useRef<NodeJS.Timeout>();
-  
+
   // Debounced search handler to prevent rapid re-renders
   const debouncedSetSearchValue = useCallback((value: string) => {
     if (debounceRef.current) {
@@ -77,24 +77,24 @@ export function PlatformSelector({
     if (!searchValue) {
       return platformsAndGuides;
     }
-    
+
     // Find currently selected platform first to ensure it's never filtered out
     const selectedPlatform = platformsAndGuides.find(
       lang => lang.key === currentPlatformKey
     );
-    
+
     // Filter out the selected platform from search, then add it back at the end
     const otherPlatforms = platformsAndGuides.filter(
       lang => lang.key !== currentPlatformKey
     );
-    
+
     // any of these fields can be used to match the search value
     const keys = ['title', 'name', 'aliases', 'sdk', 'keywords'];
     const matches_ = matchSorter(otherPlatforms, searchValue, {
       keys,
       threshold: matchSorter.rankings.ACRONYM,
     });
-    
+
     // Always include the selected platform at the beginning
     return selectedPlatform ? [selectedPlatform, ...matches_] : matches_;
   }, [searchValue, currentPlatformKey, platformsAndGuides]);
@@ -131,7 +131,7 @@ export function PlatformSelector({
       setStoredPlatformKey(localStorage.getItem('active-platform'));
     }
   }, [currentPlatformKey]);
-  
+
   // Cleanup debounce timer on unmount
   useEffect(() => {
     return () => {
