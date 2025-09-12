@@ -77,30 +77,31 @@ export default async function Page(props: {
 
   // For JavaScript platforms, also include individual frameworks that support the content
   const expandedPlatformList = [...platformList];
-  
+
   // Find JavaScript platform and add its supported frameworks
   // Only use JavaScript platform if it's already in the filtered list (has relevant content)
   const javascriptPlatform = platformList.find(p => p.key === 'javascript');
-  
-  if (javascriptPlatform && (
-    pathname.startsWith('/session-replay/') ||
-    pathname.startsWith('/tracing/') ||
-    pathname.startsWith('/profiling/') ||
-    pathname.startsWith('/logs/')
-  )) {
+
+  if (
+    javascriptPlatform &&
+    (pathname.startsWith('/session-replay/') ||
+      pathname.startsWith('/tracing/') ||
+      pathname.startsWith('/profiling/') ||
+      pathname.startsWith('/logs/'))
+  ) {
     // Get the JavaScript page to check which frameworks are supported
     const jsPageNode = nodeForPath(rootNode, [
       'platforms',
       'javascript',
       ...pathname.split('/').filter(Boolean),
     ]);
-    
+
     if (jsPageNode && jsPageNode.frontmatter.notSupported) {
       const notSupported = jsPageNode.frontmatter.notSupported;
-      
+
       // Remove JavaScript from the main list temporarily
       const otherPlatforms = expandedPlatformList.filter(p => p.key !== 'javascript');
-      
+
       // Add supported JavaScript frameworks as separate entries
       const jsFrameworks: typeof platformList = [];
       javascriptPlatform.guides?.forEach(guide => {
@@ -124,7 +125,7 @@ export default async function Page(props: {
           });
         }
       });
-      
+
       // Rebuild the list with JavaScript and its frameworks at the end
       expandedPlatformList.length = 0; // Clear the array
       expandedPlatformList.push(...otherPlatforms); // Add other platforms first
@@ -165,7 +166,7 @@ export default async function Page(props: {
         {expandedPlatformList.map(p => {
           // Check if this is a JavaScript framework (has javascript. prefix)
           const isJSFramework = p.key.startsWith('javascript.');
-          
+
           return (
             <li key={p.key} style={{marginLeft: isJSFramework ? '20px' : '0'}}>
               <SmartLink to={`${p.url}${pathname}`}>
