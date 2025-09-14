@@ -1,0 +1,36 @@
+name: Linkify URL in Docs 404 issues
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  issues: write
+
+jobs:
+  linkify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const labels = (issue.labels || []).map(l => typeof l === 'string' ? l : l.name);
+
+            // Scope to the 404 template's labels
+            if (!(labels.includes('Docs Platform') && labels.includes('404'))) return;
+
+            const body = issue.body || '';
+
+            // Find the FIRST url after in the "### URL" section produced by the form, replace it with a linkified version
+            // ignores the [url](url) pattern (set by the user or from a previous run)
+            const urlLineRegex = /### URL\n+([^\[.\n].*)/;
+            const updated = example_body.replace(urlLineRegex, "### URL\n[$1]($1)")
+
+            if (updated !== body) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: updated
+              });
+            }
