@@ -16,7 +16,7 @@ Starting from Hydrogen version 2025.5.0, Shopify switched from Remix v2 to React
 First, install the Sentry React Router and Cloudflare SDKs with your package manager:
 
 ```bash {tabTitle:npm}
-npm install @sentry/react-router @sentry/cloudflare --save
+npm install @sentry/react-router @sentry/cloudflare --legacy-peer-deps --save
 ```
 
 ```bash {tabTitle:yarn}
@@ -35,7 +35,7 @@ Create an `instrument.server.mjs` file to initialize Sentry on the server:
 import * as Sentry from "@sentry/react-router";
 
 Sentry.init({
-  dsn: "YOUR_DSN_HERE",
+  dsn: "___PUBLIC_DSN___",
   // Adds request headers and IP for users, for more info visit:
   // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#sendDefaultPii
   sendDefaultPii: true,
@@ -46,8 +46,11 @@ Sentry.init({
 Update your `server.ts` file to use the `wrapRequestHandler` method from `@sentry/cloudflare`:
 
 ```ts {filename:server.ts}
-import { wrapRequestHandler } from '@sentry/cloudflare';
-// ...other imports
+// Virtual entry point for the app
+import { wrapRequestHandler } from '@sentry/cloudflare/request';
+import { storefrontRedirect } from '@shopify/hydrogen';
+import { createRequestHandler } from '@shopify/remix-oxygen';
+import { createAppLoadContext } from '~/lib/context';
 
 /**
  * Export a fetch handler in module format.
@@ -56,29 +59,63 @@ export default {
   async fetch(
     request: Request,
     env: Env,
-    executionContext: ExecutionContext
+    executionContext: ExecutionContext,
   ): Promise<Response> {
     return wrapRequestHandler(
       {
         options: {
-          dsn: "YOUR_DSN_HERE",
+          dsn: "___PUBLIC_DSN___",
           tracesSampleRate: 1.0,
         },
         request: request as any,
         context: executionContext,
       },
       async () => {
-        // Your existing Hydrogen server logic
-        const handleRequest = createRequestHandler({
-          // @ts-ignore
-          build: await import('virtual:react-router/server-build'),
-          mode: process.env.NODE_ENV,
-          getLoadContext: (): AppLoadContext => ({
-            // your load context
-          }),
-        });
+        try {
+          const appLoadContext = await createAppLoadContext(
+            request,
+            env,
+            executionContext,
+          );
 
-        return handleRequest(request);
+          /**
+           * Create a Remix request handler and pass
+           * Hydrogen's Storefront client to the loader context.
+           */
+          const handleRequest = createRequestHandler({
+            // eslint-disable-next-line import/no-unresolved
+            build: await import('virtual:react-router/server-build'),
+            mode: process.env.NODE_ENV,
+            getLoadContext: () => appLoadContext,
+          });
+
+          const response = await handleRequest(request);
+
+          if (appLoadContext.session.isPending) {
+            response.headers.set(
+              'Set-Cookie',
+              await appLoadContext.session.commit(),
+            );
+          }
+
+          if (response.status === 404) {
+            /**
+             * Check for redirects only when there's a 404 from the app.
+             * If the redirect doesn't exist, then `storefrontRedirect`
+             * will pass through the 404 response.
+             */
+            return storefrontRedirect({
+              request,
+              response,
+              storefront: appLoadContext.storefront,
+            });
+          }
+
+          return response;
+        } catch (error) {
+          console.error(error);
+          return new Response('An unexpected error occurred', {status: 500});
+        }
       }
     );
   },
@@ -92,7 +129,7 @@ Initialize Sentry in your `entry.client.tsx` file:
 ```tsx {filename:app/entry.client.tsx}
 import { HydratedRouter } from 'react-router/dom';
 import * as Sentry from '@sentry/react-router/cloudflare';
-import { StrictMode, startTransition } from 'react';
+import { startTransition, StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 
 Sentry.init({
@@ -101,14 +138,16 @@ Sentry.init({
   tracesSampleRate: 1.0,
 });
 
-startTransition(() => {
-  hydrateRoot(
-    document,
-    <StrictMode>
-      <HydratedRouter />
-    </StrictMode>,
-  );
-});
+if (!window.location.origin.includes('webcache.googleusercontent.com')) {
+  startTransition(() => {
+    hydrateRoot(
+      document,
+      <StrictMode>
+        <HydratedRouter />
+      </StrictMode>,
+    );
+  });
+}
 ```
 
 ## Server-Side Rendering with Trace Injection
@@ -116,10 +155,11 @@ startTransition(() => {
 To enable distributed tracing, wrap your `handleRequest` function in your `entry.server.tsx` file and inject trace meta tags:
 
 ```tsx {filename:app/entry.server.tsx}
-import './instrument.server';
-import { HandleErrorFunction, ServerRouter } from 'react-router';
-import type { EntryContext } from '@shopify/remix-oxygen';
+import '../instrument.server.mjs';
+import { type AppLoadContext } from '@shopify/remix-oxygen';
+import { type HandleErrorFunction, type EntryContext, ServerRouter } from 'react-router';
 import { renderToReadableStream } from 'react-dom/server';
+import { createContentSecurityPolicy } from '@shopify/hydrogen';
 import * as Sentry from '@sentry/react-router/cloudflare';
 
 async function handleRequest(
@@ -127,16 +167,38 @@ async function handleRequest(
   responseStatusCode: number,
   responseHeaders: Headers,
   reactRouterContext: EntryContext,
+  context: AppLoadContext,
 ) {
-  const body = Sentry.injectTraceMetaTags(await renderToReadableStream(
-    <ServerRouter context={reactRouterContext} url={request.url} />,
-    {
-      signal: request.signal,
+  const {nonce, header, NonceProvider} = createContentSecurityPolicy({
+    shop: {
+      checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
+      storeDomain: context.env.PUBLIC_STORE_DOMAIN,
     },
-  ));
+  });
+  
+  const body = Sentry.injectTraceMetaTags(
+    await renderToReadableStream(
+      <NonceProvider>
+        <ServerRouter
+          context={reactRouterContext}
+          url={request.url}
+          nonce={nonce}
+        />
+      </NonceProvider>,
+      {
+        nonce,
+        signal: request.signal,
+        onError(error) {
+          console.error(error);
+          responseStatusCode = 500;
+        },
+      },
+    ),
+  );
 
   responseHeaders.set('Content-Type', 'text/html');
-
+  responseHeaders.set('Content-Security-Policy', header);
+  
   return new Response(body, {
     headers: responseHeaders,
     status: responseStatusCode,
