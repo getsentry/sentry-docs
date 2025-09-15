@@ -176,7 +176,7 @@ Please note that the Sentry server [limits HTTP request body size](https://devel
 
 The number of characters after which the values containing text in the event payload will be truncated.
 
-In SDK versions prior to 2.34.0, the default was 1024.
+In SDK versions prior to `2.34.0`, the default was `1024`.
 
 </SdkOption>
 
@@ -245,7 +245,18 @@ The callback typically gets a second argument (called a "hint") which contains t
 
 </SdkOption>
 
+<SdkOption name="before_send_log" type='Optional[Callable[Log, Hint] -> Optional[Log]]' defaultValue='None'>
+
+A function that will be called for each log. It can be used to modify the log
+before it's sent to Sentry or to filter specific logs out altogether (if it returns
+`None`).
+
+New in SDK version `2.35.0`. Prior to `2.35.0`, this option was experimental.
+
+</SdkOption>
+
 <PlatformContent includePath="/performance/traces-sampler-config-option" />
+
 
 ## Transport Options
 
@@ -261,15 +272,23 @@ Transports are used to send events to Sentry. Transports can be customized to so
 
 </SdkOption>
 
-<SdkOption name="http_proxy" defaultValue='None'>
+<SdkOption name="http_proxy" defaultValue='None' type='Optional[str]'>
 
-When set, a proxy can be configured that should be used for outbound requests. This is also used for HTTPS requests unless a separate `https_proxy` is configured. However, not all SDKs support a separate HTTPS proxy. SDKs will attempt to default to the system-wide configured proxy, if possible. For instance, on Unix systems, the `http_proxy` environment variable will be picked up.
+When set, a proxy can be configured for outbound requests. This is also used for HTTPS requests, unless a separate `https_proxy` is configured.
+
+If not set or set to `None`, the SDK will attempt to default to the system-wide configured proxy, if possible. For instance, on Unix systems, the `http_proxy` environment variable will be picked up.
+
+If the SDK shouldn't use a proxy, set the option to `""`.
 
 </SdkOption>
 
-<SdkOption name="https_proxy" defaultValue='None'>
+<SdkOption name="https_proxy" defaultValue='None' type='Optional[str]'>
 
-Configures a separate proxy for outgoing HTTPS requests. This value might not be supported by all SDKs. When not supported the `http-proxy` value is also used for HTTPS requests at all times.
+Configures a separate proxy for outgoing HTTPS requests.
+
+If not set (or set to `None`), the SDK will attempt to default to the system-wide configured proxy.
+
+If no proxy should be used, set the option to `""`.
 
 </SdkOption>
 
@@ -410,5 +429,17 @@ In `trace` mode, the profiler starts and stops automatically based on active spa
 <SdkOption name="profile_session_sample_rate" type='float' defaultValue='None'>
 
 A number between `0` and `1`, controlling the percentage chance a given session will be profiled. The sampling decision is evaluated only once at SDK initialization.
+
+</SdkOption>
+
+
+## Logs Options
+
+<SdkOption name="enable_logs" type='bool' defaultValue='False'>
+
+Enables Sentry structured logs, allowing you to use the `sentry_sdk.logger` APIs
+to send logs to Sentry. This option must be set to `True` to automatically capture logs from Python’s built-in logging module or other supported logging integrations.
+
+New in SDK version `2.35.0`. Prior to `2.35.0`, this option was experimental.
 
 </SdkOption>
