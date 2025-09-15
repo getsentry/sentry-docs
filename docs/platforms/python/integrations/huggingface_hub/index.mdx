@@ -1,0 +1,134 @@
+---
+title: Hugging Face Hub
+description: "Learn about using Sentry for Hugging Face Hub."
+---
+
+This integration connects Sentry with [Hugging Face Hub](https://github.com/huggingface/huggingface_hub) in Python.
+
+Once you've installed this SDK, you can use Sentry AI Agents Monitoring, a Sentry dashboard that helps you understand what's going on with your AI requests. Sentry AI Monitoring will automatically collect information about prompts, tools, tokens, and models. Learn more about the [AI Agents Dashboard](/product/insights/ai/agents).
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `huggingface_hub` extra:
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[huggingface_hub]"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk[huggingface_hub]"
+```
+
+## Configure
+
+If you have the `huggingface_hub` package in your dependencies, the Hugging Face Hub integration will be enabled automatically when you initialize the Sentry SDK.
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    environment="local",
+    traces_sample_rate=1.0,
+    send_default_pii=True,
+)
+```
+
+## Verify
+
+Verify that the integration works by initializing a transaction and invoking an agent. In these examples, we're providing a function tool to roll a die.
+
+```python
+import random
+import sentry_sdk
+from huggingface_hub import InferenceClient
+
+def roll_die(sides):
+    """Roll a die with a given number of sides"""
+    return f"Rolled a {random.randint(1, sides)} on a {sides}-sided die."
+
+HF_TOKEN = "..."
+TOOLS = [{
+    "type": "function",
+    "function": {
+        "name": "roll_die",
+        "description": "Roll a die with a given number of sides",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "sides": {
+                    "type": "int",
+                    "description": "The number of sides of the die"
+                }
+            },
+            "required": ["sides"],
+        },
+    }
+}]
+
+def main():
+    sentry_sdk.init(...)  # same as above
+
+    client = InferenceClient(token=HF_TOKEN)
+
+    with sentry_sdk.start_transaction(name="testing_sentry"):
+        response = client.chat_completion(
+            model="Qwen/Qwen2.5-72B-Instruct",
+            messages=[{
+                "role": "user",
+                "content": "Greet the user and use the die roll tool to roll a 6-sided die."
+            }],
+            tools=TOOLS,
+            tool_choice="auto",
+        )
+
+if __name__ == "__main__":
+    main()
+```
+
+
+After running this script, the resulting data should show up in the `"AI Spans"` tab on the `"Explore" > "Traces"` page on Sentry.io, and in the [AI Agents Dashboard](/product/insights/ai/agents).
+
+It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Behavior
+
+- The Hugging Face Hub integration will connect Sentry with all supported Hugging Face Hub methods automatically.
+
+- All exceptions are reported.
+
+- Sentry considers LLM and tokenizer inputs/outputs as PII (Personally identifiable information) and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below.
+
+## Options
+
+By adding `HuggingfaceHubIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `HuggingfaceHubIntegration` to change its behavior:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.huggingface_hub import HuggingfaceHubIntegration
+
+sentry_sdk.init(
+    # ...
+    # Add data like inputs and responses;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    integrations=[
+        HuggingfaceHubIntegration(
+            include_prompts=False,  # LLM inputs/outputs will be not sent to Sentry, despite send_default_pii=True
+        ),
+    ],
+)
+```
+
+You can pass the following keyword arguments to `HuggingfaceHubIntegration()`:
+
+- `include_prompts`
+
+  Whether LLM and tokenizer inputs and outputs should be sent to Sentry. Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
+
+  The default is `True`.
+
+## Supported Versions
+
+- Python: 3.8+
+- huggingface_hub: 0.22+
