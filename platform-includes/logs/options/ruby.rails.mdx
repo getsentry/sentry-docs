@@ -1,0 +1,127 @@
+### Available Built-in Subscribers
+
+The Rails SDK includes several built-in log subscribers that you can enable:
+
+#### Default Subscribers (enabled automatically)
+- **ActiveRecord**: Database queries with SQL, duration, connection info, and caching status
+- **ActionController**: HTTP requests with controller, action, parameters, response status, and timing
+
+#### Additional Subscribers (opt-in)
+- **ActiveJob**: Background job execution (`perform`), enqueueing (`enqueue`), retry failures (`retry_stopped`), and job discarding (`discard`)
+- **ActionMailer**: Email delivery (`deliver`) and processing (`process`) events
+
+### Custom Subscriber Configuration
+
+You can customize which subscribers are active:
+
+```ruby
+Sentry.init do |config|
+  config.dsn = "___PUBLIC_DSN___"
+
+  config.enable_logs = true
+
+  config.rails.structured_logging.enabled = true
+
+  config.rails.structured_logging.subscribers = {
+    active_record: Sentry::Rails::LogSubscribers::ActiveRecordSubscriber,
+    action_controller: Sentry::Rails::LogSubscribers::ActionControllerSubscriber
+  }
+end
+```
+
+To enable additional subscribers, add them to the configuration:
+
+```ruby
+Sentry.init do |config|
+  config.dsn = "___PUBLIC_DSN___"
+
+  config.enable_logs = true
+
+  config.rails.structured_logging.enabled = true
+
+  config.rails.structured_logging.subscribers = {
+    active_record: Sentry::Rails::LogSubscribers::ActiveRecordSubscriber,
+    action_controller: Sentry::Rails::LogSubscribers::ActionControllerSubscriber,
+    active_job: Sentry::Rails::LogSubscribers::ActiveJobSubscriber,
+    action_mailer: Sentry::Rails::LogSubscribers::ActionMailerSubscriber
+  }
+end
+```
+
+To disable specific subscribers:
+
+```ruby
+Sentry.init do |config|
+  config.dsn = "___PUBLIC_DSN___"
+
+  config.enable_logs = true
+
+  config.rails.structured_logging.enabled = true
+
+  config.rails.structured_logging.subscribers = {
+    active_record: Sentry::Rails::LogSubscribers::ActiveRecordSubscriber
+    # ActionController subscriber disabled
+  }
+end
+```
+
+### Creating Custom Log Subscribers
+
+You can create custom log subscribers by extending the base class:
+
+```ruby
+class MyCustomSubscriber < Sentry::Rails::LogSubscriber
+  # Attach to your component's instrumentation events
+  attach_to :my_component
+
+  def my_event(event)
+    log_structured_event(
+      message: "Custom event occurred",
+      level: :info,
+      attributes: {
+        duration_ms: event.duration,
+        custom_data: event.payload[:custom_data],
+        user_id: event.payload[:user_id]
+      }
+    )
+  end
+
+  def another_event(event)
+    log_structured_event(
+      message: "Another custom event",
+      level: :warn,
+      attributes: {
+        event_type: event.payload[:type],
+        metadata: event.payload[:metadata]
+      }
+    )
+  end
+end
+```
+
+Then register your custom subscriber:
+
+```ruby
+Sentry.init do |config|
+  config.dsn = "___PUBLIC_DSN___"
+
+  config.enable_logs = true
+
+  config.rails.structured_logging.enabled = true
+
+  config.rails.structured_logging.subscribers = {
+    active_record: Sentry::Rails::LogSubscribers::ActiveRecordSubscriber,
+    action_controller: Sentry::Rails::LogSubscribers::ActionControllerSubscriber,
+    my_component: MyCustomSubscriber
+  }
+end
+```
+
+### Sensitive Data Filtering
+
+Log subscribers automatically respect Rails' parameter filtering configuration. Sensitive parameters defined in `config.filter_parameters` will be filtered from structured logs:
+
+```ruby
+# config/application.rb
+config.filter_parameters += [:password, :credit_card, :ssn]
+```
