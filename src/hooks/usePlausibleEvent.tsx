@@ -11,9 +11,6 @@ type PlausibleEventProps = {
     page: string;
     title: string;
   };
-  ['copy sentry code']: {
-    page: string;
-  };
   ['Copy Page']: {
     page: string;
     source: string;
@@ -37,6 +34,9 @@ type PlausibleEventProps = {
   ['View Markdown']: {
     page: string;
     source: string;
+  };
+  ['copy sentry code']: {
+    page: string;
   };
 };
 

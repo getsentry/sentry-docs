@@ -3,12 +3,12 @@
 import {RefObject, useEffect, useRef, useState} from 'react';
 import {Clipboard} from 'react-feather';
 
+import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
+
 import styles from './code-blocks.module.scss';
 
 import {makeHighlightBlocks} from '../codeHighlights';
 import {makeKeywordsClickable} from '../codeKeywords';
-import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
-
 
 export interface CodeBlockProps {
   children: React.ReactNode;
@@ -50,7 +50,6 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
   // otherwise the copy button will not work
   const [showCopyButton, setShowCopyButton] = useState(false);
   const {emit} = usePlausibleEvent();
-
 
   useEffect(() => {
     setShowCopyButton(true);
