@@ -11,6 +11,9 @@ type PlausibleEventProps = {
     page: string;
     title: string;
   };
+  ['copy sentry code']: {
+    page: string;
+  };
   ['Copy Page']: {
     page: string;
     source: string;
