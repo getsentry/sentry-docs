@@ -7,6 +7,8 @@ import styles from './code-blocks.module.scss';
 
 import {makeHighlightBlocks} from '../codeHighlights';
 import {makeKeywordsClickable} from '../codeKeywords';
+import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
+
 
 export interface CodeBlockProps {
   children: React.ReactNode;
@@ -47,6 +49,8 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
   // Show the copy button after js has loaded
   // otherwise the copy button will not work
   const [showCopyButton, setShowCopyButton] = useState(false);
+  const {emit} = usePlausibleEvent();
+
 
   useEffect(() => {
     setShowCopyButton(true);
@@ -83,6 +87,7 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
     try {
       await navigator.clipboard.writeText(code);
       setShowCopied(true);
+      emit('copy sentry code', {props: {page: window.location.pathname}});
       setTimeout(() => setShowCopied(false), 1200);
     } catch (error) {
       // eslint-disable-next-line no-console

@@ -17,6 +17,7 @@ import {KEYWORDS_REGEX, ORG_AUTH_TOKEN_REGEX} from './codeKeywords';
 import {updateElementsVisibilityForOptions} from './onboarding';
 import {SignInNote} from './signInNote';
 
+
 // human readable versions of names
 const HUMAN_LANGUAGE_NAMES = {
   coffee: 'CoffeeScript',
