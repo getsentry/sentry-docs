@@ -433,6 +433,37 @@ Please note that the `span` you receive as an argument is a serialized object, n
 
 </SdkOption>
 
+<SdkOption name="ignoreSpans" type='Array<string | RegExp | {name?: string | RegExp, op?: string | RegExp}>' defaultValue='[]'>
+
+A list of strings or regex patterns matching span names that shouldn't be sent to Sentry. When using strings, partial matches will be filtered out, so if you need to filter by exact match, use regex patterns instead. You can also provide an object with a `name` and `op` property to match both the span name and the operation name. Note that at least `name` or `op` must be provided.
+
+If a root span matches any of the specified patterns, the entire local trace will be dropped. If a child span matches, its children will be reparented to the dropped span's parent span. 
+
+By default, no spans are ignored.
+
+</SdkOption>
+
+<PlatformCategorySection supported={['browser']}>
+
+<SdkOption name="propagateTraceparent" type='boolean' defaultValue='false'>
+
+_Available since: `10.10.0`_
+
+If set to `true`, the SDK adds the [W3C `traceparent` header](https://www.w3.org/TR/trace-context/) to outgoing Http requests made via `fetch` or `XMLHttpRequest`.
+This header is attached in addition to the `sentry-trace` and `baggage` headers.
+Set this option to `true` if your backend services are instrumented with e.g. OpenTelemetry or other W3C Trace Context compatible libraries and you want to continue traces from the client.
+
+**Important:** Make sure that your backend services' CORS configuration allows the `traceparent` header.
+Otherwise, requests might be blocked.
+Use the [`tracePropagationTargets` option](#tracepropagationtargets) to control which requests the `traceparent` header is attached to.
+See <PlatformLink to="/tracing/distributed-tracing/dealing-with-cors-issues/">Dealing with CORS Issues</PlatformLink> for more information.
+
+Note that this option is only available for browser SDKs.
+
+</SdkOption>
+
+</PlatformCategorySection>
+
 ## Session Replay Options
 
 <SdkOption name="replaysSessionSampleRate" type='number' categorySupported={['browser']}>

@@ -10,7 +10,9 @@ sidebar_order: 6000
 The User Feedback feature allows you to collect user feedback from anywhere inside your application at any time, without needing an error event to occur first.
 
 <Alert>
-If you're using a self-hosted Sentry instance, you'll need to be on version 24.4.2 or higher in order to use the full functionality of the User Feedback feature. Lower versions may have limited functionality.
+  If you're using a self-hosted Sentry instance, you'll need to be on version
+  24.4.2 or higher in order to use the full functionality of the User Feedback
+  feature. Lower versions may have limited functionality.
 </Alert>
 
 ## User Feedback Widget
@@ -46,6 +48,116 @@ To start using the User Feedback widget in your Cocoa application, provide a fee
 ```
 
 This setup will insert the widget into your app's view hierarchy. By default, it appears in the bottom trailing corner of the screen, but you can fully customize its appearance and behavior.
+
+#### SwiftUI
+
+SwiftUI apps don’t currently support automatic widget injection when the SDK starts. Several options exist to display the feedback form:
+
+##### Use your own button
+
+Add a `UIButton` to your app, then provide the reference to the feedback configuration in the SDK start options:
+
+```swift
+import Sentry
+import SwiftUI
+import UIKit
+
+@main
+struct SwiftUIApp: App {
+    // a button displayed somewhere in your app
+    public let feedbackButton = {
+        let button = UIButton(type: .custom)
+        button.setTitle("BYOB Feedback", for: .normal)
+        return button
+    }()
+
+    init() {
+        // start the SentrySDK as usual, as early as possible in your app's launch sequence
+        SentrySDK.start { options in
+            options.configureUserFeedback { config in
+                config.customButton = feedbackButton
+            }
+
+            // your other SDK options
+        }
+    }
+}
+```
+
+##### Manually display the widget from a connected `UIWindowSceneDelegate`
+
+You must set up a `UIApplicationDelegateAdaptor`, connect a `UIScene` to your app, and manually call `SentrySDK.feedback.showWidget()`:
+
+```swift
+import Sentry
+import SwiftUI
+
+@main
+struct SwiftUIApp: App {
+    @UIApplicationDelegateAdaptor private var appDelegate: MyAppDelegate
+
+    init() {
+        // start the SentrySDK as usual, as early as possible in your app's launch sequence
+        SentrySDK.start { options in
+            options.configureUserFeedback { config in
+                // configure user feedback and any other SDK options
+            }
+        }
+    }
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}
+
+class MyAppDelegate: NSObject, UIApplicationDelegate, ObservableObject {
+    func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
+        let configuration = UISceneConfiguration(
+            name: nil,
+            sessionRole: connectingSceneSession.role)
+        if connectingSceneSession.role == .windowApplication {
+            configuration.delegateClass = MySceneDelegate.self
+        }
+        return configuration
+    }
+}
+
+class MySceneDelegate: NSObject, UIWindowSceneDelegate, ObservableObject {
+    var initializedSentry = false
+    func sceneDidBecomeActive(_ scene: UIScene) {
+        guard !initializedSentry else { return }
+
+        // display the feedback widget
+        SentrySDK.feedback.showWidget()
+
+        initializedSentry = true
+    }
+}
+```
+
+##### Manually display the widget from an `onAppear` view modifier
+
+You can manually call `SentrySDK.feedback.showWidget()` from an `onAppear` view modifier. Ideally, you should call this from the root view of your app, so that the widget is displayed as soon as the app is launched and only called once.
+
+```swift
+import Sentry
+import SwiftUI
+
+@main
+struct SwiftUIApp: App {
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .onAppear {
+                    SentrySDK.feedback.showWidget()
+                }
+        }
+    }
+}
+```
 
 ### Session Replay
 

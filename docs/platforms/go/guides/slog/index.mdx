@@ -14,177 +14,76 @@ Slog structured logging is supported in Sentry Go SDK version `0.34.0` and above
 ## Install
 
 ```bash
+go get github.com/getsentry/sentry-go
 go get github.com/getsentry/sentry-go/slog
-```
-
-<Break />
-
-<SignInNote />
-
-To integrate Sentry with slog, you need to set up a Sentry handler and configure the Sentry client.
-
-```go
-import (
-    "context"
-	"fmt"
-	"log"
-	"time"
-
-	"log/slog"
-
-	"github.com/getsentry/sentry-go"
-	sentryslog "github.com/getsentry/sentry-go/slog"
-)
-
-func main() {
-	// Initialize Sentry
-	err := sentry.Init(sentry.ClientOptions{
-		Dsn:           "___PUBLIC_DSN___",
-		EnableTracing: false,
-		// Adds request headers and IP for users,
-		// visit: https://docs.sentry.io/platforms/go/data-management/data-collected/ for more info
-		SendDefaultPII: true,
-		EnableLogs: true,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer sentry.Flush(2 * time.Second)
-
-	// Configure `slog` to use Sentry as a handler
-	ctx := context.Background()
-	handler := sentryslog.Option{
-		EventLevel: []slog.Level{slog.LevelError}, // Only Error level will be sent as events
-		LogLevel:   []slog.Level{slog.LevelWarn, slog.LevelInfo},         // Only Warn and Info levels will be sent as logs
-	}.NewSentryHandler(ctx)
-	logger := slog.New(handler)
-	logger = logger.With("release", "v1.0.0")
-
-	// Log messages with various attributes
-	logger.
-		With(
-			slog.Group("user",
-				slog.String("id", "user-123"),
-				slog.Time("created_at", time.Now()),
-			),
-		).
-		With("environment", "dev").
-		With("error", fmt.Errorf("an error")).
-		ErrorContext(ctx, "a message")
-}
 ```
 
 ## Configure
 
+### Initialize the Sentry SDK
+
+<PlatformContent includePath="getting-started-include-logs-config" />
+
+### Options
+
 `sentryslog` provides options to configure the integration with Sentry. It accepts a struct of `sentryslog.Options` that allows you to configure how the handler will behave. The options are:
 
 ```go
-// EventLevel specifies the exact log levels to capture and send to Sentry as Events.
-// Only logs at these specific levels will be processed as events.
-// Defaults to []slog.Level{slog.LevelError, LevelFatal}.
-EventLevel slog.Leveler
-// LogLevel specifies the exact log levels to capture and send to Sentry as Log entries
-// Only logs at these specific levels will be processed as log entries.
-// Defaults to []slog.Level{slog.LevelDebug, slog.LevelInfo, slog.LevelWarn, slog.LevelError, LevelFatal}.
-LogLevel slog.Leveler
-// Hub specifies the Sentry Hub to use for capturing events.
-// If not provided, the current Hub is used by default.
-Hub *sentry.Hub
-// Converter is an optional function that customizes how log records
-// are converted into Sentry events. By default, the DefaultConverter is used.
-Converter Converter
-// AttrFromContext is an optional slice of functions that extract attributes
-// from the context. These functions can add additional metadata to the log entry.
-AttrFromContext []func(ctx context.Context) []slog.Attr
-// AddSource is an optional flag that, when set to true, includes the source
-// information (such as file and line number) in the Sentry event.
-// This can be useful for debugging purposes.
-AddSource bool
-// ReplaceAttr is an optional function that allows for the modification or
-// replacement of attributes in the log record. This can be used to filter
-// or transform attributes before they are sent to Sentry.
-ReplaceAttr func(groups []string, a slog.Attr) slog.Attr
-```
+type Option struct {
+	// EventLevel specifies the exact log levels to capture and send to Sentry as Events.
+	// Only logs at these specific levels will be processed as events.
+	// Defaults to []slog.Level{slog.LevelError, LevelFatal}.
+	EventLevel []slog.Level
 
-## Usage
+	// LogLevel specifies the exact log levels to capture and send to Sentry as Log entries.
+	// Only logs at these specific levels will be processed as log entries.
+	// Defaults to []slog.Level{slog.LevelDebug, slog.LevelInfo, slog.LevelWarn, slog.LevelError, LevelFatal}.
+	LogLevel []slog.Level
 
-### Sending Logs vs Events
+	// Hub specifies the Sentry Hub to use for capturing events.
+	// If not provided, the current Hub is used by default.
+	Hub *sentry.Hub
 
-Sentry allows you to send logs either as log entries or as events. The minimum log level defaults to `slog.LevelDebug` and logs will be sent if the `EnableLogs` option is set. The minimum event level defaults to `slog.LevelError`.
+	// Converter is an optional function that customizes how log records
+	// are converted into Sentry events. By default, the DefaultConverter is used.
+	Converter Converter
 
-### Example: Sending Logs as Events
+	// AttrFromContext is an optional slice of functions that extract attributes
+	// from the context. These functions can add additional metadata to the log entry.
+	AttrFromContext []func(ctx context.Context) []slog.Attr
 
-```go
-ctx := context.Background()
-logger := slog.New(sentryslog.Option{
-    // specify all event levels
-    EventLevel: []slog.Level{
-        slog.LevelDebug,
-        slog.LevelInfo,
-        slog.LevelWarn,
-        slog.LevelError,
-	},
-    LogLevel: []slog.Level{}, // disable log entries
-	AttrFromContext: []func(ctx context.Context) []slog.Attr{
-		func(ctx context.Context) []slog.Attr {
-			return []slog.Attr{slog.String("request_id", "123")}
-		},
-	},
-}.NewSentryHandler(ctx))
+	// AddSource is an optional flag that, when set to true, includes the source
+	// information (such as file and line number) in the Sentry event.
+	// This can be useful for debugging purposes.
+	AddSource bool
 
-logger.Error("This log is sent as an event")
-```
-
-### Example: Sending Logs as Logs
-
-```go
-ctx := context.Background()
-logger := slog.New(sentryslog.Option{
-    EventLevel: []slog.Level{}, // disable events
-    // specify all log levels
-    LogLevel: []slog.Level{
-        slog.LevelDebug,
-        slog.LevelInfo,
-        slog.LevelWarn,
-        slog.LevelError,
-    },
-}.NewSentryHandler(ctx))
-
-logger.Error("This log is sent as a log")
-```
-
-<Alert>
-    In order to properly attach the correct trace with each Log entry, a
-    `context.Context` is required. We recommend using `Context` functions to ensure your logs
-    are connected to spans and errors in the Sentry UI.
-</Alert>
-
-## Correlating Logs with Traces
-
-To correlate logs with transactions, you need to pass a `context.Context` that contains transaction information to your logger calls. The `sentryhttp` middleware automatically adds transaction information to the request's context.
-Here's an example of how to use `InfoContext` in an HTTP handler to ensure logs are associated with the correct trace.
-
-```go
-// Assume logger is initialized with the Sentry handler as shown above.
-// var logger *slog.Logger
-
-func myAsyncHandler(w http.ResponseWriter, r *http.Request) {
-	// The sentryhttp middleware adds a Hub with transaction information to the request context.
-	ctx := r.Context()
-	// By using InfoContext, the log entry will be associated with the transaction from the request.
-	slog.InfoContext(ctx, "Log inside handler")
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintln(w, "Handler finished, async task running in background.")
-}
-
-func main() {
-	// Wrap your handler with sentryhttp to automatically start transactions for requests.
-	sentryHandler := sentryhttp.New(sentryhttp.Options{})
-	http.Handle("/async", sentryHandler.Handle(http.HandlerFunc(myAsyncHandler)))
+	// ReplaceAttr is an optional function that allows for the modification or
+	// replacement of attributes in the log record. This can be used to filter
+	// or transform attributes before they are sent to Sentry.
+	ReplaceAttr func(groups []string, a slog.Attr) slog.Attr
 }
 ```
 
-Note: Ensure Sentry is flushed before the application exits to avoid losing any pending events.
+## Verify
+
+```go
+// Configure `slog` to use Sentry as a handler
+ctx := context.Background()
+handler := sentryslog.Option{
+    // Explicitly specify the levels that you want to be captured.
+	EventLevel: []slog.Level{slog.LevelError}, // Captures only [slog.LevelError] as error events.
+	LogLevel:   []slog.Level{slog.LevelWarn, slog.LevelInfo}, // Captures only [slog.LevelWarn] and [slog.LevelInfo] as log entries.
+}.NewSentryHandler(ctx)
+logger := slog.New(handler)
+
+// Send an error event to Sentry to verify functionality
+logger.Error("This error will be sent to Sentry!")
+
+// Also a log entry
+logger.With("key.string", "value").Info("An error occurred")
+```
+
+<Include name="logs/go-ctx-usage-alert.mdx"/>
 
 ## Logs
 

@@ -1,5 +1,86 @@
-Available integrations:
-- [Timber](/platforms/android/integrations/timber/)
-- [Logcat](/platforms/android/integrations/logcat/)
+### Timber
 
-If there's an integration you would like to see, open a [new issue on GitHub](https://github.com/getsentry/sentry-java/issues/new/choose).
+The Android SDK automatically adds the `SentryTimberIntegration` if the `sentry-android-timber` dependency was found on the classpath. The integration is added with `minLogsLevel` set to `INFO`.
+
+If you want to customize these levels, please have a look at [Timber docs](/platforms/android/integrations/timber/#configure).
+
+If you are not using our Gradle plugin, please have a look at [Timber docs](/platforms/android/integrations/timber/#install).
+
+This snippet captures an intentional error, so you can test that logs are working as soon as you set it up:
+
+```kotlin
+import androidx.appcompat.app.AppCompatActivity
+import android.os.Bundle
+import java.lang.Exception
+import timber.log.Timber
+
+class MyActivity : AppCompatActivity() {
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    try {
+      throw Exception("This is a test.")
+    } catch (e: Exception) {
+      Timber.e(e)
+    }
+  }
+}
+```
+
+```java
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import java.lang.Exception;
+import timber.log.Timber;
+
+public class MyActivity extends AppCompatActivity {
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    try {
+      throw new Exception("This is a test.");
+    } catch (Exception e) {
+      Timber.e(e);
+    }
+  }
+}
+```
+
+### Logcat
+
+The Sentry Android Gradle Plugin automatically captures Logcat logs of level `WARNING` or higher.
+
+If you would like to change the minimum level, please have a look at [Logcat docs](/platforms/android/integrations/logcat/#configure).
+
+This snippet captures an intentional error, so you can test that everything is working once you've set it up:
+
+```kotlin
+import androidx.appcompat.app.AppCompatActivity
+import android.os.Bundle
+import io.sentry.Sentry
+import android.util.Log
+
+class MyActivity : AppCompatActivity() {
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    Log.w("MyTag", "Warning message.")
+
+    Sentry.captureException(Exception("My Exception"))
+  }
+}
+```
+
+```java
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import java.lang.Exception;
+import io.sentry.Sentry;
+import android.util.Log;
+
+public class MyActivity extends AppCompatActivity {
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    Log.w("MyTag", "Warning message.");
+
+    Sentry.captureException(new Exception("My Exception"));
+  }
+}
+```

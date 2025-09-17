@@ -34,11 +34,8 @@ devservices up
 After that, you can start the development server inside the `sentry` folder:
 
 ```shell
-sentry devserver --workers
+devservices serve
 ```
-
-If you are developing for aesthetics only and do not rely on the async workers, you can omit the `--workers` flag in order
-to use fewer system resources.
 
 Access it at [http://dev.getsentry.net:8000](http://dev.getsentry.net:8000) (you'll have to wait a bit for webpack to finish).
 A superuser account should have been created for you during bootstrap - `admin@sentry.io` with password `admin`.
@@ -86,8 +83,8 @@ After the server is running we can visit the dev server using `https` at port `:
 <Link to="/relay/">Relay</Link> and the ingest workers are not started by default. Follow the instructions below to start them so you can send events to your dev environment Sentry instance:
 
 - Set `SENTRY_USE_RELAY = True` in `~/.sentry/sentry.conf.py`.
-- Run `devservices up` to start the services Relay needs. (like for example Kafka)
-- (Re-)Start your devserver with the `--ingest` flag (e.g. `sentry devserver --workers --ingest`). This will start the Relay container and all related services alongside your devserver.
+- Run `devservices up --mode ingest` to start the services Relay needs. (like for example Kafka)
+- Start your devserver (e.g. `devservices serve`).
 
 ## Running the Getsentry Development Server
 
@@ -105,10 +102,18 @@ Just like running `sentry` (see above), you can start the `devservices` using th
 devservices up
 ```
 
+You will also need to enable workers which you can do so by running the following command:
+
+```shell
+devservices up taskbroker
+```
+
+or use a --mode that includes workers. If you use the --mode flag of devservices, any modes that started celery workers will now start taskbroker and a taskworker.
+
 After that, you can start the development server inside the `getsentry` folder:
 
 ```shell
-getsentry devserver --workers
+devservices serve
 ```
 
 **Note**: You **cannot** have both sentry and getsentry devserver running at the same time.
@@ -123,7 +128,7 @@ by `dev.py` if it exists.
 To enable the ingest workers, follow the steps described <Link to="#ingestion-pipeline-relay">here</Link> and run
 
 ```shell
-getsentry devserver --workers --ingest
+devservices serve
 ```
 
 ## Running siloed instances
@@ -134,10 +139,10 @@ The devserver command supports `--silo` option that lets you create siloed insta
 
 ```shell
 # Start control silo servers
-sentry devserver --silo=control --celery-beat --workers
+devservices serve --silo=control --celery-beat
 
 # Start region silo servers
-sentry devserver --silo=region --celery-beat --workers --ingest
+devservices serve --silo=region --celery-beat
 ```
 
 Siloed servers have the following port assignments:
