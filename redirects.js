@@ -1201,6 +1201,11 @@ const userDocsRedirects = [
     source: '/product/ai-in-sentry/seer/seer-privacy-and-security',
     destination: '/product/ai-in-sentry/ai-privacy-and-security/',
   },
+  // Redirects for Sentry Prevent AI
+  {
+    source: '/product/ai-in-sentry/sentry-prevent-ai/',
+    destination: '/product/ai-in-sentry/ai-code-review/',
+  }
 ];
 
 /**
