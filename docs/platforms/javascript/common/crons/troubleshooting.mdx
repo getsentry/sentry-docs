@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting
-description: "Learn how to troubleshoot your Cron Monitoring setup."
+description: "Common issues and solutions for JavaScript cron monitoring setup."
 sidebar_order: 9000
 supported:
   - javascript.nextjs
@@ -25,31 +25,57 @@ supported:
   - javascript.tanstackstart-react
 ---
 
-<PlatformCategorySection supported={['server', 'serverless']}>
-
-<PlatformContent includePath="crons/troubleshooting" />
+Common issues and solutions for JavaScript cron monitoring setup.
 
 <Expandable title="Why aren't recurring job errors showing up on my monitor details page?">
 
-You may not have <PlatformLink to="/crons/#connecting-errors-to-cron-monitors">linked errors to your monitor</PlatformLink>.
+Errors that happen outside of job execution aren't linked to cron monitors. The most common situation is an error occurring in an external service, like a database or API call, that isn't directly part of the job function. In such cases, make sure the job function execution includes any external service calls. If you have a job that starts a service outside of the job function, you should execute the service call directly within the job function.
 
 </Expandable>
 
 <Expandable title="Why am I not receiving alerts when my monitor fails?">
 
-You may not have <PlatformLink to="/crons/#alerts">set up alerts for your monitor</PlatformLink>.
+Alert notifications are based on notification settings. If you're not receiving alerts when a monitor fails or experiences an issue, make sure you've configured an alert rule for the monitor.
+
+To configure an alert rule:
+
+1. Go to **Alerts** and click "Create Alert Rule".
+2. Set "Issues" as the alert type under **Errors**.
+3. Set the conditions to: `The event's tags match monitor.slug equals your-monitor-slug-here`
+
+Learn more about [Issue Alert Configuration](/product/alerts/alert-types/#issue-alerts).
 
 </Expandable>
-</PlatformCategorySection>
 
 <Expandable title="What is the crons data retention policy for check-ins?">
 
-Our current data retention policy is 90 days.
+Check-in data is retained for **90 days**. After this period, check-in history is automatically removed.
 
 </Expandable>
 
 <Expandable title="Do you support a monitor schedule with a six-field crontab expression?">
 
-Currently, we only support crontab expressions with five fields.
+Currently, Sentry only supports **five-field crontab expressions** (minute, hour, day, month, weekday). Six-field expressions with seconds are not supported.
+
+**Supported**: `0 */2 * * *` (every 2 hours)  
+**Not supported**: `0 0 */2 * * *` (every 2 hours with seconds field)
 
 </Expandable>
+
+## Getting Help
+
+If you're still experiencing issues:
+
+1. **Check Sentry Status**: Visit [status.sentry.io](https://status.sentry.io)
+2. **Review Documentation**: Return to the [main cron documentation](index)
+3. **Community Support**: Ask on [Discord](https://discord.gg/sentry) or [GitHub Discussions](https://github.com/getsentry/sentry/discussions)
+4. **Contact Support**: Use the in-app support chat for technical issues
+
+## Setup Method Troubleshooting
+
+Having trouble with your specific setup method? Return to the relevant documentation:
+
+- **[Job Monitoring](job-monitoring)** - For `withMonitor()` wrapper issues
+- **[Check-Ins](check-ins)** - For manual check-in problems  
+- **[Heartbeat](heartbeat)** - For simple notification issues
+- **[Upserting Monitors](upserting-monitors)** - For programmatic monitor creation

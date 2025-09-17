@@ -1,0 +1,201 @@
+# Coding Guidelines
+
+Code quality and style standards for the Sentry documentation project.
+
+## TypeScript Standards
+
+### Type Definitions
+```typescript
+// Use strict TypeScript configuration
+interface FrontMatter {
+  title: string;
+  description?: string;
+  sidebar_order?: number;
+  supported?: string[];
+}
+
+// Prefer interfaces over types for object shapes
+interface ComponentProps {
+  children: ReactNode;
+  className?: string;
+}
+```
+
+### Component Patterns
+```typescript
+// Use function declarations for components
+export function DocPage({children, frontMatter}: DocPageProps) {
+  return <div className="doc-page">{children}</div>;
+}
+
+// Use proper typing for hooks
+const [state, setState] = useState<State | null>(null);
+```
+
+## File Organization
+
+### Directory Structure
+```
+src/
+├── components/         # Reusable React components
+├── types/             # TypeScript type definitions  
+├── utils/             # Utility functions
+└── pages/             # Page components
+```
+
+### Import Order
+```typescript
+// 1. React and external libraries
+import {ReactNode} from 'react';
+import {getMDXComponent} from 'mdx-bundler/client';
+
+// 2. Internal imports (absolute paths)
+import {FrontMatter} from 'sentry-docs/types';
+import {usePlatform} from 'sentry-docs/hooks';
+
+// 3. Relative imports
+import './styles.scss';
+```
+
+## Component Standards
+
+### Props Interface
+```typescript
+// Always define props interface
+interface AlertProps {
+  level?: 'info' | 'warning' | 'error';
+  children: ReactNode;
+  className?: string;
+}
+
+export function Alert({level = 'info', children, className}: AlertProps) {
+  return (
+    <div className={`alert alert-${level} ${className || ''}`}>
+      {children}
+    </div>
+  );
+}
+```
+
+### Error Handling
+```typescript
+// Use error boundaries for component errors
+export function ErrorBoundary({children}: {children: ReactNode}) {
+  return (
+    <ErrorBoundaryComponent
+      fallback={<div>Something went wrong</div>}
+    >
+      {children}
+    </ErrorBoundaryComponent>
+  );
+}
+
+// Handle async errors gracefully
+async function loadContent() {
+  try {
+    return await fetchContent();
+  } catch (error) {
+    console.error('Failed to load content:', error);
+    return null;
+  }
+}
+```
+
+## MDX Processing
+
+### Content Validation
+```typescript
+// Validate frontmatter
+function validateFrontMatter(data: unknown): FrontMatter {
+  if (!data || typeof data !== 'object') {
+    throw new Error('Invalid frontmatter');
+  }
+  
+  if (!('title' in data) || typeof data.title !== 'string') {
+    throw new Error('Missing required field: title');
+  }
+  
+  return data as FrontMatter;
+}
+```
+
+### Component Registration
+```typescript
+// Register custom MDX components
+const mdxComponents = {
+  Alert,
+  PlatformContent,
+  Include,
+  // Add new components here
+};
+```
+
+## Performance Standards
+
+### React Optimization
+```typescript
+// Use React.memo for expensive components
+export const ExpensiveComponent = memo(function ExpensiveComponent({data}: Props) {
+  const processedData = useMemo(() => processData(data), [data]);
+  return <div>{processedData}</div>;
+});
+
+// Use callbacks to prevent re-renders
+const handleClick = useCallback((id: string) => {
+  setState(prev => ({...prev, active: id}));
+}, []);
+```
+
+### Bundle Optimization
+- Use dynamic imports for large components
+- Optimize images with Next.js Image component
+- Minimize JavaScript bundle size
+
+## Testing Standards
+
+### Component Testing
+```typescript
+// Test component behavior
+import {render, screen} from '@testing-library/react';
+
+describe('Alert', () => {
+  it('renders with correct level class', () => {
+    render(<Alert level="warning">Test message</Alert>);
+    expect(screen.getByRole('alert')).toHaveClass('alert-warning');
+  });
+});
+```
+
+### Content Testing
+```typescript
+// Test MDX processing
+describe('MDX Processing', () => {
+  it('validates required frontmatter', () => {
+    expect(() => validateFrontMatter({})).toThrow('Missing required field: title');
+  });
+});
+```
+
+## Quality Checklist
+
+### Before Committing
+- [ ] TypeScript compiles without errors
+- [ ] Components are properly typed
+- [ ] No console errors in development
+- [ ] Components are tested
+- [ ] Code follows import order standards
+- [ ] Error handling is implemented
+- [ ] Performance optimizations applied where needed
+
+### Code Review Standards
+- [ ] Code is readable and well-documented
+- [ ] TypeScript types are accurate
+- [ ] Components are reusable where appropriate
+- [ ] No unnecessary re-renders
+- [ ] Error states are handled gracefully
+
+For architecture decisions, see [Architecture Guidelines](./architecture.mdc).
+For reusable code patterns, see [Common Patterns](./common-patterns.mdc).
+
+- [ ] Code is formatted with Prettier
+- [ ] Linting passes without errors

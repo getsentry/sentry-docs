@@ -1,0 +1,87 @@
+---
+title: Upserting Cron Monitors
+description: "Programmatic monitor creation and management for your cron jobs."
+sidebar_order: 5755
+supported:
+  - javascript.nextjs
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.react-router
+  - javascript.astro
+  - javascript.bun
+  - javascript.deno
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.cloudflare
+---
+
+You can create and update your Monitors programmatically with code rather than creating and configuring them in Sentry.io.
+
+To create/update a monitor, use `Sentry.withMonitor()` and pass in your monitor configuration as a third parameter:
+
+```javascript
+const monitorConfig = {
+  schedule: {
+    type: "crontab",
+    value: "* * * * *",
+  },
+  checkinMargin: 2, // In minutes. Optional.
+  maxRuntime: 10, // In minutes. Optional.
+  timezone: "America/Los_Angeles", // Optional.
+};
+
+Sentry.withMonitor(
+  "<monitor-slug>",
+  () => {
+    // Execute your scheduled task here...
+  },
+  monitorConfig,
+);
+```
+
+To configure the monitor's check-ins, use `Sentry.captureCheckIn()` and pass in your monitor configuration as a second parameter:
+
+```javascript
+const monitorConfig = {
+  schedule: {
+    type: "crontab",
+    value: "* * * * *",
+  },
+  checkinMargin: 2, // In minutes. Optional.
+  maxRuntime: 10, // In minutes. Optional.
+  timezone: "America/Los_Angeles", // Optional.
+};
+
+// 🟡 Notify Sentry your job is running:
+const checkInId = Sentry.captureCheckIn(
+  {
+    monitorSlug: "<monitor-slug>",
+    status: "in_progress",
+  },
+  monitorConfig,
+);
+
+// Execute your scheduled task here...
+
+// 🟢 Notify Sentry your job has completed successfully:
+Sentry.captureCheckIn(
+  {
+    // Make sure this variable is named `checkInId`
+    checkInId,
+    monitorSlug: "<monitor-slug>",
+    status: "ok",
+  },
+  monitorConfig,
+);
+```
+
+<Include name="crons-monitor-config-properties" /> 
