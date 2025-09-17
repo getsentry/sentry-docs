@@ -128,7 +128,13 @@ If configured with manual lifecycle, a profile starts on the next app launch, an
 
 If configured with trace lifecycle, app start profiles are attached to a special performance transaction operation called `app.launch` and displayed in the product as `launch`. It is stopped either when `SentrySDK.startWithOptions` is called, or, if <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#time-to-initial-display">Time to Initial Display (TTID)</PlatformLink>/<PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#time-to-full-display">Time to Full Display (TTFD)</PlatformLink> tracking is enabled, when the SDK determines that TTID/TTFD has been reached.
 
+<Alert>
+The SDK must have been started with a call to `SentrySDK.startWithOptions` in order to stop a running launch profiler. If a launch profile is started but the SDK is not, the profiler will run for the duration of the user session. Ensure proper configuration if you selectively start the Sentry SDK along with launch profiling, so that you never set a launch profile to start on a launch where you might decide not to start the Sentry SDK.
+</Alert>
+
+<Alert>
 Every time `SentrySDK.startWithOptions` is called with app start profiling configured, a separate sample decision is generated with `sessionSampleRate` and stored until the next app launch (as well as `tracesSampleRate` if trace profile lifecycle is configured). The same sample decision will apply for the remainder of the profile session following that subsequent launch.
+</Alert>
 
 ## Transaction-based Profiling (deprecated)
 

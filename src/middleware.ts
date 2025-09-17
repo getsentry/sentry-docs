@@ -1626,32 +1626,48 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/platforms/javascript/guides/:guide/tracing/instrumentation/opentelemetry/',
     to: '/platforms/javascript/guides/:guide/opentelemetry/',
   },
-  // START  bandaid fix for #11870
+  // START redirecting deprecated generic metrics docs to concepts
   {
-    from: '/platforms/java/performance/instrumentation/opentelemetry/',
-    to: '/platforms/java/tracing/instrumentation/opentelemetry/',
-  },
-  {
-    from: '/platforms/go/performance/instrumentation/opentelemetry/',
-    to: '/platforms/go/tracing/instrumentation/opentelemetry/',
-  },
-  {
-    from: '/platforms/javascript/guides/node/performance/instrumentation/opentelemetry/',
-    to: '/platforms/javascript/guides/node/opentelemetry/',
-  },
-  {
-    from: '/platforms/python/performance/instrumentation/opentelemetry/',
-    to: '/platforms/python/tracing/instrumentation/opentelemetry/',
-  },
-  {
-    from: '/platforms/ruby/performance/instrumentation/opentelemetry/',
-    to: '/platforms/ruby/tracing/instrumentation/opentelemetry/',
+    from: '/platforms/python/metrics/',
+    to: '/platforms/python/tracing/span-metrics/',
   },
   {
     from: '/platforms/ruby/metrics/',
-    to: '/platforms/ruby/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
   },
-  // END  bandaid fix for #11870
+  {
+    from: '/platforms/react-native/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    from: '/platforms/java/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    from: '/platforms/android/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    from: '/platforms/apple/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    from: '/platforms/unity/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    from: '/platforms/php/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    from: '/platforms/php/guides/laravel/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    from: '/platforms/php/guides/symfony/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  // END redirecting deprecated generic metrics docs to concepts
   {
     from: '/learn/cli/configuration/',
     to: '/cli/configuration/',
@@ -1663,6 +1679,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/learn/cli/releases/',
     to: '/cli/releases/',
+  },
+  {
+    from: '/cli/metrics/',
+    to: '/cli/send-event/',
   },
   {
     from: '/workflow/alerts-notifications/',
@@ -2418,16 +2438,8 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/relay/',
   },
   {
-    from: '/meta/relay/projects/',
-    to: '/product/relay/projects/',
-  },
-  {
     from: '/meta/relay/getting-started/',
     to: '/product/relay/getting-started/',
-  },
-  {
-    from: '/meta/relay/pii-and-data-scrubbing/',
-    to: '/product/relay/pii-and-data-scrubbing/',
   },
   {
     from: '/meta/relay/options/',
@@ -3124,19 +3136,19 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/product/ai-monitoring/',
-    to: '/product/insights/agents/',
+    to: '/product/insights/ai/agents/',
   },
   {
     from: '/product/insights/llm-monitoring/',
-    to: '/product/insights/agents/',
+    to: '/product/insights/ai/agents/',
   },
   {
     from: '/product/insights/llm-monitoring/getting-started/',
-    to: '/product/insights/agents/getting-started/',
+    to: '/product/insights/ai/agents/getting-started/',
   },
   {
     from: '/product/insights/llm-monitoring/getting-started/the-dashboard/',
-    to: '/product/insights/agents/getting-started/the-dashboard/',
+    to: '/product/insights/ai/agents/getting-started/the-dashboard/',
   },
   {
     from: '/product/metrics/',
@@ -3307,8 +3319,28 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/explore/session-replay/',
   },
   {
-    from: '/product/explore/session-replay/replay-page-and-filters/',
-    to: '/product/explore/session-replay/web/replay-page-and-filters/',
+    from: '/product/explore/session-replay/web/getting-started/',
+    to: '/product/explore/session-replay/web/',
+  },
+  {
+    from: '/product/explore/session-replay/web/replay-page-and-filters/',
+    to: '/product/explore/session-replay/replay-page-and-filters/',
+  },
+  {
+    from: '/product/explore/session-replay/web/replay-details/',
+    to: '/product/explore/session-replay/replay-details/',
+  },
+  {
+    from: '/product/explore/session-replay/hydration-errors/',
+    to: '/product/issues/issue-details/replay-issues/hydration-error/',
+  },
+  {
+    from: '/product/explore/session-replay/rage-dead-clicks/',
+    to: '/product/issues/issue-details/replay-issues/rage-clicks/',
+  },
+  {
+    from: '/product/explore/session-replay/privacy/',
+    to: '/security-legal-pii/scrubbing/protecting-user-privacy/',
   },
   {
     from: '/product/teams/roles/',

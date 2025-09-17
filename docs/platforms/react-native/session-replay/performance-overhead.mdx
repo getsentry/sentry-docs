@@ -44,3 +44,32 @@ The benchmarks were run on an iPhone 14 Pro and a Pixel 2XL. Note that active Se
 | App Startup Time (Cold)          | 1533.35 ms      | 1539.55 ms          |
 | Main Thread Time                 | n/a             | 20ms                |
 | Network Bandwidth                | n/a             | 7 KB/s of recording |
+
+## Reducing Performance Overhead
+
+To minimize the performance impact of the Replay SDK on iOS and Android, consider lowering the quality of captured screenshots and videos. Setting the `replaysSessionQuality` to `low` can significantly reduce CPU, memory, and network bandwidth usage on mobile devices. Here's how you can do it:
+
+```js {tabTitle: React Native}
+  import * as Sentry from '@sentry/react-native';
+
+  Sentry.init({
+    replaysSessionSampleRate: 1.0,
+    replaysSessionQuality: 'low',
+    integrations: [Sentry.mobileReplayIntegration()],
+  });
+```
+
+Note that the default value for `replaysSessionQuality` is `medium` and a `high` quality setting is also available.
+
+## Excluding Session Replay from Android
+
+If you don’t plan to use Session Replay, you can exclude the sentry-android-replay module from your Android targets to reduce the bundle size by about 40KB compressed and 80KB uncompressed. Here's how you can do it:
+
+```gradle
+// from the android's root build.gradle file
+subprojects {
+  configurations.all {
+    exclude group: 'io.sentry', module: 'sentry-android-replay'
+  }
+}
+```

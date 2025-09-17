@@ -1,0 +1,20 @@
+Before using this integration, you need to install and instrument Statsig in your app. Learn more by reading [Statsig's SDK reference](https://docs.statsig.com/client/javascript-sdk) and [quickstart guide](https://docs.statsig.com/guides/first-feature).
+
+```javascript
+import * as Sentry from '@sentry/tanstackstart-react';
+import { StatsigClient } from '@statsig/js-client';
+
+const statsigClient = new StatsigClient( YOUR_SDK_KEY, { userID: 'my-user-id' }, {} ); // see Statsig SDK reference.
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  integrations: [Sentry.statsigIntegration({featureFlagClient: statsigClient})],
+});
+
+await statsigClient.initializeAsync();  // or statsigClient.initializeSync();
+
+const result = statsigClient.checkGate('my-feature-gate');
+Sentry.captureException(new Error('something went wrong'));
+```
+
+Visit the Sentry website and confirm that your error event has recorded the feature flag "my-feature-gate" and its value "false".

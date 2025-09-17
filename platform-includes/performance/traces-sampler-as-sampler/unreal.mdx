@@ -7,20 +7,20 @@ class USomeTraceSampler : public USentryTraceSampler
 public:
 	virtual bool Sample_Implementation(USentrySamplingContext* samplingContext, float& samplingValue) override
     {
-        const FString& gameMode =
+        const FSentryVariant& gameMode =
             *samplingContext->GetCustomSamplingContext().Find("GameMode");
 
-        if (gameMode.Equals(TEXT("ranked")))
+        if (gameMode.GetValue<FString>().Equals(TEXT("ranked")))
         {
             // Ranked matches are important - take a big sample
             samplingValue = 0.5;
         }
-        else if (gameMode.Equals(TEXT("quick_match")))
+        else if (gameMode.GetValue<FString>().Equals(TEXT("quick_match")))
         {
             // Quick matches less important and happen more frequently - only take 20%
             samplingValue = 0.2;
         }
-        else if (gameMode.Equals(TEXT("training")))
+        else if (gameMode.GetValue<FString>().Equals(TEXT("training")))
         {
             // Training matches are just noise - drop all transactions
             samplingValue = 0.0;

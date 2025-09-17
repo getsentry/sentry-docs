@@ -1,6 +1,6 @@
 'use client';
 
-import {Fragment, useEffect, useRef, useState} from 'react';
+import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {Clipboard} from 'react-feather';
 import Link from 'next/link';
@@ -19,9 +19,20 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
   const [error, setError] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [prefetchedContent, setPrefetchedContent] = useState<string | null>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const {emit} = usePlausibleEvent();
+
+  const fetchMarkdownContent = useCallback(async (): Promise<string> => {
+    // PSA: It's expected that this doesn't work on local development since we need
+    // the generated markdown files, which only are generated in the deploy pipeline.
+    const response = await fetch(`${window.location.origin}/${pathname}.md`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch markdown content: ${response.status}`);
+    }
+    return await response.text();
+  }, [pathname]);
 
   const copyMarkdownToClipboard = async () => {
     setIsLoading(true);
@@ -32,14 +43,14 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
     emit('Copy Page', {props: {page: pathname, source: 'copy_button'}});
 
     try {
-      // This doesn't work on local development since we need the generated markdown
-      // files, and we need to be aware of the origin since we have two different origins.
-      const response = await fetch(`${window.location.origin}/${pathname}.md`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch markdown content: ${response.status}`);
+      let content: string;
+      if (prefetchedContent) {
+        content = prefetchedContent;
+      } else {
+        content = await fetchMarkdownContent();
       }
 
-      await navigator.clipboard.writeText(await response.text());
+      await navigator.clipboard.writeText(content);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -82,6 +93,22 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
     };
   }, []);
 
+  // Pre-fetch markdown content to avoid losing user gesture context. On iOS we can't async
+  // fetch on tap because the user gesture is lost by the time we try to update the clipboard.
+  useEffect(() => {
+    if (!prefetchedContent) {
+      const prefetchContent = async () => {
+        try {
+          const content = await fetchMarkdownContent();
+          setPrefetchedContent(content);
+        } catch (err) {
+          // Silently fail - we'll fall back to regular fetch on click
+        }
+      };
+      prefetchContent();
+    }
+  }, [pathname, prefetchedContent, fetchMarkdownContent]);
+
   const getDropdownPosition = () => {
     if (!buttonRef.current) return {top: 0, left: 0};
     const rect = buttonRef.current.getBoundingClientRect();
@@ -92,7 +119,7 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
   };
 
   const buttonClass =
-    'inline-flex items-center h-full text-gray-700 dark:text-[var(--foreground)] bg-transparent border-none cursor-pointer transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-[var(--gray-a4)] active:bg-gray-100 dark:active:bg-[var(--gray-5)] focus:bg-gray-50 dark:focus:bg-[var(--gray-a4)] outline-none';
+    'inline-flex items-center text-nowrap h-full text-gray-700 dark:text-[var(--foreground)] bg-transparent border-none cursor-pointer transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-[var(--gray-a4)] active:bg-gray-100 dark:active:bg-[var(--gray-5)] focus:bg-gray-50 dark:focus:bg-[var(--gray-a4)] outline-none';
   const dropdownItemClass =
     'flex items-center gap-3 w-full p-2 px-3 text-left bg-transparent rounded-md transition-colors hover:bg-gray-100 dark:hover:bg-[var(--gray-a4)] font-sans text-gray-900 dark:text-[var(--foreground)]';
   const iconContainerClass =

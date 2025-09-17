@@ -47,42 +47,9 @@ then needs to be uploaded to Sentry. For more information, see [Debug Informatio
 
 ## Crash Reporting
 
-WebAssembly does not currently have a runtime that can produce stack traces. We
-do not yet provide a ready-to-use SDK, though we have a small integration for the
-Sentry JavaScript SDK to enhance error reports in the browser environment
-which include WASM frames, called [wasm-support.js](https://gist.github.com/mitsuhiko/c27fee8445d2a18a8c134e0169119058), which needs to be loaded _after_ the JavaScript SDK and before you start loading your WASM modules:
-
-```html {tabTitle: CDN}
-<script
-  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/bundle.min.js"
-  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'bundle.min.js', 'sha384-base64') }}"
-  crossorigin="anonymous"
-></script>
-<script src="wasm-support.js"></script>
-```
-
-If you then throw a JavaScript exception you can get the stack trace. If you want
-to capture an error from within your WebAssembly application you can export a
-utility function like this:
-
-```javascript
-function captureError() {
-  try {
-    throw new Error();
-  } catch (e) {
-    Sentry.captureException(e);
-  }
-}
-
-async function loadWasm(url) {
-  const importObj = {
-    env: {
-      capture_error: captureError,
-    },
-  };
-  return await WebAssembly.instantiateStreaming(fetch(url), importObj);
-}
-```
+If you want to have crash reporting in the browser, the recommended way with Sentry is to use
+the `@sentry/wasm` package and apply its `wasmIntegration` to your `@sentry/browser` configuration.
+This is [documented in detail](/platforms/javascript/guides/wasm/) in the JavaScript platform docs.
 
 ## Custom Crash Reports
 
