@@ -213,18 +213,42 @@ init({
 
 ### Custom IPC Namespace
 
-If your Electron application uses multiple IPC channels and you want to prevent potential conflicts between them, you can specify a custom namespace for the IPC channels used by Sentry with the `ipcNamespace` option:
+If your Electron application uses multiple IPC channels and you want to prevent potential conflicts between them, you can specify a custom namespace for the IPC channels used by Sentry with the `ipcNamespace` option.
+
+To use a custom namespace, you need to configure it in all three contexts: main process, renderer processes, and preload scripts.
+
+**In the main process:**
 
 ```javascript
 import * as Sentry from "@sentry/electron/main";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  ipcNamespace: "myAppSentry",
+  ipcNamespace: "some-app",
 });
 ```
 
-When set, the IPC channels used by Sentry will be prefixed with the specified namespace, helping to avoid conflicts with other IPC channels in your application. For more configuration options, see the <PlatformLink to="/configuration/options/#ipcNamespace">configuration options documentation</PlatformLink>.
+**In renderer processes:**
+
+```javascript
+import * as Sentry from '@sentry/electron/renderer';
+
+Sentry.init({
+  ipcNamespace: 'some-app',
+});
+```
+
+**In preload scripts:**
+
+```javascript
+import { hookupIpc } from '@sentry/electron/preload-namespaced';
+
+hookupIpc('some-app');
+```
+
+When set, the IPC channels used by Sentry will be prefixed with the specified namespace (e.g., `some-app`), helping to avoid conflicts with other IPC channels in your application. Make sure to use the same namespace value across all processes for proper communication.
+
+For more configuration options, see the <PlatformLink to="/configuration/options/#ipcNamespace">configuration options documentation</PlatformLink>.
 
 ### Preload Injection
 
