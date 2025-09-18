@@ -21,20 +21,20 @@ sentry:
 
 This integration catches all global uncaught exceptions and emits events when an error occurs.
 
-To do so, it ensures that Sentry's `ErrorHandler` is registered, and adds a callback to it as an exception listener.
+It does this by ensuring that Sentry's `ErrorHandler` is registered, and adds a callback to it as an exception listener.
 
 ### ErrorListenerIntegration
 
 This integration hooks into the global PHP `error_handler` and emits events when an error occurs.
 
-To do so, it ensures that Sentry's `ErrorHandler` is registered, and adds a callback to it as an error listener. By default, the `ErrorHandler` reserves 16 KiB of memory to handle fatal errors. When handling out of memory errors, the `ErrorHandler` additionally increases the [`memory_limit`](https://www.php.net/manual/en/ini.core.php#ini.memory-limit) by an additional 5 MiB to have enough room to send the out of memory event to Sentry. This change is only done once and only affects the handling of the out of memory error.
+It does this by ensuring that Sentry's `ErrorHandler` is registered, and adds a callback to it as an error listener. By default, the `ErrorHandler` reserves 16 KiB of memory to handle fatal errors. When handling out of memory errors, the `ErrorHandler` additionally increases the [`memory_limit`](https://www.php.net/manual/en/ini.core.php#ini.memory-limit) by an additional 5 MiB to have enough room to send the out of memory event to Sentry. This change is only done once and only affects the handling of the out of memory error.
 
 To change the amount of memory reserved for fatal error handling or the amount the `memory_limit` is increased when handling an out of memory error, you can register the fatal error handler yourself before calling `\Sentry\init(...)`:
 
 ```php
-// The amount of reserved memory every request (in bytes), this has to be a positive integer amount of bytes. Defaults to 16 KiB
+// The amount of reserved memory for every request (in bytes), this has to be a positive integer in bytes. Defaults to 16 KiB
 $errorHandler = \Sentry\ErrorHandler::registerOnceFatalErrorHandler(16 * 1024);
-// The amount of memory in bytes to increase the `memory_limit` to when handling a out of memory error, can also be set to `null` to disable increasing the `memory_limit`. Defaults to 5 MiB
+// The amount of memory in bytes to increase the `memory_limit` to when handling an out of memory error. It can also be set to `null` to disable increasing the `memory_limit`. Defaults to 5 MiB
 $errorHandler->setMemoryLimitIncreaseOnOutOfMemoryErrorInBytes(5 * 1024 * 1024);
 ```
 
@@ -46,7 +46,7 @@ By default, the error*types option defaults to the value returned by the `error_
 
 This integration catches all fatal errors and emits the corresponding events.
 
-To do so, it ensures that Sentry's `ErrorHandler` is registered, and adds a callback to it as a fatal error listener.
+It does this by ensuring that Sentry's `ErrorHandler` is registered, and adds a callback to it as a fatal error listener.
 
 ### RequestIntegration
 
@@ -54,7 +54,7 @@ This integration adds to the event request data:
 
 - HTTP method
 - URL (including the query string)
-- Body (by default only if the body is 10Kb or less)
+- Body (only if the body is 10Kb or less)
 
 If the <PlatformLink to="/configuration/options/#send_default_pii">send_default_pii option</PlatformLink> is enabled, it will also send the following PII:
 
@@ -101,4 +101,4 @@ If you want to remove one or more default integrations, set `options.default_int
 
 ### Use a Callback to Customize Integrations
 
-For advanced cases, you can provide a callback (service) instead of a fixed list to customize integrations. See how to reference callables in Symfony configuration here: <PlatformLink to="/platforms/php/guides/symfony/configuration/symfony-options/#callables">Callables in Symfony Options</PlatformLink>.
+For advanced cases, you can provide a callback (service) instead of a fixed list to customize integrations. See how to reference callables in Symfony configuration here: [Callables in Symfony Options](/platforms/php/guides/symfony/configuration/symfony-options/#callables).
