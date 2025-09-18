@@ -26,7 +26,6 @@ export default function Mermaid() {
         );
 
       const {default: mermaid} = await import('mermaid/dist/mermaid.esm.min.mjs');
-
       // Create light and dark versions
       mermaidBlocks.forEach(block => {
         const code = block.textContent ?? '';
@@ -89,7 +88,20 @@ export default function Mermaid() {
         } else {
           svgElement.dataset.needsPanZoom = 'true';
         }
+
+        svgPanZoom(svgElement, {
+          zoomEnabled: true,
+          panEnabled: true,
+          controlIconsEnabled: true,
+          fit: true,
+          center: true,
+          minZoom: 0.1,
+          maxZoom: 10,
+          zoomScaleSensitivity: 0.2,
+        });
       });
+
+      setDoneRendering(true);
     };
 
     renderMermaid();
