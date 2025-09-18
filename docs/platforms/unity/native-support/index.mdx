@@ -5,7 +5,10 @@ sidebar_order: 100
 ---
 
 The Sentry SDK supports C# and Native crashes on Android, iOS, Windows, macOS and Linux. The support is set to `enabled` by default.
+
 For Game Consoles, the SDK supports C# errors. While Sentry supports native crashes on consoles, support for that through the Unity SDK is a work in progress. Reach out via GitHub for the platform you're interested in: [PlayStation](https://github.com/getsentry/sentry-unity/issues/2050), [Switch](https://github.com/getsentry/sentry-unity/issues/2052) and [Xbox](https://github.com/getsentry/sentry-unity/issues/2051)
+
+For WebGL, the SDK supports C# exceptions but has limitations for native crash reporting. See the [WebGL section](#webgl) below for details.
 
 ## Mobile
 
@@ -56,6 +59,23 @@ The Native Support on macOS relies on the [macOS SDK](/platforms/apple/guides/ma
 ### Linux
 
 On Linux the Unity SDK includes the [Native SDK](/platforms/native/) with the breakpad backend. A minidump is created in process and no handler executable is required.
+
+## WebGL
+
+WebGL builds have unique limitations due to running in web browsers through WebAssembly (WASM).
+
+For the SDK to function properly, you need to configure exception support in `Player Settings` → `WebAssembly Language Features` → `Enable Exception`. Set this to `FullWithStacktrace` to get for full stack traces, or at minimum above `None` for basic functionality. The SDK will create a build error if exception support is set to `None` to prevent unexpected behaviour.
+
+### Limitations
+
+The Sentry SDK for Unity has several limitations when targeting WebGL:
+
+- **Managed exceptions only**: The SDK can only capture C# exceptions. Native crashes that occur outside of managed code will not be captured.
+- **No line number support**: Line numbers are not available because the IL2CPP backend required for symbolication is not available on WebGL.
+- **Screenshot attachments disabled**: Screenshot support is unavailable as they result in blank images.
+- **Limited crash detection**: Because there is no native crash support, calling `SentrySdk.GetLastRunState()` will always return `Unknown`.
+- **Custom transport**: The SDK uses a dedicated WebGL transport utilizing [UnityWebRequests](https://docs.unity3d.com/6000.2/Documentation/ScriptReference/Networking.UnityWebRequest.html) instead of standard HTTP transport.
+- **ANR detection limitations**: Due to multi-threading limitations, ANR detection relies on the main thread recovering to report events. See the [ANR documentation](/platforms/unity/configuration/app-not-responding/#platforms-without-multi-threading-support---webgl) for details.
 
 ## Debug Symbols
 
