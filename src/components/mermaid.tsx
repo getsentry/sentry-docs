@@ -8,17 +8,26 @@ export default function Mermaid() {
 
   useEffect(() => {
     const renderMermaid = async () => {
-      const mermaidBlocks = document.querySelectorAll<HTMLDivElement>('.language-mermaid');
+      const mermaidBlocks =
+        document.querySelectorAll<HTMLDivElement>('.language-mermaid');
       if (mermaidBlocks.length === 0) return;
 
-      const escapeHTML = (str: string) => 
-        str.replace(/[&<>"']/g, (match) => ({
-          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-        }[match] || match));
+      const escapeHTML = (str: string) =>
+        str.replace(
+          /[&<>"']/g,
+          match =>
+            ({
+              '&': '&amp;',
+              '<': '&lt;',
+              '>': '&gt;',
+              '"': '&quot;',
+              "'": '&#39;',
+            })[match] || match
+        );
 
       const {default: mermaid} = await import('mermaid/dist/mermaid.esm.min.mjs');
       const svgPanZoom = (await import('svg-pan-zoom')).default;
-      
+
       // Create light and dark versions
       mermaidBlocks.forEach(block => {
         const code = block.textContent ?? '';
@@ -44,7 +53,7 @@ export default function Mermaid() {
       // Render both themes
       mermaid.initialize({startOnLoad: false, theme: 'default'});
       await mermaid.run({nodes: document.querySelectorAll('.language-mermaid.light')});
-      
+
       mermaid.initialize({startOnLoad: false, theme: 'dark'});
       await mermaid.run({nodes: document.querySelectorAll('.language-mermaid.dark')});
 
@@ -52,12 +61,12 @@ export default function Mermaid() {
       document.querySelectorAll('.language-mermaid svg').forEach(svg => {
         const svgElement = svg as SVGSVGElement;
         const rect = svgElement.getBoundingClientRect();
-        
+
         if (rect.width > 0 && rect.height > 0) {
           svgElement.setAttribute('width', rect.width.toString());
           svgElement.setAttribute('height', rect.height.toString());
         }
-        
+
         svgPanZoom(svgElement, {
           zoomEnabled: true,
           panEnabled: true,
