@@ -8,24 +8,17 @@ export default function Mermaid() {
 
   useEffect(() => {
     const renderMermaid = async () => {
-      const mermaidBlocks =
-        document.querySelectorAll<HTMLDivElement>('.language-mermaid');
+      const mermaidBlocks = document.querySelectorAll<HTMLDivElement>('.language-mermaid');
       if (mermaidBlocks.length === 0) return;
 
-      const escapeHTML = (str: string) =>
-        str.replace(
-          /[&<>"']/g,
-          match =>
-            ({
-              '&': '&amp;',
-              '<': '&lt;',
-              '>': '&gt;',
-              '"': '&quot;',
-              "'": '&#39;',
-            })[match] || match
-        );
+      const escapeHTML = (str: string) => 
+        str.replace(/[&<>"']/g, (match) => ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[match] || match));
 
       const {default: mermaid} = await import('mermaid/dist/mermaid.esm.min.mjs');
+      const svgPanZoom = (await import('svg-pan-zoom')).default;
+      
       // Create light and dark versions
       mermaidBlocks.forEach(block => {
         const code = block.textContent ?? '';
@@ -51,44 +44,20 @@ export default function Mermaid() {
       // Render both themes
       mermaid.initialize({startOnLoad: false, theme: 'default'});
       await mermaid.run({nodes: document.querySelectorAll('.language-mermaid.light')});
-
+      
       mermaid.initialize({startOnLoad: false, theme: 'dark'});
       await mermaid.run({nodes: document.querySelectorAll('.language-mermaid.dark')});
 
-      // Initialize pan/zoom
-      await initializePanZoom();
-      setDoneRendering(true);
-    };
-
-    const initializePanZoom = async () => {
-      const svgPanZoom = (await import('svg-pan-zoom')).default;
-
+      // Initialize pan/zoom for all SVGs (including hidden ones)
       document.querySelectorAll('.language-mermaid svg').forEach(svg => {
         const svgElement = svg as SVGSVGElement;
-        const container = svgElement.closest('.language-mermaid') as HTMLElement;
-        const isVisible = window.getComputedStyle(container).display !== 'none';
-
-        if (isVisible) {
-          const rect = svgElement.getBoundingClientRect();
-          if (rect.width > 0 && rect.height > 0) {
-            svgElement.setAttribute('width', rect.width.toString());
-            svgElement.setAttribute('height', rect.height.toString());
-          }
-
-          svgPanZoom(svgElement, {
-            zoomEnabled: true,
-            panEnabled: true,
-            controlIconsEnabled: true,
-            fit: true,
-            center: true,
-            minZoom: 0.1,
-            maxZoom: 10,
-            zoomScaleSensitivity: 0.2,
-          });
-        } else {
-          svgElement.dataset.needsPanZoom = 'true';
+        const rect = svgElement.getBoundingClientRect();
+        
+        if (rect.width > 0 && rect.height > 0) {
+          svgElement.setAttribute('width', rect.width.toString());
+          svgElement.setAttribute('height', rect.height.toString());
         }
-
+        
         svgPanZoom(svgElement, {
           zoomEnabled: true,
           panEnabled: true,
@@ -106,46 +75,6 @@ export default function Mermaid() {
 
     renderMermaid();
   }, []);
-
-  // Initialize pan/zoom for newly visible SVGs on theme change
-  useEffect(() => {
-    if (!isDoneRendering) return;
-
-    const initializeDelayedPanZoom = async () => {
-      const svgPanZoom = (await import('svg-pan-zoom')).default;
-
-      document
-        .querySelectorAll('.language-mermaid svg[data-needs-pan-zoom="true"]')
-        .forEach(svg => {
-          const svgElement = svg as SVGSVGElement;
-          const container = svgElement.closest('.language-mermaid') as HTMLElement;
-          const isVisible = window.getComputedStyle(container).display !== 'none';
-
-          if (isVisible) {
-            const rect = svgElement.getBoundingClientRect();
-            if (rect.width > 0 && rect.height > 0) {
-              svgElement.setAttribute('width', rect.width.toString());
-              svgElement.setAttribute('height', rect.height.toString());
-            }
-
-            svgPanZoom(svgElement, {
-              zoomEnabled: true,
-              panEnabled: true,
-              controlIconsEnabled: true,
-              fit: true,
-              center: true,
-              minZoom: 0.1,
-              maxZoom: 10,
-              zoomScaleSensitivity: 0.2,
-            });
-
-            svgElement.removeAttribute('data-needs-pan-zoom');
-          }
-        });
-    };
-
-    setTimeout(initializeDelayedPanZoom, 50);
-  }, [theme, isDoneRendering]);
 
   return isDoneRendering ? (
     <style>
