@@ -1,8 +1,8 @@
 import {codecovNextJSWebpackPlugin} from '@codecov/nextjs-webpack-plugin';
 import {withSentryConfig} from '@sentry/nextjs';
 
-import {redirects} from './redirects.js';
 import {REMOTE_IMAGE_PATTERNS} from './src/config/images';
+import {redirects} from './redirects.js';
 
 const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? {
