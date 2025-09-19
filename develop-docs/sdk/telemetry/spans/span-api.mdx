@@ -1,0 +1,61 @@
+---
+title: Span API
+---
+
+<Alert level="info">
+  This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement levels.
+</Alert>
+
+Spans are measuring the duration of certain operations in an application.
+The topmost member of a span tree is called the root span. This span has no parent span and groups together its children with a representative name for the entire operation, such as `GET /` in case of a request to a backend application.
+
+## Creating a root span
+
+The SDK must expose a method for creating a root span. The user must be able to set certain properties on this root span, such as its name, the type of operation (`op`) and others.
+
+```js
+span = sentry.tracing.startSpan()
+	->setName('GET /')
+	->setOp('http.server')
+
+span.end()
+```
+
+## Creating nested spans
+
+To create nested spans, the SDK must expose an explicit way for a user to perform this task.
+
+Additionally, the SDK may expose alternative APIs to create nested spans, such as allowing a user to wrap an operation into a callback or apply a decorator to certain blocks. These alternative APIs must never create a root span and no-op if no parent span is present.
+
+```js
+childSpan = span.startChild()
+	->setName('authentication middleware')
+	->setOp('middleware.handle')
+	
+childSpan.end()
+```
+
+## Setting the span status
+
+A span has two statuses, `ok` and `error`. By default, the status of a span is set to `ok`.
+The SDK must allow a user to modify the status of a span.
+
+```js
+span.setStatus('error')
+```
+
+## Setting span attributes
+
+The SDK must expose a method to allow a user to set data attributes onto a span.
+These attributes should use pre-defined keys whenever possible.
+
+```js
+span.setAttribute(SpanAttributes.HTTP_METHOD, 'GET')
+span.setAttribute(SpanAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
+```
+
+## Additional, optional span APIs
+
+`span.setStartTimestamp()` - overwrite the span's start time
+
+`span.setEndTimestamp()` - overwrites the span's end time
