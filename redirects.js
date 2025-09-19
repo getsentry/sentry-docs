@@ -254,6 +254,10 @@ const userDocsRedirects = [
     source: '/product/dev-toolbar/:path*',
     destination: '/product/sentry-toolbar/:path*',
   },
+  {
+    source: '/product/ai-in-sentry/sentry-prevent-ai/:path*',
+    destination: '/product/ai-in-sentry/ai-code-review/:path*',
+  },
 
   {
     source: '/organization/integrations/launchdarkly/',
