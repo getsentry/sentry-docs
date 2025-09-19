@@ -6,34 +6,34 @@ import {buildDocUrl} from "../shared/docs-utils";
 const SEARCH_INDEX_PATH = path.join(process.cwd(), "public", "search-index.json");
 
 type RawSearchIndexEntry = {
-  path: string;
-  title: string;
-  hierarchy: string[];
-  summary: string;
   content: string;
+  hierarchy: string[];
+  path: string;
+  summary: string;
+  title: string;
 };
 
 type SearchIndexFile = {
+  entries: RawSearchIndexEntry[];
   generatedAt: string;
   total: number;
-  entries: RawSearchIndexEntry[];
 };
 
 export type SearchMatch = {
-  path: string;
-  title: string;
   hierarchy: string[];
-  summary: string;
-  snippet: string | null;
-  score: number;
   matchedTokens: number;
+  path: string;
+  score: number;
+  snippet: string | null;
+  summary: string;
+  title: string;
 };
 
 type CachedEntry = RawSearchIndexEntry & {
+  contentLower: string;
+  hierarchyLower: string[];
   pathLower: string;
   titleLower: string;
-  hierarchyLower: string[];
-  contentLower: string;
 };
 
 let searchIndexPromise: Promise<CachedEntry[]> | null = null;
@@ -58,7 +58,7 @@ export async function ensureSearchIndex(): Promise<CachedEntry[]> {
     });
   }
 
-  return searchIndexPromise;
+  return await searchIndexPromise;
 }
 
 function scoreEntry(entry: CachedEntry, tokens: string[]) {
