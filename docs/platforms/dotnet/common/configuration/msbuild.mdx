@@ -174,6 +174,13 @@ Sentry will try to determine the release version automatically by checking the f
 
 </ConfigKey>
 
+<ConfigKey name="SentryProGuardUUID" supported={["dotnet.maui"]}>
+
+Manually set your ProGuard UUID. This UUID will be used to [upload ProGuard mapping to Sentry](cli/dif/#proguard-mapping-upload), and setting APK's metadata.
+If not defined, Sentry will [generate a UUID](../../data-management/debug-files/identifiers/#proguard-uuids) for you.
+
+</ConfigKey>
+
 <ConfigKey name="SentrySetCommits">
 
 Enable `SentrySetCommits` to automatically [associate commits with the release](/cli/releases/#commit-integration).
@@ -183,6 +190,25 @@ Enable `SentrySetCommits` to automatically [associate commits with the release](
 <ConfigKey name="SentrySetCommitOptions">
 
 By default, when `SentrySetCommits` is enabled, the SDK will set commits with the `--auto` flag. The optional `SentrySetCommitOptions` property allows you to override this to provide whatever flags you want to the `set-commits` CLI command.
+
+</ConfigKey>
+
+<ConfigKey name="SentryUploadAndroidProGuardMapping" supported={["dotnet.maui"]}>
+
+Controls uploading ProGuard mapping file to Sentry after the build. Defaults to `false` (disabled).
+
+Set to `true` to upload ProGuard mapping file to Sentry.
+Your resulting APK will be injected with the metadata `io.sentry.proguard-uuid`. `AndroidManifest.xml` will contain a metadata entry such as the following:
+
+```xml
+<meta-data
+    android:name="io.sentry.proguard-uuid"
+    android:value="YOUR-UUID-HERE" />
+```
+
+Do not overwrite `io.sentry.proguard-uuid` metadata directly. See [SentryProGuardUUID](#SentryProGuardUUID) to set your own ProGuard UUID.
+
+`UseSentryCLI` must be set to `true` for the ProGuard mapping upload to work.
 
 </ConfigKey>
 
