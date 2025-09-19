@@ -1,10 +1,63 @@
 ---
 title: Monolog
-description: "Learn how to enable Sentry's PHP SDK to capture Monolog events."
+description: "Learn how to enable Sentry's PHP SDK to capture Monolog events and logs."
 ---
 
-When using [Monolog](https://github.com/Seldaek/monolog) you can configure a [breadcrumb](../../enriching-events/breadcrumbs/) handler to capture Monolog messages as breadcrumbs and a handler that captures messages as events in Sentry.
+When using [Monolog](https://github.com/Seldaek/monolog) you can configure handlers to capture Monolog messages in several ways:
+
+- **Logs Handler** - Send structured logs to Sentry for search and analysis
+- **Event Handler** - Capture messages as error events in Sentry
+- **Breadcrumb Handler** - Record messages as breadcrumbs attached to future events
+
 The breadcrumb handler will not send anything to Sentry directly, it only records breadcrumbs that will be attached to any event or exception sent to Sentry.
+
+## Logs
+
+<Alert level="info">
+Available in SDK version 4.12.0 and above.
+</Alert>
+
+To send structured logs to Sentry, use the `\Sentry\Monolog\LogsHandler`. This handler sends log entries to Sentry's structured logs feature, where they can be searched, filtered, and analyzed.
+
+```php
+<?php
+
+use Monolog\Level;
+use Monolog\Logger;
+
+// Setup the Sentry SDK with logs enabled
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'enable_logs' => true, // Required for logs to be sent to Sentry
+]);
+
+// Create a Monolog channel with a logs handler
+$log = new Logger('app');
+$log->pushHandler(new \Sentry\Monolog\LogsHandler(
+    hub: \Sentry\SentrySdk::getCurrentHub(),
+    level: Level::Info, // Minimum level to send to Sentry logs
+));
+
+// Send logs to Sentry
+$log->info('User logged in', [
+    'user_id' => 12345,
+    'email' => 'user@example.com',
+    'login_method' => 'password',
+]);
+
+$log->warning('API rate limit approaching', [
+    'endpoint' => '/api/users',
+    'requests_remaining' => 10,
+    'window_seconds' => 60,
+]);
+
+// Flush to ensure logs are sent
+\Sentry\logger()->flush();
+```
+
+The context array passed to Monolog methods becomes searchable attributes in the Sentry logs interface.
+
+## Events
 
 ```php
 <?php
