@@ -177,3 +177,31 @@ export default defineConfig({
   },
 });
 ```
+
+### SSR gotchas 
+
+When using SSR, make sure to only run `addIntegration` in a browser context. 
+
+Here's a Vite example :
+
+```ts
+import workerUrl from "./my-worker?worker&url"
+
+const worker = new Worker(new URL(workerUrl, import.meta.url), { type: "module" })
+if (!import.meta.env.SSR) {
+	Sentry.addIntegration(Sentry.webWorkerIntegration({ worker }))
+}
+```
+
+Refer to your framework documentation to know how to remove code from the server bundle.
+
+For example, with Nuxt you can use : 
+
+```ts
+import workerUrl from "./my-worker?worker&url"
+
+const worker = new Worker(new URL(workerUrl, import.meta.url), { type: "module" })
+if (import.meta.client) {
+	Sentry.addIntegration(Sentry.webWorkerIntegration({ worker }))
+}
+```
