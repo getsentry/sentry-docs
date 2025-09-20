@@ -72,7 +72,10 @@ export function StepComponent({
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container) {
+      // Return empty cleanup function for consistent return
+      return () => {};
+    }
 
     const headings = Array.from(
       container.querySelectorAll<HTMLElement>(`:scope ${selector}`)
@@ -109,6 +112,7 @@ export function StepComponent({
       }
     });
 
+    // Cleanup function
     return () => {
       headings.forEach(h => {
         h.classList.remove(styles.stepHeading);
@@ -126,7 +130,9 @@ export function StepComponent({
     try {
       const raw = sessionStorage.getItem(storageKey);
       if (raw) setCompleted(new Set(JSON.parse(raw) as string[]));
-    } catch {}
+    } catch {
+      // Ignore storage errors
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storageKey, checkable]);
 
@@ -147,7 +153,9 @@ export function StepComponent({
     if (storageKey && checkable) {
       try {
         sessionStorage.setItem(storageKey, JSON.stringify(Array.from(completed)));
-      } catch {}
+      } catch {
+        // Ignore storage errors
+      }
     }
   }, [completed, selector, storageKey, checkable]);
 
@@ -156,7 +164,9 @@ export function StepComponent({
     if (storageKey) {
       try {
         sessionStorage.removeItem(storageKey);
-      } catch {}
+      } catch {
+        // Ignore storage errors
+      }
     }
   };
 
