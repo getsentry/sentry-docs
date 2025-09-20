@@ -15,12 +15,12 @@
 type Props = {
   /** The message displayed in the center label. */
   message: string;
-  /** Optional visual style; default 'info'. */
-  variant?: 'neutral' | 'info' | 'warning' | 'success' | 'danger';
-  /** Extra spacing above (in rem). Default: 2. */
-  marginTopRem?: number;
   /** Extra spacing below (in rem). Default: 1. */
   marginBottomRem?: number;
+  /** Extra spacing above (in rem). Default: 2. */
+  marginTopRem?: number;
+  /** Optional visual style; default 'info'. */
+  variant?: 'neutral' | 'info' | 'warning' | 'success' | 'danger';
 };
 
 import styles from './style.module.scss';
@@ -45,10 +45,11 @@ export function ContentSeparator({
     >
       <div className={styles.separator} role="separator" aria-label={message}>
         <span className={styles.line} aria-hidden="true" />
-        <span className={`${styles.label} ${styles[`label--${variant}`]}`}>{message}</span>
+        <span className={`${styles.label} ${styles[`label--${variant}`]}`}>
+          {message}
+        </span>
         <span className={styles.line} aria-hidden="true" />
       </div>
     </section>
   );
 }
-
