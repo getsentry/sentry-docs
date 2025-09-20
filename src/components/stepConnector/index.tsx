@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 /**
  * Component: StepConnector / StepComponent
@@ -27,43 +27,44 @@
  * - --rail-x, --circle, --gap control rail position and circle size/spacing.
  */
 
-import {useEffect, useMemo, useRef, useState} from "react";
-import styles from "./style.module.scss";
+import {useEffect, useMemo, useRef, useState} from 'react';
 
-type Persistence = "session" | "none";
+import styles from './style.module.scss';
+
+type Persistence = 'session' | 'none';
 
 type Props = {
   children: React.ReactNode;
-  /** Start numbering from this value. @defaultValue 1 */
-  startAt?: number;
-  /** Which heading level to connect (CSS selector). @defaultValue 'h2' */
-  selector?: string;
-  /** Show numeric labels inside circles. Set false for blank circles. @defaultValue true */
-  showNumbers?: boolean;
   /** Allow users to check off steps (circle becomes a button). @defaultValue false */
   checkable?: boolean;
   /** Completion storage: 'session' | 'none'. @defaultValue 'session' */
   persistence?: Persistence;
+  /** Which heading level to connect (CSS selector). @defaultValue 'h2' */
+  selector?: string;
+  /** Show numeric labels inside circles. Set false for blank circles. @defaultValue true */
+  showNumbers?: boolean;
   /** Show a small "Reset steps" action when checkable. @defaultValue true */
   showReset?: boolean;
+  /** Start numbering from this value. @defaultValue 1 */
+  startAt?: number;
 };
 
 export function StepComponent({
   children,
   startAt = 1,
-  selector = "h2",
+  selector = 'h2',
   showNumbers = true,
   checkable = false,
-  persistence = "session",
+  persistence = 'session',
   showReset = true,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [completed, setCompleted] = useState<Set<string>>(new Set());
 
   const storageKey = useMemo(() => {
-    if (typeof window === "undefined" || persistence !== "session") return null;
+    if (typeof window === 'undefined' || persistence !== 'session') return null;
     try {
-      const path = window.location?.pathname ?? "";
+      const path = window.location?.pathname ?? '';
       return `stepConnector:${path}:${selector}:${startAt}`;
     } catch {
       return null;
@@ -83,24 +84,24 @@ export function StepComponent({
 
     headings.forEach(h => {
       h.classList.remove(styles.stepHeading);
-      h.removeAttribute("data-step");
-      h.removeAttribute("data-completed");
+      h.removeAttribute('data-step');
+      h.removeAttribute('data-completed');
       const existingToggle = h.querySelector(`.${styles.stepToggle}`);
       if (existingToggle) existingToggle.remove();
     });
 
     headings.forEach((h, idx) => {
       const stepNumber = startAt + idx;
-      h.setAttribute("data-step", String(stepNumber));
+      h.setAttribute('data-step', String(stepNumber));
       h.classList.add(styles.stepHeading);
 
       if (checkable) {
-        const btn = document.createElement("button");
-        btn.type = "button";
+        const btn = document.createElement('button');
+        btn.type = 'button';
         btn.className = styles.stepToggle;
-        btn.setAttribute("aria-label", `Toggle completion for step ${stepNumber}`);
-        btn.setAttribute("aria-pressed", completed.has(h.id) ? "true" : "false");
-        btn.addEventListener("click", () => {
+        btn.setAttribute('aria-label', `Toggle completion for step ${stepNumber}`);
+        btn.setAttribute('aria-pressed', completed.has(h.id) ? 'true' : 'false');
+        btn.addEventListener('click', () => {
           setCompleted(prev => {
             const next = new Set(prev);
             if (next.has(h.id)) next.delete(h.id);
@@ -116,8 +117,8 @@ export function StepComponent({
     return () => {
       headings.forEach(h => {
         h.classList.remove(styles.stepHeading);
-        h.removeAttribute("data-step");
-        h.removeAttribute("data-completed");
+        h.removeAttribute('data-step');
+        h.removeAttribute('data-completed');
         const existingToggle = h.querySelector(`.${styles.stepToggle}`);
         if (existingToggle) existingToggle.remove();
       });
@@ -144,10 +145,10 @@ export function StepComponent({
     );
     headings.forEach(h => {
       const isDone = completed.has(h.id);
-      if (isDone) h.setAttribute("data-completed", "true");
-      else h.removeAttribute("data-completed");
+      if (isDone) h.setAttribute('data-completed', 'true');
+      else h.removeAttribute('data-completed');
       const btn = h.querySelector(`.${styles.stepToggle}`) as HTMLButtonElement | null;
-      if (btn) btn.setAttribute("aria-pressed", isDone ? "true" : "false");
+      if (btn) btn.setAttribute('aria-pressed', isDone ? 'true' : 'false');
     });
 
     if (storageKey && checkable) {
@@ -174,7 +175,7 @@ export function StepComponent({
     <div
       ref={containerRef}
       className={styles.stepContainer}
-      data-shownumbers={showNumbers ? "true" : "false"}
+      data-shownumbers={showNumbers ? 'true' : 'false'}
     >
       {checkable && showReset && (
         <div className={styles.resetRow}>
@@ -192,4 +193,3 @@ export function StepComponent({
 export function StepConnector(props: Props) {
   return <StepComponent {...props} />;
 }
-
