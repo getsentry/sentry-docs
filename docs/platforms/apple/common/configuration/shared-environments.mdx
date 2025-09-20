@@ -1,0 +1,45 @@
+---
+title: Using Sentry within an SDK
+description: "Learn how to use the Sentry SDK within a shared environment, e.g. another SDK."
+sidebar_order: 2000
+---
+
+<Alert>
+
+Using the Sentry SDK within another SDK is [discouraged](/platforms/). This can lead to unexpected behaviour and potential data leakage. If you need to use Sentry within another SDK, please follow the best practices outlined below.
+
+</Alert>
+
+<Alert>
+
+When setting up Sentry inside a library, the consuming app could use the Sentry SDK as well, thus you should **not use `SentrySDK.start()`**, as this will pollute the global state.
+
+</Alert>
+
+In order to not conflict with other Sentry instances, you should use the `Hub` API to create a new instance of Sentry. The Hub API works the similarly as the global Sentry instance, but it is not global and can be used within your component.
+
+```swift
+import Sentry
+
+let options = Options()
+options.dsn = "___PUBLIC_DSN___"
+
+let client = SentryClient(options: options)
+
+// You don't need to pass a scope. The hub will create a new scope for you automatically.
+// Furthermore, the SDK enriches it with some contexts automatically, such as app, OS and
+// device context.
+let hub = SentryHub(client: client, andScope: nil)
+
+hub.capture(message: "Hello from your SDK!")
+```
+
+If your SDK can be opened and closed multiple times, you should also close the `Hub` when you are done:
+
+```swift
+hub.close()
+```
+
+Capturing crashes, watchdog terminations or app hangs aren't supported by the `Hub` API, because they depend on the global Sentry instance.
+
+To symbolicate stacktraces of your events, Sentry requires dSYMs (debug information files). Depending on your setup, you might not be able to get these, but if you can, visit <PlatformLink to="/dsym/">Uploading Debug Symbols</PlatformLink> for more information on how to upload them.
