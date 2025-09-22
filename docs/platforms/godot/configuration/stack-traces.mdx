@@ -58,17 +58,32 @@ cd godot
 git checkout 4.4-stable
 ```
 
+<Expandable title="Additional Setup for Android">
+
+For Android compilation, Godot requires the Swappy frame pacing library. Download the pre-built library from [https://github.com/godotengine/godot-swappy/releases](https://github.com/godotengine/godot-swappy/releases) and extract the archive contents to the `thirdparty/swappy-frame-pacing/` directory within your cloned Godot source tree.
+
+</Expandable>
+
 ## Compiling Templates
 
-To compile the Godot release export template with debug symbols, run the following command:
+To compile the Godot export templates with debug symbols, run the following commands:
 
 ```bash {tabTitle:Windows/Linux}
 scons target=template_release production=yes debug_symbols=yes separate_debug_symbols=yes
 ```
 
 ```bash {tabTitle:macOS}
-scons target=template_release arch=x86_64 production=yes debug_symbols=yes separate_debug_symbols=yes platform=macos
-scons target=template_release arch=arm64 generate_bundle=yes production=yes debug_symbols=yes separate_debug_symbols=yes platform=macos
+scons target=template_release platform=macos arch=x86_64 production=yes debug_symbols=yes separate_debug_symbols=yes
+scons target=template_release platform=macos arch=arm64 production=yes debug_symbols=yes separate_debug_symbols=yes generate_bundle=yes
+```
+
+```bash {tabTitle:Android}
+# For Android development, you'll need both debug and release templates.
+# The debug template is required for running the project from the editor in debug mode.
+scons target=template_debug platform=android arch=arm32 production=yes debug_symbols=yes separate_debug_symbols=yes
+scons target=template_debug platform=android arch=arm64 production=yes debug_symbols=yes separate_debug_symbols=yes
+scons target=template_release platform=android arch=arm32 production=yes debug_symbols=yes separate_debug_symbols=yes
+scons target=template_release platform=android arch=arm64 production=yes debug_symbols=yes separate_debug_symbols=yes generate_android_binaries=yes
 ```
 
 <Expandable title="Options explained">
@@ -79,12 +94,19 @@ scons target=template_release arch=arm64 generate_bundle=yes production=yes debu
 - `debug_symbols`: include debugging symbols in the build
 - `separate_debug_symbols`: extract symbols into a separate file
 - `generate_bundle`: generate an APP bundle `godot_macos.zip` after building macOS binaries
+- `generate_android_binaries`: generate Android templates and Gradle template project after build is complete
 
 For more information, run: `scons --help`
 
 </Expandable>
 
-If all goes well, the export template files should appear as the result of the build process in the `bin/` directory inside the Godot source tree. When using MSVC on Windows, you will find `.exe` files alongside `.pdb` files, which contain debug information. On macOS, you will find `godot_macos.zip` containing a universal binary supporting both x86_64 and ARM64 architectures and also two folders ending with `.dSYM` containing debug information bundles for each architecture.
+After a successful build, the export template files will be generated in the `bin/` directory within the Godot source tree:
+
+**Windows (MSVC):** You'll find `.exe` executable files alongside corresponding `.pdb` files containing the debug information.
+
+**macOS:** The build generates `godot_macos.zip` containing a universal binary that supports both x86_64 and ARM64 architectures. Additionally, you'll see two separate `.dSYM` folders (debug symbol bundles) for each architecture.
+
+**Android:** The build produces `android_source.zip`, which contains the Gradle build template with the compiled export template libraries, and `android-template-release-native-symbols.zip` & `android-template-debug-native-symbols.zip` archives containing the debug symbols.
 
 <Alert>
 
