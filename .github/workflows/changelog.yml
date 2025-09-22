@@ -1,0 +1,62 @@
+name: Changelog
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Step 1: Run Release Drafter to build structured notes
+      - name: Run Release Drafter
+        id: drafter
+        uses: release-drafter/release-drafter@v6
+        with:
+          config-name: release-drafter.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 2: Ask OpenAI to generate a summary
+      - name: Summarize with OpenAI
+        id: summary
+        run: |
+          RELEASE_NOTES="${{ steps.drafter.outputs.body }}"
+          SUMMARY=$(curl -s https://api.openai.com/v1/chat/completions \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.OPENAI_API_KEY }}" \
+            -d '{
+              "model": "gpt-4o-mini",
+              "messages": [
+                {"role": "system", "content": "You are a release note generator for documentation updates. Output in concise markdown bullet points."},
+                {"role": "user", "content": "Summarize these changes:\n'"${RELEASE_NOTES}"'"}
+              ]
+            }' | jq -r '.choices[0].message.content')
+          echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
+
+      # Step 3: Write to CHANGELOG.md
+      - name: Update CHANGELOG.md
+        run: |
+          echo "## $(date +'%Y-%m-%d')" > new_changelog.md
+          echo "" >> new_changelog.md
+          echo "### Summary" >> new_changelog.md
+          echo "${{ steps.summary.outputs.summary }}" >> new_changelog.md
+          echo "" >> new_changelog.md
+          echo "### Details" >> new_changelog.md
+          echo "${{ steps.drafter.outputs.body }}" >> new_changelog.md
+          echo "" >> new_changelog.md
+          cat CHANGELOG.md >> new_changelog.md || true
+          mv new_changelog.md CHANGELOG.md
+
+      # Step 4: Commit changelog changes
+      - name: Commit Changelog
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: update-changelog
+          title: "Update changelog"
+          body: "Automated changelog update with LLM-generated summary and Release Drafter details."
+          commit-message: "chore: update changelog"
+          token: ${{ secrets.GITHUB_TOKEN }}
