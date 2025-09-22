@@ -8,6 +8,7 @@ import {CodeTabs} from './components/codeTabs';
 import {CommunitySupportedPlatforms} from './components/communitySupportedPlatforms';
 import {ConfigKey} from './components/configKey';
 import {ConfigValue} from './components/configValue';
+import {ContentSeparator} from './components/contentSeparator';
 import {CreateGitHubAppForm} from './components/createGitHubAppForm';
 import {DefinitionList} from './components/definitionList';
 import {DevDocsCardGrid} from './components/devDocsCardGrid';
@@ -59,6 +60,7 @@ export function mdxComponents(
     Card,
     CliChecksumTable,
     CommunitySupportedPlatforms,
+    ContentSeparator,
     DevDocsCardGrid,
     PlatformFilter,
     CodeBlock,
