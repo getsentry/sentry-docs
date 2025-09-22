@@ -47,7 +47,7 @@ type Props = {
   showReset?: boolean;
   /** Start numbering from this value. @defaultValue 1 */
   startAt?: number;
-}
+};
 
 export function StepComponent({
   children,
