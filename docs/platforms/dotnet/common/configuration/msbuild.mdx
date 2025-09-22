@@ -176,8 +176,9 @@ Sentry will try to determine the release version automatically by checking the f
 
 <ConfigKey name="SentryProGuardUUID" supported={["dotnet.maui"]}>
 
-Manually set your ProGuard UUID. This UUID will be used to [upload the ProGuard mapping to Sentry](cli/dif/#proguard-mapping-upload), and set the APK's metadata.
-If not defined, Sentry will [generate a UUID](../../data-management/debug-files/identifiers/#proguard-uuids) for you.
+Define the UUID used to link an APK and its ProGuard mapping file.
+
+If not defined, Sentry will [generate a UUID](#SentryUploadAndroidProGuardMapping) for you.
 
 </ConfigKey>
 
@@ -195,20 +196,20 @@ By default, when `SentrySetCommits` is enabled, the SDK will set commits with th
 
 <ConfigKey name="SentryUploadAndroidProGuardMapping" supported={["dotnet.maui"]}>
 
-Controls whether ProGuard mapping files get uploaded to Sentry after the build.
+Controls whether a ProGuard mapping file is uploaded to Sentry.
 
 Defaults to `false` (disabled).
 
-Set to `true` to upload ProGuard mapping file to Sentry.
-Your resulting APK will be injected with the metadata `io.sentry.proguard-uuid`. `AndroidManifest.xml` will contain a metadata entry such as the following:
+When set to `true`:
+- A ProGuard UUID is generated automatically, unless you configure your own via [SentryProGuardUUID](#SentryProGuardUUID).
+- This UUID is injected into the APK as manifest metadata under the key `io.sentry.proguard-uuid`.
+- The same UUID is used to associate the uploaded ProGuard mapping file with the build in Sentry.
 
-```xml
-<meta-data
-    android:name="io.sentry.proguard-uuid"
-    android:value="YOUR-UUID-HERE" />
-```
+This ensures that obfuscated stack traces from your Android app can be correctly de-obfuscated in Sentry.
 
-Do not overwrite `io.sentry.proguard-uuid` metadata directly. See [SentryProGuardUUID](#SentryProGuardUUID) to set your own ProGuard UUID.
+<Alert>
+Do not overwrite the `io.sentry.proguard-uuid` metadata directly. Use [SentryProGuardUUID](#SentryProGuardUUID) if you need to provide a custom UUID.
+</Alert>
 
 </ConfigKey>
 
