@@ -79,6 +79,11 @@ scons target=template_release platform=macos arch=x86_64 production=yes debug_sy
 scons target=template_release platform=macos arch=arm64 production=yes debug_symbols=yes separate_debug_symbols=yes generate_bundle=yes
 ```
 
+```bash {tabTitle:iOS}
+scons target=template_debug platform=ios production=yes debug_symbols=yes separate_debug_symbols=yes
+scons target=template_release platform=ios production=yes debug_symbols=yes separate_debug_symbols=yes generate_bundle=yes
+```
+
 ```bash {tabTitle:Android}
 scons target=template_debug platform=android arch=arm32 production=yes debug_symbols=yes separate_debug_symbols=yes
 scons target=template_debug platform=android arch=arm64 production=yes debug_symbols=yes separate_debug_symbols=yes
@@ -93,8 +98,8 @@ scons target=template_release platform=android arch=arm64 production=yes debug_s
 - `production`: set build defaults for production use
 - `debug_symbols`: include debugging symbols in the build
 - `separate_debug_symbols`: extract symbols into a separate file
-- `generate_bundle`: generate an APP bundle `godot_macos.zip` after building macOS binaries
-- `generate_android_binaries`: generate Android templates and Gradle template project after build is complete
+- `generate_bundle`: generate application bundle archive (`godot_macos.zip` for macOS or `godot_ios.zip` for iOS)
+- `generate_android_binaries`: generate Android template AARs and Gradle template project after build is complete (`android_source.zip`)
 
 For more information, run: `scons --help`
 
@@ -132,6 +137,10 @@ With your custom templates compiled, you can now export your project with debug 
    - Enable **Gradle Build** in the **Gradle** section
    - Set **Android Source Template** to point to the `android_source.zip` file generated during compilation
    - Install the Android build template by navigating to **Project > Install Android Build Template...** in the editor menu
+
+   **For iOS:**
+   - Find the **Custom Template** section
+   - Under both **Release** and **Debug**, browse and select the same `godot_ios.zip` bundle from the `bin/` directory
 
 Once configured, your export preset will use the custom template containing the debug information needed for readable stack traces in Sentry.
 
@@ -190,6 +199,12 @@ sentry-cli debug-files upload --include-sources --org ___ORG_SLUG___ --project _
 ```
 
 This uploads debug information files from the `bin` directory to Sentry, creating the source bundles on the fly.
+
+<Alert title="Important note for iOS">
+
+For iOS projects, you must export your project to a directory first, then run the `sentry-cli debug-files upload` command on that exported directory rather than the `bin/` directory. This is necessary because Godot uses an Xcode project with static libraries, and the debug symbols are only available after the export compilation process is complete.
+
+</Alert>
 
 <Expandable title="Generating source bundle archives separately">
 
