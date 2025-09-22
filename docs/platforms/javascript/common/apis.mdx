@@ -637,6 +637,51 @@ See <PlatformLink to="/tracing/instrumentation/">Tracing Instrumentation</Platfo
 </SdkApi>
 
 <SdkApi
+ name="setSpanActive"
+ signature="function setSpanActive(span: Span): void"
+ availableSince="10.14.0"
+ categorySupported={["browser"]}
+ parameters={[
+  {
+    name: "span",
+    required: true,
+    type: "Span",
+    description: "The span to be set active"
+  }
+ ]}
+ >
+  Sets the passed span as the active span on the current scope.
+  You most likely don't need this functionality but should [use `startActiveSpan`](#startActiveSpan) 
+  instead.
+  However, in some situations, you might prefer a span being active outside of a callback. 
+  In this case, the combination of [`startInactiveSpan`](#startInactiveSpan) with this function
+  allows you to start a span, hold a reference to it and keep it active until you end it, without
+  the active duration being bound to the callback (as opposed to [`startSpanManual`](#startSpanManual)).
+  
+  
+  <Expandable title='Examples'>
+  ```javascript
+  let checkoutSpan;
+  
+  on('startCheckout', () => {
+    checkoutSpan = Sentry.startInactiveSpan({name: 'checkout-flow'});
+    Sentry.setSpanActive(checkoutSpan);
+  })
+  
+  doSomeWork();
+  
+  on('endCheckout', () => {
+    // Ending the span automatically removes it as the active span on the scope
+    checkoutSpan.end();
+  })
+  ```
+</Expandable>
+
+See <PlatformLink to="/tracing/instrumentation/">Tracing Instrumentation</PlatformLink> for more information on how to work with spans.
+
+</SdkApi>
+
+<SdkApi
   name="continueTrace"
   signature="function continueTrace<T>(options: TraceOptions, callback: () => T): T"
   parameters={[

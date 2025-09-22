@@ -102,7 +102,32 @@ Sometimes, you do not want the span to be ended automatically when the callback 
 
 To add spans that aren't active, you can create independent spans. This is useful when you have work that is grouped together under a single parent span, but is independent from the currently active span. However, in most cases you'll want to create and use the [startSpan](#starting-an-active-span-startspan) API from above.
 
+
 <PlatformContent includePath="performance/start-inactive-span" />
+
+<PlatformCategorySection supported={['browser']}>
+
+  In some cases, you may need to start an inactive span and make it the active span.
+  In contrast to [startSpanManual](#starting-an-active-span-with-manual-end-startspanmanual), the period for which 
+  the span is active is not bound to the callback. Instead, it will remain active until you manually end the span.
+
+  ```javascript
+  let checkoutSpan;
+  
+  on('startCheckout', () => {
+    checkoutSpan = Sentry.startInactiveSpan({name: 'checkout-flow'});
+    Sentry.setSpanActive(checkoutSpan);
+  })
+  
+  doSomeWork();
+  
+  on('endCheckout', () => {
+    // Ending the span automatically removes it as the active span on the scope
+    checkoutSpan.end();
+  })
+  ```
+
+</PlatformCategorySection>
 
 ## Starting Spans as Children of a Specific Span
 
