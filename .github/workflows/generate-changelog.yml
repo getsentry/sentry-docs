@@ -1,62 +1,70 @@
-name: Changelog
+name: Generate Changelog
 
 on:
   push:
     branches:
-      - master
+      - master   # Trigger on merges to master
 
 jobs:
-  changelog:
+  generate-changelog:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      # Step 1: Run Release Drafter to build structured notes
-      - name: Run Release Drafter
-        id: drafter
-        uses: release-drafter/release-drafter@v6
-        with:
-          config-name: release-drafter.yml
+    steps:
+      # Checkout the repo
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Install dependencies
+      - name: Install GitHub CLI and jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh jq
+
+      # Authenticate the gh CLI
+      - name: Authenticate GitHub CLI
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh auth setup-git
 
-      # Step 2: Ask OpenAI to generate a summary
-      - name: Summarize with OpenAI
-        id: summary
+      # Set OpenAI API key
+      - name: Set OpenAI API Key
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: echo "OPENAI_API_KEY is set"
+
+      # Run the summarize script
+      - name: Generate Changelog
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          RELEASE_NOTES="${{ steps.drafter.outputs.body }}"
-          SUMMARY=$(curl -s https://api.openai.com/v1/chat/completions \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer ${{ secrets.OPENAI_API_KEY }}" \
-            -d '{
-              "model": "gpt-4o-mini",
-              "messages": [
-                {"role": "system", "content": "You are a release note generator for documentation updates. Output in concise markdown bullet points."},
-                {"role": "user", "content": "Summarize these changes:\n'"${RELEASE_NOTES}"'"}
-              ]
-            }' | jq -r '.choices[0].message.content')
-          echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
+          bash ./scripts/summarize.sh
+          # Extract summary from response.json
+          jq -r '.choices[0].message.content' response.json > SUMMARY.md
 
-      # Step 3: Write to CHANGELOG.md
-      - name: Update CHANGELOG.md
+      # Append summary to CHANGELOG.md
+      - name: Prepare changelog
         run: |
-          echo "## $(date +'%Y-%m-%d')" > new_changelog.md
-          echo "" >> new_changelog.md
-          echo "### Summary" >> new_changelog.md
-          echo "${{ steps.summary.outputs.summary }}" >> new_changelog.md
-          echo "" >> new_changelog.md
-          echo "### Details" >> new_changelog.md
-          echo "${{ steps.drafter.outputs.body }}" >> new_changelog.md
-          echo "" >> new_changelog.md
-          cat CHANGELOG.md >> new_changelog.md || true
-          mv new_changelog.md CHANGELOG.md
+          DATE=$(date '+%Y-%m-%d')
+          echo "## Release - $DATE" >> CHANGELOG.md
+          cat SUMMARY.md >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
 
-      # Step 4: Commit changelog changes
-      - name: Commit Changelog
-        uses: peter-evans/create-pull-request@v6
+      # Commit and push only if PREVIEW_MODE is not set
+      - name: Commit and push changelog
+        if: env.PREVIEW_MODE != '1'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "Update changelog for release $DATE" || echo "No changes to commit"
+          git push origin master
+
+      # Optional: Upload preview artifact if PREVIEW_MODE=1
+      - name: Upload preview artifact
+        if: env.PREVIEW_MODE == '1'
+        uses: actions/upload-artifact@v3
         with:
-          branch: update-changelog
-          title: "Update changelog"
-          body: "Automated changelog update with LLM-generated summary and Release Drafter details."
-          commit-message: "chore: update changelog"
-          token: ${{ secrets.GITHUB_TOKEN }}
+          name: changelog-preview
+          path: SUMMARY.md
