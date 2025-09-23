@@ -1,0 +1,63 @@
+---
+title: Migration Guide
+description: "Learn more about migrating to the current version."
+sidebar_order: 8000
+---
+
+## Migrating to 1.0.0
+
+### Breaking changes
+
+The minimum supported Godot Engine version has been updated to `4.5-stable`. This requirement will remain fixed for the `1.x` release series. The log file is no longer required for script error detection.
+
+We redesigned breadcrumbs API for a cleaner interface. See [Changes to breadcrumbs API](#changes-to-breadcrumbs-api) below.
+
+Configuration script support and `SentryConfiguration` class are removed. Instead, please use manual initialization with a configuration callback, if you need to set up SDK from code. See [Changes to programmatic configuration](#changes-to-programmatic-configuration) below.
+
+The `attach_screenshot` and `screenshot_level` options have moved to the experimental section while we're still improving things. If you previously had it enabled, you will need to re-enable it in its new location. Testing is recommended if you want to use this in production.
+
+`enabled` and `disabled_in_editor_play` project settings were renamed to `auto_init` and `skip_auto_init_on_editor_play` for clarity.
+
+
+### Changes to breadcrumbs API
+
+Previously, `add_breadcrumb()` method accepted 5 parameters (3 of which were strings), making it confusing to use. The new approach uses a dedicated `SentryBreadcrumb` class:
+
+```gdscript
+var crumb := SentryBreadcrumb.create("Something happened")
+crumb.type = "info"
+crumb.set_data({"some": "data"})
+SentrySDK.add_breadcrumb(crumb)
+```
+
+For simple breadcrumbs, you can use a one-liner:
+```gdscript
+SentrySDK.add_breadcrumb(SentryBreadcrumb.create("Something happened"))
+```
+
+### Changes to programmatic configuration
+
+Configuration scripts and the `SentryConfiguration` class have been removed. To configure the SDK programmatically, you must initialize it manually. The earliest point for initialization is within the `MainLoop._initialize()` method. Here's how you can do it:
+
+1. Disable **Auto Init** in the project settings under **Sentry** category.
+2. Create a main loop script with a class_name attribute, and init Sentry inside `_initialize()` method.
+```gdscript
+class_name MyMainLoop
+extends SceneTree
+
+func _initialize() -> void:
+	# Sentry initialization
+	SentrySDK.init(func(options: SentryOptions) -> void:
+		options.release = "my-game@1.2.3"
+		options.before_send = _before_send
+	)
+
+	# Post-init configuration
+	SentrySDK.add_attachment(...)
+	# ...
+
+func _before_send(ev: SentryEvent) -> SentryEvent:
+	# Return the event (with or without modifications) or null to skip reporting.
+	return ev
+```
+3. Assign your main loop type in the **Project Settings** under `application/run/main_loop_type` ("MyMainLoop" in the example code).
