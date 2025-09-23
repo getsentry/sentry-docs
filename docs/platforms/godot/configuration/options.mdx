@@ -38,7 +38,7 @@ Specifies the minimum level of messages to be printed if `debug` is turned on.
 
 <ConfigKey name="release">
 
-Release version of the application. This value must be unique across all projects in your organization. By default, the SDK reads from the `application/config/name` and `application/config/version` project settings to generate the release identifier in the format `"{app_name}@{app_version}"`. Alternatively, you can set `release` to a custom value, optionally using the `{app_name}` and `{app_version}` placeholders in a [configuration script](#configuration-script).
+Release version of the application. This value must be unique across all projects in your organization. By default, the SDK reads from the `application/config/name` and `application/config/version` project settings to generate the release identifier in the format `"{app_name}@{app_version}"`. Alternatively, you can set `release` to a custom value [programmatically](#programmatic-configuration), optionally using the `{app_name}` and `{app_version}` placeholders.
 
 Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
 
@@ -54,7 +54,7 @@ Sets the distribution of the application. Distributions are used to disambiguate
 
 Sets the environment. Environments indicate where an error occurred, such as in a release export, headless server, QA build, or another deployment. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `production` or similar).
 
-The SDK automatically detects Godot-specific environments, such as `headless_server` and `export_release`, but you can also set it to your own value in a [configuration script](#configuration-script).
+The SDK automatically detects Godot-specific environments, such as `headless_server` and `export_release`, but you can also set it to your own value [programmatically](#programmatic-configuration).
 
 </ConfigKey>
 
@@ -78,18 +78,6 @@ This option is disabled by default. If you enable this option, be sure to manual
 
 </ConfigKey>
 
-<ConfigKey name="enabled">
-
-If `false`, the SDK will not initialize. This is useful for temporarily disabling the SDK in the Project Settings, or in a [configuration script](#configuration-script).
-
-</ConfigKey>
-
-<ConfigKey name="disabled-in-editor-play">
-
-If `true`, the SDK will not initialize when you play/run your project from within the Godot editor (using the play button or F5).
-
-</ConfigKey>
-
 <ConfigKey name="attach-log">
 
 If enabled, the SDK will attach the Godot log file to the event.
@@ -99,6 +87,12 @@ If enabled, the SDK will attach the Godot log file to the event.
 <ConfigKey name="attach-screenshot">
 
 If enabled, the SDK will try to take a screenshot and attach it to the event.
+
+<Alert level="warning" title="Important">
+
+This feature is experimental and may impact performance when capturing screenshots. We recommend testing before enabling in production.
+
+</Alert>
 
 </ConfigKey>
 
@@ -117,6 +111,25 @@ Changing this option may impact performance in the frames the screenshots are ta
 <ConfigKey name="attach-scene-tree">
 
 If enabled, the SDK will capture and attach scene tree information to events. The scene tree data is attached as a `view-hierarchy.json` file, and you can explore it in the "Scene Tree" section of each issue that includes this attachment. This provides valuable context about your game's scene tree at the time of the error. See <PlatformLink to="/enriching-events/view-hierarchy/">Scene Tree</PlatformLink> for more details.
+
+</ConfigKey>
+
+## GUI-only Options
+
+These options are only available in the **Project Settings** window.
+
+<ConfigKey name="Auto Init">
+
+Enables automatic SDK initialization when the game starts.
+The SDK initializes as early as possible in the lifecycle — before scenes are loaded or any scripts are executed.
+
+</ConfigKey>
+
+<ConfigKey name="Skip Auto Init on Editor Play">
+
+Prevents automatic initialization when running the game from the editor
+(for example, by pressing the play button or **F5**).
+This setting only applies if **Auto Init** is enabled.
 
 </ConfigKey>
 
@@ -206,7 +219,7 @@ thread-safe APIs and only use Godot-specific APIs after you've checked that you'
 
 <ConfigKey name="before-send">
 
-If assigned, this callback runs before a message or error event is sent to Sentry. It takes `SentryEvent` as a parameter and returns either the same event object, with or without modifications, or `null` to skip reporting the event. You can assign it in a [configuration script](#configuration-script). This can be used, for instance, for stripping PII before sending.
+If assigned, this callback runs before an event is sent to Sentry. You can only set it [programmatically](#programmatic-configuration). It takes `SentryEvent` as a parameter and returns either the same event object, with or without modifications, or `null` to skip reporting the event. This can be used, for instance, for stripping PII before sending.
 
 ```GDScript
 func _before_send(event: SentryEvent) -> SentryEvent:
@@ -223,7 +236,7 @@ func _before_send(event: SentryEvent) -> SentryEvent:
 
 <ConfigKey name="before-capture-screenshot">
 
-If assigned, this callback runs before a screenshot is captured. It takes `SentryEvent` as a parameter and returns `false` to skip capturing the screenshot, or `true` to capture the screenshot.
+If assigned, this callback runs before a screenshot is captured. You can only set it [programmatically](#programmatic-configuration). It takes `SentryEvent` as a parameter and returns `false` to skip capturing the screenshot, or `true` to capture the screenshot.
 
 ```GDScript
 func _before_capture_screenshot(event: SentryEvent) -> bool:

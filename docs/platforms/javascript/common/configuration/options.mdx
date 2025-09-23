@@ -18,20 +18,16 @@ sidebar_order: 1
 
 </SdkOption>
 
-<PlatformCategorySection supported={["server", "serverless"]}>
-  <SdkOption name="orgId" type='`${number}` | number'>
+<SdkOption name="orgId" type='`${number}` | number' categorySupported={["server", "serverless"]}>
 
-    The organization ID for your Sentry project.
+The organization ID for your Sentry project.
 
-    The SDK will try to extract the organization ID from the DSN. If it cannot be found, or if you need to override it,
-    you can provide the ID with this option. The organization ID is used for trace propagation and features like `strictTraceContinuation`.
+The SDK will try to extract the organization ID from the DSN. If it cannot be found, or if you need to override it,
+you can provide the ID with this option. The organization ID is used for trace propagation and features like `strictTraceContinuation`.
 
-    <Alert level="info">
-      The organization ID is used for features like <PlatformLink to="/configuration/options#strictTraceContinuation">strict trace continuation</PlatformLink>.
-    </Alert>
+The organization ID is used for features like <PlatformLink to="/configuration/options#strictTraceContinuation">strict trace continuation</PlatformLink>.
 
-  </SdkOption>
-</PlatformCategorySection>
+</SdkOption>
 
 <SdkOption name="debug" type='boolean' defaultValue='false'>
 
@@ -281,6 +277,23 @@ Available options are:
 
 </SdkOption>
 
+<SdkOption name="ipcNamespace" type='string'>
+
+Custom namespace for the inter-process communication (IPC) channels used by the Sentry Electron SDK. This is useful when your Electron application uses multiple IPC channels and you want to prevent potential conflicts between them.
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  ipcNamespace: "myCustomNamespace",
+});
+```
+
+When set, the IPC channels used by Sentry will be prefixed with the specified namespace. Note that you need to configure the same namespace in your main process, renderer processes, and preload scripts for proper communication. See the <PlatformLink to="/platforms/javascript/guides/electron/#custom-ipc-namespace">Custom IPC Namespace section</PlatformLink> for complete setup instructions.
+
+</SdkOption>
+
 <SdkOption name="getSessions" type='() => Electron.Session[]' defaultValue='() => [session.defaultSession]'>
 
 A function that returns an array of Electron `session` objects. These sessions are used to configure communication between the Electron main and renderer processes.
@@ -394,21 +407,17 @@ If you want to disable trace propagation, you can set this option to `[]`.
 
 </SdkOption>
 
+<SdkOption name="strictTraceContinuation" type='boolean' defaultValue='false' categorySupported={["server", "serverless"]}>
 
-<PlatformCategorySection supported={["server", "serverless"]}>
-  <SdkOption name="strictTraceContinuation" type='boolean' defaultValue='false'>
+If set to `true`, the SDK will only continue a trace if the organization ID of the incoming trace found in the
+`baggage` header matches the organization ID of the current Sentry client.
 
-    If set to `true`, the SDK will only continue a trace if the organization ID of the incoming trace found in the
-    `baggage` header matches the organization ID of the current Sentry client.
+The client's organization ID is extracted from the DSN or can be set with the <PlatformLink to={'/configuration/options#orgId'}>`orgId` option</PlatformLink>.
 
-    The client's organization ID is extracted from the DSN or can be set with the <PlatformLink to={'/configuration/options#orgId'}>`orgId` option</PlatformLink>.
+If the organization IDs do not match, the SDK will start a new trace instead of continuing the incoming one.
+This is useful to prevent traces of unknown third-party services from being continued in your application.
 
-    If the organization IDs do not match, the SDK will start a new trace instead of continuing the incoming one.
-    This is useful to prevent traces of unknown third-party services from being continued in your application.
-
-  </SdkOption>
-</PlatformCategorySection>
-
+</SdkOption>
 
 <SdkOption name="beforeSendTransaction" type='(event: TransactionEvent, hint: EventHint) => TransactionEvent | null'>
 
@@ -436,15 +445,13 @@ Please note that the `span` you receive as an argument is a serialized object, n
 
 A list of strings or regex patterns matching span names that shouldn't be sent to Sentry. When using strings, partial matches will be filtered out, so if you need to filter by exact match, use regex patterns instead. You can also provide an object with a `name` and `op` property to match both the span name and the operation name. Note that at least `name` or `op` must be provided.
 
-If a root span matches any of the specified patterns, the entire local trace will be dropped. If a child span matches, its children will be reparented to the dropped span's parent span. 
+If a root span matches any of the specified patterns, the entire local trace will be dropped. If a child span matches, its children will be reparented to the dropped span's parent span.
 
 By default, no spans are ignored.
 
 </SdkOption>
 
-<PlatformCategorySection supported={['browser']}>
-
-<SdkOption name="propagateTraceparent" type='boolean' defaultValue='false' availableSince='10.10.0'>
+<SdkOption name="propagateTraceparent" type='boolean' defaultValue='false' availableSince='10.10.0' categorySupported={['browser']}>
 
 If set to `true`, the SDK adds the [W3C `traceparent` header](https://www.w3.org/TR/trace-context/) to outgoing Http requests made via `fetch` or `XMLHttpRequest`.
 This header is attached in addition to the `sentry-trace` and `baggage` headers.
@@ -455,13 +462,23 @@ Otherwise, requests might be blocked.
 Use the [`tracePropagationTargets` option](#tracepropagationtargets) to control which requests the `traceparent` header is attached to.
 See <PlatformLink to="/tracing/distributed-tracing/dealing-with-cors-issues/">Dealing with CORS Issues</PlatformLink> for more information.
 
-Note that this option is only available for browser SDKs.
+</SdkOption>
+
+<PlatformCategorySection supported={['browser']}>
+
+## Logs Options
+
+<SdkOption name="enableLogs" type='boolean' defaultValue='false'>
+
+Set this option to `true` to enable log capturing in Sentry. Only when this is enabled will the `logger` APIs actually send logs to Sentry.
 
 </SdkOption>
 
-</PlatformCategorySection>
+<SdkOption name="beforeSendLog" type='(log: Log) => Log | null'>
 
-<PlatformCategorySection supported={['browser']}>
+This function is called with a log object, and can return a modified log object, or `null` to skip sending this log to Sentry. This can be used, for instance, for manual PII stripping before sending, or to add custom attributes to all logs.
+
+</SdkOption>
 
 ## Session Replay Options
 
