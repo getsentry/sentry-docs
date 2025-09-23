@@ -2,6 +2,9 @@
 import {useEffect} from 'react';
 import {useRouter} from 'next/navigation';
 
+const HOT_RELOAD_PORT = process.env.NEXT_PUBLIC_HOT_RELOAD_PORT ?? '8081';
+const HOT_RELOAD_HOST = process.env.NEXT_PUBLIC_HOT_RELOAD_HOST ?? 'localhost';
+
 function HotReload_() {
   const router = useRouter();
   let ws: WebSocket;
@@ -9,7 +12,7 @@ function HotReload_() {
     if (ws) {
       return;
     }
-    ws = new WebSocket('ws://localhost:8080');
+    ws = new WebSocket(`ws://${HOT_RELOAD_HOST}:${HOT_RELOAD_PORT}`);
     ws.onopen = function open() {
       // do nothing
     };

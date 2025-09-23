@@ -1,4 +1,4 @@
-import path from 'path';
+import path from 'node:path';
 
 import {isExternalImage} from 'sentry-docs/config/images';
 import {serverContext} from 'sentry-docs/serverContext';
@@ -73,25 +73,47 @@ export default function DocImage({
   }
 
   const isExternal = isExternalImage(src);
+  const isMdxAsset = src.startsWith('/mdx-images/');
   let finalSrc = src;
   let imgPath = src;
 
-  // For internal images, process the path
   if (!isExternal) {
-    if (src.startsWith('./')) {
-      // Remove ./ prefix and properly join with mdx-images path
+    if (isMdxAsset) {
+      try {
+        const parsed = new URL(src, 'https://example.com');
+        finalSrc = src;
+        imgPath = parsed.pathname;
+      } catch (_error) {
+        imgPath = src;
+      }
+    } else if (src.startsWith('/')) {
+      // Assets already in the public directory
+      try {
+        const parsed = new URL(src, 'https://example.com');
+        finalSrc = src;
+        imgPath = parsed.pathname;
+      } catch (_error) {
+        imgPath = src;
+      }
+    } else if (src.startsWith('./')) {
       const cleanSrc = src.slice(2);
-      finalSrc = path.join('/mdx-images', cleanSrc);
-    } else if (!src?.startsWith('/') && !src?.includes('://')) {
-      finalSrc = `/${pagePath.join('/')}/${src}`;
-    }
-
-    // For internal images, imgPath should be the pathname only
-    try {
-      const srcURL = new URL(finalSrc, 'https://example.com');
-      imgPath = srcURL.pathname;
-    } catch (_error) {
-      imgPath = finalSrc;
+      const joined = ['mdx-images', ...pagePath, cleanSrc].join('/');
+      finalSrc = `/${path.posix.normalize(joined)}`;
+      try {
+        const parsed = new URL(finalSrc, 'https://example.com');
+        imgPath = parsed.pathname;
+      } catch (_error) {
+        imgPath = finalSrc;
+      }
+    } else {
+      const joined = ['mdx-images', ...pagePath, src].join('/');
+      finalSrc = `/${path.posix.normalize(joined)}`;
+      try {
+        const parsed = new URL(finalSrc, 'https://example.com');
+        imgPath = parsed.pathname;
+      } catch (_error) {
+        imgPath = finalSrc;
+      }
     }
   } else {
     // For external images, clean URL by removing only dimension hashes, preserving fragment identifiers

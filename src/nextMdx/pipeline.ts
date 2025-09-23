@@ -1,7 +1,6 @@
+import type {CompileOptions} from '@mdx-js/mdx';
 import matter from 'gray-matter';
 import path from 'node:path';
-
-import type {CompileOptions} from '@mdx-js/mdx';
 import type {PluggableList} from 'unified';
 
 import {createPluginConfig} from './plugins';
@@ -13,7 +12,9 @@ import type {
 
 const rootDir = process.cwd();
 
-async function loadCompiler(): Promise<(value: string, options?: CompileOptions) => Promise<any>> {
+async function loadCompiler(): Promise<
+  (value: string, options?: CompileOptions) => Promise<any>
+> {
   const mod = await import('@mdx-js/mdx');
   const compile = (mod as any).compile ?? (mod as any).default;
   if (typeof compile !== 'function') {
@@ -22,13 +23,29 @@ async function loadCompiler(): Promise<(value: string, options?: CompileOptions)
   return compile as (value: string, options?: CompileOptions) => Promise<any>;
 }
 
+const INJECT_PREFIX = '@inject';
+const INJECT_PATTERN = /\{\{\s*(?!\\)@inject([\s\S]*?)\}\}/gi;
+const INJECT_SENTINEL_OPEN = 'SENTRYINJECTOPEN';
+const INJECT_SENTINEL_CLOSE = 'SENTRYINJECTCLOSE';
+
+function normalizeInjectVariables(content: string): string {
+  return content.replace(INJECT_PATTERN, (_match, expression) => {
+    return `${INJECT_SENTINEL_OPEN}${INJECT_PREFIX}${expression}${INJECT_SENTINEL_CLOSE}`;
+  });
+}
+
 function buildMatter(
   source: string,
   slug: string,
   configFrontmatter?: NextMdxCompileOptions['configFrontmatter']
-): {content: string; frontMatter: NextMdxFrontMatter; grayMatter: NextMdxCompiledFile['matter']} {
+): {
+  content: string;
+  frontMatter: NextMdxFrontMatter;
+  grayMatter: NextMdxCompiledFile['matter'];
+} {
   const parsed = matter(source);
-  const baseFrontMatter = (parsed.data as NextMdxFrontMatter | undefined) ?? ({} as NextMdxFrontMatter);
+  const baseFrontMatter =
+    (parsed.data as NextMdxFrontMatter | undefined) ?? ({} as NextMdxFrontMatter);
   const mergedFrontMatter = {
     ...baseFrontMatter,
     ...(configFrontmatter ?? {}),
@@ -52,12 +69,14 @@ export async function compileWithNextMdx(
 ): Promise<NextMdxCompiledFile> {
   const {source, slug, sourcePath, configFrontmatter} = options;
 
-  const {content, frontMatter, grayMatter} = buildMatter(source, slug, configFrontmatter);
+  const matterResult = buildMatter(source, slug, configFrontmatter);
+  const content = normalizeInjectVariables(matterResult.content);
+  const {frontMatter, grayMatter} = matterResult;
 
   const toc: NextMdxCompiledFile['toc'] = [];
 
   const cwd = path.dirname(sourcePath);
-  const {remarkPlugins, rehypePlugins} = await createPluginConfig({
+  const {remarkPlugins, rehypePlugins} = createPluginConfig({
     cwd,
     frontMatter,
     root: rootDir,

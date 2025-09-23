@@ -10,7 +10,6 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         '**/*.map',
         './.git/**/*',
         './apps/**/*',
-        './.next/cache/mdx-bundler/**/*',
         './.next/cache/md-exports/**/*',
         'docs/**/*',
       ],
@@ -19,13 +18,11 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
       '/**/*': [
         '**/*.map',
         './.git/**/*',
-        './.next/cache/mdx-bundler/**/*',
         './.next/cache/md-exports/**/*',
         './apps/**/*',
         'develop-docs/**/*',
-        'node_modules/@esbuild/*',
       ],
-      '/platform-redirect': ['**/*.gif', 'public/mdx-images/**/*', '**/*.pdf'],
+      '/platform-redirect': ['**/*.gif', '**/*.pdf'],
       '\\[\\[\\.\\.\\.path\\]\\]': [
         'docs/**/*',
         'node_modules/prettier/plugins',
@@ -33,7 +30,6 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
       ],
       'sitemap.xml': [
         'docs/**/*',
-        'public/mdx-images/**/*',
         '**/*.gif',
         '**/*.pdf',
         '**/*.png',

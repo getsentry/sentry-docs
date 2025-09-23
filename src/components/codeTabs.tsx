@@ -49,8 +49,19 @@ const showSigninNote = (children: ReactNode) => {
   });
 };
 
+const isCodeBlockElement = (
+  node: ReactElement<CodeBlockProps> | ReactNode
+): node is ReactElement<CodeBlockProps> => {
+  return Boolean(node && typeof node === 'object' && 'props' in (node as any));
+};
+
 export function CodeTabs({children}: CodeTabProps) {
-  const codeBlocks = Array.isArray(children) ? [...children] : [children];
+  const rawChildren = Array.isArray(children) ? [...children] : [children];
+  const codeBlocks = rawChildren.filter(isCodeBlockElement);
+
+  if (codeBlocks.length === 0) {
+    return null;
+  }
 
   // The title is what we use for sorting and also for remembering the
   // selection. If there is no title fall back to the title cased language name

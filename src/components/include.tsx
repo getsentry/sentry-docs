@@ -1,5 +1,5 @@
 import {useMemo} from 'react';
-import {getMDXComponent} from 'mdx-bundler/client';
+import {getMDXComponent} from 'sentry-docs/mdxClient';
 
 import {getFileBySlugWithCache} from 'sentry-docs/mdx';
 import {mdxComponents} from 'sentry-docs/mdxComponents';

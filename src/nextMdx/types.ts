@@ -8,7 +8,7 @@ export type NextMdxFrontMatter = Platform & {slug: string};
 export type NextMdxCompiledFile = {
   frontMatter: NextMdxFrontMatter;
   matter: Omit<matter.GrayMatterFile<string>, 'data'> & {
-    data: Platform;
+    data: NextMdxFrontMatter;
   };
   mdxSource: string;
   toc: TocNode[];

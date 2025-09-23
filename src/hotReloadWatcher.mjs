@@ -1,9 +1,15 @@
+/* eslint-disable no-console */
 import path from 'path';
 
 import {watch} from 'node:fs/promises';
 import {WebSocketServer} from 'ws';
 
 const watchedContent = new Set(['.mdx', '.md', '.png', '.jpg', '.jpeg', '.gif', '.svg']);
+const hotReloadPort = Number.parseInt(
+  process.env.NEXT_PUBLIC_HOT_RELOAD_PORT ?? process.env.SENTRY_DOCS_HOT_RELOAD_PORT ?? '8081',
+  10
+);
+const hotReloadHost = process.env.NEXT_PUBLIC_HOT_RELOAD_HOST ?? 'localhost';
 
 export const throttle = (fn, delay) => {
   let last = 0;
@@ -17,8 +23,8 @@ export const throttle = (fn, delay) => {
   };
 };
 
-const wss = new WebSocketServer({port: 8080});
-console.info('⚡️ Hot reload watcher listening on ws://localhost:8080');
+const wss = new WebSocketServer({port: hotReloadPort, host: hotReloadHost});
+console.info(`⚡️ Hot reload watcher listening on ws://${hotReloadHost}:${hotReloadPort}`);
 
 wss.on('connection', async function onConnect(ws) {
   ws.on('error', err => {

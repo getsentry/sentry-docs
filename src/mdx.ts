@@ -1,20 +1,8 @@
 import matter from 'gray-matter';
 import {s} from 'hastscript';
 import yaml from 'js-yaml';
-import {bundleMDX} from 'mdx-bundler';
-import {BinaryLike, createHash} from 'node:crypto';
-import {createReadStream, createWriteStream, mkdirSync} from 'node:fs';
-import {access, cp, mkdir, opendir, readFile} from 'node:fs/promises';
+import {access, mkdir, opendir, readFile} from 'node:fs/promises';
 import path from 'node:path';
-// @ts-expect-error ts(2305) -- For some reason "compose" is not recognized in the types
-import {compose, Readable} from 'node:stream';
-import {json} from 'node:stream/consumers';
-import {pipeline} from 'node:stream/promises';
-import {
-  constants as zlibConstants,
-  createBrotliCompress,
-  createBrotliDecompress,
-} from 'node:zlib';
 import {limitFunction} from 'p-limit';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypePresetMinify from 'rehype-preset-minify';
@@ -28,12 +16,12 @@ import getPackageRegistry from './build/packageRegistry';
 import {apiCategories} from './build/resolveOpenAPI';
 import getAllFilesRecursively from './files';
 import remarkDefList from './mdx-deflist';
+import {compileWithNextMdx} from './nextMdx';
 import rehypeOnboardingLines from './rehype-onboarding-lines';
 import rehypeSlug from './rehype-slug.js';
 import remarkCodeTabs from './remark-code-tabs';
 import remarkCodeTitles from './remark-code-title';
 import remarkComponentSpacing from './remark-component-spacing';
-import remarkExtractFrontmatter from './remark-extract-frontmatter';
 import remarkFormatCodeBlocks from './remark-format-code';
 import remarkImageSize from './remark-image-size';
 import remarkTocHeadings, {TocNode} from './remark-toc-headings';
@@ -58,36 +46,6 @@ const root = process.cwd();
 // Functions which looks like AWS Lambda and we get `EMFILE` errors when trying to open
 // so many files at once.
 const FILE_CONCURRENCY_LIMIT = 200;
-const CACHE_COMPRESS_LEVEL = 4;
-const CACHE_DIR = path.join(root, '.next', 'cache', 'mdx-bundler');
-if (process.env.CI) {
-  mkdirSync(CACHE_DIR, {recursive: true});
-}
-
-const md5 = (data: BinaryLike) => createHash('md5').update(data).digest('hex');
-
-async function readCacheFile<T>(file: string): Promise<T> {
-  const reader = createReadStream(file);
-  const decompressor = createBrotliDecompress();
-
-  return (await json(compose(reader, decompressor))) as T;
-}
-
-async function writeCacheFile(file: string, data: string) {
-  const bufferData = Buffer.from(data);
-  await pipeline(
-    Readable.from(bufferData),
-    createBrotliCompress({
-      chunkSize: 32 * 1024,
-      params: {
-        [zlibConstants.BROTLI_PARAM_MODE]: zlibConstants.BROTLI_MODE_TEXT,
-        [zlibConstants.BROTLI_PARAM_QUALITY]: CACHE_COMPRESS_LEVEL,
-        [zlibConstants.BROTLI_PARAM_SIZE_HINT]: bufferData.length,
-      },
-    }),
-    createWriteStream(file)
-  );
-}
 
 function formatSlug(slug: string) {
   return slug.replace(/\.(mdx|md)/, '');
@@ -524,174 +482,31 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     );
   }
 
-  let cacheKey: string | null = null;
-  let cacheFile: string | null = null;
-  let assetsCacheDir: string | null = null;
-  const outdir = path.join(root, 'public', 'mdx-images');
-  await mkdir(outdir, {recursive: true});
-
-  if (process.env.CI) {
-    cacheKey = md5(source);
-    cacheFile = path.join(CACHE_DIR, `${cacheKey}.br`);
-    assetsCacheDir = path.join(CACHE_DIR, cacheKey);
-
-    try {
-      const [cached, _] = await Promise.all([
-        readCacheFile<SlugFile>(cacheFile),
-        cp(assetsCacheDir, outdir, {recursive: true}),
-      ]);
-      return cached;
-    } catch (err) {
-      if (
-        err.code !== 'ENOENT' &&
-        err.code !== 'ABORT_ERR' &&
-        err.code !== 'Z_BUF_ERROR'
-      ) {
-        // If cache is corrupted, ignore and proceed
-        // eslint-disable-next-line no-console
-        console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
-      }
-    }
-  }
-
-  process.env.ESBUILD_BINARY_PATH = path.join(
-    root,
-    'node_modules',
-    'esbuild',
-    'bin',
-    'esbuild'
-  );
-
-  const toc: TocNode[] = [];
-
-  // cwd is how mdx-bundler knows how to resolve relative paths
-  const cwd = path.dirname(sourcePath);
-
-  const result = await bundleMDX<Platform>({
+  const compiled = await compileWithNextMdx({
+    slug,
     source,
-    cwd,
-    mdxOptions(options) {
-      // this is the recommended way to add custom remark/rehype plugins:
-      // The syntax might look weird, but it protects you in case we add/remove
-      // plugins in the future.
-      options.remarkPlugins = [
-        ...(options.remarkPlugins ?? []),
-        remarkExtractFrontmatter,
-        [remarkTocHeadings, {exportRef: toc}],
-        remarkGfm,
-        remarkDefList,
-        remarkFormatCodeBlocks,
-        [remarkImageSize, {sourceFolder: cwd, publicFolder: path.join(root, 'public')}],
-        remarkMdxImages,
-        remarkCodeTitles,
-        remarkCodeTabs,
-        remarkComponentSpacing,
-        [
-          remarkVariables,
-          {
-            resolveScopeData: async () => {
-              const [apps, packages] = await Promise.all([
-                getAppRegistry(),
-                getPackageRegistry(),
-              ]);
-
-              return {apps, packages};
-            },
-          },
-        ],
-      ];
-      options.rehypePlugins = [
-        ...(options.rehypePlugins ?? []),
-        rehypeSlug,
-        [
-          rehypeAutolinkHeadings,
-          {
-            behavior: 'wrap',
-            properties: {
-              ariaHidden: true,
-              tabIndex: -1,
-              className: 'autolink-heading',
-            },
-            content: [
-              s(
-                'svg.anchorlink.before',
-                {
-                  xmlns: 'http://www.w3.org/2000/svg',
-                  width: 16,
-                  height: 16,
-                  fill: 'currentColor',
-                  viewBox: '0 0 24 24',
-                },
-                s('path', {
-                  d: 'M9.199 13.599a5.99 5.99 0 0 0 3.949 2.345 5.987 5.987 0 0 0 5.105-1.702l2.995-2.994a5.992 5.992 0 0 0 1.695-4.285 5.976 5.976 0 0 0-1.831-4.211 5.99 5.99 0 0 0-6.431-1.242 6.003 6.003 0 0 0-1.905 1.24l-1.731 1.721a.999.999 0 1 0 1.41 1.418l1.709-1.699a3.985 3.985 0 0 1 2.761-1.123 3.975 3.975 0 0 1 2.799 1.122 3.997 3.997 0 0 1 .111 5.644l-3.005 3.006a3.982 3.982 0 0 1-3.395 1.126 3.987 3.987 0 0 1-2.632-1.563A1 1 0 0 0 9.201 13.6zm5.602-3.198a5.99 5.99 0 0 0-3.949-2.345 5.987 5.987 0 0 0-5.105 1.702l-2.995 2.994a5.992 5.992 0 0 0-1.695 4.285 5.976 5.976 0 0 0 1.831 4.211 5.99 5.99 0 0 0 6.431 1.242 6.003 6.003 0 0 0 1.905-1.24l1.723-1.723a.999.999 0 1 0-1.414-1.414L9.836 19.81a3.985 3.985 0 0 1-2.761 1.123 3.975 3.975 0 0 1-2.799-1.122 3.997 3.997 0 0 1-.111-5.644l3.005-3.006a3.982 3.982 0 0 1 3.395-1.126 3.987 3.987 0 0 1 2.632 1.563 1 1 0 0 0 1.602-1.198z',
-                })
-              ),
-            ],
-          },
-        ],
-        [rehypePrismPlus, {ignoreMissing: true}] as any,
-        rehypeOnboardingLines,
-        [rehypePrismDiff, {remove: true}] as any,
-        rehypePresetMinify,
-      ];
-      return options;
-    },
-    esbuildOptions: options => {
-      options.loader = {
-        ...options.loader,
-        '.js': 'jsx',
-        '.png': 'file',
-        '.gif': 'file',
-        '.jpg': 'file',
-        '.jpeg': 'file',
-        // inline svgs
-        '.svg': 'dataurl',
-      };
-      // Set the `outdir` to a public location for this bundle.
-      // this is where these images will be copied
-      // the reason we use the cache folder when it's
-      // enabled is because mdx-images is a dumping ground
-      // for all images, so we cannot filter it out only
-      // for this specific slug easily
-      options.outdir = assetsCacheDir || outdir;
-
-      // Set write to true so that esbuild will output the files.
-      options.write = true;
-
-      return options;
-    },
-  }).catch(e => {
-    // eslint-disable-next-line no-console
-    console.error('Error occurred during MDX compilation:', e.errors);
-    throw e;
+    sourcePath,
+    configFrontmatter,
   });
 
-  const {code, frontmatter} = result;
-
-  let mergedFrontmatter = frontmatter;
-  if (configFrontmatter) {
-    mergedFrontmatter = {...frontmatter, ...configFrontmatter};
-  }
-
-  const resultObj: SlugFile = {
-    matter: result.matter,
-    mdxSource: code,
-    toc,
-    frontMatter: {
-      ...mergedFrontmatter,
-      slug,
-    },
+  const relativeSourcePath = path.relative(root, sourcePath);
+  const frontMatter = {
+    ...compiled.frontMatter,
+    sourcePath: compiled.frontMatter.sourcePath ?? relativeSourcePath,
   };
 
-  if (assetsCacheDir && cacheFile) {
-    await cp(assetsCacheDir, outdir, {recursive: true});
-    writeCacheFile(cacheFile, JSON.stringify(resultObj)).catch(e => {
-      // eslint-disable-next-line no-console
-      console.warn(`Failed to write MDX cache: ${cacheFile}`, e);
-    });
-  }
-
-  return resultObj;
+  return {
+    frontMatter,
+    matter: {
+      ...compiled.matter,
+      data: {
+        ...compiled.matter.data,
+        sourcePath: compiled.matter.data?.sourcePath ?? relativeSourcePath,
+      },
+    },
+    mdxSource: compiled.mdxSource,
+    toc: compiled.toc,
+  };
 }
 
 const fileBySlugCache = new Map<string, Promise<SlugFile>>();

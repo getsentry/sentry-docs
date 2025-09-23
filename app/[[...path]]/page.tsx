@@ -1,5 +1,4 @@
 import {useMemo} from 'react';
-import {getMDXComponent} from 'mdx-bundler/client';
 import {Metadata} from 'next';
 import {notFound} from 'next/navigation';
 
@@ -25,6 +24,7 @@ import {
   getFileBySlugWithCache,
   getVersionsFromDoc,
 } from 'sentry-docs/mdx';
+import {getMDXComponent} from 'sentry-docs/mdxClient';
 import {mdxComponents} from 'sentry-docs/mdxComponents';
 import {setServerContext} from 'sentry-docs/serverContext';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
