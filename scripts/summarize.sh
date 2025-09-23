@@ -3,26 +3,21 @@ set -euo pipefail
 
 echo ">>> summarize.sh starting"
 
-# ---- Basic checks ----
-if ! command -v jq >/dev/null 2>&1; then
-  echo "❌ Error: jq is required but not installed."
-  exit 1
-fi
-if ! command -v curl >/dev/null 2>&1; then
-  echo "❌ Error: curl is required but not installed."
-  exit 1
-fi
+# --- Safety check for OpenAI API key ---
 if [[ -z "${OPENAI_API_KEY:-}" ]]; then
-  echo "❌ Error: OPENAI_API_KEY is not set. Run:"
-  echo "   export OPENAI_API_KEY=sk-proj-..."
+  echo "ERROR: OPENAI_API_KEY is not set."
   exit 1
 fi
+echo ">>> OPENAI_API_KEY appears set (prefix shown): ${OPENAI_API_KEY:0:10}... (masked)"
 
-echo ">>> OPENAI_API_KEY appears set (prefix shown): ${OPENAI_API_KEY:0:8}... (masked)"
+# --- Local testing toggle ---
+# Set USE_STATIC_EXAMPLE=1 to force the fallback example list
+USE_STATIC_EXAMPLE="${USE_STATIC_EXAMPLE:-0}"
 
-# ---- Example PR list for local testing (commented out, un-comment to test locally) ----
-: <<'EXAMPLE_PR_LIST'
-PR_NOTES=$(cat <<'EOF'
+PR_NOTES=""
+if [[ "$USE_STATIC_EXAMPLE" -eq 1 ]]; then
+  echo ">>> Using static example PR list for testing"
+  PR_NOTES=$(cat <<'EOF'
 ### Details
 
 - docs(js): Add min `next` version for Turbopack support ([#15009](https://github.com/getsentry/sentry-docs/pull/15009)) by @chargome
@@ -32,61 +27,48 @@ PR_NOTES=$(cat <<'EOF'
 - feat(components): Add ContentSeparator component ([#15002](https://github.com/getsentry/sentry-docs/pull/15002)) by @codyde
 EOF
 )
-EXAMPLE_PR_LIST
+else
+  echo ">>> Fetching live merged PRs from master (production data)"
+  PR_NOTES=$(gh pr list --repo getsentry/sentry-docs --state merged --base master --limit 10 --json number,title,author \
+    | jq -r '.[] | "- " + .title + " ([#\(.number)](https://github.com/getsentry/sentry-docs/pull/\(.number))) by @" + .author.login')
+fi
 
-# ---- Placeholder for live PR notes (to be filled with actual merged PRs) ----
-PR_NOTES=$(cat <<'EOF'
-# TODO: Replace this block with actual merged PR list from GitHub
-# For example, using `gh pr list --state merged --base main --json title,number,author`
+# --- Fallback to static example if nothing is returned ---
+if [[ -z "$PR_NOTES" ]]; then
+  echo ">>> No PRs returned; using static example list"
+  PR_NOTES=$(cat <<'EOF'
+### Details
+
+- docs(js): Add min `next` version for Turbopack support ([#15009](https://github.com/getsentry/sentry-docs/pull/15009)) by @chargome
+- docs(js): Update turbopack support notes ([#15008](https://github.com/getsentry/sentry-docs/pull/15008)) by @chargome
+- Unreal Engine: Add notice about loading custom callback handler classes ([#15004](https://github.com/getsentry/sentry-docs/pull/15004)) by @tustanivsky
+- feat(components): Add StepConnector component ([#15003](https://github.com/getsentry/sentry-docs/pull/15003)) by @codyde
+- feat(components): Add ContentSeparator component ([#15002](https://github.com/getsentry/sentry-docs/pull/15002)) by @codyde
 EOF
 )
+fi
 
-# ---- Build JSON payload safely with jq ----
-PAYLOAD=$(jq -n \
-  --arg model "gpt-4o-mini" \
-  --arg system "You are a release notes generator for documentation updates. Summarize PR titles into concise, grouped markdown bullets." \
-  --arg user "Summarize these changes:\n$PR_NOTES" \
-  '{
-    model: $model,
-    messages: [
-      { role: "system", content: $system },
-      { role: "user", content: $user }
-    ]
-  }')
+# --- Build JSON payload safely using jq ---
+JSON_PAYLOAD=$(jq -n --arg notes "$PR_NOTES" '{
+  model: "gpt-4o-mini",
+  messages: [
+    {role: "system", content: "You are a release note generator for documentation updates. Output concise markdown bullet points."},
+    {role: "user", content: ("Summarize these changes:\n" + $notes)}
+  ]
+}')
 
-# ---- Call OpenAI API and capture status+body ----
 echo ">>> Sending request to OpenAI API..."
-RAW=$(curl -s -w "\n%{http_code}" https://api.openai.com/v1/chat/completions \
+RESPONSE=$(curl -s -X POST https://api.openai.com/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $OPENAI_API_KEY" \
-  -d "$PAYLOAD")
+  -d "$JSON_PAYLOAD")
 
-HTTP_BODY=$(printf "%s\n" "$RAW" | sed '$d')
-HTTP_STATUS=$(printf "%s\n" "$RAW" | tail -n1)
-
-echo ">>> HTTP status: $HTTP_STATUS"
-echo "$HTTP_BODY" > response.json
+# Save raw response for debugging
 echo ">>> Raw response saved to response.json"
+echo "$RESPONSE" > response.json
 
-# ---- Check for errors ----
-if [[ "$HTTP_STATUS" -ne 200 ]]; then
-  echo "### Summary"
-  echo "_(Error: OpenAI API request failed — see response.json for details)_"
-  jq . response.json || true
-  exit 1
-fi
-
-# ---- Extract assistant reply ----
-SUMMARY=$(echo "$HTTP_BODY" | jq -r '
-  .choices[0].message.content
-  // .choices[0].message["content"]
-  // .choices[0].text
-  // empty
-')
+# --- Extract summary ---
+SUMMARY=$(echo "$RESPONSE" | jq -r '.choices[0].message.content')
 
 echo "### Summary"
-if [[ -n "$SUMMARY" ]]; then
-  echo "$SUMMARY"
-else
-  echo "_(No summary found in response — see response.json)_"
-fi
+echo "$SUMMARY"
