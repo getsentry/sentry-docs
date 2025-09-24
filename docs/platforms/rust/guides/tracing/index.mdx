@@ -92,6 +92,21 @@ By default, error level events from `tokio-rs/tracing` are captured as Sentry ev
 
 Additionally, if the `logs` feature flag of the `sentry` crate is enabled, events from `tokio-rs/tracing` at info level or above are also captured as structured logs.
 This behavior can be customized by applying a custom `event_filter` when creating the layer.
+The following snippet shows the default `event_filter` that's applied when using the `sentry` crate with the `logs` feature flag.
+
+```rust
+use sentry::integrations::tracing::EventFilter;
+
+let sentry_layer =
+    sentry::integrations::tracing::layer().event_filter(|md| match *md.level() {
+        // Capture error and warn level events as both logs and events in Sentry
+        tracing::Level::ERROR => EventFilter::Event | EventFilter::Log,
+        // Ignore trace level events, as they're too verbose
+        tracing::Level::TRACE => EventFilter::Ignore,
+        // Capture everything else as both a breadcrumb and a log
+        _ => EventFilter::Breadcrumb | EventFilter::Log,
+    });
+```
 
 ## Verify
 
