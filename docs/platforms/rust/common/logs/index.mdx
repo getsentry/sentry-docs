@@ -70,7 +70,7 @@ As of today, array and object types will be converted to strings using their JSO
 
 ## Integrations
 
-### `tracing` Integration
+### `tokio-rs/tracing` Integration
 
 To use the `tracing` integration with logs, add the necessary dependencies to your `Cargo.toml`.
 
@@ -81,7 +81,7 @@ tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
 ```
 
-Initialize the SDK with `enable_logs` set to `true`, and configure the `tracing` subscriber to map `tracing` events to logs based on metadata such as severity.
+Initialize the SDK with `enable_logs` set to `true`.
 Then, use standard `tracing` macros to capture logs.
 
 ```rust {filename:main.rs}
@@ -99,20 +99,9 @@ fn main() {
         },
     ));
 
-    let sentry_layer =
-        sentry::integrations::tracing::layer().event_filter(|md| match *md.level() {
-            // Capture error level events as Sentry events
-            // These are grouped into issues, representing high-severity errors to act upon
-            tracing::Level::ERROR => EventFilter::Event,
-            // Ignore trace level events, as they're too verbose
-            tracing::Level::TRACE => EventFilter::Ignore,
-            // Capture everything else as a traditional structured log
-            _ => EventFilter::Log,
-        });
-
     tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer())
-        .with(sentry_layer)
+        .with(sentry::integrations::tracing::layer())
         .init();
 
     info!("Hello, world!");
@@ -130,7 +119,11 @@ fn main() {
 
 The fields of `tracing` events are automatically captured as attributes in Sentry logs.
 
-To map a `tracing` event to multiple items in Sentry (e.g. both an event and a log), combine multiple event filters using the bitwise or operator.
+By default, `tracing` events at info level or above are captured as Sentry logs.
+
+To customize this behavior, define a custom `event_filter`.
+Multiple event filters can be combined using the bitwise or operator.
+The following code snippet shows the default `event_filter` used when the `sentry` crate is used with the `logs` feature.
 
 ```rust
 use sentry::integrations::tracing::EventFilter;
@@ -146,7 +139,7 @@ let sentry_layer =
     });
 ```
 
-### `log` Integration
+### `log` crate Integration
 
 To use the `log` integration with logs, add the necessary dependencies to your `Cargo.toml`.
 
