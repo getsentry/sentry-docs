@@ -88,22 +88,7 @@ async fn fail() {
 }
 ```
 
-By default, error level events from `tokio-rs/tracing` are captured as Sentry events, while anything at or above info is added as a breadcrumb.
-
-To capture structured logs from `tokio-rs/tracing` events instead, you need to pass `enable_logs: true` to `sentry::init`, and set up the Sentry layer with a custom event filter that maps to logs, like so:
-
-```rust
-use sentry::integrations::tracing::EventFilter;
-
-sentry::integrations::tracing::layer().event_filter(|md| match *md.level() {
-    // Capture error level events as Sentry events
-    tracing::Level::ERROR => EventFilter::Event,
-    // Ignore trace level events, as they're too verbose
-    tracing::Level::TRACE => EventFilter::Ignore,
-    // Capture everything else as a structured log
-    _ => EventFilter::Log,
-});
-```
+By default, error level events from `tokio-rs/tracing` are captured as Sentry events, while anything at or above info level is added as a breadcrumb and captured as a structured log (if the `logs` feature flag is enabled).
 
 ## Verify
 
