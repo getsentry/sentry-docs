@@ -121,9 +121,8 @@ The fields of `tracing` events are automatically captured as attributes in Sentr
 
 By default, `tracing` events at info level or above are captured as Sentry logs.
 
-To customize this behavior, define a custom `event_filter`.
-Multiple event filters can be combined using the bitwise or operator.
-The following code snippet shows the default `event_filter` used when the `sentry` crate is used with the `logs` feature.
+This behavior can be customized by applying a custom `event_filter` when creating the layer.
+The following snippet shows the default `event_filter` that's applied when using the `sentry` crate with the `logs` feature flag.
 
 ```rust
 use sentry::integrations::tracing::EventFilter;
@@ -131,13 +130,12 @@ use sentry::integrations::tracing::EventFilter;
 let sentry_layer =
     sentry::integrations::tracing::layer().event_filter(|md| match *md.level() {
         // Capture error and warn level events as both logs and events in Sentry
-        tracing::Level::ERROR | tracing::Level::WARN => EventFilter::Event | EventFilter::Log,
+        tracing::Level::ERROR => EventFilter::Event | EventFilter::Log,
         // Ignore trace level events, as they're too verbose
         tracing::Level::TRACE => EventFilter::Ignore,
-        // Capture everything else just as a log
-        _ => EventFilter::Log,
+        // Capture everything else as both a breadcrumb and a log
+        _ => EventFilter::Breadcrumb | EventFilter::Log,
     });
-```
 
 ### `log` crate Integration
 
