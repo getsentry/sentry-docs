@@ -1,0 +1,205 @@
+---
+title: AWS Lambda Development Environment
+sidebar_order: 200
+---
+
+This guide will explain how you can setup a development environment to work on the [AWS Lambda Integration](https://docs.sentry.io/product/integrations/cloud-monitoring/aws-lambda/). The development environment is a local instance of `sentry` and configuration in AWS to make everything work together.
+
+<Alert level="warning" title="IMPORTANT">
+
+**This guide is only if you want to send data from an AWS Lambda function to your local `sentry` instance.**
+
+When working on the Sentry AWS Lambda layer from one of the SDKs, the workflow is that you have your example Lambda function in a dev account on AWS and then deploy your local layer to the dev account and attach it to your example function. How do to this in Python is described in the [contribution guide](https://github.com/getsentry/sentry-python/blob/master/CONTRIBUTING.md#contributing-to-sentry-aws-lambda-layer) of the Python SDK.
+
+</Alert>
+
+## Configuration of AWS
+
+To emulate a Sentry integration with a project base on AWS Lambda functions you need:
+
+- One AWS account representing Sentry having an IAM and a S3 Bucket containing a JSON config file.
+- One AWS account representing the user that has a example Lambda function.
+
+### What You Need in Detail
+
+- For the **“Sentry Account”** in AWS we assume the AWS Account ID is `1111 1111 1111` in this guide. This account can be the shared official dev AWS account of Sentry, or you can create a personal one (credit card required for this)
+- Create an **IAM user** in the **“Sentry account”** that can create S3 buckets, and has permission to assume roles. The policy that can be directly attached to the IAM user looks like this:
+
+  _TODO: check if we can restrict those permissions more_
+
+  ```json
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "VisualEditor0",
+        "Effect": "Allow",
+        "Action": "sts:AssumeRole",
+        "Resource": "*"
+      }
+    ]
+  }
+  ```
+
+- A **S3 Bucket in “Sentry Account”** that is accessible by the public to host the CloudFormation configuration file. (more on this later). The S3 Bucket Policy should look like this (in this example “sentry-dev-cloudformation” is the name of the S3 bucket):
+
+  _TODO: check if we can restrict those permissions more_
+
+  ```json
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "Statement1",
+        "Effect": "Allow",
+        "Principal": "*",
+        "Action": "s3:*",
+        "Resource": [
+          "arn:aws:s3:::sentry-dev-cloudformation",
+          "arn:aws:s3:::sentry-dev-cloudformation/dev.json"
+        ]
+      }
+    ]
+  }
+  ```
+
+- An **CloudFormation configuration file** called `dev.json` that lives in the S3 bucket in “Sentry account” as mentioned above. The `dev.json` file is a pointer to a “Sentry account” user. The file must be readable by the customer.
+  The dev.json must look like this. You need to replace `arn:aws:iam::111111111111:user/sentry` with the ARN of your user:
+
+      *TODO: check if we can restrict those permissions more.*
+
+      ```json
+      {
+        "Description": "This stack grants write access to your Lambda functions in order to add Sentry error and performance monitoring. After pressing create, wait for the stack to be created before copying your AWS account number and region into the Sentry installation modal.",
+        "Resources": {
+          "SentryRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+              "AssumeRolePolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": {
+                      "AWS": "arn:aws:iam::111111111111:user/sentry"
+                    },
+                    "Action": [
+                      "sts:AssumeRole"
+                    ],
+                    "Condition": {
+                      "StringEquals": {
+                        "sts:ExternalId": {
+                          "Ref": "ExternalId"
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              "Path": "/",
+              "RoleName": "SentryRole",
+              "ManagedPolicyArns": [],
+              "Policies": [
+                {
+                  "PolicyName": "sentry-policy",
+                  "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "lambda:UpdateFunctionConfiguration",
+                          "lambda:ListFunctions",
+                          "lambda:ListLayerVersions",
+                          "lambda:GetFunction",
+                          "lambda:GetLayerVersion",
+                          "organizations:DescribeAccount"
+                        ],
+                        "Resource": "*"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "Parameters": {
+          "ExternalId": {
+            "Description": "External ID for securing the role - Do not change",
+            "Type": "String"
+          }
+        }
+      }
+      ```
+
+      This CloudFormation config file basically gives the user in the “Sentry account” access to assume a role in the “User account” to augment the Lambda functions (add the Sentry Lambda Layer) to instrument them for sending errors/metrics to Sentry
+
+- One **AWS** account representing the user and where the Lambda functions of the user live. This account we will call the **User account”** (and we will assume the AWS Account ID is `2222 2222 2222`)
+  The **“Sentry account”** and the **“User account”** can also be the same account.
+
+Ok, so now you have two AWS accounts and you have set up your CloudFormation config in a S3 bucket that is accessible to the world. Great!
+
+## Configuration of Local Sentry Instance
+
+You need just a default installation of `sentry` on your computer. Please install it following the [Development Environment Setup Guide](https://develop.sentry.dev/development-infrastructure/environment/).
+
+Now you have to tell your sentry installation what AWS account to use and where it can find the CloudFormation configuration.
+
+You can do this by adding the following parameter to your `~/.sentry/config.yml` file:
+
+```yaml
+aws-lambda.access-key-id: AKIBRN4AXJUFIG4EWYNA
+aws-lambda.secret-access-key: Iuy2GZYMhFZM7UDL4zQvaQ8lieXLNY6Cu2po2Xoj
+aws-lambda.cloudformation-url: https://sentry-dev-cloudformation.s3.eu-central-1.amazonaws.com/dev.json
+aws-lambda.node.layer-version: "37"
+aws-lambda.python.layer-version: "142"
+```
+
+Explanation:
+
+- `aws-lambda.access-key-id` AWS access key id of the IAM user created in the “Sentry Account”.
+- `aws-lambda.secret-access-key`AWS secret access key of the IAM user created in the “Sentry Account”.
+- `aws-lambda.cloudformation-url` public accessible URL of the CloudFormation config file that lives in a S3 bucket in the “Sentry Account”.
+- `aws-lambda.node.layer-version` the version of the Lambda layer that should be used for Node Lambda functions. (This is because I was unable to get the system to grab the version from the registry by itself.) This version number can be found here: [https://github.com/getsentry/sentry-release-registry/tree/master/aws-lambda-layers](https://github.com/getsentry/sentry-release-registry/tree/master/aws-lambda-layers) (Hint: every region can have another version of the Layer installed.)
+- `aws-lambda.python.layer-version` same as above but for Python based Lambda functions.
+
+## Configuration of Ngrok
+
+With [Ngrok](https://ngrok.com/) you get an URL that points to your local computer. So everyone on the internet can talk to your Sentry installation on your computer.
+
+This is needed so your AWS Lambda function can send its errors/tracing to your local Sentry installation.
+
+Follow the instructions on the [Ngrok documentation](https://develop.sentry.dev/development/ngrok/) page to install ngrok.
+
+Now start Ngrok like the following:
+
+```bash
+ngrok http 8000
+```
+
+If ngrok starts it outputs the URL that your computer is now available at. Copy the HTTP URL (it should look something like `http://xxxx-xxx-xxx-x-xxx.ngrok.io`).
+
+If you follow the guide in the ngrok page linked above you will get access to the Sentry Ngrok account and you can create a subdomain that is custom and not always changing when you restart ngrok. This is highly recommended.
+
+You now have to tell your sentry installation its new URL by adding the following line to your `~/.sentry/config.yml` :
+
+```yaml
+system.url-prefix: "http://xxxx-xxx-xxx-x-xxx.ngrok.io"
+```
+
+Make sure to restart all the development environment, to make sure everyone knows about the new URL. (with `devservices down && devservices up`)
+
+## Start the Local Sentry Server
+
+If you now run your local Sentry with this command and it will have all the information it needs:
+
+```bash
+devservices serve
+```
+
+Now everything is ready for serverless integration development.
+
+## Add Sentry to Your Lambda Functions
+
+Log into your local sentry environment at your ngrok URL and follow the [AWS Lambda Guide](https://docs.sentry.io/product/integrations/cloud-monitoring/aws-lambda/) in our documentation to add Sentry instrumentation to your demo AWS Lambda function.
