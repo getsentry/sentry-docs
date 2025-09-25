@@ -89,7 +89,7 @@ export const DEFAULTS: CodeKeywords = {
         'https://o0.ingest.sentry.io/api/0/minidump/?sentry_key=examplePublicKey',
       UNREAL_URL: 'https://o0.ingest.sentry.io/api/0/unreal/examplePublicKey/',
       OTLP_TRACES_URL: 'https://o0.ingest.sentry.io/api/0/otlp/v1/traces/',
-      OTLP_LOGS_URL: 'https://o0.ingest.sentry.io/api/0/otlp/v1/logs/',
+      OTLP_LOGS_URL: 'https://o0.ingest.sentry.io/api/0/integrations/otlp/v1/logs/',
       title: `example-org / example-project`,
     },
   ],
@@ -146,7 +146,7 @@ const formatOtlpTracesUrl = ({scheme, host, pathname}: Dsn) => {
 };
 
 const formatOtlpLogsUrl = ({scheme, host, pathname}: Dsn) => {
-  return `${scheme}${host}/api${pathname}/otlp/v1/logs/`;
+  return `${scheme}${host}/api${pathname}/integrations/otlp/v1/logs/`;
 };
 
 const formatApiUrl = ({scheme, host}: Dsn) => {
