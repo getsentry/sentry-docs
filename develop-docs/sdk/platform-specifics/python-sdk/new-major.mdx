@@ -1,0 +1,37 @@
+---
+title: New Major
+description: What to consider when preparing a new major.
+sidebar_order: 50
+---
+
+Even if we decide to make a new major, it's important to prioritize user-friendliness, ease of migration, and backwards compatibility.
+
+Upgrading requires effort. Every major increases the chances of folks staying on an older version forever.
+
+Make the process as seamless as possible. Don't break existing APIs for minor maintenance benefit on your end.
+
+
+## Make Upgrading as Effortless as Possible
+
+Create a migration guide. Include easily understandable and copy-pastable examples wherever possible.
+
+Many folks might try to upgrade using AI. Try it out yourself on an example project.
+
+
+## Dropping Version Support
+
+In general, we want to keep supporting as many Python versions and as many framework/library versions as possible.
+
+Consider whether we should drop support for an old Python version. There is data in Looker you can use to make an informed decision.
+
+Investigate if we should drop support for old versions of frameworks and libraries. This is not feasible to do by hand as there's too many. For this purpose there is a small script in `scripts/update_integration_support.py` that automatically detects the effective lowest supported version based on our tests and package metadata. You can run the script after removing support for an old Python version, and it should automatically detect which minimum versions are no longer supported.
+
+In order to fully specify the new minimum versions:
+- Update `_MIN_VERSIONS` in `sentry_sdk/integrations/__init__.py`
+- Update the lower bounds in `extras_require` in `setup.py`, if specified
+- Update the documentation pages for the affected integrations (usually, the lowest supported version is mentioned at the bottom)
+
+
+## Dropping deprecations
+
+Look over the codebase to look for mentions of deprecated features. Remove them.
