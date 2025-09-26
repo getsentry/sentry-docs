@@ -32,3 +32,40 @@ If you run any JavaScript applications in your distributed system, make sure tha
 <PlatformContent includePath="distributed-tracing/how-to-use/" />
 
 Remember that in order to propagate trace information through your whole distributed system, you have to use Sentry in all of the involved services and applications. Take a look at the respective SDK documentation to learn how distributed tracing can be enabled for each platform.
+
+### tracePropagationTargets
+
+The Java SDK will attach the `sentry-trace` and `baggage` headers to all outgoing requests by default. To narrow
+this down to only specific URLs, add those URLs to the `tracePropagationTargets` allowlist, (you can use both
+strings and regexes). The SDK will then only attach the `sentry-trace` and `baggage` headers to outgoing requests matching the allowlist.
+
+<Alert>
+The `tracePropagationTargets` option can contain full URLs (e.g. `"https://api.myproject.org/request/path"`), sub-strings (e.g. `"api.myproject.org"`) or regular expressions (e.g. `"https://[\w]*\.myproject\.org/.*"`).
+</Alert>
+
+Since the value of `tracePropagationTargets` is `".*"` by default, tracing headers are attached to all requests unless otherwise specified.
+
+```java {tabTitle:Java}
+Sentry.init(context, options -> {
+    final ArrayList<String> tracePropagationTargets = new ArrayList<>();
+    tracePropagationTargets.add("https://api.myproject.org/");
+
+    options.setDsn("___PUBLIC_DSN___");
+    options.setTracePropagationTargets(tracePropagationTargets);
+});
+```
+
+```kotlin {tabTitle:Kotlin}
+Sentry.init(context, { options ->
+    options.setDsn("___PUBLIC_DSN___")
+    options.setTracePropagationTargets(listOf(
+        "https://api.myproject.org/"
+    ))
+})
+```
+
+## W3C Traceparent Header Support
+
+Starting from version 8.22.0, the Java SDK also supports the W3C `traceparent` HTTP header for outgoing requests. This header follows the [W3C Trace Context specification](https://develop.sentry.dev/sdk/telemetry/traces/distributed-tracing/#w3c-trace-context-header) and provides interoperability with other tracing systems that support this standard.
+
+To enable W3C `traceparent` header propagation, set the [`propagateTraceparent`](/platforms/java/configuration/options/#propagate-traceparent) option to `true`. When enabled, the `traceparent` header will be propagated alongside the `sentry-trace` and `baggage` headers to outgoing HTTP requests. Like the other headers, it's attached to all requests by default, or only to requests matching your `tracePropagationTargets` configuration if you've specified one.

@@ -3,6 +3,8 @@
 import {RefObject, useEffect, useRef, useState} from 'react';
 import {Clipboard} from 'react-feather';
 
+import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
+
 import styles from './code-blocks.module.scss';
 
 import {makeHighlightBlocks} from '../codeHighlights';
@@ -15,6 +17,31 @@ export interface CodeBlockProps {
   title?: string;
 }
 
+/**
+ *
+ * Copy `element`'s text children as long as long as they are not `.no-copy`
+ */
+function getCopiableText(element: HTMLDivElement) {
+  let text = '';
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, {
+    acceptNode: function (node) {
+      // Skip if parent has .no-copy class
+      if (node.parentElement?.classList.contains('no-copy')) {
+        return NodeFilter.FILTER_REJECT;
+      }
+      return NodeFilter.FILTER_ACCEPT;
+    },
+  });
+
+  let node: Node | null;
+  // eslint-disable-next-line no-cond-assign
+  while ((node = walker.nextNode())) {
+    text += node.textContent;
+  }
+
+  return text.trim();
+}
+
 export function CodeBlock({filename, language, children}: CodeBlockProps) {
   const [showCopied, setShowCopied] = useState(false);
   const codeRef = useRef<HTMLDivElement>(null);
@@ -22,8 +49,27 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
   // Show the copy button after js has loaded
   // otherwise the copy button will not work
   const [showCopyButton, setShowCopyButton] = useState(false);
+  const {emit} = usePlausibleEvent();
+
   useEffect(() => {
     setShowCopyButton(true);
+    // prevent .no-copy elements from being copied during selection Right click copy or / Cmd+C
+    const noCopyElements = codeRef.current?.querySelectorAll<HTMLSpanElement>('.no-copy');
+    const handleSelectionChange = () => {
+      // hide no copy elements within the selection
+      const selection = window.getSelection();
+      noCopyElements?.forEach(element => {
+        if (selection?.containsNode(element, true)) {
+          element.style.display = 'none';
+        } else {
+          element.style.display = 'inline';
+        }
+      });
+    };
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange);
+    };
   }, []);
 
   useCleanSnippetInClipboard(codeRef, {language});
@@ -33,11 +79,14 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
       return;
     }
 
-    const code = cleanCodeSnippet(codeRef.current.innerText, {language});
+    const code = cleanCodeSnippet(getCopiableText(codeRef.current), {
+      language,
+    });
 
     try {
       await navigator.clipboard.writeText(code);
       setShowCopied(true);
+      emit('copy sentry code', {props: {page: window.location.pathname}});
       setTimeout(() => setShowCopied(false), 1200);
     } catch (error) {
       // eslint-disable-next-line no-console
