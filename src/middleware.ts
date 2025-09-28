@@ -46,6 +46,7 @@ function isAIOrDevTool(userAgent: string): boolean {
     /vscode/i,           // VS Code extensions
     /intellij/i,         // IntelliJ plugins
     /sublime/i,          // Sublime Text plugins
+    /got/i,              // Got HTTP library (sindresorhus/got)
     // Add more patterns as needed
   ];
 
