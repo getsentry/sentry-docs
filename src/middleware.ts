@@ -60,11 +60,17 @@ const handleAIClientRedirect = (request: NextRequest) => {
   const userAgent = request.headers.get('user-agent') || '';
   const url = request.nextUrl;
 
+  // Determine if this will be served as markdown
+  const forceMarkdown = url.searchParams.get('format') === 'md';
+  const isAIClient = isAIOrDevTool(userAgent);
+  const willServeMarkdown = (isAIClient || forceMarkdown) && !url.pathname.endsWith('.md');
+
   // Log user agent for debugging (only for non-static assets)
   if (!url.pathname.startsWith('/_next/') &&
       !url.pathname.includes('.') &&
       !url.pathname.startsWith('/api/')) {
-    console.log(`[Middleware] ${url.pathname} - User-Agent: ${userAgent}`);
+    const contentType = willServeMarkdown ? '📄 MARKDOWN' : '🌐 HTML';
+    console.log(`[Middleware] ${url.pathname} - ${contentType} - User-Agent: ${userAgent}`);
   }
 
   // Skip if already requesting a markdown file
@@ -79,9 +85,7 @@ const handleAIClientRedirect = (request: NextRequest) => {
     return undefined;
   }
 
-  // Check for explicit format request via query parameter
-  const forceMarkdown = url.searchParams.get('format') === 'md';
-  const isAIClient = isAIOrDevTool(userAgent);
+  // Check for AI client detection
 
   if (isAIClient || forceMarkdown) {
     // Log the redirect for debugging
