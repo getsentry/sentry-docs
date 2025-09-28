@@ -59,6 +59,13 @@ const handleAIClientRedirect = (request: NextRequest) => {
   const userAgent = request.headers.get('user-agent') || '';
   const url = request.nextUrl;
 
+  // Log user agent for debugging (only for non-static assets)
+  if (!url.pathname.startsWith('/_next/') &&
+      !url.pathname.includes('.') &&
+      !url.pathname.startsWith('/api/')) {
+    console.log(`[Middleware] ${url.pathname} - User-Agent: ${userAgent}`);
+  }
+
   // Skip if already requesting a markdown file
   if (url.pathname.endsWith('.md')) {
     return undefined;
@@ -76,6 +83,9 @@ const handleAIClientRedirect = (request: NextRequest) => {
   const isAIClient = isAIOrDevTool(userAgent);
 
   if (isAIClient || forceMarkdown) {
+    // Log the redirect for debugging
+    console.log(`[Middleware] Redirecting to markdown: ${isAIClient ? 'AI client detected' : 'Manual format=md'}`);
+
     // Create new URL with .md extension
     const newUrl = url.clone();
     // Handle root path and ensure proper .md extension
