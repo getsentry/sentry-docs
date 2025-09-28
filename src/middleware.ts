@@ -79,8 +79,10 @@ const handleAIClientRedirect = (request: NextRequest) => {
     // Create new URL with .md extension
     const newUrl = url.clone();
     // Handle root path and ensure proper .md extension
-    const pathname = url.pathname === '/' ? '/index' : url.pathname.replace(/\/$/, '');
-    newUrl.pathname = pathname + '.md';
+    let pathname = url.pathname === '/' ? '/index' : url.pathname;
+    // Remove trailing slash if present, then add .md
+    pathname = pathname.replace(/\/$/, '') + '.md';
+    newUrl.pathname = pathname;
 
     // Clean up the format query parameter if it was used
     if (forceMarkdown) {
