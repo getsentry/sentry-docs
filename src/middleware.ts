@@ -19,11 +19,81 @@ export const config = {
 
 // This function can be marked `async` if using `await` inside
 export function middleware(request: NextRequest) {
+  // Check for AI/LLM clients and redirect to markdown if appropriate
+  const markdownRedirect = handleAIClientRedirect(request);
+  if (markdownRedirect) {
+    return markdownRedirect;
+  }
+
   return handleRedirects(request);
 }
 
 // don't send Permanent Redirects (301) in dev mode - it gets cached for "localhost" by the browser
 const redirectStatusCode = process.env.NODE_ENV === 'development' ? 302 : 301;
+
+/**
+ * Detects if the user agent belongs to an AI/LLM tool or development environment
+ * that would benefit from markdown format
+ */
+function isAIOrDevTool(userAgent: string): boolean {
+  const patterns = [
+    /claude/i,           // Claude Desktop/Code
+    /cursor/i,           // Cursor IDE
+    /copilot/i,          // GitHub Copilot
+    /chatgpt/i,          // ChatGPT
+    /openai/i,           // OpenAI tools
+    /anthropic/i,        // Anthropic tools
+    /vscode/i,           // VS Code extensions
+    /intellij/i,         // IntelliJ plugins
+    /sublime/i,          // Sublime Text plugins
+    // Add more patterns as needed
+  ];
+
+  return patterns.some(pattern => pattern.test(userAgent));
+}
+
+/**
+ * Handles redirection to markdown versions for AI/LLM clients
+ */
+const handleAIClientRedirect = (request: NextRequest) => {
+  const userAgent = request.headers.get('user-agent') || '';
+  const url = request.nextUrl;
+
+  // Skip if already requesting a markdown file
+  if (url.pathname.endsWith('.md')) {
+    return undefined;
+  }
+
+  // Skip API routes and static assets (should already be filtered by matcher)
+  if (url.pathname.startsWith('/api/') ||
+      url.pathname.startsWith('/_next/') ||
+      url.pathname.includes('.')) {
+    return undefined;
+  }
+
+  // Check for explicit format request via query parameter
+  const forceMarkdown = url.searchParams.get('format') === 'md';
+  const isAIClient = isAIOrDevTool(userAgent);
+
+  if (isAIClient || forceMarkdown) {
+    // Create new URL with .md extension
+    const newUrl = url.clone();
+    // Handle root path and ensure proper .md extension
+    const pathname = url.pathname === '/' ? '/index' : url.pathname.replace(/\/$/, '');
+    newUrl.pathname = pathname + '.md';
+
+    // Clean up the format query parameter if it was used
+    if (forceMarkdown) {
+      newUrl.searchParams.delete('format');
+    }
+
+    return NextResponse.redirect(newUrl, {
+      status: redirectStatusCode,
+    });
+  }
+
+  return undefined;
+};
 
 const handleRedirects = (request: NextRequest) => {
   const urlPath = request.nextUrl.pathname;
