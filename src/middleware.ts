@@ -37,16 +37,16 @@ const redirectStatusCode = process.env.NODE_ENV === 'development' ? 302 : 301;
  */
 function isAIOrDevTool(userAgent: string): boolean {
   const patterns = [
-    /claude/i,           // Claude Desktop/Code
-    /cursor/i,           // Cursor IDE
-    /copilot/i,          // GitHub Copilot
-    /chatgpt/i,          // ChatGPT
-    /openai/i,           // OpenAI tools
-    /anthropic/i,        // Anthropic tools
-    /vscode/i,           // VS Code extensions
-    /intellij/i,         // IntelliJ plugins
-    /sublime/i,          // Sublime Text plugins
-    /got/i,              // Got HTTP library (sindresorhus/got)
+    /claude/i, // Claude Desktop/Code
+    /cursor/i, // Cursor IDE
+    /copilot/i, // GitHub Copilot
+    /chatgpt/i, // ChatGPT
+    /openai/i, // OpenAI tools
+    /anthropic/i, // Anthropic tools
+    /vscode/i, // VS Code extensions
+    /intellij/i, // IntelliJ plugins
+    /sublime/i, // Sublime Text plugins
+    /got/i, // Got HTTP library (sindresorhus/got)
     // Add more patterns as needed
   ];
 
@@ -63,14 +63,19 @@ const handleAIClientRedirect = (request: NextRequest) => {
   // Determine if this will be served as markdown
   const forceMarkdown = url.searchParams.get('format') === 'md';
   const isAIClient = isAIOrDevTool(userAgent);
-  const willServeMarkdown = (isAIClient || forceMarkdown) && !url.pathname.endsWith('.md');
+  const willServeMarkdown =
+    (isAIClient || forceMarkdown) && !url.pathname.endsWith('.md');
 
   // Log user agent for debugging (only for non-static assets)
-  if (!url.pathname.startsWith('/_next/') &&
-      !url.pathname.includes('.') &&
-      !url.pathname.startsWith('/api/')) {
+  if (
+    !url.pathname.startsWith('/_next/') &&
+    !url.pathname.includes('.') &&
+    !url.pathname.startsWith('/api/')
+  ) {
     const contentType = willServeMarkdown ? '📄 MARKDOWN' : '🌐 HTML';
-    console.log(`[Middleware] ${url.pathname} - ${contentType} - User-Agent: ${userAgent}`);
+    console.log(
+      `[Middleware] ${url.pathname} - ${contentType} - User-Agent: ${userAgent}`
+    );
   }
 
   // Skip if already requesting a markdown file
@@ -79,9 +84,11 @@ const handleAIClientRedirect = (request: NextRequest) => {
   }
 
   // Skip API routes and static assets (should already be filtered by matcher)
-  if (url.pathname.startsWith('/api/') ||
-      url.pathname.startsWith('/_next/') ||
-      url.pathname.includes('.')) {
+  if (
+    url.pathname.startsWith('/api/') ||
+    url.pathname.startsWith('/_next/') ||
+    url.pathname.includes('.')
+  ) {
     return undefined;
   }
 
@@ -89,7 +96,9 @@ const handleAIClientRedirect = (request: NextRequest) => {
 
   if (isAIClient || forceMarkdown) {
     // Log the redirect for debugging
-    console.log(`[Middleware] Redirecting to markdown: ${isAIClient ? 'AI client detected' : 'Manual format=md'}`);
+    console.log(
+      `[Middleware] Redirecting to markdown: ${isAIClient ? 'AI client detected' : 'Manual format=md'}`
+    );
 
     // Create new URL with .md extension
     const newUrl = url.clone();

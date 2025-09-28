@@ -1,9 +1,9 @@
-import {promises as fs} from "node:fs";
-import path from "node:path";
+import {promises as fs} from 'node:fs';
+import path from 'node:path';
 
-import {buildDocUrl} from "../../shared/docs-utils";
+import {buildDocUrl} from '../../shared/docs-utils';
 
-const SEARCH_INDEX_PATH = path.join(process.cwd(), "public", "search-index.json");
+const SEARCH_INDEX_PATH = path.join(process.cwd(), 'public', 'search-index.json');
 
 type RawSearchIndexEntry = {
   content: string;
@@ -39,7 +39,7 @@ type CachedEntry = RawSearchIndexEntry & {
 let searchIndexPromise: Promise<CachedEntry[]> | null = null;
 
 async function loadSearchIndexInternal(): Promise<CachedEntry[]> {
-  const raw = await fs.readFile(SEARCH_INDEX_PATH, "utf8");
+  const raw = await fs.readFile(SEARCH_INDEX_PATH, 'utf8');
   const parsed = JSON.parse(raw) as SearchIndexFile;
   return parsed.entries.map(entry => ({
     ...entry,
@@ -162,34 +162,34 @@ export async function searchIndex(query: string, limit: number): Promise<SearchM
 }
 
 function getInstallBias(entry: CachedEntry): number {
-  const segments = entry.pathLower.split("/");
-  const fileName = segments[segments.length - 1] ?? "";
-  const baseName = fileName.replace(/\.md$/, "");
+  const segments = entry.pathLower.split('/');
+  const fileName = segments[segments.length - 1] ?? '';
+  const baseName = fileName.replace(/\.md$/, '');
 
   let bias = 0;
 
   // Top-level platform doc like "platforms/react.md"
-  if (segments[0] === "platforms" && segments.length === 2) {
+  if (segments[0] === 'platforms' && segments.length === 2) {
     bias += 40;
   }
 
   // JavaScript guide root doc like "platforms/javascript/guides/react.md"
   if (
-    segments[0] === "platforms" &&
-    segments[1] === "javascript" &&
-    segments[2] === "guides" &&
+    segments[0] === 'platforms' &&
+    segments[1] === 'javascript' &&
+    segments[2] === 'guides' &&
     segments.length === 4
   ) {
     bias += 50;
   }
 
   // Files under an install directory get a boost
-  if (segments.includes("install")) {
+  if (segments.includes('install')) {
     bias += 20;
   }
 
   // Common install filenames get additional weight
-  if (["install", "installation", "setup", "getting-started"].includes(baseName)) {
+  if (['install', 'installation', 'setup', 'getting-started'].includes(baseName)) {
     bias += 25;
   }
 
@@ -197,7 +197,7 @@ function getInstallBias(entry: CachedEntry): number {
 }
 
 export function formatMatchAsBlock(match: SearchMatch): string {
-  const header = `# ${match.hierarchy.join(" > ")}`;
+  const header = `# ${match.hierarchy.join(' > ')}`;
   const link = `[${match.title}](${match.path})`;
   const lines = [header, link];
 
@@ -205,7 +205,7 @@ export function formatMatchAsBlock(match: SearchMatch): string {
     lines.push(match.snippet);
   }
 
-  return lines.join("\n");
+  return lines.join('\n');
 }
 
 export function mapMatchToResponse(match: SearchMatch) {
