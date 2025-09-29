@@ -19,13 +19,14 @@ export const config = {
 
 // This function can be marked `async` if using `await` inside
 export function middleware(request: NextRequest) {
-  // Check for AI/LLM clients and redirect to markdown if appropriate
-  const markdownRedirect = handleAIClientRedirect(request);
-  if (markdownRedirect) {
-    return markdownRedirect;
+  // First, handle canonical URL redirects for deprecated paths
+  const canonicalRedirect = handleRedirects(request);
+  if (canonicalRedirect) {
+    return canonicalRedirect;
   }
 
-  return handleRedirects(request);
+  // Then, check for AI/LLM clients and redirect to markdown if appropriate
+  return handleAIClientRedirect(request);
 }
 
 // don't send Permanent Redirects (301) in dev mode - it gets cached for "localhost" by the browser
