@@ -99,7 +99,7 @@ export function ImageLightbox({
     const imageClassName = isInline
       ? className
       : 'max-h-[90vh] max-w-[90vw] object-contain';
-    
+
     // Apply sizing:
     // - If manual: set only provided dimension(s); missing one becomes 'auto'
     // - Else: default responsive

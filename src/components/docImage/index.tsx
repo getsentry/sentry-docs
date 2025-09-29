@@ -110,13 +110,13 @@ export default function DocImage({
   const width = isManual
     ? manualWidth
     : hashDimensions[0] > 0
-    ? hashDimensions[0]
-    : undefined;
+      ? hashDimensions[0]
+      : undefined;
   const height = isManual
     ? manualHeight
     : hashDimensions[1] > 0
-    ? hashDimensions[1]
-    : undefined;
+      ? hashDimensions[1]
+      : undefined;
 
   return (
     <ImageLightbox
