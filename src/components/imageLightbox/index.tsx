@@ -15,6 +15,7 @@ interface ImageLightboxProps
   imgPath: string;
   src: string;
   height?: number;
+  isManualDimensions?: boolean;
   width?: number;
 }
 
@@ -54,6 +55,7 @@ export function ImageLightbox({
   width,
   height,
   imgPath,
+  isManualDimensions = false,
   style,
   className,
   ...props
@@ -97,8 +99,18 @@ export function ImageLightbox({
     const imageClassName = isInline
       ? className
       : 'max-h-[90vh] max-w-[90vw] object-contain';
+    
+    // Apply sizing:
+    // - If manual: set only provided dimension(s); missing one becomes 'auto'
+    // - Else: default responsive
     const imageStyle = isInline
-      ? {width: '100%', height: 'auto', ...style}
+      ? isManualDimensions
+        ? {
+            width: width != null ? `${width}px` : 'auto',
+            height: height != null ? `${height}px` : 'auto',
+            ...style,
+          }
+        : {width: '100%', height: 'auto', ...style}
       : {width: 'auto', height: 'auto'};
 
     if (shouldUseNextImage && dimensions) {

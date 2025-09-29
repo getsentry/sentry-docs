@@ -35,6 +35,7 @@ import remarkCodeTitles from './remark-code-title';
 import remarkComponentSpacing from './remark-component-spacing';
 import remarkExtractFrontmatter from './remark-extract-frontmatter';
 import remarkFormatCodeBlocks from './remark-format-code';
+import remarkImageResize from './remark-image-resize';
 import remarkImageSize from './remark-image-size';
 import remarkTocHeadings, {TocNode} from './remark-toc-headings';
 import remarkVariables from './remark-variables';
@@ -583,6 +584,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
         remarkFormatCodeBlocks,
         [remarkImageSize, {sourceFolder: cwd, publicFolder: path.join(root, 'public')}],
         remarkMdxImages,
+        remarkImageResize,
         remarkCodeTitles,
         remarkCodeTabs,
         remarkComponentSpacing,
@@ -654,11 +656,6 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       // for all images, so we cannot filter it out only
       // for this specific slug easily
       options.outdir = assetsCacheDir || outdir;
-
-      // Ensure file-loader URLs are absolute from the public folder so
-      // imported image paths do not end up page-relative (which breaks <img src={imported}>).
-      // With this, imports will resolve like "/mdx-images/<name>-<hash>.<ext>".
-      options.publicPath = '/mdx-images';
 
       // Set write to true so that esbuild will output the files.
       options.write = true;
