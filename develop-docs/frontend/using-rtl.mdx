@@ -131,14 +131,17 @@ Suppose routes.tsx defines some nested routes like:
 We can configure the in-memory router to know about just the route tree that you need. Remember to render the wrapper component itself, and the router + route child components will render themsevles.
 ```tsx
 function SettingsWrapper() {
-  return <Outlet />;
+  const settings = useSettings(); // returns `{name: 'Default'}` or something
+  return <Outlet settings={settings} />;
 }
 function SettingsIndex() {
-  return <div>Settings Index</div>;
+  const {settings} = useOutletContext();
+  return <div>Settings > {settings.name}</div>;
 }
 function AccountSettings() {
+  const {settings} = useOutletContext();
   const {projectId} = useParams();
-  return <div>Project: {projectId}</div>;
+  return <div>Settings > {settings.name} > Project: {projectId}</div>;
 }
 
 render(<SettingsWrapper />, {
@@ -155,7 +158,7 @@ render(<SettingsWrapper />, {
     ],
   },
 });
-expect(screen.getByText('Setting Index')).toBeInTheDocument();
+expect(screen.getByText('Settings > Default')).toBeInTheDocument();
 
 render(<SettingsWrapper />, {
   initialRouterConfig: {
@@ -171,7 +174,7 @@ render(<SettingsWrapper />, {
     ],
   },
 });
-expect(screen.getByText('Project: 123')).toBeInTheDocument();
+expect(screen.getByText('Settings > Default > Project: 123')).toBeInTheDocument();
 ```
 
 
