@@ -55,17 +55,46 @@ function isAIOrDevTool(userAgent: string): boolean {
 }
 
 /**
+ * Detects if client wants markdown via Accept header (standards-compliant)
+ */
+function wantsMarkdownViaAccept(acceptHeader: string): boolean {
+  return acceptHeader.includes('text/markdown') ||
+         acceptHeader.includes('text/x-markdown');
+}
+
+/**
+ * Detects if client wants markdown via Accept header or user-agent
+ */
+function wantsMarkdown(request: NextRequest): boolean {
+  const userAgent = request.headers.get('user-agent') || '';
+  const acceptHeader = request.headers.get('accept') || '';
+
+  // Strategy 1: Accept header content negotiation (standards-compliant)
+  if (wantsMarkdownViaAccept(acceptHeader)) {
+    return true;
+  }
+
+  // Strategy 2: User-agent detection (fallback for tools that don't set Accept)
+  return isAIOrDevTool(userAgent);
+}
+
+/**
  * Handles redirection to markdown versions for AI/LLM clients
  */
 const handleAIClientRedirect = (request: NextRequest) => {
   const userAgent = request.headers.get('user-agent') || '';
+  const acceptHeader = request.headers.get('accept') || '';
   const url = request.nextUrl;
 
   // Determine if this will be served as markdown
   const forceMarkdown = url.searchParams.get('format') === 'md';
-  const isAIClient = isAIOrDevTool(userAgent);
+  const clientWantsMarkdown = wantsMarkdown(request);
   const willServeMarkdown =
-    (isAIClient || forceMarkdown) && !url.pathname.endsWith('.md');
+    (clientWantsMarkdown || forceMarkdown) && !url.pathname.endsWith('.md');
+
+  // Determine detection method for logging
+  const detectionMethod = wantsMarkdownViaAccept(acceptHeader) ? 'Accept header' :
+                         isAIOrDevTool(userAgent) ? 'User-agent' : 'Manual';
 
   // Log user agent for debugging (only for non-static assets)
   if (
@@ -74,8 +103,9 @@ const handleAIClientRedirect = (request: NextRequest) => {
     !url.pathname.startsWith('/api/')
   ) {
     const contentType = willServeMarkdown ? '📄 MARKDOWN' : '🌐 HTML';
+    const methodInfo = willServeMarkdown ? ` (${detectionMethod})` : '';
     console.log(
-      `[Middleware] ${url.pathname} - ${contentType} - User-Agent: ${userAgent}`
+      `[Middleware] ${url.pathname} - ${contentType}${methodInfo} - User-Agent: ${userAgent}`
     );
   }
 
@@ -95,12 +125,11 @@ const handleAIClientRedirect = (request: NextRequest) => {
     return undefined;
   }
 
-  // Check for AI client detection
-
-  if (isAIClient || forceMarkdown) {
+  // Check for markdown request (Accept header, user-agent, or manual)
+  if (clientWantsMarkdown || forceMarkdown) {
     // Log the redirect for debugging
     console.log(
-      `[Middleware] Redirecting to markdown: ${isAIClient ? 'AI client detected' : 'Manual format=md'}`
+      `[Middleware] Redirecting to markdown: ${forceMarkdown ? 'Manual format=md' : detectionMethod}`
     );
 
     // Create new URL with .md extension
