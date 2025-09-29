@@ -81,7 +81,7 @@ const handleAIClientRedirect = (request: NextRequest) => {
   // Skip API routes and static assets (should already be filtered by matcher)
   if (url.pathname.startsWith('/api/') ||
       url.pathname.startsWith('/_next/') ||
-      url.pathname.includes('.')) {
+      /\.(js|json|png|jpg|jpeg|gif|ico|pdf|css|woff|woff2|ttf|map|xml|txt|zip|svg)$/i.test(url.pathname)) {
     return undefined;
   }
 
