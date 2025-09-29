@@ -58,8 +58,9 @@ function isAIOrDevTool(userAgent: string): boolean {
  * Detects if client wants markdown via Accept header (standards-compliant)
  */
 function wantsMarkdownViaAccept(acceptHeader: string): boolean {
-  return acceptHeader.includes('text/markdown') ||
-         acceptHeader.includes('text/x-markdown');
+  return (
+    acceptHeader.includes('text/markdown') || acceptHeader.includes('text/x-markdown')
+  );
 }
 
 /**
@@ -93,8 +94,11 @@ const handleAIClientRedirect = (request: NextRequest) => {
     (clientWantsMarkdown || forceMarkdown) && !url.pathname.endsWith('.md');
 
   // Determine detection method for logging
-  const detectionMethod = wantsMarkdownViaAccept(acceptHeader) ? 'Accept header' :
-                         isAIOrDevTool(userAgent) ? 'User-agent' : 'Manual';
+  const detectionMethod = wantsMarkdownViaAccept(acceptHeader)
+    ? 'Accept header'
+    : isAIOrDevTool(userAgent)
+      ? 'User-agent'
+      : 'Manual';
 
   // Log user agent for debugging (only for non-static assets)
   if (
