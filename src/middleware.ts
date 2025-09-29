@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import type {NextRequest} from 'next/server';
 import {NextResponse} from 'next/server';
 
@@ -59,7 +60,9 @@ function isAIOrDevTool(userAgent: string): boolean {
  */
 function wantsMarkdownViaAccept(acceptHeader: string): boolean {
   return (
-    acceptHeader.includes('text/markdown') || acceptHeader.includes('text/x-markdown')
+    acceptHeader.includes('text/markdown') ||
+    acceptHeader.includes('text/x-markdown') ||
+    acceptHeader.includes('text/plain')
   );
 }
 
@@ -106,11 +109,13 @@ const handleAIClientRedirect = (request: NextRequest) => {
     !url.pathname.includes('.') &&
     !url.pathname.startsWith('/api/')
   ) {
-    const contentType = willServeMarkdown ? '📄 MARKDOWN' : '🌐 HTML';
-    const methodInfo = willServeMarkdown ? ` (${detectionMethod})` : '';
-    console.log(
-      `[Middleware] ${url.pathname} - ${contentType}${methodInfo} - User-Agent: ${userAgent}`
-    );
+    Sentry.logger.info(`Middleware request processed: ${url.pathname}`, {
+      urlPath: url.pathname,
+      acceptHeader: request.headers.get('accept') || '',
+      userAgent: request.headers.get('user-agent') || '',
+      contentType: willServeMarkdown ? 'markdown' : 'html',
+      detectionMethod: willServeMarkdown ? detectionMethod : null,
+    });
   }
 
   // Skip if already requesting a markdown file
@@ -132,9 +137,11 @@ const handleAIClientRedirect = (request: NextRequest) => {
   // Check for markdown request (Accept header, user-agent, or manual)
   if (clientWantsMarkdown || forceMarkdown) {
     // Log the redirect for debugging
-    console.log(
-      `[Middleware] Redirecting to markdown: ${forceMarkdown ? 'Manual format=md' : detectionMethod}`
-    );
+    Sentry.logger.info('Markdown redirect triggered', {
+      urlPath: url.pathname,
+      detectionMethod: forceMarkdown ? 'Manual format=md' : detectionMethod,
+      targetUrl: url.pathname.replace(/\/+$/, '') + '.md',
+    });
 
     // Create new URL with .md extension
     const newUrl = url.clone();
