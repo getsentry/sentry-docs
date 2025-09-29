@@ -146,8 +146,7 @@ export function useCustomOutletContext() {
 }
 
 export default function SettingsWrapper() {
-  const settings = useSettings(); // returns `{name: 'Default'}` or something
-  return <Outlet settings={settings as OutletContext} />;
+  return <Outlet context={{name: 'Default'} as OutletContext} />;
 }
 
 // settingsIndex.tsx
@@ -156,14 +155,14 @@ function SettingsIndex() {
   return <div>Settings > {settings.name}</div>;
 }
 
-// accountSettings.tsx
-function AccountSettings() {
+// projectSettings.tsx
+function ProjectSettings() {
   const {settings} = useCustomOutletContext();
   const {projectId} = useParams();
   return <div>Settings > {settings.name} > Project: {projectId}</div>;
 }
 
-// tests.spec.tsx
+// settingsIndex.spec.tsx
 render(<SettingsWrapper />, {
   initialRouterConfig: {
     location: {
@@ -180,6 +179,7 @@ render(<SettingsWrapper />, {
 });
 expect(screen.getByText('Settings > Default')).toBeInTheDocument();
 
+// projectSettings.spec.tsx
 render(<SettingsWrapper />, {
   initialRouterConfig: {
     location: {
@@ -189,7 +189,7 @@ render(<SettingsWrapper />, {
     children: [
       {
         path: ':projectId/',
-        element: <AccountSettings />,
+        element: <ProjectSettings />,
       },
     ],
   },
