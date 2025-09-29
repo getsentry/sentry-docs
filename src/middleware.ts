@@ -1,6 +1,6 @@
+import * as Sentry from '@sentry/nextjs';
 import type {NextRequest} from 'next/server';
 import {NextResponse} from 'next/server';
-import * as Sentry from '@sentry/nextjs';
 
 // This env var is set in next.config.js based on the `NEXT_PUBLIC_DEVELOPER_DOCS` env var at build time
 // a workaround edge middleware not having access to env vars
@@ -109,8 +109,6 @@ const handleAIClientRedirect = (request: NextRequest) => {
     !url.pathname.includes('.') &&
     !url.pathname.startsWith('/api/')
   ) {
-    const contentType = willServeMarkdown ? '📄 MARKDOWN' : '🌐 HTML';
-    const methodInfo = willServeMarkdown ? ` (${detectionMethod})` : '';
     Sentry.logger.info(`Middleware request processed: ${url.pathname}`, {
       urlPath: url.pathname,
       acceptHeader: request.headers.get('accept') || '',
