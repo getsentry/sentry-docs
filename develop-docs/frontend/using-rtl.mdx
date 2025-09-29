@@ -97,6 +97,84 @@ const {router} = render(<TestComponent />, {
 expect(screen.getByText('123')).toBeInTheDocument();
 ```
 
+If you need to test outlet param values (as in `useOutletContext()`), you can pass them inside the `initialRouterConfig` object.
+
+```tsx
+function TestComponent() {
+  const { id } = useOutletContext();
+  return <div>{id}</div>;
+}
+
+const { router } = render(<TestComponent />, {
+  initialRouterConfig: {
+    outletContext: { id: '123' },
+  },
+});
+
+expect(screen.getByText('123')).toBeInTheDocument();
+```
+
+If directly setting outlet context isn't enough, instead you want to render some nested routes you can do that too!
+
+Suppose routes.tsx defines some nested routes like:
+```tsx
+{
+  path: 'settings/',
+  component: SettingsWrapper,
+  children: [
+    {index: true, component: SettingsIndex},
+    {path: ':projectID/', component: ProjectSettings},
+  ]
+}
+```
+
+We can configure the in-memory router to know about just the route tree that you need. Remember to render the wrapper component itself, and the router + route child components will render themsevles.
+```tsx
+function SettingsWrapper() {
+  return <Outlet />;
+}
+function SettingsIndex() {
+  return <div>Settings Index</div>;
+}
+function AccountSettings() {
+  const {projectID} = useParams();
+  return <div>Project: {projectID}</div>;
+}
+
+render(<SettingsWrapper />, {
+  initialRouterConfig: {
+    location: {
+      pathname: '/settings/',
+    },
+    route: '/settings/',
+    children: [
+      {
+        index: true,
+        element: <SettingsIndex />,
+      },
+    ],
+  },
+});
+expect(screen.getByText('Setting Index')).toBeInTheDocument();
+
+render(<SettingsWrapper />, {
+  initialRouterConfig: {
+    location: {
+      pathname: '/settings/123',
+    },
+    route: '/settings/:projectId',
+    children: [
+      {
+        path: ':projectId/',
+        element: <AccountSettings />,
+      },
+    ],
+  },
+});
+expect(screen.getByText('Project: 123')).toBeInTheDocument();
+```
+
+
 ## Querying
 
 - use `getBy...` as much as possible
