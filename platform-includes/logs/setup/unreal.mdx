@@ -1,0 +1,103 @@
+To enable logging in your Unreal Engine project, you need to configure the Sentry SDK with structured logging enabled.
+
+### Project Settings Configuration
+
+1. Open your project settings: **Project Settings > Plugins > Sentry**
+2. Check the **Enable Structured Logging** option
+
+### Programmatic Configuration
+
+Alternatively, you can enable logging programmatically when initializing the SDK:
+
+```cpp
+#include "SentrySubsystem.h"
+
+void ConfigureSentryWithLogs()
+{
+    USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+    // Create settings with logging enabled
+    USentrySettings* Settings = NewObject<USentrySettings>();
+    Settings->EnableStructuredLogging = true;
+
+    // Initialize with custom settings
+    SentrySubsystem->InitializeWithSettings(Settings);
+}
+```
+
+### Advanced Configuration Options
+
+#### Automatic Unreal Engine Log Forwarding
+
+You can configure the SDK to automatically forward Unreal Engine's native `UE_LOG` calls to Sentry based on the enabled severity levels:
+
+```cpp
+// Configure automatic log forwarding programmatically
+USentrySettings* Settings = NewObject<USentrySettings>();
+Settings->EnableStructuredLogging = true;
+
+// Enable specific severity levels for UE_LOG forwarding
+Settings->EnableDebugLogs = false;
+Settings->EnableInfoLogs = true;
+Settings->EnableWarningLogs = true;
+Settings->EnableErrorLogs = true;
+Settings->EnableFatalLogs = true;
+
+Settings->SendLogsAsBreadcrumbs = false; // Send as structured logs instead of breadcrumbs
+```
+
+#### Log Category Filtering
+
+You can filter which log categories are sent to Sentry:
+
+```cpp
+// Configure category filtering
+USentrySettings* Settings = NewObject<USentrySettings>();
+Settings->EnableStructuredLogging = true;
+
+// Only forward logs from specific categories
+TArray<FString> AllowedCategories;
+AllowedCategories.Add(TEXT("LogGameFlow"));
+AllowedCategories.Add(TEXT("LogPlayerSystem"));
+AllowedCategories.Add(TEXT("LogSentrySdk"));
+Settings->LogCategoryFilter = AllowedCategories;
+```
+
+#### Before-Log Handler
+
+To filter logs, or update them before they are sent to Sentry, you can use the `SetBeforeLogCallback` option:
+
+```cpp
+#include "SentrySubsystem.h"
+
+void SetupBeforeLogHandler()
+{
+    USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+    // Set a before-log handler to modify log events
+    SentrySubsystem->SetBeforeLogCallback([](USentryLogEvent* LogEvent) -> USentryLogEvent*
+    {
+        // Filter out all debug logs
+        if (LogEvent->GetLevel() == ESentryLevel::Debug)
+        {
+            return nullptr; // Return null to prevent sending
+        }
+
+        // Filter out logs based on category
+        if (LogEvent->GetBody() == TEXT("Sensitive"))
+        {
+            return nullptr; // Filter out sensitive logs
+        }
+
+        return LogEvent; // Return modified event
+    });
+}
+```
+
+The callback function receives a `USentryLogEvent` object, and should return the log event if you want it to be sent to Sentry, or `nullptr` if you want to discard it.
+
+The `USentryLogEvent` object has the following methods:
+- `GetLevel()`: Returns the severity level of the log (`ESentryLevel`)
+- `GetBody()`: Returns the formatted log message (`FString`)
+- `SetLevel(ESentryLevel Level)`: Sets the Level of the Log Event
+- `SetBody(FString& Body)`: Sets the Body of the Log Event
