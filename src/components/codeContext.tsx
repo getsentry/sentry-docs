@@ -14,6 +14,7 @@ type ProjectCodeKeywords = {
   ORG_ID: number;
   ORG_INGEST_DOMAIN: string;
   ORG_SLUG: string;
+  OTLP_LOGS_URL: string;
   OTLP_TRACES_URL: string;
   PROJECT_ID: number;
   PROJECT_SLUG: string;
@@ -88,6 +89,7 @@ export const DEFAULTS: CodeKeywords = {
         'https://o0.ingest.sentry.io/api/0/minidump/?sentry_key=examplePublicKey',
       UNREAL_URL: 'https://o0.ingest.sentry.io/api/0/unreal/examplePublicKey/',
       OTLP_TRACES_URL: 'https://o0.ingest.sentry.io/api/0/otlp/v1/traces/',
+      OTLP_LOGS_URL: 'https://o0.ingest.sentry.io/api/0/integrations/otlp/v1/logs/',
       title: `example-org / example-project`,
     },
   ],
@@ -141,6 +143,10 @@ const formatUnrealEngineURL = ({scheme, host, pathname, publicKey}: Dsn) => {
 
 const formatOtlpTracesUrl = ({scheme, host, pathname}: Dsn) => {
   return `${scheme}${host}/api${pathname}/otlp/v1/traces/`;
+};
+
+const formatOtlpLogsUrl = ({scheme, host, pathname}: Dsn) => {
+  return `${scheme}${host}/api${pathname}/integrations/otlp/v1/logs/`;
 };
 
 const formatApiUrl = ({scheme, host}: Dsn) => {
@@ -236,6 +242,7 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
         MINIDUMP_URL: formatMinidumpURL(parsedDsn),
         UNREAL_URL: formatUnrealEngineURL(parsedDsn),
         OTLP_TRACES_URL: formatOtlpTracesUrl(parsedDsn),
+        OTLP_LOGS_URL: formatOtlpLogsUrl(parsedDsn),
         title: `${project.organizationSlug} / ${project.projectSlug}`,
       };
     }),
