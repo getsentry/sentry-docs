@@ -65,17 +65,15 @@ Settings->LogCategoryFilter = AllowedCategories;
 
 #### Before-Log Handler
 
-To filter logs, or update them before they are sent to Sentry, you can use the `SetBeforeLogCallback` option:
+To filter logs, or update them before they are sent to Sentry, you can create a custom before-log handler class similar to the trace sampler pattern:
 
 ```cpp
-#include "SentrySubsystem.h"
-
-void SetupBeforeLogHandler()
+UCLASS()
+class UCustomLogFilter : public USentryBeforeLogCallback
 {
-    USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
-
-    // Set a before-log handler to modify log events
-    SentrySubsystem->SetBeforeLogCallback([](USentryLogEvent* LogEvent) -> USentryLogEvent*
+    GENERATED_BODY()
+public:
+    virtual USentryLogEvent* Execute_Implementation(USentryLogEvent* LogEvent) override
     {
         // Filter out all debug logs
         if (LogEvent->GetLevel() == ESentryLevel::Debug)
@@ -83,18 +81,49 @@ void SetupBeforeLogHandler()
             return nullptr; // Return null to prevent sending
         }
 
-        // Filter out logs based on category
-        if (LogEvent->GetBody() == TEXT("Sensitive"))
+        // Filter out logs based on message content
+        if (LogEvent->GetBody().Contains(TEXT("Sensitive")))
         {
             return nullptr; // Filter out sensitive logs
         }
 
+        // Filter based on specific categories
+        if (LogEvent->GetBody().Contains(TEXT("Password")) ||
+            LogEvent->GetBody().Contains(TEXT("Token")))
+        {
+            return nullptr; // Filter out authentication-related logs
+        }
+
         return LogEvent; // Return modified event
-    });
+    }
+};
+
+// Configure settings using delegate
+FConfigureSettingsDelegate SettingsDelegate;
+SettingsDelegate.BindDynamic(this, &USomeClass::HandleSettingsDelegate);
+
+void USomeClass::HandleSettingsDelegate(USentrySettings* Settings)
+{
+    // Enable structured logging
+    Settings->EnableStructuredLogging = true;
+
+    // Configure individual severity levels
+    Settings->EnableDebugLogs = false;
+    Settings->EnableInfoLogs = true;
+    Settings->EnableWarningLogs = true;
+    Settings->EnableErrorLogs = true;
+    Settings->EnableFatalLogs = true;
+
+    // Set custom before-log handler
+    Settings->BeforeLogCallback = UCustomLogFilter::StaticClass();
 }
+
+// Initialize with settings delegate
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+SentrySubsystem->InitializeWithSettings(SettingsDelegate);
 ```
 
-The callback function receives a `USentryLogEvent` object, and should return the log event if you want it to be sent to Sentry, or `nullptr` if you want to discard it.
+The `Execute_Implementation` method receives a `USentryLogEvent` object, and should return the log event if you want it to be sent to Sentry, or `nullptr` if you want to discard it.
 
 The `USentryLogEvent` object has the following methods:
 - `GetLevel()`: Returns the severity level of the log (`ESentryLevel`)
