@@ -4,7 +4,7 @@ sidebar_order: 100
 description: "Upload source maps for CodePush releases."
 ---
 
-Sentry's React Native SDK works out of the box with CodePush. To see readable stack traces in the product, you must upload source maps to Sentry. This guide explains how to upload source maps for CodePush releases, that are created with the AppCenter CLI.
+Sentry's React Native SDK works out of the box with CodePush. To see readable stack traces in the product, you must upload source maps to Sentry. This guide explains how to upload source maps for CodePush releases, that are created with the CodePush CLI.
 
 ## Prerequisites
 
@@ -35,6 +35,8 @@ code-push-standalone release-react \
 ```
 
 ```bash {tabTitle:Hermes (Standalone)}
+# Make sure `jq` is installed on your system. If it's not, you can install it using your system's package manager. For example `apt-get install jq` on Ubuntu, or `brew install jq` on macOS with Homebrew.
+
 rm -rf ./build
 CODEPUSH_COMMAND="code-push-standalone release-react \
   \"${APP_NAME}\" \
@@ -51,6 +53,21 @@ jq -c ". + {\"debug_id\": \"${DEBUG_ID}\"}" "${MAP_FILE}" > "${MAP_FILE}.tmp"
 mv "${MAP_FILE}.tmp" "${MAP_FILE}"
 ```
 
+```bash {tabTitle:JSC (AppZung)}
+appzung releases deploy-react-native \
+  --use-jsc
+  --output-dir ./build \
+  --sourcemap-output-dir ./build
+```
+
+```bash {tabTitle:Hermes (AppZung)}
+appzung releases deploy-react-native \
+  --use-hermes
+  --output-dir ./build \
+  --sourcemap-output-dir ./build \
+  --sentry-sourcemap-debug-id
+```
+
 ```bash {tabTitle:JSC (AppCenter)}
 appcenter codepush release-react \
   --app "${APP_NAME}" \
@@ -60,6 +77,8 @@ appcenter codepush release-react \
 ```
 
 ```bash {tabTitle:Hermes (AppCenter)}
+# Make sure `jq` is installed on your system. If it's not, you can install it using your system's package manager. For example `apt-get install jq` on Ubuntu, or `brew install jq` on macOS with Homebrew.
+
 rm -rf ./build
 CODEPUSH_COMMAND="appcenter codepush release-react \
   --app \"${APP_NAME}\" \
@@ -74,10 +93,6 @@ MAP_FILE=$(find ./build -name "*.map" -type f)
 jq -c ". + {\"debug_id\": \"${DEBUG_ID}\"}" "${MAP_FILE}" > "${MAP_FILE}.tmp"
 mv "${MAP_FILE}.tmp" "${MAP_FILE}"
 ```
-
-### Notes
-
-If you are using Hermes make sure `jq` is installed on your system. If it's not, you can install it using your system's package manager. For example `apt-get install jq` on Ubuntu, or `brew install jq` on macOS with Homebrew.
 
 ## Upload Source Maps
 
