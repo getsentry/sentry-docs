@@ -38,10 +38,7 @@ export default function remarkImageResize() {
             name: 'alt',
             value: cleanedAlt,
           };
-          // remove any pre-existing width/height attributes to avoid duplicates
-          node.attributes = node.attributes.filter(
-            a => !(a && (a.name === 'width' || a.name === 'height'))
-          );
+
           if (wStr)
             node.attributes.push({type: 'mdxJsxAttribute', name: 'width', value: wStr});
           if (hStr)
