@@ -6,13 +6,9 @@ description: "Learn how to set up ownership rules to automatically assign issues
 
 <Include name="only-error-issues-note.mdx" />
 
-Sentry offers multiple ways to define the "ownership" of an issue. With ownership defined, we can automatically assign issues and send alerts to the owner. Sentry defines ownership with _code owners_ and _ownership rules_. Code owners functionality lets you import your [GitHub](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners) or [GitLab](https://docs.gitlab.com/ee/user/project/code_owners.html) CODEOWNERS file, and then we assign issues according to those file paths. Ownership rules allow you to override the assignments based on code owners and provide advanced matcher types (for example, urls and tags). These rules can also match on the file paths of files in the stack trace, URL of the request, or event tags.
+Sentry offers multiple ways to define the "ownership" of an issue. With ownership defined, we can automatically assign issues and send alerts to the owner. Sentry defines ownership with _ownership rules_ and _code owners_. Ownership rules can assign issues based on the file paths in the event stack trace, URL of the request, or event tags, and also allow you to override rules in code owners. Code owners functionality lets you import your [GitHub](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners) or [GitLab](https://docs.gitlab.com/ee/user/project/code_owners.html) CODEOWNERS file and assign issues based on the file paths in the event stack trace.
 
 Once an issue has been assigned, whether manually by a user or automatically by Sentry, future auto-assignment will be turned off for that issue.
-
-## Methods
-
-Ownership rules and code owners are matched against individual events in an issue. This matching is relied upon in other areas of [sentry.io](https://sentry.io), as described in the following sections.
 
 ### Ownership Rules
 
@@ -100,54 +96,58 @@ Create external team/user mappings for your GitHub/GitLab teams and users by nav
 
 ## Evaluation Flow
 
-If you have both ownership rules and code owners, Sentry evaluates an event’s in-app frames against the rules in the following order:
+Ownership rules and code owners are matched against individual events in an issue. Sentry evaluates an event by checking if _any_ of its in-app stack trace frames match a rule from:
 
 1. Code owners, top-to-bottom
-
-   a. If there are multiple owners in the rule, left-to-right
-
 2. Ownership rules, top-to-bottom
 
-   a. If there are multiple owners in the rule, left-to-right
-
-After evaluation, the last rule matching returns the assignment. The order of the event’s stack trace filepaths is irrelevant in determining the rule assignment.
+The _last_ rule that matches for an event is used for issue assignment. If there are multiple owners in a rule, we take the leftmost owner. The order of in-app stack trace frames in an event is not used in determining the rule assignment.
 
 ### Example
 
+Sentry receives an event with the following stack trace:
+- `models/UserModel.py` (frame 1)
+- `backend/endpoints/auth/user.py` (frame 2)
+- `backend/api/base.py` (frame 3)
+
 **Code Owners:**
 
-```
-codeowners:*.js                    #ecosystem
+```bash
+# Frontend
+*.js                               @frontend-team
+*.tsx                              @frontend-team
+
+# Backend
+backend/                           @engineering-team
+models/                            @models-team
+backend/api/                       @api-team
 ```
 
 **Ownership Rules:**
 
-```
-path:*.js                          #ecosystem #frontend
-path:sentry/api/*                  #api
-url:*subscription*                 #billing
-path:dist/frontend/components/*    #frontend
+```text
+path:backend/endpoints/*           #api-team
+path:backend/endpoints/auth/*      #auth-team #enterprise-team
 ```
 
-When Sentry receives an event with a stack trace filepath: `dist/frontend/components/sidebar.js`, we:
+For this event, we:
 
-1. Evaluate against the code owners top-to-bottom; we get one match with two owners in the rule.
-
-   a. Evaluate the rule left-to-right; we choose the first owner.
-
+1. Evaluate against the code owners top-to-bottom; we get three matches.
 2. Evaluate against the ownership rules top-to-bottom; we get two matches.
 
 The matches, in order, are:
 
 ```
 [
-  "codeowners:*.js                    #ecosystem",
-  "path:*.js                          #ecosystem",
-  "path:dist/frontend/components/*    #frontend"
+  "codeowners:backend/                #engineering-team",           # match on frame 2 and 3
+  "codeowners:models/                 #models-team",                # match on frame 1
+  "codeowners:backend/api/            #api-team",                   # match on frame 3
+  "path:backend/endpoints/*           #api-team",                   # match on frame 2
+  "path:backend/endpoints/auth/*      #auth-team #enterprise-team", # match on frame 2
 ]
 ```
 
-Sentry will return the last matching rule, which in this case is `path:dist/frontend/components/* #frontend`
+Sentry will return the last matching rule, which in this case is `path:backend/endpoints/auth/* #auth-team #enterprise-team`. Although there are two owners in the last matching rule, Sentry will assign the issue to the first owner, `#auth-team`. 
 
 ## Where It's Applied
 
