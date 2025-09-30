@@ -17,11 +17,10 @@ void ConfigureSentryWithLogs()
     USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
 
     // Create settings with logging enabled
-    USentrySettings* Settings = NewObject<USentrySettings>();
-    Settings->EnableStructuredLogging = true;
-
-    // Initialize with custom settings
-    SentrySubsystem->InitializeWithSettings(Settings);
+    SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::CreateLambda([=](USentrySettings* Settings)
+    {
+        Settings->EnableStructuredLogging = true;
+    }));
 }
 ```
 
@@ -32,18 +31,22 @@ void ConfigureSentryWithLogs()
 You can configure the SDK to automatically forward Unreal Engine's native `UE_LOG` calls to Sentry based on the enabled severity levels:
 
 ```cpp
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
 // Configure automatic log forwarding programmatically
-USentrySettings* Settings = NewObject<USentrySettings>();
-Settings->EnableStructuredLogging = true;
+SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::CreateLambda([=](USentrySettings* Settings)
+{
+    Settings->EnableStructuredLogging = true;
 
-// Enable specific severity levels for UE_LOG forwarding
-Settings->EnableDebugLogs = false;
-Settings->EnableInfoLogs = true;
-Settings->EnableWarningLogs = true;
-Settings->EnableErrorLogs = true;
-Settings->EnableFatalLogs = true;
+    // Enable specific severity levels for UE_LOG forwarding
+    Settings->EnableDebugLogs = false;
+    Settings->EnableInfoLogs = true;
+    Settings->EnableWarningLogs = true;
+    Settings->EnableErrorLogs = true;
+    Settings->EnableFatalLogs = true;
 
-Settings->SendLogsAsBreadcrumbs = false; // Send as structured logs instead of breadcrumbs
+    Settings->bSendBreadcrumbsWithStructuredLogging = false; // Send as structured logs instead of breadcrumbs
+}));
 ```
 
 #### Log Category Filtering
@@ -52,20 +55,30 @@ You can filter which log categories are sent to Sentry:
 
 ```cpp
 // Configure category filtering
-USentrySettings* Settings = NewObject<USentrySettings>();
-Settings->EnableStructuredLogging = true;
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
 
-// Only forward logs from specific categories
-TArray<FString> AllowedCategories;
-AllowedCategories.Add(TEXT("LogGameFlow"));
-AllowedCategories.Add(TEXT("LogPlayerSystem"));
-AllowedCategories.Add(TEXT("LogSentrySdk"));
-Settings->LogCategoryFilter = AllowedCategories;
+// Create settings with logging enabled
+SentrySubsystem->InitializeWithSettings(FConfigureSettingsNativeDelegate::CreateLambda([=](USentrySettings* Settings)
+{
+    Settings->EnableStructuredLogging = true;
+    
+    // Only forward logs from specific categories
+    TArray<FString> AllowedCategories;
+    AllowedCategories.Add(TEXT("LogGameFlow"));
+    AllowedCategories.Add(TEXT("LogPlayerSystem"));
+    AllowedCategories.Add(TEXT("LogSentrySdk"));
+    Settings->LogCategoryFilter = AllowedCategories;
+
+}));
 ```
 
 #### Before-Log Handler
 
-To filter logs, or update them before they are sent to Sentry, you can create a custom before-log handler class similar to the trace sampler pattern:
+To filter logs, or update them before they are sent to Sentry, you can create a custom before-log handler class.
+
+<Alert level="info">
+  Logging additional messages in the BeforeLog handler can cause recursive call of the handler, resulting in a stack overflow!
+</Alert>
 
 ```cpp
 UCLASS()
