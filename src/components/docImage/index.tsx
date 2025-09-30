@@ -107,16 +107,12 @@ export default function DocImage({
   // If either width or height is specified manually, ignore any hash dimensions entirely
   const isManual = manualWidth != null || manualHeight != null;
   const hashDimensions = isManual ? [] : parseDimensionsFromHash(src);
-  const width = isManual
-    ? manualWidth
-    : hashDimensions[0] > 0
-      ? hashDimensions[0]
-      : undefined;
-  const height = isManual
-    ? manualHeight
-    : hashDimensions[1] > 0
-      ? hashDimensions[1]
-      : undefined;
+
+  const inferredWidth = hashDimensions[0] > 0 ? hashDimensions[0] : undefined;
+  const width = isManual ? manualWidth : inferredWidth;
+    
+  const inferredHeight = hashDimensions[1] > 0 ? hashDimensions[1] : undefined;
+  const height = isManual ? manualHeight : inferredHeight;
 
   return (
     <ImageLightbox
