@@ -11,7 +11,6 @@ const SIZE_FROM_ALT_RE = /\s*=\s*(?:(\d+)\s*x\s*(\d+)|(\d+)\s*x|x\s*(\d+))\s*$/;
  *   ![Alt text =300x200](./image.png)
  *   ![Alt text =300x](./image.png)
  *   ![Alt text =x200](./image.png)
- *   ![Alt text =300](./image.png)
  *
  * Behavior:
  * - Extracts the trailing "=WxH" (width-only/height-only also supported).
