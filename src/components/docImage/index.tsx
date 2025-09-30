@@ -120,9 +120,9 @@ export default function DocImage({
 
   return (
     <ImageLightbox
+      {...props}
       src={finalSrc}
       imgPath={imgPath}
-      {...props}
       width={width}
       height={height}
       isManualDimensions={isManual}
