@@ -45,11 +45,11 @@ export function PlatformLink({children, to, supported = [], notSupported = []}: 
 
   const {rootNode, path} = serverContext();
   const currentPlatformOrGuide = getCurrentPlatformOrGuide(rootNode, path);
-  
+
   // Check platform support if we have a current platform and support constraints
   if (currentPlatformOrGuide && (supported.length > 0 || notSupported.length > 0)) {
     const platformsToSearch = getPlatformsWithFallback(rootNode, currentPlatformOrGuide);
-    
+
     let result: boolean | null = null;
     // eslint-disable-next-line no-cond-assign
     for (let platformKey: string, i = 0; (platformKey = platformsToSearch[i]); i++) {
