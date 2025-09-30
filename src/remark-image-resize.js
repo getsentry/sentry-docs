@@ -28,9 +28,9 @@ export default function remarkImageResize() {
           ? node.attributes[altIndex].value
           : null;
       if (altValue) {
-        const m = altValue.match(SIZE_FROM_ALT_RE);
-        if (m) {
-          const [, wStr, hStr] = m;
+        const sizeMatch = altValue.match(SIZE_FROM_ALT_RE);
+        if (sizeMatch) {
+          const [, wStr, hStr] = sizeMatch;
           const cleanedAlt = altValue.replace(SIZE_FROM_ALT_RE, '').trim();
           // set cleaned alt
           node.attributes[altIndex] = {
