@@ -219,6 +219,10 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/account/cli/configuration/',
+    destination: '/cli/configuration/',
+  },
+  {
     source: '/organization/integrations/telegram-alerts-bot/',
     destination: '/organization/integrations/notification-incidents/telegram-alerts-bot/',
   },
@@ -249,6 +253,10 @@ const userDocsRedirects = [
   {
     source: '/product/dev-toolbar/:path*',
     destination: '/product/sentry-toolbar/:path*',
+  },
+  {
+    source: '/product/ai-in-sentry/sentry-prevent-ai/:path*',
+    destination: '/product/ai-in-sentry/ai-code-review/:path*',
   },
 
   {
