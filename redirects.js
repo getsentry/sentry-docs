@@ -219,8 +219,16 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/account/cli/configuration/',
+    destination: '/cli/configuration/',
+  },
+  {
     source: '/organization/integrations/telegram-alerts-bot/',
     destination: '/organization/integrations/notification-incidents/telegram-alerts-bot/',
+  },
+  {
+    source: '/platforms/python-fastapi/logs/',
+    destination: '/platforms/python/integrations/fastapi/',
   },
   {
     source: '/platforms/php/configuration/integrations/',
@@ -247,24 +255,13 @@ const userDocsRedirects = [
     destination: '/product/sentry-toolbar/:path*',
   },
   {
-    source: '/product/explore/session-replay/hydration-errors/',
-    destination: '/product/issues/issue-details/replay-issues/hydration-error/',
+    source: '/product/ai-in-sentry/sentry-prevent-ai/:path*',
+    destination: '/product/ai-in-sentry/ai-code-review/:path*',
   },
-  {
-    source: '/product/explore/session-replay/privacy/',
-    destination: '/security-legal-pii/scrubbing/protecting-user-privacy/',
-  },
-  {
-    source: '/product/explore/session-replay/rage-dead-clicks/',
-    destination: '/product/issues/issue-details/replay-issues/rage-clicks/',
-  },
+
   {
     source: '/organization/integrations/launchdarkly/',
     destination: '/organization/integrations/feature-flag/launchdarkly/',
-  },
-  {
-    source: '/product/explore/session-replay/replay-details/',
-    destination: '/product/explore/session-replay/web/replay-details/',
   },
   {
     source: '/platforms/javascript/guides/nextjs/sourcemaps/uploading/',
@@ -753,7 +750,13 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/guides/remix/frameworks/hydrogen/',
-    destination: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+    destination:
+      '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen/',
+    destination:
+      '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
   },
   {
     source: '/product/metrics/:path*',
@@ -977,6 +980,11 @@ const userDocsRedirects = [
   {
     source: '/product/insights/agents/:path*',
     destination: '/product/insights/ai/agents/:path*',
+  },
+  {
+    source: '/platforms/javascript/tracing/instrumentation/ai-agents-module',
+    destination:
+      '/platforms/javascript/guides/node/tracing/instrumentation/ai-agents-module',
   },
   {
     source: '/product/insights/retention-priorities/',

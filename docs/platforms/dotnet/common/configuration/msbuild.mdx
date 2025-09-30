@@ -115,7 +115,7 @@ if you only want these features enabled in a GitHub Actions CI workflow, you cou
   <SentryUploadSources>true</SentryUploadSources>
 
   <!-- If you are targeting Android, sends proguard mapping file to Sentry. -->
-  <SentryUploadAndroidProguardMapping>true</SentryUploadAndroidProguardMapping>
+  <SentryUploadAndroidProGuardMapping>true</SentryUploadAndroidProGuardMapping>
 
 </PropertyGroup>
 
@@ -174,15 +174,42 @@ Sentry will try to determine the release version automatically by checking the f
 
 </ConfigKey>
 
+<ConfigKey name="SentryProGuardUUID" supported={["dotnet.maui"]}>
+
+Define the UUID used to link an APK and its ProGuard mapping file.
+
+If not defined, Sentry will [generate a UUID](#SentryUploadAndroidProGuardMapping) for you.
+
+</ConfigKey>
+
 <ConfigKey name="SentrySetCommits">
 
-Enable `SentrySetCommits` to automatically [associate commits with the release](https://docs.sentry.io/cli/releases/#commit-integration).
+Enable `SentrySetCommits` to automatically [associate commits with the release](/cli/releases/#commit-integration).
 
 </ConfigKey>
 
 <ConfigKey name="SentrySetCommitOptions">
 
 By default, when `SentrySetCommits` is enabled, the SDK will set commits with the `--auto` flag. The optional `SentrySetCommitOptions` property allows you to override this to provide whatever flags you want to the `set-commits` CLI command.
+
+</ConfigKey>
+
+<ConfigKey name="SentryUploadAndroidProGuardMapping" supported={["dotnet.maui"]}>
+
+Controls whether a ProGuard mapping file is uploaded to Sentry.
+
+Defaults to `false` (disabled).
+
+When set to `true`:
+- A ProGuard UUID is generated automatically, unless you configure your own via [SentryProGuardUUID](#SentryProGuardUUID).
+- This UUID is injected into the APK as manifest metadata under the key `io.sentry.proguard-uuid`.
+- The same UUID is used to associate the uploaded ProGuard mapping file with the build in Sentry.
+
+This ensures that obfuscated stack traces from your Android app can be correctly de-obfuscated in Sentry.
+
+<Alert>
+Do not overwrite the `io.sentry.proguard-uuid` metadata directly. Use [SentryProGuardUUID](#SentryProGuardUUID) if you need to provide a custom UUID.
+</Alert>
 
 </ConfigKey>
 
