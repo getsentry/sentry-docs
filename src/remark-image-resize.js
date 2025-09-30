@@ -1,6 +1,6 @@
 import {visit} from 'unist-util-visit';
 
-const SIZE_FROM_ALT_RE = /\s*=\s*(\d+)?x?(\d+)?\s*$/;
+const SIZE_FROM_ALT_RE = /\s*=\s*(?:(\d+)\s*x\s*(\d+)|(\d+)\s*x|x\s*(\d+))\s*$/;
 /**
  * remark plugin to parse width/height hints from the image ALT text.
  *
@@ -30,7 +30,9 @@ export default function remarkImageResize() {
       if (altValue) {
         const sizeMatch = altValue.match(SIZE_FROM_ALT_RE);
         if (sizeMatch) {
-          const [, wStr, hStr] = sizeMatch;
+          const [, wBoth, hBoth, wOnlyWithX, hOnlyWithX] = sizeMatch;
+          const wStr = wBoth || wOnlyWithX || undefined;
+          const hStr = hBoth || hOnlyWithX || undefined;
           const cleanedAlt = altValue.replace(SIZE_FROM_ALT_RE, '').trim();
           // set cleaned alt
           node.attributes[altIndex] = {
