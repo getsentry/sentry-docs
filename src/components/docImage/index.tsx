@@ -122,11 +122,11 @@ export default function DocImage({
     <ImageLightbox
       src={finalSrc}
       imgPath={imgPath}
+      {...props}
       width={width}
       height={height}
       isManualDimensions={isManual}
       alt={props.alt ?? ''}
-      {...props}
     />
   );
 }

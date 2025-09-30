@@ -117,13 +117,13 @@ export function ImageLightbox({
       return (
         <Image
           src={renderedSrc}
-          width={dimensions.width}
-          height={dimensions.height}
           style={imageStyle}
           className={imageClassName}
           alt={alt}
           priority={!isInline}
           {...imageCompatibleProps}
+          width={dimensions.width}
+          height={dimensions.height}
         />
       );
     }
