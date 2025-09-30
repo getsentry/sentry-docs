@@ -137,8 +137,8 @@ Suppose routes.tsx defines some nested routes like:
 We can configure the in-memory router to know about just the route tree that you need. Remember to render the wrapper component itself, and the router + route child components will render themsevles.
 ```tsx
 // settingsWrapper.tsx
-export interface OutletContext {
- name: string,
+interface OutletContext {
+  name: string;
 }
 
 export function useCustomOutletContext() {
@@ -146,20 +146,21 @@ export function useCustomOutletContext() {
 }
 
 export default function SettingsWrapper() {
-  return <Outlet context={{name: 'Default'} as OutletContext} />;
+  const context: OutletContext = {name: "Default"};
+  return <Outlet context={context} />;
 }
 
 // settingsIndex.tsx
 function SettingsIndex() {
-  const {settings} = useCustomOutletContext();
-  return <div>Settings > {settings.name}</div>;
+  const {name} = useCustomOutletContext();
+  return <div>Settings > {name}</div>;
 }
 
 // projectSettings.tsx
 function ProjectSettings() {
-  const {settings} = useCustomOutletContext();
+  const {name} = useCustomOutletContext();
   const {projectId} = useParams();
-  return <div>Settings > {settings.name} > Project: {projectId}</div>;
+  return <div>Settings > {name} > Project: {projectId}</div>;
 }
 
 // settingsIndex.spec.tsx
