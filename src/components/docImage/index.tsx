@@ -105,14 +105,14 @@ export default function DocImage({
   const manualHeight = parseDimension(propsHeight);
 
   // If either width or height is specified manually, ignore any hash dimensions entirely
-  const isManual = manualWidth != null || manualHeight != null;
-  const hashDimensions = isManual ? [] : parseDimensionsFromHash(src);
+  const hasDimensionOverrides = manualWidth != null || manualHeight != null;
+  const hashDimensions = hasDimensionOverrides ? [] : parseDimensionsFromHash(src);
 
   const inferredWidth = hashDimensions[0] > 0 ? hashDimensions[0] : undefined;
-  const width = isManual ? manualWidth : inferredWidth;
+  const width = hasDimensionOverrides ? manualWidth : inferredWidth;
     
   const inferredHeight = hashDimensions[1] > 0 ? hashDimensions[1] : undefined;
-  const height = isManual ? manualHeight : inferredHeight;
+  const height = hasDimensionOverrides ? manualHeight : inferredHeight;
 
   return (
     <ImageLightbox
@@ -121,7 +121,7 @@ export default function DocImage({
       imgPath={imgPath}
       width={width}
       height={height}
-      isManualDimensions={isManual}
+      hasDimensionOverrides={hasDimensionOverrides}
       alt={props.alt ?? ''}
     />
   );
