@@ -103,6 +103,7 @@ export function ImageLightbox({
     // Apply sizing:
     // - If manual: set only provided dimension(s); missing one becomes 'auto'
     // - Else: default responsive
+    // TODO: support other units for overrides
     const imageStyle = isInline
       ? hasDimensionOverrides
         ? {
