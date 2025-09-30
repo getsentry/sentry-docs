@@ -10,7 +10,7 @@ Note, that Sessions (as described below) are not the same as a [Session Replay](
 
 </Alert>
 
-You can monitor the health of releases by observing user adoption, usage of your application, percentage of [crashes](#crashes), and [session data](#sessions). Release health data provides insight into the impact of crashes and bugs related to user experience and reveals trends with each new issue through the release details, graphs, and filters. This data is primarily displayed on the [Releases](/product/releases/) and [Release Details](/product/releases/release-details) pages, but is also reflected in other parts of [sentry.io](https://sentry.io).
+You can monitor the health of releases by observing user adoption, usage of your application, percentage of [crashes](#crashes--unhandled), and [session data](#sessions). Release health data provides insight into the impact of crashes and bugs related to user experience and reveals trends with each new issue through the release details, graphs, and filters. This data is primarily displayed on the [Releases](/product/releases/) and [Release Details](/product/releases/release-details) pages, but is also reflected in other parts of [sentry.io](https://sentry.io).
 
 > Many SDKs automatically manage the start and end of [sessions](#sessions) when the SDK is initialized, but release health configuration is key to ensuring you're receiving useful data, so check out our information on [which SDKs support release health](/product/releases/setup/#release-health) for links to configuring the SDK, as needed.
 
@@ -85,9 +85,11 @@ Depending on your "Display" selection, the sort options for the **Releases** pag
 
 ![Sort By: Active Users dropdown](./img/release_active_users.png)
 
-## Crashes
+## Crashes & Unhandled
 
-A _crash_ is when the application had an explicit unhandled error or hard crash. You'll typically be able to view the corresponding issue that captures this event in [sentry.io](https://sentry.io), and errors that did not cause the end of the application should not be included. To search for crash events in **Discover** or on the **Issues** page, filter by `error.unhandled:true`.
+A _crash_ is when the application had a hard crash, while _unhandled_ is when an error that wasn't explicitly handled by the application. You'll typically be able to view the corresponding issue that captures this event in [sentry.io](https://sentry.io), and errors that did not cause the end of the application should not be included. To search for crash events in **Discover** or on the **Issues** page, filter by `error.unhandled:true`.
+
+Starting with v25.9.0, Sentry differentiates between crashes and unhandled errors and both are counted separately. Check your SDK release notes and update to the latest version to support _unhandled_ session status.
 
 ### Crash Free Sessions/Users
 
@@ -112,6 +114,14 @@ Please note that the number of crashes is not expected to match the number of cr
 ### Crashed Users
 
 The number of users that experienced a crash in the specified time range.
+
+## Sessions vs. Issues
+
+One common misconception is that session data is derived from issues, and that the numbers can be cross referenced. This is not the case.
+
+Session data is unconditionally sent from SDKs when the integration is enabled (it is enabled by default in most SDKs). This dataset tracks every session as it is started and ended, and includes only basic tags related to release and environment. In contrast, Issues are derived from error events, which are subject to [inbound filters](/concepts/data-management/filtering/) and [sampling](/platform-redirect/?next=/configuration/sampling/) and [quota](/pricing/quotas/) limits.
+
+These two systems work in parallel to provide different views of your application's health. Session data enables the Release Adoption and Release Health charts and views which show you the health of your application at a high level, with no sampling or filtering applied. Issues data enables you to drill down into specific issues and have all the context you need to fix it.
 
 ## Release Adoption
 
@@ -166,9 +176,13 @@ A session can have one of the following statuses:
 
 The application timed out, froze, or was forced to quit by the operating system. There is usually no corresponding Sentry issue, as this is a passive action.
 
+### Unhandled
+
+The application had an explicit error that was not explicitly [unhandled](#crashes--unhandled). The language or framework prevented the process from terminating.
+
 ### Crashed
 
-The application had an explicit unhandled error or hard [crash](#crashes).
+The application had a hard [crash](#crashes--unhandled).
 
 ### Errored
 

@@ -134,6 +134,7 @@ it must not be updated anymore.
 
 - `ok`: The session is currently in progress but healthy. This can be the terminal state of a session.
 - `exited`: The session terminated normally.
+- `unhandled`: The session terminated with an unhandled error.
 - `crashed`: The session terminated in a crash.
 - `abnormal`: The session encountered a non crash related abnormal exit.
 
@@ -217,6 +218,7 @@ something like this:
 - `did`: _Optional_. The distinct user id of the group.
 - `exited`: _Optional_. The number of sessions with status `"exited"` _without_ any errors.
 - `abnormal`: _Optional_. The number of sessions with status `"abnormal"`.
+- `unhandled`: _Optional_. The number of sessions with status `"unhandled"`.
 - `crashed`: _Optional_. The number of sessions with status `"crashed"`.
 - `errored`: _Optional_. The number of sessions with status `"exited"` that had a non-zero `errors` count.
 
@@ -265,7 +267,7 @@ deduplicate the total session count as an optimization. If the initial
 ### Terminal Session States
 
 A session can exist in one of two states: in progress or terminated. A terminated
-session must not receive further updates. `exited`, `crashed` and `abnormal`
+session must not receive further updates. `exited`, `unhandled`, `crashed` and `abnormal`
 are all terminal states. When a session reaches this state the client must
 not report any more session updates or start a new session.
 
@@ -276,33 +278,43 @@ SDKs are encouraged to distinguish between different ways of ending a session:
   sessions ending in `exited` will be considered for session durations.
   A session is allowed to go to `exited` even if errors occurred.
 
+- `unhandled`: a session should be reported as unhandled under the following cases:
+
+  - an unhandled error occurred and there is a natural session end (eg: end of HTTP request).
+  - the application did not handle an error, but the language or framework prevented the process from terminating.
+
 - `crashed`: a session should be reported as crashed under the following cases:
 
-  - an unhandled error occurred and there is a natural session end (eg: end of HTTP request)
-  - a complete crash of the application occurred (crash to desktop, termination)
-  - a user feedback dialog is surfaced to the user. After this, the SDK must start a new session as if it fully crashed.;
+  - a complete crash of the application occurred (crash to desktop, termination).
+  - a user feedback dialog is surfaced to the user. After this, the SDK must start a new session as if it fully crashed.
 
 - `abnormal`: SDKs are encouraged to always transition a session to `exited` or
   `crashed` if they can do so. For SDKs that are capable of always ending sessions, they should end a
   session in `abnormal` if they could not detect the application shutting down
   correctly. Examples for abnormal sessions:
 
-  - a computer was shut down / lost power
-  - the user force closed an application through `kill -9` or the task manager
+  - a computer was shut down / lost power.
+  - the user force closed an application through `kill -9` or the task manager.
 
   Abnormal session ends are normally to be recorded on application restart.
 
-### Crashed, Abnormal vs Errored
+### Crashed, Unhandled, Abnormal vs Errored
 
-A session is supposed to transition to `crashed` when it encountered an unhandled
-error such as a full application crash. For applications that cannot fully
-crash such as a website, it's acceptable to transition to the crashed state if
-the user encountered an error dialog. For server environments where we create sessions
-for every incoming request, `crashed` is basically like status code `500` internal server error.
-So if there is an unhandled error happening during the request, the session should be `crashed`.
+A session is supposed to transition to `crashed` when it encountered an a full 
+application crash and the process terminated. For applications that cannot fully
+crash, such as a website, `unhandled` is more appropriate.
+It's acceptable to transition to the `crashed` state if the user encountered an
+error dialog.
+For server environments where we create sessions for every incoming request,
+`unhandled` is basically like status code `500` internal server error.
 
-Abnormal are sessions of which their fate is unknown. For desktop applications, for instance, it makes sense to transition a session to abnormal if it was stored
-but the exit of the application was not observed but also did not crash. These are situations where the user forced the app to close via the
+Note that `unhandled` became supported on the server in v25.9.0, prior to that
+`crashed` was used for all of the cases above.
+
+`abnormal` are sessions of which their fate is unknown. For desktop
+applications, for instance, it makes sense to transition a session to `abnormal`
+if it was stored but the exit of the application was not observed but also did
+not crash. These are situations where the user forced the app to close via the
 task manager, the machine lost power or other situations. A session can be
 _stored_ by persisting it to disk eagerly. This saved file can be detected on
 application restart to close the session as `abnormal`.
