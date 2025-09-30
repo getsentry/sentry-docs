@@ -110,7 +110,7 @@ export default function DocImage({
 
   const inferredWidth = hashDimensions[0] > 0 ? hashDimensions[0] : undefined;
   const width = hasDimensionOverrides ? manualWidth : inferredWidth;
-    
+
   const inferredHeight = hashDimensions[1] > 0 ? hashDimensions[1] : undefined;
   const height = hasDimensionOverrides ? manualHeight : inferredHeight;
 
