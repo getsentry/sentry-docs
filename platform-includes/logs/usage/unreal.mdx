@@ -1,0 +1,66 @@
+Once logging is enabled, you can send log messages to Sentry using the `AddLog` method.
+
+## Basic Logging
+
+```cpp
+#include "SentrySubsystem.h"
+
+void SendLogs()
+{
+    USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+    // Send a simple log message
+    SentrySubsystem->AddLog(TEXT("User completed tutorial"), ESentryLevel::Info);
+
+    // Send a log message with category
+    SentrySubsystem->AddLog(TEXT("Failed to load texture asset"), ESentryLevel::Warning, TEXT("AssetLoading"));
+
+    // Send an error log
+    SentrySubsystem->AddLog(TEXT("Database connection failed"), ESentryLevel::Error, TEXT("Database"));
+}
+```
+
+## Log Levels
+
+Sentry Logs supports the following log levels:
+
+| Unreal ESentryLevel | Sentry Logs UI Severity |
+| --- | --- |
+| Debug | DEBUG |
+| Info | INFO |
+| Warning | WARN |
+| Error | ERROR |
+| Fatal | FATAL |
+
+```cpp
+// Examples of different log levels
+SentrySubsystem->AddLog(TEXT("Player position updated"), ESentryLevel::Debug, TEXT("Player"));
+SentrySubsystem->AddLog(TEXT("Level loaded successfully"), ESentryLevel::Info, TEXT("GameFlow"));
+SentrySubsystem->AddLog(TEXT("Low memory warning"), ESentryLevel::Warning, TEXT("Performance"));
+SentrySubsystem->AddLog(TEXT("Failed to save game data"), ESentryLevel::Error, TEXT("SaveSystem"));
+SentrySubsystem->AddLog(TEXT("Critical system failure"), ESentryLevel::Fatal, TEXT("System"));
+```
+
+## Automatic UE_LOG Integration
+
+When structured logging is enabled with the appropriate severity levels, the SDK can automatically capture Unreal Engine's native `UE_LOG` calls:
+
+```cpp
+// Standard Unreal Engine logging - automatically captured when severity levels are enabled
+UE_LOG(LogGameFlow, Warning, TEXT("Player health is critically low: %d"), PlayerHealth);
+UE_LOG(LogAssets, Error, TEXT("Failed to load texture: %s"), *TexturePath);
+UE_LOG(LogTemp, Log, TEXT("Debug information")); // Only sent if EnableInfoLogs = true
+```
+
+You can configure whether these logs are sent as:
+- **Structured Logs**: Full log entries with searchable attributes
+- **Breadcrumbs**: Contextual information attached to errors (useful for debugging)
+
+## Blueprint Support
+
+You can also use Sentry Logs from Blueprints by calling the **Add Log** function:
+
+1. Add a **Add Log** node to your Blueprint
+2. Set the **Body** parameter to your log message
+3. Choose the appropriate **Level** from the dropdown
+4. Optionally set a **Category** for better organization
