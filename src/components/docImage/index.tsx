@@ -119,7 +119,6 @@ export default function DocImage({
       {...props}
       src={finalSrc}
       imgPath={imgPath}
-      {...props}
       width={width}
       height={height}
       hasDimensionOverrides={hasDimensionOverrides}
