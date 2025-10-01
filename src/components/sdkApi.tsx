@@ -26,6 +26,7 @@ type Props = {
   name: string;
   parameters: ParameterDef[];
   signature: string;
+  availableSince?: string;
   categorySupported?: PlatformCategory[];
   children?: React.ReactNode;
   language?: string;
@@ -35,6 +36,7 @@ export function SdkApi({
   name,
   children,
   signature,
+  availableSince,
   parameters = [],
   language,
   categorySupported = [],
@@ -51,9 +53,12 @@ export function SdkApi({
       {showServerLikeOnly && (
         <div className="italic text-sm">Only available on Server</div>
       )}
-
       <pre className="mt-2 mb-2 text-sm">{codeToJsx(signature, lang)}</pre>
-
+      {availableSince && (
+        <p className="italic">
+          Available Since: <code>{availableSince}</code>
+        </p>
+      )}
       {parameters.length ? (
         <Expandable title="Parameters">
           <div className="space-y-3">
@@ -63,7 +68,6 @@ export function SdkApi({
           </div>
         </Expandable>
       ) : null}
-
       {children}
     </SdkDefinition>
   );
