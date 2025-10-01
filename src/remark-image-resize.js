@@ -1,6 +1,6 @@
 import {visit} from 'unist-util-visit';
 
-const SIZE_FROM_ALT_RE = /\s*=\s*(\d+)?x?(\d+)?\s*$/;
+const SIZE_FROM_ALT_RE = /\s*=\s*(?:(\d+)\s*x\s*(\d+)|(\d+)\s*x|x\s*(\d+))\s*$/;
 /**
  * remark plugin to parse width/height hints from the image ALT text.
  *
@@ -11,7 +11,6 @@ const SIZE_FROM_ALT_RE = /\s*=\s*(\d+)?x?(\d+)?\s*$/;
  *   ![Alt text =300x200](./image.png)
  *   ![Alt text =300x](./image.png)
  *   ![Alt text =x200](./image.png)
- *   ![Alt text =300](./image.png)
  *
  * Behavior:
  * - Extracts the trailing "=WxH" (width-only/height-only also supported).
@@ -28,9 +27,11 @@ export default function remarkImageResize() {
           ? node.attributes[altIndex].value
           : null;
       if (altValue) {
-        const m = altValue.match(SIZE_FROM_ALT_RE);
-        if (m) {
-          const [, wStr, hStr] = m;
+        const sizeMatch = altValue.match(SIZE_FROM_ALT_RE);
+        if (sizeMatch) {
+          const [, wBoth, hBoth, wOnlyWithX, hOnlyWithX] = sizeMatch;
+          const wStr = wBoth || wOnlyWithX || undefined;
+          const hStr = hBoth || hOnlyWithX || undefined;
           const cleanedAlt = altValue.replace(SIZE_FROM_ALT_RE, '').trim();
           // set cleaned alt
           node.attributes[altIndex] = {
@@ -38,10 +39,7 @@ export default function remarkImageResize() {
             name: 'alt',
             value: cleanedAlt,
           };
-          // remove any pre-existing width/height attributes to avoid duplicates
-          node.attributes = node.attributes.filter(
-            a => !(a && (a.name === 'width' || a.name === 'height'))
-          );
+
           if (wStr)
             node.attributes.push({type: 'mdxJsxAttribute', name: 'width', value: wStr});
           if (hStr)

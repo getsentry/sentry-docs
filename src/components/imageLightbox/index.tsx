@@ -14,6 +14,7 @@ interface ImageLightboxProps
   alt: string;
   imgPath: string;
   src: string;
+  hasDimensionOverrides?: boolean;
   height?: number;
   isManualDimensions?: boolean;
   width?: number;
@@ -55,7 +56,7 @@ export function ImageLightbox({
   width,
   height,
   imgPath,
-  isManualDimensions = false,
+  hasDimensionOverrides: hasDimensionOverrides = false,
   style,
   className,
   ...props
@@ -103,8 +104,9 @@ export function ImageLightbox({
     // Apply sizing:
     // - If manual: set only provided dimension(s); missing one becomes 'auto'
     // - Else: default responsive
+    // TODO: support other units for overrides
     const imageStyle = isInline
-      ? isManualDimensions
+      ? hasDimensionOverrides
         ? {
             width: width != null ? `${width}px` : 'auto',
             height: height != null ? `${height}px` : 'auto',
