@@ -16,7 +16,6 @@ interface ImageLightboxProps
   src: string;
   hasDimensionOverrides?: boolean;
   height?: number;
-  isManualDimensions?: boolean;
   width?: number;
 }
 
