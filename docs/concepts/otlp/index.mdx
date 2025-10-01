@@ -24,7 +24,7 @@ export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="___OTLP_TRACES_URL___"
 export OTEL_EXPORTER_OTLP_TRACES_HEADERS="x-sentry-auth=sentry sentry_key=___PUBLIC_KEY___"
 ```
 
-Alternatively, you can configure the OpenTelemetry Exporter directly in your application code. Here is an example with the OpenTelemetry Node SDK:
+Alternatively, you can configure the OpenTelemetry Exporter directly in your application code. Here are examples with the OpenTelemetry Node and Python SDKs:
 
 ```typescript {filename: app.ts}
 import { NodeSDK } from "@opentelemetry/sdk-node";
@@ -42,11 +42,36 @@ const sdk = new NodeSDK({
 sdk.start();
 ```
 
+```python {filename: app.py}
+import sentry_sdk
+from sentry_sdk.integrations.otlp import OtlpIntegration
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+
+# Initialize OpenTelemetry
+trace.set_tracer_provider(TracerProvider())
+
+otlp_exporter = OTLPSpanExporter(
+    endpoint="___OTLP_TRACES_URL___",
+    headers={"x-sentry-auth": "sentry sentry_key=___PUBLIC_KEY___"},
+)
+span_processor = BatchSpanProcessor(otlp_exporter)
+trace.get_tracer_provider().add_span_processor(span_processor)
+
+sentry_sdk.init(integrations=[OtlpIntegration()])
+```
+
 You can find the values of Sentry's OTLP traces endpoint and public key in your Sentry project settings.
 
 1. Go to the [Settings > Projects](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/) page in Sentry.
 2. Select a project from the list.
 3. Go to the "Client Keys (DSN)" sub-page for this project under the "SDK Setup" heading.
+
+### Linking Errors with Traces
+
+For Python, make sure to enable the `OtlpIntegration` for the Sentry SDK so that other event types such as Errors and Logs are connected to the correct Trace.
 
 ## OpenTelemetry Logs
 
