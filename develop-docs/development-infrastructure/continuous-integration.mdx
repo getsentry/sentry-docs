@@ -14,10 +14,12 @@ GitHub actions is our primary CI system and runs our tests on every pull request
 
 ## Docker images
 
-We use Google Cloud Build to build our Docker containers. Every single commit (including from PRs) gets built, tested and becomes available at `us.gcr.io/sentryio/sentry:<sha>` with no retention guarantees. Every push to `master` gets built, tested and [pushed to Docker Hub](https://hub.docker.com/r/getsentry/sentry/tags) permanently. You can set `SENTRY_IMAGE` to the following, when working with [getsentry/self-hosted](https://github.com/getsentry/self-hosted):
+We use GitHub Actions to build our Docker images. We primarily use [a composite action](https://github.com/getsentry/action-build-and-push-images) for building and pushing images to ensure that the workflows for building and publishing images are standardized, and appropriate metadata is available in the images. The standard for artifact management can be found [here](https://www.notion.so/sentry/Standard-Spec-Artifact-Management-22a8b10e4b5d80ecb6dcca3eb4558f5b).
 
-* `getsentry/sentry:<sha>`, `getsentry/sentry:<short_sha>`, or `getsentry/sentry:latest` to pull from a commit in [getsentry/sentry](https://github.com/getsentry/sentry) `master`
-* `us.gcr.io/sentryio/sentry:<sha>` to pull from a commit in any other branch or PR
+We use GHCR (github container registry) for images that are used in CI, self-hosted, and local development. GAR (google artifact registry) is used for images that are used in prod.
+
+## Fast-Revert
+In order to facilitate quick changes to unblock failures on default branches, many of our repositories have a fast-revert workflow. In order to use it, PR's can be automatically reverted once a label `Trigger: Revert` is applied. More details found [here](https://www.notion.so/sentry/Standard-Spec-Fast-Revert-2388b10e4b5d8019bc98d863703d1b17?pvs=25)
 
 
 ## CI workflow for testing changes with getsentry
