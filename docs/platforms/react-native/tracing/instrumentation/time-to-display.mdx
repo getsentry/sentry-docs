@@ -26,6 +26,19 @@ To automatically measure Time to Initial Display of React Navigation Screens, en
 
 - Time to Initial Display is only available for React Navigation version 5 and above.
 
+### Using Time to Display with TabNavigator
+
+When using React Navigation’s `TabNavigator` or other navigators that **preload or re-use routes**, automatic instrumentation with `enableTimeToInitialDisplay` may not always create a `TimeToInitialDisplay` span. This is because auto-TTID only records the first time a route is seen; on preloaded or already-visited routes, TTID may be skipped. Since `TimeToFullDisplay` depends on an active TTID span, this can result in missing TTFD spans in Sentry.
+
+Recent versions of the React Native SDK have introduced fixes and fallbacks for some of these cases. However, Sentry’s mobile team has verified that **custom/manual instrumentation remains the most reliable solution** today, particularly for tabbed navigation scenarios.
+
+We recommend explicitly adding both components on screens within a `TabNavigator`:
+
+```jsx
+<TimeToInitialDisplay record={true} />
+<TimeToFullDisplay record={isLoading === false} />
+```
+
 ## Time To Initial Display Overwrite
 
 When the automatically captured Time to Initial Display doesn't meet your requirements, you can overwrite it by using `Sentry.TimeToInitialDisplay` component.
