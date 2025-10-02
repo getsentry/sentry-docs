@@ -1,0 +1,70 @@
+name: Generate Changelog
+
+on:
+  push:
+    branches:
+      - master   # Trigger on merges to master
+
+jobs:
+  generate-changelog:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repo
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Install dependencies
+      - name: Install GitHub CLI and jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh jq
+
+      # Authenticate the gh CLI
+      - name: Authenticate GitHub CLI
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh auth setup-git
+
+      # Set OpenAI API key
+      - name: Set OpenAI API Key
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: echo "OPENAI_API_KEY is set"
+
+      # Run the summarize script
+      - name: Generate Changelog
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          bash ./scripts/summarize.sh
+          # Extract summary from response.json
+          jq -r '.choices[0].message.content' response.json > SUMMARY.md
+
+      # Append summary to CHANGELOG.md
+      - name: Prepare changelog
+        run: |
+          DATE=$(date '+%Y-%m-%d')
+          echo "## Release - $DATE" >> CHANGELOG.md
+          cat SUMMARY.md >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+
+      # Commit and push only if PREVIEW_MODE is not set
+      - name: Commit and push changelog
+        if: env.PREVIEW_MODE != '1'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "Update changelog for release $DATE" || echo "No changes to commit"
+          git push origin master
+
+      # Optional: Upload preview artifact if PREVIEW_MODE=1
+      - name: Upload preview artifact
+        if: env.PREVIEW_MODE == '1'
+        uses: actions/upload-artifact@v3
+        with:
+          name: changelog-preview
+          path: SUMMARY.md
