@@ -102,12 +102,6 @@ Note that enabling this option may increase the payload size of events sent to S
 
 If this flag is enabled, certain personally identifiable information (PII) is added by active integrations. By default, no such data is sent.
 
-<Alert>
-
-If you are using Sentry in your mobile app, read our [frequently asked questions about mobile data privacy](/security-legal-pii/security/mobile-privacy/) to assist with Apple App Store and Google Play app privacy details.
-
-</Alert>
-
 This option is turned off by default.
 
 If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
@@ -204,7 +198,7 @@ These options can be used to hook the SDK in various ways to customize the repor
 
 <ConfigKey name="before-send">
 
-This function is called with an SDK-specific message or error event object, and can return a modified event object, or `null` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
+This function is called with the event payload, and can return a modified event object, or `null` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
 
 By the time <PlatformIdentifier name="before-send" /> is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
 
@@ -212,13 +206,13 @@ By the time <PlatformIdentifier name="before-send" /> is executed, all scope dat
 
 <ConfigKey name="before-send-transaction">
 
-This function is called with an SDK-specific transaction event object, and can return a modified transaction event object, or `null` to skip reporting the event. One way this might be used is for manual PII stripping before sending.
+This function is called with a transaction event object, and can return a modified transaction event object, or `null` to skip reporting the event. One way this might be used is for manual PII stripping before sending.
 
 </ConfigKey>
 
 <ConfigKey name="before-breadcrumb">
 
-This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
+This function is called with a breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
 The callback typically gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
 
 </ConfigKey>
@@ -235,7 +229,7 @@ Transports are used to send events to Sentry. Transports can be customized to so
 
 <ConfigKey name="transport">
 
-Switches out the transport used to send events. How this works depends on the SDK. It can, for instance, be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication.
+Switches out the transport used to send events. It can, for instance, be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication.
 
 </ConfigKey>
 
@@ -247,7 +241,7 @@ When set, a proxy can be configured that should be used for outbound requests. T
 
 <ConfigKey name="shutdown-timeout-millis">
 
-Controls how many seconds to wait before shutting down. Sentry SDKs send events from a background queue. This queue is given a certain amount to drain pending events. The default is SDK specific but typically around two seconds. Setting this value too low may cause problems for sending events from command line applications. Setting the value too high will cause the application to block for a long time for users experiencing network connectivity problems.
+Controls how many seconds to wait before shutting down. The SDK sends events from a background queue. This queue is given a certain amount to drain pending events. The default is two seconds. Setting this value too low may cause problems for sending events from command line applications. Setting the value too high will cause the application to block for a long time for users experiencing network connectivity problems.
 
 </ConfigKey>
 
