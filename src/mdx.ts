@@ -538,6 +538,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
 
   if (process.env.CI) {
     if (skipCache) {
+      // eslint-disable-next-line no-console
       console.info(`Skipping cache for ${sourcePath}`);
     } else {
       cacheKey = md5(source);
