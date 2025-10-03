@@ -83,6 +83,18 @@ This option can be overridden using `in_app_include`.
 
 </SdkOption>
 
+<SdkOption name="server_name" type='string'>
+
+The server name to be reported. When not set, the server name is not sent with events.
+
+</SdkOption>
+
+<SdkOption name="user_agent" type='string' defaultValue="sentry.rust/<version>">
+
+The user agent that should be reported when sending events to Sentry.
+
+</SdkOption>
+
 <SdkOption name="before_breadcrumb" type='Fn'>
 
 This function is called with a breadcrumb object before the breadcrumb is added to the scope. When `None` is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the breadcrumb itself.
@@ -91,8 +103,28 @@ This function is called with a breadcrumb object before the breadcrumb is added 
 
 <SdkOption name="max_request_body_size" type='MaxRequestBodySize' defaultValue='MaxRequestBodySize::Medium'>
 
-This option controls the maximum size of request bodies that are sent to Sentry.
+This option controls the maximum size of request bodies that are sent to Sentry by HTTP server integrations.
 The default value of `MaxRequestBodySize::Medium` will capture request bodies up to 10kB in size.
+
+</SdkOption>
+
+<SdkOption name="shutdown_timeout" type='Duration' defaultValue="Duration::from_secs(2)">
+
+  The timeout on client drop for draining events on shutdown. This controls how long the SDK will wait for pending events to be sent when shutting down.
+
+</SdkOption>
+
+<SdkOption name="integrations" type="Vec<Arc<dyn Integration>>">
+
+  A list of integrations to enable. This allows you to manually pick and choose the integrations to enable.
+  By default, only the default integrations are enabled.
+
+</SdkOption>
+
+<SdkOption name="default_integrations" type='bool' defaultValue='true'>
+
+  Whether to add default integrations. When set to `false`, no default integrations will be added automatically.
+  The list of default integrations depends on the feature flags of the `sentry` crate that are active.
 
 </SdkOption>
 
@@ -121,6 +153,12 @@ A number between `0.0` and `1.0`, controlling the percentage chance a given tran
 
 </SdkOption>
 
+<SdkOption name="traces_sampler" type='Fn'>
+
+If given, called with a `SamplingContext` for each transaction to determine the sampling rate. Return a sample rate between `0.0` and `1.0` for the transaction in question. Takes priority over the `traces_sample_rate`.
+
+</SdkOption>
+
 
 ## Transport Options
 
@@ -136,7 +174,51 @@ A number between `0.0` and `1.0`, controlling the percentage chance a given tran
 
 </SdkOption>
 
-<SdkOption name="accept_invalid_certs" type='bool' envVar='SSL_VERIFY'>
+<SdkOption name="accept_invalid_certs" type='bool' envVar='SSL_VERIFY' defaultValue="false">
 Setting this to `true` disables SSL certificate validation when sending outbound requests to Sentry. This should never be enabled when using the SDK in your real codebase or otherwise handling any kind of sensitive or personally identifiable information, as it could be exposed to potential attackers.
+
+</SdkOption>
+
+<SdkOption name="transport" type='Arc<dyn TransportFactory>'>
+
+  The transport to use to send envelopes to Sentry.
+  This is typically either a boxed function taking the client options by reference and returning a `Transport`, a boxed `Arc<Transport>` or alternatively the `DefaultTransportFactory`.
+  By default, the SDK uses a transport based on the `reqwest` crate running on a background thread.
+
+</SdkOption>
+
+## Logging Options
+
+The following features and options are only available when the `logs` feature of the `sentry` crate is enabled.
+
+<SdkOption name="enable_logs" type='bool' defaultValue='true'>
+
+Determines whether captured structured logs should be sent to Sentry.
+  This option is only available when the `logs` feature is enabled.
+
+</SdkOption>
+
+<SdkOption name="before_send_log" type='Fn'>
+
+  Callback that is executed for each Log being captured. When `None` is returned from the function, the log record is dropped. To pass the log record through, return the log record itself.
+
+  This option is only available when the `logs` feature is enabled.
+
+</SdkOption>
+
+
+## Session Tracking Options
+
+The following features and options are only available when the `release-health` feature of the `sentry` crate is enabled.
+
+<SdkOption name="auto_session_tracking" type='bool' defaultValue='false'>
+
+Enable Release Health Session tracking. When automatic session tracking is enabled, a new "user-mode" session is started at the time of `sentry::init`, and will persist for the application lifetime.
+
+</SdkOption>
+
+<SdkOption name="session_mode" type='SessionMode' defaultValue="SessionMode::Application">
+
+Determine how Sessions are being tracked. Controls the mode for session tracking when `auto_session_tracking` is enabled.
 
 </SdkOption>
