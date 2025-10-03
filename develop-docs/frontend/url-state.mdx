@@ -1,0 +1,71 @@
+---
+title: URL State
+sidebar_order: 85
+---
+
+**URL state** is any piece of state that should be reflected in the browser URL (typically as query parameters). If a user reloads, shares a link, navigates with back/forward, or opens the page in another tab, the state should be restored from the URL. Typical examples:
+
+- Search queries and filters (e.g., `?project=11276&statsPeriod=14d`)
+- Pagination and sorting (e.g., `?page=3&sort=price`)
+- UI view controls (selected tab, map zoom, layout mode)
+- Lightweight feature switches and flags
+
+<Alert level="warning">
+  Don’t put sensitive or large data into the URL. Keep it human-readable and bounded.
+</Alert>
+
+## nuqs
+
+Going forward, we will be using [nuqs](https://nuqs.dev/) to manage URL state in React. Nuqs is a type-safe search params state manager for React that exposes a `useState` like API that syncs with the URL. It also gracefully handles un-parseable values, supports defaults and throttles updates to the URL out of the box. Nuqs has built-in parsers & serializers for common state types and is customizable so we can make our own.
+
+## Parsers
+
+Per default, everything is parsed as `string`. It is recommended to use any of the built-in parsers or to write your own over doing type assertions or coercions in the component. Types can be inferred from what the parsers return, and it also handles serialization back to the URL.
+
+```tsx
+// parsed as string per default
+const [cursor, setCursor] = useQueryState('cursor')
+
+// with a predefined parser
+const [page, setPage] = useQueryState('page', parseAsNumber)
+
+// with a custom parser
+const [mailbox, setMailbox] = useQueryState('mailbox', parseAsMailbox);
+```
+
+### Array Parsing
+
+For `SingleParsers`, `nuqs` only considers the first value of a query param in the URL. That means arrays get represented as one value with a separator.
+
+```jsx
+useQueryState('project', parseAsArrayOf(parseAsInteger))
+// ?project=1,2,3
+```
+
+Since we usually want to have Array values represented as multiple url params, we have to use `parseAsNativeArrayOf`, which is a `MultiParser`:
+
+```jsx
+useQueryState('foo', parseAsNativeArrayOf(parseAsInteger))
+// ?project=1&project=2&project=3
+```
+
+## Default Options
+
+Per default, `nuqs` will **replace** the current history entry **without scrolling** to the top of the page. This can be customized on the usage sites:
+
+```jsx
+const [state, setState] = useQueryState(
+  'foo',
+  {
+   ...parseAsString,
+    history: 'push',
+    scroll: true,
+  }
+)
+```
+
+Options can also be provided as the second argument to the state setter:
+
+```jsx
+setState('bar', { history: 'push', scroll: true })
+```
