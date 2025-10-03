@@ -531,6 +531,9 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   const outdir = path.join(root, 'public', 'mdx-images');
   await mkdir(outdir, {recursive: true});
 
+  // If the file contains content that depends on the Release Registry (such as an SDK's latest version), avoid using the cache for that file, i.e. always rebuild it.
+  // This is because the content from the registry might have changed since the last time the file was cached.
+  // If a new component that injects content from the registry is introduced, it should be added to the patterns below.
   const skipCache =
     source.includes('@inject') ||
     source.includes('<PlatformSDKPackage') ||
@@ -539,7 +542,9 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   if (process.env.CI) {
     if (skipCache) {
       // eslint-disable-next-line no-console
-      console.info(`Skipping cache for ${sourcePath}`);
+      console.info(
+        `Not using cache for ${sourcePath}, as its content depends on the Release Registry`
+      );
     } else {
       cacheKey = md5(source);
       cacheFile = path.join(CACHE_DIR, `${cacheKey}.br`);
