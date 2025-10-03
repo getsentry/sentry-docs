@@ -536,7 +536,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   // If a new component that injects content from the registry is introduced, it should be added to the patterns below.
   const skipCache =
     source.includes('@inject') ||
-    source.includes('<PlatformSDKPackage') ||
+    source.includes('<PlatformSDKPackageName') ||
     source.includes('<LambdaLayerDetail');
 
   if (process.env.CI) {
