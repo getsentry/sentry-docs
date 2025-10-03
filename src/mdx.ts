@@ -543,7 +543,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     if (skipCache) {
       // eslint-disable-next-line no-console
       console.info(
-        `Not using cache for ${sourcePath}, as its content depends on the Release Registry`
+        `Not using cached version of ${sourcePath}, as its content depends on the Release Registry`
       );
     } else {
       cacheKey = md5(source);
