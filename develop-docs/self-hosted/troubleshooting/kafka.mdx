@@ -4,19 +4,19 @@ sidebar_title: Kafka
 sidebar_order: 2
 ---
 
-## Offset Out Of Range Error
+## How Kafka Works
 
-```log
-Exception: KafkaError{code=OFFSET_OUT_OF_RANGE,val=1,str="Broker: Offset out of range"}
-```
+This section is aimed for those who has Kafka problems, yet not familiar with Kafka. At a high level, it is a message broker which stores message in a log (or in an easier language: very similar to array) format. It receives messages from producers that aimed to a specific topic, and then sends them to consumers that are subscribed to that topic. The consumers can then process the messages.
 
-This happens where Kafka and the consumers get out of sync. Possible reasons are:
+On the inside, when a message enters a topic, it would be written to a certain partition. You can think partition as physical boxes that stores messages for a specific topic, each topic will have their own separate & dedicated partitions. In a distributed Kafka setup, each partition might be stored on a different machine/node, but if you only have a single Kafka instance, then all the partitions are stored on the same machine.
 
-1. Running out of disk space or memory
-2. Having a sustained event spike that causes very long processing times, causing Kafka to drop messages as they go past the retention time
-3. Date/time out of sync issues due to a restart or suspend/resume cycle
+When a producer sends a message to a topic, it will either stick to a certain partition number (example: partition 1, partition 2, etc.) or it will randomly choose a partition. A consumer will then subscribe to a topic and will automatically be assigned to one or more partitions by Kafka. The consumer will then start receiving messages from the assigned partitions. One very important aspect to note is that the number of consumers must not exceed the number of partition for a given topic. If you have more consumers than number of partitions, then the consumers will be hanging with no messages to consume.
 
-### Visualize
+Each messages in a topic will then have an "offset" (number), this would easily translates to "index" in an array. The offset will be used by the consumer to track where it is in the log, and what's the last message it has consumed. If the consumer is not able to keep up with the producer, it will start to lag behind. Most of the times, we want "lag" to be as low as possible, meaning we don't want to have so many unprocessed messages. The easy solution would be adding more partitions and increasing the number of consumers.
+
+The differences with other types of queues or brokers like RabbitMQ or Redis is that Kafka has a concept called "retention time". Messages that are stored on Kafka and consumed by consumers won't be deleted immediately. Instead, they will be stored for a certain period of time. By default, self-hosted Sentry uses Kafka with a retention time of 24 hours. This means that messages that are older than 24 hours will be deleted. If you want to change the retention time, you can do so by modifying the `KAFKA_LOG_RETENTION_HOURS` environment variable in the `kafka` service.
+
+### Visualize Kafka
 
 You can visualize the Kafka consumers and their offsets by bringing an additional container, such as [Kafka UI](https://github.com/provectus/kafka-ui) or [Redpanda Console](https://github.com/redpanda-data/console) into your Docker Compose.
 
@@ -59,6 +59,20 @@ redpanda-console:
     - kafka
 ```
 
+It's recommended to put this on `docker-compose.override.yml` rather than modifying your `docker-compose.yml` directly. The UI will then can be accessed via `http://localhost:8080/` (or `http://<your-ip>:8080/` if you're using a reverse proxy).
+
+## Offset Out Of Range Error
+
+```log
+Exception: KafkaError{code=OFFSET_OUT_OF_RANGE,val=1,str="Broker: Offset out of range"}
+```
+
+This happens where Kafka and the consumers get out of sync. Possible reasons are:
+
+1. Running out of disk space or memory
+2. Having a sustained event spike that causes very long processing times, causing Kafka to drop messages as they go past the retention time
+3. Date/time out of sync issues due to a restart or suspend/resume cycle
+
 Ideally, you want to have zero lag for all consumer groups. If a consumer group has a lot of lag, you need to investigate whether it's caused by a disconnected consumer (e.g., a Sentry/Snuba container that's disconnected from Kafka) or a consumer that's stuck processing a certain message. If it's a disconnected consumer, you can either restart the container or reset the Kafka offset to 'earliest.' Otherwise, you can reset the Kafka offset to 'latest.'
 
 ### Recovery
@@ -77,19 +91,19 @@ The _proper_ solution is as follows ([reported](https://github.com/getsentry/sel
    ```
 2. Receive consumers list:
    ```shell
-   docker compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --list
+   docker compose exec kafka kafka-consumer-groups --bootstrap-server kafka:9092 --list
    ```
 3. Get group info:
    ```shell
-   docker compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers --describe
+   docker compose exec kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers --describe
    ```
 4. Watching what is going to happen with offset by using dry-run (optional):
    ```shell
-   docker compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers --topic events --reset-offsets --to-latest --dry-run
+   docker compose exec kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers --topic events --reset-offsets --to-latest --dry-run
    ```
 5. Set offset to latest and execute:
    ```shell
-   docker compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers --topic events --reset-offsets --to-latest --execute
+   docker compose exec kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers --topic events --reset-offsets --to-latest --execute
    ```
 6. Start the previously stopped Sentry/Snuba containers:
    ```shell
@@ -107,14 +121,16 @@ This option is as follows ([reported](https://github.com/getsentry/self-hosted/i
 
 1. Set offset to latest and execute:
    ```shell
-   docker compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --all-groups --all-topics --reset-offsets --to-latest --execute
+   docker compose exec kafka kafka-consumer-groups --bootstrap-server kafka:9092 --all-groups --all-topics --reset-offsets --to-latest --execute
    ```
 
 Unlike the proper solution, this involves resetting the offsets of all consumer groups and all topics.
 
 #### Nuclear option
 
-The _nuclear option_ is removing all Kafka-related volumes and recreating them which _will_ cause data loss. Any data that was pending there will be gone upon deleting these volumes.
+<Alert level="warning" title="Warning">
+  The _nuclear option_ is removing all Kafka-related volumes and recreating them which _will_ cause data loss. Any data that was pending there will be gone upon deleting these volumes.
+</Alert>
 
 1. Stop the instance:
    ```shell
@@ -133,6 +149,33 @@ The _nuclear option_ is removing all Kafka-related volumes and recreating them w
     ```shell
     docker compose up --wait
     ```
+
+## Consumers Lagging Behind
+
+If you notice a very slow ingestion speed and consumers are lagging behind, it's likely that the consumers are not able to keep up with the producers. This can happen if the consumers are not able to keep up with the rate of messages being produced. To fix this, you can increase the number of partitions and increase the number of consumers.
+
+1. For example, if you see `ingest-consumer` consumer group has a lot of lag, and you can see that it's subscribed to `ingest-events` topic, then you need to first increase the number of partitions for that topic.
+   ```bash
+   docker compose exec kafka kafka-topics --bootstrap-server kafka:9092 --alter --partitions 3 --topic ingest-events
+   ```
+2. Validate that the number of partitions for the topic is now 3.
+   ```bash
+   docker compose exec kafka kafka-topics --bootstrap-server kafka:9092 --describe --topic ingest-events
+   ```
+3. Then, you need to increase the number of consumers for the consumer group. You can see on the `docker-compose.yml` that the container that consumes `ingest-events` topic using ` ingest-consumer` consumer group is `events-consumer` container. But we won't modify the `docker-compose.yml` directly, instead, we will create a new file called `docker-compose.override.yml` and add the following:
+   ```yaml
+   services:
+     events-consumer:
+       deploy:
+         replicas: 3
+   ```
+   This will increase the number of consumers for the `ingest-consumer` consumer group to 3.
+4. Finally, you need to refresh the `events-consumer` container. You can do so by running the following command:
+   ```bash
+   docker compose up -d --wait events-consumer
+   ```
+5. Observe the logs of `events-consumer`, you should not see any consumer errors. Let it run for a while (usually a few minutes until a few hours) and observe the Kafka topic lags.
+
 ## Reducing disk usage
 
 If you want to reduce the disk space used by Kafka, you'll need to carefully calculate how much data you are ingesting, how much data loss you can tolerate and then follow the recommendations on [this awesome StackOverflow post](https://stackoverflow.com/a/52970982/90297) or [this post on our community forum](https://forum.sentry.io/t/sentry-disk-cleanup-kafka/11337/2?u=byk).
