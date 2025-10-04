@@ -47,7 +47,12 @@ export const dynamic = 'force-static';
 const mdxComponentsWithWrapper = mdxComponents(
   {Include, PlatformContent},
   ({children, frontMatter, nextPage, previousPage}) => (
-    <DocPage frontMatter={frontMatter} nextPage={nextPage} previousPage={previousPage}>
+    <DocPage
+      frontMatter={frontMatter}
+      nextPage={nextPage}
+      previousPage={previousPage}
+      fullWidth={frontMatter.fullWidth}
+    >
       {children}
     </DocPage>
   )
@@ -199,10 +204,10 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     ? `https://${process.env.VERCEL_URL}`
     : domain;
   let title =
-    'Sentry Docs | Application Performance Monitoring &amp; Error Tracking Software';
+    'Sentry Docs | Application Performance Monitoring & Error Tracking Software';
   let customCanonicalTag: string = '';
   let description =
-    'Self-hosted and cloud-based application performance monitoring &amp; error tracking that helps software teams see clearer, solve quicker, &amp; learn continuously.';
+    'Self-hosted and cloud-based application performance monitoring & error tracking that helps software teams see clearer, solve quicker, and learn continuously.';
   // show og image on the home page only
   const images =
     ((await props.params).path ?? []).length === 0

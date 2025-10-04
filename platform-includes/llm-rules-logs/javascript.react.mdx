@@ -1,14 +1,12 @@
-<Expandable title="AI Rules for Logs in Code Editors" copy={true}>
+<Expandable title="AI Rules for Logs in Code Editors" copy={true} hideFromMd={true}>
 
-When created as a rules file this should be placed alongside other editor specific rule files. For example, if you are using Cursor, place this file in the `.cursorrules` directory.
+When created as a rules file this should be placed alongside other editor specific rule files. For example, if you are using Cursor, place this file in the `.cursor/rules` directory, or the contents in the `AGENTS.md` or `.cursorrules` (legacy) files.
 
-````markdown {filename:rules.md}
-
+````markdown {filename:rules.mdc}
 # Logs
 
 - Where logs are used, ensure Sentry is imported using `import * as Sentry from "@sentry/react"`
-- Enable logging in Sentry using `Sentry.init({ _experiments: { enableLogs: true } })`
-- Reference the logger using `const { logger } = Sentry`
+- Enable logging in Sentry using `Sentry.init({ enableLogs: true })`
 - Sentry offers a `consoleLoggingIntegration` that can be used to log specific console error types automatically without instrumenting the individual logger calls
 
 ## Configuration
@@ -20,11 +18,8 @@ The Sentry initialization needs to be updated to enable the logs feature.
 ```javascript
 Sentry.init({
   dsn: "https://examplePublicKey@o0.ingest.sentry.io/0",
-
-  _experiments: {
-    enableLogs: true,
-  },
-
+  // Enable logs to be sent to Sentry
+  enableLogs: true,
 });
 ```
 
@@ -42,28 +37,27 @@ Sentry.init({
 
 ## Logger Examples
 
-`logger.fmt` is a template literal function that should be used to bring variables into the structured logs.
+`Sentry.logger.fmt` is a template literal function that should be used to bring variables into the structured logs.
 
 ```javascript
 import * as Sentry from "@sentry/react";
 
-const { logger } = Sentry;
-
-logger.trace("Starting database connection", { database: "users" });
-logger.debug(logger.fmt`Cache miss for user: ${userId}`);
-logger.info("Updated profile", { profileId: 345 });
-logger.warn("Rate limit reached for endpoint", {
+Sentry.logger.trace("Starting database connection", { database: "users" });
+Sentry.logger.debug(Sentry.logger.fmt`Cache miss for user: ${userId}`);
+Sentry.logger.info("Updated profile", { profileId: 345 });
+Sentry.logger.warn("Rate limit reached for endpoint", {
   endpoint: "/api/results/",
   isEnterprise: false,
 });
-logger.error("Failed to process payment", {
+Sentry.logger.error("Failed to process payment", {
   orderId: "order_123",
   amount: 99.99,
 });
-logger.fatal("Database connection pool exhausted", {
+Sentry.logger.fatal("Database connection pool exhausted", {
   database: "users",
   activeConnections: 100,
 });
 ```
 ````
+
 </Expandable>

@@ -131,6 +131,23 @@ To hide this content, block the iframe, as described in our Session Replay <Plat
 
 </Expandable>
 
+<Expandable title="I'm getting the error: Blocked a frame with origin '...' from accessing a frame with origin '...'. Protocols, domains, and ports must match." permalink>
+
+The replay SDK attempted to access a cross-origin frame but was not allowed to. You will need to block the iframe in order to stop the errors:
+
+```javascript
+Sentry.init({
+  dsn: "...",
+  replaysSessionSampleRate: 1,
+  integrations: [
+    Sentry.replayIntegration({
+      block: ["iframe"],
+    }),
+  ],
+})
+```
+</Expandable>
+
 <Expandable title="Replay on my browser extension doesn't work" permalink>
 
 This is not a supported use-case. The replay package is built to work on a website and not as an externally-loaded script via browser extension or other mechanism. In fact, Sentry's Session Replay product can help developers find out when a third-party Chrome extension causes otherwise hard to debug or reproduce issues with their website.
@@ -161,9 +178,9 @@ With this configuration, Replay is able to capture response bodies from Apollo C
 
 <Expandable title="`console` calls are triggering replays to record" permalink>
   Using the
-  [`captureConsoleIntegration`](https://docs.sentry.io/platforms/javascript/configuration/integrations/captureconsole/)
+  [`captureConsoleIntegration`](/platforms/javascript/configuration/integrations/captureconsole/)
   can cause replays to record as if you have triggered an exception. You can use
-  [`beforeErrorSampling`](https://docs.sentry.io/platforms/javascript/guides/sveltekit/session-replay/understanding-sessions/#ignore-certain-errors-for-error-sampling)
+  [`beforeErrorSampling`](/platforms/javascript/guides/sveltekit/session-replay/understanding-sessions/#ignore-certain-errors-for-error-sampling)
   to avoid this behavior.
 </Expandable>
 
@@ -180,4 +197,26 @@ If you want to turn off [rage click issues](/product/issues/issue-details/replay
 Clicks in replays can appear in the incorrect location due to rendering differences between your application and the replayer. A common case of this is with text rendering: if custom fonts are not loaded properly in the replayer, it can cause the height of elements to differ between production and the replay. This means that the scroll position will be incorrect and will result in mouse clicks appearing in the wrong location. If you are hosting your own fonts, please configure the `Access-Control-Allow-Origin` headers to allow the `sentry.io` host to load your fonts, otherwise the replayer will be unable to load them due to CORS.
 
 Text masking of variable-width fonts can also cause this because the size of the masking text ("*") will not necessarily have the same dimensions as the original character it replaced. There is currently no workaround; please [follow this GitHub Issue](https://github.com/getsentry/sentry-javascript/issues/15449) for updates.
+</Expandable>
+
+<Expandable title="I'm not receiving any replays" permalink>
+
+If you're not receiving any Session Replay data, it's likely due to Content Security Policy (CSP) restrictions. This can happen in any application that explicitly sets CSP values. The Session Replay integration uses web workers to process replay data, which requires specific CSP permissions.
+
+To resolve this issue, make sure to include `worker-src 'self' blob:` in your `Content-Security-Policy` header or meta tag. This directive allows the integration to create and use web workers from the same origin (`'self'`) and from blob URLs (`blob:`), which are necessary for the replay functionality to work properly.
+
+For example, if you're setting the CSP via a meta tag:
+
+```html
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; worker-src 'self' blob:; ...">
+```
+
+Or if you're setting it via an HTTP header:
+
+```
+Content-Security-Policy: default-src 'self'; worker-src 'self' blob:; ...
+```
+
+Without the proper `worker-src` directive, the browser will block the web worker creation, preventing Session Replay from functioning correctly in your application.
+
 </Expandable>

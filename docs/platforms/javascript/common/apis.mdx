@@ -534,7 +534,7 @@ parameters={[
 
 Any spans created inside of the callback will be children of this span.
 
-The started span will automatically be ended when the callback returns, and will thus measure the duration of the callback. The callback cann also be an async function.
+The started span will automatically be ended when the callback returns, and will thus measure the duration of the callback. The callback can also be an async function.
 
   <Expandable title='Examples'>
   ```javascript
@@ -637,6 +637,43 @@ See <PlatformLink to="/tracing/instrumentation/">Tracing Instrumentation</Platfo
 </SdkApi>
 
 <SdkApi
+ name="setActiveSpanInBrowser"
+ signature="function setActiveSpanInBrowser(span: Span): void"
+ availableSince="10.15.0"
+ categorySupported={["browser"]}
+ >
+  Sets the passed span as the active span on the current scope.
+  You most likely don't need this functionality and should [use `startSpan`](#startSpan) 
+  instead.
+  However, in some situations, you might prefer a span being active outside of a callback. 
+  In this case, the combination of [`startInactiveSpan`](#startInactiveSpan) with this function
+  allows you to start a span, hold a reference to it and keep it active until you end it, without
+  the active duration being bound to the callback (as opposed to [`startSpanManual`](#startSpanManual)).
+  
+  
+  <Expandable title='Examples'>
+  ```javascript
+  let checkoutSpan;
+  
+  on('startCheckout', () => {
+    checkoutSpan = Sentry.startInactiveSpan({name: 'checkout-flow'});
+    Sentry.setActiveSpanInBrowser(checkoutSpan);
+  })
+  
+  doSomeWork();
+  
+  on('endCheckout', () => {
+    // Ending the span automatically removes it as the active span on the scope
+    checkoutSpan.end();
+  })
+  ```
+</Expandable>
+
+See <PlatformLink to="/tracing/instrumentation/">Tracing Instrumentation</PlatformLink> for more information on how to work with spans.
+
+</SdkApi>
+
+<SdkApi
   name="continueTrace"
   signature="function continueTrace<T>(options: TraceOptions, callback: () => T): T"
   parameters={[
@@ -712,6 +749,39 @@ See <PlatformLink to="/tracing/instrumentation/">Tracing Instrumentation</Platfo
   `browserTracingIntegration` has not been enabled.
 </SdkApi>
 
+<SdkApi
+  name="reportPageLoaded"
+  signature="function reportPageLoaded(): void"
+  categorySupported={["browser"]}
+  availableSince="10.13.0"
+>
+
+  Signals to the Sentry SDK that the initial page was fully loaded.
+  Requires the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#enableReportPageLoaded">`enableReportPageLoaded` option</PlatformLink> in `browserTracingIntegration` to
+  be set to `true`. Once called, the SDK ends the pageload span automatically,
+
+  By default, the SDK takes care of ending the pageload span automatically, based on
+  a period of inactivity where no new child spans are added to the pageload trace.
+  You can alternatively use explicit pageload reporting if the inactivity heuristics of
+  `browserTracingIntegration` don't work well for your use case.
+  However, you must ensure that you call `reportPageLoaded` in every situation.
+  If `reportPageLoaded` is not called, the pageload span will be ended after 30 seconds
+  or whatever custom value is set on the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#enableReportPageLoaded">`finalTimeout` option</PlatformLink>.
+
+
+  <Expandable title="Examples">
+  ```javascript
+  Sentry.init({
+    // 1. Enable manual page load reporting:
+    integrations: [browserTracingIntegration({ enableReportPageLoaded: true })]
+  })
+
+  // 2. Whenever you consider the page loaded:
+  Sentry.reportPageLoaded();
+  ```
+  </Expandable>
+</SdkApi>
+
 ## Tracing Utilities
 
 These utilities can be used for more advanced tracing use cases.
@@ -726,6 +796,13 @@ These utilities can be used for more advanced tracing use cases.
 >
   Update the name of a span. Use this over `span.updateName(name)` to ensure
   that the span is updated in all backends.
+</SdkApi>
+
+<SdkApi
+  name="setHttpStatus"
+  signature="function setHttpStatus(span: Span, httpStatus: number): void"
+>
+  Set the status of a span based on the given http status code.
 </SdkApi>
 
 <SdkApi
@@ -1081,6 +1158,79 @@ parameters={[
 Wraps a callback with a cron monitor check in. The check in will be sent to Sentry when the callback finishes.
 </SdkApi>
 </PlatformCategorySection>
+
+<PlatformSection supported={["javascript.sveltekit"]}>
+## Instrumenting Load Functions
+
+SvelteKit's universal and server `load` functions are instrumented automatically by default. If you don't want to use `load` auto-instrumentation, you can [disable it](/platforms/javascript/guides/sveltekit/configuration/build/#auto-instrumentation-options) and manually instrument specific `load` functions using the following function wrappers:
+
+<SdkApi
+  name="wrapLoadWithSentry"
+  signature={`function wrapLoadWithSentry<T extends (...args: any) => any>(
+  originalLoad: T
+  ): T`}
+>
+Wraps a SvelteKit `load` function declared in `+page.(js|ts)` or `+layout.(js|ts)` with Sentry error and performance monitoring.
+
+<Expandable title="Examples">
+```javascript
+import { wrapLoadWithSentry } from "@sentry/sveltekit";
+
+export const load = wrapLoadWithSentry(({ fetch }) => {
+    const res = await fetch("/api/data");
+    const data = await res.json();
+    return { data };
+});
+```
+
+</Expandable>
+</SdkApi>
+
+<SdkApi
+  name="wrapServerLoadWithSentry"
+  signature={`function wrapServerLoadWithSentry<T extends (...args: any) => any>(
+  originalServerLoad: T
+  ): T`}
+>
+Wraps a SvelteKit server-only `load` function declared in`+page.server.(js|ts)` or `+layout.server.(js|ts)` with Sentry error and performance monitoring.
+
+<Expandable title="Examples">
+```javascript
+import { wrapServerLoadWithSentry } from "@sentry/sveltekit";
+
+export const load = wrapServerLoadWithSentry(({ fetch }) => {
+  const res = await fetch("/api/data");
+  const data = await res.json();
+  return { data };
+});
+```
+</Expandable>
+
+</SdkApi>
+
+## Instrumenting Server Routes 
+
+<SdkApi
+  name="wrapServerRouteWithSentry"
+  signature={`function wrapServerRouteWithSentry<T extends RequestEvent>(
+  originalRouteHandler: (request: T) => Promise<Response>
+  ): (requestEvent: T) => Promise<Response>`}
+>
+Wraps a SvelteKit [server route handler](https://kit.svelte.dev/docs/routing#server) registered in `+server.(js|ts)` with Sentry error and performance monitoring. This is useful if you have custom server routes that you want to trace or if you want to capture `error()` calls within your server routes.
+
+<Expandable title="Examples">
+```javascript
+import { wrapServerRouteWithSentry } from "@sentry/sveltekit";
+
+export const GET = wrapServerRouteWithSentry(async () => {
+  // your endpoint logic
+  return new Response("Hello World");
+});
+```
+</Expandable>
+</SdkApi>
+
+</PlatformSection>
 
 <PlatformSection supported={["javascript.nextjs"]}>
 ## Server Actions

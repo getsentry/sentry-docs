@@ -9,6 +9,23 @@ import styles from './styles.module.scss';
 
 import {CodeContext} from '../codeContext';
 
+const OPTION_IDS = [
+  'error-monitoring',
+  'logs',
+  'session-replay',
+  'performance',
+  'profiling',
+  'source-maps',
+  'user-feedback',
+  'source-context',
+  'dsym',
+  'opentelemetry',
+] as const;
+
+const OPTION_IDS_SET = new Set(OPTION_IDS);
+
+type OptionId = (typeof OPTION_IDS)[number];
+
 const optionDetails: Record<
   OptionId,
   {
@@ -20,6 +37,24 @@ const optionDetails: Record<
   'error-monitoring': {
     name: 'Error Monitoring',
     description: "Let's admit it, we all have errors.",
+  },
+  logs: {
+    name: 'Logs',
+    description: (
+      <span>
+        Send text-based log information from your applications to Sentry for viewing
+        alongside relevant errors and searching by text-string or individual attributes.
+      </span>
+    ),
+  },
+  'session-replay': {
+    name: 'Session Replay',
+    description: (
+      <span>
+        Video-like reproductions of user sessions with debugging context to help you
+        confirm issue impact and troubleshoot faster.
+      </span>
+    ),
   },
   performance: {
     name: 'Tracing',
@@ -41,12 +76,12 @@ const optionDetails: Record<
     ),
     deps: ['performance'],
   },
-  'session-replay': {
-    name: 'Session Replay',
+  'source-maps': {
+    name: 'Source Maps',
     description: (
       <span>
-        Video-like reproductions of user sessions with debugging context to help you
-        confirm issue impact and troubleshoot faster.
+        Source maps for web applications that help translate minified code back to the
+        original source for better error reporting.
       </span>
     ),
   },
@@ -56,15 +91,6 @@ const optionDetails: Record<
       <span>
         Collect user feedback from anywhere in your application with an embeddable widget
         that allows users to report bugs and provide insights.
-      </span>
-    ),
-  },
-  logs: {
-    name: 'Logs (Beta)',
-    description: (
-      <span>
-        Send text-based log information from your applications to Sentry for viewing
-        alongside relevant errors and searching by text-string or individual attributes.
       </span>
     ),
   },
@@ -86,35 +112,11 @@ const optionDetails: Record<
       </span>
     ),
   },
-  'source-maps': {
-    name: 'Source Maps',
-    description: (
-      <span>
-        Source maps for web applications that help translate minified code back to the
-        original source for better error reporting.
-      </span>
-    ),
-  },
   opentelemetry: {
     name: 'OpenTelemetry',
     description: <span>Combine Sentry with OpenTelemetry.</span>,
   },
 };
-
-const OPTION_IDS = [
-  'error-monitoring',
-  'performance',
-  'profiling',
-  'session-replay',
-  'user-feedback',
-  'logs',
-  'source-context',
-  'dsym',
-  'source-maps',
-  'opentelemetry',
-] as const;
-
-type OptionId = (typeof OPTION_IDS)[number];
 
 export type OnboardingOptionType = {
   /**
@@ -132,7 +134,7 @@ export type OnboardingOptionType = {
 
 const validateOptionIds = (options: Pick<OnboardingOptionType, 'id'>[]) => {
   options.forEach(option => {
-    if (!OPTION_IDS.includes(option.id)) {
+    if (!OPTION_IDS_SET.has(option.id)) {
       throw new Error(
         `Invalid option id: ${option.id}.\nValid options are: ${OPTION_IDS.map(opt => `"${opt}"`).join(', ')}`
       );
@@ -142,23 +144,40 @@ const validateOptionIds = (options: Pick<OnboardingOptionType, 'id'>[]) => {
 
 export function OnboardingOption({
   children,
-  optionId,
+  optionId = 'all',
   hideForThisOption,
+  isStep = false,
 }: {
-  children: React.ReactNode;
-  optionId: OptionId;
+  children: ReactNode;
+  optionId: OptionId | 'all';
   hideForThisOption?: boolean;
+  isStep?: boolean;
 }) {
-  validateOptionIds([{id: optionId}]);
+  if (optionId !== 'all') {
+    // Allow not passing an optionId when isStep is true
+    validateOptionIds([{id: optionId}]);
+  }
+  const className = [hideForThisOption ? 'hidden' : '', isStep ? 'onboarding-step' : '']
+    .filter(Boolean)
+    .join(' ');
+
   return (
     <div
       data-onboarding-option={optionId}
       data-hide-for-this-option={hideForThisOption}
-      className={hideForThisOption ? 'hidden' : ''}
+      className={className}
     >
       {children}
     </div>
   );
+}
+
+/**
+ * Wrapper component that provides CSS counter context for numbered onboarding steps
+ * @param children - OnboardingOption components that should be numbered as steps
+ */
+export function OnboardingSteps({children}: {children: ReactNode}) {
+  return <div className="onboarding-steps">{children}</div>;
 }
 
 /**
@@ -220,17 +239,26 @@ export function OnboardingOptionButtons({
 }) {
   const codeContext = useContext(CodeContext);
 
-  const normalizedOptions = initialOptions.map(option => {
-    if (typeof option === 'string') {
-      return {
-        id: option,
-        // error monitoring is always needs to be checked and disabled
-        disabled: option === 'error-monitoring',
-        checked: option === 'error-monitoring',
-      };
-    }
-    return option;
-  });
+  const normalizedOptions = initialOptions
+    .map(option => {
+      if (typeof option === 'string') {
+        return {
+          id: option,
+          // error monitoring is always needs to be checked and disabled
+          disabled: option === 'error-monitoring',
+          checked: option === 'error-monitoring',
+        };
+      }
+      return option;
+    })
+    // sort options by their index in OPTION_IDS
+    // so that the order of the options is consistent
+    // regardless of how the user passes them in
+    .sort((a, b) => {
+      const indexA = OPTION_IDS.indexOf(a.id);
+      const indexB = OPTION_IDS.indexOf(b.id);
+      return indexA - indexB;
+    });
 
   validateOptionIds(normalizedOptions);
 
@@ -293,7 +321,7 @@ export function OnboardingOptionButtons({
   }, [options, touchOptions, touchedOptions]);
 
   return (
-    <div className="onboarding-options flex flex-wrap gap-3 py-2 bg-[var(--white)] dark:bg-[var(--gray-1)]  sticky top-[80px] z-[4] shadow-[var(--shadow-6)] transition">
+    <div className="onboarding-options flex flex-wrap gap-3 py-2 bg-[var(--white)] dark:bg-[var(--gray-1)] lg:sticky top-[80px] z-[4] shadow-[var(--shadow-6)] transition">
       {options.map(option => (
         <Button
           variant="surface"

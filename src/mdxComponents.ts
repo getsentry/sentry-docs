@@ -8,6 +8,7 @@ import {CodeTabs} from './components/codeTabs';
 import {CommunitySupportedPlatforms} from './components/communitySupportedPlatforms';
 import {ConfigKey} from './components/configKey';
 import {ConfigValue} from './components/configValue';
+import {ContentSeparator} from './components/contentSeparator';
 import {CreateGitHubAppForm} from './components/createGitHubAppForm';
 import {DefinitionList} from './components/definitionList';
 import {DevDocsCardGrid} from './components/devDocsCardGrid';
@@ -18,7 +19,12 @@ import {GuideGrid} from './components/guideGrid';
 import {JsBundleList} from './components/jsBundleList';
 import {LambdaLayerDetail} from './components/lambdaLayerDetail';
 import {LinkWithPlatformIcon} from './components/linkWithPlatformIcon';
-import {OnboardingOption, OnboardingOptionButtons} from './components/onboarding';
+import {LLMSteering} from './components/llmSteering';
+import {
+  OnboardingOption,
+  OnboardingOptionButtons,
+  OnboardingSteps,
+} from './components/onboarding';
 import {OrgAuthTokenNote} from './components/orgAuthTokenNote';
 import {PageGrid} from './components/pageGrid';
 import {ParamTable} from './components/paramTable';
@@ -38,7 +44,9 @@ import {SdkApi} from './components/sdkApi';
 import {SdkOption} from './components/sdkOption';
 import {SignInNote} from './components/signInNote';
 import {SmartLink} from './components/smartLink';
+import {StepComponent, StepConnector} from './components/stepConnector';
 import {TableOfContents} from './components/tableOfContents';
+import {VersionRequirement} from './components/version-requirement';
 import {VimeoEmbed} from './components/video';
 
 export function mdxComponents(
@@ -52,6 +60,7 @@ export function mdxComponents(
     Card,
     CliChecksumTable,
     CommunitySupportedPlatforms,
+    ContentSeparator,
     DevDocsCardGrid,
     PlatformFilter,
     CodeBlock,
@@ -70,6 +79,7 @@ export function mdxComponents(
     LambdaLayerDetail,
     Link: SmartLink,
     LinkWithPlatformIcon,
+    LLMSteering,
     OrgAuthTokenNote,
     PageGrid,
     ParamTable,
@@ -84,10 +94,14 @@ export function mdxComponents(
     PlatformSdkPackageName,
     OnboardingOption,
     OnboardingOptionButtons,
+    OnboardingSteps,
     RelayMetrics,
     SandboxLink,
     SignInNote,
+    StepComponent,
+    StepConnector,
     VimeoEmbed,
+    VersionRequirement,
     a: SmartLink,
     img: DocImage,
     ...dynamicComponents,

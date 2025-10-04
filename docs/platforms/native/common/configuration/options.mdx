@@ -14,8 +14,6 @@ Options that can be read from an environment variable (`SENTRY_DSN`, `SENTRY_ENV
 
 The DSN tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable also does not exist, the SDK will just not send any events.
 
-In runtimes without a process environment (such as the browser) that fallback does not apply.
-
 Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
 
 </ConfigKey>
@@ -34,9 +32,9 @@ Turns debug mode on or off. If `debug` is enabled, the SDK will attempt to print
 
 <ConfigKey name="release">
 
-Sets the release. Some SDKs will try to automatically configure a release out of the box but it's a better idea to manually set it to guarantee that the release is in sync with your deploy integrations or source map uploads. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
+Sets the release. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
 
-By default the SDK will try to read this value from the `SENTRY_RELEASE` environment variable (in the browser SDK, this will be read off of the `window.SENTRY_RELEASE.id` if available).
+By default the SDK will try to read this value from the `SENTRY_RELEASE` environment variable.
 
 </ConfigKey>
 
@@ -72,7 +70,7 @@ These options can be used to hook the SDK in various ways to customize the repor
 
 <ConfigKey name="before-send">
 
-This function is called with an SDK-specific message or error event object, and can return a modified event object, or `null` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
+This function is called with an SDK-specific message or error event object, and can return a modified event object, or `sentry_value_new_null()` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
 
 By the time <PlatformIdentifier name="before-send" /> is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
 
@@ -101,5 +99,19 @@ A number between `0.0` and `1.0`, controlling the percentage chance a given tran
 <ConfigKey name="traces-sampler">
 
 A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="traces-sample-rate" /> must be defined to enable tracing. An example can be found in the [Sampling](/platforms/native/configuration/sampling/#setting-a-sampling-function) section.
+
+</ConfigKey>
+
+## Logs options
+
+<ConfigKey name="enable-logs">
+
+This option enables the [logging integration](/platforms/native/logs), which allows the SDK to capture logs and send them to Sentry. This is disabled by default.
+
+</ConfigKey>
+
+<ConfigKey name="before-send-log">
+
+This function is called with an SDK-specific log object, and can return a modified log object, or `sentry_value_new_null()` to drop the log.
 
 </ConfigKey>

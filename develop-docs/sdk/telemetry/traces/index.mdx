@@ -115,6 +115,47 @@ The `maxSpans` should be implemented as an internal, non-configurable, constant 
 
 The `maxSpans` limit may also help avoiding transactions that never finish (in platforms that keep a transaction open for as long as spans are open), preventing OOM errors, and generally avoiding degraded application performance.
 
+
+### `propagateTraceparent`
+
+This must be a boolean value. The default is `false`. This option is used to enable the propagation of the W3C Trace Context HTTP header `traceparent` on outgoing HTTP requests. This is useful when the receiving services only support OTel/W3C propagation.
+
+The `traceparent` header is only sent when `propagateTraceparent` is `true` and the request matches `tracePropagationTargets` (same condition as for `sentry-trace`/`baggage`).
+
+Header Format:
+- Key: `traceparent`
+- Value: `00-<traceId>-<spanId>-<sampled>` where `<sampled>` is `01` if sampled, otherwise `00`.
+
+The full spec is available in the [W3C Trace Context](https://www.w3.org/TR/trace-context/) specification.
+
+### `traceIgnoreStatusCodes`
+
+This SHOULD be a collection of integers, denoting HTTP status codes.
+If suitable for the platform, the collection MAY also admit pairs of integers, denoting inclusive HTTP status code ranges.
+
+The option applies exclusively to incoming requests, and therefore MUST only be implemented in server SDKs.
+
+The SDK MUST honor this option by inspecting the [`http.response.status_code`](https://opentelemetry.io/docs/specs/semconv/registry/attributes/http/#:~:text=1437-,http.response.status_code,-int) attribute on each transaction/root span before it's finished.
+If the value of this attribute matches one of the status codes in `traceIgnoreStatusCodes`, the SDK MUST set the transaction's [sampling decision](https://develop.sentry.dev/sdk/telemetry/traces/#sampling) to `not sampled`.
+
+Note that a prerequisite to implement this option is that every HTTP server integration MUST record the [`http.response.status_code`](https://opentelemetry.io/docs/specs/semconv/registry/attributes/http/#:~:text=1437-,http.response.status_code,-int) attribute as defined in the OTEL spec.
+
+The SDK MUST emit a debug log denoting why the transaction was dropped.
+If the SDK implements client reports, it MUST record the dropped transaction with the `event_processor` discard reason.
+
+This option MUST default to an empty collection if it's introduced in a release with a minor SemVer bump.
+SDKs SHOULD set the default for this option to the following value (or equivalent if the implementation doesn't admit pairs of integers)
+```
+[[301, 303], [305, 399], [401, 404]]
+```
+at the earliest release with a major SemVer bump following its introduction.
+
+The rationale for this option and default is to not consume a user's span quota to trace requests that are useless for debugging purposes (and can often be triggered by scanning bots).
+
+Examples:
+`[403, 404]`: don't sample transactions corresponding to requests with status code 403 or 404
+`[[300, 399], [401, 404]]`: don't sample transactions corresponding to requests with status codes between 300 and 399 (inclusive) or between 401 and 404 (inclusive)
+
 ## `Event` Changes
 
 As of writing, transactions are implemented as an extension of the `Event`

@@ -1,0 +1,157 @@
+---
+title: Event Loop Block
+description: "Monitor for blocked event loops in all threads of a Node.js application."
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.electron
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.react-router
+  - javascript.astro
+  - javascript.tanstackstart-react
+---
+
+<Alert>
+
+This integration only works in the Node.js runtime.
+
+</Alert>
+
+_Import name: `eventLoopBlockIntegration` from `@sentry/node-native`_
+
+The `eventLoopBlockIntegration` can be used to monitor for blocked event loops in all threads of a Node.js application. Stack traces are automatically captured when blocking is detected.
+
+## Installation
+
+```bash {tabTitle:npm}
+npm install @sentry/node-native
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/node-native
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/node-native
+```
+
+## Usage
+
+<PlatformSection notSupported={["javascript.electron"]}>
+
+If you instrument your application via the Node.js `--import` flag, Sentry will be started and this instrumentation will be automatically applied to all worker threads.
+
+`instrument.mjs`
+
+```javascript
+import { eventLoopBlockIntegration } from "@sentry/node-native";
+
+Sentry.init({
+  dsn: "__YOUR_DSN__",
+  // Monitor event loop blocking for more than 500ms (stack traces automatically captured)
+  integrations: [eventLoopBlockIntegration({ threshold: 500 })],
+});
+```
+
+`app.mjs`
+
+```javascript
+import { Worker } from "worker_threads";
+
+const worker = new Worker(new URL("./worker.mjs", import.meta.url));
+
+// This main thread will be monitored for blocked event loops
+```
+
+`worker.mjs`
+
+```javascript
+// This worker thread will also be monitored for blocked event loops too
+```
+
+Start your application:
+
+```bash
+node --import instrument.mjs app.mjs
+```
+
+If a thread is blocked for more than the configured threshold, stack traces are automatically captured for all threads and sent to Sentry.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.electron"]}>
+
+_(Available in version 6.9.0 and above)_
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+import { eventLoopBlockIntegration } from "@sentry/electron/native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [eventLoopBlockIntegration({ threshold: 500 })],
+});
+```
+
+</PlatformSection>
+
+## Configuration Options
+
+You can pass a configuration object to the `eventLoopBlockIntegration` to customize the behavior:
+
+```typescript
+interface ThreadBlockedIntegrationOptions {
+  /**
+   * Threshold in milliseconds to trigger an event.
+   *
+   * Defaults to 1000ms.
+   */
+  threshold: number;
+  /**
+   * Maximum number of blocked events to send per clock hour.
+   *
+   * Defaults to 1.
+   */
+  maxEventsPerHour: number;
+  /**
+   * Tags to include with blocked events.
+   */
+  staticTags: { [key: string]: Primitive };
+}
+```
+<PlatformSection notSupported={["javascript.electron"]}>
+
+## Example Configuration
+
+```javascript
+import { eventLoopBlockIntegration } from "@sentry/node-native";
+
+Sentry.init({
+  dsn: "__YOUR_DSN__",
+  integrations: [
+    eventLoopBlockIntegration({
+      threshold: 500, // Trigger after 500ms of blocking (stack traces automatically captured)
+      maxEventsPerHour: 5, // Maximum 5 events per hour
+      staticTags: {
+        component: "main-thread",
+        environment: "production",
+      },
+    }),
+  ],
+});
+```
+
+</PlatformSection>

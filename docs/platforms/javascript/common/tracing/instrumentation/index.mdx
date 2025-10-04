@@ -102,7 +102,45 @@ Sometimes, you do not want the span to be ended automatically when the callback 
 
 To add spans that aren't active, you can create independent spans. This is useful when you have work that is grouped together under a single parent span, but is independent from the currently active span. However, in most cases you'll want to create and use the [startSpan](#starting-an-active-span-startspan) API from above.
 
+
 <PlatformContent includePath="performance/start-inactive-span" />
+
+<PlatformCategorySection supported={['browser']}>
+
+  ### Setting an inactive span active (browser only)
+
+  _Available Since: `10.15.0`_
+
+  In browser environments, you might run into use cases, where the callback-based span APIs are not sufficient.
+  In such cases (see example below), you can use `startInactiveSpan` to start an initially inactive span and then
+  set it active until you manually end the span.
+
+  ```javascript
+  let checkoutSpan;
+
+  on('startCheckout', () => {
+    checkoutSpan = Sentry.startInactiveSpan({name: 'checkout-flow'});
+    Sentry.setActiveSpanInBrowser(checkoutSpan);
+  })
+
+  doSomeWork();
+
+  on('endCheckout', () => {
+    // Ending the span automatically removes it as the active span
+    checkoutSpan.end();
+  })
+  ```
+
+  Using `startInactiveSpan` in combination with `setActiveSpanInBrowser` allows you to create an inactive span that can be made active until you manually end it. In contrast, [`startSpanManual`](#starting-an-active-span-with-manual-end-startspanmanual) allows you to end the span manually at any point, but it only remains active within the callback.
+
+  <Alert>
+
+  Note that `setActiveSpanInBrowser` is only available in browser environments! If you're running code in the server
+  (for example for server-side rendering), make sure to guard this call to only run in the browser.
+
+  </Alert>
+
+</PlatformCategorySection>
 
 ## Starting Spans as Children of a Specific Span
 
@@ -212,3 +250,17 @@ Prior to v8.39.0, you had to use `span.updateName('New Name')`, which had some l
 Using `Sentry.updateSpanName()` ensures that the name is updated correctly and no longer overwritten in these cases.
 
 If you use `@sentry/browser`, `@sentry/react`, and so on in browser environments, `span.updateName()` and `Sentry.updateSpanName()` will function identically, so you can use either one of them.
+
+### Updating the Span Status
+
+By default, spans will have an `unknown` status. You can manually update the status of a span to indicate whether it succeeded or failed:
+
+```javascript
+// Status codes:
+// 0: unknown
+// 1: ok
+// 2: error
+span.setStatus({ code: 2 });
+```
+
+Alternatively, you can also use the <PlatformLink to='/apis/#setHttpStatus'>`Sentry.setHttpStatus()`</PlatformLink> utility function to set a more specific error status.

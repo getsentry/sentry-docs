@@ -23,8 +23,9 @@ The routing instrumentation feature is shipped with Sentry's Flutter SDK automat
 
 Before starting, ensure:
 
-1. The Sentry Flutter SDK is initialized. Learn more [here](/platforms/dart/guides/flutter/#configure).
-2. Tracing is set up. Learn more [here](/platforms/dart/guides/flutter/tracing/).
+1. The Sentry Flutter SDK `9.1.0` or later is installed.
+2. The Sentry Flutter SDK is initialized. Learn more [here](/platforms/dart/guides/flutter/#configure).
+3. Tracing is set up. Learn more [here](/platforms/dart/guides/flutter/tracing/).
 
 ## Configure
 
@@ -32,94 +33,183 @@ Before starting, ensure:
 
 Add an instance of `SentryNavigationObserver` to your application's `navigatorObservers`.
 
-```dart {8} {tabTitle: Flutter Routing}
+```dart {14-16} {tabTitle: Flutter Routing}
 import 'package:flutter/material.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-return MaterialApp(
-  title: 'My Widget',
-  home: MyWidget(),
-  navigatorObservers: [
-    SentryNavigatorObserver()
-  ],
-);
+Future<void> main() async {
+  await SentryFlutter.init((options) {
+    options.dsn = '___DSN___';
+  }, appRunner: () => runApp(SentryWidget(child: MyApp())));
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+        navigatorObservers: [
+          SentryNavigatorObserver(),
+        ],
+        ...
+    );
+  }
+}
 ```
 
-```dart {6} {tabTitle: GoRouter}
-import 'package:go_router/go_router.dart';
+```dart {9} {tabTitle: GoRouter}
+import 'package:flutter/material.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:go_router/go_router.dart';
 
-final router = GoRouter(
-  routes: ...,
+final _router = GoRouter(
+  routes: [
+    ...
+  ],
   observers: [SentryNavigatorObserver()],
 );
+
+Future<void> main() async {
+  await SentryFlutter.init((options) {
+    options.dsn = '___DSN___';
+  }, appRunner: () => runApp(SentryWidget(child: MyApp())));
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp.router(
+      routerConfig: _router,
+    );
+  }
+}
+
 ```
 
 ### 2. Define Route Names
 
 By default the application's main route name is `"/"`.
 The instrumentation sets the span `operation` to `navigation` and the span `name` to the provided route name.
-For transactions to be created when navigation changes, you need to provide route names:
+For transactions to be created and breadcrumbs to be added when navigation changes, you need to provide route names:
 
 - Flutter routing: use `RouteSettings` and set the name in the constructor.
 - GoRouter: use the `name` parameter to set the route name.
 
-```dart {4} {tabTitle: Flutter Routing}
-/// Setting the route name is required
+<Alert>
+
+Make sure that you set the route name for all routes.
+If you do not set the route name, the SDK will not instrument performance insights such as [TTID](/platforms/dart/guides/flutter/integrations/routing-instrumentation/#time-to-initial-display) or [TTFD](/platforms/dart/guides/flutter/integrations/routing-instrumentation/#time-to-full-display) or create breadcrumbs for the route.
+
+</Alert>
+
+```dart {tabTitle: Flutter Routing}
 MaterialPageRoute(
   builder: (BuildContext context) => MyWidget(),
   settings: RouteSettings(name: 'My Widget'),
 )
 ```
 
-```dart {13} {tabTitle: GoRouter}
-final GoRouter _router = GoRouter(
-  observers: [SentryNavigatorObserver()],
-  routes: <RouteBase>[
-    GoRoute(
-      path: '/',
-      name: 'Home',
-      builder: (BuildContext context, GoRouterState state) {
-        return const HomeScreen();
-      },
-      routes: <RouteBase>[
-        GoRoute(
-          path: 'mywidget',
-          name: 'MyWidget',
-          builder: (BuildContext context, GoRouterState state) {
-            return const MyWidget();
-          },
-        ),
-      ],
-    ),
-  ],
-);
+```dart {tabTitle: GoRouter}
+GoRoute(
+  path: 'mywidget',
+  name: 'My Widget',
+  builder: (BuildContext context, GoRouterState state) {
+    return const MyWidget();
+  }
+)
 ```
 
 ## Time to Initial Display
 
-Time to initial display (TTID) provides insight into how long it takes your Widget to launch and draw their first frame. This is measured by adding a span for navigation to a Widget. The SDK then sets the span operation to `ui.load.initial-display` and the span description to the Widget's route name, followed by initial display (for example, `MyWidget initial display`).
+Time to initial display (TTID) provides insight into how long it takes your Widget to launch and draw their first frame. 
+This is measured by adding a span for navigation to a Widget. 
+The SDK then sets the span operation to `ui.load.initial-display` and the span description to the Widget's route name, followed by initial display (for example, `MyWidget initial display`).
+
+TTID is enabled by default.
 
 ## Time to Full Display
 
-Time to full display (TTFD) provides insight into how long it would take your Widget to launch and load all of its content. This is measured by adding a span for each navigation to a Widget. The SDK then sets the span operation to `ui.load.full-display` and the span description to the Widget's route name, followed by full display (for example, `MyWidget full display`).
+Time to full display (TTFD) provides insight into how long it would take your Widget to launch and load all of its content. 
+This is measured by adding a span for each navigation to a Widget. 
+The SDK then sets the span operation to `ui.load.full-display` and the span description to the Widget's route name, followed by full display (for example, `MyWidget full display`).
 
 TTFD is disabled by default. To enable TTFD measurements, follow these steps:
 
-1. Enable the `enableTimeToFullDisplayTracing` option in the SDK configuration:
+### 1. Enable the `enableTimeToFullDisplayTracing` option in the SDK configuration
 
-```dart {3}
+```dart {4}
 await SentryFlutter.init(
   (options) {
+    options.dsn = '___DSN___';
     options.enableTimeToFullDisplayTracing = true;
-  }, appRunner: () => runApp(MyApp()),
+  }, appRunner: () => runApp(SentryWidget(child: MyApp())),
 );
 ```
 
-2. Report the span manually:
+### 2. Report the TTFD span
 
-```dart
-await SentryFlutter.reportFullyDisplayed();
+There are two ways to report when your widget is fully displayed:
+
+#### 1. Wrap with `SentryDisplayWidget`
+
+Embed your target widget in `SentryDisplayWidget` and call `SentryDisplayWidget.of(context).reportFullyDisplayed()`.
+
+#### 2. Call the API directly
+
+Retrieve the current display span via `SentryFlutter.currentDisplay()` in `initState()` and call `currentDisplay.reportFullyDisplayed()` — no wrapper needed.
+
+
+<Alert>
+
+**Important for `StatelessWidget`:**
+
+If you're navigating to a `StatelessWidget`, you must use the `SentryDisplayWidget` wrapper.
+`SentryDisplayWidget` automatically reports TTFD as soon as the build completes.
+You do not need to call `reportFullyDisplayed()` yourself.
+
+</Alert>
+
+```dart {5, 13-18} {tabTitle: Wrap with SentryDisplayWidget}
+Navigator.push(
+  context,
+  MaterialPageRoute(
+    settings: const RouteSettings(name: 'MyWidget'),
+    builder: (context) => SentryDisplayWidget(child: MyWidget()),
+  ),
+);
+
+// Inside MyWidget’s State:
+@override
+void initState() {
+  super.initState();
+  // Do some long running work...
+  Future.delayed(const Duration(seconds: 3), () {
+    if (mounted) {
+      SentryDisplayWidget.of(context).reportFullyDisplayed();
+    }
+  });
+}
+```
+
+```dart {14, 13-18} {tabTitle: Use the API Directly}
+Navigator.push(
+  context,
+  MaterialPageRoute(
+    settings: const RouteSettings(name: 'MyWidget'),
+    builder: (context) => MyWidget(),
+  ),
+);
+
+// Inside MyWidget’s State:
+@override
+void initState() {
+  super.initState();
+  // Get a reference to the current display before doing work.
+  final currentDisplay = SentryFlutter.currentDisplay();
+  // Do some long running work...
+  Future.delayed(const Duration(seconds: 3), () {
+    currentDisplay?.reportFullyDisplayed();
+  });
+}
 ```
 
 If the span finishes through the API, its status will be set to `SpanStatus.OK`.
@@ -136,7 +226,6 @@ Set up a new widget that executes an expensive operation.
 import 'package:flutter/material.dart';
 import 'package:sentry/sentry.dart';
 
-/// Widget that executes an expensive operation
 class MyWidget extends StatefulWidget {
   const MyWidget({super.key});
 
@@ -145,22 +234,14 @@ class MyWidget extends StatefulWidget {
 }
 
 class MyWidgetState extends State<MyWidget> {
-  static const delayInSeconds = 5;
-
   @override
   void initState() {
     super.initState();
-    _doComplexOperation();
-  }
-
-  /// Attach child spans to the routing transaction
-  /// or the transaction will not be sent to Sentry.
-  Future<void> _doComplexOperation() async {
-    final activeTransaction = Sentry.getSpan();
-    final childSpan = activeTransaction?.startChild('complex operation',
-    description: 'running a $delayInSeconds seconds operation');
-    await Future.delayed(const Duration(seconds: delayInSeconds));
-    childSpan?.finish();
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        SentryDisplayWidget.of(context).reportFullyDisplayed();
+      }
+    });
   }
 
   @override
@@ -183,7 +264,7 @@ Navigator.push(
   context,
   MaterialPageRoute(
     settings: const RouteSettings(name: 'MyWidget'),
-    builder: (context) => MyWidget(),
+    builder: (context) => SentryDisplayWidget(child: MyWidget()),
   ),
 );
 ```
