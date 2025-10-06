@@ -110,7 +110,7 @@ module.exports = withSentryConfig(nextConfig, {
   unstable_sentryWebpackPluginOptions: {
     applicationKey: 'sentry-docs',
   },
-
+  useRunAfterProductionCompileHook: true,
   _experimental: {
     thirdPartyOriginStackFrames: true,
   },
