@@ -1,7 +1,7 @@
 #!/bin/bash
  
 if [[ $VERCEL_ENV == "production"  ]] ; then
-  npm run build
+  yarn run build
 else
-  npm run build:preview
+  yarn run build:preview
 fi
