@@ -1,6 +1,6 @@
 ---
 title: AWS Lambda
-description: AWS Lambda is a serverless compute service offered as part of Amazon Web Services. Learn how to set it up with Sentry.
+description: Learn how to manually set up Sentry to use in your AWS Lambda functions and capture your first errors.
 sdk: sentry.javascript.aws-serverless
 fallbackGuide: javascript.node
 categories:
@@ -16,39 +16,186 @@ Looking for instructions on how to add Sentry without modifying your code? [Chec
 
 </Alert>
 
-On this page you'll get an overview how to install, configure and use Sentry in your AWS Lambda functions. Once set up, our SDK will automatically report error and performance data from your Lambda Functions. Issues in Sentry will automatically include cloudwatch data, function details and execution time measurements.
+<PlatformContent includePath="getting-started-prerequisites" />
 
-## Installation
+## Step 1: Install
 
-Depending on your preferences, you can install Sentry in your Lambda functions using the [Sentry AWS Lambda Layer](./install/layer) (recommended) or the [Sentry AWS NPM package](./install/npm).
+Choose the features you want to configure, and this guide will show you how:
 
-### Should I use the Lambda Layer or the NPM package?
+<OnboardingOptionButtons options={["error-monitoring", "performance"]} />
 
-We generally recommend using the Lambda layer as it doesn't require you to deploy any Sentry dependency alongside your function.
-With the layer, you can achieve the same level of customization as with the NPM package.
-There are two reasons why you still might want to use the NPM package instead:
+<Expandable title="Want to learn more about these features?">
 
-1. You want to minimize lambda function size and tree-shake parts of the SDK code that you don't need. A related reason might be because you're transpiling your code and want to transpile your dependencies as well.
-2. You already use NPM packages and deploy `node_modules` with your function and you don't want to add a (or another) Lambda layer to your functions.
+- [**Issues**](/product/issues) (always enabled): Sentry's core error monitoring product that automatically reports errors,
+  uncaught exceptions, and unhandled rejections. If you have something that
+  looks like an exception, Sentry can capture it.
+- [**Tracing**](/product/tracing): Track software performance while seeing the
+  impact of errors across multiple systems. For example, distributed tracing
+  allows you to follow a request from the frontend to the backend and back.
 
-## Configuration
+</Expandable>
 
-After installing the SDK, you might want to configure some parameters. Besides the [common SDK configuration](./configuration/), you can also [configure Sentry's Lambda Function handler wrapper](./configuration/lambda-wrapper) to optimize function runtime overhead and timeout warnings.
+### Add the Sentry Lambda Layer
 
-## Verify
+<Alert>
+  You can also install Sentry via our NPM package. [Compare installation
+  methods](./install/) to decide which one fits your needs.
+</Alert>
 
-Once set up, verify that Sentry is reporting errors correctly by throwing a sample error in one of your functions:
+- Go to your Lambda function, select **Layers**, then **Add a Layer**
+- Under **Choose a layer**, select **Specify an ARN** (Amazon Resource Name)
+- Select your AWS region from the dropdown below and copy the provided ARN into the **Specify an ARN** input field
 
-```javascript {filename:index.js}{tabTitle:CommonJS}{2}
+<LambdaLayerDetail canonical="aws-layer:node" />
+
+## Step 2: Configure
+
+You can configure Sentry automatically via environment variables or manually in code. The automatic configuration is quick and requires no code changes. The manual configuration gives you more control over SDK options.
+
+### Option A: Automatic Configuration
+
+Set the following environment variables in your Lambda function configuration:
+
+```bash
+NODE_OPTIONS="--import @sentry/aws-serverless/awslambda-auto"
+SENTRY_DSN="___PUBLIC_DSN___"
+# ___PRODUCT_OPTION_START___ performance
+SENTRY_TRACES_SAMPLE_RATE="1.0"
+# ___PRODUCT_OPTION_END___ performance
+```
+
+### Option B: Manual Configuration
+
+First, create a new file, such as `instrument.(js|mjs)` and initialize the SDK and add the Lambda function wrapper:
+
+```javascript {filename:instrument.js} {tabTitle:CommonJS}
+const Sentry = require("@sentry/aws-serverless");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/aws-lambda/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Add Tracing by setting tracesSampleRate and adding integration
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+});
+
+// Wrap your handler with Sentry
+exports.handler = Sentry.wrapHandler(async (event, context) => {
+  // Your handler code
+});
+```
+
+```javascript {filename:instrument.mjs} {tabTitle:ESM}
+import * as Sentry from "@sentry/aws-serverless";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Adds request headers and IP for users, for more info visit:
+  // https://docs.sentry.io/platforms/javascript/guides/aws-lambda/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Add Tracing by setting tracesSampleRate and adding integration
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+});
+
+// Wrap your handler with Sentry
+exports.handler = Sentry.wrapHandler(async (event, context) => {
+  // Your handler code
+});
+```
+
+<Alert level="warning" title="Important">
+  You need to wrap your handler with `Sentry.wrapHandler()` to capture errors
+  and performance data when configuring Sentry manually.
+</Alert>
+
+Next, make sure the SDK loads before your function starts. To this end, preload the `instrument.(js|mjs)` file by setting the `NODE_OPTIONS` environment variable in your Lambda function configuration:
+
+```bash
+NODE_OPTIONS="--import ./instrument.js"
+```
+
+## Step 3: Verify your Setup
+
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+### Issues
+
+To verify that Sentry captures errors and creates issues in your Sentry project, throw an Error in your main handler function.
+
+```javascript {filename:index.js}{4}
 exports.handler = async (event, context) => {
+  //if you used manual configuration, use the Sentry wrapper
+  //exports.handler = Sentry.wrapHandler(async (event, context) => {
   throw new Error("This is a test error");
 };
 ```
 
-```javascript {filename:index.mjs}{tabTitle:ESM}{4}
-import * as Sentry from "@sentry/aws-serverless";
+<OnboardingOption optionId="performance">
+### Tracing
+To test your tracing configuration, update the previous code snippet by starting a trace to measure the time it takes for the execution of your code:
 
-export const handler = Sentry.wrapHandler(async (event, context) => {
-  throw new Error("This is a test error");
-}));
+```javascript {filename:index.js}{4-12}
+exports.handler = async (event, context) => {
+  //if you used manual configuration, use the Sentry wrapper
+  //exports.handler = Sentry.wrapHandler(async (event, context) => {
+  await Sentry.startSpan(
+    {
+      op: "test",
+      name: "My Custom Operation",
+    },
+    async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  );
+};
 ```
+
+</OnboardingOption>
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
+
+<Expandable title="Need help locating the captured errors in your Sentry project?">
+
+1. Open the [**Issues**](https://sentry.io/issues) page and select an error from the issues list to view the full details and context of this error. For more details, see this [interactive walkthrough](/product/sentry-basics/integrate-frontend/generate-first-error/#ui-walkthrough).
+2. Open the [**Traces**](https://sentry.io/explore/traces) page and select a trace to reveal more information about each span, its duration, and any errors. For an interactive UI walkthrough, click [here](/product/sentry-basics/distributed-tracing/generate-first-error/#ui-walkthrough).
+
+</Expandable>
+
+## Next Steps
+
+At this point, you should have integrated Sentry into your AWS Lambda function, which should already be sending data to your Sentry project.
+
+Now's a good time to customize your setup and look into more advanced topics.
+Our next recommended steps for you are:
+
+- Learn how to [manually capture errors](/platforms/javascript/guides/aws-lambda/usage/)
+- Continue to [customize your configuration](/platforms/javascript/guides/aws-lambda/configuration/)
+- Continue to [configure Sentry's Lambda function wrapper](/platforms/javascript/guides/aws-lambda/configuration/lambda-wrapper/)
+- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Find various topics in [Troubleshooting](/platforms/javascript/guides/aws-lambda/troubleshooting/)
+- Review alternative [installation methods](/platforms/javascript/guides/aws-lambda/install/)
+- [Get support](https://sentry.zendesk.com/hc/en-us/)
+
+</Expandable>
