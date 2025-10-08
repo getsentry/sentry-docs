@@ -25,9 +25,17 @@ function getCopiableText(element: HTMLDivElement) {
   let text = '';
   const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, {
     acceptNode: function (node) {
-      // Skip if parent has .no-copy class
-      if (node.parentElement?.classList.contains('no-copy')) {
-        return NodeFilter.FILTER_REJECT;
+      let parent = node.parentElement;
+      // Walk up the tree to check if any parent has .no-copy, .hidden, or data-onboarding-option-hidden
+      while (parent && parent !== element) {
+        if (
+          parent.classList.contains('no-copy') ||
+          parent.classList.contains('hidden') ||
+          (parent as HTMLElement).dataset?.onboardingOptionHidden
+        ) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        parent = parent.parentElement;
       }
       return NodeFilter.FILTER_ACCEPT;
     },
