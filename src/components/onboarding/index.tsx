@@ -276,35 +276,35 @@ export function updateElementsVisibilityForOptions(
       // Check line before open wrapper
       if (openIndex > 0) {
         const prevLine = allLines[openIndex - 1];
-        const prevText = prevLine.textContent?.trim();
-        if (!prevText || prevText === '') {
-          prevLine.style.display = 'none';
+        if (!prevLine.textContent?.trim()) {
+          prevLine.classList.add('hidden');
+          prevLine.dataset.emptyLineHidden = 'true';
         }
       }
 
       // Check line after close wrapper
       if (closeIndex < allLines.length - 1) {
         const nextLine = allLines[closeIndex + 1];
-        const nextText = nextLine.textContent?.trim();
-        if (!nextText || nextText === '') {
-          nextLine.style.display = 'none';
+        if (!nextLine.textContent?.trim()) {
+          nextLine.classList.add('hidden');
+          nextLine.dataset.emptyLineHidden = 'true';
         }
       }
     } else {
       // Show empty lines when integrations are visible
       if (openIndex > 0) {
         const prevLine = allLines[openIndex - 1];
-        const prevText = prevLine.textContent?.trim();
-        if (!prevText || prevText === '') {
-          prevLine.style.display = '';
+        if (prevLine.dataset.emptyLineHidden === 'true') {
+          prevLine.classList.remove('hidden');
+          delete prevLine.dataset.emptyLineHidden;
         }
       }
 
       if (closeIndex < allLines.length - 1) {
         const nextLine = allLines[closeIndex + 1];
-        const nextText = nextLine.textContent?.trim();
-        if (!nextText || nextText === '') {
-          nextLine.style.display = '';
+        if (nextLine.dataset.emptyLineHidden === 'true') {
+          nextLine.classList.remove('hidden');
+          delete nextLine.dataset.emptyLineHidden;
         }
       }
     }
