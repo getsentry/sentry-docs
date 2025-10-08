@@ -66,7 +66,6 @@ function handle_inline_options(node) {
 
     // Found "integrations: ["
     if (lineStr.match(/integrations:\s*\[/)) {
-      console.log('🎯 Found integrations opening at line', i, ':', lineStr);
       // Mark the opening line and hide it by default
       line.properties['data-integrations-wrapper'] = 'open';
       line.properties.className = [...(line.properties.className || []), 'hidden'];
@@ -75,7 +74,6 @@ function handle_inline_options(node) {
       for (let j = i + 1; j < node.children.length; j++) {
         const closeStr = toString(node.children[j]).trim();
         if (closeStr.includes('],')) {
-          console.log('🎯 Found integrations closing at line', j, ':', closeStr);
           // Mark the closing line and hide it by default
           node.children[j].properties['data-integrations-wrapper'] = 'close';
           node.children[j].properties.className = [
