@@ -229,6 +229,46 @@ export function updateElementsVisibilityForOptions(
       });
     }
   });
+
+  // Handle integrations wrapper: hide opening/closing brackets if no integrations are visible
+  const openWrappers = document.querySelectorAll<HTMLElement>('[data-integrations-wrapper="open"]');
+
+  openWrappers.forEach(openLine => {
+    const codeBlock = openLine.closest('code.code-highlight');
+    if (!codeBlock) return;
+
+    const allLines = Array.from(codeBlock.children) as HTMLElement[];
+    const openIndex = allLines.indexOf(openLine);
+
+    // Find the matching close line in the same code block
+    let closeIndex = -1;
+    for (let i = openIndex + 1; i < allLines.length; i++) {
+      if (allLines[i].dataset.integrationsWrapper === 'close') {
+        closeIndex = i;
+        break;
+      }
+    }
+
+    if (closeIndex === -1) return;
+
+    // Check if any lines between open and close are visible option lines
+    let hasVisibleIntegrations = false;
+    for (let i = openIndex + 1; i < closeIndex; i++) {
+      const line = allLines[i];
+      const isOption = line.dataset.onboardingOption;
+      const isHidden = line.classList.contains('hidden');
+      const isMarker = line.dataset.onboardingOptionHidden;
+
+      if (isOption && !isMarker && !isHidden) {
+        hasVisibleIntegrations = true;
+        break;
+      }
+    }
+
+    // Toggle visibility of both open and close lines
+    openLine.classList.toggle('hidden', !hasVisibleIntegrations);
+    allLines[closeIndex].classList.toggle('hidden', !hasVisibleIntegrations);
+  });
 }
 
 export function OnboardingOptionButtons({
