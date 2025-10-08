@@ -46,9 +46,9 @@ export async function DocsChangelog() {
       {entries.map(entry => {
         const date = new Date(entry.publishedAt);
         const totalFiles =
-          (entry.filesChanged?.added.length || 0) +
-          (entry.filesChanged?.modified.length || 0) +
-          (entry.filesChanged?.removed.length || 0);
+          (entry.filesChanged?.added?.length || 0) +
+          (entry.filesChanged?.modified?.length || 0) +
+          (entry.filesChanged?.removed?.length || 0);
 
         return (
           <article
@@ -93,7 +93,7 @@ export async function DocsChangelog() {
                   View changed files
                 </summary>
                 <div className="mt-2 space-y-2 rounded-md bg-gray-50 p-3">
-                  {entry.filesChanged.added.length > 0 && (
+                  {entry.filesChanged.added && entry.filesChanged.added.length > 0 && (
                     <div>
                       <span className="font-semibold text-green-700">Added:</span>
                       <ul className="ml-4 mt-1 list-inside list-disc">
@@ -105,7 +105,7 @@ export async function DocsChangelog() {
                       </ul>
                     </div>
                   )}
-                  {entry.filesChanged.modified.length > 0 && (
+                  {entry.filesChanged.modified && entry.filesChanged.modified.length > 0 && (
                     <div>
                       <span className="font-semibold text-blue-700">Modified:</span>
                       <ul className="ml-4 mt-1 list-inside list-disc">
@@ -117,7 +117,7 @@ export async function DocsChangelog() {
                       </ul>
                     </div>
                   )}
-                  {entry.filesChanged.removed.length > 0 && (
+                  {entry.filesChanged.removed && entry.filesChanged.removed.length > 0 && (
                     <div>
                       <span className="font-semibold text-red-700">Removed:</span>
                       <ul className="ml-4 mt-1 list-inside list-disc">
