@@ -253,15 +253,15 @@ export function updateElementsVisibilityForOptions(
 
     if (closeIndex === -1) return;
 
-    // Check if any lines between open and close are visible option lines
+    // Check if any lines between open and close are visible (non-marker lines)
     let hasVisibleIntegrations = false;
     for (let i = openIndex + 1; i < closeIndex; i++) {
       const line = allLines[i];
-      const isOption = line.dataset.onboardingOption;
       const isHidden = line.classList.contains('hidden');
       const isMarker = line.dataset.onboardingOptionHidden;
 
-      if (isOption && !isMarker && !isHidden) {
+      // Count any visible non-marker line
+      if (!isMarker && !isHidden) {
         hasVisibleIntegrations = true;
         break;
       }
@@ -270,6 +270,44 @@ export function updateElementsVisibilityForOptions(
     // Toggle visibility of both open and close lines
     openLine.classList.toggle('hidden', !hasVisibleIntegrations);
     allLines[closeIndex].classList.toggle('hidden', !hasVisibleIntegrations);
+
+    // Hide empty lines adjacent to the wrapper when no integrations are visible
+    if (!hasVisibleIntegrations) {
+      // Check line before open wrapper
+      if (openIndex > 0) {
+        const prevLine = allLines[openIndex - 1];
+        const prevText = prevLine.textContent?.trim();
+        if (!prevText || prevText === '') {
+          prevLine.style.display = 'none';
+        }
+      }
+
+      // Check line after close wrapper
+      if (closeIndex < allLines.length - 1) {
+        const nextLine = allLines[closeIndex + 1];
+        const nextText = nextLine.textContent?.trim();
+        if (!nextText || nextText === '') {
+          nextLine.style.display = 'none';
+        }
+      }
+    } else {
+      // Show empty lines when integrations are visible
+      if (openIndex > 0) {
+        const prevLine = allLines[openIndex - 1];
+        const prevText = prevLine.textContent?.trim();
+        if (!prevText || prevText === '') {
+          prevLine.style.display = '';
+        }
+      }
+
+      if (closeIndex < allLines.length - 1) {
+        const nextLine = allLines[closeIndex + 1];
+        const nextText = nextLine.textContent?.trim();
+        if (!nextText || nextText === '') {
+          nextLine.style.display = '';
+        }
+      }
+    }
   });
 }
 
