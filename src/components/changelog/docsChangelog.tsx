@@ -1,10 +1,12 @@
+import React from 'react';
+
 interface ChangelogEntry {
-  id: string;
-  title: string;
-  description: string;
-  url: string;
-  publishedAt: string;
   author: string;
+  description: string;
+  id: string;
+  publishedAt: string;
+  title: string;
+  url: string;
   filesChanged?: {
     added: string[];
     modified: string[];
@@ -15,7 +17,7 @@ interface ChangelogEntry {
 async function getChangelogEntries(): Promise<ChangelogEntry[]> {
   try {
     const res = await fetch('https://sentry-content-dashboard.sentry.dev/api/docs', {
-      next: { revalidate: 3600 }, // Cache for 1 hour
+      next: {revalidate: 3600}, // Cache for 1 hour
     });
     
     if (!res.ok) {
@@ -24,7 +26,7 @@ async function getChangelogEntries(): Promise<ChangelogEntry[]> {
     
     return res.json();
   } catch (error) {
-    console.error('Error fetching changelog:', error);
+    // Error fetching changelog - return empty array
     return [];
   }
 }
@@ -77,10 +79,10 @@ export async function DocsChangelog() {
                 <span>•</span>
                 <span>by {entry.author}</span>
                 {totalFiles > 0 && (
-                  <>
+                  <React.Fragment>
                     <span>•</span>
                     <span>{totalFiles} file{totalFiles !== 1 ? 's' : ''} changed</span>
-                  </>
+                  </React.Fragment>
                 )}
               </div>
             </header>
