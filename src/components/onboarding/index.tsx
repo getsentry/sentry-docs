@@ -231,7 +231,9 @@ export function updateElementsVisibilityForOptions(
   });
 
   // Handle integrations wrapper: hide opening/closing brackets if no integrations are visible
-  const openWrappers = document.querySelectorAll<HTMLElement>('[data-integrations-wrapper="open"]');
+  const openWrappers = document.querySelectorAll<HTMLElement>(
+    '[data-integrations-wrapper="open"]'
+  );
 
   openWrappers.forEach(openLine => {
     const codeBlock = openLine.closest('code.code-highlight');
