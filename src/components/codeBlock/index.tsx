@@ -31,7 +31,7 @@ function getCopiableText(element: HTMLDivElement) {
         if (
           parent.classList.contains('no-copy') ||
           parent.classList.contains('hidden') ||
-          (parent as HTMLElement).dataset?.onboardingOptionHidden
+          parent.hasAttribute('data-onboarding-option-hidden')
         ) {
           return NodeFilter.FILTER_REJECT;
         }
