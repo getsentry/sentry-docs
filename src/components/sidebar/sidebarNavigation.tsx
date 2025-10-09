@@ -44,6 +44,10 @@ const productSidebarItems = [
     title: 'Concepts & Reference',
     root: 'concepts',
   },
+  {
+    title: 'Documentation Changelog',
+    root: 'changelog',
+  },
 ];
 
 export async function SidebarNavigation({path}: {path: string[]}) {
