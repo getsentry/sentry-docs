@@ -255,30 +255,45 @@ function foo() {
 ```
 ````
 
-## ConfigKey
+## SdkOption
 
-Render a heading with a configuration key in the correctly cased format for a given platform.
+Render an SDK configuration option heading with a metadata table. Option names should be written in the platform's native casing (camelCase, PascalCase, or snake_case).
 
 <Alert>
 
-If content is specified, it will automatically hide the content when the given `platform` is not selected in context.
+If `categorySupported` is specified, it will automatically hide the option when the platform does not support it.
 
 </Alert>
 
 ```markdown {tabTitle:Example}
-<ConfigKey name="send-default-pii" notSupported={["javascript"]}>
+<SdkOption 
+  name="sampleRate" 
+  type="number" 
+  defaultValue="1.0"
+  envVar="SENTRY_SAMPLE_RATE">
 
-Description of send-default-pii
+The sample rate for error events, as a number between `0.0` and `1.0` (inclusive).
 
-</ConfigKey>
+</SdkOption>
 ```
 
 Attributes:
 
-- `name` (string)
-- `platform` (string) - defaults to the `platform` value from the page context
-- `supported` (string[])
-- `notSupported` (string[])
+- `name` (string) - **required** - the option name in the platform's native casing
+- `type` (string) - optional - data type (e.g., `boolean`, `string`, `number`)
+- `defaultValue` (string) - optional - default value for the option
+- `envVar` (string) - optional - associated environment variable
+- `availableSince` (string) - optional - SDK version when the option was introduced
+- `categorySupported` (string[]) - optional - platform categories that support this option (e.g., `["browser", "server"]`)
+- `categoryNotSupported` (string[]) - optional - platform categories that don't support this option
+
+**Platform-native casing guidelines:**
+
+- **camelCase**: JavaScript/TypeScript (all frameworks), Java, Kotlin, Dart/Flutter, Android, Apple (iOS/macOS)
+- **PascalCase**: .NET (all frameworks), Unity, Unreal, PowerShell
+- **snake_case**: Python, PHP, Ruby, Go, Rust, Elixir, Native (C/C++), Godot
+
+Use the `<PlatformIdentifier name="option-name" />` component to render option names with correct casing based on the platform's `case_style` setting.
 
 ## PageGrid
 
