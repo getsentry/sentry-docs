@@ -17,11 +17,11 @@ async function getChangelogEntries(): Promise<ChangelogEntry[]> {
     const res = await fetch('https://sentry-content-dashboard.sentry.dev/api/docs', {
       next: {revalidate: 3600}, // Cache for 1 hour
     });
-    
+
     if (!res.ok) {
       throw new Error('Failed to fetch changelog');
     }
-    
+
     return res.json();
   } catch (error) {
     // Error fetching changelog - return empty array
@@ -51,10 +51,7 @@ export async function DocsChangelog() {
           (entry.filesChanged?.removed?.length || 0);
 
         return (
-          <article
-            key={entry.id}
-            className="border-b border-gray-200 pb-8 last:border-0"
-          >
+          <article key={entry.id} className="border-b border-gray-200 pb-8 last:border-0">
             <header className="mb-3">
               <h3 className="mb-2 text-xl font-semibold">
                 <a
@@ -77,7 +74,11 @@ export async function DocsChangelog() {
                 <span>•</span>
                 <span>by {entry.author}</span>
                 {totalFiles > 0 && <span>•</span>}
-                {totalFiles > 0 && <span>{totalFiles} file{totalFiles !== 1 ? 's' : ''} changed</span>}
+                {totalFiles > 0 && (
+                  <span>
+                    {totalFiles} file{totalFiles !== 1 ? 's' : ''} changed
+                  </span>
+                )}
               </div>
             </header>
 
@@ -101,30 +102,32 @@ export async function DocsChangelog() {
                       </ul>
                     </div>
                   )}
-                  {entry.filesChanged.modified && entry.filesChanged.modified.length > 0 && (
-                    <div>
-                      <span className="font-semibold text-blue-700">Modified:</span>
-                      <ul className="ml-4 mt-1 list-inside list-disc">
-                        {entry.filesChanged.modified.map(file => (
-                          <li key={file} className="text-gray-700">
-                            {file}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {entry.filesChanged.removed && entry.filesChanged.removed.length > 0 && (
-                    <div>
-                      <span className="font-semibold text-red-700">Removed:</span>
-                      <ul className="ml-4 mt-1 list-inside list-disc">
-                        {entry.filesChanged.removed.map(file => (
-                          <li key={file} className="text-gray-700">
-                            {file}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                  {entry.filesChanged.modified &&
+                    entry.filesChanged.modified.length > 0 && (
+                      <div>
+                        <span className="font-semibold text-blue-700">Modified:</span>
+                        <ul className="ml-4 mt-1 list-inside list-disc">
+                          {entry.filesChanged.modified.map(file => (
+                            <li key={file} className="text-gray-700">
+                              {file}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  {entry.filesChanged.removed &&
+                    entry.filesChanged.removed.length > 0 && (
+                      <div>
+                        <span className="font-semibold text-red-700">Removed:</span>
+                        <ul className="ml-4 mt-1 list-inside list-disc">
+                          {entry.filesChanged.removed.map(file => (
+                            <li key={file} className="text-gray-700">
+                              {file}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                 </div>
               </details>
             )}
@@ -134,4 +137,3 @@ export async function DocsChangelog() {
     </div>
   );
 }
-
