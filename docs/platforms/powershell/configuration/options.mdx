@@ -8,9 +8,11 @@ sidebar_order: 1
 
 ## Core Options
 
+<TableOfContents ignoreIds={["core-options"]} />
+
 Options that can be read from an environment variable (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically.
 
-<ConfigKey name="dsn">
+<SdkOption name="Dsn" type="string" envVar="SENTRY_DSN">
 
 The DSN tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable also does not exist, the SDK will just not send any events.
 
@@ -18,23 +20,23 @@ In runtimes without a process environment (such as the browser) that fallback do
 
 Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="is-global-mode-enabled">
+<SdkOption name="IsGlobalModeEnabled" type="bool" defaultValue="true">
 
 Specifies whether to use global scope management mode. Should be `true` for client applications and `false` for server applications.
 
 Defaults to `true` for PowerShell.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="debug">
+<SdkOption name="Debug" type="bool" defaultValue="false">
 
 Turns debug mode on or off. If debug is enabled SDK will attempt to print out useful debugging information if something goes wrong with sending the event. The default is always `false`. It's generally not recommended to turn it on in production, though turning `debug` mode on will not cause any safety concerns.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="diagnostic-level">
+<SdkOption name="DiagnosticLevel" type="enum">
 
 Enabling `debug` mode makes the SDK generate as much diagnostic data as possible. However, if you'd prefer to lower the verbosity of the Sentry SDK diagnostics logs, configure this option to set the appropriate level:
 
@@ -44,57 +46,57 @@ Enabling `debug` mode makes the SDK generate as much diagnostic data as possible
 - `error`: Only SDK internal errors are printed
 - `fatal`: Only critical errors are printed
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="dist">
+<SdkOption name="Dist" type="string">
 
 Sets the distribution of the application. Distributions are used to disambiguate build or deployment variants of the same release of an application. For example, the dist can be a hash of the script file contents. The dist has a max length of 64 characters.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="release">
+<SdkOption name="Release" type="string" envVar="SENTRY_RELEASE">
 
 Sets the identifier for the version of the currently running application. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
 
 By default the SDK will try to read this value from the `SENTRY_RELEASE` environment variable (in the browser SDK, this will be read off of the `window.SENTRY_RELEASE.id` if available).
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="environment">
+<SdkOption name="Environment" type="string" defaultValue="production" envVar="SENTRY_ENVIRONMENT">
 
 Sets the environment. This string is freeform and set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
 
 By default, the SDK reports `debug` when the debugger is attached. Otherwise, the default environment is `production`.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="sample-rate">
+<SdkOption name="SampleRate" type="float" defaultValue="1.0">
 
 Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="max-breadcrumbs">
+<SdkOption name="MaxBreadcrumbs" type="int" defaultValue="100">
 
 This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`, but you can set this to any number. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="max-cache-items">
+<SdkOption name="MaxCacheItems" type="int" defaultValue="30">
 
 The maximum number of [envelopes](https://develop.sentry.dev/sdk/data-model/envelopes/) to keep in cache. The SDKs use envelopes to send data, such as events, attachments, user feedback, and sessions to sentry.io. An envelope can contain multiple items, such as an event with a session and two attachments. Depending on the usage of the SDK, the size of an envelope can differ. If the number of envelopes in the local cache exceeds `max-cache-items`, the SDK deletes the oldest envelope and migrates the sessions to the next envelope to maintain the integrity of your release health stats. The default is `30`.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="attach-stacktrace">
+<SdkOption name="AttachStacktrace" type="bool">
 
 When enabled, stack traces are automatically attached to all messages logged. Stack traces are always attached to exceptions; however, when this option is set, stack traces are also sent with messages. This option, for instance, means that stack traces appear next to all log messages.
 
 Grouping in Sentry is different for events with stack traces and without. As a result, you will get new groups as you enable or disable this flag for certain events.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="send-default-pii">
+<SdkOption name="SendDefaultPii" type="bool" defaultValue="false">
 
 If this flag is enabled, certain personally identifiable information (PII) is added by active integrations. By default, no such data is sent.
 
@@ -108,67 +110,67 @@ This option is turned off by default.
 
 If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="send-client-reports">
+<SdkOption name="SendClientReports" type="bool">
 
 Set this boolean to `false` to disable sending of client reports. Client reports are a protocol feature that let clients send status reports about themselves to Sentry. They are currently mainly used to emit outcomes for events that were never sent.
 
-</ConfigKey>
+</SdkOption>
 
 ## Hooks
 
 These options can be used to hook the SDK in various ways to customize the reporting of events.
 
-<ConfigKey name="before-send">
+<SdkOption name="BeforeSend" type="function">
 
 This function is called with an SDK-specific message or error event object, and can return a modified event object, or `null` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
 
 By the time <PlatformIdentifier name="before-send" /> is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="before-breadcrumb">
+<SdkOption name="BeforeBreadcrumb" type="function">
 
 This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
 The callback typically gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
 
-</ConfigKey>
+</SdkOption>
 
 ## Transport Options
 
 Transports are used to send events to Sentry. Transports can be customized to some degree to better support highly specific deployments.
 
-<ConfigKey name="transport">
+<SdkOption name="Transport" type="function">
 
 Switches out the transport used to send events. How this works depends on the SDK. It can, for instance, be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="init-cache-flush-timeout">
+<SdkOption name="InitCacheFlushTimeout" type="int" defaultValue="1">
 
 When caching is enabled (that is, <PlatformIdentifier name="cache-directory-path" /> is set), this option controls the timeout that limits how long the SDK will attempt to flush existing cache during initialization. Note that flushing the cache involves sending the payload to Sentry in a blocking operation. Setting this option to zero means that Sentry will **not** attempt to flush the cache during initialization, but instead will do so when the next payload is queued up.
 
 The default is `1` (one) second.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="shutdown-timeout">
+<SdkOption name="ShutdownTimeout" type="int">
 
 Controls how many seconds to wait before shutting down. Sentry SDKs send events from a background queue. This queue is given a certain amount to drain pending events. The default is SDK specific but typically around two seconds. Setting this value too low may cause problems for sending events from command line applications. Setting the value too high will cause the application to block for a long time for users experiencing network connectivity problems.
 
-</ConfigKey>
+</SdkOption>
 
 ## Tracing Options
 
-<ConfigKey name="traces-sample-rate">
+<SdkOption name="TracesSampleRate" type="float">
 
 A number between `0` and `1`, controlling the percentage chance a given transaction will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Applies equally to all transactions created in the app. Either this or <PlatformIdentifier name="traces-sampler" /> must be defined to enable tracing.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="traces-sampler">
+<SdkOption name="TracesSampler" type="function">
 
 A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="traces-sample-rate" /> must be defined to enable tracing.
 
-</ConfigKey>
+</SdkOption>
