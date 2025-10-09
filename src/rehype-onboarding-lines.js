@@ -42,6 +42,8 @@ function handle_inline_options(node) {
   // ___PRODUCT_OPTION_END___ session-replay
   const PRODUCT_OPTION_START = '___PRODUCT_OPTION_START___';
   const PRODUCT_OPTION_END = '___PRODUCT_OPTION_END___';
+
+  // First pass: mark lines with options
   node.children?.forEach(line => {
     const lineStr = toString(line);
     if (lineStr.includes(PRODUCT_OPTION_START)) {
@@ -55,4 +57,40 @@ function handle_inline_options(node) {
       line.properties['data-onboarding-option'] = currentOption;
     }
   });
+
+  // Second pass: Mark integrations array opening/closing lines
+  // These should be hidden if all content inside is from options that are disabled
+  for (let i = 0; i < (node.children?.length ?? 0); i++) {
+    const line = node.children[i];
+    const lineStr = toString(line).trim();
+
+    // Found "integrations: ["
+    if (lineStr.match(/integrations:\s*\[/)) {
+      // Mark the opening line and hide it by default
+      line.properties['data-integrations-wrapper'] = 'open';
+      const openClasses = Array.isArray(line.properties.className)
+        ? line.properties.className
+        : line.properties.className
+          ? [line.properties.className]
+          : [];
+      line.properties.className = [...openClasses, 'hidden'];
+
+      // Find the closing "]," - must be exactly ],
+      for (let j = i + 1; j < node.children.length; j++) {
+        const closeStr = toString(node.children[j]).trim();
+        if (closeStr === '],') {
+          // Mark the closing line and hide it by default
+          node.children[j].properties['data-integrations-wrapper'] = 'close';
+          const closeClasses = Array.isArray(node.children[j].properties.className)
+            ? node.children[j].properties.className
+            : node.children[j].properties.className
+              ? [node.children[j].properties.className]
+              : [];
+          node.children[j].properties.className = [...closeClasses, 'hidden'];
+          break;
+        }
+      }
+      break; // Only handle first integrations array
+    }
+  }
 }
