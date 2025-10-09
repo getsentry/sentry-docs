@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface ChangelogEntry {
   author: string;
   description: string;
@@ -78,12 +76,8 @@ export async function DocsChangelog() {
                 </time>
                 <span>•</span>
                 <span>by {entry.author}</span>
-                {totalFiles > 0 && (
-                  <React.Fragment>
-                    <span>•</span>
-                    <span>{totalFiles} file{totalFiles !== 1 ? 's' : ''} changed</span>
-                  </React.Fragment>
-                )}
+                {totalFiles > 0 && <span>•</span>}
+                {totalFiles > 0 && <span>{totalFiles} file{totalFiles !== 1 ? 's' : ''} changed</span>}
               </div>
             </header>
 
