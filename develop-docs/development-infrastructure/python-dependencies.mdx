@@ -14,6 +14,10 @@ data if they turn out to be malicious.
 
 Any new dependency needs to be thoroughly reviewed and approved by [owners-python-build](https://github.com/orgs/getsentry/teams/owners-python-build/members). This group is already automatically tagged in your PR to `sentry` or `getsentry` as soon as you edit relevant files. For other repos you might need to do it manually.
 
+Dependencies must:
+- be on [internal pypi](https://github.com/getsentry/pypi)
+- not be added to repos as non-specifier requirements (see sentry's `tools/lint_requirements.py`)
+
 To add or update a dependency:
 
 1. Clone https://github.com/getsentry/pypi/.
@@ -38,15 +42,12 @@ Dependencies should pinned with lower bounds `>=`, to encourage updating to late
 ## Depending on forks
 
 If you need to make modifications to a dependency and need to deploy the result
-before it is accepted upstream, you can fork the dependency.
+before it is accepted upstream, you must fork the dependency and publish it to pypi and internal pypi.
 
-Depending on forks is generally discouraged unless necessary, and you should
-make sure that the changes in your fork are **not required for self-hosted to
-function,** because they won't be included in the PyPI distribution of Sentry.
+1. Fork into the `getsentry` organization and make your changes.
+2. Add craft configuration to publish to pypi+internal pypi ([example](https://github.com/getsentry/sentry-forked-djangorestframework-stubs/pull/1)).
+3. Add the dependency to your repository.
 
-1. Fork into the `getsentry` organization.
-2. Depend on the fork using `library-name @ https://github.com/getsentry/<repo>/archive/<40 char sha>.zip` in `getsentry`'s `requirements-base.txt`.
-3. The requirement in `sentry` stays the same, because we upload `sentry` to PyPI, and PyPI does not allow us to depend on URLs.
 
 ## Unclear?
 
