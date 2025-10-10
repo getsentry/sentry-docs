@@ -184,19 +184,12 @@ export default defineConfig(config => ({
 
 ### Build Configuration
 
-Add the `buildEnd` hook to your `react-router.config.ts`:
+Since the `buildEnd` hook will not be executed for Hydrogen, you'll need to manually upload source maps using the [Sentry CLI](/cli/) instead.
 
-```ts {filename:react-router.config.ts}
-import type {Config} from '@react-router/dev/config';
-import { sentryOnBuildEnd } from '@sentry/react-router';
-
-export default {
-  appDirectory: 'app',
-  buildDirectory: 'dist',
-  ssr: true,
-  buildEnd: async ({ viteConfig, reactRouterConfig, buildManifest }) => {
-    // Call this at the end of the hook
-    (await sentryOnBuildEnd({ viteConfig, reactRouterConfig, buildManifest }));
-  }
-} satisfies Config;
+```bash
+# Inject debug IDs
+sentry-cli sourcemaps inject /path/to/build/dir
+# Upload sourcemaps
+sentry-cli sourcemaps upload /path/to/build/dir
 ```
+
