@@ -457,6 +457,48 @@ _None_
 
 _None_
 
+### Trace Metric
+
+Item type `"trace_metric"` contains an array of metric payloads encoded as JSON. This allows for multiple metric payloads to be sent in a single envelope item.
+
+Only a single trace_metric container is allowed per envelope. The `item_count` field in the envelope item header must match the amount of metrics sent, it's not optional. A `content_type` field in the envelope item header must be set to `application/vnd.sentry.items.trace_metric+json`.
+
+It's okay to mix metrics from different traces into the same trace_metric envelope item, but if you do, you MUST not attach a DSC (dynamic sampling context) to the envelope header.
+
+See the <Link to="/sdk/telemetry/metrics">Metrics</Link> documentation for the payload
+details. For an example `trace_metric` envelope, see [Appendix A of the Metrics documentation](/sdk/telemetry/metrics#appendix-a-example-trace_metric-envelope).
+
+Example:
+
+```json
+{
+	"type": "trace_metric",
+	"item_count": 5,
+	"content_type": "application/vnd.sentry.items.trace_metric+json"
+}
+{
+	"items": [{..metric..}, {..metric..}, {..metric..}, {..metric..}, {..metric..}]
+}
+```
+
+**Constraints:**
+
+_None_
+
+**Envelope Headers:**
+
+_None_
+
+**Additional Item Headers:**
+
+`item_count`
+
+: **integer, required.** The number of metric entries in the envelope.
+
+`content_type`
+
+: **string, required.** The content type of the metric entries. Must be `application/vnd.sentry.items.trace_metric+json`.
+
 ### Reserved Types
 
 Reserved types may not be written by any implementation. They are reserved for

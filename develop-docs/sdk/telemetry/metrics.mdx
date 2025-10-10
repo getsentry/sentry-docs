@@ -1,0 +1,551 @@
+---
+title: Metrics
+sidebar_order: 4
+---
+
+<Alert title="Note" level="warning">
+
+The Sentry Metrics feature is under active development. The information in this document is subject to change.
+
+</Alert>
+
+This document defines the format used by Sentry to ingest metrics, as well as the SDK API and behavior that create and send metrics to Sentry.
+
+<Alert title="Note" level="info">
+
+The envelope item type is named `trace_metric` for internal usage to avoid naming collisions with other metric systems within Sentry's infrastructure. From an SDK perspective, these are simply referred to as "metrics".
+
+</Alert>
+
+## Metrics Protocol
+
+Metrics are sent to Sentry via the `trace_metric` envelope item. Each `trace_metric` envelope item contains a batch of metric payloads encoded as JSON, allowing for transmission of multiple metrics in a single envelope.
+
+### `trace_metric` Envelope Item
+
+The `trace_metric` envelope item is an object that contains an array of metric payloads encoded as JSON. This allows for multiple metric payloads to be sent in a single envelope item. See [Appendix A](#appendix-a-example-trace_metric-envelope) for an example `trace_metric` envelope.
+
+```json
+{
+	"type": "trace_metric",
+	"item_count": 10,
+	"content_type": "application/vnd.sentry.items.trace_metric+json"
+}
+{
+	"items": [{..metric..}, {..metric..}, {..metric..}, {..metric..}, {..metric..}, ...]
+}
+```
+
+### `trace_metric` Envelope Item Payload
+
+The `trace_metric` envelope item payload is a JSON object that represents a Sentry Metric.
+
+```json
+{
+  "timestamp": 1544719860.0,
+  "trace_id": "5b8efff798038103d269b633813fc60c",
+  "name": "api.response_time",
+  "value": 125.5,
+  "unit": "millisecond",
+  "type": "distribution",
+  "attributes": {
+    "endpoint": { "value": "api/users", "type": "string" },
+    "method": { "value": "GET", "type": "string" },
+    "status_code": { "value": 200, "type": "integer" }
+  }
+}
+```
+
+It consists of the following fields:
+
+`timestamp`
+
+: **Number, required**. Timestamp in seconds (epoch time) indicating when the metric was recorded.
+
+`type`
+
+: **String, required**. The type of metric. One of:
+
+- `counter`: A metric that increments counts
+- `gauge`: A metric that tracks a value that can go up or down
+- `distribution`: A metric that tracks the statistical distribution of values
+
+`name`
+
+: **String, required**. The name of the metric. This should follow a hierarchical naming convention using dots as separators (e.g., `api.response_time`, `db.query.duration`).
+
+`value`
+
+: **Number, required**. The numeric value of the metric. The interpretation depends on the metric `type`:
+
+- For `counter` metrics: the count to increment by (should default to 1)
+- For `gauge` metrics: the current value
+- For `distribution` metrics: a single measured value
+
+Integers should be a 64-bit signed integer, while doubles should be a 64-bit floating point number.
+
+`trace_id`
+
+: **String, optional**. The trace id of the metric. The value should be 16 random bytes encoded as a hex string (32 characters long). The trace id should be grabbed from the current propagation context in the SDK.
+
+`span_id`
+
+: **String, optional**. The span id for the metric.
+
+`unit`
+
+: **String, optional**. The unit of measurement for the metric value.
+
+`attributes`
+
+: **Object, optional**. A dictionary of key-value pairs of arbitrary data attached to the metric. Attributes must also declare the type of the value. The following types are supported: `string`, `boolean`, `integer`, `double`.
+
+Example with multiple attribute types:
+
+```json
+{
+  "timestamp": 1544719860.0,
+  "trace_id": "5b8efff798038103d269b633813fc60c",
+  "span_id": "b0e6f15b45c36b12",
+  "name": "http.request.duration",
+  "value": 245.3,
+  "unit": "millisecond",
+  "type": "distribution",
+  "attributes": {
+    "endpoint": { "value": "/api/users", "type": "string" },
+    "status_code": { "value": 200, "type": "integer" },
+    "response_size": { "value": 1024.5, "type": "double" },
+    "cache_hit": { "value": true, "type": "boolean" }
+  }
+}
+```
+
+### Metric Types
+
+#### Counter
+
+Counters track the number of times an event occurs. They only increase and are useful for tracking things like requests, errors, or any other countable event.
+
+```json
+{
+  "name": "api.requests",
+  "value": 1,
+  "type": "counter",
+  "attributes": {
+    "endpoint": { "value": "/api/users", "type": "string" },
+    "method": { "value": "POST", "type": "string" }
+  }
+}
+```
+
+#### Gauge
+
+Gauges track a value that can arbitrarily increase or decrease over time, such as memory usage, queue depth, or connection pool size.
+
+```json
+{
+  "name": "db.connection_pool.active",
+  "value": 42,
+  "unit": "connection",
+  "type": "gauge",
+  "attributes": {
+    "pool_name": { "value": "main_db", "type": "string" },
+    "max_size": { "value": 100, "type": "integer" },
+    "database": { "value": "postgres", "type": "string" }
+  }
+}
+```
+
+#### Distribution
+
+Distributions track the statistical distribution of a set of values. They're useful for understanding percentiles, averages, and other statistical properties of measurements like response times or file sizes.
+
+```json
+{
+  "name": "page.load_time",
+  "value": 245.7,
+  "unit": "millisecond",
+  "type": "distribution",
+  "attributes": {
+    "page": { "value": "/dashboard", "type": "string" },
+    "browser": { "value": "chrome", "type": "string" }
+  }
+}
+```
+
+## Public API
+
+API wise the SDKs are required to expose metrics methods which are to be defined in a `metrics` module or namespace. The SDKs should also include some initialization options to configure the behavior of metrics in the SDK.
+
+### Initialization Options
+
+The SDKs must expose the following configuration options:
+
+- `enableMetrics`/`enable_metrics`: A boolean flag to control if metric envelopes will be generated and sent to Sentry via the Sentry SDK's Metrics APIs. If this flag is set to `false`, the SDK should not send metrics to Sentry. Defaults to `false`.
+
+- `beforeSendMetric`/`before_send_metric`: A function that takes a metric object and returns a metric object. This function is called before sending the metric to Sentry. It can be used to modify the metric object or to prevent the metric from being sent to Sentry. This function is optional.
+
+While the metrics functionality for an SDK is in an experimental state, SDKs should put these configuration options in an experimental namespace to avoid breaking changes. Also, since integrations will not send automatically generated metrics, the `enableMetrics` flag will not be needed after metrics are released and instead default to `true`.
+
+```js
+Sentry.init({
+  _experiments: { enableMetrics: true },
+});
+```
+
+### Metrics Module
+
+At minimum the SDK needs to implement the following methods for each metric type:
+
+- `Sentry.metrics.increment(name, value, options)` - Increment a counter
+- `Sentry.metrics.gauge(name, value, options)` - Set a gauge value
+- `Sentry.metrics.distribution(name, value, options)` - Add a distribution value
+
+#### Method Signatures
+
+The parameters for these methods are:
+
+- `name` **String, required**: The name of the metric
+- `value` **Number, required**: The value of the metric
+- `options` **Object, optional**: An object containing the following properties:
+  - `unit` **String, optional**: The unit of measurement (distribution and gauge only)
+  - `attributes` **Object, optional**: A dictionary of attributes (key-value pairs with type information)
+  - `scope` **Scope, optional**: The scope to capture the metric with.
+
+Below are some example SDK implementations to get you started. These are not finalized versions of the API and individual SDK authors should ensure the metrics APIs best fit their platforms.
+
+#### JavaScript
+
+```jsx
+// Increment a counter
+Sentry.metrics.increment("button.clicks", 1, {
+  attributes: {
+    button_id: "submit",
+    page: "checkout",
+  },
+});
+
+// Set a gauge value
+Sentry.metrics.gauge("db.connection_pool.active", 42, {
+  unit: "connection",
+  attributes: {
+    pool_name: "main_db",
+    database: "postgres",
+  },
+});
+
+// Record a distribution
+Sentry.metrics.distribution("page.load_time", 245.7, {
+  unit: "millisecond",
+  attributes: {
+    page: "/dashboard",
+    browser: "chrome",
+  },
+});
+```
+
+#### Python
+
+```python
+# Increment a counter
+Sentry.metrics.increment('button.clicks', 1, {
+  'attributes': {'button_id': 'submit', 'page': 'checkout'}
+})
+
+# Set a gauge value
+Sentry.metrics.gauge('db.connection_pool.active', 42, {
+  'unit': 'connection',
+  'attributes': {'pool_name': 'main_db', 'database': 'postgres'}
+})
+
+# Record a distribution
+Sentry.metrics.distribution('page.load_time', 245.7, {
+  'unit': 'millisecond',
+  'attributes': {'page': '/dashboard', 'browser': 'chrome'}
+})
+```
+
+#### PHP
+
+```php
+use function Sentry\metrics;
+
+metrics()->increment('button.clicks', 1, [
+  'attributes' => ['button_id' => 'submit', 'page' => 'checkout']
+]);
+
+metrics()->gauge('db.connection_pool.active', 42, [
+  'unit' => 'connection',
+  'attributes' => ['pool_name' => 'main_db', 'database' => 'postgres']
+]);
+
+metrics()->distribution('page.load_time', 245.7, [
+  'unit' => 'millisecond',
+  'attributes' => ['page' => '/dashboard', 'browser' => 'chrome']
+]);
+```
+
+#### Java
+
+```java
+import io.sentry.Sentry;
+
+Sentry.metrics().increment("button.clicks", 1,
+  Map.of("attributes", Map.of("button_id", "submit", "page", "checkout"))
+);
+
+Sentry.metrics().gauge("db.connection_pool.active", 42,
+  Map.of(
+    "unit", "connection",
+    "attributes", Map.of("pool_name", "main_db", "database", "postgres")
+  )
+);
+
+Sentry.metrics().distribution("page.load_time", 245.7,
+  Map.of(
+    "unit", "millisecond",
+    "attributes", Map.of("page", "/dashboard", "browser", "chrome")
+  )
+);
+```
+
+#### Apple
+
+```swift
+// Swift
+SentrySDK.metrics()
+  .increment(
+    name: "button.clicks",
+    value: 1,
+    options: [
+      "attributes": ["button_id": "submit", "page": "checkout"]
+    ]
+  )
+
+SentrySDK.metrics()
+  .gauge(
+    name: "db.connection_pool.active",
+    value: 42,
+    options: [
+      "unit": "connection",
+      "attributes": ["pool_name": "main_db", "database": "postgres"]
+    ]
+  )
+
+SentrySDK.metrics()
+  .distribution(
+    name: "page.load_time",
+    value: 245.7,
+    options: [
+      "unit": "millisecond",
+      "attributes": ["page": "/dashboard", "browser": "chrome"]
+    ]
+  )
+```
+
+### Threading and Concurrency Considerations
+
+The threading and concurrency considerations for metrics are the same as for logs. See the [Threading and Concurrency Considerations section in the Logs documentation](/sdk/telemetry/logs/#threading-and-concurrency-considerations) for more information.
+
+## SDK Behavior
+
+In general metric processing should follow this order:
+
+1. Capture metric via [Public APIs](#metrics-module) (e.g. `Sentry.metrics.increment`).
+1. (While experimental) Check if metrics are enabled as per `enableMetrics`/`enable_metrics` configuration - if not, skip the rest of the steps.
+1. Process captured metric (attach default attributes as per [default attributes](#default-attributes)).
+1. Run `beforeSendMetric`/`before_send_metric` to filter or modify the metric.
+1. Add metric to buffer/batch processor as detailed in [buffering](#buffering).
+1. At time of flushing buffer, send array of metrics to Sentry via `trace_metric` envelope, apply rate limiting as per [data category and rate limiting](#data-category-and-rate-limiting).
+
+<Alert title="Note" level="warning">
+
+An SDK should implement [Tracing without Performance](/sdk/telemetry/traces/tracing-without-performance) before adding support for metrics. This is required to ensure that metrics are associated with traces and that the correct trace context is sent to Sentry.
+
+</Alert>
+
+### Default Attributes
+
+By default the SDK should attach the following attributes to a metric:
+
+1. `sentry.environment`: The environment set in the SDK if defined.
+2. `sentry.release`: The release set in the SDK if defined.
+3. `sentry.sdk.name`: The name of the SDK that sent the metric
+4. `sentry.sdk.version`: The version of the SDK that sent the metric
+5. `sentry.replay_id`: The replay id of the replay that was active when the metric was collected. This should not be set if there was no active replay.
+
+```json
+{
+  "attributes": {
+    "sentry.environment": { "value": "production", "type": "string" },
+    "sentry.release": { "value": "1.0.0", "type": "string" },
+    "sentry.sdk.name": {
+      "value": "sentry.javascript.browser",
+      "type": "string"
+    },
+    "sentry.sdk.version": { "value": "10.17.0", "type": "string" },
+    "sentry.replay_id": {
+      "value": "36b75d9fa11f45459412a96c41bdf691",
+      "type": "string"
+    }
+  }
+}
+```
+
+#### User Attributes
+
+SDKs may optionally attach user information as attributes:
+
+1. `user.id`: The user ID. Maps to `id` in the [User](/sdk/data-model/event-payloads/user/) payload.
+2. `user.name`: The username. Maps to `username` in the [User](/sdk/data-model/event-payloads/user/) payload.
+3. `user.email`: The email address. Maps to `email` in the [User](/sdk/data-model/event-payloads/user/) payload.
+
+Note: Adding user information to metrics may significantly increase cardinality and should be done carefully.
+
+```json
+{
+  "attributes": {
+    "user.id": { "value": "123", "type": "string" }
+  }
+}
+```
+
+#### User Agent Parsing
+
+By default, Relay should parse the user agent attached to an incoming log envelope to parse `browser` and `os` information for logs. These attributes should be attached by Relay, but SDKs can attach them if they do not forward a user agent when sending logs to Sentry.
+
+1. `browser.name`: Display name of the browser application. Maps to `name` in the [Contexts](/sdk/data-model/event-payloads/contexts/#browser-context) payload.
+2. `browser.version`: Version string of the browser. Maps to `version` in the [Contexts](/sdk/data-model/event-payloads/contexts/#browser-context) payload.
+
+```json
+{
+  "browser.name": "Chrome",
+  "browser.version": "120.0"
+}
+```
+
+#### Future Default Attributes
+
+The SDKs should aim to minimize the number of default attributes attached to a metric. Metrics cardinality can explode quickly with too many attributes, and we want to keep metrics lightweight and cost-effective.
+
+New default attributes should only be added after significant feedback from users and discussion internally with the SDK and ingest teams. There is no hard rule about what exact attributes are allowed, every proposed new attribute will be evaluated on a case-by-case basis.
+
+### Data Category and Rate Limiting
+
+TBD
+
+### Buffering
+
+Metrics should be buffered and aggregated before being sent. SDKs should keep a buffer of metrics on the client that flushes out based on some kind of condition. We recommend following the [batch processor specification](/sdk/telemetry/spans/batch-processor/) outlined in the develop docs, but you should choose the approach that works best for your platform.
+
+- The aggregation window should be time and size based.
+- Flush triggers (e.g. SDK shutdown, size thresholds) should be considered based on the platform and use case.
+- SDKs should implement safeguards to prevent excessive memory usage from metric buffering.
+
+### Behaviour with other Sentry Telemetry
+
+#### Tracing
+
+Metrics should be associated with traces. If a metric is recorded during an active span, the SDK should set the `sentry.trace.parent_span_id` attribute to the span id of the span that was active when the metric was collected.
+
+#### Replays
+
+Whenever possible, metrics should be linked to replays. If a metric is recorded while an active, sampled replay is in progress, the SDK should attach the `sentry.replay_id` attribute with the ID of the replay that was active at the time the metric was collected. Additionally, the SDK should include the `sentry._internal.replay_is_buffering` attribute to indicate that the metric is associated with a replay that is currently buffering. This ensures we can correctly handle scenarios where a `replay_id` is present, but the corresponding replay was never actually sent.
+
+### Other
+
+If `debug` is set to `true` in SDK init, calls to the Sentry metrics API should also print to the console with appropriate details. This will help debugging metrics setups.
+
+## Appendix A: Example `trace_metric` Envelope
+
+```json
+{ "sdk": { "name": "sentry.javascript.browser", "version": "10.17.0" } }
+{
+  "type": "trace_metric",
+  "item_count": 5,
+  "content_type": "application/vnd.sentry.items.trace_metric+json"
+}
+{
+  "items": [
+    {
+      "timestamp": 1746456149.019,
+      "trace_id": "624f66e93a04469f9992c7e9f1485056",
+      "name": "api.requests",
+      "value": 1,
+      "type": "counter",
+      "attributes": {
+        "endpoint": { "value": "/api/users", "type": "string" },
+        "method": { "value": "POST", "type": "string" },
+        "status_code": { "value": 201, "type": "integer" },
+        "sentry.sdk.name": { "value": "sentry.javascript.browser", "type": "string" },
+        "sentry.sdk.version": { "value": "10.17.0", "type": "string" },
+        "sentry.environment": { "value": "production", "type": "string" },
+        "sentry.release": { "value": "1.0.0", "type": "string" }
+      }
+    },
+    {
+      "timestamp": 1746456149.019,
+      "trace_id": "624f66e93a04469f9992c7e9f1485056",
+      "name": "api.response_time",
+      "value": 125.5,
+      "unit": "millisecond",
+      "type": "distribution",
+      "attributes": {
+        "endpoint": { "value": "/api/users", "type": "string" },
+        "method": { "value": "POST", "type": "string" },
+        "sentry.sdk.name": { "value": "sentry.javascript.browser", "type": "string" },
+        "sentry.sdk.version": { "value": "10.17.0", "type": "string" },
+      }
+    },
+    {
+      "timestamp": 1746456149.02,
+      "trace_id": "624f66e93a04469f9992c7e9f1485056",
+      "name": "cache.hit_rate",
+      "value": 0.95,
+      "unit": "ratio",
+      "type": "gauge",
+      "attributes": {
+        "cache_name": { "value": "user_sessions", "type": "string" },
+        "region": { "value": "us-west-1", "type": "string" },
+        "sentry.sdk.name": { "value": "sentry.javascript.browser", "type": "string" },
+        "sentry.sdk.version": { "value": "10.17.0", "type": "string" }
+      }
+    },
+    {
+      "timestamp": 1746456149.02,
+      "trace_id": "624f66e93a04469f9992c7e9f1485056",
+      "name": "database.query.duration",
+      "value": 42.3,
+      "unit": "millisecond",
+      "type": "distribution",
+      "attributes": {
+        "query_type": { "value": "SELECT", "type": "string" },
+        "table": { "value": "users", "type": "string" },
+        "sentry.sdk.name": { "value": "sentry.javascript.browser", "type": "string" },
+        "sentry.sdk.version": { "value": "10.17.0", "type": "string" },
+        "sentry.origin": { "value": "auto.db.graphql", "type": "string" }
+      }
+    },
+    {
+      "timestamp": 1746456149.021,
+      "trace_id": "624f66e93a04469f9992c7e9f1485056",
+      "name": "active.users",
+      "value": 12345,
+      "type": "set",
+      "attributes": {
+        "cohort": { "value": "beta", "type": "string" },
+        "sentry.sdk.name": { "value": "sentry.javascript.browser", "type": "string" },
+        "sentry.sdk.version": { "value": "10.17.0", "type": "string" },
+        "sentry.replay_id": { "value": "36b75d9fa11f45459412a96c41bdf691", "type": "string" }
+      }
+    }
+  ]
+}
+```
+
+## Related Resources
+
+- [GitHub PR #17883 - Metrics API Implementation](https://github.com/getsentry/sentry-javascript/pull/17883/files)
+- [Batch Processor Specification](/sdk/telemetry/spans/batch-processor/)
+- [Tracing without Performance](/sdk/telemetry/traces/tracing-without-performance)
+- [Trace Origin](/sdk/telemetry/traces/trace-origin/)
