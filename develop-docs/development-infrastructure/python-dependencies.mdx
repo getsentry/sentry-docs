@@ -20,14 +20,16 @@ To add or update a dependency:
 2. `cd` into your clone and run `python3 -m add_pkg PKGNAME` (or `python3 -m add_pkg PKGNAME==PKGVERSION` if you want a version other than the latest).
 3. Commit the resulting changes to a branch, open a PR in `getsentry/pypi`, and tag someone on your team (any engineer can approve PRs on this repo).
 4. Once your PR is merged, go back to the main repo whose dependencies you want to change (`sentry`, `getsentry`, etc.).
-5. In that repo, add to or update the dependency in `pyproject.toml`.
+5. In that repo, add to or update the dependency in `pyproject.toml` (or `requirements*.txt` if the repo isn't [using `uv` yet](https://www.notion.so/Standard-Spec-python-uv-2248b10e4b5d8045b8fff30f8b8b67ca)).
 - In sentry, you can do this with the [bump-version action](https://github.com/getsentry/sentry/actions/workflows/bump-version.yml).
   - Click the **Run workflow** dropdown.
   - Fill in your package name and version.
   - Click the **Run workflow** button.
-- Some projects are still using `requirements*.txt`, in which case update those files.
-- The eventual goal is that every python project will [use `uv` to lock python dependencies](https://www.notion.so/Standard-Spec-python-uv-2248b10e4b5d8045b8fff30f8b8b67ca).
-- Note that dependencies should pinned with lower bounds only, to encourage updating to latest versions.
+
+<Alert level="warning" title="Note">
+Dependencies should pinned with lower bounds `>=`, to encourage updating to latest versions.
+</Alert>
+
 6. Run `make freeze-requirements` (or `uv lock`). You might need to wait a few minutes for the changes to `getsentry/pypi` to be deployed before this will work without erroring.
 7. Commit your changes (which should consist of changes to both one of the `requirements` files and its corresponding lockfile) to a branch and open a PR in the relevant repo. If it's not obvious, explain why you're adding or updating the dependency. Tag `owners-python-build` if they haven't already been auto-tagged.
 8. Merge your PR, pull `master`, and run `devenv sync`.
