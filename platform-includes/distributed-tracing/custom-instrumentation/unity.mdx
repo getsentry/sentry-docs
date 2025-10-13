@@ -1,12 +1,75 @@
-On this page you will learn how to manually propagate trace information into and out of your Unity application. Please note, that you do not need to do this manually if you have our <PlatformLink to="/tracing/">tracing feature</PlatformLink> turned on.
+On this page you will learn how to manually propagate trace information into and out of your Unity application.
 
-To set it up manually, all you have to do is to make sure your application extracts incoming headers and to set those headers again when making an outgoing request within your application.
+To set it up you have to make sure your game extracts incoming headers and to set those headers again when making an outgoing request.
+
+## Choosing Between HttpClient and UnityWebRequest
+
+Unity supports two approaches for making HTTP requests out of the box:
+
+- **HttpClient**: Use .NET's `HttpClient` with `SentryHttpMessageHandler` for automatic trace propagation. This is the simplest approach and works on all platforms except WebGL. It supports modern async/await patterns.
+- **UnityWebRequest (Required for WebGL)**: Use Unity's `UnityWebRequest`, as `HttpClient` is not supported in WebGL due to browser security restrictions. This approach also works well if you prefer Unity's coroutine-based patterns or need consistent behavior across all platforms.
 
 ## Step 1) Extract Incoming Tracing Information
 
 Incoming tracing information has to be extracted and stored in memory for later use. Sentry provides the `ContinueTrace()` function to help you with this. Tracing information can come from incoming headers, for example, by another Sentry SDK used in your backend service.
 
-Here's an example using Unity's `UnityWebRequest` to extract and store incoming tracing information using `ContinueTrace()`:
+### Using HttpClient
+
+If you're using .NET's `HttpClient`, you can extract trace headers from the response:
+
+```csharp
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
+using UnityEngine;
+
+public class TraceReceiver : MonoBehaviour
+{
+    private static readonly HttpClient httpClient = new HttpClient();
+
+    async Task MakeRequest()
+    {
+        try
+        {
+            var response = await httpClient.GetAsync("https://example.com/api/data");
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Extract Sentry trace headers from the response
+                var sentryTraceHeader = string.Empty;
+                var sentryBaggageHeader = string.Empty;
+
+                if (response.Headers.TryGetValues("sentry-trace", out var traceValues))
+                {
+                    sentryTraceHeader = traceValues.FirstOrDefault() ?? string.Empty;
+                }
+
+                if (response.Headers.TryGetValues("baggage", out var baggageValues))
+                {
+                    sentryBaggageHeader = baggageValues.FirstOrDefault() ?? string.Empty;
+                }
+
+                // Continue the trace from the backend service
+                var transactionContext = SentrySdk.ContinueTrace(sentryTraceHeader, sentryBaggageHeader);
+                var transaction = SentrySdk.StartTransaction(transactionContext);
+
+                // Process your data here...
+                var content = await response.Content.ReadAsStringAsync();
+
+                transaction.Finish();
+            }
+        }
+        catch (HttpRequestException e)
+        {
+            Debug.LogError($"Request failed: {e.Message}");
+        }
+    }
+}
+```
+
+### Using UnityWebRequest (Required for WebGL)
+
+For WebGL builds or if you prefer Unity's coroutine-based approach, use `UnityWebRequest`:
 
 ```csharp
 using System.Collections;
@@ -17,37 +80,35 @@ public class TraceReceiver : MonoBehaviour
 {
     IEnumerator MakeRequest()
     {
-        using (UnityWebRequest www = UnityWebRequest.Get("https://example.com/api/data"))
+        using var www = UnityWebRequest.Get("https://example.com/api/data");
+        yield return www.SendWebRequest();
+
+        if (www.result == UnityWebRequest.Result.Success)
         {
-            yield return www.SendWebRequest();
-
-            if (www.result == UnityWebRequest.Result.Success)
+            // Extract headers from the incoming response
+            var responseHeaders = www.GetResponseHeaders();
+            if (responseHeaders != null)
             {
-                // Extract headers from the incoming response
-                var responseHeaders = www.GetResponseHeaders();
-                if (responseHeaders != null)
+                var sentryTraceHeader = string.Empty;
+                var sentryBaggageHeader = string.Empty;
+
+                if (responseHeaders.TryGetValue("sentry-trace", out var traceHeader))
                 {
-                    var sentryTraceHeader = string.Empty;
-                    var sentryBaggageHeader = string.Empty;
-
-                    if (responseHeaders.TryGetValue("sentry-trace", out var traceHeader))
-                    {
-                        sentryTraceHeader = traceHeader;
-                    }
-
-                    if (responseHeaders.TryGetValue("baggage", out var baggageHeader))
-                    {
-                        sentryBaggageHeader = baggageHeader;
-                    }
-
-                    // Continue the trace from the backend service
-                    var transactionContext = SentrySdk.ContinueTrace(sentryTraceHeader, sentryBaggageHeader);
-                    var transaction = SentrySdk.StartTransaction(transactionContext);
-
-                    // Process your data here...
-
-                    transaction.Finish();
+                    sentryTraceHeader = traceHeader;
                 }
+
+                if (responseHeaders.TryGetValue("baggage", out var baggageHeader))
+                {
+                    sentryBaggageHeader = baggageHeader;
+                }
+
+                // Continue the trace from the backend service
+                var transactionContext = SentrySdk.ContinueTrace(sentryTraceHeader, sentryBaggageHeader);
+                var transaction = SentrySdk.StartTransaction(transactionContext);
+
+                // Process your data here...
+
+                transaction.Finish();
             }
         }
     }
@@ -60,9 +121,46 @@ If you pass these headers to Sentry's `ContinueTrace()` function it will store t
 
 For distributed tracing to work, the two headers `sentry-trace` and `baggage`, must now also be added to outgoing requests.
 
-If you send outgoing HTTP requests with an HTTP client that uses `SentryHttpMessageHandler`, this tracing information is automatically added to outgoing requests. You do not have to enable Performance for distributed tracing to work.
+### Using HttpClient with SentryHttpMessageHandler (Recommended for non-WebGL)
 
-If you're not using the `SentryHttpMessageHandler`, you can generate this tracing information with the Sentry SDK's `GetTraceHeader()` and `GetBaggage()` functions. Here's an example using Unity's `UnityWebRequest`:
+The easiest way to propagate traces is to use .NET's `HttpClient` with `SentryHttpMessageHandler`. This automatically adds tracing headers to all outgoing requests:
+
+```csharp
+using System.Net.Http;
+using System.Threading.Tasks;
+using Sentry.Http;
+using UnityEngine;
+
+public class TraceSender : MonoBehaviour
+{
+    private static readonly HttpClient httpClient = new HttpClient(new SentryHttpMessageHandler());
+
+    async Task SendRequest()
+    {
+        try
+        {
+            var response = await httpClient.PostAsync(
+                "https://example.com/api/action",
+                new StringContent("{}", System.Text.Encoding.UTF8, "application/json"));
+
+            if (response.IsSuccessStatusCode)
+            {
+                Debug.Log("Request sent with automatic trace headers");
+            }
+        }
+        catch (HttpRequestException e)
+        {
+            Debug.LogError($"Request failed: {e.Message}");
+        }
+    }
+}
+```
+
+Note that `SentryHttpMessageHandler` automatically adds the `sentry-trace` and `baggage` headers, so you don't need to do anything manually.
+
+### Using UnityWebRequest (Required for WebGL)
+
+For WebGL builds or if you prefer Unity's coroutine-based approach, you can manually add trace headers using Unity's `UnityWebRequest`:
 
 ```csharp
 using System.Collections;
@@ -73,30 +171,28 @@ public class TraceSender : MonoBehaviour
 {
     IEnumerator SendRequest()
     {
-        using (UnityWebRequest www = UnityWebRequest.Post("https://example.com/api/action", "{}"))
+        using var www = UnityWebRequest.PostWwwForm("https://example.com/api/action", "{}");
+        // Add Sentry trace headers to propagate the trace
+        var traceHeader = SentrySdk.GetTraceHeader();
+        if (traceHeader != null)
         {
-            // Add Sentry trace headers to propagate the trace
-            var traceHeader = SentrySdk.GetTraceHeader();
-            if (traceHeader != null)
-            {
-                www.SetRequestHeader("sentry-trace", traceHeader.ToString());
-            }
+            www.SetRequestHeader("sentry-trace", traceHeader.ToString());
+        }
 
-            var baggageHeader = SentrySdk.GetBaggage();
-            if (baggageHeader != null)
-            {
-                www.SetRequestHeader("baggage", baggageHeader.ToString());
-            }
+        var baggageHeader = SentrySdk.GetBaggage();
+        if (baggageHeader != null)
+        {
+            www.SetRequestHeader("baggage", baggageHeader.ToString());
+        }
 
-            // Set content type for the request
-            www.SetRequestHeader("Content-Type", "application/json");
+        // Set content type for the request
+        www.SetRequestHeader("Content-Type", "application/json");
 
-            yield return www.SendWebRequest();
+        yield return www.SendWebRequest();
 
-            if (www.result == UnityWebRequest.Result.Success)
-            {
-                Debug.Log("Request sent with trace headers");
-            }
+        if (www.result == UnityWebRequest.Result.Success)
+        {
+            Debug.Log("Request sent with trace headers");
         }
     }
 }
