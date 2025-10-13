@@ -96,3 +96,39 @@ Outside of this helper function, Sentry is unaware of any **real world** crash t
 ### Screenshot contain artifacts
 
 The screenshot capture relies on Unity's `ScreenCapture.CaptureScreenshotIntoRenderTexture` function. When capturing errors in the Editor, this might lead to artifacts or scaling issues in the captured screenshot.
+
+### Stack traces contain frames with `<>n__0` or similar compiler-generated names
+
+When viewing stack traces in Sentry, you may encounter method names like `<YourMethod>b__0`, `<>c__DisplayClass0_0.<YourMethod>b__0`, or similar patterns with angle brackets and underscores. These are compiler-generated methods created by the C# compiler for:
+
+- **Lambda expressions**: Anonymous functions like `items.Where(x => x.IsActive)`
+- **Delegates**: Inline delegate definitions
+- **LINQ expressions**: Query syntax and method chains
+- **Async/await**: State machine methods for asynchronous operations
+- **Iterator methods**: Methods using `yield return`
+
+**Example:**
+
+If your code contains:
+```csharp
+public void ProcessItems()
+{
+    var results = items.Where(x => x.Value > 10).ToList();
+}
+```
+
+The stack trace might show:
+```
+at YourNamespace.YourClass.<ProcessItems>b__0(Item x)
+at YourNamespace.YourClass.ProcessItems()
+```
+
+The `<ProcessItems>b__0` frame represents the lambda expression `x => x.Value > 10` that was compiled into a separate method.
+
+**How to interpret these frames:**
+
+1. The method name in angle brackets (e.g., `<ProcessItems>`) indicates the parent method that contains the lambda or delegate
+2. The suffix like `b__0`, `b__1`, etc., distinguishes multiple lambdas within the same method
+3. Look at the parent method in the stack trace to understand the context where the lambda was defined
+
+These frames are normal and expected in C# applications. They provide additional detail about where exactly an exception occurred within complex expressions.
