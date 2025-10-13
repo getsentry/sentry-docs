@@ -1,0 +1,27 @@
+---
+title: Query Injection Detection Module
+---
+
+The SDK SHOULD auto-instrument all transactions for SQL databases like PostgreSQL and MySQL, as well as for MongoDB.
+Each BEGIN, COMMIT, and ROLLBACK, or equivalent instruction in the database system MUST result in an individual span.
+Transaction instructions SHOULD produce spans whether they are issued through a database driver or through an ORM.
+
+### Span Data
+
+Each database transaction instruction MUST have a `data` attribute.
+`data` is itself a key-value lookup of attributes.
+Refer to <Link to="https://getsentry.github.io/sentry-conventions/generated/attributes/code.html">Database Span Data Conventions</Link> for a full list of attributes that database spans should have.
+The SDK MUST set the
+
+- db.system.name
+- db.operation.name
+
+attributes for transaction instruction spans.
+
+The operation names for BEGIN, COMMIT and ROLLBACK instructions MUST be "BEGIN", "COMMIT", and "ROLLBACK", respectively.
+For other transaction-level instructions like MySQL's START TRANSACTION, the SDK SHOULD represent the literal statement as closely as possible, omitting control-flow characters like semicolons.
+For the MongoDB client libraries:
+
+- The SDK MUST produce a span with a "BEGIN" operation name attribute for a `startTransaction()` call.
+- The SDK MUST produce a span with a "COMMIT" operation name attribute for a `commitTransaction()` call.
+- The SDK MUST produce a span with a "ROLLBACK" operation name attribute for a `abortTransaction()` call.
