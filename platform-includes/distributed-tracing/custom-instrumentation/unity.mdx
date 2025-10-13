@@ -171,7 +171,9 @@ public class TraceSender : MonoBehaviour
 {
     IEnumerator SendRequest()
     {
-        using var www = UnityWebRequest.PostWwwForm("https://example.com/api/action", "{}");
+        var jsonData = "{}";
+        using var www = UnityWebRequest.Post("https://example.com/api/action", jsonData, "application/json");
+
         // Add Sentry trace headers to propagate the trace
         var traceHeader = SentrySdk.GetTraceHeader();
         if (traceHeader != null)
@@ -184,9 +186,6 @@ public class TraceSender : MonoBehaviour
         {
             www.SetRequestHeader("baggage", baggageHeader.ToString());
         }
-
-        // Set content type for the request
-        www.SetRequestHeader("Content-Type", "application/json");
 
         yield return www.SendWebRequest();
 
