@@ -1242,6 +1242,10 @@ const userDocsRedirects = [
     source: '/platforms/dotnet/guides/google-cloud-functions/profiling/:path*',
     destination: '/platforms/dotnet/profiling/',
   },
+  {
+    source: '/product/insights/mcp/',
+    destination: '/product/insights/ai/mcp/',
+  },
 ];
 
 /**

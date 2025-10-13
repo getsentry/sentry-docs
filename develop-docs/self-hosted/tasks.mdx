@@ -25,9 +25,9 @@ Brokers and workers can be scaled horizontally to increase parallelism.
 
 By default, self-hosted installs come with a single broker & worker replica. You
 can increase processing capacity by adding more concurrency to the single worker
-(via the `--concurrency` option on the worker), or by adding additional worker, and broker
-replicas. It is not recommended to go above 24 worker replicas per broker as
-broker performance can degrade with higher worker counts.
+(via the `--concurrency` option on the worker), or by adding additional worker,
+and broker replicas. It is not recommended to go above 24 worker replicas
+per broker as broker performance can degrade with higher worker counts.
 
 If your deployment requires additional processing capacity, you can add
 additional broker replicas and use CLI options to inform the workers of the
@@ -40,7 +40,76 @@ sentry run taskworker --rpc-host-list=sentry-broker-default-0:50051,sentry-broke
 Workers use client-side loadbalancing to distribute load across the brokers they
 have been assigned to.
 
-## Running multiple brokers
+If you only want to scale `taskworker` replicas and you have a single `taskbroker`,
+you can easily increase it (up to 24 replicas) by modifying your `docker-compose.override.yml`
+file:
+
+```yaml
+services:
+  taskworker:
+    deploy:
+      replicas: 5
+```
+
+This will spawn 5 replicas of the `taskworker` service. Bear in mind that although
+the processing capacity is increased, you will need to monitor and scale your
+system resources (CPU and RAM) accordingly.
+
+## Scaling brokers
+
+If you have reached the maximum number of `taskworker` replicas, you can scale
+your `taskbroker` replicas. First, you need to increase the number of partitions
+on "taskworker" topic in Kafka, the number of partitions should be evenly divisible by
+the number of `taskbroker` replicas that you're planning to scale to.
+Then due to the limited capability of Docker Compose, you will need to manually
+scale your `taskbroker` replicas. You can do this by adding more container
+declarations to your `docker-compose.override.yml` file:
+
+```yaml
+services:
+  taskbroker-beta:
+    restart: "unless-stopped"
+    image: "$TASKBROKER_IMAGE"
+    environment:
+      TASKBROKER_KAFKA_CLUSTER: "kafka:9092"
+      TASKBROKER_KAFKA_DEADLETTER_CLUSTER: "kafka:9092"
+      TASKBROKER_DB_PATH: "/opt/sqlite/taskbroker-activations-beta.sqlite"
+    volumes:
+      - sentry-taskbroker:/opt/sqlite
+    depends_on:
+      - kafka
+  taskbroker-charlie:
+    restart: "unless-stopped"
+    image: "$TASKBROKER_IMAGE"
+    environment:
+      TASKBROKER_KAFKA_CLUSTER: "kafka:9092"
+      TASKBROKER_KAFKA_DEADLETTER_CLUSTER: "kafka:9092"
+      TASKBROKER_DB_PATH: "/opt/sqlite/taskbroker-activations-charlie.sqlite"
+    volumes:
+      - sentry-taskbroker:/opt/sqlite
+    depends_on:
+      - kafka
+```
+
+Note that each `taskbroker` replica needs their own SQLite database per replica, to prevent
+issues contention and locks between replicas.
+
+Finally, you need to modify `taskworker` command to have `rpc-host-list` pointing
+to the new brokers:
+
+```yaml
+taskworker:
+  <<: *sentry_defaults
+  command: run taskworker --concurrency=4 --rpc-host-list=taskbroker:50051,taskbroker-beta:50051,taskbroker-charlie:50051 --health-check-file-path=/tmp/health.txt
+  healthcheck:
+    <<: *file_healthcheck_defaults
+```
+
+If you are running on Kubernetes, you can utilize `--rpc-host` and `--num-brokers`
+instead if you are using StatefulSet. Otherwise, you can use `--rpc-host-list`
+if you have a different host name pattern for the brokers.
+
+## Isolate Workload Separation
 
 In higher throughput installations, you may also want to isolate task workloads
 from each other to ensure timely processing of lower volume tasks. For example,
