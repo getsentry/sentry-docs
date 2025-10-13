@@ -12,7 +12,7 @@ Options that can be read from an environment variable (`SENTRY_DSN`, `SENTRY_ENV
 
 <SdkOption name="Dsn" type="string" envVar="SENTRY_DSN">
 
-The DSN tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable also does not exist, the SDK will just not send any events.
+The DSN tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that's also missing, no events will be sent.
 
 Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
 
@@ -20,13 +20,13 @@ Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-uti
 
 <SdkOption name="Debug" type="bool" defaultValue="false">
 
-If debug is enabled, the SDK will attempt to print out useful debugging information if something goes wrong while sending the event. The default is always `false`. It's generally not recommended to turn it on in production, though turning `debug` mode on will not cause any safety concerns.
+If debug is enabled, the SDK will attempt to print out useful debugging information if something goes wrong while sending the event. It's always `false` by default and generally not recommended in production environments, though it's safe to use.
 
 </SdkOption>
 
 <SdkOption name="Release" type="string" envVar="SENTRY_RELEASE">
 
-Sets the release. Some Sentry features are built around releases, and, thus, reporting events with a non-empty release improves the product experience. See [the releases documentation](/product/releases/).
+Sets the release. Some Sentry features are built around release info, so reporting releases can help improve the overall experience. See [the releases documentation](/product/releases/).
 
 If Release is not set, the SDK will try to derive a default value from environment variables or the Git repository in the working directory.
 
@@ -66,7 +66,7 @@ Environments tell you where an error occurred, whether that's in your production
 
 Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly.
 
-As a historical special case, the sample rate `0.0` is treated as if it was `1.0`. To drop all events, set the DSN to the empty string.
+As a historical special case, the sample rate `0.0` is treated as if it was `1.0`. To drop all events, set the DSN to an empty string.
 
 </SdkOption>
 
@@ -74,7 +74,7 @@ As a historical special case, the sample rate `0.0` is treated as if it was `1.0
 
 This variable controls the total amount of breadcrumbs that should be captured. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
 
-When MaxBreadcrumbs is negative then breadcrumbs are ignored.
+If MaxBreadcrumbs is given a negative value, breadcrumbs are ignored.
 
 </SdkOption>
 
@@ -98,15 +98,14 @@ If you enable this option, be sure to manually remove what you don't want to sen
 
 <SdkOption name="ServerName" type="string">
 
-This option can be used to supply a server name. When provided, the name of the server is sent along and persisted in the event. For many integrations, the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server.
+Supplies a server name. When provided, the name of the server is sent along and persisted in the event. For many integrations, the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server.
 
-Most SDKs will attempt to auto-discover this value.
 
 </SdkOption>
 
 <SdkOption name="IgnoreErrors" type="[]string">
 
-A list of regexp strings that will be used to match against event's message and if applicable, caught errors type and value. If the match is found, then a whole event will be dropped.
+A list of regular expression strings used to match an event’s message, and, when applicable, the type or value of a caught error. If a match is found, the entire event is dropped.
 
 By default, no errors are ignored.
 
@@ -118,7 +117,7 @@ By default, no errors are ignored.
 
 This is the maximum number of errors reported in a chain of errors. This protects the SDK from an arbitrarily long chain of wrapped errors.
 
-An additional consideration is that arguably reporting a long chain of errors is of little use when debugging production errors with Sentry. The Sentry UI is not optimized for long chains either. The top-level error together with a stack trace is often the most useful information.
+In practice, reporting very long chains usually provides little value when debugging production issues, as the Sentry UI isn’t optimized for them. The top-level error and its stack trace usually contain the most relevant information.
 
 </SdkOption>
 
@@ -126,7 +125,7 @@ An additional consideration is that arguably reporting a long chain of errors is
 
 <SdkOption name="EnableLogs" type="bool" defaultValue="false">
 
-Set this option to `true` to enable log capturing in Sentry. Only when this is enabled will the SDK capture log messages and send them to Sentry.
+Set this option to `true` to enable log capturing in Sentry. The SDK will only capture and send log messages to Sentry if this option is enabled.
 
 </SdkOption>
 
@@ -134,7 +133,7 @@ Set this option to `true` to enable log capturing in Sentry. Only when this is e
 
 <SdkOption name="EnableTracing" type="bool" defaultValue="false">
 
-Enable performance tracing. When enabled, the SDK will create transactions and spans to measure performance.
+Enables performance tracing. When enabled, the SDK will create transactions and spans to measure performance.
 
 </SdkOption>
 
@@ -146,7 +145,7 @@ A number between `0.0` and `1.0`, controlling the percentage chance a given tran
 
 <SdkOption name="TracesSampler" type="TracesSampler">
 
-Used to customize the sampling of traces, overrides TracesSampleRate. A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or `TracesSampleRate` must be defined to enable tracing.
+Used to customize the sampling of traces, overrides `TracesSampleRate`. This is a function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or `TracesSampleRate` must be defined to enable tracing.
 
 </SdkOption>
 
@@ -179,7 +178,7 @@ These options can be used to hook the SDK in various ways to customize the repor
 
 <SdkOption name="BeforeSend" type="func(event *Event, hint *EventHint) *Event">
 
-This function is called with an SDK-specific message or error event object, and can return a modified event object, or `nil` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
+This function is called with an event object, and can return a modified event object, or `nil` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
 
 By the time `BeforeSend` is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
 
@@ -187,14 +186,14 @@ By the time `BeforeSend` is executed, all scope data has already been applied to
 
 <SdkOption name="BeforeSendTransaction" type="func(event *Event, hint *EventHint) *Event">
 
-This function is called with an SDK-specific transaction event object, and can return a modified transaction event object, or `nil` to skip reporting the event. One way this might be used is for manual PII stripping before sending.
+This function is called with a transaction object, and can return a modified transaction object, or `nil` to skip reporting the transaction. One way this might be used is for manual PII stripping before sending.
 
 </SdkOption>
 
 <SdkOption name="BeforeBreadcrumb" type="func(breadcrumb *Breadcrumb, hint *BreadcrumbHint) *Breadcrumb">
 
-This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When `nil` is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
-The callback typically gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
+This function is called with a breadcrumb object before the breadcrumb is added to the scope. When `nil` is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
+The callback typically gets a second argument (called a "hint") that provides the original object used to create the breadcrumb. You can use this to further customize the breadcrumb’s content or appearance.
 
 </SdkOption>
 
@@ -210,7 +209,7 @@ See the [Removing Default Integrations](#removing-default-integrations) section 
 
 <SdkOption name="DebugWriter" type="io.Writer">
 
-io.Writer implementation that should be used with the Debug mode. This allows you to redirect debug output to a custom writer instead of stdout.
+`io.Writer` implementation that should be used with the Debug mode. This allows you to redirect debug output to a custom writer instead of stdout.
 
 </SdkOption>
 
@@ -220,13 +219,13 @@ Transports are used to send events to Sentry. Transports can be customized to so
 
 <SdkOption name="Transport" type="Transport">
 
-The transport to use. Defaults to HTTPTransport. Switches out the transport used to send events. How this works depends on the SDK. It can, for instance, be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication.
+The transport to use. Defaults to `HTTPTransport`. Switches out the transport used to send events. How this works depends on the SDK. It can, for instance, be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication.
 
 </SdkOption>
 
 <SdkOption name="HTTPClient" type="*http.Client">
 
-An optional pointer to http.Client that will be used with a default HTTPTransport. Using your own client will make HTTPTransport, HTTPProxy, HTTPSProxy and CaCerts options ignored.
+An optional pointer to `http.Client` that will be used with a default HTTPTransport. Using your own client will make HTTPTransport, HTTPProxy, HTTPSProxy and CaCerts options ignored.
 
 </SdkOption>
 
@@ -238,7 +237,7 @@ An optional pointer to http.Transport that will be used with a default HTTPTrans
 
 <SdkOption name="HTTPProxy" type="string" envVar="HTTP_PROXY">
 
-When set, a proxy can be configured that should be used for outbound requests. This is also used for HTTPS requests unless a separate `HTTPSProxy` is configured. However, not all SDKs support a separate HTTPS proxy. SDKs will attempt to default to the system-wide configured proxy, if possible. For instance, on Unix systems, the `HTTP_PROXY` environment variable will be picked up.
+When set, a proxy can be configured that should be used for outbound requests. This is also used for HTTPS requests unless a separate `HTTPSProxy` is configured.
 
 This will default to the HTTP_PROXY environment variable.
 
