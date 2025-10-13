@@ -1,52 +1,57 @@
-On this page you will learn how to manually propagate trace information into and out of your .NET application. Please note, that you do not need to do this manually, if you [use one of our supported frameworks](/platforms/dotnet/distributed-tracing/#how-to-use-distributed-tracing), or you have our <PlatformLink to="/tracing/">tracing feature</PlatformLink> turned on.
+On this page you will learn how to manually propagate trace information into and out of your Unity application. Please note, that you do not need to do this manually if you have our <PlatformLink to="/tracing/">tracing feature</PlatformLink> turned on.
 
 To set it up manually, all you have to do is to make sure your application extracts incoming headers and to set those headers again when making an outgoing request within your application.
 
 ## Step 1) Extract Incoming Tracing Information
 
-Incoming tracing information has to be extracted and stored in memory for later use. Sentry provides the `ContinueTrace()` function to help you with this. Tracing information can come from incoming headers, for example, by another Sentry SDK used in your frontend project.
+Incoming tracing information has to be extracted and stored in memory for later use. Sentry provides the `ContinueTrace()` function to help you with this. Tracing information can come from incoming headers, for example, by another Sentry SDK used in your backend service.
 
-Here's an example using RabbitMQ of how to extract and store incoming tracing information using `ContinueTrace()`:
+Here's an example using Unity's `UnityWebRequest` to extract and store incoming tracing information using `ContinueTrace()`:
 
 ```csharp
-using System.Text;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
+using System.Collections;
+using UnityEngine;
+using UnityEngine.Networking;
 
-var factory = new ConnectionFactory()
+public class TraceReceiver : MonoBehaviour
 {
-    HostName = "localhost",
-    UserName = "guest",
-    Password = "guest"
-};
-
-using var connection = factory.CreateConnection();
-using var channel = connection.CreateModel();
-
-var consumer = new EventingBasicConsumer(channel);
-consumer.Received += (model, ea) =>
-{
-    // Extract headers from the incoming message
-    var headers = ea.BasicProperties.Headers;
-    if (headers != null)
+    IEnumerator MakeRequest()
     {
-        var sentryTraceHeader = string.Empty;
-        var sentryBaggageHeader = string.Empty;
-
-        if (headers.TryGetValue("sentry-trace", out var traceHeader) && traceHeader is not null)
+        using (UnityWebRequest www = UnityWebRequest.Get("https://example.com/api/data"))
         {
-            sentryTraceHeader = Encoding.UTF8.GetString((byte[])traceHeader);
-        }
+            yield return www.SendWebRequest();
 
-        if (headers.TryGetValue("baggage", out var baggageHeader) && baggageHeader is not null)
-        {
-            sentryBaggageHeader = Encoding.UTF8.GetString((byte[])baggageHeader);
-        }
+            if (www.result == UnityWebRequest.Result.Success)
+            {
+                // Extract headers from the incoming response
+                var responseHeaders = www.GetResponseHeaders();
+                if (responseHeaders != null)
+                {
+                    var sentryTraceHeader = string.Empty;
+                    var sentryBaggageHeader = string.Empty;
 
-        var transactionContext = SentrySdk.ContinueTrace(sentryTraceHeader, sentryBaggageHeader);
-        var transaction = SentrySdk.StartTransaction(transactionContext);
+                    if (responseHeaders.TryGetValue("sentry-trace", out var traceHeader))
+                    {
+                        sentryTraceHeader = traceHeader;
+                    }
+
+                    if (responseHeaders.TryGetValue("baggage", out var baggageHeader))
+                    {
+                        sentryBaggageHeader = baggageHeader;
+                    }
+
+                    // Continue the trace from the backend service
+                    var transactionContext = SentrySdk.ContinueTrace(sentryTraceHeader, sentryBaggageHeader);
+                    var transaction = SentrySdk.StartTransaction(transactionContext);
+
+                    // Process your data here...
+
+                    transaction.Finish();
+                }
+            }
+        }
     }
-};
+}
 ```
 
 If you pass these headers to Sentry's `ContinueTrace()` function it will store them in memory for later use.
@@ -57,31 +62,44 @@ For distributed tracing to work, the two headers `sentry-trace` and `baggage`, m
 
 If you send outgoing HTTP requests with an HTTP client that uses `SentryHttpMessageHandler`, this tracing information is automatically added to outgoing requests. You do not have to enable Performance for distributed tracing to work.
 
-If you're not using the `SentryHttpMessageHandler`, you can generate this tracing information with the Sentry SDK's `GetTraceHeader()` and `GetBaggage()` functions. Here's an example using RabbitMQ:
+If you're not using the `SentryHttpMessageHandler`, you can generate this tracing information with the Sentry SDK's `GetTraceHeader()` and `GetBaggage()` functions. Here's an example using Unity's `UnityWebRequest`:
 
 ```csharp
-using RabbitMQ.Client;
+using System.Collections;
+using UnityEngine;
+using UnityEngine.Networking;
 
-var factory = new ConnectionFactory()
+public class TraceSender : MonoBehaviour
 {
-    HostName = "localhost",
-    UserName = "guest",
-    Password = "guest"
-};
+    IEnumerator SendRequest()
+    {
+        using (UnityWebRequest www = UnityWebRequest.Post("https://example.com/api/action", "{}"))
+        {
+            // Add Sentry trace headers to propagate the trace
+            var traceHeader = SentrySdk.GetTraceHeader();
+            if (traceHeader != null)
+            {
+                www.SetRequestHeader("sentry-trace", traceHeader.ToString());
+            }
 
-using var connection = factory.CreateConnection();
-using var channel = connection.CreateModel();
+            var baggageHeader = SentrySdk.GetBaggage();
+            if (baggageHeader != null)
+            {
+                www.SetRequestHeader("baggage", baggageHeader.ToString());
+            }
 
-var properties = channel.CreateBasicProperties();
-properties.Headers = new Dictionary<string, object>();
-properties.Headers.Add("sentry-trace", SentrySdk.GetTraceHeader()?.ToString());
-properties.Headers.Add("baggage", SentrySdk.GetBaggage()?.ToString());
+            // Set content type for the request
+            www.SetRequestHeader("Content-Type", "application/json");
 
-channel.BasicPublish(
-    exchange: "..",
-    routingKey: "...",
-    basicProperties: properties,
-    body: new ReadOnlyMemory<byte>());
+            yield return www.SendWebRequest();
+
+            if (www.result == UnityWebRequest.Result.Success)
+            {
+                Debug.Log("Request sent with trace headers");
+            }
+        }
+    }
+}
 ```
 
 This way, tracing information is propagated to the project receiving the message. If this project uses the Sentry .NET SDK, it will extract and save the tracing information for later use.
