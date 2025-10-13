@@ -99,21 +99,30 @@ export default function DocImage({
     imgPath = finalSrc;
   }
 
-  // Parse dimensions from URL hash (works for both internal and external)
-  const hashDimensions = parseDimensionsFromHash(src);
+  // Prefer explicit props (coming from MDX attributes) over hash-based dimensions.
+  // If either width or height prop is provided, treat as manual sizing.
+  const manualWidth = parseDimension(propsWidth);
+  const manualHeight = parseDimension(propsHeight);
 
-  // Use hash dimensions first, fallback to props
-  const width = hashDimensions[0] > 0 ? hashDimensions[0] : parseDimension(propsWidth);
-  const height = hashDimensions[1] > 0 ? hashDimensions[1] : parseDimension(propsHeight);
+  // If either width or height is specified manually, ignore any hash dimensions entirely
+  const hasDimensionOverrides = manualWidth != null || manualHeight != null;
+  const hashDimensions = hasDimensionOverrides ? [] : parseDimensionsFromHash(src);
+
+  const inferredWidth = hashDimensions[0] > 0 ? hashDimensions[0] : undefined;
+  const width = hasDimensionOverrides ? manualWidth : inferredWidth;
+
+  const inferredHeight = hashDimensions[1] > 0 ? hashDimensions[1] : undefined;
+  const height = hasDimensionOverrides ? manualHeight : inferredHeight;
 
   return (
     <ImageLightbox
+      {...props}
       src={finalSrc}
       imgPath={imgPath}
       width={width}
       height={height}
+      hasDimensionOverrides={hasDimensionOverrides}
       alt={props.alt ?? ''}
-      {...props}
     />
   );
 }

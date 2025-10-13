@@ -8,6 +8,26 @@ title: Span Protocol
 
 The SDK must implement a new "span v2" envelope item, which is used to emit spans to Sentry.
 
+## Span v2 Envelope Header
+
+The envelope header must contain the same properties as previously with transactions.
+There are no special requirements for the Span v2 envelope header.
+
+```json
+{
+  "sent_at": "2025-02-07T14:16:00Z",
+  "dsn": "https://e12d836b15bb49d7bbf99e64295d995b@sentry.io/42",
+  "sdk": {
+    // ...
+  },
+  "trace": {
+    // ...
+  }
+}
+```
+
+Also see [Envelope Headers](/sdk/data-model/envelopes/#headers).
+
 ## Span v2 Envelope Item Header
 
 The envelope item header must contain the following properties:
@@ -29,7 +49,6 @@ The envelope item payload must contain an `items` array with span one and up to 
   "items": [
     {
       "trace_id": "6cf173d587eb48568a9b2e12dcfbea52",
-      "parent_span_id": null,
       "span_id": "438f40bd3b4a41ee",
       "name": "GET /users",
       "status": "ok",
@@ -142,17 +161,28 @@ Attributes are stored as key-value pairs where each value is an object with type
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
-| `type` | string | Yes | The data type of the attribute value. Values: `"string"`, `"integer"`, `"float"`, `"boolean"` |
+| `type` | string | Yes | The data type of the attribute value. Values: `"string"`, `"integer"`, `"double"`, `"boolean"` |
 | `value` | any | Yes | The actual attribute value, must match the specified type |
 | `unit` | string | No | The unit of the attribute value. Example values: `"ms"`, `"s"`, `"bytes"`, `"count"`, `"percent"` |
 
 #### Common Attribute Keys
 
+All attributes mentioned below must be attached to every span being emitted from the SDK, depending on the platform.
+Empty attributes must be emitted.
+
 | Attribute Key | Type | Description |
 |---------------|------|-------------|
 | `sentry.release` | string | The release version of the application |
 | `sentry.environment` | string | The environment name (e.g., "production", "staging", "development") |
-| `sentry.platform` | string | The platform/language (e.g., "php", "javascript", "python") |
+| `sentry.segment.name` | string | The segment name (e.g., "GET /users") |
+| `os.name` | string | The operating system name (e.g., "Linux", "Windows", "macOS") |
+| `browser.name` | string | The browser name (e.g., "Chrome", "Firefox", "Safari") |
+| `user.id` | string | The user ID (gated by `sendDefaultPii`) |
+| `user.email` | string | The user email (gated by `sendDefaultPii`) |
+| `user.ip_address` | string | The user IP address (gated by `sendDefaultPii`) |
+| `user.username` | string | The user username (gated by `sendDefaultPii`) |
+| `thread.id` | string | The thread ID |
+| `thread.name` | string | The thread name |
 | `sentry.sdk.name` | string | Name of the Sentry SDK (e.g., "sentry.php", "sentry.javascript") |
 | `sentry.sdk.version` | string | Version of the Sentry SDK |
 

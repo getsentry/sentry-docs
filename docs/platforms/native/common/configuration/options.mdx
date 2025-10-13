@@ -14,8 +14,6 @@ Options that can be read from an environment variable (`SENTRY_DSN`, `SENTRY_ENV
 
 The DSN tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable also does not exist, the SDK will just not send any events.
 
-In runtimes without a process environment (such as the browser) that fallback does not apply.
-
 Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
 
 </ConfigKey>
@@ -34,9 +32,9 @@ Turns debug mode on or off. If `debug` is enabled, the SDK will attempt to print
 
 <ConfigKey name="release">
 
-Sets the release. Some SDKs will try to automatically configure a release out of the box but it's a better idea to manually set it to guarantee that the release is in sync with your deploy integrations or source map uploads. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
+Sets the release. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
 
-By default the SDK will try to read this value from the `SENTRY_RELEASE` environment variable (in the browser SDK, this will be read off of the `window.SENTRY_RELEASE.id` if available).
+By default the SDK will try to read this value from the `SENTRY_RELEASE` environment variable.
 
 </ConfigKey>
 
@@ -66,13 +64,19 @@ Whether Crashpad should delay application shutdown until the upload of the crash
 
 </ConfigKey>
 
+<ConfigKey name="propagate-traceparent">
+
+Controls whether the SDK should propagate the W3C `traceparent` HTTP header alongside the `sentry-trace` header for [distributed tracing](https://docs.sentry.io/platforms/native/tracing/trace-propagation/custom-instrumentation/). This option defaults to `false`.
+
+</ConfigKey>
+
 ## Hooks
 
 These options can be used to hook the SDK in various ways to customize the reporting of events.
 
 <ConfigKey name="before-send">
 
-This function is called with an SDK-specific message or error event object, and can return a modified event object, or `null` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
+This function is called with an SDK-specific message or error event object, and can return a modified event object, or `sentry_value_new_null()` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
 
 By the time <PlatformIdentifier name="before-send" /> is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
 
@@ -108,7 +112,7 @@ A function responsible for determining the percentage chance a given transaction
 
 <ConfigKey name="enable-logs">
 
-This option enables the logging integration, which allows the SDK to capture logs and send them to Sentry. This is disabled by default.
+This option enables the [logging integration](/platforms/native/logs), which allows the SDK to capture logs and send them to Sentry. This is disabled by default.
 
 </ConfigKey>
 
