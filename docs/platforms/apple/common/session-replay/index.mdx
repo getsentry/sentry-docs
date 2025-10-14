@@ -20,6 +20,30 @@ Before enabling Session Replay in production, verify your masking configuration 
 
 </Alert>
 
+<Alert level="warning">
+
+<strong>Session Replay is disabled by default on iOS 26.0+ with Xcode 26.0+ to prevent PII leaks</strong>
+
+Due to potential masking issues introduced by Apple's Liquid Glass rendering changes in iOS 26.0, Session Replay is now <strong>automatically disabled</strong> on apps running iOS 26.0+ when built with Xcode 26.0 or later. This is a defensive measure to protect user privacy and prevent potential PII leaks until masking is reliably supported.
+
+Session Replay will work normally if:
+
+- Your app runs on iOS versions older than 26.0, OR
+- Your app is built with Xcode versions older than 26.0, OR
+- Your app explicitly sets <code>UIDesignRequiresCompatibility</code> to <code>YES</code> in <code>Info.plist</code>
+
+<strong>Override (use with caution):</strong> If you understand the PII risks and want to enable session replay anyway, you can set:
+
+```swift
+options.experimental.enableSessionReplayInUnreliableEnvironment = true
+```
+
+This experimental override option will be removed in a future minor version once the masking issues are resolved.
+
+Follow the progress on fixing masking for iOS 26.0 (Liquid Glass) in <a href="https://github.com/getsentry/sentry-cocoa/issues/6390">GitHub issue #6390</a>.
+
+</Alert>
+
 [Session Replay](/product/explore/session-replay/) helps you get to the root cause of an error or latency issue faster by providing you with a reproduction of what was happening in the user's device before, during, and after the issue. You can rewind and replay your application's state and see key user interactions, like taps, swipes, network requests, and console entries, in a single UI.
 
 By default, our Session Replay SDK masks all text content, images, and user input, giving you heightened confidence that no sensitive data will leave the device. To learn more, see [product docs](/product/explore/session-replay/).

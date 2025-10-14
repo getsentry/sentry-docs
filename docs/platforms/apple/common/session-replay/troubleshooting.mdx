@@ -17,6 +17,28 @@ notSupported:
 
 <PlatformSection notSupported={["apple", "apple.macos", "apple.tvos", "apple.watchos", "apple.visionos"]}>
 
+<Expandable title="Why is Session Replay not running on iOS 26.0?" permalink>
+
+Due to potential masking issues introduced by Apple's Liquid Glass rendering changes in iOS 26.0, Session Replay is <strong>automatically disabled</strong> by default on apps running iOS 26.0+ when built with Xcode 26.0 or later. This defensive measure protects user privacy and prevents potential PII leaks until masking is reliably supported.
+
+Session Replay will work normally if:
+
+- Your app runs on iOS versions older than 26.0, OR
+- Your app is built with Xcode versions older than 26.0, OR
+- Your app explicitly sets <code>UIDesignRequiresCompatibility</code> to <code>YES</code> in <code>Info.plist</code>
+
+If you understand the PII risks and want to enable Session Replay anyway, you can override this behavior:
+
+```swift
+options.experimental.enableSessionReplayInUnreliableEnvironment = true
+```
+
+This experimental override option will be removed in a future minor version once the masking issues are resolved.
+
+You can follow the ongoing work to fix masking for iOS 26.0 (Liquid Glass) in <a href="https://github.com/getsentry/sentry-cocoa/issues/6390">GitHub issue #6390</a>.
+
+</Expandable>
+
 <Expandable title="Does Session Replay work with UIKit, SwiftUI or AppKit?" permalink>
 
 Session Replay works with both UIKit and SwiftUI.
