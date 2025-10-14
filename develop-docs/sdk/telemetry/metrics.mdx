@@ -356,7 +356,7 @@ The threading and concurrency considerations for metrics are the same as for log
 In general metric processing should follow this order:
 
 1. Capture metric via [Public APIs](#metrics-module) (e.g. `Sentry.metrics.increment`).
-1. (While experimental) Check if metrics are enabled as per `enableMetrics`/`enable_metrics` configuration - if not, skip the rest of the steps.
+1. Check if metrics are disabled as per `enableMetrics`/`enable_metrics` configuration - if so, skip the rest of the steps.
 1. Process captured metric (attach default attributes as per [default attributes](#default-attributes)).
 1. Run `beforeSendMetric`/`before_send_metric` to filter or modify the metric.
 1. Add metric to buffer/batch processor as detailed in [buffering](#buffering).
@@ -398,13 +398,11 @@ By default the SDK should attach the following attributes to a metric:
 
 #### User Attributes
 
-SDKs may optionally attach user information as attributes:
+SDKs may optionally attach user information as attributes (guarded by `sendDefaultPii`):
 
 1. `user.id`: The user ID. Maps to `id` in the [User](/sdk/data-model/event-payloads/user/) payload.
 2. `user.name`: The username. Maps to `username` in the [User](/sdk/data-model/event-payloads/user/) payload.
 3. `user.email`: The email address. Maps to `email` in the [User](/sdk/data-model/event-payloads/user/) payload.
-
-Note: Adding user information to metrics may significantly increase cardinality and should be done carefully.
 
 ```json
 {
