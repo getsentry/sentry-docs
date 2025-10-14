@@ -95,3 +95,48 @@ Scenario: 1 span added application crashes
   And loses the spans in the BatchProcessor
 
 ```
+
+## Sudden Process Terminations
+
+The BatchProcessor SHOULD accordingly handle sudden process terminations, such as crashes or watchdog terminations, to prevent data loss. Since each environment is unique, SDKs have three options to choose from.
+The options get more complex the higher their number is. The first option is the simplest and the last option is the most complex. SDKs SHOULD implement the least complex option that is suitable for their environment.
+
+### 1. Store Data into Envelope
+
+When the SDK detects a sudden process termination it MUST put all items in the BatchProcessor into one envelope and store it to disk. When the SDK starts again, it MUST send this envelope to Sentry. The BatchProcessor MUST keep it's existing logic described in the specification above.
+
+If SDKs can't reliably detect sudden process terminations or they can't reliably store envelopes to disk when a sudden process termination happens, they SHOULD implement the [FileStream Cache](#2-file-stream-cache) or the [FIFO Queue with Async IO](#3-fifo-queue-with-async-io).
+
+### 2. FileStream Cache
+
+SDKs for which blocking the main thread is a nogo, such as Android and Apple, SDKs MUST NOT implement this option. They SHOULD implement the [FIFO Queue with Async IO](#3-fifo-queue-with-async-io).
+
+Instead of keeping the data in memory, the BatchProcessor stores the data on the calling thread to disk. The BatchProcessor keeps the timeout logic to ensure the delay of sending data to Sentry is minimal. For efficiency, the BatchProcessor MUST use file handles or file streams when writing data to disk.
+
+The BatchProcessor uses two types of cache files:
+- **`current`** - The file the processor is actively writing to
+- **`sending`** - The file being converted to an envelope and sent to Sentry (deleted after successful send)
+
+When the timeout expires or the cache file hits the size limit, the BatchProcessor renames the `current` file to `sending`, creates a new `current` file for incoming data, converts the data in the `sending` file to an envelope, sends it to Sentry, and then deletes the `sending` file. When the SDK starts again, it MUST check if there are any cache files in the cache directory (both `current` and `sending`) and if so, it MUST load the data from the files and send it to Sentry.
+
+
+### 3. Crash Safe List with Async FileStream Cache
+
+This is the recommended option for SDKs that can't reliably detect sudden process terminations or they can't reliably store envelopes to disk when a sudden process termination happens.
+
+With this option, the BatchProcessor stores its logs in a thread-safe list, residing in an async-safe memory space, allowing the crash reporter to write them to disk when a crash occurs. Furthermore, the BatchProcessor stores logs asynchronously into a file, allowing it to recover after an abnormal termination, for which the crash handler can't run.
+
+When the BatchProcessor receives a item, it performs the following steps:
+
+1. Put the log into the async safe and thread safe list on the calling thread.
+2. On a background thread, store the items in the list to the batch-processor-cache-file.
+
+The BatchProcessor MUST keep two lists for storing its items and two files for the batch-processor-cache. When one list exceeds half of the max batch size, the BatchProcessor writes those items to an envelope and stores incoming items in the other list and the other batch-processor-file. After it stored the envelope successfully to disk, it removes items in the list and also deletes the batch-processor-cache-file. These are the flushing steps:
+
+1. Store items of `async-safe-list1` to an envelope in the batch processor directory, which MUST be the same folder as the other BatchProcessor files, and name it `batch-processor-cache-envelope-to-flush-list1`.
+2. Remove items in `async-safe-list1`
+3. Move the `batch-processor-cache-envelope-to-flush-list1` to the envelopes cache folder.
+
+If a crash occurs, between step 2 and 3, SDKs avoid sending duplicate items to Sentry, by discarding items stored in `async-safe-list1` and only send `batch-processor-cache-envelope-to-flush-list1` on the next launch.
+
+When a crash occurs, the SDKs write the items in the list to batch-processor-abnormal-termination-file and send these on the next launch. The SDKs ignore items in batch-processor-cache-file when a batch-processor-abnormal-termination-detected-file exists. SDKs only send items in the batch-processor-cache-file when there is no batch-processor-abnormal-termination-file, which means that an abnormal termination occurred with the SDK being able to detect and handle it.
