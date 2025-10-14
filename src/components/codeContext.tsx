@@ -14,6 +14,8 @@ type ProjectCodeKeywords = {
   ORG_ID: number;
   ORG_INGEST_DOMAIN: string;
   ORG_SLUG: string;
+  OTLP_LOGS_HOST: string;
+  OTLP_LOGS_PATH: string;
   OTLP_LOGS_URL: string;
   OTLP_TRACES_URL: string;
   PROJECT_ID: number;
@@ -90,6 +92,8 @@ export const DEFAULTS: CodeKeywords = {
       UNREAL_URL: 'https://o0.ingest.sentry.io/api/0/unreal/examplePublicKey/',
       OTLP_TRACES_URL: 'https://o0.ingest.sentry.io/api/0/integration/otlp/v1/traces',
       OTLP_LOGS_URL: 'https://o0.ingest.sentry.io/api/0/integration/otlp/v1/logs',
+      OTLP_LOGS_PATH: '/api/0/integration/otlp/v1/logs',
+      OTLP_LOGS_HOST: 'https://o0.ingest.sentry.io',
       title: `example-org / example-project`,
     },
   ],
@@ -145,8 +149,16 @@ const formatOtlpTracesUrl = ({scheme, host, pathname}: Dsn) => {
   return `${scheme}${host}/api${pathname}/integration/otlp/v1/traces`;
 };
 
+const formatOtlpLogsPath = (pathname: string) => {
+  return `/api${pathname}/integration/otlp/v1/logs`;
+};
+
+const formatOtlpLogsHost = (schema: string, host: string) => {
+  return `${schema}${host}`;
+};
+
 const formatOtlpLogsUrl = ({scheme, host, pathname}: Dsn) => {
-  return `${scheme}${host}/api${pathname}/integration/otlp/v1/logs`;
+  return `${formatOtlpLogsHost(scheme, host)}${formatOtlpLogsPath(pathname)}`;
 };
 
 const formatApiUrl = ({scheme, host}: Dsn) => {
@@ -243,6 +255,8 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
         UNREAL_URL: formatUnrealEngineURL(parsedDsn),
         OTLP_TRACES_URL: formatOtlpTracesUrl(parsedDsn),
         OTLP_LOGS_URL: formatOtlpLogsUrl(parsedDsn),
+        OTLP_LOGS_PATH: formatOtlpLogsPath(parsedDsn.pathname),
+        OTLP_LOGS_HOST: formatOtlpLogsHost(parsedDsn.scheme, parsedDsn.host),
         title: `${project.organizationSlug} / ${project.projectSlug}`,
       };
     }),

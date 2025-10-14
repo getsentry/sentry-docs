@@ -1,0 +1,71 @@
+---
+title: Fluent Bit Log Forwarder
+sidebar_order: 1
+description: "Learn how to forward logs to Sentry via Fluent Bit."
+---
+
+Sentry supports ingesting logs from [Fluent Bit](https://fluentbit.io/) directly via the [Fluent Bit OpenTelemetry Output Plugin](https://docs.fluentbit.io/manual/data-pipeline/outputs/opentelemetry).
+
+To start configuring this, add a new opentelemetry output section to your Fluent Bit configuration file. The `host`, `logs_uri` and `header` values can be found in your Sentry project settings.
+
+```yaml
+pipeline:
+  outputs:
+    - name: opentelemetry
+      match: "*"
+      port: 443
+      host: ___OTLP_LOGS_HOST___
+      logs_uri: ___OTLP_LOGS_PATH___
+      header: x-sentry-auth sentry sentry_key=___PUBLIC_KEY___
+      log_response_payload: true
+      tls: on
+      tls.verify: off
+      compress: gzip
+      logs_body_key: $message
+      logs_trace_id_message_key: trace_id
+      logs_severity_text_message_key: level
+```
+
+```conf
+[OUTPUT]
+  Name                 opentelemetry
+  Match                *
+  Host                 ___OTLP_LOGS_HOST___
+  Port                 443
+  Logs_uri             ___OTLP_LOGS_PATH___
+  Header               x-sentry-auth sentry sentry_key=___PUBLIC_KEY___
+  Log_response_payload True
+  Tls                  On
+  Tls.verify           Off
+  Compress             gzip
+  logs_body_key $message
+  logs_trace_id_message_key trace_id
+  logs_severity_text_message_key level
+```
+
+The `host` is the host of the Sentry server and looks like `https://o0.ingest.sentry.io`. The `logs_uri` is the path to the logs endpoint and looks like `/api/0/integration/otlp/v1/logs`. The `header` is the authentication header and looks like `x-sentry-auth sentry sentry_key=examplePublicKey`. These come from the OTLP logs endpoint which you can find in your Sentry project settings.
+
+```yaml
+host: ___OTLP_LOGS_HOST___
+logs_uri: ___OTLP_LOGS_PATH___
+header: x-sentry-auth sentry sentry_key=___PUBLIC_KEY___
+```
+
+```conf
+Host                 ___OTLP_LOGS_HOST___
+Logs_uri             ___OTLP_LOGS_PATH___
+Header               x-sentry-auth sentry sentry_key=___PUBLIC_KEY___
+```
+
+If you want to attach additional labels to the logs, you can add the `add_label` section to the opentelemetry output configuration.
+
+```yaml
+add_label:
+  - app my-app
+  - color blue
+```
+
+```conf
+add_label            app my-app
+add_label            color blue
+```
