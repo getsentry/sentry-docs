@@ -22,13 +22,13 @@ Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-uti
 
 </SdkOption>
 
-<SdkOption name="debug" type="bool" defaultValue="false">
+<SdkOption name="debug" type="boolean" defaultValue="false">
 
 Turns debug mode on or off. If debug is enabled SDK will attempt to print out useful debugging information if something goes wrong with sending the event. The default is always `false`. It's generally not recommended to turn it on in production, though turning `debug` mode on will not cause any safety concerns.
 
 </SdkOption>
 
-<SdkOption name="diagnosticLevel" type="enum">
+<SdkOption name="diagnosticLevel" type="enum" defaultValue="debug">
 
 Enabling `debug` mode makes the SDK generate as much diagnostic data as possible. However, if you'd prefer to lower the verbosity of the Sentry SDK diagnostics logs, configure this option to set the appropriate level:
 
@@ -68,19 +68,19 @@ Configures the sample rate for error events, in the range of `0.0` to `1.0`. The
 
 </SdkOption>
 
-<SdkOption name="maxBreadcrumbs" type="int" defaultValue="100">
+<SdkOption name="maxBreadcrumbs" type="integer" defaultValue="100">
 
 This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`, but you can set this to any number. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
 
 </SdkOption>
 
-<SdkOption name="maxCacheItems" type="int" defaultValue="30">
+<SdkOption name="maxCacheItems" type="integer" defaultValue="30">
 
 The maximum number of [envelopes](https://develop.sentry.dev/sdk/data-model/envelopes/) to keep in cache. The SDKs use envelopes to send data, such as events, attachments, user feedback, and sessions to sentry.io. An envelope can contain multiple items, such as an event with a session and two attachments. Depending on the usage of the SDK, the size of an envelope can differ. If the number of envelopes in the local cache exceeds `max-cache-items`, the SDK deletes the oldest envelope and migrates the sessions to the next envelope to maintain the integrity of your release health stats. The default is `30`.
 
 </SdkOption>
 
-<SdkOption name="attachStacktrace" type="bool" defaultValue="true">
+<SdkOption name="attachStacktrace" type="boolean" defaultValue="true">
 
 When enabled, stack traces are automatically attached to all messages logged. Stack traces are always attached to exceptions; however, when this option is set, stack traces are also sent with messages. This option, for instance, means that stack traces appear next to all log messages.
 
@@ -90,7 +90,7 @@ Grouping in Sentry is different for events with stack traces and without. As a r
 
 </SdkOption>
 
-<SdkOption name="attachThreads" type="bool" defaultValue="false">
+<SdkOption name="attachThreads" type="boolean" defaultValue="false">
 
 When enabled, information about all threads is attached to events, not just the crashing thread. This provides a more complete picture of the application state at the time of an error, including stack traces from all running threads.
 
@@ -100,7 +100,7 @@ Note that enabling this option may increase the payload size of events sent to S
 
 </SdkOption>
 
-<SdkOption name="sendDefaultPii" type="bool" defaultValue="false">
+<SdkOption name="sendDefaultPii" type="boolean" defaultValue="false">
 
 If this flag is enabled, certain personally identifiable information (PII) is added by active integrations. By default, no such data is sent.
 
@@ -140,11 +140,11 @@ A list of exception types that will be filtered out before sending to Sentry.
 
 </SdkOption>
 
-<SdkOption name="maxRequestBodySize" type="enum">
+<SdkOption name="maxRequestBodySize" type="enum" defaultValue="never">
 
 This parameter controls whether integrations should capture HTTP request bodies. It can be set to one of the following values:
 
-- `never`: Request bodies are never sent.
+- `never`: **default** Request bodies are never sent.
 - `small`: Only small request bodies will be captured. The cutoff for small depends on the SDK (typically 4KB).
 - `medium`: Medium and small requests will be captured (typically 10KB).
 - `always`: The SDK will always capture the request body as long as Sentry can make sense of it.
@@ -154,13 +154,13 @@ Please consult the <PlatformLink to="/configuration/options/#send-default-pii">d
 
 </SdkOption>
 
-<SdkOption name="enabled" type="bool" defaultValue="true">
+<SdkOption name="enabled" type="boolean" defaultValue="true">
 
 Specifies whether this SDK should send events to Sentry. Defaults to `true`. Setting this to `enabled: false` doesn't prevent all overhead from Sentry instrumentation. To disable Sentry completely, depending on environment, call `Sentry.init` conditionally.
 
 </SdkOption>
 
-<SdkOption name="sendClientReports" type="bool" availableSince="6.0.0">
+<SdkOption name="sendClientReports" type="boolean" defaultValue="true" availableSince="6.0.0">
 
 Set this boolean to `false` to disable sending of client reports. Client reports are a protocol feature that let clients send status reports about themselves to Sentry. They are currently mainly used to emit outcomes for events that were never sent.
 
@@ -168,7 +168,7 @@ _(New in version 6.0.0)_
 
 </SdkOption>
 
-<SdkOption name="forceInit" type="bool" defaultValue="false" availableSince="8.0.0">
+<SdkOption name="forceInit" type="boolean" defaultValue="false" availableSince="8.0.0">
 
 Set this boolean to `true` to force a call to `Sentry.init` to re-initialize the SDK, even if the SDK has already been initialized by a high priority integration.
 
@@ -176,7 +176,7 @@ _(New in version 8.0.0)_
 
 </SdkOption>
 
-<SdkOption name="enableBackpressureHandling" type="bool" availableSince="7.1.0">
+<SdkOption name="enableBackpressureHandling" type="boolean" defaultValue="true" availableSince="7.1.0">
 
 Set this boolean to `false` to disable automatic downsampling of transactions while the system is under load. The `tracesSampleRate` is halved for every failing health check up to 10 times, (roughly 0.001% of the original `tracesSampleRate`). Any positive health check will reset `tracesSampleRate` to its original value. Health checks run in the background every 10 seconds, checking for queue drops and rate limiting. Note: Starting with version 7.8.0 backpressure handling has changed from opt-in to opt-out.
 
@@ -241,7 +241,7 @@ When set, a proxy can be configured that should be used for outbound requests. T
 
 </SdkOption>
 
-<SdkOption name="shutdownTimeoutMillis" type="int" defaultValue="2000">
+<SdkOption name="shutdownTimeoutMillis" type="integer" defaultValue="2000">
 
 Controls how many seconds to wait before shutting down. The SDK sends events from a background queue. This queue is given a certain amount to drain pending events. The default is two seconds. Setting this value too low may cause problems for sending events from command line applications. Setting the value too high will cause the application to block for a long time for users experiencing network connectivity problems.
 
@@ -273,13 +273,13 @@ If <PlatformIdentifier name="tracePropagationTargets" /> is not provided, trace 
 
 </SdkOption>
 
-<SdkOption name="propagateTraceparent" type="bool" defaultValue="false" availableSince="8.22.0">
+<SdkOption name="propagateTraceparent" type="boolean" defaultValue="false" availableSince="8.22.0">
 
 Controls whether the SDK should propagate the W3C `traceparent` HTTP header alongside the `sentry-trace` and `baggage` headers for distributed tracing. This option defaults to `false` and is available starting from SDK version 8.22.0.
 
 </SdkOption>
 
-<SdkOption name="traceOptionsRequests" type="bool">
+<SdkOption name="traceOptionsRequests" type="boolean" defaultValue="true">
 
 Set this boolean to `false` to disable tracing for `OPTIONS` requests. This options default value will likely be changed in the next major version, meaning you will have to set it to `true` if you want to keep tracing `OPTIONS` requests.
 
