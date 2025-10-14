@@ -8,61 +8,69 @@ sidebar_order: 1
 
 ## Core Options
 
+<TableOfContents ignoreIds={["core-options"]} />
+
 Options that can be read from an environment variable (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically.
 
-<ConfigKey name="dsn">
+<SdkOption name="dsn" type="string" envVar="SENTRY_DSN">
 
 The DSN tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable also does not exist, the SDK will just not send any events.
 
 Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="database-path">
+<SdkOption name="database_path" type="string" defaultValue=".sentry-native">
 
 Allows you to specify a path to the local event- and crash-database of the Native SDK. This path will default to `.sentry-native` relative to the current working directory (`CWD`). While this is a convenient setting for development, we strongly urge you to provide an explicit database path for our production deployments. In many deployment scenarios, the path relative to the `CWD` will not be writable. For this reason, you should store the database in your application's user-specific data/cache directory (e.g., under `%AppData%\Local` on Windows, `~/Library/Application Support` on macOS, or `XDG_CACHE_HOME` on Linux).
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="debug">
+<SdkOption name="debug" type="bool" envVar="SENTRY_DEBUG" defaultValue="false">
 
 Turns debug mode on or off. If `debug` is enabled, the SDK will attempt to print out useful debugging information if something goes wrong. If you run a debug-build (`NDEBUG` isn't defined), it will default to `true`; otherwise, the default is always `false`. You can provide a `SENTRY_DEBUG` environment variable with either `"0"` or `"1"` for "off" and "on" respectively, which will override the defaults. It's generally not recommended to turn it on in production, though turning `debug` mode on will not cause any safety concerns. You can limit the output by setting `logger_level` to an appropriate level for your production use case.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="release">
+<SdkOption name="release" type="string" envVar="SENTRY_RELEASE">
 
 Sets the release. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
 
 By default the SDK will try to read this value from the `SENTRY_RELEASE` environment variable.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="environment">
+<SdkOption name="environment" type="string" defaultValue="production" envVar="SENTRY_ENVIRONMENT">
 
 Sets the environment. This string is freeform and set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
 
 By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable. Otherwise, the default environment is `production`.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="sample-rate">
+<SdkOption name="sample_rate" type="float" defaultValue="1.0">
 
 Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="max-breadcrumbs">
+<SdkOption name="max_breadcrumbs" type="int" defaultValue="100">
 
 This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`, but you can set this to any number. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="crashpad-wait-for-upload">
+<SdkOption name="crashpad_wait_for_upload" type="bool" defaultValue="false">
 
 Whether Crashpad should delay application shutdown until the upload of the crash report in the `crashpad_handler` is complete. This is useful for deployment in `Docker` (Linux and Windows containers) or `systemd`, where the life cycle of all processes is bound by the root process (typically the application being monitored).
 
-</ConfigKey>
+</SdkOption>
+
+<SdkOption name="propagate_traceparent" type="bool" defaultValue="false">
+
+Controls whether the SDK should propagate the W3C `traceparent` HTTP header alongside the `sentry-trace` header for [distributed tracing](https://docs.sentry.io/platforms/native/tracing/trace-propagation/custom-instrumentation/). This option defaults to `false`.
+
+</SdkOption>
 
 <ConfigKey name="propagate-traceparent">
 
@@ -74,50 +82,50 @@ Controls whether the SDK should propagate the W3C `traceparent` HTTP header alon
 
 These options can be used to hook the SDK in various ways to customize the reporting of events.
 
-<ConfigKey name="before-send">
+<SdkOption name="before_send" type="function">
 
 This function is called with an SDK-specific message or error event object, and can return a modified event object, or `sentry_value_new_null()` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
 
-By the time <PlatformIdentifier name="before-send" /> is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
+By the time <PlatformIdentifier name="before_send" /> is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="on-crash">
+<SdkOption name="on_crash" type="function">
 
 This function is called with a backend-specific event object, and can return a modified event object or nothing to skip reporting the event. In contrast to `before_send`, it is only called when a crash occurred. You can find detailed information concerning its usage in [Filtering](/platforms/native/configuration/filtering/#using-on_crash).
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="before-transaction">
+<SdkOption name="before_transaction" type="function">
 
 This function is called with an SDK-specific transaction event object, and can return a modified transaction event object, or `sentry_value_new_null()` to skip reporting the event. One way this might be used is for manual PII stripping before sending.
 
-</ConfigKey>
+</SdkOption>
 
 ## Tracing Options
 
-<ConfigKey name="traces-sample-rate">
+<SdkOption name="traces_sample_rate" type="float" defaultValue="0.0">
 
-A number between `0.0` and `1.0`, controlling the percentage chance a given transaction will be sent to Sentry. (`0.0` represents 0% while `1.0` represents 100%.) Applies equally to all transactions created in the app. Either this or <PlatformIdentifier name="traces-sampler" /> must be defined to enable tracing.
+A number between `0.0` and `1.0`, controlling the percentage chance a given transaction will be sent to Sentry. (`0.0` represents 0% while `1.0` represents 100%.) Applies equally to all transactions created in the app. Either this or <PlatformIdentifier name="traces_sampler" /> must be defined to enable tracing.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="traces-sampler">
+<SdkOption name="traces_sampler" type="function">
 
-A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="traces-sample-rate" /> must be defined to enable tracing. An example can be found in the [Sampling](/platforms/native/configuration/sampling/#setting-a-sampling-function) section.
+A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="traces_sample_rate" /> must be defined to enable tracing. An example can be found in the [Sampling](/platforms/native/configuration/sampling/#setting-a-sampling-function) section.
 
-</ConfigKey>
+</SdkOption>
 
 ## Logs options
 
-<ConfigKey name="enable-logs">
+<SdkOption name="enable_logs" type="bool" defaultValue="false">
 
 This option enables the [logging integration](/platforms/native/logs), which allows the SDK to capture logs and send them to Sentry. This is disabled by default.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="before-send-log">
+<SdkOption name="before_send_log" type="function">
 
 This function is called with an SDK-specific log object, and can return a modified log object, or `sentry_value_new_null()` to drop the log.
 
-</ConfigKey>
+</SdkOption>
