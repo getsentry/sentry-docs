@@ -1,6 +1,6 @@
 ---
 title: React Router Framework
-description: React Router v7 is a framework for building full-stack web apps and websites. Learn how to set it up with Sentry.
+description: Learn how to set up and configure Sentry in your React Router v7 application, capture your first errors, and view them in Sentry.
 sdk: sentry.javascript.react-router
 categories:
   - javascript
@@ -18,15 +18,15 @@ categories:
 
 <Alert title='Looking for library mode?' level='info'>
 
-If you are using React Router in library mode, you can follow the instructions in the [React guide here](/platforms/javascript/guides/react/features/react-router/v7).
+If you're using React Router in library mode, follow the instructions in our [React guide](/platforms/javascript/guides/react/features/react-router/v7).
 
 </Alert>
 
 <PlatformContent includePath="getting-started-prerequisites" />
 
-## Install
+## Step 1: Install
 
-Sentry captures data by using an SDK within your application's runtime.
+Choose the features you want to configure, and this guide will show you how:
 
 <OnboardingOptionButtons
   options={[
@@ -41,6 +41,12 @@ Sentry captures data by using an SDK within your application's runtime.
     },
   ]}
 />
+
+<PlatformContent includePath="getting-started-features-expandable" />
+
+### Install the Sentry SDK
+
+Run the command for your preferred package manager to add the SDK package to your application:
 
 <OnboardingOption optionId="profiling">
 
@@ -73,20 +79,19 @@ pnpm add @sentry/react-router
 
 </OnboardingOption>
 
-## Configure
+## Step 2: Configure
 
-### Expose Hooks
+### Expose Entry Point Files
 
-React Router exposes two hooks in your `app` folder (`entry.client.tsx` and `entry.server.tsx`).
-If you do not see these two files, expose them with the following command:
+Before configuring Sentry, you need to make React Router's entry files (`entry.client.tsx` and `entry.server.tsx`) visible in your project. Run this command to expose them:
 
 ```bash
 npx react-router reveal
 ```
 
-### Client-Side Setup
+### Configure Client-side Sentry
 
-Initialize the Sentry React SDK in your `entry.client.tsx` file:
+Initialize Sentry in your `entry.client.tsx` file:
 
 ```tsx {diff} {filename: entry.client.tsx}
 +import * as Sentry from "@sentry/react-router";
@@ -103,9 +108,14 @@ Initialize the Sentry React SDK in your `entry.client.tsx` file:
 +
 +  integrations: [
 +    // ___PRODUCT_OPTION_START___ performance
++    // Registers and configures the Tracing integration,
++    // which automatically instruments your application to monitor its
++    // performance, including custom Angular routing instrumentation
 +    Sentry.reactRouterTracingIntegration(),
 +    // ___PRODUCT_OPTION_END___ performance
 +    // ___PRODUCT_OPTION_START___ session-replay
++    // Registers the Replay integration,
++    // which automatically captures Session Replays
 +    Sentry.replayIntegration(),
 +    // ___PRODUCT_OPTION_END___ session-replay
 +    // ___PRODUCT_OPTION_START___ user-feedback
@@ -122,6 +132,11 @@ Initialize the Sentry React SDK in your `entry.client.tsx` file:
 +  // ___PRODUCT_OPTION_END___ logs
 +  // ___PRODUCT_OPTION_START___ performance
 +
++  // Set tracesSampleRate to 1.0 to capture 100%
++  // of transactions for tracing.
++  // We recommend adjusting this value in production
++  // Learn more at
++  // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#traces-sample-rate
 +  tracesSampleRate: 1.0, //  Capture 100% of the transactions
 +
 +  // Set `tracePropagationTargets` to declare which URL(s) should have trace propagation enabled
@@ -131,6 +146,8 @@ Initialize the Sentry React SDK in your `entry.client.tsx` file:
 +
 +  // Capture Replay for 10% of all sessions,
 +  // plus 100% of sessions with an error
++  // Learn more at
++  // https://docs.sentry.io/platforms/javascript/guides/react-router/session-replay/configuration/#general-integration-configuration
 +  replaysSessionSampleRate: 0.1,
 +  replaysOnErrorSampleRate: 1.0,
 +  // ___PRODUCT_OPTION_END___ session-replay
@@ -146,7 +163,9 @@ startTransition(() => {
 });
 ```
 
-Now, update your `app/root.tsx` file to report any unhandled errors from your error boundary:
+#### Report Errors from Error Boundaries
+
+Update your `app/root.tsx` file to capture unhandled errors in your error boundary:
 
 ```tsx {diff} {filename: app/root.tsx}
 +import * as Sentry from "@sentry/react-router";
@@ -186,14 +205,14 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 // ...
 ```
 
-### Server-Side Setup
+### Configure Server-side Sentry
 
-<Expandable level="warning" title="Limited Node support for auto instrumentation" permalink>
+<Expandable level="warning" title="Limited Node support for auto-instrumentation" permalink>
   Automatic server-side instrumentation is currently only supported on:
     - **Node 20:** Version \<20.19
     - **Node 22:** Version \<22.12
 
-If you are on a different version please make use of our manual server wrappers.
+If you're on a different version, use our manual server wrappers.
 
 For server loaders use `wrapServerLoader`:
 
@@ -229,7 +248,7 @@ export const action = Sentry.wrapServerAction(
 
 </Expandable>
 
-Create an `instrument.server.mjs` file in the root of your app:
+First, create a file called `instrument.server.mjs` in the root of your project to initialize Sentry:
 
 ```js {filename: instrument.server.mjs}
 import * as Sentry from "@sentry/react-router";
@@ -250,18 +269,29 @@ Sentry.init({
   // ___PRODUCT_OPTION_END___ logs
   // ___PRODUCT_OPTION_START___ profiling
 
+  // Add our Profiling integration
   integrations: [nodeProfilingIntegration()],
   // ___PRODUCT_OPTION_END___ profiling
   // ___PRODUCT_OPTION_START___ performance
-  tracesSampleRate: 1.0, // Capture 100% of the transactions
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for tracing.
+  // We recommend adjusting this value in production
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#tracesSampleRate
+  tracesSampleRate: 1.0,
   // ___PRODUCT_OPTION_END___ performance
   // ___PRODUCT_OPTION_START___ profiling
-  profilesSampleRate: 1.0, // profile every transaction
+  // Set profilesSampleRate to 1.0 to profile 100%
+  // of sampled transactions.
+  // This is relative to tracesSampleRate
+  // Learn more at
+  // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#profilesSampleRate
+  profilesSampleRate: 1.0,
   // ___PRODUCT_OPTION_END___ profiling
 });
 ```
 
-Update your `entry.server.tsx` file:
+Next, replace the default `handleRequest` and `handleError` functions in your `entry.server.tsx` file with Sentry's wrapped versions:
 
 ```tsx {diff} {filename: entry.server.tsx}
 +import * as Sentry from '@sentry/react-router';
@@ -286,7 +316,7 @@ Update your `entry.server.tsx` file:
 ```
 
 <Expandable title="Do you need to customize your handleRequest function?">
-  If you need to update the logic of your `handleRequest` function you'll need to include the provided Sentry helper functions (`getMetaTagTransformer` and `wrapSentryHandleRequest`) manually:
+  If you need to customize the logic of your `handleRequest` function, you'll need to use Sentry's helper functions (`getMetaTagTransformer` and `wrapSentryHandleRequest`) manually:
 
 ```tsx {1-4, 44-45, 69-70}
 import {
@@ -375,11 +405,7 @@ import {
 
 export function handleError(
   error: unknown,
-  {
-    request,
-    params,
-    context,
-  }: LoaderFunctionArgs | ActionFunctionArgs
+  { request, params, context }: LoaderFunctionArgs | ActionFunctionArgs
 ) {
   if (!request.signal.aborted) {
     Sentry.captureException(error);
@@ -392,23 +418,22 @@ export function handleError(
 
 </Expandable>
 
-### Update Scripts
+#### Load Instrumentation on Startup
 
-Since React Router is running in ESM mode, you need to use the `--import` command line options to load our server-side instrumentation module before the application starts.
-Update the `start` and `dev` script to include the instrumentation file:
-
-<PlatformContent includePath="node-options-windows" />
+React Router runs in ESM mode, which means you need to load the Sentry instrumentation file before the application starts. Update your `package.json` scripts:
 
 ```json {filename: package.json}
 "scripts": {
-"dev": "NODE_OPTIONS='--import ./instrument.server.mjs' react-router dev",
-"start": "NODE_OPTIONS='--import ./instrument.server.mjs' react-router-serve ./build/server/index.js",
+  "dev": "NODE_OPTIONS='--import ./instrument.server.mjs' react-router dev",
+  "start": "NODE_OPTIONS='--import ./instrument.server.mjs' react-router-serve ./build/server/index.js",
 }
 ```
 
-#### Alternative Setup for Hosting Platforms
+<PlatformContent includePath="node-options-windows" />
 
-If you're deploying to platforms like **Vercel** or **Netlify** where setting the `NODE_OPTIONS` import flag is not possible, you can import the instrumentation file directly at the top of your `entry.server.tsx`:
+**Deploying to Vercel, Netlify, and similar platforms**
+
+If you're deploying to platforms where you can't set the `NODE_OPTIONS` flag, import the instrumentation file directly at the top of your `entry.server.tsx`:
 
 ```tsx {diff} {filename: entry.server.tsx}
 +import './instrument.server';
@@ -420,13 +445,15 @@ If you're deploying to platforms like **Vercel** or **Netlify** where setting th
 
 <Alert title="Incomplete Auto-instrumentation" level="warning">
 
-When importing the instrumentation file directly in `entry.server.tsx` instead of using the `--import` flag, automatic instrumentation will be incomplete and you'll miss automatically captured spans and traces for some of your application's server-side operations. This approach should only be used when the `NODE_OPTIONS` approach is not available on your hosting platform.
+When you import the instrumentation file directly instead of using the `--import` flag, automatic instrumentation will be incomplete. You'll miss automatically captured spans and traces for some server-side operations. Only use this approach when the `NODE_OPTIONS` method isn't available.
 
 </Alert>
 
-## Source Maps Upload
+## Step 3: Add Readable Stack Traces With Source Maps (Optional)
 
-Update `vite.config.ts` to include the `sentryReactRouter` plugin, making sure to pass both the Vite and Sentry configurations to it:
+The stack traces in your Sentry errors probably won't look like your actual code without unminifying them. To fix this, upload your source maps to Sentry.
+
+First, update `vite.config.ts` to include the `sentryReactRouter` plugin, making sure to pass both the Vite and Sentry configurations to it:
 
 ```typescript {filename: vite.config.ts} {diff}
 import { reactRouter } from '@react-router/dev/vite';
@@ -458,7 +485,7 @@ To keep your auth token secure, always store it in an environment variable inste
 SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
 
-Include the `sentryOnBuildEnd` hook in `react-router.config.ts`:
+Next, include the `sentryOnBuildEnd` hook in `react-router.config.ts`:
 
 ```typescript {filename: react-router.config.ts} {diff}
 import type { Config } from "@react-router/dev/config";
@@ -474,18 +501,23 @@ export default {
 } satisfies Config;
 ```
 
-## Verify
+## Step 4: Avoid Ad Blockers With Tunneling (Optional)
 
-This snippet includes an intentional error, so you can test that everything is working as soon as you set it up.
+<PlatformContent includePath="getting-started-tunneling" />
 
-Throw an error in a loader to verify that Sentry is working.
-After opening this route in your browser, you should see two errors in the Sentry issue stream, one captured from the server and one captured from the client.
+## Step 5: Verify Your Setup
+
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+### Issues
+
+To verify that Sentry captures errors and creates issues in your Sentry project, throw an error in a loader:
 
 ```tsx {filename: error.tsx}
 import type { Route } from "./+types/example-page";
 
 export async function loader() {
-  throw new Error("some error thrown in a loader");
+  throw new Error("My first Sentry error!");
 }
 
 export default function ExamplePage() {
@@ -493,10 +525,62 @@ export default function ExamplePage() {
 }
 ```
 
-<Alert>
+<OnboardingOption optionId="performance" hideForThisOption>
+  Open the route in your browser and you should trigger two errors: one from the
+  server-side and one from the client-side.
+</OnboardingOption>
 
-Learn more about manually capturing an error or message in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
 
-</Alert>
+<OnboardingOption optionId="performance">
+### Tracing
+To test your tracing configuration, update the previous code snippet by starting a trace to measure the time it takes for the execution of your code:
 
-To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+```tsx {filename: error.tsx}
+import * as Sentry from "@sentry/react-router";
+import type { Route } from "./+types/example-page";
+
+export async function loader() {
+  return Sentry.startSpan(
+    {
+      op: "test",
+      name: "My First Test Transaction",
+    },
+    () => {
+      throw new Error("My first Sentry error!");
+    }
+  );
+}
+
+export default function ExamplePage() {
+  return <div>Loading this page will throw an error</div>;
+}
+```
+
+Open the route in your browser. You should start a trace and trigger two errors: one from the server side and one from the client side.
+
+</OnboardingOption>
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
+
+<PlatformContent includePath="getting-started-verify-locate-data" />
+
+## Next Steps
+
+At this point, you should have integrated Sentry into your React Router Framework application and should already be sending data to your Sentry project.
+
+Now's a good time to customize your setup and look into more advanced topics.
+Our next recommended steps for you are:
+
+- Learn how to <PlatformLink to="/usage">manually capture errors</PlatformLink>
+- Continue to <PlatformLink to="/configuration">customize your configuration</PlatformLink>
+- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Find various topics in <PlatformLink to="/troubleshooting">Troubleshooting</PlatformLink>
+- [Get support](https://sentry.zendesk.com/hc/en-us/)
+
+</Expandable>
