@@ -19,11 +19,13 @@ async function getChangelogEntries(): Promise<ChangelogEntry[]> {
     });
 
     if (!res.ok) {
-      throw new Error('Failed to fetch changelog');
+      throw new Error(`Failed to fetch changelog: ${res.status} ${res.statusText}`);
     }
 
     return res.json();
   } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error fetching changelog:', error);
     // Error fetching changelog - return empty array
     return [];
   }
