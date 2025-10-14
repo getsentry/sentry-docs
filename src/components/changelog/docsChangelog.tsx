@@ -65,7 +65,7 @@ export async function DocsChangelog() {
                   {entry.title.replace('Docs Update: ', '')}
                 </a>
               </h3>
-              <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+              <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:[color:rgb(210,199,218)]">
                 <time dateTime={entry.publishedAt}>
                   {date.toLocaleDateString('en-US', {
                     year: 'numeric',
@@ -84,7 +84,7 @@ export async function DocsChangelog() {
               </div>
             </header>
 
-            <p className="mb-4 text-gray-700">{entry.description}</p>
+            <p className="mb-4 text-gray-700 dark:[color:rgb(210,199,218)]">{entry.description}</p>
 
             {entry.filesChanged && totalFiles > 0 && (
               <details className="text-sm">
