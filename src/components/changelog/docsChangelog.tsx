@@ -84,7 +84,9 @@ export async function DocsChangelog() {
               </div>
             </header>
 
-            <p className="mb-4 text-gray-700 dark:[color:rgb(210,199,218)]">{entry.description}</p>
+            <p className="mb-4 text-gray-700 dark:[color:rgb(210,199,218)]">
+              {entry.description}
+            </p>
 
             {entry.filesChanged && totalFiles > 0 && (
               <details className="text-sm">
@@ -94,7 +96,9 @@ export async function DocsChangelog() {
                 <div className="mt-2 space-y-2 rounded-md bg-gray-50 p-3 dark:bg-gray-800">
                   {entry.filesChanged.added && entry.filesChanged.added.length > 0 && (
                     <div>
-                      <span className="font-semibold text-green-700 dark:text-green-400">Added:</span>
+                      <span className="font-semibold text-green-700 dark:text-green-400">
+                        Added:
+                      </span>
                       <ul className="ml-4 mt-1 list-inside list-disc">
                         {entry.filesChanged.added.map(file => (
                           <li key={file} className="text-gray-700 dark:text-gray-300">
@@ -104,30 +108,36 @@ export async function DocsChangelog() {
                       </ul>
                     </div>
                   )}
-                  {entry.filesChanged.modified && entry.filesChanged.modified.length > 0 && (
-                    <div>
-                      <span className="font-semibold text-blue-700 dark:text-blue-400">Modified:</span>
-                      <ul className="ml-4 mt-1 list-inside list-disc">
-                        {entry.filesChanged.modified.map(file => (
-                          <li key={file} className="text-gray-700 dark:text-gray-300">
-                            {file}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {entry.filesChanged.removed && entry.filesChanged.removed.length > 0 && (
-                    <div>
-                      <span className="font-semibold text-red-700 dark:text-red-400">Removed:</span>
-                      <ul className="ml-4 mt-1 list-inside list-disc">
-                        {entry.filesChanged.removed.map(file => (
-                          <li key={file} className="text-gray-700 dark:text-gray-300">
-                            {file}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                  {entry.filesChanged.modified &&
+                    entry.filesChanged.modified.length > 0 && (
+                      <div>
+                        <span className="font-semibold text-blue-700 dark:text-blue-400">
+                          Modified:
+                        </span>
+                        <ul className="ml-4 mt-1 list-inside list-disc">
+                          {entry.filesChanged.modified.map(file => (
+                            <li key={file} className="text-gray-700 dark:text-gray-300">
+                              {file}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  {entry.filesChanged.removed &&
+                    entry.filesChanged.removed.length > 0 && (
+                      <div>
+                        <span className="font-semibold text-red-700 dark:text-red-400">
+                          Removed:
+                        </span>
+                        <ul className="ml-4 mt-1 list-inside list-disc">
+                          {entry.filesChanged.removed.map(file => (
+                            <li key={file} className="text-gray-700 dark:text-gray-300">
+                              {file}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                 </div>
               </details>
             )}
