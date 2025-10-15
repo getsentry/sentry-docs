@@ -111,6 +111,9 @@ module.exports = withSentryConfig(nextConfig, {
     applicationKey: 'sentry-docs',
   },
 
+  // Enables sourcemap uploads after the build is complete
+  useRunAfterProductionCompileHook: true,
+
   _experimental: {
     thirdPartyOriginStackFrames: true,
   },
