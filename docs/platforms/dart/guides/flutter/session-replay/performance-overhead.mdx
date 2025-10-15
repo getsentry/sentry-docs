@@ -7,7 +7,7 @@ description: "Learn about how enabling Session Replay impacts the performance of
 
 If you're considering enabling Session Replay, it's important to understand the potential performance impact to your app. Learn more about Replay SDK optimizations in the [Replay Performance Overhead](/product/explore/session-replay/mobile/performance-overhead/) docs.
 
-Meaningful metrics require realistic testing where you apply typical access patterns and correlate the results with your business metrics. To provide a baseline, we measure replay overhead using this [Open Food Facts app](https://github.com/openfoodfacts/smooth-app/). 
+Meaningful metrics require realistic testing where you apply typical access patterns and correlate the results with your business metrics. To provide a baseline, we measure replay overhead using this [Open Food Facts app](https://github.com/openfoodfacts/smooth-app/).
 We chose Open Food Facts because it's an actively maintained open source app that presents several scrollable, interactable lists of both text and images during onboarding. The app also includes native functionality like a default camera view for barcode scanning, making for a more comprehensive testing scenario.
 
 ## Benchmarking Setup
@@ -17,9 +17,23 @@ Here's how the benchmarks were conducted:
 - **Configuration:** Default (complete) masking was enabled, and optimized release builds were used.
 - **User Flow:** The same flow was executed 10 times to ensure consistency.
 - **Real-World Representation:** This approach closely mirrors performance in real-world scenarios.
-The benchmarks were run on a Pixel Fold (2023) running Android 15.
 
-### Results
+The benchmarks were run on:
+- **iOS**: iPhone X with iOS 16.7.10 - Performance was measured using [py-ios-device](https://github.com/YueChen-C/py-ios-device) during manual onboarding flows.
+- **Android**: Pixel Fold (2023) running Android 15
+
+Note that active Session Replay recording can introduce slow frames on older lower-end devices.
+
+### iOS
+
+Below are the results of the benchmarking tests, presented as average values across 10 runs.
+
+| Metric                           | Sentry SDK only | Sentry + Replay SDK |
+| -------------------------------- | --------------- | ------------------- |
+| CPU Usage                        | 30.04%          | 31.92% (+6.26%)     |
+| Memory                           | 193 MiB         | 193 MiB             |
+
+### Android
 
 Below are the results of the benchmarking tests, presented as average values across all runs.
 
@@ -45,7 +59,7 @@ Lowering the quality of captured screenshots and videos can significantly reduce
 await SentryFlutter.init(
   (options) {
     ...
-    options.replay.quality = SentryReplayQuality.low // defaults to medium
+    options.replay.quality = SentryReplayQuality.low; // defaults to medium
   },
   ...
 );
