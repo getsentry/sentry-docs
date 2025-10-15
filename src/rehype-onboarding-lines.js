@@ -66,30 +66,58 @@ function handle_inline_options(node) {
 
     // Found "integrations: ["
     if (lineStr.match(/integrations:\s*\[/)) {
-      // Mark the opening line and hide it by default
+      // Mark the opening line
       line.properties['data-integrations-wrapper'] = 'open';
-      const openClasses = Array.isArray(line.properties.className)
-        ? line.properties.className
-        : line.properties.className
-          ? [line.properties.className]
-          : [];
-      line.properties.className = [...openClasses, 'hidden'];
 
       // Find the closing "]," - must be exactly ],
+      let closeIndex = -1;
       for (let j = i + 1; j < node.children.length; j++) {
         const closeStr = toString(node.children[j]).trim();
         if (closeStr === '],') {
-          // Mark the closing line and hide it by default
+          closeIndex = j;
+          // Mark the closing line
           node.children[j].properties['data-integrations-wrapper'] = 'close';
-          const closeClasses = Array.isArray(node.children[j].properties.className)
-            ? node.children[j].properties.className
-            : node.children[j].properties.className
-              ? [node.children[j].properties.className]
-              : [];
-          node.children[j].properties.className = [...closeClasses, 'hidden'];
           break;
         }
       }
+
+      // Only hide the wrapper by default if ALL content between open and close
+      // has data-onboarding-option (meaning it's ALL conditional)
+      if (closeIndex !== -1) {
+        let hasNonOptionContent = false;
+        for (let k = i + 1; k < closeIndex; k++) {
+          const contentLine = node.children[k];
+          const isMarker = contentLine.properties['data-onboarding-option-hidden'];
+          const hasOption = contentLine.properties['data-onboarding-option'];
+
+          // If this line has content and is not a marker and doesn't have an onboarding option,
+          // it's always-visible content
+          if (!isMarker && !hasOption && toString(contentLine).trim()) {
+            hasNonOptionContent = true;
+            break;
+          }
+        }
+
+        // Only hide wrapper by default if ALL content is part of onboarding options
+        if (!hasNonOptionContent) {
+          const openClasses = Array.isArray(line.properties.className)
+            ? line.properties.className
+            : line.properties.className
+              ? [line.properties.className]
+              : [];
+          line.properties.className = [...openClasses, 'hidden'];
+
+          const closeClasses = Array.isArray(
+            node.children[closeIndex].properties.className
+          )
+            ? node.children[closeIndex].properties.className
+            : node.children[closeIndex].properties.className
+              ? [node.children[closeIndex].properties.className]
+              : [];
+          node.children[closeIndex].properties.className = [...closeClasses, 'hidden'];
+        }
+      }
+
       break; // Only handle first integrations array
     }
   }
