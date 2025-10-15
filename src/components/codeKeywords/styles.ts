@@ -162,7 +162,7 @@ export const KeywordSpan = styled(motion.span, {
   grid-row: 1;
   grid-column: 1;
   display: inline-block;
-  margin-top: ${p => (p.hasPreview ? '24px' : '0')};
+  margin-top: 0;
 `;
 
 export const KeywordSearchInput = styled('input')<{dark: boolean}>`
