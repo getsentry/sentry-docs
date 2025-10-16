@@ -156,8 +156,8 @@ export async function DocsChangelog() {
               className="text-primary hover:underline"
             >
               full content dashboard
-            </a>
-            {' '}or subscribe to the{' '}
+            </a>{' '}
+            or subscribe to the{' '}
             <a
               href="https://sentry-content-dashboard.sentry.dev/api/docs/feed"
               target="_blank"
