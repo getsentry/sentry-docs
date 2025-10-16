@@ -2,9 +2,10 @@
 title: SQL Transactions
 ---
 
-The SDK SHOULD auto-instrument all transactions for SQL databases like PostgreSQL and MySQL.
-Each BEGIN, COMMIT, and ROLLBACK, or equivalent instruction in the database system MUST result in an individual span.
-Transaction instructions SHOULD produce spans whether they are issued through a database driver or through an ORM.
+The SDK SHOULD auto-instrument all database transactions for SQL databases like PostgreSQL and MySQL.
+Each BEGIN, COMMIT, and ROLLBACK, or equivalent statement in the database system MUST result in an individual span.
+Spans for other transaction-level statement, such as SAVEPOINT, are RECOMMENDED, and when implemented, MUST also correspond to individual SQL instructions.
+Transaction statements SHOULD produce spans whether they are issued through a database driver or through an ORM.
 
 ### Span Data
 
@@ -14,8 +15,8 @@ The SDK SHOULD set the
 - db.system.name
 - db.operation.name
 
-attributes for transaction instruction spans.
+attributes for transaction statement spans.
 Equivalent deprecated attributes MAY be used for backward compatibility, but they SHOULD be marked for deprecation.
 
 The operation names for BEGIN, COMMIT and ROLLBACK instructions MUST be "BEGIN", "COMMIT", and "ROLLBACK", respectively.
-For other transaction-level instructions like MySQL's START TRANSACTION, the SDK SHOULD represent the literal statement as closely as possible, omitting control-flow characters like semicolons.
+For other transaction-level statements like MySQL's START TRANSACTION, the SDK SHOULD represent the literal statement as closely as possible, omitting control-flow characters like semicolons.
