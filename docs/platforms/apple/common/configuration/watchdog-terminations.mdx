@@ -60,3 +60,17 @@ SentrySDK.start { options in
 ```
 
 If you disable the `enableCrashHandler` option, the SDK will disable watchdog termination tracking. This will prevent false positive watchdog termination reporting for every crash.
+
+#### FAQ
+
+**Do watchdog terminations include terminations due to high memory pressure?**
+
+Yes, if the watchdog terminates your app because of too high memory pressure, the Apple SDK can't detect this as an app crash but reports a watchdog termination event instead, the next time your application launches.
+
+**Do watchdog terminations include force terminations from the user?**
+
+No, watchdog terminations don't include force terminations from the user, because when the user force kills your app, your app goes through the normal termination process, via the [applicationWillTerminate](https://developer.apple.com/documentation/uikit/uiapplicationdelegate/applicationwillterminate(_:)) delegate method that the Apple SDK also subscribes to. If the user force kills your app while it's hanging, the SDK will report this as a fatal app hang if you have enabled <PlatformLink to="/configuration/app-hangs/#app-hangs-v2">App Hangs V2</PlatformLink>.
+
+**Do watchdog terminations include fatal app hangs?**
+
+No, watchdog terminations don't include fatal app hangs.
