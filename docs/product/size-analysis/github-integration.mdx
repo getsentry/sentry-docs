@@ -1,0 +1,126 @@
+---
+title: GitHub Integration
+sidebar_order: 40
+description: Set up the GitHub integration to receive size change notifications as PR comments and status checks.
+---
+
+The GitHub integration brings Size Analysis directly into your pull request workflow by posting size change summaries as PR comments and status checks.
+
+<Alert level="info">
+  GitHub is currently the only supported VCS provider for Size Analysis.
+</Alert>
+
+## Benefits
+
+With the GitHub integration enabled, you get:
+
+- **PR comments**: Automatic comments on pull requests showing size changes
+- **Status checks**: Pass/fail checks based on size thresholds (coming soon)
+- **Inline notifications**: See size impacts without leaving GitHub
+- **Historical tracking**: Links to detailed comparisons in [sentry.io](https://sentry.io)
+
+## Installation
+
+### Install the Sentry GitHub App
+
+The GitHub integration requires the Sentry GitHub App to be installed on your repository:
+
+1. Navigate to **Organization Settings > Integrations** in [sentry.io](https://sentry.io)
+2. Find the **GitHub** integration and click **Install**
+3. Follow the prompts to authorize the app for your GitHub organization
+4. Select the repositories where you want to enable Size Analysis
+
+For detailed installation instructions, see the [GitHub integration documentation](https://docs.sentry.io/organization/integrations/source-code-mgmt/github/).
+
+### Configure Repository Access
+
+Ensure the Sentry GitHub App has access to the repositories where you're uploading builds:
+
+1. Go to your GitHub organization settings
+2. Navigate to **Integrations > Applications**
+3. Click on **Sentry**
+4. Under **Repository access**, grant access to your repositories
+
+## How It Works
+
+Once the integration is set up and you're uploading builds from your CI:
+
+### On Pull Requests
+
+1. **You open a PR**: Your CI builds the app and uploads it to Sentry
+2. **Base branch build**: Sentry finds the corresponding build from your base branch
+3. **Comparison**: Sentry compares the two builds
+4. **PR comment**: A comment is posted with the size change summary
+
+### Comment Content
+
+The PR comment includes:
+
+- **Total size change**: How much the app grew or shrank (e.g., "+142 KB" or "-23 KB")
+- **Percentage change**: The relative impact (e.g., "+2.3%")
+- **Component highlights**: The components that changed the most
+- **Link to details**: A link to view the full comparison in [sentry.io](https://sentry.io)
+
+### Example PR Comment
+
+```
+## 📊 Size Analysis
+
+**App size changed by +142 KB (+2.3%)**
+
+### Largest Changes
+- `Frameworks/MyFramework.framework`: +98 KB
+- `Resources/Assets.car`: +52 KB
+- `Binary`: -8 KB
+
+[View detailed comparison →](https://sentry.io/...)
+```
+
+## Requirements
+
+For the GitHub integration to work with Size Analysis:
+
+1. **GitHub App installed**: The Sentry GitHub App must be installed on your repository
+2. **Builds from PRs**: You must upload builds from pull request CI runs
+3. **Base branch builds**: You must also upload builds from your main/base branch
+4. **Metadata**: Your build uploads must include PR metadata (auto-detected in GitHub Actions)
+
+## Troubleshooting
+
+### Not Seeing PR Comments?
+
+Check that:
+
+- The Sentry GitHub App is installed and has access to your repository
+- You're uploading builds from both PR branches and the base branch
+- Your CI is running on pull request events
+- The `SENTRY_AUTH_TOKEN` is set correctly in your CI environment
+- Your builds have the same build configuration (e.g., both are `Release` builds)
+
+### Comments Not Updating?
+
+- Make sure you're uploading a new build after each code change
+- Check that the build configuration matches between PR and base builds
+- Verify that the PR metadata (PR number, base SHA) is being detected correctly
+
+### Missing Base Build?
+
+The first time you set up Size Analysis, your main branch may not have any builds yet:
+
+1. Merge a PR or push to your main branch to trigger a build
+2. Future PRs will be able to compare against this base build
+
+## Permissions
+
+The GitHub App requires these permissions:
+
+- **Read access to code**: To identify the repository and branches
+- **Write access to pull requests**: To post comments on PRs
+- **Write access to checks**: To create status checks (coming soon)
+
+These permissions are requested during the GitHub App installation flow.
+
+## Next Steps
+
+- [Upload your first build](/product/size-analysis/getting-started/) to start seeing size analysis
+- [View build comparisons](/product/size-analysis/build-comparison/) to understand size changes in detail

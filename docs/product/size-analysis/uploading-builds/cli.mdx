@@ -1,0 +1,155 @@
+---
+title: CLI Upload
+sidebar_order: 30
+description: Upload builds to Size Analysis using the Sentry CLI for any platform or build system.
+---
+
+The Sentry CLI provides a platform-agnostic way to upload builds to Size Analysis. This is useful if you're not using Fastlane (iOS) or Gradle (Android), or if you want more control over the upload process.
+
+## Install Sentry CLI
+
+If you don't already have the Sentry CLI installed, see the [Sentry CLI installation guide](https://docs.sentry.io/cli/installation/).
+
+## Upload Command
+
+Use the `sentry-cli build upload` command to upload your build artifact:
+
+```bash
+sentry-cli build upload <path-to-build> \
+  --org <your-org> \
+  --project <your-project> \
+  --build-configuration <build-config>
+```
+
+### iOS Example
+
+```bash
+sentry-cli build upload app.xcarchive.zip \
+  --org your-org \
+  --project your-ios-project \
+  --build-configuration Release
+```
+
+### Android Example
+
+```bash
+sentry-cli build upload app.aab \
+  --org your-org \
+  --project your-android-project \
+  --build-configuration freeRelease
+```
+
+## Upload Metadata
+
+The CLI accepts several parameters to provide metadata about the build. Some are auto-detected when running in GitHub Actions.
+
+| Parameter               | Description                                    | Auto-detected in GitHub Actions |
+| ----------------------- | ---------------------------------------------- | ------------------------------- |
+| `--org`                 | Sentry organization slug                       | ❌ Required                     |
+| `--project`             | Sentry project slug                            | ❌ Required                     |
+| `--build-configuration` | Build configuration (e.g., `Release`, `Debug`) | ❌ Required                     |
+| `--head-sha`            | Current commit SHA                             | ✅ Yes                          |
+| `--base-sha`            | Base commit SHA (for comparison)               | ✅ Yes (PR only)                |
+| `--head-repo-name`      | Repository name (org/repo format)              | ✅ Yes                          |
+| `--pr-number`           | Pull request number                            | ✅ Yes (PR only)                |
+| `--head-ref`            | Branch or tag name                             | ✅ Yes                          |
+| `--base-ref`            | Base branch name                               | ✅ Yes (PR only)                |
+| `--vcs-provider`        | VCS provider (currently only `github`)         | ✅ Yes                          |
+
+### Build Configuration
+
+The `--build-configuration` parameter is used to ensure builds with different configurations are not compared. This should match your platform's build configuration:
+
+**iOS**: Your Xcode build configuration
+
+- `Debug`, `Release`, `Staging`, etc.
+
+**Android**: Your build variant (combination of build type and flavor)
+
+- `freeDebug`, `paidRelease`, etc.
+
+## Authentication
+
+The CLI needs a Sentry auth token to upload builds. You can provide it in two ways:
+
+### Environment Variable (Recommended)
+
+```bash
+export SENTRY_AUTH_TOKEN=your-token-here
+sentry-cli build upload app.aab --org your-org --project your-project --build-configuration Release
+```
+
+### Command-line Parameter
+
+```bash
+sentry-cli build upload app.aab \
+  --org your-org \
+  --project your-project \
+  --build-configuration Release \
+  --auth-token your-token-here
+```
+
+Generate an auth token in your [Sentry account settings](https://sentry.sentry.io/settings/auth-tokens/).
+
+## GitHub Actions Integration
+
+When running in GitHub Actions, most metadata is auto-detected. You only need to provide the organization, project, and build configuration:
+
+```yaml
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build app
+        run: ./build-script.sh
+
+      - name: Upload to Sentry
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: |
+          sentry-cli build upload build/outputs/bundle/release/app-release.aab \
+            --org your-org \
+            --project your-project \
+            --build-configuration Release
+```
+
+### Manual Metadata Override
+
+If you need to override auto-detected values or are using a custom CI system, you can provide all metadata manually:
+
+```bash
+sentry-cli build upload app.aab \
+  --org your-org \
+  --project your-project \
+  --build-configuration Release \
+  --head-sha abc123 \
+  --base-sha def456 \
+  --head-repo-name your-org/your-repo \
+  --pr-number 42 \
+  --head-ref feature-branch \
+  --base-ref main \
+  --vcs-provider github
+```
+
+## Supported Build Formats
+
+The CLI accepts the following build artifact formats:
+
+| Platform | Format                         | Extension             |
+| -------- | ------------------------------ | --------------------- |
+| Android  | Android App Bundle (preferred) | `.aab`                |
+| Android  | APK                            | `.apk`                |
+| iOS      | XCArchive (preferred)          | `.xcarchive` (zipped) |
+| iOS      | IPA                            | `.ipa`                |
+
+<Alert level="info">
+  For iOS XCArchive files, you must zip the `.xcarchive` directory before
+  uploading.
+</Alert>
+
+## Next Steps
+
+- [Set up the GitHub integration](/product/size-analysis/github-integration/) to receive size change notifications in your pull requests
+- [View build details](/product/size-analysis/build-details/) to explore your app's size breakdown

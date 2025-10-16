@@ -1,0 +1,162 @@
+---
+title: Android Setup
+sidebar_order: 20
+description: Configure Size Analysis for Android apps using the Sentry Gradle plugin and GitHub Actions.
+---
+
+This guide walks you through setting up Size Analysis for Android applications using the Sentry Android Gradle plugin. This assumes you already have a working integration with the Sentry Android Gradle plugin and are using GitHub Actions.
+
+<Alert level="info">
+  If you don't already have Sentry set up with Gradle, see the [Android SDK
+  setup guide](https://docs.sentry.io/platforms/android/) first.
+</Alert>
+
+## Apply the Gradle Plugin
+
+Use version `6.0.0-alpha.4` or higher of the Sentry Android Gradle plugin.
+
+### For Kotlin DSL (build.gradle.kts)
+
+In your app-level `build.gradle.kts`:
+
+```kotlin
+plugins {
+  id("io.sentry.android.gradle") version "6.0.0-alpha.4"
+}
+
+sentry {
+  sizeAnalysis {
+    enabled = providers.environmentVariable("GITHUB_ACTIONS").isPresent
+  }
+}
+```
+
+### For Groovy (build.gradle)
+
+In your app-level `build.gradle`:
+
+```groovy
+plugins {
+  id "io.sentry.android.gradle" version "6.0.0-alpha.4"
+}
+
+sentry {
+  sizeAnalysis {
+    enabled = providers.environmentVariable("GITHUB_ACTIONS").present
+  }
+}
+```
+
+## Configuration
+
+The `sizeAnalysis` block configures when Size Analysis uploads are triggered. The example above enables uploads only when running in GitHub Actions, preventing uploads from local development builds.
+
+### Configuration Options
+
+```kotlin
+sentry {
+  sizeAnalysis {
+    // Enable or disable size analysis uploads
+    enabled = true
+
+    // Override auto-detected organization slug
+    org = "your-org"
+
+    // Override auto-detected project slug
+    project = "your-project"
+
+    // Override auto-detected build configuration
+    buildConfiguration = "customRelease"
+  }
+}
+```
+
+Most of the time, you only need to set `enabled`. The plugin automatically detects your organization, project, and build configuration from your environment.
+
+## Set Up GitHub Actions
+
+In your GitHub Actions workflow, set the `SENTRY_AUTH_TOKEN` environment variable:
+
+```yaml
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Build release bundle
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: ./gradlew bundleRelease
+```
+
+Add your Sentry auth token as a [GitHub secret](https://docs.github.com/en/actions/security-guides/encrypted-secrets) named `SENTRY_AUTH_TOKEN`.
+
+## Build Configuration
+
+The plugin automatically sets the build configuration to your build variant (a combination of build type and build flavor). For example:
+
+- `freeDebug`
+- `paidRelease`
+- `demoRelease`
+
+This ensures builds with different configurations are not compared against each other in Size Analysis.
+
+## Supported Build Tasks
+
+Size Analysis uploads are automatically triggered when you run:
+
+- `bundle<Variant>` - Creates an Android App Bundle (`.aab`, preferred)
+- `assemble<Variant>` - Creates an APK (`.apk`)
+
+For example:
+
+```bash
+./gradlew bundleRelease  # Uploads Release AAB
+./gradlew assembleFreeDebug  # Uploads freeDebug APK
+```
+
+## Example Workflow
+
+Here's a complete example of a GitHub Actions workflow that builds an Android app and uploads it to Sentry:
+
+```yaml
+name: Android Build and Size Analysis
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build release bundle
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: ./gradlew bundleRelease
+```
+
+## Next Steps
+
+- [Set up the GitHub integration](/product/size-analysis/github-integration/) to receive size change notifications in your pull requests
+- [View build details](/product/size-analysis/build-details/) to explore your app's size breakdown
