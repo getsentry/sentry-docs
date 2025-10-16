@@ -76,13 +76,11 @@ export async function DocsChangelog() {
                     day: 'numeric',
                   })}
                 </time>
+                {totalFiles > 0 && <span>•</span>}
                 {totalFiles > 0 && (
-                  <>
-                    <span>•</span>
-                    <span>
-                      {totalFiles} file{totalFiles !== 1 ? 's' : ''} changed
-                    </span>
-                  </>
+                  <span>
+                    {totalFiles} file{totalFiles !== 1 ? 's' : ''} changed
+                  </span>
                 )}
               </div>
             </header>
