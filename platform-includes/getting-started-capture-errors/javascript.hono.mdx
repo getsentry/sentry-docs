@@ -1,34 +1,5 @@
 ### Report Unhandled Exceptions
 
-Next, bind an `onError` hook to report unhandled exceptions to Sentry:
+Sentry automatically reports exceptions reported by the `onError` function from Hono. In case the error comes with a status code, it captures all errors except for the ones with a 3xx or 4xx status code.
 
-```javascript
-const app = new Hono()
-  // Add an onError hook to report unhandled exceptions to Sentry.
-  .onError((err, c) => {
-    // Report _all_ unhandled errors.
-    Sentry.captureException(err);
-    if (err instanceof HTTPException) {
-      return err.getResponse();
-    }
-    // Or just report errors which are not instances of HTTPException
-    // Sentry.captureException(err);
-    return c.json({ error: "Internal server error" }, 500);
-  })
-
-  // Bind global context via Hono middleware
-  .use((c, next) => {
-    Sentry.setUser({
-      email: c.session.user.email,
-    });
-
-    Sentry.setTag("project_id", c.session.projectId);
-
-    return next();
-  })
-
-  // Your routes...
-  .get("/", () => {
-    // ...
-  });
-```
+To learn how to customize this behavior, see the [`honoIntegration` documentation](/platforms/javascript/guides/cloudflare/configuration/integrations/hono/).
