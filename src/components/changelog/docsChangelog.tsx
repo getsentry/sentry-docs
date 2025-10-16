@@ -43,9 +43,12 @@ export async function DocsChangelog() {
     );
   }
 
+  // Show only the 20 most recent entries
+  const recentEntries = entries.slice(0, 20);
+
   return (
     <div className="space-y-8">
-      {entries.map(entry => {
+      {recentEntries.map(entry => {
         const date = new Date(entry.publishedAt);
         const totalFiles =
           (entry.filesChanged?.added?.length || 0) +
@@ -144,6 +147,31 @@ export async function DocsChangelog() {
           </article>
         );
       })}
+      {entries.length > 20 && (
+        <div className="mt-8 rounded-lg border border-gray-200 bg-gray-50 p-4 text-center dark:border-gray-700 dark:bg-gray-800">
+          <p className="text-sm text-gray-600 dark:[color:rgb(210,199,218)]">
+            Showing the 20 most recent updates. View the{' '}
+            <a
+              href="https://sentry-content-dashboard.sentry.dev/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              full content dashboard
+            </a>
+            {' '}or subscribe to the{' '}
+            <a
+              href="https://sentry-content-dashboard.sentry.dev/api/docs/feed"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              RSS feed
+            </a>
+            .
+          </p>
+        </div>
+      )}
     </div>
   );
 }
