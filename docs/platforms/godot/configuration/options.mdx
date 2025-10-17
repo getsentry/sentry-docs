@@ -24,7 +24,7 @@ Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-uti
 
 </SdkOption>
 
-<SdkOption name="debug" type="bool">
+<SdkOption name="debug" type="boolean" defaultValue="false">
 
 Turns debug mode on or off. If `debug` is enabled, the SDK will print useful debugging information. You can see it in the Output panel of the Godot editor. It's generally not recommended to turn it on in production, though turning `debug` mode on will not cause any safety concerns.
 
@@ -34,9 +34,9 @@ You can control the verbosity using the `diagnostic_level` option.
 
 </SdkOption>
 
-<SdkOption name="diagnostic_level" type="enum">
+<SdkOption name="diagnostic_level" type="enum" defaultValue="error">
 
-Specifies the minimum level of messages to be printed if `debug` is turned on.
+Specifies the minimum level of messages to be printed if `debug` is turned on. Possible values are: `debug`, `info`, `warning`, `error`, and `fatal`.
 
 </SdkOption>
 
@@ -68,13 +68,13 @@ Configures the sample rate for error events, in the range of `0.0` to `1.0`. The
 
 </SdkOption>
 
-<SdkOption name="max_breadcrumbs" type="int" defaultValue="100">
+<SdkOption name="max_breadcrumbs" type="integer" defaultValue="100">
 
 This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`, but you can set this to any number. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
 
 </SdkOption>
 
-<SdkOption name="send_default_pii" type="bool" defaultValue="false">
+<SdkOption name="send_default_pii" type="boolean" defaultValue="false">
 
 If enabled, the SDK will include PII (Personally Identifiable Information) with the events.
 
@@ -82,15 +82,17 @@ This option is disabled by default. If you enable this option, be sure to manual
 
 </SdkOption>
 
-<SdkOption name="attach_log" type="bool">
+<SdkOption name="attach_log" type="boolean" defaultValue="true">
 
 If enabled, the SDK will attach the Godot log file to the event.
 
 </SdkOption>
 
-<SdkOption name="attach_screenshot" type="bool">
+<SdkOption name="attach_screenshot" type="boolean" defaultValue="false">
 
 If enabled, the SDK will try to take a screenshot and attach it to the event.
+
+This option is turned off by default.
 
 <Alert level="warning" title="Important">
 
@@ -100,9 +102,9 @@ This feature is experimental and may impact performance when capturing screensho
 
 </SdkOption>
 
-<SdkOption name="screenshot_level" type="enum">
+<SdkOption name="screenshot_level" type="enum" defaultValue="fatal">
 
-Specifies the minimum level of events for which screenshots will be captured. By default, screenshots are captured for fatal events.
+Specifies the minimum level of events for which screenshots will be captured. Possible values are: `debug`, `info`, `warning`, `error`, and `fatal`.
 
 <Alert title="Note">
 
@@ -112,9 +114,11 @@ Changing this option may impact performance in the frames the screenshots are ta
 
 </SdkOption>
 
-<SdkOption name="attach_scene_tree" type="bool">
+<SdkOption name="attach_scene_tree" type="boolean" defaultValue="false">
 
 If enabled, the SDK will capture and attach scene tree information to events. The scene tree data is attached as a `view-hierarchy.json` file, and you can explore it in the "Scene Tree" section of each issue that includes this attachment. This provides valuable context about your game's scene tree at the time of the error. See <PlatformLink to="/enriching-events/view-hierarchy/">Scene Tree</PlatformLink> for more details.
+
+This option is turned off by default.
 
 </SdkOption>
 
@@ -122,32 +126,38 @@ If enabled, the SDK will capture and attach scene tree information to events. Th
 
 These options are only available in the **Project Settings** window.
 
-<SdkOption name="auto_init" type="bool">
+<SdkOption name="auto_init" type="boolean" defaultValue="true">
 
 Enables automatic SDK initialization when the game starts.
 The SDK initializes as early as possible in the lifecycle — before scenes are loaded or any scripts are executed.
 
+This option is turned on by default.
+
 </SdkOption>
 
-<SdkOption name="skip_auto_init_on_editor_play" type="bool">
+<SdkOption name="skip_auto_init_on_editor_play" type="boolean" defaultValue="true">
 
 Prevents automatic initialization when running the game from the editor
 (for example, by pressing the play button or **F5**).
 This setting only applies if **Auto Init** is enabled.
 
+This option is turned on by default.
+
 </SdkOption>
 
 ## Error Logger Options
 
-<SdkOption name="logger_enabled" type="bool">
+<SdkOption name="logger_enabled" type="boolean" defaultValue="true">
 
 If `true`, the SDK will capture logged errors as events and/or breadcrumbs, as defined by `logger_event_mask` and `logger_breadcrumb_mask` options. Crashes are always captured.
 
+This option is turned on by default.
+
 </SdkOption>
 
-<SdkOption name="logger_breadcrumb_mask" type="int">
+<SdkOption name="logger_breadcrumb_mask" type="integer" defaultValue="7">
 
-Specifies the types of errors captured as breadcrumbs. Accepts a single value or a bitwise combination of `GodotErrorMask` masks.
+Specifies the types of errors captured as breadcrumbs. Accepts a single value or a bitwise combination of `GodotErrorMask` masks. The default value captures errors, warnings, and script errors (`MASK_ERROR | MASK_WARNING | MASK_SCRIPT`).
 
 `GodotErrorMask` values:
 - `MASK_NONE`: No logger errors will be captured.
@@ -163,9 +173,9 @@ options.logger_breadcrumb_mask = mask
 
 </SdkOption>
 
-<SdkOption name="logger_event_mask" type="int">
+<SdkOption name="logger_event_mask" type="integer" defaultValue="5">
 
-Specifies the types of errors captured as events. Accepts a single value or a bitwise combination of `GodotErrorMask` masks.
+Specifies the types of errors captured as events. Accepts a single value or a bitwise combination of `GodotErrorMask` masks. The default value captures native errors and script errors (`MASK_ERROR | MASK_SCRIPT`).
 
 ```GDScript
 var mask = SentryOptions.MASK_ERROR | SentryOptions.MASK_SCRIPT
@@ -174,15 +184,19 @@ options.logger_event_mask = mask
 
 </SdkOption>
 
-<SdkOption name="logger_include_source" type="bool">
+<SdkOption name="logger_include_source" type="boolean" defaultValue="true">
 
 If `true`, the SDK will include the surrounding source code of logged errors, if available in the exported project.
 
+This option is turned on by default.
+
 </SdkOption>
 
-<SdkOption name="logger_include_variables" type="bool">
+<SdkOption name="logger_include_variables" type="boolean" defaultValue="true">
 
 If `true`, the SDK will include local variables from stack traces when capturing script errors. This allows showing the values of variables at each frame in the call stack. Requires enabling **Debug -> Settings -> GDScript -> Always Track Local Variables** in the **Project Settings**.
+
+This option is turned on by default.
 
 <Alert title="Note">
 
@@ -192,9 +206,11 @@ Enabling this option may impact performance, especially for applications with fr
 
 </SdkOption>
 
-<SdkOption name="logger_messages_as_breadcrumbs" type="bool">
+<SdkOption name="logger_messages_as_breadcrumbs" type="boolean" defaultValue="true">
 
 If `true`, the SDK will capture log messages (such as `print()` statements) as breadcrumbs along with events.
+
+This option is turned on by default.
 
 </SdkOption>
 
@@ -204,13 +220,13 @@ Defines throttling limits for the error logger. These limits are used to prevent
 
 This option contains multiple properties that govern the behavior of throttling. The following paragraphs explain each of those properties in detail.
 
-`events_per_frame` specifies the maximum number of error events to send per processed frame. If exceeded, no further errors will be captured until the next frame. This serves as a safety measure to prevent the SDK from overloading a single frame.
+`events_per_frame` specifies the maximum number of error events to send per processed frame. If exceeded, no further errors will be captured until the next frame. This serves as a safety measure to prevent the SDK from overloading a single frame. Default: `5`.
 
-`repeated_error_window_ms` specifies the minimum time interval in milliseconds between two identical errors. If exceeded, no further errors from the same line of code with the identical message will be captured until the next interval. Set it to `0` to disable this limit.
+`repeated_error_window_ms` specifies the minimum time interval in milliseconds between two identical errors. If exceeded, no further errors from the same line of code with the identical message will be captured until the next interval. Set it to `0` to disable this limit. Default: `1000`.
 
-`throttle_events` specifies the maximum number of events allowed within a sliding time window of `throttle_window_ms` milliseconds. If exceeded, errors will be captured as breadcrumbs only until capacity is freed.
+`throttle_events` specifies the maximum number of events allowed within a sliding time window of `throttle_window_ms` milliseconds. If exceeded, errors will be captured as breadcrumbs only until capacity is freed. Default: `10`.
 
-`throttle_window_ms` specifies the time window in milliseconds for `throttle_events`. Set it to `0` to disable this limit.
+`throttle_window_ms` specifies the time window in milliseconds for `throttle_events`. Set it to `0` to disable this limit. Default: `10000`.
 
 </SdkOption>
 
