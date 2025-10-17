@@ -1,140 +1,35 @@
 ---
 title: Uploading Builds
 sidebar_order: 1
-description: Upload your first build to Size Analysis in under 5 minutes.
+description: Learn which formats and metadata Size Analysis needs when you upload builds.
 ---
 
-Get your first build uploaded to Size Analysis in under 5 minutes
-
-<Alert level="info">GitHub is currently the only supported VCS provider.</Alert>
+Every build uploaded to Size Analysis needs a supported archive format and enough metadata for Sentry to compare releases safely.
 
 ## Prerequisites
 
-Before uploading builds, you'll need:
-
-1. **A Sentry account** with access to any [core plan](https://sentry.io/pricing/)
-2. **A Sentry auth token** - [Docs](/account/auth-tokens/) | [Generate token](https://sentry.sentry.io/settings/auth-tokens/)
-   - Set `SENTRY_AUTH_TOKEN` as an environment variable to have it automatically picked up by the upload tools
-
-## Quickstart
-
-Choose your platform to get started:
-
-### iOS (Fastlane + GitHub Actions)
-
-**1. Install the Fastlane plugin** (version 1.34.0 or higher):
-
-```ruby
-bundle exec fastlane add_plugin fastlane-plugin-sentry
-```
-
-**2. Add to your Fastfile:**
-
-```ruby
-lane :upload_to_sentry do
-  sentry_upload_build(
-    org_slug: 'your-org',
-    project_slug: 'your-project',
-    build_configuration: 'Release' # Adjust to your configuration
-  )
-end
-```
-
-**3. Set your auth token in GitHub Actions:**
-
-```yaml
-env:
-  SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-```
-
-**4. Run the lane:**
-
-```bash
-bundle exec fastlane upload_to_sentry
-```
-
-[Read the full iOS setup guide →](/product/size-analysis/getting-started/ios/)
-
-### Android (Gradle + GitHub Actions)
-
-**1. Add the plugin** (version 6.0.0-alpha.4 or higher) in your `build.gradle.kts`:
-
-```kotlin
-plugins {
-  id("io.sentry.android.gradle") version "6.0.0-alpha.4"
-}
-
-sentry {
-  sizeAnalysis {
-    enabled = providers.environmentVariable("GITHUB_ACTIONS").isPresent
-  }
-}
-```
-
-Or for `build.gradle`:
-
-```groovy
-plugins {
-  id "io.sentry.android.gradle" version "6.0.0-alpha.4"
-}
-
-sentry {
-  sizeAnalysis {
-    enabled = providers.environmentVariable("GITHUB_ACTIONS").present
-  }
-}
-```
-
-**2. Set your auth token in GitHub Actions:**
-
-```yaml
-env:
-  SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-```
-
-**3. Build your app:**
-
-```bash
-./gradlew bundleRelease
-```
-
-[Read the full Android setup guide →](/product/size-analysis/getting-started/android/)
-
-### Using the CLI (Any Platform)
-
-The Sentry CLI provides a platform-agnostic way to upload builds:
-
-```bash
-export SENTRY_AUTH_TOKEN=your-token-here
-
-# iOS
-sentry-cli build upload app.xcarchive.zip \
-  --org your-org \
-  --project your-project \
-  --build-configuration Release
-
-# Android
-sentry-cli build upload app.aab \
-  --org your-org \
-  --project your-project \
-  --build-configuration freeRelease # Adjust to your build flavor
-```
-
-[Read the full CLI guide →](/product/size-analysis/getting-started/cli/)
+<Include name="size-analysis/prerequisites" />
 
 ## Supported Build Formats
 
-| Platform | Format             | Extension    | Notes     |
-| -------- | ------------------ | ------------ | --------- |
-| Android  | Android App Bundle | `.aab`       | Preferred |
-| Android  | APK                | `.apk`       | Supported |
-| iOS      | XCArchive          | `.xcarchive` | Preferred |
-| iOS      | IPA                | `.ipa`       | Supported |
+<Include name="size-analysis/supported-formats" />
 
-## Next Steps
+## Upload Tools
 
-After uploading your first build:
+Use any of the following guides to configure uploads for your project:
 
-1. [Set up the GitHub integration](/product/size-analysis/github-integration/) to receive PR comments and status checks
-2. [View build details](/product/size-analysis/build-details/) to explore size breakdowns and insights
-3. [Compare builds](/product/size-analysis/build-comparison/) to understand how changes impact your app size
+- [Fastlane Setup](/product/size-analysis/uploading-builds/fastlane/)
+- [Gradle Setup](/product/size-analysis/uploading-builds/gradle/)
+- [CLI Setup](/product/size-analysis/uploading-builds/cli/)
+
+For cross-platform frameworks like React Native or Flutter, you can choose any of the above which work best for your pipeline.
+
+## Upload Metadata
+
+The table shows the minimum fields your upload needs and whether GitHub Actions fills them in automatically. Provide the same values when using a different CI system.
+
+<Include name="size-analysis/upload-metadata" />
+
+### Build Configuration
+
+<Include name="size-analysis/build-configuration" />

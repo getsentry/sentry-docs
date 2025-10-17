@@ -1,0 +1,42 @@
+### Android (Gradle + GitHub Actions)
+
+1. Add the plugin (version `6.0.0-alpha.4` or higher) in your `build.gradle.kts`:
+
+   ```kotlin {filename:build.gradle.kts}
+   plugins {
+     id("io.sentry.android.gradle") version "6.0.0-alpha.4"
+   }
+
+   sentry {
+     sizeAnalysis {
+       enabled = providers.environmentVariable("GITHUB_ACTIONS").isPresent
+     }
+   }
+   ```
+
+   Or for `build.gradle`:
+
+   ```groovy {filename:build.gradle}
+   plugins {
+     id "io.sentry.android.gradle" version "6.0.0-alpha.4"
+   }
+
+   sentry {
+     sizeAnalysis {
+       enabled = providers.environmentVariable("GITHUB_ACTIONS").present
+     }
+   }
+   ```
+
+2. Set your auth token in GitHub Actions:
+
+   ```yaml {filename:.github/workflows/build.yml}
+   env:
+     SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+   ```
+
+3. Build your app:
+
+   ```bash
+   ./gradlew bundleRelease
+   ```
