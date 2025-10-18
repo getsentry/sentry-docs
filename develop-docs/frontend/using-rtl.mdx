@@ -20,7 +20,7 @@ As a part of this goal, we avoid testing implementation details so refactors (ch
 We are generally in favor of Use Case Coverage over Code Coverage.
 
 ## Use our built-in contexts
-By default, `render()` has some default contexts setup for you. The organization context is set to `OrganizationFixture()` and the router context has some default params like orgId and projectId. These can be overriden by passing a proptery to the 2nd argument of the `render()` function.
+By default, `render()` has some default contexts setup for you. The organization context is set to `OrganizationFixture()` and the router context has some default params like orgId and projectId. These can be overriden by passing a property to the 2nd argument of the `render()` function.
 
 Example of overriding the default organization features and access:
 ```tsx
@@ -77,6 +77,8 @@ router.navigate('/new/path/');
 router.navigate(-1); // Simulates clicking the back button
 ```
 
+### Route Param Values
+
 If you need to test route param values (as in `useParams()`), the `route` will need to be provided in the config:
 
 ```tsx
@@ -96,6 +98,106 @@ const {router} = render(<TestComponent />, {
 
 expect(screen.getByText('123')).toBeInTheDocument();
 ```
+
+### Outlet Context
+
+If you need to test outlet param values (as in `useOutletContext()`), you can pass them inside the `initialRouterConfig` object.
+
+```tsx
+function TestComponent() {
+  const { id } = useOutletContext();
+  return <div>{id}</div>;
+}
+
+const { router } = render(<TestComponent />, {
+  initialRouterConfig: {
+    outletContext: { id: '123' },
+  },
+});
+
+expect(screen.getByText('123')).toBeInTheDocument();
+```
+
+### Nested Routes
+
+If directly setting outlet context isn't enough, instead you want to render some nested routes you can do that too!
+
+Suppose routes.tsx defines some nested routes like:
+```tsx
+{
+  path: 'settings/',
+  component: SettingsWrapper,
+  children: [
+    {index: true, component: SettingsIndex},
+    {path: ':projectId/', component: ProjectSettings},
+  ]
+}
+```
+
+We can configure the in-memory router to know about just the route tree that you need. Remember to render the wrapper component itself, and the router + route child components will render themsevles.
+```tsx
+// settingsWrapper.tsx
+interface OutletContext {
+  name: string;
+}
+
+export function useCustomOutletContext() {
+  return useOutletContext<OutletContext>();
+}
+
+export default function SettingsWrapper() {
+  const context: OutletContext = {name: "Default"};
+  return <Outlet context={context} />;
+}
+
+// settingsIndex.tsx
+function SettingsIndex() {
+  const {name} = useCustomOutletContext();
+  return <div>Settings > {name}</div>;
+}
+
+// projectSettings.tsx
+function ProjectSettings() {
+  const {name} = useCustomOutletContext();
+  const {projectId} = useParams();
+  return <div>Settings > {name} > Project: {projectId}</div>;
+}
+
+// settingsIndex.spec.tsx
+render(<SettingsWrapper />, {
+  initialRouterConfig: {
+    location: {
+      pathname: '/settings/',
+    },
+    route: '/settings/',
+    children: [
+      {
+        index: true,
+        element: <SettingsIndex />,
+      },
+    ],
+  },
+});
+expect(screen.getByText('Settings > Default')).toBeInTheDocument();
+
+// projectSettings.spec.tsx
+render(<SettingsWrapper />, {
+  initialRouterConfig: {
+    location: {
+      pathname: '/settings/123/',
+    },
+    route: '/settings/:projectId',
+    children: [
+      {
+        path: ':projectId/',
+        element: <ProjectSettings />,
+      },
+    ],
+  },
+});
+expect(screen.getByText('Settings > Default > Project: 123')).toBeInTheDocument();
+```
+
 
 ## Querying
 
