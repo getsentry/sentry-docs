@@ -1,0 +1,51 @@
+---
+title: Gradle Uploads
+sidebar_order: 20
+description: Configure Size Analysis uploads for Android projects using the Sentry Gradle plugin.
+---
+
+This assumes you already use the Sentry Android Gradle plugin. For full installation instructions, see the [Android Gradle configuration guide](https://docs.sentry.io/platforms/android/configuration/gradle/).
+
+## Apply the plugin
+
+```kotlin
+plugins {
+  id("io.sentry.android.gradle") version "6.0.0-alpha.4"
+}
+
+sentry {
+  sizeAnalysis {
+    enabled = providers.environmentVariable("GITHUB_ACTIONS").isPresent
+  }
+}
+```
+
+```groovy
+plugins {
+  id "io.sentry.android.gradle" version "6.0.0-alpha.4"
+}
+
+sentry {
+  sizeAnalysis {
+    enabled = providers.environmentVariable("GITHUB_ACTIONS").present
+  }
+}
+```
+
+## Set your auth token in GitHub Actions
+
+```yaml
+env:
+  SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+```
+
+## Build your app
+
+```bash
+./gradlew bundleRelease
+```
+
+## Next steps
+
+- Review the [Sentry Gradle plugin documentation](https://docs.sentry.io/platforms/android/configuration/gradle/) for additional configuration
+- Return to the [Size Analysis upload overview](/product/size-analysis/uploading-builds/)

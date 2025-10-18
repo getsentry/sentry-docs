@@ -1,0 +1,47 @@
+---
+title: Fastlane Uploads
+sidebar_order: 10
+description: Configure Size Analysis uploads for iOS projects using Fastlane.
+---
+
+This assumes you already have the Sentry Fastlane plugin in your project. See the [Fastlane integration guide](https://docs.sentry.io/platforms/apple/guides/ios/upload-debug-symbols/fastlane/) for the full setup.
+
+## Install the plugin
+
+```ruby
+bundle exec fastlane add_plugin fastlane-plugin-sentry
+```
+
+Ensure the plugin version is `1.34.0` or higher.
+
+## Add a lane
+
+```ruby
+lane :upload_to_sentry do
+  sentry_upload_build(
+    org_slug: 'your-org',
+    project_slug: 'your-project',
+    build_configuration: 'Release' # Adjust to your configuration
+  )
+end
+```
+
+If you already have a lane, add the `sentry_upload_build` action to it.
+
+## Set your auth token in GitHub Actions
+
+```yaml
+env:
+  SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+```
+
+## Run the lane
+
+```bash
+bundle exec fastlane upload_to_sentry
+```
+
+## Next steps
+
+- View the [Sentry Fastlane plugin documentation](https://github.com/getsentry/sentry-fastlane-plugin) for advanced options
+- Return to the [Size Analysis upload overview](/product/size-analysis/uploading-builds/)
