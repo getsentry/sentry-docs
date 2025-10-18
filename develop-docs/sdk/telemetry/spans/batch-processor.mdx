@@ -16,11 +16,19 @@ The BatchProcessor batches spans and logs into one envelope to reduce the number
 
 Whenever the SDK finishes a span or captures a log, it MUST put it into the BatchProcessor. The SDK MUST NOT put unfinished spans into the BatchProcessor.
 
-The BatchProcessor MUST start a timeout of 5 seconds when the SDK adds the first span or log. When the timeout exceeds, the BatchProcessor MUST send all spans or logs, no matter how many items it contains. The SDK MAY choose a different value for the timeout, but it MUST NOT exceed 30 seconds, as this can lead to problems with the span buffer on the backend, which uses a time interval of 60 seconds for determining segments for spans.
+The BatchProcessor MUST start a timeout of 5 seconds when the SDK adds the first span or log. When the timeout exceeds, the BatchProcessor MUST send all spans or logs, no matter how many items it contains. The SDK MAY choose a different value for the timeout, but it MUST NOT exceed 30 seconds, as this can lead to problems with the span buffer on the backend, which uses a time interval of 60 seconds for determining segments for spans. The BatchProcessor MUST only start a new timeout, when it has spans or logs to send, to avoid running the timeout unnecessarily.
 
 The BatchProcessor MUST send all items after the SDK when containing spans or logs exceeding 1MiB in size. The SDK MAY choose a different value for the max batch size keeping the [envelope max sizes](/sdk/data-model/envelopes/#size-limits) in mind. The SDK MUST calculate the size of a span or a log to manage the BatchProcessor's memory footprint. The SDK MUST serialize the span or log and calculate the size based on the serialized JSON bytes. As serialization is expensive, the BatchProcessor SHOULD keep track of the serialized spans and logs and pass these to the envelope to avoid serializing multiple times.
 
 When the BatchProcessor sends all spans or logs, it MUST reset its timeout and remove all spans and logs. The SDK MUST apply filtering and sampling before adding spans or logs to the BatchProcessor. The SDK MUST apply rate limits to spans and logs after they leave the BatchProcessor to send as much data as possible by dropping data as late as possible.
+
+The BatchProcessor MUST send all spans and logs in memory to avoid data loss in the following scenarios:
+
+1. When the user calls `SentrySDK.flush()`, the BatchProcessor MUST send all data in memory.
+2. When the user calls  `SentrySDK.close()`, the BatchProcessor MUST send all data in memory.
+3. When the application shuts down gracefully, the BatchProcessor SHOULD send all data in memory. This is mostly relevant for mobile SDKs already subscribed to these hooks, such as [applicationWillTerminate](https://developer.apple.com/documentation/uikit/uiapplicationdelegate/applicationwillterminate(_:)) on iOS.
+4. When the application moves to the background, the BatchProcessor SHOULD send all data in memory and stop the timer. This is mostly relevant for mobile SDKs.
+5. We're working on concept for crashes, and will update the specification when we have more details.
 
 The detailed specification is written in the [Gherkin syntax](https://cucumber.io/docs/gherkin/reference/). The specification uses spans as an example, but the same applies to logs or any other future telemetry data.
 
@@ -40,6 +48,12 @@ Scenario: Span added before timeout exceeds
     Then the SDK adds span B to the BatchProcessor
     And doesn't reset the timeout
     And doesn't send the spans A and B in the BatchProcessor to Sentry
+
+Scenario: Timeout exceeds and no spans or logs to send
+    Given no spans in the BatchProcessor
+    When the timeout exceeds
+    Then the BatchProcessor does nothing
+    And doesn't start a new timeout
 
 Scenario: Spans with size of 1 MiB - 1 byte added, timeout exceeds
     Given spans with size of 1 MiB - 1 byte in the BatchProcessor
