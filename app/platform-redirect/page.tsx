@@ -37,115 +37,103 @@ export default async function Page(props: {
     "The page you are looking for is customized for each platform. Select your platform below and we'll direct you to the most specific documentation on it.";
   let title = defaultTitle;
 
-  // get rid of irrelevant platforms for the `next` path
-  const platformList = extractPlatforms(rootNode).filter(platform_ => {
-    // First check the main platform path
-    let node = nodeForPath(rootNode, [
+  // Build a list of platforms or guides that have the content for the `next` path
+  type PlatformOrGuide = {
+    icon: string;
+    key: string;
+    title: string;
+    url: string;
+    isGuide?: boolean;
+    parentPlatform?: string;
+  };
+
+  const platformOrGuideList: PlatformOrGuide[] = [];
+
+  for (const platformEntry of extractPlatforms(rootNode)) {
+    // Check if the main platform path has the content
+    const mainPlatformNode = nodeForPath(rootNode, [
       'platforms',
-      platform_.key,
+      platformEntry.key,
       ...pathname.split('/').filter(Boolean),
     ]);
 
-    // If not found, check if it's a guide (like dart/guides/flutter)
-    if (!node && platform_.guides) {
-      for (const guide of platform_.guides) {
-        node = nodeForPath(rootNode, [
+    // Extract title and description from the first valid node we find
+    if (mainPlatformNode && title === defaultTitle && pathname.length > 0) {
+      title = mainPlatformNode.frontmatter.title ?? title;
+      description = mainPlatformNode.frontmatter.description || '';
+    }
+
+    // Check which guides have the content
+    const supportedGuides: typeof platformEntry.guides = [];
+    if (platformEntry.guides) {
+      for (const guide of platformEntry.guides) {
+        const guideNode = nodeForPath(rootNode, [
           'platforms',
-          platform_.key,
+          platformEntry.key,
           'guides',
           guide.name,
           ...pathname.split('/').filter(Boolean),
         ]);
-        if (node) {
-          // Create a copy of the platform with the guide URL to avoid mutating the original
-          const platformCopy = {...platform_, url: guide.url};
-          // Update the platform reference to use the copy
-          Object.assign(platform_, platformCopy);
-          break;
+
+        if (guideNode) {
+          supportedGuides.push(guide);
+          
+          // Extract title and description if we haven't yet
+          if (title === defaultTitle && pathname.length > 0) {
+            title = guideNode.frontmatter.title ?? title;
+            description = guideNode.frontmatter.description || '';
+          }
         }
       }
     }
 
-    // extract title and description for displaying it on page
-    if (node && title === defaultTitle && pathname.length > 0) {
-      title = node.frontmatter.title ?? title;
-      description = node.frontmatter.description || '';
+    // Check notSupported list to filter out unsupported guides (for platforms like JavaScript)
+    let filteredGuides = supportedGuides;
+    if (mainPlatformNode?.frontmatter.notSupported && supportedGuides.length > 0) {
+      const notSupported = mainPlatformNode.frontmatter.notSupported;
+      filteredGuides = supportedGuides.filter(
+        guide => !notSupported.includes(`${platformEntry.key}.${guide.name}`)
+      );
     }
 
-    return !!node;
-  });
+    // Include platform if main path exists OR if any guides exist
+    if (mainPlatformNode || filteredGuides.length > 0) {
+      // Add the main platform entry only if it has content
+      if (mainPlatformNode) {
+        platformOrGuideList.push({
+          key: platformEntry.key,
+          title: platformEntry.title ?? platformEntry.key ?? '',
+          url: platformEntry.url ?? '',
+          icon: platformEntry.icon ?? platformEntry.key,
+        });
+      }
 
-  // For JavaScript platforms, also include individual frameworks that support the content
-  const expandedPlatformList = [...platformList];
-
-  // Find JavaScript platform and add its supported frameworks
-  // Only use JavaScript platform if it's already in the filtered list (has relevant content)
-  const javascriptPlatform = platformList.find(p => p.key === 'javascript');
-
-  if (
-    javascriptPlatform &&
-    (pathname.startsWith('/session-replay/') ||
-      pathname.startsWith('/tracing/') ||
-      pathname.startsWith('/profiling/') ||
-      pathname.startsWith('/logs/'))
-  ) {
-    // Get the JavaScript page to check which frameworks are supported
-    const jsPageNode = nodeForPath(rootNode, [
-      'platforms',
-      'javascript',
-      ...pathname.split('/').filter(Boolean),
-    ]);
-
-    if (jsPageNode && jsPageNode.frontmatter.notSupported) {
-      const notSupported = jsPageNode.frontmatter.notSupported;
-
-      // Remove JavaScript from the main list temporarily
-      const otherPlatforms = expandedPlatformList.filter(p => p.key !== 'javascript');
-
-      // Add supported JavaScript frameworks as separate entries
-      const jsFrameworks: typeof platformList = [];
-      javascriptPlatform.guides?.forEach(guide => {
-        const guideKey = `javascript.${guide.name}`;
-        if (!notSupported.includes(guideKey)) {
-          jsFrameworks.push({
-            key: guideKey,
-            name: guide.name,
-            type: 'platform' as const,
-            url: javascriptPlatform.url,
-            title: guide.title,
-            caseStyle: guide.caseStyle,
-            sdk: guide.sdk,
-            fallbackPlatform: guide.fallbackPlatform,
-            language: guide.language,
-            categories: guide.categories,
-            keywords: guide.keywords,
-            guides: [],
-            integrations: [],
-            icon: `javascript-${guide.name}`,
-          });
-        }
-      });
-
-      // Rebuild the list with JavaScript and its frameworks at the end
-      expandedPlatformList.length = 0; // Clear the array
-      expandedPlatformList.push(...otherPlatforms); // Add other platforms first
-      expandedPlatformList.push(javascriptPlatform); // Add JavaScript platform
-      expandedPlatformList.push(...jsFrameworks); // Add JavaScript frameworks last
+      // Add guide entries as nested items (only if main platform exists)
+      // or as top-level items (if only guides have content)
+      for (const guide of filteredGuides) {
+        platformOrGuideList.push({
+          key: `${platformEntry.key}.${guide.name}`,
+          title: guide.title ?? guide.name ?? '',
+          url: guide.url ?? '', // Always use the guide-specific URL
+          icon: `${platformEntry.key}-${guide.name}`,
+          isGuide: mainPlatformNode ? true : false, // Only nest if parent exists
+          parentPlatform: platformEntry.key,
+        });
+      }
     }
   }
 
-  if (expandedPlatformList.length === 0) {
+  if (platformOrGuideList.length === 0) {
     // try to redirect the user to the page directly, might result in 404
     return redirect(next);
   }
 
   const requestedPlatform = Array.isArray(platform) ? platform[0] : platform;
   if (requestedPlatform) {
-    const validPlatform = expandedPlatformList.find(
+    const validPlatform = platformOrGuideList.find(
       p => p.key === requestedPlatform?.toLowerCase()
     );
     if (validPlatform) {
-      // Use the platform's URL (which may have been updated to point to a guide)
       return redirect(`${validPlatform.url}${pathname}`);
     }
   }
@@ -163,24 +151,19 @@ export default async function Page(props: {
       <Alert>{platformInfo}</Alert>
 
       <ul>
-        {expandedPlatformList.map(p => {
-          // Check if this is a JavaScript framework (has javascript. prefix)
-          const isJSFramework = p.key.startsWith('javascript.');
-
-          return (
-            <li key={p.key} style={{marginLeft: isJSFramework ? '20px' : '0'}}>
-              <SmartLink to={`${p.url}${pathname}`}>
-                <PlatformIcon
-                  size={16}
-                  platform={p.icon ?? p.key}
-                  style={{marginRight: '0.5rem'}}
-                  format="sm"
-                />
-                <h4 style={{display: 'inline-block'}}>{p.title}</h4>
-              </SmartLink>
-            </li>
-          );
-        })}
+        {platformOrGuideList.map(p => (
+          <li key={p.key} style={{marginLeft: p.isGuide ? '20px' : '0'}}>
+            <SmartLink to={`${p.url}${pathname}`}>
+              <PlatformIcon
+                size={16}
+                platform={p.icon}
+                style={{marginRight: '0.5rem'}}
+                format="sm"
+              />
+              <h4 style={{display: 'inline-block'}}>{p.title}</h4>
+            </SmartLink>
+          </li>
+        ))}
       </ul>
     </DocPage>
   );
