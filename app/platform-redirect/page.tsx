@@ -77,7 +77,7 @@ export default async function Page(props: {
 
         if (guideNode) {
           supportedGuides.push(guide);
-          
+
           // Extract title and description if we haven't yet
           if (title === defaultTitle && pathname.length > 0) {
             title = guideNode.frontmatter.title ?? title;
