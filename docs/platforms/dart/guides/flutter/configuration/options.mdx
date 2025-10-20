@@ -14,7 +14,7 @@ Options that can be read from an environment variable (`SENTRY_DSN`, `SENTRY_ENV
 
 <SdkOption name="dsn" type="string" envVar="SENTRY_DSN">
 
-The DSN tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable also does not exist, the SDK will just not send any events.
+The DSN tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable also does not exist, the SDK will not send any events.
 
 In runtimes without a process environment (such as the browser) that fallback does not apply.
 
@@ -22,31 +22,31 @@ Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-uti
 
 </SdkOption>
 
-<SdkOption name="debug">
+<SdkOption name="debug" type="bool" defaultNote="true in debug mode, false otherwise">
 
 Turns debug mode on or off. If debug is enabled SDK will attempt to print out useful debugging information if something goes wrong with sending the event. The default is `true` if your app runs in [debug mode](https://docs.flutter.dev/testing/build-modes#debug), otherwise it is `false`. It's generally not recommended to turn it on in production, though turning `debug` mode on will not cause any safety concerns.
 
 </SdkOption>
 
-<SdkOption name="diagnosticLevel">
+<SdkOption name="diagnosticLevel" type="enum" defaultValue="warning">
 
 Enabling `debug` mode makes the SDK generate as much diagnostic data as possible. However, if you'd prefer to lower the verbosity of the Sentry SDK diagnostics logs, configure this option to set the appropriate level:
 
-- `debug`: **default** The most verbose mode
+- `debug`: The most verbose mode
 - `info`: Informational messages
-- `warning`: Warning that something might not be right
+- `warning`:  **default** Warning that something might not be right
 - `error`: Only SDK internal errors are printed
 - `fatal`: Only critical errors are printed
 
 </SdkOption>
 
-<SdkOption name="dist">
+<SdkOption name="dist" type="string">
 
 Sets the distribution of the application. Distributions are used to disambiguate build or deployment variants of the same release of an application. For example, the dist can be the build number of an Xcode build or the version code of an Android build. The dist has a max length of 64 characters.
 
 </SdkOption>
 
-<SdkOption name="release">
+<SdkOption name="release" type="string" envVar="SENTRY_RELEASE">
 
 Sets the release. Some SDKs will try to automatically configure a release out of the box but it's a better idea to manually set it to guarantee that the release is in sync with your deploy integrations or source map uploads. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
 
@@ -54,7 +54,7 @@ By default the SDK will try to read this value from the `SENTRY_RELEASE` environ
 
 </SdkOption>
 
-<SdkOption name="environment">
+<SdkOption name="environment" type="string" envVar="SENTRY_ENVIRONMENT">
 
 Sets the environment. This string is freeform and not set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
 
@@ -62,25 +62,25 @@ By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` env
 
 </SdkOption>
 
-<SdkOption name="sampleRate">
+<SdkOption name="sampleRate" type="float" defaultValue="1.0">
 
 Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly.
 
 </SdkOption>
 
-<SdkOption name="maxBreadcrumbs">
+<SdkOption name="maxBreadcrumbs" type="int" defaultValue="100">
 
 This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`, but you can set this to any number. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
 
 </SdkOption>
 
-<SdkOption name="maxCacheItems">
+<SdkOption name="maxCacheItems" type="int" defaultValue="30">
 
 The maximum number of [envelopes](https://develop.sentry.dev/sdk/data-model/envelopes/) to keep in cache. The SDKs use envelopes to send data, such as events, attachments, user feedback, and sessions to sentry.io. An envelope can contain multiple items, such as an event with a session and two attachments. Depending on the usage of the SDK, the size of an envelope can differ. If the number of envelopes in the local cache exceeds `max-cache-items`, the SDK deletes the oldest envelope and migrates the sessions to the next envelope to maintain the integrity of your release health stats. The default is `30`.
 
 </SdkOption>
 
-<SdkOption name="attachStacktrace">
+<SdkOption name="attachStacktrace" type="bool" defaultValue="true">
 
 When enabled, stack traces are automatically attached to all messages logged. Stack traces are always attached to exceptions; however, when this option is set, stack traces are also sent with messages. This option, for instance, means that stack traces appear next to all log messages.
 
@@ -90,7 +90,7 @@ Grouping in Sentry is different for events with stack traces and without. As a r
 
 </SdkOption>
 
-<SdkOption name="sendDefaultPii">
+<SdkOption name="sendDefaultPii" type="bool" defaultValue="false">
 
 If this flag is enabled, certain personally identifiable information (PII) is added by active integrations. By default, no such data is sent.
 
@@ -106,7 +106,7 @@ If you enable this option, be sure to manually remove what you don't want to sen
 
 </SdkOption>
 
-<SdkOption name="serverName">
+<SdkOption name="serverName" type="string">
 
 This option can be used to supply a server name. When provided, the name of the server is sent along and persisted in the event. For many integrations, the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server.
 
@@ -114,13 +114,13 @@ Most SDKs will attempt to auto-discover this value.
 
 </SdkOption>
 
-<SdkOption name="autoSessionTracking">
+<SdkOption name="autoSessionTracking" type="bool" defaultValue="true">
 
 When set to `true`, the SDK will send session events to Sentry. This is supported in all browser SDKs, emitting one session per pageload and page navigation to Sentry. In mobile SDKs, when the app goes to the background for longer than 30 seconds, sessions are ended.
 
 </SdkOption>
 
-<SdkOption name="considerInAppFramesByDefault">
+<SdkOption name="considerInAppFramesByDefault" type="bool">
 
 Configures whether stack trace frames are considered as in app frames by default.
 You can use this to essentially make `inAppIncludes` or `inAppExcludes` an allow or deny list.
@@ -131,7 +131,7 @@ This value is used only if Sentry can not find the origin of the frame.
 
 </SdkOption>
 
-<SdkOption name="inAppInclude">
+<SdkOption name="inAppInclude" type="array">
 
 A list of string prefixes of module names that belong to the app. This option takes precedence over `in-app-exclude`.
 
@@ -139,7 +139,7 @@ Sentry differentiates stack frames that are directly related to your application
 
 </SdkOption>
 
-<SdkOption name="inAppExclude">
+<SdkOption name="inAppExclude" type="array">
 
 A list of string prefixes of module names that do not belong to the app, but rather to third-party packages. Modules considered not part of the app will be hidden from stack traces by default.
 
@@ -147,7 +147,7 @@ This option can be overridden using <PlatformIdentifier name="inAppInclude" />.
 
 </SdkOption>
 
-<SdkOption name="attachScreenshot">
+<SdkOption name="attachScreenshot" type="bool" defaultValue="false">
 
 Takes a screenshot of the application when an error happens and includes it as an attachment.
 Enable this option by setting <PlatformIdentifier name="attachScreenshot" /> to `true` and wrapping your root widget with `SentryWidget(child: MyApp())`.
@@ -155,20 +155,20 @@ Learn more about enriching events with screenshots in our <PlatformLink to="/enr
 
 </SdkOption>
 
-<SdkOption name="screenshotQuality">
+<SdkOption name="screenshotQuality" type="enum" defaultValue="high">
 
 The quality of the attached screenshot. It can be set to `full`, `high`, `medium` or `low`.
 
 </SdkOption>
 
-<SdkOption name="attachViewHierarchy">
+<SdkOption name="attachViewHierarchy" type="bool" defaultValue="false">
 
 Renders a JSON representation of the entire view hierarchy of the application when an error happens and includes it as an attachment.
 Learn more about enriching events with the view hierarchy in our <PlatformLink to="/enriching-events/viewhierarchy/">View Hierarchy documentation</PlatformLink>.
 
 </SdkOption>
 
-<SdkOption name="idleTimeout">
+<SdkOption name="idleTimeout" type="int" defaultValue="3000">
 
 The idle time, measured in ms, to wait until a transaction will be automatically finished. The transaction will use the end timestamp of the last finished span as the endtime for the transaction.
 
@@ -176,7 +176,7 @@ The default is `3000`.
 
 </SdkOption>
 
-<SdkOption name="sendClientReports">
+<SdkOption name="sendClientReports" type="bool" defaultValue="true" availableSince="6.6.0">
 
 Set this boolean to `false` to disable sending of client reports. Client reports are a protocol feature that let clients send status reports about themselves to Sentry. They are currently mainly used to emit outcomes for events that were never sent.
 
@@ -184,7 +184,7 @@ _(New in version 6.6.0)_
 
 </SdkOption>
 
-<SdkOption name="captureFailedRequests">
+<SdkOption name="captureFailedRequests" type="bool" defaultValue="true" availableSince="7.0.0">
 
 Once enabled, this feature automatically captures HTTP client errors, like bad response codes, as error events and reports them to Sentry.
 
@@ -192,7 +192,7 @@ _(New in version 7.0.0)_
 
 </SdkOption>
 
-<SdkOption name="maxRequestBodySize">
+<SdkOption name="maxRequestBodySize" type="enum" defaultValue="never">
 
 This parameter controls whether integrations should capture HTTP request bodies. It can be set to one of the following values:
 
@@ -207,7 +207,7 @@ This parameter controls whether integrations should capture HTTP request bodies.
 
 For many platform SDKs integrations can be configured alongside it. On some platforms that happen as part of the `init()` call, in some others, different patterns apply.
 
-<SdkOption name="integrations">
+<SdkOption name="integrations" type="array">
 
 In some SDKs, the integrations are configured through this parameter on library initialization. For more information, please see our documentation for a specific integration.
 
@@ -217,7 +217,7 @@ In some SDKs, the integrations are configured through this parameter on library 
 
 These options can be used to hook the SDK in various ways to customize the reporting of events.
 
-<SdkOption name="beforeSend">
+<SdkOption name="beforeSend" type="function">
 
 This function is called with an SDK-specific message or error event object, and can return a modified event object, or `null` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
 
@@ -225,7 +225,7 @@ By the time <PlatformIdentifier name="beforeSend" /> is executed, all scope data
 
 </SdkOption>
 
-<SdkOption name="beforeBreadcrumb">
+<SdkOption name="beforeBreadcrumb" type="function">
 
 This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
 The callback typically gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
@@ -236,7 +236,7 @@ The callback typically gets a second argument (called a "hint") which contains t
 
 Transports are used to send events to Sentry. Transports can be customized to some degree to better support highly specific deployments.
 
-<SdkOption name="transport">
+<SdkOption name="transport" type="function">
 
 Switches out the transport used to send events. How this works depends on the SDK. It can, for instance, be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication.
 
@@ -244,19 +244,19 @@ Switches out the transport used to send events. How this works depends on the SD
 
 ## Tracing Options
 
-<SdkOption name="tracesSampleRate">
+<SdkOption name="tracesSampleRate" type="float">
 
 A number between `0` and `1`, controlling the percentage chance a given transaction will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Applies equally to all transactions created in the app. Either this or <PlatformIdentifier name="tracesSampler" /> must be defined to enable tracing.
 
 </SdkOption>
 
-<SdkOption name="tracesSampler">
+<SdkOption name="tracesSampler" type="function">
 
 A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="tracesSampleRate" /> must be defined to enable tracing.
 
 </SdkOption>
 
-<SdkOption name="tracePropagationTargets">
+<SdkOption name="tracePropagationTargets" type="array">
 
 An optional property that controls which downstream services receive tracing data, in the form of a `sentry-trace` and a `baggage` header attached to any outgoing HTTP requests.
 
@@ -270,7 +270,7 @@ If <PlatformIdentifier name="tracePropagationTargets" /> is not provided, trace 
 
 ## Experimental Features
 
-<SdkOption name="experimental">
+<SdkOption name="experimental" type="object">
 
 An optional property that configures which features are in experimental mode. This property is either an `Object Type` with properties or a key/value `TypedDict`, depending the language. Experimental features are still in-progress and may have bugs. We recognize the irony.
 
@@ -278,7 +278,7 @@ An optional property that configures which features are in experimental mode. Th
 
 ## Hybrid SDK Options
 
-<SdkOption name="autoInitializeNativeSdk">
+<SdkOption name="autoInitializeNativeSdk" type="bool" defaultValue="true">
 
 Set this boolean to `false` to disable the auto initialization of the native layer SDK. Doing so means you will need to initialize the native SDK manually. Do not use this to disable the native layer.
 
@@ -286,43 +286,43 @@ You should follow the [guide to native initialization](/platforms/dart/guides/fl
 
 </SdkOption>
 
-<SdkOption name="enableNativeCrashHandling">
+<SdkOption name="enableNativeCrashHandling" type="bool" defaultValue="true">
 
 Set this boolean to `false` to disable hard crash handling from the native layer. Doing so means that the SDK won't capture events for hard crashes on Android and iOS if the error was caused by native code.
 
 </SdkOption>
 
-<SdkOption name="enableAutoSessionTracking">
+<SdkOption name="enableAutoSessionTracking" type="bool" defaultValue="true">
 
 Set this boolean to `false` to disable the [release health](/product/releases/health/) feature.
 
 </SdkOption>
 
-<SdkOption name="sessionTrackingIntervalMillis">
+<SdkOption name="sessionTrackingIntervalMillis" type="int" defaultValue="30000">
 
 Set this to change the default interval to end a session (release health) if the app goes to the background. Default is 30,000.
 
 </SdkOption>
 
-<SdkOption name="enableNdkScopeSync">
+<SdkOption name="enableNdkScopeSync" type="bool" defaultValue="true">
 
 Set this boolean to `false` to disable the scope sync from Java to NDK on Android.
 
 </SdkOption>
 
-<SdkOption name="attachThreads">
+<SdkOption name="attachThreads" type="bool" defaultValue="false">
 
 Set this boolean to `true` to automatically attach all threads to all logged events on Android.
 
 </SdkOption>
 
-<SdkOption name="enableAutoPerformanceTracing">
+<SdkOption name="enableAutoPerformanceTracing" type="bool" defaultValue="true">
 
 Set this boolean to `false` to disable auto [tracing](/product/insights/overview/) tracking.
 
 </SdkOption>
 
-<SdkOption name="enableWatchdogTerminationTracking">
+<SdkOption name="enableWatchdogTerminationTracking" type="bool" defaultValue="true">
 
 <Alert>
   Available since version 8.0.0 of Sentry Apple SDK. It was named
@@ -333,55 +333,55 @@ Set this boolean to `false` to disable [watchdog termination](/platforms/apple/g
 
 </SdkOption>
 
-<SdkOption name="enableScopeSync">
+<SdkOption name="enableScopeSync" type="bool" defaultValue="true">
 
 Set this boolean to `false` to disable sync of `Scope` data to Android and iOS SDKs.
 
 </SdkOption>
 
-<SdkOption name="reportPackages">
+<SdkOption name="reportPackages" type="bool" defaultValue="true">
 
 Set this boolean to `false` to disable reporting all the package dependencies.
 
 </SdkOption>
 
-<SdkOption name="anrEnabled">
+<SdkOption name="anrEnabled" type="bool" defaultValue="true">
 
 Set this boolean to `true` to enable ANR (Application Not Responding) detection on Android.
 
 </SdkOption>
 
-<SdkOption name="anrTimeoutInterval">
+<SdkOption name="anrTimeoutInterval" type="int" defaultValue="5000">
 
 Set this to change the default interval of the ANR detection. The default is `5` seconds.
 
 </SdkOption>
 
-<SdkOption name="reportSilentFlutterErrors">
+<SdkOption name="reportSilentFlutterErrors" type="bool" defaultValue="false">
 
 Set this boolean to `true` to enable reporting [FlutterErrorDetails.silent](https://api.flutter.dev/flutter/foundation/FlutterErrorDetails/silent.html) errors automatically.
 
 </SdkOption>
 
-<SdkOption name="enableAutoNativeBreadcrumbs">
+<SdkOption name="enableAutoNativeBreadcrumbs" type="bool" defaultValue="true">
 
 Set this boolean to `false` to disable automatic breadcrumbs on the Native platforms.
 
 </SdkOption>
 
-<SdkOption name="enableUserInteractionBreadcrumbs">
+<SdkOption name="enableUserInteractionBreadcrumbs" type="bool" defaultValue="true">
 
 Set this boolean to `false` to disable automatic User Interactions breadcrumbs.
 
 </SdkOption>
 
-<SdkOption name="enableUserInteractionTracing">
+<SdkOption name="enableUserInteractionTracing" type="bool" defaultValue="true">
 
 Set this boolean to `false` to disable automatic User Interactions tracing.
 
 </SdkOption>
 
-<SdkOption name="proguardUuid">
+<SdkOption name="proguardUuid" type="string">
 
 Sets the Proguard UUID for Android platform
 
