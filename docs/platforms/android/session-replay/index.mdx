@@ -57,12 +57,20 @@ SentryAndroid.init(context) { options ->
 
   options.sessionReplay.onErrorSampleRate = 1.0
   options.sessionReplay.sessionSampleRate = 0.1
+  
+  // if your application is strictly PII sensitive we recommend using the Canvas screenshot strategy
+  // Note: this strategy does **not** support any masking options, it always masks text and images
+  // options.sessionReplay.screenshotStrategy = ScreenshotStrategyType.CANVAS
 }
 ```
 
 ```XML {filename:AndroidManifest.xml}
 <meta-data android:name="io.sentry.session-replay.on-error-sample-rate" android:value="1.0" />
 <meta-data android:name="io.sentry.session-replay.session-sample-rate" android:value="0.1" />
+
+<!-- if your application is strictly PII sensitive we recommend using the Canvas screenshot strategy -->
+<!-- Note: this strategy does **not** support any masking options, it always masks text and images -->
+<!-- <meta-data android:name="io.sentry.session-replay.screenshot-strategy" android:value="canvas" /> -->
 ```
 
 ## Verify
@@ -115,6 +123,32 @@ options.sessionReplay.maskAllImages = false
 ```XML {filename:AndroidManifest.xml}
 <meta-data android:name="io.sentry.session-replay.mask-all-text" android:value="false" />
 <meta-data android:name="io.sentry.session-replay.mask-all-images" android:value="false" />
+```
+
+### Screenshot Strategy
+
+The SDK offers two strategies for recording replays: `PixelCopy` and `Canvas`.
+
+`PixelCopy` uses Android's [PixelCopy](https://developer.android.com/reference/android/view/PixelCopy) API to capture screenshots of the current screen and takes a snapshot of the view hierarchy within the same frame. The view hierarchy is then used to find the position of controls such as text boxes, images, labels, and buttons and mask them with a block that's drawn over these controls. This strategy has slightly lower performance overhead but may result in masking misalignments due to the asynchronous nature of the PixelCopy API. We recommend using this strategy for apps that do not have strict PII requirements or do not require masking functionality.
+
+`Canvas` uses Android's custom [Canvas](https://developer.android.com/reference/android/graphics/Canvas) API to redraw the screen contents onto a bitmap, masking all `drawText` and `drawBitmap` operations in the process to produce a masked screenshot. This strategy has a slightly higher performance overhead but provides more reliable masking. We recommend using this strategy for apps with strict PII requirements.
+
+<Alert level="warning">
+
+The `Canvas` screenshot strategy currently does **not** support any masking options. When the screenshot strategy is set to `Canvas`, it will **always** mask all texts, input fields and images, disregarding any masking options set. If you need more flexibility with masking, switch back to `PixelCopy`.
+
+</Alert>
+
+You can change the strategy as follows:
+
+```kotlin
+import io.sentry.ScreenshotStrategyType
+
+options.sessionReplay.screenshotStrategy = ScreenshotStrategyType.CANVAS // or ScreenshotStrategyType.PIXEL_COPY (default)
+```
+
+```XML {filename:AndroidManifest.xml}
+<meta-data android:name="io.sentry.session-replay.screenshot-strategy" android:value="canvas|pixelCopy" />
 ```
 
 ## Error Linking
