@@ -1,0 +1,238 @@
+---
+title: MCP (Model Context Protocol)
+description: "Learn about using Sentry for MCP (Model Context Protocol) servers."
+---
+
+<Alert title="Beta">
+
+The support for **MCP (Model Context Protocol) Python SDK** is in its beta phase. Please test locally before using in production.
+
+</Alert>
+
+This integration connects Sentry with the [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk), enabling monitoring and error tracking for MCP servers built with Python.
+
+The integration supports both the high-level FastMCP API and the low-level `mcp.server.lowlevel.Server` API, automatically instrumenting tools, prompts, and resources.
+
+Once you've installed this SDK, you can use Sentry to monitor your MCP server's operations, track tool executions, and capture errors that occur during request handling.
+
+Sentry MCP monitoring will automatically collect information about:
+
+- Tool invocations and their arguments
+- Prompt template requests
+- Resource access operations
+- Request and session identifiers
+- Transport types (stdio/HTTP)
+- Execution errors
+
+## Install
+
+Install `sentry-sdk` from PyPI with the `mcp` extra:
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[mcp]"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk[mcp]"
+```
+
+## Configure
+
+If you have the `mcp` package in your dependencies, the MCP integration will be enabled automatically when you initialize the Sentry SDK.
+
+<PlatformContent includePath="getting-started-config" />
+
+## Verify
+
+Verify that the integration works by running an MCP server with tool handlers. The resulting data should show up in your Sentry dashboard.
+
+### Using FastMCP (High-Level API)
+
+FastMCP provides a simplified decorator-based API for building MCP servers:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.mcp import MCPIntegration
+
+from mcp.server.fastmcp import FastMCP
+
+# Initialize Sentry
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    traces_sample_rate=1.0,
+    # Add data like tool inputs/outputs;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+)
+
+# Create the MCP server
+mcp = FastMCP("Example MCP Server")
+
+# Define a tool
+@mcp.tool()
+async def calculate_sum(a: int, b: int) -> int:
+    """Add two numbers together."""
+    return a + b
+
+@mcp.tool()
+def greet_user(name: str) -> str:
+    """Generate a personalized greeting."""
+    return f"Hello, {name}! Welcome to the MCP server."
+
+# Define a resource
+@mcp.resource("config://settings")
+def get_settings() -> str:
+    """Get server configuration settings."""
+    return "Server Configuration: Version 1.0.0"
+
+# Define a prompt
+@mcp.prompt()
+def code_review_prompt(language: str = "python") -> str:
+    """Generate a code review prompt for a specific language."""
+    return f"You are an expert {language} code reviewer..."
+
+# Run the server
+mcp.run()
+```
+
+### Using Low-Level API
+
+For more control over server behavior, use the low-level API:
+
+```python
+import asyncio
+from typing import Any
+
+import sentry_sdk
+from sentry_sdk.integrations.mcp import MCPIntegration
+
+from mcp.server.lowlevel import Server
+from mcp.server import stdio
+from mcp.types import Tool, TextContent, GetPromptResult, PromptMessage
+
+# Initialize Sentry
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    traces_sample_rate=1.0,
+    send_default_pii=True,
+)
+
+# Create the low-level MCP server
+server = Server("example-lowlevel-server")
+
+# List available tools
+@server.list_tools()
+async def list_tools() -> list[Tool]:
+    return [
+        Tool(
+            name="calculate_sum",
+            description="Add two numbers together",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "a": {"type": "number", "description": "First number"},
+                    "b": {"type": "number", "description": "Second number"},
+                },
+                "required": ["a", "b"],
+            },
+        ),
+    ]
+
+# Handle tool execution
+@server.call_tool()
+async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
+    if name == "calculate_sum":
+        a = arguments.get("a", 0)
+        b = arguments.get("b", 0)
+        result = a + b
+        return [TextContent(type="text", text=f"The sum is {result}")]
+    
+    return [TextContent(type="text", text=f"Unknown tool: {name}")]
+
+async def main():
+    async with stdio.stdio_server() as (read_stream, write_stream):
+        await server.run(
+            read_stream,
+            write_stream,
+            server.create_initialization_options(),
+        )
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+It may take a couple of moments for the data to appear in [sentry.io](https://sentry.io).
+
+## Behavior
+
+Data on the following will be collected:
+
+- **Tool executions**: Tool name, arguments, results, and execution errors
+- **Prompt requests**: Prompt name, arguments, message counts, and content (for single-message prompts)
+- **Resource access**: Resource URI, protocol, and access patterns
+- **Request context**: Request IDs, session IDs, and transport types (stdio/HTTP)
+- **Execution spans**: Timing information for all handler invocations
+
+Sentry considers tool inputs/outputs and prompt content as PII and doesn't include PII data by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude this data despite `send_default_pii=True`, configure the integration with `include_prompts=False` as shown in the [Options section](#options) below.
+
+### Captured Span Data
+
+For each operation, the following span data attributes are captured:
+
+**General (all operations):**
+- `mcp.method.name`: The MCP method name (e.g., `tools/call`, `prompts/get`, `resources/read`)
+- `mcp.transport`: Transport type (`pipe` for stdio, `tcp` for HTTP)
+- `mcp.request_id`: Request identifier (when available)
+- `mcp.session_id`: Session identifier (when available)
+
+**Tools:**
+- `mcp.tool.name`: The name of the tool being executed
+- `mcp.request.argument.*`: Tool input arguments
+- `mcp.tool.result.content`: Tool output (when `send_default_pii=True`)
+- `mcp.tool.result.is_error`: Whether the tool execution resulted in an error
+
+**Prompts:**
+- `mcp.prompt.name`: The name of the prompt being requested
+- `mcp.request.argument.*`: Prompt input arguments
+- `mcp.prompt.result.message.count`: Number of messages in the prompt result
+- `mcp.prompt.result.message.role`: Role of the message (for single-message prompts)
+- `mcp.prompt.result.message.content`: Message content (for single-message prompts, when `send_default_pii=True`)
+
+**Resources:**
+- `mcp.resource.uri`: The URI of the resource being accessed
+- `mcp.resource.protocol`: The URI protocol/scheme (e.g., `config`, `data`, `file`)
+
+## Options
+
+By adding `MCPIntegration` to your `sentry_sdk.init()` call explicitly, you can set options for `MCPIntegration` to change its behavior:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.mcp import MCPIntegration
+
+sentry_sdk.init(
+    # ...
+    # Add data like tool inputs and outputs;
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    integrations=[
+        MCPIntegration(
+            include_prompts=False,  # Tool and prompt inputs/outputs will not be sent to Sentry
+        ),
+    ],
+)
+```
+
+You can pass the following keyword arguments to `MCPIntegration()`:
+
+- `include_prompts`:
+
+  Whether tool inputs/outputs and prompt content should be sent to Sentry. Sentry considers this data personal identifiable data (PII) by default. If you want to include the data, set `send_default_pii=True` in the `sentry_sdk.init()` call. To explicitly exclude prompts and outputs despite `send_default_pii=True`, configure the integration with `include_prompts=False`.
+
+  The default is `True`.
+
+## Supported Versions
+
+- MCP SDK: 1.15.0+
+- Python: 3.9+
+
