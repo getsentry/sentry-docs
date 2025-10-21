@@ -98,113 +98,90 @@ Scenario: 1 span added application crashes
 
 ## Sudden Process Terminations
 
-When the BatchProcessor handles logs, it MUST minimize the loss of logs, so developers can fully trust logs. In that case, the BatchProcessor MUST prevent data loss for sudden process terminations, such as crashes or watchdog terminations.
+The BatchProcessor MUST minimize the loss of logs for sudden process terminations, such as crashes or watchdog terminations.
 
-Since each environment is unique, SDKs have three options to choose from. The options become more complex as their number increases. The first option is the simplest, and the last option is the most complicated. SDKs SHOULD implement the least complex option that is suitable for their environment.
+Each SDK environment is unique. Therefore, SDKs have three options to choose from to minimize data loss. As their number increases, the options get more complex. The first option is the simplest, and the last option is the most complicated. SDKs SHOULD implement the least complex option that is suitable for their environment.
 
-### 1. Store Data into Envelope
+### 1. Flush All Data
 
-When the SDK detects a sudden process termination it MUST put all items in the BatchProcessor into one envelope and store it to disk. When the SDK starts again, it MUST send this envelope to Sentry. The BatchProcessor MUST keep it's existing logic described in the specification above.
+When the SDK detects a sudden process termination, it MUST put all items in the BatchProcessor into one envelope and flush it. If your SDK has an offline cache, it MAY flush the envelope to disk and skip sending it to Sentry, if it ensures to send the envelope the next time the SDK starts. The BatchProcessor MUST keep its existing logic described in the [specification](#specification) above.
 
-If SDKs can't reliably detect sudden process terminations or they can't reliably store envelopes to disk when a sudden process termination happens, they SHOULD implement the [FileStream Cache](#2-file-stream-cache) or the [FIFO Queue with Async FileStream Cache](#3-fifo-queue-with-async-file-stream-cache), but it's also acceptable to start with this option as a best effort before adding one of the more complex options
+Suppose your SDK can't reliably detect sudden process terminations, or it can't reliably flush envelopes to Sentry or disk when a sudden process termination happens. In that case, it SHOULD implement the [FileStream Cache](#2-file-stream-cache) or the [FIFO Queue with Async FileStream Cache](#3-fifo-queue-with-async-file-stream-cache). It's acceptable to start with this option as a best effort interim solution before adding one of the more complex options.
 
 ### 2. FileStream Cache
 
 SDKs for which blocking the main thread is a nogo, such as Android and Apple, SDKs MUST NOT implement this option. They SHOULD implement the [FIFO Queue with Async FileStream Cache](#3-fifo-queue-with-async-file-stream-cache).
 
-Instead of keeping the data in memory, the BatchProcessor stores the data on the calling thread to disk. The BatchProcessor keeps the timeout logic to ensure the delay of sending data to Sentry is minimal. For efficiency, the BatchProcessor SHOULD use file handles or file streams when writing data to disk.
+With this option, the BatchProcessor stores the data on the calling thread directly to disk. The SDK SHOULD store the BatchProcessor files in a folder that is a sibling of the `envelopes` or `replay` folder, named `batch-processor`. This folder is scoped per DSN, so SDKs ensure not mixing up data for different DSNs. In the `batch-processor` folder, the SDK MUST store two types of cache files:
 
-The BatchProcessor uses two types of cache files:
-- **`current`** - The file the processor is actively writing to
-- **`sending`** - The file being converted to an envelope and sent to Sentry
+- **`cache`** - The file the processor is actively writing to
+- **`flushing`** - The file being converted to an envelope and sent to Sentry
 
-When the timeout expires or the cache file hits the size limit, the BatchProcessor renames the `current` file to `sending`, creates a new `current` file for incoming data, converts the data in the `sending` file to an envelope, sends it to Sentry, and then deletes the `sending` file. When the SDK starts again, it MUST check if there are any cache files in the cache directory (both `current` and `sending`) and if so, it MUST load the data from the files and send it to Sentry.
+When the timeout expires or the cache file hits the size limit, the BatchProcessor renames the `cache` file to `flushing`, creates a new `cache` file for incoming data, converts the data in the `flushing` file to an envelope, sends it to Sentry, and then deletes the `flushing` file. When the SDK starts again, it MUST check if there are any cache files in the cache directory (both `cache` and `flushing`) and if so, it MUST load the data from the files and send it to Sentry.
 
 
 ### 3. FIFO Queue with Async FileStream Cache
 
-This is the recommended option for SDKs that can't reliably detect sudden process terminations or they can't reliably store envelopes to disk when a sudden process termination happens, such as Android and Apple.
+This is the recommended option for SDKs that can't reliably detect sudden process terminations or that can't reliably store envelopes to disk when a sudden process termination happens, such as Android and Apple. SDKs SHOULD prefer implementing option 1 or 2 if possible, as this option is more complex.
 
 With this option, the BatchProcessor stores its logs in a thread-safe FIFO queue, residing in an async-safe memory space, allowing the crash reporter to write them to disk when a crash occurs. Furthermore, the BatchProcessor stores logs asynchronously into a file, allowing it to recover after an abnormal termination, for which the crash handler can't run. The BatchProcessor MUST store the logs immediately to disk after adding them to the FIFO queue.
+
+The BatchProcessor maintains its logic of batching multiple logs together into a single envelope to avoid multiple HTTP requests.
+
+Hybrid SDKs pass every log down to the native SDKs, which will put every log in their BatchProcessor and its cache when logs are ready for sending, meaning after they go through beforeLog, integrations, processors, etc.
+
+#### Receiving Data
 
 When the BatchProcessor receives a log, it performs the following steps
 
 1. Put the log into the FIFO queue on the calling thread.
-2. On a background thread, serialize the next log of the FIFO queue and store it in the batch-processor-cache-file.
+2. On a background thread, serialize the next log of the FIFO queue and store it in the `cache` file.
 3. Remove the log from the FIFO queue.
 4. If the queue isn't empty, go back to step 2.
 
 The FIFO queue has a `max-logs-count` of 64 logs. When the FIFO queue exceeds `max-logs-count` log items, the BatchProcessor MUST drop logs and record client reports with the category `queue_overflow` for every dropped log. SDKs MAY choose a different `max-logs-count` value, if needed. SDKs MUST NOT expose the `max-logs-count` value to users as an option. We can make this option public in the future, if required.
 
-When SDKs detect an abnormal process termination, they MUST write the logs in the FIFO queue to the `batch-processor-recovery-file` and send these logs on the next SDK launch. To avoid sending duplicated logs, the SDKs MUST deduplicate the logs from the `batch-processor-recovery-file` and `batch-processor-cache-file` based on the logID after an abnormal process termination before sending them.
+#### Abnormal Process Termination
 
-The BatchProcessor MUST keep two `batch-processor-cache-files`. When it sends the logs from `batch-processor-cache-file`, it renames it to `batch-processor-cache-file-to-flush` and creates a new `batch-processor-cache-file` to avoid losing logs if an abnormal termination occurs when flushing the logs. To avoid sending duplicate logs if an abnormal termination occurs in between storing the envelope and deleting the cache file, the BatchProcessor MUST first store the envelope to the same folder as the BatchProcessor files. After deleting the `batch-processor-cache-file-to-flush`, SDKs MUST move the envelope to the envelope cache folder. As moving files is usually atomic, SDKs avoid sending duplicated logs in the described scenario. These are the flushing steps:
+When SDKs detect an abnormal process termination, they MUST write the logs in the FIFO queue to the `abnormal-termination-x` file where `x` is the an increasing index of the file starting from 0.
 
-1. Rename `batch-processor-cache-file` to `batch-processor-cache-file-to-flush`.
-2. Create a new `batch-processor-cache-file` and store new logs to this file.
-3. Convert the logs in `batch-processor-cache-file-to-flush` to an envelope and name it `batch-processor-cache-envelope-to-flush`. SDKs MUST not put the envelope into the envelope cache folder yet. Instead, they MUST store the envelope to the same folder as the other BatchProcessor files.
-4. Delete the file `batch-processor-cache-file-to-flush`
-5. Move the `batch-processor-cache-envelope-to-flush` to the envelopes cache folder.
+When the process terminates abnormally and the SDKs can't detect it, the SDKs lose data in the FIFO queue, which we accept over blocking the calling thread that could be the main thread.
 
+No matter the abnormal process termination, SDKs MUST send data both in the `abnormal-termination-x` and `cache` files on the next SDK start. Please refer to the [SDK start](#sdk-start) section for the detailed specification.
+
+#### Cache File Location
+
+The SDK SHOULD store the BatchProcessor cache files in a folder that is a sibling of the `envelopes` or `replay` folder, named `batch-processor`. This folder is scoped per DSN, so SDKs ensure not mixing up data for different DSNs. The `batch-processor` folder MAY contain the follow files, where `x` is the an increasing index of the file starting from 0:
+
+- `cache` - The active writing cache file for the BatchProcessor
+- `cache-to-flush-x` - The file that the BatchProcessor is converting to an envelope.
+- `abnormal-termination-x` - The file containing the data from the FIFO queue when an abnormal process termination occurs.
+- `envelope-to-flush-x` - The envelope that the BatchProcessor is about to move to the envelopes cache folder, so the SDK can send it to Sentry.
+
+#### Flushing
+
+The BatchProcessor MUST keep two cache files. When the BatchProcessor sends the data from `cache`, it renames it to `cache-to-flush-x` where `x` is the an increasing index of the cache file starting from 0 and creates a new `cache` to avoid losing logs if an abnormal termination occurs when flushing the logs. To avoid sending duplicate logs if an abnormal termination occurs between storing the envelope and deleting the cache file, the BatchProcessor MUST first store the envelope to the same folder as the BatchProcessor files. After deleting the `cache-to-flush-x`, SDKs MUST move the envelope to the envelope cache folder. As moving files is usually atomic, SDKs avoid sending duplicated logs in the described scenario. These are the flushing steps:
+
+1. Rename `cache` to `cache-to-flush-x` where `x` is the an increasing index of the cache file starting from 0.
+2. Create a new `cache` and store new logs to this file.
+3. Convert the logs in `cache-to-flush-x` to an envelope and name it `envelope-to-flush-x`. SDKs MUST not put the envelope into the envelope cache folder yet. Instead, they MUST store the envelope to the same folder as the other BatchProcessor files.
+4. Delete the file `cache-to-flush-x`
+5. Move the `envelope-to-flush-x` to the envelopes cache folder.
 
 The detailed specification is written in the [Gherkin syntax](https://cucumber.io/docs/gherkin/reference/). The specification uses logs as an example, but the same applies to logs or any other future telemetry data.
 
-SDK detects abnormal process termination scenarios:
+#### SDK start
 
-```Gherkin
-Scenario: One log in FIFO queue
-    Given one log in the FIFO queue
-    And no logs in the `batch-processor-cache-file`
-    When the SDK detects an abnormal process termination
-    Then the SDK puts this log to the `batch-processor-recovery-file`
+Whenever the SDK starts, it must check if there is any data in the batch processor folder that needs to be recovered. SDKs MUST perform the following steps when starting:
 
-Scenario: Log in FIFO queue and cache file
-    Given one log in the FIFO queue
-    And one log in the `batch-processor-cache-file`
-    When the SDK detects an abnormal process termination
-    Then the SDK puts this log to the `batch-processor-recovery-file`
-```
+1. If there is data in the `cache` file, rename the `cache` file to `cache-recovery-to-flush-x`.
+2. If there is an `abnormal-termination-x` file, deduplicate data from both the `cache-recovery-to-flush-x` and `abnormal-termination-x` file based on the ID.
+3. Put the deduplicated data into the `envelope-to-flush-x` in the batch processor cache folder.
+4. Delete the `cache-recovery-to-flush-x` and `abnormal-termination-x` files.
+5. Move the `envelope-to-flush-x` to the envelopes cache folder.
 
-SDK doesn't detect abnormal process termination scenarios:
+As abnormal terminations can occur at any time, there may be multiple `cache-recovery-to-flush-x`, `abnormal-termination-x` or `envelope-to-flush-x` files. SDKs MUST handle multiple file pairs at each of the above-described steps. For example, if there are two pairs of `cache-recovery-to-flush-x` and `abnormal-termination-x`, the SDKs should perform steps 2 to 5 for both pairs.
 
-```Gherkin
-Scenario: One log in FIFO queue
-    Given one log in the FIFO queue
-    And no logs in the `batch-processor-cache-file`
-    When the process terminates abnormally and the SDK can't detect it
-    Then the SDK loses this log in the FIFO queue
+#### SDK Closes
 
-Scenario: Log in FIFO queue and cache file
-    Given one log in the FIFO queue
-    And one log in the `batch-processor-cache-file`
-    When the process terminates abnormally and the SDK can't detect it
-    Then the SDK loses this log in the FIFO queue
-    But it doesn't lose the log in the `batch-processor-cache-file`
-```
-
-SDK Launch Scenarios
-
-`x` is the index of the batch-processor-recovery-file and batch-processor-cache-file
-
-```Gherkin
-Scenario: SDK Launch after abnormal termination
-    Given one log in the `batch-processor-recovery-file-x`
-    And one log in the `batch-processor-cache-file-x`
-    When the SDK starts
-    Then the SDK deduplicates the logs from the `batch-processor-recovery-file-x` and `batch-processor-cache-file-x` based on the logID
-    And puts the logs into one envelope named `batch-processor-envelope-x` in the BatchProcessor directory
-    And deletes the `batch-processor-recovery-file-x` and `batch-processor-cache-file-x`
-    And moves the logs envelope `batch-processor-envelope-x` from the BatchProcessor directory to the envelopes cache folder
-
-Scenario: Abnormal termination before deleting recover and crash file
-    Given the SDK stored the envelope `batch-processor-envelope-0` to the BatchProcessor directory
-    But it didn't delete the `batch-processor-recovery-file-0` and `batch-processor-cache-file-0`
-    When the SDK starts
-    Then the SDK deletes the `batch-processor-recovery-file-0` and `batch-processor-cache-file-0`
-    And moves the logs envelope from the BatchProcessor directory to the envelopes cache folder
-```
-
-
-The BatchProcessor maintains its logic of batching multiple logs together into a single envelope to avoid multiple HTTP requests.
-
-Hybrid SDKs pass every log down to the native SDKs, which will put every log in their BatchProcessor and its cache when logs are ready for sending, meaning after they go through beforeLog, integrations, processors, etc.
+Whenever the users closes the SDK, the BatchProcessor MUST perform the steps described in the [Flushing](#flushing) section.
