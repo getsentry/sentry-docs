@@ -1,6 +1,6 @@
 ---
-title: tracing
-description: "Learn about monitoring your Rust application with Sentry's tracing integration."
+title: tokio-rs/tracing
+description: "Learn about monitoring your Rust application with Sentry's tokio-rs/tracing integration."
 ---
 
 The Sentry SDK offers an integration for tokio's [tracing](https://github.com/tokio-rs/tracing) ecosystem that supports:
@@ -65,7 +65,7 @@ fn main() {
         .with(tracing_subscriber::fmt::layer())
         .with(sentry::integrations::tracing::layer())
         .init();
-        
+
     tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()?
@@ -88,26 +88,26 @@ async fn fail() {
 }
 ```
 
-By default, error level events are captured as Sentry events, while anything at or above info is added as a breadcrumb.
+By default, error-level events from `tracing` are captured as Sentry events, while events at or above info level are added to the current scope as breadcrumbs.
 
-{/* ___PRODUCT_OPTION_START___ logs */}
+Additionally, if the `logs` feature flag of the `sentry` crate is enabled and the SDK is initialized with `enable_logs: true`, then events from `tracing` at info level or above are also captured as [structured logs](https://docs.sentry.io/product/explore/logs/).
 
-To capture structured logs for `tracing` events instead, you need to set up the Sentry layer with a custom event filter that maps to logs, like so:
+This behavior can be customized by applying a custom `event_filter` when creating the layer.
+The following snippet shows the default `event_filter` that's applied when using the `sentry` crate with the `logs` feature flag.
 
 ```rust
 use sentry::integrations::tracing::EventFilter;
 
-sentry::integrations::tracing::layer().event_filter(|md| match *md.level() {
-    // Capture error level events as Sentry events
-    tracing::Level::ERROR => EventFilter::Event,
-    // Ignore trace level events, as they're too verbose
-    tracing::Level::TRACE => EventFilter::Ignore,
-    // Capture everything else as a structured log
-    _ => EventFilter::Log,
-});
+let sentry_layer =
+    sentry::integrations::tracing::layer().event_filter(|md| match *md.level() {
+        // Capture error and warn level events as both logs and events in Sentry
+        tracing::Level::ERROR => EventFilter::Event | EventFilter::Log,
+        // Ignore trace level events, as they're too verbose
+        tracing::Level::TRACE => EventFilter::Ignore,
+        // Capture everything else as both a breadcrumb and a log
+        _ => EventFilter::Breadcrumb | EventFilter::Log,
+    });
 ```
-
-{/* ___PRODUCT_OPTION_END___ logs */}
 
 ## Verify
 
@@ -118,3 +118,7 @@ Learn more about manually capturing an error or message in our <PlatformLink to=
 </Alert>
 
 To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and select your project. Select Issues, and then Errors & Outages in the sidebar, where you will find the newly created issue. Clicking on the issue's title will open a page where you can see detailed information and mark it as resolved.
+
+If you're using tracing (the Sentry feature), you can view the recorded traces and spans by selecting Explore, and then Traces in the sidebar.
+
+If you're using logs, you can view the recorded logs by selecting Explore, and then Logs in the sidebar.

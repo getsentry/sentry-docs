@@ -63,13 +63,15 @@ Additional attributes on the span:
 | Attribute                              | Type | Requirement Level | Description                                                               | Example |
 | :------------------------------------- | :--- | :---------------- | :------------------------------------------------------------------------ | :------ |
 | `gen_ai.usage.input_tokens`            | int  | optional          | The number of tokens used in the AI input (prompt).                       | `10`    |
-| `gen_ai.usage.input_tokens.cached`     | int  | optional          | The number of cached tokens used in the AI input (prompt)                 | `50`    |
+| `gen_ai.usage.input_tokens.cached`     | int  | optional          | The number of cached tokens used in the AI input (prompt) **[2]**         | `50`    |
 | `gen_ai.usage.output_tokens`           | int  | optional          | The number of tokens used in the AI response.                             | `100`   |
-| `gen_ai.usage.output_tokens.reasoning` | int  | optional          | The number of tokens used for reasoning.                                  | `30`    |
+| `gen_ai.usage.output_tokens.reasoning` | int  | optional          | The number of tokens used for reasoning. **[3]**                          | `30`    |
 | `gen_ai.usage.total_tokens`            | int  | optional          | The total number of tokens used to process the prompt. (input and output) | `190`   |
 
 - **[0]:** Span attributes only allow primitive data types (like `int`, `float`, `boolean`, `string`). This means you need to use a stringified version of a list of dictionaries. Do NOT set the object/array `[{"foo": "bar"}]` but rather the string `'[{"foo": "bar"}]'` (must be parsable JSON).
 - **[1]:** Each message item uses the format `{role:"", content:""}`. The `role` must be `"user"`, `"assistant"`, `"tool"`, or `"system"`. For messages of the role `tool`, the `content` can be a string or an arbitrary object with information about the tool call. For other messages the `content` can be either a string or a list of dictionaries in the format `{type: "text", text:"..."}`.
+- **[2]:** Cached tokens are a subset of input tokens; `gen_ai.usage.input_tokens` includes `gen_ai.usage.input_tokens.cached`.
+- **[3]:** Reasoning tokens are a subset of output tokens; `gen_ai.usage.output_tokens` includes `gen_ai.usage.output_tokens.reasoning`.
 
 ## AI Client Span
 
@@ -106,13 +108,15 @@ Additional attributes on the span:
 | Attribute                              | Type | Requirement Level | Description                                                               | Example |
 | :------------------------------------- | :--- | :---------------- | :------------------------------------------------------------------------ | :------ |
 | `gen_ai.usage.input_tokens`            | int  | optional          | The number of tokens used in the AI input (prompt).                       | `10`    |
-| `gen_ai.usage.input_tokens.cached`     | int  | optional          | The number of cached tokens used in the AI input (prompt)                 | `50`    |
+| `gen_ai.usage.input_tokens.cached`     | int  | optional          | The number of cached tokens used in the AI input (prompt) **[2]**         | `50`    |
 | `gen_ai.usage.output_tokens`           | int  | optional          | The number of tokens used in the AI response.                             | `100`   |
-| `gen_ai.usage.output_tokens.reasoning` | int  | optional          | The number of tokens used for reasoning.                                  | `30`    |
+| `gen_ai.usage.output_tokens.reasoning` | int  | optional          | The number of tokens used for reasoning. **[3]**                          | `30`    |
 | `gen_ai.usage.total_tokens`            | int  | optional          | The total number of tokens used to process the prompt. (input and output) | `190`   |
 
 - **[0]:** Span attributes only allow primitive data types (like `int`, `float`, `boolean`, `string`). This means you need to use a stringified version of a list of dictionaries. Do NOT set the object/array `[{"foo": "bar"}]` but rather the string `'[{"foo": "bar"}]'` (must be parsable JSON).
 - **[1]:** Each message item uses the format `{role:"", content:""}`. The `role` must be `"user"`, `"assistant"`, `"tool"`, or `"system"`. For messages of the role `tool`, the `content` can be a string or an arbitrary object with information about the tool call. For other messages the `content` can be either a string or a list of dictionaries in the format `{type: "text", text:"..."}`.
+- **[2]:** Cached tokens are a subset of input tokens; `gen_ai.usage.input_tokens` includes `gen_ai.usage.input_tokens.cached`.
+- **[3]:** Reasoning tokens are a subset of output tokens; `gen_ai.usage.output_tokens` includes `gen_ai.usage.output_tokens.reasoning`.
 
 ## Execute Tool Span
 
@@ -187,3 +191,7 @@ Some attributes are common to all AI Agents spans:
 | `"openai"`          | OpenAI                            |
 | `"perplexity"`      | Perplexity                        |
 | `"xai"`             | xAI                               |
+
+## Size Limits
+In addition to the [general size limits](/concepts/data-management/size-limits/) for events, spans, and attachments, there are specific size limits for AI integrations:
+- Input messages in AI integrations recorded in the span attribute `gen_ai.request.messages` are limited to 20kB per span. Messages are trimmed and truncated if they exceed the limit, retaining the most recent messages.

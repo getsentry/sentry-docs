@@ -3,6 +3,8 @@
 import {RefObject, useEffect, useRef, useState} from 'react';
 import {Clipboard} from 'react-feather';
 
+import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
+
 import styles from './code-blocks.module.scss';
 
 import {makeHighlightBlocks} from '../codeHighlights';
@@ -23,9 +25,17 @@ function getCopiableText(element: HTMLDivElement) {
   let text = '';
   const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, {
     acceptNode: function (node) {
-      // Skip if parent has .no-copy class
-      if (node.parentElement?.classList.contains('no-copy')) {
-        return NodeFilter.FILTER_REJECT;
+      let parent = node.parentElement;
+      // Walk up the tree to check if any parent has .no-copy, .hidden, or data-onboarding-option-hidden
+      while (parent && parent !== element) {
+        if (
+          parent.classList.contains('no-copy') ||
+          parent.classList.contains('hidden') ||
+          parent.hasAttribute('data-onboarding-option-hidden')
+        ) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        parent = parent.parentElement;
       }
       return NodeFilter.FILTER_ACCEPT;
     },
@@ -47,6 +57,7 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
   // Show the copy button after js has loaded
   // otherwise the copy button will not work
   const [showCopyButton, setShowCopyButton] = useState(false);
+  const {emit} = usePlausibleEvent();
 
   useEffect(() => {
     setShowCopyButton(true);
@@ -83,6 +94,7 @@ export function CodeBlock({filename, language, children}: CodeBlockProps) {
     try {
       await navigator.clipboard.writeText(code);
       setShowCopied(true);
+      emit('copy sentry code', {props: {page: window.location.pathname}});
       setTimeout(() => setShowCopied(false), 1200);
     } catch (error) {
       // eslint-disable-next-line no-console

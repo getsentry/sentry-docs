@@ -1,0 +1,101 @@
+---
+title: Pino
+description: "Capture logs and errors from Pino."
+supported:
+  - javascript.node
+  - javascript.astro
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.deno
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.electron
+  - javascript.nestjs
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.react-router
+  - javascript.astro
+  - javascript.bun
+  - javascript.tanstackstart-react
+---
+
+<Alert>
+
+This integration only works in the Node.js and Bun runtimes. Requires SDK version `10.18.0` or higher.
+
+</Alert>
+
+_Import name: `Sentry.pinoIntegration`_
+
+The `pinoIntegration` adds instrumentation for the `pino` library so that calls to the pino logger as captured as logs. Optionally, you can capture calls to the pino logger as errors.
+
+```JavaScript
+Sentry.init({
+  integrations: [Sentry.pinoIntegration()],
+});
+```
+
+## Options
+
+### `error`
+
+Configure how pino logs are captured as Sentry errors.
+
+#### `levels`
+
+- Type: `Array<'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal'>`
+- Default: `[]`
+
+Levels that trigger capturing of events. When a pino log message is logged at one of these levels, it will be captured as a Sentry error event.
+
+#### `handled`
+
+- Type: `boolean`
+- Default: `true`
+
+By default, Sentry will mark captured errors as handled. Set this to `false` if you want to mark them as unhandled instead.
+
+### `log`
+
+Configure how pino logs are captured as Sentry logs.
+
+#### `levels`
+
+- Type: `Array<'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal'>`
+- Default: `["trace", "debug", "info", "warn", "error", "fatal"]`
+
+Levels that trigger capturing of logs. Logs are only captured if `enableLogs` is enabled in your Sentry configuration.
+
+## Supported Versions
+
+- `pino`: `>=8.0.0 <10`
+
+## Examples
+
+### Send only info, error, and warn log levels to Sentry
+
+```js
+Sentry.init({
+  integrations: [
+    Sentry.pinoIntegration({ log: { levels: ["info", "warn", "error"] } }),
+  ],
+});
+```
+
+### Send errors to Sentry
+
+```js
+Sentry.init({
+  integrations: [
+    Sentry.pinoIntegration({ error: { levels: ["warn", "error"] } }),
+  ],
+});
+```

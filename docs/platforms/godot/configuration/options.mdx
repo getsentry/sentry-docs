@@ -6,11 +6,15 @@ description: "Learn more about how the SDK can be configured via options. These 
 
 <PlatformContent includePath="configuration/config-intro" />
 
+## Available Options
+
+<TableOfContents ignoreIds={["available-options"]} />
+
 ## Core Options
 
 Options that can be read from an environment variable (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically.
 
-<ConfigKey name="dsn">
+<SdkOption name="dsn" type="string" envVar="SENTRY_DSN">
 
 The DSN tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable also does not exist, the SDK will just not send any events.
 
@@ -18,9 +22,9 @@ In runtimes without a process environment (such as the browser) that fallback do
 
 Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-utilization).
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="debug">
+<SdkOption name="debug" type="bool" defaultValue="false">
 
 Turns debug mode on or off. If `debug` is enabled, the SDK will print useful debugging information. You can see it in the Output panel of the Godot editor. It's generally not recommended to turn it on in production, though turning `debug` mode on will not cause any safety concerns.
 
@@ -28,97 +32,132 @@ In the Project Settings, this option appears as `Debug Printing` and defaults to
 
 You can control the verbosity using the `diagnostic_level` option.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="diagnostic_level">
+<SdkOption name="diagnostic_level" type="SentrySDK.Level" defaultValue="LEVEL_DEBUG">
 
-Specifies the minimum level of messages to be printed if `debug` is turned on.
+Specifies the minimum level of messages to be printed if `debug` is turned on. Possible values are: `LEVEL_DEBUG`, `LEVEL_INFO`, `LEVEL_WARNING`, `LEVEL_ERROR`, and `LEVEL_FATAL`.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="release">
+<SdkOption name="release" type="string" envVar="SENTRY_RELEASE">
 
-Release version of the application. This value must be unique across all projects in your organization. By default, the SDK reads from the `application/config/name` and `application/config/version` project settings to generate the release identifier in the format `"{app_name}@{app_version}"`. Alternatively, you can set `release` to a custom value, optionally using the `{app_name}` and `{app_version}` placeholders in a [configuration script](#configuration-script).
+Release version of the application. This value must be unique across all projects in your organization. By default, the SDK reads from the `application/config/name` and `application/config/version` project settings to generate the release identifier in the format `"{app_name}@{app_version}"`. Alternatively, you can set `release` to a custom value [programmatically](#programmatic-configuration), optionally using the `{app_name}` and `{app_version}` placeholders.
 
 Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/) or the <SandboxLink scenario="releases">sandbox</SandboxLink>.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="dist">
+<SdkOption name="dist" type="string">
 
 Sets the distribution of the application. Distributions are used to disambiguate build or deployment variants of the same release of an application. For example, the dist can be the build number of an Xcode build or the version code of an Android build. The dist has a max length of 64 characters.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="environment">
+<SdkOption name="environment" type="string" envVar="SENTRY_ENVIRONMENT">
 
 Sets the environment. Environments indicate where an error occurred, such as in a release export, headless server, QA build, or another deployment. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `production` or similar).
 
-The SDK automatically detects Godot-specific environments, such as `headless_server` and `export_release`, but you can also set it to your own value in a [configuration script](#configuration-script).
+The SDK automatically detects Godot-specific environments, such as `headless_server` and `export_release`, but you can also set it to your own value [programmatically](#programmatic-configuration).
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="sample-rate">
+<SdkOption name="sample_rate" type="float" defaultValue="1.0">
 
 Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0`, which means that 100% of error events will be sent. If set to `0.1`, only 10% of error events will be sent. Events are picked randomly.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="max-breadcrumbs">
+<SdkOption name="max_breadcrumbs" type="int" defaultValue="100">
 
 This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`, but you can set this to any number. However, you should be aware that Sentry has a [maximum payload size](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) and any events exceeding that payload size will be dropped.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="send-default-pii">
+<SdkOption name="send_default_pii" type="bool" defaultValue="false">
 
 If enabled, the SDK will include PII (Personally Identifiable Information) with the events.
 
 This option is disabled by default. If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="enabled">
-
-If `false`, the SDK will not initialize. This is useful for temporarily disabling the SDK in the Project Settings, or in a [configuration script](#configuration-script).
-
-</ConfigKey>
-
-<ConfigKey name="disabled-in-editor-play">
-
-If `true`, the SDK will not initialize when you play/run your project from within the Godot editor (using the play button or F5).
-
-</ConfigKey>
-
-<ConfigKey name="attach-log">
+<SdkOption name="attach_log" type="bool" defaultValue="true">
 
 If enabled, the SDK will attach the Godot log file to the event.
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="attach-screenshot">
+<SdkOption name="attach_screenshot" type="bool" defaultValue="false">
 
 If enabled, the SDK will try to take a screenshot and attach it to the event.
 
-</ConfigKey>
+This option is turned off by default.
 
-<ConfigKey name="attach-scene-tree">
+<Alert level="warning" title="Important">
+
+This feature is experimental and may impact performance when capturing screenshots. We recommend testing before enabling in production.
+
+</Alert>
+
+</SdkOption>
+
+<SdkOption name="screenshot_level" type="SentrySDK.Level" defaultValue="LEVEL_FATAL">
+
+Specifies the minimum level of events for which screenshots will be captured. Possible values are: `LEVEL_DEBUG`, `LEVEL_INFO`, `LEVEL_WARNING`, `LEVEL_ERROR`, and `LEVEL_FATAL`.
+
+<Alert title="Note">
+
+Changing this option may impact performance in the frames the screenshots are taken.
+
+</Alert>
+
+</SdkOption>
+
+<SdkOption name="attach_scene_tree" type="bool" defaultValue="false">
 
 If enabled, the SDK will capture and attach scene tree information to events. The scene tree data is attached as a `view-hierarchy.json` file, and you can explore it in the "Scene Tree" section of each issue that includes this attachment. This provides valuable context about your game's scene tree at the time of the error. See <PlatformLink to="/enriching-events/view-hierarchy/">Scene Tree</PlatformLink> for more details.
 
-</ConfigKey>
+This option is turned off by default.
+
+</SdkOption>
+
+## GUI-only Options
+
+These options are only available in the **Project Settings** window.
+
+<SdkOption name="auto_init" type="bool" defaultValue="true">
+
+Enables automatic SDK initialization when the game starts.
+The SDK initializes as early as possible in the lifecycle — before scenes are loaded or any scripts are executed.
+
+This option is turned on by default.
+
+</SdkOption>
+
+<SdkOption name="skip_auto_init_on_editor_play" type="bool" defaultValue="true">
+
+Prevents automatic initialization when running the game from the editor
+(for example, by pressing the play button or **F5**).
+This setting only applies if **Auto Init** is enabled.
+
+This option is turned on by default.
+
+</SdkOption>
 
 ## Error Logger Options
 
-<ConfigKey name="logger-enabled">
+<SdkOption name="logger_enabled" type="bool" defaultValue="true">
 
 If `true`, the SDK will capture logged errors as events and/or breadcrumbs, as defined by `logger_event_mask` and `logger_breadcrumb_mask` options. Crashes are always captured.
 
-</ConfigKey>
+This option is turned on by default.
 
-<ConfigKey name="logger-breadcrumb-mask">
+</SdkOption>
 
-Specifies the types of errors captured as breadcrumbs. Accepts a single value or a bitwise combination of `GodotErrorMask` masks.
+<SdkOption name="logger_breadcrumb_mask" type="int" defaultValue="7">
+
+Specifies the types of errors captured as breadcrumbs. Accepts a single value or a bitwise combination of `GodotErrorMask` masks. The default value captures nativer errors, warnings, script and shader errors (`MASK_ERROR | MASK_WARNING | MASK_SCRIPT | MASK_SHADER`).
 
 `GodotErrorMask` values:
 - `MASK_NONE`: No logger errors will be captured.
@@ -132,40 +171,64 @@ var mask = SentryOptions.MASK_ERROR | SentryOptions.MASK_SCRIPT
 options.logger_breadcrumb_mask = mask
 ```
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="logger-event-mask">
+<SdkOption name="logger_event_mask" type="int" defaultValue="5">
 
-Specifies the types of errors captured as events. Accepts a single value or a bitwise combination of `GodotErrorMask` masks.
+Specifies the types of errors captured as events. Accepts a single value or a bitwise combination of `GodotErrorMask` masks. The default value captures native, script and shader errors (`MASK_ERROR | MASK_SCRIPT` | `MASK_SHADER`).
 
 ```GDScript
 var mask = SentryOptions.MASK_ERROR | SentryOptions.MASK_SCRIPT
 options.logger_event_mask = mask
 ```
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="logger-include-source">
+<SdkOption name="logger_include_source" type="bool" defaultValue="true">
 
 If `true`, the SDK will include the surrounding source code of logged errors, if available in the exported project.
 
-</ConfigKey>
+This option is turned on by default.
 
-<ConfigKey name="logger-limits">
+</SdkOption>
+
+<SdkOption name="logger_include_variables" type="bool" defaultValue="true">
+
+If `true`, the SDK will include local variables from stack traces when capturing script errors. This allows showing the values of variables at each frame in the call stack. Requires enabling **Debug -> Settings -> GDScript -> Always Track Local Variables** in the **Project Settings**.
+
+This option is turned on by default.
+
+<Alert title="Note">
+
+Enabling this option may impact performance, especially for applications with frequent errors or deep call stacks.
+
+</Alert>
+
+</SdkOption>
+
+<SdkOption name="logger_messages_as_breadcrumbs" type="bool" defaultValue="true">
+
+If `true`, the SDK will capture log messages (such as `print()` statements) as breadcrumbs along with events.
+
+This option is turned on by default.
+
+</SdkOption>
+
+<SdkOption name="logger_limits" type="object">
 
 Defines throttling limits for the error logger. These limits are used to prevent the SDK from sending too many non-critical and repeating error events.
 
 This option contains multiple properties that govern the behavior of throttling. The following paragraphs explain each of those properties in detail.
 
-`events_per_frame` specifies the maximum number of error events to send per processed frame. If exceeded, no further errors will be captured until the next frame. This serves as a safety measure to prevent the SDK from overloading a single frame.
+`events_per_frame` specifies the maximum number of error events to send per processed frame. If exceeded, no further errors will be captured until the next frame. This serves as a safety measure to prevent the SDK from overloading a single frame. Default: `5`.
 
-`repeated_error_window_ms` specifies the minimum time interval in milliseconds between two identical errors. If exceeded, no further errors from the same line of code will be captured until the next interval.
+`repeated_error_window_ms` specifies the minimum time interval in milliseconds between two identical errors. If exceeded, no further errors from the same line of code with the identical message will be captured until the next interval. Set it to `0` to disable this limit. Default: `1000`.
 
-`throttle_events` specifies the maximum number of events allowed within a sliding time window of `throttle_window_ms` milliseconds. If exceeded, errors will be captured as breadcrumbs only until capacity is freed.
+`throttle_events` specifies the maximum number of events allowed within a sliding time window of `throttle_window_ms` milliseconds. If exceeded, errors will be captured as breadcrumbs only until capacity is freed. Default: `10`.
 
-`throttle_window_ms` specifies the time window in milliseconds for `throttle_events`.
+`throttle_window_ms` specifies the time window in milliseconds for `throttle_events`. Set it to `0` to disable this limit. Default: `10000`.
 
-</ConfigKey>
+</SdkOption>
 
 ## Hooks
 
@@ -174,9 +237,9 @@ These options can be used to hook the SDK in various ways to customize the repor
 The callbacks you set as hooks will be called on the thread where the event happened. So you can only use
 thread-safe APIs and only use Godot-specific APIs after you've checked that you're on the main thread.
 
-<ConfigKey name="before-send">
+<SdkOption name="before_send" type="function">
 
-If assigned, this callback runs before a message or error event is sent to Sentry. It takes `SentryEvent` as a parameter and returns either the same event object, with or without modifications, or `null` to skip reporting the event. You can assign it in a [configuration script](#configuration-script). This can be used, for instance, for stripping PII before sending.
+If assigned, this callback runs before an event is sent to Sentry. You can only set it [programmatically](#programmatic-configuration). It takes `SentryEvent` as a parameter and returns either the same event object, with or without modifications, or `null` to skip reporting the event. This can be used, for instance, for stripping PII before sending.
 
 ```GDScript
 func _before_send(event: SentryEvent) -> SentryEvent:
@@ -189,11 +252,11 @@ func _before_send(event: SentryEvent) -> SentryEvent:
 	return event
 ```
 
-</ConfigKey>
+</SdkOption>
 
-<ConfigKey name="before-capture-screenshot">
+<SdkOption name="before_capture_screenshot" type="function">
 
-If assigned, this callback runs before a screenshot is captured. It takes `SentryEvent` as a parameter and returns `false` to skip capturing the screenshot, or `true` to capture the screenshot.
+If assigned, this callback runs before a screenshot is captured. You can only set it [programmatically](#programmatic-configuration). It takes `SentryEvent` as a parameter and returns `false` to skip capturing the screenshot, or `true` to capture the screenshot.
 
 ```GDScript
 func _before_capture_screenshot(event: SentryEvent) -> bool:
@@ -202,4 +265,4 @@ func _before_capture_screenshot(event: SentryEvent) -> bool:
 	return true
 ```
 
-</ConfigKey>
+</SdkOption>
