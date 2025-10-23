@@ -1,23 +1,33 @@
 ---
 title: Electron
-description: "Electron is a framework for building desktop applications using JavaScript, HTML, and CSS. Learn how to set it up with Sentry."
+description: "Learn how to manually set up Sentry in your Electron app and capture your first errors."
 sdk: sentry.javascript.electron
 categories:
   - javascript
   - desktop
 ---
 
-`@sentry/electron` is the official Sentry SDK for Electron applications. It can capture JavaScript exceptions in the `main` and `renderer` processes, as well as collect native crash reports (Minidumps).
+<PlatformContent includePath="getting-started-prerequisites" />
 
-## Features
+## Step 1: Install
 
-In addition to capturing errors, you can monitor interactions between multiple services or applications by [enabling tracing](/concepts/key-terms/tracing/). You can also get to the root of an error or performance issue faster, by watching a video-like reproduction of a user session with [session replay](/product/explore/session-replay/web/getting-started/).
+Choose the features you want to configure, and this guide will show you how:
 
-Select which Sentry features you'd like to install in addition to Error Monitoring to get the corresponding installation and configuration instructions below.
+<OnboardingOptionButtons
+  options={[
+    "error-monitoring",
+    "performance",
+    "session-replay",
+    "user-feedback",
+    "logs",
+  ]}
+/>
 
-## Install
+<PlatformContent includePath="getting-started-features-expandable" />
 
-<OnboardingOptionButtons options={["error-monitoring", "performance", "session-replay", "user-feedback", "logs"]} />
+### Install the Sentry SDK
+
+Run the command for your preferred package manager to add the Sentry SDK to your application:
 
 ```bash {tabTitle:npm}
 npm install @sentry/electron --save
@@ -31,23 +41,41 @@ yarn add @sentry/electron
 pnpm add @sentry/electron
 ```
 
-## Configure
+## Step 2: Configure
 
-You should `init` the SDK in the `main` process and every `renderer` process you spawn.
+You should initialize the SDK in both the `main` process and every `renderer` process you spawn.
 
-In the Electron `main` process:
+### Configure the Main Process
 
-```javascript
+Initialize the SDK in your Electron `main` process as early as possible:
+
+```javascript {filename:main.(js|ts)}
 import * as Sentry from "@sentry/electron/main";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  // ___PRODUCT_OPTION_START___ logs
+  // Enable logs to be sent to Sentry
+  _experiments: { enableLogs: true },
+  // ___PRODUCT_OPTION_END___ logs
 });
 ```
 
-In the Electron `renderer` process:
+### Configure the Renderer Process
 
-```javascript
+Initialize the SDK in your Electron renderer process. You can do this in either a preload script (`preload.(js|ts)`) or directly in your renderer script (`renderer.(js|ts)`):
+
+<Expandable title="Should you use a preload script or renderer script?">
+
+Choose based on your app's setup:
+
+- **Renderer script**: Requires `contextIsolation: false`.
+- **Preload script**: Recommended for production apps with `contextIsolation: true` (Electron's default security setting).
+- **Both**: Initialize in both places, for example, if you need different configurations for the preload and renderer contexts.
+
+</Expandable>
+
+```javascript {filename:preload.(js|ts)}
 import * as Sentry from "@sentry/electron/renderer";
 
 Sentry.init({
@@ -86,35 +114,16 @@ Sentry.init({
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
   // ___PRODUCT_OPTION_END___ session-replay
+  // ___PRODUCT_OPTION_START___ logs
+
+  // Enable logs to be sent to Sentry
+  _experiments: { enableLogs: true },
+  // ___PRODUCT_OPTION_END___ logs
 });
 ```
 
-Once configured, all unhandled exceptions and native crashes are automatically captured by Sentry.
-
-**Important:** Note your DSN. The DSN (Data Source Name) tells the SDK where to send events. If you forget it, view _Settings -> Projects -> Client Keys (DSN)_ in the Sentry web UI.
-
-## Wizard
-
-Our Sentry Wizard can help with the setup process. Make sure you have installed the `@sentry/wizard` npm package globally, then run:
-
-```shell
-npx @sentry/wizard@latest -i electron
-```
-
-This will guide you through the installation and configuration process and suggest useful tools for development. If you instead prefer to setup manually, keep reading.
-
-## Configuring the Client
-
-Start by configuring the SDK as described above. This will enable the [Electron CrashReporter](https://electronjs.org/docs/api/crash-reporter) for native app crashes and capture any uncaught JavaScript exceptions using the JavaScript SDKs under the hood. Be sure to call this function as early as possible in the `main` process and all `renderer` processes to also catch errors during startup.
-
-If you are using preload scripts, have `contextIsolation` enabled and want to
-capture errors from the isolated preload context, you should call the renderer `init`
-early in that context too.
-
-### App `userData` Directory
-
+<Expandable title="Did you change the userData directory?" level="warning">
 If you change the `userData` directory used by your app, ensure this change is made before you configure the SDK as this path is used to cache scope and events between application restarts.
-
 
 ```javascript
 import { app } from "electron";
@@ -124,10 +133,11 @@ app.setPath("userData", "~/.config/my-app");
 Sentry.init({ dsn: "___PUBLIC_DSN___" });
 ```
 
-## Framework-Specific SDKs
+</Expandable>
 
-If you're using a framework-specific Sentry SDK in the Electron renderers, you
-can pass that `init` function as the second parameter and the two SDKs functionalities will be combined:
+### Using Framework-Specific SDKs
+
+If you're using a framework in your renderers, you can combine the Electron SDK with the framework SDK:
 
 ```javascript
 import { init } from "@sentry/electron/renderer";
@@ -136,19 +146,19 @@ import { init as reactInit } from "@sentry/react";
 init(
   {
     dsn: "___PUBLIC_DSN___",
-    integrations: [ /* integrations */ ],
+    integrations: [
+      /* integrations */
+    ],
     /* Other Electron and React SDK config */
   },
   reactInit
 );
 ```
 
-## Offline Support
+## Step 3: Offline Support (Optional)
 
 The default transport automatically handles offline events caching from both the
-main and renderer processes. Following, are a number of options that allow you
-to customize queueing behavior:
-
+main and renderer processes. Here are several options that allow you to customize queueing behavior:
 
 ```javascript
 import * as Sentry from "@sentry/electron/main";
@@ -194,12 +204,11 @@ Sentry.init({
 });
 ```
 
-## Inter-Process Communication
+## Step 4: Inter-Process Communication (Optional)
 
-To give the most detailed context for all events including native crashes, the SDK merges context, scope and breadcrumbs from all processes in the Electron `main` process.
+To provide the most detailed context for all events, including native crashes, the SDK merges context, scope, and breadcrumbs from all processes into the Electron `main` process.
 
-By default, the SDK attempts to establish communication from `renderer` to `main` via Electron IPC API's and if that fails, falls back to using a custom HTTP protocol. You can change this default via the `ipcMode` option which can be one of `Classic`, `Protocol` or `Both`.
-
+By default, the SDK attempts to establish communication from `renderer` to `main` via Electron IPC APIs, and if that fails, falls back to using a custom HTTP protocol. You can change this default via the `ipcMode` option, which can be one of `Classic`, `Protocol`, or `Both`.
 
 ```javascript
 const { init, IPCMode } = require("@sentry/electron/main");
@@ -231,19 +240,19 @@ Sentry.init({
 **In renderer processes:**
 
 ```javascript
-import * as Sentry from '@sentry/electron/renderer';
+import * as Sentry from "@sentry/electron/renderer";
 
 Sentry.init({
-  ipcNamespace: 'some-app',
+  ipcNamespace: "some-app",
 });
 ```
 
 **In preload scripts:**
 
 ```javascript
-import { hookupIpc } from '@sentry/electron/preload-namespaced';
+import { hookupIpc } from "@sentry/electron/preload-namespaced";
 
-hookupIpc('some-app');
+hookupIpc("some-app");
 ```
 
 When set, the IPC channels used by Sentry will be prefixed with the specified namespace (e.g., `some-app`), helping to avoid conflicts with other IPC channels in your application. Make sure to use the same namespace value across all processes for proper communication.
@@ -253,7 +262,6 @@ For more configuration options, see the <PlatformLink to="/configuration/options
 ### Preload Injection
 
 The SDK attempts to inject a preload script via [`session.setPreloads(preloads)`](https://www.electronjs.org/docs/latest/api/session#sessetpreloadspreloads) and by default only does this for the `defaultSession`. If you are using other sessions, you can pass custom sessions via the `getSessions` option in the `main` process:
-
 
 ```javascript
 import { session } from "electron";
@@ -278,39 +286,39 @@ If you would like to manually bundle and configure the preload script, you shoul
 import "@sentry/electron/preload";
 ```
 
-This script exposes IPC to the isolated renderer via Electrons `contextBridge` API.
+This script exposes IPC to the isolated renderer via Electron's `contextBridge` API.
 
 Check out the [example apps](https://github.com/getsentry/sentry-electron/tree/master/examples) for how to do this.
 
-## Debug Information
+## Step 5: Debug Information (Optional)
 
 To get symbolicated stack traces for native crashes, you should enable fetching
 debug symbols from the Electron symbol server. Go to **Project Settings > Debug
 Files** and add Electron to the list of built-in repositories.
 
-If your app uses a custom Electron fork, contains modules with native extensions
+If your app uses a custom Electron fork, contains modules with native extensions,
 or spawns subprocesses, you should upload those symbols manually using the
 Sentry CLI. For more information, see [_Native Usage_](/platforms/javascript/guides/electron/#native).
 
 <Alert level="warning" title="Known Issue">
 
-It is currently not possible to send events from native code (such as a C++ extension). However, crashes will still be reported to Sentry if they happen in a process where the SDK has been configured. Also, crash reports from sub processes will not be reported automatically on all platforms. This feature will be added in a future SDK update.
+It is currently not possible to send events from native code (such as a C++ extension). However, crashes will still be reported to Sentry if they happen in a process where the SDK has been configured. Additionally, crash reports from sub-processes will not be reported automatically on all platforms. This feature will be added in a future SDK update.
 
 </Alert>
 
-## Dealing with Minified Source Code
+## Step 6: Add Readable Stack Traces With Source Maps (Optional)
 
-The Electron SDK supports [Source Maps](https://web.dev/articles/source-maps). If you upload source maps in addition to your minified files that data becomes available in Sentry. For more information see [_Source Maps_](/platforms/javascript/guides/electron/#source-maps).
+<PlatformContent includePath="getting-started-sourcemaps-short-version" />
 
-## Native
+## Step 7: Native (Optional)
 
-Sentry can process Minidumps created when any of the Electron processes crash. To do so, the SDK needs to upload those files once the application restarts (or immediately for renderer crashes). All event meta data including user information and breadcrumbs are included in these uploads.
+Sentry can process Minidumps created when any of the Electron processes crash. To do so, the SDK needs to upload those files once the application restarts (or immediately for renderer crashes). All event metadata, including user information and breadcrumbs, is included in these uploads.
 
 Due to [restrictions of macOS app sandboxing](https://electronjs.org/docs/tutorial/mac-app-store-submission-guide#limitations-of-mas-build), native crashes cannot be collected in Mac App Store builds. In this case, native crash handling will be disabled.
 
 <Alert level="warning" title="A Word on Data Privacy">
 
-Minidumps are memory dumps of the process at the moment it crashes. As such, they might contain sensitive information on the target system, such as environment variables, local path names or maybe even in-memory representations of input fields including passwords. **Sentry does not store these memory dumps**. Once processed, they are removed immediately and all sensitive information is stripped from the resulting issues.
+Minidumps are memory dumps of the process at the moment it crashes. As such, they might contain sensitive information on the target system, such as environment variables, local path names, or maybe even in-memory representations of input fields including passwords. **Sentry does not store these memory dumps**. Once processed, they are removed immediately, and all sensitive information is stripped from the resulting issues.
 
 </Alert>
 
@@ -329,17 +337,17 @@ If your application contains custom native extensions or you wish to symbolicate
 crashes from a spawned child process, upload their debug information manually
 during your build or release process. See [_Debug Information Files_](/platforms/javascript/guides/electron/data-management/debug-files/) for a detailed description of how to
 set up Sentry for native development. Additionally, see [_Uploading Debug
-Information_](/cli/dif/) for the upload process.
+Information_](/cli/dif/) for details on the upload process.
 
 ### Child Processes
 
-The SDK relies on the [Electron crashReporter](https://electronjs.org/docs/api/crash-reporter) to capture crash dumps. To receive crash reports for child processes, you need to make sure the crash reporter is activated by either the SDK or manually (see [below](/platforms/javascript/guides/electron/#manual-crash-reporting)).
+The SDK relies on the [Electron crashReporter](https://electronjs.org/docs/api/crash-reporter) to capture crash dumps. To receive crash reports for child processes, ensure the crash reporter is activated by either the SDK or manually (see [below](/platforms/javascript/guides/electron/#manual-crash-reporting)).
 
 Once the crash reporter is active, the SDK will automatically capture native
 crashes for the following processes:
 
 |                             | `event.process` tag | macOS | Windows | Linux          |
-|-----------------------------|---------------------|-------|---------|----------------|
+| --------------------------- | ------------------- | ----- | ------- | -------------- |
 | Electron `main` process     | `browser`           | ✓     | ✓       | ✓              |
 | Electron `renderer` process | `renderer`          | ✓     | ✓       | ✓              |
 | Electron `utilityProcess`   | `utility`           | ✓     | ✓       | ✓ <sup>1</sup> |
@@ -350,7 +358,7 @@ crashes for the following processes:
 
 ### Manual Crash Reporting
 
-You can also capture native crashes by starting the [Electron CrashReporter](https://electronjs.org/docs/api/crash-reporter) manually. Sentry is able to provide symbolicated stack traces and show system information, but no Electron-specific metadata, breadcrumbs or context information will be present. This is useful in cases where you cannot use the full Electron SDK:
+You can also capture native crashes by starting the [Electron CrashReporter](https://electronjs.org/docs/api/crash-reporter) manually. Sentry can provide symbolicated stack traces and show system information, but no Electron-specific metadata, breadcrumbs, or context information will be present. This is useful in cases where you cannot use the full Electron SDK:
 
 ```javascript
 const { crashReporter } = require("electron");
@@ -362,6 +370,84 @@ crashReporter.start({
 });
 ```
 
-## Source Maps
+## Step 8: Verify Your Setup
 
-To find out why Sentry needs your source maps and how to provide them visit: [Source Maps](/platforms/javascript/sourcemaps/)
+Let's test your setup and confirm that Sentry is working correctly.
+
+### Issues
+
+**Main process error**
+
+Add an event listener that throws an error in your `main.(js|ts)` file:
+
+```javascript {filename: main(js|ts)}
+// In main process
+import { app } from "electron";
+import * as Sentry from "@sentry/electron/main";
+
+app.on("ready", () => {
+  throw new Error("Sentry test error in main process");
+});
+```
+
+**Renderer process error**
+
+Add a test button in one of your HTML pages:
+
+```html {filename: index.html}
+<button id="testError">Break the world</button>
+
+<script src="renderer.js"></script>
+```
+
+Then, in your renderer, add the following:
+
+```javascript {filename: renderer.(js|ts)}
+document.getElementById("testError").addEventListener("click", () => {
+  throw new Error("Sentry test error in renderer process");
+});
+```
+
+<OnboardingOption optionId="performance" hideForThisOption>
+  Start your app and trigger two errors that Sentry will capture: one from the
+  main process and one from the renderer.
+</OnboardingOption>
+
+<OnboardingOption optionId="performance">
+### Tracing
+To test tracing in your renderer, start a trace to measure the time it takes to execute your code:
+
+```javascript {filename: renderer.(js|ts)}
+document.getElementById("testError").addEventListener("click", () => {
+  Sentry.startSpan({ op: "test", name: "Renderer test span" }, () => {
+    throw new Error("Sentry test error in renderer process");
+  });
+});
+```
+
+Start your app and trigger two errors that Sentry will capture: one from the main process and one from the renderer. It will also start a trace with the defined name.
+
+</OnboardingOption>
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io/) to view the collected data (it takes a couple of moments for the data to appear).
+
+<PlatformContent includePath="getting-started-verify-locate-data" />
+
+## Next Steps
+
+At this point, you should have integrated Sentry into your Electron application and should already be sending data to your Sentry project.
+
+Now's a good time to customize your setup and look into more advanced topics. Our next recommended steps for you are:
+
+- Continue to <PlatformLink to="/configuration">customize your configuration</PlatformLink>
+- Learn how to <PlatformLink to="/usage">manually capture errors</PlatformLink>
+- Get familiar with [Sentry's product features](/product/) like tracing, insights, and alerts
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Find various topics in <PlatformLink to="/troubleshooting">Troubleshooting</PlatformLink>
+- [Get support](https://sentry.zendesk.com/hc/en-us/)
+
+</Expandable>
