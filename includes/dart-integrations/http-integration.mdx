@@ -115,6 +115,67 @@ try {
 }
 ```
 
+### Failed Request Status Codes
+
+You can customize which status codes should be considered as failed requests by setting the `failedRequestStatusCodes` option when calling `SentryHttpClient()`.
+
+```dart
+import 'package:sentry/sentry.dart';
+
+var client = SentryHttpClient(
+  failedRequestStatusCodes: [
+    SentryStatusCode.range(400, 404), // Capture 400-404
+    SentryStatusCode(500),             // Capture 500
+  ],
+);
+
+try {
+  var uriResponse = await client.post('https://example.com/whatsit/create',
+    body: {'name': 'doodle', 'color': 'blue'});
+  print(await client.get(uriResponse.bodyFields['uri']));
+} finally {
+  client.close();
+}
+```
+
+**Default Behavior:**
+
+By default, `failedRequestStatusCodes` is set to `[SentryStatusCode.range(500, 599)]`, which captures server errors (status codes 500-599).
+
+### Failed Request Targets
+
+To control which URLs should have failed requests captured, use the `failedRequestTargets` option. This is useful when you only want to capture errors from specific APIs or domains.
+
+The SDK will only capture HTTP client errors if the request URL matches one of the provided targets. Targets can be:
+
+- Strings that appear anywhere in the URL
+- Regular expression patterns
+
+```dart
+import 'package:sentry/sentry.dart';
+
+// Capture failed requests only from specific domains
+var client = SentryHttpClient(
+  failedRequestTargets: [
+    'api.example.com',      // Matches any URL containing this string
+    'myapi.com',            // Another domain to track
+  ],
+);
+
+try {
+  var uriResponse = await client.post('https://api.example.com/whatsit/create',
+    body: {'name': 'doodle', 'color': 'blue'});
+  print(await client.get(uriResponse.bodyFields['uri']));
+} finally {
+  client.close();
+}
+```
+
+**Default Behavior:**
+
+By default, `failedRequestTargets` is set to `['.*']`, which matches all URLs. This means all failed requests are captured (subject to `failedRequestStatusCodes`).
+
+
 ## Tracing for HTTP Requests
 
 <Alert>
