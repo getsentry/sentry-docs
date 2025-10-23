@@ -1,56 +1,20 @@
-Once the feature is enabled on the SDK, you can send logs using the `Sentry.logger` API.
-
-### Using Sentry Logger
-
-The `logger` namespace exposes common logging methods that you can use to log messages at different log levels: `trace`, `debug`, `info`, `warning`, `error`, and `fatal`.
-
-You can pass additional attributes directly to the logging functions. These properties will be sent to Sentry, and can be searched from within the Logs UI, and even added to the Logs views as a dedicated column.
+Use the `Sentry.logger` API to send logs to Sentry:
 
 ```ruby
-Sentry.logger.info("Updated global cache")
+Sentry.logger.info("User logged in successfully")
+Sentry.logger.error("Payment processing failed")
+```
 
-Sentry.logger.debug("Cache miss for user %{user_id}", user_id: 123)
+You can include additional context data as attributes:
 
-Sentry.logger.trace(
-  "Starting database connection %{database}",
-  database: "users"
-)
-
-Sentry.logger.warn(
-  "Rate limit reached for endpoint %{endpoint}",
-  endpoint: "/api/results/"
-)
-
+```ruby
 Sentry.logger.error(
-  "Failed to process payment. Order: %{order_id}. Amount: %{amount}",
-  order_id: "or_2342", amount: 99.99
-)
-
-Sentry.logger.fatal(
-  "Database %{database} connection pool exhausted",
-  database: "users"
+  "Failed to process payment. Order: %{order_id}",
+  order_id: "or_2342",
+  amount: 99.99
 )
 ```
 
-### Message Templates
+Additional attributes like `amount` are sent as searchable metadata in Sentry's Logs UI.
 
-You can use message templates with positional or hash parameters:
-
-```ruby
-# Using named parameters
-Sentry.logger.info("User %{name} logged in", name: "Jane Doe")
-
-# Using positional parameters
-Sentry.logger.info("User %s logged in", ["Jane Doe"])
-```
-
-Any other arbitrary attributes will be sent as part of the log event payload:
-
-```ruby
-# Here `user_id` and `action` will be sent as extra attributes that
-# Sentry Logs UI displays
-Sentry.logger.info(
-  "User %{user} logged in",
-  user: "Jane", user_id: 123, action: "create"
-)
-```
+See [Default Attributes](#default-attributes) for the complete list of metadata and [Options](#options) to customize which events are captured.

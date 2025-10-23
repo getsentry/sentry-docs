@@ -5,6 +5,13 @@ description: "Learn how to instrument your Hono app on Cloudflare Workers and ca
 
 <PlatformContent includePath="getting-started-primer" />
 
+<Alert type="warning" title="Community Middleware Deprecation">
+  The community-maintained `@hono/sentry` middleware that uses `toucan-js` has been deprecated in favor of 
+  using `@sentry/cloudflare` directly. 
+  If you're currently using the `@hono/sentry` middleware with `toucan-js`, you should migrate to 
+  `@sentry/cloudflare` directly as shown in this guide.
+</Alert>
+
 ## Step 1: Install
 
 Choose the features you want to configure, and this guide will show you how:
@@ -35,6 +42,27 @@ The main Sentry configuration should happen as early as possible in your app's l
   includePath="getting-started-config"
   platform="javascript.cloudflare.workers"
 />
+
+### Migration from Community Middleware
+
+If you're currently using the `@hono/sentry` middleware, migrate to the official `@sentry/cloudflare` middleware:
+
+```javascript
+// New approach using official Sentry SDK
+import { Hono } from 'hono';
+import * as Sentry from '@sentry/cloudflare';
+
+const app = new Hono();
+
+// Wrap your app with Sentry
+export default Sentry.withSentry(
+  (env: Env) => ({
+    dsn: '___PUBLIC_DSN___',
+    tracesSampleRate: 1.0,
+  }),
+  app
+);
+```
 
 <PlatformContent
   includePath="getting-started-capture-errors"
