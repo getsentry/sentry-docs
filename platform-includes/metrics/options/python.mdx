@@ -1,0 +1,35 @@
+#### before_send_log
+
+To filter logs, or update them before they are sent to Sentry, you can use the `before_send_metric` option.
+
+```python
+import sentry_sdk
+from sentry_sdk.types import Metric, Hint
+from typing import Optional
+
+def before_metric(metric: Metric, _hint: Hint) -> Optional[Metric]:
+    # Filter out all info level logs
+    if log["severity_text"] == "info":
+        return None
+    return log
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    _experiments={
+        "enable_metrics": True,
+        "before_send_metric": _before_metric,
+    },
+)
+```
+
+The `before_send_metric` function receives a metric object, and should return the metric object if you want it to be sent to Sentry, or `None` if you want to discard it.
+
+The metric dict has the following keys:
+
+- `name`: (`str`) The name of the metric.
+- `type`: (`str` - one of `counter`, `gauge`, `distribution`) The type of metric.
+- `value`: (`float`) The numeric value of the metric.
+- `unit`: (`int`) The unit of measurement for the metric value.
+- `attributes`: (`dict[str, str | bool | float | int]`) Additional attributes to be sent with the log.
+- `timestamp`: (`float`) Timestamp in seconds (epoch time) indicating when the metric was recorded.
+- `trace_id`: (`Optional[str]`) The trace ID of the trace this metric belongs to.
