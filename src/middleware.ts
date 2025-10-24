@@ -1767,10 +1767,6 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   // START redirecting deprecated generic metrics docs to concepts
   {
-    from: '/platforms/python/metrics/',
-    to: '/platforms/python/tracing/span-metrics/',
-  },
-  {
     from: '/platforms/ruby/metrics/',
     to: '/concepts/key-terms/tracing/span-metrics/',
   },
