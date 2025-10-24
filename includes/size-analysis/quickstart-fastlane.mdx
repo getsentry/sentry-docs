@@ -1,7 +1,11 @@
 ### iOS (Fastlane + GitHub Actions)
 
 <Alert level="info">
-  This quick start assumes you're already running Fastlane in GitHub Actions and have authentication configured (for example, with the `SENTRY_AUTH_TOKEN` secret). If you haven't added the [Sentry Fastlane plugin](/platforms/apple/guides/ios/upload-debug-symbols/fastlane/) yet, follow the integration guide first.
+  This quick start assumes you're already running Fastlane in GitHub Actions and
+  have authentication configured (for example, with the `SENTRY_AUTH_TOKEN`
+  secret). If you haven't added the [Sentry Fastlane
+  plugin](/platforms/apple/guides/ios/upload-debug-symbols/fastlane/) yet,
+  follow the integration guide first.
 </Alert>
 
 1. Install the plugin (version `1.34.0` or higher):
@@ -10,20 +14,24 @@
    bundle exec fastlane add_plugin fastlane-plugin-sentry
    ```
 
-2. Add to your `Fastfile`:
+2. In `FastFile`, add a call to `sentry_upload_build` after your build step:
 
    ```ruby {filename:Fastfile}
    lane :upload_to_sentry do
-     sentry_upload_build(
-       org_slug: 'your-org',
-       project_slug: 'your-project',
-       build_configuration: 'Release' # Adjust to your configuration
-     )
+      build_ios_app(
+        scheme: 'YourScheme',
+        configuration: 'Release',
+      )
+      sentry_upload_build(
+        org_slug: 'your-org',
+        project_slug: 'your-project',
+        build_configuration: 'Release' # Adjust to your configuration
+      )
    end
    ```
 
-3. Run the lane:
+3. Add the lane after your build step:
 
-   ```bash
+   ```ruby
    bundle exec fastlane upload_to_sentry
    ```
