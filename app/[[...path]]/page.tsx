@@ -34,20 +34,20 @@ export async function generateStaticParams() {
   const startTime = Date.now();
   // eslint-disable-next-line no-console
   console.log('[PERF:page] generateStaticParams started');
-  
+
   const docs = await (isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter());
   const paths: {path: string[] | undefined}[] = docs.map(doc => {
     const path = doc.slug.split('/');
     return {path};
   });
   paths.push({path: undefined}); // the home page
-  
+
   const duration = Date.now() - startTime;
   // eslint-disable-next-line no-console
   console.log(
     `[PERF:page] generateStaticParams completed: ${duration}ms (${paths.length} paths)`
   );
-  
+
   return paths;
 }
 
@@ -81,15 +81,15 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   const pageStartTime = Date.now();
   pageRenderCount++;
   const shouldLog = pageRenderCount % PAGE_SAMPLE_RATE === 0;
-  
+
   const params = await props.params;
   const pagePath = params.path?.join('/') || 'home';
-  
+
   if (shouldLog) {
     // eslint-disable-next-line no-console
     console.log(`[PERF:page] Page render started (${pageRenderCount}): ${pagePath}`);
   }
-  
+
   // get frontmatter of all docs in tree
   const rootNode = await getDocsRootNode();
 
