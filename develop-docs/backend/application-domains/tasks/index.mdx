@@ -213,6 +213,63 @@ def deliver_issue_webhook(organization_id: int, group_id: int) -> None:
 
 If an idempotent task exceeds a processing deadline, it will *not* be retried.
 
+## Task Aliasing
+
+Task aliasing allows you to rename tasks or move them to different namespaces while maintaining backward compatibility with existing task activations in Kafka. This is useful when refactoring task organization or renaming tasks without losing queued tasks. Task aliases inherit the same retry policy, processing deadline, and other configuration from the primary task definition.
+
+### Renaming a Task
+
+When renaming a task, use the `alias` parameter to specify the old task name:
+
+```python
+@instrumented_task(
+    name="sentry.widgets.tasks.do_work_v2",  # New task name
+    namespace=issues_tasks,
+    alias="sentry.widgets.tasks.do_work",    # Old task name
+)
+def do_work() -> None:
+    ...
+```
+
+Both task names will be registered and can process activations. Workers will handle tasks sent to either `do_work_v2` or `do_work` with the same function.
+
+### Moving to a Different Namespace
+
+To move a task from one namespace to another, use the `alias_namespace` parameter:
+
+```python
+from sentry.taskworker.namespaces import issues_tasks, integrations_tasks
+
+@instrumented_task(
+    name="sentry.widgets.tasks.do_work",
+    namespace=integrations_tasks,  # New namespace
+    alias_namespace=issues_tasks,  # Old namespace
+)
+def do_work() -> None:
+    ...
+```
+
+The task will be registered in both `performance_tasks` and `issues_tasks` for the same task name `sentry.widgets.tasks.do_work`, allowing existing activations in the old namespace to continue processing.
+
+### Renaming and Moving Together
+
+You can combine both `alias` and `alias_namespace` to rename a task and move it to a different namespace simultaneously:
+
+```python
+@instrumented_task(
+    name="sentry.widgets.tasks.do_work_v2",   # New name
+    namespace=integrations_tasks,             # New namespace
+    alias="sentry.widgets.tasks.do_work",     # Old name
+    alias_namespace=issues_tasks,             # Old namespace
+)
+def do_work() -> None:
+    ...
+```
+
+This registers the task as both:
+- `integrations_tasks:sentry.widgets.tasks.do_work_v2` (new)
+- `issues_tasks:sentry.widgets.tasks.do_work` (old)
+
 ## Testing Tasks
 
 Tasks can be tested with a few different approaches. The first is with the
