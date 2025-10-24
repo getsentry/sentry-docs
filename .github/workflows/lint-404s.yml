@@ -36,12 +36,11 @@ jobs:
             ${{ github.workspace }}/node_modules
             ${{ github.workspace }}/.next/cache
             ${{ github.workspace }}/.eslintcache
-          key: node-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+          key: node-${{ runner.os }}-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            node-${{ runner.os }}-
+            node-${{ runner.os }}-${{ steps.setup-node.outputs.node-version }}-
 
       - run: yarn install --frozen-lockfile
-        if: steps.cache.outputs.cache-hit != 'true'
 
       - run: yarn build
         if: steps.filter.outputs.docs == 'true'
@@ -50,7 +49,8 @@ jobs:
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
 
       - run: yarn build:developer-docs
-        if: steps.filter.outputs.dev-docs == 'true'
+      # short circuit for now
+      # if: steps.filter.outputs.dev-docs == 'true'
         env:
           SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
           NEXT_PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
