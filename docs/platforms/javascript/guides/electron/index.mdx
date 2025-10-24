@@ -49,7 +49,7 @@ You should initialize the SDK in both the `main` process and every `renderer` pr
 
 Initialize the SDK in your Electron `main` process as early as possible:
 
-```javascript {filename:main.(js|ts)}
+```javascript
 import * as Sentry from "@sentry/electron/main";
 
 Sentry.init({
@@ -63,19 +63,9 @@ Sentry.init({
 
 ### Configure the Renderer Process
 
-Initialize the SDK in your Electron renderer process. You can do this in either a preload script (`preload.(js|ts)`) or directly in your renderer script (`renderer.(js|ts)`):
+Initialize the SDK in your Electron renderer processes:
 
-<Expandable title="Should you use a preload script or renderer script?">
-
-Choose based on your app's setup:
-
-- **Renderer script**: Requires `contextIsolation: false`.
-- **Preload script**: Recommended for production apps with `contextIsolation: true` (Electron's default security setting).
-- **Both**: Initialize in both places, for example, if you need different configurations for the preload and renderer contexts.
-
-</Expandable>
-
-```javascript {filename:preload.(js|ts)}
+```javascript
 import * as Sentry from "@sentry/electron/renderer";
 
 Sentry.init({
@@ -155,7 +145,7 @@ init(
 );
 ```
 
-## Step 3: Offline Support (Optional)
+## Step 3: Offline Support
 
 The default transport automatically handles offline events caching from both the
 main and renderer processes. Here are several options that allow you to customize queueing behavior:
@@ -378,10 +368,9 @@ Let's test your setup and confirm that Sentry is working correctly.
 
 **Main process error**
 
-Add an event listener that throws an error in your `main.(js|ts)` file:
+Add an event listener that throws an error in your main process:
 
-```javascript {filename: main(js|ts)}
-// In main process
+```javascript
 import { app } from "electron";
 import * as Sentry from "@sentry/electron/main";
 
@@ -402,7 +391,7 @@ Add a test button in one of your HTML pages:
 
 Then, in your renderer, add the following:
 
-```javascript {filename: renderer.(js|ts)}
+```javascript
 document.getElementById("testError").addEventListener("click", () => {
   throw new Error("Sentry test error in renderer process");
 });
@@ -417,7 +406,7 @@ document.getElementById("testError").addEventListener("click", () => {
 ### Tracing
 To test tracing in your renderer, start a trace to measure the time it takes to execute your code:
 
-```javascript {filename: renderer.(js|ts)}
+```javascript
 document.getElementById("testError").addEventListener("click", () => {
   Sentry.startSpan({ op: "test", name: "Renderer test span" }, () => {
     throw new Error("Sentry test error in renderer process");
