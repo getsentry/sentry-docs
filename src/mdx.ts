@@ -118,8 +118,14 @@ const isSupported = (
 };
 
 let getDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
+let getDocsFrontMatterCallCount = 0;
 
 export function getDocsFrontMatter(): Promise<FrontMatter[]> {
+  getDocsFrontMatterCallCount++;
+  // eslint-disable-next-line no-console
+  console.log(
+    `[PERF:frontmatter] getDocsFrontMatter called (call #${getDocsFrontMatterCallCount}, cached: ${!!getDocsFrontMatterCache})`
+  );
   if (!getDocsFrontMatterCache) {
     getDocsFrontMatterCache = getDocsFrontMatterUncached();
   }
@@ -147,6 +153,10 @@ export const getVersionsFromDoc = (frontMatter: FrontMatter[], docPath: string) 
 };
 
 async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
+  const startTime = Date.now();
+  // eslint-disable-next-line no-console
+  console.log('[PERF:frontmatter] getDocsFrontMatterUncached started');
+
   const frontMatter = await getAllFilesFrontMatter();
 
   const categories = await apiCategories();
@@ -178,6 +188,12 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
       fm.slug = `${segments[0]}${VERSION_INDICATOR}${segments[1]}`;
     }
   });
+
+  const duration = Date.now() - startTime;
+  // eslint-disable-next-line no-console
+  console.log(
+    `[PERF:frontmatter] getDocsFrontMatterUncached completed: ${duration}ms (${frontMatter.length} entries)`
+  );
 
   return frontMatter;
 }
@@ -213,8 +229,14 @@ export async function getDevDocsFrontMatterUncached(): Promise<FrontMatter[]> {
 }
 
 let getDevDocsFrontMatterCache: Promise<FrontMatter[]> | undefined;
+let getDevDocsFrontMatterCallCount = 0;
 
 export function getDevDocsFrontMatter(): Promise<FrontMatter[]> {
+  getDevDocsFrontMatterCallCount++;
+  // eslint-disable-next-line no-console
+  console.log(
+    `[PERF:frontmatter] getDevDocsFrontMatter called (call #${getDevDocsFrontMatterCallCount}, cached: ${!!getDevDocsFrontMatterCache})`
+  );
   if (!getDevDocsFrontMatterCache) {
     getDevDocsFrontMatterCache = getDevDocsFrontMatterUncached();
   }
@@ -432,7 +454,16 @@ export const addVersionToFilePath = (filePath: string, version: string) => {
   return `${filePath}__v${version}`;
 };
 
+let getFileBySlugCallCount = 0;
+
 export async function getFileBySlug(slug: string): Promise<SlugFile> {
+  const slugStartTime = Date.now();
+  getFileBySlugCallCount++;
+  // eslint-disable-next-line no-console
+  console.log(
+    `[PERF:mdx] getFileBySlug started (call #${getFileBySlugCallCount}): ${slug}`
+  );
+
   // no versioning on a config file
   const configPath = path.join(root, slug.split(VERSION_INDICATOR)[0], 'config.yml');
 
@@ -583,6 +614,11 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   // cwd is how mdx-bundler knows how to resolve relative paths
   const cwd = path.dirname(sourcePath);
 
+  const bundleStartTime = Date.now();
+  const cacheHit = cacheFile ? 'cache miss' : 'no cache';
+  // eslint-disable-next-line no-console
+  console.log(`[PERF:mdx] bundleMDX starting for ${slug} (${cacheHit})`);
+
   const result = await bundleMDX<Platform>({
     source,
     cwd,
@@ -683,6 +719,10 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     throw e;
   });
 
+  const bundleDuration = Date.now() - bundleStartTime;
+  // eslint-disable-next-line no-console
+  console.log(`[PERF:mdx] bundleMDX completed: ${bundleDuration}ms for ${slug}`);
+
   const {code, frontmatter} = result;
 
   let mergedFrontmatter = frontmatter;
@@ -707,6 +747,10 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       console.warn(`Failed to write MDX cache: ${cacheFile}`, e);
     });
   }
+
+  const slugDuration = Date.now() - slugStartTime;
+  // eslint-disable-next-line no-console
+  console.log(`[PERF:mdx] getFileBySlug completed: ${slugDuration}ms (${slug})`);
 
   return resultObj;
 }
