@@ -1,0 +1,178 @@
+---
+title: LangChain
+description: "Adds instrumentation for LangChain."
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.electron
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.react-router
+  - javascript.remix
+  - javascript.astro
+  - javascript.bun
+  - javascript.tanstackstart-react
+  - javascript.cloudflare
+---
+
+<Alert>
+
+This integration works in the Node.js, Cloudflare Workers, and Vercel Edge Functions runtimes. It requires SDK version `10.22.0` or higher.
+
+</Alert>
+
+_Import name: `Sentry.langChainIntegration`_
+
+The `langChainIntegration` adds instrumentation for LangChain to capture spans by automatically wrapping LangChain operations and recording AI agent interactions with configurable input/output recording.
+
+<PlatformSection notSupported={["javascript.cloudflare", "javascript.nextjs"]}>
+
+It is enabled by default and will automatically capture spans for LangChain operations including chat models, LLM invocations, chains, and tool executions. You can opt-in to capture inputs and outputs by setting `recordInputs` and `recordOutputs` in the integration config:
+
+```javascript
+Sentry.init({
+  dsn: "____PUBLIC_DSN____",
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.langChainIntegration({
+      recordInputs: true,
+      recordOutputs: true,
+    }),
+  ],
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.cloudflare"]}>
+
+For Cloudflare Workers, you need to manually instrument LangChain operations using the `createLangChainCallbackHandler` helper:
+
+```javascript
+import * as Sentry from "@sentry/cloudflare";
+import { ChatAnthropic } from "@langchain/anthropic";
+
+// Create a LangChain callback handler
+const callbackHandler = Sentry.createLangChainCallbackHandler({
+  recordInputs: true, // Optional: record input prompts/messages
+  recordOutputs: true, // Optional: record output responses
+});
+
+// Use with chat models
+const model = new ChatAnthropic({
+  model: "claude-3-5-sonnet-20241022",
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
+
+await model.invoke("Tell me a joke", {
+  callbacks: [callbackHandler],
+});
+```
+
+</PlatformSection>
+
+## Options
+
+### `recordInputs`
+
+_Type: `boolean`_
+
+Records inputs to LangChain operations (such as prompts and messages).
+
+Defaults to `true` if `sendDefaultPii` is `true`.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.langChainIntegration({ recordInputs: true })],
+});
+```
+
+### `recordOutputs`
+
+_Type: `boolean`_
+
+Records outputs from LangChain operations (such as generated text and responses).
+
+Defaults to `true` if `sendDefaultPii` is `true`.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.langChainIntegration({ recordOutputs: true })],
+});
+```
+
+## Configuration
+
+By default this integration adds tracing support for LangChain operations including:
+
+- **Chat model invocations** (`gen_ai.chat`) - Captures spans for chat model calls
+- **LLM invocations** (`gen_ai.pipeline`) - Captures spans for LLM pipeline executions
+- **Chain executions** (`gen_ai.invoke_agent`) - Captures spans for chain invocations
+- **Tool executions** (`gen_ai.execute_tool`) - Captures spans for tool calls
+
+### Supported Runnables
+
+The integration automatically instruments the following LangChain runnable methods:
+
+- `invoke()` - Single execution
+- `stream()` - Streaming execution
+- `batch()` - Batch execution
+
+<PlatformSection notSupported={["javascript.cloudflare", "javascript.nextjs"]}>
+
+### Supported Providers
+
+The automatic instrumentation supports the following LangChain provider packages:
+
+- `@langchain/anthropic`
+- `@langchain/openai`
+- `@langchain/google-genai`
+- `@langchain/mistralai`
+- `@langchain/google-vertexai`
+- `@langchain/groq`
+
+</PlatformSection>
+
+<PlatformSection supported={['javascript.nextjs']}>
+
+## Edge runtime
+
+This integration is automatically instrumented in the Node.js runtime. For Next.js applications using the Edge runtime, you need to manually instrument LangChain operations using the callback handler:
+
+```javascript
+import * as Sentry from "@sentry/nextjs";
+import { ChatAnthropic } from "@langchain/anthropic";
+
+// Create a LangChain callback handler
+const callbackHandler = Sentry.createLangChainCallbackHandler({
+  recordInputs: true,
+  recordOutputs: true,
+});
+
+// Use with chat models
+const model = new ChatAnthropic({
+  model: "claude-3-5-sonnet-20241022",
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
+
+await model.invoke("Tell me a joke", {
+  callbacks: [callbackHandler],
+});
+```
+
+</PlatformSection>
+
+## Supported Versions
+
+- `langchain`: `>=0.1.0 <1.0.0`
