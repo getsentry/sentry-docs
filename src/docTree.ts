@@ -29,8 +29,14 @@ function slugWithoutIndex(slug: string): string[] {
 }
 
 let getDocsRootNodeCache: Promise<DocNode> | undefined;
+let getDocsRootNodeCallCount = 0;
 
 export function getDocsRootNode(): Promise<DocNode> {
+  getDocsRootNodeCallCount++;
+  // eslint-disable-next-line no-console
+  console.log(
+    `[PERF:tree] getDocsRootNode called (call #${getDocsRootNodeCallCount}, cached: ${!!getDocsRootNodeCache})`
+  );
   if (getDocsRootNodeCache) {
     return getDocsRootNodeCache;
   }
@@ -39,9 +45,25 @@ export function getDocsRootNode(): Promise<DocNode> {
 }
 
 async function getDocsRootNodeUncached(): Promise<DocNode> {
-  return frontmatterToTree(
-    await (isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter())
+  const startTime = Date.now();
+  // eslint-disable-next-line no-console
+  console.log('[PERF:tree] getDocsRootNodeUncached started');
+
+  const frontmatter = await (isDeveloperDocs
+    ? getDevDocsFrontMatter()
+    : getDocsFrontMatter());
+
+  const treeStartTime = Date.now();
+  const tree = frontmatterToTree(frontmatter);
+  const treeDuration = Date.now() - treeStartTime;
+
+  const totalDuration = Date.now() - startTime;
+  // eslint-disable-next-line no-console
+  console.log(
+    `[PERF:tree] getDocsRootNodeUncached completed: ${totalDuration}ms (tree building: ${treeDuration}ms, ${frontmatter.length} entries)`
   );
+
+  return tree;
 }
 
 const sidebarOrderSorter = (a: FrontMatter, b: FrontMatter) => {

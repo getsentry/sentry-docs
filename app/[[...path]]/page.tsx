@@ -31,12 +31,23 @@ import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
 import {stripVersion} from 'sentry-docs/versioning';
 
 export async function generateStaticParams() {
+  const startTime = Date.now();
+  // eslint-disable-next-line no-console
+  console.log('[PERF:page] generateStaticParams started');
+  
   const docs = await (isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter());
   const paths: {path: string[] | undefined}[] = docs.map(doc => {
     const path = doc.slug.split('/');
     return {path};
   });
   paths.push({path: undefined}); // the home page
+  
+  const duration = Date.now() - startTime;
+  // eslint-disable-next-line no-console
+  console.log(
+    `[PERF:page] generateStaticParams completed: ${duration}ms (${paths.length} paths)`
+  );
+  
   return paths;
 }
 
@@ -63,8 +74,22 @@ function MDXLayoutRenderer({mdxSource, ...rest}) {
   return <MDXLayout components={mdxComponentsWithWrapper} {...rest} />;
 }
 
+let pageRenderCount = 0;
+const PAGE_SAMPLE_RATE = 100; // Log every 100th page
+
 export default async function Page(props: {params: Promise<{path?: string[]}>}) {
+  const pageStartTime = Date.now();
+  pageRenderCount++;
+  const shouldLog = pageRenderCount % PAGE_SAMPLE_RATE === 0;
+  
   const params = await props.params;
+  const pagePath = params.path?.join('/') || 'home';
+  
+  if (shouldLog) {
+    // eslint-disable-next-line no-console
+    console.log(`[PERF:page] Page render started (${pageRenderCount}): ${pagePath}`);
+  }
+  
   // get frontmatter of all docs in tree
   const rootNode = await getDocsRootNode();
 
@@ -165,6 +190,12 @@ export default async function Page(props: {params: Promise<{path?: string[]}>}) 
   // collect versioned files
   const allFm = await getDocsFrontMatter();
   const versions = getVersionsFromDoc(allFm, pageNode.path);
+
+  if (shouldLog) {
+    const pageDuration = Date.now() - pageStartTime;
+    // eslint-disable-next-line no-console
+    console.log(`[PERF:page] Page render completed: ${pageDuration}ms (${pagePath})`);
+  }
 
   // pass frontmatter tree into sidebar, rendered page + fm into middle, headers into toc.
   return (
