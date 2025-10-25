@@ -10,11 +10,13 @@ func _initialize() -> void:
 	)
 
 func _before_send(event: SentryEvent) -> SentryEvent:
-	if event.environment == "debug":
-		# Discard event if running in a debug build.
+	if event.environment.contains("editor"):
+		# Discard event if running from the editor.
 		return null
-	if event.message.contains("Bruno"):
+	var error_message: String = event.get_exception_value(0)
+	if error_message.contains("Bruno"):
 		# Remove sensitive information from the event.
-		event.message = event.message.replace("Bruno", "REDACTED")
+		var redacted_message := error_message.replace("Bruno", "REDACTED")
+		event.set_exception_value(0, redacted_message)
 	return event
 ```
