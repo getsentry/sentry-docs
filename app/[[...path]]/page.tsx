@@ -4,6 +4,7 @@ import {Metadata} from 'next';
 import {notFound} from 'next/navigation';
 
 import {apiCategories} from 'sentry-docs/build/resolveOpenAPI';
+import {BuildTimer, logBuildInfo} from 'sentry-docs/buildTimer';
 import {ApiCategoryPage} from 'sentry-docs/components/apiCategoryPage';
 import {ApiPage} from 'sentry-docs/components/apiPage';
 import {DocPage} from 'sentry-docs/components/docPage';
@@ -31,12 +32,15 @@ import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
 import {stripVersion} from 'sentry-docs/versioning';
 
 export async function generateStaticParams() {
+  const timer = new BuildTimer('generateStaticParams');
   const docs = await (isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter());
   const paths: {path: string[] | undefined}[] = docs.map(doc => {
     const path = doc.slug.split('/');
     return {path};
   });
   paths.push({path: undefined}); // the home page
+  logBuildInfo(`Generated ${paths.length} static paths for build`);
+  timer.end();
   return paths;
 }
 

@@ -26,6 +26,7 @@ import remarkMdxImages from 'remark-mdx-images';
 import getAppRegistry from './build/appRegistry';
 import getPackageRegistry from './build/packageRegistry';
 import {apiCategories} from './build/resolveOpenAPI';
+import {BuildTimer, logBuildInfo, OperationAggregator} from './buildTimer';
 import getAllFilesRecursively from './files';
 import remarkDefList from './mdx-deflist';
 import rehypeOnboardingLines from './rehype-onboarding-lines';
@@ -64,6 +65,12 @@ const CACHE_DIR = path.join(root, '.next', 'cache', 'mdx-bundler');
 if (process.env.CI) {
   mkdirSync(CACHE_DIR, {recursive: true});
 }
+
+// Track MDX compilation performance
+const mdxCompilationAggregator = new OperationAggregator('MDX Compilation', {
+  progressInterval: 500, // log every 500 compilations (less verbose)
+  slowThreshold: 3000, // 3 seconds (only really slow pages)
+});
 
 const md5 = (data: BinaryLike) => createHash('md5').update(data).digest('hex');
 
@@ -222,10 +229,12 @@ export function getDevDocsFrontMatter(): Promise<FrontMatter[]> {
 }
 
 async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
+  const timer = new BuildTimer('getAllFilesFrontMatter');
   const docsPath = path.join(root, 'docs');
   const files = await getAllFilesRecursively(docsPath);
   const allFrontMatter: FrontMatter[] = [];
 
+  const readFilesTimer = new BuildTimer('Reading MDX frontmatter');
   await Promise.all(
     files.map(
       limitFunction(
@@ -251,8 +260,10 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
       )
     )
   );
+  readFilesTimer.end(true); // Silent - we'll show in summary
 
   // Add all `common` files in the right place.
+  const commonFilesTimer = new BuildTimer('Processing common platform files');
   const platformsPath = path.join(docsPath, 'platforms');
   for await (const platform of await opendir(platformsPath)) {
     if (platform.isFile()) {
@@ -396,6 +407,8 @@ async function getAllFilesFrontMatter(): Promise<FrontMatter[]> {
       );
     }
   }
+  commonFilesTimer.end(true); // Silent - we'll show in summary
+  timer.end();
   return allFrontMatter;
 }
 
@@ -433,6 +446,8 @@ export const addVersionToFilePath = (filePath: string, version: string) => {
 };
 
 export async function getFileBySlug(slug: string): Promise<SlugFile> {
+  const compileStart = Date.now();
+
   // no versioning on a config file
   const configPath = path.join(root, slug.split(VERSION_INDICATOR)[0], 'config.yml');
 
@@ -708,7 +723,23 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     });
   }
 
+  // Track compilation time
+  const compileDuration = Date.now() - compileStart;
+  mdxCompilationAggregator.track(slug, compileDuration);
+
   return resultObj;
+}
+
+// Log final MDX compilation stats when process exits
+if (typeof process !== 'undefined') {
+  process.on('beforeExit', () => {
+    const stats = mdxCompilationAggregator.getStats();
+    if (stats.count > 0) {
+      logBuildInfo('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      mdxCompilationAggregator.logFinalSummary();
+      logBuildInfo('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    }
+  });
 }
 
 const fileBySlugCache = new Map<string, Promise<SlugFile>>();
