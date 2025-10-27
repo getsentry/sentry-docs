@@ -76,6 +76,44 @@ async function getRegistryHash(): Promise<string> {
   return cachedRegistryHash;
 }
 
+// Track cache statistics per worker (silent tracking)
+const cacheStats = {
+  registryHits: 0,
+  registryMisses: 0,
+  uniqueRegistryFiles: new Set<string>(),
+};
+
+// Log summary periodically and at end
+let lastSummaryLog = Date.now();
+function logCacheSummary(force = false) {
+  const now = Date.now();
+  // Log every 30 seconds or when forced
+  if (!force && now - lastSummaryLog < 30000) {
+    return;
+  }
+  lastSummaryLog = now;
+
+  const total = cacheStats.registryHits + cacheStats.registryMisses;
+  if (total === 0) {
+    return;
+  }
+
+  const hitRate = ((cacheStats.registryHits / total) * 100).toFixed(1);
+  const uniqueFiles = cacheStats.uniqueRegistryFiles.size;
+
+  // eslint-disable-next-line no-console
+  console.log(
+    `📊 [MDX Cache] ${cacheStats.registryHits}/${total} registry files cached (${hitRate}% hit rate, ${uniqueFiles} unique files)`
+  );
+}
+
+// Log final summary when worker exits
+if (typeof process !== 'undefined') {
+  process.on('beforeExit', () => {
+    logCacheSummary(true);
+  });
+}
+
 const md5 = (data: BinaryLike) => createHash('md5').update(data).digest('hex');
 
 async function readCacheFile<T>(file: string): Promise<T> {
@@ -583,13 +621,11 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
           readCacheFile<SlugFile>(cacheFile),
           cp(assetsCacheDir, outdir, {recursive: true}),
         ]);
-        // Log cache hits for registry-dependent files to verify caching is working
+        // Track cache hit silently
         if (dependsOnRegistry) {
-          const registryHash = cacheKey.split('-').pop()?.slice(0, 8);
-          // eslint-disable-next-line no-console
-          console.log(
-            `✓ Using cached registry-dependent file: ${sourcePath} (registry: ${registryHash})`
-          );
+          cacheStats.registryHits++;
+          cacheStats.uniqueRegistryFiles.add(sourcePath);
+          logCacheSummary(); // Periodically log summary (every 30s)
         }
         return cached;
       } catch (err) {
@@ -604,6 +640,13 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
         }
       }
     }
+  }
+
+  // Track cache miss silently
+  if (dependsOnRegistry) {
+    cacheStats.registryMisses++;
+    cacheStats.uniqueRegistryFiles.add(sourcePath);
+    logCacheSummary(); // Periodically log summary (every 30s)
   }
 
   process.env.ESBUILD_BINARY_PATH = path.join(

@@ -1,5 +1,9 @@
 # MDX Build Cache Optimization Summary
 
+## Overview
+
+This optimization re-enables caching for ~1000 registry-dependent MDX files that were previously skipped, significantly reducing build times on Vercel preview branches by avoiding redundant compilation across workers.
+
 ## Changes Made
 
 ### 1. **Re-enabled Registry-Dependent File Caching** (`src/mdx.ts`)
@@ -42,20 +46,21 @@ async function getRegistryHash(): Promise<string> {
 - 🔒 Consistent: All files in same worker use same hash
 - 💾 Less memory: Registry data loaded once
 
-### 3. **Cache Hit Logging**
+### 3. **Summary-Based Cache Logging**
 
-**Problem:** No visibility into whether cache was being used on Vercel.
+**Problem:** Logging every individual cache hit/miss created excessive noise in build logs (same files logged across multiple workers).
 
-**Solution:** Log when registry-dependent files are served from cache:
+**Solution:** Silent tracking with periodic summaries every 30 seconds:
 
 ```
-✓ Using cached registry-dependent file: platform-includes/.../javascript.mdx (registry: 50fbbd5e)
+📊 [MDX Cache] 150/200 registry files cached (75.0% hit rate, 50 unique files)
 ```
 
 **Benefits:**
-- 📊 Visibility into cache effectiveness
-- 🐛 Debug cache issues in production builds
-- ✅ Verify optimization is working
+- 📊 Clean, concise build logs
+- ✅ Easy to see cache effectiveness at a glance
+- 🔍 Shows unique files vs total accesses (reveals worker duplication)
+- 🐛 Periodic updates show progress during long builds
 
 ## Expected Impact
 
