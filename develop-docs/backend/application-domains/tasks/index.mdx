@@ -215,7 +215,7 @@ If an idempotent task exceeds a processing deadline, it will *not* be retried.
 
 ## Task Aliasing
 
-Task aliasing allows you to rename tasks or move them to different namespaces while maintaining backward compatibility with existing task activations in Kafka. This is useful when refactoring task organization or renaming tasks without losing queued tasks. Task aliases inherit the same retry policy, processing deadline, and other configuration from the primary task definition.
+Task aliasing allows you to rename tasks or move them to different namespaces while maintaining backwards compatibility with existing task activations in Kafka. This is useful when refactoring task organization or renaming tasks without losing queued tasks. Task aliases inherit the same retry policy, processing deadline, and other configuration from the primary task definition.
 
 ### Renaming a Task
 
@@ -231,7 +231,7 @@ def do_work() -> None:
     ...
 ```
 
-Both task names will be registered and can process activations. Workers will handle tasks sent to either `do_work_v2` or `do_work` with the same function.
+New activations will be created using `name`. However, both task names will be registered and can process activations. Workers will handle tasks sent to either `do_work_v2` or `do_work` with the same function. 
 
 ### Moving to a Different Namespace
 
@@ -249,7 +249,7 @@ def do_work() -> None:
     ...
 ```
 
-The task will be registered in both `performance_tasks` and `issues_tasks` for the same task name `sentry.widgets.tasks.do_work`, allowing existing activations in the old namespace to continue processing.
+The task will be registered in both `performance_tasks` and `issues_tasks` for the same task name `sentry.widgets.tasks.do_work`, allowing in-flight activations in the old namespace to process.
 
 ### Renaming and Moving Together
 
