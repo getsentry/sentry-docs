@@ -153,7 +153,108 @@ export const getVersionsFromDoc = (frontMatter: FrontMatter[], docPath: string) 
   return [...new Set(versions)];
 };
 
+// Lock file management for cross-worker cache coordination
+const lockFile = (cacheFile: string) =>
+  path.join(root, '.next', 'cache', `${cacheFile}.lock`);
+
+/**
+ * Try to load frontmatter from disk cache created by first worker
+ * If cache is being built, wait for it to complete
+ */
+async function loadFrontmatterFromCache(
+  cacheFile: string
+): Promise<FrontMatter[] | null> {
+  const cachePath = path.join(root, '.next', 'cache', cacheFile);
+  const lockPath = lockFile(cacheFile);
+
+  // Check if another worker is building the cache
+  let waitAttempts = 0;
+  while (waitAttempts < 30) {
+    // Wait up to 15 seconds
+    try {
+      // If lock file exists, another worker is building cache
+      await access(lockPath);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      waitAttempts++;
+      continue;
+    } catch {
+      // No lock file, proceed
+      break;
+    }
+  }
+
+  try {
+    const cacheData = JSON.parse(await readFile(cachePath, 'utf-8'));
+    const age = Date.now() - cacheData.timestamp;
+
+    // Cache is valid for 1 hour (in case of incremental builds)
+    if (age < 60 * 60 * 1000) {
+      logBuildInfo(
+        `✓ Loaded ${cacheData.frontmatter.length} files from worker cache (${(age / 1000).toFixed(0)}s old)`
+      );
+      return cacheData.frontmatter;
+    }
+    return null;
+  } catch {
+    // Cache doesn't exist or is invalid
+    return null;
+  }
+}
+
+/**
+ * Save frontmatter to disk cache for other workers
+ */
+async function saveFrontmatterToCache(
+  cacheFile: string,
+  frontmatter: FrontMatter[]
+): Promise<void> {
+  try {
+    const cachePath = path.join(root, '.next', 'cache', cacheFile);
+    const cacheData = {
+      timestamp: Date.now(),
+      frontmatter,
+    };
+    await mkdir(path.dirname(cachePath), {recursive: true});
+    await import('fs/promises').then(fs =>
+      fs.writeFile(cachePath, JSON.stringify(cacheData))
+    );
+    logBuildInfo(`✓ Saved ${frontmatter.length} files to worker cache for other workers`);
+  } catch (error) {
+    // Non-fatal - other workers will just build their own
+    // eslint-disable-next-line no-console
+    console.error('Failed to save frontmatter cache:', error);
+  }
+}
+
 async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
+  // Try to load from worker cache first
+  const cached = await loadFrontmatterFromCache('frontmatter.json');
+  if (cached) {
+    return cached;
+  }
+
+  // Create lock file so other workers wait
+  const lockPath = lockFile('frontmatter.json');
+  let lockFd: number | null = null;
+  try {
+    // Try to create lock file atomically
+    const {open} = await import('fs/promises');
+    lockFd = await open(lockPath, 'wx')
+      .then(fh => fh.fd)
+      .catch(() => null);
+
+    // If we couldn't create lock, another worker is building - wait for them
+    if (!lockFd) {
+      const cached2 = await loadFrontmatterFromCache('frontmatter.json');
+      if (cached2) {
+        return cached2;
+      }
+      // Cache not ready, fall through to build ourselves
+    }
+  } catch {
+    // Lock file issues are non-fatal
+  }
+
   const frontMatter = await getAllFilesFrontMatter();
 
   const categories = await apiCategories();
@@ -186,10 +287,50 @@ async function getDocsFrontMatterUncached(): Promise<FrontMatter[]> {
     }
   });
 
+  // Save to cache for other workers (if we got the lock)
+  if (lockFd) {
+    await saveFrontmatterToCache('frontmatter.json', frontMatter);
+    // Remove lock file
+    try {
+      const {unlink} = await import('fs/promises');
+      await unlink(lockPath);
+    } catch {
+      // Non-fatal
+    }
+  }
+
   return frontMatter;
 }
 
 export async function getDevDocsFrontMatterUncached(): Promise<FrontMatter[]> {
+  // Try to load from worker cache first
+  const cached = await loadFrontmatterFromCache('frontmatter-dev.json');
+  if (cached) {
+    return cached;
+  }
+
+  // Create lock file so other workers wait
+  const lockPath = lockFile('frontmatter-dev.json');
+  let lockFd: number | null = null;
+  try {
+    // Try to create lock file atomically
+    const {open} = await import('fs/promises');
+    lockFd = await open(lockPath, 'wx')
+      .then(fh => fh.fd)
+      .catch(() => null);
+
+    // If we couldn't create lock, another worker is building - wait for them
+    if (!lockFd) {
+      const cached2 = await loadFrontmatterFromCache('frontmatter-dev.json');
+      if (cached2) {
+        return cached2;
+      }
+      // Cache not ready, fall through to build ourselves
+    }
+  } catch {
+    // Lock file issues are non-fatal
+  }
+
   const folder = 'develop-docs';
   const docsPath = path.join(root, folder);
   const files = await getAllFilesRecursively(docsPath);
@@ -216,6 +357,19 @@ export async function getDevDocsFrontMatterUncached(): Promise<FrontMatter[]> {
       )
     )
   ).filter(isNotNil);
+
+  // Save to cache for other workers (if we got the lock)
+  if (lockFd) {
+    await saveFrontmatterToCache('frontmatter-dev.json', frontMatters);
+    // Remove lock file
+    try {
+      const {unlink} = await import('fs/promises');
+      await unlink(lockPath);
+    } catch {
+      // Non-fatal
+    }
+  }
+
   return frontMatters;
 }
 
@@ -546,41 +700,78 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   const outdir = path.join(root, 'public', 'mdx-images');
   await mkdir(outdir, {recursive: true});
 
-  // If the file contains content that depends on the Release Registry (such as an SDK's latest version), avoid using the cache for that file, i.e. always rebuild it.
-  // This is because the content from the registry might have changed since the last time the file was cached.
-  // If a new component that injects content from the registry is introduced, it should be added to the patterns below.
-  const skipCache =
+  // Check if file depends on Release Registry
+  const dependsOnRegistry =
     source.includes('@inject') ||
     source.includes('<PlatformSDKPackageName') ||
     source.includes('<LambdaLayerDetail');
 
   if (process.env.CI) {
-    if (skipCache) {
-      // eslint-disable-next-line no-console
-      console.info(
-        `Not using cached version of ${sourcePath}, as its content depends on the Release Registry`
-      );
-    } else {
-      cacheKey = md5(source);
-      cacheFile = path.join(CACHE_DIR, `${cacheKey}.br`);
-      assetsCacheDir = path.join(CACHE_DIR, cacheKey);
+    // Build cache key from: source content + registry data (if needed) + build ID
+    const sourceHash = md5(source);
 
+    // For files that depend on registry, include registry version in cache key
+    let registryHash = '';
+    if (dependsOnRegistry) {
       try {
-        const [cached, _] = await Promise.all([
-          readCacheFile<SlugFile>(cacheFile),
-          cp(assetsCacheDir, outdir, {recursive: true}),
+        // Get registry data (already cached in memory by each worker)
+        const [apps, packages] = await Promise.all([
+          getAppRegistry(),
+          getPackageRegistry(),
         ]);
-        return cached;
+        // Hash the registry data to create a stable version identifier
+        registryHash = md5(JSON.stringify({apps, packages}));
       } catch (err) {
-        if (
-          err.code !== 'ENOENT' &&
-          err.code !== 'ABORT_ERR' &&
-          err.code !== 'Z_BUF_ERROR'
-        ) {
-          // If cache is corrupted, ignore and proceed
-          // eslint-disable-next-line no-console
-          console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
-        }
+        // If registry fetch fails, skip caching
+        // eslint-disable-next-line no-console
+        console.warn(`Failed to fetch registry for cache key: ${err.message}`);
+        registryHash = 'no-registry';
+      }
+    }
+
+    // Use VERCEL_GIT_COMMIT_REF (branch name) for cache key
+    // This allows cache to persist across commits on the same branch!
+    // Falls back to VERCEL_DEPLOYMENT_ID for non-git deploys, then BUILD_ID, then 'local'
+    const cacheVersion =
+      process.env.VERCEL_GIT_COMMIT_REF ||
+      process.env.VERCEL_DEPLOYMENT_ID ||
+      process.env.BUILD_ID ||
+      'local';
+
+    // Cache key: source + registry version + branch/build identifier
+    // This ensures:
+    // 1. All workers in the same build share cache (same cacheVersion)
+    // 2. Cache persists across commits on same branch (same VERCEL_GIT_COMMIT_REF)
+    // 3. Cache is invalidated when registry changes (registryHash changes)
+    // 4. Cache is invalidated when source changes (sourceHash changes)
+    cacheKey = dependsOnRegistry
+      ? `${sourceHash}-${registryHash}-${cacheVersion}`
+      : `${sourceHash}-${cacheVersion}`;
+
+    cacheFile = path.join(CACHE_DIR, `${cacheKey}.br`);
+    assetsCacheDir = path.join(CACHE_DIR, cacheKey);
+
+    try {
+      const [cached, _] = await Promise.all([
+        readCacheFile<SlugFile>(cacheFile),
+        cp(assetsCacheDir, outdir, {recursive: true}),
+      ]);
+      if (dependsOnRegistry) {
+        // eslint-disable-next-line no-console
+        console.info(
+          `✓ Using cached registry-dependent file: ${sourcePath} (branch: ${cacheVersion}, registry: ${registryHash.slice(0, 8)})`
+        );
+      }
+      return cached;
+    } catch (err) {
+      if (
+        err.code !== 'ENOENT' &&
+        err.code !== 'ABORT_ERR' &&
+        err.code !== 'Z_BUF_ERROR'
+      ) {
+        // If cache is corrupted, ignore and proceed
+        // eslint-disable-next-line no-console
+        console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
       }
     }
   }
@@ -715,7 +906,8 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     },
   };
 
-  if (assetsCacheDir && cacheFile && !skipCache) {
+  // Save to cache if we have a cache key (we now cache everything, including registry-dependent files)
+  if (assetsCacheDir && cacheFile && cacheKey) {
     await cp(assetsCacheDir, outdir, {recursive: true});
     writeCacheFile(cacheFile, JSON.stringify(resultObj)).catch(e => {
       // eslint-disable-next-line no-console

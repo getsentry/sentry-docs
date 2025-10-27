@@ -50,7 +50,7 @@ export class BuildTimer {
       );
     }
     // Track for summary
-    buildPhases.push({name: this.name, duration});
+    buildPhases.push({duration, name: this.name});
     return duration;
   }
 
