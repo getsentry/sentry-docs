@@ -65,6 +65,17 @@ if (process.env.CI) {
   mkdirSync(CACHE_DIR, {recursive: true});
 }
 
+// Cache registry hash per worker to avoid recomputing for every file
+let cachedRegistryHash: string | null = null;
+async function getRegistryHash(): Promise<string> {
+  if (cachedRegistryHash) {
+    return cachedRegistryHash;
+  }
+  const [apps, packages] = await Promise.all([getAppRegistry(), getPackageRegistry()]);
+  cachedRegistryHash = md5(JSON.stringify({apps, packages}));
+  return cachedRegistryHash;
+}
+
 const md5 = (data: BinaryLike) => createHash('md5').update(data).digest('hex');
 
 async function readCacheFile<T>(file: string): Promise<T> {
@@ -547,13 +558,8 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     // This prevents serving stale content when registry is updated
     if (dependsOnRegistry) {
       try {
-        // Get registry data (cached in memory per worker)
-        const [apps, packages] = await Promise.all([
-          getAppRegistry(),
-          getPackageRegistry(),
-        ]);
-        // Hash the registry data to create a stable version identifier
-        const registryHash = md5(JSON.stringify({apps, packages}));
+        // Get registry hash (cached per worker to avoid redundant fetches)
+        const registryHash = await getRegistryHash();
         cacheKey = `${sourceHash}-${registryHash}`;
       } catch (err) {
         // If registry fetch fails, skip caching for safety
@@ -577,6 +583,14 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
           readCacheFile<SlugFile>(cacheFile),
           cp(assetsCacheDir, outdir, {recursive: true}),
         ]);
+        // Log cache hits for registry-dependent files to verify caching is working
+        if (dependsOnRegistry) {
+          const registryHash = cacheKey.split('-').pop()?.slice(0, 8);
+          // eslint-disable-next-line no-console
+          console.log(
+            `✓ Using cached registry-dependent file: ${sourcePath} (registry: ${registryHash})`
+          );
+        }
         return cached;
       } catch (err) {
         if (
