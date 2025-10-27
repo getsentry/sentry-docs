@@ -521,6 +521,8 @@ Example Repository: _Coming soon - sample repository in development_
 **Frontend (React) — Instrument AI Chat Interface:**
 
 ```typescript
+import { SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN } from '@sentry/core';
+
 // In your AI chat component
 const handleSendMessage = async (userMessage: string) => {
   await Sentry.startSpan(
@@ -537,6 +539,7 @@ const handleSendMessage = async (userMessage: string) => {
           ...conversationHistory,
           { role: 'user', content: userMessage }
         ]),
+        [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: 'manual.ai.custom-llm',
         'conversation.turn': conversationHistory.length + 1,
         'conversation.session_id': sessionId,
       },
@@ -565,6 +568,7 @@ const handleSendMessage = async (userMessage: string) => {
         // Set response attributes
         agentSpan.setAttribute('gen_ai.response.text', aiResponse.message);
         agentSpan.setAttribute('gen_ai.response.id', aiResponse.responseId);
+        agentSpan.setAttribute('gen_ai.response.model', 'custom-model-v2');
         agentSpan.setAttribute('gen_ai.usage.total_tokens', aiResponse.totalTokens);
         agentSpan.setAttribute('conversation.tools_used', aiResponse.toolsUsed?.length || 0);
         agentSpan.setAttribute('conversation.resolution_status', aiResponse.resolutionStatus);
@@ -599,6 +603,8 @@ Where to put this in your app:
 **Backend — Custom LLM Integration with Tool Calls:**
 
 ```typescript
+import { SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN } from '@sentry/core';
+
 // Express API route for custom AI agent
 app.post('/api/ai/chat', async (req: Request, res: Response) => {
   const { message, sessionId, conversationHistory } = req.body;
@@ -613,6 +619,7 @@ app.post('/api/ai/chat', async (req: Request, res: Response) => {
         'gen_ai.agent.name': 'Customer Support Agent',
         'gen_ai.system': 'custom-llm',
         'gen_ai.request.model': 'custom-model-v2',
+        [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: 'manual.ai.custom-llm',
         'conversation.session_id': sessionId,
       },
     },
@@ -647,6 +654,7 @@ app.post('/api/ai/chat', async (req: Request, res: Response) => {
               ]),
               'gen_ai.request.temperature': 0.7,
               'gen_ai.request.max_tokens': 500,
+              [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: 'manual.ai.custom-llm',
             },
           },
           async (llmSpan) => {
@@ -703,6 +711,7 @@ app.post('/api/ai/chat', async (req: Request, res: Response) => {
                   'gen_ai.tool.input': toolCall.function.arguments,
                   'gen_ai.system': 'custom-llm',
                   'gen_ai.request.model': 'custom-model-v2',
+                  [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: 'manual.ai.custom-llm',
                 },
               },
               async (toolSpan) => {
@@ -762,6 +771,7 @@ app.post('/api/ai/chat', async (req: Request, res: Response) => {
                 'gen_ai.operation.name': 'chat',
                 'gen_ai.system': 'custom-llm',
                 'gen_ai.request.model': 'custom-model-v2',
+                [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: 'manual.ai.custom-llm',
                 'llm.call_type': 'final_synthesis',
               },
             },
@@ -794,6 +804,7 @@ app.post('/api/ai/chat', async (req: Request, res: Response) => {
         
         // Set final agent span attributes
         agentSpan.setAttribute('gen_ai.response.text', finalResponse);
+        agentSpan.setAttribute('gen_ai.response.model', 'custom-model-v2');
         agentSpan.setAttribute('gen_ai.usage.total_tokens', totalTokens);
         agentSpan.setAttribute('conversation.tools_used_count', toolsUsed.length);
         agentSpan.setAttribute('conversation.tools_used', JSON.stringify(toolsUsed));
