@@ -668,27 +668,7 @@ app.post('/api/ai/chat', async (req: Request, res: Response) => {
             },
           },
           async (llmSpan) => {
-            // Call your custom LLM API
-            const llmApiResponse = await fetch('https://your-custom-llm-api.com/chat', {
-              method: 'POST',
-              headers: { 
-                'Authorization': `Bearer ${process.env.CUSTOM_LLM_API_KEY}`,
-                'Content-Type': 'application/json' 
-              },
-              body: JSON.stringify({
-                model: 'custom-model-v2',
-                messages: conversationHistory.concat([{ role: 'user', content: message }]),
-                temperature: 0.7,
-                max_tokens: 500,
-                tools: tools
-              })
-            });
-            
-            if (!llmApiResponse.ok) {
-              throw new Error(`LLM API failed: ${llmApiResponse.status}`);
-            }
-            
-            const llmData = await llmApiResponse.json();
+            const llmData = await callCustomLLM(message, conversationHistory);
             
             // Set LLM response attributes
             llmSpan.setAttribute('gen_ai.response.text', llmData.choices[0].message.content || '');
@@ -707,119 +687,43 @@ app.post('/api/ai/chat', async (req: Request, res: Response) => {
           }
         );
         
-        // Step 2: Execute any tool calls
+        // Step 2: Execute tool calls if present
         if (llmResponse.choices[0].message.tool_calls) {
           for (const toolCall of llmResponse.choices[0].message.tool_calls) {
-            // Find tool description from available tools
-            const toolDefinition = tools.find(t => t.name === toolCall.function.name);
-            
-            const toolResult = await Sentry.startSpan(
+            await Sentry.startSpan(
               {
                 name: `execute_tool ${toolCall.function.name}`,
                 op: 'gen_ai.execute_tool',
                 attributes: {
                   'gen_ai.operation.name': 'execute_tool',
                   'gen_ai.tool.name': toolCall.function.name,
-                  'gen_ai.tool.description': toolDefinition?.description || '',
                   'gen_ai.tool.type': 'function',
                   'gen_ai.tool.input': toolCall.function.arguments,
-                  'gen_ai.system': 'custom-llm',
-                  'gen_ai.request.model': 'custom-model-v2',
                   [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: 'manual.ai.custom-llm',
                 },
               },
               async (toolSpan) => {
-                let toolOutput = '';
-                let toolTokensUsed = 0;
+                const toolOutput = await executeKnowledgeBaseSearch(toolCall.function.arguments);
                 
-                try {
-                  // Execute the tool
-                  switch (toolCall.function.name) {
-                    case 'search_knowledge_base':
-                      const searchArgs = JSON.parse(toolCall.function.arguments);
-                      toolOutput = await searchKnowledgeBase(searchArgs.query);
-                      toolSpan.setAttribute('search.query', searchArgs.query);
-                      toolSpan.setAttribute('search.results_count', toolOutput.split('\n').length);
-                      break;
-                      
-                    default:
-                      throw new Error(`Unknown tool: ${toolCall.function.name}`);
-                  }
-                  
-                  toolSpan.setAttribute('gen_ai.tool.output', toolOutput);
-                  toolSpan.setAttribute('gen_ai.usage.total_tokens', toolTokensUsed);
-                  toolsUsed.push(toolCall.function.name);
-                  totalTokens += toolTokensUsed;
-                  
-                } catch (toolError) {
-                  toolSpan.setStatus({ code: 2, message: 'tool_execution_failed' });
-                  toolSpan.setAttribute('error.type', toolError instanceof Error ? toolError.constructor.name : 'UnknownError');
-                  toolSpan.setAttribute('error.message', toolError instanceof Error ? toolError.message : 'Unknown tool error');
-                  toolOutput = `Error executing ${toolCall.function.name}: ${toolError instanceof Error ? toolError.message : 'Unknown error'}`;
-                }
-                
-                return toolOutput;
+                toolSpan.setAttribute('gen_ai.tool.output', toolOutput);
+                toolSpan.setAttribute('search.query', JSON.parse(toolCall.function.arguments).query);
+                toolsUsed.push(toolCall.function.name);
               }
             );
           }
         }
         
-        // Step 3: Generate final response (if tools were used)
-        if (toolsUsed.length > 0) {
-          const finalLlmResponse = await Sentry.startSpan(
-            {
-              name: 'chat custom-model-v2',
-              op: 'gen_ai.chat',
-              attributes: {
-                'gen_ai.operation.name': 'chat',
-                'gen_ai.system': 'custom-llm',
-                'gen_ai.request.model': 'custom-model-v2',
-                [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: 'manual.ai.custom-llm',
-                'llm.call_type': 'final_synthesis',
-              },
-            },
-            async (finalSpan) => {
-              // Make final LLM call with tool results
-              // Implementation similar to above...
-              const synthesisResponse = await synthesizeResponse(llmResponse, toolsUsed);
-              
-              finalSpan.setAttribute('gen_ai.response.text', synthesisResponse.message);
-              finalSpan.setAttribute('gen_ai.usage.total_tokens', synthesisResponse.usage.total_tokens);
-              
-              totalTokens += synthesisResponse.usage.total_tokens;
-              finalResponse = synthesisResponse.message;
-              
-              return synthesisResponse;
-            }
-          );
-        } else {
-          finalResponse = llmResponse.choices[0].message.content;
-        }
-        
-        // Determine resolution status
-        if (toolsUsed.includes('create_ticket')) {
-          resolutionStatus = 'escalated';
-        } else if (finalResponse.toLowerCase().includes('resolved') || finalResponse.toLowerCase().includes('solved')) {
-          resolutionStatus = 'resolved';
-        } else {
-          resolutionStatus = 'answered';
-        }
-        
-        // Set final agent span attributes
+        // Set final agent attributes
+        const finalResponse = llmResponse.choices[0].message.content;
         agentSpan.setAttribute('gen_ai.response.text', finalResponse);
-        agentSpan.setAttribute('gen_ai.response.model', 'custom-model-v2');
         agentSpan.setAttribute('gen_ai.usage.total_tokens', totalTokens);
-        agentSpan.setAttribute('conversation.tools_used_count', toolsUsed.length);
         agentSpan.setAttribute('conversation.tools_used', JSON.stringify(toolsUsed));
-        agentSpan.setAttribute('conversation.resolution_status', resolutionStatus);
-        agentSpan.setAttribute('conversation.cost_estimate_usd', (totalTokens * 0.0001).toFixed(4)); // Example cost calculation
+        agentSpan.setAttribute('conversation.resolution_status', toolsUsed.length > 0 ? 'resolved' : 'answered');
         
         res.json({
           message: finalResponse,
-          responseId: `resp_${Date.now()}`,
           totalTokens,
           toolsUsed,
-          resolutionStatus,
         });
         
       } catch (error) {
