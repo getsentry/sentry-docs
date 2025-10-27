@@ -5,13 +5,11 @@ description: "Structured logs allow you to send, view, and query logs sent from 
 sidebar_order: 5600
 ---
 
-<Include name="feature-stage-beta-logs.mdx" />
-
-With Sentry Structured Logs, you can send text based log information from your applications to Sentry. Once in Sentry, these logs can be viewed alongside relevant errors, searched by text-string, or searched using their individual attributes.
+With Sentry Structured Logs, you can send text-based log information from your applications to Sentry. Once in Sentry, these logs can be viewed alongside relevant errors, searched by text-string, or searched using their individual attributes.
 
 ## Requirements
 
-Logs in Rust are supported in Sentry Rust SDK version `0.39.0` and above.
+Logs in Rust are supported in Sentry Rust SDK version `0.42.0` and above.
 Additionally, the `logs` feature flag needs to be enabled.
 
 ```toml {filename:Cargo.toml}
@@ -21,22 +19,13 @@ sentry = { version = "{{@inject packages.version('sentry.rust') }}", features = 
 
 ## Setup
 
-To enable logging, you need to initialize the SDK with the `enable_logs` option set to `true`.
-
-```rust
-let _guard = sentry::init((
-    "___PUBLIC_DSN___",
-    sentry::ClientOptions {
-        release: sentry::release_name!(),
-        enable_logs: true,
-        ..Default::default()
-    }
-));
-```
+To enable logging, just add the `sentry` dependency with the `logs` feature flag.
+This will set `enable_logs: true` by default in your `sentry::ClientOptions`.
+You can opt-out from sending logs even while using the `logs` feature flag by explicitly initializing the SDK with `enable_logs: false`.
 
 ## Usage
 
-Once the feature is enabled on the SDK and the SDK is initialized, you can send logs by using the logging macros.
+Once the feature is enabled and the SDK is initialized, you can send logs by using the logging macros.
 The `sentry` crate exposes macros that support six different log levels:
 `logger_trace`, `logger_debug`, `logger_info`, `logger_warn`, `logger_error` and `logger_fatal`.
 The macros support logging a simple message, or a message with parameters, with `format` syntax:
@@ -83,7 +72,6 @@ tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
 ```
 
-Initialize the SDK with `enable_logs` set to `true`, and configure the `tracing` subscriber to map `tracing` events to logs based on metadata such as severity.
 Then, use standard `tracing` macros to capture logs.
 
 ```rust {filename:main.rs}
@@ -101,20 +89,9 @@ fn main() {
         },
     ));
 
-    let sentry_layer =
-        sentry::integrations::tracing::layer().event_filter(|md| match *md.level() {
-            // Capture error level events as Sentry events
-            // These are grouped into issues, representing high-severity errors to act upon
-            tracing::Level::ERROR => EventFilter::Event,
-            // Ignore trace level events, as they're too verbose
-            tracing::Level::TRACE => EventFilter::Ignore,
-            // Capture everything else as a traditional structured log
-            _ => EventFilter::Log,
-        });
-
     tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer())
-        .with(sentry_layer)
+        .with(sentry::integrations::tracing::layer())
         .init();
 
     info!("Hello, world!");
@@ -132,7 +109,10 @@ fn main() {
 
 The fields of `tracing` events are automatically captured as attributes in Sentry logs.
 
-To map a `tracing` event to multiple items in Sentry (e.g. both an event and a log), combine multiple event filters using the bitwise or operator.
+By default, `tracing` events at or above info level are captured as Sentry logs.
+
+This behavior can be customized by applying a custom `event_filter` when creating the layer.
+The following snippet shows the default `event_filter` that's applied when using the `sentry` crate with the `logs` feature flag.
 
 ```rust
 use sentry::integrations::tracing::EventFilter;
@@ -140,11 +120,11 @@ use sentry::integrations::tracing::EventFilter;
 let sentry_layer =
     sentry::integrations::tracing::layer().event_filter(|md| match *md.level() {
         // Capture error and warn level events as both logs and events in Sentry
-        tracing::Level::ERROR | tracing::Level::WARN => EventFilter::Event | EventFilter::Log,
+        tracing::Level::ERROR => EventFilter::Event | EventFilter::Log,
         // Ignore trace level events, as they're too verbose
         tracing::Level::TRACE => EventFilter::Ignore,
-        // Capture everything else just as a log
-        _ => EventFilter::Log,
+        // Capture everything else as both a breadcrumb and a log
+        _ => EventFilter::Breadcrumb | EventFilter::Log,
     });
 ```
 
@@ -160,7 +140,6 @@ log = "0.4"
 env_logger = "0.11"
 ```
 
-Initialize the SDK with `enable_logs` set to `true`, and configure the `log` integration to map `log` records to logs based on metadata such as severity.
 Then, use standard `log` macros to capture logs.
 
 ```rust {filename:main.rs}
@@ -179,17 +158,7 @@ fn main() {
 
     let logger = sentry::integrations::log::SentryLogger::with_dest(
         env_logger::Builder::from_default_env().build(),
-    )
-    .filter(|md| match md.level() {
-        // Capture error records as Sentry events
-        // These are grouped into issues, representing high-severity errors to act upon
-        log::Level::Error => LogFilter::Event,
-        // Ignore trace level records, as they're too verbose
-        log::Level::Trace => LogFilter::Ignore,
-        // Capture everything else as a log
-        _ => LogFilter::Log,
-    });
-
+    );
     log::set_boxed_logger(Box::new(logger)).unwrap();
     log::set_max_level(log::LevelFilter::Trace);
 
@@ -224,3 +193,17 @@ let _guard = sentry::init(("___PUBLIC_DSN___", sentry::ClientOptions {
     ..Default::default()
 }));
 ```
+
+## Default Attributes
+
+The Rust SDK automatically sets several default attributes on all log entries to provide context and improve debugging:
+
+<Include name="logs/default-attributes/core" />
+
+<Include name="logs/default-attributes/message-template" />
+
+<Include name="logs/default-attributes/server" />
+
+<Include name="logs/default-attributes/user" />
+
+<Include name="logs/default-attributes/integration" />

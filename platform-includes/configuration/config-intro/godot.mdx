@@ -1,31 +1,51 @@
-Options are used to initialize and control the behavior of the SDK. They can be configured in the **Project Settings** under the **Sentry** category. Additionally, you can configure or override options using a configuration script.
+Options control how the SDK is initialized and behaves at runtime.
+You can configure them in the **Project Settings** under the **Sentry** category,
+or override them programmatically when initializing the SDK in code.
 
-### Configuration Script
+### Programmatic Configuration
 
-To define a configuration script, create a new script that extends the `SentryConfiguration` class. Then, assign your configuration script in the **Project Settings** under the **Sentry** category in the `Configuration Script` field.
+If **Auto Init** is enabled in **Project Settings**, the SDK initializes automatically when the game starts.
+However, if you need finer control — for example, to define callbacks like <PlatformLink to="/configuration/options/#before_send"><PlatformIdentifier name="before-send" /></PlatformLink> —
+you can disable **Auto Init** and manually initialize the SDK from code.
 
-```GDScript
-extends SentryConfiguration
+The earliest point to configure and initialize the SDK is `MainLoop._initialize()`.
 
-func _configure(options: SentryOptions):
-	if OS.is_debug_build():
-		options.environment = "debug"
-		options.debug = true
-	options.release = "mygame@1.0.0"
-	options.before_send = _before_send
+To do this:
+
+1. Disable **Auto Init** in **Project Settings -> Sentry -> Options**.
+2. Create a new script that extends `SceneTree` and add a `class_name`.
+3. Assign that `class_name` as your main loop type in **Project Settings → Application → Run → Main Loop Type**.
+4. Define `_initialize()` method in your script and call `SentrySDK.init()` there.
+
+Here’s a complete example:
+
+```gdscript
+class_name ProjectMainLoop
+extends SceneTree
+## Tip: Set "ProjectMainLoop" as your main loop type in the project settings
+##      under `application/run/main_loop_type`.
+
+func _initialize() -> void:
+	SentrySDK.init(func(options: SentryOptions) -> void:
+		if OS.is_debug_build():
+			options.environment = "debug"
+			options.debug = true
+		options.release = "mygame@1.0.0"
+		options.before_send = _before_send
+	)
 
 func _before_send(event: SentryEvent) -> SentryEvent:
 	if event.environment == "debug":
 		# Discard event if running in a debug build.
 		return null
 	if event.message.contains("Bruno"):
-		# Remove sensitive information from the event.
+		# Scrub sensitive information from the event.
 		event.message = event.message.replace("Bruno", "REDACTED")
 	return event
 ```
 
 <Alert>
 
-If a user configuration script is assigned, SDK initialization will be delayed until `ScriptServer` becomes available during game startup.
+Prefer automatic initialization when possible — it runs before your code and helps ensure no startup events are missed. Use manual initialization only for cases that require runtime customization (custom <PlatformLink to="/configuration/options/#before_send"><PlatformIdentifier name="before-send" /></PlatformLink> handler, dynamic release values, programmatic sampling, etc.).
 
 </Alert>

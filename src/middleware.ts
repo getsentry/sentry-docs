@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import type {NextRequest} from 'next/server';
 import {NextResponse} from 'next/server';
 
@@ -19,11 +20,149 @@ export const config = {
 
 // This function can be marked `async` if using `await` inside
 export function middleware(request: NextRequest) {
-  return handleRedirects(request);
+  // First, handle canonical URL redirects for deprecated paths
+  const canonicalRedirect = handleRedirects(request);
+  if (canonicalRedirect) {
+    return canonicalRedirect;
+  }
+
+  // Then, check for AI/LLM clients and redirect to markdown if appropriate
+  return handleAIClientRedirect(request);
 }
 
 // don't send Permanent Redirects (301) in dev mode - it gets cached for "localhost" by the browser
 const redirectStatusCode = process.env.NODE_ENV === 'development' ? 302 : 301;
+
+/**
+ * Detects if the user agent belongs to an AI/LLM tool or development environment
+ * that would benefit from markdown format
+ */
+function isAIOrDevTool(userAgent: string): boolean {
+  const patterns = [
+    /claude/i, // Claude Desktop/Code
+    /cursor/i, // Cursor IDE
+    /copilot/i, // GitHub Copilot
+    /chatgpt/i, // ChatGPT
+    /openai/i, // OpenAI tools
+    /anthropic/i, // Anthropic tools
+    /vscode/i, // VS Code extensions
+    /intellij/i, // IntelliJ plugins
+    /sublime/i, // Sublime Text plugins
+    /got/i, // Got HTTP library (sindresorhus/got)
+    // Add more patterns as needed
+  ];
+
+  return patterns.some(pattern => pattern.test(userAgent));
+}
+
+/**
+ * Detects if client wants markdown via Accept header (standards-compliant)
+ */
+function wantsMarkdownViaAccept(acceptHeader: string): boolean {
+  return (
+    acceptHeader.includes('text/markdown') ||
+    acceptHeader.includes('text/x-markdown') ||
+    acceptHeader.includes('text/plain')
+  );
+}
+
+/**
+ * Detects if client wants markdown via Accept header or user-agent
+ */
+function wantsMarkdown(request: NextRequest): boolean {
+  const userAgent = request.headers.get('user-agent') || '';
+  const acceptHeader = request.headers.get('accept') || '';
+
+  // Strategy 1: Accept header content negotiation (standards-compliant)
+  if (wantsMarkdownViaAccept(acceptHeader)) {
+    return true;
+  }
+
+  // Strategy 2: User-agent detection (fallback for tools that don't set Accept)
+  return isAIOrDevTool(userAgent);
+}
+
+/**
+ * Handles redirection to markdown versions for AI/LLM clients
+ */
+const handleAIClientRedirect = (request: NextRequest) => {
+  const userAgent = request.headers.get('user-agent') || '';
+  const acceptHeader = request.headers.get('accept') || '';
+  const url = request.nextUrl;
+
+  // Determine if this will be served as markdown
+  const forceMarkdown = url.searchParams.get('format') === 'md';
+  const clientWantsMarkdown = wantsMarkdown(request);
+  const willServeMarkdown =
+    (clientWantsMarkdown || forceMarkdown) && !url.pathname.endsWith('.md');
+
+  // Determine detection method for logging
+  const detectionMethod = wantsMarkdownViaAccept(acceptHeader)
+    ? 'Accept header'
+    : isAIOrDevTool(userAgent)
+      ? 'User-agent'
+      : 'Manual';
+
+  // Log user agent for debugging (only for non-static assets)
+  if (
+    !url.pathname.startsWith('/_next/') &&
+    !url.pathname.includes('.') &&
+    !url.pathname.startsWith('/api/')
+  ) {
+    Sentry.logger.info(`Middleware request processed: ${url.pathname}`, {
+      urlPath: url.pathname,
+      acceptHeader: request.headers.get('accept') || '',
+      userAgent: request.headers.get('user-agent') || '',
+      contentType: willServeMarkdown ? 'markdown' : 'html',
+      detectionMethod: willServeMarkdown ? detectionMethod : null,
+    });
+  }
+
+  // Skip if already requesting a markdown file
+  if (url.pathname.endsWith('.md')) {
+    return undefined;
+  }
+
+  // Skip API routes and static assets (should already be filtered by matcher)
+  if (
+    url.pathname.startsWith('/api/') ||
+    url.pathname.startsWith('/_next/') ||
+    /\.(js|json|png|jpg|jpeg|gif|ico|pdf|css|woff|woff2|ttf|map|xml|txt|zip|svg)$/i.test(
+      url.pathname
+    )
+  ) {
+    return undefined;
+  }
+
+  // Check for markdown request (Accept header, user-agent, or manual)
+  if (clientWantsMarkdown || forceMarkdown) {
+    // Log the redirect for debugging
+    Sentry.logger.info('Markdown redirect triggered', {
+      urlPath: url.pathname,
+      detectionMethod: forceMarkdown ? 'Manual format=md' : detectionMethod,
+      targetUrl: url.pathname.replace(/\/+$/, '') + '.md',
+    });
+
+    // Create new URL with .md extension
+    const newUrl = url.clone();
+    // Handle root path and ensure proper .md extension
+    let pathname = url.pathname === '/' ? '/index' : url.pathname;
+    // Remove all trailing slashes if present, then add .md
+    pathname = pathname.replace(/\/+$/, '') + '.md';
+    newUrl.pathname = pathname;
+
+    // Clean up the format query parameter if it was used
+    if (forceMarkdown) {
+      newUrl.searchParams.delete('format');
+    }
+
+    return NextResponse.redirect(newUrl, {
+      status: redirectStatusCode,
+    });
+  }
+
+  return undefined;
+};
 
 const handleRedirects = (request: NextRequest) => {
   const urlPath = request.nextUrl.pathname;
@@ -1626,32 +1765,48 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     from: '/platforms/javascript/guides/:guide/tracing/instrumentation/opentelemetry/',
     to: '/platforms/javascript/guides/:guide/opentelemetry/',
   },
-  // START  bandaid fix for #11870
+  // START redirecting deprecated generic metrics docs to concepts
   {
-    from: '/platforms/java/performance/instrumentation/opentelemetry/',
-    to: '/platforms/java/tracing/instrumentation/opentelemetry/',
-  },
-  {
-    from: '/platforms/go/performance/instrumentation/opentelemetry/',
-    to: '/platforms/go/tracing/instrumentation/opentelemetry/',
-  },
-  {
-    from: '/platforms/javascript/guides/node/performance/instrumentation/opentelemetry/',
-    to: '/platforms/javascript/guides/node/opentelemetry/',
-  },
-  {
-    from: '/platforms/python/performance/instrumentation/opentelemetry/',
-    to: '/platforms/python/tracing/instrumentation/opentelemetry/',
-  },
-  {
-    from: '/platforms/ruby/performance/instrumentation/opentelemetry/',
-    to: '/platforms/ruby/tracing/instrumentation/opentelemetry/',
+    from: '/platforms/python/metrics/',
+    to: '/platforms/python/tracing/span-metrics/',
   },
   {
     from: '/platforms/ruby/metrics/',
-    to: '/platforms/ruby/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
   },
-  // END  bandaid fix for #11870
+  {
+    from: '/platforms/react-native/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    from: '/platforms/java/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    from: '/platforms/android/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    from: '/platforms/apple/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    from: '/platforms/unity/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    from: '/platforms/php/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    from: '/platforms/php/guides/laravel/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  {
+    from: '/platforms/php/guides/symfony/metrics/',
+    to: '/concepts/key-terms/tracing/span-metrics/',
+  },
+  // END redirecting deprecated generic metrics docs to concepts
   {
     from: '/learn/cli/configuration/',
     to: '/cli/configuration/',
@@ -1663,6 +1818,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/learn/cli/releases/',
     to: '/cli/releases/',
+  },
+  {
+    from: '/cli/metrics/',
+    to: '/cli/send-event/',
   },
   {
     from: '/workflow/alerts-notifications/',
@@ -2418,16 +2577,8 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/relay/',
   },
   {
-    from: '/meta/relay/projects/',
-    to: '/product/relay/projects/',
-  },
-  {
     from: '/meta/relay/getting-started/',
     to: '/product/relay/getting-started/',
-  },
-  {
-    from: '/meta/relay/pii-and-data-scrubbing/',
-    to: '/product/relay/pii-and-data-scrubbing/',
   },
   {
     from: '/meta/relay/options/',
@@ -3307,8 +3458,28 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
     to: '/product/explore/session-replay/',
   },
   {
-    from: '/product/explore/session-replay/replay-page-and-filters/',
-    to: '/product/explore/session-replay/web/replay-page-and-filters/',
+    from: '/product/explore/session-replay/web/getting-started/',
+    to: '/product/explore/session-replay/web/',
+  },
+  {
+    from: '/product/explore/session-replay/web/replay-page-and-filters/',
+    to: '/product/explore/session-replay/replay-page-and-filters/',
+  },
+  {
+    from: '/product/explore/session-replay/web/replay-details/',
+    to: '/product/explore/session-replay/replay-details/',
+  },
+  {
+    from: '/product/explore/session-replay/hydration-errors/',
+    to: '/product/issues/issue-details/replay-issues/hydration-error/',
+  },
+  {
+    from: '/product/explore/session-replay/rage-dead-clicks/',
+    to: '/product/issues/issue-details/replay-issues/rage-clicks/',
+  },
+  {
+    from: '/product/explore/session-replay/privacy/',
+    to: '/security-legal-pii/scrubbing/protecting-user-privacy/',
   },
   {
     from: '/product/teams/roles/',

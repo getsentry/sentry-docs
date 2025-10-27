@@ -133,9 +133,23 @@ The Xcode integration reads `dist` from `CFBundleVersion` but Xcode Cloud builds
 export SENTRY_DIST=$CI_BUILD_NUMBER
 ```
 
+## iOS: Sentry User Feedback UI cannot be used from app extensions.
+
+If you see an error similar to `'SentryUserFeedbackIntegration' is unavailable: not available on iOS - Sentry User Feedback UI cannot be used from app extensions` during the application build process, please make sure that the `APPLICATION_EXTENSION_API_ONLY` is set to `NO`. You can achive that with the following in your `Podfile`.
+
+```ruby {filename:ios/Podfile}
+installer.pods_project.targets.each do |target|
+  target.build_configurations.each do |config|
+    if target.name == 'Sentry'
+      config.build_settings['APPLICATION_EXTENSION_API_ONLY'] = 'NO'
+    end
+  end
+end
+```
+
 ## Unknown receiver '\<SomeReceiver\>', Use of undeclared identifier '\<SomeIdentifier\>'
 
-If you see an error like `Unknown receiver 'SwiftDescriptor'` or `Use of undeclared identifier 'SentryLog'` during the application build process, there's a conflict stemming from `APPLICATION_EXTENSION_API_ONLY`. By default, the Sentry Cocoapod is configured with `APPLICATION_EXTENSION_API_ONLY=YES`, but some `post_install` script likely changed it. To fix this error, add the following to the `Podfile`.
+If you see an error like `Unknown receiver 'SwiftDescriptor'` or `Use of undeclared identifier 'SentryLog'` during the application build process (in SDK versions prior to `6.18.0`), there's a conflict stemming from `APPLICATION_EXTENSION_API_ONLY`. By default, the Sentry Cocoapod is configured with `APPLICATION_EXTENSION_API_ONLY=YES`, but some `post_install` script likely changed it. To fix this error, add the following to the `Podfile`.
 
 ```ruby {filename:ios/Podfile}
 post_install do |installer|

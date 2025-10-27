@@ -19,9 +19,12 @@ The difference only resides on a few things that are impossible to be hosted by 
 - [Spend Allocation](https://docs.sentry.io/pricing/quotas/spend-allocation/), as it is tightly coupled with Billing Quotas.
 - Seer and other AI & ML features, as these are currently closed source.
 - [Data Storage Location](https://docs.sentry.io/organization/data-storage-location/), because you own your data.
-- [iOS Symbolication](https://docs.sentry.io/platforms/apple/data-management/debug-files/symbol-servers#built-in-repositories), because Apple does not provide a public symbol server, nor do they allow us to distribute the Debug Information Files (DIFs) ourselves.
-- Android system symbols, with symbols collected using its [symbol-collector service](https://github.com/getsentry/symbol-collector/), but cannot be redestributed. This helps give better quality stack traces for native Android crashes.
-- [PlayStation](https://docs.sentry.io/platforms/playstation/) support involves components part of a partnership with Sony which cannot be made public or redistributed.
+- Limited stack-trace resolution for mobile platforms, but all other features are available:
+  - [iOS Symbolication](https://docs.sentry.io/platforms/apple/data-management/debug-files/symbol-servers#built-in-repositories), because Apple does not provide a public symbol server, nor do they allow us to distribute the Debug Information Files (DIFs) ourselves.
+  - Android system symbols, with symbols collected using its [symbol-collector service](https://github.com/getsentry/symbol-collector/), but cannot be redestributed. This helps give better quality stack traces for native Android crashes.
+- Limited support for gaming platforms, notably for PlayStation and Nintendo Switch:
+  - [PlayStation](https://docs.sentry.io/platforms/playstation/) support involves components part of a partnership with Sony which cannot be made public or redistributed. Sentry has a private service that pulls crashes from Sony to Sentry, therefore it is not possible to use PlayStation support without Sony's permission.
+  - [Nintendo Switch](https://docs.sentry.io/platforms/nintendo-switch/) has a limited support scope, since it's not fully tested on self-hosted environment. Users can give self-hosted Sentry DSN to Nintendo for them to forward data to.
 
 To put things simply, consider self-hosted as the Business plan without any software limitations and no paid tier.
 
@@ -31,10 +34,10 @@ We require at least **Docker 19.03.6** and **Docker Compose 2.32.2**. It is reco
 
 These are the minimum requirements:
 - 4 CPU Cores
-- 16 GB RAM
+- 16 GB RAM + 16 GB swap
 - 20 GB Free Disk Space
 
-We also recommend using a swapfile whenever applicable.
+We recommend using 32 GB RAM, but it works with 16 GB RAM + 16 GB swap as well. You will not notice a downside if your 16 GB swap is on a high speed disk.
 
 Depending on your traffic volume, you may want to increase your system specification to handle increased load. Although most of the times, this is not the case for self-hosted Sentry, since no matter how small or big the traffic is, you will most likely hover around the same used resources.
 
@@ -84,6 +87,8 @@ Starting with the 22.10.0 release, we will require those running the Sentry inst
 ### Air-gapped installation
 
 Sentry can run in air-gapped environments, where there are no internet access. Depending on how air-tight your environment is, the best way to do so is to do installation and upgrades behind a proxy, see [Installing Behind a Proxy](#installing-behind-a-proxy) below. If it's not possible, you may build the entire Docker Compose stack on another machine, use `docker commit` to "freeze" the images, then use combination of `docker save` and `docker load` which convert the image as a `.tar` file and transfer it into the air-gapped machine. Then, you can use `docker-compose up` to start the services. Although this may seem possible, we don't provide any further help for this use case, as it's not a common scenario.
+
+It is recommended to set `SENTRY_AIR_GAP` to `True` on your `sentry/sentry.conf.py` file to make sure there are no network calls from your Sentry installation.
 
 ### Self-hosted Beacon
 
@@ -136,7 +141,7 @@ By default Sentry sends anonymous usage statistics to the Sentry team. It helps 
   "proxies": {
     "httpProxy": "http://proxy:3128",
     "httpsProxy": "http://proxy:3128",
-    "noProxy": "smtp,memcached,redis,postgres,kafka,clickhouse,snuba-api,symbolicator,web,worker,nginx,relay,vroom,taskbroker,172.17.0.0/16,127.0.0.0/8"
+    "noProxy": "smtp,memcached,redis,postgres,pgbouncer,kafka,clickhouse,seaweedfs,snuba-api,symbolicator,web,worker,nginx,relay,vroom,taskbroker,172.17.0.0/16,127.0.0.0/8"
   }
 }
 ```

@@ -30,6 +30,10 @@ The exception provided by Unity that is getting captured by the logging integrat
 
 Currently, it is not possible for the SDK to distinguish between the user calling `Debug.LogException` and the SDK capturing an unhandled exception. To capture an exception and mark it as handled you can call `SentrySDK.CaptureException` instead.
 
+### Line Numbers Missing when Building with Mono
+
+When building with Mono, make sure to set the `ManagedStrippingLevel` to `None`. Otherwise, Unity will strip the debug information from the assembly, which will cause the SDK to fail to retrieve the debug ID that allows connecting the assembly to the correct debug symbols for symbolication.
+
 ### C++ as Part of the Stack Trace
 
 Your stack traces might contain C++ frames. This might be because:
@@ -41,9 +45,65 @@ Your stack traces might contain C++ frames. This might be because:
 
 This is also why you might end up with very high line numbers (in the several thousands) even though your C# script is very small; the line numbers relate to the generated C++ code.
 
+### Stack traces contain frames with `<>n__0`, `<>c`, or `<>c__DisplayClass`
+
+When viewing stack traces in Sentry, you may encounter compiler-generated class and method names with patterns like `<>c`, `<>c__DisplayClass#_#`, `<>n__0`, or `{ <lambda> }`. These are created by the C# compiler when you use:
+
+- **Lambda expressions**: Anonymous functions like `items.Where(x => x.IsActive)`
+- **Delegates**: Inline delegate definitions such as `Action`, `Func`
+- **LINQ expressions**: Query syntax and method chains
+- **Async/await**: State machine methods for asynchronous operations (may show `MoveNext`)
+- **Iterator methods**: Coroutines and methods using `yield return` (may show `MoveNext`)
+- **Event handlers**: Lambda expressions in event subscriptions
+- **UI callbacks**: Unity button click handlers like `button.onClick.AddListener(() => {...})`
+
+**Common patterns you'll see:**
+
+| Pattern | What it means | Example |
+|---------|---------------|---------|
+| `YourClass+<>c` | Cached delegate class for simple lambdas | `YourClass+<>c in ThrowExceptionInLinq { <lambda> }` |
+| `YourClass+<>c__DisplayClass#_#` | Display class for closures that capture local variables | `YourClass+<>c__DisplayClass12_0 in ThrowExceptionInClosure { <lambda> }` |
+| `<>n__0`, `<>n__1` | Compiler-generated method names (may appear in detailed stack traces) | Method name suffix distinguishing multiple lambdas |
+| `{ <lambda> }` | Indicates the frame is from a lambda expression | Shown in Sentry issue titles |
+| `MoveNext` | State machine method for async/await or iterator methods | Common in async methods and Unity coroutines |
+
+**Example:**
+
+If your code contains:
+```csharp
+public void ThrowExceptionInLinq()
+{
+    var numbers = new List<int> { 1, 2, 3, 4, 5 };
+    var result = numbers.Where(n =>
+    {
+        if (n == 3) throw new InvalidOperationException("Error!");
+        return n > 2;
+    }).ToList();
+}
+```
+
+The Sentry issue will show something like:
+```
+YourClass+<>c in ThrowExceptionInLinq { <lambda> }
+```
+
+**How to interpret these frames:**
+
+1. **`+<>c`**: The `+` indicates a nested class. `<>c` is a cached delegate class that holds the lambda's compiled code
+2. **`+<>c__DisplayClass#_#`**: Similar to `<>c`, but used when the lambda captures local variables (creates a "closure")
+3. **Method name shown**: Look at the parent method name (after "in") to identify where in your code the lambda was defined
+4. **`{ <lambda> }`**: Confirms the exception occurred inside the lambda expression itself
+5. **`MoveNext`**: For async methods and coroutines, this is the state machine method that executes your code
+
+These frames are normal and expected in C# applications. They provide precise information about where an exception occurred within lambda expressions and compiler-generated code.
+
 ## Cysharp
 
-Currently, the SDK fails to provide line numbers and source context in combination with Cysharp. For context, the SDK relies on Unity's IL2CPP backend to provide it with instruction addresses for Sentry generate line numbers in events. When using Cysharp, those instruction addresses default back to `0x0` once the stacktrace goes into the library. There is no known workaround for this.
+**Note: This issue is obsolete and resolved for Unity 2021+ with UniTask 2.5.10+**
+
+In older versions, the SDK failed to provide line numbers and source context in combination with Cysharp. This is because the SDK depends on Unity’s IL2CPP backend to supply instruction addresses, which Sentry uses to generate line numbers in events. However, when the stack trace entered the Cysharp library, those instruction addresses defaulted to 0x0, preventing line numbers from being reported.
+
+This issue has been resolved in newer versions. If you're experiencing this problem, updating to Unity 2021 or later with UniTask 2.5.10 or later should resolve it.
 
 ## WebGL Support
 
@@ -52,12 +112,3 @@ When targeting WebGL, you have the option of setting the `PlayerSettings.WebGL.e
 - Setting it to `WebGLExceptionSupport.None` is not supported by the SDK.
 - For the SDK to be able provide stack traces, the support needs to be set to `WebGLExceptionSupport.FullWithStacktrace`.
 - The SDK is currently not able to provide line numbers due to the IL2CPP backend not being available.
-
-## Managed Stripping Level
-
-When building with Unity 2019, the `ManagedStrippingLevel` needs to be set to `ManagedStrippingLevel.Low`. Otherwise, the build will fail throwing the following error:
-
-```
-Fatal error in Unity CIL Linker
-System.ArgumentException: Member 'System.Void System.Runtime.CompilerServices.NullableAttribute::.ctor(System.Byte)' is declared in another module and needs to be imported
-```

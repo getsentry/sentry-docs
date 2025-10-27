@@ -229,6 +229,86 @@ export function updateElementsVisibilityForOptions(
       });
     }
   });
+
+  // Handle integrations wrapper: hide opening/closing brackets if no integrations are visible
+  const openWrappers = document.querySelectorAll<HTMLElement>(
+    '[data-integrations-wrapper="open"]'
+  );
+
+  openWrappers.forEach(openLine => {
+    const codeBlock = openLine.closest('code.code-highlight');
+    if (!codeBlock) return;
+
+    const allLines = Array.from(codeBlock.children) as HTMLElement[];
+    const openIndex = allLines.indexOf(openLine);
+
+    // Find the matching close line in the same code block
+    let closeIndex = -1;
+    for (let i = openIndex + 1; i < allLines.length; i++) {
+      if (allLines[i].dataset.integrationsWrapper === 'close') {
+        closeIndex = i;
+        break;
+      }
+    }
+
+    if (closeIndex === -1) return;
+
+    // Check if any lines between open and close are visible (non-marker lines)
+    let hasVisibleIntegrations = false;
+    for (let i = openIndex + 1; i < closeIndex; i++) {
+      const line = allLines[i];
+      const isHidden = line.classList.contains('hidden');
+      const isMarker = line.dataset.onboardingOptionHidden;
+
+      // Count any visible non-marker line
+      if (!isMarker && !isHidden) {
+        hasVisibleIntegrations = true;
+        break;
+      }
+    }
+
+    // Toggle visibility of both open and close lines
+    openLine.classList.toggle('hidden', !hasVisibleIntegrations);
+    allLines[closeIndex].classList.toggle('hidden', !hasVisibleIntegrations);
+
+    // Hide empty lines adjacent to the wrapper when no integrations are visible
+    if (!hasVisibleIntegrations) {
+      // Check line before open wrapper
+      if (openIndex > 0) {
+        const prevLine = allLines[openIndex - 1];
+        if (!prevLine.textContent?.trim()) {
+          prevLine.classList.add('hidden');
+          prevLine.dataset.emptyLineHidden = 'true';
+        }
+      }
+
+      // Check line after close wrapper
+      if (closeIndex < allLines.length - 1) {
+        const nextLine = allLines[closeIndex + 1];
+        if (!nextLine.textContent?.trim()) {
+          nextLine.classList.add('hidden');
+          nextLine.dataset.emptyLineHidden = 'true';
+        }
+      }
+    } else {
+      // Show empty lines when integrations are visible
+      if (openIndex > 0) {
+        const prevLine = allLines[openIndex - 1];
+        if (prevLine.dataset.emptyLineHidden === 'true') {
+          prevLine.classList.remove('hidden');
+          delete prevLine.dataset.emptyLineHidden;
+        }
+      }
+
+      if (closeIndex < allLines.length - 1) {
+        const nextLine = allLines[closeIndex + 1];
+        if (nextLine.dataset.emptyLineHidden === 'true') {
+          nextLine.classList.remove('hidden');
+          delete nextLine.dataset.emptyLineHidden;
+        }
+      }
+    }
+  });
 }
 
 export function OnboardingOptionButtons({
@@ -321,7 +401,7 @@ export function OnboardingOptionButtons({
   }, [options, touchOptions, touchedOptions]);
 
   return (
-    <div className="onboarding-options flex flex-wrap gap-3 py-2 bg-[var(--white)] dark:bg-[var(--gray-1)]  sticky top-[80px] z-[4] shadow-[var(--shadow-6)] transition">
+    <div className="onboarding-options flex flex-wrap gap-3 py-2 bg-[var(--white)] dark:bg-[var(--gray-1)] lg:sticky top-[80px] z-[4] shadow-[var(--shadow-6)] transition">
       {options.map(option => (
         <Button
           variant="surface"

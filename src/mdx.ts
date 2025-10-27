@@ -35,6 +35,7 @@ import remarkCodeTitles from './remark-code-title';
 import remarkComponentSpacing from './remark-component-spacing';
 import remarkExtractFrontmatter from './remark-extract-frontmatter';
 import remarkFormatCodeBlocks from './remark-format-code';
+import remarkImageResize from './remark-image-resize';
 import remarkImageSize from './remark-image-size';
 import remarkTocHeadings, {TocNode} from './remark-toc-headings';
 import remarkVariables from './remark-variables';
@@ -530,26 +531,41 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   const outdir = path.join(root, 'public', 'mdx-images');
   await mkdir(outdir, {recursive: true});
 
-  if (process.env.CI) {
-    cacheKey = md5(source);
-    cacheFile = path.join(CACHE_DIR, `${cacheKey}.br`);
-    assetsCacheDir = path.join(CACHE_DIR, cacheKey);
+  // If the file contains content that depends on the Release Registry (such as an SDK's latest version), avoid using the cache for that file, i.e. always rebuild it.
+  // This is because the content from the registry might have changed since the last time the file was cached.
+  // If a new component that injects content from the registry is introduced, it should be added to the patterns below.
+  const skipCache =
+    source.includes('@inject') ||
+    source.includes('<PlatformSDKPackageName') ||
+    source.includes('<LambdaLayerDetail');
 
-    try {
-      const [cached, _] = await Promise.all([
-        readCacheFile<SlugFile>(cacheFile),
-        cp(assetsCacheDir, outdir, {recursive: true}),
-      ]);
-      return cached;
-    } catch (err) {
-      if (
-        err.code !== 'ENOENT' &&
-        err.code !== 'ABORT_ERR' &&
-        err.code !== 'Z_BUF_ERROR'
-      ) {
-        // If cache is corrupted, ignore and proceed
-        // eslint-disable-next-line no-console
-        console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
+  if (process.env.CI) {
+    if (skipCache) {
+      // eslint-disable-next-line no-console
+      console.info(
+        `Not using cached version of ${sourcePath}, as its content depends on the Release Registry`
+      );
+    } else {
+      cacheKey = md5(source);
+      cacheFile = path.join(CACHE_DIR, `${cacheKey}.br`);
+      assetsCacheDir = path.join(CACHE_DIR, cacheKey);
+
+      try {
+        const [cached, _] = await Promise.all([
+          readCacheFile<SlugFile>(cacheFile),
+          cp(assetsCacheDir, outdir, {recursive: true}),
+        ]);
+        return cached;
+      } catch (err) {
+        if (
+          err.code !== 'ENOENT' &&
+          err.code !== 'ABORT_ERR' &&
+          err.code !== 'Z_BUF_ERROR'
+        ) {
+          // If cache is corrupted, ignore and proceed
+          // eslint-disable-next-line no-console
+          console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
+        }
       }
     }
   }
@@ -583,6 +599,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
         remarkFormatCodeBlocks,
         [remarkImageSize, {sourceFolder: cwd, publicFolder: path.join(root, 'public')}],
         remarkMdxImages,
+        remarkImageResize,
         remarkCodeTitles,
         remarkCodeTabs,
         remarkComponentSpacing,
@@ -683,7 +700,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     },
   };
 
-  if (assetsCacheDir && cacheFile) {
+  if (assetsCacheDir && cacheFile && !skipCache) {
     await cp(assetsCacheDir, outdir, {recursive: true});
     writeCacheFile(cacheFile, JSON.stringify(resultObj)).catch(e => {
       // eslint-disable-next-line no-console
