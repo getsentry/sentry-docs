@@ -509,3 +509,351 @@ What to monitor with span metrics:
 - Distribution of `http.response_size` for payload optimization.
 - Error rate for `op:search` filtered by `status:error`.
 - Backend abandonment via `op:search request.aborted:true`.
+
+## Manual LLM Instrumentation (Custom AI Agent + Tool Calls)
+
+Example Repository: _Coming soon - sample repository in development_
+
+**Challenge:** You're building a custom AI agent that uses a proprietary LLM API (not OpenAI/Anthropic), performs multi-step reasoning with tool calls, and needs comprehensive monitoring to track token usage, tool performance, and agent effectiveness across the entire conversation flow.
+
+**Solution:** Manually instrument each component of the AI pipeline using Sentry's AI agent span conventions. Create spans for agent invocation, LLM calls, tool executions, and handoffs between agents, with rich attributes for monitoring costs, performance, and business metrics.
+
+**Frontend (React) — Instrument AI Chat Interface:**
+
+```typescript
+// In your AI chat component
+const handleSendMessage = async (userMessage: string) => {
+  await Sentry.startSpan(
+    {
+      name: 'invoke_agent Customer Support Agent',
+      op: 'gen_ai.invoke_agent',
+      attributes: {
+        'gen_ai.operation.name': 'invoke_agent',
+        'gen_ai.agent.name': 'Customer Support Agent',
+        'gen_ai.system': 'custom-llm',
+        'gen_ai.request.model': 'custom-model-v2',
+        'gen_ai.request.messages': JSON.stringify([
+          { role: 'system', content: 'You are a helpful customer support agent.' },
+          ...conversationHistory,
+          { role: 'user', content: userMessage }
+        ]),
+        'conversation.turn': conversationHistory.length + 1,
+        'conversation.session_id': sessionId,
+      },
+    },
+    async (agentSpan) => {
+      try {
+        setIsLoading(true);
+        
+        // Call your backend AI agent endpoint
+        const response = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: userMessage,
+            sessionId: sessionId,
+            conversationHistory: conversationHistory
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`AI request failed: ${response.status}`);
+        }
+
+        const aiResponse = await response.json();
+        
+        // Set response attributes
+        agentSpan.setAttribute('gen_ai.response.text', aiResponse.message);
+        agentSpan.setAttribute('gen_ai.response.id', aiResponse.responseId);
+        agentSpan.setAttribute('gen_ai.usage.total_tokens', aiResponse.totalTokens);
+        agentSpan.setAttribute('conversation.tools_used', aiResponse.toolsUsed?.length || 0);
+        agentSpan.setAttribute('conversation.resolution_status', aiResponse.resolutionStatus);
+        
+        // Update UI with response
+        setConversationHistory(prev => [
+          ...prev,
+          { role: 'user', content: userMessage },
+          { role: 'assistant', content: aiResponse.message }
+        ]);
+        
+        Sentry.logger.info(Sentry.logger.fmt`AI agent completed conversation turn ${conversationHistory.length + 1}`);
+        
+      } catch (error) {
+        agentSpan.setStatus({ code: 2, message: 'internal_error' });
+        agentSpan.setAttribute('error.type', error instanceof Error ? error.constructor.name : 'UnknownError');
+        setError('Failed to get AI response. Please try again.');
+        Sentry.logger.error(Sentry.logger.fmt`AI agent failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  );
+};
+```
+
+Where to put this in your app:
+- In your chat message submit handler or AI conversation component
+- Auto-instrumentation will capture the fetch request; the explicit span adds AI-specific context
+- Consider adding user feedback collection to track conversation quality
+
+**Backend — Custom LLM Integration with Tool Calls:**
+
+```typescript
+// Express API route for custom AI agent
+app.post('/api/ai/chat', async (req: Request, res: Response) => {
+  const { message, sessionId, conversationHistory } = req.body;
+
+  // Main agent invocation span (matches frontend)
+  await Sentry.startSpan(
+    {
+      name: 'invoke_agent Customer Support Agent',
+      op: 'gen_ai.invoke_agent',
+      attributes: {
+        'gen_ai.operation.name': 'invoke_agent',
+        'gen_ai.agent.name': 'Customer Support Agent',
+        'gen_ai.system': 'custom-llm',
+        'gen_ai.request.model': 'custom-model-v2',
+        'conversation.session_id': sessionId,
+      },
+    },
+    async (agentSpan) => {
+      try {
+        const tools = [
+          { name: 'search_knowledge_base', description: 'Search company knowledge base for answers' },
+          { name: 'create_ticket', description: 'Create a support ticket for complex issues' },
+          { name: 'check_order_status', description: 'Look up customer order information' }
+        ];
+        
+        agentSpan.setAttribute('gen_ai.request.available_tools', JSON.stringify(tools));
+        
+        let totalTokens = 0;
+        let toolsUsed: string[] = [];
+        let finalResponse = '';
+        let resolutionStatus = 'in_progress';
+        
+        // Step 1: Call custom LLM for initial reasoning
+        const llmResponse = await Sentry.startSpan(
+          {
+            name: 'chat custom-model-v2',
+            op: 'gen_ai.chat',
+            attributes: {
+              'gen_ai.operation.name': 'chat',
+              'gen_ai.system': 'custom-llm',
+              'gen_ai.request.model': 'custom-model-v2',
+              'gen_ai.request.messages': JSON.stringify([
+                { role: 'system', content: 'You are a customer support agent. Use tools when needed.' },
+                ...conversationHistory,
+                { role: 'user', content: message }
+              ]),
+              'gen_ai.request.temperature': 0.7,
+              'gen_ai.request.max_tokens': 500,
+            },
+          },
+          async (llmSpan) => {
+            // Call your custom LLM API
+            const llmApiResponse = await fetch('https://your-custom-llm-api.com/chat', {
+              method: 'POST',
+              headers: { 
+                'Authorization': `Bearer ${process.env.CUSTOM_LLM_API_KEY}`,
+                'Content-Type': 'application/json' 
+              },
+              body: JSON.stringify({
+                model: 'custom-model-v2',
+                messages: conversationHistory.concat([{ role: 'user', content: message }]),
+                temperature: 0.7,
+                max_tokens: 500,
+                tools: tools
+              })
+            });
+            
+            if (!llmApiResponse.ok) {
+              throw new Error(`LLM API failed: ${llmApiResponse.status}`);
+            }
+            
+            const llmData = await llmApiResponse.json();
+            
+            // Set LLM response attributes
+            llmSpan.setAttribute('gen_ai.response.text', llmData.choices[0].message.content || '');
+            llmSpan.setAttribute('gen_ai.response.id', llmData.id);
+            llmSpan.setAttribute('gen_ai.response.model', llmData.model);
+            llmSpan.setAttribute('gen_ai.usage.input_tokens', llmData.usage.prompt_tokens);
+            llmSpan.setAttribute('gen_ai.usage.output_tokens', llmData.usage.completion_tokens);
+            llmSpan.setAttribute('gen_ai.usage.total_tokens', llmData.usage.total_tokens);
+            
+            if (llmData.choices[0].message.tool_calls) {
+              llmSpan.setAttribute('gen_ai.response.tool_calls', JSON.stringify(llmData.choices[0].message.tool_calls));
+            }
+            
+            totalTokens += llmData.usage.total_tokens;
+            return llmData;
+          }
+        );
+        
+        // Step 2: Execute any tool calls
+        if (llmResponse.choices[0].message.tool_calls) {
+          for (const toolCall of llmResponse.choices[0].message.tool_calls) {
+            const toolResult = await Sentry.startSpan(
+              {
+                name: `execute_tool ${toolCall.function.name}`,
+                op: 'gen_ai.execute_tool',
+                attributes: {
+                  'gen_ai.operation.name': 'execute_tool',
+                  'gen_ai.tool.name': toolCall.function.name,
+                  'gen_ai.tool.type': 'function',
+                  'gen_ai.tool.input': toolCall.function.arguments,
+                  'gen_ai.system': 'custom-llm',
+                  'gen_ai.request.model': 'custom-model-v2',
+                },
+              },
+              async (toolSpan) => {
+                let toolOutput = '';
+                
+                try {
+                  // Execute the actual tool
+                  switch (toolCall.function.name) {
+                    case 'search_knowledge_base':
+                      const searchArgs = JSON.parse(toolCall.function.arguments);
+                      toolOutput = await searchKnowledgeBase(searchArgs.query);
+                      toolSpan.setAttribute('search.query', searchArgs.query);
+                      toolSpan.setAttribute('search.results_count', toolOutput.split('\n').length);
+                      break;
+                      
+                    case 'create_ticket':
+                      const ticketArgs = JSON.parse(toolCall.function.arguments);
+                      const ticketId = await createSupportTicket(ticketArgs);
+                      toolOutput = `Created support ticket #${ticketId}`;
+                      toolSpan.setAttribute('ticket.id', ticketId);
+                      toolSpan.setAttribute('ticket.priority', ticketArgs.priority || 'medium');
+                      resolutionStatus = 'escalated';
+                      break;
+                      
+                    case 'check_order_status':
+                      const orderArgs = JSON.parse(toolCall.function.arguments);
+                      toolOutput = await checkOrderStatus(orderArgs.orderId);
+                      toolSpan.setAttribute('order.id', orderArgs.orderId);
+                      break;
+                      
+                    default:
+                      throw new Error(`Unknown tool: ${toolCall.function.name}`);
+                  }
+                  
+                  toolSpan.setAttribute('gen_ai.tool.output', toolOutput);
+                  toolsUsed.push(toolCall.function.name);
+                  
+                } catch (toolError) {
+                  toolSpan.setStatus({ code: 2, message: 'tool_execution_failed' });
+                  toolSpan.setAttribute('error.message', toolError instanceof Error ? toolError.message : 'Unknown tool error');
+                  toolOutput = `Error executing ${toolCall.function.name}: ${toolError instanceof Error ? toolError.message : 'Unknown error'}`;
+                }
+                
+                return toolOutput;
+              }
+            );
+          }
+        }
+        
+        // Step 3: Generate final response (if tools were used)
+        if (toolsUsed.length > 0) {
+          const finalLlmResponse = await Sentry.startSpan(
+            {
+              name: 'chat custom-model-v2',
+              op: 'gen_ai.chat',
+              attributes: {
+                'gen_ai.operation.name': 'chat',
+                'gen_ai.system': 'custom-llm',
+                'gen_ai.request.model': 'custom-model-v2',
+                'llm.call_type': 'final_synthesis',
+              },
+            },
+            async (finalSpan) => {
+              // Make final LLM call with tool results
+              // Implementation similar to above...
+              const synthesisResponse = await synthesizeResponse(llmResponse, toolsUsed);
+              
+              finalSpan.setAttribute('gen_ai.response.text', synthesisResponse.message);
+              finalSpan.setAttribute('gen_ai.usage.total_tokens', synthesisResponse.usage.total_tokens);
+              
+              totalTokens += synthesisResponse.usage.total_tokens;
+              finalResponse = synthesisResponse.message;
+              
+              return synthesisResponse;
+            }
+          );
+        } else {
+          finalResponse = llmResponse.choices[0].message.content;
+        }
+        
+        // Determine resolution status
+        if (toolsUsed.includes('create_ticket')) {
+          resolutionStatus = 'escalated';
+        } else if (finalResponse.toLowerCase().includes('resolved') || finalResponse.toLowerCase().includes('solved')) {
+          resolutionStatus = 'resolved';
+        } else {
+          resolutionStatus = 'answered';
+        }
+        
+        // Set final agent span attributes
+        agentSpan.setAttribute('gen_ai.response.text', finalResponse);
+        agentSpan.setAttribute('gen_ai.usage.total_tokens', totalTokens);
+        agentSpan.setAttribute('conversation.tools_used_count', toolsUsed.length);
+        agentSpan.setAttribute('conversation.tools_used', JSON.stringify(toolsUsed));
+        agentSpan.setAttribute('conversation.resolution_status', resolutionStatus);
+        agentSpan.setAttribute('conversation.cost_estimate_usd', (totalTokens * 0.0001).toFixed(4)); // Example cost calculation
+        
+        res.json({
+          message: finalResponse,
+          responseId: `resp_${Date.now()}`,
+          totalTokens,
+          toolsUsed,
+          resolutionStatus,
+        });
+        
+      } catch (error) {
+        agentSpan.setStatus({ code: 2, message: 'agent_invocation_failed' });
+        agentSpan.setAttribute('error.type', error instanceof Error ? error.constructor.name : 'UnknownError');
+        Sentry.captureException(error);
+        res.status(500).json({ error: 'AI agent processing failed' });
+      }
+    }
+  );
+});
+
+// Helper functions for tool execution
+async function searchKnowledgeBase(query: string): Promise<string> {
+  // Implementation for knowledge base search
+  return `Knowledge base results for: ${query}`;
+}
+
+async function createSupportTicket(args: any): Promise<string> {
+  // Implementation for ticket creation
+  return `TICKET-${Date.now()}`;
+}
+
+async function checkOrderStatus(orderId: string): Promise<string> {
+  // Implementation for order status check
+  return `Order ${orderId} is shipped and tracking number is XYZ123`;
+}
+
+async function synthesizeResponse(llmResponse: any, toolsUsed: string[]): Promise<any> {
+  // Implementation for final response synthesis
+  return {
+    message: "Based on the information I found, here's your answer...",
+    usage: { total_tokens: 150 }
+  };
+}
+```
+
+**How the trace works together:**
+- Frontend span (`gen_ai.invoke_agent`) captures the entire user interaction from message to response.
+- Backend agent span continues the trace with the same operation and agent name for correlation.
+- LLM spans (`gen_ai.chat`) track individual model calls with token usage and performance.
+- Tool execution spans (`gen_ai.execute_tool`) monitor each tool call with input/output and timing.
+- Rich attributes enable monitoring of conversation quality, cost, and business outcomes.
+
+What to monitor with span metrics:
+- p95 duration of `op:gen_ai.invoke_agent` grouped by `conversation.resolution_status`.
+- Token usage trends via `gen_ai.usage.total_tokens` by `gen_ai.request.model`.
+- Tool usage patterns via `op:gen_ai.execute_tool` grouped by `gen_ai.tool.name`.
+- Cost analysis via `conversation.cost_estimate_usd` aggregated by time period.
+- Agent effectiveness via `conversation.resolution_status` distribution.
+- Error rates for each component: `op:gen_ai.chat`, `op:gen_ai.execute_tool`, `op:gen_ai.invoke_agent`.
