@@ -521,9 +521,19 @@ Example Repository: _Coming soon - sample repository in development_
 **Frontend (React) — Instrument AI Chat Interface:**
 
 ```typescript
+import { useState, useEffect } from 'react';
 import { SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN } from '@sentry/core';
 
 // In your AI chat component
+export default function CustomerSupportChat() {
+  const [conversationHistory, setConversationHistory] = useState([]);
+  const [sessionId, setSessionId] = useState('');
+  
+  // Generate sessionId on client-side only to avoid hydration mismatch
+  useEffect(() => {
+    setSessionId(`session_${Date.now()}`);
+  }, []);
+
 const handleSendMessage = async (userMessage: string) => {
   await Sentry.startSpan(
     {
@@ -600,6 +610,8 @@ Where to put this in your app:
 - Auto-instrumentation will capture the fetch request; the explicit span adds AI-specific context
 - Consider adding user feedback collection to track conversation quality
 
+**Important:** Generate `sessionId` in `useEffect` to avoid hydration errors when using Server-Side Rendering (SSR). Using `Date.now()` or random values during component initialization will cause mismatches between server and client renders.
+
 **Backend — Custom LLM Integration with Tool Calls:**
 
 ```typescript
@@ -626,9 +638,7 @@ app.post('/api/ai/chat', async (req: Request, res: Response) => {
     async (agentSpan) => {
       try {
         const tools = [
-          { name: 'search_knowledge_base', description: 'Search company knowledge base for answers' },
-          { name: 'create_ticket', description: 'Create a support ticket for complex issues' },
-          { name: 'check_order_status', description: 'Look up customer order information' }
+          { name: 'search_knowledge_base', description: 'Search company knowledge base for answers' }
         ];
         
         agentSpan.setAttribute('gen_ai.request.available_tools', JSON.stringify(tools));
@@ -700,6 +710,9 @@ app.post('/api/ai/chat', async (req: Request, res: Response) => {
         // Step 2: Execute any tool calls
         if (llmResponse.choices[0].message.tool_calls) {
           for (const toolCall of llmResponse.choices[0].message.tool_calls) {
+            // Find tool description from available tools
+            const toolDefinition = tools.find(t => t.name === toolCall.function.name);
+            
             const toolResult = await Sentry.startSpan(
               {
                 name: `execute_tool ${toolCall.function.name}`,
@@ -707,6 +720,7 @@ app.post('/api/ai/chat', async (req: Request, res: Response) => {
                 attributes: {
                   'gen_ai.operation.name': 'execute_tool',
                   'gen_ai.tool.name': toolCall.function.name,
+                  'gen_ai.tool.description': toolDefinition?.description || '',
                   'gen_ai.tool.type': 'function',
                   'gen_ai.tool.input': toolCall.function.arguments,
                   'gen_ai.system': 'custom-llm',
@@ -716,9 +730,10 @@ app.post('/api/ai/chat', async (req: Request, res: Response) => {
               },
               async (toolSpan) => {
                 let toolOutput = '';
+                let toolTokensUsed = 0;
                 
                 try {
-                  // Execute the actual tool
+                  // Execute the tool
                   switch (toolCall.function.name) {
                     case 'search_knowledge_base':
                       const searchArgs = JSON.parse(toolCall.function.arguments);
@@ -727,30 +742,18 @@ app.post('/api/ai/chat', async (req: Request, res: Response) => {
                       toolSpan.setAttribute('search.results_count', toolOutput.split('\n').length);
                       break;
                       
-                    case 'create_ticket':
-                      const ticketArgs = JSON.parse(toolCall.function.arguments);
-                      const ticketId = await createSupportTicket(ticketArgs);
-                      toolOutput = `Created support ticket #${ticketId}`;
-                      toolSpan.setAttribute('ticket.id', ticketId);
-                      toolSpan.setAttribute('ticket.priority', ticketArgs.priority || 'medium');
-                      resolutionStatus = 'escalated';
-                      break;
-                      
-                    case 'check_order_status':
-                      const orderArgs = JSON.parse(toolCall.function.arguments);
-                      toolOutput = await checkOrderStatus(orderArgs.orderId);
-                      toolSpan.setAttribute('order.id', orderArgs.orderId);
-                      break;
-                      
                     default:
                       throw new Error(`Unknown tool: ${toolCall.function.name}`);
                   }
                   
                   toolSpan.setAttribute('gen_ai.tool.output', toolOutput);
+                  toolSpan.setAttribute('gen_ai.usage.total_tokens', toolTokensUsed);
                   toolsUsed.push(toolCall.function.name);
+                  totalTokens += toolTokensUsed;
                   
                 } catch (toolError) {
                   toolSpan.setStatus({ code: 2, message: 'tool_execution_failed' });
+                  toolSpan.setAttribute('error.type', toolError instanceof Error ? toolError.constructor.name : 'UnknownError');
                   toolSpan.setAttribute('error.message', toolError instanceof Error ? toolError.message : 'Unknown tool error');
                   toolOutput = `Error executing ${toolCall.function.name}: ${toolError instanceof Error ? toolError.message : 'Unknown error'}`;
                 }
@@ -831,22 +834,19 @@ app.post('/api/ai/chat', async (req: Request, res: Response) => {
 
 // Helper functions for tool execution
 async function searchKnowledgeBase(query: string): Promise<string> {
-  // Implementation for knowledge base search
-  return `Knowledge base results for: ${query}`;
+  // Search company knowledge base - returns relevant policy info
+  const results = [
+    "Our return policy allows returns within 30 days of purchase.",
+    "Refunds are processed within 5-7 business days after we receive the item.",
+    "Items must be in original condition with tags attached.",
+    "Free return shipping is provided for defective items."
+  ];
+  return results.join('\n');
 }
 
-async function createSupportTicket(args: any): Promise<string> {
-  // Implementation for ticket creation
-  return `TICKET-${Date.now()}`;
-}
-
-async function checkOrderStatus(orderId: string): Promise<string> {
-  // Implementation for order status check
-  return `Order ${orderId} is shipped and tracking number is XYZ123`;
-}
 
 async function synthesizeResponse(llmResponse: any, toolsUsed: string[]): Promise<any> {
-  // Implementation for final response synthesis
+  // Make final LLM call to synthesize tool results into response
   return {
     message: "Based on the information I found, here's your answer...",
     usage: { total_tokens: 150 }
