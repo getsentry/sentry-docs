@@ -221,7 +221,7 @@ const handleUpload = async () => {
         span?.setAttribute('job.id', uploadData.jobId);
         
         // Update UI to show processing status
-        updateUploadStatus(uploadId, 'processing');
+        updateUploadStatus(uploadData.jobId, 'processing');
         
       } catch (error) {
         span?.setAttribute('upload.success', false);
@@ -705,7 +705,7 @@ app.post('/api/ai/chat', async (req: Request, res: Response) => {
                 },
               },
               async (toolSpan) => {
-                const toolOutput = await executeKnowledgeBaseSearch(toolCall.function.arguments);
+                const toolOutput = await searchKnowledgeBase(JSON.parse(toolCall.function.arguments).query);
                 
                 toolSpan.setAttribute('gen_ai.tool.output', toolOutput);
                 toolSpan.setAttribute('search.query', JSON.parse(toolCall.function.arguments).query);
@@ -716,7 +716,7 @@ app.post('/api/ai/chat', async (req: Request, res: Response) => {
         }
         
         // Set final agent attributes
-        const finalResponse = llmResponse.choices[0].message.content;
+        finalResponse = llmResponse.choices[0].message.content;
         agentSpan.setAttribute('gen_ai.response.text', finalResponse);
         agentSpan.setAttribute('gen_ai.usage.total_tokens', totalTokens);
         agentSpan.setAttribute('conversation.tools_used', JSON.stringify(toolsUsed));
