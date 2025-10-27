@@ -21,7 +21,6 @@ import Mermaid from '../mermaid';
 import {PaginationNav} from '../paginationNav';
 import {PlatformSdkDetail} from '../platformSdkDetail';
 import {Sidebar} from '../sidebar';
-import {SidebarTableOfContents} from '../sidebarTableOfContents';
 import {ReaderDepthTracker} from '../track-reader-depth';
 
 type Props = {
@@ -124,7 +123,6 @@ export function DocPage({
             className="sticky h-[calc(100vh-var(--header-height))] top-[var(--header-height)] overflow-y-auto hidden toc:block flex-none w-[250px] min-w-[250px]"
           >
             <div className="sidebar">
-              <SidebarTableOfContents />
               <PlatformSdkDetail />
             </div>
           </aside>
