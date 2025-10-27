@@ -16,6 +16,7 @@ import {CopyMarkdownButton} from '../copyMarkdownButton';
 import {DocFeedback} from '../docFeedback';
 import {GitHubCTA} from '../githubCTA';
 import {Header} from '../header';
+import {InlineTableOfContents} from '../inlineTableOfContents';
 import Mermaid from '../mermaid';
 import {PaginationNav} from '../paginationNav';
 import {PlatformSdkDetail} from '../platformSdkDetail';
@@ -96,6 +97,7 @@ export function DocPage({
                 <h1>{frontMatter.title}</h1>
                 <h2>{frontMatter.description}</h2>
               </hgroup>
+              <InlineTableOfContents />
               {/* This exact id is important for Algolia indexing */}
               <div id="main">
                 <CodeContextProvider>{children}</CodeContextProvider>
