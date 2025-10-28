@@ -29,9 +29,9 @@ Below are a list of available insights for iOS builds.
 
 ### Strip debug symbols
 
-**What it is**: Flags binaries that still ship debug sections or symbol tables.
+**What it is**: Debug info and symbols are only used during development and should not be shipped to users.
 
-**How to fix**: Strip symbols in release builds, use symbols in separate dSYM files for crash reporters.
+**How to fix**: Strip symbols from release builds and instead use debug symbols in separate dSYM files for crash reporters.
 
 <Alert type="warning">
   Stripping symbols before creating a dSYM breaks crash symbolication. Confirm
@@ -39,21 +39,19 @@ Below are a list of available insights for iOS builds.
   has them) before stripping.
 </Alert>
 
-Swift binaries often hold large symbol sets that the dynamic linker uses only during debugging.
+In Xcode ensure your release configuration sets the `Debug Information Format` build setting to `DWARF with dSYM`.
 
-Strip a single binary with:
+The `strip` command can then remove the extra information:
 
 ```bash
 strip -rSTx AppBinary -o AppBinaryStripped
 ```
 
-`-T` removes Swift symbols; the other flags drop debug and local symbols.
-
-To automate stripping at the end of the build, add a Run Script phase that skips non-release builds and leaves Apple-signed frameworks untouched:
+To automate stripping in your project after building, add a Run Script phase that skips non-release builds and leaves Apple-signed frameworks untouched:
 
 <Alert type="warning">
   This script will strip the main app binary along with any binaries in the
-  `/Frameworks` directory. This is a sample script that **may require
+  `Frameworks/` directory. This is a sample script that **may require
   adjustments** for your project.
 </Alert>
 
@@ -89,11 +87,11 @@ Contents/Resources/DWARF/${EXECUTABLE_NAME}
 
 **What it is**: Finds identical files bundled more than once.
 
-**How to fix**: Use dynamic frameworks to share assets between multiple targets. Here's an [example a post](https://www.emergetools.com/blog/posts/make-your-ios-app-smaller-with-dynamic-frameworks) walking through how to do this (for SPM projects).
+**How to fix**: Use dynamic frameworks to share assets between multiple targets. Here's an [example a post](https://www.emergetools.com/blog/posts/make-your-ios-app-smaller-with-dynamic-frameworks) walking through how to do this for an SPM project.
 
 ### Image optimization
 
-**What it is**: Surfaces PNG, JPEG, or HEIC assets that can be recompressed or converted.
+**What it is**: Surfaces PNG, JPEG, or HEIC assets that can be minified or converted.
 
 **How to fix**: Pick one of these workflows, then replace the source asset with the optimized version. If you convert to HEIC, update the asset catalog reference.
 
@@ -120,7 +118,7 @@ Open the image in Preview, choose `File → Export`, pick `HEIC`, and save. Repl
 
 ### Alternate icon optimization
 
-**What it is**: Checks alternate app icons that are larger than homescreen quality demands.
+**What it is**: Alternate app icons are only ever shown on the home screen which requires 180x180 pixels. These images can be downsized to 180x180 and then upsampled back to 1024x1024 to reduce size.
 
 **How to fix**: Run one of the scripts below to resize to homescreen quality and save an optimized copy. Then update the alternate icon entry in your `.xcassets` catalog (and Info.plist if you change the filename).
 
@@ -158,7 +156,7 @@ optimize_icon() {
 }
 ```
 
-> Update the Info.plist alternate icon entry to point at the new `.heic` file.
+Update the Info.plist alternate icon entry to point at the new `.heic` file.
 
 #### Option: Keep PNG
 
@@ -191,37 +189,37 @@ optimize_icon() {
 
 ### Loose images
 
-**What it is**: Finds @1x/@2x/@3x resources stored outside asset catalogs, so app thinning cannot remove unused scales.
+**What it is**: Finds scaled @1x/@2x/@3x images stored outside of asset catalogs. This prevents app thinning from removing variants not needed for the user's device.
 
-**How to fix**: Move each image set into an `.xcassets` catalog so Xcode trims unused variants per device download.
+**How to fix**: Move each image set into an asset catalog in Xcode.
 
 ### Small files
 
-**What it is**: Totals tiny files that each consume a full 4 KB filesystem block.
+**What it is**: Each file on iOS takes up a minimum of 4KB due to the filesystem's block size. Files smaller than this limit will take up more storage on disk than expected. Every file inside the app also has code signature overhead which can add up with many files.
 
-**How to fix**: Group related data into asset catalogs, archives, or databases so multiple entries share the same file on disk.
+**How to fix**: Group small files into asset catalogs, archives, or databases so multiple entries share the same file on disk.
 
 ### Unnecessary files
 
-**What it is**: Flags docs, scripts, configs, and similar build leftovers in the app bundle.
+**What it is**: Files such as READMEs, docs, scripts, configs, and similar build leftovers do not need to be included in the app bundle.
 
-**How to fix**: Drop them from the Copy Bundle Resources phase or exclude them with `EXCLUDED_SOURCE_FILE_NAMES` before archiving.
+**How to fix**: Drop these files from the Copy Bundle Resources phase or exclude them with `EXCLUDED_SOURCE_FILE_NAMES` before archiving.
 
 ### Large videos
 
-**What it is**: Highlights video assets larger than 10 MB.
+**What it is**: Video assets larger than 10 MB are not recommended to be bundled in your app. Often times videos are only shown to a subset of users and could instead be shown on-demand.
 
-**How to fix**: Re-encode them with H.264 or HEVC at a lower bitrate or resolution, or host and stream the content instead of bundling it.
+**How to fix**: host and stream the content instead of bundling it, or re-encode them with H.264 or HEVC at a lower bitrate or resolution.
 
 ### Localized strings
 
-**What it is**: Totals `.strings` payloads whose size suggests room for compression.
+**What it is**: Xcode localized strings files use a verbose dictionary format by default.
 
-**How to fix**: Deduplicate entries, move long copy to server-delivered content, or adopt a compact format such as Sentry's SmallStrings helper.
+**How to fix**: Sentry's SmallStrings helper library is a more efficient method of encoding translations.
 
 ### Minify localized strings
 
-**What it is**: Measures extra space in `.strings` files caused by binary encodings, translator comments, and other non-runtime text.
+**What it is**: Xcode localized strings files often include translator comments, whitespace, binary encodings, and other non-runtime text that can be safely stripped.
 
 **How to fix**: Start with low-effort cleanup, then automate comment stripping if you still ship large payloads.
 
@@ -271,7 +269,7 @@ This script strips comments and blank lines after the files are generated, so ke
 
 ### Main binary export metadata
 
-**What it is**: Highlights exported symbols inside your main app binary. The linker includes these identifiers for external consumers, but no other app links against your binary, so they only bloat the export trie.
+**What it is**: Binaries that act as entrypoints for your app, such as your main app binary or watchOS app binary, are not linked against by other binaries. This means the export trie information is unnecessary and can be removed.
 
 **How to fix**: Maintain a minimal allowlist so only required entry points stay exported.
 
@@ -284,8 +282,13 @@ This script strips comments and blank lines after the files are generated, so ke
 
 Xcode now limits the export trie to just that allowlist.
 
-### Hermes debug info (RN only)
+### Hermes debug info (React Native)
 
-**What it is**: Finds Hermes bytecode bundles that still contain debug info sections.
+**What it is**: Debug information is only needed during development and should not be shipped to users.
 
-**How to fix**: Generate the bundle in release mode (for example, `react-native bundle --dev false` or the Xcode release task) so Hermes strips debug data before packaging.
+**How to fix**: Enable [Source maps](https://reactnative.dev/docs/debugging-release-builds) when building your release app.
+
+<Alert type="warning">
+  Stripping debug information breaks crash symbolication. Source maps need to be
+  uploaded separately to your crash reporter.
+</Alert>
