@@ -188,7 +188,7 @@ Sentry.logger.warn("User %s performed action %s", [userId, actionName], {
 });
 ```
 
-Aside from accepting attributes, these methods can be overloaded to accept severity number or other parameters if required for the language or platform.
+Aside from accepting attributes, these methods can be overloaded to accept severity number or other parameters if required for the language or platform. The Hub/Scope MUST offer the same methods as the static API `Sentry.logger.X`, which is useful for power users who want to use multiple Hubs/Scopes. The Client SHOULD only offer one generic method that accepts the log object and the Scope, such as `captureLog(log, scope)`.
 
 Beyond the specified methods, SDKs are free to add any extra helpers as they feel is necessary. For example, they could choose to add specialized decorators or helpers for string template creation.
 
@@ -255,6 +255,8 @@ In general log processing should follow this order:
 
 1. Capture log via [Public APIs](#logger-module) (e.g. `Sentry.logger.info`) or via [SDK integrations](#sdk-integrations).
 1. Check if logging is enabled as per `enableLogs`/`enable_logs` configuration - if not, skip the rest of the steps.
+1. Pass the log to Hub/Scope, which MUST offer the same methods as the static API `Sentry.logger.X`. This is useful for power users who want to use multiple Hubs/Scopes.
+1. Pass the log to the Client, via a generic method that accepts the log object and the `scope`, such as `captureLog(log, scope)`.
 1. Process captured log (attach attributes as per [default attributes](#default-attributes)).
 1. Run `beforeSendLog`/`before_send_log` to filter or modify the log.
 1. Add log to buffer/batch processor as detailed in [buffering](#buffering).
