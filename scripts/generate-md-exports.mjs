@@ -316,7 +316,9 @@ async function processTaskList({id, tasks, cacheDir, noCache}) {
   let cacheMisses = [];
   let cacheHits = 0;
   let r2CacheMisses = [];
-  console.log(`🤖 Worker[${id}]: Starting to process ${tasks.length} files... (noCache=${noCache})`);
+  console.log(
+    `🤖 Worker[${id}]: Starting to process ${tasks.length} files... (noCache=${noCache})`
+  );
   for (const {sourcePath, targetPath, relativePath, r2Hash} of tasks) {
     try {
       const {data, cacheHit} = await genMDFromHTML(sourcePath, targetPath, {
@@ -342,12 +344,14 @@ async function processTaskList({id, tasks, cacheDir, noCache}) {
     }
   }
   const success = tasks.length - failedTasks.length;
-  
+
   // Log cache statistics
   const cacheHitRate = ((cacheHits / tasks.length) * 100).toFixed(1);
   const cacheMissRate = ((cacheMisses.length / tasks.length) * 100).toFixed(1);
-  console.log(`📊 Worker[${id}]: Cache stats - ${cacheHits}/${tasks.length} hits (${cacheHitRate}%), ${cacheMisses.length} misses (${cacheMissRate}%)`);
-  
+  console.log(
+    `📊 Worker[${id}]: Cache stats - ${cacheHits}/${tasks.length} hits (${cacheHitRate}%), ${cacheMisses.length} misses (${cacheMissRate}%)`
+  );
+
   if (r2CacheMisses.length / tasks.length > 0.1) {
     console.warn(
       `⚠️ Worker[${id}]: More than 10% of files had a different hash on R2 with the generation process.`
