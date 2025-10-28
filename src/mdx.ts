@@ -657,7 +657,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   }
 
   // Track cache miss silently
-  if (dependsOnRegistry) {
+  if (process.env.CI && dependsOnRegistry) {
     cacheStats.registryMisses++;
     cacheStats.uniqueRegistryFiles.add(sourcePath);
   }
