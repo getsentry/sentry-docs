@@ -29,17 +29,17 @@ Below are a list of available insights for iOS builds.
 
 ### Strip debug symbols
 
-**What it is**: Flags Mach-O binaries that still ship debug sections or symbol tables.
+**What it is**: Flags binaries that still ship debug sections or symbol tables.
 
-**How to fix**: Strip symbols only when you also upload dSYMs, otherwise crash reports will not resolve.
+**How to fix**: Strip symbols in release builds, use symbols in separate dSYM files for crash reporters.
 
 <Alert type="warning">
-  Stripping symbols before uploading dSYMs breaks crash symbolication. Confirm
+  Stripping symbols before creating a dSYM breaks crash symbolication. Confirm
   your release build still produces and uploads dSYMs (or another crash reporter
   has them) before stripping.
 </Alert>
 
-Swift binaries often hold large symbol sets that the dynamic linker uses only during debugging. Xcode’s old bitcode pipeline removed them automatically, but bitcode is deprecated in Xcode 14 and later.
+Swift binaries often hold large symbol sets that the dynamic linker uses only during debugging.
 
 Strip a single binary with:
 
@@ -50,6 +50,12 @@ strip -rSTx AppBinary -o AppBinaryStripped
 `-T` removes Swift symbols; the other flags drop debug and local symbols.
 
 To automate stripping at the end of the build, add a Run Script phase that skips non-release builds and leaves Apple-signed frameworks untouched:
+
+<Alert type="warning">
+  This script will strip the main app binary along with any binaries in the
+  `/Frameworks` directory. This is a sample script that **may require
+  adjustments** for your project.
+</Alert>
 
 ```bash
 #!/bin/bash
@@ -268,8 +274,6 @@ This script strips comments and blank lines after the files are generated, so ke
 **What it is**: Highlights exported symbols inside your main app binary. The linker includes these identifiers for external consumers, but no other app links against your binary, so they only bloat the export trie.
 
 **How to fix**: Maintain a minimal allowlist so only required entry points stay exported.
-
-Since Xcode 16 no longer injects `_main` automatically, avoid the old `-exported_symbols_list /dev/null` workaround (it strips `_main` and crashes on launch).
 
 1. Create a text file in your project, for example `Config/ExportedSymbols.txt`.
 2. Add `_main` on its own line. Add `__mh_execute_header` if you use Crashlytics or other tooling that finds symbols dynamically with `dlsym`.
