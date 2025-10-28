@@ -45,6 +45,58 @@ Your stack traces might contain C++ frames. This might be because:
 
 This is also why you might end up with very high line numbers (in the several thousands) even though your C# script is very small; the line numbers relate to the generated C++ code.
 
+### Stack traces contain frames with `<>n__0`, `<>c`, or `<>c__DisplayClass`
+
+When viewing stack traces in Sentry, you may encounter compiler-generated class and method names with patterns like `<>c`, `<>c__DisplayClass#_#`, `<>n__0`, or `{ <lambda> }`. These are created by the C# compiler when you use:
+
+- **Lambda expressions**: Anonymous functions like `items.Where(x => x.IsActive)`
+- **Delegates**: Inline delegate definitions such as `Action`, `Func`
+- **LINQ expressions**: Query syntax and method chains
+- **Async/await**: State machine methods for asynchronous operations (may show `MoveNext`)
+- **Iterator methods**: Coroutines and methods using `yield return` (may show `MoveNext`)
+- **Event handlers**: Lambda expressions in event subscriptions
+- **UI callbacks**: Unity button click handlers like `button.onClick.AddListener(() => {...})`
+
+**Common patterns you'll see:**
+
+| Pattern | What it means | Example |
+|---------|---------------|---------|
+| `YourClass+<>c` | Cached delegate class for simple lambdas | `YourClass+<>c in ThrowExceptionInLinq { <lambda> }` |
+| `YourClass+<>c__DisplayClass#_#` | Display class for closures that capture local variables | `YourClass+<>c__DisplayClass12_0 in ThrowExceptionInClosure { <lambda> }` |
+| `<>n__0`, `<>n__1` | Compiler-generated method names (may appear in detailed stack traces) | Method name suffix distinguishing multiple lambdas |
+| `{ <lambda> }` | Indicates the frame is from a lambda expression | Shown in Sentry issue titles |
+| `MoveNext` | State machine method for async/await or iterator methods | Common in async methods and Unity coroutines |
+
+**Example:**
+
+If your code contains:
+```csharp
+public void ThrowExceptionInLinq()
+{
+    var numbers = new List<int> { 1, 2, 3, 4, 5 };
+    var result = numbers.Where(n =>
+    {
+        if (n == 3) throw new InvalidOperationException("Error!");
+        return n > 2;
+    }).ToList();
+}
+```
+
+The Sentry issue will show something like:
+```
+YourClass+<>c in ThrowExceptionInLinq { <lambda> }
+```
+
+**How to interpret these frames:**
+
+1. **`+<>c`**: The `+` indicates a nested class. `<>c` is a cached delegate class that holds the lambda's compiled code
+2. **`+<>c__DisplayClass#_#`**: Similar to `<>c`, but used when the lambda captures local variables (creates a "closure")
+3. **Method name shown**: Look at the parent method name (after "in") to identify where in your code the lambda was defined
+4. **`{ <lambda> }`**: Confirms the exception occurred inside the lambda expression itself
+5. **`MoveNext`**: For async methods and coroutines, this is the state machine method that executes your code
+
+These frames are normal and expected in C# applications. They provide precise information about where an exception occurred within lambda expressions and compiler-generated code.
+
 ## Cysharp
 
 **Note: This issue is obsolete and resolved for Unity 2021+ with UniTask 2.5.10+**

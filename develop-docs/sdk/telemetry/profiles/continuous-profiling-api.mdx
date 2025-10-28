@@ -1,0 +1,94 @@
+---
+title: Continuous/UI Profiling API
+description: APIs for Continuous Profiling and UI Profiling
+sidebar_order: 3
+---
+
+This document outlines the API for Continuous Profiling and UI Profiling.
+
+## Public API
+
+The SDK should expose the following functions to control the profiler:
+
+### `start_profiler()`
+
+Starts the profiler. This function is a no-op if any of the following conditions are met:
+
+- The profiling session is sampled (based on `profile_session_sample_rate`) and the profiler is already running.
+- The profiling session is not sampled.
+- `profile_lifecycle` is set to `'trace'`. In this mode, the profiler's lifecycle is bound to trace collection, so manual control is not permitted.
+
+<Alert level="info">
+  SDKs should log a warning in `debug` mode if this function is called but results in a no-op.
+</Alert>
+
+### `stop_profiler()`
+
+Stops the profiler. The behavior of this function depends on the `profile_lifecycle` setting:
+
+- **`'manual'`**: Stops the current profiling session. The profiler can be started again by calling `start_profiler()`.
+- **`'trace'`**: This is a no-op. In this mode, the profiler stops automatically when there are no active root spans.
+
+<Alert level="info">
+  SDKs should log a warning in `debug` mode if this function is called while `profile_lifecycle` is `'trace'`.
+</Alert>
+
+## Configuration
+
+The following options can be passed to `Sentry.init()` to configure the profiler.
+
+```ts {tabTitle:Options}
+interface SentryOptions {
+  // ...
+  profile_session_sample_rate?: number;
+  profile_lifecycle?: 'trace' | 'manual';
+  start_profiler_on_app_start?: boolean; // Mobile only
+}
+```
+
+### `profile_session_sample_rate`
+
+- **Type**: `number`
+- **Default**: `0` (`nil` for mobile)
+- **Description**: Determines the sampling rate for the entire profiling session. The sampling decision is made once when the SDK is initialized.
+
+The definition of a profiling session depends on the profiling type:
+
+- **Continuous Profiling**: The session starts when the Sentry SDK is configured and stops when the service terminates. `profile_session_sample_rate` controls the percentage of service instances that have profiling enabled. Sampling is re-evaluated on service restart or redeployment.
+- **UI Profiling**: The session corresponds to a user session. A user session starts with a new SDK initialization. It ends when the browser tab is closed, or alternatively, under the same conditions that end a [Replay session](/product/explore/session-replay/web/). `profile_session_sample_rate` sets the percentage of user sessions for which profiling is enabled. So this sampling decision is made once on SDK initialization.
+  - **On mobile**: Backgrounding and foregrounding the app starts a new user session, and sampling is re-evaluated. If a trace is active when the app is foregrounded, the existing profiling session continues until the last root span in that trace finishes. The new sample rate will only take effect when the profiler is next started.
+
+<Alert level="warning">
+  If `profiles_sample_rate` or `profiles_sampler` are configured for transaction-based profiling, `profile_session_sample_rate` has no effect. SDKs should log a warning in this case.
+</Alert>
+
+### `profile_lifecycle`
+
+- **Type**: `'trace' | 'manual'`
+- **Default**: `'manual'`
+- **Description**: Determines whether the profiler is controlled manually or automatically based on the trace lifecycle.
+
+Those are the two modes:
+
+- **`'manual'`**: The profiler is controlled via the `start_profiler()` and `stop_profiler()` functions. In this mode, profiling only respects `profile_session_sample_rate` (independent of spans). If the session is sampled, `start_profiler()` will start the profiler.
+- **`'trace'`**:  **This mode requires tracing to be enabled.** The profiler starts automatically when there is at least one active root span and stops when there are no active root spans (letting the current chunk completely finish).
+  - Profiling respects **both** `profile_session_sample_rate` and the tracing sampling configuration (`traces_sample_rate` or `traces_sampler`).
+  - `profile_session_sample_rate` is checked first. If the session is not sampled, no profiling will occur.
+  - If the session is sampled, `traces_sample_rate` / `traces_sampler` is evaluated for each root span to determine if it should be profiled.
+  - The profiler runs as long as there is at least one **sampled** root span. If multiple root spans overlap, profiling continues until the last sampled root span finishes.
+
+<Alert level="warning">
+  SDKs should log a warning if `profile_lifecycle` is set to `'trace'` but tracing is disabled.
+</Alert>
+
+### `start_profiler_on_app_start` (mobile-only)
+
+- **Type**: `boolean`
+- **Default**: `false`
+- **Platform**: Mobile only
+- **Description**: If `true`, profiling starts as early as possible during app startup, before `start_profiler()` can be manually called. This is **an automated way to invoke `start_profiler()`**.
+  The `profile_session_sample_rate` for app start profiling is evaluated on the **previous** app launch and applied on the **next** launch, since we cannot evaluate the sample rate at the time of launch.
+
+Behavior with `profile_lifecycle`:
+- **`'manual'`**: Profiling starts on startup. The developer must manually call `stop_profiler()` to end the app start profile when the app startup is complete.
+- **`'trace'`**: Profiling starts on startup and stops automatically when the root span associated with app startup ends.

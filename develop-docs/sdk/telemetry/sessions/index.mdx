@@ -271,7 +271,7 @@ not report any more session updates or start a new session.
 
 SDKs are encouraged to distinguish between different ways of ending a session:
 
-- `exited`: this means the session ended cleanly. It's is the same as the 
+- `exited`: this means the session ended cleanly. It's is the same as the
   session staying in `ok` from the point of success reports. However only
   sessions ending in `exited` will be considered for session durations.
   A session is allowed to go to `exited` even if errors occurred.
@@ -313,6 +313,29 @@ count along with session updates. A session that is `ok` and has an error
 count of greater than zero is considered an errored session. All crashed and
 abnormal sessions are also at all times considered errored but subtracted from
 the final errored session count.
+
+Only events that stem from `captureException`, `captureError`, or `captureEvent`
+must increment the `errors` counter when their level is `error` or higher. As SDKs
+set the default level to `error` for these methods, a level lower than `error`
+means the users changed it manually. This gives the users the ability to capture
+error events not marking sessions as errored. `captureEvent` is included because
+users might manually create exception events with it. Events stemming from
+`captureMessage` must not affect the session's error count, regardless of their
+log level. For all methods, it doesn't matter if the event has a stack trace or not.
+The following table summarizes the behavior of the methods:
+
+| method | level  | increments `errors` counter |
+| --- | --- | --- |
+| captureException / captureError | `fatal` | `yes` |
+| captureException / captureError | `error` | `yes` |
+| captureException / captureError | `warning` | `no` |
+| captureEvent  | `fatal` | `yes` |
+| captureEvent  | `error` | `yes` |
+| captureEvent  | `warning` | `no` |
+| captureMessage | `fatal` | `no` |
+| captureMessage | `error` | `no` |
+| captureMessage | `warning` | `no` |
+
 
 ### Exited
 
