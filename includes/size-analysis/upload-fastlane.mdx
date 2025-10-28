@@ -1,0 +1,27 @@
+The Fastlane plugin can be used to upload XCArchive or IPA builds to Sentry. Fastlane will automatically detect your [build's metadata](#upload-metadata) and include it in the upload. If for any reason you need to override values, you can... TODO: show fastlane override, maybe at bottom of this?
+
+1. Configure the [Sentry Fastlane plugin](/platforms/apple/guides/ios/upload-debug-symbols/fastlane/) (version `1.34.0` or higher).
+
+   ```ruby
+   bundle exec fastlane add_plugin fastlane-plugin-sentry
+   ```
+
+2. Set up `SENTRY_AUTH_TOKEN` in your environment (you can generate a token [here](https://sentry.sentry.io/settings/auth-tokens/)).
+
+3. In `FastFile`, add a call to `sentry_upload_build` after your build step:
+
+   ```ruby {filename:Fastfile}
+   lane :upload_to_sentry do
+      build_ios_app(
+        scheme: 'YourScheme',
+        configuration: 'Release',
+      )
+      sentry_upload_build(
+        org_slug: 'your-org',
+        project_slug: 'your-project',
+        build_configuration: 'Release' # Adjust to your configuration
+      )
+   end
+   ```
+
+   4. Confirm your upload's metadata is correct in the Sentry UI. (TODO: pic of sidebar metadata)

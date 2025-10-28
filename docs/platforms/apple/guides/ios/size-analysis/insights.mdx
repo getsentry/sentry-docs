@@ -12,4 +12,276 @@ Size Analysis Insights point out how iOS app can reduce its size. They spot patt
 
 Below are a list of available insights for iOS builds.
 
-<Include name="size-analysis/ios-insights.mdx" />
+| Insight                                                     | What it catches                                                                                    |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| [Strip debug symbols](#strip-debug-symbols)                 | Shows binaries that still include removable debug sections or symbols.                             |
+| [Duplicate files](#duplicate-files)                         | Flags identical files where you can keep once and drop the additional copies.                      |
+| [Image optimization](#image-optimization)                   | Surfaces oversized PNG/JPEG/HEIC assets and recommends recompressing or converting to HEIC.        |
+| [Alternate icon optimization](#alternate-icon-optimization) | Checks alternate app icons for downscaling and recompressing.                                      |
+| [Loose images](#loose-images)                               | Flags @1x/@2x/@3x images that should be move into asset catalogs so they qualify for app thinning. |
+| [Small files](#small-files)                                 | Totals tiny files wasting space because of 4 KB filesystem blocks.                                 |
+| [Unnecessary files](#unnecessary-files)                     | Catches docs, scripts, configs, or other build leftovers in the bundle.                            |
+| [Large videos](#large-videos)                               | Highlights video files that are bigger than typical delivery budgets.                              |
+| [Localized strings](#localized-strings)                     | Estimates savings from shrinking `.strings` payloads.                                              |
+| [Minify localized strings](#minify-localized-strings)       | Measures wins from stripping comments and whitespace in `.strings` files.                          |
+| [Main binary export metadata](#main-binary-export-metadata) | Reports export tries on main binaries that are not needed.                                         |
+| [Hermes debug info (RN only)](#hermes-debug-info-rn-only)   | Show bundled Hermes bytecode with removable debug info.                                            |
+
+### Strip debug symbols
+
+**What it is**: Flags Mach-O binaries that still ship debug sections or symbol tables.
+
+**How to fix**: Strip symbols only when you also upload dSYMs, otherwise crash reports will not resolve.
+
+<Alert type="warning">
+  Stripping symbols before uploading dSYMs breaks crash symbolication. Confirm
+  your release build still produces and uploads dSYMs (or another crash reporter
+  has them) before stripping.
+</Alert>
+
+Swift binaries often hold large symbol sets that the dynamic linker uses only during debugging. Xcode’s old bitcode pipeline removed them automatically, but bitcode is deprecated in Xcode 14 and later.
+
+Strip a single binary with:
+
+```bash
+strip -rSTx AppBinary -o AppBinaryStripped
+```
+
+`-T` removes Swift symbols; the other flags drop debug and local symbols.
+
+To automate stripping at the end of the build, add a Run Script phase that skips non-release builds and leaves Apple-signed frameworks untouched:
+
+```bash
+#!/bin/bash
+set -e
+
+if [ "Release" != "${CONFIGURATION}" ]; then
+  echo "Skipping symbol stripping for ${CONFIGURATION} build."
+  exit 0
+fi
+
+APP_DIR_PATH="${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}"
+echo "Stripping main binary: ${APP_DIR_PATH}/${EXECUTABLE_NAME}"
+strip -rSTx "${APP_DIR_PATH}/${EXECUTABLE_NAME}"
+
+APP_FRAMEWORKS_DIR="${APP_DIR_PATH}/Frameworks"
+if [ -d "${APP_FRAMEWORKS_DIR}" ]; then
+  find "${APP_FRAMEWORKS_DIR}" -maxdepth 2 -mindepth 2 -type f -perm -111 -exec bash -c '
+    codesign -v -R="anchor apple" "$1" &> /dev/null || strip -rSTx "$1"
+  ' _ {} \;
+fi
+```
+
+Because Xcode generates dSYMs from the unstripped binary, list the dSYM as an Input File so the script runs after Xcode finishes generating it:
+
+```
+${DWARF_DSYM_FOLDER_PATH}/${EXECUTABLE_NAME}.app.dSYM/\
+Contents/Resources/DWARF/${EXECUTABLE_NAME}
+```
+
+### Duplicate files
+
+**What it is**: Finds identical files bundled more than once.
+
+**How to fix**: Use dynamic frameworks to share assets between multiple targets. Here's an [example a post](https://www.emergetools.com/blog/posts/make-your-ios-app-smaller-with-dynamic-frameworks) walking through how to do this (for SPM projects).
+
+### Image optimization
+
+**What it is**: Surfaces PNG, JPEG, or HEIC assets that can be recompressed or converted.
+
+**How to fix**: Pick one of these workflows, then replace the source asset with the optimized version. If you convert to HEIC, update the asset catalog reference.
+
+#### Option 1: Use Imagemin (CLI)
+
+```bash
+# Install imagemin-cli
+npm install -g imagemin-cli
+
+# Optimize PNG with quality 85
+imagemin input.png --plugin=pngquant --plugin.quality=[0.85,0.85] > output.png
+
+# Optimize JPEG with quality 85
+imagemin input.jpg --plugin=mozjpeg --plugin.quality=85 > output.jpg
+```
+
+#### Option 2: Use ImageOptim (GUI)
+
+Download ImageOptim for macOS, drag your images into the window, and let it recompress them with lossy settings.
+
+#### Option 3: Convert to HEIC
+
+Open the image in Preview, choose `File → Export`, pick `HEIC`, and save. Replace the original file and update any references.
+
+### Alternate icon optimization
+
+**What it is**: Checks alternate app icons that are larger than homescreen quality demands.
+
+**How to fix**: Run one of the scripts below to resize to homescreen quality and save an optimized copy. Then update the alternate icon entry in your `.xcassets` catalog (and Info.plist if you change the filename).
+
+1. Save the script as `optimize.sh`.
+2. Run `source optimize.sh`.
+3. Call `optimize_icon YourIcon.png`.
+
+#### Option: Convert to HEIC
+
+```bash
+#!/bin/bash
+optimize_icon() {
+    local input="$1"
+    local output="$(basename "$input" | sed 's/\.[^.]*$//')_optimized.heic"
+
+    [ ! -f "$input" ] && echo "❌ File not found: $input" && return 1
+
+    echo "🔄 Optimizing $(basename "$input")..."
+
+    sips --resampleWidth 180 "$input" \
+      --out /tmp/icon.png >/dev/null 2>&1 || return 1
+    sips --resampleWidth 1024 /tmp/icon.png \
+      -s format heic -s formatOptions 85 \
+      --out "$output" >/dev/null 2>&1
+
+    rm /tmp/icon.png
+
+    if [ -f "$output" ]; then
+        local saved=$(( ($(stat -f%z "$input") - $(stat -f%z "$output")) / 1024 ))
+        echo "✅ Saved ${saved}KB → $output"
+    else
+        echo "❌ Optimization failed"
+        return 1
+    fi
+}
+```
+
+> Update the Info.plist alternate icon entry to point at the new `.heic` file.
+
+#### Option: Keep PNG
+
+```bash
+#!/bin/bash
+optimize_icon() {
+    local input="$1"
+    local output="$(basename "$input" | sed 's/\.[^.]*$//')_optimized.png"
+
+    [ ! -f "$input" ] && echo "❌ File not found: $input" && return 1
+
+    echo "🔄 Optimizing $(basename "$input")..."
+
+    sips --resampleWidth 180 "$input" \
+      --out /tmp/icon.png >/dev/null 2>&1 || return 1
+    sips --resampleWidth 1024 /tmp/icon.png \
+      --out "$output" >/dev/null 2>&1
+
+    rm /tmp/icon.png
+
+    if [ -f "$output" ]; then
+        local saved=$(( ($(stat -f%z "$input") - $(stat -f%z "$output")) / 1024 ))
+        echo "✅ Saved ${saved}KB → $output"
+    else
+        echo "❌ Optimization failed"
+        return 1
+    fi
+}
+```
+
+### Loose images
+
+**What it is**: Finds @1x/@2x/@3x resources stored outside asset catalogs, so app thinning cannot remove unused scales.
+
+**How to fix**: Move each image set into an `.xcassets` catalog so Xcode trims unused variants per device download.
+
+### Small files
+
+**What it is**: Totals tiny files that each consume a full 4 KB filesystem block.
+
+**How to fix**: Group related data into asset catalogs, archives, or databases so multiple entries share the same file on disk.
+
+### Unnecessary files
+
+**What it is**: Flags docs, scripts, configs, and similar build leftovers in the app bundle.
+
+**How to fix**: Drop them from the Copy Bundle Resources phase or exclude them with `EXCLUDED_SOURCE_FILE_NAMES` before archiving.
+
+### Large videos
+
+**What it is**: Highlights video assets larger than 10 MB.
+
+**How to fix**: Re-encode them with H.264 or HEVC at a lower bitrate or resolution, or host and stream the content instead of bundling it.
+
+### Localized strings
+
+**What it is**: Totals `.strings` payloads whose size suggests room for compression.
+
+**How to fix**: Deduplicate entries, move long copy to server-delivered content, or adopt a compact format such as Sentry's SmallStrings helper.
+
+### Minify localized strings
+
+**What it is**: Measures extra space in `.strings` files caused by binary encodings, translator comments, and other non-runtime text.
+
+**How to fix**: Start with low-effort cleanup, then automate comment stripping if you still ship large payloads.
+
+#### Option 1: Keep the format lean
+
+- Encode localized strings as plain text (`"key" = "value";`), not binary plists. Set **Strings File Output Encoding** (`STRINGS_FILE_OUTPUT_ENCODING`) to **UTF-8** in Xcode.
+- Remove translator comments that ship with the bundle. They help during translation but take space in production. A typical comment looks like:
+
+  ```text
+  /* Title for the expired code alert. */
+  "code_expired" = "Code Expired";
+  ```
+
+#### Option 2: Strip comments automatically
+
+Add a Run Script build phase that converts each `.strings` file to JSON, rewrites it without comments, and leaves a compact UTF-8 file behind:
+
+1. In Xcode, open **Build Phases → + → New Run Script Phase** and place it after the localized resources build step.
+2. Set the shell to your Python 3 binary (for Homebrew on Apple Silicon: `/opt/homebrew/bin/python3`).
+3. Paste the script below.
+
+```python
+#!/usr/bin/env python3
+import json
+import os
+import subprocess
+
+def minify(file_path: str) -> None:
+    subprocess.run(["plutil", "-convert", "json", file_path], check=True)
+
+    with open(file_path, "r", encoding="utf-8") as source:
+        data = json.load(source)
+
+    with open(file_path, "w", encoding="utf-8") as target:
+        for key, value in data.items():
+            target.write(f'"{key}" = "{value}";\n')
+
+for root, _, files in os.walk(os.environ["BUILT_PRODUCTS_DIR"], followlinks=True):
+    for filename in files:
+        if filename.endswith(".strings"):
+            path = os.path.join(root, filename)
+            print(f"Minifying {path}")
+            minify(path)
+```
+
+This script strips comments and blank lines after the files are generated, so keep the original annotated copies under version control for translators.
+
+### Main binary export metadata
+
+**What it is**: Highlights exported symbols inside your main app binary. The linker includes these identifiers for external consumers, but no other app links against your binary, so they only bloat the export trie.
+
+**How to fix**: Maintain a minimal allowlist so only required entry points stay exported.
+
+Since Xcode 16 no longer injects `_main` automatically, avoid the old `-exported_symbols_list /dev/null` workaround (it strips `_main` and crashes on launch).
+
+1. Create a text file in your project, for example `Config/ExportedSymbols.txt`.
+2. Add `_main` on its own line. Add `__mh_execute_header` if you use Crashlytics or other tooling that finds symbols dynamically with `dlsym`.
+3. If you rely on other dynamic lookups, list those symbols too.
+4. In Xcode, set **Build Settings → Linking → Exported Symbols File** to the new file’s path.
+
+![Example of Exported Symbols File](./images/exported-symbols.png)
+
+Xcode now limits the export trie to just that allowlist.
+
+### Hermes debug info (RN only)
+
+**What it is**: Finds Hermes bytecode bundles that still contain debug info sections.
+
+**How to fix**: Generate the bundle in release mode (for example, `react-native bundle --dev false` or the Xcode release task) so Hermes strips debug data before packaging.
