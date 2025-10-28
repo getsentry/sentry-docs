@@ -1,4 +1,4 @@
-The Gradle plugin will automatically detect your [build's metadata](#upload-metadata) and include it in the upload. If for any reason you need to override values, you can... TODO: show gradle override
+The Gradle plugin will automatically detect your [build's metadata](#upload-metadata) and include it in the upload. If for any reason you need to override values, you can use the `vcsInfo` extension.
 
 1. Configure the [Sentry Android Gradle plugin](/platforms/android/configuration/gradle/)
 
@@ -38,4 +38,61 @@ _TODO: the text for #3 doesn't make sense given the code snippet. Shouldn't the 
 
 _TODO: do we have difference between bundleRelease and assembleRelease anywhere?_
 
-You can see an example of the Gradle plugin in action [here](TODO:LINK).
+### Overriding Metadata
+
+The Gradle plugin automatically detects build metadata from your git repository. On GitHub Actions, all metadata is automatically detected. On other CI systems, you may need to manually set some values using the `vcsInfo` extension.
+
+Configure overrides in your `build.gradle.kts`:
+
+```kotlin {filename:build.gradle.kts}
+sentry {
+  sizeAnalysis {
+    enabled = providers.environmentVariable("GITHUB_ACTIONS").isPresent
+  }
+
+  vcsInfo {
+    headSha.set("abc123")
+    baseSha.set("def456")
+    vcsProvider.set("github")
+    headRepoName.set("organization/repository")
+    baseRepoName.set("organization/repository")
+    headRef.set("feature-branch")
+    baseRef.set("main")
+    prNumber.set(42)
+  }
+}
+```
+
+Or for `build.gradle`:
+
+```groovy {filename:build.gradle}
+sentry {
+  sizeAnalysis {
+    enabled = providers.environmentVariable("GITHUB_ACTIONS").present
+  }
+
+  vcsInfo {
+    headSha = 'abc123'
+    baseSha = 'def456'
+    vcsProvider = 'github'
+    headRepoName = 'organization/repository'
+    baseRepoName = 'organization/repository'
+    headRef = 'feature-branch'
+    baseRef = 'main'
+    prNumber = 42
+  }
+}
+```
+
+Available `vcsInfo` properties:
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `headSha` | String | Current commit SHA |
+| `baseSha` | String | Base commit SHA (for comparison) |
+| `vcsProvider` | String | VCS provider (e.g., "github") |
+| `headRepoName` | String | Repository name (org/repo format) |
+| `baseRepoName` | String | Base repository name |
+| `headRef` | String | Branch or tag name |
+| `baseRef` | String | Base branch name |
+| `prNumber` | Int | Pull request number |
