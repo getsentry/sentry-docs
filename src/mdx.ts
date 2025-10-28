@@ -99,10 +99,13 @@ async function getRegistryHashWithRetry(
 }
 
 function getRegistryHash(): Promise<string> {
-  if (cachedRegistryHash) {
-    return cachedRegistryHash;
+  if (!cachedRegistryHash) {
+    cachedRegistryHash = getRegistryHashWithRetry().catch(err => {
+      // Clear cache on error to allow retry on next call
+      cachedRegistryHash = null;
+      throw err;
+    });
   }
-  cachedRegistryHash = getRegistryHashWithRetry();
   return cachedRegistryHash;
 }
 
