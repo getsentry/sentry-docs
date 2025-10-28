@@ -5,7 +5,7 @@ import imgLinks from '@pondorasti/remark-img-links';
 import {selectAll} from 'hast-util-select';
 import {createHash} from 'node:crypto';
 import {createReadStream, createWriteStream, existsSync} from 'node:fs';
-import {mkdir, opendir, readFile, rm, writeFile} from 'node:fs/promises';
+import {mkdir, opendir, readdir, readFile, rm, writeFile} from 'node:fs/promises';
 import {cpus} from 'node:os';
 import * as path from 'node:path';
 import {compose, Readable} from 'node:stream';
@@ -199,13 +199,50 @@ async function createWork() {
 
 const md5 = data => createHash('md5').update(data).digest('hex');
 
+// Initialize debug counter
+genMDFromHTML.debugCount = 0;
+
 async function genMDFromHTML(source, target, {cacheDir, noCache}) {
-  const leanHTML = (await readFile(source, {encoding: 'utf8'}))
+  const rawHTML = await readFile(source, {encoding: 'utf8'});
+  
+  // Debug: Log first 3 files to understand what's being removed
+  const shouldDebug = genMDFromHTML.debugCount < 3;
+  if (shouldDebug) {
+    genMDFromHTML.debugCount++;
+    const fileName = path.basename(source);
+    console.log(`\n🔍 DEBUG: Processing ${fileName}`);
+    console.log(`📏 Raw HTML length: ${rawHTML.length} chars`);
+    
+    // Extract what we're removing to see if it's stable
+    const scripts = rawHTML.match(/<script[^>]*src="[^"]*"/gi);
+    const links = rawHTML.match(/<link[^>]*>/gi);
+    
+    console.log(`📦 Found ${scripts?.length || 0} script tags with src`);
+    if (scripts && scripts.length > 0) {
+      console.log(`   First 3: ${scripts.slice(0, 3).join(', ')}`);
+    }
+    console.log(`🔗 Found ${links?.length || 0} link tags`);
+    if (links && links.length > 0) {
+      console.log(`   First 3: ${links.slice(0, 3).join(', ')}`);
+    }
+  }
+  
+  const leanHTML = rawHTML
     // Remove all script tags, as they are not needed in markdown
     // and they are not stable across builds, causing cache misses
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+  
+  if (shouldDebug) {
+    console.log(`✂️  Lean HTML length: ${leanHTML.length} chars (removed ${rawHTML.length - leanHTML.length} chars)`);
+  }
+  
   const cacheKey = `v${CACHE_VERSION}_${md5(leanHTML)}`;
   const cacheFile = path.join(cacheDir, cacheKey);
+  
+  if (shouldDebug) {
+    console.log(`🔑 Cache key: ${cacheKey}`);
+  }
+  
   if (!noCache) {
     try {
       const data = await text(
@@ -217,6 +254,17 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
     } catch (err) {
       if (err.code !== 'ENOENT') {
         console.warn(`Error using cache file ${cacheFile}:`, err);
+      } else if (shouldDebug) {
+        // Cache miss on debug file - show what's in cache
+        console.log(`❌ Cache miss! Looking for: ${cacheKey}`);
+        try {
+          const allCacheFiles = await readdir(cacheDir);
+          const v3Files = allCacheFiles.filter(f => f.startsWith('v3_')).slice(0, 3);
+          console.log(`   Existing v3 files in cache:`);
+          v3Files.forEach(f => console.log(`     - ${f}`));
+        } catch (e) {
+          console.log(`   Could not read cache dir: ${e.message}`);
+        }
       }
     }
   }
