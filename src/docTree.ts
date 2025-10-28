@@ -1,4 +1,3 @@
-import {BuildTimer} from './buildTimer';
 import {isDeveloperDocs} from './isDeveloperDocs';
 import {getDevDocsFrontMatter, getDocsFrontMatter} from './mdx';
 import {platformsData} from './platformsData';
@@ -40,12 +39,10 @@ export function getDocsRootNode(): Promise<DocNode> {
 }
 
 async function getDocsRootNodeUncached(): Promise<DocNode> {
-  const timer = new BuildTimer('Building doc tree');
   const frontmatter = await (isDeveloperDocs
     ? getDevDocsFrontMatter()
     : getDocsFrontMatter());
   const tree = frontmatterToTree(frontmatter);
-  timer.end();
   return tree;
 }
 
@@ -62,7 +59,6 @@ const sidebarOrderSorter = (a: FrontMatter, b: FrontMatter) => {
 };
 
 function frontmatterToTree(frontmatter: FrontMatter[]): DocNode {
-  const timer = new BuildTimer('Sorting and building tree');
   const sortedDocs = frontmatter.sort(sidebarOrderSorter);
 
   const rootNode: DocNode = {
@@ -134,7 +130,6 @@ function frontmatterToTree(frontmatter: FrontMatter[]): DocNode {
     }
   });
 
-  timer.end(true); // Silent - shown in summary
   return rootNode;
 }
 
