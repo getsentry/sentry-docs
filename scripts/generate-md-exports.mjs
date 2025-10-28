@@ -204,7 +204,7 @@ genMDFromHTML.debugCount = 0;
 
 async function genMDFromHTML(source, target, {cacheDir, noCache}) {
   const rawHTML = await readFile(source, {encoding: 'utf8'});
-  
+
   // Debug: Log first 3 files to understand what's being removed
   const shouldDebug = genMDFromHTML.debugCount < 3;
   if (shouldDebug) {
@@ -212,11 +212,11 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
     const fileName = path.basename(source);
     console.log(`\n🔍 DEBUG: Processing ${fileName}`);
     console.log(`📏 Raw HTML length: ${rawHTML.length} chars`);
-    
+
     // Extract what we're removing to see if it's stable
     const scripts = rawHTML.match(/<script[^>]*src="[^"]*"/gi);
     const links = rawHTML.match(/<link[^>]*>/gi);
-    
+
     console.log(`📦 Found ${scripts?.length || 0} script tags with src`);
     if (scripts && scripts.length > 0) {
       console.log(`   First 3: ${scripts.slice(0, 3).join(', ')}`);
@@ -226,23 +226,25 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
       console.log(`   First 3: ${links.slice(0, 3).join(', ')}`);
     }
   }
-  
+
   const leanHTML = rawHTML
     // Remove all script tags, as they are not needed in markdown
     // and they are not stable across builds, causing cache misses
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
-  
+
   if (shouldDebug) {
-    console.log(`✂️  Lean HTML length: ${leanHTML.length} chars (removed ${rawHTML.length - leanHTML.length} chars)`);
+    console.log(
+      `✂️  Lean HTML length: ${leanHTML.length} chars (removed ${rawHTML.length - leanHTML.length} chars)`
+    );
   }
-  
+
   const cacheKey = `v${CACHE_VERSION}_${md5(leanHTML)}`;
   const cacheFile = path.join(cacheDir, cacheKey);
-  
+
   if (shouldDebug) {
     console.log(`🔑 Cache key: ${cacheKey}`);
   }
-  
+
   if (!noCache) {
     try {
       const data = await text(
