@@ -1,4 +1,4 @@
-The Fastlane plugin can be used to upload XCArchive or IPA builds to Sentry. Fastlane will automatically detect your [build's metadata](#upload-metadata) and include it in the upload. If for any reason you need to override values, you can... TODO: show fastlane override, maybe at bottom of this?
+The Fastlane plugin can be used to upload XCArchive or IPA builds to Sentry. On GitHub Actions, Fastlane will automatically detect your [build's metadata](#upload-metadata) and include it in the upload. In other CI environments, you may need to manually set metadata values.
 
 1. Configure the [Sentry Fastlane plugin](/platforms/apple/guides/ios/upload-debug-symbols/fastlane/) (version `1.34.0` or higher).
 
@@ -24,4 +24,47 @@ The Fastlane plugin can be used to upload XCArchive or IPA builds to Sentry. Fas
    end
    ```
 
-   4. Confirm your upload's metadata is correct in the Sentry UI. (TODO: pic of sidebar metadata)
+4. Confirm your upload's metadata is correct in the Sentry UI. (TODO: pic of sidebar metadata)
+
+### Overriding Metadata
+
+On GitHub Actions, the Fastlane plugin automatically detects all build metadata. On other CI systems, you can manually set metadata values by passing parameters to `sentry_upload_build`:
+
+```ruby {filename:Fastfile}
+lane :upload_to_sentry do
+  build_ios_app(
+    scheme: 'YourScheme',
+    configuration: 'Release',
+  )
+  sentry_upload_build(
+    org_slug: 'your-org',
+    project_slug: 'your-project',
+    build_configuration: 'Release',
+    # Optional metadata overrides:
+    head_sha: 'abc123',
+    base_sha: 'def456',
+    vcs_provider: 'github',
+    head_repo_name: 'organization/repository',
+    base_repo_name: 'organization/repository',
+    head_ref: 'feature-branch',
+    base_ref: 'main',
+    pr_number: '42'
+  )
+end
+```
+
+Available metadata parameters:
+
+| Parameter | Description |
+| --- | --- |
+| `head_sha` | Current commit SHA |
+| `base_sha` | Base commit SHA (for comparison) |
+| `vcs_provider` | VCS provider (e.g., "github") |
+| `head_repo_name` | Repository name (org/repo format) |
+| `base_repo_name` | Base repository name |
+| `head_ref` | Branch or tag name |
+| `base_ref` | Base branch name |
+| `pr_number` | Pull request number |
+| `build_configuration` | Build configuration (e.g., "Release", "Debug") |
+
+You can also set these values via environment variables: `SENTRY_HEAD_SHA`, `SENTRY_BASE_SHA`, `SENTRY_VCS_PROVIDER`, `SENTRY_HEAD_REPO_NAME`, `SENTRY_BASE_REPO_NAME`, `SENTRY_HEAD_REF`, `SENTRY_BASE_REF`, `SENTRY_PR_NUMBER`, and `SENTRY_BUILD_CONFIGURATION`. Explicit parameters take precedence over environment variables.
