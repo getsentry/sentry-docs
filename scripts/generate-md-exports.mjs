@@ -227,10 +227,18 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
     }
   }
 
+  // Normalize HTML to make cache keys deterministic across builds
+  // Remove elements that change between builds but don't affect markdown output
   const leanHTML = rawHTML
-    // Remove all script tags, as they are not needed in markdown
-    // and they are not stable across builds, causing cache misses
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+    // Remove all script tags (build IDs, chunk hashes, Vercel injections)
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    // Remove link tags for stylesheets and preloads (chunk hashes change)
+    .replace(/<link[^>]*>/gi, '')
+    // Remove meta tags that might have build-specific content
+    .replace(/<meta name="next-size-adjust"[^>]*>/gi, '')
+    // Remove data attributes that Next.js/Vercel add (build IDs, etc.)
+    .replace(/\s+data-next-[a-z-]+="[^"]*"/gi, '')
+    .replace(/\s+data-nextjs-[a-z-]+="[^"]*"/gi, '');
 
   if (shouldDebug) {
     console.log(
