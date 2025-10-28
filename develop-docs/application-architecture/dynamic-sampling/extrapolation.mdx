@@ -8,13 +8,13 @@ sidebar_order: 5
 Without accounting for the lower request volume due to the sample rate, any metrics derived from these spans will misrepresent the true volume of the application. Perhaps more importantly, when different parts of your application have different sample rates, attention may be skewed with a bias towards parts with higher sample rates. This bias especially impacts numerical attributes like latency, reducing their accuracy. To account for this, Sentry uses extrapolation to a) derive a "true" volume of each part of your application and b) combine the extrapolated data from different parts of the application to provide a more wholistic view of the application's performance.
 
 ### Accuracy & Usefulness
-What happens during extrapolation? how does Sentry handle this type of data? And when is extrapolated data accurate and useful? Let's start with some definitions:
+What happens during extrapolation? how does Sentry handle this type of data? And when is extrapolated data accurate and useful? Our goal is to make data _accurate_ and _useful_ when reviewing metrics and alerts. Let's define these terms:
 
 - **Accuracy** refers to data being correct. For example, the measured number of spans corresponds to the actual number of spans that were executed. As sample rates decrease, accuracy also goes down because minor random decisions can influence the result in major ways.
-- **Usefulness** refers to data being able to express something about the state of the observed system and the value of the data for the user in a specific use case.
+- **Usefulness** refers to data being able to express something about the state of the observed system, and the value of the data for the user in a specific use case. For example, a metric that shows the P90 latency of your application is useful for understanding the performance of your application, but a metric that shows the P90 latency of different endpoints in your application sampled at 10%, 1%, and 5% is not as useful because it is not a complete picture.
 
 ### Modes
-Given these objectives, there are two modes that can be used to view data in Sentry: default mode and sample mode.
+Given these objectives, there are two modes that can be used to view data: default mode and sample mode.
 
 - **Default mode** extrapolates the ingested data as outlined below - targeting usefulness.
 - **Sample mode** does not extrapolate and presents exactly the data that was ingested - targeting accuracy, especially for small datasets.
