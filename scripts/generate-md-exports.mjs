@@ -91,12 +91,15 @@ async function createWork() {
   console.log(`💰 Cache directory: ${CACHE_DIR}`);
   const noCache = !existsSync(CACHE_DIR);
   if (noCache) {
-    console.log(`ℹ️ No cache directory found, this will take a while...`);
+    console.log(`ℹ️ No cache directory found, creating fresh cache...`);
     await mkdir(CACHE_DIR, {recursive: true});
+  } else {
+    console.log(`✅ Cache directory exists, will attempt to use cached files`);
   }
 
-  // On a 16-core machine, 8 workers were optimal (and slightly faster than 16)
-  const numWorkers = Math.max(Math.floor(cpus().length / 2), 2);
+  // Use 75% of CPU cores for optimal performance
+  const numWorkers = Math.max(Math.floor(cpus().length * 0.75), 2);
+  console.log(`⚙️  Using ${numWorkers} workers for ${cpus().length} CPU cores`);
   const workerTasks = new Array(numWorkers).fill(null).map(() => []);
 
   let existingFilesOnR2 = null;
@@ -311,8 +314,9 @@ async function processTaskList({id, tasks, cacheDir, noCache}) {
   const s3Client = getS3Client();
   const failedTasks = [];
   let cacheMisses = [];
+  let cacheHits = 0;
   let r2CacheMisses = [];
-  console.log(`🤖 Worker[${id}]: Starting to process ${tasks.length} files...`);
+  console.log(`🤖 Worker[${id}]: Starting to process ${tasks.length} files... (noCache=${noCache})`);
   for (const {sourcePath, targetPath, relativePath, r2Hash} of tasks) {
     try {
       const {data, cacheHit} = await genMDFromHTML(sourcePath, targetPath, {
@@ -321,6 +325,8 @@ async function processTaskList({id, tasks, cacheDir, noCache}) {
       });
       if (!cacheHit) {
         cacheMisses.push(relativePath);
+      } else {
+        cacheHits++;
       }
 
       if (r2Hash !== null) {
@@ -336,6 +342,12 @@ async function processTaskList({id, tasks, cacheDir, noCache}) {
     }
   }
   const success = tasks.length - failedTasks.length;
+  
+  // Log cache statistics
+  const cacheHitRate = ((cacheHits / tasks.length) * 100).toFixed(1);
+  const cacheMissRate = ((cacheMisses.length / tasks.length) * 100).toFixed(1);
+  console.log(`📊 Worker[${id}]: Cache stats - ${cacheHits}/${tasks.length} hits (${cacheHitRate}%), ${cacheMisses.length} misses (${cacheMissRate}%)`);
+  
   if (r2CacheMisses.length / tasks.length > 0.1) {
     console.warn(
       `⚠️ Worker[${id}]: More than 10% of files had a different hash on R2 with the generation process.`
