@@ -39,11 +39,9 @@ export function getDocsRootNode(): Promise<DocNode> {
 }
 
 async function getDocsRootNodeUncached(): Promise<DocNode> {
-  const frontmatter = await (isDeveloperDocs
-    ? getDevDocsFrontMatter()
-    : getDocsFrontMatter());
-  const tree = frontmatterToTree(frontmatter);
-  return tree;
+  return frontmatterToTree(
+    await (isDeveloperDocs ? getDevDocsFrontMatter() : getDocsFrontMatter())
+  );
 }
 
 const sidebarOrderSorter = (a: FrontMatter, b: FrontMatter) => {

@@ -66,13 +66,43 @@ if (process.env.CI) {
 }
 
 // Cache registry hash per worker to avoid recomputing for every file
-let cachedRegistryHash: string | null = null;
-async function getRegistryHash(): Promise<string> {
+let cachedRegistryHash: Promise<string> | null = null;
+async function getRegistryHashWithRetry(
+  maxRetries = 3,
+  initialDelayMs = 1000
+): Promise<string> {
+  let lastError: Error | null = null;
+  let delayMs = initialDelayMs;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const [apps, packages] = await Promise.all([
+        getAppRegistry(),
+        getPackageRegistry(),
+      ]);
+      return md5(JSON.stringify({apps, packages}));
+    } catch (err) {
+      lastError = err as Error;
+      if (attempt < maxRetries) {
+        const currentDelay = delayMs;
+        // eslint-disable-next-line no-console
+        console.warn(
+          `Failed to fetch registry (attempt ${attempt + 1}/${maxRetries + 1}): ${lastError.message}. Retrying in ${currentDelay}ms...`
+        );
+        await new Promise(resolve => setTimeout(resolve, currentDelay));
+        delayMs *= 2; // Exponential backoff
+      }
+    }
+  }
+  throw new Error(
+    `Failed to fetch registry after ${maxRetries + 1} attempts: ${lastError?.message}`
+  );
+}
+
+function getRegistryHash(): Promise<string> {
   if (cachedRegistryHash) {
     return cachedRegistryHash;
   }
-  const [apps, packages] = await Promise.all([getAppRegistry(), getPackageRegistry()]);
-  cachedRegistryHash = md5(JSON.stringify({apps, packages}));
+  cachedRegistryHash = getRegistryHashWithRetry();
   return cachedRegistryHash;
 }
 
@@ -83,16 +113,8 @@ const cacheStats = {
   uniqueRegistryFiles: new Set<string>(),
 };
 
-// Log summary periodically and at end
-let lastSummaryLog = Date.now();
-function logCacheSummary(force = false) {
-  const now = Date.now();
-  // Log every 30 seconds or when forced
-  if (!force && now - lastSummaryLog < 30000) {
-    return;
-  }
-  lastSummaryLog = now;
-
+// Log summary at end
+function logCacheSummary() {
   const total = cacheStats.registryHits + cacheStats.registryMisses;
   if (total === 0) {
     return;
@@ -110,7 +132,7 @@ function logCacheSummary(force = false) {
 // Log final summary when worker exits
 if (typeof process !== 'undefined') {
   process.on('beforeExit', () => {
-    logCacheSummary(true);
+    logCacheSummary();
   });
 }
 
@@ -595,49 +617,38 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     // For files that depend on registry, include registry version in cache key
     // This prevents serving stale content when registry is updated
     if (dependsOnRegistry) {
-      try {
-        // Get registry hash (cached per worker to avoid redundant fetches)
-        const registryHash = await getRegistryHash();
-        cacheKey = `${sourceHash}-${registryHash}`;
-      } catch (err) {
-        // If registry fetch fails, skip caching for safety
-        // eslint-disable-next-line no-console
-        console.warn(
-          `Failed to fetch registry for cache key, skipping cache: ${err.message}`
-        );
-        cacheKey = null;
-      }
+      // Get registry hash (cached per worker to avoid redundant fetches)
+      // If this fails, the build will fail - registry is required for these files
+      const registryHash = await getRegistryHash();
+      cacheKey = `${sourceHash}-${registryHash}`;
     } else {
       // Regular files without registry dependencies
       cacheKey = sourceHash;
     }
 
-    if (cacheKey) {
-      cacheFile = path.join(CACHE_DIR, `${cacheKey}.br`);
-      assetsCacheDir = path.join(CACHE_DIR, cacheKey);
+    cacheFile = path.join(CACHE_DIR, `${cacheKey}.br`);
+    assetsCacheDir = path.join(CACHE_DIR, cacheKey);
 
-      try {
-        const [cached, _] = await Promise.all([
-          readCacheFile<SlugFile>(cacheFile),
-          cp(assetsCacheDir, outdir, {recursive: true}),
-        ]);
-        // Track cache hit silently
-        if (dependsOnRegistry) {
-          cacheStats.registryHits++;
-          cacheStats.uniqueRegistryFiles.add(sourcePath);
-          logCacheSummary(); // Periodically log summary (every 30s)
-        }
-        return cached;
-      } catch (err) {
-        if (
-          err.code !== 'ENOENT' &&
-          err.code !== 'ABORT_ERR' &&
-          err.code !== 'Z_BUF_ERROR'
-        ) {
-          // If cache is corrupted, ignore and proceed
-          // eslint-disable-next-line no-console
-          console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
-        }
+    try {
+      const [cached, _] = await Promise.all([
+        readCacheFile<SlugFile>(cacheFile),
+        cp(assetsCacheDir, outdir, {recursive: true}),
+      ]);
+      // Track cache hit silently
+      if (dependsOnRegistry) {
+        cacheStats.registryHits++;
+        cacheStats.uniqueRegistryFiles.add(sourcePath);
+      }
+      return cached;
+    } catch (err) {
+      if (
+        err.code !== 'ENOENT' &&
+        err.code !== 'ABORT_ERR' &&
+        err.code !== 'Z_BUF_ERROR'
+      ) {
+        // If cache is corrupted, ignore and proceed
+        // eslint-disable-next-line no-console
+        console.warn(`Failed to read MDX cache: ${cacheFile}`, err);
       }
     }
   }
@@ -646,7 +657,6 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   if (dependsOnRegistry) {
     cacheStats.registryMisses++;
     cacheStats.uniqueRegistryFiles.add(sourcePath);
-    logCacheSummary(); // Periodically log summary (every 30s)
   }
 
   process.env.ESBUILD_BINARY_PATH = path.join(
