@@ -25,17 +25,17 @@ Learn more about [DSN utilization](/product/sentry-basics/dsn-explainer/#dsn-uti
 <SdkOption name="debug" type="Boolean" defaultValue="false">
 
 This turns debug mode on or off. When enabled, SDK errors will be logged with backtrace.
-If you want more output, use `config.logger.level`. `debug` only works for attaching backtraces to the messages.
+If you want more output, use `config.sdk_logger.level`. `debug` only works for attaching backtraces to the messages.
 
 </SdkOption>
 
-<SdkOption name="logger" type="Sentry::Logger">
+<SdkOption name="sdk_logger" type="Sentry::Logger">
 
 The logger used by Sentry. The default for Rails is `Rails.logger`, otherwise it's `Sentry::Logger`. Make sure to change the logger level if you need debug output. **We don't recommend doing this in production unless absolutely necessary.**
 
 ```ruby
-config.logger = Sentry::Logger.new(STDOUT)
-config.logger.level = ::Logger::DEBUG # defaults to INFO
+config.sdk_logger = Sentry::Logger.new(STDOUT)
+config.sdk_logger.level = ::Logger::DEBUG # defaults to INFO
 ```
 
 </SdkOption>
@@ -97,7 +97,7 @@ config.send_modules = false
 
 <SdkOption name="include_local_variables" type="Boolean" defaultValue="false">
 
-Whether to capture local variables from the raised exceptions frame. (In older versions, this was called `capture_exception_frame_locals`.)
+Whether to capture local variables from the raised exceptions frame.
 
 </SdkOption>
 
@@ -125,7 +125,6 @@ Sentry supports different breadcrumbs loggers in the Ruby SDK:
 - `:http_logger` - Captures requests made with the standard `net/http` library.
 - `:redis_logger` - Captures breadcrumbs from redis operations.
 - `:active_support_logger` - Built on top of [ActiveSupport instrumentation](https://guides.rubyonrails.org/active_support_instrumentation.html) and provides many Rails-specific information.
-- `:monotonic_active_support_logger` - Similar to `:active_support_logger` but breadcrumbs will have monotonic time values. Only available with Rails 6.1+.
 
 And you can enable them with the `breadcrumbs_logger` option:
 
@@ -164,7 +163,7 @@ Sentry automatically sets the current environment from the environment variables
 
 </SdkOption>
 
-<SdkOption name="enabled_environments" type="Array">
+<SdkOption name="enabled_environments" type="Array | nil" defaultValue="nil">
 
 By default, events will be sent to Sentry in all environments. If you don't want to send events in a specific environment, you can unset the `SENTRY_DSN` variable in that environment.
 
@@ -314,6 +313,18 @@ config.propagate_traces = false
 
 </SdkOption>
 
+<SdkOption name="trace_ignore_status_codes" type="Array<Integer | Range>" defaultValue="[(301..303), (305..399), (401..404)]">
+
+An optional property that disables tracing for HTTP requests with certain status codes.
+
+Requests are not traced if the status code is contained in the provided list.
+
+```ruby
+config.trace_ignore_status_codes = [404, (502..511)]
+```
+
+</SdkOption>
+
 <SdkOption name="instrumenter" type="Symbol" defaultValue=":sentry">
 
 The instrumenter to use, `:sentry` or `:otel` for [use with OpenTelemetry](../../tracing/instrumentation/opentelemetry).
@@ -326,7 +337,7 @@ The below options can be used to hook the SDK in various ways and customize how 
 
 <SdkOption name="before_send" type="lambda | proc">
 
-Provides a lambda or proc that's called with an SDK-specific message or error event object, and can return a modified event object, or `nil` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
+Provides a lambda or proc that's called with a message or error event object, and can return a modified event object, or `nil` to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
 
 By the time `before_send` is executed, all scope data has already been applied to the event. Further modification of the scope won't have any effect.
 
@@ -336,7 +347,7 @@ By the time `before_send` is executed, all scope data has already been applied t
 
 <SdkOption name="before_send_transaction" type="lambda | proc">
 
-Provides a lambda or proc that's called with an SDK-specific transaction event object, and can return a modified transaction event object, or `nil` to skip reporting the event. One way this might be used is for manual PII stripping before sending.
+Provides a lambda or proc that's called with a transaction event object, and can return a modified transaction event object, or `nil` to skip reporting the event. One way this might be used is for manual PII stripping before sending.
 
 <PlatformContent includePath="configuration/before-send-transaction/" />
 
@@ -347,6 +358,14 @@ Provides a lambda or proc that's called with an SDK-specific transaction event o
 Provides a lambda or proc that's called with an SDK-specific log object, and can return a modified log object, or `nil` to skip reporting the log. This can be used to filter logs before they are sent to Sentry.
 
 <PlatformContent includePath="configuration/before-send-log/" />
+
+</SdkOption>
+
+<SdkOption name="before_send_check_in" type="lambda | proc">
+
+Provides a lambda or proc that's called with a check-in event object, and can return a modified check-in event object, or `nil` to skip reporting the event.
+
+<PlatformContent includePath="configuration/before-send-check-in/" />
 
 </SdkOption>
 
@@ -481,6 +500,14 @@ config.cron.default_timezone = "America/New_York"
 <SdkOption name="profiles_sample_rate" type="Float" defaultValue="nil">
 
 A number between `0` and `1`, controlling the percentage chance a given sampled transaction will be profiled. (`0` represents 0% while `1` represents 100%.) Applies equally to all profiles created in the app. This is relative to the tracing sample rate - e.g. `0.5` means 50% of sampled transactions will be profiled.
+
+</SdkOption>
+
+<SdkOption name="profiles_sample_interval" type="Float" defaultValue="1e6 / 101">
+
+Interval in microseconds at which the profiler will collect samples.
+
+The default is 101 Hz. Note that the 101 is intentional to avoid **lockstep sampling**.
 
 </SdkOption>
 
