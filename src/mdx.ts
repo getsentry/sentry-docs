@@ -33,6 +33,7 @@ import rehypeSlug from './rehype-slug.js';
 import remarkCodeTabs from './remark-code-tabs';
 import remarkCodeTitles from './remark-code-title';
 import remarkComponentSpacing from './remark-component-spacing';
+import remarkExtractFirstImage from './remark-extract-first-image';
 import remarkExtractFrontmatter from './remark-extract-frontmatter';
 import remarkFormatCodeBlocks from './remark-format-code';
 import remarkImageResize from './remark-image-resize';
@@ -44,6 +45,7 @@ import {isNotNil} from './utils';
 import {isVersioned, VERSION_INDICATOR} from './versioning';
 
 type SlugFile = {
+  firstImage?: string;
   frontMatter: Platform & {slug: string};
   matter: Omit<matter.GrayMatterFile<string>, 'data'> & {
     data: Platform;
@@ -579,6 +581,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   );
 
   const toc: TocNode[] = [];
+  const firstImageRef: string[] = [];
 
   // cwd is how mdx-bundler knows how to resolve relative paths
   const cwd = path.dirname(sourcePath);
@@ -598,6 +601,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
         remarkDefList,
         remarkFormatCodeBlocks,
         [remarkImageSize, {sourceFolder: cwd, publicFolder: path.join(root, 'public')}],
+        [remarkExtractFirstImage, {exportRef: firstImageRef}],
         remarkMdxImages,
         remarkImageResize,
         remarkCodeTitles,
@@ -694,6 +698,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     matter: result.matter,
     mdxSource: code,
     toc,
+    firstImage: firstImageRef[0],
     frontMatter: {
       ...mergedFrontmatter,
       slug,

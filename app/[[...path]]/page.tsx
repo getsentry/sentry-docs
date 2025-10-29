@@ -194,6 +194,65 @@ function formatCanonicalTag(tag: string) {
   return tag;
 }
 
+// Helper function to resolve OG image URLs
+async function resolveOgImageUrl(
+  imageUrl: string | undefined,
+  domain: string,
+  pagePath: string[]
+): Promise<string | null> {
+  if (!imageUrl) {
+    return null;
+  }
+
+  // Remove hash fragments (e.g., #600x400 from remark-image-size)
+  const cleanUrl = imageUrl.split('#')[0];
+
+  // External URLs - return as is
+  if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) {
+    return cleanUrl;
+  }
+
+  // Absolute paths (public folder or already processed mdx-images)
+  if (cleanUrl.startsWith('/')) {
+    return `${domain}${cleanUrl}`;
+  }
+
+  // For relative paths, try to find the processed image in /mdx-images/
+  // Images get hashed during build, so we need to find the hashed version
+  if (cleanUrl.startsWith('./')) {
+    const {readdir} = await import('fs/promises');
+    const path = await import('path');
+
+    // Extract the base filename without path
+    const filename = path.basename(cleanUrl);
+    const nameWithoutExt = filename.replace(path.extname(filename), '');
+
+    try {
+      // Look for the hashed version in public/mdx-images/
+      const mdxImagesDir = path.join(process.cwd(), 'public', 'mdx-images');
+      const files = await readdir(mdxImagesDir);
+
+      // Find a file that starts with the same base name
+      const hashedFile = files.find(f => f.startsWith(nameWithoutExt + '-'));
+
+      if (hashedFile) {
+        return `${domain}/mdx-images/${hashedFile}`;
+      }
+    } catch (e) {
+      // If we can't find the hashed version, fall through to default behavior
+    }
+
+    // Fallback: resolve relative to page directory
+    const relativePath = cleanUrl.slice(2);
+    const pageDir = pagePath.join('/');
+    return `${domain}/${pageDir}/${relativePath}`;
+  }
+
+  // Default case: treat as relative to page
+  const pageDir = pagePath.join('/');
+  return `${domain}/${pageDir}/${cleanUrl}`;
+}
+
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const params = await props.params;
   const domain = isDeveloperDocs
@@ -208,12 +267,8 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   let customCanonicalTag: string = '';
   let description =
     'Self-hosted and cloud-based application performance monitoring & error tracking that helps software teams see clearer, solve quicker, and learn continuously.';
-  // show og image on the home page only
-  const images =
-    ((await props.params).path ?? []).length === 0
-      ? [{url: `${previewDomain ?? domain}/og.png`, width: 1200, height: 630}]
-      : [];
 
+  let ogImageUrl: string | null = null;
   let noindex: undefined | boolean = undefined;
 
   const rootNode = await getDocsRootNode();
@@ -236,8 +291,45 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
       }
 
       noindex = pageNode.frontmatter.noindex;
+
+      // Three-tier OG image priority:
+      // 1. Manual override via og_image frontmatter
+      if (pageNode.frontmatter.og_image) {
+        ogImageUrl = await resolveOgImageUrl(
+          pageNode.frontmatter.og_image,
+          previewDomain ?? domain,
+          params.path
+        );
+      }
+
+      // 2. First image from page content (if no manual override)
+      if (!ogImageUrl) {
+        try {
+          const doc = await getFileBySlugWithCache(
+            isDeveloperDocs
+              ? `develop-docs/${params.path.join('/')}`
+              : `docs/${pageNode.path}`
+          );
+          if (doc.firstImage) {
+            ogImageUrl = await resolveOgImageUrl(
+              doc.firstImage,
+              previewDomain ?? domain,
+              params.path
+            );
+          }
+        } catch (e) {
+          // If we can't load the doc, just continue without the first image
+        }
+      }
     }
   }
+
+  // 3. Default fallback
+  if (!ogImageUrl) {
+    ogImageUrl = `${previewDomain ?? domain}/og.png`;
+  }
+
+  const images = [{url: ogImageUrl, width: 1200, height: 630}];
 
   const canonical = customCanonicalTag
     ? domain + customCanonicalTag
