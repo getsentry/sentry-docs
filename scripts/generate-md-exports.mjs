@@ -6,7 +6,7 @@ import {selectAll} from 'hast-util-select';
 import {createHash} from 'node:crypto';
 import {createReadStream, createWriteStream, existsSync} from 'node:fs';
 import {mkdir, opendir, readFile, rm, writeFile} from 'node:fs/promises';
-// import {cpus} from 'node:os';
+import {cpus} from 'node:os';
 import * as path from 'node:path';
 import {compose, Readable} from 'node:stream';
 import {text} from 'node:stream/consumers';
@@ -95,8 +95,8 @@ async function createWork() {
     await mkdir(CACHE_DIR, {recursive: true});
   }
 
-  // On a 16-core machine, 8 workers were optimal (and slightly faster than 16)
-  const numWorkers = 2;
+  // We are currently on Enhanced Builds in Vercel which gives us 8 cores, here we'll use half.
+  const numWorkers = Math.max(Math.floor(cpus().length / 2), 2);
   const workerTasks = new Array(numWorkers).fill(null).map(() => []);
 
   let existingFilesOnR2 = null;
