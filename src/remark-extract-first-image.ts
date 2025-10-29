@@ -25,6 +25,7 @@ export default function remarkExtractFirstImage(options: {exportRef: string[]}) 
         firstImage = node.url;
         return false; // Stop visiting once we find the first image
       }
+      return undefined;
     });
 
     // Export the first image URL if found

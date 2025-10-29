@@ -45,13 +45,13 @@ import {isNotNil} from './utils';
 import {isVersioned, VERSION_INDICATOR} from './versioning';
 
 type SlugFile = {
-  firstImage?: string;
   frontMatter: Platform & {slug: string};
   matter: Omit<matter.GrayMatterFile<string>, 'data'> & {
     data: Platform;
   };
   mdxSource: string;
   toc: TocNode[];
+  firstImage?: string;
 };
 
 const root = process.cwd();
