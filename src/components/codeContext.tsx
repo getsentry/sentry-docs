@@ -22,6 +22,7 @@ type ProjectCodeKeywords = {
   PUBLIC_KEY: string;
   SECRET_KEY: string;
   UNREAL_URL: string;
+  VERCEL_LOG_DRAIN_URL: string;
   title: string;
 };
 
@@ -90,6 +91,7 @@ export const DEFAULTS: CodeKeywords = {
       UNREAL_URL: 'https://o0.ingest.sentry.io/api/0/unreal/examplePublicKey/',
       OTLP_TRACES_URL: 'https://o0.ingest.sentry.io/api/0/integration/otlp/v1/traces',
       OTLP_LOGS_URL: 'https://o0.ingest.sentry.io/api/0/integration/otlp/v1/logs',
+      VERCEL_LOG_DRAIN_URL: 'https://o0.ingest.sentry.io/api/0/integration/vercel/logs/',
       title: `example-org / example-project`,
     },
   ],
@@ -139,6 +141,10 @@ const formatMinidumpURL = ({scheme, host, pathname, publicKey}: Dsn) => {
 
 const formatUnrealEngineURL = ({scheme, host, pathname, publicKey}: Dsn) => {
   return `${scheme}${host}/api${pathname}/unreal/${publicKey}/`;
+};
+
+const formatVercelLogDrainUrl = ({scheme, host, pathname}: Dsn) => {
+  return `${scheme}${host}/api${pathname}/integration/vercel/logs/`;
 };
 
 const formatOtlpTracesUrl = ({scheme, host, pathname}: Dsn) => {
@@ -241,6 +247,7 @@ export async function fetchCodeKeywords(): Promise<CodeKeywords> {
           parsedDsn.host ?? `o${project.organizationId}.ingest.sentry.io`,
         MINIDUMP_URL: formatMinidumpURL(parsedDsn),
         UNREAL_URL: formatUnrealEngineURL(parsedDsn),
+        VERCEL_LOG_DRAIN_URL: formatVercelLogDrainUrl(parsedDsn),
         OTLP_TRACES_URL: formatOtlpTracesUrl(parsedDsn),
         OTLP_LOGS_URL: formatOtlpLogsUrl(parsedDsn),
         title: `${project.organizationSlug} / ${project.projectSlug}`,
