@@ -6,28 +6,28 @@ description: See how Size Analysis surfaces trends for your iOS builds.
 
 TODO: ADD SOME PICS
 
-Size Analysis Insights point out how iOS app can reduce its size. They spot patterns like duplicate files, oversized media, or unneeded assets, and list exactly what to fix along with the estimated size savings.
+Size Analysis Insights point out how opportunities to reduce your iOS app's size. They spot patterns like duplicate files, oversized media, or unneeded assets, and list exactly what to fix along with the estimated size savings.
 
 ## iOS Insights
 
-Below are a list of available insights for iOS builds.
+Below are a list of available insights for iOS builds, followed by more details about each insight:
 
-| Insight                                                     | What it catches                                                                                 |
+| Insight                                                     | What it flags                                                                                   |
 | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| [Strip debug symbols](#strip-debug-symbols)                 | Binaries that include removable debug sections or symbols.                                      |
-| [Duplicate files](#duplicate-files)                         | Identical files where the extras can be removed.                                                |
-| [Image optimization](#image-optimization)                   | Oversized PNG/JPEG/HEIC assets and recommends minifying or converting to HEIC.                  |
-| [Alternate icon optimization](#alternate-icon-optimization) | Alternate app icons that can be downscaled and recompressed.                                    |
-| [Loose images](#loose-images)                               | Scaled @1x/@2x/@3x images that should be moved into asset catalogs to qualify for app thinning. |
-| [Small files](#small-files)                                 | Tiny files wasting space because of the 4KB filesystem block size.                              |
-| [Unnecessary files](#unnecessary-files)                     | Docs, scripts, configs, or other build leftovers in the bundle.                                 |
-| [Large videos](#large-videos)                               | Video files that are a good candidate for on-demand delivery.                                   |
-| [Localized strings](#localized-strings)                     | Localized strings that can use a more efficient format.                                         |
-| [Minify localized strings](#minify-localized-strings)       | Localized string files that contain removable whitespace and comments.                          |
-| [Main binary export metadata](#main-binary-export-metadata) | Binaries that include removable export tries.                                                   |
-| [Hermes debug info (RN only)](#hermes-debug-info-rn-only)   | Hermes bytecode files that include removable debug info.                                        |
+| [Strip Debug Symbols](#strip-debug-symbols)                 | Binaries that include removable debug sections or symbols.                                      |
+| [Duplicate Files](#duplicate-files)                         | Identical files where the extras can be removed.                                                |
+| [Image Optimization](#image-optimization)                   | Oversized PNG/JPEG/HEIC assets and recommends minifying or converting to HEIC.                  |
+| [Alternate Icon Optimization](#alternate-icon-optimization) | Alternate app icons that can be downscaled and recompressed.                                    |
+| [Loose Images](#loose-images)                               | Scaled @1x/@2x/@3x images that should be moved into asset catalogs to qualify for app thinning. |
+| [Small Files](#small-files)                                 | Tiny files wasting space because of the 4KB filesystem block size.                              |
+| [Unnecessary Files](#unnecessary-files)                     | Docs, scripts, configs, or other build leftovers in the bundle.                                 |
+| [Large Videos](#large-videos)                               | Video files that are a good candidate for on-demand delivery.                                   |
+| [Localized Strings](#localized-strings)                     | Localized strings that can use a more efficient format.                                         |
+| [Minify Localized Strings](#minify-localized-strings)       | Localized string files that contain removable whitespace and comments.                          |
+| [Main Binary Export Metadata](#main-binary-export-metadata) | Binaries that include removable export tries.                                                   |
+| [Hermes Debug Info (RN Only)](#hermes-debug-info-rn-only)   | Hermes bytecode files that include removable debug info.                                        |
 
-### Strip debug symbols
+### Strip Debug Symbols
 
 **What it is**: Debug info and symbols are only used during development and should not be shipped to users.
 
@@ -83,13 +83,13 @@ ${DWARF_DSYM_FOLDER_PATH}/${EXECUTABLE_NAME}.app.dSYM/\
 Contents/Resources/DWARF/${EXECUTABLE_NAME}
 ```
 
-### Duplicate files
+### Duplicate Files
 
 **What it is**: Finds identical files bundled more than once.
 
 **How to fix**: Use dynamic frameworks to share assets between multiple targets. Here's an [example a post](https://www.emergetools.com/blog/posts/make-your-ios-app-smaller-with-dynamic-frameworks) walking through how to do this for an SPM project.
 
-### Image optimization
+### Image Optimization
 
 **What it is**: Surfaces PNG, JPEG, or HEIC assets that can be minified or converted.
 
@@ -116,7 +116,7 @@ Download ImageOptim for macOS, drag your images into the window, and let it reco
 
 Open the image in Preview, choose `File → Export`, pick `HEIC`, and save. Replace the original file and update any references.
 
-### Alternate icon optimization
+### Alternate Icon Optimization
 
 **What it is**: Alternate app icons are only ever shown on the home screen which requires 180x180 pixels. These images can be downsized to 180x180 and then upsampled back to 1024x1024 to reduce size.
 
@@ -187,37 +187,37 @@ optimize_icon() {
 }
 ```
 
-### Loose images
+### Loose Images
 
 **What it is**: Finds scaled @1x/@2x/@3x images stored outside of asset catalogs. This prevents app thinning from removing variants not needed for the user's device.
 
 **How to fix**: Move each image set into an asset catalog in Xcode.
 
-### Small files
+### Small Files
 
 **What it is**: Each file on iOS takes up a minimum of 4KB due to the filesystem's block size. Files smaller than this limit will take up more storage on disk than expected. Every file inside the app also has code signature overhead which can add up with many files.
 
 **How to fix**: Group small files into asset catalogs, archives, or databases so multiple entries share the same file on disk.
 
-### Unnecessary files
+### Unnecessary Files
 
 **What it is**: Files such as READMEs, docs, scripts, configs, and similar build leftovers do not need to be included in the app bundle.
 
 **How to fix**: Drop these files from the Copy Bundle Resources phase or exclude them with `EXCLUDED_SOURCE_FILE_NAMES` before archiving.
 
-### Large videos
+### Large Videos
 
 **What it is**: Video assets larger than 10 MB are not recommended to be bundled in your app. Often times videos are only shown to a subset of users and could instead be shown on-demand.
 
 **How to fix**: host and stream the content instead of bundling it, or re-encode them with H.264 or HEVC at a lower bitrate or resolution.
 
-### Localized strings
+### Localized Strings
 
 **What it is**: Xcode localized strings files use a verbose dictionary format by default.
 
 **How to fix**: Sentry's SmallStrings helper library is a more efficient method of encoding translations.
 
-### Minify localized strings
+### Minify Localized Strings
 
 **What it is**: Xcode localized strings files often include translator comments, whitespace, binary encodings, and other non-runtime text that can be safely stripped.
 
@@ -267,7 +267,7 @@ for root, _, files in os.walk(os.environ["BUILT_PRODUCTS_DIR"], followlinks=True
 
 This script strips comments and blank lines after the files are generated, so keep the original annotated copies under version control for translators.
 
-### Main binary export metadata
+### Main Binary Export Metadata
 
 **What it is**: Binaries that act as entrypoints for your app, such as your main app binary or watchOS app binary, are not linked against by other binaries. This means the export trie information is unnecessary and can be removed.
 
@@ -282,7 +282,7 @@ This script strips comments and blank lines after the files are generated, so ke
 
 Xcode now limits the export trie to just that allowlist.
 
-### Hermes debug info (React Native)
+### Hermes Debug Info (React Native)
 
 **What it is**: Debug information is only needed during development and should not be shipped to users.
 
