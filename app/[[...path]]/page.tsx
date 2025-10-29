@@ -195,11 +195,7 @@ function formatCanonicalTag(tag: string) {
 }
 
 // Helper function to resolve OG image URLs
-async function resolveOgImageUrl(
-  imageUrl: string | undefined,
-  domain: string,
-  pagePath: string[]
-): Promise<string | null> {
+function resolveOgImageUrl(imageUrl: string | undefined, domain: string): string | null {
   if (!imageUrl) {
     return null;
   }
@@ -212,63 +208,14 @@ async function resolveOgImageUrl(
     return cleanUrl;
   }
 
-  // Absolute paths (public folder or already processed mdx-images)
+  // Absolute paths (should already be the hashed path like /mdx-images/overview-HASH.png)
   if (cleanUrl.startsWith('/')) {
     return `${domain}${cleanUrl}`;
   }
 
-  // For relative paths, try to find the processed image in /mdx-images/
-  // Images get hashed during build, so we need to find the hashed version
-  if (cleanUrl.startsWith('./')) {
-    const {readdir, access} = await import('fs/promises');
-    const path = await import('path');
-
-    // Extract the base filename without path
-    const filename = path.basename(cleanUrl);
-    const nameWithoutExt = filename.replace(path.extname(filename), '');
-
-    try {
-      // Look for the hashed version in public/mdx-images/
-      const mdxImagesDir = path.join(process.cwd(), 'public', 'mdx-images');
-
-      // Check if directory exists first
-      try {
-        await access(mdxImagesDir);
-      } catch (accessError) {
-        // eslint-disable-next-line no-console
-        console.warn('mdx-images directory not accessible:', mdxImagesDir, accessError);
-        return null; // Return null to fall back to default OG image
-      }
-
-      const files = await readdir(mdxImagesDir);
-
-      // Find a file that starts with the same base name
-      const hashedFile = files.find(f => f.startsWith(nameWithoutExt + '-'));
-
-      if (hashedFile) {
-        return `${domain}/mdx-images/${hashedFile}`;
-      }
-
-      // eslint-disable-next-line no-console
-      console.warn(
-        'No hashed image found for:',
-        nameWithoutExt,
-        'in files:',
-        files.filter(f => f.includes(nameWithoutExt))
-      );
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error('Error finding hashed image:', e);
-      return null; // Return null to fall back to default OG image
-    }
-
-    // If we get here, we couldn't find the image - return null to use default
-    return null;
-  }
-
-  // Default case: treat as relative to page
-  const pageDir = pagePath.join('/');
-  return `${domain}/${pageDir}/${cleanUrl}`;
+  // If we still have a relative path here, it means the hashing didn't work
+  // Return null to fall back to default OG image
+  return null;
 }
 
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
@@ -313,10 +260,9 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
       // Three-tier OG image priority:
       // 1. Manual override via og_image frontmatter
       if (pageNode.frontmatter.og_image) {
-        ogImageUrl = await resolveOgImageUrl(
+        ogImageUrl = resolveOgImageUrl(
           pageNode.frontmatter.og_image,
-          previewDomain ?? domain,
-          params.path
+          previewDomain ?? domain
         );
       }
 
@@ -329,11 +275,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
               : `docs/${pageNode.path}`
           );
           if (doc.firstImage) {
-            ogImageUrl = await resolveOgImageUrl(
-              doc.firstImage,
-              previewDomain ?? domain,
-              params.path
-            );
+            ogImageUrl = resolveOgImageUrl(doc.firstImage, previewDomain ?? domain);
           }
         } catch (e) {
           // If we can't load the doc, just continue without the first image

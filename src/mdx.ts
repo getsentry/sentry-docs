@@ -543,8 +543,6 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   } catch (e) {
     // If we can't create the directory (e.g., read-only filesystem during static generation),
     // continue anyway - images should already exist from build time
-    // eslint-disable-next-line no-console
-    console.warn('Could not create mdx-images directory:', outdir, (e as Error).message);
   }
 
   // If the file contains content that depends on the Release Registry (such as an SDK's latest version), avoid using the cache for that file, i.e. always rebuild it.
@@ -697,6 +695,9 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       // Set write to true so that esbuild will output the files.
       options.write = true;
 
+      // Enable metafile to track input -> output file mappings
+      options.metafile = true;
+
       return options;
     },
   }).catch(e => {
@@ -712,11 +713,38 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     mergedFrontmatter = {...frontmatter, ...configFrontmatter};
   }
 
+  // Map the first image to its hashed output filename using esbuild's metafile
+  let firstImageHashed: string | undefined;
+  if (firstImageRef[0] && result.metafile) {
+    const firstImagePath = firstImageRef[0];
+
+    // Find the output file that corresponds to this input image
+    for (const [outputPath, outputInfo] of Object.entries(result.metafile.outputs)) {
+      if (outputInfo.inputs) {
+        for (const inputPath of Object.keys(outputInfo.inputs)) {
+          // Check if this input matches our first image
+          // Handle both absolute and relative paths
+          if (
+            inputPath.endsWith(firstImagePath) ||
+            inputPath.endsWith(firstImagePath.replace('./', ''))
+          ) {
+            // Extract just the filename from the output path
+            firstImageHashed = `/mdx-images/${path.basename(outputPath)}`;
+            break;
+          }
+        }
+      }
+      if (firstImageHashed) {
+        break;
+      }
+    }
+  }
+
   const resultObj: SlugFile = {
     matter: result.matter,
     mdxSource: code,
     toc,
-    firstImage: firstImageRef[0],
+    firstImage: firstImageHashed || firstImageRef[0],
     frontMatter: {
       ...mergedFrontmatter,
       slug,
