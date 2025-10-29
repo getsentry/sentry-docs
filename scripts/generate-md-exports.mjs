@@ -6,7 +6,7 @@ import {selectAll} from 'hast-util-select';
 import {createHash} from 'node:crypto';
 import {createReadStream, createWriteStream, existsSync} from 'node:fs';
 import {mkdir, opendir, readFile, rm, writeFile} from 'node:fs/promises';
-import {cpus} from 'node:os';
+// import {cpus} from 'node:os';
 import * as path from 'node:path';
 import {compose, Readable} from 'node:stream';
 import {text} from 'node:stream/consumers';
@@ -96,7 +96,7 @@ async function createWork() {
   }
 
   // On a 16-core machine, 8 workers were optimal (and slightly faster than 16)
-  const numWorkers = Math.max(Math.floor(cpus().length / 2), 2);
+  const numWorkers = 2;
   const workerTasks = new Array(numWorkers).fill(null).map(() => []);
 
   let existingFilesOnR2 = null;
