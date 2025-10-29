@@ -95,8 +95,8 @@ async function createWork() {
     await mkdir(CACHE_DIR, {recursive: true});
   }
 
-  // We are currently on Enhanced Builds in Vercel which gives us 8 cores, here we'll use half.
-  const numWorkers = Math.max(Math.floor(cpus().length / 2), 2);
+  // We are currently on Enhanced Builds in Vercel which gives us 8 cores, lets try 75%
+  const numWorkers = Math.max(Math.floor(cpus().length * 0.75), 2);
   const workerTasks = new Array(numWorkers).fill(null).map(() => []);
 
   let existingFilesOnR2 = null;
