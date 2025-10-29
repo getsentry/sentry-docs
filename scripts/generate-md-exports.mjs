@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// testing cache
 /* eslint-disable no-console */
 import {ListObjectsV2Command, PutObjectCommand, S3Client} from '@aws-sdk/client-s3';
 import imgLinks from '@pondorasti/remark-img-links';
