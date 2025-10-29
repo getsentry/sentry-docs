@@ -715,11 +715,14 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
 
   // Map the first image to its hashed output filename using esbuild's metafile
   let firstImageHashed: string | undefined;
-  if (firstImageRef[0] && result.metafile) {
+  if (firstImageRef[0] && (result as any).metafile) {
     const firstImagePath = firstImageRef[0];
+    const metafile = (result as any).metafile as {
+      outputs: Record<string, {inputs?: Record<string, any>}>;
+    };
 
     // Find the output file that corresponds to this input image
-    for (const [outputPath, outputInfo] of Object.entries(result.metafile.outputs)) {
+    for (const [outputPath, outputInfo] of Object.entries(metafile.outputs)) {
       if (outputInfo.inputs) {
         for (const inputPath of Object.keys(outputInfo.inputs)) {
           // Check if this input matches our first image
