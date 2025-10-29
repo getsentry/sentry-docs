@@ -1,10 +1,16 @@
 The Gradle plugin will automatically detect your [build's metadata](#upload-metadata) and include it in the upload. If for any reason you need to override values, you can use the `vcsInfo` extension.
 
-1. Configure the [Sentry Android Gradle plugin](/platforms/android/configuration/gradle/)
+1. Configure the [Sentry Android Gradle plugin](/platforms/android/configuration/gradle/) with at least version `6.0.0-alpha.6`
 
-2. Set up `SENTRY_AUTH_TOKEN` in your environment (you can generate a token [here](https://sentry.sentry.io/settings/auth-tokens/))
+2. Set the auth token as an environment variable to be used when running your release build.
 
-3. Make sure to use at least version `6.0.0-alpha.6` or higher in your `build.gradle.kts`:
+<OrgAuthTokenNote />
+
+```bash
+export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+3. Enable uploading for size analysis for CI builds.
 
    ```kotlin {filename:build.gradle.kts}
    sentry {
@@ -14,8 +20,6 @@ The Gradle plugin will automatically detect your [build's metadata](#upload-meta
    }
    ```
 
-   Or for `build.gradle`:
-
    ```groovy {filename:build.gradle}
    sentry {
      sizeAnalysis {
@@ -24,13 +28,13 @@ The Gradle plugin will automatically detect your [build's metadata](#upload-meta
    }
    ```
 
-_TODO: the text for #3 doesn't make sense given the code snippet. Shouldn't the version be in #1?_
-
 4. Invoke the following Gradle tasks to build your app and trigger the upload.
 
-   ```bash
+   ```bash {filename:aab}
    ./gradlew bundleRelease
-   # or
+   ```
+   
+   ```bash {filename:apk}
    ./gradlew assembleRelease
    ```
 
@@ -62,8 +66,6 @@ sentry {
   }
 }
 ```
-
-Or for `build.gradle`:
 
 ```groovy {filename:build.gradle}
 sentry {

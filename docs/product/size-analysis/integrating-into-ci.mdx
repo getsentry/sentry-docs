@@ -1,14 +1,12 @@
 ---
 title: Integrating into CI
 sidebar_order: 40
-description: Set up the GitHub integration to receive size change notifications as PR comments and status checks.
+description: Set up the GitHub integration to receive size change notifications as Github status checks.
 ---
-
-TODO: THIS IS SLOP
 
 <Include name="size-analysis/github-only" />
 
-The GitHub integration brings Size Analysis directly into your pull request workflow by posting size change summaries as PR comments and status checks.
+The GitHub integration brings Size Analysis directly into your pull request workflow by adding status checks for size analysis.
 
 TODO: something like a ##benefits?
 
@@ -16,23 +14,15 @@ TODO: something like a ##benefits?
 
 ### Install the Sentry GitHub App
 
-The GitHub integration requires the Sentry GitHub App to be installed on your repository:
+Install the Sentry Github App by following the installation instructions in the [GitHub integration documentation](https://docs.sentry.io/organization/integrations/source-code-mgmt/github/).
 
-1. Navigate to **Organization Settings > Integrations** in [sentry.io](https://sentry.io)
-2. Find the **GitHub** integration and click **Install**
-3. Follow the prompts to authorize the app for your GitHub organization
-4. Select the repositories where you want to enable Size Analysis
+### Upload builds
 
-For detailed installation instructions, see the [GitHub integration documentation](https://docs.sentry.io/organization/integrations/source-code-mgmt/github/).
+1. Set up size analysis by following the guide for [iOS](/platforms/apple/guides/ios/size-analysis/) or [Android](/platforms/android/size-analysis/).
 
-### Configure Repository Access
+2. Ensure all base branch builds are uploading builds.
 
-Ensure the Sentry GitHub App has access to the repositories where you're uploading builds:
-
-1. Go to your GitHub organization settings
-2. Navigate to **Integrations > Applications**
-3. Click on **Sentry**
-4. Under **Repository access**, grant access to your repositories
+3. Ensure all PR builds are uploading builds.
 
 ## How It Works
 
@@ -45,56 +35,21 @@ Once the integration is set up and you're uploading builds from your CI:
 3. **Comparison**: Sentry compares the two builds
 4. **PR comment**: A comment is posted with the size change summary
 
-### Comment Content
-
-The PR comment includes:
-
-- **Total size change**: How much the app grew or shrank (for example, `+142 KB` or `-23 KB`)
-- **Percentage change**: The relative impact (for example, `+2.3%`)
-- **Component highlights**: The components that changed the most
-- **Link to details**: A link to view the full comparison in [sentry.io](https://sentry.io)
-
 ### Example Status Check
 
-```
-## 📊 Size Analysis
-
-**App size changed by +142 KB (+2.3%)**
-
-### Largest Changes
-- `Frameworks/MyFramework.framework`: +98 KB
-- `Resources/Assets.car`: +52 KB
-- `Binary`: -8 KB
-
-[View detailed comparison →](https://sentry.io/...)
-```
-
-## Requirements
-
-For the GitHub integration to work with Size Analysis:
-
-1. **GitHub App installed**: The Sentry GitHub App must be installed on your repository
-2. **Builds from PRs**: You must upload builds from pull request CI runs
-3. **Base branch builds**: You must also upload builds from your main/base branch
-4. **Metadata**: Your build uploads must include PR metadata (auto-detected in GitHub Actions)
+TODO: Add image here of status check example
 
 ## Troubleshooting
 
-### Not Seeing PR Comments?
+### Not Seeing status checks ?
 
 Check that:
 
 - The Sentry GitHub App is installed and has access to your repository
-- You're uploading builds from both PR branches and the base branch
-- Your CI is running on pull request events
-- Ensure that you are authenticated by [following these steps](https://docs.sentry.io/cli/configuration/#to-authenticate-manually).
+- You're correctly uploading builds for size analysis from all base branch builds
+- You're correctly uploading builds for size analysis from the PR branch.
 - Your builds that you want to compare have the same build configuration (for example, both are `Release` builds)
-
-### Comments Not Updating?
-
-- Make sure you're uploading a new build after each code change
-- Check that the build configuration matches between PR and base builds
-- Verify that the PR metadata (PR number, base SHA) is being detected correctly
+- You're builds contain all the required metadata. TODO link to required metadat
 
 ### Missing Base Build?
 
@@ -102,16 +57,6 @@ The first time you set up Size Analysis, your main branch may not have any build
 
 1. Merge a PR or push to your main branch to trigger a build
 2. Future PRs will be able to compare against this base build
-
-## Permissions
-
-The GitHub App requires these permissions:
-
-- **Read access to code**: To identify the repository and branches
-- **Write access to pull requests**: To post comments on PRs
-- **Write access to checks**: To create status checks (coming soon)
-
-These permissions are requested during the GitHub App installation flow.
 
 ## Next Steps
 
