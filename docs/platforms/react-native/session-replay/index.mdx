@@ -150,6 +150,31 @@ If you encounter any data not being redacted with the default settings, please l
 
 </Alert>
 
+### Screenshot Strategy (Android only)
+
+The SDK offers two strategies for recording replays on Android: `PixelCopy` and `Canvas`.
+
+`PixelCopy` uses Android's [PixelCopy](https://developer.android.com/reference/android/view/PixelCopy) API to capture screenshots of the current screen and takes a snapshot of the view hierarchy within the same frame. The view hierarchy is then used to find the position of controls such as text boxes, images, labels, and buttons and mask them with a block that's drawn over these controls. This strategy has slightly lower performance overhead but may result in masking misalignments due to the asynchronous nature of the PixelCopy API. We recommend using this strategy for apps that do not have strict PII requirements or do not require masking functionality.
+
+`Canvas` uses Android's custom [Canvas](https://developer.android.com/reference/android/graphics/Canvas) API to redraw the screen contents onto a bitmap, masking all `drawText` and `drawBitmap` operations in the process to produce a masked screenshot. This strategy has a slightly higher performance overhead but provides more reliable masking. We recommend using this strategy for apps with strict PII requirements.
+
+<Alert level="warning">
+
+The `Canvas` screenshot strategy is currently experimental and does **not** support any masking options. When the screenshot strategy is set to `Canvas`, it will **always** mask all texts, input fields and images, disregarding any masking options set. If you need more flexibility with masking, switch back to `PixelCopy`.
+
+</Alert>
+
+You can change the strategy as follows:
+
+```javascript {tabTitle:Mobile}
+integrations: [
+  // You can pass options to the mobileReplayIntegration function during init:
+  Sentry.mobileReplayIntegration({
+    screenshotStrategy: 'canvas' // or 'pixelCopy' (default)
+  }),
+]
+```
+
 ## React Component Names
 
 Sentry helps you capture your React components and unlock additional insights in your application. You can set it up to use React component names.
