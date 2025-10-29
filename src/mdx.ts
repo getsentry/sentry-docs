@@ -112,6 +112,8 @@ async function getRegistryHashWithRetry(
  */
 function getRegistryHash(): Promise<string> {
   if (!cachedRegistryHash) {
+    // eslint-disable-next-line no-console
+    console.info('Fetching registry hash for the first time in this worker');
     cachedRegistryHash = getRegistryHashWithRetry().catch(err => {
       // Reset cache on error so next call will retry
       cachedRegistryHash = null;
@@ -611,6 +613,10 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       try {
         const registryHash = await getRegistryHash();
         cacheKey = `${sourceHash}-${registryHash}`;
+        // eslint-disable-next-line no-console
+        console.info(
+          `Using registry-aware cache for ${sourcePath} (registry hash: ${registryHash.slice(0, 8)}...)`
+        );
       } catch (err) {
         // If we can't get registry hash, skip cache for this file
         // eslint-disable-next-line no-console
