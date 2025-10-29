@@ -121,23 +121,21 @@ When the timeout expires or the cache file hits the size limit, the BatchProcess
 
 ### 3. DoubleRotatingBuffer
 
-SDKs should only consider implementing this option when options 1 or 2 are insufficient to prevent data loss within their ecosystem. We recommend this option only if SDKs are unable to reliably detect sudden process terminations or to consistently store envelopes to disk during such terminations, as can occur with Android or Apple devices.
+SDKs should only consider implementing this option when options [1](#1-flush-all-data) or [2](#2-file-stream-cache) are insufficient to prevent data loss within their ecosystem. We recommend this option only if SDKs are unable to reliably detect sudden process terminations or to consistently store envelopes to disk during such terminations, as can occur with Android or Apple devices.
 
 The BatchProcessor uses two buffers to minimize data loss in the event of an abnormal process termination:
-* **Crash-safe list**: A list stored in a crash-safe space to prevent data loss during detectable abnormal process terminations.
-* **Async IO cache**: When a process terminates abruptly, the crash-safe list loses all its elements. Therefore, the BatchProcessor uses a second buffer, the async IO cache, that stores elements to disk on a background thread to avoid blocking the calling thread.
+* **Crash-Safe List**: A list stored in a crash-safe space to prevent data loss during detectable abnormal process terminations.
+* **Async IO Cache**: When a process terminates without the SDK being able to detect it, the crash-safe list loses all its elements. Therefore, the BatchProcessor uses a second buffer, the async IO cache, that stores elements to disk on a background thread to avoid blocking the calling thread, which ensures minimal data loss when such terminations occur.
 
 Furthermore, the BatchProcessor MUST prevent data loss when flushing. Therefore, it uses a double-buffering solution, meaning the two buffers alternate. The crash-safe list has two lists, and the async IO buffer has two files. When list1 is full, the BatchProcessor stores items in list2 until it successfully stores items in list1 to disk as an envelope. Then it can delete items in list1. The same applies to the IO buffer.
 
-When the SDK detects an abnormal process termination, it stores items in the crash-safe list to disk. The next time the SDK starts, it sends these items. When an undetectable process termination occurs, the SDK loses items from the crash-safe list that have not yet been stored in the async IO buffer, which we intentionally accept rather than blocking the calling thread. Furthermore, the SDK must deduplicate items in the stored crash-safe list and the IO buffer by item ID to avoid sending duplicates.
-
 #### BatchProcessor Files
 
-The SDK SHOULD store the BatchProcessor files in a folder that is a sibling of the `envelopes` or `replay` folder, named `batch-processor`. This folder is scoped per DSN, so SDKs ensure not mixing up data for different DSNs. The `batch-processor` folder SHOULD contain the following files:
+The SDK SHOULD store the BatchProcessor files in a folder that is a sibling of the `envelopes` or `replay` folder, named `batch-processor`. This folder is scoped per DSN, so SDKs ensure not mixing up data for different DSNs. The `batch-processor` folder MAY contain the following files:
 
 - `file-buffer1` and `file-buffer2` - The active IO buffers for the BatchProcessor.
 - `detected-termination-x` - The file containing items from a previous detected abnormal termination.
-- `envelope-to-flush-x` - The envelope that the BatchProcessor is about to move to the envelopes cache folder, so the SDK can send it to Sentry.
+- `envelope-to-flush-x` - The envelope that the BatchProcessor is about to move to the envelopes cache folder, so the SDK can send it to Sentry, where `x` is the an increasing index of the file starting from 0.
 
 
 #### Receiving Items
@@ -149,19 +147,19 @@ The BatchProcessor has two lists `crash-safe-list1` and `crash-safe-list2` and t
 
 #### Flushing
 
-When the `crash-safe-list1` exceeds the [above described](#specification) 1MiB in size, the BatchProcessor performs the following flushing steps:
+When the `crash-safe-list1` exceeds the [above described](#specification) 1MiB in size or the timeout exceeds, the BatchProcessor performs the following flushing steps:
 
-1. Store new incoming items in `crash-safe-list2` and `file-buffer2`.
-2. Put the items of `crash-safe-list1` into an envelope named `envelope-to-flush-x`, where `x` is the an increasing index of the file starting from 0, in the same folder as the BatchProcessor files.
+1. Store new incoming items to the `crash-safe-list2` and `file-buffer2`.
+2. Put the items of `crash-safe-list1` into an envelope named `envelope-to-flush-x`.
 3. Delete the items in `crash-safe-list1` and `file-buffer1`.
-4. Move the envelope to the envelopes cache folder.
+4. Move the `envelope-to-flush-x` to the envelopes cache folder, in which all the other envelopes are stored, so the SDK can send it to Sentry.
 
-The BatchProcessor stores the envelope-to-flush not directly in the envelope cache folder because, if an abnormal process termination occurs before deleting the items `crash-safe-list1` and `file-buffer1`, the SDKs would send duplicate items.
+The BatchProcessor stores the `envelope-to-flush-x` not directly in the envelope cache folder because, if an abnormal process termination occurs before deleting the items `crash-safe-list1` and `file-buffer1`, the SDKs might send duplicate items.
 
 
 #### Abnormal Process Termination
 
-When SDKs detect an abnormal process termination, they MUST write the items in both `crash-safe-list1` and `crash-safe-list2` to the `detected-abnormal-termination-x` file where `x` is the an increasing index of the file starting from 0.
+When SDKs detect an abnormal process termination, they MUST write the items in both `crash-safe-list1` and `crash-safe-list2` to the `detected-termination-x` file where `x` is the an increasing index of the file starting from 0.
 
 When the process terminates abnormally and the SDKs can't detect it, the SDKs lose items in the crash safe lists, which we accept over blocking the calling thread that could be the main thread.
 
