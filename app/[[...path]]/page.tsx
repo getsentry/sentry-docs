@@ -220,7 +220,7 @@ async function resolveOgImageUrl(
   // For relative paths, try to find the processed image in /mdx-images/
   // Images get hashed during build, so we need to find the hashed version
   if (cleanUrl.startsWith('./')) {
-    const {readdir} = await import('fs/promises');
+    const {readdir, access} = await import('fs/promises');
     const path = await import('path');
 
     // Extract the base filename without path
@@ -230,6 +230,16 @@ async function resolveOgImageUrl(
     try {
       // Look for the hashed version in public/mdx-images/
       const mdxImagesDir = path.join(process.cwd(), 'public', 'mdx-images');
+
+      // Check if directory exists first
+      try {
+        await access(mdxImagesDir);
+      } catch (accessError) {
+        // eslint-disable-next-line no-console
+        console.warn('mdx-images directory not accessible:', mdxImagesDir, accessError);
+        return null; // Return null to fall back to default OG image
+      }
+
       const files = await readdir(mdxImagesDir);
 
       // Find a file that starts with the same base name
@@ -238,14 +248,22 @@ async function resolveOgImageUrl(
       if (hashedFile) {
         return `${domain}/mdx-images/${hashedFile}`;
       }
+
+      // eslint-disable-next-line no-console
+      console.warn(
+        'No hashed image found for:',
+        nameWithoutExt,
+        'in files:',
+        files.filter(f => f.includes(nameWithoutExt))
+      );
     } catch (e) {
-      // If we can't find the hashed version, fall through to default behavior
+      // eslint-disable-next-line no-console
+      console.error('Error finding hashed image:', e);
+      return null; // Return null to fall back to default OG image
     }
 
-    // Fallback: resolve relative to page directory
-    const relativePath = cleanUrl.slice(2);
-    const pageDir = pagePath.join('/');
-    return `${domain}/${pageDir}/${relativePath}`;
+    // If we get here, we couldn't find the image - return null to use default
+    return null;
   }
 
   // Default case: treat as relative to page
