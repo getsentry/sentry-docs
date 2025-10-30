@@ -531,9 +531,14 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   let cacheFile: string | null = null;
   let assetsCacheDir: string | null = null;
 
-  // During Vercel deployment, use /tmp to avoid read-only file system errors
+  // During Vercel deployment (which uses AWS Lambda), use /tmp to avoid read-only file system errors
   // The actual images are already built and in public/mdx-images from the build step
-  const isVercelRuntime = process.env.VERCEL || process.env.VERCEL_ENV;
+  // Check for both Vercel and Lambda environment indicators
+  const isVercelRuntime =
+    process.env.VERCEL ||
+    process.env.VERCEL_ENV ||
+    process.env.AWS_LAMBDA_FUNCTION_NAME ||
+    process.env.LAMBDA_TASK_ROOT;
   const outdir = isVercelRuntime
     ? path.join('/tmp', 'mdx-images-' + md5(sourcePath).slice(0, 8))
     : path.join(root, 'public', 'mdx-images');
@@ -690,7 +695,8 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       // enabled is because mdx-images is a dumping ground
       // for all images, so we cannot filter it out only
       // for this specific slug easily
-      options.outdir = assetsCacheDir || outdir;
+      // On Vercel runtime, always use /tmp (writable) instead of cache or public dirs
+      options.outdir = isVercelRuntime ? outdir : assetsCacheDir || outdir;
 
       // Set write to true so that esbuild will output the files.
       options.write = true;
