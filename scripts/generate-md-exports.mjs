@@ -5,7 +5,7 @@ import imgLinks from '@pondorasti/remark-img-links';
 import {selectAll} from 'hast-util-select';
 import {createHash} from 'node:crypto';
 import {createReadStream, createWriteStream, existsSync} from 'node:fs';
-import {mkdir, opendir, readdir, readFile, rm, stat, writeFile} from 'node:fs/promises';
+import {mkdir, opendir, readdir, readFile, rm, writeFile} from 'node:fs/promises';
 import {cpus} from 'node:os';
 import * as path from 'node:path';
 import {compose, Readable} from 'node:stream';
@@ -58,7 +58,12 @@ async function uploadToCFR2(s3Client, relativePath, data) {
   return;
 }
 
-function taskFinishHandler({id, success, failedTasks}) {
+function taskFinishHandler({id, success, failedTasks, usedCacheFiles}, allUsedCacheFiles) {
+  // Collect cache files used by this worker
+  if (usedCacheFiles) {
+    usedCacheFiles.forEach(file => allUsedCacheFiles.add(file));
+  }
+
   if (failedTasks.length === 0) {
     console.log(`✅ Worker[${id}]: converted ${success} files successfully.`);
     return false;
@@ -93,38 +98,10 @@ async function createWork() {
   if (noCache) {
     console.log(`ℹ️ No cache directory found, this will take a while...`);
     await mkdir(CACHE_DIR, {recursive: true});
-  } else {
-    // Clean up old cache files to prevent unbounded growth
-    // Keep files accessed within last 7 days only
-    const MAX_CACHE_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
-    const now = Date.now();
-    let cleanedCount = 0;
-
-    try {
-      const files = await readdir(CACHE_DIR);
-
-      for (const file of files) {
-        const filePath = path.join(CACHE_DIR, file);
-        try {
-          const stats = await stat(filePath);
-          const age = now - stats.atimeMs; // Time since last access
-
-          if (age > MAX_CACHE_AGE_MS) {
-            await rm(filePath, {force: true});
-            cleanedCount++;
-          }
-        } catch (err) {
-          // Skip files we can't stat/delete
-        }
-      }
-
-      if (cleanedCount > 0) {
-        console.log(`🧹 Cleaned up ${cleanedCount} old cache files (>7 days)`);
-      }
-    } catch (err) {
-      console.warn('Failed to clean cache:', err);
-    }
   }
+
+  // Track which cache files are used during this build
+  const usedCacheFiles = new Set();
 
   // On a 16-core machine, 8 workers were optimal (and slightly faster than 16)
   const numWorkers = Math.max(Math.floor(cpus().length / 2), 2);
@@ -194,7 +171,7 @@ async function createWork() {
         },
       });
       let hasErrors = false;
-      worker.on('message', data => (hasErrors = taskFinishHandler(data)));
+      worker.on('message', data => (hasErrors = taskFinishHandler(data, usedCacheFiles)));
       worker.on('error', reject);
       worker.on('exit', code => {
         if (code !== 0) {
@@ -206,14 +183,16 @@ async function createWork() {
     });
   });
   // The main thread can also process tasks -- That's 65% more bullet per bullet! -Cave Johnson
+  const mainThreadUsedFiles = new Set();
   workerPromises.push(
     processTaskList({
       id: workerTasks.length - 1,
       tasks: workerTasks[workerTasks.length - 1],
       cacheDir: CACHE_DIR,
       noCache,
+      usedCacheFiles: mainThreadUsedFiles,
     }).then(data => {
-      if (taskFinishHandler(data)) {
+      if (taskFinishHandler(data, usedCacheFiles)) {
         throw new Error(`Worker[${data.id}] had some errors.`);
       }
     })
@@ -221,13 +200,34 @@ async function createWork() {
 
   await Promise.all(workerPromises);
 
+  // Clean up unused cache files to prevent unbounded growth
+  if (!noCache) {
+    try {
+      const allFiles = await readdir(CACHE_DIR);
+      let cleanedCount = 0;
+
+      for (const file of allFiles) {
+        if (!usedCacheFiles.has(file)) {
+          await rm(path.join(CACHE_DIR, file), {force: true});
+          cleanedCount++;
+        }
+      }
+
+      if (cleanedCount > 0) {
+        console.log(`🧹 Cleaned up ${cleanedCount} unused cache files`);
+      }
+    } catch (err) {
+      console.warn('Failed to clean unused cache files:', err);
+    }
+  }
+
   console.log(`📄 Generated ${numFiles} markdown files from HTML.`);
   console.log('✅ Markdown export generation complete!');
 }
 
 const md5 = data => createHash('md5').update(data).digest('hex');
 
-async function genMDFromHTML(source, target, {cacheDir, noCache}) {
+async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}) {
   const leanHTML = (await readFile(source, {encoding: 'utf8'}))
     // Remove all script tags, as they are not needed in markdown
     // and they are not stable across builds, causing cache misses
@@ -240,6 +240,9 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
         compose(createReadStream(cacheFile), createBrotliDecompress())
       );
       await writeFile(target, data, {encoding: 'utf8'});
+
+      // Track that we used this cache file
+      usedCacheFiles.add(cacheKey);
 
       return {cacheHit: true, data};
     } catch (err) {
@@ -338,7 +341,7 @@ async function genMDFromHTML(source, target, {cacheDir, noCache}) {
   return {cacheHit: false, data};
 }
 
-async function processTaskList({id, tasks, cacheDir, noCache}) {
+async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
   const s3Client = getS3Client();
   const failedTasks = [];
   let cacheMisses = [];
@@ -349,6 +352,7 @@ async function processTaskList({id, tasks, cacheDir, noCache}) {
       const {data, cacheHit} = await genMDFromHTML(sourcePath, targetPath, {
         cacheDir,
         noCache,
+        usedCacheFiles,
       });
       if (!cacheHit) {
         cacheMisses.push(relativePath);
@@ -388,6 +392,7 @@ async function processTaskList({id, tasks, cacheDir, noCache}) {
     id,
     success,
     failedTasks,
+    usedCacheFiles: Array.from(usedCacheFiles),
   };
 }
 

@@ -66,10 +66,11 @@ if (process.env.CI) {
   mkdirSync(CACHE_DIR, {recursive: true});
 
   // Clean up old cache files in background to prevent unbounded growth
+  // Delete any file not accessed in the last 24 hours (meaning it wasn't used in recent builds)
   // This runs once per worker process and doesn't block the build
   (async () => {
     try {
-      const MAX_CACHE_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+      const MAX_CACHE_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
       const now = Date.now();
       let cleanedCount = 0;
 
@@ -96,7 +97,7 @@ if (process.env.CI) {
 
       if (cleanedCount > 0) {
         // eslint-disable-next-line no-console
-        console.log(`🧹 MDX cache: Cleaned up ${cleanedCount} old items (>7 days)`);
+        console.log(`🧹 MDX cache: Cleaned up ${cleanedCount} unused items (>24h)`);
       }
     } catch (err) {
       // Silently fail - cache cleanup is not critical
