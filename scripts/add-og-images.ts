@@ -25,11 +25,6 @@ async function addOgImageToFile(filePath: string, fileSlug: string): Promise<boo
     const content = await readFile(filePath, 'utf8');
     const {data: frontmatter, content: markdownContent} = matter(content);
 
-    // Skip if og_image already exists
-    if (frontmatter.og_image) {
-      return false;
-    }
-
     // Find the first image in the content
     const imageMatch = markdownContent.match(IMAGE_REGEX);
 
@@ -69,7 +64,8 @@ async function addOgImageToFile(filePath: string, fileSlug: string): Promise<boo
     const ogImagePath = path.join(OG_IMAGES_DIR, ogImageName);
     const ogImageUrl = `/og-images/${ogImageName}`;
 
-    // Copy the source image to public/og-images/
+    // Always copy the source image (even if frontmatter exists)
+    // This is important because og-images/ is gitignored and needs to be regenerated on each build
     try {
       await copyFile(sourceImagePath, ogImagePath);
     } catch (copyError) {
@@ -80,7 +76,13 @@ async function addOgImageToFile(filePath: string, fileSlug: string): Promise<boo
       return false;
     }
 
-    // Add og_image to frontmatter with absolute path
+    // Check if frontmatter needs updating
+    if (frontmatter.og_image === ogImageUrl) {
+      // Already correct, just return true (image was copied successfully)
+      return true;
+    }
+
+    // Add or update og_image in frontmatter with absolute path
     frontmatter.og_image = ogImageUrl;
 
     // Reconstruct the file with updated frontmatter
@@ -99,6 +101,7 @@ async function main() {
   const docsFolders = ['docs', 'develop-docs'];
   let totalUpdated = 0;
   let totalScanned = 0;
+  let copyErrors = 0;
 
   // Create og-images directory
   await mkdir(OG_IMAGES_DIR, {recursive: true});
@@ -106,27 +109,43 @@ async function main() {
 
   for (const folder of docsFolders) {
     const folderPath = path.join(root, folder);
-    const files = await getAllFilesRecursively(folderPath);
 
-    const mdxFiles = files.filter(
-      file => path.extname(file) === '.mdx' || path.extname(file) === '.md'
-    );
+    try {
+      const files = await getAllFilesRecursively(folderPath);
 
-    console.log(`Scanning ${mdxFiles.length} files in ${folder}/...`);
+      const mdxFiles = files.filter(
+        file => path.extname(file) === '.mdx' || path.extname(file) === '.md'
+      );
 
-    for (const file of mdxFiles) {
-      totalScanned++;
-      // Generate slug from file path (relative to folder, without extension)
-      const relativePath = path.relative(folderPath, file);
-      const fileSlug = relativePath
-        .replace(/\.(mdx|md)$/, '')
-        .replace(/\/index$/, '')
-        .replace(/\\/g, '/'); // Normalize Windows paths
+      console.log(`Scanning ${mdxFiles.length} files in ${folder}/...`);
 
-      const updated = await addOgImageToFile(file, fileSlug);
-      if (updated) {
-        totalUpdated++;
+      for (const file of mdxFiles) {
+        totalScanned++;
+        // Generate slug from file path (relative to folder, without extension)
+        const relativePath = path.relative(folderPath, file);
+        const fileSlug = relativePath
+          .replace(/\.(mdx|md)$/, '')
+          .replace(/\/index$/, '')
+          .replace(/\\/g, '/'); // Normalize Windows paths
+
+        const result = await addOgImageToFile(file, fileSlug);
+        if (result === true) {
+          totalUpdated++;
+        } else if (result === false) {
+          // This could be from copy errors, count them
+          const content = await readFile(file, 'utf8');
+          const {content: markdownContent} = matter(content);
+          const imageMatch = markdownContent.match(IMAGE_REGEX);
+
+          if (imageMatch && !imageMatch[2].startsWith('http')) {
+            // Had an image but failed to process
+            copyErrors++;
+          }
+        }
       }
+    } catch (error) {
+      console.error(`❌ Error processing folder ${folder}:`, error);
+      process.exit(1);
     }
   }
 
@@ -134,9 +153,15 @@ async function main() {
   console.log(`   Scanned: ${totalScanned} files`);
   console.log(`   Updated: ${totalUpdated} files`);
   console.log(`   Copied: ${totalUpdated} images to public/og-images/`);
+  console.log(`   Errors: ${copyErrors} files failed to copy`);
   console.log(
-    `   Skipped: ${totalScanned - totalUpdated} files (no images or og_image already set)`
+    `   Skipped: ${totalScanned - totalUpdated - copyErrors} files (no images or og_image already set)`
   );
+
+  if (copyErrors > 0) {
+    console.log(`\n⚠️  Warning: ${copyErrors} files had image copy errors`);
+    console.log('   These files will use the default OG image.');
+  }
 }
 
 main().catch(error => {
