@@ -1,6 +1,7 @@
 import {codecovNextJSWebpackPlugin} from '@codecov/nextjs-webpack-plugin';
 import {withSentryConfig} from '@sentry/nextjs';
 
+import {REMOTE_IMAGE_PATTERNS} from './src/config/images';
 import {redirects} from './redirects.js';
 
 const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
@@ -39,12 +40,9 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
       ],
     };
 
-if (
-  process.env.NODE_ENV !== 'development' &&
-  (!process.env.NEXT_PUBLIC_SENTRY_DSN || !process.env.SENTRY_DSN)
-) {
+if (process.env.NODE_ENV !== 'development' && !process.env.NEXT_PUBLIC_SENTRY_DSN) {
   throw new Error(
-    'Missing required environment variables: NEXT_PUBLIC_SENTRY_DSN and SENTRY_DSN must be set in production'
+    'Missing required environment variable: NEXT_PUBLIC_SENTRY_DSN must be set in production'
   );
 }
 
@@ -54,6 +52,10 @@ const nextConfig = {
   trailingSlash: true,
   serverExternalPackages: ['rehype-preset-minify'],
   outputFileTracingExcludes,
+  images: {
+    contentDispositionType: 'inline', // "open image in new tab" instead of downloading
+    remotePatterns: REMOTE_IMAGE_PATTERNS,
+  },
   webpack: (config, options) => {
     config.plugins.push(
       codecovNextJSWebpackPlugin({
@@ -71,7 +73,7 @@ const nextConfig = {
     DEVELOPER_DOCS_: process.env.NEXT_PUBLIC_DEVELOPER_DOCS,
   },
   redirects,
-  rewrites: async () => [
+  rewrites: () => [
     {
       source: '/:path*.md',
       destination: '/md-exports/:path*.md',

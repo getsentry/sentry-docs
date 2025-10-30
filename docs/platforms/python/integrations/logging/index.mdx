@@ -12,6 +12,7 @@ Install `sentry-sdk` from PyPI:
 ```bash {tabTitle:pip}
 pip install "sentry-sdk"
 ```
+
 ```bash {tabTitle:uv}
 uv add "sentry-sdk"
 ```
@@ -19,7 +20,6 @@ uv add "sentry-sdk"
 ## Configure
 
 The logging integrations is a default integration so it will be enabled automatically when you initialize the Sentry SDK.
-
 
 ```python
 import sentry_sdk
@@ -54,7 +54,7 @@ main()
 - `"An exception happened"` will send the current exception from `sys.exc_info()` with the stack trace and everything to the Sentry Python SDK. If there's no exception, the current stack will be attached.
 - The debug message `"I am ignored"` will not surface anywhere. To capture it, you need to lower `level` to `DEBUG` (See below).
 
-Log records can additionally also be captured as [Sentry logs](/platforms/python/logs/) as long as the `enable_logs` experimental option is `True`.
+Log records can additionally also be captured as [Sentry logs](/platforms/python/logs/) as long as the `enable_logs` option is `True`.
 
 ```python
 import logging
@@ -62,13 +62,40 @@ import sentry_sdk
 
 sentry_sdk.init(
     # ...
-    _experiments={
-        "enable_logs": True,
-    },
+    enable_logs=True,
 )
 
 logging.info("I will be sent to Sentry logs")
 ```
+
+### Working with Extra Fields
+
+When sending log records as Sentry logs, any fields provided in the `extra` dictionary are automatically promoted to top-level attributes on the log entry. This makes them searchable and filterable in the Sentry UI.
+
+```python
+import logging
+import sentry_sdk
+
+sentry_sdk.init(
+    # ...
+    enable_logs=True,
+)
+
+logger = logging.getLogger(__name__)
+
+# Extra fields become top-level searchable attributes
+logger.error(
+    "Payment processing failed", 
+    extra={
+        "user_id": 12345,
+        "transaction_id": "txn_abc123", 
+        "payment_method": "credit_card",
+        "amount": 99.99
+    }
+)
+```
+
+In this example, `user_id`, `transaction_id`, `payment_method`, and `amount` will appear as separate, searchable attributes in the Sentry logs interface, not nested within an `extra` object. You can filter and query logs using these attributes directly, such as `user_id:12345` or `payment_method:credit_card`.
 
 ## Options
 
@@ -102,12 +129,12 @@ You can pass the following keyword arguments to `LoggingIntegration()`:
 
 - `event_level` (default `ERROR`): The Sentry Python SDK will report log records with a level higher than or equal to `event_level` as events as long as the logger itself is set to output records of those log levels (see note below). If a value of `None` occurs, the SDK won't send log records as events.
 
-- `sentry_logs_level` (default `INFO`): The Sentry Python SDK will capture records with a level higher than or equal to `sentry_logs_level` as [Sentry structured logs](/platforms/python/logs/) as long as the `enable_logs` experimental option is `True`.
+- `sentry_logs_level` (default `INFO`): The Sentry Python SDK will capture records with a level higher than or equal to `sentry_logs_level` as [Sentry structured logs](/platforms/python/logs/) as long as the `enable_logs` option is `True`.
 
   ```python
   sentry_sdk.init(
       # ...
-      _experiments={"enable_logs": True},
+      enable_logs=True,
   )
   ```
 

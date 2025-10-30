@@ -510,11 +510,31 @@ You can also use the features available with the Sentry SDK for the framework yo
 
 You will need to upload source maps to make sense of the events you receive in Sentry.
 
-For example, if you are using Capacitor with Ionic-Angular, upload your `www` folder on **every build** you release. The values for `<release_name>` and `<dist>` must match the values passed into `Sentry.init` for events to be deminified correctly.
+If you are using Capacitor with Ionic-Angular, upload your outputPath folder (tipically `www` or `dist`) on **every build** you release. The values for `<release_name>` and `<dist>` must match the values passed into `Sentry.init` for events to be deminified correctly.
 
-```bash {tabTitle: Ionic}
+```bash {tabTitle: Ionic Build & others}
+sentry-cli sourcemaps inject --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ ./www
 sentry-cli sourcemaps upload --release <release_name>  --dist <dist> ./www
 ```
+
+```bash {tabTitle: Ionic Capacitor Build}
+
+# Android
+sentry-cli sourcemaps inject --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ ./android/app/src/main/assets/public
+sentry-cli sourcemaps upload --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ --release <release_name>  --dist <dist> ./android/app/src/main/assets/public
+find ./android/app/src/main/assets/public -type f -name '*.map' -delete # Optional, removes sourcemaps from the mobile app.
+
+# iOS
+sentry-cli sourcemaps inject --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ ./ios/App/App/public
+sentry-cli sourcemaps upload --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ --release <release_name> --dist <dist> ./ios/App/App/public,
+find ./ios/App/App/public -type f -name '*.map' -delete # Optional, removes sourcemaps from the mobile app.
+
+```
+
+<Alert level="warning" title="Important">
+If you are building your project using `ionic capacitor build`, you must upload the source maps from the native app folder (e.g., android/app/build/assets) — not from the `outputPath` defined in your web project (like `www` or `dist`).
+</Alert>
+
 
 Learn more about uploading [source maps](/platforms/javascript/guides/capacitor/sourcemaps/).
 

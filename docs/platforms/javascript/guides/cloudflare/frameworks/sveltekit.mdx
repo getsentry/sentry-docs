@@ -1,56 +1,9 @@
 ---
 title: SvelteKit on Cloudflare
-description: "Learn how to add Cloudflare instrumentation to your SvelteKit app."
+description: "Learn how to instrument your SvelteKit app on Cloudflare Workers and Pages and capture your first errors with Sentry."
 ---
 
-If you're running your SvelteKit app on Cloudflare Pages, you need to configure the SDK a little differently to the default setup. This guide will show you how to set up the Sentry SvelteKit SDK for Cloudflare Pages.
-
-## Install
-
-We recommend using the Sentry wizard to automatically install the SDK in your application:
-
-```bash
-npx @sentry/wizard@latest -i sveltekit
-```
-
-If the setup through the wizard doesn't work for you, you can also [set up the SvelteKit SDK manually](/platforms/javascript/guides/sveltekit/manual-setup/).
-
-<Alert>
-
-If you installed the SDK before, make sure that `@sentry/sveltekit` version `9.2.0` or newer is installed.
-
-</Alert>
-
-## Setup
-
-<PlatformContent includePath="getting-started-config" />
-
-Next, update your `src/hooks.server.(ts|js)` file to use the `initCloudflareSentryHandle` method from the Sentry Cloudflare SDK and remove the `Sentry.init` call from `@sentry/sveltekit`.
-
-```typescript diff {filename:hooks.server.(ts|js)}
--import { handleErrorWithSentry, sentryHandle } from "@sentry/sveltekit";
-+import { handleErrorWithSentry, sentryHandle, initCloudflareSentryHandle } from "@sentry/sveltekit";
-+import { sequence } from "@sveltejs/kit/hooks";
- import * as Sentry from '@sentry/sveltekit';
-
--Sentry.init({
--  dsn: '___PUBLIC_DSN___',
--  tracesSampleRate: 1.0,
--
--  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
--  // spotlight: import.meta.env.DEV,
--});
--
--export const handle = sentryHandle();
-+export const handle = sequence(
-+   initCloudflareSentryHandle({
-+       dsn: '___PUBLIC_DSN___',
-+       tracesSampleRate: 1.0,
-+   }),
-+   sentryHandle()
-+);
-
- export const handleError = handleErrorWithSentry(myErrorHandler);
-```
-
-If you need to use environmental variables, you can access them using `event.platform.env`.
+<PlatformContent
+  includePath="getting-started-complete"
+  platform="javascript.sveltekit"
+/>

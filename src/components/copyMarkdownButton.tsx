@@ -119,7 +119,7 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
   };
 
   const buttonClass =
-    'inline-flex items-center h-full text-gray-700 dark:text-[var(--foreground)] bg-transparent border-none cursor-pointer transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-[var(--gray-a4)] active:bg-gray-100 dark:active:bg-[var(--gray-5)] focus:bg-gray-50 dark:focus:bg-[var(--gray-a4)] outline-none';
+    'inline-flex items-center text-nowrap h-full text-gray-700 dark:text-[var(--foreground)] bg-transparent border-none cursor-pointer transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-[var(--gray-a4)] active:bg-gray-100 dark:active:bg-[var(--gray-5)] focus:bg-gray-50 dark:focus:bg-[var(--gray-a4)] outline-none';
   const dropdownItemClass =
     'flex items-center gap-3 w-full p-2 px-3 text-left bg-transparent rounded-md transition-colors hover:bg-gray-100 dark:hover:bg-[var(--gray-a4)] font-sans text-gray-900 dark:text-[var(--foreground)]';
   const iconContainerClass =

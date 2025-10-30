@@ -63,6 +63,22 @@ To make debugging easier, adjust the diff boundary to show more changes before o
 
 ![html diff tool](./img/hydration-error-adjust-bounds.png)
 
+### The HTML view shows extra changes that do not impact the HTML rendering
+
+Sometimes you will see changes to the HTML like attribute being removed, order changing, spaces being removed, or strange classes like `:hover` appearing. These parts of the diff do not impact the HTML that the user sees, and often are not the cause of the hydration error.
+
+This is expected and a side effect of how we capture debugging data after a Hyration Error has occurred.
+
+Some common examples:
+
+![html diff tool](./img/hydration-diff-hover.png)
+
+An attribute `xmlns="http://www.w3.org/2000/svg"` was removed. This is an XML attribute and is not needed within a valid HTML page, so React did not include it in the render.
+
+![html diff tool](./img/hydration-diff-xmlns.png)
+
+The class name `:hover` was added Session Replay when it serialized the page, React didn't see this class and it has no impact on hydration. This means the user was hovering and interacting with the page before react was finished hydrating (this is the whole point of hydration; to make the page react for interaction sooner!). By the time hydration was complete the user had moved their mouse so the :hover class is changed.
+
 ## Privacy
 
 The diff tools all rely on replay data, so any PII data within the webpage will be masked or blocked before being sent to the server by default. Read more about [Protecting user privacy in Session Replay](/security-legal-pii/scrubbing/protecting-user-privacy/) and [how to configure Session Replay to maintain user privacy](/platforms/javascript/session-replay/privacy/).

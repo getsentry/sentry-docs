@@ -9,7 +9,7 @@ Getting started with [Relay](/product/relay/) is as simple as using the default 
 <Alert>
 
 The Relay server is called `relay`. Download binaries from [GitHub
-Releases](https://github.com/getsentry/relay/releases). A Docker image is provided on [DockerHub](https://hub.docker.com/r/getsentry/relay/).
+Releases](https://github.com/getsentry/relay/releases). A Docker image is provided on the [Github Container Registry](https://github.com/getsentry/relay/pkgs/container/relay).
 
 </Alert>
 
@@ -30,18 +30,14 @@ container and copying in the files.
 
 ```shell {tabTitle:Run in Docker}
 # Adjust permissions for the configuration directory
-# The :z option is only necessary on selinux.
-# See https://docs.docker.com/storage/bind-mounts/#configure-the-selinux-label.
-docker run --rm -it                  \
-  -v $(pwd)/config/:/work/.relay/:z  \
-  --entrypoint bash                  \
-  getsentry/relay                    \
-  -c 'chown -R relay:relay /work/.relay'
+chown -R 65532:65532 ./config
 
 # Generate the configuration
-docker run --rm -it                  \
-  -v $(pwd)/config/:/work/.relay/:z  \
-  getsentry/relay                    \
+# The :z option is only necessary on selinux.
+# See https://docs.docker.com/storage/bind-mounts/#configure-the-selinux-label.
+docker run --rm -it                   \
+  -v "$(pwd)"/config/:/work/.relay/:z \
+  ghcr.io/getsentry/relay             \
   config init
 ```
 
@@ -54,12 +50,6 @@ You can choose to override the default settings by selecting
 _"create custom config"_ and customizing these parameters:
 
 - The `mode` setting, which configures the major mode in which Relay operates. For more information on available Relay modes, refer to [Relay Modes](../modes/).
-
-  <Alert level="warning">
-
-  Currently, only `proxy` and `static` mode are available to all organizations. Relay in `managed` mode is available only on the [Business and Enterprise plans](https://sentry.io/pricing/).
-
-  </Alert>
 
 - The `upstream` setting configures the server to which Relay will forward the
   events (by default the main `sentry.io` URL).
@@ -96,7 +86,7 @@ Configurations are fully documented in [Configuration Options](../options/).
 
 <Alert>
 
-Not applicable in `proxy` or `static` mode.
+Not applicable in `proxy` mode.
 
 </Alert>
 
@@ -120,7 +110,7 @@ Use the `public_key` to register your Relay with the upstream server when runnin
 
 <Alert>
 
-Not applicable in `proxy` or `static` mode.
+Not applicable in `proxy` mode.
 
 </Alert>
 
@@ -134,9 +124,9 @@ To register Relay with Sentry:
 1. Copy the contents of the public key, either by inspecting the `credentials.json` file or by running:
 
    ```shell {tabTitle:Run in Docker}
-   docker run --rm -it                \
-     -v $(pwd)/config/:/work/.relay/  \
-     getsentry/relay                  \
+   docker run --rm -it                 \
+     -v "$(pwd)"/config/:/work/.relay/ \
+     ghcr.io/getsentry/relay           \
      credentials show
    ```
 
@@ -160,10 +150,10 @@ This process registers Relay with Sentry so it is ready to send messages. See
 After registering Relay with Sentry, it is ready to run:
 
 ```shell {tabTitle:Run in Docker}
-docker run --rm -it                \
-  -v $(pwd)/config/:/work/.relay/  \
-  -p 3000:3000                     \
-  getsentry/relay                  \
+docker run --rm -it                 \
+  -v "$(pwd)"/config/:/work/.relay/ \
+  -p 3000:3000                      \
+  ghcr.io/getsentry/relay           \
   run
 ```
 
@@ -187,10 +177,10 @@ Refer to the [Logging](../monitoring/#logging) page for more information on how 
 If you moved your config folder (for example, for security reasons), use the `--config` option to specify the location:
 
 ```shell {tabTitle:Run in Docker}
-docker run --rm -it                \
-  -v $(pwd)/config/:/etc/relay/    \
-  -p 3000:3000                     \
-  getsentry/relay                  \
+docker run --rm -it               \
+  -v "$(pwd)"/config/:/etc/relay/ \
+  -p 3000:3000                    \
+  ghcr.io/getsentry/relay         \
   run --config /etc/relay/
 ```
 

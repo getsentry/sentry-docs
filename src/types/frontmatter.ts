@@ -24,6 +24,10 @@ export interface FrontMatter {
    */
   draft?: boolean;
   /**
+   * Set this to true to take all the available width for the page content.
+   */
+  fullWidth?: boolean;
+  /**
    * A list of keywords for indexing with search.
    */
   keywords?: string[];

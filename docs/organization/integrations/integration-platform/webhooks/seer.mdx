@@ -1,0 +1,275 @@
+---
+title: Seer
+sidebar_order: 7
+description: "Learn more about Sentry's integration platform Seer webhooks for Issue Fix analysis notifications."
+---
+
+Sentry integrations that have subscribed to Seer webhooks can receive notifications about the Seer [Issue Fix](/product/ai-in-sentry/seer/issue-fix/) process. These webhooks allow you to track the progress of automated root cause analysis, solution generation, and code fixes.
+
+## Sentry-Hook-Resource Header
+
+`'Sentry-Hook-Resource': 'seer'`
+
+## Webhook Types
+
+Seer webhooks support seven different event types that track the complete lifecycle of AI-powered issue resolution:
+
+### Root Cause Analysis
+- `seer.root_cause_started` - Triggered when root cause analysis begins
+- `seer.root_cause_completed` - Triggered when root cause analysis completes with results
+
+### Solution Generation
+- `seer.solution_started` - Triggered when solution generation begins
+- `seer.solution_completed` - Triggered when a solution has been generated
+
+### Code Generation
+- `seer.coding_started` - Triggered when code generation/fixing begins
+- `seer.coding_completed` - Triggered when code changes are ready
+- `seer.pr_created` - Triggered when pull request(s) are created
+
+## Common Attributes
+
+All Seer webhooks share these common attributes:
+
+### action
+
+- type: string
+- description: The specific Seer event that occurred (e.g., `root_cause_started`, `solution_completed`)
+
+### data['run_id']
+
+- type: integer
+- description: Unique identifier for this Seer analysis run
+
+### data['group_id']
+
+- type: integer
+- description: The Sentry issue ID being analyzed
+
+## Event-Specific Payloads
+
+### Root Cause Started
+
+Minimal payload indicating analysis has begun:
+
+```json
+{
+  "action": "root_cause_started",
+  "actor": {
+    "id": "sentry",
+    "name": "Sentry",
+    "type": "application"
+  },
+  "data": {
+    "run_id": 12345,
+    "group_id": 1170820242
+  },
+  "installation": {
+    "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+  }
+}
+```
+
+### Root Cause Completed
+
+Includes the identified root cause:
+
+```json
+{
+  "action": "root_cause_completed",
+  "actor": {
+    "id": "sentry",
+    "name": "Sentry",
+    "type": "application"
+  },
+  "data": {
+    "run_id": 12345,
+    "group_id": 1170820242,
+    "root_cause": {
+      "description": "Woah wow there's a bug here.",
+      "steps": [
+        {
+          "title": "User navigates to the dashboard page, initiating page load.",
+          "code_snippet_and_analysis": "The user's browser sends a GET request to `/dashboard`. This is the entry point for the issue.",
+          "timeline_item_type": "human_action",
+          "relevant_code_file": {
+            "file_path": "N/A",
+            "repo_name": "N/A"
+          },
+          "is_most_important_event": false
+        },
+        {
+          "title": "Next.js server renders the /dashboard route.",
+          "code_snippet_and_analysis": "The Next.js server processes the request and hits the bug",
+          "timeline_item_type": "internal_code",
+          "relevant_code_file": {
+            "file_path": "src/app/page.ts",
+            "repo_name": "owner/repo"
+          },
+          "is_most_important_event": true
+        }
+      ]
+    }
+  },
+  "installation": {
+    "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+  }
+}
+```
+
+### Solution Started
+
+Minimal payload indicating solution generation has begun:
+
+```json
+{
+  "action": "solution_started",
+  "actor": {
+    "id": "sentry",
+    "name": "Sentry",
+    "type": "application"
+  },
+  "data": {
+    "run_id": 12345,
+    "group_id": 1170820242
+  },
+  "installation": {
+    "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+  }
+}
+```
+
+### Solution Completed
+
+Includes the generated solution details:
+
+```json
+{
+  "action": "solution_completed",
+  "actor": {
+    "id": "sentry",
+    "name": "Sentry",
+    "type": "application"
+  },
+  "data": {
+    "run_id": 12345,
+    "group_id": 1170820242,
+    "solution": {
+      "description": "Definitely need to fix this.",
+      "steps": [
+        {
+          "title": "Go fix it",
+        },
+        {
+          "title": "Then go fix this other thing.",
+        },
+      ],
+      
+    }
+  },
+  "installation": {
+    "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+  }
+}
+```
+
+### Coding Started
+
+Minimal payload indicating code generation has begun:
+
+```json
+{
+  "action": "coding_started",
+  "actor": {
+    "id": "sentry",
+    "name": "Sentry",
+    "type": "application"
+  },
+  "data": {
+    "run_id": 12345,
+    "group_id": 1170820242
+  },
+  "installation": {
+    "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+  }
+}
+```
+
+### Coding Completed
+
+Includes details about the code changes made:
+
+```json
+{
+  "action": "coding_completed",
+  "actor": {
+    "id": "sentry",
+    "name": "Sentry",
+    "type": "application"
+  },
+  "data": {
+    "run_id": 12345,
+    "group_id": 1170820242,
+    "changes": [
+      {
+        "repo_name": "my-app",
+        "repo_external_id": "12345",
+        "title": "fix: Initialize undefined variable",
+        "description": "This change initializes the 'blooopy' variable before use to prevent ReferenceError",
+        "diff": "<the diff as a string>",
+        "branch_name": "seer/fix-this-thing",
+      }
+    ]
+  },
+  "installation": {
+    "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+  }
+}
+```
+
+### PR Created
+
+Includes pull request details, there may be more than one pull request if there are multiple repos:
+
+```json
+{
+  "action": "pr_created",
+  "actor": {
+    "id": "sentry",
+    "name": "Sentry",
+    "type": "application"
+  },
+  "data": {
+    "run_id": 12345,
+    "group_id": 1170820242,
+    "pull_requests": [
+      {
+        "pull_request": {
+          "pr_number": 123,
+          "pr_url": "https://github.com/owner/repo/pull/123",
+          "pr_id": 456789
+        },
+        "repo_name": "my-app",
+        "provider": "github"
+      }
+    ]
+  },
+  "installation": {
+    "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+  }
+}
+```
+
+## Use Cases
+
+Seer webhooks enable you to:
+
+1. **Track Progress**: Monitor the status of Seer Issue Fix in real-time
+2. **Build Notifications**: Send custom notifications when fixes are ready
+3. **Audit Trail**: Maintain a log of all Seer fixes for your issues
+4. **Custom Integrations**: Build custom tools that react to Seer's analysis results
+
+## Best Practices
+
+- Store the `run_id` to correlate related webhook events
+- Use the `group_id` to link webhooks back to the original Sentry issue

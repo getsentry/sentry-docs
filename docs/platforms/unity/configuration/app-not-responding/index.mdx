@@ -8,10 +8,23 @@ Application Not Responding (ANR) errors are triggered when the Unity thread of t
 
 ## ANR Implementation Details
 
-The ANR detection in the Unity SDK strictly works within the Unity game, irrespective of the targeted platform and works in two parts. First the SDK starts a coroutine that periodically notes the time it last got called. Second, a background thread checks the time since the last update against the ANR threshold from the options.
-The detection is sensitive of the app losing and regaining focus and gets paused accordingly. It is also using `WaitForSecondsRealtime` so pausing your game by modifying the `Time.timeScale` will not trigger false ANR reports.
+The ANR detection in the Unity SDK works differently depending on whether multithreading is available on the target platform:
 
-On platforms that do no support multithreading the ANR detection falls back to relying on the coroutine itself to report if the last time it executed exceeds the timeout.
+### Platforms with Multi-Threading Support
+
+On platforms that support multithreading, the ANR detection works in two parts:
+1. A coroutine periodically resets a counter
+2. A background thread increments and monitors this counter. It reports an ANR event when the threshold defined on `options.AnrTimeout` is exceeded
+
+### Platforms without Multi-Threading Support - WebGL
+
+On platforms without multi-threading support like WebGL, the ANR detection uses a slightly different approach:
+- A single coroutine using a `Stopwatch` to measure elapsed time
+- When the coroutine detects that more time has passed than the ANR timeout, it reports the ANR event
+
+The drawback here is that the ANR detection relies on the game recovering from the not-responding state to report the event.
+
+Both implementations are sensitive to the app losing and regaining focus and get paused accordingly. They also use `WaitForSecondsRealtime` so pausing your game by modifying the `Time.timeScale` will not trigger false ANR reports.
 
 ### Stack Trace Support
 

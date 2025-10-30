@@ -11,6 +11,8 @@ Debug information files allow Sentry to extract stack traces and provide additio
 
 To get debug information, we need to compile export templates with debug symbols produced. You'll need Git, SCons build tool, Python, and a C++ compiler for your target platform installed.
 
+For Android, you'll also need the Android SDK (command-line tools are enough). On macOS, don't use the Android SDK provided by Homebrew as it will not be installed in a unified location.
+
 Ensure you have a compatible C++ compiler. On Windows, for instance, you can use [Visual Studio Community 2022](https://visualstudio.microsoft.com/) with the C++ workload installed, GCC on Linux and Clang on macOS.
 
 Here are a few ways to install the **SCons** build tool:
@@ -45,7 +47,7 @@ For compiling on macOS you also need to install [Vulkan SDK](https://sdk.lunarg.
 
 <Alert>
 
-For more information, refer to [Building from Source](https://docs.godotengine.org/en/stable/contributing/development/compiling/index.html) in the official Godot documentation. It provides detailed instructions for compiling Godot on different platforms and with different tools. This guide offers streamlined instructions tailored for our use case, and may omit some details you require.
+For more information, refer to [Building from Source](https://docs.godotengine.org/en/stable/engine_details/development/compiling/index.html) in the official Godot documentation. It provides detailed instructions for compiling Godot on different platforms and with different tools. This guide offers streamlined instructions tailored for our use case, and may omit some details you require.
 
 </Alert>
 
@@ -55,20 +57,38 @@ Start in a terminal with Git available. Clone Godot Engine repository and switch
 ```bash
 git clone https://github.com/godotengine/godot
 cd godot
-git checkout 4.4-stable
+git checkout 4.5-stable
 ```
+
+<Expandable title="Additional Setup for Android">
+
+For Android compilation, Godot requires the Swappy frame pacing library. Download the pre-built library from [https://github.com/godotengine/godot-swappy/releases](https://github.com/godotengine/godot-swappy/releases) and extract the archive contents to the `thirdparty/swappy-frame-pacing/` directory within your cloned Godot source tree.
+
+</Expandable>
 
 ## Compiling Templates
 
-To compile the Godot release export template with debug symbols, run the following command:
+To compile the Godot export templates with debug symbols, run the following commands:
 
 ```bash {tabTitle:Windows/Linux}
 scons target=template_release production=yes debug_symbols=yes separate_debug_symbols=yes
 ```
 
 ```bash {tabTitle:macOS}
-scons target=template_release arch=x86_64 production=yes debug_symbols=yes separate_debug_symbols=yes platform=macos
-scons target=template_release arch=arm64 generate_bundle=yes production=yes debug_symbols=yes separate_debug_symbols=yes platform=macos
+scons target=template_release platform=macos arch=x86_64 production=yes debug_symbols=yes separate_debug_symbols=yes
+scons target=template_release platform=macos arch=arm64 production=yes debug_symbols=yes separate_debug_symbols=yes generate_bundle=yes
+```
+
+```bash {tabTitle:iOS}
+scons target=template_debug platform=ios production=yes debug_symbols=yes separate_debug_symbols=yes
+scons target=template_release platform=ios production=yes debug_symbols=yes separate_debug_symbols=yes generate_bundle=yes
+```
+
+```bash {tabTitle:Android}
+scons target=template_debug platform=android arch=arm32 production=yes debug_symbols=yes separate_debug_symbols=yes
+scons target=template_debug platform=android arch=arm64 production=yes debug_symbols=yes separate_debug_symbols=yes
+scons target=template_release platform=android arch=arm32 production=yes debug_symbols=yes separate_debug_symbols=yes
+scons target=template_release platform=android arch=arm64 production=yes debug_symbols=yes separate_debug_symbols=yes generate_android_binaries=yes
 ```
 
 <Expandable title="Options explained">
@@ -78,13 +98,22 @@ scons target=template_release arch=arm64 generate_bundle=yes production=yes debu
 - `production`: set build defaults for production use
 - `debug_symbols`: include debugging symbols in the build
 - `separate_debug_symbols`: extract symbols into a separate file
-- `generate_bundle`: generate an APP bundle `godot_macos.zip` after building macOS binaries
+- `generate_bundle`: generate application bundle archive (`godot_macos.zip` for macOS or `godot_ios.zip` for iOS)
+- `generate_android_binaries`: generate Android template AARs and Gradle template project after build is complete (`android_source.zip`)
 
 For more information, run: `scons --help`
 
 </Expandable>
 
-If all goes well, the export template files should appear as the result of the build process in the `bin/` directory inside the Godot source tree. When using MSVC on Windows, you will find `.exe` files alongside `.pdb` files, which contain debug information. On macOS, you will find `godot_macos.zip` containing a universal binary supporting both x86_64 and ARM64 architectures and also two folders ending with `.dSYM` containing debug information bundles for each architecture.
+After a successful build, the export template files will be generated in the `bin/` directory within the Godot source tree:
+
+**Windows (MSVC):** You'll find `.exe` executable files alongside corresponding `.pdb` files containing the debug information.
+
+**macOS:** The build generates `godot_macos.zip` containing a universal binary that supports both x86_64 and ARM64 architectures. Additionally, you'll see two separate `.dSYM` folders (debug symbol bundles) for each architecture.
+
+**iOS:** The build generates `godot_ios.zip` containing universal frameworks with static libraries and Xcode project files for both release and debug export configurations.
+
+**Android:** The build produces `android_source.zip`, which contains the Gradle build template with the compiled export template libraries. Additionally, the build generates `android-template-release-native-symbols.zip` and `android-template-debug-native-symbols.zip` archives containing the corresponding debug symbols for each template variant.
 
 <Alert>
 
@@ -94,13 +123,32 @@ Learn more about debug formats in [Debug Information Files](/platforms/native/da
 
 ## Exporting Project
 
-Now you can export your project using your custom template. In the Godot **Export** dialog window, follow these steps:
+With your custom templates compiled, you can now export your project with debug symbols. Open the Godot **Export** dialog and configure it as follows:
 
-1. Select or add an export preset.
-2. Enable the **Advanced Options** toggle.
-3. In the **Options** tab, under **Custom Template -> Release**, assign your custom template executable file.
+1. Select or add an export preset for your target platform.
 
-This will configure your project to use the custom export template with the debug symbols you compiled earlier.
+2. Enable **Advanced Options** in the top-right corner of the dialog.
+
+3. Configure the custom template in the **Options** tab:
+
+   **For Windows/Linux:**
+   - Find the **Custom Template** section
+   - Under **Release**, browse and select your compiled template executable from the `bin/` directory
+
+   **For macOS**
+   - Find the **Custom Template** section
+   - Under **Release**, browse and select `godot_macos.zip` bundle from the `bin/` directory
+
+   **For iOS:**
+   - Find the **Custom Template** section
+   - Under both **Release** and **Debug**, browse and select the same `godot_ios.zip` bundle from the `bin/` directory
+
+   **For Android:**
+   - Enable **Gradle Build** in the **Gradle** section
+   - Set **Android Source Template** to point to the `android_source.zip` file generated during compilation
+   - Install the Android build template by navigating to **Project > Install Android Build Template...** in the editor menu
+
+Once configured, your export preset will use the custom template containing the debug information needed for readable stack traces in Sentry.
 
 ![Export Dialog](./imgs/godot_export_dialog.png)
 
@@ -114,7 +162,7 @@ If you need to `Export with Debug`, you can compile a debug template using the `
 
 ## Uploading Debug Symbols
 
-In order to get readable stack traces in Sentry, you also need to upload your debug symbols. The easiest way to do it is by using [Sentry CLI](https://docs.sentry.io/cli/). This tool allows you to upload the necessary debug information, making the stack traces useful for debugging.
+In order to get readable stack traces in Sentry, you also need to upload your debug symbols. The easiest way to do it is by using [Sentry CLI](/cli/). This tool allows you to upload the necessary debug information, making the stack traces useful for debugging.
 
 <Expandable title="Installing Sentry CLI">
 
@@ -157,6 +205,12 @@ sentry-cli debug-files upload --include-sources --org ___ORG_SLUG___ --project _
 ```
 
 This uploads debug information files from the `bin` directory to Sentry, creating the source bundles on the fly.
+
+<Alert title="Important note for iOS">
+
+For iOS projects, you must export your project to a directory first, then run the `sentry-cli debug-files upload` command on that exported directory rather than the `bin/` directory. This is necessary because Godot uses an Xcode project with static libraries for iOS exports, and the debug symbols are only available after the export compilation process is complete.
+
+</Alert>
 
 <Expandable title="Generating source bundle archives separately">
 

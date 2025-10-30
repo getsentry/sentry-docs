@@ -32,19 +32,23 @@ try {
 }
 
 void processOrderBatch() {
-  ISpan span = Sentry.getSpan();
-  if (span == null) {
-    span = Sentry.startTransaction("processOrderBatch()", "task");
+  ISpan parentSpan = Sentry.getSpan(); // returns the "processOrderBatch()" transaction
+  ISpan innerSpan = null;
+  if (parentSpan != null) {
+    innerSpan = parentSpan.startChild("task", "operation");
   }
-  ISpan innerSpan = span.startChild("task", "operation");
+  
   try {
     // omitted code
   } catch (FileNotFoundException e) {
-    innerSpan.setThrowable(e);
-    innerSpan.setStatus(SpanStatus.NOT_FOUND);
+    if (innerSpan != null) {
+      innerSpan.setThrowable(e);
+      innerSpan.setStatus(SpanStatus.NOT_FOUND);
     throw e;
   } finally {
-    innerSpan.finish();
+    if (innerSpan != null) {
+      innerSpan.finish();
+    }
   }
 }
 ```
@@ -67,18 +71,18 @@ try {
   transaction.finish()
 }
 
-fun processOrderBatch(item: Item) {
-  val span = Sentry.getSpan() ?: Sentry.startTransaction("processOrderBatch()", "task")
-  val innerSpan = it.startChild("task", "operation")
+fun processOrderBatch() {
+  val parentSpan = Sentry.getSpan() // returns the "processOrderBatch()" transaction
+  val innerSpan = parentSpan?.startChild("task", "operation")
 
   try {
     // omitted code
   } catch (e: FileNotFoundException) {
-    innerSpan.throwable = e
-    innerSpan.status = SpanStatus.NOT_FOUND
+    innerSpan?.throwable = e
+    innerSpan?.status = SpanStatus.NOT_FOUND
     throw e
   } finally {
-    innerSpan.finish()
+    innerSpan?.finish()
   }
 }
 ```

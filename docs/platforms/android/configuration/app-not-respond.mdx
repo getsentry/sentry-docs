@@ -4,7 +4,7 @@ sidebar_order: 4
 description: "Learn how to turn off or specify ANR."
 ---
 
-Application Not Responding (ANR) errors are triggered when the main UI thread of an application is blocked for more than five seconds. The Android SDK reports ANR errors as Sentry events. In addition, Sentry calculates [ANR rate](/platforms/android/tracing/instrumentation/performance-metrics/#application-not-responding-anr-rate) based on these events and user sessions.
+Application Not Responding (ANR) errors are triggered when the main UI thread of an application is blocked for more than five seconds. The Android SDK reports ANR errors as Sentry events. In addition, Sentry calculates [ANR rate](#anr-rate) based on these events and user sessions.
 
 ## ANR implementation details
 
@@ -13,7 +13,7 @@ The Android SDK uses different implementations to detect ANRs, depending on what
 - Below Android 11: Running a Watchdog thread (v1)
 - Android 11 and above: Reading [ApplicationExitInfo](https://developer.android.com/reference/android/app/ApplicationExitInfo) (v2)
 
-The new implementation (v2) uses the same data source as Google Play Console. This means the reported ANR events and [ANR rate](/platforms/android/tracing/instrumentation/performance-metrics/#application-not-responding-anr-rate) should match with what you see on Sentry. The new implementation also captures a thread dump with additional information, like held locks, to help you resolve ANRs more efficiently.
+The new implementation (v2) uses the same data source as Google Play Console. This means the reported ANR events and [ANR rate](#anr-rate) should match with what you see on Sentry. The new implementation also captures a thread dump with additional information, like held locks, to help you resolve ANRs more efficiently.
 
 While the original Watchdog approach (v1) reports many false positives and is based on heuristics, it still has some advantages over v2, like capturing screenshots and transactions with profiles at the time of ANR.
 
@@ -125,3 +125,38 @@ This detector looks at the stack trace of an ANR and tries to identify common pi
 Sentry will try to detect deadlocks and point out potential causes. If, for example, the main thread is blocked by waiting on a lock object that's held by another thread, the suspect frame that's waiting on the lock will be highlighted. The stack trace of the offending thread that's holding the lock, as well as the offending frame of that thread will also be shown:
 
 ![ANR Root Cause Deadlock](./img/anr-rootcause-deadlock.png)
+
+## ANR Rate
+
+ANR rate is the percentage of unique users who have experienced an ANR during the specified time period.
+
+<Alert level="info">
+
+Since there's two implementations for ANR detection, Sentry calculates the ANR Rate depending on the implementation. On Android 11 and above Sentry only accounts for **Fatal ANRs** - ANRs that lead to your app being terminated, either by the user or the OS. On Android 10 and below both Fatal and Non-Fatal ANRs contribute to the ANR Rate calculation.
+
+</Alert>
+
+### User-perceived ANR Rate
+
+User-perceived ANR rate is a core Android vital and is defined more specifically, as the unique percentage of users who've experienced the lack of response to an input event in an app, lasting more than five seconds.
+
+A user-perceived ANR rate that's more than 0.47%, is considered over the [bad behavior threshold](https://developer.android.com/topic/performance/vitals#what_are_the_bad_behavior_thresholds), as set by Google. If your app exceeds this threshold, Google Play may choose to reduce your app's visibility in their app store.
+
+### Foreground ANR Rate
+
+In Sentry, we can monitor the foreground ANR rate, which is the percentage of unique users who've experienced an ANR event lasting more than five seconds, while the app was running in the foreground. Because it's more noticeable to the user, a foreground ANR event is more likely to be seen as an annoyance.
+
+While foreground ANR rates may not map exactly to user-perceived ANR rates, they can provide a close proxy. In Sentry, the foreground ANR rate chart has a bad behavior threshold line for comparison.
+
+To see your ANR Rate in Sentry:
+
+1. Go to the **Projects** page
+2. Click on your Android project
+3. Look for the "ANR Rate" card in the "Project Details" section
+4. Click "View Issues" to see a list of ANR issues that were created in the selected timeframe and environment
+
+You can also see an ANR rate graph on a separate card. Opening the "Display" menu will allow you to switch back and forth between the "ANR Rate" and the "Foreground ANR Rate" view.
+
+![ANR Rate](./img/anr-rate.png)
+
+Sentry's Android SDK, version 6.13.0 and above, reports ANR rate errors if the main UI thread of your application is blocked for more than five seconds.

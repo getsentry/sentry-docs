@@ -38,26 +38,68 @@ void perform_checkout() {
 
 This example will send a transaction named `checkout` to Sentry. The transaction will contain a `validation` span that measures how long `validate_shopping_cart()` took and a `process` span that measures `process_shopping_cart()`. Finally, the call to `sentry_transaction_finish()` will finish the transaction and send it to Sentry.
 
-## Trace Boundaries
-By default, events, transactions, and spans will inherit the `trace_id` from the `propagation_context` as generated during SDK initialization. These values can be overridden by a downstream SDK that calls `sentry_set_trace(trace_id, parent_span_id)`, or by a user who can manually create a trace boundary using `sentry_generate_trace()`:
+## Automatic Trace Boundaries
 
-```c
+By default, events will inherit the `trace_id` from the `propagation_context` as generated during SDK initialization.
+
+Transactions act as automatic trace boundaries, meaning whenever you create a transaction, it will start a new trace, which the SDK will apply as soon as you scope it. Once you finish the transaction, the SDK will move the trace to the `propagation_context`, from which the trace will affect any event until you scope a new transaction:
+
+```C
 // Upon init, generates a random trace_id and span_id in the propagation_context
 sentry_options_t *options = sentry_options_new();
 sentry_init(options);
-// Events, transactions and spans will inherit the trace data from this propagation_context
-initialize_store();
+
+// Events will inherit the trace data from this propagation_context
+
+// the transaction inside perform_checkout() will lead to a new trace in the propgation_context
+perform_checkout();
+
+// After perform_checkout() events will inherit the trace created in perform_checkout() from the propagation_context
+```
+
+## Manual Trace Boundaries
+
+The SDK will turn off managing automatic trace boundaries via transactions once manual management of trace boundaries
+was requested by either a downstream SDK (using `sentry_set_trace(trace_id, parent_span_id)`) or a direct user of the
+Native SDK (via `sentry_regenerate_trace()`):
+
+```C
+sentry_options_t *options = sentry_options_new();
+sentry_init(options);
 
 // trace_id and parent_span_id usually originate from a downstream SDK
 //  (which should be the one calling `sentry_set_trace`)
 const char *trace_id = "2674eb52d5874b13b560236d6c79ce8a";
 const char *parent_span_id = "a0f9fdf04f1a63df";
 
-// Set the trace propagation_context with the given data
+// Set the trace propagation_context with the given data.
+// Downstream SDKs should do this as early as possible.
 sentry_set_trace(trace_id, parent_span_id);
+
+// Events, transactions and spans inside authenticate_user() will be part
+// of a different trace than the one created during initialization.
 authenticate_user();
+```
+
+```C
+sentry_options_t *options = sentry_options_new();
+sentry_init(options);
 
 // Generates a new random trace and span id onto the propagation_context
 sentry_regenerate_trace();
+authenticate_user();
+
+sentry_regenerate_trace();
+// Events, transactions, and spans inside perform_checkout() will be part of
+// a different trace than the ones inside authenticate_user()
 perform_checkout();
 ```
+
+After the client called either function, the following transactions inherit that trace from the `propagation_context` and no longer act as trace boundaries.
+
+<Alert type="warning" title="Downstream SDK usage">
+  If you interact with the Native SDK in the context of a downstream SDK (for
+  instance Android, .NET, Unity, or Unreal), we urge you not to use
+  `sentry_regenerate_trace()` since it would interfere with the traces managed
+  from those SDKs.
+</Alert>
