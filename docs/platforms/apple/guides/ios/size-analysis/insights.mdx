@@ -227,16 +227,17 @@ optimize_icon() {
 #### Option 1: Keep the format lean
 
 - Encode localized strings as plain text (`"key" = "value";`), not binary plists. Set **Strings File Output Encoding** (`STRINGS_FILE_OUTPUT_ENCODING`) to **UTF-8** in Xcode.
-- Remove translator comments that ship with the bundle. They help during translation but take space in production. A typical comment looks like:
-
-  ```text
-  /* Title for the expired code alert. */
-  "code_expired" = "Code Expired";
-  ```
 
 #### Option 2: Strip comments automatically
 
-Add a Run Script build phase that converts each `.strings` file to JSON, rewrites it without comments, and leaves a compact UTF-8 file behind:
+String files can have comments that ship with the bundle. They help during translation but take space in production. A typical comment may look like:
+
+```text
+/* Title for the expired code alert. */
+"code_expired" = "Code Expired";
+```
+
+You can automatically strip comments by adding a Run Script build phase that converts each `.strings` file to JSON, rewrites it without comments, and leaves a compact UTF-8 file behind:
 
 1. In Xcode, open **Build Phases → + → New Run Script Phase** and place it after the localized resources build step.
 2. Set the shell to your Python 3 binary (for Homebrew on Apple Silicon: `/opt/homebrew/bin/python3`).
