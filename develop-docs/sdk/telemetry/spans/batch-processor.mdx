@@ -134,7 +134,7 @@ As the BatchProcessor MUST prevent data loss during flushing, it uses a double-b
 The SDK SHOULD store the BatchProcessor files in a folder that is a sibling of the `envelopes` or `replay` folder, named `batch-processor`. This folder is scoped per DSN, so SDKs ensure not mixing up data for different DSNs. The `batch-processor` folder MAY contain the following files:
 
 - `async-io-cache-1` and `async-io-cache-2` - The async IO cache files.
-- `detected-termination-x` - The file containing items from a previous detected abnormal termination.
+- `detected-termination-x` - The file containing items from the crash-safe list from a previous detected abnormal termination.
 - `envelope-x` - The envelope that the BatchProcessor is about to move to the envelopes cache folder, so the SDK can send it to Sentry, where `x` is the an increasing index of the file starting from 0.
 
 
@@ -142,7 +142,7 @@ The SDK SHOULD store the BatchProcessor files in a folder that is a sibling of t
 
 The BatchProcessor has two lists `crash-safe-list-1` and `crash-safe-list-2` and two files `async-io-cache-1` and `async-io-cache-2`. When it receives items, it performs the following steps:
 
-1. Put the item into the crash-safe `crash-safe-list1` on the calling thread.
+1. Put the item into the crash-safe `crash-safe-list-1` on the calling thread.
 2. On a background thread, store the item in the `async-io-cache-1`.
 
 #### Flushing
@@ -161,16 +161,33 @@ The BatchProcessor stores the `envelope-x` not directly in the envelope cache fo
 
 When SDKs detect an abnormal process termination, they MUST write the items in both `crash-safe-list-1` and `crash-safe-list-2` to the `detected-termination-x` file where `x` is the an increasing index of the file starting from 0.
 
-When the process terminates abnormally and the SDKs can't detect it, the SDKs lose items in the crash safe lists, which we accept over blocking the calling thread that could be the main thread.
+When the process terminates abnormally and the SDKs can't detect it, the SDKs lose items from the crash-safe lists, which we consider preferable to blocking the calling thread, which could be the main thread. However, the SDKs don't lose items from the async IO cache.
+
+So the SDK MAY lose items due to undetectable abnormal process terminations that occur immediately after receiving an item, but it won't lose items due to detectable abnormal process terminations.
+
+```
+// SDKs keep this log
+Sentry.logger.info("We might crash now.");
+
+crash();
+```
+
+```
+// SDKs might lose this log
+Sentry.logger.info("We are going to allocate loads of memory now.");
+
+// Something allocating a lot of memory leading to a watchdog termination due to out of memory.
+allocateAllMemory();
+```
 
 #### SDK Initialization
 
-Whenever the SDKs initialize, they must check if there is any data in the batch processor folder that needs to be recovered. SDKs MUST perform the following steps when initializing:
+Whenever the SDKs initialize, they MUST check if there is any data in the batch processor folder that needs to be recovered. They MUST perform the following steps when initializing:
 
-1. Load all items from `async-io-cache-1`, `async-io-cache-2` and `detected-termination-x` files into memory if there are any. If the application terminates normally, these files don't exist.
+1. Load all items from `async-io-cache-1`, `async-io-cache-2` and `detected-termination-x` into memory if they exist. When the application terminates normally, these files don't exist.
 2. Deduplicate the items based on the IDs of the items and store the deduplicated items in the `envelope-x` file.
 3. Create new `async-io-cache-1` and `async-io-cache-2` files, and delete the `detected-termination-x` file.
-4. Now the BatchProcessor can start receiving new items again.
+4. Now the BatchProcessor can start receiving new items.
 5. Move the `envelope-x` to the envelopes cache folder.
 
 #### SDK Closes
