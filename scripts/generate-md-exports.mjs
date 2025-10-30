@@ -93,6 +93,38 @@ async function createWork() {
   if (noCache) {
     console.log(`ℹ️ No cache directory found, this will take a while...`);
     await mkdir(CACHE_DIR, {recursive: true});
+  } else {
+    // Clean up old cache files to prevent unbounded growth
+    // Keep files accessed within last 7 days only
+    const MAX_CACHE_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+    const now = Date.now();
+    let cleanedCount = 0;
+
+    try {
+      const {readdir, stat, rm} = await import('node:fs/promises');
+      const files = await readdir(CACHE_DIR);
+
+      for (const file of files) {
+        const filePath = path.join(CACHE_DIR, file);
+        try {
+          const stats = await stat(filePath);
+          const age = now - stats.atimeMs; // Time since last access
+
+          if (age > MAX_CACHE_AGE_MS) {
+            await rm(filePath, {force: true});
+            cleanedCount++;
+          }
+        } catch (err) {
+          // Skip files we can't stat/delete
+        }
+      }
+
+      if (cleanedCount > 0) {
+        console.log(`🧹 Cleaned up ${cleanedCount} old cache files (>7 days)`);
+      }
+    } catch (err) {
+      console.warn('Failed to clean cache:', err);
+    }
   }
 
   // On a 16-core machine, 8 workers were optimal (and slightly faster than 16)

@@ -64,6 +64,43 @@ const CACHE_COMPRESS_LEVEL = 4;
 const CACHE_DIR = path.join(root, '.next', 'cache', 'mdx-bundler');
 if (process.env.CI) {
   mkdirSync(CACHE_DIR, {recursive: true});
+
+  // Clean up old cache files in background to prevent unbounded growth
+  // This runs once per worker process and doesn't block the build
+  (async () => {
+    try {
+      const MAX_CACHE_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+      const now = Date.now();
+      let cleanedCount = 0;
+
+      const {opendir, rm, stat} = await import('node:fs/promises');
+      const dir = await opendir(CACHE_DIR);
+
+      for await (const dirent of dir) {
+        if (!dirent.isFile() && !dirent.isDirectory()) continue;
+
+        const itemPath = path.join(CACHE_DIR, dirent.name);
+        try {
+          const stats = await stat(itemPath);
+          const age = now - stats.atimeMs; // Time since last access
+
+          if (age > MAX_CACHE_AGE_MS) {
+            await rm(itemPath, {recursive: true, force: true});
+            cleanedCount++;
+          }
+        } catch (err) {
+          // Skip items we can't stat/delete
+        }
+      }
+
+      if (cleanedCount > 0) {
+        // eslint-disable-next-line no-console
+        console.log(`🧹 MDX cache: Cleaned up ${cleanedCount} old items (>7 days)`);
+      }
+    } catch (err) {
+      // Silently fail - cache cleanup is not critical
+    }
+  })();
 }
 
 const md5 = (data: BinaryLike) => createHash('md5').update(data).digest('hex');
