@@ -5,7 +5,7 @@ import imgLinks from '@pondorasti/remark-img-links';
 import {selectAll} from 'hast-util-select';
 import {createHash} from 'node:crypto';
 import {createReadStream, createWriteStream, existsSync} from 'node:fs';
-import {mkdir, opendir, readFile, rm, writeFile} from 'node:fs/promises';
+import {mkdir, opendir, readdir, readFile, rm, stat, writeFile} from 'node:fs/promises';
 import {cpus} from 'node:os';
 import * as path from 'node:path';
 import {compose, Readable} from 'node:stream';
@@ -101,7 +101,6 @@ async function createWork() {
     let cleanedCount = 0;
 
     try {
-      const {readdir, stat, rm} = await import('node:fs/promises');
       const files = await readdir(CACHE_DIR);
 
       for (const file of files) {
