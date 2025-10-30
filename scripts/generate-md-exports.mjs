@@ -242,7 +242,9 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
       await writeFile(target, data, {encoding: 'utf8'});
 
       // Track that we used this cache file
-      usedCacheFiles.add(cacheKey);
+      if (usedCacheFiles) {
+        usedCacheFiles.add(cacheKey);
+      }
 
       return {cacheHit: true, data};
     } catch (err) {
@@ -338,10 +340,20 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
     ).catch(err => console.warn('Error writing cache file:', err)),
   ]);
 
+  // Track that we created this cache file
+  if (usedCacheFiles) {
+    usedCacheFiles.add(cacheKey);
+  }
+
   return {cacheHit: false, data};
 }
 
 async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
+  // Workers don't receive usedCacheFiles in workerData, so create a new Set
+  if (!usedCacheFiles) {
+    usedCacheFiles = new Set();
+  }
+
   const s3Client = getS3Client();
   const failedTasks = [];
   let cacheMisses = [];
