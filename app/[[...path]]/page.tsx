@@ -195,7 +195,11 @@ function formatCanonicalTag(tag: string) {
 }
 
 // Helper function to resolve OG image URLs
-function resolveOgImageUrl(imageUrl: string | undefined, domain: string): string | null {
+function resolveOgImageUrl(
+  imageUrl: string | undefined,
+  domain: string,
+  pagePath: string[]
+): string | null {
   if (!imageUrl) {
     return null;
   }
@@ -208,14 +212,21 @@ function resolveOgImageUrl(imageUrl: string | undefined, domain: string): string
     return cleanUrl;
   }
 
-  // Absolute paths (should already be the hashed path like /mdx-images/overview-HASH.png)
+  // Absolute paths (public folder)
   if (cleanUrl.startsWith('/')) {
     return `${domain}${cleanUrl}`;
   }
 
-  // If we still have a relative path here, it means the hashing didn't work
-  // Return null to fall back to default OG image
-  return null;
+  // Relative paths - resolve based on page path
+  if (cleanUrl.startsWith('./')) {
+    const relativePath = cleanUrl.slice(2); // Remove './'
+    const pageDir = pagePath.join('/');
+    return `${domain}/${pageDir}/${relativePath}`;
+  }
+
+  // Default case: treat as relative to page
+  const pageDir = pagePath.join('/');
+  return `${domain}/${pageDir}/${cleanUrl}`;
 }
 
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
@@ -257,34 +268,18 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 
       noindex = pageNode.frontmatter.noindex;
 
-      // Three-tier OG image priority:
-      // 1. Manual override via og_image frontmatter
+      // Check for manual OG image override in frontmatter
       if (pageNode.frontmatter.og_image) {
         ogImageUrl = resolveOgImageUrl(
           pageNode.frontmatter.og_image,
-          previewDomain ?? domain
+          previewDomain ?? domain,
+          params.path
         );
-      }
-
-      // 2. First image from page content (if no manual override)
-      if (!ogImageUrl) {
-        try {
-          const doc = await getFileBySlugWithCache(
-            isDeveloperDocs
-              ? `develop-docs/${params.path.join('/')}`
-              : `docs/${pageNode.path}`
-          );
-          if (doc.firstImage) {
-            ogImageUrl = resolveOgImageUrl(doc.firstImage, previewDomain ?? domain);
-          }
-        } catch (e) {
-          // If we can't load the doc, just continue without the first image
-        }
       }
     }
   }
 
-  // 3. Default fallback
+  // Default fallback
   if (!ogImageUrl) {
     ogImageUrl = `${previewDomain ?? domain}/og.png`;
   }

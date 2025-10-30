@@ -33,7 +33,6 @@ import rehypeSlug from './rehype-slug.js';
 import remarkCodeTabs from './remark-code-tabs';
 import remarkCodeTitles from './remark-code-title';
 import remarkComponentSpacing from './remark-component-spacing';
-import remarkExtractFirstImage from './remark-extract-first-image';
 import remarkExtractFrontmatter from './remark-extract-frontmatter';
 import remarkFormatCodeBlocks from './remark-format-code';
 import remarkImageResize from './remark-image-resize';
@@ -602,7 +601,6 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   );
 
   const toc: TocNode[] = [];
-  const firstImageRef: string[] = [];
 
   // cwd is how mdx-bundler knows how to resolve relative paths
   const cwd = path.dirname(sourcePath);
@@ -622,7 +620,6 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
         remarkDefList,
         remarkFormatCodeBlocks,
         [remarkImageSize, {sourceFolder: cwd, publicFolder: path.join(root, 'public')}],
-        [remarkExtractFirstImage, {exportRef: firstImageRef}],
         remarkMdxImages,
         remarkImageResize,
         remarkCodeTitles,
@@ -701,9 +698,6 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       // Set write to true so that esbuild will output the files.
       options.write = true;
 
-      // Enable metafile to track input -> output file mappings
-      options.metafile = true;
-
       return options;
     },
   }).catch(e => {
@@ -719,41 +713,10 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     mergedFrontmatter = {...frontmatter, ...configFrontmatter};
   }
 
-  // Map the first image to its hashed output filename using esbuild's metafile
-  let firstImageHashed: string | undefined;
-  if (firstImageRef[0] && (result as any).metafile) {
-    const firstImagePath = firstImageRef[0];
-    const metafile = (result as any).metafile as {
-      outputs: Record<string, {inputs?: Record<string, any>}>;
-    };
-
-    // Find the output file that corresponds to this input image
-    for (const [outputPath, outputInfo] of Object.entries(metafile.outputs)) {
-      if (outputInfo.inputs) {
-        for (const inputPath of Object.keys(outputInfo.inputs)) {
-          // Check if this input matches our first image
-          // Handle both absolute and relative paths
-          if (
-            inputPath.endsWith(firstImagePath) ||
-            inputPath.endsWith(firstImagePath.replace('./', ''))
-          ) {
-            // Extract just the filename from the output path
-            firstImageHashed = `/mdx-images/${path.basename(outputPath)}`;
-            break;
-          }
-        }
-      }
-      if (firstImageHashed) {
-        break;
-      }
-    }
-  }
-
   const resultObj: SlugFile = {
     matter: result.matter,
     mdxSource: code,
     toc,
-    firstImage: firstImageHashed || firstImageRef[0],
     frontMatter: {
       ...mergedFrontmatter,
       slug,
