@@ -8,14 +8,15 @@ Sentry MCP Observability helps you track and debug Model Context Protocol (MCP) 
 
 To start sending MCP data to Sentry, make sure you've created a Sentry project for your MCP-enabled repository and follow the guide below:
 
-## Requirements
-
-<VersionRequirement product="MCP Observability" sdk="Node SDK" minVersion="9.46.0" />
-
-
 ## Supported SDKs
 
 ### JavaScript - MCP Server
+
+<VersionRequirement
+  product="MCP Observability"
+  sdk="Node SDK"
+  minVersion="9.46.0"
+/>
 
 The Sentry JavaScript SDK supports MCP observability by wrapping the MCP Server from the [@modelcontextprotocol/sdk](https://www.npmjs.com/package/@modelcontextprotocol/sdk) package. This wrapper automatically captures spans for your MCP server workflows including tool executions, resource access, and client connections.
 
@@ -40,4 +41,41 @@ const server = Sentry.wrapMcpServerWithSentry(new McpServer({
 }));
 
 ...
+```
+
+### Python - MCP Server
+
+<VersionRequirement
+  product="MCP Observability"
+  sdk="Python SDK"
+  minVersion="2.43.0"
+/>
+
+The Sentry Python SDK supports MCP observability for [FastMCP](https://gofastmcp.com/getting-started/welcome). The integration automatically captures spans for your MCP server workflows including tool executions, resource access, and prompt handling.
+
+#### Quick Start with FastMCP
+
+```python
+import sentry_sdk
+from mcp.server.fastmcp import FastMCP
+
+# Sentry init needs to be above everything else
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    traces_sample_rate=1.0,
+    # Optional: Enable to capture tool call arguments and results in Sentry, which may include PII
+    send_default_pii=True,
+)
+
+# Create the MCP server
+mcp = FastMCP("Example MCP Server")
+
+# Define a tool
+@mcp.tool()
+async def calculate_sum(a: int, b: int) -> int:
+    """Add two numbers together."""
+    return a + b
+
+# Run the server
+mcp.run()
 ```
