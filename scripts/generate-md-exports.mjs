@@ -58,7 +58,10 @@ async function uploadToCFR2(s3Client, relativePath, data) {
   return;
 }
 
-function taskFinishHandler({id, success, failedTasks, usedCacheFiles}, allUsedCacheFiles) {
+function taskFinishHandler(
+  {id, success, failedTasks, usedCacheFiles},
+  allUsedCacheFiles
+) {
   // Collect cache files used by this worker
   if (usedCacheFiles) {
     usedCacheFiles.forEach(file => allUsedCacheFiles.add(file));
