@@ -530,22 +530,14 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   let cacheFile: string | null = null;
   let assetsCacheDir: string | null = null;
 
-  // During Vercel deployment (which uses AWS Lambda), use /tmp to avoid read-only file system errors
-  // The actual images are already built and in public/mdx-images from the build step
-  // Check for both Vercel and Lambda environment indicators
-  const isVercelRuntime =
-    process.env.VERCEL ||
-    process.env.VERCEL_ENV ||
-    process.env.AWS_LAMBDA_FUNCTION_NAME ||
-    process.env.LAMBDA_TASK_ROOT;
-  const outdir = isVercelRuntime
-    ? path.join('/tmp', 'mdx-images-' + md5(sourcePath).slice(0, 8))
-    : path.join(root, 'public', 'mdx-images');
+  // Always use public/mdx-images during build
+  // During runtime (Lambda), this directory is read-only but images are already there from build
+  const outdir = path.join(root, 'public', 'mdx-images');
 
   try {
     await mkdir(outdir, {recursive: true});
   } catch (e) {
-    // If we can't create the directory (e.g., read-only filesystem during static generation),
+    // If we can't create the directory (e.g., read-only filesystem),
     // continue anyway - images should already exist from build time
   }
 
@@ -557,8 +549,8 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     source.includes('<PlatformSDKPackageName') ||
     source.includes('<LambdaLayerDetail');
 
-  // Check cache in CI or Vercel environments
-  if (process.env.CI || isVercelRuntime) {
+  // Check cache in CI environments
+  if (process.env.CI) {
     if (skipCache) {
       // eslint-disable-next-line no-console
       console.info(
@@ -572,10 +564,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       try {
         const [cached, _] = await Promise.all([
           readCacheFile<SlugFile>(cacheFile),
-          // Only try to copy if the target is writable
-          isVercelRuntime
-            ? Promise.resolve() // Skip copying on Vercel runtime - images already in public/
-            : cp(assetsCacheDir, outdir, {recursive: true}),
+          cp(assetsCacheDir, outdir, {recursive: true}),
         ]);
         return cached;
       } catch (err) {
@@ -692,8 +681,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
       // enabled is because mdx-images is a dumping ground
       // for all images, so we cannot filter it out only
       // for this specific slug easily
-      // On Vercel runtime, always use /tmp (writable) instead of cache or public dirs
-      options.outdir = isVercelRuntime ? outdir : assetsCacheDir || outdir;
+      options.outdir = assetsCacheDir || outdir;
 
       // Set write to true so that esbuild will output the files.
       options.write = true;
@@ -724,14 +712,11 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   };
 
   if (assetsCacheDir && cacheFile && !skipCache) {
-    // On Vercel runtime, skip copying since we're using /tmp which is ephemeral
-    if (!isVercelRuntime) {
-      try {
-        await cp(assetsCacheDir, outdir, {recursive: true});
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.warn(`Failed to copy assets from cache to output dir:`, e);
-      }
+    try {
+      await cp(assetsCacheDir, outdir, {recursive: true});
+    } catch (e) {
+      // If copy fails (e.g., on read-only filesystem), continue anyway
+      // Images should already exist from build time
     }
     writeCacheFile(cacheFile, JSON.stringify(resultObj)).catch(e => {
       // eslint-disable-next-line no-console
