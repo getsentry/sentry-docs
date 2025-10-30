@@ -1,28 +1,64 @@
 ---
 title: Integrating into CI
 sidebar_order: 40
-description: Set up the GitHub integration to receive size change notifications as Github status checks.
+description: Set up the integration in CI to receive automated size change notifications
 ---
 
 <Include name="size-analysis/github-only" />
 
-The GitHub integration brings Size Analysis directly into your pull request workflow by adding status checks for size analysis.
+## Github
 
-TODO: something like a ##benefits?
+The GitHub integration brings Size Analysis directly into your pull request workflow by adding status checks for size analysis. This alerts developers to the size impact their code changes have on the app build, and can optionally block the pull request from being merged on large size increases.
 
-## Installation
+### Installation
 
 1. Install the Sentry Github App by following the installation instructions in the [GitHub integration documentation](https://docs.sentry.io/organization/integrations/source-code-mgmt/github/).
 
-2. Set up size analysis by following the guide for [iOS](/platforms/apple/guides/ios/size-analysis/) or [Android](/platforms/android/size-analysis/).
+2. Set up Size Analysis by following the guide for [iOS](/platforms/apple/guides/ios/size-analysis/) or [Android](/platforms/android/size-analysis/).
 
-3. Ensure all base branch builds are uploading builds.
+3. Create a workflow to upload base branch builds.
 
-4. Ensure all PR builds are uploading builds.
+Size Analysis works by comparing a head vs a base build, similar to code review. First, we need to upload base builds:
 
-TODO: How much detail should we give in all the above steps or should we just remove them and cite the iOS and Android guides?
+```yml {filename:sentry_size_analysis_main.yml}
+name: Sentry Size Analysis Upload
 
-## How It Works
+on:
+  push:
+    branches: [main] // or whatever is used
+
+jobs:
+  build_and_upload:
+    // ...
+```
+
+Confirm that builds uploaded from this workflow have the correct `sha` metadata value, as well as no `base_sha` being set.
+
+4. Create a workflow to upload pull request builds.
+
+Next, we need the head build uploads:
+
+```yml {filename:sentry_size_analysis_pull_request.yml}
+name: Sentry Size Analysis Upload
+
+on:
+  pull_request:
+    branches: [main] // or whatever is used
+
+jobs:
+  build_and_upload:
+    // ...
+```
+
+Confirm that builds uploaded from this workflow have the correct `sha` and `base_sha` metadata values.
+
+5. Confirm the status check appears
+
+After configuring both workflows and sending the correct metadata, the status check should appear on every commit:
+
+![Example Status Check =400x](./images/status-check-inline.png)
+
+### How It Works
 
 Once the integration is set up and you're uploading builds from your CI:
 
