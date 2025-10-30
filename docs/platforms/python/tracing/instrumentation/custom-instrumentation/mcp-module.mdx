@@ -1,0 +1,165 @@
+---
+title: Instrument MCP Servers
+sidebar_order: 600
+description: "Learn how to manually instrument your code to use Sentry's MCP monitoring."
+---
+
+With Sentry's MCP (Model Context Protocol) monitoring, you can track and debug MCP servers with full-stack context. You'll be able to monitor tool executions, prompt retrievals, resource access, and error rates. MCP monitoring data will be fully connected to your other Sentry data like logs, errors, and traces.
+
+As a prerequisite to setting up MCP monitoring with Python, you'll need to first <PlatformLink to="/tracing/">set up tracing</PlatformLink>. Once this is done, the Python SDK will automatically instrument MCP servers created with supported libraries. If that doesn't fit your use case, you can use custom instrumentation described below.
+
+## Automatic Instrumentation
+
+The Python SDK supports automatic instrumentation for MCP servers. We recommend adding the MCP integration to your Sentry configuration to automatically capture spans for MCP operations.
+
+- <PlatformLink to="/integrations/mcp/">
+    MCP (Model Context Protocol)
+  </PlatformLink>
+
+## Manual Instrumentation
+
+For your MCP data to show up in Sentry, spans must be created with well-defined names and data attributes. See below for the different types of MCP operations you can instrument.
+
+The [@sentry_sdk.trace()](/platforms/python/tracing/instrumentation/custom-instrumentation/#span-templates) decorator can also be used to create these spans.
+
+## Spans
+
+### Tool Execution Span
+
+<Include name="tracing/mcp-module/tool-execution-span" />
+
+#### Example Tool Execution Span:
+
+```python
+import sentry_sdk
+import json
+
+sentry_sdk.init(...)
+
+# Example tool execution
+tool_name = "get_weather"
+tool_arguments = {"city": "San Francisco"}
+
+with sentry_sdk.start_span(
+    op="mcp.tool",
+    name=f"mcp.tool {tool_name}",
+) as span:
+    # Set MCP-specific attributes
+    span.set_data("mcp.tool.name", tool_name)
+    span.set_data("mcp.method.name", "tools/call")
+
+    # Set request metadata
+    span.set_data("mcp.request.id", "req_123abc")
+    span.set_data("mcp.session.id", "session_xyz789")
+    span.set_data("mcp.transport", "pipe")  # or "tcp" for HTTP/WebSocket/SSE
+
+    # Set tool arguments (optional, if send_default_pii=True)
+    for key, value in tool_arguments.items():
+        span.set_data(f"mcp.request.argument.{key}", value)
+
+    # Execute the tool
+    try:
+        result = execute_tool(tool_name, tool_arguments)
+
+        # Set result data
+        span.set_data("mcp.tool.result.content", json.dumps(result))
+        span.set_data("mcp.tool.result.is_error", False)
+
+        # Set result content count if applicable
+        if isinstance(result, (list, dict)):
+            span.set_data("mcp.tool.result.content_count", len(result))
+    except Exception as e:
+        span.set_data("mcp.tool.result.is_error", True)
+        raise
+```
+
+### Prompt Retrieval Span
+
+<Include name="tracing/mcp-module/prompt-retrieval-span" />
+
+#### Example Prompt Retrieval Span:
+
+```python
+import sentry_sdk
+import json
+
+sentry_sdk.init(...)
+
+# Example prompt retrieval
+prompt_name = "code_review"
+prompt_arguments = {"language": "python"}
+
+with sentry_sdk.start_span(
+    op="mcp.prompt",
+    name=f"mcp.prompt {prompt_name}",
+) as span:
+    # Set MCP-specific attributes
+    span.set_data("mcp.prompt.name", prompt_name)
+    span.set_data("mcp.method.name", "prompts/get")
+
+    # Set request metadata
+    span.set_data("mcp.request.id", "req_456def")
+    span.set_data("mcp.session.id", "session_xyz789")
+    span.set_data("mcp.transport", "pipe")
+
+    # Set prompt arguments (optional, if send_default_pii=True)
+    for key, value in prompt_arguments.items():
+        span.set_data(f"mcp.request.argument.{key}", value)
+
+    # Retrieve the prompt
+    prompt_result = get_prompt(prompt_name, prompt_arguments)
+
+    # Set result data
+    messages = prompt_result.get("messages", [])
+    span.set_data("mcp.prompt.result.message_count", len(messages))
+
+    # For single-message prompts, set role and content
+    if len(messages) == 1:
+        span.set_data("mcp.prompt.result.message_role", messages[0].get("role"))
+        # Content is PII, only set if send_default_pii=True
+        span.set_data(
+            "mcp.prompt.result.message_content",
+            json.dumps(messages[0].get("content"))
+        )
+```
+
+### Resource Read Span
+
+<Include name="tracing/mcp-module/resource-read-span" />
+
+#### Example Resource Read Span:
+
+```python
+import sentry_sdk
+from urllib.parse import urlparse
+
+sentry_sdk.init(...)
+
+# Example resource access
+resource_uri = "file:///path/to/resource.txt"
+
+with sentry_sdk.start_span(
+    op="mcp.resource",
+    name=f"mcp.resource {resource_uri}",
+) as span:
+    # Set MCP-specific attributes
+    span.set_data("mcp.resource.uri", resource_uri)
+    span.set_data("mcp.method.name", "resources/read")
+
+    # Extract and set protocol/scheme
+    parsed_uri = urlparse(resource_uri)
+    if parsed_uri.scheme:
+        span.set_data("mcp.resource.protocol", parsed_uri.scheme)
+
+    # Set request metadata
+    span.set_data("mcp.request.id", "req_789ghi")
+    span.set_data("mcp.session.id", "session_xyz789")
+    span.set_data("mcp.transport", "pipe")
+
+    # Access the resource
+    resource_data = read_resource(resource_uri)
+```
+
+## Common Span Attributes
+
+<Include name="tracing/mcp-module/common-span-attributes" />
