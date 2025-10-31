@@ -294,9 +294,7 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
         console.log(
           `   Build hash found: ${buildHashMatch ? buildHashMatch[1] : 'none'}`
         );
-        console.log(
-          `   Timestamp found: ${timestampMatch ? timestampMatch[1] : 'none'}`
-        );
+        console.log(`   Timestamp found: ${timestampMatch ? timestampMatch[1] : 'none'}`);
         console.log(`   Date found: ${dateMatch ? dateMatch[0] : 'none'}`);
         console.log(`   First 500 chars: ${leanHTML.substring(0, 500)}`);
       }
