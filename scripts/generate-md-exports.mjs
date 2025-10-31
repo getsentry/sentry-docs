@@ -58,13 +58,13 @@ async function uploadToCFR2(s3Client, relativePath, data) {
   return;
 }
 
-function taskFinishHandler(
-  {id, success, failedTasks, usedCacheFiles},
-  allUsedCacheFiles
-) {
-  // Collect cache files used by this worker
-  if (usedCacheFiles) {
-    usedCacheFiles.forEach(file => allUsedCacheFiles.add(file));
+// Global set to track which cache files are used across all workers
+let globalUsedCacheFiles = null;
+
+function taskFinishHandler({id, success, failedTasks, usedCacheFiles}) {
+  // Collect cache files used by this worker into the global set
+  if (usedCacheFiles && globalUsedCacheFiles) {
+    usedCacheFiles.forEach(file => globalUsedCacheFiles.add(file));
   }
 
   if (failedTasks.length === 0) {
@@ -104,7 +104,7 @@ async function createWork() {
   }
 
   // Track which cache files are used during this build
-  const usedCacheFiles = new Set();
+  globalUsedCacheFiles = new Set();
 
   // On a 16-core machine, 8 workers were optimal (and slightly faster than 16)
   const numWorkers = Math.max(Math.floor(cpus().length / 2), 2);
@@ -174,7 +174,7 @@ async function createWork() {
         },
       });
       let hasErrors = false;
-      worker.on('message', data => (hasErrors = taskFinishHandler(data, usedCacheFiles)));
+      worker.on('message', data => (hasErrors = taskFinishHandler(data)));
       worker.on('error', reject);
       worker.on('exit', code => {
         if (code !== 0) {
@@ -195,7 +195,7 @@ async function createWork() {
       noCache,
       usedCacheFiles: mainThreadUsedFiles,
     }).then(data => {
-      if (taskFinishHandler(data, usedCacheFiles)) {
+      if (taskFinishHandler(data)) {
         throw new Error(`Worker[${data.id}] had some errors.`);
       }
     })
@@ -207,17 +207,13 @@ async function createWork() {
   if (!noCache) {
     try {
       const allFiles = await readdir(CACHE_DIR);
-      let cleanedCount = 0;
+      const filesToDelete = allFiles.filter(file => !globalUsedCacheFiles.has(file));
 
-      for (const file of allFiles) {
-        if (!usedCacheFiles.has(file)) {
-          await rm(path.join(CACHE_DIR, file), {force: true});
-          cleanedCount++;
-        }
-      }
-
-      if (cleanedCount > 0) {
-        console.log(`🧹 Cleaned up ${cleanedCount} unused cache files`);
+      if (filesToDelete.length > 0) {
+        await Promise.all(
+          filesToDelete.map(file => rm(path.join(CACHE_DIR, file), {force: true}))
+        );
+        console.log(`🧹 Cleaned up ${filesToDelete.length} unused cache files`);
       }
     } catch (err) {
       console.warn('Failed to clean unused cache files:', err);
