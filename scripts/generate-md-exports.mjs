@@ -279,25 +279,25 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
       if (err.code !== 'ENOENT') {
         console.warn(`Error using cache file ${cacheFile}:`, err);
       }
-      // Log first cache miss to help debug why HTML is changing
-      if (err.code === 'ENOENT' && !genMDFromHTML._loggedFirstMiss) {
-        genMDFromHTML._loggedFirstMiss = true;
-        console.log(`🔍 First cache miss: ${source}`);
-        console.log(`   Looking for cache key: ${cacheKey}`);
-        console.log(`   HTML length: ${leanHTML.length} chars`);
-
-        // List a few cache files that exist to compare
+      // Save HTML samples for debugging (skip in CI)
+      if (!process.env.CI && err.code === 'ENOENT') {
+        const debugDir = path.join(cacheDir, '..', 'debug-html-samples');
         try {
-          const existingFiles = await readdir(cacheDir);
-          const v4Files = existingFiles.filter(f => f.startsWith('v4_')).slice(0, 5);
-          console.log(`   Existing v4 cache files: ${v4Files.join(', ')}`);
-        } catch (e) {
-          // Ignore
-        }
+          await mkdir(debugDir, {recursive: true});
+          const timestamp = Date.now();
+          const basename = path.basename(source, '.html');
+          const debugFile = path.join(debugDir, `${basename}-${timestamp}.html`);
+          await writeFile(debugFile, leanHTML, {encoding: 'utf8'});
 
-        // Log HTML in chunks to avoid truncation
-        console.log(`   HTML chunk 1 (0-800): ${leanHTML.substring(0, 800)}`);
-        console.log(`   HTML chunk 2 (800-1600): ${leanHTML.substring(800, 1600)}`);
+          if (!genMDFromHTML._loggedFirstMiss) {
+            genMDFromHTML._loggedFirstMiss = true;
+            console.log(`🔍 First cache miss: ${source}`);
+            console.log(`   Saving HTML samples to: ${debugDir}`);
+            console.log(`   Compare files to find what's changing between builds`);
+          }
+        } catch (e) {
+          // Ignore errors
+        }
       }
     }
   }
