@@ -285,9 +285,20 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
         console.log(`🔍 First cache miss: ${source}`);
         console.log(`   Looking for cache key: ${cacheKey}`);
         console.log(`   HTML length: ${leanHTML.length} chars`);
+
+        // Look for common non-deterministic patterns
+        const buildHashMatch = leanHTML.match(/buildId['":]+"([^"]+)"/);
+        const timestampMatch = leanHTML.match(/timestamp['":]+"?(\d+)"?/i);
+        const dateMatch = leanHTML.match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+
         console.log(
-          `   First 200 chars: ${leanHTML.substring(0, 200).replace(/\n/g, '\\n')}`
+          `   Build hash found: ${buildHashMatch ? buildHashMatch[1] : 'none'}`
         );
+        console.log(
+          `   Timestamp found: ${timestampMatch ? timestampMatch[1] : 'none'}`
+        );
+        console.log(`   Date found: ${dateMatch ? dateMatch[0] : 'none'}`);
+        console.log(`   First 500 chars: ${leanHTML.substring(0, 500)}`);
       }
     }
   }
