@@ -109,16 +109,13 @@ async function getRegistryHashWithRetry(
 /**
  * Get the registry hash, using cached value if available.
  * This ensures we only fetch the registry once per worker process.
+ * If the fetch fails, the error is cached so subsequent calls fail fast.
  */
 function getRegistryHash(): Promise<string> {
   if (!cachedRegistryHash) {
     // eslint-disable-next-line no-console
     console.info('Fetching registry hash for the first time in this worker');
-    cachedRegistryHash = getRegistryHashWithRetry().catch(err => {
-      // Reset cache on error so next call will retry
-      cachedRegistryHash = null;
-      throw err;
-    });
+    cachedRegistryHash = getRegistryHashWithRetry();
   }
   return cachedRegistryHash;
 }
