@@ -219,12 +219,21 @@ async function createWork() {
       console.log(`   - Files tracked as used: ${globalUsedCacheFiles.size}`);
       console.log(`   - Files to delete: ${filesToDelete.length}`);
 
+      // Debug: Show a few examples of what we're comparing
+      console.log(`   - Example used files: ${Array.from(globalUsedCacheFiles).slice(0, 3).join(', ')}`);
+      console.log(`   - Example dir files: ${allFiles.slice(0, 3).join(', ')}`);
+      console.log(`   - Example to delete: ${filesToDelete.slice(0, 3).join(', ')}`);
+
       if (filesToDelete.length > 0) {
         await Promise.all(
           filesToDelete.map(file => rm(path.join(CACHE_DIR, file), {force: true}))
         );
         console.log(`🧹 Cleaned up ${filesToDelete.length} unused cache files`);
       }
+
+      // Verify cleanup worked
+      const remainingFiles = await readdir(CACHE_DIR);
+      console.log(`✅ Cache directory now has ${remainingFiles.length} files`);
     } catch (err) {
       console.warn('Failed to clean unused cache files:', err);
     }
