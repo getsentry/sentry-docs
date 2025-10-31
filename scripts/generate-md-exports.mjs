@@ -27,7 +27,7 @@ import {unified} from 'unified';
 import {remove} from 'unist-util-remove';
 
 const DOCS_ORIGIN = 'https://docs.sentry.io';
-const CACHE_VERSION = 4; // Bumped: now normalizing timestamps and Next.js asset hashes
+const CACHE_VERSION = 3;
 const CACHE_COMPRESS_LEVEL = 4;
 const R2_BUCKET = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'sentry-develop-docs'
@@ -64,7 +64,7 @@ let globalUsedCacheFiles = null;
 function taskFinishHandler({id, success, failedTasks, usedCacheFiles}) {
   // Collect cache files used by this worker into the global set
   if (usedCacheFiles && globalUsedCacheFiles) {
-    console.log(`🔍 Worker[${id}]: returned ${usedCacheFiles.length} cache files`);
+    console.log(`🔍 Worker[${id}]: returned ${usedCacheFiles.length} cache files.`);
     usedCacheFiles.forEach(file => globalUsedCacheFiles.add(file));
   } else {
     console.warn(
@@ -227,13 +227,6 @@ async function createWork() {
       console.log(`   - Files to delete (old/unused): ${filesToDelete.length}`);
       console.log(`   - Expected after cleanup: ${overlaps.length} files`);
 
-      // Debug: Show a few examples
-      console.log(
-        `   - Example used: ${Array.from(globalUsedCacheFiles).slice(0, 2).join(', ')}`
-      );
-      console.log(`   - Example to delete: ${filesToDelete.slice(0, 2).join(', ')}`);
-      console.log(`   - Example kept: ${overlaps.slice(0, 2).join(', ')}`);
-
       if (filesToDelete.length > 0) {
         await Promise.all(
           filesToDelete.map(file => rm(path.join(CACHE_DIR, file), {force: true}))
@@ -278,26 +271,6 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
     } catch (err) {
       if (err.code !== 'ENOENT') {
         console.warn(`Error using cache file ${cacheFile}:`, err);
-      }
-      // Save HTML samples for debugging (skip in CI)
-      if (!process.env.CI && err.code === 'ENOENT') {
-        const debugDir = path.join(cacheDir, '..', 'debug-html-samples');
-        try {
-          await mkdir(debugDir, {recursive: true});
-          const timestamp = Date.now();
-          const basename = path.basename(source, '.html');
-          const debugFile = path.join(debugDir, `${basename}-${timestamp}.html`);
-          await writeFile(debugFile, leanHTML, {encoding: 'utf8'});
-
-          if (!genMDFromHTML._loggedFirstMiss) {
-            genMDFromHTML._loggedFirstMiss = true;
-            console.log(`🔍 First cache miss: ${source}`);
-            console.log(`   Saving HTML samples to: ${debugDir}`);
-            console.log(`   Compare files to find what's changing between builds`);
-          }
-        } catch (e) {
-          // Ignore errors
-        }
       }
     }
   }
