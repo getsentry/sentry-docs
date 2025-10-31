@@ -220,11 +220,17 @@ async function createWork() {
       console.log(`   - Files to delete: ${filesToDelete.length}`);
 
       // Debug: Show a few examples of what we're comparing
-      console.log(
-        `   - Example used files: ${Array.from(globalUsedCacheFiles).slice(0, 3).join(', ')}`
-      );
+      const usedArray = Array.from(globalUsedCacheFiles);
+      console.log(`   - Example used files: ${usedArray.slice(0, 3).join(', ')}`);
       console.log(`   - Example dir files: ${allFiles.slice(0, 3).join(', ')}`);
       console.log(`   - Example to delete: ${filesToDelete.slice(0, 3).join(', ')}`);
+
+      // Check if there's ANY overlap
+      const overlaps = allFiles.filter(file => globalUsedCacheFiles.has(file));
+      console.log(`   - Files that overlap (exist in both): ${overlaps.length}`);
+      if (overlaps.length > 0) {
+        console.log(`   - Example overlaps: ${overlaps.slice(0, 3).join(', ')}`);
+      }
 
       if (filesToDelete.length > 0) {
         await Promise.all(
@@ -270,6 +276,14 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
     } catch (err) {
       if (err.code !== 'ENOENT') {
         console.warn(`Error using cache file ${cacheFile}:`, err);
+      }
+      // Log first cache miss to help debug why HTML is changing
+      if (err.code === 'ENOENT' && !genMDFromHTML._loggedFirstMiss) {
+        genMDFromHTML._loggedFirstMiss = true;
+        console.log(`🔍 First cache miss: ${source}`);
+        console.log(`   Looking for cache key: ${cacheKey}`);
+        console.log(`   HTML length: ${leanHTML.length} chars`);
+        console.log(`   First 200 chars: ${leanHTML.substring(0, 200).replace(/\n/g, '\\n')}`);
       }
     }
   }
