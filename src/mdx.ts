@@ -50,6 +50,7 @@ type SlugFile = {
   };
   mdxSource: string;
   toc: TocNode[];
+  firstImage?: string;
 };
 
 const root = process.cwd();
@@ -528,8 +529,17 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   let cacheKey: string | null = null;
   let cacheFile: string | null = null;
   let assetsCacheDir: string | null = null;
+
+  // Always use public/mdx-images during build
+  // During runtime (Lambda), this directory is read-only but images are already there from build
   const outdir = path.join(root, 'public', 'mdx-images');
-  await mkdir(outdir, {recursive: true});
+
+  try {
+    await mkdir(outdir, {recursive: true});
+  } catch (e) {
+    // If we can't create the directory (e.g., read-only filesystem),
+    // continue anyway - images should already exist from build time
+  }
 
   // If the file contains content that depends on the Release Registry (such as an SDK's latest version), avoid using the cache for that file, i.e. always rebuild it.
   // This is because the content from the registry might have changed since the last time the file was cached.
@@ -539,6 +549,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     source.includes('<PlatformSDKPackageName') ||
     source.includes('<LambdaLayerDetail');
 
+  // Check cache in CI environments
   if (process.env.CI) {
     if (skipCache) {
       // eslint-disable-next-line no-console
@@ -701,7 +712,12 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
   };
 
   if (assetsCacheDir && cacheFile && !skipCache) {
-    await cp(assetsCacheDir, outdir, {recursive: true});
+    try {
+      await cp(assetsCacheDir, outdir, {recursive: true});
+    } catch (e) {
+      // If copy fails (e.g., on read-only filesystem), continue anyway
+      // Images should already exist from build time
+    }
     writeCacheFile(cacheFile, JSON.stringify(resultObj)).catch(e => {
       // eslint-disable-next-line no-console
       console.warn(`Failed to write MDX cache: ${cacheFile}`, e);

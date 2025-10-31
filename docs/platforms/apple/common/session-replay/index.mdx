@@ -14,9 +14,33 @@ notSupported:
 
 <PlatformSection notSupported={["apple", "apple.macos", "apple.tvos", "apple.watchos", "apple.visionos"]}>
 
-<Alert level="warning">
+<Alert level="warning" title="All iOS developers">
 
 Before enabling Session Replay in production, verify your masking configuration to ensure no sensitive data is captured. Our default settings aggressively mask potentially sensitive data, but if you modify these settings or update UI frameworks or system SDKs, you must thoroughly test your application. If you find any masking issues or sensitive data that should be masked but isn't, please [create a GitHub issue](https://github.com/getsentry/sentry-cocoa/issues/new/choose) and avoid deploying to production with Session Replay enabled until the issue is resolved.
+
+</Alert>
+
+<Alert level="warning" title="iOS 26.0+ - Liquid Glass">
+
+<strong>Session Replay is disabled by default on iOS 26.0+ with Xcode 26.0+ to prevent potential PII leaks</strong>
+
+Due to potential masking issues introduced by Apple's Liquid Glass rendering changes in iOS 26.0, Session Replay is now <strong>automatically disabled</strong> on apps running iOS 26.0+ when built with Xcode 26.0 or later starting with Sentry Cocoa <strong>8.57.0</strong>. This is a defensive measure to protect user privacy and prevent potential PII leaks until masking is reliably supported. Earlier SDK versions do not include this safeguard and may be affected by unreliable masking on iOS 26.0 when built with Xcode 26.0 (Liquid Glass). We recommend upgrading to 8.57.0+ or, if you can't upgrade the SDK, disabling Session Replay manually.
+
+Session Replay will work normally if:
+
+- Your app runs on iOS versions prior to 26.0, OR
+- Your app is built with Xcode prior to 26.0, OR
+- Your app explicitly sets <code>UIDesignRequiresCompatibility</code> to <code>YES</code> in <code>Info.plist</code>
+
+<strong>Override (use with caution):</strong> If you understand the PII risks and want to enable session replay anyway, you can set:
+
+```swift
+options.experimental.enableSessionReplayInUnreliableEnvironment = true
+```
+
+This experimental override option will be removed in a future minor version once the masking issues are resolved.
+
+Follow the progress on fixing masking for iOS 26.0 (Liquid Glass) in <a href="https://github.com/getsentry/sentry-cocoa/issues/6390">GitHub issue #6390</a>.
 
 </Alert>
 

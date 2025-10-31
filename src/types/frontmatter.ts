@@ -57,6 +57,14 @@ export interface FrontMatter {
   notoc?: boolean;
 
   /**
+   * Custom Open Graph image for social sharing.
+   * Can be a relative path (e.g., './img/my-image.png'), absolute path (e.g., '/images/og.png'),
+   * or external URL. If not specified, the first image in the page content will be used,
+   * or falls back to the default OG image.
+   */
+  og_image?: string;
+
+  /**
    * The previous page in the bottom pagination navigation.
    */
   previousPage?: PaginationNavNode;
