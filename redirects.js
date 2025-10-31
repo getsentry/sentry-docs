@@ -1064,10 +1064,6 @@ const userDocsRedirects = [
     destination: '/product/issues/issue-details/feature-flags/:path*',
   },
   {
-    source: '/product/explore/metrics/:path*',
-    destination: '/concepts/key-terms/tracing/span-metrics/',
-  },
-  {
     source: '/product/tracing/:path*',
     destination: '/concepts/key-terms/tracing/:path*',
   },
