@@ -219,17 +219,19 @@ const handleUpload = async () => {
         const uploadData = await uploadResponse.json();
         
         // Set success attributes
-        span?.setAttribute('upload.success', true);
-        span?.setAttribute('upload.duration_ms', Date.now() - uploadStartTime);
-        span?.setAttribute('job.id', uploadData.jobId);
+        span.setAttribute('upload.success', true);
+        span.setAttribute('upload.duration_ms', Date.now() - uploadStartTime);
+        span.setAttribute('job.id', uploadData.jobId);
         
         // Update UI to show processing status
         updateUploadStatus(uploadData.jobId, 'processing');
         
       } catch (error) {
-        span?.setAttribute('upload.success', false);
-        span?.setAttribute('upload.error', error instanceof Error ? error.message : 'Unknown error');
+        span.setStatus({ code: 2, message: 'error' });
+        span.setAttribute('upload.success', false);
+        span.setAttribute('upload.error', error instanceof Error ? error.message : 'Unknown error');
         setUploadStatus('error');
+        Sentry.captureException(error);
       }
     }
   );
@@ -344,9 +346,9 @@ export async function processMedia(job: ProcessingJob): Promise<void> {
                 const operations: string[] = [];
                 
                 // Add job-specific attributes
-                span?.setAttribute('media.size_bytes', job.fileSize);
-                span?.setAttribute('media.mime_type', job.fileType);
-                span?.setAttribute('media.size_bucket', getSizeBucket(job.fileSize));
+                span.setAttribute('media.size_bytes', job.fileSize);
+                span.setAttribute('media.mime_type', job.fileType);
+                span.setAttribute('media.size_bucket', getSizeBucket(job.fileSize));
                 
                 // Simulate image optimization and thumbnail generation
                 if (job.fileType.startsWith('image/')) {
@@ -363,13 +365,13 @@ export async function processMedia(job: ProcessingJob): Promise<void> {
                 const thumbnailCreated = Math.random() > 0.05; // 95% success rate
                 
                 // Rich attributes instead of multiple spans
-                span?.setAttribute('processing.operations', JSON.stringify(operations));
-                span?.setAttribute('processing.optimization_level', 'high');
-                span?.setAttribute('processing.thumbnail_created', thumbnailCreated);
-                span?.setAttribute('processing.duration_ms', Date.now() - startTime);
-                span?.setAttribute('result.size_saved_bytes', sizeSaved);
-                span?.setAttribute('result.size_reduction_percent', 30);
-                span?.setAttribute('result.status', 'success');
+                span.setAttribute('processing.operations', JSON.stringify(operations));
+                span.setAttribute('processing.optimization_level', 'high');
+                span.setAttribute('processing.thumbnail_created', thumbnailCreated);
+                span.setAttribute('processing.duration_ms', Date.now() - startTime);
+                span.setAttribute('result.size_saved_bytes', sizeSaved);
+                span.setAttribute('result.size_reduction_percent', 30);
+                span.setAttribute('result.status', 'success');
                 
                 // Update job status
                 job.status = 'completed';
@@ -378,8 +380,8 @@ export async function processMedia(job: ProcessingJob): Promise<void> {
                 parentSpan.setStatus({ code: 1, message: 'ok' });
                 
               } catch (error) {
-                span?.setAttribute('result.status', 'failed');
-                span?.setAttribute('error.message', error instanceof Error ? error.message : 'Unknown error');
+                span.setAttribute('result.status', 'failed');
+                span.setAttribute('error.message', error instanceof Error ? error.message : 'Unknown error');
                 parentSpan.setStatus({ code: 2, message: 'error' });
                 Sentry.captureException(error);
               }
@@ -446,21 +448,21 @@ const response = await Sentry.startSpan(
 
       const data: SearchResponse = await response.json();
       
-      span?.setAttribute('results.count', data.results.length);
-      span?.setAttribute('results.has_results', data.results.length > 0);
-      span?.setAttribute('http.response_size', JSON.stringify(data).length);
-      span?.setStatus({ code: 1, message: 'ok' });
+      span.setAttribute('results.count', data.results.length);
+      span.setAttribute('results.has_results', data.results.length > 0);
+      span.setAttribute('http.response_size', JSON.stringify(data).length);
+      span.setStatus({ code: 1, message: 'ok' });
       
       return data;
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        span?.setAttribute('ui.aborted', true);
-        span?.setStatus({ code: 2, message: 'cancelled' });
+        span.setAttribute('ui.aborted', true);
+        span.setStatus({ code: 2, message: 'cancelled' });
         // Don't re-throw AbortError to avoid sending it to Sentry
         return { results: [] };
       }
       
-      span?.setStatus({ code: 2, message: error instanceof Error ? error.message : 'unknown error' });
+      span.setStatus({ code: 2, message: error instanceof Error ? error.message : 'unknown error' });
       throw error;
     }
   }
@@ -487,14 +489,14 @@ app.get('/api/search', async (req: Request, res: Response) => {
         // Check if request was aborted
         req.on('close', () => {
           if (!res.headersSent) {
-            span?.setStatus({ code: 2, message: 'cancelled' });
-            span?.setAttribute('request.aborted', true);
+            span.setStatus({ code: 2, message: 'cancelled' });
+            span.setAttribute('request.aborted', true);
           }
         });
         
         if (!query) {
-          span?.setAttribute('results.count', 0);
-          span?.setAttribute('search.engine', 'elasticsearch');
+          span.setAttribute('results.count', 0);
+          span.setAttribute('search.engine', 'elasticsearch');
           return res.json({ results: [] });
         }
         
@@ -504,21 +506,21 @@ app.get('/api/search', async (req: Request, res: Response) => {
         const searchDuration = Date.now() - startSearch;
         
         // Set span attributes
-        span?.setAttribute('search.engine', 'elasticsearch');
-        span?.setAttribute('search.mode', queryLength < 3 ? 'prefix' : 'fuzzy');
-        span?.setAttribute('results.count', results.length);
-        span?.setAttribute('query.length', queryLength);
+        span.setAttribute('search.engine', 'elasticsearch');
+        span.setAttribute('search.mode', queryLength < 3 ? 'prefix' : 'fuzzy');
+        span.setAttribute('results.count', results.length);
+        span.setAttribute('query.length', queryLength);
         
         // Track slow searches
         if (searchDuration > 500) {
-          span?.setAttribute('performance.slow', true);
-          span?.setAttribute('search.duration_ms', searchDuration);
+          span.setAttribute('performance.slow', true);
+          span.setAttribute('search.duration_ms', searchDuration);
         }
         
         return res.json({ results });
       } catch (error: any) {
-        span?.setStatus({ code: 2, message: error?.message || 'error' });
-        span?.setAttribute('error.type', (error as any)?.constructor?.name || 'Error');
+        span.setStatus({ code: 2, message: error?.message || 'error' });
+        span.setAttribute('error.type', (error as any)?.constructor?.name || 'Error');
         
         Sentry.captureException(error);
         if (!res.headersSent) {
