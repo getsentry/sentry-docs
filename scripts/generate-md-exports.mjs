@@ -106,6 +106,9 @@ async function createWork() {
   if (noCache) {
     console.log(`ℹ️ No cache directory found, this will take a while...`);
     await mkdir(CACHE_DIR, {recursive: true});
+  } else {
+    const initialCacheFiles = await readdir(CACHE_DIR);
+    console.log(`📦 Cache directory has ${initialCacheFiles.length} files from previous build`);
   }
 
   // Track which cache files are used during this build
@@ -213,24 +216,20 @@ async function createWork() {
     try {
       const allFiles = await readdir(CACHE_DIR);
       const filesToDelete = allFiles.filter(file => !globalUsedCacheFiles.has(file));
+      const overlaps = allFiles.filter(file => globalUsedCacheFiles.has(file));
 
       console.log(`📊 Cache tracking stats:`);
-      console.log(`   - Files in cache dir: ${allFiles.length}`);
+      console.log(`   - Files in cache dir (after build): ${allFiles.length}`);
       console.log(`   - Files tracked as used: ${globalUsedCacheFiles.size}`);
-      console.log(`   - Files to delete: ${filesToDelete.length}`);
+      console.log(`   - Files that existed and were used: ${overlaps.length}`);
+      console.log(`   - Files to delete (old/unused): ${filesToDelete.length}`);
+      console.log(`   - Expected after cleanup: ${overlaps.length} files`);
 
-      // Debug: Show a few examples of what we're comparing
-      const usedArray = Array.from(globalUsedCacheFiles);
-      console.log(`   - Example used files: ${usedArray.slice(0, 3).join(', ')}`);
-      console.log(`   - Example dir files: ${allFiles.slice(0, 3).join(', ')}`);
-      console.log(`   - Example to delete: ${filesToDelete.slice(0, 3).join(', ')}`);
+      // Debug: Show a few examples
+      console.log(`   - Example used: ${Array.from(globalUsedCacheFiles).slice(0, 2).join(', ')}`);
+      console.log(`   - Example to delete: ${filesToDelete.slice(0, 2).join(', ')}`);
+      console.log(`   - Example kept: ${overlaps.slice(0, 2).join(', ')}`);
 
-      // Check if there's ANY overlap
-      const overlaps = allFiles.filter(file => globalUsedCacheFiles.has(file));
-      console.log(`   - Files that overlap (exist in both): ${overlaps.length}`);
-      if (overlaps.length > 0) {
-        console.log(`   - Example overlaps: ${overlaps.slice(0, 3).join(', ')}`);
-      }
 
       if (filesToDelete.length > 0) {
         await Promise.all(
@@ -428,6 +427,9 @@ async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
       `📤 Worker[${id}]: Updated the following files on R2: \n${r2CacheMisses.map(n => ` - ${n}`).join('\n')}`
     );
   }
+  const cacheHits = success - cacheMisses.length;
+  console.log(`📈 Worker[${id}]: Cache stats: ${cacheHits} hits, ${cacheMisses.length} misses (${((cacheMisses.length / success) * 100).toFixed(1)}% miss rate)`);
+
   if (cacheMisses.length / tasks.length > 0.1) {
     console.warn(`⚠️ Worker[${id}]: More than 10% cache miss rate during build.`);
   } else if (cacheMisses.length > 0) {
