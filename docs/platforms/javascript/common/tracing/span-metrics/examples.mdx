@@ -238,7 +238,13 @@ Where to put this in your app:
 - In drag-and-drop onDrop callback
 - Auto-instrumentation will capture fetch spans; the explicit span adds business context
 
-**Backend — Upload Validation and Async Processing**
+**Backend — Upload Validation and Queue Job**
+
+<Alert>
+
+This example demonstrates proper queue instrumentation patterns. For more details on instrumenting queues, see the <PlatformLink to="/tracing/instrumentation/queues-module/">Queues Module documentation</PlatformLink>.
+
+</Alert>
 
 ```typescript
 // Import Sentry instrumentation first (required for v10)
@@ -246,116 +252,138 @@ import './instrument';
 import express from 'express';
 import * as Sentry from '@sentry/node';
 
-// POST /api/upload - Receive and validate upload, then trigger async processing
+// POST /api/upload - Receive and validate upload, then enqueue for processing
 app.post('/api/upload', async (req: Request<{}, {}, UploadRequest>, res: Response) => {
   const { fileName, fileType, fileSize } = req.body;
 
-  // Span 2: Backend validates and accepts upload
+  // Validate the upload
+  if (!fileName || !fileType || !fileSize) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  if (fileSize > 50 * 1024 * 1024) { // 50MB limit
+    return res.status(400).json({ error: 'File too large (max 50MB)' });
+  }
+
+  // Create a job for processing
+  const job = createJob(fileName, fileType, fileSize);
+
+  // Producer span: Enqueue media processing job
   await Sentry.startSpan(
     {
-      op: 'upload.receive',
-      name: 'Receive upload',
+      op: 'queue.publish',
+      name: 'queue_producer',
       attributes: {
-        'file.name': fileName,
-        'file.size_bytes': fileSize,
-        'file.mime_type': fileType,
-        'validation.passed': true
+        'messaging.message.id': job.id,
+        'messaging.destination.name': 'media-processing',
+        'messaging.message.body.size': fileSize,
       }
     },
-    async (span) => {
-      try {
-        // Validate the upload
-        if (!fileName || !fileType || !fileSize) {
-          span?.setAttribute('validation.passed', false);
-          span?.setAttribute('validation.error', 'Missing required fields');
-          return res.status(400).json({ error: 'Missing required fields' });
-        }
+    async () => {
+      // Get trace headers to pass to consumer
+      const { 'sentry-trace': sentryTrace, baggage: sentryBaggage } = Sentry.getTraceData();
+      
+      // Store job with trace headers for async processing
+      await enqueueJob({
+        ...job,
+        sentryTrace,
+        sentryBaggage,
+        enqueuedAt: Date.now(),
+      });
 
-        if (fileSize > 50 * 1024 * 1024) { // 50MB limit
-          span?.setAttribute('validation.passed', false);
-          span?.setAttribute('validation.error', 'File too large');
-          return res.status(400).json({ error: 'File too large (max 50MB)' });
-        }
+      // Start async processing
+      setImmediate(async () => {
+        await processMedia(job);
+      });
 
-        // Create a job for processing
-        const job = createJob(fileName, fileType, fileSize);
-        span?.setAttribute('job.id', job.id);
-
-        // Start async processing (Span 3 will be created here)
-        setImmediate(async () => {
-          await processMedia(job);
-        });
-
-        // Respond immediately with job ID
-        res.json({
-          jobId: job.id,
-          status: 'accepted',
-          message: 'Upload received and processing started'
-        });
-
-      } catch (error) {
-        span?.setAttribute('validation.passed', false);
-        span?.setAttribute('error.message', error instanceof Error ? error.message : 'Unknown error');
-        Sentry.captureException(error);
-        res.status(500).json({ error: 'Failed to process upload' });
-      }
+      // Respond immediately with job ID
+      res.json({
+        jobId: job.id,
+        status: 'accepted',
+        message: 'Upload received and processing started'
+      });
     }
   );
 });
 ```
 
-**Backend — Async media processing**
+**Backend — Async Media Processing (Consumer)**
 
 ```typescript
 // Async media processing (runs in background via setImmediate)
 export async function processMedia(job: ProcessingJob): Promise<void> {
-  await Sentry.startSpan(
-    {
-      op: 'media.process',
-      name: 'Process media',
-      attributes: {
-        'media.size_bytes': job.fileSize,
-        'media.mime_type': job.fileType,
-        'media.size_bucket': getSizeBucket(job.fileSize),
-        'job.id': job.id
-      }
-    },
-    async (span) => {
-      try {
-        const startTime = Date.now();
-        const operations: string[] = [];
-        
-        // Simulate image optimization and thumbnail generation
-        if (job.fileType.startsWith('image/')) {
-          // Note: No separate spans for these operations - use attributes instead
-          await optimizeImage(); // Simulated delay
-          operations.push('optimize');
-          
-          await generateThumbnail(); // Simulated delay
-          operations.push('thumbnail');
+  // Continue trace from producer using stored trace headers
+  Sentry.continueTrace(
+    { sentryTrace: job.sentryTrace, baggage: job.sentryBaggage },
+    () => {
+      // Parent span for the consumer transaction
+      Sentry.startSpan(
+        {
+          name: 'media_processing_consumer',
+        },
+        (parentSpan) => {
+          // Consumer span: Process the queued job
+          Sentry.startSpan(
+            {
+              op: 'queue.process',
+              name: 'queue_consumer',
+              attributes: {
+                'messaging.message.id': job.id,
+                'messaging.destination.name': 'media-processing',
+                'messaging.message.body.size': job.fileSize,
+                'messaging.message.receive.latency': Date.now() - job.enqueuedAt,
+                'messaging.message.retry.count': 0,
+              }
+            },
+            async (span) => {
+              try {
+                const startTime = Date.now();
+                const operations: string[] = [];
+                
+                // Add job-specific attributes
+                span?.setAttribute('media.size_bytes', job.fileSize);
+                span?.setAttribute('media.mime_type', job.fileType);
+                span?.setAttribute('media.size_bucket', getSizeBucket(job.fileSize));
+                
+                // Simulate image optimization and thumbnail generation
+                if (job.fileType.startsWith('image/')) {
+                  // Note: No separate spans for these operations - use attributes instead
+                  await optimizeImage(); // Simulated delay
+                  operations.push('optimize');
+                  
+                  await generateThumbnail(); // Simulated delay
+                  operations.push('thumbnail');
+                }
+                
+                // Calculate results
+                const sizeSaved = Math.floor(job.fileSize * 0.3); // 30% reduction
+                const thumbnailCreated = Math.random() > 0.05; // 95% success rate
+                
+                // Rich attributes instead of multiple spans
+                span?.setAttribute('processing.operations', JSON.stringify(operations));
+                span?.setAttribute('processing.optimization_level', 'high');
+                span?.setAttribute('processing.thumbnail_created', thumbnailCreated);
+                span?.setAttribute('processing.duration_ms', Date.now() - startTime);
+                span?.setAttribute('result.size_saved_bytes', sizeSaved);
+                span?.setAttribute('result.size_reduction_percent', 30);
+                span?.setAttribute('result.status', 'success');
+                
+                // Update job status
+                job.status = 'completed';
+                
+                // Mark parent span as successful
+                parentSpan.setStatus({ code: 1, message: 'ok' });
+                
+              } catch (error) {
+                span?.setAttribute('result.status', 'failed');
+                span?.setAttribute('error.message', error instanceof Error ? error.message : 'Unknown error');
+                parentSpan.setStatus({ code: 2, message: 'error' });
+                Sentry.captureException(error);
+              }
+            }
+          );
         }
-        
-        // Calculate results
-        const sizeSaved = Math.floor(job.fileSize * 0.3); // 30% reduction
-        const thumbnailCreated = Math.random() > 0.05; // 95% success rate
-        
-        // Rich attributes instead of multiple spans
-        span?.setAttribute('processing.operations', JSON.stringify(operations));
-        span?.setAttribute('processing.optimization_level', 'high');
-        span?.setAttribute('processing.thumbnail_created', thumbnailCreated);
-        span?.setAttribute('processing.duration_ms', Date.now() - startTime);
-        span?.setAttribute('result.size_saved_bytes', sizeSaved);
-        span?.setAttribute('result.size_reduction_percent', 30);
-        span?.setAttribute('result.status', 'success');
-        
-        // Update job status
-        job.status = 'completed';
-        
-      } catch (error) {
-        span?.setAttribute('result.status', 'failed');
-        span?.setAttribute('error.message', error instanceof Error ? error.message : 'Unknown error');
-        Sentry.captureException(error);
-      }
+      );
     }
   );
 }
@@ -363,16 +391,18 @@ export async function processMedia(job: ProcessingJob): Promise<void> {
 
 **How the trace works together:**
 - Frontend span (`file.upload`) captures the entire user experience from file selection to server response.
-- Backend validation span (`upload.receive`) tracks server-side validation and job creation.
-- Async processing span (`media.process`) runs in background with rich attributes for all processing operations.
-- No unnecessary spans for individual operations — prefer attributes for details.
-- Trace continuity is maintained via Sentry’s automatic context propagation.
+- Backend producer span (`queue.publish`) tracks job enqueueing with proper queue attributes.
+- Consumer span (`queue.process`) continues the trace using `continueTrace()` with trace headers stored in the job.
+- Async processing runs independently with its own trace connected via queue instrumentation.
+- Rich attributes on the consumer span capture all processing details without creating excessive child spans.
+- This pattern populates Sentry's Queues insights page for monitoring queue performance.
 
 What to monitor with span metrics:
 - p95 upload duration by `file.size_bucket`.
 - Processing success rate by `media.mime_type`.
 - Average storage saved via `result.size_saved_bytes` where `result.status = success`.
-- Validation failure reasons grouped by `validation.error`.
+- Queue latency via `messaging.message.receive.latency` to track processing delays.
+- Job throughput via `op:queue.publish` and `op:queue.process` span counts.
 
 ## Search Autocomplete (debounced, cancellable, performance monitoring)
 
@@ -387,8 +417,8 @@ Example Repository: [NullFlix](https://github.com/getsentry/nullflix-tracing-exa
 ```typescript
 const response = await Sentry.startSpan(
   {
-    op: 'http.client',
-    name: 'Search autocomplete',
+    op: 'function',
+    name: 'Search autocomplete request',
     attributes: {
       'query.length': searchQuery.length,
       'ui.debounce_ms': DEBOUNCE_MS,
@@ -396,6 +426,7 @@ const response = await Sentry.startSpan(
   },
   async (span) => {
     try {
+      // SDK automatically instruments the fetch with op: 'http.client'
       const response = await fetch(
         `${API_URL}/api/search?${new URLSearchParams({ q: searchQuery })}`,
         {
@@ -422,7 +453,8 @@ const response = await Sentry.startSpan(
       if (error instanceof Error && error.name === 'AbortError') {
         span?.setAttribute('ui.aborted', true);
         span?.setStatus({ code: 2, message: 'cancelled' });
-        throw error;
+        // Don't re-throw AbortError to avoid sending it to Sentry
+        return { results: [] };
       }
       
       span?.setStatus({ code: 2, message: error instanceof Error ? error.message : 'unknown error' });
@@ -517,6 +549,12 @@ Example Repository: _Coming soon - sample repository in development_
 **Challenge:** You're building a custom AI agent that uses a proprietary LLM API (not OpenAI/Anthropic), performs multi-step reasoning with tool calls, and needs comprehensive monitoring to track token usage, tool performance, and agent effectiveness across the entire conversation flow.
 
 **Solution:** Manually instrument each component of the AI pipeline using Sentry's AI agent span conventions. Create spans for agent invocation, LLM calls, tool executions, and handoffs between agents, with rich attributes for monitoring costs, performance, and business metrics.
+
+<Alert>
+
+This example follows Sentry's AI Agents Module conventions. For detailed specifications on `gen_ai.*` span attributes and requirements, see the [AI Agents Module documentation](https://develop.sentry.dev/sdk/telemetry/traces/modules/ai-agents/).
+
+</Alert>
 
 ![Custom LLM Monitoring](./img/custom-llm-monitoring.png)
 
