@@ -220,7 +220,9 @@ async function createWork() {
       console.log(`   - Files to delete: ${filesToDelete.length}`);
 
       // Debug: Show a few examples of what we're comparing
-      console.log(`   - Example used files: ${Array.from(globalUsedCacheFiles).slice(0, 3).join(', ')}`);
+      console.log(
+        `   - Example used files: ${Array.from(globalUsedCacheFiles).slice(0, 3).join(', ')}`
+      );
       console.log(`   - Example dir files: ${allFiles.slice(0, 3).join(', ')}`);
       console.log(`   - Example to delete: ${filesToDelete.slice(0, 3).join(', ')}`);
 
