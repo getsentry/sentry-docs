@@ -64,7 +64,10 @@ let globalUsedCacheFiles = null;
 function taskFinishHandler({id, success, failedTasks, usedCacheFiles}) {
   // Collect cache files used by this worker into the global set
   if (usedCacheFiles && globalUsedCacheFiles) {
+    console.log(`🔍 Worker[${id}]: returned ${usedCacheFiles.length} cache files`);
     usedCacheFiles.forEach(file => globalUsedCacheFiles.add(file));
+  } else {
+    console.warn(`⚠️ Worker[${id}]: usedCacheFiles=${!!usedCacheFiles}, globalUsedCacheFiles=${!!globalUsedCacheFiles}`);
   }
 
   if (failedTasks.length === 0) {
@@ -208,6 +211,11 @@ async function createWork() {
     try {
       const allFiles = await readdir(CACHE_DIR);
       const filesToDelete = allFiles.filter(file => !globalUsedCacheFiles.has(file));
+
+      console.log(`📊 Cache tracking stats:`);
+      console.log(`   - Files in cache dir: ${allFiles.length}`);
+      console.log(`   - Files tracked as used: ${globalUsedCacheFiles.size}`);
+      console.log(`   - Files to delete: ${filesToDelete.length}`);
 
       if (filesToDelete.length > 0) {
         await Promise.all(
