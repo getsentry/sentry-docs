@@ -283,7 +283,9 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
         console.log(`🔍 First cache miss: ${source}`);
         console.log(`   Looking for cache key: ${cacheKey}`);
         console.log(`   HTML length: ${leanHTML.length} chars`);
-        console.log(`   First 200 chars: ${leanHTML.substring(0, 200).replace(/\n/g, '\\n')}`);
+        console.log(
+          `   First 200 chars: ${leanHTML.substring(0, 200).replace(/\n/g, '\\n')}`
+        );
       }
     }
   }
