@@ -27,7 +27,7 @@ import {unified} from 'unified';
 import {remove} from 'unist-util-remove';
 
 const DOCS_ORIGIN = 'https://docs.sentry.io';
-const CACHE_VERSION = 3;
+const CACHE_VERSION = 4; // Bumped: now normalizing timestamps and Next.js asset hashes
 const CACHE_COMPRESS_LEVEL = 4;
 const R2_BUCKET = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? 'sentry-develop-docs'
@@ -259,7 +259,12 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
   const leanHTML = (await readFile(source, {encoding: 'utf8'}))
     // Remove all script tags, as they are not needed in markdown
     // and they are not stable across builds, causing cache misses
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    // Remove ISO timestamps (e.g., "2025-10-29T16:22:19") that change each build
+    .replace(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?/g, 'BUILD_TIME')
+    // Normalize Next.js asset hashes in paths (e.g., /_next/static/css/abc123.css)
+    // so cache isn't invalidated when only asset hashes change
+    .replace(/\/_next\/static\/([^\/]+)\/[a-f0-9]{16,}/g, '/_next/static/$1/BUILD_HASH');
   const cacheKey = `v${CACHE_VERSION}_${md5(leanHTML)}`;
   const cacheFile = path.join(cacheDir, cacheKey);
   if (!noCache) {
