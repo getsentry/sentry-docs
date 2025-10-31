@@ -259,12 +259,7 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
   const leanHTML = (await readFile(source, {encoding: 'utf8'}))
     // Remove all script tags, as they are not needed in markdown
     // and they are not stable across builds, causing cache misses
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-    // Remove ISO timestamps (e.g., "2025-10-29T16:22:19") that change each build
-    .replace(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?/g, 'BUILD_TIME')
-    // Normalize Next.js asset hashes in paths (e.g., /_next/static/css/abc123.css)
-    // so cache isn't invalidated when only asset hashes change
-    .replace(/\/_next\/static\/([^\/]+)\/[a-f0-9]{16,}/g, '/_next/static/$1/BUILD_HASH');
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
   const cacheKey = `v${CACHE_VERSION}_${md5(leanHTML)}`;
   const cacheFile = path.join(cacheDir, cacheKey);
   if (!noCache) {
@@ -291,17 +286,12 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
         console.log(`   Looking for cache key: ${cacheKey}`);
         console.log(`   HTML length: ${leanHTML.length} chars`);
 
-        // Look for common non-deterministic patterns
-        const buildHashMatch = leanHTML.match(/buildId['":]+"([^"]+)"/);
-        const timestampMatch = leanHTML.match(/timestamp['":]+"?(\d+)"?/i);
-        const dateMatch = leanHTML.match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
-
-        console.log(
-          `   Build hash found: ${buildHashMatch ? buildHashMatch[1] : 'none'}`
-        );
-        console.log(`   Timestamp found: ${timestampMatch ? timestampMatch[1] : 'none'}`);
-        console.log(`   Date found: ${dateMatch ? dateMatch[0] : 'none'}`);
-        console.log(`   First 500 chars: ${leanHTML.substring(0, 500)}`);
+        // Save the first 2000 chars to a temp file so we can diff between builds
+        const debugFile = path.join(cacheDir, '..', 'debug-first-miss.txt');
+        writeFile(debugFile, `${source}\n${cacheKey}\n${leanHTML.substring(0, 2000)}`, {
+          encoding: 'utf8',
+        }).catch(() => {});
+        console.log(`   Saved first 2000 chars to ${debugFile} for comparison`);
       }
     }
   }
