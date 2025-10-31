@@ -784,7 +784,7 @@ export async function getFileBySlug(slug: string): Promise<SlugFile> {
     },
   };
 
-  if (assetsCacheDir && cacheFile && !skipCache) {
+  if (assetsCacheDir && cacheFile && cacheKey) {
     try {
       await cp(assetsCacheDir, outdir, {recursive: true});
     } catch (e) {
