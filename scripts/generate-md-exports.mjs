@@ -67,7 +67,9 @@ function taskFinishHandler({id, success, failedTasks, usedCacheFiles}) {
     console.log(`🔍 Worker[${id}]: returned ${usedCacheFiles.length} cache files`);
     usedCacheFiles.forEach(file => globalUsedCacheFiles.add(file));
   } else {
-    console.warn(`⚠️ Worker[${id}]: usedCacheFiles=${!!usedCacheFiles}, globalUsedCacheFiles=${!!globalUsedCacheFiles}`);
+    console.warn(
+      `⚠️ Worker[${id}]: usedCacheFiles=${!!usedCacheFiles}, globalUsedCacheFiles=${!!globalUsedCacheFiles}`
+    );
   }
 
   if (failedTasks.length === 0) {
