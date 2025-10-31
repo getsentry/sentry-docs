@@ -286,12 +286,18 @@ async function genMDFromHTML(source, target, {cacheDir, noCache, usedCacheFiles}
         console.log(`   Looking for cache key: ${cacheKey}`);
         console.log(`   HTML length: ${leanHTML.length} chars`);
 
-        // Save the first 2000 chars to a temp file so we can diff between builds
-        const debugFile = path.join(cacheDir, '..', 'debug-first-miss.txt');
-        writeFile(debugFile, `${source}\n${cacheKey}\n${leanHTML.substring(0, 2000)}`, {
-          encoding: 'utf8',
-        }).catch(() => {});
-        console.log(`   Saved first 2000 chars to ${debugFile} for comparison`);
+        // List a few cache files that exist to compare
+        try {
+          const existingFiles = await readdir(cacheDir);
+          const v4Files = existingFiles.filter(f => f.startsWith('v4_')).slice(0, 5);
+          console.log(`   Existing v4 cache files: ${v4Files.join(', ')}`);
+        } catch (e) {
+          // Ignore
+        }
+
+        // Log HTML in chunks to avoid truncation
+        console.log(`   HTML chunk 1 (0-800): ${leanHTML.substring(0, 800)}`);
+        console.log(`   HTML chunk 2 (800-1600): ${leanHTML.substring(800, 1600)}`);
       }
     }
   }
