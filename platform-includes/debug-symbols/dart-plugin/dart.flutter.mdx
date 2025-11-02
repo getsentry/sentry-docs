@@ -24,8 +24,11 @@ sentry:
   project: ___PROJECT_SLUG___
   org: ___ORG_SLUG___
   auth_token: ___ORG_AUTH_TOKEN___
-  # Disable automatic upload of debug symbols
-  # upload_debug_symbols: false
+  # Absolute or relative path to the Dart symbol map file
+  # Used to make obfuscated Flutter issue titles readable on iOS and Android
+  # See the "Building Your Application" section below for more details on how to generate the symbol map file
+  # Available since version 3.2.0 of the Sentry Dart Plugin
+  dart_symbol_map_path: build/app/obfuscation.map.json
   # ___PRODUCT_OPTION_START___ source-context
   # Enable source context
   upload_sources: true
@@ -52,12 +55,17 @@ For more information, read the [Sentry Dart Plugin README](https://github.com/ge
 
 Before running the plugin, build your Flutter application with one of the following commands. Obfuscated is encouraged for production builds, and will make uploading debug symbols necessary to get readable stack traces.
 
+<Alert>
+The `--extra-gen-snapshot-options=--save-obfuscation-map=build/app/obfuscation.map.json` option is required to generate the symbol map file which is used to make the obfuscated Flutter issue titles readable on iOS and Android.
+Make sure to set the `dart_symbol_map_path` option in your `pubspec.yaml` file to the path of the `obfuscation.map.json` file.
+</Alert>
+
 ```bash {tabTitle: Obfuscated}
-flutter build apk --obfuscate --split-debug-info=<output-directory>
-flutter build ios --obfuscate --split-debug-info=<output-directory>
-flutter build macos --obfuscate --split-debug-info=<output-directory>
-flutter build windows --obfuscate --split-debug-info=<output-directory>
-flutter build linux --obfuscate --split-debug-info=<output-directory>
+flutter build apk --obfuscate --split-debug-info=<output-directory> --extra-gen-snapshot-options=--save-obfuscation-map=build/app/obfuscation.map.json
+flutter build ios --obfuscate --split-debug-info=<output-directory> --extra-gen-snapshot-options=--save-obfuscation-map=build/app/obfuscation.map.json
+flutter build macos --obfuscate --split-debug-info=<output-directory> --extra-gen-snapshot-options=--save-obfuscation-map=build/app/obfuscation.map.json
+flutter build windows --obfuscate --split-debug-info=<output-directory> --extra-gen-snapshot-options=--save-obfuscation-map=build/app/obfuscation.map.json
+flutter build linux --obfuscate --split-debug-info=<output-directory> --extra-gen-snapshot-options=--save-obfuscation-map=build/app/obfuscation.map.json
 ```
 
 ```bash {tabTitle: Flutter Web}
@@ -83,7 +91,7 @@ If you don't obfuscate your build, the plugin won't upload debug symbols. Additi
 
 ## Android ProGuard Integration
 
-If you have ProGuard (`minifyEnabled`) enabled, you must upload Android Proguard/R8 mapping files. You have two options:
+If you have ProGuard (`minifyEnabled`) enabled and you want to see proper native Android stacktraces, you must upload Android Proguard/R8 mapping files. You have two options:
 
 1. **Use the Sentry Android Gradle Plugin (Recommended)**
 
@@ -125,6 +133,7 @@ The following table lists all available configuration options for the Sentry Dar
 | `upload_debug_symbols` | boolean | `true` | Enables or disables automatic upload of debug symbols | |
 | `upload_source_maps` | boolean | `false` | Enables or disables automatic upload of source maps | |
 | `upload_sources` | boolean | `false` | Enables or disables source code upload | |
+| `dart_symbol_map_path` | string | | Absolute or relative path to the Dart symbol map file used to make obfuscated Flutter issue titles readable on iOS and Android | |
 | `url` | string | | The URL of your Sentry instance | `SENTRY_URL` |
 | `url_prefix` | URL prefix for JS source maps | e.g. ~/app/ (string) | no | - |
 | `wait_for_processing` | boolean | `false` | Whether to wait for server-side processing of uploaded files | |
