@@ -10,9 +10,9 @@ This section is aimed for those who have Kafka problems, but are not yet familia
 
 On the inside, when a message enters a topic, it will be written to a certain partition. You can think of a partition as physical a box that stores messages for a specific topic. In a distributed Kafka setup, each partition might be stored on a different machine/node, but if you only have a single Kafka instance, then all the partitions are stored on the same machine.
 
-When a producer sends a message to a topic, it will either stick to a certain partition number (example: partition 1, partition 2, etc.) or it will randomly choose a partition. A consumer will then subscribe to a topic and will automatically be assigned to one or more partitions by Kafka. The consumer will then start receiving messages from the assigned partitions. **Important to note: the number of consumers cannot exceed the number of partitions**. If you have more consumers than partitions, the extra consumers will receive no messages.
+When a producer sends a message to a topic, it will either stick to a certain partition number based on the partition key (example: partition 1, partition 2, etc.) or it will choose a partition in a round-robin manner. A consumer will then subscribe to a topic and will automatically be assigned to one or more partitions by Kafka. The consumer will then start receiving messages from the assigned partitions. **Important to note: the number of consumers cannot exceed the number of partitions**. If you have more consumers than partitions, the extra consumers will receive no messages.
 
-Each message in a topic will have an "offset" (number). You can think of this like an "index" in an array. The offset will be used by the consumer to track where it is in the log, and what's the last message it has consumed. If the consumer is not able to keep up with the producer, it will start to lag behind. Most of the time, we want "lag" to be as low as possible. The easiest solution to lagging is adding more partitions and increasing the number of consumers.
+Each message in a topic will have an "offset" (number). You can think of this like an "index" in an array. The offset will be used by the consumer to track where it is in the log, and what's the last message it has consumed. Offsets are scoped to a partition, therefore a partition in a topic can have the same offset numbers. If the consumer is not able to keep up with the producer, it will start to lag behind. Most of the time, we want "lag" to be as low as possible. The easiest solution to lagging is adding more partitions and increasing the number of consumers.
 
 The differences with other types of queues or brokers like RabbitMQ or Redis is that Kafka has a concept called "retention time". Messages that are stored on Kafka and consumed by consumers won't be deleted immediately. Instead, they will be stored for a certain period of time. By default, self-hosted Sentry uses Kafka with a retention time of 24 hours. This means that messages that are older than 24 hours will be deleted. If you want to change the retention time, you can do so by modifying the `KAFKA_LOG_RETENTION_HOURS` environment variable in the `kafka` service.
 
@@ -74,6 +74,10 @@ This happens where Kafka and the consumers get out of sync. Possible reasons are
 3. Date/time out of sync issues due to a restart or suspend/resume cycle
 
 Ideally, you want to have zero lag for all consumer groups. If a consumer group has a lot of lag, you need to investigate whether it's caused by a disconnected consumer (e.g., a Sentry/Snuba container that's disconnected from Kafka) or a consumer that's stuck processing a certain message. If it's a disconnected consumer, you can either restart the container or reset the Kafka offset to 'earliest.' Otherwise, you can reset the Kafka offset to 'latest.'
+
+<Alert level="info" title="Tip">
+Choose "earliest" if you want to start re-processing events from the beginning. Choose "latest" if you are okay with losing old events and want to start processing from the newest events.
+</Alert>
 
 ### Recovery
 
@@ -175,6 +179,10 @@ If you notice a very slow ingestion speed and consumers are lagging behind, it's
    docker compose up -d --wait events-consumer
    ```
 5. Observe the logs of `events-consumer`, you should not see any consumer errors. Let it run for a while (usually a few minutes until a few hours) and observe the Kafka topic lags.
+
+<Alert level="info" title="Tip">
+The definition of "normal lag" varies depending on your system resources. If you are running a small instance, you can expect a normal lag of around hundreds of messages. If you are running a large instance, you can expect a normal lag of around thousands of messages.
+</Alert>
 
 ## Reducing disk usage
 
