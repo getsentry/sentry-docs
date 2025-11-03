@@ -47,12 +47,12 @@ function filePathToUrls(filePath: string): {isDeveloperDocs: boolean; urls: stri
   // Handle index files
   if (slug.endsWith('/index')) {
     slug = slug.replace(/\/index$/, '');
-    // Return both with and without trailing slash
-    return {isDeveloperDocs, urls: [`/${slug}/`, `/${slug}`]};
+    // Return canonical URL with trailing slash (Next.js has trailingSlash: true)
+    return {isDeveloperDocs, urls: [`/${slug}/`]};
   }
 
-  // Return URL path
-  return {isDeveloperDocs, urls: [`/${slug}`, `/${slug}/`]};
+  // Return canonical URL with trailing slash (Next.js has trailingSlash: true)
+  return {isDeveloperDocs, urls: [`/${slug}/`]};
 }
 
 /**
@@ -109,18 +109,15 @@ function detectRenamedFiles(): RenamedFile[] {
         );
       }
 
-      // Create entries for all URL variants
-      for (const oldUrl of oldPathInfo.urls) {
-        for (const newUrl of newPathInfo.urls) {
-          renamedFiles.push({
-            oldPath,
-            newPath,
-            oldUrl,
-            newUrl,
-            isDeveloperDocs: oldPathInfo.isDeveloperDocs,
-          });
-        }
-      }
+      // Create entry with canonical URL (Next.js normalizes to trailing slash)
+      // Since trailingSlash: true is set, we only need one redirect per file pair
+      renamedFiles.push({
+        oldPath,
+        newPath,
+        oldUrl: oldPathInfo.urls[0], // Canonical URL (with trailing slash)
+        newUrl: newPathInfo.urls[0], // Canonical URL (with trailing slash)
+        isDeveloperDocs: oldPathInfo.isDeveloperDocs,
+      });
     }
 
     return renamedFiles;
@@ -128,6 +125,31 @@ function detectRenamedFiles(): RenamedFile[] {
     console.error('Error detecting renamed files:', error);
     return [];
   }
+}
+
+/**
+ * Checks if a quote at the given index is escaped by counting consecutive backslashes.
+ * A quote is escaped (part of the string) if there's an odd number of backslashes before it.
+ * A quote is not escaped (ends the string) if there's an even number (including zero) of backslashes before it.
+ *
+ * Examples:
+ * - "text\" - 1 backslash (odd) → escaped
+ * - "text\\" - 2 backslashes (even) → not escaped
+ * - "text\\\" - 3 backslashes (odd) → escaped
+ */
+function isEscapedQuote(content: string, index: number): boolean {
+  if (index === 0) return false;
+
+  // Count consecutive backslashes before this position
+  let backslashCount = 0;
+  let pos = index - 1;
+  while (pos >= 0 && content[pos] === '\\') {
+    backslashCount++;
+    pos--;
+  }
+
+  // Quote is escaped if there's an odd number of backslashes
+  return backslashCount % 2 === 1;
 }
 
 /**
@@ -163,13 +185,12 @@ function parseRedirectsJs(filePath: string): {
 
       while (i < content.length) {
         const char = content[i];
-        const prevChar = i > 0 ? content[i - 1] : '';
 
         // Handle string literals
-        if (!inString && (char === '"' || char === "'") && prevChar !== '\\') {
+        if (!inString && (char === '"' || char === "'") && !isEscapedQuote(content, i)) {
           inString = true;
           stringChar = char;
-        } else if (inString && char === stringChar && prevChar !== '\\') {
+        } else if (inString && char === stringChar && !isEscapedQuote(content, i)) {
           inString = false;
         }
 
@@ -203,12 +224,11 @@ function parseRedirectsJs(filePath: string): {
 
       while (i < content.length) {
         const char = content[i];
-        const prevChar = i > 0 ? content[i - 1] : '';
 
-        if (!inString && (char === '"' || char === "'") && prevChar !== '\\') {
+        if (!inString && (char === '"' || char === "'") && !isEscapedQuote(content, i)) {
           inString = true;
           stringChar = char;
-        } else if (inString && char === stringChar && prevChar !== '\\') {
+        } else if (inString && char === stringChar && !isEscapedQuote(content, i)) {
           inString = false;
         }
 
@@ -265,6 +285,20 @@ function extractRedirectsFromArray(arrayContent: string): Redirect[] {
 /**
  * Checks if a redirect matches the expected old → new URL pattern
  * Handles path parameters like :path*, :platform, etc.
+ *
+ * Important considerations for :path*:
+ * 1. If a redirect uses :path* (e.g., /old/:path* -> /new/:path*), it matches
+ *    any path under /old/ and redirects to the same path under /new/
+ * 2. For a file rename, we need to verify that the redirect correctly maps
+ *    the old URL to the new URL
+ * 3. If the redirect destination doesn't match where the file actually moved,
+ *    we need a specific redirect
+ *
+ * Examples:
+ * - Redirect: /sdk/basics/:path* -> /sdk/processes/basics/:path*
+ * - File: /sdk/basics/old.mdx -> /sdk/processes/basics/old.mdx ✅ Covered
+ * - File: /sdk/basics/old.mdx -> /sdk/basics/new.mdx ❌ Needs specific redirect
+ * - File: /sdk/basics/old.mdx -> /sdk/other/new.mdx ❌ Needs specific redirect
  */
 function redirectMatches(redirect: Redirect, oldUrl: string, newUrl: string): boolean {
   // Simple exact match first
@@ -273,29 +307,42 @@ function redirectMatches(redirect: Redirect, oldUrl: string, newUrl: string): bo
   }
 
   // Handle path parameters - convert patterns to regex
+  // :path* matches zero or more path segments (including nested paths)
+  // :param matches a single path segment
   const sourcePattern = redirect.source
-    .replace(/:\w+\*/g, '.*')
-    .replace(/:\w+/g, '[^/]+');
+    .replace(/:\w+\*/g, '.*') // :path* -> .* (matches any chars including slashes)
+    .replace(/:\w+/g, '[^/]+'); // :param -> [^/]+ (matches non-slash chars)
   const sourceRegex = new RegExp(`^${sourcePattern}$`);
 
   // Check if oldUrl matches the source pattern
-  if (sourceRegex.test(oldUrl)) {
-    // For destinations with path parameters, check if newUrl matches
-    const destPattern = redirect.destination
-      .replace(/:\w+\*/g, '.*')
-      .replace(/:\w+/g, '[^/]+');
-    const destRegex = new RegExp(`^${destPattern}$`);
-
-    // If destination has no params, exact match
-    if (!redirect.destination.includes(':')) {
-      return redirect.destination === newUrl;
-    }
-
-    // If destination has params, check if pattern matches
-    return destRegex.test(newUrl);
+  if (!sourceRegex.test(oldUrl)) {
+    return false;
   }
 
-  return false;
+  // Old URL matches the source pattern, now check if destination matches new URL
+  const destPattern = redirect.destination
+    .replace(/:\w+\*/g, '.*')
+    .replace(/:\w+/g, '[^/]+');
+  const destRegex = new RegExp(`^${destPattern}$`);
+
+  // If destination has no path parameters, require exact match
+  if (!redirect.destination.includes(':')) {
+    return redirect.destination === newUrl;
+  }
+
+  // If destination has path parameters, check if newUrl matches the pattern
+  // This handles cases like:
+  // - /old/:path* -> /new/:path* where /old/file/ -> /new/file/ ✅
+  // - /old/:path* -> /new/ where /old/file/ -> /new/ ✅
+  // - /old/:path* -> /new/:path* where /old/file/ -> /other/file/ ❌
+  //
+  // Note: Next.js redirects preserve parameter values (e.g., /platforms/:platform/old
+  // with request /platforms/javascript/old redirects to /platforms/javascript/new).
+  // Our pattern matching doesn't extract and resolve parameter values, so we might
+  // have false positives in edge cases where parameters differ between old and new URLs.
+  // However, this is rare in practice (most renames preserve parameter values), and
+  // the pattern match is a good heuristic that a redirect exists.
+  return destRegex.test(newUrl);
 }
 
 /**
@@ -397,9 +444,14 @@ function validateRedirects(): MissingRedirect[] {
     );
 
     if (!hasRedirect) {
-      // Check if it's a duplicate (already reported for a different URL variant)
+      // Check if this file pair has already been reported
+      // Since we only generate one URL variant per file (canonical with trailing slash),
+      // we can deduplicate by file paths
       const alreadyReported = missingRedirects.some(
-        mr => mr.oldPath === renamedFile.oldPath && mr.newPath === renamedFile.newPath
+        mr =>
+          mr.oldPath === renamedFile.oldPath &&
+          mr.newPath === renamedFile.newPath &&
+          mr.isDeveloperDocs === renamedFile.isDeveloperDocs
       );
 
       if (!alreadyReported) {
