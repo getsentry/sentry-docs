@@ -62,10 +62,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           script: |
-            const validationResultJson = `${{ steps.validate.outputs.validation_result }}`;
+            // Use toJSON() to safely escape the JSON string for JavaScript interpolation
+            // toJSON() will JSON-encode the string, so we need to parse it once to get the original JSON string,
+            // then parse again to get the actual object
+            const validationResultJsonString = ${{ toJSON(steps.validate.outputs.validation_result) }};
             let validationResult;
             try {
-              validationResult = JSON.parse(validationResultJson);
+              // First parse: convert from JSON-encoded string to original JSON string
+              const jsonString = JSON.parse(validationResultJsonString);
+              // Second parse: convert from JSON string to object
+              validationResult = JSON.parse(jsonString);
             } catch (e) {
               console.error('Failed to parse validation result:', e);
               return;
