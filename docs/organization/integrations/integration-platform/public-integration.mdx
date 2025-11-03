@@ -108,6 +108,46 @@ def refresh_token(install_id):
     return new_token
 ```
 
+### Refreshing Tokens Manually for Integrators
+Sometimes incidents or other technical anomalies can lead to token refreshing being committed on the Sentry side but then the token is lost in transmission on the way back. As a result, we've added a method for integrators to explicitly refresh and request a new token for their installers.
+
+This manual refresh method uses a different authorization scheme where you will need to send a JWT signed with your client secret to the previous
+`/api/0/sentry-app-installations/{}/authorizations/` endpoint with the below claims and payload.
+
+```python
+def manual_token_refresh(install_id):
+    url = u'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
+    url = url.format(install_id)
+    
+    now = datetime.now(timezone.utc).timestamp()
+    client_secret = "XXXX-XXXX-XXXX"
+    client_id = "1234-5678-9999"
+    iat = now
+    exp = now + 60 # 1 minute validity period
+    
+    claims = {
+		    'iss': client_id,
+		    'sub': client_id,
+		    'iat': iat,
+		    'exp': exp,
+		    'jti': uuid.uuid4(),
+    }
+    jwt_token = jwt.encode(claims, client_secret, algorithm="HS256")
+    headers = jwt.authorization_header(jwt_token)
+    
+    payload = {
+        'grant_type': 'urn:sentry:params:oauth:grant-type:jwt-bearer',
+    }
+	resp = requests.post(url, json=payload, headers=headers) 
+    data = resp.json()
+
+    new_token = data['token']
+    new_refresh_token = data['refreshToken']
+    # ... Securely update the token and refresh_token in DB...
+
+    return new_token
+```
+
 The data you can expect back for both the initial grant code exchange and subsequent token refreshes is as follows:
 
 ```json
