@@ -130,10 +130,14 @@ def manual_token_refresh(install_id):
 		    'sub': client_id,
 		    'iat': iat,
 		    'exp': exp,
-		    'jti': uuid.uuid4(),
+		    'jti': str(uuid.uuid4()),
     }
     jwt_token = jwt.encode(claims, client_secret, algorithm="HS256")
-    headers = jwt.authorization_header(jwt_token)
+    headers = {
+            'Authorization': f'Bearer {jwt_token}',
+            'Content-Type': 'application/json'
+        }
+    
     
     payload = {
         'grant_type': 'urn:sentry:params:oauth:grant-type:jwt-bearer',
