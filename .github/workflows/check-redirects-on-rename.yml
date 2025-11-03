@@ -1,0 +1,141 @@
+name: Check Redirects on File Rename
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  check-redirects:
+    name: Check redirects for renamed files
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Need full history for git diff
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Set up git for diff
+        run: |
+          git fetch origin ${{ github.event.pull_request.base.ref }}:${{ github.event.pull_request.base.ref }}
+          echo "GITHUB_BASE_REF=${{ github.event.pull_request.base.ref }}" >> $GITHUB_ENV
+          echo "GITHUB_BASE_SHA=$(git rev-parse origin/${{ github.event.pull_request.base.ref }})" >> $GITHUB_ENV
+          echo "GITHUB_SHA=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
+
+      - name: Run redirect validation
+        id: validate
+        continue-on-error: true
+        run: |
+          set +e
+          OUTPUT=$(bun scripts/check-redirects-on-rename.ts 2>&1)
+          EXIT_CODE=$?
+          set -e
+
+          echo "$OUTPUT"
+
+          # Extract JSON output if present
+          if echo "$OUTPUT" | grep -q "---JSON_OUTPUT---"; then
+            JSON_OUTPUT=$(echo "$OUTPUT" | sed -n '/---JSON_OUTPUT---/,/---JSON_OUTPUT---/p' | sed '1d;$d')
+            echo "validation_result<<EOF" >> $GITHUB_OUTPUT
+            echo "$JSON_OUTPUT" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            echo "has_results=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_results=false" >> $GITHUB_OUTPUT
+          fi
+
+          # Save exit code
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+
+      - name: Post comment if redirects are missing
+        if: steps.validate.outputs.exit_code == '1' && steps.validate.outputs.has_results == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const validationResultJson = `${{ steps.validate.outputs.validation_result }}`;
+            let validationResult;
+            try {
+              validationResult = JSON.parse(validationResultJson);
+            } catch (e) {
+              console.error('Failed to parse validation result:', e);
+              return;
+            }
+
+            const missingRedirects = validationResult.missingRedirects || [];
+
+            if (missingRedirects.length === 0) {
+              return;
+            }
+
+            // Group by redirects array type
+            const devDocsRedirects = missingRedirects.filter(mr => mr.isDeveloperDocs);
+            const userDocsRedirects = missingRedirects.filter(mr => !mr.isDeveloperDocs);
+
+            let comment = '## ⚠️ Missing Redirects Detected\n\n';
+            comment += 'This PR renames or moves MDX files, but some redirects may be missing from `redirects.js`.\n\n';
+            comment += 'Please add the following redirects to ensure old URLs continue to work:\n\n';
+
+            if (userDocsRedirects.length > 0) {
+              comment += '### User Docs Redirects (userDocsRedirects array)\n\n';
+              comment += '```javascript\n';
+              userDocsRedirects.forEach(mr => {
+                comment += `  {\n`;
+                comment += `    source: '${mr.oldUrl}',\n`;
+                comment += `    destination: '${mr.newUrl}',\n`;
+                comment += `  },\n`;
+              });
+              comment += '```\n\n';
+            }
+
+            if (devDocsRedirects.length > 0) {
+              comment += '### Developer Docs Redirects (developerDocsRedirects array)\n\n';
+              comment += '```javascript\n';
+              devDocsRedirects.forEach(mr => {
+                comment += `  {\n`;
+                comment += `    source: '${mr.oldUrl}',\n`;
+                comment += `    destination: '${mr.newUrl}',\n`;
+                comment += `  },\n`;
+              });
+              comment += '```\n\n';
+            }
+
+            comment += '---\n';
+            comment += '_Note: This is a warning and will not block your PR. However, adding redirects ensures old links continue to work._\n';
+
+            // Check for existing comments from this action
+            const {data: comments} = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existingComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('Missing Redirects Detected')
+            );
+
+            if (existingComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: comment,
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment,
+              });
+            }
