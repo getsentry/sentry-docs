@@ -194,6 +194,41 @@ function formatCanonicalTag(tag: string) {
   return tag;
 }
 
+// Helper function to resolve OG image URLs
+function resolveOgImageUrl(
+  imageUrl: string | undefined,
+  domain: string,
+  pagePath: string[]
+): string | null {
+  if (!imageUrl) {
+    return null;
+  }
+
+  // Remove hash fragments (e.g., #600x400 from remark-image-size)
+  const cleanUrl = imageUrl.split('#')[0];
+
+  // External URLs - return as is
+  if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) {
+    return cleanUrl;
+  }
+
+  // Absolute paths (public folder)
+  if (cleanUrl.startsWith('/')) {
+    return `${domain}${cleanUrl}`;
+  }
+
+  // Relative paths - resolve based on page path
+  if (cleanUrl.startsWith('./')) {
+    const relativePath = cleanUrl.slice(2); // Remove './'
+    const pageDir = pagePath.join('/');
+    return `${domain}/${pageDir}/${relativePath}`;
+  }
+
+  // Default case: treat as relative to page
+  const pageDir = pagePath.join('/');
+  return `${domain}/${pageDir}/${cleanUrl}`;
+}
+
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const params = await props.params;
   const domain = isDeveloperDocs
@@ -208,12 +243,8 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   let customCanonicalTag: string = '';
   let description =
     'Self-hosted and cloud-based application performance monitoring & error tracking that helps software teams see clearer, solve quicker, and learn continuously.';
-  // show og image on the home page only
-  const images =
-    ((await props.params).path ?? []).length === 0
-      ? [{url: `${previewDomain ?? domain}/og.png`, width: 1200, height: 630}]
-      : [];
 
+  let ogImageUrl: string | null = null;
   let noindex: undefined | boolean = undefined;
 
   const rootNode = await getDocsRootNode();
@@ -236,8 +267,24 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
       }
 
       noindex = pageNode.frontmatter.noindex;
+
+      // Check for manual OG image override in frontmatter
+      if (pageNode.frontmatter.og_image) {
+        ogImageUrl = resolveOgImageUrl(
+          pageNode.frontmatter.og_image,
+          previewDomain ?? domain,
+          params.path
+        );
+      }
     }
   }
+
+  // Default fallback
+  if (!ogImageUrl) {
+    ogImageUrl = `${previewDomain ?? domain}/og.png`;
+  }
+
+  const images = [{url: ogImageUrl, width: 1200, height: 630}];
 
   const canonical = customCanonicalTag
     ? domain + customCanonicalTag
