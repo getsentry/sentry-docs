@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import {execSync} from 'child_process';
+import {execFileSync} from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
@@ -66,10 +66,13 @@ function detectRenamedFiles(): RenamedFile[] {
     const headSha = process.env.GITHUB_SHA || 'HEAD';
 
     // Use git diff to find renames (similarity threshold of 50%)
-    const diffOutput = execSync(
-      `git diff --find-renames=50% --name-status ${baseSha}...${headSha}`,
+    const diffOutput = execFileSync(
+      'git',
+      ['diff', '--find-renames=50%', '--name-status', `${baseSha}...${headSha}`],
       {encoding: 'utf8', stdio: 'pipe'}
-    ).trim();
+    )
+      .toString()
+      .trim();
 
     const renamedFiles: RenamedFile[] = [];
 
@@ -323,10 +326,16 @@ function validateRedirects(): MissingRedirect[] {
 
   try {
     // Check if redirects.js was modified in this PR
-    const modifiedFiles = execSync(`git diff --name-only ${baseSha}...${headSha}`, {
-      encoding: 'utf8',
-      stdio: 'pipe',
-    }).trim();
+    const modifiedFiles = execFileSync(
+      'git',
+      ['diff', '--name-only', `${baseSha}...${headSha}`],
+      {
+        encoding: 'utf8',
+        stdio: 'pipe',
+      }
+    )
+      .toString()
+      .trim();
 
     const redirectsModified = modifiedFiles.includes('redirects.js');
 
@@ -336,7 +345,7 @@ function validateRedirects(): MissingRedirect[] {
     } else {
       // Try to get base version for comparison
       try {
-        const baseRedirects = execSync(`git show ${baseSha}:redirects.js`, {
+        const baseRedirects = execFileSync('git', ['show', `${baseSha}:redirects.js`], {
           encoding: 'utf8',
           stdio: 'pipe',
         });
