@@ -1217,6 +1217,11 @@ const userDocsRedirects = [
     source: '/product/ai-in-sentry/seer/seer-privacy-and-security',
     destination: '/product/ai-in-sentry/ai-privacy-and-security/',
   },
+  // Redirects for UWP (deprecated)
+  {
+    source: '/platforms/dotnet/guides/uwp/:path*',
+    destination: '/platforms/dotnet/guides/maui/',
+  },
   // .NET profiling guide redirects - consolidate to main profiling page
   {
     source: '/platforms/dotnet/guides/uwp/profiling/:path*',
