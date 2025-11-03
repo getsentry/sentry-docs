@@ -249,7 +249,7 @@ export function updateElementsVisibilityForOptions(
           // Lines are nested in highlight-block > div (CodeLinesContainer)
           const linesContainer = el.querySelector('div');
           if (linesContainer) {
-            lines.push(...Array.from(linesContainer.children) as HTMLElement[]);
+            lines.push(...(Array.from(linesContainer.children) as HTMLElement[]));
           }
         } else {
           // Regular line, add it directly
