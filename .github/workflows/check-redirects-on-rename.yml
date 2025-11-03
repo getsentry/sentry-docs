@@ -8,6 +8,7 @@ jobs:
   check-redirects:
     name: Check redirects for renamed files
     runs-on: ubuntu-latest
+    continue-on-error: true # Fail the check but don't block merge
     permissions:
       contents: read
       pull-requests: write
@@ -42,22 +43,23 @@ jobs:
           echo "$OUTPUT"
 
           # Extract JSON output if present
-          if echo "$OUTPUT" | grep -Fq "---JSON_OUTPUT---"; then
+          HAS_JSON=false
+          if echo "$OUTPUT" | grep -Fq -- "---JSON_OUTPUT---"; then
             JSON_OUTPUT=$(echo "$OUTPUT" | sed -n '/---JSON_OUTPUT---/,/---JSON_OUTPUT---/p' | sed '1d;$d')
             echo "validation_result<<EOF" >> $GITHUB_OUTPUT
             echo "$JSON_OUTPUT" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
-            echo "has_results=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_results=false" >> $GITHUB_OUTPUT
+            HAS_JSON=true
           fi
 
-          # Save exit code
+          echo "has_results=$HAS_JSON" >> $GITHUB_OUTPUT
           echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
 
       - name: Post comment if redirects are missing
         if: steps.validate.outputs.exit_code == '1' && steps.validate.outputs.has_results == 'true'
         uses: actions/github-script@v7
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           script: |
             const validationResultJson = `${{ steps.validate.outputs.validation_result }}`;
@@ -108,7 +110,7 @@ jobs:
             }
 
             comment += '---\n';
-            comment += '_Note: This is a warning and will not block your PR. However, adding redirects ensures old links continue to work._\n';
+            comment += '_Note: This check will fail until redirects are added. Adding redirects ensures old links continue to work._\n';
 
             // Check for existing comments from this action
             const {data: comments} = await github.rest.issues.listComments({
@@ -119,6 +121,7 @@ jobs:
 
             const existingComment = comments.find(comment => 
               comment.user.type === 'Bot' && 
+              (comment.user.login === 'github-actions[bot]' || comment.user.login.includes('bot')) &&
               comment.body.includes('Missing Redirects Detected')
             );
 
@@ -130,6 +133,7 @@ jobs:
                 comment_id: existingComment.id,
                 body: comment,
               });
+              console.log(`Updated existing comment ${existingComment.id}`);
             } else {
               // Create new comment
               await github.rest.issues.createComment({
@@ -138,4 +142,17 @@ jobs:
                 issue_number: context.issue.number,
                 body: comment,
               });
+              console.log('Created new comment');
             }
+
+      - name: Report failure if redirects are missing
+        if: steps.validate.outputs.exit_code == '1' && steps.validate.outputs.has_results == 'true'
+        run: |
+          echo "::warning::Missing redirects detected. Please add the redirects shown in the PR comment above."
+          echo "::warning::This check will show as failed, but will not block merging. However, adding redirects is recommended."
+          exit 1
+
+      - name: Success - no redirects needed
+        if: steps.validate.outputs.exit_code == '0'
+        run: |
+          echo "✅ No file renames detected, or all renames have corresponding redirects."
