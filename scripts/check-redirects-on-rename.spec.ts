@@ -145,6 +145,93 @@ const userDocsRedirects = [
     expect(result.userDocsRedirects[0].source).toBe('/platforms/old/path/');
     expect(result.userDocsRedirects[0].destination).toBe('/platforms/new/path/');
   });
+
+  it('should handle property order flexibility (destination before source)', () => {
+    // Test that the parser works even when destination comes before source
+    const redirectsWithReversedOrder = `
+const developerDocsRedirects = [
+  {
+    destination: '/sdk/new-path/',
+    source: '/sdk/old-path/',
+  },
+];
+
+const userDocsRedirects = [
+  {
+    destination: '/platforms/javascript/new-guide/',
+    source: '/platforms/javascript/old-guide/',
+  },
+];
+`;
+    fs.writeFileSync(tempFile, redirectsWithReversedOrder);
+    const result = parseRedirectsJs(tempFile);
+
+    expect(result.developerDocsRedirects).toHaveLength(1);
+    expect(result.developerDocsRedirects[0].source).toBe('/sdk/old-path/');
+    expect(result.developerDocsRedirects[0].destination).toBe('/sdk/new-path/');
+
+    expect(result.userDocsRedirects).toHaveLength(1);
+    expect(result.userDocsRedirects[0].source).toBe('/platforms/javascript/old-guide/');
+    expect(result.userDocsRedirects[0].destination).toBe('/platforms/javascript/new-guide/');
+  });
+
+  it('should handle escaped quotes in URLs', () => {
+    // Test that URLs containing escaped quotes are parsed correctly
+    // In JavaScript strings, \" represents a literal quote character
+    // Note: In template literals (backticks), \" is NOT escaped - it's just \ + "
+    // So we write it as \\" in the template to get \" in the actual string
+    const redirectsWithEscapedQuotes = `
+const developerDocsRedirects = [
+  {
+    source: '/sdk/path/with\\"quotes/',
+    destination: '/sdk/new-path/',
+  },
+];
+
+const userDocsRedirects = [
+  {
+    source: '/platforms/javascript/guide\\"test/',
+    destination: '/platforms/javascript/new-guide/',
+  },
+];
+`;
+    fs.writeFileSync(tempFile, redirectsWithEscapedQuotes);
+    const result = parseRedirectsJs(tempFile);
+
+    expect(result.developerDocsRedirects).toHaveLength(1);
+    // The string contains \" (backslash + quote), which is preserved as-is
+    expect(result.developerDocsRedirects[0].source).toBe('/sdk/path/with\\"quotes/');
+    expect(result.developerDocsRedirects[0].destination).toBe('/sdk/new-path/');
+
+    expect(result.userDocsRedirects).toHaveLength(1);
+    expect(result.userDocsRedirects[0].source).toBe('/platforms/javascript/guide\\"test/');
+    expect(result.userDocsRedirects[0].destination).toBe('/platforms/javascript/new-guide/');
+  });
+
+  it('should handle escaped backslashes before quotes', () => {
+    // Test that \\" (escaped backslash + quote) in double-quoted strings is handled correctly
+    // In a double-quoted JavaScript string, \\" means:
+    //   \\ escapes to a single literal backslash
+    //   \" escapes to a literal quote
+    // So the string value contains \" (backslash + quote)
+    const redirectsWithEscapedBackslashQuote = `
+const developerDocsRedirects = [
+  {
+    source: "/sdk/path/with\\"quotes/",
+    destination: '/sdk/new-path/',
+  },
+];
+`;
+    fs.writeFileSync(tempFile, redirectsWithEscapedBackslashQuote);
+    const result = parseRedirectsJs(tempFile);
+
+    expect(result.developerDocsRedirects).toHaveLength(1);
+    // The string contains \" which should be parsed correctly
+    // When we read the file, \" is two characters: \ and "
+    // Our parser should handle this and include both in the value
+    expect(result.developerDocsRedirects[0].source).toBe('/sdk/path/with\\"quotes/');
+    expect(result.developerDocsRedirects[0].destination).toBe('/sdk/new-path/');
+  });
 });
 
 describe('redirectMatches', () => {

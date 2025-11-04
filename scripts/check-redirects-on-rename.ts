@@ -252,23 +252,104 @@ function parseRedirectsJs(filePath: string): {
 }
 
 /**
+ * Extracts a string value from a JavaScript string literal, handling escaped quotes
+ * Supports both single and double quotes
+ */
+function extractStringValue(
+  content: string,
+  startIndex: number
+): {endIndex: number; value: string} | null {
+  const quoteChar = content[startIndex];
+  if (quoteChar !== '"' && quoteChar !== "'") {
+    return null;
+  }
+
+  let value = '';
+  let i = startIndex + 1; // Start after the opening quote
+
+  while (i < content.length) {
+    const char = content[i];
+
+    if (char === '\\') {
+      // Handle escaped characters
+      if (i + 1 < content.length) {
+        const nextChar = content[i + 1];
+
+        // Special case: \\" should be parsed as \" (escaped quote)
+        // In JavaScript: \\ escapes the backslash, \" escapes the quote
+        // So \\" becomes \" (backslash + quote) in the string value
+        if (nextChar === '\\' && i + 2 < content.length && content[i + 2] === quoteChar) {
+          // This is \\" which should be parsed as \" (escaped quote)
+          value += '\\' + quoteChar;
+          i += 3;
+          continue;
+        }
+
+        // Handle escaped quote, backslash, and other escape sequences
+        if (nextChar === quoteChar || nextChar === '\\') {
+          value += char + nextChar;
+          i += 2;
+          continue;
+        }
+        // Handle other escape sequences like \n, \t, etc.
+        value += char + nextChar;
+        i += 2;
+        continue;
+      }
+      // Backslash at end of string - treat as literal
+      value += char;
+      i++;
+    } else if (char === quoteChar) {
+      // Found closing quote (not escaped)
+      return {endIndex: i, value};
+    } else {
+      value += char;
+      i++;
+    }
+  }
+
+  // No closing quote found
+  return null;
+}
+
+/**
  * Extracts redirect objects from JavaScript array string
- * Handles both single and double quotes, and whitespace variations
+ * Handles both single and double quotes, escaped quotes, and flexible property order
  */
 function extractRedirectsFromArray(arrayContent: string): Redirect[] {
   const redirects: Redirect[] = [];
 
-  // Match redirect objects with more flexible whitespace handling
-  // Handles both ' and " quotes, and various whitespace patterns including multiline
-  // The pattern needs to match objects that span multiple lines
-  const redirectRegex =
-    /\{[\s\S]*?source:\s*['"]([^'"]+)['"][\s\S]*?destination:\s*['"]([^'"]+)['"][\s\S]*?\}/g;
+  // Match redirect objects - handle both source-first and destination-first orders
+  // Look for opening brace, then find source and destination properties in any order
+  const objectRegex = /\{[\s\S]*?\}/g;
 
-  let match: RegExpExecArray | null = redirectRegex.exec(arrayContent);
-  while (match !== null) {
-    const source = match[1];
-    const destination = match[2];
+  let objectMatch: RegExpExecArray | null = objectRegex.exec(arrayContent);
+  while (objectMatch !== null) {
+    const objectContent = objectMatch[0];
+    let source: string | null = null;
+    let destination: string | null = null;
 
+    // Find source property
+    const sourceMatch = objectContent.match(/source\s*:\s*(['"])/);
+    if (sourceMatch && sourceMatch.index !== undefined) {
+      const stringStart = sourceMatch.index + sourceMatch[0].length - 1; // Position of quote char
+      const result = extractStringValue(objectContent, stringStart);
+      if (result) {
+        source = result.value;
+      }
+    }
+
+    // Find destination property
+    const destMatch = objectContent.match(/destination\s*:\s*(['"])/);
+    if (destMatch && destMatch.index !== undefined) {
+      const stringStart = destMatch.index + destMatch[0].length - 1; // Position of quote char
+      const result = extractStringValue(objectContent, stringStart);
+      if (result) {
+        destination = result.value;
+      }
+    }
+
+    // If both properties found, add to redirects
     if (source && destination) {
       redirects.push({
         source,
@@ -276,7 +357,7 @@ function extractRedirectsFromArray(arrayContent: string): Redirect[] {
       });
     }
 
-    match = redirectRegex.exec(arrayContent);
+    objectMatch = objectRegex.exec(arrayContent);
   }
 
   return redirects;
