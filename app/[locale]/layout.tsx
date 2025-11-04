@@ -1,10 +1,11 @@
 import { GTProvider } from 'gt-next';
+import { getLocales } from 'gt-next/server';
 
 export const dynamicParams = false;
 
 export async function generateStaticParams() {
-  // Keep in sync with gt.config.json
-  return [{ locale: 'en' }, { locale: 'fr' }, { locale: 'es' }, { locale: 'de' }];
+  const locales = getLocales();
+  return locales.map((locale) => ({ locale }));
 }
 
 export default async function LocaleLayout({
@@ -18,4 +19,3 @@ export default async function LocaleLayout({
   console.log('locale', locale);
   return <GTProvider locale={locale}>{children}</GTProvider>;
 }
-
