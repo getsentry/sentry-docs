@@ -275,16 +275,6 @@ function extractStringValue(
       if (i + 1 < content.length) {
         const nextChar = content[i + 1];
 
-        // Special case: \\" should be parsed as \" (escaped quote)
-        // In JavaScript: \\ escapes the backslash, \" escapes the quote
-        // So \\" becomes \" (backslash + quote) in the string value
-        if (nextChar === '\\' && i + 2 < content.length && content[i + 2] === quoteChar) {
-          // This is \\" which should be parsed as \" (escaped quote)
-          value += '\\' + quoteChar;
-          i += 3;
-          continue;
-        }
-
         // Handle escaped quote, backslash, and other escape sequences
         if (nextChar === quoteChar || nextChar === '\\') {
           value += char + nextChar;
