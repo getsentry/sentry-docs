@@ -38,7 +38,7 @@ export interface FrontMatter {
   nextPage?: PaginationNavNode;
   /**
    * relative links to use in the "next steps" section of the page grid
-   * takes precendence over children when present
+   * takes precedence over children when present
    */
   next_steps?: string[];
   /**
@@ -88,7 +88,7 @@ export interface FrontMatter {
   sidebar_title?: string;
 
   /**
-   * filesytem path to the source file, generated during build time
+   * filesystem path to the source file, generated during build time
    */
   sourcePath?: string;
 
