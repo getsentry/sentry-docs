@@ -283,6 +283,41 @@ function extractRedirectsFromArray(arrayContent: string): Redirect[] {
 }
 
 /**
+ * Escapes special regex characters in a string so they are treated as literals
+ */
+function escapeRegexSpecialChars(str: string): string {
+  // Escape special regex characters: . * + ? ^ $ | ( ) [ ] { } \
+  // We need to escape backslashes first, then other special chars
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Converts a redirect pattern with path parameters to a regex pattern
+ * Escapes special regex characters while preserving path parameter patterns
+ */
+function convertRedirectPatternToRegex(pattern: string): string {
+  // Strategy: Replace path parameters with placeholders first, escape everything,
+  // then replace placeholders with regex patterns
+  const placeholderPathStar = '__PATH_STAR_PLACEHOLDER__';
+  const placeholderParam = '__PARAM_PLACEHOLDER__';
+  
+  // Replace path parameters with placeholders
+  let result = pattern
+    .replace(/:\w+\*/g, placeholderPathStar)  // :path* -> placeholder
+    .replace(/:\w+/g, placeholderParam);       // :param -> placeholder
+  
+  // Escape all special regex characters
+  result = escapeRegexSpecialChars(result);
+  
+  // Replace placeholders with regex patterns
+  result = result
+    .replace(new RegExp(escapeRegexSpecialChars(placeholderPathStar), 'g'), '.*')      // placeholder -> .*
+    .replace(new RegExp(escapeRegexSpecialChars(placeholderParam), 'g'), '[^/]+');    // placeholder -> [^/]+
+  
+  return result;
+}
+
+/**
  * Checks if a redirect matches the expected old → new URL pattern
  * Handles path parameters like :path*, :platform, etc.
  *
@@ -309,9 +344,7 @@ function redirectMatches(redirect: Redirect, oldUrl: string, newUrl: string): bo
   // Handle path parameters - convert patterns to regex
   // :path* matches zero or more path segments (including nested paths)
   // :param matches a single path segment
-  const sourcePattern = redirect.source
-    .replace(/:\w+\*/g, '.*') // :path* -> .* (matches any chars including slashes)
-    .replace(/:\w+/g, '[^/]+'); // :param -> [^/]+ (matches non-slash chars)
+  const sourcePattern = convertRedirectPatternToRegex(redirect.source);
   const sourceRegex = new RegExp(`^${sourcePattern}$`);
 
   // Check if oldUrl matches the source pattern
@@ -320,9 +353,7 @@ function redirectMatches(redirect: Redirect, oldUrl: string, newUrl: string): bo
   }
 
   // Old URL matches the source pattern, now check if destination matches new URL
-  const destPattern = redirect.destination
-    .replace(/:\w+\*/g, '.*')
-    .replace(/:\w+/g, '[^/]+');
+  const destPattern = convertRedirectPatternToRegex(redirect.destination);
   const destRegex = new RegExp(`^${destPattern}$`);
 
   // If destination has no path parameters, require exact match

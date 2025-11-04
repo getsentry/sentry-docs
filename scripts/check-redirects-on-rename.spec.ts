@@ -284,4 +284,92 @@ describe('redirectMatches', () => {
       )
     ).toBe(true); // Pattern matches, even though actual redirect would preserve 'javascript'
   });
+
+  it('should escape regex special characters in URLs', () => {
+    // Test URLs with special regex characters that should be treated as literals
+    const redirect = {
+      source: '/platforms/javascript/guide(v2)/',
+      destination: '/platforms/javascript/guide-v2/',
+    };
+    // Should match exact URLs with special characters
+    expect(
+      redirectMatches(
+        redirect,
+        '/platforms/javascript/guide(v2)/',
+        '/platforms/javascript/guide-v2/'
+      )
+    ).toBe(true);
+    // Should not match URLs that don't exactly match
+    expect(
+      redirectMatches(
+        redirect,
+        '/platforms/javascript/guide(v3)/',
+        '/platforms/javascript/guide-v2/'
+      )
+    ).toBe(false);
+  });
+
+  it('should handle URLs with dots and other special characters', () => {
+    const redirect = {
+      source: '/platforms/javascript/guide.old/',
+      destination: '/platforms/javascript/guide.new/',
+    };
+    // Dot should be treated as literal, not regex "any character"
+    expect(
+      redirectMatches(redirect, '/platforms/javascript/guide.old/', '/platforms/javascript/guide.new/')
+    ).toBe(true);
+    // Should not match "guidexold" (if dot was treated as regex)
+    expect(
+      redirectMatches(redirect, '/platforms/javascript/guidexold/', '/platforms/javascript/guide.new/')
+    ).toBe(false);
+  });
+
+  it('should handle URLs with brackets and parentheses', () => {
+    const redirect = {
+      source: '/platforms/javascript/guide[deprecated]/',
+      destination: '/platforms/javascript/guide/',
+    };
+    // Brackets should be treated as literal, not regex character class
+    expect(
+      redirectMatches(
+        redirect,
+        '/platforms/javascript/guide[deprecated]/',
+        '/platforms/javascript/guide/'
+      )
+    ).toBe(true);
+    // Should not match without brackets
+    expect(
+      redirectMatches(redirect, '/platforms/javascript/guide/', '/platforms/javascript/guide/')
+    ).toBe(false);
+  });
+
+  it('should escape special characters while preserving path parameters', () => {
+    const redirect = {
+      source: '/platforms/:platform/guide(v1)/',
+      destination: '/platforms/:platform/guide-v1/',
+    };
+    // Path parameters should still work, but special chars should be escaped
+    expect(
+      redirectMatches(
+        redirect,
+        '/platforms/javascript/guide(v1)/',
+        '/platforms/javascript/guide-v1/'
+      )
+    ).toBe(true);
+    expect(
+      redirectMatches(
+        redirect,
+        '/platforms/python/guide(v1)/',
+        '/platforms/python/guide-v1/'
+      )
+    ).toBe(true);
+    // Should not match different version
+    expect(
+      redirectMatches(
+        redirect,
+        '/platforms/javascript/guide(v2)/',
+        '/platforms/javascript/guide-v1/'
+      )
+    ).toBe(false);
+  });
 });
