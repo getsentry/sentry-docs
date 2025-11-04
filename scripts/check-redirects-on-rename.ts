@@ -128,33 +128,7 @@ function detectRenamedFiles(): RenamedFile[] {
 }
 
 /**
- * Checks if a quote at the given index is escaped by counting consecutive backslashes.
- * A quote is escaped (part of the string) if there's an odd number of backslashes before it.
- * A quote is not escaped (ends the string) if there's an even number (including zero) of backslashes before it.
- *
- * Examples:
- * - "text\" - 1 backslash (odd) → escaped
- * - "text\\" - 2 backslashes (even) → not escaped
- * - "text\\\" - 3 backslashes (odd) → escaped
- */
-function isEscapedQuote(content: string, index: number): boolean {
-  if (index === 0) return false;
-
-  // Count consecutive backslashes before this position
-  let backslashCount = 0;
-  let pos = index - 1;
-  while (pos >= 0 && content[pos] === '\\') {
-    backslashCount++;
-    pos--;
-  }
-
-  // Quote is escaped if there's an odd number of backslashes
-  return backslashCount % 2 === 1;
-}
-
-/**
- * Parses redirects.js to extract redirect entries
- * This uses regex-based parsing since redirects.js is a JavaScript file
+ * Parses redirects.js to extract redirect entries by directly requiring the file
  */
 function parseRedirectsJs(filePath: string): {
   developerDocsRedirects: Redirect[];
@@ -165,192 +139,21 @@ function parseRedirectsJs(filePath: string): {
     return {developerDocsRedirects: [], userDocsRedirects: []};
   }
 
-  const content = fs.readFileSync(filePath, 'utf8');
+  try {
+    // Clear require cache to ensure we get fresh data
+    const resolvedPath = path.resolve(filePath);
+    delete require.cache[resolvedPath];
 
-  const developerDocsRedirects: Redirect[] = [];
-  const userDocsRedirects: Redirect[] = [];
-
-  // Extract developerDocsRedirects array
-  // Find the start of the array (look for the const declaration, not JSDoc comments)
-  const devDocsMatch = content.match(/const developerDocsRedirects\s*=/);
-  if (devDocsMatch && devDocsMatch.index !== undefined) {
-    // Find the opening bracket after the assignment
-    const arrayStart = content.indexOf('[', devDocsMatch.index);
-    if (arrayStart !== -1) {
-      // Find the matching closing bracket by counting braces
-      let depth = 0;
-      let inString = false;
-      let stringChar = '';
-      let i = arrayStart;
-
-      while (i < content.length) {
-        const char = content[i];
-
-        // Handle string literals
-        if (!inString && (char === '"' || char === "'") && !isEscapedQuote(content, i)) {
-          inString = true;
-          stringChar = char;
-        } else if (inString && char === stringChar && !isEscapedQuote(content, i)) {
-          inString = false;
-        }
-
-        // Count brackets only when not in string
-        if (!inString) {
-          if (char === '[') depth++;
-          if (char === ']') {
-            depth--;
-            if (depth === 0) {
-              // Found the closing bracket
-              const arrayContent = content.slice(arrayStart + 1, i);
-              developerDocsRedirects.push(...extractRedirectsFromArray(arrayContent));
-              break;
-            }
-          }
-        }
-        i++;
-      }
-    }
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const redirects = require(resolvedPath);
+    return {
+      developerDocsRedirects: redirects.developerDocsRedirects || [],
+      userDocsRedirects: redirects.userDocsRedirects || [],
+    };
+  } catch (error) {
+    console.warn(`⚠️  Error loading redirects from ${filePath}:`, error);
+    return {developerDocsRedirects: [], userDocsRedirects: []};
   }
-
-  // Extract userDocsRedirects array
-  const userDocsMatch = content.match(/const userDocsRedirects\s*=/);
-  if (userDocsMatch && userDocsMatch.index !== undefined) {
-    const arrayStart = content.indexOf('[', userDocsMatch.index);
-    if (arrayStart !== -1) {
-      let depth = 0;
-      let inString = false;
-      let stringChar = '';
-      let i = arrayStart;
-
-      while (i < content.length) {
-        const char = content[i];
-
-        if (!inString && (char === '"' || char === "'") && !isEscapedQuote(content, i)) {
-          inString = true;
-          stringChar = char;
-        } else if (inString && char === stringChar && !isEscapedQuote(content, i)) {
-          inString = false;
-        }
-
-        if (!inString) {
-          if (char === '[') depth++;
-          if (char === ']') {
-            depth--;
-            if (depth === 0) {
-              const arrayContent = content.slice(arrayStart + 1, i);
-              userDocsRedirects.push(...extractRedirectsFromArray(arrayContent));
-              break;
-            }
-          }
-        }
-        i++;
-      }
-    }
-  }
-
-  return {developerDocsRedirects, userDocsRedirects};
-}
-
-/**
- * Extracts a string value from a JavaScript string literal, handling escaped quotes
- * Supports both single and double quotes
- */
-function extractStringValue(
-  content: string,
-  startIndex: number
-): {endIndex: number; value: string} | null {
-  const quoteChar = content[startIndex];
-  if (quoteChar !== '"' && quoteChar !== "'") {
-    return null;
-  }
-
-  let value = '';
-  let i = startIndex + 1; // Start after the opening quote
-
-  while (i < content.length) {
-    const char = content[i];
-
-    if (char === '\\') {
-      // Handle escaped characters
-      if (i + 1 < content.length) {
-        const nextChar = content[i + 1];
-
-        // Handle escaped quote, backslash, and other escape sequences
-        if (nextChar === quoteChar || nextChar === '\\') {
-          value += char + nextChar;
-          i += 2;
-          continue;
-        }
-        // Handle other escape sequences like \n, \t, etc.
-        value += char + nextChar;
-        i += 2;
-        continue;
-      }
-      // Backslash at end of string - treat as literal
-      value += char;
-      i++;
-    } else if (char === quoteChar) {
-      // Found closing quote (not escaped)
-      return {endIndex: i, value};
-    } else {
-      value += char;
-      i++;
-    }
-  }
-
-  // No closing quote found
-  return null;
-}
-
-/**
- * Extracts redirect objects from JavaScript array string
- * Handles both single and double quotes, escaped quotes, and flexible property order
- */
-function extractRedirectsFromArray(arrayContent: string): Redirect[] {
-  const redirects: Redirect[] = [];
-
-  // Match redirect objects - handle both source-first and destination-first orders
-  // Look for opening brace, then find source and destination properties in any order
-  const objectRegex = /\{[\s\S]*?\}/g;
-
-  let objectMatch: RegExpExecArray | null = objectRegex.exec(arrayContent);
-  while (objectMatch !== null) {
-    const objectContent = objectMatch[0];
-    let source: string | null = null;
-    let destination: string | null = null;
-
-    // Find source property
-    const sourceMatch = objectContent.match(/source\s*:\s*(['"])/);
-    if (sourceMatch && sourceMatch.index !== undefined) {
-      const stringStart = sourceMatch.index + sourceMatch[0].length - 1; // Position of quote char
-      const result = extractStringValue(objectContent, stringStart);
-      if (result) {
-        source = result.value;
-      }
-    }
-
-    // Find destination property
-    const destMatch = objectContent.match(/destination\s*:\s*(['"])/);
-    if (destMatch && destMatch.index !== undefined) {
-      const stringStart = destMatch.index + destMatch[0].length - 1; // Position of quote char
-      const result = extractStringValue(objectContent, stringStart);
-      if (result) {
-        destination = result.value;
-      }
-    }
-
-    // If both properties found, add to redirects
-    if (source && destination) {
-      redirects.push({
-        source,
-        destination,
-      });
-    }
-
-    objectMatch = objectRegex.exec(arrayContent);
-  }
-
-  return redirects;
 }
 
 /**
