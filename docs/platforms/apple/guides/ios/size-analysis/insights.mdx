@@ -143,10 +143,10 @@ Contents/Resources/DWARF/${EXECUTABLE_NAME}
 npm install -g imagemin-cli
 
 # Optimize PNG with quality 85
-imagemin input.png --plugin=pngquant --plugin.quality=[0.85,0.85] > output.png
+npx imagemin input.png --plugin=pngquant --pngquant.quality=0.85-0.85 > output.png
 
 # Optimize JPEG with quality 85
-imagemin input.jpg --plugin=mozjpeg --plugin.quality=85 > output.jpg
+npx imagemin input.jpg --plugin=mozjpeg --plugin.mozjpeg.quality=85 > output.jpg
 ```
 
 #### Option 2: Use ImageOptim (GUI)
@@ -166,8 +166,6 @@ Open the image in Preview, choose `File → Export`, pick `HEIC`, and save. Repl
 1. Save the script as `optimize.sh`.
 2. Run `source optimize.sh`.
 3. Call `optimize_icon YourIcon.png`.
-
-#### Option: Convert to HEIC
 
 ```bash
 #!/bin/bash
@@ -198,35 +196,6 @@ optimize_icon() {
 ```
 
 Update the Info.plist alternate icon entry to point at the new `.heic` file.
-
-#### Option: Keep PNG
-
-```bash
-#!/bin/bash
-optimize_icon() {
-    local input="$1"
-    local output="$(basename "$input" | sed 's/\.[^.]*$//')_optimized.png"
-
-    [ ! -f "$input" ] && echo "❌ File not found: $input" && return 1
-
-    echo "🔄 Optimizing $(basename "$input")..."
-
-    sips --resampleWidth 180 "$input" \
-      --out /tmp/icon.png >/dev/null 2>&1 || return 1
-    sips --resampleWidth 1024 /tmp/icon.png \
-      --out "$output" >/dev/null 2>&1
-
-    rm /tmp/icon.png
-
-    if [ -f "$output" ]; then
-        local saved=$(( ($(stat -f%z "$input") - $(stat -f%z "$output")) / 1024 ))
-        echo "✅ Saved ${saved}KB → $output"
-    else
-        echo "❌ Optimization failed"
-        return 1
-    fi
-}
-```
 
 ### Loose Images
 
