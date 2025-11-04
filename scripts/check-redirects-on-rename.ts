@@ -300,20 +300,20 @@ function convertRedirectPatternToRegex(pattern: string): string {
   // then replace placeholders with regex patterns
   const placeholderPathStar = '__PATH_STAR_PLACEHOLDER__';
   const placeholderParam = '__PARAM_PLACEHOLDER__';
-  
+
   // Replace path parameters with placeholders
   let result = pattern
-    .replace(/:\w+\*/g, placeholderPathStar)  // :path* -> placeholder
-    .replace(/:\w+/g, placeholderParam);       // :param -> placeholder
-  
+    .replace(/:\w+\*/g, placeholderPathStar) // :path* -> placeholder
+    .replace(/:\w+/g, placeholderParam); // :param -> placeholder
+
   // Escape all special regex characters
   result = escapeRegexSpecialChars(result);
-  
+
   // Replace placeholders with regex patterns
   result = result
-    .replace(new RegExp(escapeRegexSpecialChars(placeholderPathStar), 'g'), '.*')      // placeholder -> .*
-    .replace(new RegExp(escapeRegexSpecialChars(placeholderParam), 'g'), '[^/]+');    // placeholder -> [^/]+
-  
+    .replace(new RegExp(escapeRegexSpecialChars(placeholderPathStar), 'g'), '.*') // placeholder -> .*
+    .replace(new RegExp(escapeRegexSpecialChars(placeholderParam), 'g'), '[^/]+'); // placeholder -> [^/]+
+
   return result;
 }
 

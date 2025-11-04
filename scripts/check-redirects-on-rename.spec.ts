@@ -316,11 +316,19 @@ describe('redirectMatches', () => {
     };
     // Dot should be treated as literal, not regex "any character"
     expect(
-      redirectMatches(redirect, '/platforms/javascript/guide.old/', '/platforms/javascript/guide.new/')
+      redirectMatches(
+        redirect,
+        '/platforms/javascript/guide.old/',
+        '/platforms/javascript/guide.new/'
+      )
     ).toBe(true);
     // Should not match "guidexold" (if dot was treated as regex)
     expect(
-      redirectMatches(redirect, '/platforms/javascript/guidexold/', '/platforms/javascript/guide.new/')
+      redirectMatches(
+        redirect,
+        '/platforms/javascript/guidexold/',
+        '/platforms/javascript/guide.new/'
+      )
     ).toBe(false);
   });
 
@@ -339,7 +347,11 @@ describe('redirectMatches', () => {
     ).toBe(true);
     // Should not match without brackets
     expect(
-      redirectMatches(redirect, '/platforms/javascript/guide/', '/platforms/javascript/guide/')
+      redirectMatches(
+        redirect,
+        '/platforms/javascript/guide/',
+        '/platforms/javascript/guide/'
+      )
     ).toBe(false);
   });
 
