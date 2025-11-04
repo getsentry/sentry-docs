@@ -219,6 +219,10 @@ const developerDocsRedirects = [
 /** @type {import('next/dist/lib/load-custom-routes').Redirect[]} */
 const userDocsRedirects = [
   {
+    source: '/organization/integrations/rootly/',
+    destination: '/organization/integrations/notification-incidents/rootly/',
+  },
+  {
     source: '/account/cli/configuration/',
     destination: '/cli/configuration/',
   },
@@ -253,6 +257,10 @@ const userDocsRedirects = [
   {
     source: '/product/dev-toolbar/:path*',
     destination: '/product/sentry-toolbar/:path*',
+  },
+  {
+    source: '/product/ai-in-sentry/sentry-prevent-ai/:path*',
+    destination: '/product/ai-in-sentry/ai-code-review/:path*',
   },
 
   {
@@ -1237,6 +1245,10 @@ const userDocsRedirects = [
   {
     source: '/platforms/dotnet/guides/google-cloud-functions/profiling/:path*',
     destination: '/platforms/dotnet/profiling/',
+  },
+  {
+    source: '/product/insights/mcp/',
+    destination: '/product/insights/ai/mcp/',
   },
 ];
 

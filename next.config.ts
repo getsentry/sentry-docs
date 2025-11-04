@@ -1,8 +1,8 @@
 import {codecovNextJSWebpackPlugin} from '@codecov/nextjs-webpack-plugin';
 import {withSentryConfig} from '@sentry/nextjs';
 
-import {redirects} from './redirects.js';
 import {REMOTE_IMAGE_PATTERNS} from './src/config/images';
+import {redirects} from './redirects.js';
 
 const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
   ? {
@@ -25,27 +25,31 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
         'develop-docs/**/*',
         'node_modules/@esbuild/*',
       ],
-      '/platform-redirect': ['**/*.gif', 'public/mdx-images/**/*', '**/*.pdf'],
+      '/platform-redirect': [
+        '**/*.gif',
+        'public/mdx-images/**/*',
+        'public/og-images/**/*',
+        '**/*.pdf',
+      ],
       '\\[\\[\\.\\.\\.path\\]\\]': [
         'docs/**/*',
         'node_modules/prettier/plugins',
         'node_modules/rollup/dist',
+        'public/og-images/**/*',
       ],
       'sitemap.xml': [
         'docs/**/*',
         'public/mdx-images/**/*',
+        'public/og-images/**/*',
         '**/*.gif',
         '**/*.pdf',
         '**/*.png',
       ],
     };
 
-if (
-  process.env.NODE_ENV !== 'development' &&
-  (!process.env.NEXT_PUBLIC_SENTRY_DSN || !process.env.SENTRY_DSN)
-) {
+if (process.env.NODE_ENV !== 'development' && !process.env.NEXT_PUBLIC_SENTRY_DSN) {
   throw new Error(
-    'Missing required environment variables: NEXT_PUBLIC_SENTRY_DSN and SENTRY_DSN must be set in production'
+    'Missing required environment variable: NEXT_PUBLIC_SENTRY_DSN must be set in production'
   );
 }
 

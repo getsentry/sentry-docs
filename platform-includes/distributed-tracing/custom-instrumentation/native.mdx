@@ -2,6 +2,14 @@ On this page you will learn how to manually propagate trace information into and
 
 To obtain trace headers from a transaction, use `sentry_transaction_iter_headers()`. For a span, use `sentry_span_iter_headers()`. Pass the returned value to the downstream service. If communication happens over HTTP, we recommend you attach all headers to the outgoing HTTP request.
 
+By default, only the `sentry-trace` header is generated. To also generate W3C `traceparent` headers for interoperability with other tracing systems, enable traceparent propagation:
+
+```c
+sentry_options_set_propagate_traceparent(options, 1);
+```
+
+When enabled, both `sentry-trace` and `traceparent` headers will be generated with the same trace and span information.
+
 Continuing a trace from an upstream service requires using `sentry_transaction_context_update_from_header()`. Before starting a transaction, pass its transaction context into the previous function along with the `sentry-trace` header. The transaction started with the transaction context will contain everything needed to continue the trace.
 
 To obtain headers from a transaction so it can be continued from a downstream service, define a function which merges the headers into some aggregate object. Use the function in `sentry_transaction_iter_headers()` as a callback. The following example uses `sentry_value_t` as the aggregate object:
@@ -14,17 +22,41 @@ copy_headers_to(const char *key, const char *value, void *userdata) {
 }
 
 int main(int argc, char **argv) {
+    sentry_options_t *options = sentry_options_new();
+    sentry_options_set_dsn(options, "___PUBLIC_DSN___");
+
+    // Enable traceparent propagation for W3C compatibility
+    sentry_options_set_propagate_traceparent(options, 1);
+
+    sentry_init(options);
+
     // Transaction to continue off of
-	sentry_transaction_context_t *tx_ctx = sentry_transaction_context_new(
+    sentry_transaction_context_t *tx_ctx = sentry_transaction_context_new(
         "honk",
         NULL
     );
     sentry_transaction_t *tx = sentry_transaction_start(tx_ctx, sentry_value_new_null());
 
-	sentry_value_t headers = sentry_value_new_object();
+    sentry_value_t headers = sentry_value_new_object();
     sentry_transaction_iter_headers(tx, copy_headers_to, (void *) &headers);
+
+    // The headers object now contains both "sentry-trace" and "traceparent"
+    // (if traceparent propagation is enabled)
+    // Example values:
+    // - "sentry-trace": "2674eb52d5874b13b560236d6c79ce8a-a0f9fdf04f1a63df-1"
+    // - "traceparent": "00-2674eb52d5874b13b560236d6c79ce8a-a0f9fdf04f1a63df-01"
+
+    sentry_transaction_finish(tx);
+    sentry_close();
 }
 ```
+
+The key differences in the generated headers are:
+- `sentry-trace`: Uses Sentry's format with sampling flag as "0" or "1"
+- `traceparent`: Uses W3C format with version "00" and sampling flag as "00" or "01"
+
+Both headers contain the same trace ID and span ID, ensuring compatibility across different tracing systems.
+
 
 To create a transaction as a continuation of a trace retrieved from an upstream service, pass an iterator of the incoming headers to the transaction context:
 
