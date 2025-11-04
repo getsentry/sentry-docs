@@ -8,6 +8,9 @@ import PlausibleProvider from 'next-plausible';
 
 import {ThemeProvider} from 'sentry-docs/components/theme-provider';
 
+import { getLocale } from 'gt-next/server';
+import { getLocaleDirection } from 'generaltranslation';
+
 const rubik = Rubik({
   weight: ['400', '500', '700'],
   style: ['normal', 'italic'],
@@ -29,9 +32,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({children}: {children: React.ReactNode}) {
+export default async function RootLayout({children}: {children: React.ReactNode}) {
+  const lang = await getLocale();
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={lang} dir={getLocaleDirection(lang)} suppressHydrationWarning>
       <head>
         <PlausibleProvider taggedEvents domain="docs.sentry.io,rollup.sentry.io" />
       </head>

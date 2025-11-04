@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/nextjs';
 import type {NextRequest} from 'next/server';
 import {NextResponse} from 'next/server';
+import { createNextMiddleware } from 'gt-next/middleware';
 
 // This env var is set in next.config.js based on the `NEXT_PUBLIC_DEVELOPER_DOCS` env var at build time
 // a workaround edge middleware not having access to env vars
@@ -27,7 +28,13 @@ export function middleware(request: NextRequest) {
   }
 
   // Then, check for AI/LLM clients and redirect to markdown if appropriate
-  return handleAIClientRedirect(request);
+  const mdRedirect = handleAIClientRedirect(request);
+  if (mdRedirect) {
+    return mdRedirect;
+  }
+
+  // Finally, hand off to gt-next middleware for locale detection/routing
+  return gtMiddleware(request);
 }
 
 // don't send Permanent Redirects (301) in dev mode - it gets cached for "localhost" by the browser
@@ -200,6 +207,12 @@ const handleRedirects = (request: NextRequest) => {
 
   return undefined;
 };
+
+// Instantiate gt-next middleware with locale routing enabled and default locale prefixed
+const gtMiddleware = createNextMiddleware({
+  localeRouting: true,
+  prefixDefaultLocale: true,
+});
 
 type Redirect = {
   /** a string with a leading and a trailing slash */
