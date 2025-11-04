@@ -172,7 +172,9 @@ const userDocsRedirects = [
 
     expect(result.userDocsRedirects).toHaveLength(1);
     expect(result.userDocsRedirects[0].source).toBe('/platforms/javascript/old-guide/');
-    expect(result.userDocsRedirects[0].destination).toBe('/platforms/javascript/new-guide/');
+    expect(result.userDocsRedirects[0].destination).toBe(
+      '/platforms/javascript/new-guide/'
+    );
   });
 
   it('should handle escaped quotes in URLs', () => {
@@ -204,8 +206,12 @@ const userDocsRedirects = [
     expect(result.developerDocsRedirects[0].destination).toBe('/sdk/new-path/');
 
     expect(result.userDocsRedirects).toHaveLength(1);
-    expect(result.userDocsRedirects[0].source).toBe('/platforms/javascript/guide\\"test/');
-    expect(result.userDocsRedirects[0].destination).toBe('/platforms/javascript/new-guide/');
+    expect(result.userDocsRedirects[0].source).toBe(
+      '/platforms/javascript/guide\\"test/'
+    );
+    expect(result.userDocsRedirects[0].destination).toBe(
+      '/platforms/javascript/new-guide/'
+    );
   });
 
   it('should handle escaped backslashes before quotes', () => {
