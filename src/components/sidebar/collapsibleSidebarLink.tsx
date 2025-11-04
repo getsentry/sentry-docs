@@ -23,7 +23,7 @@ interface SidebarLinkProps {
   className?: string;
 
   /**
-   * Indicates that the links are currently hidden. Overriden by isActive
+   * Indicates that the links are currently hidden. overridden by isActive
    */
   collapsed?: boolean | null;
 }
