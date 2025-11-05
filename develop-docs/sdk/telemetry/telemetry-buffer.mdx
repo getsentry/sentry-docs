@@ -1,5 +1,7 @@
 ---
-title: Batch Processor
+title: Telemetry Buffer
+redirect_from:
+  - /sdk/telemetry/spans/batch-processor/
 ---
 
 <Alert level="warning">
@@ -9,6 +11,32 @@ title: Batch Processor
 <Alert>
   This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement levels.
 </Alert>
+
+The telemetry buffer sits between the client and the transport, temporarily storing telemetry data such as spans and logs. Its main goal is to efficiently batch data to reduce the number of outgoing HTTP requests and Sentry envelopes. Without buffering, each span or log would trigger its own request, quickly overwhelming our backends.
+
+```mermaid
+flowchart LR
+  Client[Client] -->|capture telemetry data| Buffer[TelemetryBuffer]
+  Buffer -->|send envelope| Transport[Transport]
+```
+
+Because telemetry workloads and platform constraints vary widely, buffer requirements differ across environments. For example, backend SDKs need high throughput and backpressure management to handle large data volumes. Mobile SDKs have lower throughput and don't need to worry much about backpressure, but they do need to minimize data loss in the event of abnormal process termination. Browser and GDX SDKs also have different requirements.
+
+Therefore, we recommend implementing different types of telemetry buffers tailored to the platform's needs. As of Nov 5th, 2025, this page is under development, and we're currently refining the requirements for different platforms:
+
+* [BatchProcessor V0](#batchprocessor-v0): The BatchProcessor V0 outlines the initial requirements, primarily for logs, to avoid sending numerous HTTP requests. This section exists only as a placeholder until we fully spec out the other telemetry buffers.
+* [Backend Telemetry Buffer](#backend-telemetry-buffer): To be defined
+* [Mobile Telemetry Buffer](#mobile-telemetry-buffer): To be defined
+* [Browser Telemetry Buffer](#browser-telemetry-buffer): To be defined
+* [GDX Telemetry Buffer](#gdx-telemetry-buffer): To be defined
+
+# Common Requirements
+
+To be defined. Things like common API, client reports, etc.
+
+# BatchProcessor V0
+
+## Overview
 
 The BatchProcessor batches spans and logs into one envelope to reduce the number of HTTP requests. When an SDK implements span streaming or logs, it MUST use a BatchProcessor, which is similar to [OpenTelemetry's Batch Processor](https://github.com/open-telemetry/opentelemetry-collector/blob/main/processor/batchprocessor/README.md). The BatchProcessor holds logs and finished spans in memory and batches them together into envelopes. It uses a combination of time and size-based batching. When writing this, the BatchProcessor only handles spans and logs, but an SDK MAY use it for other telemetry data in the future.
 
@@ -95,3 +123,19 @@ Scenario: 1 span added application crashes
   And loses the spans in the BatchProcessor
 
 ```
+
+# Backend Telemetry Buffer
+
+To be defined
+
+# Mobile Telemetry Buffer
+
+To be defined
+
+# Browser Telemetry Buffer
+
+To be defined
+
+# GDX Telemetry Buffer
+
+To be defined
