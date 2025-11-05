@@ -12,12 +12,13 @@ redirect_from:
   This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement levels.
 </Alert>
 
-The telemetry buffer sits between the client and the transport, temporarily storing telemetry data such as spans and logs. Its main goal is to efficiently batch data to reduce the number of outgoing HTTP requests and Sentry envelopes. Without buffering, each span or log would trigger its own request, quickly overwhelming our backends.
+The telemetry buffer sits between the client and the transport, temporarily buffering high-volume telemetry data such as spans and logs. The client SHOULD continue to pass low-volume telemetry data, such as events, directly to the transport. The telemetry buffer aims to efficiently batch data to reduce the number of outgoing HTTP requests and Sentry envelopes. Without buffering, each span or log would trigger its own request, quickly overwhelming our backends.
 
 ```mermaid
 flowchart LR
-  Client[Client] -->|capture telemetry data| Buffer[TelemetryBuffer]
-  Buffer -->|send envelope| Transport[Transport]
+  Client[Client] -->|high-volume telemetry data| Buffer[TelemetryBuffer]
+  Buffer -->|buffered telemetry data| Transport[Transport]
+  Client -->|low-volume telemetry data| Transport
 ```
 
 Because telemetry workloads and platform constraints vary widely, buffer requirements differ across environments. For example, backend SDKs need high throughput and backpressure management to handle large data volumes. Mobile SDKs have lower throughput and don't need to worry much about backpressure, but they do need to minimize data loss in the event of abnormal process termination. Browser and GDX SDKs also have different requirements.
