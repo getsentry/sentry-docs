@@ -6,7 +6,7 @@ import * as Sentry from '@sentry/nextjs';
 
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 
-// explicitly not usig CSS modules here
+// explicitly not using CSS modules here
 // because there's some prerendered content that depends on these exact class names
 import '../callout/styles.scss';
 import styles from './style.module.scss';
@@ -17,6 +17,8 @@ type Props = {
   copy?: boolean;
   /** If defined, the expandable will be grouped with other expandables that have the same group. */
   group?: string;
+  // If true, the expandable will not be rendered in the markdown version of the page
+  hideFromMd?: boolean;
   level?: 'info' | 'warning' | 'success';
   permalink?: boolean;
 };
@@ -35,6 +37,7 @@ export function Expandable({
   permalink,
   group,
   copy,
+  hideFromMd = false,
 }: Props) {
   const id = permalink ? slugify(title) : undefined;
 
@@ -155,6 +158,7 @@ export function Expandable({
       open={isExpanded}
       onToggle={toggleIsExpanded}
       id={id}
+      {...(hideFromMd ? {'data-mdast': 'ignore'} : {})}
     >
       <summary className={`${styles['expandable-header']} callout-header`}>
         <div className={styles['expandable-title-container']}>

@@ -136,3 +136,46 @@ class CustomBeforeBreadcrumbCallback : SentryOptions.BeforeBreadcrumbCallback {
   }
 }
 ```
+
+## Registering Custom On Discard Callback
+
+Any Spring bean implementing the `OnDiscardCallback` will be automatically set on `SentryOptions` during the SDK's auto-configuration. Note that there can be only a single bean set this way.
+
+```java
+import io.sentry.SentryOptions;
+import io.sentry.clientreport.DiscardReason;
+import io.sentry.DataCategory;
+import org.springframework.stereotype.Component;
+
+@Component
+class CustomOnDiscardCallback implements SentryOptions.OnDiscardCallback {
+  @Override 
+  public void execute(DiscardReason reason, DataCategory category, Long count) {
+    // Only record the number of lost spans due to overflow conditions
+    if ((reason == DiscardReason.CACHE_OVERFLOW
+            || reason == DiscardReason.QUEUE_OVERFLOW)
+        && category == DataCategory.Span) {
+      System.out.println("Discarded " + number + " spans due to overflow.");
+    }
+  }
+}
+```
+
+```kotlin
+import io.sentry.SentryOptions
+import io.sentry.clientreport.DiscardReason
+import io.sentry.DataCategory
+import org.springframework.stereotype.Component
+
+@Component
+class CustomOnDiscardCallback : SentryOptions.OnDiscardCallback {
+  override fun execute(reason: DiscardReason, category: DataCategory, countToAdd: Long) {
+    // Only record the number of lost spans due to overflow conditions
+    if ((reason == DiscardReason.CACHE_OVERFLOW
+            || reason == DiscardReason.QUEUE_OVERFLOW)
+        && category == DataCategory.Span) {
+      println("Discarded " + number + " spans due to overflow.")
+    }
+  }
+}
+```

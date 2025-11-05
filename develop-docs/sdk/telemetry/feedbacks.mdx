@@ -114,7 +114,7 @@ SDKs should implement a `beforeSendFeedback` callback to allow users to modify t
 
 ### Scope Data and Event Processors
 
-The scope is applied to the feedbacks, including tags, user, trace and contexts. The scope’s _event processors_ are invoked, too.
+The scope is applied to the feedbacks, including tags, user, trace and contexts. The scope's _event processors_ are invoked, too.
 
 ### Rate Limiting
 
@@ -127,3 +127,13 @@ There is no sample rate for feedbacks, as they are always sampled. However, a fe
 ### Session Replay Integration
 
 When sending feedback, SDKs are expected to flush the current Session Replay, if running. This ensures a meaningful replay recording exists and can be included in the `replay_id` attribute of the feedback context.
+
+#### Timing of Replay Sampling with Feedback Widgets
+
+For feedback widgets specifically, when Session Replay's `onErrorSampleRate` is greater than 0, SDKs must sample and flush the replay when the widget **opens**, not when the user submits the feedback. This timing is critical because:
+
+- The replay buffer captures the user's session leading up to opening the feedback widget, providing context about what the user experienced before deciding to provide feedback
+- If sampling only occurs on submission, the buffer would primarily contain the user's interactions with the feedback form itself (typing their message), which provides minimal debugging value
+- Early sampling ensures the complete user context is preserved regardless of whether the user ultimately submits the feedback
+
+This behavior ensures that developers receive meaningful session replay data that shows the user's experience prior to the feedback moment, rather than just their interaction with the feedback widget itself.

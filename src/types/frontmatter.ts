@@ -24,6 +24,10 @@ export interface FrontMatter {
    */
   draft?: boolean;
   /**
+   * Set this to true to take all the available width for the page content.
+   */
+  fullWidth?: boolean;
+  /**
    * A list of keywords for indexing with search.
    */
   keywords?: string[];
@@ -34,7 +38,7 @@ export interface FrontMatter {
   nextPage?: PaginationNavNode;
   /**
    * relative links to use in the "next steps" section of the page grid
-   * takes precendence over children when present
+   * takes precedence over children when present
    */
   next_steps?: string[];
   /**
@@ -51,6 +55,14 @@ export interface FrontMatter {
    * Set this to true to disable page-level table of contents rendering.
    */
   notoc?: boolean;
+
+  /**
+   * Custom Open Graph image for social sharing.
+   * Can be a relative path (e.g., './img/my-image.png'), absolute path (e.g., '/images/og.png'),
+   * or external URL. If not specified, the first image in the page content will be used,
+   * or falls back to the default OG image.
+   */
+  og_image?: string;
 
   /**
    * The previous page in the bottom pagination navigation.
@@ -76,7 +88,7 @@ export interface FrontMatter {
   sidebar_title?: string;
 
   /**
-   * filesytem path to the source file, generated during build time
+   * filesystem path to the source file, generated during build time
    */
   sourcePath?: string;
 

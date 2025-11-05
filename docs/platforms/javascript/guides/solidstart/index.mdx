@@ -9,7 +9,7 @@ categories:
 
 ## Install
 
-Sentry captures data by using an SDK within your application’s runtime.
+Sentry captures data by using an SDK within your application's runtime.
 
 ```bash {tabTitle:npm}
 npm install @sentry/solidstart --save
@@ -31,30 +31,29 @@ Initialize the Sentry SDK in your `src/entry-client.tsx` file.
 
 If you're using Solid Router, add the `solidRouterBrowserTracingIntegration` to collect meaningful performance data about the health of your page loads and associated requests.
 
-
 ```jsx {filename:src/entry-client.tsx}
-import * as Sentry from '@sentry/solidstart';
-import { solidRouterBrowserTracingIntegration } from '@sentry/solidstart/solidrouter';
-import { mount, StartClient } from '@solidjs/start/client';
+import * as Sentry from "@sentry/solidstart";
+import { solidRouterBrowserTracingIntegration } from "@sentry/solidstart/solidrouter";
+import { mount, StartClient } from "@solidjs/start/client";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  
+  dsn: "___PUBLIC_DSN___",
+
   // Adds request headers and IP for users, for more info visit:
   // https://docs.sentry.io/platforms/javascript/guides/solidstart/configuration/options/#sendDefaultPii
   sendDefaultPii: true,
-  
+
   integrations: [solidRouterBrowserTracingIntegration()],
   tracesSampleRate: 1.0, //  Capture 100% of the transactions
 });
 
-mount(() => <StartClient />, document.getElementById('app'));
+mount(() => <StartClient />, document.getElementById("app"));
 ```
 
 <Alert>
 
-  Depending on the configuration of your SolidStart project, the file structure may differ from the code listed on this page.
-  For example, for JavaScript projects files end in `.js` and `.jsx` while we use TypeScript snippets here ending in `.ts` and `.tsx`.
+Depending on the configuration of your SolidStart project, the file structure may differ from the code listed on this page.
+For example, for JavaScript projects files end in `.js` and `.jsx` while we use TypeScript snippets here ending in `.ts` and `.tsx`.
 
 </Alert>
 
@@ -63,15 +62,15 @@ mount(() => <StartClient />, document.getElementById('app'));
 Create an instrument file `instrument.server.ts` in your `src` folder. In this file, initialize the Sentry SDK for your server.
 
 ```javascript {filename:src/instrument.server.ts}
-import * as Sentry from '@sentry/solidstart';
+import * as Sentry from "@sentry/solidstart";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  
+  dsn: "___PUBLIC_DSN___",
+
   // Adds request headers and IP for users, for more info visit:
   // https://docs.sentry.io/platforms/javascript/guides/solidstart/configuration/options/#sendDefaultPii
   sendDefaultPii: true,
-  
+
   tracesSampleRate: 1.0, //  Capture 100% of the transactions
 });
 ```
@@ -79,8 +78,8 @@ Sentry.init({
 Wrap your SolidStart config with `withSentry`, so this file gets added to your build output. With the default server preset, you can find the file here: `.output/server/instrument.server.mjs`.
 
 ```javascript {filename:app.config.ts} {5-12}
-import { withSentry } from '@sentry/solidstart';
-import { defineConfig } from '@solidjs/start/config';
+import { withSentry } from "@sentry/solidstart";
+import { defineConfig } from "@solidjs/start/config";
 
 export default defineConfig(
   withSentry(
@@ -90,7 +89,7 @@ export default defineConfig(
     {
       /* Your Sentry build-time config (such as source map upload options) */
     }
-  ),
+  )
 );
 ```
 
@@ -101,8 +100,8 @@ The Sentry SDK provides [middleware lifecycle](https://docs.solidjs.com/solid-st
 Complete the setup by adding `sentryBeforeResponseMiddleware` to your `src/middleware.ts` file. If you don't have a `src/middleware.ts` file yet, create one:
 
 ```typescript {filename:src/middleware.ts} {6}
-import { sentryBeforeResponseMiddleware } from '@sentry/solidstart';
-import { createMiddleware } from '@solidjs/start/middleware';
+import { sentryBeforeResponseMiddleware } from "@sentry/solidstart";
+import { createMiddleware } from "@solidjs/start/middleware";
 
 export default createMiddleware({
   onBeforeResponse: [
@@ -115,13 +114,13 @@ export default createMiddleware({
 And specify `src/middleware.ts` in `app.config.ts`:
 
 ```typescript {filename:app.config.ts} {7}
-import { withSentry } from '@sentry/solidstart';
-import { defineConfig } from '@solidjs/start/config';
+import { withSentry } from "@sentry/solidstart";
+import { defineConfig } from "@solidjs/start/config";
 
 export default defineConfig(
   withSentry({
     // other SolidStart config options...
-    middleware: './src/middleware.ts',
+    middleware: "./src/middleware.ts",
   })
 );
 ```
@@ -132,9 +131,9 @@ This creates a higher order component, which will enable Sentry to collect navig
 ```tsx {filename:app.tsx} {5,9,11}
 import { Router } from "@solidjs/router";
 import { FileRoutes } from "@solidjs/start/router";
-import { withSentryRouterRouting } from '@sentry/solidstart/solidrouter'
+import { withSentryRouterRouting } from "@sentry/solidstart/solidrouter";
 
-const SentryRouter = withSentryRouterRouting(Router)
+const SentryRouter = withSentryRouterRouting(Router);
 
 export default function App() {
   return (
@@ -161,17 +160,17 @@ For example, update your scripts in `package.json`.
 ```
 
 <Alert level="warning">
-  If you experience any issues during the server-side setup, read through the different <PlatformLink to="/install">installation methods</PlatformLink>
-  or check out <PlatformLink to="/troubleshooting">Troubleshooting</PlatformLink>.
+  If you experience any issues during the server-side setup, read through the
+  different <PlatformLink to="/install">installation methods</PlatformLink>
+  or check out{" "}
+  <PlatformLink to="/troubleshooting">Troubleshooting</PlatformLink>.
 </Alert>
 
 ## Add Readable Stack Traces to Errors
 
-To upload source maps, configure an auth token. Auth tokens can be passed to `withSentry` explicitly with the `authToken`
-option. You can also use the `SENTRY_AUTH_TOKEN` environment variable or have an `.env.sentry-build-plugin` file in the
+To upload source maps, you need to pass an auth token to `withSentry` explicitly with the `authToken`
+option. We highly recommend to store this token in an environment variable for security. You can also use the `SENTRY_AUTH_TOKEN` environment variable or have an `.env.sentry-build-plugin` file in the
 working directory when building your project.
-
-<OrgAuthTokenNote />
 
 Update your `app.config.ts`:
 
@@ -187,10 +186,19 @@ export default defineConfig(
     {
       org: "___ORG_SLUG___",
       project: "___PROJECT_SLUG___",
-      authToken: "___ORG_AUTH_TOKEN___",
+      // store your auth token in an environment variable
+      authToken: process.env.SENTRY_AUTH_TOKEN,
     }
   ),
 );
+```
+
+Store your token in an environment variable:
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
 
 or create a `.env.sentry-build-plugin` file:

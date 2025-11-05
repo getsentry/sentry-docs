@@ -19,16 +19,74 @@ Any APIs exposed to the user to filter spans MUST adhere to the following design
 
 ## Filter with `ignoreSpans`
 
-The `ignoreSpans` option accepts a glob pattern or string.
+The `ignoreSpans` option MUST accept a string, RegExp or glob pattern (whichever of the two the platform supports). These values MUST be matched against the span name.
+
+Furthermore, `ignoreSpans` SHOULD accept an Object with patterns matching the span name, or span attributes (see type definitions below). 
+
+```ts
+type IgnoreSpanNamePattern = string | RegExp | GlobPattern;
+
+// all allowed values for span attributes (unlikely but could differ by platform)
+type AttributeValueTypes = string | boolean | number | Array<string> | Array<boolean> | Array<number>;
+type EnhancedAttributeValueTypes = AttributeValueTypes | RegExp | GlobPattern;
+
+type IgnoreSpanFilter = {
+  name: IgnoreSpanNamePattern;
+  attributes?: Record<string, EnhancedAttributeValueTypes>;
+} | {
+  name?: IgnoreSpanNamePattern;
+  attributes?: Record<string, EnhancedAttributeValueTypes>;
+}
+
+type IgnoreSpans = Array<IgnoreSpanNamePattern | IgnoreSpanFilter>
+```
+(Note: `GlobPattern` is used as an illustrative type for platforms that support matching glob patterns. It is not a valid TypeScript type.)
+
+Example:
 
 ```js
 Sentry.init({
   ignoreSpans: [
+    // apply on span name
     'GET /about',
     'events.signal *',
+    /api\/\d+/,
+    // ignore health check GET requests with 200 status code
+    {
+      name: /healthz?/,
+      attributes: {
+        'http.method': 'GET',
+        'http.status_code': 200,
+      }
+    },
+    // ignore all GET requests to /api/ with 200 status code 
+    // (i.e. span name doesn't matter)
+    {
+      attributes: {
+        'http.method': /GET \/api\/.*/,
+        'http.status_code': 200,
+      }
+    },
+    // ignore all spans with name starting with /imprint-
+    // if glob patterns are supported
+    {
+      name: '/imprint-*'
+    }
   ]
 })
 ```
+(Note: The glob patterns used in the example serve an illustrative purpose. They are not supported in JavaScript.)
+
+### Implementation Requirements
+
+1. The `ignoreSpans` patterns MUST be applied to all spans, including the root or segment span.
+   - If a pattern matches the root span, the span and all its children MUST be ignored.
+   - If a pattern matches a child span, the span MUST be ignored but any potential child spans MUST be attempted to be reparented to the parent span of the ignored span.
+   
+2. If SDKs accept `IgnoreSpanFilter` objects, attributes MUST be matched by value. This also applies to attributes with array values. 
+   - String attribute values are matched in the same fashion as span names: If a string is provided, the string MUST match (contains), if a `RegExp` or glob pattern is provided, the value MUST match the pattern.
+   - Any other attribute value type MUST strictly equal the provided value.
+   
 
 ## Filter with `integrations`
 

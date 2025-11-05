@@ -15,7 +15,7 @@
  * If you want to run it locally,
  *   1. Make sure you have the required env vars set up
  *   2. Be careful to change to `DOCS_INDEX_NAME` to a value different
- *      from the productoin docs index name (specified in the `@sentry-internal/global-search`)
+ *      from the production docs index name (specified in the `@sentry-internal/global-search`)
  *      to avoid accidental deletions
  *   3. Run a production build of the app before running this script
  */
@@ -64,9 +64,9 @@ indexAndUpload();
 async function indexAndUpload() {
   // the page front matters are the source of truth for the static doc routes
   // as they are used directly by generateStaticParams() on [[..path]] page
-  const pageFrontMatters = isDeveloperDocs
+  const pageFrontMatters = await (isDeveloperDocs
     ? getDevDocsFrontMatter()
-    : await getDocsFrontMatter();
+    : getDocsFrontMatter());
   const records = await generateAlogliaRecords(pageFrontMatters);
   console.log('🔥 Generated %d new Algolia records.', records.length);
   const existingRecordIds = await fetchExistingRecordIds(index);

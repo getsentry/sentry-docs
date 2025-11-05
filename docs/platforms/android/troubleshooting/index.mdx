@@ -28,9 +28,10 @@ android {
 }
 ```
 
-## Sentry Android SDK Causes ANR
+## Sentry Android SDK Causes ANR or StrictMode violations
 
-Since version `6.1.1` of the Sentry SDK for Android, you can opt-out of some additional device context.
+The Sentry Android SDK may trigger ANRs or StrictMode violations due to minimal file I/O operations required for event processing and context collection. 
+Since version `6.1.1` of the Sentry SDK for Android you can reduce violations by disabling additional context collection:
 
 ```xml {tabTitle:AndroidManifest.xml}
 <application>
@@ -38,14 +39,26 @@ Since version `6.1.1` of the Sentry SDK for Android, you can opt-out of some add
 </application>
 ```
 
-```java {tabTitle:MyFile.java}
-options.setCollectAdditionalContext(false);
+```java {tabTitle:MyApplication.java}
+SentryAndroid.init(this, options -> {
+    options.setDsn("___PUBLIC_DSN___");
+    options.setCollectAdditionalContext(false);
+});
 ```
 
-[More context in the PR](https://github.com/getsentry/sentry-java/pull/2100) that added this option.
+```kotlin {tabTitle:MyApplication.kt}
+SentryAndroid.init(this) { options ->
+    options.dsn = "___PUBLIC_DSN___"
+    options.collectAdditionalContext = false
+}
+```
+
+This reduces file I/O operations during event processing but you'll lose some device context information like battery level, memory usage, and file storage state. 
+Note that this won't eliminate all violations as certain features like app start crash detection require minimal file I/O operations.
 
 The motivation for it is that some of the Android API's the Sentry SDK relies on to add additional context, can be slow in some devices.
-For example, the following stack traces:
+
+For example, this stack trace shows connectivity checking causing ANRs:
 
 ```
   #00  pc 000000000007550c  /apex/com.android.runtime/lib64/bionic/libc.so (syscall+28)
@@ -71,6 +84,8 @@ For example, the following stack traces:
   at io.sentry.IHub$-CC.$default$captureEvent (IHub.java)
   at io.sentry.HubAdapter.captureEvent (HubAdapter.java:29)
 ```
+
+This one shows battery level checking causing ANRs:
 
 ```
   #00  pc 0000000000086f8c  /apex/com.android.runtime/lib64/bionic/libc.so (syscall+28)
@@ -105,7 +120,7 @@ This is due to a [missing feature in the JVM](https://youtrack.jetbrains.com/iss
 
 Let's show an example. Here is an Activity with an inline function throwing an Exception.
 
-```
+```kotlin
 class MyActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -176,6 +191,16 @@ internally. As a result, this option won't work out of the box on devices with a
 ```properties {filename:gradle.properties}
 android.bundle.enableUncompressedNativeLibs=false
 ```
+
+## The SDK Is Not Sending Data
+
+If you set up the Sentry SDK and it's not sending any data to Sentry:
+
+- Check that you have configured a DSN and that you are passing it to the `dsn` option in `SentryAndroid.init()` or `AndroidManifest`.
+- When a crash happens or the app closes, the system allows only a short time to handle it before terminating the process. The SDK might not have enough time to send the event, spans, profile, or replay data. In these cases, simply relaunching the app should allow the SDK to send the remaining data.
+- An ad-blocker (e.g. [DuckDuckGo's App Tracking Protection](https://duckduckgo.com/duckduckgo-help-pages/p-app-tracking-protection/what-is-app-tracking-protection)) or network restrictions might be preventing the SDK from reaching Sentry's servers. As a workaround, you can use [tunneling](/platforms/javascript/troubleshooting/#using-the-tunnel-option) to proxy Sentry events through your own server. Then you can add the [proxy option](/platforms/android/configuration/options/#proxy) to your SDK configuration.
+- Set `debug: true` in the `SentryAndroid.init()` or the manifest options and observe your Logcat output when you start your application. The SDK may tell you why it is not sending any data.
+- Check the [Stats](https://sentry.io/orgredirect/organizations/:orgslug/stats/) and [Subscription](https://sentry.io/orgredirect/organizations/:orgslug/settings/billing/overview/) pages in Sentry. You may be out of quota.
 
 ## Sentry Android Gradle Plugin Build Issues
 

@@ -115,3 +115,34 @@ The maximum number of connections to keep in the pool. Only applied if `client` 
 The maximum time to wait (in milliseconds) for a connection to become available. Only applied if `client` is set to `Sentry.HackneyClient`.
 
 </SdkOption>
+
+## Tracing Options
+
+<SdkOption name="traces_sample_rate" type='float' defaultValue='nil'>
+
+A number between `0.0` and `1.0` that determines the percentage of transactions that will be sent to Sentry. Either this or `traces_sampler` must be defined to enable tracing.
+
+```elixir
+config :sentry,
+  traces_sample_rate: 0.2  # Sample 20% of transactions
+```
+
+</SdkOption>
+
+<SdkOption name="traces_sampler" type='function'>
+
+A function that determines the sample rate for transaction events. This function receives a sampling context map and should return a boolean or a float between `0.0` and `1.0`.
+
+```elixir
+config :sentry,
+  traces_sampler: fn sampling_context ->
+    case sampling_context.transaction_context.op do
+      "http.server" -> 0.1  # Sample 10% of HTTP requests
+      _ -> 0.05             # Sample 5% of other operations
+    end
+  end
+```
+
+If both `:traces_sampler` and `:traces_sample_rate` are configured, `:traces_sampler` takes precedence.
+
+</SdkOption>
