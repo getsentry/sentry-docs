@@ -13,6 +13,8 @@ import {NavLink} from './navlink';
 import {Search} from './search';
 import {ThemeToggle} from './theme-toggle';
 
+import { T } from 'gt-next';
+
 export const sidebarToggleId = sidebarStyles['navbar-menu-toggle'];
 
 type Props = {
@@ -50,21 +52,23 @@ export function Header({
             </label>
           </button>
         )}
-        <Link
-          href="/"
-          title="Sentry error monitoring"
-          className="logo-slot flex flex-shrink-0 items-center lg:w-[calc(var(--sidebar-width,300px)-2rem)] text-2xl font-medium text-[var(--foreground)]"
-        >
-          <div className="h-full pb-[6px]">
-            <Image
-              src={SentryLogoSVG}
-              alt="Sentry's logo"
-              width={40}
-              className="h-16 dark:invert"
-            />
-          </div>
-          Docs
-        </Link>
+        <T>
+          <Link
+            href="/"
+            title="Sentry error monitoring"
+            className="logo-slot flex flex-shrink-0 items-center lg:w-[calc(var(--sidebar-width,300px)-2rem)] text-2xl font-medium text-[var(--foreground)]"
+          >
+            <div className="h-full pb-[6px]">
+              <Image
+                src={SentryLogoSVG}
+                alt="Sentry's logo"
+                width={40}
+                className="h-16 dark:invert"
+              />
+            </div>
+            Docs
+          </Link>
+        </T>
         {!noSearch && (
           <div className="hidden md:flex justify-center lg:justify-start w-full px-6">
             <Search
@@ -75,18 +79,20 @@ export function Header({
             />
           </div>
         )}
-        <div className="hidden lg-xl:flex justify-end flex-1 gap-6 items-center min-w-fit">
-          <NavLink href="https://sentry.io/changelog/">Changelog</NavLink>
-          <NavLink href="https://sandbox.sentry.io/">Sandbox</NavLink>
-          <NavLink href="https://sentry.io/">Go to Sentry</NavLink>
-          <NavLink
-            href="https://sentry.io/signup/"
-            className="transition-all duration-300 ease-in-out hover:bg-gradient-to-r hover:from-[#fa7faa] hover:via-[#ff9691] hover:to-[#ffb287]"
-          >
-            Get Started
-          </NavLink>
-          <ThemeToggle />
-        </div>
+        <T>
+          <div className="hidden lg-xl:flex justify-end flex-1 gap-6 items-center min-w-fit">
+            <NavLink href="https://sentry.io/changelog/">Changelog</NavLink>
+            <NavLink href="https://sandbox.sentry.io/">Sandbox</NavLink>
+            <NavLink href="https://sentry.io/">Go to Sentry</NavLink>
+            <NavLink
+              href="https://sentry.io/signup/"
+              className="transition-all duration-300 ease-in-out hover:bg-gradient-to-r hover:from-[#fa7faa] hover:via-[#ff9691] hover:to-[#ffb287]"
+            >
+              Get Started
+            </NavLink>
+            <ThemeToggle />
+          </div>
+        </T>
         <div className="lg-xl:hidden ml-auto">
           <MobileMenu pathname={pathname} searchPlatforms={searchPlatforms} />
         </div>

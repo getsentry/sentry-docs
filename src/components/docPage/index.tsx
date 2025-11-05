@@ -23,6 +23,8 @@ import {Sidebar} from '../sidebar';
 import {SidebarTableOfContents} from '../sidebarTableOfContents';
 import {ReaderDepthTracker} from '../track-reader-depth';
 
+import { msg } from 'gt-next';
+
 type Props = {
   children: ReactNode;
   frontMatter: Omit<FrontMatter, 'slug'>;
@@ -103,10 +105,10 @@ export function DocPage({
 
               <div className="grid grid-cols-2 gap-4 not-prose mt-16">
                 <div className="col-span-1">
-                  {previousPage && <PaginationNav node={previousPage} title="Previous" />}
+                  {previousPage && <PaginationNav node={previousPage} title={msg('Previous')} />}
                 </div>
                 <div className="col-span-1">
-                  {nextPage && <PaginationNav node={nextPage} title="Next" />}
+                  {nextPage && <PaginationNav node={nextPage} title={msg('Next')} />}
                 </div>
               </div>
 

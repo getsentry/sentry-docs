@@ -2,6 +2,8 @@ import fields from 'sentry-docs/data/relay_event_pii.json';
 
 import styles from './style.module.scss';
 
+import { T } from 'gt-next';
+
 function PiiField({field}) {
   const asterisk_flag = field.additional_properties;
 
@@ -28,10 +30,12 @@ export function PiiFields() {
         <PiiField key={field.path} field={field} />
       ))}
       {hasStar && (
-        <dd>
-          * Not an actual field, but represents unstructured data that is not part of the
-          schema.
-        </dd>
+        <T>
+          <dd>
+            * Not an actual field, but represents unstructured data that is not part of the
+            schema.
+          </dd>
+        </T>
       )}
     </ul>
   );

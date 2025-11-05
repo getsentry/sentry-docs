@@ -9,6 +9,8 @@ import styles from './styles.module.scss';
 
 import {CodeContext} from '../codeContext';
 
+import { T, msg, useMessages } from 'gt-next';
+
 const OPTION_IDS = [
   'error-monitoring',
   'logs',
@@ -35,86 +37,106 @@ const optionDetails: Record<
   }
 > = {
   'error-monitoring': {
-    name: 'Error Monitoring',
-    description: "Let's admit it, we all have errors.",
+    name: msg('Error Monitoring'),
+    description: msg("Let's admit it, we all have errors."),
   },
   logs: {
-    name: 'Logs',
+    name: msg('Logs'),
     description: (
-      <span>
-        Send text-based log information from your applications to Sentry for viewing
-        alongside relevant errors and searching by text-string or individual attributes.
-      </span>
+      <T>
+        <span>
+            Send text-based log information from your applications to Sentry for viewing
+            alongside relevant errors and searching by text-string or individual attributes.
+        </span>
+      </T>
     ),
   },
   'session-replay': {
-    name: 'Session Replay',
+    name: msg('Session Replay'),
     description: (
-      <span>
-        Video-like reproductions of user sessions with debugging context to help you
-        confirm issue impact and troubleshoot faster.
-      </span>
+      <T>
+        <span>
+          Video-like reproductions of user sessions with debugging context to help you
+          confirm issue impact and troubleshoot faster.
+        </span>
+      </T>
     ),
   },
   performance: {
-    name: 'Tracing',
+    name: msg('Tracing'),
     description: (
-      <span>
-        Tracing and automatic performance issue detection across services and context on
-        who is impacted, outliers, regressions, and the root cause of your slowdown.
-      </span>
+      <T>
+        <span>
+          Tracing and automatic performance issue detection across services and context on
+          who is impacted, outliers, regressions, and the root cause of your slowdown.
+        </span>
+      </T>
     ),
   },
   profiling: {
-    name: 'Profiling',
+    name: msg('Profiling'),
     description: (
-      <span>
-        <span className={styles.TooltipTitle}>Requires Tracing to be enabled</span>
-        See the exact lines of code causing your performance bottlenecks, for faster
-        troubleshooting and resource optimization.
-      </span>
+      <T>
+        <span>
+          <span className={styles.TooltipTitle}>Requires Tracing to be enabled</span>
+          See the exact lines of code causing your performance bottlenecks, for faster
+          troubleshooting and resource optimization.
+        </span>
+      </T>
     ),
     deps: ['performance'],
   },
   'source-maps': {
-    name: 'Source Maps',
+    name: msg('Source Maps'),
     description: (
-      <span>
-        Source maps for web applications that help translate minified code back to the
-        original source for better error reporting.
-      </span>
+      <T>
+        <span>
+          Source maps for web applications that help translate minified code back to the
+          original source for better error reporting.
+        </span>
+      </T>
     ),
   },
   'user-feedback': {
-    name: 'User Feedback',
+    name: msg('User Feedback'),
     description: (
-      <span>
-        Collect user feedback from anywhere in your application with an embeddable widget
-        that allows users to report bugs and provide insights.
-      </span>
+      <T>
+        <span>
+          Collect user feedback from anywhere in your application with an embeddable widget
+          that allows users to report bugs and provide insights.
+        </span>
+      </T>
     ),
   },
   'source-context': {
-    name: 'Source Context',
+    name: msg('Source Context'),
     description: (
-      <span>
-        Upload your source code to allow Sentry to display snippets of your code next to
-        the event stack traces.
+      <T>
+        <span>
+          Upload your source code to allow Sentry to display snippets of your code next to
+          the event stack traces.
       </span>
+      </T>
     ),
   },
   dsym: {
     name: 'dSYM',
     description: (
-      <span>
-        Debug symbols for iOS and macOS that provide the necessary information to convert
-        program addresses back to function names, source file names, and line numbers.
+      <T>
+        <span>
+          Debug symbols for iOS and macOS that provide the necessary information to convert
+          program addresses back to function names, source file names, and line numbers.
       </span>
+      </T>
     ),
   },
   opentelemetry: {
     name: 'OpenTelemetry',
-    description: <span>Combine Sentry with OpenTelemetry.</span>,
+    description: (
+      <T>
+        <span>Combine Sentry with OpenTelemetry.</span>
+      </T>
+    ),
   },
 };
 
@@ -317,6 +339,7 @@ export function OnboardingOptionButtons({
   // convenience to allow passing option ids as strings when no additional config is required
   options: (OnboardingOptionType | OptionId)[];
 }) {
+  const m = useMessages();
   const codeContext = useContext(CodeContext);
 
   const normalizedOptions = initialOptions
@@ -426,7 +449,7 @@ export function OnboardingOptionButtons({
               }}
             />
 
-            {optionDetails[option.id].name}
+            {m(optionDetails[option.id].name)}
             {optionDetails[option.id] && (
               <Tooltip.Provider delayDuration={300}>
                 <Tooltip.Root>

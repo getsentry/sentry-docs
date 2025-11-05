@@ -10,6 +10,8 @@ import styles from './styles.module.scss';
 
 import {ThemeToggle} from '../theme-toggle';
 
+import { T } from 'gt-next';
+
 type Props = {
   pathname: string;
   searchPlatforms: string[];
@@ -36,24 +38,26 @@ export function MobileMenu({pathname, searchPlatforms}: Props) {
         <Popover.Portal>
           <Theme accentColor="iris">
             <Popover.Content className={styles.PopoverContent} sideOffset={5}>
-              <Box display={{xs: 'block', sm: 'none'}}>
+              <T>
+                <Box display={{xs: 'block', sm: 'none'}}>
+                  <li className={styles.MenuItem}>
+                    <Search path={pathname} searchPlatforms={searchPlatforms} />
+                  </li>
+                  <div className={styles.MenuSeparator} />
+                </Box>
                 <li className={styles.MenuItem}>
-                  <Search path={pathname} searchPlatforms={searchPlatforms} />
+                  <Link href="https://sentry.io/changelog/">Changelog</Link>
                 </li>
-                <div className={styles.MenuSeparator} />
-              </Box>
-              <li className={styles.MenuItem}>
-                <Link href="https://sentry.io/changelog/">Changelog</Link>
-              </li>
-              <li className={styles.MenuItem}>
-                <Link href="https://sandbox.sentry.io/">Sandbox</Link>
-              </li>
-              <li className={styles.MenuItem}>
-                <Link href="https://sentry.io/">Go to Sentry</Link>
-              </li>
-              <li className={styles.MenuItem}>
-                <Link href="https://sentry.io/signup/">Get Started</Link>
-              </li>
+                <li className={styles.MenuItem}>
+                  <Link href="https://sandbox.sentry.io/">Sandbox</Link>
+                </li>
+                <li className={styles.MenuItem}>
+                  <Link href="https://sentry.io/">Go to Sentry</Link>
+                </li>
+                <li className={styles.MenuItem}>
+                  <Link href="https://sentry.io/signup/">Get Started</Link>
+                </li>
+              </T>
             </Popover.Content>
           </Theme>
         </Popover.Portal>

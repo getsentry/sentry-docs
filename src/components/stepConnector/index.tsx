@@ -31,6 +31,8 @@ import {useEffect, useMemo, useRef, useState} from 'react';
 
 import styles from './style.module.scss';
 
+import { T } from 'gt-next';
+
 type Persistence = 'session' | 'none';
 
 type Props = {
@@ -179,9 +181,11 @@ export function StepComponent({
     >
       {checkable && showReset && (
         <div className={styles.resetRow}>
-          <button type="button" className={styles.resetBtn} onClick={handleReset}>
-            Reset steps
-          </button>
+          <T>
+            <button type="button" className={styles.resetBtn} onClick={handleReset}>
+              Reset steps
+            </button>
+          </T>
         </div>
       )}
       {children}

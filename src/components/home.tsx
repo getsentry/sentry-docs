@@ -117,9 +117,7 @@ export function Home() {
               description={gt("Core concepts that make Sentry, Sentry.")}
             />
           </div>
-          <T>
-            <h2 className="text-2xl mt-10 mb-6 font-medium">Talk to us</h2>
-          </T>
+          <h2 className="text-2xl mt-10 mb-6 font-medium">Talk to us</h2>
           <div className="flex flex-col md:flex-row gap-6">
             <Card
               className="w-full"

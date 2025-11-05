@@ -1,3 +1,5 @@
+import { T } from 'gt-next';
+import { getGT } from 'gt-next/server';
 interface ChangelogEntry {
   author: string;
   description: string;
@@ -32,14 +34,17 @@ async function getChangelogEntries(): Promise<ChangelogEntry[]> {
 }
 
 export async function DocsChangelog() {
+  const gt = await getGT();
   const entries = await getChangelogEntries();
 
   if (entries.length === 0) {
     return (
-      <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-yellow-800 dark:border-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
-        <p className="font-semibold">No changelog entries available</p>
-        <p className="text-sm">Check back later for updates.</p>
-      </div>
+      <T>
+        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-yellow-800 dark:border-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
+          <p className="font-semibold">No changelog entries available</p>
+          <p className="text-sm">Check back later for updates.</p>
+        </div>
+      </T>
     );
   }
 
@@ -65,7 +70,7 @@ export async function DocsChangelog() {
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
-                  {entry.title.replace('Docs Update: ', '')}
+                  {entry.title.replace(gt('Docs Update: '), '')}
                 </a>
               </h3>
               <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:[color:rgb(210,199,218)]">
@@ -79,7 +84,7 @@ export async function DocsChangelog() {
                 {totalFiles > 0 && <span>•</span>}
                 {totalFiles > 0 && (
                   <span>
-                    {totalFiles} file{totalFiles !== 1 ? 's' : ''} changed
+                    {gt('{totalFiles} file{s, plural, one {s} other {}} changed', {totalFiles})}
                   </span>
                 )}
               </div>
@@ -91,15 +96,19 @@ export async function DocsChangelog() {
 
             {entry.filesChanged && totalFiles > 0 && (
               <details className="text-sm">
-                <summary className="cursor-pointer text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">
-                  View changed files
-                </summary>
+                <T>
+                  <summary className="cursor-pointer text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">
+                    View changed files
+                  </summary>
+                </T>
                 <div className="mt-2 space-y-2 rounded-md bg-gray-50 p-3 dark:bg-gray-800">
                   {entry.filesChanged.added && entry.filesChanged.added.length > 0 && (
                     <div>
-                      <span className="font-semibold text-green-700 dark:text-green-400">
-                        Added:
-                      </span>
+                      <T>
+                        <span className="font-semibold text-green-700 dark:text-green-400">
+                          Added:
+                        </span>
+                      </T>
                       <ul className="ml-4 mt-1 list-inside list-disc">
                         {entry.filesChanged.added.map(file => (
                           <li key={file} className="text-gray-700 dark:text-gray-300">
@@ -112,9 +121,11 @@ export async function DocsChangelog() {
                   {entry.filesChanged.modified &&
                     entry.filesChanged.modified.length > 0 && (
                       <div>
-                        <span className="font-semibold text-blue-700 dark:text-blue-400">
-                          Modified:
-                        </span>
+                        <T>
+                          <span className="font-semibold text-blue-700 dark:text-blue-400">
+                            Modified:
+                          </span>
+                        </T>
                         <ul className="ml-4 mt-1 list-inside list-disc">
                           {entry.filesChanged.modified.map(file => (
                             <li key={file} className="text-gray-700 dark:text-gray-300">
@@ -146,29 +157,31 @@ export async function DocsChangelog() {
         );
       })}
       {entries.length > 20 && (
-        <div className="mt-8 rounded-lg border border-gray-200 bg-gray-50 p-4 text-center dark:border-gray-700 dark:bg-gray-800">
-          <p className="text-sm text-gray-600 dark:[color:rgb(210,199,218)]">
-            Showing the 20 most recent updates. View the{' '}
-            <a
-              href="https://sentry-content-dashboard.sentry.dev/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              full content dashboard
-            </a>{' '}
-            or subscribe to the{' '}
-            <a
-              href="https://sentry-content-dashboard.sentry.dev/api/docs/feed"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              RSS feed
-            </a>
-            .
-          </p>
-        </div>
+        <T>
+          <div className="mt-8 rounded-lg border border-gray-200 bg-gray-50 p-4 text-center dark:border-gray-700 dark:bg-gray-800">
+            <p className="text-sm text-gray-600 dark:[color:rgb(210,199,218)]">
+              Showing the 20 most recent updates. View the{' '}
+              <a
+                href="https://sentry-content-dashboard.sentry.dev/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                full content dashboard
+              </a>{' '}
+              or subscribe to the{' '}
+              <a
+                href="https://sentry-content-dashboard.sentry.dev/api/docs/feed"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                RSS feed
+              </a>
+              .
+            </p>
+          </div>
+        </T>
       )}
     </div>
   );

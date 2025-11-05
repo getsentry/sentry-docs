@@ -26,6 +26,8 @@ import {
 } from './styles';
 import {dropdownPopperOptions} from './utils';
 
+import { useGT } from 'gt-next';
+
 type KeywordSelectorProps = {
   group: string;
   index: number;
@@ -39,6 +41,7 @@ export function KeywordSelector({
   index,
   showPreview,
 }: KeywordSelectorProps) {
+  const gt = useGT();
   const [isOpen, setIsOpen] = useState(false);
   const [referenceEl, setReferenceEl] = useState<HTMLSpanElement | null>(null);
   const [dropdownEl, setDropdownEl] = useState<HTMLElement | null>(null);
@@ -89,7 +92,7 @@ export function KeywordSelector({
           />
           {choices.length > 5 && (
             <KeywordSearchInput
-              placeholder="Search Project"
+              placeholder={gt('Search Project')}
               onClick={e => e.stopPropagation()}
               value={orgFilter}
               onChange={e => setOrgFilter(e.target.value)}
@@ -137,8 +140,8 @@ export function KeywordSelector({
         title={currentSelection?.title}
         aria-label={
           currentSelection?.title
-            ? `${currentSelection?.title}: ${currentSelection[keyword]}. Click to select different project.`
-            : `Click to select project`
+            ? `${gt('Current project {title}: {keyword}. Click to select different project.', {title: currentSelection?.title, keyword: currentSelection[keyword]})}`
+            : gt('Click to select project')
         }
         aria-expanded={isOpen}
         onClick={() => setIsOpen(!isOpen)}
