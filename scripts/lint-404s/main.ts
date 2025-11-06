@@ -75,7 +75,7 @@ async function main() {
     const fullPath = link.href.startsWith('/')
       ? trimSlashes(link.href)
       : // relative path
-        trimSlashes(new URL(link.href, pageUrl).pathname);
+        trimSlashes(new URL(pageUrl.pathname + '/' + link.href, baseURL).pathname);
 
     if (isInSitemap(fullPath)) {
       return false;
