@@ -1,7 +1,13 @@
-Wrap your worker handler with the `withSentry` function, for example, in your `index.ts` file, to initialize the Sentry SDK and hook into the environment:
+Wrap your Hono app with the `withSentry` function, for example, in your `index.ts` file, to initialize the Sentry SDK and hook into the environment:
 
 ```typescript {filename:index.ts}
+import { Env, Hono } from "hono";
 import * as Sentry from "@sentry/cloudflare";
+
+const app = new Hono();
+
+// Add your routes here
+// app.get('/your-route', (c) => c.text('Hello!'));
 
 export default Sentry.withSentry(
   (env: Env) => {
@@ -29,11 +35,7 @@ export default Sentry.withSentry(
       // ___PRODUCT_OPTION_END___ performance
     };
   },
-  {
-    async fetch(request, env, ctx) {
-      // Your worker logic here
-      return new Response("Hello World!");
-    },
-  }
+  app
 );
 ```
+

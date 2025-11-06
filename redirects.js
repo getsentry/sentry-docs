@@ -75,6 +75,10 @@ const developerDocsRedirects = [
     destination: '/sdk/telemetry/replays/:path*',
   },
   {
+    source: '/sdk/telemetry/spans/batch-processor/',
+    destination: '/sdk/telemetry/telemetry-buffer/',
+  },
+  {
     source: '/sdk/setup-wizards/:path*',
     destination: '/sdk/expected-features/setup-wizards/:path*',
   },
@@ -1062,10 +1066,6 @@ const userDocsRedirects = [
   {
     source: '/product/explore/feature-flags/:path*',
     destination: '/product/issues/issue-details/feature-flags/:path*',
-  },
-  {
-    source: '/product/explore/metrics/:path*',
-    destination: '/concepts/key-terms/tracing/span-metrics/',
   },
   {
     source: '/product/tracing/:path*',
