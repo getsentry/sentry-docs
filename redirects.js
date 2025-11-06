@@ -787,6 +787,10 @@ const userDocsRedirects = [
     destination: '/platforms/javascript/configuration/integrations/browserapierrors/',
   },
   {
+    source: '/platforms/javascript/configuration/integrations/supabase/',
+    destination: '/platforms/javascript/guides/node/configuration/integrations/supabase/',
+  },
+  {
     source: '/api/releases/post-organization-release-files/',
     destination: '/api/releases/update-an-organization-release-file/',
   },
