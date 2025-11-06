@@ -12,9 +12,9 @@ export default async function LocaleLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
   // Provider is applied at the root layout; just render children here
-  await params; // ensure params are awaited to keep async signature
+  await params; // maintain async signature consistent with app typing
   return children;
 }

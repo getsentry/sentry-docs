@@ -6,7 +6,7 @@ import * as Sentry from '@sentry/nextjs';
 
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 
-import { useGT, T } from 'gt-next';
+import { useGT } from 'gt-next';
 
 // explicitly not using CSS modules here
 // because there's some prerendered content that depends on these exact class names

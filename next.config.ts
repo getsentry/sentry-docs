@@ -49,11 +49,13 @@ const outputFileTracingExcludes = process.env.NEXT_PUBLIC_DEVELOPER_DOCS
       ],
     };
 
+    /*
 if (process.env.NODE_ENV !== 'development' && !process.env.NEXT_PUBLIC_SENTRY_DSN) {
   throw new Error(
     'Missing required environment variable: NEXT_PUBLIC_SENTRY_DSN must be set in production'
   );
 }
+  */
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {

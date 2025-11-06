@@ -22,7 +22,7 @@ import styles from './style.module.scss';
 
 import {SidebarLink, SidebarSeparator} from '../sidebar/sidebarLink';
 
-import { useGT, T } from 'gt-next';
+import { useGT } from 'gt-next';
 
 export function PlatformSelector({
   platforms,
