@@ -1,0 +1,81 @@
+---
+title: Redirecciones
+noindex: true
+sidebar_order: 60
+---
+
+Las redirecciones te permiten enviar automáticamente una ruta de solicitud entrante a una nueva ruta de destino. Cuando mueves o renombras un archivo, asegúrate de configurar una redirección de la ruta anterior a la nueva, para que la URL antigua siga llevando a los usuarios al lugar correcto.
+
+<div id="add-a-new-redirect">
+  ## Agregar una nueva redirección
+</div>
+
+Hay dos formas de agregar redirecciones en la documentación de Sentry:
+
+- [Agregar una nueva redirección en `middleware.ts` (recomendado)](#add-a-new-redirect-in-middlewarets-recommended)
+- [Agregar una nueva redirección en `redirects.js`](#example-redirect-in-redirectsjs)
+
+<Alert>
+  Ambos archivos distinguen entre la documentación del SDK (es decir, la documentación para usuarios finales) y la documentación para desarrolladores.
+</Alert>
+
+Como Sentry tiene un número limitado de redirecciones en `next.config.js`, configura tus redirecciones en `middleware.ts` siempre que sea posible. Usa `redirects.js` (es decir, `next.config.js`) solo si necesitas expresiones regulares y segmentos comodín en las rutas de tus redirecciones.
+
+<Alert level="warning">
+  Ya no se recomienda usar `vercel.json` para redirecciones debido a sus limitaciones (no funciona en localhost, requiere un archivo estático…)
+</Alert>
+
+<div id="add-a-new-redirect-in-middlewarets-recommended">
+  ### Agrega una nueva redirección en `middleware.ts` (recomendado)
+</div>
+
+Configura todas las redirecciones simples uno a uno en `src/middleware.ts`.
+
+Para agregar una nueva redirección en [`src/middleware.ts`](https://github.com/getsentry/sentry-docs/blob/master/src/middleware.ts), agrega un nuevo objeto a `REDIRECTS` con las siguientes propiedades:
+
+- `from`: La ruta de la solicitud entrante.
+- `to`: La nueva ruta de destino a la que quieres redirigir.
+
+<div id="example-redirect-in-middlewarets">
+  #### Ejemplo de redirección en `middleware.ts`
+</div>
+
+El siguiente ejemplo redirige `https://docs.sentry.io/performance/` a `https://docs.sentry.io/product/performance/`:
+
+```typescript {filename:middleware.ts} {2-5}
+const REDIRECTS: {from: PathWithTrailingSlash; to: string}[] = [
+  {
+    from: '/performance/',
+    to: '/product/performance/',
+  },
+];
+```
+
+
+<div id="add-a-new-redirect-in-redirectsjs">
+  ### Agrega un nuevo redirect en `redirects.js`
+</div>
+
+Sentry tiene un número limitado de redirects en Vercel, por lo que solo deberías configurar redirects en `vercel.json` si necesitan usar expresiones regulares. De lo contrario, usa [`middleware.ts`](#add-a-new-redirect-in-middlewarets-recommended).
+
+Para agregar un nuevo redirect en `redirects.js` (que es utilizado por [`redirects`](https://nextjs.org/docs/app/api-reference/next-config-js/redirects) de `next.config.js`), agrega un nuevo objeto a los redirects correspondientes con las siguientes propiedades:
+
+- `source`: El patrón de la ruta de la solicitud entrante.
+- `destination`: La nueva ruta de destino a la que quieres redirigir.
+
+<div id="example-redirect-in-redirectsjs">
+  #### Redirección de ejemplo en `redirects.js`
+</div>
+
+El siguiente ejemplo redirige URL como `https://docs.sentry.io/cli/:path*` a `https://docs.sentry.io/product/cli/:path*` con un [patrón de ruta](https://nextjs.org/docs/app/api-reference/next-config-js/redirects#path-matching) o una [expresión regular](https://nextjs.org/docs/app/api-reference/next-config-js/redirects#regex-path-matching).
+
+Por ejemplo, `https://docs.sentry.io/cli/installation/` se redirigirá a `https://docs.sentry.io/product/cli/installation/`.
+
+```json {filename:redirects.js}
+ "redirects": [
+    {
+      "source": "/cli/:path*",
+      "destination": "/product/cli/:path*",
+    },
+ ]
+```

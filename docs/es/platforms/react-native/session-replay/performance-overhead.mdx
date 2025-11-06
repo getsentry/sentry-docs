@@ -1,0 +1,81 @@
+---
+title: Sobrecarga de rendimiento
+sidebar_order: 5502
+notSupported:
+description: "Obtén información sobre cómo habilitar Session Replay afecta el rendimiento de tu aplicación."
+---
+
+Si estás pensando en habilitar Session Replay, primero es importante entender el posible impacto en el rendimiento de tu app. Aunque para obtener métricas precisas se requieren pruebas realistas en las que apliques patrones de uso típicos y relaciones los resultados con tus métricas de negocio, para ofrecer una referencia medimos la sobrecarga usando la app de código abierto Pocket Casts.
+
+Puedes obtener más información sobre las optimizaciones implementadas en el SDK de React Native Replay en la documentación [Sobrecarga de rendimiento de Replay](/es/product/explore/session-replay/mobile/performance-overhead/).
+
+El SDK de React Native Replay es un contenedor ligero de los SDK nativos de iOS y Android, por lo que su sobrecarga es mínima y no requiere mediciones por separado. A continuación se muestran los resultados de los benchmarks para cada plataforma.
+
+Medimos la sobrecarga usando las apps de código abierto [Pocket Casts iOS](https://github.com/Automattic/pocket-casts-ios) y [Pocket Casts Android](https://github.com/Automattic/pocket-casts-android). Cada una incluye un conjunto diverso de componentes como ViewControllers y pantallas de SwiftUI.
+
+Así se realizaron los benchmarks:
+
+* **Configuración:** Se habilitó el enmascaramiento completo y se usaron compilaciones de release optimizadas.
+* **Flujo de usuario:** El mismo flujo se ejecutó 10 veces para garantizar la consistencia.
+* **Representación del mundo real:** Este enfoque refleja de cerca el rendimiento en escenarios reales.
+
+Los benchmarks se ejecutaron en un iPhone 14 Pro y un Pixel 2 XL. Ten en cuenta que la grabación activa de Session Replay puede introducir fotogramas lentos en dispositivos iOS más antiguos y de gama baja (por ejemplo, iPhone 8).
+
+<div id="ios">
+  ## iOS
+</div>
+
+| Métrica                          | Solo SDK de Sentry | Sentry + SDK de Replay |
+| -------------------------------- | ------------------ | ---------------------- |
+| FPS                              | 55 fps             | 53 fps                 |
+| Memoria                          | 102 MB             | 121 MB                 |
+| CPU                              | 4%                 | 13%                    |
+| Tiempo de inicio de la app (en frío) | 1264,80 ms         | 1265 ms                |
+| Tiempo del hilo principal        | n/d                | 43 ms                  |
+| Ancho de banda de red            | n/d                | 10 KB/s de grabación   |
+
+<div id="android">
+  ## Android
+</div>
+
+| Métrica                          | Solo SDK de Sentry | Sentry + SDK de Replay |
+| -------------------------------- | ------------------ | ---------------------- |
+| FPS                              | 55 fps             | 54 fps                 |
+| Memoria                          | 255 MB             | 265 MB                 |
+| CPU                              | 36%                | 42%                    |
+| Tiempo de inicio de la app (en frío) | 1533,35 ms         | 1539,55 ms             |
+| Tiempo del hilo principal        | n/d                | 20 ms                  |
+| Ancho de banda de red            | n/d                | 7 KB/s de grabación    |
+
+<div id="reducing-performance-overhead">
+  ## Reducir la sobrecarga de rendimiento
+</div>
+
+Para minimizar el impacto del Replay SDK en iOS y Android, considera reducir la calidad de las capturas de pantalla y los videos. Configurar `replaysSessionQuality` en `low` puede reducir significativamente el uso de CPU, memoria y ancho de banda de red en dispositivos móviles. Aquí tienes cómo hacerlo:
+
+```js {tabTitle: React Native}
+  import * as Sentry from '@sentry/react-native';
+
+  Sentry.init({
+    replaysSessionSampleRate: 1.0,
+    replaysSessionQuality: 'low',
+    integrations: [Sentry.mobileReplayIntegration()],
+  });
+```
+
+Ten en cuenta que el valor predeterminado de `replaysSessionQuality` es `medium` y que también está disponible la calidad `high`.
+
+<div id="excluding-session-replay-from-android">
+  ## Excluir Session Replay en Android
+</div>
+
+Si no tienes pensado usar Session Replay, puedes excluir el módulo sentry-android-replay de tus destinos de Android para reducir el tamaño del paquete en aproximadamente 40 KB comprimidos y 80 KB sin comprimir. Aquí te explicamos cómo hacerlo:
+
+```gradle
+// desde el archivo build.gradle raíz de Android
+subprojects {
+  configurations.all {
+    exclude group: 'io.sentry', module: 'sentry-android-replay'
+  }
+}
+```

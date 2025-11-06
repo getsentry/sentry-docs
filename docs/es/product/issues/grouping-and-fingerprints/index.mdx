@@ -1,0 +1,121 @@
+---
+title: Agrupación de incidencias
+sidebar_order: 60
+noindex: true
+description: >-
+  Obtén más información sobre cómo Sentry agrupa incidencias y las diferentes
+  formas de cambiar la manera en que se agrupan los eventos.
+og_image: /og-images/product-issues-grouping-and-fingerprints.png
+---
+
+¿Alguna vez has tenido un conjunto de incidencias con aspecto similar como estas?
+
+![Issues Dashboard](./img/issues-dashboard.png)
+
+¿Te has preguntado por qué algunos eventos se agrupan en una sola incidencia y otros en incidencias separadas?
+
+Primero, entendamos cómo los errores y las transacciones se agrupan en una incidencia. En el ejemplo anterior, la incidencia `testTypeIssue14` tiene 718 eventos que Sentry agrupó en una sola incidencia porque comparten la misma *huella*.
+
+**¿Qué es una huella?**
+Una huella es una forma de identificar de manera única un evento. Sentry establece una huella de forma predeterminada, usando algoritmos de agrupación integrados basados en información como el stack trace, el tipo de excepción y el mensaje. Los eventos con la misma huella se agrupan.
+
+**¿Necesito hacer algo?** No. Sentry genera automáticamente una huella según el tipo de evento y otros datos del evento. Si los eventos tienen la misma causa raíz, se agruparán en una sola incidencia. Si quieres cambiar la forma en que se agrupan los eventos, consulta Cambiar cómo se agrupan los eventos más abajo.
+
+**¿Cómo veo la huella?** Abre una incidencia, haz clic en el enlace JSON y busca la propiedad *fingerprint*. Si se usó la agrupación predeterminada, verás `"{{ default }}"` escrito allí. Si se usó una agrupación diferente, verás el valor de la huella en sí.
+
+<div id="why-are-similar-looking-issues-not-grouping-together">
+  ## ¿Por qué no se agrupan los issues que se ven similares?
+</div>
+
+Aunque un conjunto de issues en el Issues Stream parezca similar, si aparecen por separado es porque todavía hay algo que los diferencia. En este ejemplo, es el nombre de la función en la parte superior del stack trace:
+![Issues Dashboard](./img/issue-stacktraces-comparison.png)
+
+<div id="changing-how-events-are-grouped">
+  ## Cambiar cómo se agrupan los eventos
+</div>
+
+<Alert>
+  Las soluciones descritas en esta sección solo se aplican a los [issues de error](/es/product/issues/issue-details/error-issues/). Otras categorías de issues (como los [issues de rendimiento](/es/product/issues/issue-details/performance-issues/)) no admiten esta función.
+</Alert>
+
+Hay cuatro maneras de cambiar cómo se agrupan los eventos en issues.
+
+**Unir issues similares**: Permite combinar issues ya existentes. No se requiere ningún ajuste ni configuración.
+
+**Reglas de huella (fingerprint)**: Te permiten configurar reglas para establecer directamente la huella de eventos futuros.
+
+**Reglas de stack trace**: Te permiten configurar reglas sobre qué frames del stack trace se usan al aplicar reglas de agrupación a eventos futuros.
+
+**Fingerprinting del lado del SDK**: Te permite establecer una huella directamente en un evento antes de enviarlo a Sentry.
+
+Ten en cuenta que ni la configuración de reglas de huella y de stack trace ni el uso de fingerprinting del lado del SDK afectarán a los eventos o issues existentes; solo cambiarán cómo se agrupan los eventos futuros.
+
+Consulta a continuación más detalles sobre cada enfoque.
+
+<div id="merging-similar-issues">
+  ### Fusión de incidencias similares
+</div>
+
+Esto permite combinar dos o más incidencias existentes, de modo que cualquier evento futuro que habría pertenecido a una de ellas se agregue a la incidencia fusionada.
+
+Antes de la fusión
+![Before Merge](./img/before-merge-1.png)
+
+Después de la fusión, vemos que `testTypeIssue7` y `testTypeIssue8` se fusionaron.
+![After Merge](./img/after-merge-1.png)
+
+También puedes hacerlo desde dentro de una sola incidencia. Haz clic en la pestaña Similar Issues
+![Similar Issues](./img/similar-issues-1.png)
+
+**Advertencia:** Esto no afectará la creación de incidencias futuras. En otras palabras, cualquier evento futuro que habría creado una incidencia nueva seguirá haciéndolo, independientemente de la similitud. Solo los eventos de las incidencias fusionadas se incluirán en la nueva incidencia combinada.
+
+Si deseas deshacer la fusión de incidencias, puedes ir a la página **Issue Details** y hacer clic en la pestaña &quot;Merged Issues&quot;. Verás las huellas que se han fusionado en esa incidencia. Selecciona las casillas correspondientes y haz clic en &quot;Unmerge&quot;.
+
+<div id="fingerprint-rules">
+  ### Reglas de huella digital
+</div>
+
+Para usar las reglas de huella digital, hay dos pasos:
+
+1. Define la lógica de coincidencia para agrupar incidencias. En los ejemplos a continuación, usaremos el **tipo** del error o su **mensaje**.
+2. Configura la lógica de coincidencia y la huella digital correspondiente en la configuración del proyecto.
+
+<div id="1-identify-match-logic">
+  #### 1. Identificar la lógica de coincidencia
+</div>
+
+Supongamos que quieres que los dos siguientes issues se agrupen:
+![ConnectionTimeouts](./img/connection-timeouts-2.png)
+
+Puedes hacerlo según el **tipo** de error:
+![ConnectionTimeoutType](./img/connection-timeout-type.png)
+
+O puedes hacerlo según el **mensaje**:
+![ConnectionTimeoutMessage](./img/connection-timeout-message.png)
+
+<div id="2-add-rules-to-project-settings">
+  #### 2. Agregar reglas a la configuración del proyecto
+</div>
+
+Así es como configurar la coincidencia según el **tipo** de error en **[Project] &gt; Settings &gt; Issue Grouping &gt; Fingerprint Rules**:
+![ConnectionTimeoutTypeExample](./img/connection-timeout-type-example.png)
+
+Ahora, todos los eventos `ConnectTimeout` tendrán la huella (`fingerprint`) `connect-timeout-type` y se agruparán en un solo issue, independientemente del stack trace. Ten en cuenta que esto solo se aplica a eventos futuros.
+
+Así es como configurar la coincidencia según el **mensaje** de error. Observa el uso de `*` para permitir que el mensaje coincida con cualquier valor de `host`.
+
+![ConnectionTimeoutMessageExample](./img/connection-timeout-message-example.png)
+
+También puedes hacerlo en función de la ruta del archivo de la función que genera el error o del nombre de la función en sí. Consulta [Fingerprint Rules](/es/concepts/data-management/event-grouping/fingerprint-rules/).
+
+<div id="stack-trace-rules">
+  ### Reglas de trazas de pila
+</div>
+
+A veces, dos trazas de pila representan la misma ruta de ejecución de una función, pero difieren en uno o más fotogramas correspondientes a código del middleware, bibliotecas de terceros o del propio framework. Sentry intentará detectar y omitir automáticamente esos fotogramas, pero esto también es configurable. Consulta [Reglas de trazas de pila](/es/concepts/data-management/event-grouping/stack-trace-rules/).
+
+<div id="sdk-side-fingerprinting">
+  ### Huellas digitales desde el lado del SDK
+</div>
+
+Para obtener información sobre cómo definir huellas digitales directamente en los eventos, consulta la [documentación del SDK](/es/platform-redirect/?next=/usage/sdk-fingerprinting/).

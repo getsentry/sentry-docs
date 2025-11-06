@@ -1,0 +1,306 @@
+---
+title: Opciones
+description: "Obtén más información sobre cómo configurar el SDK mediante opciones. Estas se pasan a la función init y, por lo tanto, se definen cuando el SDK se inicializa por primera vez."
+sidebar_order: 1
+---
+
+<PlatformContent includePath="configuration/config-intro" />
+
+<div id="core-options">
+  ## Opciones principales
+</div>
+
+<TableOfContents ignoreIds={["core-options"]} />
+
+<SdkOption name="dsn" type="string">
+  El DSN le indica al SDK adónde enviar los eventos. Si no se proporciona este valor, el SDK simplemente no enviará ningún evento.
+
+  Obtén más información sobre el [uso del DSN](/es/product/sentry-basics/dsn-explainer/#dsn-utilization).
+</SdkOption>
+
+<SdkOption name="debug" type="bool" defaultValue="false">
+  Activa o desactiva el modo de depuración. Si la depuración está habilitada, el SDK intentará imprimir información útil de depuración si algo sale mal al enviar el evento. Por lo general, no se recomienda activarlo en producción, aunque activar el modo `debug` no generará problemas de seguridad.
+</SdkOption>
+
+<SdkOption name="diagnosticLevel" type="enum" defaultValue="debug">
+  Habilitar el modo `debug` hace que el SDK genere la mayor cantidad posible de datos de diagnóstico. Sin embargo, si prefieres reducir la verbosidad de los registros de diagnóstico del SDK de Sentry, configura esta opción para establecer el nivel adecuado:
+
+  * `debug`: **predeterminado** El modo más detallado
+  * `info`: Mensajes informativos
+  * `warning`: Advertencia de que algo podría no estar bien
+  * `error`: Solo se imprimen errores internos del SDK
+  * `fatal`: Solo se imprimen errores críticos
+</SdkOption>
+
+<SdkOption name="dist" type="string">
+  Establece la distribución de la aplicación. Las distribuciones se usan para diferenciar variantes de compilación o despliegue de la misma versión de una aplicación. Por ejemplo, la distribución puede ser el número de compilación de un build de Xcode o el código de versión de un build de Android. La distribución tiene una longitud máxima de 64 caracteres.
+</SdkOption>
+
+<SdkOption name="release" type="string">
+  Establece la versión (release). Algunos SDK intentarán configurar automáticamente una versión lista para usar, pero es mejor configurarla manualmente para garantizar que esté sincronizada con tus integraciones de despliegue o cargas de source maps. Los nombres de versión son cadenas, pero Sentry detecta algunos formatos y podría mostrarlos de manera diferente. Obtén más información sobre cómo enviar datos de versiones para que Sentry pueda informarte sobre regresiones entre versiones e identificar la fuente potencial en [la documentación de versiones](/es/product/releases/) o en el <SandboxLink scenario="releases">sandbox</SandboxLink>.
+</SdkOption>
+
+<SdkOption name="environment" type="string">
+  Establece el entorno. Esta cadena es de formato libre y puede usarse para asociar una versión con más de un entorno y separarlos en la interfaz (piensa en `staging` vs `prod` o similar).
+</SdkOption>
+
+<SdkOption name="sampleRate" type="float" defaultValue="1.0">
+  Configura la tasa de muestreo para eventos de error, en el rango de `0.0` a `1.0`. (`1.0` significa que se enviará el 100% de los eventos de error, `0.1` significa que solo se enviará el 10%.) Los eventos se seleccionan aleatoriamente.
+</SdkOption>
+
+<SdkOption name="maxBreadcrumbs" type="int" defaultValue="100">
+  Esta variable controla la cantidad total de breadcrumbs que se deben capturar. Puedes establecerla en cualquier número. Sin embargo, ten en cuenta que Sentry tiene un [tamaño máximo de payload](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) y cualquier evento que exceda ese tamaño de payload se descartará.
+</SdkOption>
+
+<SdkOption name="maxCacheItems" type="int" defaultValue="30">
+  El número máximo de [envelopes](https://develop.sentry.dev/sdk/data-model/envelopes/) que se mantienen en caché. Los SDK usan envelopes para enviar datos, como eventos, adjuntos, comentarios de usuarios y sesiones a sentry.io. Un envelope puede contener varios elementos, como un evento con una sesión y dos adjuntos. Dependiendo del uso del SDK, el tamaño de un envelope puede variar. Si el número de envelopes en la caché local supera `max-cache-items`, el SDK elimina el envelope más antiguo y migra las sesiones al siguiente envelope para mantener la integridad de las estadísticas de salud de tu release.
+</SdkOption>
+
+<SdkOption name="attachStacktrace" type="bool" defaultValue="true">
+  Cuando está habilitado, las trazas de pila se adjuntan automáticamente a todos los mensajes registrados. Las trazas de pila siempre se adjuntan a las excepciones; sin embargo, cuando esta opción está activada, las trazas de pila también se envían junto con los mensajes. Esta opción, por ejemplo, hace que las trazas de pila aparezcan junto a todos los mensajes de registro.
+
+  La agrupación en Sentry es diferente para eventos con y sin trazas de pila. Como resultado, obtendrás nuevos grupos a medida que habilites o deshabilites este indicador para ciertos eventos.
+</SdkOption>
+
+<SdkOption name="attachThreads" type="bool" defaultValue="false">
+  Cuando está habilitada, se adjunta información sobre todos los hilos a los eventos, no solo sobre el hilo que falla. Esto ofrece una visión más completa del estado de la aplicación en el momento del error, incluidas las trazas de pila de todos los hilos en ejecución.
+
+  Ten en cuenta que habilitar esta opción puede aumentar el tamaño de la carga de los eventos enviados a Sentry.
+</SdkOption>
+
+<SdkOption name="collectAdditionalContext" type="bool" defaultValue="true">
+  Controla si el SDK recopila contexto adicional del dispositivo (como nivel de batería, uso de memoria, estado del almacenamiento y conectividad) para enriquecer los eventos. Deshabilitarlo puede reducir la E/S de archivos y ayudar a evitar infracciones de Android StrictMode o ANR en algunos dispositivos, a costa de perder ese contexto en los eventos.
+
+  Clave de AndroidManifest.xml: `io.sentry.additional-context`.
+</SdkOption>
+
+<SdkOption name="sendDefaultPii" type="bool" defaultValue="false">
+  Si este indicador está habilitado, cierta información de identificación personal (PII) se agrega mediante integraciones activas.
+
+  <Alert>
+    Si usas Sentry en tu app móvil, consulta nuestras [preguntas frecuentes sobre privacidad de datos móviles](/es/security-legal-pii/security/mobile-privacy/) para ayudarte con los detalles de privacidad de las apps en Apple App Store y Google Play.
+  </Alert>
+
+  Si habilitas esta opción, asegúrate de eliminar manualmente lo que no quieras enviar usando nuestras funciones para gestionar [*Sensitive Data*](../../data-management/sensitive-data/).
+</SdkOption>
+
+<SdkOption name="autoSessionTracking" type="bool" defaultValue="true">
+  Cuando se establece en `true`, el SDK enviará eventos de sesión a Sentry. Esto es compatible en todos los SDK de navegador, emitiendo una sesión por carga y navegación de página a Sentry. En los SDK móviles, cuando la app pasa a segundo plano durante más de 30 segundos, las sesiones finalizan.
+</SdkOption>
+
+<SdkOption name="inAppIncludes" type="array">
+  Una lista de prefijos de cadena de nombres de módulos que pertenecen a la app. Esta opción tiene prioridad sobre `in-app-excludes`.
+
+  Sentry diferencia los frames de pila que están directamente relacionados con tu aplicación (“en la aplicación”) de los que provienen de otros paquetes como la biblioteca estándar, frameworks u otras dependencias. El paquete de la aplicación se marca automáticamente como `inApp`. La diferencia es visible en [sentry.io](https://sentry.io), donde solo los frames “en la aplicación” se muestran de forma predeterminada.
+</SdkOption>
+
+<SdkOption name="inAppExcludes" type="array">
+  Una lista de prefijos de cadena de nombres de módulos que no pertenecen a la app, sino a paquetes de terceros. Los módulos considerados fuera de la app se ocultarán de las trazas de pila de forma predeterminada.
+
+  Esta opción se puede anular usando <PlatformIdentifier name="inAppIncludes" />.
+</SdkOption>
+
+<SdkOption name="ignoredExceptionsForType" type="array">
+  Una lista de tipos de excepciones que se filtrarán antes de enviarlas a Sentry.
+</SdkOption>
+
+<SdkOption name="maxRequestBodySize" type="enum" defaultValue="none">
+  Este parámetro controla si las integraciones deben capturar los cuerpos de las solicitudes HTTP. Se puede establecer en uno de los siguientes valores:
+
+  * `none`: predeterminado. Nunca se envían cuerpos de solicitudes.
+  * `small`: Solo se capturarán cuerpos de solicitudes pequeños. El umbral para “pequeño” depende del SDK (normalmente 4 KB).
+  * `medium`: Se capturarán solicitudes medianas y pequeñas (normalmente 10 KB).
+  * `always`: El SDK siempre capturará el cuerpo de la solicitud siempre que Sentry pueda interpretarlo.
+</SdkOption>
+
+<SdkOption name="attachScreenshot" type="bool" defaultValue="false" availableSince="6.0.0">
+  Toma una captura de pantalla de la aplicación cuando ocurre un error y la incluye como adjunto.
+  Obtén más información sobre cómo enriquecer eventos con capturas de pantalla en nuestra <PlatformLink to="/enriching-events/screenshots/">documentación de Screenshots</PlatformLink>.
+
+  *(Nuevo en la versión 6.0.0)*
+</SdkOption>
+
+<SdkOption name="attachViewHierarchy" type="bool" defaultValue="false">
+  Genera una representación JSON de toda la jerarquía de vistas de la aplicación cuando ocurre un error y la incluye como adjunto.
+  Obtén más información sobre cómo enriquecer eventos con la jerarquía de vistas en nuestra <PlatformLink to="/enriching-events/viewhierarchy/">documentación de View Hierarchy</PlatformLink>.
+</SdkOption>
+
+<SdkOption name="idleTimeout" type="int" defaultValue="3000" availableSince="6.0.0">
+  El tiempo de inactividad, medido en ms, que se espera hasta que una transacción finalice automáticamente. La transacción usará la marca de tiempo de finalización del último span terminado como hora de finalización de la transacción.
+
+  *(Nuevo en la versión 6.0.0)*
+
+  <Alert>
+    Esto solo afecta a las [transacciones de interacción del usuario](/es/platforms/android/tracing/instrumentation/automatic-instrumentation/#user-interaction-instrumentation).
+  </Alert>
+</SdkOption>
+
+<SdkOption name="deadlineTimeout" type="int" defaultValue="30000" availableSince="8.18.0">
+  El tiempo límite, en ms, que se espera hasta que una transacción se finalice automáticamente de forma forzosa, incluso si aún se está ejecutando un span hijo.
+
+  *(Nuevo en la versión 8.18.0)*
+
+  <Alert>
+    Esto solo afecta a las [transacciones automáticas](/es/platforms/android/tracing/instrumentation/automatic-instrumentation/).
+  </Alert>
+</SdkOption>
+
+<SdkOption name="enabled" type="bool" defaultValue="true">
+  Especifica si este SDK debe enviar eventos a Sentry. Establecer `enabled: false` no elimina por completo la sobrecarga de la instrumentación de Sentry. Para desactivar Sentry por completo, llama a `SentryAndroid.init` de forma condicional.
+</SdkOption>
+
+<SdkOption name="sendClientReports" type="bool" defaultValue="true" availableSince="6.0.0">
+  Configura este booleano en `false` para desactivar el envío de informes del cliente. Los informes del cliente son una característica del protocolo que permite a los clientes enviar a Sentry informes de estado sobre sí mismos. Actualmente se usan principalmente para publicar resultados de eventos que nunca se enviaron.
+
+  *(Nuevo en la versión 6.0.0)*
+</SdkOption>
+
+<SdkOption name="forceInit" type="bool" defaultValue="false" availableSince="8.0.0">
+  Configura este booleano en `true` para forzar que una llamada a `SentryAndroid.init` vuelva a inicializar el SDK, incluso si el SDK ya se había inicializado con alta prioridad.
+
+  *(Nuevo en la versión 8.0.0)*
+</SdkOption>
+
+<div id="integration-configuration">
+  ## Configuración de integraciones
+</div>
+
+En muchos SDK de plataforma, las integraciones pueden configurarse junto con el propio SDK. En algunas plataformas, esto ocurre como parte de la llamada a `init()`, y en otras se aplican patrones diferentes.
+
+<SdkOption name="integrations" type="array">
+  En algunos SDK, las integraciones se configuran mediante este parámetro durante la inicialización de la librería. Para más información, consulta la documentación de la integración específica.
+</SdkOption>
+
+<PlatformSection notSupported={["java", "dart"]}>
+  <SdkOption name="defaultIntegrations" type="bool" defaultValue="true">
+    Esto puede usarse para desactivar las integraciones que se añaden de forma predeterminada. Si se establece en `false`, no se añadirá ninguna integración predeterminada.
+  </SdkOption>
+</PlatformSection>
+
+<PlatformSection supported={["python"]}>
+  <SdkOption name="autoEnablingIntegrations" type="bool" defaultValue="true">
+    Esto puede usarse para desactivar las integraciones que se habilitan automáticamente cuando el SDK detecta que el framework o la librería correspondiente está instalado. Si se establece en `false`, ninguna de estas integraciones se habilitará de forma predeterminada, incluso si se detecta el framework o la librería correspondiente.
+  </SdkOption>
+</PlatformSection>
+
+<div id="hooks">
+  ## Hooks
+</div>
+
+Estas opciones permiten integrar el SDK de distintas maneras para personalizar el envío de eventos o para supervisar el tipo y la cantidad de datos descartados.
+
+<SdkOption name="beforeSend" type="function">
+  Esta función se invoca con un mensaje específico del SDK o un objeto de evento de error, y puede devolver un objeto de evento modificado o `null` para omitir el envío del evento. Puede usarse, por ejemplo, para eliminar manualmente PII antes de enviarlo.
+
+  Cuando se ejecuta <PlatformIdentifier name="beforeSend" />, todos los datos del scope ya se han aplicado al evento. Modificar el scope después no tendrá ningún efecto.
+</SdkOption>
+
+<SdkOption name="beforeSendTransaction" type="function">
+  Esta función se invoca con un objeto de evento de transacción específico del SDK, y puede devolver un objeto de evento de transacción modificado o `null` para omitir el envío del evento. Una forma de usarla es eliminar manualmente PII antes de enviarlo.
+</SdkOption>
+
+<SdkOption name="beforeBreadcrumb" type="function">
+  Esta función se invoca con un objeto breadcrumb específico del SDK antes de que el breadcrumb se agregue al scope. Si la función no devuelve nada, el breadcrumb se descarta. Para dejar pasar el breadcrumb, devuelve el primer argumento, que contiene el objeto breadcrumb.
+
+  El callback normalmente recibe un segundo argumento (llamado &quot;hint&quot;) que contiene el objeto original a partir del cual se creó el breadcrumb, para personalizar más el aspecto del breadcrumb.
+</SdkOption>
+
+<SdkOption name="onDiscard" type="function">
+  Esta función se invoca cuando se descartan datos, por motivos como muestreo, errores de red o desbordamientos de la cola. Los argumentos de la función ofrecen información sobre el motivo del descarte, el tipo de datos descartados y la cantidad de elementos descartados.
+</SdkOption>
+
+<div id="transport-options">
+  ## Opciones de transporte
+</div>
+
+Los transportes se usan para enviar eventos a Sentry. Pueden personalizarse hasta cierto punto para adaptarse mejor a implementaciones muy específicas.
+
+<SdkOption name="transport" type="function">
+  Sustituye el transporte utilizado para enviar eventos. Su funcionamiento depende del SDK. Por ejemplo, puede usarse para capturar eventos en pruebas unitarias o para enviarlos a través de una configuración más compleja que requiera autenticación por proxy.
+</SdkOption>
+
+<SdkOption name="proxy" type="object">
+  Si se establece, se puede configurar un proxy que se utilizará para las solicitudes salientes. También se aplica a solicitudes HTTPS.
+</SdkOption>
+
+<SdkOption name="cacheDirectoryPath" type="string" defaultNote="android.content.Context.getCacheDir()/sentry">
+  Especifica un directorio local para almacenar en caché las cargas útiles. Cuando esta opción está habilitada (es decir, cuando se define el directorio), el SDK de Sentry persistirá los sobres localmente antes de enviarlos a Sentry. Esta opción de configuración es especialmente útil si esperas que tu aplicación se ejecute en entornos con conectividad a Internet limitada.
+</SdkOption>
+
+<SdkOption name="shutdownTimeoutMillis" type="int" defaultValue="2000">
+  Controla cuántos segundos esperar antes de cerrar. Los SDK de Sentry envían eventos desde una cola en segundo plano. A esta cola se le concede un tiempo determinado para vaciar los eventos pendientes. Establecer este valor demasiado bajo puede causar problemas al enviar eventos desde la aplicación. Establecerlo demasiado alto hará que la aplicación se bloquee durante mucho tiempo para los usuarios que tengan problemas de conectividad de red.
+</SdkOption>
+
+<div id="tracing-options">
+  ## Opciones de trazas
+</div>
+
+<SdkOption name="tracesSampleRate" type="float">
+  Un número entre `0` y `1` que controla el porcentaje de probabilidad de que una transacción se envíe a Sentry. (`0` representa el 0% y `1` representa el 100%.) Se aplica por igual a todas las transacciones creadas en la aplicación. Para habilitar las trazas, debes definir esta opción o <PlatformIdentifier name="tracesSampler" />.
+</SdkOption>
+
+<SdkOption name="tracesSampler" type="function">
+  Una función responsable de determinar el porcentaje de probabilidad de que una transacción se envíe a Sentry. Recibirá automáticamente información sobre la transacción y el contexto en el que se crea, y debe devolver un número entre `0` (0% de probabilidad de envío) y `1` (100% de probabilidad de envío). También puede usarse para filtrar transacciones devolviendo 0 para las no deseadas. Para habilitar las trazas, debes definir esta opción o <PlatformIdentifier name="tracesSampleRate" />.
+</SdkOption>
+
+<SdkOption name="tracePropagationTargets" type="array">
+  Una propiedad opcional que controla qué servicios de downstream reciben datos de trazas, en forma de un encabezado `sentry-trace` y uno `baggage` adjuntos a cualquier solicitud HTTP saliente.
+
+  La opción puede contener una lista de cadenas o expresiones regulares con las que se comparan las URL de las solicitudes salientes.
+  Si alguna de las entradas de la lista coincide con la URL de una solicitud saliente, se adjuntarán los datos de traza a esa solicitud.
+  Las entradas de tipo cadena no tienen que ser coincidencias completas, lo que significa que la URL de una solicitud coincide cuando *contiene* una cadena proporcionada mediante la opción.
+
+  Si no se proporciona <PlatformIdentifier name="tracePropagationTargets" />, se adjuntan datos de traza a todas las solicitudes salientes del cliente instrumentado.
+</SdkOption>
+
+<SdkOption name="propagateTraceparent" type="bool" defaultValue="false" availableSince="8.22.0">
+  Controla si el SDK debe propagar el encabezado HTTP W3C `traceparent` junto con los encabezados `sentry-trace` y `baggage` en las solicitudes HTTP salientes.
+</SdkOption>
+
+<SdkOption name="traceOptionsRequests" type="bool" defaultValue="true">
+  Establece este valor booleano en `false` para desactivar las trazas de las solicitudes `OPTIONS`. Es probable que el valor predeterminado de esta opción cambie en la próxima versión principal, lo que significa que tendrás que establecerlo en `true` si quieres seguir trazando las solicitudes `OPTIONS`.
+</SdkOption>
+
+<div id="ui-profiling-options">
+  ## Opciones de perfilado de UI
+</div>
+
+<Alert title="Nota">
+  El perfilado de UI requiere versiones del SDK `8.7.0` o superiores. Las versiones anteriores pueden usar el <PlatformLink to="/configuration/options/#transaction-based-profiling-options">perfilado basado en transacciones</PlatformLink>.
+</Alert>
+
+<SdkOption name="profileSessionSampleRate" type="float" availableSince="8.7.0">
+  Un número entre `0` y `1` que controla la probabilidad (en porcentaje) de que la sesión sea perfilada. (`0` representa 0%, `1` representa 100%.) El valor predeterminado es null (deshabilitado).
+</SdkOption>
+
+<SdkOption name="profileLifecycle" type="enum" defaultValue="manual" availableSince="8.7.0">
+  Indica si el ciclo de vida del perfilado de UI se controla manualmente o en función del ciclo de vida del trace. Los valores posibles son:
+
+  * `manual`: **predeterminado** El profiler debe iniciarse y detenerse mediante las API `Sentry.startProfiler()` y `Sentry.stopProfiler()`
+  * `trace`: El profiler se inicia y se detiene automáticamente cada vez que comienza o termina un trace muestreado
+</SdkOption>
+
+<SdkOption name="startProfilerOnAppStart" type="bool" defaultValue="false" availableSince="8.7.0">
+  Un valor booleano que determina si se perfilará el proceso de inicio de la app. Cuando es true, se perfilará el proceso de arranque, incluidos los ContentProviders, Application y la creación de la primera Activity. Ten en cuenta que <PlatformIdentifier name="profileSessionSampleRate" /> debe estar definido.
+
+  * Si profileLifecycle está establecido en `manual`: el perfilado se inicia automáticamente al arrancar y se debe llamar a stopProfiler manualmente cuando se considere que el inicio de la app ha finalizado
+  * Si profileLifecycle está establecido en `trace`: el perfilado se inicia automáticamente al arrancar y se detendrá automáticamente cuando termine el root span asociado con el inicio de la app
+</SdkOption>
+
+<div id="transaction-based-profiling-options">
+  ## Opciones de perfilado basadas en transacciones
+</div>
+
+Este modo quedará obsoleto y se recomienda actualizar a <PlatformLink to="/configuration/options/#ui-profiling-options">UI Profiling</PlatformLink>. El mismo comportamiento, sin la limitación de 30 segundos, se puede conseguir con la opción de ciclo de vida de perfil <PlatformLink to="/configuration/options/#profile-lifecycle">`trace`</PlatformLink>. Para actualizar a UI Profiling, también debes eliminar de tu configuración las opciones basadas en transacciones.
+
+<SdkOption name="profilesSampleRate" type="float">
+  Un número entre `0` y `1` que controla el porcentaje de probabilidad de que se envíe un perfil a Sentry. (`0` representa 0% y `1` representa 100%.) Aplica solo a las transacciones muestreadas creadas en la app. Al establecer esta opción se habilitará el generador de perfiles heredado.
+</SdkOption>
+
+<SdkOption name="profilesSampler" type="function">
+  Una función responsable de determinar el porcentaje de probabilidad de que se envíe un perfil a Sentry. Recibirá automáticamente información sobre la transacción y el contexto en el que se crea, y debe devolver un número entre `0` (0% de probabilidad de envío) y `1` (100% de probabilidad de envío). También puede usarse para filtrar perfiles devolviendo 0 para aquellos no deseados. Debe definirse esta opción o <PlatformIdentifier name="profilesSampleRate" /> para habilitar el perfilado de transacciones. Al establecer esta opción se habilitará el generador de perfiles heredado.
+</SdkOption>
+
+<SdkOption name="enableAppStartProfiling" type="bool" defaultValue="false">
+  Un valor booleano que determina si se perfilará el proceso de inicio de la app. Cuando es true, se perfilará el inicio, incluidos los ContentProviders, Application y la creación de la primera Activity.
+</SdkOption>

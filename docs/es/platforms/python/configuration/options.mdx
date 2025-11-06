@@ -1,0 +1,398 @@
+---
+title: Opciones
+description: "Obtén más información sobre cómo configurar el SDK mediante opciones. Estas se pasan a la función init y, por lo tanto, se definen cuando el SDK se inicializa por primera vez."
+sidebar_order: 1
+---
+
+<PlatformContent includePath="configuration/config-intro" />
+
+<div id="available-options">
+  ## Opciones disponibles
+</div>
+
+<TableOfContents ignoreIds={["available-options"]} />
+
+<div id="core-options">
+  ## Opciones principales
+</div>
+
+Las opciones que pueden leerse desde una variable de entorno (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) se leen automáticamente.
+
+<SdkOption name="dsn" type="str" envVar="SENTRY_DSN" defaultValue="None">
+  El DSN indica al SDK dónde enviar los eventos. Si esta opción no se configura, el SDK simplemente no enviará datos. La opción de configuración `dsn` tiene prioridad sobre la variable de entorno. Obtén más información sobre la [utilización de DSN](/es/product/sentry-basics/dsn-explainer/#dsn-utilization).
+
+  <PlatformContent includePath="configuration/dsn" />
+</SdkOption>
+
+<SdkOption name="debug" type="bool" defaultValue="False" envVar="SENTRY_DEBUG">
+  Activa o desactiva el modo de depuración. Cuando es `True`, el SDK intentará imprimir información de depuración. Esto puede ser útil si algo sale mal al enviar eventos. El valor predeterminado siempre es `False`. Generalmente no se recomienda activarlo en producción debido al incremento en la salida de logs.
+
+  La opción de configuración `debug` tiene prioridad sobre la variable de entorno.
+</SdkOption>
+
+<SdkOption name="release" type="str" envVar="SENTRY_RELEASE" defaultValue="None">
+  Establece la release. Si no se configura, el SDK intentará configurar una release automáticamente, pero es mejor establecerla manualmente para garantizar que la release esté sincronizada con tus integraciones de despliegue. Los nombres de release son cadenas, pero Sentry detecta algunos formatos y podría mostrarlos de forma diferente. Consulta [la documentación de releases](/es/platforms/python/configuration/releases/) para saber cómo el SDK intenta configurar una release automáticamente.
+
+  La opción de configuración `release` tiene prioridad sobre la variable de entorno.
+
+  Obtén más información sobre cómo enviar datos de release para que Sentry pueda informarte sobre regresiones entre releases e identificar la posible fuente en [la documentación del producto](/es/product/releases/) o en el <SandboxLink scenario="releases">sandbox</SandboxLink>.
+</SdkOption>
+
+<SdkOption name="environment" type="str" defaultValue="production" envVar="SENTRY_ENVIRONMENT">
+  Establece el entorno. Esta cadena es de formato libre y se establece en `production` de forma predeterminada. Una release puede asociarse con más de un entorno para separarlos en la interfaz (piensa en `staging` vs `production` o similar).
+
+  La opción de configuración `environment` tiene prioridad sobre la variable de entorno.
+</SdkOption>
+
+<SdkOption name="spotlight" type="str | bool" envVar="SENTRY_SPOTLIGHT" defaultValue="None">
+  Habilita [Sentry Spotlight](https://github.com/getsentry/spotlight). Especifica la URL en la que se ejecuta Spotlight. Si se configura como el booleano `True`, se usa la URL predeterminada de Spotlight `"http://localhost:8969/stream"`.
+</SdkOption>
+
+<SdkOption name="dist" type="str" defaultValue="None">
+  La distribución de la aplicación. Las distribuciones se usan para diferenciar variantes de compilación o despliegue de la misma release de una aplicación. Por ejemplo, la dist puede ser un número de compilación.
+</SdkOption>
+
+<SdkOption name="sample_rate" type="float" defaultValue="1.0">
+  Configura la tasa de muestreo para eventos de error, en el rango de `0.0` a `1.0`. El valor predeterminado es `1.0`, lo que significa que se enviará el 100% de los eventos de error. Si se establece en `0.1`, solo se enviará el 10% de los eventos de error. Los eventos se seleccionan al azar.
+</SdkOption>
+
+<SdkOption name="error_sampler" type="function" defaultValue="None">
+  Función responsable de determinar el porcentaje de probabilidad de que un evento de error dado se envíe a Sentry. Esta opción de configuración acepta una función que recibe dos parámetros (el `event` y el `hint`) y que devuelve un booleano (que indica si el evento debe enviarse a Sentry) o un número entre `0` (0% de probabilidad de enviarse) y `1` (100% de probabilidad de enviarse).
+
+  Si se especifica esta opción de configuración, se ignora la opción `sample_rate`.
+</SdkOption>
+
+<SdkOption name="ignore_errors" type="list" defaultValue="[]">
+  Lista de nombres de clases de excepciones que no deben enviarse a Sentry. Los errores que sean instancia de estas excepciones, o de una subclase de ellas, se filtrarán antes de enviarse a Sentry.
+
+  De forma predeterminada, se envían todos los errores.
+</SdkOption>
+
+<SdkOption name="max_breadcrumbs" type="int" defaultValue="100">
+  Esta variable controla la cantidad total de breadcrumbs que se deben capturar. De forma predeterminada es `100`, pero puedes establecerla en cualquier número. Ten en cuenta que Sentry tiene un [tamaño máximo de carga útil](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) y cualquier evento que lo exceda se descartará.
+</SdkOption>
+
+<SdkOption name="attach_stacktrace" type="bool" defaultValue="False">
+  Cuando está habilitado, las trazas de pila se adjuntan automáticamente a todos los mensajes registrados. Las trazas de pila siempre se adjuntan a las excepciones; sin embargo, cuando esta opción está activada, las trazas de pila también se envían con los mensajes. Esta opción, por ejemplo, hace que las trazas de pila aparezcan junto a todos los mensajes de registro.
+
+  La agrupación en Sentry difiere para eventos con y sin trazas de pila. Como resultado, obtendrás nuevos grupos al habilitar o deshabilitar este indicador para ciertos eventos.
+</SdkOption>
+
+<SdkOption name="send_default_pii" type="bool" defaultValue="None">
+  Si este indicador está habilitado, las integraciones activas añaden [cierta información de identificación personal (PII)](/es/platforms/python/data-management/data-collected/).
+
+  Si habilitas esta opción, asegúrate de eliminar manualmente lo que no quieras enviar usando nuestras funciones para gestionar [*Sensitive Data*](../../data-management/sensitive-data/).
+</SdkOption>
+
+<SdkOption name="event_scrubber" type="sentry_sdk.scrubber.EventScrubber" defaultValue="None">
+  Limpia la carga útil del evento de información sensible como cookies, sesiones y contraseñas a partir de una `denylist`. Además, se puede usar para limpiar a partir de otra `pii_denylist` si `send_default_pii` está deshabilitado. Consulta cómo [configurar el scrubber aquí](../../data-management/sensitive-data/#event-scrubber).
+</SdkOption>
+
+<SdkOption name="include_source_context" type="bool" defaultValue="True">
+  Cuando está habilitado, se incluirá el contexto de código fuente en los eventos enviados a Sentry. Este contexto incluye las cinco líneas de código por encima y por debajo de la línea donde ocurrió el error.
+</SdkOption>
+
+<SdkOption name="include_local_variables" type="bool" defaultValue="True">
+  Cuando está habilitado, el SDK capturará una instantánea de las variables locales para enviarla con el evento y ayudar en la depuración.
+</SdkOption>
+
+<SdkOption name="add_full_stack" type="bool" defaultValue="False">
+  Al capturar errores, las trazas de pila de Sentry normalmente solo incluyen los frames que comienzan en el momento en que ocurre un error. Pero si la opción `add_full_stack` está habilitada (establecida en `True`), todos los frames desde el inicio de la ejecución se incluirán en la traza de pila enviada a Sentry.
+
+  Nota: La agrupación de incidencias en Sentry se basa en las trazas de pila. Si cambias este valor en una configuración existente de Sentry, se crearán nuevos grupos para errores ya conocidos.
+</SdkOption>
+
+<SdkOption name="max_stack_frames" type="int" defaultValue="100">
+  Esta opción limita el número de frames de la pila que se capturarán cuando `add_full_stack` esté habilitado.
+</SdkOption>
+
+<SdkOption name="server_name" type="str" defaultValue="None">
+  Esta opción puede usarse para proporcionar un nombre de servidor. Cuando se proporciona, el nombre del servidor se envía y se conserva en el evento. En muchas integraciones, el nombre del servidor corresponde al hostname del dispositivo, incluso cuando la máquina no es realmente un servidor.
+</SdkOption>
+
+<SdkOption name="project_root" type="str" defaultValue="os.getcwd()">
+  La ruta completa al directorio raíz de tu aplicación.
+
+  El `project_root` se utiliza para marcar los frames en una traza de pila como pertenecientes a tu aplicación o como externos a la aplicación.
+</SdkOption>
+
+<SdkOption name="in_app_include" type="list[str]" defaultValue="[]">
+  Una lista de prefijos de cadena de nombres de módulos que pertenecen a la app. Esta opción tiene prioridad sobre `in_app_exclude`.
+
+  Sentry diferencia los frames de pila directamente relacionados con tu aplicación (&quot;in application&quot;) de los que provienen de otros paquetes como la biblioteca estándar, frameworks u otras dependencias. El paquete de la aplicación se marca automáticamente como `inApp`. La diferencia es visible en [sentry.io](https://sentry.io), donde solo los frames &quot;in application&quot; se muestran de forma predeterminada.
+</SdkOption>
+
+<SdkOption name="in_app_exclude" type="list[str]" defaultValue="[]">
+  Una lista de prefijos de cadena de nombres de módulos que no pertenecen a la app, sino a paquetes de terceros. Los módulos considerados fuera de la app se ocultarán de las trazas de pila de forma predeterminada.
+
+  Esta opción se puede anular usando `in_app_include`.
+</SdkOption>
+
+<SdkOption name="max_request_body_size" type="str" defaultValue="medium">
+  Este parámetro controla si las integraciones deben capturar los cuerpos de las solicitudes HTTP. Puede configurarse con uno de los siguientes valores:
+
+  * `never`: Nunca se envían los cuerpos de las solicitudes.
+  * `small`: Solo se capturarán cuerpos de solicitudes pequeños. El umbral de &quot;small&quot; depende del SDK (normalmente 4 KB).
+  * `medium`: Se capturarán solicitudes medianas y pequeñas (normalmente 10 KB).
+  * `always`: El SDK siempre capturará el cuerpo de la solicitud siempre que Sentry pueda interpretarlo.
+
+  Ten en cuenta que el servidor de Sentry [limita el tamaño del cuerpo de la solicitud HTTP](https://develop.sentry.dev/sdk/expected-features/data-handling/#variable-size). El servidor siempre aplica su límite de tamaño, sin importar cómo configures esta opción.
+</SdkOption>
+
+<SdkOption name="max_value_length" type="int" defaultValue="100 000">
+  La cantidad de caracteres a partir de la cual se truncarán los valores con texto en la carga útil del evento.
+
+  En versiones del SDK anteriores a la `2.34.0`, el valor predeterminado era `1024`.
+</SdkOption>
+
+<SdkOption name="ca_certs" type="str" defaultValue="None">
+  Ruta a un archivo alternativo de paquetes de CA en formato PEM.
+</SdkOption>
+
+<SdkOption name="send_client_reports" type="bool" defaultValue="True">
+  Configura este valor booleano en `False` para desactivar el envío de informes del cliente. Los informes del cliente permiten que el cliente envíe a Sentry informes de estado sobre sí mismo, como información sobre eventos que se descartaron antes de enviarse.
+</SdkOption>
+
+<SdkOption name="auto_session_tracking" type="bool" defaultValue="True">
+  Indica si las sesiones deben registrarse automáticamente y enviarse a Sentry.
+</SdkOption>
+
+<div id="integration-configuration">
+  ## Configuración de integraciones
+</div>
+
+<SdkOption name="integrations" type="list[sentry_sdk.integrations.Integration]" defaultValue="[]">
+  Lista de integraciones para habilitar además de las [integraciones con habilitación automática](/es/platforms/python/integrations). Esta opción permite sustituir la configuración predeterminada de una integración con habilitación automática específica o añadir una integración que no se habilita automáticamente.
+</SdkOption>
+
+<SdkOption name="disabled_integrations" type="list[sentry_sdk.integrations.Integration]" defaultValue="[]">
+  Lista de integraciones que se deshabilitarán. Esta opción permite desactivar explícitamente integraciones [con habilitación automática](/es/platforms/python/integrations/#available-integrations) o [predeterminadas](/es/platforms/python/integrations/default-integrations/).
+</SdkOption>
+
+<SdkOption name="auto_enabling_integrations" type="bool" defaultValue="True">
+  Configura si deben habilitarse las [integraciones con habilitación automática](/es/platforms/python/integrations/#available-integrations).
+
+  Cuando se establece en `False`, no se habilitará ninguna integración con habilitación automática de forma predeterminada, incluso si se detecta el framework o la biblioteca correspondientes.
+</SdkOption>
+
+<SdkOption name="default_integrations" type="bool" defaultValue="True">
+  Configura si deben habilitarse las [integraciones predeterminadas](/es/platforms/python/integrations/default-integrations/).
+
+  Establecer `default_integrations` en `False` deshabilita todas las integraciones predeterminadas **así como todas las integraciones con habilitación automática**, a menos que se añadan específicamente en la opción `integrations`, descrita arriba.
+</SdkOption>
+
+<div id="hooks">
+  ## Hooks
+</div>
+
+Estas opciones se pueden usar para conectar el SDK de varias maneras y personalizar el envío de eventos.
+
+<SdkOption name="before_send" type="function" defaultValue="None">
+  Esta función se llama con el payload del evento y puede devolver un objeto de evento modificado o `None` para omitir el envío del evento. Esto puede usarse, por ejemplo, para eliminar manualmente PII antes de enviar.
+
+  Para cuando se ejecuta `before_send`, todos los datos del scope ya se han aplicado al evento. Cualquier modificación posterior del scope no tendrá efecto.
+</SdkOption>
+
+<SdkOption name="before_send_transaction" type="function" defaultValue="None">
+  Esta función se llama con un objeto de evento de transacción y puede devolver un objeto de evento de transacción modificado o `None` para omitir el envío del evento. Una forma de usarlo es para eliminar manualmente PII antes de enviar.
+</SdkOption>
+
+<SdkOption name="before_breadcrumb" type="function" defaultValue="None">
+  Esta función se llama con un objeto breadcrumb antes de que el breadcrumb se agregue al scope. Cuando la función no devuelve nada, el breadcrumb se descarta. Para permitir que el breadcrumb pase, devuelve el primer argumento, que contiene el objeto breadcrumb.
+  El callback normalmente recibe un segundo argumento (llamado &quot;hint&quot;) que contiene el objeto original a partir del cual se creó el breadcrumb, para personalizar mejor cómo debería verse el breadcrumb.
+</SdkOption>
+
+<SdkOption name="before_send_log" type="Optional[Callable[Log, Hint] -> Optional[Log]]" defaultValue="None">
+  Una función que se llamará para cada log. Se puede usar para modificar el log
+  antes de enviarlo a Sentry o para filtrar por completo logs específicos (si devuelve
+  `None`).
+
+  Nuevo en la versión `2.35.0` del SDK. Antes de `2.35.0`, esta opción era experimental.
+</SdkOption>
+
+<PlatformContent includePath="/performance/traces-sampler-config-option" />
+
+<div id="transport-options">
+  ## Opciones de transporte
+</div>
+
+Los transportes se usan para enviar eventos a Sentry. Pueden personalizarse hasta cierto punto para adaptarse mejor a implementaciones muy específicas.
+
+<SdkOption name="transport" type="sentry_sdk.transport.Transport" defaultValue="None">
+  Sustituye el transporte usado para enviar eventos. Por ejemplo, puede usarse para capturar eventos en pruebas unitarias o para enviarlos mediante una configuración más compleja que requiera autenticación de proxy.
+</SdkOption>
+
+<SdkOption name="transport_queue_size" type="int" defaultValue="100" />
+
+<SdkOption name="http_proxy" defaultValue="None" type="Optional[str]">
+  Si se establece, se puede configurar un proxy para las solicitudes salientes. También se usa para solicitudes HTTPS, a menos que se configure un `https_proxy` por separado.
+
+  Si no se establece o se establece en `None`, el SDK intentará usar por defecto el proxy configurado a nivel del sistema, si es posible. Por ejemplo, en sistemas Unix se tomará la variable de entorno `http_proxy`.
+
+  Si el SDK no debe usar un proxy, establece la opción en `""`.
+</SdkOption>
+
+<SdkOption name="https_proxy" defaultValue="None" type="Optional[str]">
+  Configura un proxy independiente para solicitudes HTTPS salientes.
+
+  Si no se establece (o se establece en `None`), el SDK intentará usar por defecto el proxy configurado a nivel del sistema.
+
+  Si no se debe usar ningún proxy, establece la opción en `""`.
+</SdkOption>
+
+<SdkOption name="proxy_headers" type="dict[str, str]" defaultValue="None">
+  Un diccionario con cabeceras de proxy adicionales (normalmente para autenticación) que se reenviarán al [`ProxyManager`](https://urllib3.readthedocs.io/en/1.24.3/reference/index.html#urllib3.poolmanager.ProxyManager) de `urllib3`.
+</SdkOption>
+
+<SdkOption name="shutdown_timeout" type="int" defaultValue="2">
+  Controla cuántos segundos esperar antes de cerrar. El SDK envía eventos desde una cola en segundo plano. A esta cola se le da un tiempo determinado para vaciar los eventos pendientes. Establecer este valor demasiado bajo puede causar problemas al enviar eventos desde aplicaciones de línea de comandos. Establecerlo demasiado alto hará que la aplicación se bloquee durante mucho tiempo para usuarios que tengan problemas de conectividad de red.
+</SdkOption>
+
+<SdkOption name="keep_alive" type="bool" defaultValue="False">
+  Determina si se mantiene la conexión activa entre solicitudes. Esto puede ser útil en entornos donde hay problemas frecuentes de red, como reinicios de conexión.
+</SdkOption>
+
+<SdkOption name="cert_file" type="str" envVar="CLIENT_CERT_FILE" defaultValue="None">
+  Ruta al certificado de cliente que se usará. Si se establece, sustituye la variable de entorno `CLIENT_CERT_FILE`.
+</SdkOption>
+
+<SdkOption name="key_file" type="str" envVar="CLIENT_KEY_FILE" defaultValue="None">
+  Ruta al archivo de clave que se usará. Si se establece, sustituye la variable de entorno `CLIENT_KEY_FILE`.
+</SdkOption>
+
+<SdkOption name="socket_options" defaultValue="None">
+  Una lista opcional de opciones de socket a usar. Proporcionan control detallado y de bajo nivel sobre cómo se conecta el SDK a Sentry. Si se proporcionan, las opciones sustituirán las [opciones de socket](https://urllib3.readthedocs.io/en/stable/reference/urllib3.connection.html#urllib3.connection.HTTPConnection) predeterminadas de `urllib3`.
+
+  ```python
+  import socket
+  from urllib3.connection import HTTPConnection
+
+  sentry_sdk.init(
+      socket_options=HTTPConnection.default_socket_options + [
+          (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1),
+      ],
+  )
+  ```
+</SdkOption>
+
+<div id="tracing-options">
+  ## Opciones de trazado
+</div>
+
+<SdkOption name="traces_sample_rate" type="float" defaultValue="None">
+  Un número entre `0` y `1` que controla el porcentaje de probabilidad de que una transacción determinada se envíe a Sentry. (`0` representa el 0% y `1` representa el 100%.) Se aplica por igual a todas las transacciones creadas en la app. Para habilitar el trazado, debes definir este parámetro o `traces_sampler`.
+
+  Si `traces_sample_rate` es `0`, no se crearán trazas nuevas. Sin embargo, si tienes otro servicio (por ejemplo, un frontend de JS) que hace solicitudes a tu servicio e incluye información de traza, esas trazas se continuarán y, por lo tanto, se enviarán transacciones a Sentry.
+
+  Si quieres deshabilitar todo el trazado, debes establecer `traces_sample_rate=None`. En este caso, no se iniciarán trazas nuevas ni se continuarán las entrantes.
+</SdkOption>
+
+<PlatformContent includePath="/performance/traces-sampler-config-option" />
+
+<SdkOption name="trace_propagation_targets" type="list" defaultValue="['.*']">
+  Una propiedad opcional que controla qué servicios descendentes reciben datos de trazado, en forma de los headers `sentry-trace` y `baggage` adjuntos a cualquier solicitud HTTP saliente.
+
+  La opción puede contener una lista de strings o regex con los que se comparan las URL de las solicitudes salientes.
+  Si una de las entradas de la lista coincide con la URL de una solicitud saliente, se adjuntarán datos de traza a esa solicitud.
+  Las entradas de tipo string no tienen que coincidir por completo: la URL de una solicitud se considera coincidencia cuando *contiene* una cadena proporcionada en la opción.
+
+  Si no se proporciona `trace_propagation_targets`, se adjuntan datos de traza a todas las solicitudes salientes del cliente instrumentado.
+</SdkOption>
+
+<SdkOption name="functions_to_trace" type="list[str]" defaultValue="[]">
+  Una lista opcional de funciones que deben configurarse para trazado. Para cada función de la lista, se creará un span cuando se ejecute.
+  Las funciones de la lista se representan como strings que contienen el nombre totalmente calificado de la función.
+
+  Es una opción práctica que permite tener un lugar central para configurar qué funciones trazar, en lugar de tener instrumentación personalizada dispersa por toda tu base de código.
+
+  Para obtener más información, consulta la documentación de [Instrumentación personalizada](/es/platforms/python/tracing/instrumentation/custom-instrumentation/#define-span-creation-in-a-central-place).
+</SdkOption>
+
+<SdkOption name="enable_backpressure_handling" type="bool" defaultValue="True">
+  Cuando está habilitado, se crea un nuevo hilo de monitor para realizar comprobaciones de estado del SDK. Si el sistema no está saludable, el SDK seguirá reduciendo a la mitad el `traces_sample_rate` que configuraste en intervalos de 10 segundos hasta la recuperación. Este muestreo a la baja ayuda a garantizar que el sistema se mantenga estable y reduce la sobrecarga del SDK bajo alta carga.
+
+  Esta opción está habilitada de forma predeterminada.
+</SdkOption>
+
+<SdkOption name="enable_db_query_source" type="bool" defaultValue="True">
+  Cuando está habilitado, se agregará la ubicación de origen a las consultas de base de datos.
+</SdkOption>
+
+<SdkOption name="db_query_source_threshold_ms" type="int" defaultValue="100">
+  El umbral, en milisegundos, para agregar la ubicación de origen a las consultas de base de datos. La ubicación de la consulta se agregará a las consultas más lentas que el umbral especificado.
+</SdkOption>
+
+<SdkOption name="enable_http_request_source" type="bool" defaultValue="True">
+  Cuando está habilitado, se agregará la ubicación de origen a las solicitudes HTTP salientes.
+</SdkOption>
+
+<SdkOption name="http_request_source_threshold_ms" type="int" defaultValue="100">
+  El umbral, en milisegundos, para agregar la ubicación de origen a una solicitud HTTP saliente. La ubicación de la solicitud se agregará a las solicitudes más lentas que el umbral especificado.
+</SdkOption>
+
+<SdkOption name="trace_ignore_status_codes" type="bool" defaultValue="frozenset()">
+  Una propiedad opcional que deshabilita el trazado para solicitudes HTTP con ciertos códigos de estado.
+
+  No se trazan las solicitudes si el código de estado está incluido en el conjunto proporcionado.
+
+  Si no se proporciona `trace_ignore_status_codes`, se pueden trazar solicitudes con cualquier código de estado.
+</SdkOption>
+
+<SdkOption name="custom_repr" type="function" defaultValue="None">
+  Una función [repr](https://docs.python.org/3/library/functions.html#repr) personalizada que se ejecuta al serializar un objeto. Úsala para controlar cómo se muestran en Sentry tus objetos y clases personalizados.
+
+  Devuelve un string para que se use como ese valor de repr o `None` para continuar serializando como lo haría Sentry de todas formas.
+
+  ```python
+  def custom_repr(obj):
+      if isinstance(obj, MyCustomClass):
+          return "<MyCustomClass>"
+      else:
+          return None
+
+  sentry_sdk.init(custom_repr=custom_repr)
+  ```
+</SdkOption>
+
+<div id="profiling-options">
+  ## Opciones de perfilado
+</div>
+
+<SdkOption name="profile_lifecycle" type="str" defaultValue="manual">
+  Determina cómo se ejecuta el profiler; acepta dos valores: `manual` o `trace`.
+
+  En modo `manual`, controlas cuándo el profiler recopila datos llamando explícitamente a `sentry_sdk.profiler.start_profiler` y `sentry_sdk.profiler.stop_profiler`. Tienes el control total sobre cuándo se ejecuta el profiler.
+
+  En modo `trace`, el profiler se inicia y se detiene automáticamente según los spans activos: sigue ejecutándose mientras haya al menos un span activo y se detiene cuando no haya spans activos.
+</SdkOption>
+
+<SdkOption name="profiler_mode" type="str" defaultValue="None">
+  Determina qué planificador usa el profiler para registrar perfiles. Puede ser `"thread"`, `"gevent"`, `"unknown"` o `"sleep"` (en desuso, solo por compatibilidad retroactiva). Si no se establece, el SDK determinará el mejor planificador que usar. Cambia esta opción solo si sabes lo que haces.
+</SdkOption>
+
+<SdkOption name="profiles_sample_rate" type="float" defaultValue="None">
+  Un número entre `0` y `1` que controla el porcentaje de probabilidad de que un perfil se envíe a Sentry. (`0` representa el 0% y `1` el 100%.) Se aplica por igual a todos los perfiles creados en la app. La opción `profiles_sample_rate` es relativa a `traces_sample_rate`.
+
+  Para habilitar el perfilado, debe definirse esta opción o `profiles_sampler`.
+</SdkOption>
+
+<SdkOption name="profiles_sampler" type="function" defaultValue="None">
+  Una función que determina el porcentaje de probabilidad de que un perfil registrado se envíe a Sentry. La función recibe un parámetro (`sampling_context`). El `sampling_context` incluye información sobre la transacción vinculada al perfil y el contexto en el que se crea. La función debe devolver un número entre `0` (0% de probabilidad de envío) y `1` (100% de probabilidad de envío). También puede usarse para filtrar perfiles devolviendo `0` para los no deseados.
+
+  Para habilitar el perfilado, debe definirse esta opción o `profiles_sample_rate`. Además, se debe habilitar el tracing para que el perfilado funcione.
+</SdkOption>
+
+<SdkOption name="profile_session_sample_rate" type="float" defaultValue="None">
+  Un número entre `0` y `1` que controla el porcentaje de probabilidad de que se perfile una sesión. La decisión de muestreo se evalúa una sola vez durante la inicialización del SDK.
+</SdkOption>
+
+<div id="logs-options">
+  ## Opciones de logs
+</div>
+
+<SdkOption name="enable_logs" type="bool" defaultValue="False">
+  Activa los logs estructurados de Sentry, lo que te permite usar las APIs de `sentry_sdk.logger`
+  para enviar logs a Sentry. Esta opción debe configurarse en `True` para capturar automáticamente logs del módulo de logging integrado de Python u otras integraciones de logging compatibles.
+
+  Nuevo en la versión `2.35.0` del SDK. Antes de `2.35.0`, esta opción era experimental.
+</SdkOption>

@@ -1,0 +1,110 @@
+---
+title: Capa de Lambda - CJS
+description: >-
+  Aprende a agregar la Sentry Node Lambda Layer para usar Sentry en tus
+  funciones Lambda que se ejecutan en CommonJS (CJS)
+sidebar_order: 1
+og_image: /og-images/platforms-javascript-guides-aws-lambda-install-layer__v9.x.png
+---
+
+La forma más fácil de empezar con Sentry es usar la [Lambda Layer](https://docs.aws.amazon.com/lambda/latest/dg/adding-layers.html) de Sentry en lugar de agregar `@sentry/aws-serverless` con `npm` o `yarn` [manualmente](./npm__v9.x).
+Si sigues esta guía, no tendrás que preocuparte por desplegar las dependencias de Sentry junto con el código de tu función.
+Para iniciar el SDK, puedes elegir entre configurarlo mediante variables de entorno o en el código de tu función Lambda. Recomendamos usar variables de entorno, ya que es la forma más sencilla de empezar. [Inicializar el SDK en el código](#alternative-initialize-the-sdk-in-code), en lugar de configurar variables de entorno, te da más control sobre la configuración del SDK si lo necesitas.
+
+<Alert>
+  Este método de instalación **no** funciona con funciones Lambda que se ejecutan en modo EcmaScript Modules (ESM) usando la sintaxis `import`. Si tu función se ejecuta en ESM, sigue la [guía de ESM](../npm__v9.x).
+</Alert>
+
+<div id="1-prerequisites">
+  ## 1. Requisitos previos
+</div>
+
+Antes de comenzar, asegúrate de lo siguiente:
+
+* Tienes una función Lambda que se ejecuta en modo CommonJS (CJS), usando la sintaxis `require`.
+* Sabes en qué región de AWS está desplegada tu función.
+
+<div id="2-add-the-sentry-lambda-layer">
+  ## 2. Agrega la capa Sentry para Lambda
+</div>
+
+Agrega la capa de Sentry navegando a tu función de Lambda. Selecciona **Layers** y luego **Add a Layer**.
+
+![](./img/lambda_view.png)
+
+Selecciona la pestaña **Specify an ARN** como se muestra:
+
+![](./img/add_layer.png)
+
+Modifica y copia en el campo el ARN correspondiente a tu región; por ejemplo, para la región `us-west-1` y la versión actual v9 de la capa de Lambda `56`:
+
+```
+arn:aws:Lambda:us-west-1:943013980633:layer:SentryNodeServerlessSDKv9:56
+```
+
+<br />
+
+<div id="3-initialize-the-sdk-with-environment-variables">
+  ## 3. Inicializa el SDK con variables de entorno
+</div>
+
+La forma más sencilla de configurar el SDK es iniciarlo y configurarlo usando variables de entorno. Así no tienes que modificar el código de tu función Lambda.
+
+Además de capturar errores, puedes supervisar las interacciones entre varios servicios o aplicaciones [habilitando el tracing](/es/concepts/key-terms/tracing/).
+
+Selecciona qué funcionalidades de Sentry quieres instalar, además de Error Monitoring, para obtener a continuación las instrucciones correspondientes de instalación y configuración.
+
+<OnboardingOptionButtons options={["error-monitoring", "performance"]} />
+
+Configura las siguientes variables de entorno en la configuración de tu función Lambda:
+
+```bash
+NODE_OPTIONS="-r @sentry/aws-serverless/awslambda-auto"
+SENTRY_DSN="___PUBLIC_DSN___"
+# ___PRODUCT_OPTION_START___ performance
+SENTRY_TRACES_SAMPLE_RATE="1.0"
+# ___PRODUCT_OPTION_END___ performance
+```
+
+Para configurar variables de entorno, ve a tu función Lambda, selecciona **Configuration** y luego **Environment variables**:
+
+![](./img/cjs_env_vars.png)
+
+<div id="alternative-initialize-the-sdk-in-code">
+  ## Alternativa: inicializar el SDK en el código
+</div>
+
+En lugar de [el paso 3, configurar variables de entorno](#3-initialize-the-sdk-with-environment-variables), también puedes inicializar manualmente el SDK en el código de tu función Lambda.
+Así podrás personalizar aún más la configuración del SDK.
+Ten en cuenta que no necesitas instalar un paquete de NPM para que esto funcione, ya que el paquete ya está incluido en la capa de Lambda.
+
+Asegúrate de haber completado el [paso 1](#1-prerequisites) y el [paso 2](#2-add-the-sentry-lambda-layer) antes de continuar.
+
+```javascript {filename:index.js}
+const Sentry = require("@sentry/aws-serverless");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Agrega encabezados de solicitud e IP de usuarios, para más información visita:
+  // https://docs.sentry.io/platforms/javascript/guides/aws-lambda/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ performance
+
+  // Agrega Tracing estableciendo tracesSampleRate y agregando integración
+  // Establece tracesSampleRate en 1.0 para capturar el 100% de las transacciones
+  // Recomendamos ajustar este valor en producción
+  // Más información en
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+});
+
+exports.handler = Sentry.wrapHandler(async (event, context) => {
+  // Tu código del handler
+});
+```
+
+Es importante añadir ambos: la llamada a `Sentry.init` fuera de la función controladora y el envoltorio `Sentry.wrapHandler` alrededor de tu función para capturar automáticamente errores y datos de rendimiento.
+
+¡Listo, ya está todo!

@@ -1,0 +1,72 @@
+---
+title: FetchIntegration
+description: "Una integración predeterminada que crea spans y agrega encabezados de trazado a las solicitudes de fetch en Cloudflare Workers."
+supported:
+  - javascript.cloudflare
+---
+
+<Alert>
+  Esta integración solo funciona dentro del entorno de ejecución de Cloudflare Workers.
+</Alert>
+
+*Nombre de importación: `Sentry.fetchIntegration`*
+
+Esta integración está habilitada de forma predeterminada. Si quieres deshabilitarla, puedes [modificar tus integraciones predeterminadas](./../#modifying-default-integrations).
+
+La `fetchIntegration` crea [spans](/es/concepts/key-terms/tracing/distributed-tracing/#traces-transactions-and-spans) y agrega encabezados de trazado a las solicitudes de fetch en Cloudflare Workers.
+
+```JavaScript
+Sentry.init({
+  integrations: [Sentry.fetchIntegration()],
+});
+```
+
+<div id="options">
+  ## Opciones
+</div>
+
+<div id="breadcrumbs">
+  ### `breadcrumbs`
+</div>
+
+*Tipo: `boolean`*
+
+Si se establece en false, no se capturarán breadcrumbs.
+
+<div id="shouldcreatespanforrequest">
+  ### `shouldCreateSpanForRequest`
+</div>
+
+*Tipo: `(url: string) => boolean`*
+
+Te permite definir un método para determinar si se deben crear spans para rastrear las solicitudes salientes a la URL indicada. De forma predeterminada, se crearán spans para todas las solicitudes salientes.
+
+```JavaScript
+Sentry.init({
+  integrations: [
+    Sentry.fetchIntegration({
+      shouldCreateSpanForRequest: (url) => {
+        // Crear spans solo para llamadas a APIs externas
+        return url.includes('api.example.com');
+      },
+    }),
+  ],
+});
+```
+
+<div id="usage">
+  ## Uso
+</div>
+
+La integración de fetch instrumenta automáticamente todas las llamadas a `fetch()` realizadas dentro de tu Cloudflare Worker. Esto incluye:
+
+* Crear spans de rendimiento para solicitudes HTTP salientes
+* Añadir encabezados de trazado para continuar trazas distribuidas
+* Capturar breadcrumbs con fines de depuración
+* Registrar la duración de la solicitud y el estado de la respuesta
+
+La integración funciona tanto con la API estándar de `fetch()` como con cualquier biblioteca que utilice fetch internamente.
+
+<Alert>
+  **Nota:** Si necesitas desactivar la instrumentación de fetch para solicitudes específicas, usa la opción `shouldCreateSpanForRequest` para filtrar las solicitudes no deseadas.
+</Alert>

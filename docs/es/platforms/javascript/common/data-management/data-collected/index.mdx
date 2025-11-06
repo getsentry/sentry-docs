@@ -1,0 +1,183 @@
+---
+title: Datos recopilados
+description: "Consulta qué datos recopila el SDK de Sentry."
+sidebar_order: 1
+---
+
+Sentry se toma muy en serio la privacidad de los datos y cuenta con configuraciones predeterminadas que priorizan su seguridad, especialmente en lo referente a la información de identificación personal (PII). Al agregar el SDK de Sentry a tu aplicación, permites que recopile datos y los envíe a Sentry durante el tiempo de ejecución y el de compilación de tu aplicación.
+
+Los tipos de categorías y la cantidad de datos recopilados varían según las integraciones que hayas habilitado en el SDK de Sentry. En esta página se enumeran las categorías de datos que recopila el SDK de Sentry para JavaScript.
+
+Muchas de las categorías que se enumeran aquí requieren que habilites la <PlatformLink to="/configuration/options/#sendDefaultPii">opción sendDefaultPii</PlatformLink>.
+
+<div id="http-headers">
+  ## Encabezados HTTP
+</div>
+
+De forma predeterminada, el SDK de Sentry envía encabezados HTTP de respuesta o de solicitud.
+
+<div id="cookies">
+  ## Cookies
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía cookies.
+
+Si quieres enviar cookies, establece `sendDefaultPii: true` en la llamada a `Sentry.init()`. Esto enviará las cabeceras de `Cookie` y `Set-Cookie` en las solicitudes fetch y XHR.
+
+<div id="information-about-logged-in-user">
+  ## Información sobre el usuario que ha iniciado sesión
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía información sobre el usuario que ha iniciado sesión, como la dirección de correo electrónico, el ID de usuario o el nombre de usuario.
+
+El tipo de información del usuario que podrás enviar depende de las integraciones que habilites en el SDK de Sentry. La mayoría de las integraciones no envían información de usuario. Algunas integraciones (por ejemplo, <PlatformLink to="/user-feedback/">User Feedback</PlatformLink>) permiten enviar datos como el ID de usuario, el nombre de usuario y la dirección de correo electrónico.
+
+<PlatformSection supported={["javascript.electron"]}>
+  ### Usuario del dispositivo local
+
+  De forma predeterminada, el SDK de Sentry no envía información sobre el usuario que haya iniciado sesión en el dispositivo donde se ejecuta la app. Sin embargo, debes tener precaución al registrar errores del sistema de archivos, ya que las rutas pueden contener el nombre de usuario actual.
+</PlatformSection>
+
+<div id="users-ip-address-and-location">
+  ## Dirección IP y ubicación de los usuarios
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía la dirección IP del usuario.
+
+Para habilitar el envío de la dirección IP del usuario e inferir su ubicación, establece <PlatformLink to="/configuration/options/#sendDefaultPii">`sendDefaultPii: true`</PlatformLink>. En algunas integraciones, como <PlatformLink to="/guides/astro/#customize-server-instrumentation">`handleRequest`</PlatformLink> en Astro, puedes enviar la dirección IP del usuario habilitando `trackClientIp`.
+
+Si el envío de la dirección IP está habilitado, intentaremos inferirla o usaremos la dirección IP proporcionada en `ip_address` en <PlatformLink to="/apis/#setUser">`Sentry.setUser()`</PlatformLink>. Si estableces `ip_address: null`, no se inferirá la dirección IP.
+
+<div id="request-url">
+  ## URL de la solicitud
+</div>
+
+La URL completa de la solicitud en las peticiones HTTP salientes y entrantes **siempre se envía a Sentry**. Según tu aplicación, esto podría contener datos personales (PII). Por ejemplo, una URL como `/users/1234/details`, donde `1234` es un ID de usuario (que puede considerarse PII).
+
+<div id="request-query-string">
+  ## Cadena de consulta de la solicitud
+</div>
+
+La cadena de consulta completa de las solicitudes HTTP entrantes y salientes **siempre se envía a Sentry**. Según tu aplicación, esto podría contener datos de PII. Por ejemplo, una cadena de consulta como `?user_id=1234`, donde `1234` es un ID de usuario (que puede considerarse PII).
+
+Sin embargo, Sentry aplica de forma predeterminada cierta [depuración de datos del lado del servidor](/es/security-legal-pii/scrubbing/server-side-scrubbing/) para eliminar información sensible de la cadena de consulta. Por ejemplo, los parámetros de consulta `apiKey` y `token` se eliminan automáticamente.
+
+<div id="request-body">
+  ## Cuerpo de la solicitud
+</div>
+
+De forma predeterminada, Sentry envía el tamaño del contenido del cuerpo de las solicitudes HTTP entrantes. Esto se infiere del encabezado `content-length`. Sentry no envía el cuerpo de la solicitud en el cliente.
+
+<PlatformSection notSupported={["javascript", "javascript.angular", "javascript.capacitor", "javascript.cordova", "javascript.ember", "javascript.gatsby", "javascript.react", "javascript.solid", "javascript.svelte", "javascript.vue", "javascript.wasm", "javascript.cloudflare", "javascript.deno"]}>
+  En el servidor, el cuerpo de la solicitud entrante se captura de forma predeterminada. Puedes deshabilitar el envío del cuerpo de la solicitud entrante configurando `ignoreIncomingRequestBody` en la <PlatformLink to="/configuration/integrations/http/">integración HTTP</PlatformLink>.
+</PlatformSection>
+
+<PlatformSection supported={["javascript.remix"]}>
+  Si `sendDefaultPii` está habilitado, puedes enviar datos de formulario con `captureActionFormDataKeys` en la <PlatformLink to="/manual-setup/#server-side-configuration">configuración del lado del servidor</PlatformLink> de Remix.
+</PlatformSection>
+
+<div id="response-body">
+  ## Cuerpo de la respuesta
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía el contenido del cuerpo de las respuestas recibidas de las solicitudes salientes. De forma predeterminada, el SDK enviará el tamaño del cuerpo de la respuesta según el encabezado `content-length`.
+
+<div id="source-context">
+  ## Contexto de origen
+</div>
+
+De forma predeterminada, los SDK configurados por el asistente de Sentry CLI (`@sentry/wizard`) habilitan la subida de mapas de origen a Sentry.
+
+Para desactivar la subida de mapas de origen, consulta <PlatformLink to="/sourcemaps">la documentación sobre mapas de origen</PlatformLink>.
+
+<div id="local-variables-in-stack-trace">
+  ## Variables locales en la traza de pila
+</div>
+
+El SDK de Sentry no envía variables locales en la traza de pila de errores en los SDK de JavaScript del lado del cliente.
+
+<PlatformSection notSupported={["javascript", "javascript.angular", "javascript.capacitor", "javascript.cordova", "javascript.ember", "javascript.gatsby", "javascript.react", "javascript.solid", "javascript.svelte", "javascript.vue", "javascript.wasm", "javascript.bun", "javascript.cloudflare", "javascript.deno"]}>
+  Puedes habilitar el envío de variables locales estableciendo `includeLocalVariables: true` en la llamada a `Sentry.init()`. Esto activa la <PlatformLink to="/configuration/integrations/localvariables">integración de variables locales</PlatformLink>. La integración se incluye de forma predeterminada en entornos de ejecución basados en Node.js.
+</PlatformSection>
+
+<div id="device-browser-os-and-runtime-information">
+  ## Información del dispositivo, navegador, SO y entorno de ejecución
+</div>
+
+De forma predeterminada, el SDK de Sentry envía a Sentry información sobre el dispositivo y el entorno de ejecución.
+
+<PlatformSection notSupported={["javascript.electron"]}>
+  En entornos de navegador, esta información se obtiene a través de la cadena del User Agent. La cadena del User Agent contiene información sobre el navegador, el sistema operativo y el tipo de dispositivo.
+
+  En entornos del lado del servidor, el SDK de Sentry utiliza el módulo `os` para obtener información sobre el sistema operativo y la arquitectura.
+</PlatformSection>
+
+<PlatformSection supported={["javascript.electron"]}>
+  El SDK de Sentry para Electron recopila información sobre el dispositivo, como la plataforma, la arquitectura, la memoria disponible y la versión y compilación de tu sistema operativo o distribución de Linux.
+
+  De forma predeterminada, la <PlatformLink to="/configuration/integrations/additionalcontext">integración Additional Context</PlatformLink> recopila las dimensiones y la resolución de la pantalla del dispositivo. Opcionalmente, puede recopilar el fabricante y el nombre del modelo del dispositivo si la opción `deviceModelManufacturer` está habilitada.
+
+  De forma predeterminada, la <PlatformLink to="/configuration/integrations/gpucontext">integración GPU Context</PlatformLink> recopila información de la GPU. Opcionalmente, puede recopilar información más detallada si la opción `infoLevel` está configurada en `complete`.
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.azure-functions", "javascript.bun", "javascript.deno", "javascript.node", "javascript.aws-lambda", "javascript.connect", "javascript.cloudflare", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.hapi",  "javascript.hono", "javascript.koa", "javascript.nestjs", "javascript.wasm"]}>
+  <PlatformSection notSupported={["javascript.cordova"]}>
+    ## Reproducción de sesiones
+
+    De forma predeterminada, nuestro SDK de Reproducción de sesiones enmascara todo el contenido de texto, las imágenes, las vistas web y la entrada del usuario. Esto ayuda a garantizar que no se expongan datos sensibles. Puedes encontrar <PlatformLink to="/session-replay/privacy/">más detalles en la documentación de Session Replay</PlatformLink>.
+
+    Session Replay también captura información básica sobre todas las solicitudes salientes `fetch` y XHR en tu aplicación. Esto incluye la URL, el tamaño del cuerpo de la solicitud y de la respuesta, el método y el código de estado. Si se definen <PlatformLink to="/session-replay/configuration/#network-details">`networkDetailAllowUrls`</PlatformLink>, el cuerpo de la solicitud y de la respuesta también se enviará a Sentry. Esto puede incluir datos de carácter personal (PII) si el cuerpo de la solicitud o de la respuesta contiene dicha información.
+
+    Los mensajes de la consola también se capturan de forma predeterminada en Session Replay. Para depurar los mensajes de la consola, puedes usar la opción <PlatformLink to="/session-replay/privacy/#custom-scrubbing">`beforeAddRecordingEvent`</PlatformLink> para filtrarlos antes de enviarlos a Sentry.
+  </PlatformSection>
+
+  ## Registros de la consola
+
+  De forma predeterminada, el SDK de Sentry envía los registros de la consola de JS a Sentry como breadcrumbs, que pueden contener datos de carácter personal (PII).
+
+  Para deshabilitar el envío de mensajes de consola, establece `console: false` en tu configuración de `Sentry.breadcrumbsIntegration`. Consulta <PlatformLink to="/configuration/integrations/breadcrumbs/">la documentación de Breadcrumbs</PlatformLink>.
+
+  <PlatformSection notSupported={["javascript.electron"]}>
+    ## URL de referencia
+
+    De forma predeterminada, el SDK de Sentry envía la URL de referencia a Sentry. Es la URL de la página que enlazó a la página actual.
+  </PlatformSection>
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript", "javascript.angular", "javascript.capacitor", "javascript.cloudflare", "javascript.cordova", "javascript.ember", "javascript.gatsby", "javascript.react", "javascript.solid", "javascript.svelte", "javascript.vue", "javascript.wasm"]}>
+  <PlatformSection notSupported={["javascript.fastify", "javascript.hono"]}>
+    ## Líneas de contexto del seguimiento de la pila
+
+    De forma predeterminada, la <PlatformLink to="/configuration/integrations/contextlines/">integración Context Lines</PlatformLink> está habilitada. Esta integración envía las líneas de código circundantes de cada frame en el seguimiento de la pila. Esto puede incluir PII si el código contiene información personal.
+  </PlatformSection>
+
+  <PlatformSection notSupported={["javascript.deno"]}>
+    ## Entradas y respuestas de LLM
+
+    Al usar la <PlatformLink to="/configuration/integrations/vercelai/">integración Vercel AI</PlatformLink>, el prompt utilizado se envía a Sentry junto con metadatos como el ID del modelo y los tokens usados. Consulta la lista completa de atributos [en el código](https://github.com/getsentry/sentry-javascript/blob/master/packages/node/src/integrations/tracing/vercelai/index.ts).
+
+    ## Consultas de base de datos
+
+    De forma predeterminada, el SDK de Sentry envía consultas SQL a Sentry. Las consultas SQL pueden incluir PII si la sentencia no está parametrizada.
+
+    También se envían consultas de MongoDB, pero el SDK de Sentry no enviará la consulta completa. En su lugar, enviará una versión parametrizada de la consulta.
+  </PlatformSection>
+
+  ## Contexto de tRPC
+
+  De forma predeterminada, el SDK de Sentry no envía la entrada de tRPC desde el contexto de tRPC.
+
+  Si quieres enviar la entrada de tRPC, puedes habilitarlo estableciendo `sendDefaultPii: true` en la llamada a `Sentry.init()` o estableciendo `attachRpcInput: true` en las opciones de <PlatformLink to="/configuration/integrations/trpc/">`Sentry.trpcMiddleware()`</PlatformLink>.
+</PlatformSection>
+
+<PlatformSection supported={["javascript.electron"]}>
+  ## Títulos de ventana
+
+  La <PlatformLink to="/configuration/integrations/electronbreadcrumbs/">integración Electron Breadcrumbs</PlatformLink> puede capturar opcionalmente los títulos de ventana para breadcrumbs relacionados con eventos de ventanas. Estos pueden contener PII, por lo que están deshabilitados de forma predeterminada, pero se pueden habilitar mediante la opción `captureWindowTitles`.
+
+  ## Fallos nativos
+
+  En el momento de un fallo nativo, la pila de cada hilo se recopila y se envía a Sentry como parte de la instantánea de Minidump. Esta información se envía a Sentry de forma predeterminada, pero se descarta después de procesar el evento en el backend.
+
+  Estos archivos no se almacenan de forma predeterminada, pero puedes [habilitar el almacenamiento de Minidump](/es/platforms/native/guides/minidumps/enriching-events/attachments/#store-minidumps-as-attachments) en la organización de Sentry o en la configuración del proyecto.
+</PlatformSection>

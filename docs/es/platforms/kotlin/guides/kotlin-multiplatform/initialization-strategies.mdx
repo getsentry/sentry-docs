@@ -1,0 +1,206 @@
+---
+title: Opciones de inicialización
+description: "Distintas opciones para inicializar el SDK de Kotlin Multiplatform."
+sidebar_order: 2
+---
+
+A la hora de inicializar un SDK de Kotlin Multiplatform, hay varias opciones a tener en cuenta:
+
+- [Usar directamente las opciones de la plataforma nativa](#native-platform-options)
+- [Inicializador compartido](#shared-initializer)
+- [Inicializadores específicos de la plataforma](#platform-specific-initializers)
+- [Enfoque híbrido](#hybrid-approach)
+
+<div id="where-to-place-initialization-code">
+  ## Dónde colocar el código de inicialización
+</div>
+
+Independientemente de la opción de inicialización que elijas, es importante colocar el código de inicialización en una etapa temprana del ciclo de vida de tu aplicación para asegurarte de que el SDK quede configurado correctamente antes de usarse.
+Aquí tienes pautas generales sobre dónde colocar el código de inicialización en diferentes plataformas:
+
+```kotlin {filename:MainActivity.kt}{tabTitle: androidApp}
+import your.kmp.app.initializeSentry
+
+class YourApplication : Application() {
+  override fun onCreate() {
+    super.onCreate()
+      initializeSentry()
+   }
+}
+```
+
+```swift {tabTitle: iosApp}
+import shared
+
+func application(
+    _ application: UIApplication,
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil
+) -> Bool {
+    SentrySetupKt.initializeSentry()
+    return true
+}
+
+// O si usas SwiftUI:
+
+@main
+struct SwiftUIApp: App {
+    init() {
+        SentrySetupKt.initializeSentry()
+    }
+}
+```
+
+
+<div id="native-platform-options">
+  ## Opciones de la plataforma nativa
+</div>
+
+<Alert>
+Requiere la versión `0.7.1` o superior del SDK de Sentry.
+</Alert>
+
+<Alert>
+Las opciones disponibles están determinadas por las versiones de los SDK nativos usadas en la compilación.
+Por ejemplo, Kotlin Multiplatform SDK `0.10.0` usa Sentry Android `7.16.0` y Sentry Cocoa `8.38.0`, por lo que admite todas las opciones de esas versiones.
+</Alert>
+
+Este enfoque consiste en inicializar el SDK directamente con las opciones específicas de la plataforma, usando `PlatformOptionsConfiguration`. Esta estrategia es ideal para proyectos que necesitan configurar opciones que aún no admite el SDK de KMP, como opciones experimentales.
+Por ejemplo, si configuras tu aplicación KMP para Android, tendrás acceso a todas las opciones que proporciona el SDK de Android.
+
+<div id="apple-target-requirements">
+  ### Requisitos para targets de Apple
+</div>
+
+Para poder usar las opciones de la plataforma nativa con targets de Apple, debes habilitar `ExperimentalForeignApi`.
+
+```kotlin {filename:build.gradle.kts}
+kotlin {
+    // otras configuraciones ...
+  sourceSets {
+    all {
+        languageSettings.optIn("kotlinx.cinterop.ExperimentalForeignApi")
+    }
+  }
+}
+```
+
+
+<div id="usage">
+  ### Uso
+</div>
+
+```kotlin {filename:SentrySetup.kt}{tabTitle: commonMain}
+import io.sentry.kotlin.multiplatform.Sentry
+import io.sentry.kotlin.multiplatform.PlatformOptionsConfiguration
+
+fun initializeSentry() {
+  Sentry.initWithPlatformOptions(platformOptionsConfiguration())
+}
+
+expect fun platformOptionsConfiguration(): PlatformOptionsConfiguration
+```
+
+```kotlin {filename:SentrySetup.ios.kt}{tabTitle: iosMain}
+import io.sentry.kotlin.multiplatform.PlatformOptionsConfiguration
+
+actual fun platformOptionsConfiguration(): PlatformOptionsConfiguration = {
+    it.dsn = "___PUBLIC_DSN___"
+}
+```
+
+```kotlin {filename:SentrySetup.android.kt}{tabTitle: androidMain}
+import io.sentry.kotlin.multiplatform.PlatformOptionsConfiguration
+
+actual fun platformOptionsConfiguration(): PlatformOptionsConfiguration = {
+    it.dsn = "___PUBLIC_DSN___"
+}
+```
+
+
+<div id="shared-initializer">
+  ## Inicializador compartido
+</div>
+
+El enfoque de inicializador compartido consiste en inicializar el SDK en tu código compartido, usando las mismas opciones de configuración para todas las plataformas. Este enfoque es ideal para proyectos que priorizan la coherencia entre plataformas y no requieren personalizaciones específicas de cada plataforma.
+
+Usar un inicializador compartido proporciona una única fuente de verdad para las opciones de configuración de tu SDK. Esto puede simplificar el mantenimiento y la depuración, ya que solo necesitas actualizar una única base de código para todas las plataformas.
+
+Para inicializar el SDK, crea un archivo Kotlin en `commonMain` (por ejemplo, `SentrySetup.kt`, o como decidas llamarlo) y escribe una función de inicialización. Luego podrás invocarla en una etapa temprana del ciclo de vida en cada plataforma.
+
+```kotlin {filename:SentrySetup.kt}
+import io.sentry.kotlin.multiplatform.Sentry
+import io.sentry.kotlin.multiplatform.SentryOptions
+
+// El contexto de la aplicación solo se necesita para plataformas Android
+fun initializeSentry() {
+  val configuration: (SentryOptions) -> Unit = {
+    it.dsn = "___PUBLIC_DSN___"
+    // Añade la configuración común aquí
+  }
+  Sentry.init(configuration)
+}
+```
+
+
+<div id="platform-specific-initializers">
+  ## Inicializadores específicos de la plataforma
+</div>
+
+Los inicializadores específicos de la plataforma permiten personalizar las opciones de configuración del SDK para cada plataforma. Este enfoque puede ser especialmente útil cuando tu SDK requiere funcionalidades propias de cada plataforma u optimizaciones de rendimiento.
+
+Este enfoque te da la flexibilidad de afinar el comportamiento del SDK para atender las necesidades particulares de cada plataforma.
+Sin embargo, las opciones disponibles se limitan a lo que el SDK KMP haya implementado.
+Si necesitas usar directamente las opciones de la plataforma correspondiente, deberías usar el enfoque de [opciones nativas de la plataforma](#native-platform-options).
+
+<div id="common">
+  ### General
+</div>
+
+```kotlin {filename:commonMain/SentrySetup.kt}
+import io.sentry.kotlin.multiplatform.Context
+
+expect fun initializeSentry()
+```
+
+
+<div id="androidmain">
+  ### androidMain
+</div>
+
+```kotlin {filename:androidMain/SentrySetup.kt}
+import io.sentry.kotlin.multiplatform.Sentry
+import io.sentry.kotlin.multiplatform.Context
+
+actual fun initializeSentry() {
+  Sentry.init {
+    it.dsn = "___PUBLIC_DSN___"
+    // Agrega aquí la configuración específica de Android
+  }
+}
+```
+
+
+<div id="iosmain">
+  ### iosMain
+</div>
+
+```kotlin {filename:iosMain/SentrySetup.kt}
+import io.sentry.kotlin.multiplatform.Sentry
+import io.sentry.kotlin.multiplatform.Context
+
+actual fun initializeSentry() {
+  Sentry.init {
+    it.dsn = "___PUBLIC_DSN___"
+    // Agrega la configuración específica de iOS aquí
+  }
+}
+```
+
+
+<div id="hybrid-approach">
+  ## Enfoque híbrido
+</div>
+
+También es posible combinar las estrategias de inicialización creando [sourceSets intermedios](https://kotlinlang.org/docs/multiplatform-hierarchy.html) que apunten a plataformas específicas. Esto te permite usar un inicializador compartido para algunas plataformas, mientras usas inicializadores específicos de cada plataforma para otras.
+
+Por ejemplo, puedes optar por un inicializador compartido para las plataformas Android e iOS, mientras utilizas un inicializador específico de plataforma para watchOS y tvOS. Este enfoque ofrece un equilibrio entre coherencia y personalización.

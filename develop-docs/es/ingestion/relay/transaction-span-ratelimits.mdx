@@ -1,0 +1,234 @@
+---
+title: Limitación de tasa de transacciones y spans
+sidebar_order: 30
+---
+
+<Alert level="warning" title="Importante">
+  Este documento describe un estado objetivo; aún no está completamente implementado en Relay.
+</Alert>
+
+Relay aplica las cuotas definidas en Sentry y las propaga como límites de tasa a los clientes. En la mayoría de los casos,
+esto es una simple asignación uno a uno de la categoría de datos al elemento del envelope.
+
+Los límites de tasa de transacciones y spans son más complejos. Tanto los spans como las transacciones
+tienen una categoría &quot;total&quot; y otra adicional &quot;indexada&quot;. También están estrechamente relacionados: una transacción es un contenedor de spans.
+Si se descarta una transacción, también se descartan sus spans.
+
+El siguiente documento describe cómo interactúan entre sí las cuotas de transacciones y spans dentro de Relay.
+
+<Alert title="Importante">
+  Esta sección describe cómo Relay debe interpretar las cuotas; los SDK y otros consumidores
+  deben leer [SDK Development / Rate Limiting](/es/sdk/rate-limiting/).
+</Alert>
+
+Documentación relacionada:
+
+* [La categoría de resultados indexados](/es/application/dynamic-sampling/outcomes/)
+
+<div id="enforcement">
+  ## Aplicación de reglas
+</div>
+
+Se aplican las siguientes reglas:
+
+* La cuota de la categoría de transacciones también rige para la categoría de spans.
+* La cuota de la categoría de spans también rige para la categoría de transacciones.
+* Cuando se descarta una transacción, todos los spans contenidos deben reflejarse en los outcomes.
+* Si se limita la tasa de transacciones o de spans, los clientes deben recibir un límite para ambas categorías.
+* Las cuotas indexadas solo afectan la carga útil de su categoría correspondiente.
+
+Estas reglas pueden visualizarse con esta tabla:
+
+| Límite de tasa / Elemento | Carga útil de transacción | Métrica de transacción | Carga útil de span | Métrica de span |
+| ------------------------- | ------------------------- | ---------------------- | ------------------ | --------------- |
+| **Transacción**           | ❌                        | ❌                     | ❌                 | ❌              |
+| **Transacción indexada**  | ❌                        | ✅                     | ✅                 | ✅              |
+| **Span**                  | ❌                        | ❌                     | ❌                 | ❌              |
+| **Span indexado**         | ✅                        | ✅                     | ❌                 | ✅              |
+
+* ❌: Elemento rechazado.
+* ✅: Elemento aceptado.
+
+<div id="outcomes">
+  ## Resultados
+</div>
+
+Los resultados deben generarse en Relay por cada span y transacción que se descarte. Por lo general, un span/transacción descartado produce resultados para su categoría total e indexada correspondientes; consulta [la categoría de resultados indexados](/es/application/dynamic-sampling/outcomes/) para más detalles.
+
+Esto es sencillo para todos los límites de tasa indexados: solo descartan el payload, lo que da lugar a un único resultado negativo en la categoría indexada del elemento. Un límite de tasa `transaction_indexed` no hace que se descarten spans y viceversa.
+
+Una cuota de spans y el límite de tasa de spans resultante también es trivial para los spans independientes que recibe Relay: el span independiente se descarta y se genera un único resultado.
+
+<div id="transaction-outcomes">
+  ### Resultados de transacciones
+</div>
+
+Las transacciones actúan como contenedores de spans hasta que se extraen en Relay. Esta extracción de spans puede ocurrir en cualquier
+etapa de Relay: gestionada por el cliente, PoP-Relay o Processing-Relay. Mientras los spans no se hayan extraído de Relay, una transacción descartada
+debe contabilizar los spans que contiene y generar un resultado con la cantidad de spans contenidos + 1, para el span de segmento
+que se generaría a partir de la propia transacción.
+
+<Alert>
+  Aunque es deseable extraer correctamente los conteos de spans de transacciones descartadas, puede que no sea factible
+  hacerlo en todas las etapas del pipeline de procesamiento. Por ejemplo, puede que no sea posible (transacciones malformadas)
+  o que resulte simplemente demasiado costoso de calcular.
+</Alert>
+
+Una vez extraídos los spans, la transacción deja de ser un contenedor de spans y pasa a representarse únicamente a sí misma;
+por lo tanto, una transacción descartada con spans ya extraídos solo genera resultados para el total de transacciones y
+las categorías de transacciones indexadas.
+
+<Alert>
+  Las cuotas de spans son equivalentes a las cuotas de transacciones, por lo que todo lo anterior también aplica a una cuota de spans.
+</Alert>
+
+<div id="examples">
+  ## Ejemplos
+</div>
+
+<div id="example-span-indexed-quota">
+  ### Ejemplo: Cuota indexada por span
+</div>
+
+**Cuota**:
+
+```json
+{
+  "categories": ["span_indexed"],
+  "limit": 0
+  // ...
+}
+```
+
+**Transacción**:
+
+```json
+{
+  "type": "transaction",
+  "spans": [
+      { .. },
+      { .. },
+      { .. }
+  ],
+  // ...
+}
+```
+
+Un sobre que contiene una transacción con 3 spans hijos genera 4 resultados para spans sujetos a rate limiting en la categoría `spans_indexed`. 1 conteo por el span de segmento generado a partir de la transacción y 3 conteos por los spans contenidos. La transacción en sí seguirá siendo ingerida.
+
+**Ingesta**:
+
+| Carga útil de la transacción | Métricas de la transacción | Carga útil del span | Métricas del span |
+| ---------------------------- | -------------------------- | ------------------- | ----------------- |
+| ✅                           | ✅                         | ❌                  | ✅                |
+
+**Resultados negativos**:
+
+| `transaction` | `transaction_indexed` | `span` | `span_indexed` |
+| ------------- | --------------------- | ------ | -------------- |
+| 0             | 0                     | 0      | 4              |
+
+**Límites de rate limiting propagados a los SDK:** Ninguno.
+
+<div id="example-transaction-quota">
+  ### Ejemplo: Cuota de transacciones
+</div>
+
+**Cuota**:
+
+```json
+{
+  "categories": ["transaction"],
+  "limit": 0
+  // ...
+}
+```
+
+**Transacción**:
+
+```json
+{
+  "type": "transaction",
+  "spans": [
+      { .. },
+      { .. },
+      { .. }
+  ],
+  // ...
+}
+```
+
+**Ingesta**:
+
+| Carga de transacciones | Métricas de transacciones | Carga de spans | Métricas de spans |
+| ---------------------- | ------------------------- | -------------- | ----------------- |
+| ❌                     | ❌                        | ❌             | ❌                |
+
+**Resultados negativos**:
+
+| `transaction` | `transaction_indexed` | `span` | `span_indexed` |
+| ------------- | --------------------- | ------ | -------------- |
+| 1             | 1                     | 4      | 4              |
+
+**Límites de velocidad propagados a los SDK:** Transaction, Span.
+
+<div id="faq-reasoning">
+  ## Preguntas frecuentes / Explicación
+</div>
+
+<div id="why-do-transaction-limits-need-to-be-propagated-as-span-limits-and-vice-versa">
+  ### ¿Por qué es necesario propagar los límites de transacciones como límites de spans y viceversa?
+</div>
+
+A primera vista no es obvio: los spans pueden existir sin transacciones
+y también las transacciones pueden existir sin spans (independientes). Entonces, ¿por qué pueden usarse las cuotas
+de forma intercambiable?
+
+La razón está en el producto Sentry y en cómo se utiliza la información dentro de Sentry.
+Gracias a Relay, Sentry puede asumir con seguridad que existen spans si el usuario/SDK envía transacciones,
+y cada vez más partes del producto se construyen sobre la base de los spans. Desde este punto de vista,
+las transacciones y los spans transmiten la misma información, solo que representada de forma diferente.
+
+La conclusión lógica y la simplificación es tratar por igual los límites de tasa de spans y de transacciones
+(importante: tratar los límites de la misma manera; las cuotas siguen registrándose por separado).
+Hacer cumplir estos límites en los SDK no requiere lógica adicional: todo está contenido
+en Relay y funciona para cualquier versión del SDK, futura y actual.
+
+<div id="why-can-span-outcomes-and-transaction-outcomes-become-inconsistent">
+  ### ¿Por qué los resultados de los spans y los de las transacciones pueden volverse inconsistentes?
+</div>
+
+Puede haber múltiples razones a lo largo de toda la canalización; estas son solo algunas por las que puede haber diferencias causadas por Relay:
+
+* Extraer el recuento de spans de una transacción puede resultar demasiado costoso y omitirse. Esta es una propiedad extremadamente importante de Relay: los casos de abuso deben gestionarse lo más rápido posible y con el menor costo (dinero y recursos) posible. En algunos casos, puede no ser viable analizar en JSON la transacción para extraer el recuento de spans.
+* Un elemento del envelope puede estar mal formado; se generarán resultados para la categoría de datos inferida (span o transacción), pero el recuento de spans no se puede recuperar a partir de una transacción no válida.
+
+<div id="i-want-relay-to-enforce-a-quota-which-category-should-i-use">
+  ### Quiero que Relay aplique una cuota, ¿qué categoría debería usar?
+</div>
+
+De arriba abajo:
+
+* ¿Quieres desactivar por completo la ingesta? Configura el límite para las categorías de datos `span` y `transaction`.
+* ¿Está relacionado con la facturación? Por ejemplo, la protección contra picos opera según la categoría de la unidad de facturación; usa la categoría de datos correspondiente para el límite.
+* Usa la categoría total (no indexada) que más sentido tenga para ti. En caso de duda, consulta al equipo de Relay.
+
+<div id="should-i-ever-use-an-indexed-category-in-a-quota">
+  ### ¿Debería usar alguna vez una categoría indexada en una cuota?
+</div>
+
+No, a menos que la intención sea proteger la infraestructura (límites contra abuso).
+
+Las cuotas indexadas solo son útiles para proteger la infraestructura aguas abajo mediante cuotas de abuso.
+Aplicarlas es intrínsecamente más costoso, no pueden propagarse a los clientes y, por lo general, son señal
+de una mala configuración.
+
+El muestreo dinámico, inteligente o del lado del cliente debería evitar que se aplique cualquier cuota indexada.
+
+<div id="what-does-this-mean-for-standalone-spans">
+  ### ¿Qué significa esto para los spans independientes?
+</div>
+
+No se tratan de forma distinta a los spans extraídos. Después de la extracción de métricas, que puede ocurrir en los Relays del cliente,
+ya no hay diferencia. No tener un tratamiento especial para los spans independientes también significa que no
+necesitamos ninguna lógica especial en los SDK.

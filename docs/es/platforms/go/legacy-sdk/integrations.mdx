@@ -1,0 +1,62 @@
+---
+draft: true
+categories: []
+toc: true
+title: Integraciones
+noindex: true
+tags: []
+---
+
+<Alert level="warning" title="Aviso de desaprobación">
+  Un [nuevo SDK de Go](/es/platforms/go/) ha reemplazado esta versión obsoleta. Sentry conserva esta documentación para clientes que aún usan el cliente antiguo `raven-go`. Obtén más información sobre el proyecto en [GitHub](https://github.com/getsentry/sentry-go) y consulta nuestra [guía de migración](/es/platforms/go/migration/).
+</Alert>
+
+El paquete Raven para Go actualmente incluye una integración para el módulo nativo `net/http` que facilita el manejo de escenarios comunes. Pronto habrá más frameworks.
+
+<div id="nethttp">
+  ## net/http
+</div>
+
+Raven Go proporciona un middleware que puede usarse con la biblioteca estándar `net/http` para manejar automáticamente los pánicos que ocurren durante una solicitud HTTP.
+
+{/*<!-- ASISTENTE http -->*/}
+
+<div id="installation">
+  ### Instalación
+</div>
+
+Instala `raven-go` con `go get`:
+
+```bash
+go get github.com/getsentry/raven-go
+```
+
+<div id="setup">
+  ### Configuración
+</div>
+
+Asegúrate de haber configurado `raven` con tu DSN; por lo general, un buen lugar es dentro de `init()` en tu paquete `main`.
+
+```go
+package main
+
+import "github.com/getsentry/raven-go"
+
+func init() {
+	raven.SetDSN("___PUBLIC_DSN___")
+}
+```
+
+Si no llamas a `SetDSN`, intentaremos leerlo de tu entorno mediante la variable de entorno `SENTRY_DSN`. La versión (release) y el entorno también se obtendrán de las variables de entorno `SENTRY_RELEASE` y `SENTRY_ENVIRONMENT`, si están definidas.
+
+A continuación, debemos envolver nuestro `http.Handler` con nuestro `RecoveryHandler`:
+
+```go
+func raisesError(w http.ResponseWriter, r *http.Request) {
+	panic("¡Mi primer error de Sentry!")
+}
+
+http.HandleFunc("/debug-sentry", raven.RecoveryHandler(raisesError))
+```
+
+Puedes usar el fragmento anterior para verificar la integración de Sentry visitando la ruta anterior en tu aplicación y comprobando el error en Sentry.

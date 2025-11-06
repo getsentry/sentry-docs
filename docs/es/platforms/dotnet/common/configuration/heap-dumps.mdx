@@ -1,0 +1,88 @@
+---
+title: Volcados de montón
+sidebar_order: 23
+description: "Esta función experimental te permite capturar automáticamente volcados de montón para tu aplicación."
+---
+
+<Alert>
+  El SDK depende de `dotnet-gcdump` para capturar los volcados de montón. `dotnet-gcdump` requiere .NET 6 o posterior y debe estar [instalado globalmente](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/dotnet-gcdump#install) en la máquina o contenedor donde se capturarán los volcados de montón.
+</Alert>
+
+Con el SDK de .NET puedes capturar automáticamente volcados de montón en función de determinados activadores. Cuando se activa, el SDK captura el volcado de montón y envía un evento a Sentry con el volcado como archivo adjunto.
+
+La configuración básica para habilitar los volcados de montón automáticos es:
+
+```csharp
+options => {
+    // Todas tus otras opciones como DSN, SendDefaultPii, etc.
+    ...
+    options.EnableHeapDumps(
+        // Se activa si el proceso utiliza más del 90% de la memoria total disponible
+        90,
+        // Limita los heap dumps a 3 por día con al menos 2 horas entre cada evento
+        Debouncer.PerDay(3, TimeSpan.FromHours(2)),
+        // Establece el nivel de eventos de heap dump en Warning
+        SentryLevel.Warning);
+}
+```
+
+
+<div id="trigger">
+  ### Activador
+</div>
+
+El primer argumento de `EnableHeapDumps` es el *activador*. El ejemplo anterior pasa un entero como activador, lo que configura el SDK para capturar un volcado del montón cuando la memoria asignada por tu aplicación supera un determinado umbral porcentual de la memoria total disponible.
+
+Como alternativa, existe una sobrecarga de `EnableHeapDumps` que te permite especificar un activador personalizado:
+
+```csharp
+options => {
+    // Todas tus otras opciones como DSN, SendDefaultPii, etc.
+    ...
+    options.EnableHeapDumps(
+        // Se activa si el proceso utiliza más de 10 MB de memoria
+        (usedMemory, totalMemory) => usedMemory > 10_000_000,
+        // Limita los heap dumps a 3 por día con al menos 2 horas entre cada evento
+        Debouncer.PerDay(3, TimeSpan.FromHours(2)),
+        // Establece el nivel de eventos de heap dump en Warning
+        SentryLevel.Warning);
+}
+```
+
+
+<div id="debouncer">
+  ### Debouncer
+</div>
+
+El segundo argumento es un *Debouncer*, que se utiliza para evitar que se capturen volcados de montón con demasiada frecuencia.
+
+Los ejemplos anteriores configuran un debouncer que limita los volcados de montón a 3 por día, con un intervalo mínimo de 2 horas entre cada evento. Los otros debouncers disponibles son `PerMinute`, `PerHour` y `PerApplicationLifetime`.
+
+Si no se especifica un debouncer, el valor predeterminado es Debouncer.PerApplicationLifetime(1), lo que significa que solo se capturará un volcado de montón cada vez que se ejecute la aplicación. Si la aplicación continúa ejecutándose durante 3 meses, no se enviará más de un volcado de montón en ese período de 3 meses.
+
+<div id="event-level">
+  ### Nivel del evento
+</div>
+
+El argumento final determina el nivel que se asociará con el evento al que está adjunto el volcado de heap. Si no especificas un valor, el valor predeterminado es `SentryLevel.Warning`.
+
+<div id="viewing-heap-dumps">
+  ## Visualización de volcados de montón
+</div>
+
+Los volcados de montón aparecerán como eventos "Memory threshold exceeded" en la interfaz de Sentry. Al hacer clic en uno de estos eventos, verás todos los detalles habituales. Además, el evento incluirá un archivo `.gcdump` como adjunto que puedes descargar para análisis.
+
+Hay varias herramientas que puedes usar para visualizar el archivo de volcado:
+
+- [dotnet-gcdump report](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/dotnet-gcdump)
+- [dotnet-heapview](https://github.com/getsentry/dotnet-heapview)
+- [Visual Studio](https://devblogs.microsoft.com/dotnet/collecting-and-analyzing-memory-dumps/)
+- [Perfview](https://github.com/microsoft/perfview)
+
+<div id="feedback">
+  ## Comentarios
+</div>
+
+Esta función es experimental y estamos abiertos a sugerencias sobre cómo mejorarla.
+
+Si tienes comentarios sobre las capacidades o el diseño de la API, únete a la [discusión en GitHub](https://github.com/getsentry/sentry-dotnet/discussions/3885).

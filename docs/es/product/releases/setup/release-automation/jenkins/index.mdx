@@ -1,0 +1,131 @@
+---
+title: Jenkins
+description: >-
+  Aprende cómo Sentry y Jenkins automatizan la gestión de versiones y ayudan
+  a identificar commits sospechosos.
+og_image: /og-images/product-releases-setup-release-automation-jenkins.png
+---
+
+Esta guía te acompaña en el proceso de automatizar la gestión de versiones de Sentry y las notificaciones de despliegue en Jenkins. Después de desplegar en Jenkins, podrás asociar commits con versiones. También podrás aplicar source maps para ver el código original en Sentry.
+
+Antes de empezar, confirma que tu proyecto de Sentry está correctamente configurado para rastrear metadatos de commits [instalando una integración de repositorio](/es/product/releases/setup/release-automation/). Una vez instalada y agregado tu repositorio, vuelve a esta guía. Si ya instalaste una integración de repositorio, estás listo para continuar.
+
+<div id="create-a-sentry-internal-integration">
+  ## Crear una integración interna de Sentry
+</div>
+
+Para que Jenkins se comunique de forma segura con Sentry, debes crear una nueva integración interna. En Sentry, ve a **Settings &gt; Developer Settings &gt; New Internal Integration**.
+
+Asigna un nombre a la nueva integración (por ejemplo, “Jenkins Deploy Integration”) y especifica los permisos necesarios. En este caso, necesitas acceso de administrador para “Release” y acceso de lectura para “Organization”.
+
+Para obtener más información sobre los scopes y los endpoints de la API, consulta la documentación completa sobre [API Permissions](/es/api/permissions/).
+
+![Vista de los permisos de la integración interna.](./img/internal-integration-permissions.png)
+
+Haz clic en “Save” y, a continuación, guarda tu token, que necesitarás en la siguiente sección.
+
+<div id="add-token-to-jenkins-credentials">
+  ## Agregar el token a las credenciales de Jenkins
+</div>
+
+Para acceder de forma segura a tu token de integración interna en Jenkins, guárdalo como una [credencial](https://www.jenkins.io/doc/book/using/using-credentials/):
+
+1. Desde la página principal de Jenkins (el panel de la interfaz clásica de Jenkins), haz clic en **Credentials &gt; System**.
+2. En **System**, haz clic en el enlace **Global credentials (unrestricted)** para acceder a ese dominio predeterminado.
+3. Haz clic en **Add Credentials**.
+4. En el campo **Kind**, selecciona Secret Text.
+5. Asigna a tu credencial un **ID** (por ejemplo, &quot;sentry-auth-token&quot;) y, en el campo **Secret**, pega tu token de integración interna.
+6. Haz clic en **OK** para guardar las credenciales.
+
+![Vista de la pantalla para agregar credenciales en Jenkins.](./img/jenkins-add-credential.png)
+
+<div id="notify-sentry-of-deployment">
+  ## Notificar a Sentry del despliegue
+</div>
+
+Según el tipo de proyecto de Jenkins que estés usando para compilar y desplegar, deberás seguir distintos pasos:
+
+* [Pipeline (Jenkinsfile)](/es/product/releases/setup/release-automation/jenkins/#pipeline)
+* [Proyecto freestyle](/es/product/releases/setup/release-automation/jenkins/#freestyle-project)
+
+Para más detalles sobre los conceptos de gestión de lanzamientos que se explican a continuación, consulta la documentación completa sobre [gestión de lanzamientos](/es/cli/releases/).
+
+<div id="pipeline">
+  ### Pipeline
+</div>
+
+Si usas un pipeline de Jenkins, agrega una nueva etapa con el siguiente fragmento después de la etapa de despliegue:
+
+```groovy
+pipeline {
+		// ...
+    stages {
+
+        /// ...
+
+        stage('Notificar despliegue a Sentry') {
+            environment {
+                SENTRY_AUTH_TOKEN = credentials('sentry-auth-token')
+                SENTRY_ORG = 'sample-organization-slug'
+                SENTRY_PROJECT = 'sample-project-slug'
+                SENTRY_ENVIRONMENT = 'production'
+            }
+            steps {
+                // Instalar Sentry CLI
+                sh 'command -v sentry-cli || curl -sL https://sentry.io/get-cli/ | bash'
+
+                sh '''
+                    export SENTRY_RELEASE=$(sentry-cli releases propose-version)
+                    sentry-cli releases new -p $SENTRY_PROJECT $SENTRY_RELEASE
+                    sentry-cli releases set-commits $SENTRY_RELEASE --auto
+                    sentry-cli sourcemaps upload --release $SENTRY_RELEASE /path/to/sourcemaps
+                    sentry-cli releases finalize $SENTRY_RELEASE
+                    sentry-cli deploys new -e $SENTRY_ENVIRONMENT
+                '''
+            }
+        }
+    }
+}
+```
+
+**Notas**:
+
+* Si no vas a desplegar un proyecto que requiera source maps o ya enviaste los source maps a Sentry por otro método, omite la línea `sourcemaps upload`.
+* Si no puedes instalar una integración de repositorio, envía los metadatos de commits usando el [endpoint de creación de release](/es/product/releases/associate-commits/#using-the-api) u omite la línea `set-commits`.
+* `credentials('sentry-auth-token')` se refiere al ID de las credenciales que acabas de añadir a Jenkins.
+* `sentry-cli releases propose-version` usa por defecto el SHA del commit que se está desplegando. Para establecer un valor distinto, ajusta `SENTRY_RELEASE` a la versión preferida.
+
+<div id="freestyle-project">
+  ### Proyecto Freestyle
+</div>
+
+Si usas proyectos Freestyle, debes agregar otro paso de build después del despliegue.
+
+1. Asegúrate de agregar un enlace para asignar la variable de entorno `SENTRY_AUTH_TOKEN` a la credencial del token de integración interna que agregaste en el paso anterior.
+
+   ![Vista de las asignaciones de variables de entorno.](./img/jenkins-freestyle-bindings.png)
+
+2. Agrega el siguiente paso de build después de tu paso de despliegue:
+
+   ![Vista de la shell de Jenkins Freestyle.](./img/jenkins-freestyle-shell.png)
+
+   ```bash
+   curl -sL https://sentry.io/get-cli/ | bash || true
+
+   export SENTRY_ORG=sample-organization-slug
+   export SENTRY_PROJECT=sample-project-slug
+   export SENTRY_ENVIRONMENT=production
+   export SENTRY_RELEASE=$(sentry-cli releases propose-version)
+
+   sentry-cli releases new -p $SENTRY_PROJECT $SENTRY_RELEASE
+   sentry-cli releases set-commits $SENTRY_RELEASE --auto
+   sentry-cli sourcemaps upload --release $SENTRY_RELEASE path-to-sourcemaps-if-applicable
+   sentry-cli releases finalize $SENTRY_RELEASE
+   sentry-cli deploys new -e $SENTRY_ENVIRONMENT
+   ```
+
+   **Notas**:
+
+   * Si no despliegas un proyecto que requiera source maps o ya enviaste los source maps a Sentry por otro método, omite la línea `sourcemaps upload`.
+   * Si no puedes instalar una integración de repositorio, envía los metadatos de commits usando el [endpoint create release](/es/product/releases/associate-commits/#using-the-api) o bien omite la línea `set-commits`.
+   * `sentry-cli releases propose-version` usa por defecto el SHA del commit que se está desplegando. Para establecer una versión distinta, ajusta `SENTRY_RELEASE` a la versión preferida.

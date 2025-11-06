@@ -1,0 +1,161 @@
+---
+draft: true
+categories: []
+toc: true
+title: Integraciones
+noindex: true
+tags: []
+---
+
+<Alert level="warning" title="Aviso de obsolescencia">
+  Un nuevo SDK de Node ha sustituido esta versión obsoleta. Sentry conserva esta documentación para quienes todavía usan el cliente anterior. Recomendamos utilizar el [SDK de Node actualizado](/es/platforms/javascript/guides/node/) para tus proyectos.
+</Alert>
+
+<div id="connect">
+  ## Conéctate
+</div>
+
+```javascript
+var connect = require("connect");
+var Raven = require("raven");
+
+// Debes configurar Raven antes de hacer cualquier otra cosa con él
+Raven.config("___PUBLIC_DSN___").install();
+
+function mainHandler(req, res) {
+  throw new Error("¡Se rompió!")
+}
+
+function onError(err, req, res, next) {
+  // El ID de los eventos de error capturados por el middleware de Sentry se adjunta a `res.sentry`.
+  // Puedes usar este ID para depurar o para correlacionar solicitudes con errores en Sentry.
+  res.statusCode = 500;
+  res.end(res.sentry + "\n");
+}
+
+connect(
+  // El controlador de solicitudes debe ser el primer elemento
+  Raven.requestHandler(),
+
+  connect.bodyParser(),
+  connect.cookieParser(),
+  mainHandler,
+
+  // El middleware de errores de Sentry debe registrarse antes que cualquier otro middleware de errores
+  Raven.errorHandler(),
+
+  // Manejador de errores opcional con continuación
+  onError
+).listen(3000);
+```
+
+<div id="express">
+  ## Express
+</div>
+
+```javascript
+var app = require("express")();
+var Raven = require("raven");
+
+// Debes configurar Raven antes de hacer cualquier otra cosa con él
+Raven.config("___DSN___").install();
+
+// El middleware del manejador de solicitudes de Sentry debe añadirse antes que cualquier otro manejador
+app.use(Raven.requestHandler());
+
+app.get("/", function mainHandler(req, res) {
+  throw new Error("¡Falló!");
+});
+
+// El middleware del manejador de errores de Sentry debe registrarse antes que cualquier otro middleware de errores
+app.use(Raven.errorHandler());
+
+// Manejador de errores de respaldo opcional
+app.use(function onError(err, req, res, next) {
+  // El ID de los eventos de error capturados por el middleware de errores de Sentry se adjunta a `res.sentry`.
+  // Puedes usar este ID para depuración o para correlacionar solicitudes con errores en Sentry.
+  res.statusCode = 500;
+  res.end(res.sentry + "\n");
+});
+
+app.listen(3000);
+```
+
+<div id="koa">
+  ## Koa
+</div>
+
+```javascript
+var koa = require("koa");
+var Raven = require("raven");
+
+var app = koa();
+Raven.config("___PUBLIC_DSN___").install();
+
+app.on("error", function (err) {
+  Raven.captureException(err, function (err, eventId) {
+    console.log("Error reportado " + eventId);
+  });
+});
+
+app.listen(3000);
+```
+
+<div id="loopback">
+  ## LoopBack
+</div>
+
+Si usas LoopBack 2.x LTS, asegúrate de haber migrado a [strong-error-handler](https://loopback.io/doc/en/lb2/Using-strong-error-handler.html); de lo contrario, ningún error llegará a `raven-node`.
+
+Configura `raven-node` lo antes posible:
+
+```javascript
+// server/server.js
+
+const Raven = require("raven");
+Raven.config("___DSN___").install();
+```
+
+Agrega `Raven.errorHandler` como middleware de LoopBack:
+
+```json
+// server/middleware.json
+
+"final:after": {
+  "raven#errorHandler": {},
+  "strong-error-handler": {
+    "debug": false,
+    "log": false
+  }
+}
+```
+
+<div id="sails">
+  ## Sails
+</div>
+
+```javascript
+// config/http.js
+
+var Raven = require("raven");
+Raven.config("___DSN___").install();
+
+module.exports.http = {
+  middleware: {
+    // Los handlers de Raven deben agregarse como claves al objeto de configuración http.middleware
+    requestHandler: Raven.requestHandler(),
+    errorHandler: Raven.errorHandler(),
+
+    // And they have to be added in a correct order to middlewares list
+    order: [
+      // El request handler debe ser el primero
+      "requestHandler",
+      // ...más middlewares
+      "router",
+      // El error handler debe ir después del router, pero antes de cualquier otro middleware de error
+      "errorHandler",
+      /// ...middlewares restantes
+    ],
+  },
+};
+```

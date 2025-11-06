@@ -1,0 +1,132 @@
+---
+title: Privacidad
+sidebar_order: 5501
+notSupported:
+description: "Aprende a enmascarar datos sensibles que pueden aparecer en tu app en Session Replay."
+---
+
+<Alert level="warning">
+  Antes de habilitar Session Replay en producción, verifica tu configuración de enmascaramiento para asegurarte de que no se capture información sensible. Nuestra configuración predeterminada enmascara de forma agresiva los datos potencialmente sensibles, pero si modificas estas opciones o actualizas frameworks de UI o SDK del sistema, debes probar tu aplicación a fondo. Si encuentras problemas de enmascaramiento o datos sensibles que deberían enmascararse pero no lo están, por favor [crea un issue en GitHub](https://github.com/getsentry/sentry-react-native/issues/new/choose) y evita implementar en producción con Session Replay habilitado hasta que se resuelva el problema.
+
+  <strong>Posibles problemas de enmascaramiento al usar el renderizado Liquid Glass de Apple en iOS 26.0</strong>
+
+  Si estás usando Liquid Glass de Apple, te recomendamos deshabilitar Session Replay en iOS para prevenir posibles filtraciones de PII. [Consulta nuestra documentación de iOS para más detalles sobre el problema](/es/platforms/apple/guides/ios/session-replay/) y sigue el progreso de la corrección del enmascaramiento para iOS 26.0 (Liquid Glass) en <a href="https://github.com/getsentry/sentry-cocoa/issues/6390">GitHub issue #6390</a>
+</Alert>
+
+El SDK de Session Replay enmascara todo el contenido de texto, imágenes, vistas web y entradas del usuario de forma predeterminada. Esto ayuda a garantizar que no se expongan datos sensibles. También puedes elegir manualmente qué partes de tu app enmascarar usando las opciones que se indican a continuación.
+
+Si tu app no contiene ningún dato sensible, puedes deshabilitar el enmascaramiento predeterminado con:
+
+```javascript
+Sentry.mobileReplayIntegration({
+  maskAllText: false,
+  maskAllImages: false,
+  maskAllVectors: false,
+}),
+```
+
+*Asegúrate de que tu Sentry React Native SDK sea la versión 5.36.0, 6.3.0 o superior*
+
+<Alert level="warning">
+  Si inicializas manualmente los SDK nativos antes de JS, usa la versión [6.15.1](https://github.com/getsentry/sentry-react-native/releases/tag/6.15.1) o posterior del Sentry React Native SDK (incluye la versión [8.52.1](https://github.com/getsentry/sentry-cocoa/releases/tag/8.52.1) de Sentry Cocoa SDK). Para más información, consulta [GH-4853](https://github.com/getsentry/sentry-react-native/issues/4853).
+</Alert>
+
+<div id="mask-and-unmask-components">
+  ## Componentes Mask y Unmask
+</div>
+
+Puedes elegir qué vistas deseas enmascarar o desenmascarar usando los componentes `Mask` o `Unmask`.
+
+```jsx
+import * as Sentry from '@sentry/react-native';
+
+const Example = () => {
+  return (
+    <View>
+      <Sentry.Unmask>
+        <Text>Esto se mostrará sin enmascarar</Text>
+      </Sentry.Unmask>
+      <Sentry.Mask>
+        <Text>Esto se mostrará enmascarado</Text>
+      </Sentry.Mask>
+    </View>
+  );
+}
+```
+
+*Asegúrate de que la versión de tu SDK de Sentry React Native sea 6.4.0-beta.1 o posterior para usar los componentes de enmascaramiento*
+
+<div id="general-masking-rules">
+  ## Reglas generales de enmascaramiento
+</div>
+
+Cuando los componentes están envueltos por `Unmask`, **solo se desenmascararán los hijos directos**. Deberás envolver explícitamente cualquier hijo indirecto que quieras que aparezca en la reproducción.
+
+```jsx
+<Sentry.Unmask>
+  <Text>
+    Esto se mostrará sin enmascarar
+    <Text>
+      Esto se enmascarará
+    </Text>
+  </Text>
+  <Text>
+    Esto se mostrará sin enmascarar
+  </Text>
+</Sentry.Unmask>
+```
+
+Cuando los componentes están envueltos con `Mask`, **todos los hijos quedarán enmascarados**.
+
+```jsx
+<Sentry.Mask>
+  <Text>
+    Esto se ocultará
+    <Text>
+      Esto se ocultará
+    </Text>
+  </Text>
+  <Text>
+    Esto se ocultará
+  </Text>
+</Sentry.Mask>
+```
+
+<div id="masking-priority">
+  ### Prioridad de enmascaramiento
+</div>
+
+Si una vista está marcada como enmascarada, siempre se enmascarará, incluso si es hija de una vista sin enmascarar.
+
+```jsx
+<Sentry.Mask>
+  <Text>Esto se ocultará</Text>
+  <Sentry.Unmask>
+    <Text>Esto se ocultará</Text>
+  </Sentry.Unmask>
+</Sentry.Mask>
+```
+
+El componente `Mask` no se puede desmascarar.
+
+```jsx
+<Sentry.Unmask>
+  <Sentry.Mask>
+    <Text>Esto será enmascarado</Text>
+  </Sentry.Mask>
+</Sentry.Unmask>
+```
+
+<div id="troubleshooting">
+  ## Solución de problemas
+</div>
+
+Los componentes `Mask` y `Unmask` son nativos en iOS y Android y son compatibles tanto con la Arquitectura nueva como con la heredada.
+
+Los componentes de enmascarado se comportan como componentes `View` estándar de React Native.
+
+Si tienes problemas al desenmascarar a más de un nivel de profundidad, verifica si los componentes envueltos están presentes en la jerarquía de vistas nativas. Si no lo están, significa que React Native evaluó tu vista como `Layout Only` y la aplanó. Lee más sobre el [aplanamiento de vistas](https://reactnative.dev/architecture/view-flattening) en la documentación de React Native.
+
+<Alert level="warning">
+  Ten en cuenta que el [aplanamiento de vistas](https://reactnative.dev/architecture/view-flattening) puede hacer que los componentes `Mask` y `Unmask` no se comporten como se espera y expongan accidentalmente datos sensibles. Asegúrate de probar tu app exhaustivamente para garantizar que no se exponga ningún dato sensible antes de publicarla.
+</Alert>

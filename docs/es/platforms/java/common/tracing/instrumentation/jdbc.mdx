@@ -1,0 +1,78 @@
+---
+title: Instrumentación JDBC
+sidebar_order: 40
+sdk: sentry.java.jdbc
+description: "Aprende a capturar información de trazas de las consultas a la base de datos ejecutadas con JDBC."
+notSupported:
+  - java.logback
+  - java.log4j2
+  - java.jul
+---
+
+<Alert>
+
+Para capturar transacciones, primero debes <PlatformLink to="/tracing/">configurar el tracing</PlatformLink> si aún no lo has hecho.
+
+</Alert>
+
+La integración de Sentry para JDBC proporciona `SentryJdbcEventListener` para el interceptor de actividad de base de datos [P6Spy](https://github.com/p6spy/p6spy/), que crea un span por cada instrucción JDBC ejecutada sobre una instancia con proxy de `javax.sql.DataSource`.
+
+<div id="install">
+  ### Instalación
+</div>
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-jdbc</artifactId>
+    <version>{{@inject packages.version('sentry.java.openfeign', '5.3.0') }}</version>
+</dependency>
+```
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-jdbc:{{@inject packages.version('sentry.java.jdbc', '5.3.0') }}'
+```
+
+```scala {tabTitle: SBT}
+libraryDependencies += "io.sentry" % "sentry-jdbc" % "{{@inject packages.version('sentry.java.jdbc', '5.3.0') }}"
+```
+
+Para otros gestores de dependencias, consulta el [repositorio central de Maven](https://search.maven.org/artifact/io.sentry/sentry-jdbc).
+
+
+<div id="configure">
+  ### Configurar
+</div>
+
+Configura el `DataSource` para usar `com.p6spy.engine.spy.P6SpyDriver` como controlador JDBC. Para aplicaciones de Spring Boot:
+
+```properties {tabTitle: application.properties}
+spring.datasource.driver-class-name=com.p6spy.engine.spy.P6SpyDriver
+```
+
+```yaml {tabTitle: application.yml}
+spring.datasource.driver-class-name: com.p6spy.engine.spy.P6SpyDriver
+```
+
+Añade el prefijo `p6spy` a la URL de conexión de la base de datos. Para aplicaciones Spring Boot:
+
+```properties {tabTitle: application.properties}
+spring.datasource.url=jdbc:p6spy:postgresql://localhost:5432/db
+```
+
+```yaml {tabTitle: application.yml}
+spring.datasource.url: jdbc:p6spy:postgresql://localhost:5432/db
+```
+
+P6Spy utiliza el mecanismo Java [Service Loader](https://docs.oracle.com/javase/tutorial/sound/SPI-intro.html) para registrar `JdbcEventListener`. Para más opciones de configuración, consulta la [Guía de referencia de P6Spy](https://p6spy.readthedocs.io/en/latest/).
+
+
+<div id="disable-log-file-generation">
+  ### Desactivar la generación de archivos de registro
+</div>
+
+Además de las spans, P6Spy registra las sentencias JDBC en un archivo de registro de forma predeterminada. Como este archivo puede crecer rápidamente, recomendamos desactivar la creación del archivo de registro estableciendo la propiedad del sistema `p6spy.config.modulelist` en `com.p6spy.engine.spy.P6SpyFactory` o creando un archivo `spy.properties` en `src/main/resources` con el contenido:
+
+```properties
+modulelist=com.p6spy.engine.spy.P6SpyFactory
+```

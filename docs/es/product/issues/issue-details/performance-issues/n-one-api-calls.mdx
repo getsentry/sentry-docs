@@ -1,0 +1,90 @@
+---
+title: Llamadas N+1 a la API
+sidebar_order: 15
+description: Obtén más información sobre las llamadas N+1 a la API y cómo diagnosticarlas y solucionarlas.
+og_image: /og-images/product-issues-issue-details-performance-issues-n-one-api-calls.png
+---
+
+_Las llamadas N+1 a la API_ son un problema de rendimiento que ocurre cuando una aplicación realiza muchas solicitudes de red simultáneas para obtener un tipo de recurso determinado. Por ejemplo, cuando una aplicación hace una solicitud de red por cada elemento de una lista en lugar de obtener toda la información de una sola vez en una única llamada combinada. Cada llamada al servidor implica una sobrecarga, y si el número de llamadas es alto, puede ocasionar problemas de rendimiento importantes. Este problema es común al renderizar listas o cuadrículas de elementos, donde cada elemento necesita obtener información adicional del servidor.
+
+<div id="affected-platforms">
+  ## Plataformas afectadas
+</div>
+
+Sentry detecta llamadas N+1 a la API en aplicaciones de frontend y móviles. El detector es independiente del lenguaje y de la plataforma. Es probable que veas este problema en entornos como React, Vue, Angular, React Native, Android y otros. Los entornos de backend no están admitidos por el momento.
+
+<div id="detection-criteria">
+  ## Criterios de detección
+</div>
+
+El detector de N+1 API Call busca grupos de llamadas de red simultáneas a la misma URL. Utiliza los siguientes criterios de detección:
+
+- Aplica solo a solicitudes `GET`
+- Debe haber un mínimo de `10` llamadas de red ocurriendo simultáneamente
+- La duración total de los spans involucrados debe superar los `300 ms`.
+- Las llamadas de red deben ocurrir con no más de `5 ms` de diferencia entre sí
+- Las llamadas no pueden dirigirse a un endpoint de GraphQL ni a `_next/data`
+- Las llamadas no pueden obtener un recurso estático (como archivos `.png`)
+- La operación de la transacción debe ser `"navigation"`, `"pageload"`, `"ui.load"` o `"ui.action"`
+- La operación del span debe ser `"http.client"`
+
+Puedes configurar los umbrales del detector para problemas de N+1 API Call en **Project Settings > Performance**:
+
+![Configuración de umbral del detector de N+1 API Calls](./img/n-plus-one-api-calls-detector-settings.png)
+
+<div id="span-evidence">
+  ## Evidencia de spans
+</div>
+
+Puedes identificar la causa raíz de los problemas de llamadas N+1 a la API fijándote en tres aspectos principales en la sección "Evidencia de spans":
+
+- Nombre de la transacción
+- Spans repetidos: esta es la URL que recibe las llamadas de red repetidas
+- Parámetros: estos son los parámetros de consulta que varían entre las llamadas de red
+
+![Evidencia de spans de llamadas N+1 a la API](./img/n-plus-one-api-calls-evidence.png)
+
+Para verlo, ve a la página de **Issues** en Sentry, haz clic en el error de N+1 API Call que quieras examinar y luego desplázate hacia abajo hasta la sección "Evidencia de spans" en la pestaña "Details".
+
+<div id="fingerprinting">
+  ## Huella
+</div>
+
+Sentry calcula la huella del problema en función de las URL de las llamadas de red repetidas. Sentry parametriza las URL eliminando enteros, UUID, hashes SHA1 y hashes MD5. Si notas que Sentry no está agrupando correctamente los problemas de llamadas N+1 a la API, puedes parametrizar los spans de `http.client` en tus transacciones usando el hook <PlatformLink to="/configuration/options#before-send-transaction">before-send-transaction</PlatformLink> si tu plataforma lo admite.
+
+<div id="example">
+  ## Ejemplo
+</div>
+
+Imagina un sitio web de recomendaciones de libros hecho con React. La página de inicio genera una lista de los libros más populares y representa un componente `<Book />` por cada libro de la lista. Cada componente `<Book />` hace una llamada a `fetch` para obtener la información del libro desde la API.
+
+```jsx
+const Book({ id }) => {
+  { book, isLoading } = useFetch(`/books?id=${id}`);
+
+  if (isLoading) {
+    return <span>Cargando...</span>
+  }
+
+  return (
+    <div>
+      <span>{book.title}</span>
+    </div>
+  );
+};
+```
+
+Si la lista tiene 100 libros, la página hará 100 llamadas de red simultáneamente. El número 100 es la “N” en “N+1 API calls”. Este efecto se aprecia en la cascada de spans, que muestra todas las solicitudes de red simultáneas:
+
+![N+1 API Calls in an example application](./img/n-plus-one-api-calls-in-book-application.png)
+
+
+<div id="fixing-n1-api-call-issues">
+  ## Solucionar problemas de llamadas N+1 a la API
+</div>
+
+Las soluciones para este tipo de problema dependen del contexto de la aplicación. En algunos casos, este comportamiento es intencional e incluso deseado. Te corresponde decidir cuál es la corrección adecuada, si es que hace falta. Aquí tienes algunos enfoques comunes:
+
+- Recupera toda la información por adelantado en una sola llamada de red. En el ejemplo anterior, podrías actualizar el endpoint `/books` para que acepte una lista de ID (p. ej., `/books?id=78&id=89&id=120`).
+- Carga la información de forma diferida (lazy-load). En el ejemplo del libro, podrías cambiar el componente `<Book>` para que solo obtenga la información cuando el componente sea visible en pantalla.
+- Almacena la información en caché. Si tu página realiza llamadas concurrentes que podrían ser duplicadas, puedes mejorar el rendimiento añadiendo caché o desduplicación de llamadas.

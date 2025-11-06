@@ -1,0 +1,212 @@
+---
+title: Datos recopilados
+description: "Consulta qué datos recopila el SDK de Sentry."
+sidebar_order: 1
+---
+
+Sentry se toma muy en serio la privacidad de los datos y cuenta con configuraciones predeterminadas que priorizan su seguridad, especialmente en lo que respecta a la información de identificación personal (PII). Cuando agregas el SDK de Sentry a tu aplicación, permites que recopile datos y los envíe a Sentry durante el tiempo de ejecución de tu aplicación.
+
+Los tipos de categorías y la cantidad de datos recopilados varían según las integraciones que tengas habilitadas en el SDK de Sentry. A continuación, encontrarás una lista de las categorías de datos que recopila el SDK de Sentry para Elixir:
+
+<div id="http-headers">
+  ## Encabezados HTTP
+</div>
+
+Al usar las integraciones de Plug o Phoenix, los encabezados HTTP de las solicitudes se incluyen en los informes de errores, con filtrado integrado para mayor seguridad:
+
+**Comportamiento predeterminado:**
+
+* La mayoría de los encabezados de la solicitud se incluyen de forma predeterminada
+* Los encabezados sensibles se depuran automáticamente, entre ellos:
+  * `authorization`
+  * `authentication`
+  * `cookie`
+
+**Configuración:**
+
+```elixir
+# Filtrado personalizado de encabezados
+config :sentry,
+  header_scrubber: &MyApp.CustomHeaderScrubber.scrub/1
+```
+
+
+<div id="cookies">
+  ## Cookies
+</div>
+
+**Comportamiento predeterminado:**
+
+* **Todas las cookies se purgan de forma predeterminada** para proteger la privacidad
+* No se envían datos de cookies a Sentry a menos que se configure explícitamente
+
+**Configuración:**
+
+```elixir
+# Habilitar la recopilación de cookies con limpieza personalizada
+config :sentry,
+  cookie_scrubber: &MyApp.CustomCookieScrubber.scrub/1
+```
+
+
+<div id="users-ip-address">
+  ## Dirección IP de los usuarios
+</div>
+
+**Comportamiento predeterminado:**
+
+* Se recopilan las direcciones IP del cliente desde las solicitudes HTTP
+* Se prioriza el header `x-forwarded-for`; en su defecto, se usa `conn.remote_ip`
+
+**Configuración:**
+
+```elixir
+# Extracción personalizada de la dirección IP
+config :sentry,
+  remote_address_reader: {MyModule, :get_ip_address}
+```
+
+
+<div id="request-url">
+  ## URL de la solicitud
+</div>
+
+**Comportamiento predeterminado:**
+
+* Siempre se envían las URL completas de la solicitud, incluidas las cadenas de consulta
+* Las URL pueden contener PII según la estructura de enrutamiento de tu aplicación
+
+**Configuración:**
+
+```elixir
+# Limpieza personalizada de URL
+config :sentry,
+  url_scrubber: &MyApp.UrlScrubber.scrub/1
+```
+
+
+<div id="request-body">
+  ## Cuerpo de la solicitud
+</div>
+
+**Comportamiento predeterminado:**
+
+* Los parámetros del cuerpo de la solicitud se incluyen con limpieza automática
+* Los parámetros confidenciales se filtran de forma predeterminada:
+  * `password`
+  * `passwd`
+  * `secret`
+  * Números de tarjeta de crédito (detectados mediante un patrón de regex)
+
+**Configuración:**
+
+```elixir
+# Filtrado personalizado de parámetros del body
+config :sentry,
+  body_scrubber: &MyApp.BodyScrubber.scrub/1
+```
+
+
+<div id="source-context">
+  ## Contexto de origen
+</div>
+
+**Comportamiento predeterminado:**
+
+* El contexto del código fuente está **desactivado de forma predeterminada**
+* Debe habilitarse y empaquetarse explícitamente
+
+**Configuración:**
+
+```elixir
+# Habilitar contexto de código fuente
+config :sentry,
+  enable_source_code_context: true,
+  root_source_code_paths: [File.cwd!()],
+  context_lines: 3  # Líneas antes/después del error
+```
+
+
+<div id="local-variables-in-stack-trace">
+  ## Variables locales en el seguimiento de pila
+</div>
+
+**Comportamiento predeterminado:**
+
+- Las variables locales no se incluyen en los seguimientos de pila
+- Los seguimientos de pila contienen únicamente nombres de funciones, variables de función, módulos, rutas de archivos y números de línea
+
+**Nota:** A diferencia de algunos otros SDK, el SDK de Elixir actualmente no admite la captura de variables locales debido a la naturaleza de la VM de Erlang.
+
+<div id="logger-data">
+  ## Datos de Logger
+</div>
+
+Al usar la integración con Logger, se recopilan datos adicionales:
+
+**Metadatos del log:**
+
+* Configurable mediante la opción `:metadata`
+* Puede incluir claves específicas o todos los metadatos disponibles
+
+**Contexto del proceso:**
+
+* ID del proceso (PID)
+* Estado del GenServer y último mensaje (para GenServers que fallaron)
+* Motivos del fallo del proceso
+
+**Configuración:**
+
+```elixir
+config :logger, :sentry,
+  metadata: [:request_id, :user_id] # Claves específicas
+# o
+config :logger, :sentry,
+  metadata: :all # Todos los metadatos disponibles
+```
+
+<Alert>
+  Siempre existe el riesgo de que datos personales (PII) se filtren en Sentry a través de la integración de Logger. Se recomienda revisar los metadatos de tus registros y eliminar o enmascarar cualquier información sensible antes de registrarla.
+</Alert>
+
+
+<div id="application-dependencies">
+  ## Dependencias de la aplicación
+</div>
+
+**Comportamiento predeterminado:**
+
+* Se envía la lista de aplicaciones cargadas y sus versiones
+* Ayuda a depurar problemas específicos de una versión
+
+**Configuración:**
+
+```elixir
+# Deshabilitar el reporte de dependencias
+config :sentry,
+  report_deps: false
+```
+
+
+<div id="oban-job-data">
+  ## Datos de tareas de Oban
+</div>
+
+Al usar la integración de Oban para tareas en segundo plano:
+
+**Información de la tarea:**
+
+- Argumentos de la tarea, número de intentos, nombre de la cola
+- Nombre de la clase del worker
+- Metadatos y etiquetas de la tarea
+- Intentos máximos y estado actual
+
+<div id="more-information">
+  ## Más información
+</div>
+
+Para saber más sobre cómo personalizar la recopilación de datos PII, consulta la siguiente documentación de la API:
+
+- [Configuration](https://hexdocs.pm/sentry/10.10.0/Sentry.html#module-configuration)
+- [PlugContext](https://hexdocs.pm/sentry/Sentry.PlugContext.html)
+- [Logger Handler](https://hexdocs.pm/sentry/10.10.0/Sentry.LoggerHandler.html)

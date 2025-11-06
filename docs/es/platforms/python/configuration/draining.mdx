@@ -1,0 +1,22 @@
+---
+title: Apagado y vaciado
+sidebar_order: 80
+description: "Obtén más información sobre el comportamiento predeterminado de nuestro SDK si la aplicación se cierra inesperadamente."
+---
+
+De forma predeterminada, el SDK envía eventos por la red en un hilo en segundo plano. Esto significa que algunos eventos pueden perderse si la aplicación se cierra inesperadamente. El SDK ofrece mecanismos para manejar esto.
+
+El SDK de Python realiza un vaciado automático al apagarse, a menos que se quite la `AtexitIntegration` o se establezca la clave de configuración `shutdown_timeout` en 0. Si necesitas vaciar manualmente, el cliente ofrece un método `close`:
+
+```python
+import sentry_sdk
+
+client = sentry_sdk.get_client()
+client.close(timeout=2.0)
+```
+
+Después de llamar a `close`, el cliente queda deshabilitado. Es importante
+invocar `close` únicamente justo antes de cerrar la aplicación.
+
+Como alternativa, el método `flush` vacía la cola de eventos mientras mantiene el
+cliente habilitado para seguir usándolo.

@@ -1,0 +1,183 @@
+---
+title: Loguru
+description: Aprende a usar Sentry con Loguru.
+---
+
+La integración de [Loguru](https://github.com/Delgan/loguru#readme) te permite capturar mensajes de registro y enviarlos a Sentry.
+
+La integración de [`logging`](/es/platforms/python/integrations/logging) ofrece la mayor parte de la funcionalidad de Loguru y la mayoría de los ejemplos de esa página funcionan con Loguru.
+
+<div id="install">
+  ## Instalación
+</div>
+
+Instala `sentry-sdk` desde PyPI con el extra `loguru`.
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[loguru]"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk[loguru]"
+```
+
+<div id="configure">
+  ## Configurar
+</div>
+
+Si tienes el paquete `loguru` en tus dependencias, la integración de Loguru se habilitará automáticamente cuando inicialices el SDK de Sentry.
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Agrega datos como encabezados de solicitud e IP de usuarios, si corresponde;
+    # consulta https://docs.sentry.io/platforms/python/data-management/data-collected/ para más información
+    send_default_pii=True,
+)
+```
+
+<div id="verify">
+  ## Verifica
+</div>
+
+```python
+from loguru import logger
+
+def main():
+    sentry_sdk.init(...)  # same as above
+    logger.debug("Se me ignora")
+    logger.error("¡Ocurrió un error!")
+
+main()
+```
+
+Esto capturará la entrada de registro con nivel `error` y la enviará a Sentry como un error.
+
+<div id="behavior">
+  ## Comportamiento
+</div>
+
+De forma predeterminada, los registros con nivel `INFO` o superior se añadirán como breadcrumbs a los eventos de Sentry. Se creará una incidencia en Sentry para los registros con nivel `ERROR` o superior:
+
+```python
+from loguru import logger
+
+logger.debug("Se me ignora")
+logger.info("Soy una miguita de pan")
+logger.error("Soy un evento", extra=dict(bar=43))
+logger.exception("Se produjo una excepción")
+```
+
+* Se creará un evento de error con el mensaje `"I am an event"`.
+* `"I am a breadcrumb"` se añadirá como breadcrumb a ese evento.
+* `bar` acabará en los atributos `extra` de ese evento.
+* `"An exception happened"` enviará la excepción actual de `sys.exc_info()` con el traceback a Sentry. Si no hay ninguna excepción, se adjuntará la traza actual.
+* Sentry no capturará el mensaje de depuración `"I am ignored"`. Para capturarlo, establece `level` en `DEBUG` o inferior en `LoguruIntegration`.
+
+Los registros de Loguru también pueden capturarse como [registros de Sentry](/es/platforms/python/logs/) siempre que la opción `enable_logs` sea `True`.
+
+```python
+import sentry_sdk
+from loguru import logger
+
+sentry_sdk.init(
+    # ...
+    enable_logs=True,
+)
+
+logger.info("Se enviará a los registros de Sentry")
+```
+
+<div id="ignoring-a-logger">
+  ### Ignorar un logger
+</div>
+
+Los loggers pueden ser verbosos. Puedes ignorar un logger llamando a `ignore_logger`.
+
+Como la mayor parte de la lógica se delega a la integración de `logging`, la usamos en lugar de la integración de Loguru:
+
+```python
+# Importar desde la integración `logging`
+from sentry_sdk.integrations.logging import ignore_logger
+
+ignore_logger("a.spammy.logger")
+```
+
+En el módulo `a.spammy.logger`:
+
+```python
+from loguru import logger
+logger.error("hola")  # No se envía ningún error a Sentry
+```
+
+Esto también funcionará con el registrador de `logging`
+
+```python
+logger = logging.getLogger("a.spammy.logger")
+logger.error("hola") # De nuevo, no se envía ningún error a Sentry
+```
+
+También puedes usar `before-send` y `before-breadcrumb` para ignorar solo ciertos mensajes. Consulta <PlatformLink to="/configuration/filtering/">Filtrado de eventos</PlatformLink> para obtener más información.
+
+<div id="options">
+  ## Opciones
+</div>
+
+Puedes pasar los siguientes argumentos con nombre a `LoguruIntegration()`:
+
+```python
+import sentry_sdk
+from loguru import logger
+
+from sentry_sdk.integrations.loguru import LoguruIntegration
+from sentry_sdk.integrations.loguru import LoggingLevels
+
+sentry_sdk.init(
+    # ...
+    integrations=[
+        LoguruIntegration(
+            level=LoggingLevels.INFO.value,              # Captura INFO y niveles superiores como breadcrumbs
+            event_level=LoggingLevels.ERROR.value,       # Envía los logs de ERROR como eventos
+            sentry_logs_level=LoggingLevels.INFO.value,  # Captura INFO y niveles superiores como logs
+        )
+    ],
+)
+```
+
+* `level`
+
+  El SDK de Sentry para Python registrará registros de log con un nivel mayor o igual que `level` como breadcrumbs. A la inversa, el SDK ignorará cualquier registro de log con un nivel inferior a este. Si se establece en `None`, el SDK no enviará registros de log como breadcrumbs.
+
+  Predeterminado: `INFO`
+
+* `event_level`
+
+  El SDK de Sentry para Python informará registros de log con un nivel mayor o igual que `event_level` como eventos. Si se establece en `None`, el SDK no enviará registros de log como eventos.
+
+  Predeterminado: `ERROR`
+
+* `sentry_logs_level`
+
+  El SDK de Sentry para Python capturará registros de log con un nivel mayor o igual que `sentry_logs_level` como [logs estructurados de Sentry](/es/platforms/python/logs/). Si se establece en `None`, el SDK no enviará registros como logs.
+
+  Para capturar registros de Loguru como logs de Sentry, debes habilitar la opción `enable_logs` al inicializar el SDK (independientemente de la configuración de `sentry_logs_level`).
+
+  ```python
+  sentry_sdk.init(
+      # ...
+      enable_logs=True,
+  )
+  ```
+
+  Predeterminado: `INFO`
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+* Loguru: 0.5+
+* Python: 3.6+
+
+<Include name="python-use-older-sdk-for-legacy-support.mdx" />

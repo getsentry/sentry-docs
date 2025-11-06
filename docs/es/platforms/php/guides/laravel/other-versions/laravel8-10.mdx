@@ -1,0 +1,113 @@
+---
+title: Laravel 8.x, 9.x y 10.x
+description: "Aprende a usar Sentry con Laravel 8.x, 9.x y 10.x."
+sidebar_order: 100
+---
+
+Laravel es compatible mediante un paquete nativo: [sentry-laravel](https://github.com/getsentry/sentry-laravel).
+
+Esta guía es para Laravel 8.x, 9.x y 10.x. También ofrecemos instrucciones para [la versión más reciente de Laravel](/es/platforms/php/guides/laravel/) y [guías específicas para Lumen](/es/platforms/php/guides/laravel/other-versions/lumen/).
+
+<div id="install">
+  ## Instalar
+</div>
+
+Instala el paquete `sentry/sentry-laravel`:
+
+```bash
+composer require sentry/sentry-laravel
+```
+
+Habilita la captura de excepciones no manejadas para informar a Sentry haciendo el siguiente cambio en tu `App/Exceptions/Handler.php`:
+
+```php {filename:App/Exceptions/Handler.php}
+use Sentry\Laravel\Integration;
+
+public function register(): void
+{
+    $this->reportable(function (Throwable $e) {
+        Integration::captureUnhandledException($e);
+    });
+}
+```
+
+<Alert>
+  Como alternativa, puedes configurar Sentry en tu [canal de registro de Laravel](/es/platforms/php/guides/laravel/usage/#log-channels), lo que también te permitirá registrar `info` y `debug`.
+</Alert>
+
+<div id="configure">
+  ## Configuración
+</div>
+
+Configura el DSN de Sentry con este comando:
+
+```shell
+php artisan sentry:publish --dsn=___PUBLIC_DSN___
+```
+
+Crea el archivo de configuración (`config/sentry.php`) y agrega el `DSN` a tu archivo `.env`.
+
+```shell {filename:.env}
+SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
+```
+
+<Alert level="warning">
+  Para recibir los argumentos del stack trace en tus errores, asegúrate de configurar `zend.exception_ignore_args: Off` en tu php.ini
+</Alert>
+
+<div id="verify">
+  ## Verifica
+</div>
+
+<div id="verify-with-artisan">
+  ### Verificar con Artisan
+</div>
+
+Puedes probar la configuración con el comando de Artisan `sentry:test`:
+
+```shell
+php artisan sentry:test
+```
+
+<div id="verify-with-code">
+  ### Verifica con código
+</div>
+
+Puedes confirmar que Sentry está capturando errores en tu aplicación Laravel creando una ruta que arroje una excepción:
+
+```php {filename:routes/web.php}
+Route::get('/debug-sentry', function () {
+    throw new Exception('¡Mi primer error en Sentry!');
+});
+```
+
+Visitar esta ruta provocará una excepción que será capturada por Sentry.
+
+<div id="tracing">
+  ## Trazabilidad
+</div>
+
+Establece `traces_sample_rate` en `config/sentry.php` o `SENTRY_TRACES_SAMPLE_RATE` en tu `.env` a un valor mayor que `0.0`. Un valor mayor que `0.0` habilita la trazabilidad; `null` (valor predeterminado) la deshabilita.
+
+```shell {filename:.env}
+# Asegúrate de reducir este valor en producción; de lo contrario, podrías agotar rápidamente tu cuota.
+SENTRY_TRACES_SAMPLE_RATE=1.0
+```
+
+La configuración de ejemplo anterior transmitirá el 100% de las trazas capturadas. Asegúrate de reducir este valor en producción o podrías agotar tu cuota rápidamente.
+
+También puedes afinar la tasa de muestreo usando la opción `traces_sampler`. Obtén más información en [Uso de muestreo para filtrar eventos de transacción](/es/platforms/php/guides/laravel/configuration/filtering/#using-sampling-to-filter-transaction-events).
+
+Los datos de rendimiento se transmiten usando un nuevo tipo de evento llamado &quot;transactions&quot;, sobre el que puedes aprender más en [Trazabilidad distribuida](/es/product/sentry-basics/tracing/distributed-tracing/#traces-transactions-and-spans).
+
+<div id="local-development-and-testing">
+  ## Desarrollo local y pruebas
+</div>
+
+Cuando Sentry está instalado en tu aplicación, también estará activo mientras desarrollas o ejecutas pruebas.
+
+Probablemente no quieras que se envíen errores a Sentry durante el desarrollo o al ejecutar pruebas. Para evitarlo, establece el valor del DSN en `null` para desactivar el envío de errores a Sentry.
+
+También puedes hacerlo no definiendo `SENTRY_LARAVEL_DSN` en tu archivo `.env` o definiéndolo como `SENTRY_LARAVEL_DSN=null`.
+
+Si dejas Sentry habilitado mientras desarrollas o ejecutas pruebas, es posible que afecte negativamente el rendimiento de tu aplicación o de tu suite de pruebas.

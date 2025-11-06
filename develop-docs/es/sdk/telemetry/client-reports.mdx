@@ -1,0 +1,171 @@
+---
+title: Informes de clientes
+sidebar_order: 2
+---
+
+<div id="scope-and-intent">
+  ## Alcance e intención
+</div>
+
+Los informes de cliente (que no deben confundirse con [User Feedback](https://docs.sentry.io/product/user-feedback/))
+son una función del protocolo que permite a los clientes enviar informes de estado
+sobre sí mismos a Sentry. Actualmente se usan principalmente para emitir resultados
+de eventos que nunca se enviaron. Los relays encadenados también pueden emitir estos
+informes de cliente para informar al siguiente relay de la cadena sobre *algunos* resultados.
+
+Debido a un error en Relay, que descarta los sobres que contienen elementos de sobre desconocidos,
+la versión mínima requerida de Sentry para los informes de cliente es la
+[21.9.0](https://github.com/getsentry/relay/blob/master/CHANGELOG.md#2190).
+
+Antes de que se añadieran los informes de cliente, no había visibilidad del número total de eventos generados en las aplicaciones instrumentadas con los SDK de Sentry. Siempre fue sencillo rastrear la cantidad de eventos descartados en el lado del servidor de Sentry por distintos motivos, pero había una brecha a la hora de saber cuántos eventos nunca se enviaron desde los SDK. ¿Existen patrones en diferentes plataformas? ¿Hay problemas de los que no estamos al tanto? Si un cliente llamara a Sentry y preguntara dónde están sus eventos, no tendríamos respuesta ni forma de averiguar si realmente faltan eventos de sus SDK. Los informes de cliente eliminan parte de esta incertidumbre. Dicho esto, no buscamos medir a la perfección cada matiz y caso límite de eventos descartados en los SDK. Es más importante hacer el mejor esfuerzo posible y obtener información sobre nuestros SDK y sus aplicaciones anfitrionas.
+
+Como se ve aquí, comunicamos *Accepted*, *filtered* y *dropped*, y ahora podemos enviar un nuevo tipo, *discarded* (aún no se muestra en el producto).
+![image](https://user-images.githubusercontent.com/47563310/166436813-8c92e6b2-acf0-4a81-9413-b94c9a178fbf.png)
+
+<div id="basic-operation">
+  ## Operación básica
+</div>
+
+Los informes del cliente se envían a Sentry como elementos de un sobre, normalmente como sobres independientes o junto con alguno de los sobres ya programados. No deberían enviarse ni con demasiada frecuencia ni con muy poca. Su propósito principal es aportar visibilidad sobre lo que ocurre en el lado del SDK y que afecta a la experiencia del usuario.
+
+Por ejemplo, los SDK pueden descartar eventos en distintos puntos del SDK y esta pérdida de eventos puede pasar desapercibida para el cliente. Los informes del cliente permiten que un SDK emita estos resultados de eventos para aportar datos sobre la frecuencia con la que sucede. Por ejemplo, los SDK pueden descartar eventos si los transportes alcanzan su tamaño máximo de cola interna, si los límites de tasa ordenan al SDK descartar eventos por estar fuera de cuota, etc.
+
+Los errores en nuestros SDK quedan fuera del alcance de los informes del cliente y, por el momento, no se están registrando mediante estos informes.
+
+<div id="envelope-item-payload">
+  ## Carga útil de elemento de sobre
+</div>
+
+Un informe de cliente es un elemento en un sobre llamado `client_report`. Consta
+de una carga útil JSON que se ve aproximadamente así:
+
+```json
+{
+  "timestamp": "2020-02-07T14:16:00Z",
+  "discarded_events": [
+    {
+      "reason": "desbordamiento_de_cola",
+      "category": "error",
+      "quantity": 23
+    },
+    {
+      "reason": "desbordamiento_de_cola",
+      "category": "transacción",
+      "quantity": 1321
+    }
+  ]
+}
+```
+
+Ten en cuenta que esto debe ir dentro de un “envelope”. Así que el evento completo se vería
+algo como esto:
+
+```json
+{}
+{"type":"client_report"}
+{"timestamp":"..."}
+```
+
+Existen los siguientes campos:
+
+`timestamp`
+
+: *String | Number, opcional*. La marca de tiempo en que se creó el informe del cliente. Debe ser una cadena ISO DateTime o un timestamp UNIX. Si no se envía, el servidor asumirá la marca de tiempo UTC actual. En el modelo de datos, esto se llama `received`.
+
+`discarded_events`
+
+: *Lista de objetos de resultado* &#123;`reason`, `category`, `quantity`&#125;
+
+* `reason`: Una cadena que define por qué se perdieron eventos.
+* `category`: La categoría de datos a la que aplica el motivo de descarte. Son las mismas categorías de datos usadas para los [límites de frecuencia](/es/sdk/expected-features/rate-limiting/#definitions).
+* `quantity`: La cantidad de eventos que se perdieron
+
+Los siguientes motivos de descarte están definidos actualmente para `discarded_events`:
+
+* `queue_overflow`: una cola interna del SDK (p. ej., cola de transporte) se desbordó
+* `cache_overflow`: una caché interna del SDK (p. ej., caché de eventos sin conexión) se desbordó
+* `buffer_overflow`: un búfer interno del SDK (p. ej., búfer de breadcrumbs) se desbordó
+* `ratelimit_backoff`: el SDK descartó eventos porque un límite de frecuencia anterior
+  le indicó reducir el envío.
+* `network_error`: se descartaron eventos debido a errores de red y no se reintentaron.
+* `sample_rate`: se descartó un evento debido a la tasa de muestreo configurada.
+* `before_send`: se descartó un evento en `before_send`
+* `event_processor`: un procesador de eventos descartó un evento; también puede usarse para excepciones/errores ignorados
+* `send_error`: se descartó un evento debido a un error al enviarlo (p. ej., respuesta 400)
+* `internal_sdk_error`: se descartó un evento debido a un error interno del SDK (p. ej., fallo de un web worker)
+* `insufficient_data`: se descartó un evento debido a falta de datos en el evento (p. ej., no hay suficientes muestras en un perfil)
+* `backpressure`: se descartó un evento debido a una reducción de muestreo causada por el sistema bajo carga
+
+En caso de que sea necesario agregar un motivo,
+también debe agregarse a la lista de permitidos (allowlist) en [snuba](https://github.com/getsentry/snuba/blob/1a2528dacaf7415f71866bf2602ce473832d938c/rust_snuba/src/processors/outcomes.rs#L15-L27).
+
+Además, los siguientes motivos de descarte están reservados, pero no se espera
+que los SDK los envíen en condiciones normales de operación:
+
+`rate_limited_events`, `filtered_events`, `filtered_sampling_events`
+
+: *Lista de objetos de resultado* &#123;`reason`, `category`, `quantity`&#125;
+
+Funcionan como `discarded_events`, pero identifican eventos que fueron limitados por frecuencia,
+filtrados o filtrados por muestreo dinámico en un relay. Los SDK de cliente nunca deben
+emitir estos a menos que estén operando como un relay. Los códigos de motivo para estos
+deben coincidir con los que un relay emitiría directamente a Sentry.
+
+<div id="special-case-for-span-outcomes">
+  ### Caso especial para resultados de span
+</div>
+
+Cuando se descarta una transacción, registramos un evento adicional de la categoría `span` que contiene el número de spans dentro de la transacción más uno.
+Ese “más uno” se debe a que Relay extrae un span adicional de la transacción. Si una transacción no contiene spans, igualmente queremos informar una transacción descartada y un span descartado. Esto también aplica a transacciones que no están muestreadas.
+Si ciertos spans se descartan en `beforeSendTransaction`, un procesador de eventos, etc., también queremos informarlos.
+
+```json
+{
+  "discarded_events": [
+    {
+      "reason": "queue_overflow",
+      "category": "transaction",
+      "quantity": 1
+    },
+    {
+      "reason": "queue_overflow",
+      "category": "span",
+      "quantity": 3 // 2 spans + 1 span (la transacción en sí debe ser contada)
+    }
+  ]
+}
+```
+
+<div id="sdk-side-recommendations">
+  ## Recomendaciones del lado del SDK
+</div>
+
+La función de informes del cliente no espera cifras 100 % exactas, y es aceptable que los SDK pierdan una pequeña cantidad de informes del cliente. El objetivo de esta función es ofrecer a los usuarios una aproximación de resultados concretos. Por supuesto, los SDK deben asegurarse de no descartar demasiados informes. No es necesario, por ejemplo:
+
+* persistir los datos cuando una aplicación se bloquea.
+* mover un elemento de sobre con un informe del cliente al siguiente sobre cuando la caché de sobres está llena.
+
+Se recomienda reducir la comunicación innecesaria desde los SDK. No deben enviar un sobre cada vez que registren un evento descartado. Los siguientes enfoques son recomendaciones que pueden ajustarse si es necesario. Los SDK deben llevar un registro de los eventos descartados en el transporte. Para aplicaciones con baja frecuencia de sobres a ingerir, como las móviles o web, el SDK debe adjuntar los eventos descartados a un sobre ya programado. Aceptamos la contrapartida de que las aplicaciones que rara vez envían eventos tendrán menos informes del cliente. Cuando el SDK programa sobres de forma continua, como en el backend, el SDK debe optar por vaciar periódicamente los eventos descartados o adjuntarlos a un sobre ya programado.
+
+Quien descarta un elemento de sobre debe registrarlo e informarlo. Si el servidor descarta un elemento de sobre, por ejemplo con la respuesta 429, el SDK del cliente no debe registrarlo, ya que el servidor ya lo hace. Aun así, el SDK debe registrar los elementos de sobre perdidos cuando los descarta él mismo, por ejemplo, debido a un límite de velocidad activo. Los SDK pueden incluir una comprobación opcional y sencilla de códigos de estado HTTP en la que cualquier código `>= 400`, excepto `429`, se registre como `network_error`. Los SDK del cliente pueden asumir que los informes del cliente nunca se ven sujetos a limitación de velocidad. El servidor minimiza la posibilidad de que los informes del cliente se vean limitados por velocidad, pero los SDK no deberían preocuparse por este caso extremo, ya que esta función es de mejor esfuerzo.
+
+<div id="configuration">
+  ### Configuración
+</div>
+
+Los SDK deberían ofrecer una forma de activar o desactivar el envío de informes del cliente. Esta opción se llama `send_client_reports` o `sendClientReports` en los SDK que ya la han implementado.
+
+<div id="legacy-events">
+  ### Eventos heredados
+</div>
+
+Para los SDK que aún envían eventos heredados en lugar de envelopes, por compatibilidad con
+servidores antiguos de Sentry, se recomienda enviar el informe del cliente como un envelope
+separado o adjuntarlo a los envelopes de sesiones pendientes.
+
+<div id="custom-transports">
+  ### Transportes personalizados
+</div>
+
+No se espera que ese registro funcione de manera transparente en los transportes personalizados.
+En consecuencia, es aceptable que los reportes del cliente sean opcionales en los transportes personalizados.

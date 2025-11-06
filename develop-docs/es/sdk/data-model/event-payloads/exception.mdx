@@ -1,0 +1,484 @@
+---
+title: Interfaz de excepciones
+sidebar_order: 2
+---
+
+La interfaz de excepciones especifica una excepción o error que ocurrió en un programa.
+
+Un <Link to="/sdk/data-model/event-payloads/">evento</Link> puede contener una o más excepciones en un atributo llamado `exception`.
+
+El atributo `exception` debe ser un objeto con el atributo `values`
+que contenga una lista de uno o más valores, donde cada uno sea un objeto con el formato descrito
+a continuación.
+De forma alternativa, el atributo `exception` puede ser una lista plana de objetos con el formato siguiente.
+
+Varios valores representan excepciones encadenadas y deben ordenarse de la más antigua a la
+más reciente. Por ejemplo, considera este fragmento de código en Python:
+
+```python
+try:
+    raise Exception
+except Exception as e:
+    raise ValueError from e
+```
+
+`Exception` se describiría primero en la lista `values`, seguida de una
+descripción de `ValueError`.
+
+## Atributos
+
+`type`
+
+: El tipo de excepción (una cadena), por ejemplo, `ValueError`. Se requiere al menos uno de `type` o `value`; de lo contrario, la excepción se descartará.
+
+`value`
+
+: El valor de la excepción (una cadena). Se requiere al menos uno de `type` o `value`; de lo contrario, la excepción se descartará.
+
+`module`
+
+: El módulo o paquete opcional en el que reside el tipo de excepción.
+
+`thread_id`
+
+: Un valor opcional que hace referencia a un hilo en la [interfaz de hilos](/es/sdk/data-model/event-payloads/threads/).
+
+`mechanism`
+
+: Un objeto opcional que describe el [mecanismo](#exception-mechanism) que creó esta excepción.
+
+`stacktrace`
+
+: Un objeto de traza de pila opcional correspondiente a la [interfaz de traza de pila](/es/sdk/data-model/event-payloads/stacktrace/).
+
+<div id="exception-mechanism">
+  ## Mecanismo de excepciones
+</div>
+
+El mecanismo de excepciones es un campo opcional dentro de la *interfaz de excepciones*.
+Incluye información adicional sobre cómo se creó y capturó la excepción (“mecanismo de captura”) en el sistema de destino.
+Esto abarca valores generales de la excepción obtenidos del sistema operativo o de las API del entorno de ejecución, así como valores específicos del mecanismo de captura.
+
+<div id="attributes">
+  ### Atributos
+</div>
+
+<div id="type">
+  #### `type`
+</div>
+
+Obligatorio (`string`)
+
+El identificador del mecanismo que capturó la excepción.
+El `type` del mecanismo elegido DEBE ayudar tanto a los usuarios como al personal de Sentry a determinar qué mecanismo fue responsable de capturar la excepción.
+Esto puede ser la instrumentación dentro de nuestros SDK o la captura manual de excepciones por parte de los usuarios (por ejemplo, mediante `captureException`).
+
+El `type` DEBE ser razonablemente único para que sea posible identificar la integración o la API del SDK que realizó la captura.
+No hay un requisito estricto de unicidad, ya que en ciertas situaciones existen múltiples rutas dentro de una misma instrumentación; en esos casos, está bien usar un `type` de mecanismo común.
+
+Para capturas de excepciones invocadas por el usuario (p. ej., mediante `captureException`), el `type` DEBE establecerse en `'generic'`.
+
+Para capturas de excepciones invocadas por el SDK, el `type` del mecanismo NO DEBE establecerse en `'generic'` y DEBERÍA seguir el esquema de nombres de [Trace Origin](/es/sdk/performance/trace-origin/) siempre que sea aplicable.
+Por ejemplo, si un span envuelve la lógica de captura de la excepción, `type` debería ser igual al atributo `sentry.origin` de ese span.
+Si no hay ningún span (específico) presente, el `type` DEBERÍA establecerse en un valor adecuado, siguiendo el esquema de nombres de Trace Origin lo más de cerca posible.
+
+<Expandable title="Ejemplos">
+  Captura de excepciones dentro de un span:
+
+  ```js
+  startSpan(
+    {
+      name: 'Middleware',
+      attributes: { 'sentry.origin': 'auto.http.express.middleware' },
+    },
+    () => {
+      captureException(error, {
+        mechanism: { type: 'auto.http.express.middleware', handled: false }
+      });
+    },
+  );
+  ```
+
+  Captura de excepciones fuera de un span:
+
+  ```js
+  captureException(error, {
+    mechanism: { type: 'auto.browser.global_handlers.onerror', handled: false }
+  });
+  ```
+
+  Usa `'generic'` para capturas de excepciones invocadas por el usuario (valor predeterminado):
+
+  ```js
+  function captureException(error, context) {
+    const mechanism = {
+      type: 'generic',
+      handled: true,
+      ...context?.mechanism,
+    }
+    // ...
+  }
+  ```
+</Expandable>
+
+<Expandable title="¿Por qué Trace Origin?">
+  Históricamente, no había un requisito para el esquema de nombres del atributo `type`.
+  En consecuencia, distintos SDK adoptaron enfoques diferentes sobre cómo establecían el atributo `type`.
+  En algunos casos, el atributo `type` no se establecía en absoluto.
+  Elegir [Trace Origin](/es/sdk/performance/trace-origin/) como esquema de nombres para el atributo `type` significa que estamos usando un esquema ya establecido y aceptado.
+  Este esquema funciona suficientemente bien para el atributo `type` del mecanismo de excepción.
+  Se permiten y se esperan leves desviaciones para adaptarlo a la aplicabilidad a excepciones.
+  Los mantenedores de los SDK pueden migrar al nuevo esquema de nombres para los mecanismos de captura existentes o usarlo al agregar mecanismos nuevos.
+</Expandable>
+
+<div id="handled">
+  #### `handled`
+</div>
+
+Opcional (`boolean`)
+
+Indicador de si el usuario ha manejado la excepción (por ejemplo, con `try ... catch`).
+
+<div id="description">
+  #### `description`
+</div>
+
+Opcional (`string`)
+
+Descripción en lenguaje natural del mecanismo del error y una posible pista sobre cómo resolverlo.
+
+<div id="help_link">
+  #### `help_link`
+</div>
+
+Opcional (`string`)
+
+URL absoluta a un recurso de ayuda en línea, posiblemente con interpolación de parámetros de error.
+
+<div id="synthetic">
+  #### `synthetic`
+</div>
+
+Opcional (`boolean`)
+
+Indicador que señala que este error es sintético.
+Los errores sintéticos son errores que, por sí mismos, aportan poco significado.
+Esto puede deberse a que todos se generan en un punto central (como un controlador de fallos) y comparten el mismo título: `Error`, `Segfault`, etc.
+Cuando se activa este indicador, Sentry intentará usar otra información (la función del frame in-app superior) en lugar del tipo y el valor de la excepción en la interfaz para la visualización principal del evento.
+Además, si este indicador está activado, Sentry ignorará el `type` de la excepción al agruparla en issues.
+Este indicador DEBERÍA activarse para todas las “segfaults”, por ejemplo, ya que de lo contrario cada grupo de errores se vería muy similar.
+Asimismo, los errores que el SDK crea para agregar un stack trace a eventos que no tienen uno propio DEBERÍAN marcarse como `synthetic` (esto ocurre, por ejemplo, cuando los usuarios establecen `attachStackTrace: true` y capturan un mensaje de texto mediante `captureException` o `captureMessage`).
+
+<div id="exception_id">
+  #### `exception_id`
+</div>
+
+Opcional (`number`)
+
+Un valor numérico opcional que proporciona un ID para la excepción relativo a este evento específico.
+El SDK DEBERÍA asignar enteros incrementales simples a cada excepción en el árbol, comenzando por 0 para la raíz del árbol.
+En otras palabras, cuando se aplana en la lista proporcionada en los valores de excepción del evento, la última excepción de la lista DEBERÍA tener el ID 0,
+la anterior DEBERÍA tener el ID 1, la anterior a esa DEBERÍA tener el ID 2, etc.
+
+<div id="parent_id">
+  #### `parent_id`
+</div>
+
+Opcional (`number`)
+
+Un valor numérico opcional que apunta al `exception_id` que es el padre de esta excepción.
+El SDK DEBERÍA asignar esto a todas las excepciones, excepto a la excepción raíz (la última en la lista de valores de excepciones).
+
+<div id="is_exception_group">
+  #### `is_exception_group`
+</div>
+
+Opcional (`boolean`)
+
+Indicador que señala que esta excepción forma parte de un tipo de grupo de excepciones específico de la plataforma o del lenguaje.
+
+<div id="source">
+  #### `source`
+</div>
+
+Opcional (`string`)
+
+Un valor de texto opcional que describe el origen de la excepción.
+El SDK DEBERÍA rellenar este campo con el nombre de la propiedad o atributo de la excepción primaria del que se obtuvo esta excepción.
+En el caso de un arreglo, también DEBERÍA incluir el índice basado en cero.
+
+* Ejemplos de Python: `"__context__"`, `"__cause__"`, `"exceptions[0]"`, `"exceptions[1]"`
+* Ejemplos de .NET: `"InnerException"`, `"InnerExceptions[0]"`, `"InnerExceptions[1]"`
+* Ejemplos de JavaScript: `"cause"`, `"errors[0]"`, `"errors[1]"`
+
+<div id="meta">
+  #### `meta`
+</div>
+
+Información opcional del sistema operativo o del entorno de ejecución sobre el mecanismo de excepciones (consulta la [información meta](#meta-information)).
+
+<div id="data">
+  #### `data`
+</div>
+
+Datos adicionales arbitrarios que pueden ayudar al usuario a entender el error generado por este mecanismo.
+
+<div id="meta-information">
+  ### Metainformación
+</div>
+
+Los metadatos del mecanismo suelen incluir códigos de error informados por el tiempo de ejecución o
+el sistema operativo, junto con una interpretación de estos códigos específica de la plataforma.
+Los SDK pueden omitir sin problemas los nombres y descripciones de los códigos para errores bien conocidos, ya que
+Sentry los completará. En el caso de códigos de error propietarios o específicos de un proveedor,
+incluir estos valores proporcionará información adicional al usuario.
+
+La clave `meta` puede contener uno o más de los siguientes atributos:
+
+<div id="signal">
+  #### `signal`
+</div>
+
+Información sobre la señal POSIX. En sistemas de Apple, las señales también incluyen un código, además del número de señal, que describe la señal con más detalle. En Linux, este código no existe.
+
+`number`
+
+: Número de la señal POSIX.
+
+`code`
+
+: Código de señal de Apple (opcional).
+
+`name`
+
+: Nombre de la señal (opcional) basado en su número.
+
+`code_name`
+
+: Nombre del código de la señal (opcional).
+
+<div id="mach_exception">
+  #### `mach_exception`
+</div>
+
+Una excepción Mach en sistemas de Apple que consta de un triple de códigos y descripciones opcionales.
+
+`exception`
+
+: Número de excepción obligatorio.
+
+`code`
+
+: Código de excepción obligatorio.
+
+`subcode`
+
+: Subcódigo de excepción obligatorio.
+
+`name`
+
+: Nombre opcional de la constante de la excepción en iOS/macOS.
+
+<div id="ns_error">
+  #### `ns_error`
+</div>
+
+Un `NSError` en sistemas Apple que consta de un dominio y un código.
+
+`code`
+
+: Código numérico de error obligatorio.
+
+`domain`
+
+: Dominio obligatorio del `NSError` como cadena.
+
+<div id="errno">
+  #### `errno`
+</div>
+
+Códigos de error establecidos por las llamadas al sistema de Linux y algunas funciones de biblioteca, según lo especificado en
+ISO C99, POSIX.1-2001 y POSIX.1-2008. Consulta
+[errno(3)](http://man7.org/linux/man-pages/man3/errno.3.html) para obtener más
+información.
+
+`number`
+
+: Número de error
+
+`name`
+
+: Nombre opcional del error
+
+<div id="examples">
+  ## Ejemplos
+</div>
+
+Los siguientes ejemplos muestran varias formas de enviar excepciones. Cada ejemplo
+contiene la parte de la excepción del <Link to="/sdk/data-model/event-payloads/">payload del evento</Link> y omite otros
+atributos para mayor simplicidad.
+
+Una sola excepción:
+
+```json
+{
+  "exception": {
+    "values": [
+      {
+        "type": "ValueError",
+        "value": "mi valor de la excepción"
+        "module": "__builtins__",
+        "stacktrace": {}
+      }
+    ]
+  }
+}
+```
+
+Excepciones encadenadas:
+
+```json
+{
+  "exception": {
+    "values": [
+      {
+        "type": "Exception",
+        "value": "excepción inicial",
+        "module": "__builtins__"
+      },
+      {
+        "type": "ValueError",
+        "value": "excepción encadenada",
+        "module": "__builtins__"
+      }
+    ]
+  }
+}
+```
+
+Excepción nativa de Mach en iOS con mecanismo:
+
+```json
+{
+  "exception": {
+    "values": [
+      {
+        "type": "EXC_BAD_ACCESS",
+        "value": "Se intentó desreferenciar un puntero nulo"
+        "mechanism": {
+          "type": "mach",
+          "handled": false,
+          "data": {
+            "relevant_address": "0x1"
+          },
+          "meta": {
+            "signal": {
+              "number": 10,
+              "code": 0,
+              "name": "SIGBUS",
+              "code_name": "BUS_NOOP"
+            },
+            "mach_exception": {
+              "code": 0,
+              "subcode": 8,
+              "exception": 1,
+              "name": "EXC_BAD_ACCESS"
+            }
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+Rechazo de promesa no controlado en JavaScript:
+
+```json
+{
+  "exception": {
+    "values": [
+      {
+        "type": "TypeError",
+        "value": "El objeto [object Object] no tiene el método 'foo'",
+        "mechanism": {
+          "type": "promise",
+          "description": "Este error se originó ya sea al lanzar una excepción dentro de un ..."
+          "handled": false,
+          "data": {
+            "polyfill": "bluebird"
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+Error genérico no controlado:
+
+```json
+{
+  "exception": {
+    "values": [
+      {
+        "type": "Error",
+        "value": "Se produjo un error"
+        "mechanism": {
+          "type": "generic",
+          "handled": false
+        }
+      }
+    ]
+  }
+}
+```
+
+Lista plana, sin `values`:
+
+```json
+{
+  "exception": [
+    {
+      "type": "Error",
+      "value": "Se produjo un error"
+      "mechanism": {
+        "type": "generic",
+        "handled": false
+      }
+    }
+  ]
+}
+```
+
+Grupo de excepciones:
+
+```json
+{
+  "exception": [
+    {
+      "type": "Error",
+      "value": "Se produjo un error",
+      "mechanism": {
+        "type": "generic",
+        "handled": true,
+        "is_exception_group": true
+        "exception_id": 0
+      }
+    },
+    {
+      "type": "Error",
+      "value": "Se produjo otro error",
+      "mechanism": {
+        "type": "generic",
+        "handled": false,
+        "is_exception_group": true,
+        "exception_id": 1,
+        "parent_id": 0
+      }
+    }
+  ]
+}
+```
+
+`;

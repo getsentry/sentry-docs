@@ -1,0 +1,143 @@
+---
+title: Configurar la generación de perfiles en Python
+sidebar_title: Perfiles
+description: "Aprende a habilitar la generación de perfiles en tu app si aún no está configurada."
+sidebar_order: 5000
+---
+
+<PlatformContent includePath="profiling/index/preface" />
+
+Con la [generación de perfiles](/es/product/explore/profiling/), Sentry rastrea el rendimiento de tu software mediante el muestreo de la pila de llamadas de tu programa en diversos entornos. Esta función recopila información a nivel de función sobre tu código y te permite afinar el rendimiento de tu programa. El [generador de perfiles de Sentry](https://sentry.io/for/profiling/) captura las llamadas a funciones y sus ubicaciones exactas, las agrega y te muestra las rutas de código más comunes de tu programa. Esto destaca áreas que podrías optimizar para mejorar el rendimiento de tu código y la satisfacción de los usuarios, además de reducir costos. Aprende cómo habilitar y configurar la generación de perfiles en Python con el [SDK estable de Python](https://sentry.io/for/python/) de Sentry
+
+<div id="enabling-continuous-profiling">
+  ## Habilitar el perfilado continuo
+</div>
+
+<Alert>
+  El perfilado continuo está disponible a partir de la versión `2.24.1` del SDK.
+
+  El <PlatformLink to="/profiling/#enable-transaction-based-profiling">perfilado basado en transacciones</PlatformLink> está disponible a partir de la versión `1.18.0` del SDK.
+</Alert>
+
+El perfilado continuo admite dos modos: `manual` y `trace`. Ambos son mutuamente excluyentes y no pueden usarse al mismo tiempo.
+
+En el modo `manual`, la recopilación de datos de perfilado puede gestionarse mediante llamadas a `sentry_sdk.profiler.start_profiler` y `sentry_sdk.profiler.stop_profiler`. Tú controlas completamente cuándo se ejecuta el profiler.
+
+En el modo `trace`, el profiler gestiona sus propias llamadas de inicio y detención, basadas en spans: el profiler sigue ejecutándose mientras haya al menos un span activo y se detiene cuando no haya spans activos.
+
+<div id="enabling-trace-lifecycle-profiling">
+  ### Activar el perfilado del ciclo de vida de trazas
+</div>
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Agrega datos como encabezados de solicitud e IP de usuarios, si aplica;
+    # consulta https://docs.sentry.io/platforms/python/data-management/data-collected/ para más información
+    send_default_pii=True,
+    # Establece traces_sample_rate en 1.0 para capturar el 100%
+    # de las transacciones para el rastreo.
+    traces_sample_rate=1.0,
+    # Para recopilar perfiles de todas las sesiones de perfil,
+    # establece `profile_session_sample_rate` en 1.0.
+    profile_session_sample_rate=1.0,
+    # Los perfiles se recopilarán automáticamente mientras
+    # haya un span activo.
+    profile_lifecycle="trace",
+)
+```
+
+<div id="enabling-manual-lifecycle-profiling">
+  ### Habilitar el perfilado manual del ciclo de vida
+</div>
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Agrega datos como encabezados de solicitud e IP de usuarios, si aplica;
+    # consulta https://docs.sentry.io/platforms/python/data-management/data-collected/ para más información
+    send_default_pii=True,
+    # Establece traces_sample_rate en 1.0 para capturar el 100%
+    # de las transacciones para el rastreo.
+    traces_sample_rate=1.0,
+    # Para recopilar perfiles de todas las sesiones de perfil,
+    # establece `profile_session_sample_rate` en 1.0.
+    profile_session_sample_rate=1.0,
+    # Los perfiles se recopilarán cuando
+    # se llame a `sentry_sdk.profiler.start_profiler` y
+    # se detendrán cuando se llame a `sentry_sdk.profiler.stop_profiler`.
+    profile_lifecycle="manual",
+)
+
+sentry_sdk.profiler.start_profiler()
+
+# ejecuta algo de código aquí
+
+sentry_sdk.profiler.stop_profiler()
+```
+
+<div id="managing-profile-sampling-rates">
+  ### Gestión de las tasas de muestreo de perfiles
+</div>
+
+El SDK de Sentry admite un `profile_session_sample_rate` adicional que debe configurarse con un valor distinto de cero para habilitar el perfilado continuo. Esto puede usarse para controlar las tasas de muestreo de sesiones a nivel de servicio, ya que la decisión de muestreo se evalúa solo una vez durante la inicialización del SDK.
+
+Esto es útil cuando despliegas tu servicio muchas veces, pero solo quieres que se perfilen algunos de esos despliegues.
+
+<div id="upgrading-from-older-sdk-versions">
+  ### Actualización desde versiones anteriores del SDK
+</div>
+
+El perfilado continuo era experimental en las versiones del SDK anteriores a `2.24.1` y se va a deprecar. Los datos enviados por esas versiones ya no se aceptarán en un futuro cercano. Aprende cómo actualizar <PlatformLink to="/troubleshooting/#continuous-profiling">aquí</PlatformLink>.
+
+<div id="enable-transaction-based-profiling">
+  ## Habilitar el perfilado basado en transacciones
+</div>
+
+<Alert>
+  El perfilado basado en transacciones está disponible a partir de la versión `1.18.0` del SDK.
+</Alert>
+
+El perfilado basado en transacciones solo se ejecuta junto con transacciones de rendimiento iniciadas automáticamente o manualmente con `sentry_sdk.start_transaction`, y se detiene cuando la transacción finaliza o después de 30 segundos.
+
+```python
+import sentry_sdk
+from sentry_sdk.types import SamplingContext
+
+def profiles_sampler(sampling_context: SamplingContext) -> float:
+    # ...
+    # devuelve un número entre 0 y 1 o un booleano
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Agrega datos como encabezados de solicitud e IP de usuarios, si aplica;
+    # consulta https://docs.sentry.io/platforms/python/data-management/data-collected/ para más información
+    send_default_pii=True,
+    # Establece traces_sample_rate en 1.0 para capturar el 100%
+    # de las transacciones para el rastreo.
+    traces_sample_rate=1.0,
+    # Para establecer una tasa de muestreo uniforme
+    # Establece profiles_sample_rate en 1.0 para perfilar el 100%
+    # de las transacciones muestreadas.
+    # Te recomendamos ajustar este valor en producción.
+    profiles_sample_rate=1.0,
+    # Alternativamente, para controlar el muestreo de forma dinámica
+    profiles_sampler=profiles_sampler
+)
+```
+
+<Alert>
+  La configuración de <PlatformIdentifier name="profiles_sample_rate" /> es *relativa* a la de <PlatformIdentifier name="traces_sample_rate" />.
+
+  Para que el perfilado basado en transacciones funcione, primero debes habilitar el [tracing de Sentry](/es/concepts/key-terms/tracing/) mediante `traces_sample_rate` (como en el ejemplo anterior). Consulta nuestra <PlatformLink to="/tracing/">documentación de configuración de tracing</PlatformLink> para saber cómo configurar el muestreo. Si estableces la tasa de muestreo en 1.0, se capturarán todas las transacciones.
+</Alert>
+
+<div id="upgrading-from-older-python-sdk-versions">
+  ### Actualización desde versiones anteriores del SDK de Python
+</div>
+
+El perfilado basado en transacciones era experimental en las versiones del SDK anteriores a la `1.18.0`. Aprende cómo actualizarte <PlatformLink to="/troubleshooting/#transaction-based-profiling">aquí</PlatformLink>.

@@ -1,0 +1,293 @@
+---
+title: Revisión de código
+description: La revisión de código es obligatoria en Sentry. Esto añade trabajo a cada cambio, pero ayuda a evitar con más facilidad problemas simples que a menudo se pasan por alto.
+sidebar_order: 20
+---
+
+La revisión de código ayuda a crear un contexto compartido y una responsabilidad colectiva. También es una oportunidad para colaborar con otros equipos. Por último, puede identificar varios tipos de problemas antes de que los clientes se vean afectados.
+
+La revisión de código se gestiona a través de los Pull Requests de GitHub (consulta el razonamiento más abajo). Pueden existir plantillas en los repositorios; si no las hay, considera [crear una](https://help.github.com/articles/creating-a-pull-request-template-for-your-repository/).
+
+<div id="who-should-be-reviewing-code">
+  ## ¿Quién debería revisar código?
+</div>
+
+Todas las personas ingenieras deberían revisar código. A medida que adquieres más experiencia y contexto sobre los productos que desarrollamos y las tecnologías que usamos, puedes aportar comentarios valiosos a otras personas ingenieras que quizá estén trabajando en áreas nuevas para ellas pero familiares para ti.
+
+La revisión de código es una oportunidad para mejorar tus habilidades de mentoría y comunicación. También cumple una función importante: enseñar a las personas ingenieras sobre los lenguajes, frameworks y tecnologías que usamos, en un entorno colaborativo centrado en los cambios que se están realizando.
+
+Al crear un pull request, incluye referencias a cualquier ticket o issue de Sentry que se esté abordando. Además, **menciona con @** al equipo adecuado (o a los equipos) para la revisión.
+
+<div id="why-pull-requests">
+  ## Por qué Pull Requests
+</div>
+
+Como Sentry es un proyecto de código abierto mantenido en GitHub, queremos asegurarnos de que la barrera de entrada para contribuciones externas sea mínima. Al usar las funciones de GitHub siempre que sea posible, les facilitamos el trabajo a los desarrolladores familiarizados con otros proyectos en GitHub. Aunque las herramientas de GitHub [no siempre son las mejores](http://cra.mr/2014/05/03/on-pull-requests), funcionan lo suficientemente bien.
+
+<div id="github-teams">
+  ### Equipos de GitHub
+</div>
+
+Los siguientes equipos están definidos en GitHub y pueden usarse al crear Pull Requests:
+
+- [@getsentry/app-backend](https://github.com/orgs/getsentry/teams/app-backend)
+- [@getsentry/app-frontend](https://github.com/orgs/getsentry/teams/app-frontend)
+- [@getsentry/infrastructure](https://github.com/orgs/getsentry/teams/infrastructure)
+- [@getsentry/ops](https://github.com/orgs/getsentry/teams/ops)
+- [@getsentry/app](https://github.com/orgs/getsentry/teams/app): todo el equipo de producto; úsalo con moderación
+
+Sentry tiene más de 200 repositorios públicos. Puedes encontrar una lista más completa de equipos y repositorios en la visión general de [Sentry Structure](https://open.sentry.io/structure/).
+
+<div id="commit-guidelines">
+  ## Directrices para commits
+</div>
+
+Consulta la guía de <Link to="/development/commit-messages/">mensajes de commit</Link>.
+
+<div id="code-reviews-are-for">
+  ## Las revisiones de código sirven para…
+</div>
+
+<div id="identifying-problematic-code">
+  ### Identificar código problemático
+</div>
+
+Ante todo, una revisión de código debe tratar de identificar posibles errores que podrían hacer que la aplicación falle, ya sea ahora o en el futuro.
+
+- Excepciones en tiempo de ejecución no controladas (p. ej., posibilidad de que un índice esté fuera de límites)
+- Cuellos de botella de rendimiento evidentes (p. ej., `O(n^2)` donde `n` no está acotada)
+- El código altera el comportamiento en otra parte de forma no prevista
+- Cambios en la API no retrocompatibles (p. ej., cambiar el nombre o eliminar una clave)
+- Interacciones complejas con el ORM que pueden generar consultas inesperadas o degradar el rendimiento
+- Vulnerabilidades de seguridad
+- Permisos o control de acceso ausentes o incorrectos
+
+<div id="improving-design">
+  ### Mejora del diseño
+</div>
+
+Al revisar el código, piensa si las interacciones de las distintas partes del cambio tienen sentido en conjunto. Si conoces el proyecto, ¿entran los cambios en conflicto con otros requisitos u objetivos? ¿Alguno de los métodos que se están añadiendo podría elevarse a métodos a nivel de módulo? ¿Se están pasando propiedades de objetos a los métodos cuando se podría pasar el objeto completo?
+
+<div id="tests-included">
+  ### Pruebas incluidas
+</div>
+
+Busca pruebas. Debería haber pruebas funcionales, de integración o de extremo a extremo que cubran los cambios. Si no, pídeles que las agreguen. En Sentry confiamos en nuestra suite de pruebas para mantener un alto estándar de calidad y desplegar rápidamente.
+
+Al revisar las pruebas, comprueba que cubran los requisitos del proyecto o el defecto que se está corrigiendo. Las pruebas deben evitar las bifurcaciones y los bucles tanto como sea posible para prevenir que errores en el código de prueba se afiancen.
+
+Las pruebas funcionales que simulan cómo una persona usaría nuestras API o nuestra interfaz de usuario son clave para prevenir regresiones y evitar pruebas frágiles acopladas a los detalles internos de los productos que lanzamos.
+
+Las pruebas también son el lugar ideal para garantizar que los cambios hayan considerado los permisos y la lógica de control de acceso.
+
+<div id="assessing-and-approving-long-term-impact">
+  ### Evaluar y aprobar el impacto a largo plazo
+</div>
+
+Si vas a realizar cambios significativos de arquitectura, esquemas o build que tendrán repercusiones a largo plazo en el software o los datos, es necesario solicitar el visto bueno y la aprobación de una persona ingeniera sénior.
+
+- Grandes refactorizaciones
+- Cambios en el esquema de la base de datos, como agregar o eliminar columnas y tablas
+- Cambios en la API (incluidos cambios en esquemas JSON)
+- Adopción de nuevos frameworks, bibliotecas o herramientas
+- Nuevos comportamientos del producto que puedan alterar permanentemente las características de rendimiento en adelante
+
+<div id="double-checking-expected-behavior">
+  ### Comprobar el comportamiento esperado
+</div>
+
+La persona que revisa debe hacer un esfuerzo real por comprobar que el código enviado cumple con los objetivos del PR. Para ello, quien lo envía debe incluir una buena descripción del comportamiento esperado y sus motivos. *Ver también: Directrices para quienes envían* *abajo*.
+
+<div id="information-sharing-and-professional-development">
+  ### Intercambio de información y desarrollo profesional
+</div>
+
+Las revisiones de código son una oportunidad para que más personas comprendan los cambios que vendrán, de modo que luego puedan enseñar a otros y estén en posición de corregir algo si/cuando el autor original no esté disponible.
+
+Además, las revisiones de código son una oportunidad para aprender nuevas técnicas o enfoques y estar expuestos a código que de otro modo quizá no tendrían oportunidad de explorar.
+
+<div id="reducing-code-complexity">
+  ### Reducir la complejidad del código
+</div>
+
+Las investigaciones muestran que LOC se correlaciona con una mayor cantidad de errores. Si los revisores ven una oportunidad fácil de reducir significativamente la cantidad de código enviado, deberían sugerir un enfoque diferente.
+
+Por ejemplo, si quien envía ha escrito un bucle `for` para encontrar un elemento en un arreglo:
+
+```
+for (let i = 0; i < arr.length; i++) {
+  if (arr[i] === 'thingiwant') return i;
+}
+return undefined;
+```
+
+Es totalmente válido sugerir que, en su lugar, utilicen:
+
+```
+return arr.find(x => x === 'thingiwant');
+```
+
+Esta es una mejora en gran medida objetiva: hay menos variables, menos instrucciones y menos ramificaciones, y el nombre del método `find` comunica la intención. Se recomienda proponer este tipo de mejoras poco controvertidas.
+
+Ahora bien, ten cuidado: es fácil caer por la madriguera rehaciendo el código para que sea lo más pequeño posible y, al final, acabar con algo más complejo. Sé pragmático y procura alcanzar un buen equilibrio. *Consulta también: “Las revisiones de código no son para dejarlo perfecto” más abajo.*
+
+
+<div id="enforcing-coding-standards">
+  ### Aplicación de estándares de codificación
+</div>
+
+Siempre que es posible, usamos automatización para hacer cumplir el estilo de código y la cobertura de pruebas, pero hay excepciones que no necesariamente se pueden automatizar (o quizá, más precisamente, aún no las hemos automatizado):
+
+- Los nombres de variables, archivos, métricas y registradores son sensatos, legibles y coherentes con el código existente
+- Las migraciones cuentan con un plan de despliegue
+- No se sube por accidente código sin uso o superfluo
+
+<div id="code-reviews-are-not-for">
+  ## Las revisiones de código no son para …
+</div>
+
+<div id="passing-responsibility-onto-the-reviewer">
+  ### Delegar la responsabilidad al revisor
+</div>
+
+No es responsabilidad del revisor que tu código sea correcto, esté libre de errores o cumpla sus objetivos. Los revisores están para ayudarte, pero si algo está mal, es tu responsabilidad corregirlo.
+
+<div id="boasting-about-your-programming-knowledge">
+  ### Presumir de tus conocimientos de programación
+</div>
+
+Como revisor, céntrate en mejoras objetivas y asume de buena fe que quien envía el cambio ha hecho su tarea. Sentry es una No Flex Zone™.
+
+<div id="introducing-long-term-architectural-changes-for-the-first-time">
+  ### Presentar por primera vez cambios arquitectónicos a largo plazo
+</div>
+
+Si bien las revisiones de código son un gran espacio para debatir, no son el lugar adecuado para introducir por primera vez cambios grandes y de largo alcance. Antes de abrir un PR que implemente esos cambios, deberías redactar una propuesta y ponerte en contacto con las partes pertinentes de antemano.
+
+<div id="getting-it-perfect">
+  ### Lograr la perfección
+</div>
+
+Las revisiones de código son costosas. Cada vez que pides un cambio, probablemente estés retrasando ese PR 24 horas o más. Esto puede afectar seriamente nuestra capacidad para movernos rápido.
+
+El objetivo de las revisiones de código es **reducir el riesgo**, no producir código perfecto. Está bien desplegar código por etapas y comprometerse a mejorarlo más adelante. Si piensas: *si no lo dejamos bien desde el principio, nunca volveremos a ello*, considera que, si nunca hace falta volver, quizá esos cambios nunca fueron necesarios desde el principio.
+
+> Lo perfecto es enemigo de lo bueno. – Voltaire, probablemente
+
+Por favor, sé pragmático y ten en cuenta el costo de cada solicitud incremental de cambios.
+
+<div id="guidelines-for-submitters">
+  ## Pautas para *quienes envían*
+</div>
+
+<div id="try-to-organize-your-work-in-a-way-that-makes-it-conducive-to-review">
+  ### Intenta organizar tu trabajo de forma que facilite la revisión
+</div>
+
+- Idealmente, una pull request se limita a una sola funcionalidad o cambio de comportamiento.
+- Puede parecer más trabajo al principio, pero puede agilizar la revisión de código, reducir el riesgo al permitir desplegar por etapas y, en última instancia, ser más rápido.
+
+<div id="describe-what-your-pr-does-in-a-few-sentences-in-the-description-field">
+  ### Describe lo que hace tu PR en unas cuantas frases en el campo de descripción
+</div>
+
+- Además, explica **_por qué_** estamos haciendo estos cambios.
+- Si aplica, explica por qué se consideraron otros enfoques pero no se eligieron.
+- Esto le da contexto a la persona que revisa y evita que recorra los mismos callejones sin salida que quien envía el PR quizá ya exploró al escribir el código.
+
+<div id="annotate-specific-lines-in-your-pr">
+  ### Anota líneas específicas en tu PR
+</div>
+
+- Si puedes, aporta contexto a líneas de código concretas que podrían necesitar más detalle.
+- Ejemplo: [getsentry/sentry#6330](https://github.com/getsentry/sentry/pull/6330#discussion_r144441272)
+
+<div id="where-appropriate-label-in-progress-prs-as-wip-work-in-progress-for-early-feedback">
+  ### Cuando corresponda, etiqueta los PR en curso como WIP (work in progress) para obtener comentarios tempranos
+</div>
+
+- Etiquetar tu trabajo como WIP ayuda a establecer expectativas sobre el estado del PR.
+- Los PR marcados como WIP son útiles para que alguien haga un check-in y confirme que vas por el camino correcto.
+- Además, es una oportunidad para verificar que el CI pase antes de involucrar a un revisor.
+
+<div id="be-your-own-first-reviewer">
+  ### Sé tu propio primer revisor
+</div>
+
+- Después de subir tu PR en GitHub, recorre el código tú mismo antes de asignar un revisor externo.
+- A menudo detectarás errores de código que no viste mientras lo escribías.
+- También es un buen momento para dejar comentarios y refrescar la memoria para redactar una descripción más útil.
+
+<div id="assign-no-more-than-1-3-reviewers">
+  ### Asigna a no más de 1-3 revisores
+</div>
+
+- Es tentador involucrar a tantas personas como sea posible, pero a menudo resulta distractor y puede generar una situación en la que no esté claro quién debe hacer realmente la revisión.
+- Si tu trabajo abarca varios equipos (y por ende, muchos revisores), considera dividir tu PR en varios cambios compatibles (p. ej., uno de back-end y otro de front-end).
+- Nota: si no sabes a quién asignar dentro de un equipo, puedes asignar equipos como @workflow y @platform.
+
+<div id="avoid-rebasing-unnecessarily">
+  ### Evita hacer rebase innecesariamente
+</div>
+
+- Tras un rebase, los comentarios de revisión anteriores quedarán huérfanos de sus commits padre, ahora inexistentes, lo que complica la revisión
+- Reescribir el historial dificulta que quienes revisan puedan acotar el alcance de su revisión
+
+<div id="let-reviewers-know-that-youve-made-changes">
+  ### Hazles saber a las personas revisoras que hiciste cambios
+</div>
+
+- Solicita revisión de nuevo desde el menú desplegable "Reviewers" (debería aparecer otra vez un punto amarillo junto a su nombre).
+- No confíes en que quienes revisan lean la mente para saber que ya estás listo para que vuelvan a revisar.
+- Si resuelves un punto de feedback accionable, es útil dejar un comentario para que la persona revisora sepa que se atendió, idealmente con una referencia al commit que lo solucionó, p. ej. [getsentry/sentry#6683 (comment)](https://github.com/getsentry/sentry/pull/6683#discussion_r155121800)
+
+<div id="guidelines-for-reviewers">
+  ## Guías para *revisores*
+</div>
+
+<div id="be-polite-and-empathetic">
+  ### Sé cortés y empático
+</div>
+
+- Evita comentarios acusatorios o juiciosos como: "Deberías haber hecho X"
+
+### Ofrece comentarios _prácticos_
+
+- En lugar de *«Esto es malo»*, prueba con *«Creo que podría ser más claro. ¿Qué tal si renombramos la variable X a Y?»*
+
+<div id="distinguish-between-requires-changes-and-nitpicks">
+  ### Distingue entre «requiere cambios» y «detalles»
+</div>
+
+- Considera aprobar un PR si los únicos cambios solicitados son detalles menores, para no bloquear al autor en otro ciclo de revisión asíncrono.
+
+<div id="respond-promptly-to-code-review-requests">
+  ### Responde con rapidez a las solicitudes de revisión de código
+</div>
+
+- Somos un equipo – *[we ride together, we die together](https://www.youtube.com/watch?v=1d5Q0vXbODs)* – y debes desbloquear a otros desarrolladores para que todos podamos avanzar.
+- Recomendamos comprobar si hay revisiones de código abiertas al comienzo y al final de cada día.
+- La [pestaña Review Requests de GitHub](https://github.com/pulls/review-requested) puede ser un buen lugar para llevar el seguimiento de estas.
+
+<div id="example-of-a-pretty-good-code-review">
+  ### Ejemplo de una revisión de código *bastante buena*
+</div>
+
+[getsentry/sentry#5849](https://github.com/getsentry/sentry/pull/5849)
+
+- Enviada pronto como WIP para solicitar comentarios cuanto antes
+- Los revisores responden el mismo día (una vez que se quita la etiqueta WIP)
+- Los revisores son educados y elogiosos
+- Los comentarios son objetivos y accionables
+- Quien envía responde a los comentarios y realiza cambios con prontitud
+- La PR se aprueba y se integra en menos de 48 horas
+
+<div id="logaf-scale">
+  ### Escala LOGAF
+</div>
+
+Para comentarios en PR, puedes usar la [escala LOGAF](https://blog.danlew.net/2020/04/15/the-logaf-scale/) para indicar la importancia de un comentario:
+
+- `l`: bajo: detalle menor. Puedes atender este comentario, pero no es obligatorio.
+- `m`: medio: comentario normal. Vale la pena atenderlo y corregirlo.
+- `h`: alto: muy importante. No debemos integrar este PR sin resolver este problema.

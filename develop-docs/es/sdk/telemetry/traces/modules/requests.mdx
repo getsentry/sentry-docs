@@ -1,0 +1,54 @@
+---
+title: Módulo de Requests
+---
+
+El SDK debería instrumentar automáticamente todas las solicitudes HTTP salientes, sin importar la biblioteca que las haga. Cada solicitud saliente debería generar un span. El módulo de Requests es independiente de la tecnología; solo le importan las propiedades de los datos del span.
+
+<div id="span-attributes">
+  ## Atributos de span
+</div>
+
+| Atributo | Descripción | Notas |
+|:--|:--|:--|
+| `op` | Siempre `"http.client"` | Obligatorio |
+| `description` | Una cadena que incluye el método de la solicitud HTTP y la URL parcial; p. ej., `"GET https://example.com/data.json"` | Obligatorio [^1] |
+| `data` | Un mapa clave-valor de atributos del span (p. ej., `{"http.query": "filter=all", "server.address": "prod-2.example.com"}`) | Obligatorio para una experiencia completa. Consulta [Datos del span](#span-data) para más detalles |
+
+<div id="span-data">
+  ### Datos del span
+</div>
+
+Ninguno de los campos de datos del span es un requisito estricto, pero adjuntar tantos como sea posible es una opción más preparada para el futuro. Recomendamos que el SDK agregue todos los atributos enumerados en las [Convenciones de datos de spans HTTP](/es/sdk/performance/span-data-conventions/#http). Los requisitos mínimos son:
+
+* Se debe establecer `server.address` para permitir el agrupamiento correcto de dominios *en descripciones que contienen URL relativas*. Por ejemplo, la descripción `"GET /data.json"` no incluye un dominio. En este caso, se debe establecer `server.address`. Si la descripción del span contiene la URL parcial, se puede omitir `span.server`
+* Se debe establecer `http.response.status_code` para habilitar los desgloses por código de respuesta
+
+<div id="instrumentation-example">
+  ## Ejemplo de instrumentación
+</div>
+
+Imagina un sitio web llamado «App Ex», que se ejecuta en `app.example.com`. Este código JavaScript realiza una solicitud HTTP desde el navegador:
+
+```javascript
+fetch("/data.json")
+```
+
+Debería generar el siguiente span, suponiendo que la solicitud se haya realizado correctamente:
+
+```json
+{
+  "description": "GET /data.json?user=1",
+  "op": "http.client",
+  "data": {
+    "http.query": "user=1",
+    "http.request_method": "GET",
+    "http.response.status_code": 200,
+    "http.fragment": "",
+    "server.address": "app.example.com",
+    "server.port": 8080,
+    ... otras propiedades del span
+  }
+}
+```
+
+[^1]: El método HTTP debe ser uno de los [métodos de petición HTTP conocidos](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods)

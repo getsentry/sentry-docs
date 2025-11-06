@@ -1,0 +1,183 @@
+---
+title: AWS Lambda
+sidebar_order: 1
+description: >-
+  Obtén más información sobre la integración de AWS Lambda de Sentry y cómo
+  puedes instrumentar automáticamente tus funciones Lambda de Node o Python con
+  Sentry sin tener que cambiar tu código.
+og_image: /og-images/organization-integrations-cloud-monitoring-aws-lambda.png
+---
+
+Conecta Sentry a tu cuenta de AWS para añadir automáticamente el monitoreo de errores y rendimiento de Sentry a tus funciones Lambda de Node o Python.
+
+<div id="install">
+  ## Instalar
+</div>
+
+<Alert>
+  Se requieren permisos de propietario, gestor o administrador de Sentry para instalar esta integración.
+</Alert>
+
+1. Ve a **Settings &gt; Integrations &gt; AWS Lambda**.
+
+   ![](./img/directory.png)
+
+2. Haz clic en **Add Installation** para abrir el cuadro de instalación.
+
+   ![](./img/integration_detail.png)
+
+3. Selecciona el proyecto para tu integración de Lambda. **Nota:** Este proyecto no se puede cambiar después de completar la instalación. Si solo tienes un proyecto, se omitirá este paso.
+
+   ![](./img/project.png)
+
+4. Haz clic en **Go To AWS**.
+
+   ![](./img/aws_account_1.png)
+
+5. Desplázate hasta el final de la página Create Stack, marca la casilla y luego haz clic en **Create Stack** para crear una pila de CloudFormation en tu región actual. Esta pila permite que Sentry instrumente automáticamente tus funciones Lambda.
+
+   ![](./img/cloudformation-create-stack.png)
+
+6. Espera a que se cree la pila. Una vez confirmada y cuando el estado cambie a **Create Complete**, haz clic en **I&#39;ve created the stack** en la ventana emergente de Sentry.
+
+   ![](./img/cloudformation-stack-create-complete.png)
+
+7. Ahora copia tu AWS Account ID, selecciona la región que quieres usar y haz clic en **Next**.
+
+   ![](./img/aws_account_2.png)
+
+<Alert>
+  Solo necesitas crear la pila de CloudFormation una vez por cuenta, incluso si instalas la integración en varias regiones. Si estás configurando la integración en una segunda región, copia el externalId de la pila de CloudFormation existente en la pestaña &quot;Parameters&quot; en el formulario mostrado arriba.
+</Alert>
+
+8. Selecciona las funciones Lambda para agregar automáticamente la capa de Sentry y las variables de entorno necesarias cuando hagas clic en **Finish Setup**. **Nota:** Puedes habilitar o deshabilitar Sentry en funciones Lambda después de la instalación.
+
+   ![](./img/select_lambdas.png)
+
+Espera unos minutos mientras se habilitan las funciones Lambda. Si alguna función no se pudo instrumentar, sigue las sugerencias en Troubleshooting.
+
+<div id="troubleshooting">
+  ### Solución de problemas
+</div>
+
+Si necesitas ayuda para resolver problemas con tu integración de Sentry en AWS Lambda, aquí puedes consultar los casos particulares documentados. Si necesitas ayuda adicional, puedes [preguntar en GitHub](https://github.com/getsentry/sentry-javascript/issues/new/choose). Los clientes con un plan de pago también pueden contactar con el soporte.
+
+* #### Error `SentryRole already exists`
+
+  La pila ya existe en tu cuenta; puedes continuar con el siguiente paso y añadir la información de tu cuenta de AWS.
+
+* #### Error `Invalid existing layer`
+
+  Tu función Lambda tiene una capa que ya no existe. Elimina la capa problemática y, a continuación, habilita Sentry en la función Lambda desde la vista de configuración de la integración.
+
+* #### Error `Please validate the CloudFormation stack was created successfully`
+
+  Sentry no puede acceder a tu cuenta de AWS a través de tu pila de CloudFormation. Esto significa que la pila no se ha creado o que el ID externo utilizado no coincide con el de tu instalación. Ve a la pestaña Parameters de la pila de CloudFormation para copiar el valor del ID externo y pégalo en el campo del formulario.
+
+* #### Error `Invalid role associated with the lambda function`
+
+  El rol asociado con tu función Lambda ya no existe. Añade un nuevo rol a tu función Lambda y, a continuación, habilita Sentry en la función Lambda desde la vista de configuración de la integración.
+
+<div id="configure">
+  ## Configurar
+</div>
+
+La vista de configuración de la integración en Sentry te permite hacer lo siguiente con tus funciones Lambda:
+
+* Habilitar Sentry
+* Deshabilitar Sentry
+* Actualizar la capa de Sentry para Lambda a la versión más reciente
+
+En la vista de tabla, también verás la versión de la capa de Lambda debajo del nombre.
+
+![](./img/sentry-manage-functions.png)
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Ejecuta tu función de AWS Lambda. Los datos de rendimiento se enviarán a Sentry y aparecerán en la página de **Performance** de Sentry. Si tu función produce un error, aparecerá en la página de **Issues** de Sentry.
+
+<div id="remove-installation">
+  ## Quitar la instalación
+</div>
+
+Ten en cuenta que, al desinstalar la integración, tus funciones Lambda seguirán instrumentadas con Sentry y continuarás recibiendo errores. Si quieres desactivar Sentry en todas tus funciones Lambda, debes desactivarlo en cada función antes de desinstalar. También puedes desinstalar y luego reinstalar si deseas cambiar el proyecto de Sentry para tus Lambdas.
+
+Obtén más información sobre [cómo funciona esta integración](/es/organization/integrations/cloud-monitoring/aws-lambda/how-it-works/).
+
+<div id="notes-on-specific-frameworks">
+  ## Notas sobre frameworks específicos
+</div>
+
+<div id="serverless-framework">
+  ### Serverless Framework
+</div>
+
+Si usas el [framework Serverless](https://www.serverless.com/), ten en cuenta que esta integración configurará correctamente tus funciones Lambda existentes para usar la capa del SDK y establecerá las variables de entorno adecuadas. Obtén más información [aquí](/es/organization/integrations/cloud-monitoring/aws-lambda/how-it-works/).
+
+Puedes confirmar que todo funciona ejecutando `aws lambda get-function-configuration --function-name <yourFunctionName>`. Sin embargo, cuando realizas un `sls deploy` posterior, las variables de entorno no se mantienen, aunque parece que se conserva la referencia a la capa.
+
+Como alternativa, puedes definir la capa y las variables de entorno en `serverless.yml`, pero tendrás que hacer dos cosas manualmente: mantener la versión más reciente de la capa y añadir la referencia a la capa del SDK para cada función a la que quieras añadir Sentry.
+
+**Serverless Framework con Node:**
+
+```yaml {filename:serverless.yml}
+# otra configuración
+
+provider:
+  # más configuración
+  region: <AWS_REGION>
+  environment:
+    SENTRY_TRACES_SAMPLE_RATE: "1.0"
+    SENTRY_DSN: "___PUBLIC_DSN___"
+    NODE_OPTIONS: "--import @sentry/aws-serverless/awslambda-auto"
+
+custom:
+  layers:
+    - arn:aws:lambda:${self:provider.region}:943013980633:layer:SentryNodeServerlessSDKv10:15
+#    - arn:aws:lambda:${self:provider.region}:943013980633:layer:SentryNodeServerlessSDK:latest
+
+functions:
+  <tuNombreDeFunción>:
+    handler: <tuRutaDelManejadorLambda>
+    layers: ${self:custom.layers}
+```
+
+**Framework Serverless con Python:**
+
+```yaml {filename:serverless.yml}
+# otra configuración
+
+provider:
+  # más configuración
+  region: <AWS_REGION>
+  environment:
+    SENTRY_TRACES_SAMPLE_RATE: "1.0"
+    SENTRY_DSN: "___PUBLIC_DSN___"
+
+custom:
+  layers:
+    - arn:aws:lambda:${self:provider.region}:943013980633:layer:SentryPythonServerlessSDK:167
+#    - arn:aws:lambda:${self:provider.region:943013980633:layer:SentryPythonServerlessSDK:latest
+
+functions:
+  <tuNombreDeFunción>:
+    handler: sentry_sdk.integrations.init_serverless_sdk.sentry_lambda_handler
+    environment:
+      SENTRY_INITIAL_HANDLER: "<tuRutaDeManejadorLambda>"
+    layers: ${self:custom.layers}
+```
+
+Actualmente no es posible usar el [latest layer plugin](https://www.npmjs.com/package/serverless-latest-layer-version) porque `lambda:ListLayerVersions` sobre el recurso `arn:aws:lambda:eu-west-1:943013980633:layer:SentryNodeServerlessSDK` no tiene los permisos necesarios.
+
+<div id="sst">
+  ### SST
+</div>
+
+Si usas funciones de Node en [SST](https://serverless-stack.com) y quieres usar esta integración, deberás:
+
+1. Importar la [capa de Lambda](/es/platforms/javascript/guides/aws-lambda/layer/) usando el constructo [`LayerVersion`](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-lambda.LayerVersion.html) y configurarla llamando a [`addDefaultFunctionLayers`](https://docs.serverless-stack.com/constructs/Stack#adddefaultfunctionlayers).
+2. Luego, establece las variables de entorno `NODE_OPTIONS`, `SENTRY_DSN` y `SENTRY_TRACES_SAMPLE_RATE` con el método [`addDefaultFunctionEnv`](https://docs.serverless-stack.com/constructs/Stack#adddefaultfunctionenv).
+
+Lee [cómo funciona esta integración](/es/organization/integrations/cloud-monitoring/aws-lambda/how-it-works/) y [la documentación de SST](https://docs.serverless-stack.com/monitoring-your-app-in-prod#sentry) para obtener más información.

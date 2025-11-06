@@ -1,0 +1,189 @@
+---
+title: Problemas de rendimiento
+sidebar_order: 20
+description: >-
+  Obtén más información sobre qué problemas de rendimiento detecta Sentry y cómo
+  usar la página de Detalles del problema para depurarlos.
+og_image: /og-images/product-issues-issue-details-performance-issues.png
+---
+
+Un *problema de rendimiento* es un conjunto de eventos de transacción con bajo desempeño. Si tu aplicación está configurada para [Insights and Tracing](/es/product/insights/), Sentry detectará problemas de rendimiento comunes y los agrupará en problemas. Agrupamos eventos de transacción similares en problemas según una huella (fingerprint). En los problemas de rendimiento, la huella se basa principalmente en el tipo de problema y en los spans implicados.
+
+La página de **Detalles del problema** te ayuda a comprender mejor el origen de un problema de rendimiento y el impacto que tiene en los usuarios de tu aplicación. El área principal de la página muestra información sobre un evento de transacción específico que forma parte de un problema. El panel superior y la barra lateral derecha de la página muestran un resumen de todos los eventos de transacción agrupados en este problema:
+
+![Performance issue](./img/performance-issue-details.png)
+
+<Alert>
+  Puedes encontrar problemas de rendimiento buscando `issue.category:performance` en **Issues** y **Dashboards**.
+</Alert>
+
+Aunque la página de **Detalles del problema** muestra información sobre un evento de transacción específico que forma parte de un problema, puedes desplazarte entre los eventos de un problema con los botones “Older” y “Newer”. En esta página verás información sobre el problema de rendimiento, así como los detalles del evento de transacción más reciente. La página también muestra un resumen de cuándo se detectó el problema, además de un desglose de las etiquetas, la evidencia de spans y las migas de pan (breadcrumbs) si están disponibles.
+
+<div id="how-performance-issues-work">
+  ## Cómo funcionan los problemas de rendimiento
+</div>
+
+Sentry detecta problemas de rendimiento analizando los eventos de transacción entrantes. Primero, comprobamos varias propiedades de la transacción (duración de los spans, disposición de los spans, tipos de spans, etc.) para detectar posibles problemas. Luego, contrastamos estas propiedades con sus umbrales correspondientes para determinar si existe un problema de rendimiento. Por último, generamos una huella digital única basada en el tipo de problema y su ubicación en la aplicación, y usamos esa huella para crear un problema de rendimiento.
+
+<div id="span-evidence">
+  ## Evidencia de span
+</div>
+
+La evidencia de span es información que explica el problema de rendimiento en el contexto del evento actual. Puede incluir detalles como las consultas específicas a la base de datos que causan el problema, los spans que lo contienen y los spans lentos que afectan el rendimiento. Esta sección también incluye un árbol de spans que muestra cómo se relacionan los spans problemáticos con el resto del evento. Los distintos problemas de rendimiento presentarán tipos de evidencia ligeramente diferentes.
+
+<div id="event-grouping-information">
+  ## Información sobre la agrupación de eventos
+</div>
+
+La sección &quot;Información sobre la agrupación de eventos&quot; detalla cómo Sentry generó la huella para agrupar el evento. Puedes ver qué partes de la evidencia del span contribuyeron a la huella.
+
+<div id="configuration">
+  ## Configuración
+</div>
+
+Como administrador del proyecto, también puedes gestionar la configuración individual de cada detector de problemas de rendimiento en **Configuración del proyecto &gt; Rendimiento**. Aquí puedes aumentar o reducir los umbrales de lo que Sentry considera un problema de rendimiento para cada proyecto, o desactivar la detección por completo.
+
+![Configuración de problemas de rendimiento](./img/performance-issue-configuration.png)
+
+<div id="issue-types">
+  ## Tipos de incidencias
+</div>
+
+A continuación encontrarás una lista de incidencias de rendimiento disponibles:
+
+<table>
+  <tbody>
+    <tr>
+      <th>Navegador</th>
+
+      <td>
+        <ul>
+          <li>
+            <a href="es/./consecutive-http/">Solicitudes HTTP consecutivas</a>
+          </li>
+
+          <li>
+            <a href="es/./large-http-payload/">Carga útil HTTP grande</a>
+          </li>
+
+          <li>
+            <a href="es/./large-render-blocking-asset/">Recurso grande que bloquea el renderizado</a>
+          </li>
+
+          <li>
+            <a href="es/./n-one-api-calls/">Llamadas N+1 a la API</a>
+          </li>
+
+          <li>
+            <a href="es/./uncompressed-asset">Recurso sin comprimir</a>
+          </li>
+
+          <li>
+            <a href="es/./http-overhead">Sobrecarga de HTTP/1.1</a>
+          </li>
+
+          <li>
+            <a href="es/./function-regressions">Regresiones de funciones</a>
+          </li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <th>Servidor</th>
+
+      <td>
+        <ul>
+          <li>
+            <a href="es/./consecutive-db-queries/">Consultas consecutivas a BD</a>
+          </li>
+
+          <li>
+            <a href="es/./n-one-queries/">Consultas N+1</a>
+          </li>
+
+          <li>
+            <a href="es/./slow-db-queries/">Consultas lentas a BD</a>
+          </li>
+
+          <li>
+            <a href="es/./function-regressions">Regresiones de funciones</a>
+          </li>
+
+          <li>
+            <a href="es/./endpoint-regressions">Regresiones de endpoints</a>
+          </li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <th>Móvil</th>
+
+      <td>
+        <ul>
+          <li>
+            <a href="es/./file-main-thread-io/">E/S de archivos en el hilo principal</a>
+          </li>
+
+          <li>
+            <a href="es/./db-main-thread-io/">Base de datos en el hilo principal</a>
+          </li>
+
+          <li>
+            <a href="es/./json-decoding-main-thread/">Decodificación de JSON en el hilo principal</a>
+          </li>
+
+          <li>
+            <a href="es/./image-decoding-main-thread/">Decodificación de imágenes en el hilo principal</a>
+          </li>
+
+          <li>
+            <a href="es/./regex-main-thread/">Expresiones regulares en el hilo principal</a>
+          </li>
+
+          <li>
+            <a href="es/./n-one-api-calls/">Llamadas N+1 a la API</a>
+          </li>
+
+          <li>
+            <a href="es/./frame-drop/">Pérdida de fotogramas</a>
+          </li>
+
+          <li>
+            <a href="es/./function-regressions">Regresiones de funciones</a>
+          </li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <th>Serverless</th>
+
+      <td>
+        <ul>
+          <li>
+            <a href="es/./consecutive-db-queries/">Consultas consecutivas a BD</a>
+          </li>
+
+          <li>
+            <a href="es/./n-one-queries/">Consultas N+1</a>
+          </li>
+
+          <li>
+            <a href="es/./slow-db-queries/">Consultas lentas a BD</a>
+          </li>
+        </ul>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div id="limitations">
+  ## Limitaciones
+</div>
+
+Los problemas de rendimiento presentan actualmente las siguientes limitaciones:
+
+* Los problemas de rendimiento no se pueden combinar
+* No se pueden aplicar el fingerprinting personalizado ni la agrupación a los problemas de rendimiento

@@ -1,0 +1,49 @@
+---
+title: ESM sin indicador de CLI
+sidebar_order: 11
+description: "Aprende a ejecutar Sentry en una aplicación ESM, sin el indicador --import."
+supported:
+  - javascript.nestjs
+---
+
+<Alert>
+  ¿No estás seguro de si deberías usar este método de instalación? Revisa nuestros
+  [métodos de instalación](../).
+</Alert>
+
+Al ejecutar tu aplicación en modo [ECMAScript Modules](https://nodejs.org/api/esm.html#introduction) (ESM), lo más probable es que quieras <PlatformLink to="/install/esm">seguir las instrucciones para ESM</PlatformLink>. Sin embargo, si quieres evitar usar la opción de línea de comandos `--import`, por ejemplo, si no tienes forma de configurar un indicador de CLI, también puedes seguir una configuración alternativa que consiste en importar el archivo `instrument.mjs` directamente en tu aplicación.
+
+<Alert level="warning" title="Restricciones de este método de instalación">
+  Este método de instalación tiene la restricción fundamental de que solo se pueden instrumentar API nativas de Node.js (como `fetch` y el módulo `http`).
+
+  Como resultado, el SDK de Sentry **no** capturará datos de llamadas a bases de datos, colas, ORMs, bibliotecas de terceros u otros datos específicos de frameworks.
+
+  Recomendamos usar esto solo si el indicador `--import` no es una opción para ti.
+</Alert>
+
+**Paso 1:** Crea un archivo llamado `instrument.mjs` que importe e inicialice Sentry:
+
+```javascript {tabTitle:ESM} {filename: instrument.mjs}
+import * as Sentry from "@sentry/nestjs";
+
+// ¡Asegúrate de llamar a esto antes de importar cualquier otro módulo!
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Agrega Tracing estableciendo tracesSampleRate
+  // Recomendamos ajustar este valor en producción
+  tracesSampleRate: 1.0,
+});
+```
+
+**Paso 2:** Importa el archivo `instrument.mjs` antes de importar cualquier otro módulo en el archivo `main.ts` de tu aplicación. Esto garantiza que Sentry pueda instrumentar automáticamente todos los módulos de tu aplicación:
+
+```javascript {filename: main.ts}
+// ¡Importa esto primero!
+import "./instrument";
+
+// Ahora importa otros módulos
+import { NestFactory } from "@nestjs/core";
+// ...
+// El código de tu aplicación va aquí
+```

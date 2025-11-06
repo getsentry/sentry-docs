@@ -1,0 +1,67 @@
+---
+title: Extensiones de Chrome
+description: "Aprende a configurar el SDK de Sentry para Flutter en extensiones de Chrome con Flutter Web."
+sidebar_order: 500
+sdk: sentry.dart.flutter
+categories:
+  - dart
+  - flutter
+---
+
+<div id="overview">
+  ## Descripción general
+</div>
+
+Las extensiones de Chrome aplican reglas estrictas de Content Security Policy (CSP) que impiden cargar scripts de forma dinámica. Como el SDK de Sentry para Flutter suele cargar dinámicamente el SDK de Sentry para JavaScript en plataformas web, debes incluir el paquete de JavaScript de Sentry como un recurso estático.
+
+<div id="required-setup">
+  ## Configuración necesaria
+</div>
+
+<div id="1-download-the-sentry-javascript-bundle">
+  ### 1. Descarga el paquete de JavaScript de Sentry
+</div>
+
+En lugar de cargar dinámicamente el SDK de JavaScript de Sentry, debes incluirlo como un recurso estático:
+
+1. Descarga el paquete minificado de JavaScript de Sentry desde el CDN de Sentry. Usa la versión compatible con el SDK de Sentry para Flutter:
+   [bundle.tracing.min.js](https://browser.sentry-cdn.com/9.40.0/bundle.tracing.min.js)
+
+   <Alert level="info">
+     Descarga el paquete de JavaScript de Sentry con la versión adecuada para tu proyecto. Consulta las [versiones del SDK de Sentry para Flutter](https://github.com/getsentry/sentry-dart/releases) para encontrar la versión del SDK de Sentry para JavaScript que se usa en una versión específica del SDK de Sentry para Flutter.
+   </Alert>
+
+2. Guarda este archivo en el directorio `web/` de tu proyecto de Flutter Web.
+
+<div id="2-include-the-script-in-your-html">
+  ### 2. Incluye el script en tu HTML
+</div>
+
+Añade el paquete de JavaScript de Sentry a tu archivo `web/index.html`:
+
+```html {filename:web/index.html}
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- Otros elementos de la sección head -->
+  <script src="bundle.tracing.min.js" type="application/javascript"></script>
+</head>
+<body>
+  <!-- Contenido de tu aplicación -->
+</body>
+</html>
+```
+
+<div id="3-configure-your-flutter-build">
+  ### 3. Configura tu build de Flutter
+</div>
+
+Genera tu app de Flutter Web para extensiones de Chrome.
+
+Asegúrate de que el archivo `bundle.tracing.min.js` esté incluido en el directorio `web/` antes de generar.
+
+<div id="4-upload-source-maps">
+  ### 4. Cargar source maps
+</div>
+
+Después de compilar tu aplicación, sube los source maps generados a Sentry para habilitar la simbolización correcta de las trazas de pila con el [sentry&#95;dart&#95;plugin](/es/platforms/dart/guides/flutter/debug-symbols/dart-plugin/).

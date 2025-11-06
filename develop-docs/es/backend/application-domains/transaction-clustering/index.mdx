@@ -1,0 +1,159 @@
+---
+title: Agrupación de transacciones de URL
+sidebar_order: 90
+og_image: /og-images/backend-application-domains-transaction-clustering.png
+---
+
+Sentry intenta eliminar identificadores de alta cardinalidad de las transacciones de URL
+para agrupar datos de rendimiento y ofrecer información más valiosa.
+
+En términos de experiencia del usuario, esta función cumple un papel similar al de [Agrupación de incidencias](/es/backend/grouping/).
+En términos de implementación técnica, es similar a [Depuración de datos](/es/backend/pii/).
+
+<div id="the-problem">
+  ## El problema
+</div>
+
+En nuestro producto [Insights](https://docs.sentry.io/product/insights/overview/), las transacciones se agrupan por su nombre
+(el campo [`event.transaction`](/es/sdk/data-model/event-payloads/#optional-attributes)).
+Esto funciona bien siempre que la cardinalidad de los nombres de transacción distintos que envía el SDK sea baja, por ejemplo
+cuando se usa la [ruta de un framework web](https://docs.sentry.io/platforms/javascript/guides/react/configuration/integrations/react-router/) como nombre de la transacción.
+
+Sin embargo, en algunos casos, el SDK no tiene suficiente información para elegir un grupo significativo,
+como el nombre de una vista o la ruta de una transacción web,
+y recurre a la URL sin procesar (o, más precisamente,
+[a su componente de ruta](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier#Syntax)).
+
+Esto dificulta que el usuario extraiga información de las [métricas de rendimiento](https://docs.sentry.io/product/insights/overview/metrics/), porque, en lugar de presentar promedios, percentiles y distribuciones de grupos de transacciones que lógicamente
+van juntas, terminamos con un montón de grupos de transacciones de una sola vez.
+
+```URLs
+/user/alice/
+/user/bob/
+/blog/1234567890/comments/
+/hash/4c79f60c11214eb38604f4ae0781bfb2/diff/
+```
+
+### &lt;&lt; sin parametrizar &gt;&gt;
+
+En segundo lugar, ingerir una gran cantidad de nombres de transacciones puntuales tampoco escala al volumen requerido,
+porque con [metrics](https://getsentry.github.io/relay/relay_metrics/index.html), la escalabilidad está determinada por la *cardinalidad* (la cantidad de grupos distintos), no por el volumen (la cantidad de eventos ingeridos).
+
+Una solución intermedia al problema de escala fue eliminar la etiqueta de transacción de las métricas de Performance
+cuando el nombre de la transacción es una URL sin procesar. Esto agrupa efectivamente *todas* las transacciones de URL en un solo grupo grande,
+lo cual también genera una mala experiencia de usuario:
+
+![Proyecto con solo transacciones sin parametrizar](./unparameterized.png)
+
+<div id="the-solution">
+  ## La solución
+</div>
+
+* En un primer paso, Relay elimina identificadores comunes como UUID, ID enteros y hashes
+  de las transacciones de URL.
+* En un segundo paso, ejecutamos un agrupamiento automático de transacciones sobre una muestra de nombres de transacción observados.
+
+<div id="overview">
+  ### Panorama general
+</div>
+
+![Arquitectura](./transaction-clustering-arch.png)
+
+<div id="pattern-based-identifier-scrubbing">
+  ### Limpieza de identificadores basada en patrones
+</div>
+
+Relay comprueba todas las transacciones de URL entrantes con una expresión regular estática y reemplaza los grupos coincidentes por `"*"` ([code](https://github.com/getsentry/relay/blob/897ca0e35ab981228274d0cb89ea050cc93e3632/relay-general/src/store/regexes.rs#L8-L52)).
+
+Por ejemplo:
+
+```python
+"/hash/4c79f60c11214eb38604f4ae0781bfb2/diff/"
+# se convierte en
+"/hash/*/diff/"
+```
+
+<div id="automatic-transaction-clustering">
+  ### Agrupación automática de transacciones
+</div>
+
+Algunos identificadores no pueden detectarse observando una sola transacción. Por ejemplo, los nombres de usuario de formato libre no pueden distinguirse de las partes de baja cardinalidad de una URL.
+
+Para detectar segmentos de alta cardinalidad en la URL, reunimos un conjunto de nombres de transacción de URL únicos para cada proyecto, los separamos por `"/"` y construimos un árbol a partir de sus segmentos de ruta (similar a una estructura de datos [trie](https://en.wikipedia.org/wiki/Trie)):
+
+![árbol de segmentos de ruta de URL](./tree.png)
+
+Si el número de hijos de un nodo supera un umbral, tratamos el segmento de ruta como de alta cardinalidad y combinamos sus hijos en un único nodo:
+
+![árbol con segmentos fusionados](./merged.png)
+
+Para cada segmento fusionado, creamos una regla de reemplazo tipo glob que puede usarse para eliminar identificadores de nuevas transacciones. En el ejemplo anterior, la regla sería:
+
+```
+/user/*/**
+```
+
+Si un nombre de transacción coincide con este glob, el segmento correspondiente a `*` se sustituye, eliminando así el identificador.
+
+Detalles:
+
+* Pasos:
+  1. En el posprocesamiento, agregamos los nombres de transacción entrantes de tipo `url` a un conjunto específico del proyecto en Redis.
+     Cada conjunto tiene una capacidad máxima. Cuando el conjunto está lleno, se expulsa un elemento aleatorio.
+     Las transacciones 404 se excluyen de este paso de recopilación de datos, ya que potencialmente pueden contener cualquier URL.
+  2. Cada hora se lanza una tarea de Celery para cada conjunto de Redis, que
+     a. construye el árbol y deriva reglas a partir de nodos combinados;
+     a. escribe las reglas en las opciones del proyecto.
+  3. Las reglas derivadas se escriben en la configuración del proyecto enviada a Relay.
+  4. Para cada transacción entrante de tipo URL, Relay aplica reglas de coincidencia para depurar identificadores.
+* **TTL:** Para depurar reglas no utilizadas, mantenemos una copia de las reglas descubiertas en Redis y, en el posprocesamiento,
+  incrementamos un campo `last_used` de una regla si se aplicó al evento actual.
+  La información sobre qué regla se aplicó la proporciona Relay a través del campo `_meta`.
+* Parámetros:
+  * El **umbral de combinación**, que decide si un segmento de ruta se considera un identificador, está establecido en 200.
+    Lo aumentamos desde 100 porque observamos que hay sitios web con más de 100 páginas estáticas.
+  * El **tamaño de muestra** de transacciones observadas está actualmente establecido en 2000 (10× el umbral de combinación).
+    Un conjunto más grande aumenta la probabilidad de descubrir una regla.
+
+Código fuente:
+
+* [Agrupador de transacciones (Sentry)](https://github.com/getsentry/sentry/blob/9af20330c84b971882be9837d4e43e148af5a126/src/sentry/ingest/transaction_clusterer/tree.py).
+* [Aplicación de reglas de reemplazo (Relay)](https://github.com/getsentry/relay/blob/e543401086c556b769b67ccb96fbfaca411696c8/relay-general/src/store/transactions/processor.rs#L37-L46).
+
+<div id="known-issues">
+  ## Problemas conocidos
+</div>
+
+<div id="accidental-erasure-of-non-identifiers">
+  ### Eliminación accidental de elementos que no son identificadores
+</div>
+
+Cada nivel del árbol de segmentos de la ruta de la URL puede contener una mezcla de identificadores y páginas estáticas; por ejemplo,
+
+```
+
+/user/alice
+/user/bob
+/user/settings <-
+/user/carol
+...
+
+```
+
+Nuestro enfoque actual reemplazaría `/user/settings` por `/user/*` porque detecta una alta cardinalidad en el segundo nivel, aunque `/settings` es una ruta estática.
+
+**Posible solución usando pesos**:
+
+Esto podría resolverse asignando un peso a cada nodo, proporcional al número de transacciones que incluyen ese segmento.
+Los nodos con pesos altos se codificarían en las reglas de reemplazo como excepciones.
+
+Decidimos no hacerlo porque codificar excepciones en las reglas incrementaría el tamaño de las configuraciones del proyecto en tránsito y en Relay.
+
+<div id="identifiers-not-scrubbed">
+  ### Identificadores no saneados
+</div>
+
+El descubrimiento de reglas de reemplazo es un enfoque por mejor esfuerzo: por muchas reglas que descubra el clusterer, podría no detectar todos los patrones. Un proyecto siempre puede
+introducir una nueva funcionalidad que genere más transacciones de alta cardinalidad, y el clusterer necesita tiempo para descubrir una nueva regla para ellas.
+
+La consecuencia de esto es, nuevamente, una posible alta cardinalidad en la ingesta y el almacenamiento de nuestras métricas, hasta el punto en que podríamos toparnos con el [limitador de cardinalidad](https://github.com/getsentry/sentry/blob/9af20330c84b971882be9837d4e43e148af5a126/src/sentry/ratelimits/cardinality.py#L93-L95).

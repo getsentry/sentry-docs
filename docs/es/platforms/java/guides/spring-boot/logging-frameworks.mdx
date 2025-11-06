@@ -1,0 +1,141 @@
+---
+title: Integraciones con frameworks de logging
+sidebar_order: 6
+description: "Obtén más información sobre cómo usar una de nuestras integraciones de logging con Sentry Spring Boot."
+---
+
+Para una mejor experiencia, recomendamos usar la integración de Spring Boot de Sentry junto con una de las integraciones del framework de logging, ya que funcionan a la perfección.
+
+<div id="logback">
+  ### Logback
+</div>
+
+Para usar la integración de Sentry con Logback en una aplicación Spring Boot, debes incluir una dependencia al módulo `sentry-logback`; luego, el Spring Boot Starter de Sentry configurará automáticamente `SentryAppender`:
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-logback</artifactId>
+    <version>{{@inject packages.version('sentry.java.logback', '4.2.0') }}</version>
+</dependency>
+```
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-logback:{{@inject packages.version('sentry.java.logback', '4.2.0') }}'
+```
+
+Los niveles mínimos de registro de `SentryAppender` se pueden configurar en los archivos `application.properties` o `application.yml`.
+
+```properties
+sentry.logging.minimum-event-level=info
+sentry.logging.minimum-breadcrumb-level=debug
+sentry.logging.minimum-level=debug
+```
+
+Los valores predeterminados son:
+
+* `info` o superior para incluir un mensaje de log como breadcrumb.
+* `info` o superior enviará un mensaje de log a Sentry y aparecerá en la sección Logs.
+* `error` o superior enviará un evento a Sentry y aparecerá en la sección Issues.
+
+Para enviar logs a Sentry y que aparezcan en la sección Logs, debes habilitar la función:
+
+```properties
+sentry.logs.enabled=true
+```
+
+Cuando la autoconfiguración de `SentryAppender` no se ajusta a tus necesidades, puedes desactivarla configurando:
+
+```properties
+sentry.logging.enabled=false
+```
+
+Si decides no usar la configuración de registro de Spring Boot basada en `application.properties` y, en su lugar, configurar el registro en el archivo `logback-spring.xml`, puedes configurar `SentryAppender` de la siguiente manera:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+  <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+
+  <appender name="SENTRY" class="io.sentry.logback.SentryAppender" />
+
+  <root>
+    <appender-ref ref="CONSOLE" />
+    <appender-ref ref="SENTRY" />
+  </root>
+</configuration>
+```
+
+<Alert>
+  No necesitas configurar tu DSN en el archivo de configuración de Logback, ya que Sentry se configura mediante la integración con Spring Boot.
+
+  Sin embargo, si se deben enviar a Sentry los errores que puedan aparecer durante el arranque, el DSN debe proporcionarse en <i>ambas</i> configuraciones: la de Logback y la de Spring Boot.
+</Alert>
+
+
+<div id="mapped-diagnostic-context-mdc">
+  #### Contexto de diagnóstico mapeado (MDC)
+</div>
+
+A partir de la versión 8.24.0 del SDK de Sentry para Java, puedes usar la opción <PlatformLink to="/configuration/options/#contextTags">`contextTags`</PlatformLink> para incluir propiedades específicas del contexto de diagnóstico mapeado (MDC) como atributos en las entradas de log enviadas a Sentry.
+
+<div id="log4j-2">
+  ### Log4j 2
+</div>
+
+Para usar la integración de Log4j 2 de Sentry en una aplicación de Spring Boot, debes incluir una dependencia del módulo `sentry-log4j2`:
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-log4j2</artifactId>
+    <version>{{@inject packages.version('sentry.java.log4j2', '5.1.1') }}</version>
+</dependency>
+```
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-log4j2:{{@inject packages.version('sentry.java.log4j2', '5.1.1') }}'
+```
+
+```scala {tabTitle: SBT}
+libraryDependencies += "io.sentry" % "sentry-log4j2" % "{{@inject packages.version('sentry.java.log4j2', '5.1.1') }}"
+```
+
+Para otros gestores de dependencias, consulta el [repositorio central de Maven](https://search.maven.org/artifact/io.sentry/sentry-log4j2).
+
+A continuación, [sigue la guía para configurar Log4j 2 con Spring Boot](https://docs.spring.io/spring-boot/docs/current/reference/html/howto.html#howto-configure-log4j-for-logging) y configura `SentryAppender` en el archivo `log4j2.xml`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+
+  <Appenders>
+    <Console name="CONSOLE" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+    </Console>
+    <Sentry name="SENTRY"/>
+  </Appenders>
+
+  <Loggers>
+    <Root level="INFO">
+      <AppenderRef ref="CONSOLE"/>
+      <AppenderRef ref="SENTRY"/>
+    </Root>
+  </Loggers>
+
+</Configuration>
+```
+
+<Alert>
+  No necesitas configurar tu DSN en el archivo de configuración de Log4j 2, ya que Sentry se configura mediante la integración con Spring Boot.
+
+  Sin embargo, si quieres que los errores que puedan aparecer durante el arranque se envíen a Sentry, debes proporcionar el DSN en <i>ambas</i> configuraciones: Log4j 2 y Spring Boot.
+</Alert>
+
+
+<div id="mapped-diagnostic-context-mdc">
+  #### Contexto de diagnóstico mapeado (MDC)
+</div>
+
+A partir de la versión 8.24.0 del SDK de Java de Sentry, puedes usar la opción <PlatformLink to="/configuration/options/#contextTags">`contextTags`</PlatformLink> para incluir propiedades específicas del contexto de diagnóstico mapeado (MDC) como atributos en las entradas de log enviadas a Sentry.

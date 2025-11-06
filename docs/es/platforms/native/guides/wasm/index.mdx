@@ -1,0 +1,111 @@
+---
+title: WebAssembly
+description: "Obtén información sobre cómo Sentry procesa informes de fallos de WASM."
+---
+
+WebAssembly te permite compilar código nativo en un formato de bytecode independiente de la plataforma, lo que, por ejemplo, te permite ejecutar código nativo en C, C++ o Rust en un navegador web.
+
+**Esta función aún está en desarrollo, por lo que puede presentar asperezas.**
+
+La compatibilidad de depuración para WebAssembly es un esfuerzo continuo de la comunidad de WebAssembly.
+La compatibilidad en Sentry está limitada por lo que es posible dentro de ese ecosistema.
+
+<Alert>
+  ¿Quieres ser early adopter, pero te estás encontrando con problemas? Ponte en contacto con nosotros
+  [en GitHub](https://github.com/getsentry/symbolicator/issues/new/choose), nos
+  encantaría conversar.
+</Alert>
+
+<div id="requirements">
+  ## Requisitos
+</div>
+
+Actualmente es posible obtener informes de fallos en Sentry si tu compilador puede
+generar [información de depuración DWARF para WASM](https://yurydelendik.github.io/webassembly-dwarf/)
+junto con el código binario. Además, necesitas subir tus archivos de
+información de depuración de WebAssembly a Sentry o usar un servidor de símbolos como lo
+harías en nuestras otras plataformas.
+
+Para que este proceso funcione, necesitamos que los archivos de información de depuración incluyan una
+sección personalizada `build_id`. Proporcionamos una herramienta llamada [wasm-split](https://github.com/getsentry/symbolicator/tree/master/crates/wasm-split)
+que puede agregar automáticamente esta sección si falta y separar
+la información de depuración para que no se envíe a los usuarios.
+
+<div id="using-wasm-split">
+  ## Uso de wasm-split
+</div>
+
+Una vez que tu compilador haya generado un archivo `.wasm`, puedes usar nuestra herramienta [wasm-split](https://github.com/getsentry/symbolicator/tree/master/crates/wasm-split)
+para agregar un `build_id` (si falta) y dividirlo en un archivo con información de depuración
+y un archivo `.wasm` final sin información de depuración:
+
+```shell
+wasm-split /path/to/file.wasm -d /path/to/file.debug.wasm --strip
+```
+
+Este comando modifica directamente `file.wasm` para añadir el `build_id` y luego elimina toda la
+información de depuración. La información de depuración se coloca en un `file.debug.wasm`, que
+después debe cargarse en Sentry. Para obtener más información, consulta [Archivos de información de depuración](/es/platforms/native/guides/wasm/data-management/debug-files/).
+
+<div id="crash-reporting">
+  ## Reporte de fallos
+</div>
+
+Si quieres habilitar el reporte de fallos en el navegador, la forma recomendada con Sentry es usar
+el paquete `@sentry/wasm` y aplicar su `wasmIntegration` a la configuración de `@sentry/browser`.
+Esto está [documentado en detalle](/es/platforms/javascript/guides/wasm/) en la documentación de la plataforma de JavaScript.
+
+<div id="custom-crash-reports">
+  ## Informes de fallos personalizados
+</div>
+
+Si trabajas con WebAssembly, probablemente quieras enviar informes de fallos personalizados; por ejemplo, si no ejecutas WebAssembly en un navegador, sino en tu propio runtime. En ese caso, puedes seguir la documentación del protocolo general, que también explica cómo describir los frames de WebAssembly: [stack trace interface](https://develop.sentry.dev/sdk/data-model/event-payloads/stacktrace/).
+
+Aquí tienes un ejemplo de evento para WebAssembly:
+
+```javascript
+{
+  "platform": "native",
+  "debug_meta": {
+    "images": [
+      {
+        // la URL donde se encuentra el archivo wasm
+        "code_file": "http://localhost:8002/demo.wasm",
+        // indica un módulo de web assembly
+        "type": "wasm",
+        // el contenido de la sección build_id en hexadecimal,
+        // truncado a 32 caracteres con un 0 agregado
+        "debug_id": "9e5cbc5553b44e8b9c69d18cdd7bfd2e0"
+      }
+    ]
+  },
+  "exception": {
+    "values": [
+      {
+        "stacktrace": {
+          "frames": [
+            // frame de wasm
+            {
+              "function": "wasm_func",
+              "abs_path": "http://localhost:8002/demo.wasm",
+              // el desplazamiento absoluto en el archivo wasm para la instrucción
+              "instruction_addr": "0x8c",
+              // indica que instruction_addr es relativo al primer
+              // módulo en la lista de imágenes de debug_info
+              "addr_mode": "rel:0"
+            },
+            // frame de javascript
+            {
+              "function": "crash",
+              "abs_path": "http://localhost:8002/index.html",
+              "lineno": 24,
+              "platform": "javascript"
+            }
+          ]
+        },
+        "type": "Error"
+      }
+    ]
+  }
+}
+```

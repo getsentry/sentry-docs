@@ -1,0 +1,56 @@
+---
+title: Cloudflare Workflows
+description: "Aprende a agregar instrumentación de Sentry para Cloudflare Workflows."
+---
+
+*(Disponible a partir de la versión [9.32.0](https://github.com/getsentry/sentry-javascript/releases/tag/9.32.0))*
+
+Puedes usar el método `instrumentWorkflowWithSentry` para instrumentar [Cloudflare
+Workflows](https://developers.cloudflare.com/workflows/).
+
+Dado que los workflows pueden hibernarse y perder su estado, usamos el
+`instanceId` de los workflows para generar el `trace_id` de Sentry y vincular todos los pasos en un
+único trace. Si `instanceId` es un UUID (con o sin guiones), se usará
+directamente como `trace_id`. De lo contrario, calculamos el hash SHA1 de `instanceId` para
+generar un `trace_id` determinista.
+
+Usamos los últimos 4 caracteres del `trace_id` para el muestreo, a fin de garantizar que todos los pasos
+tengan la misma decisión de muestreo.
+
+Como el `instanceId` se usa tanto para el `trace_id` como para las decisiones de
+muestreo, debes asegurarte de que el `instanceId` sea único para cada instancia
+de workflow. Si usas UUID personalizados, asegúrate de que los últimos 4 dígitos sean
+lo suficientemente aleatorios para lograr una buena distribución de decisiones de muestreo.
+
+<Alert level="warning">
+  Te recomendamos crear spans solo dentro de los callbacks de `step.do()`. Debido a la naturaleza de Cloudflare Workflows, un workflow
+  puede hibernarse y reanudarse en cualquier momento. Cuando un workflow se reanuda, su método `run` se ejecuta de nuevo desde el principio.
+  Las llamadas a `step.do()` son idempotentes y no volverán a ejecutar los pasos completados, pero cualquier código fuera de ellas se volverá a ejecutar.
+  Esto puede provocar spans duplicados y un comportamiento inesperado si inicias spans en el nivel superior de tu método `run`.
+</Alert>
+
+```typescript
+import { WorkflowEntrypoint, WorkflowStep, WorkflowEvent } from 'cloudflare:workers';
+import * as Sentry from "@sentry/cloudflare";
+
+class MyWorkflowBase extends WorkflowEntrypoint<Env, Params> {
+  async run(event: WorkflowEvent<Params>, step: WorkflowStep) {
+    await step.do('obtener datos', async () => {
+      //
+    });
+
+    await step.do('procesar datos', async () => {
+      //
+    });
+  }
+}
+
+// Exporta tu clase con nombre tal como está definida en tu configuración de wrangler
+export const MyWorkflow = Sentry.instrumentWorkflowWithSentry(
+  (env: Env) => ({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+  }),
+  MyWorkflowBase
+);
+```

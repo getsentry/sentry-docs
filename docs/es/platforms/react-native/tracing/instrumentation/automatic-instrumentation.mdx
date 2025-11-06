@@ -1,0 +1,283 @@
+---
+title: Instrumentación automática
+description: "Descubre qué transacciones se capturan una vez que el tracing está habilitado."
+sidebar_order: 10
+---
+
+`@sentry/react-native` ofrece instrumentación de rendimiento automática lista para usar cuando <PlatformLink to="/tracing/">el tracing está habilitado</PlatformLink>.
+
+<div id="set-up">
+  ## Configuración
+</div>
+
+Para sacarle el máximo partido a nuestra instrumentación automática, deberías:
+
+<div id="wrap-your-root-component">
+  ### Envuelve tu componente raíz
+</div>
+
+Envuelve tu componente raíz con Sentry para acceder a la mayoría de las funciones de Performance.
+
+```javascript {filename:App.js}
+export default Sentry.wrap(App);
+```
+
+<div id="enable-routing-instrumentation">
+  ### Habilitar la instrumentación de enrutamiento
+</div>
+
+<Alert>
+  Cuando no se utiliza instrumentación de enrutamiento, se captura automáticamente una transacción de `App Start`. Sin embargo, esa transacción deja de enviarse cuando se añade alguna de las siguientes integraciones de enrutamiento. En su lugar, la información de `App Start` se incluye como un span dentro de una transacción capturada por la instrumentación de enrutamiento.
+</Alert>
+
+Actualmente ofrecemos tres instrumentaciones de enrutamiento listas para usar para registrar cambios de ruta:
+
+* [Expo Router](/es/platforms/react-native/tracing/instrumentation/expo-router/)
+* [React Navigation](/es/platforms/react-native/tracing/instrumentation/react-navigation/)
+* [React Native Navigation](/es/platforms/react-native/tracing/instrumentation/react-native-navigation/)
+
+<div id="additional-instrumentation">
+  ### Instrumentación adicional
+</div>
+
+* [Navegación personalizada](/es/platforms/react-native/tracing/instrumentation/custom-navigation/) para añadir la integración con la biblioteca de navegación personalizada
+* [Instrumentación personalizada](/es/platforms/react-native/tracing/instrumentation/custom-navigation/) para añadir datos de rendimiento personalizados a tu aplicación
+
+<div id="features">
+  ## Funcionalidades
+</div>
+
+Sentry ofrece las siguientes funcionalidades de instrumentación automática.
+
+<div id="app-start-instrumentation">
+  ### Instrumentación del inicio de la app
+</div>
+
+La instrumentación del inicio de la app ofrece información sobre cuánto tarda tu aplicación en arrancar. Realiza un seguimiento del tiempo desde la **inicialización nativa más temprana del proceso** hasta que se **monta el componente raíz de React Native**.
+
+<Alert>
+  Si no [envuelves tu componente raíz con Sentry](#wrap-your-root-component), la medición del inicio de la app finalizará cuando se inicialice el código de JavaScript en lugar de cuando se monte el primer componente.
+</Alert>
+
+El SDK distingue entre un inicio en frío y uno en caliente, pero no registra inicios en caliente en ejecución ni reanudaciones. Las mediciones están disponibles en `measurements.app_start_warm` y `measurements.app_start_cold`.
+
+Los inicios en frío y en caliente forman parte de Mobile Vitals, sobre los que puedes aprender más en la [documentación completa](/es/product/insights/mobile/mobile-vitals).
+
+<Alert>
+  La instrumentación de App Start de Sentry procura ser lo más completa y representativa posible de la experiencia del usuario y se adhiere a las directrices de los proveedores de la plataforma. Por este motivo, los inicios de app informados por Sentry pueden ser más largos que los que ves en otras herramientas. Lee más en la [documentación de App Start de Apple](/es/platforms/apple/guides/ios/tracing/instrumentation/automatic-instrumentation/#app-start-tracing) y la [documentación de App Start de Android](/es/platforms/android/tracing/instrumentation/automatic-instrumentation/#app-start-instrumentation).
+</Alert>
+
+<div id="slow-and-frozen-frames">
+  ### Fotogramas lentos y congelados
+</div>
+
+Una interfaz no responsiva y los tirones en las animaciones molestan a los usuarios y empeoran la experiencia. Dos métricas para seguir este tipo de problemas son los fotogramas lentos y los fotogramas congelados. Si quieres que tu app funcione fluidamente, deberías intentar evitar ambos. El SDK añade estas dos métricas a las transacciones que capturas.
+
+Los fotogramas lentos y congelados forman parte de Mobile Vitals, sobre lo que puedes aprender en la [documentación completa](/es/product/insights/mobile/mobile-vitals).
+
+<Alert>
+  Las apps móviles de React Native no informarán [Web Vitals](/es/product/insights/web-vitals/). Estos valores dependen de APIs proporcionadas por los navegadores y no están disponibles en este contexto.
+</Alert>
+
+<div id="androidx-support">
+  #### Compatibilidad con AndroidX
+</div>
+
+Sentry utiliza la biblioteca `androidx.core` para detectar [fotogramas lentos y congelados](#slow-and-frozen-frames). Esto es necesario para obtener resultados precisos en todas las versiones de Android.
+
+Comprobamos la disponibilidad en tiempo de ejecución, así que si no usas `androidx.core`, puedes eliminarla de las dependencias transitivas de Sentry.
+
+```Groovy
+api ('io.sentry:sentry-android:{{@inject packages.version('sentry.java.android', '4.2.0') }}') {
+    exclude group: 'androidx.core', module: 'core'
+}
+```
+
+Ten en cuenta que, si eliminas esta dependencia transitiva, no se registrarán los fotogramas lentos ni congelados.
+
+<div id="stall-tracking">
+  ### Seguimiento de bloqueos
+</div>
+
+Un bloqueo ocurre cuando el bucle de eventos de JavaScript tarda más de lo esperado en completarse. Un bloqueo en tu código JavaScript no solo vuelve tu UI no receptiva, sino que también ralentiza la lógica que se ejecuta en JavaScript. Esto lo retrasa todo y crea una mala experiencia para tus usuarios.
+
+Registramos los bloqueos que se producen en tu app de React Native durante una transacción y te proporcionamos estos valores:
+
+* **Tiempo de bloqueo más largo**: El tiempo, en milisegundos, del bloqueo del bucle de eventos más largo.
+* **Tiempo total de bloqueo**: El tiempo total acumulado, en milisegundos, de todos los bloqueos.
+* **Número de bloqueos**: La cantidad total de bloqueos que se produjeron durante la transacción.
+
+<div id="fetchxml-request-instrumentation">
+  ### Instrumentación de solicitudes Fetch/XML
+</div>
+
+La integración de tracing crea un span secundario para cada solicitud de `XMLHttpRequest` o `fetch` en la capa de JavaScript que se produzca mientras esas transacciones estén abiertas. Obtén más información sobre [traces, transactions y spans](/es/product/sentry-basics/tracing/distributed-tracing/).
+
+<div id="configuration-options">
+  ## Opciones de configuración
+</div>
+
+Para configurar la instrumentación automática del rendimiento, deberás añadir la integración `ReactNativeTracing` por tu cuenta. Ofrecemos muchas opciones predeterminadas, así que en la mayoría de las apps no tendrás que configurar la integración tú mismo.
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  integrations: [Sentry.reactNativeTracingIntegration()],
+});
+```
+
+<div id="tracepropagationtargets">
+  ### tracePropagationTargets
+</div>
+
+El valor predeterminado de `tracePropagationTargets` es `[/.*/]` para móviles y `['localhost', /^\//]` para la web. El SDK de React Native adjuntará el encabezado `sentry-trace` a todas las solicitudes XHR/fetch salientes en móviles.
+En la web, los datos de trazado solo se adjuntan a solicitudes salientes que contengan `localhost` en su URL o a solicitudes cuya URL comience con `'/'` (por ejemplo, `GET /api/v1/users`).
+
+<Expandable title="¿Usas React Native en la web? Así cambia `tracePropagationTargets`.">
+  El SDK adjuntará el encabezado `sentry-trace` a todas las solicitudes XHR/fetch salientes cuyo destino contenga una cadena de la lista o coincida con una expresión regular de la lista. Si tu frontend realiza solicitudes a otro dominio, deberás agregar ese dominio para propagar el encabezado `sentry-trace` a los servicios de backend, lo cual es necesario para vincular transacciones como parte de una única traza. **La opción `tracePropagationTargets` se compara con la URL completa de la solicitud, no solo con el dominio. Usar expresiones regulares más estrictas para hacer coincidir ciertas partes de la URL garantiza que no se adjunte el encabezado `sentry-trace` innecesariamente.**
+
+  <PlatformContent includePath="performance/tracePropagationTargets-example" />
+
+  Deberás configurar el CORS de tu servidor web para permitir el encabezado `sentry-trace`. La configuración podría verse como `"Access-Control-Allow-Headers: sentry-trace"`, pero depende de tu implementación. Si no permites el encabezado `sentry-trace`, es posible que la solicitud sea bloqueada.
+</Expandable>
+
+<div id="beforestartspan">
+  ### beforeStartSpan
+</div>
+
+`beforeStartSpan` se invoca al inicio de cada span de `pageload` o `navigation`, y recibe un objeto con los datos del span que está por iniciarse. Con `beforeStartSpan` puedes modificar esos datos.
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.reactNativeTracingIntegration({
+      beforeStartSpan: (context) => {
+        return {
+          ...context,
+          attributes: {
+            ...context.attributes,
+            "custom": "valor",
+          },
+        };
+      },
+    }),
+  ],
+});
+```
+
+<div id="shouldcreatespanforrequest">
+  ### shouldCreateSpanForRequest
+</div>
+
+Esta función puede usarse para filtrar spans no deseados, como XHR que realizan
+comprobaciones de estado o algo similar. Si no se especifica esta función, se
+crearán spans para todas las solicitudes.
+
+```javascript
+Sentry.init({
+  // ...
+  integrations: [
+    Sentry.reactNativeTracingIntegration({
+      shouldCreateSpanForRequest: (url) => {
+        // No crear spans para solicitudes salientes al endpoint `/health/`
+        return !url.match(/\/health\/?$/);
+      },
+    }),
+  ],
+});
+```
+
+<div id="idletimeoutms">
+  ### idleTimeoutMs
+</div>
+
+El tiempo de inactividad, en ms, que debes esperar para que la transacción finalice si no hay spans pendientes. La transacción usará la marca de tiempo de finalización del último span completado como hora de finalización de la transacción.
+
+El valor predeterminado es `1_000`.
+
+<div id="finaltimeoutms">
+  ### finalTimeoutMs
+</div>
+
+La duración máxima de la transacción, en ms. Si la duración de la transacción alcanza el valor de `finalTimeout`, se dará por finalizada.
+
+El valor predeterminado es `60_0000`.
+
+<div id="recipes">
+  ## Recetas
+</div>
+
+Actualmente, de forma predeterminada, el SDK de React Native solo crea spans secundarios para transacciones de fetch/XHR de fábrica. Esto significa que, una vez que termines de configurar la instrumentación de enrutamiento, verás solo algunos spans secundarios de fetch/XHR o ninguno. Para saber cómo personalizar la instrumentación de tu app, consulta nuestra <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">Instrumentación personalizada</PlatformLink>.
+
+<div id="react-profiler">
+  ### React Profiler
+</div>
+
+También exportamos React Profiler desde nuestro SDK de React Native. Obtén más información en [Seguimiento de componentes de React](/es/platforms/javascript/guides/react/features/component-monitoring/).
+
+Después de instrumentar el enrutamiento de tu app, si envuelves con `withProfiler` un componente que se renderiza en una de las rutas, podrás rastrear el ciclo de vida del componente como un span hijo de la transacción de la ruta.
+
+```javascript {tabTitle: Higher Order Component}
+import * as Sentry from "@sentry/react-native";
+
+// HOC withProfiler
+const SomeComponent = () => {
+  // ...
+};
+
+export default Sentry.withProfiler(SomeComponent);
+```
+
+```javascript {tabTitle: Parent Component}
+// Componente padre del profiler
+const SomeComponent = () => {
+  return (
+    <Sentry.Profiler name="SomeChild">
+      <SomeChild />
+    </Sentry.Profiler>
+  );
+};
+```
+
+```javascript {tabTitle: Hook}
+// hook useProfiler
+const SomeComponent = () => {
+  Sentry.useProfiler("SomeComponent");
+
+  return (
+    //...
+  )
+}
+```
+
+<div id="minified-names-in-production">
+  #### Nombres minificados en producción
+</div>
+
+Al generar el paquete para producción, React Native minificará los nombres de clases y funciones para reducir el tamaño del paquete. Esto significa que **no verás los nombres completos originales de los componentes en tus spans del Profiler**, sino nombres minificados. Consulta nuestra [guía de solución de problemas sobre paquetes de producción minificados](/es/platforms/react-native/troubleshooting/#minified-names-in-production) para resolverlo.
+
+<div id="opt-out">
+  ## Exclusión
+</div>
+
+Si quieres usar el tracing sin nuestra instrumentación automática, puedes desactivarlo estableciendo `enableAutoPerformanceTracing` en tus opciones de Sentry y eliminando la integración `ReactNativeTracing`, si la agregaste:
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  enableAutoPerformanceTracing: false,
+});
+```
+
+<div id="user-interaction-instrumentation">
+  ## Instrumentación de la interacción del usuario
+</div>
+
+La instrumentación de la interfaz captura transacciones y añade breadcrumbs para las interacciones táctiles. También hay compatibilidad con gestos mediante React Native Gesture Handler usando el wrapper `sentryTraceGesture`. Obtén más información sobre la [instrumentación de la interacción del usuario](/es/platforms/react-native/tracing/instrumentation/user-interaction-instrumentation).

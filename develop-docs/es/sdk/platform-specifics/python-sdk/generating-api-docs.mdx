@@ -1,0 +1,52 @@
+---
+title: Generación de la documentación de la API
+description: Cómo solucionar problemas al generar nuestra documentación de la API.
+sidebar_order: 40
+---
+
+<div id="problem">
+  ## Problema
+</div>
+
+`sphinx` (ejecutado como parte de `make apidocs`) a veces arroja errores crípticos de importaciones circulares y hace que el CI falle. Esto se debe a que lo ejecutamos con `TYPE_CHECKING` y, aunque `mypy` comprueba los tipos de forma estática, `sphinx` es dinámico y, por tanto, introduce circularidad en la comprobación de tipos, algo que normalmente no supone un problema.
+
+```python
+sphinx.errors.SphinxWarning: autodoc: no se pudo importar la función 'api.capture_event' del módulo 'sentry_sdk'; se produjo la siguiente excepción:
+no se puede importar el nombre 'logger' del módulo parcialmente inicializado 'sentry_sdk.utils' (probablemente debido a una importación circular) (/home/runner/work/sentry-python/sentry-python/sentry_sdk/utils.py)
+```
+
+Consulta https://github.com/tox-dev/sphinx-autodoc-typehints?tab=readme-ov-file#dealing-with-circular-imports
+
+Estos problemas de importaciones circulares pueden aparecer no solo en nuestro código del SDK, sino también en extensiones integradas de Sphinx. Podrías encontrarte con algo como esto:
+
+```
+Error de extensión:
+No se pudo importar la extensión sphinx.domains.c (excepción: no se puede importar el nombre 'ASTDeclaration' desde el módulo parcialmente inicializado 'sphinx.domains.c._ast' (probablemente debido a una importación circular) (.venv/lib/python3.11/site-packages/sphinx/domains/c/_ast.py))
+```
+
+
+<div id="solution">
+  ## Solución
+</div>
+
+Para resolver esto en código del SDK, simplemente usa referencias adelantadas; así, en lugar de:
+
+```python
+from sentry_sdk.integrations import Integration
+
+def foo(integration):
+    # type: (Integration) -> None
+    pass
+```
+
+solo usa:
+
+```python
+import sentry_sdk
+
+def foo(integration):
+    # type: (sentry_sdk.integrations.Integration) -> None
+    pass
+```
+
+Si la importación circular proviene de una extensión, añádela a los [imports en conf.py](https://github.com/getsentry/sentry-python/blob/302457dec22bd105beb849e98324f653d8c7b5f0/docs/conf.py#L6-L12).

@@ -1,0 +1,70 @@
+---
+title: Origen de la traza
+---
+
+El origen de la traza indica qué creó una traza, un `span` o un registro. No todas las trazas, `spans` o registros contienen suficiente información
+para saber si fue el usuario o qué, exactamente, dentro del SDK, lo creó. El origen resuelve este problema. El origen puede enviarse con
+el <Link to="/sdk/data-model/event-payloads/contexts/#trace-context">contexto de traza</Link>, los <Link to="/sdk/data-model/event-payloads/span/">spans</Link> o los <Link to="/sdk/telemetry/logs/">registros</Link>.
+
+Para los registros y los `spans` independientes, el origen debe configurarse como la clave de atributo `sentry.origin`.
+
+Los SDK deberían establecer este valor automáticamente. No se espera que los usuarios lo configuren manualmente. El valor de origen rara vez debería cambiar para que podamos ejecutar análisis adecuados sobre ellos.
+
+El origen es de tipo `string` y consta de cuatro partes: `<type>.<category>.<integration-name>.<integration-part>`.
+Solo la primera es obligatoria. Las partes se construyen unas sobre otras, lo que significa que está prohibido
+omitir una parte. Por ejemplo, puedes enviar las partes uno y dos, pero no puedes enviar las partes uno y tres sin la parte dos.
+
+`type`
+
+: *Obligatorio*. Puede ser `manual` o `auto`. `manual` indica que el usuario creó la traza o el `span`, `auto` indica que el SDK o alguna integración lo creó.
+
+`category`
+
+: *Opcional*. Es la categoría de la traza o del `span`, y debe ser una categoría de [operaciones de span](/es/sdk/performance/span-operations/). Por ejemplo, `http`, `db`, `ui`, `navigation`, `file`, `browser`, `rpc`, etc.
+
+`integration-name`
+
+: *Opcional*. Es el nombre de la integración del SDK que creó la traza o el `span`.
+
+`integration-part`
+
+: *Opcional*. Es la parte de la integración del SDK que creó la traza o el `span`. Esto solo es útil cuando una integración crea múltiples trazas o `spans`, y quieres diferenciarlas. Por lo tanto, la mayoría de las veces, esto se omitirá.
+
+Todas las partes solo pueden contener:
+
+* Caracteres alfanuméricos: `a-z`, `A-Z` y `0-9`.
+* Guiones bajos: `_`
+
+<div id="examples">
+  ### Ejemplos
+</div>
+
+* `manual`
+* `auto`
+* `auto.file`
+* `auto.navigation`
+* `auto.app.start`
+* `auto.ui.swift_ui`
+* `auto.ui.view_controller`
+* `auto.ui.jetpack_compose`
+* `auto.ui.activity`
+* `auto.navigation.jetpack_compose`
+* `auto.http.okhttp`
+* `auto.http.http_client_5`
+* `auto.http.client.stream`
+* `auto.db.core_data`
+* `auto.db.graphql`
+
+Los orígenes de tipo `manual` también pueden tener categorías y nombres de integración. Por ejemplo, para la <Link to="/sdk/performance/time-to-initial-full-display/">función de tiempo hasta la primera visualización completa</Link>, el usuario llama manualmente a una API del SDK y crea un span. En este caso, el SDK puede identificar qué creó el span, pero fue el usuario quien lo hizo manualmente. Por otro lado, el SDK también crea un span automáticamente. En este caso, obtenemos los siguientes orígenes:
+
+* `manual.ui.time_to_display`
+* `auto.ui.time_to_display`
+
+<div id="see-also">
+  ## Consulta también:
+</div>
+
+* <Link to="/sdk/data-model/event-payloads/span/">Interfaz de Span</Link>
+* <Link to="/sdk/data-model/event-payloads/contexts/#trace-context">Contexto de Trace</Link>
+* <Link to="/sdk/telemetry/logs/">Interfaz de Logs</Link>
+* [RFC](https://github.com/getsentry/rfcs/pull/73/) relacionado

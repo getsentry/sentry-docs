@@ -1,0 +1,41 @@
+---
+title: Antirrebote de eventos
+description: "Aprende cómo el SDK maneja frecuencias altas de eventos."
+sidebar_order: 20
+---
+
+Como las actualizaciones del juego ocurren a una frecuencia muy alta (60 veces por segundo o más), existe un mecanismo opcional de antirrebote (debouncing). Cada tipo de registro tiene su propio intervalo. Si `EnableLogDebounce` está habilitado y el juego genera demasiados eventos del mismo tipo en rápida sucesión, Sentry solo capturará el primero y luego ignorará (aplicará antirrebote a) los demás eventos del mismo tipo.
+
+El antirrebote de eventos está `disabled` de forma predeterminada.
+
+El tiempo que debe transcurrir después de que se genere un evento para que pueda volver a capturarse:
+
+* `LogType.Log` - un segundo
+* `LogType.Warning` - un segundo
+* `LogType.Error`, `LogType.Exception`, `LogType.Assert` y excepciones reales - un segundo
+
+```csharp
+using UnityEngine;
+
+public class DebouncerTestMonoBehaviour : MonoBehaviour
+{
+    void Start()
+    {
+        SentryUnity.Init(o =>
+        {
+            o.Dsn = "___PUBLIC_DSN___";
+            o.EnableLogDebouncing = true;
+        });
+
+        // El tiempo entre llamadas de depuración del mismo tipo es menor a 1s
+        // Cada llamada siguiente del mismo tipo se ignora hasta que pase 1s
+
+        Debug.Log("Log");              // registrado
+        Debug.Log("Log 2");            // no registrado
+        Debug.LogWarning("Warning");   // registrado
+        Debug.LogWarning("Warning 2"); // no registrado
+        Debug.LogError("Error");       // registrado
+        Debug.LogError("Error 2");     // no registrado
+    }
+}
+```

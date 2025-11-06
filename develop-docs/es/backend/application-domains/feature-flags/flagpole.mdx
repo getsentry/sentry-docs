@@ -1,0 +1,289 @@
+---
+title: "Flagpole"
+---
+
+Flagpole es la biblioteca interna de Sentry para flags de funcionalidades basada en opciones.
+
+Las funcionalidades se definen en el repositorio [`sentry-options-automator`](https://github.com/getsentry/sentry-options-automator) como objetos YAML dentro del archivo [`options/defaults/flagpole.yml`](https://github.com/getsentry/sentry-options-automator/blob/main/options/default/flagpole.yml).
+Estas opciones YAML se envían a cada uno de nuestros despliegues y se almacenan en una tabla de la base de datos, donde luego se consultan y se analizan durante la evaluación de los flags de funcionalidades.
+
+A continuación se muestra la configuración de ejemplo para una funcionalidad llamada `organizations:is_sentry`, habilitada para una organización con el slug `sentry`.
+
+```yaml
+options:
+  'feature.organizations:is_sentry':
+    created_at: '2024-06-01T00:00:00.000000'
+    enabled: false
+    owner: hybrid-cloud
+    segments:
+    - conditions:
+      - operator: in
+        value:
+          - sentry
+        property: organization_slug
+      name: is_sentry
+      rollout: 100
+```
+
+
+<div id="flagpole-feature-yaml-structure">
+  ## Estructura YAML de la función Flagpole
+</div>
+
+`created_at`
+
+: La fecha y hora en formato ISO 8601 cuando se añadió la función al YAML de configuración.
+
+`owner`
+
+: El nombre del equipo o el correo electrónico del usuario responsable de este feature flag.
+
+`enabled` [optional]
+
+: La palanca global del feature flag. Su valor predeterminado es `True`. Configurarlo en `False` puede servir como una válvula de emergencia para desactivar una función sin modificar los segmentos o condiciones existentes.
+
+`segments`
+
+: Un contenedor de una lista de condiciones que agrupa lógicamente clientes/entidades para los que habilitar el feature flag. Los segmentos permiten crear operaciones `OR` con otros segmentos, lo que implica que al menos un segmento debe evaluarse como `True` para conceder la función. Si se proporciona una lista de segmentos vacía, la función se evaluará como `False`.
+
+<div id="segments">
+  ### Segmentos
+</div>
+
+`conditions`
+
+: Una lista de predicados que se evaluarán para que el feature flag esté habilitado para este segmento. Todas las condiciones de un segmento deben evaluarse como `True` para que el segmento quede habilitado. Si no se definen condiciones, el segmento se evaluará como `False`.
+
+`name`
+
+: Una breve descripción del segmento que identifique su propósito.
+
+`rollout` [optional]
+
+: El porcentaje de entidades para las que habilitar la función, definido como un entero entre `0` y `100`. Por defecto es `100`.
+
+<div id="conditions">
+  ### Condiciones
+</div>
+
+`property`
+
+: El nombre de la propiedad de la entrada del contexto de evaluación con la que se va a comparar.
+
+`value`
+
+: El valor esperado con el que se comparará el valor de la propiedad del contexto de evaluación, utilizando el operador indicado.
+
+`operator`
+
+: La estrategia de comparación que se aplicará entre el valor de la propiedad del contexto de evaluación y el valor de la condición proporcionada.
+
+<div id="operators">
+  ### Operadores
+</div>
+
+Flagpole actualmente admite los siguientes tipos de `operator`:
+
+`in`
+
+: Dada una lista de valores, devuelve `True` si el valor de la propiedad de contexto existe en la lista.
+
+`not_in`
+
+: El inverso de `in`, devuelve `True` si el valor de la propiedad de contexto no existe en la lista proporcionada.
+
+`contains`
+
+: Dado un único valor int, string, float o boolean, devuelve `True` si el valor de la propiedad de contexto es una lista que contiene el valor proporcionado.
+
+`not_contains`
+
+: El inverso de `contains`, devuelve `True` si el valor de la propiedad de contexto es una lista que no contiene el valor proporcionado.
+
+`equals`
+
+: Dado un único valor int, string, float o boolean, devuelve `True` si el valor de la propiedad de contexto coincide exactamente con el valor proporcionado.
+
+`not_equals`
+
+: El inverso de `equals`, devuelve `True` si el valor de la propiedad de contexto no coincide con el valor proporcionado.
+
+<div id="evaluation-contexts">
+  ## Contextos de evaluación
+</div>
+
+Cuando se consulta un feature flag, el invocador debe proporcionar uno o más objetos de entidad para que el manejador de la característica pueda compararlos. Estos objetos se usan para construir un `EvaluationContext`, que es esencialmente un diccionario plano de claves y valores primitivos. Este contexto se pasa a cada característica, que a su vez lo proporciona a cada segmento y condición para decidir si la característica debe estar habilitada.
+
+<div id="context-builders">
+  ### Constructores de contexto
+</div>
+
+Cada contexto de evaluación se construye por etapas mediante un objeto [`ContextBuilder`](https://github.com/getsentry/sentry/blob/3cbf73a389a4ea006cbad9d8c4b8073effe09393/src/flagpole/evaluation_context.py#L54).
+
+Cada constructor de contexto consta de una lista de transformadores de contexto, responsables de crear partes individuales del contexto de evaluación general.
+
+Estas son algunas propiedades comunes que exponemos mediante nuestros constructores de contexto de Sentry y GetSentry y que puedes usar en tus condiciones:
+
+**Propiedades del contexto del sistema**
+
+`sentry_region` [str]
+
+: La región de Sentry o el entorno monoinquilino en el que se realiza la comprobación del flag.
+
+`sentry_singletenant` [bool]
+
+: Indica si la aplicación se ejecuta en un entorno monoinquilino.
+
+**Propiedades del contexto de la organización**
+
+`organization_id` [int]
+
+: ID de la organización
+
+`organization_slug` [str]
+
+: Slug de la organización
+
+`organization_name` [str]
+
+: Nombre de la organización
+
+`organization_is-early-adopter` [bool]
+
+: Indica si la organización tiene habilitado el flag `early_adopter`.
+
+**Propiedades del contexto del proyecto (si se comprueba una función del proyecto)**
+
+`project_id` [int]
+
+: ID del proyecto
+
+`project_slug` [str]
+
+: Slug del proyecto
+
+`project_platform` [str]
+
+: Plataforma del proyecto
+
+**Propiedades del contexto del usuario (si se comprueba un flag con un actor)**
+
+`user_id` [int]
+
+: ID del usuario activo
+
+`user_email` [str]
+
+: Dirección de correo electrónico del usuario activo. Solo debería contener direcciones de empleados de Sentry.
+
+`user_domain` [str]
+
+: Dominio de la dirección de correo electrónico del usuario activo.
+
+`user_is-staff` [bool]
+
+: Se establece en `true` para usuarios con `is_staff`.
+
+`user_is-superuser` [bool]
+
+: Se establece en `true` para usuarios con `is_superuser`.
+
+Para ver las últimas propiedades de contexto disponibles, consulta los constructores de contexto específicos del repositorio:
+
+- [Sentry Context Builder](https://github.com/getsentry/sentry/blob/master/src/sentry/features/flagpole_context.py)
+- [GetSentry Context Builder](https://github.com/getsentry/getsentry/blob/master/getsentry/feature_handlers/getsentry_flagpole_context_builder.py)
+
+<div id="rolling-out-a-new-flagpole-feature">
+  ## Implementar una nueva función de Flagpole
+</div>
+
+Crear una nueva función de Flagpole es actualmente un proceso de 2 pasos:
+
+1. Registra una nueva función en el archivo `temporary.py` de Sentry o en el archivo `features.py` de GetSentry con la estrategia Flagpole:
+
+```python
+features.add(
+    "<feature_scope>:<feature_name>",
+    OrganizationFeature,
+    FeatureHandlerStrategy.FLAGPOLE
+)
+```
+
+2. Agrega una nueva entrada de objeto de función en el archivo `flagpole.yml` de sentry-options-automator. El nombre de la opción de la función debe seguir el formato siguiente para que Flagpole la detecte:
+
+```
+feature.<alcance_función>:<nombre_función>
+```
+
+<Alert>
+  No combines la configuración de la funcionalidad hasta que el commit de registro del paso 1 se haya implementado por completo en todos los entornos de destino. Esto se debe a que Options Automator no podrá enviar opciones a los entornos que no tengan registrada la opción.
+  Si esto ocurre, asegúrate de volver a ejecutar el despliegue de opciones una vez que todos los entornos se hayan actualizado, para garantizar que tu funcionalidad esté activa.
+</Alert>
+
+Una vez desplegado el cambio de opción, las comprobaciones de la funcionalidad estarán activas de inmediato en todos los entornos y regiones.
+
+
+<div id="using-flagpole-in-single-tenants">
+  ## Usar Flagpole en entornos de inquilino único
+</div>
+
+Para permitir que la configuración de la función de Flagpole se use en entornos de inquilino único, tendrás que agregar el nombre de la función a la lista `flagpole.allowed_features` para cada inquilino. Por ejemplo, en `options/regions/acme.yml` agrega lo siguiente:
+
+```yaml
+opciones:
+    flagpole.allowed_features: ["organizations:is_sentry"]
+```
+
+También puedes usar los valores de contexto `sentry_singletenant` y `sentry_region` en
+tus condiciones de características según sea necesario.
+
+
+<div id="testing-a-flagpole-feature-locally">
+  ## Probar una funcionalidad de Flagpole localmente
+</div>
+
+Puedes probar un feature flag de Flagpole localmente usando el devserver de GetSentry.
+Como el controlador de funcionalidades de Flagpole solo existe en GetSentry, no es posible
+probar funcionalidades de Flagpole usando el devserver de Sentry por el momento.
+
+Empieza creando un archivo YAML nuevo que contenga la configuración de tu funcionalidad:
+
+```yaml
+options:
+  'feature.organizations:is_sentry':
+    created_at: '2024-06-01T00:00:00.000000'
+    enabled: false
+    owner: hybrid-cloud
+    segments:
+    - conditions:
+      - operator: in
+        value:
+          - sentry
+        property: organization_slug
+      name: is_sentry
+      rollout: 100
+```
+
+Puedes enviar tu opción de funcionalidad a tu servidor de desarrollo local con el siguiente comando de la CLI `getsentry configoptions`:
+
+```bash
+getsentry configoptions -f <ruta>/<a>/<tu>/<configuración>.yml -l DEBUG patch
+```
+
+Si este comando se ejecuta correctamente, la función de flagpole debería estar
+activa en tu instancia local de devserver y permanecerá activa entre ejecuciones hasta que
+elimines la opción de la función.
+
+Para desactivar la función, comenta o elimina su configuración del
+objeto `option` y vuelve a ejecutar el comando `getsentry configoptions` indicado arriba.
+
+
+<div id="removing-flagpole-features">
+  ## Eliminación de funciones de Flagpole
+</div>
+
+Como nuestro CI del automatizador de opciones depende de las definiciones de funciones tanto en Sentry como en GetSentry, las banderas deben eliminarse en un orden específico para evitar fallos en las pruebas:
+
+1. Elimina todas las comprobaciones de la bandera en el código y establece un valor predeterminado de `True` para la bandera.
+2. Una vez que se hayan eliminado todas las comprobaciones de la bandera y los cambios se hayan desplegado en todos los entornos, elimina la configuración de la feature flag en el automatizador de opciones.
+3. Elimina el [registro de la función](#rolling-out-a-new-flagpole-feature) de GetSentry o Sentry.

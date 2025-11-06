@@ -1,0 +1,91 @@
+---
+title: Administra tu cuota de Replay
+keywords:
+  - buenas prácticas
+sidebar_order: 50
+description: >-
+  Aprende a usar las herramientas de Sentry para administrar la cantidad de reproducciones de sesión por las que pagas.
+og_image: /og-images/pricing-quotas-manage-replay-quota.png
+---
+
+A continuación encontrarás cómo y dónde administrar tu cuota de Replay, cómo verificar qué proyectos consumen más que otros y qué esperar si necesitas aumentar o reducir el gasto.
+
+<div id="before-you-begin-check-your-quota-usage">
+  ## Antes de empezar: revisa el uso de tu cuota
+</div>
+
+Puedes ver tus replays de forma agregada en la pestaña &quot;Usage Stats&quot; de la página **Stats** para entender el desglose de tus replays entrantes y ver qué proyectos están consumiendo tu cuota. Esto puede ayudarte a determinar dónde necesitas afinar más tus filtros y la configuración del SDK.
+
+Esta página es accesible para todos los miembros de tu organización, por lo que los propietarios de tu organización de Sentry podrán compartirla con los desarrolladores directamente responsables de un proyecto determinado. También podrás usar esta página para evaluar si los cambios que has realizado están teniendo el efecto deseado.
+
+<div id="how-can-i-see-a-breakdown-of-incoming-replays">
+  ### ¿Cómo puedo ver un desglose de las repeticiones entrantes?
+</div>
+
+La pestaña Usage Stats muestra detalles sobre la cantidad total de datos que Sentry ha recibido en toda tu organización durante un máximo de 90 días. La página desglosa los eventos (por proyecto) en tres categorías: aceptados, descartados o filtrados. Solo las repeticiones aceptadas afectan tu cuota:
+
+![Página de Usage Stats que muestra repeticiones](./img/usage-stats-replay.png)
+
+<div id="which-projects-are-consuming-my-quota">
+  ### ¿Qué proyectos están consumiendo mi cuota?
+</div>
+
+La tabla “Project” en la pestaña “Usage Stats” de la página de estadísticas desglosa tus datos por proyecto para que puedas identificar cuáles consumen más cuota. Al hacer clic en el ícono de configuración junto al nombre de un proyecto en la tabla, se abrirá la página de configuración del proyecto, donde puedes gestionar sus [filtros de entrada](#2-inbound-data-filters) y los límites de solicitudes.
+
+<div id="adjusting-quotas">
+  ## Ajuste de cuotas
+</div>
+
+<Alert>
+  Las cuotas solo pueden actualizarse por un miembro con nivel Billing o Owner de tu organización de Sentry.
+</Alert>
+
+Cuando el volumen de reproducciones se acerque a su cuota o la haya superado, los miembros con el permiso de organización &quot;Owner&quot; empezarán a recibir correos electrónicos de [notificación](/es/product/alerts/notifications/#quota-notifications). A partir de ahí podrán [aumentar](#increasing-quotas) o [reducir](#decreasing-quotas) tu cuota.
+
+<div id="increasing-quotas">
+  ### Aumentar las cuotas
+</div>
+
+Si estás descartando replays que quieres conservar porque superaste tu cuota, puedes aumentarla en cualquier momento durante tu período de facturación incrementando tu presupuesto [reservado](#reserved-volume) o de [pago por uso](/es/pricing/#pricing-how-it-works).
+
+Cuando superas el umbral de tu cuota, el servidor responde con el código de estado HTTP 429, que indica a los SDK y a los clientes que dejen de enviar replays. Este código incluye el encabezado `Retry-After`, que indica el tiempo durante el cual el límite de velocidad está activo. Para evitar acumulaciones en la cola, en lugar de reintentar los eventos, los clientes deben descartarlos hasta que expire el límite. Ten en cuenta que, dado que la ingesta de eventos y la limitación de velocidad ocurren de forma asíncrona, el código 429 siempre llega con un ligero retraso.
+
+Para aumentar tu cuota, ve a **Settings &gt; Subscription** y haz clic en el botón &quot;Manage Subscription&quot; para acceder a las opciones de tu suscripción. Al aumentar tu cuota, el cambio entra en vigor de inmediato.
+
+Si estás en el plan Developer y quieres aumentar tu cuota, tendrás que actualizar al plan Team o Business, que permiten prepagar más volumen de replay y comprar presupuesto de pago por uso según sea necesario. Obtén más información sobre los planes de Sentry en nuestra [página de precios](https://sentry.io/pricing/).
+
+<Alert>
+  Si actualizas de Team a Business a mitad del período de facturación, tu precio de pago por uso cambia retroactivamente.
+</Alert>
+
+<div id="increasing-reserved-volume">
+  ### Aumentar el volumen reservado
+</div>
+
+Si la cantidad de replays que necesitas crece de forma constante, quizá quieras aumentar tu capacidad o volumen reservado. El volumen reservado es más económico que el modelo de pago por uso, ya que lo pagas por adelantado. También te permite elegir de antemano la cantidad de replays que quieres tener disponibles, en lugar de fijar un presupuesto arbitrario de pago por uso. Obtén más información sobre el [volumen reservado](/es/pricing/#prepaid-reserved-capacity) en nuestra documentación de precios.
+
+No deberías aumentar tu volumen reservado si crees que tu necesidad de más eventos es temporal, ya que [reducir tu volumen reservado está ligado a tu periodo de facturación](#decreasing-quotas).
+
+<div id="increasing-pay-as-you-go-budget">
+  ### Aumentar el presupuesto de pago por uso
+</div>
+
+Si necesitas aumentar temporalmente tu cuota de reproducciones, te recomendamos añadir o incrementar tu presupuesto de pago por uso. Esto es ideal, por ejemplo, cuando vas a lanzar una nueva versión de tu aplicación y prevés recibir más datos ese mes. Para añadir presupuesto de pago por uso, define un presupuesto mensual máximo ya sea de forma compartida (el presupuesto se reparte entre eventos como reproducciones y errores) o por categoría (el presupuesto se asigna por categoría, como reproducciones). Obtén más información sobre el [presupuesto de pago por uso](/es/pricing/#pricing-how-it-works) en nuestra documentación de precios.
+
+<div id="decreasing-quotas">
+  ### Reducción de cuotas
+</div>
+
+Las reducciones de plan de facturación y de volumen reservado se procesan al final de tu ciclo de facturación, y cualquier volumen restante no es reembolsable. Por ejemplo, si tu ciclo de facturación mensual comienza el día 5 y decides reducir tu volumen reservado el 20 de junio, tu solicitud se procesará el 4 de julio. Tu solicitud de reducción se reflejará a partir del ciclo de facturación del 5 de julio.
+
+<Alert level="warning">
+  Si tienes un periodo de facturación anual, las reducciones de plan y de volumen reservado entran en vigor al comienzo de tu **próximo año de facturación.**
+</Alert>
+
+Los cambios en el presupuesto de pago por uso normalmente entran en vigor en cuestión de minutos y, como máximo, dentro de 24 horas. Sin embargo, no puedes reducir tu presupuesto de pago por uso por debajo de lo que ya hayas consumido en un periodo de facturación.
+
+Para reducir tu cuota, ve a **Settings &gt; Subscription** y haz clic en &quot;Manage Subscriptions&quot;. Cuando llegues al paso &quot;Review &amp; Confirm&quot;, se mostrará la fecha en que estos cambios entrarán en vigor.
+
+<Alert>
+  Recomendamos encarecidamente realizar cambios en la suscripción **antes** del último día de tu periodo de facturación. En algunos casos, los cambios hechos el último día del periodo no entrarán en vigor hasta el siguiente periodo de facturación (según tu zona horaria).
+</Alert>

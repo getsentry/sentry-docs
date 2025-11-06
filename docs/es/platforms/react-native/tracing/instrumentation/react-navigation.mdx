@@ -1,0 +1,64 @@
+---
+title: React Navigation
+description: "Aprende a usar la instrumentación de React Navigation de Sentry."
+sidebar_order: 40
+---
+
+El paquete del SDK de React Native de Sentry incluye instrumentación para React Navigation. Esto te permite ver el rendimiento de las transiciones de navegación y los errores que se producen durante ellas. En esta página te guiaremos para configurar la instrumentación y ajustarla a tus necesidades.
+
+<div id="initialization">
+  ## Inicialización
+</div>
+
+El siguiente fragmento de código muestra cómo inicializar la instrumentación.
+
+<Include name="react-native-react-navigation-setup.mdx" />
+
+<div id="options">
+  ## Opciones
+</div>
+
+Puedes configurar la instrumentación pasando un objeto de opciones al constructor:
+
+```javascript
+Sentry.reactNavigationIntegration({
+  enableTimeToInitialDisplay: true, // por defecto: false
+  routeChangeTimeoutMs: 1_000, // por defecto: 1_000
+  ignoreEmptyBackNavigationTransactions: true, // por defecto: true
+  useDispatchedActionData: true, // por defecto: false
+});
+```
+
+<div id="routechangetimeoutms">
+  ### routeChangeTimeoutMs
+</div>
+
+Esta opción especifica cuánto tiempo esperará la instrumentación a que la ruta se monte tras iniciarse un cambio antes de descartar la transacción. El valor predeterminado es `1_000`.
+
+<div id="enabletimetoinitialdisplay">
+  ### enableTimeToInitialDisplay
+</div>
+
+Esta opción habilita la medición automática del tiempo hasta la primera visualización para cada ruta. Para obtener más información, consulta [Time to Initial Display](/es/platforms/react-native/tracing/instrumentation/time-to-display). El valor predeterminado es `false`.
+
+<div id="ignoreemptybacknavigationtransactions">
+  ### ignoreEmptyBackNavigationTransactions
+</div>
+
+Esto garantiza que las transacciones provenientes de rutas ya visitadas y que no tienen spans no se muestren. Esto elimina mucho ruido y hace que la mayoría de las transacciones de navegación hacia atrás se ignoren. El valor predeterminado es `true`.
+
+<div id="usedispatchedactiondata">
+  ### useDispatchedActionData
+</div>
+
+Esta opción define si se deben usar los datos de la acción despachada para completar los metadatos de la transacción. Cuando se establece en `true`, la integración filtrará las acciones de navegación que no deberían crear spans. El valor predeterminado es `false`.
+
+<div id="notes">
+  ## Notas
+</div>
+
+* Esta instrumentación es compatible con React Navigation versión 5 y posteriores. A partir de la versión 6 del SDK, React Navigation versión 4 dejará de estar soportada. Actualiza por favor.
+
+* La instrumentación crea una transacción en cada cambio de ruta, incluidas las navegaciones con `goBack`.
+
+* Si vienes de una versión anterior a la 2.3.0, asegúrate de actualizar el lugar donde se llama a `registerNavigationContainer`. Para obtener instrucciones más detalladas, consulta [nuestra guía de migración](/es/platforms/react-native/migration/#react-navigation-instrumentation-from-230).

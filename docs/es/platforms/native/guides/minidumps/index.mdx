@@ -1,0 +1,131 @@
+---
+title: Minidumps
+description: "Aprende cómo Sentry procesa los informes de fallos Minidump."
+---
+
+Sentry puede procesar informes de fallos Minidump, un volcado de memoria usado en Windows y por
+bibliotecas de código abierto como [*Breakpad*](/es/platforms/native/guides/breakpad/) o [*Crashpad*](/es/platforms/native/guides/crashpad/).
+
+<Alert>
+  Esta página describe el uso **independiente** de Minidumps con Sentry. Te recomendamos encarecidamente usar nuestro [SDK nativo](/es/platforms/native/), ya que las cargas de Minidumps tienen una funcionalidad muy limitada.
+</Alert>
+
+Para obtener trazas de pila simbolizadas, debes subir información de depuración a Sentry. Para más información, consulta [Archivos de información de depuración](/es/platforms/native/guides/minidumps/data-management/debug-files/).
+
+<div id="what-is-a-minidump">
+  ## ¿Qué es un minidump?
+</div>
+
+Los minidumps son archivos que contienen las regiones de memoria más importantes de un
+proceso que se ha bloqueado. Cuando el proceso falla, el minidump se escribe en el disco del usuario
+y luego se puede subir a Sentry. Un minidump suele incluir:
+
+* La pila de ejecución de cada hilo que estaba activo en el momento del fallo.
+  Esto te permite reconstruir trazas de pila para todas las pilas e incluso inferir
+  valores de variables en algunos casos.
+* Los contextos de los hilos —es decir, los valores de los registros— en el momento del fallo. Esto
+  es especialmente relevante para el recorrido de pilas.
+* Opcionalmente, el heap del proceso. De forma predeterminada, no se incluye para mantener
+  los minidumps a un tamaño razonable. Sentry no lee el heap, por lo que puede
+  omitirse sin problema. Al usar los SDK de Sentry, no se incluye memoria del heap en los minidumps.
+* El motivo del fallo y una dirección de memoria opcional asociada con el fallo.
+  Por ejemplo, infracciones de acceso a memoria. En el caso de las aserciones, el
+  mensaje de aserción también se incluye en el volcado.
+* Metadatos sobre la arquitectura de la CPU y el sistema operativo del usuario.
+
+<Alert title="Una palabra sobre la privacidad de los datos">
+  Los minidumps son volcados de memoria del proceso en el momento en que se bloquea. Por lo tanto,
+  podrían contener información sensible del sistema de destino, como
+  variables de entorno, rutas locales o incluso representaciones en memoria
+  de campos de entrada, incluidas contraseñas. **Sentry no almacena estos volcados de memoria
+  de forma predeterminada**. Una vez procesados, se eliminan de inmediato y toda la información sensible
+  se elimina de los issues resultantes.
+  Puedes configurar Sentry para almacenar el minidump como un archivo adjunto.
+</Alert>
+
+Además de esta información, puedes añadir más metadatos específicos de
+Sentry, que pueden ayudar a organizar y analizar issues. Para obtener más información,
+consulta [Passing Additional Data](#minidump-additional).
+
+<div id="creating-and-uploading-minidumps">
+  ## Creación y carga de minidumps
+</div>
+
+Según tu sistema operativo y lenguaje de programación, hay varias
+alternativas para crear minidumps y subirlos a Sentry. Consulta los siguientes
+recursos para bibliotecas que admiten la generación de informes de fallos en minidump:
+
+* [Native SDK](/es/platforms/native/)
+* [Google Breakpad](/es/platforms/native/guides/breakpad/)
+* [Google Crashpad](/es/platforms/native/guides/crashpad/)
+
+Si ya integraste una biblioteca que genera minidumps y solo
+quieres subirlos a Sentry, debes configurar la *URL del endpoint de Minidump*,
+que se encuentra en *Project Settings &gt; Client Keys (DSN)*. Este
+endpoint espera una solicitud `POST` con el minidump en el campo
+`upload_file_minidump`:
+
+```bash
+curl -X POST \
+  '___MINIDUMP_URL___' \
+  -F upload_file_minidump=@mini.dmp
+```
+
+Para enviar información adicional, agrega más campos de formulario a esta solicitud. Para obtener una descripción completa de los campos que acepta Sentry, consulta [Passing Additional Data](#minidump-additional).
+
+<div id="passing-additional-data">
+  ## Incluir datos adicionales
+</div>
+
+Puedes añadir más información a los informes de fallos simplemente agregando más campos a
+la solicitud HTTP de carga. Todos estos campos se recopilarán en la sección “Datos adicionales”
+de Sentry:
+
+```bash
+curl -X POST \
+  '___MINIDUMP_URL___' \
+  -F upload_file_minidump=@mini.dmp \
+  -F custom_field=value
+```
+
+Además, puedes configurar todos los atributos correspondientes a la interfaz de eventos de Sentry en el campo `sentry`. Este campo acepta datos JSON o bien puedes aplanar sus valores con la sintaxis de corchetes. Por ejemplo, para establecer la versión (release) y añadir una etiqueta, envía:
+
+```bash
+# Como JSON
+curl -X POST \
+  '___MINIDUMP_URL___' \
+  -F upload_file_minidump=@mini.dmp \
+  -F 'sentry={"release":"my-project-name@2.3.12","tags":{"mytag":"value"}}'
+
+# aplanado
+curl -X POST \
+  '___MINIDUMP_URL___' \
+  -F upload_file_minidump=@mini.dmp \
+  -F 'sentry[release]=my-project-name@2.3.12' \
+  -F 'sentry[tags][mytag]=value'
+```
+
+Para ver la lista completa de valores admitidos, consulta [*Event Payloads*](https://develop.sentry.dev/sdk/data-model/event-payloads/) y los documentos enlazados.
+
+Si el tamaño de tu minidump supera los [límites](#size-limits) de la siguiente sección, puedes comprimirlo con `gzip`, `zstd`, `bzip2` o `xz`, y hacer que `upload_file_minidump` apunte al archivo comprimido en lugar del minidump sin comprimir.
+
+<div id="size-limits">
+  ## Límites de tamaño
+</div>
+
+La ingesta de eventos impone límites al tamaño y al número de campos en las cargas
+multipartes. Estos límites están sujetos a cambios y actualmente se definen como:
+
+* *20 MB* para una solicitud de minidump comprimida
+* *100 MB* para el cuerpo completo después de la descompresión
+* *100 MB* para todos los archivos combinados
+* *100 MB* para cada archivo individual
+* *1 MB* para las cargas útiles de eventos
+
+<div id="store-minidumps-as-attachments">
+  ## Almacenar minidumps como archivos adjuntos
+</div>
+
+<Include name="store-minidumps-as-attachments-intro" />
+
+<Include name="store-minidumps-as-attachments-configuration" />

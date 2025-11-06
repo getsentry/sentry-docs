@@ -1,0 +1,70 @@
+---
+title: Manejo de señales
+description: "Aprende sobre el manejo de errores común a todas las plataformas POSIX."
+sidebar_order: 1000
+---
+
+El SDK nativo utiliza el manejo de señales en todas las plataformas compatibles. En Linux (y Android) es el mecanismo principal para detectar errores. En macOS y Windows, los controladores de señales detectan errores específicos que otros mecanismos no detectan.
+
+Una señal (POSIX) es una forma en que el kernel de un sistema operativo informa a una aplicación sobre un evento excepcional y proporciona un mecanismo para que la aplicación reaccione a ese evento. El sistema operativo entrega esta información interrumpiendo la ejecución actual de la aplicación afectada con una función controladora (“handler”) que la aplicación registró previamente.
+
+Este documento ofrece orientación sobre el manejo de señales en el SDK nativo. Si deseas aprender más sobre el manejo de señales en general, recomendamos los siguientes recursos:
+
+* El [artículo de Wikipedia sobre Signal (IPC)](https://en.wikipedia.org/wiki/Signal_\(IPC\)) ofrece una visión general de las señales y describe muchas señales POSIX.
+* La [documentación de glibc](https://www.gnu.org/software/libc/manual/html_node/Signal-Handling.html) y [las páginas del manual](https://man7.org/linux/man-pages/man7/signal.7.html) ofrecen detalles de referencia sobre la terminología de señales.
+* Si quieres una cobertura a nivel de libro, recomendamos los capítulos 20–22 de [The Linux Programming Interface](https://man7.org/tlpi/) de Michael Kerrisk.
+
+<div id="signal-handling-conflicts">
+  ## Conflictos en el manejo de señales
+</div>
+
+El SDK nativo de Sentry incluye su propio conjunto de controladores de señales. Puede haber conflictos si tu aplicación instala controladores para alguna de las [señales de interés](#signals-of-interest) (enumeradas abajo) que puedan provocar un bloqueo. Para evitarlo, haz lo siguiente:
+
+* Evita registrar en tu aplicación un controlador de señales que entre en conflicto.
+* Si debes hacerlo, registra tu controlador después de `sentry_init()` y haz que invoque el controlador de Sentry al finalizar; de lo contrario, no recibirás un informe.
+* Si tú o alguna de tus dependencias registran un controlador para las señales listadas abajo *antes* de llamar a `sentry_init()`, Sentry reinstalará ese controlador en cuanto llames a `sentry_close()`. Solo el backend `inproc` invoca tu controlador instalado al final del controlador de Sentry.
+* Si quieres actuar ante cualquier bloqueo sin considerar señales específicas, [registra un hook `on_crash()`](/es/platforms/native/configuration/filtering/#using-on_crash) en lugar de registrar un controlador de señales.
+
+<div id="signals-of-interest">
+  ### Señales de interés
+</div>
+
+En el contexto del Native SDK, solo nos interesan las señales que provocan la finalización inesperada de la aplicación (crashes). Estas suelen incluir:
+
+* `SIGSEGV`: El proceso intentó acceder a un “segmento” de memoria virtual no válido.
+* `SIGBUS`: El proceso intentó acceder a una dirección física no válida o una página de memoria virtual falló al cargarse.
+* `SIGABRT`: Se genera cuando se llama a `abort()`. Esta es la única señal gestionada en Windows (y solo por el backend `crashpad`) porque llamar a `abort()` evita el Structured Exception Handling ([`SEH`](https://learn.microsoft.com/en-us/windows/win32/debug/structured-exception-handling)).
+* `SIGFPE`: Se produjo una operación aritmética errónea en la CPU.
+* `SIGILL`: El proceso intentó ejecutar una instrucción de procesador ilegal (a menudo privilegiada).
+* `SIGTRAP`: Normalmente se usa para informar a los depuradores cuando la ejecución alcanza una instrucción de punto de interrupción (`int 3`, `brk`, etc.). Las herramientas de instrumentación y los sanitizadores a veces también emiten puntos de interrupción.
+
+Si usas el backend `crashpad`, además de lo anterior, en Linux también obtendrás informes de crash para:
+
+* `SIGSYS`: El kernel recibió una llamada al sistema con un argumento no válido.
+* `SIGEMT`: Se produjo una trampa de emulador.
+* `SIGXCPU`: El proceso superó un [rlimit](https://pubs.opengroup.org/onlinepubs/9699919799/functions/getrlimit.html) de CPU especificado previamente.
+* `SIGXFSZ`: Se genera cuando un proceso expande un archivo más allá del tamaño máximo permitido ([`RLIMIT_FSIZE`](https://man7.org/linux/man-pages/man2/getrlimit.2.html)).
+
+<div id="what-to-consider-when-writing-on_crash-hooks">
+  ## Qué tener en cuenta al escribir hooks de `on_crash`
+</div>
+
+El callback que registras como un hook de `on_crash` se ejecuta en el contexto de un controlador de señales. (`before_send` también se ejecuta en el contexto de un controlador de señales, a menos que lo hayas desactivado para fallos).
+
+Dado que los controladores de señales pueden interrumpir el proceso en ejecución (e incluso entre sí) en cualquier momento, presta especial atención al escribirlos.
+
+Nuestra documentación para desarrolladores ofrece [directrices para escribir controladores de señales](https://develop.sentry.dev/sdk/signal-handlers/). Si ejecutas en Linux o Android, estas directrices también se aplican a los hooks. Los controladores de señales son notoriamente difíciles de manejar, por lo que es crucial seguir estas directrices para evitar provocar fallos graves (como bloqueos y interbloqueos), que pueden impedir finalizar programas y enviar informes.
+
+<div id="stack-size-in-the-signal-handler">
+  ## Tamaño de la pila en el controlador de señales
+</div>
+
+Además de las pautas anteriores, debes tener en cuenta el uso de la pila del controlador de señales. Dado que un desbordamiento de pila (cuando se agota la pila del proceso) puede ser una de las razones para acabar en un controlador de señales, normalmente reservamos una pila independiente para el controlador de señales (`sigaltstack()`) para poder seguir ejecutándolo cuando se dispare.
+
+Esta pila es de 64 KiB en Linux. En Android, es de 16 KiB en dispositivos de 32 bits y 32 KiB en dispositivos de 64 bits.
+
+Además, es crucial entender que esta configuración de la pila del controlador de señales afecta solo a un único hilo y que el SDK nativo en Linux solo puede inicializar la pila del hilo en el que llamaste a `sentry_init()`. Ninguna configuración proporciona una pila de señales alternativa si el kernel interrumpe otro hilo para manejar una señal.
+
+Esto difiere de la situación en Android, donde la implementación de `pthread` en `Bionic libc` inicializa cada hilo con una pila separada para el controlador de señales. `Bionic` establece los tamaños de pila de Android mencionados arriba, y el equipo de Android Runtime recomienda no sobrescribir estos ajustes.
+
+En este escenario, la mayoría de los tamaños de pila definidos arriba estarán completamente disponibles para tu hook `on_crash`. Aun así, sé prudente con el uso de la pila. Si necesitas llenar estructuras de datos grandes dentro del hook, recomendamos preasignarlas durante la inicialización y solo rellenar los valores dentro del hook.

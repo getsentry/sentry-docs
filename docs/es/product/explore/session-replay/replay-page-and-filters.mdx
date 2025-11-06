@@ -1,0 +1,55 @@
+---
+title: Página de Repeticiones y Filtros
+sidebar_order: 71
+description: >-
+  Aprende a navegar por la página de Repeticiones y a filtrar sesiones de
+  usuarios que cumplan condiciones específicas.
+og_image: /og-images/product-explore-session-replay-replay-page-and-filters.png
+---
+
+<Include name="session-replay-web-report-bug.mdx" />
+
+Puedes buscar o explorar repeticiones de sesiones de usuarios en la página de **Replay**, donde se organizan cronológicamente de forma predeterminada. Verás la siguiente información para cada sesión:
+
+* **Project**: El proyecto en el que se grabó la sesión.
+* **Start Time**: Hace cuánto se activó la repetición. (Las repeticiones pueden aparecer aquí mientras la grabación aún está en curso).
+* **Duration**: La duración de la repetición. (Las grabaciones pueden variar de 1 segundo a 60 minutos).
+* **Errors:** La cantidad de errores de frontend identificados por Sentry, tal como se encontraron en la repetición. (A veces, el recuento de errores informado difiere de los errores reales capturados. Lee más en [Error Linking](/es/platform-redirect/?next=/session-replay/#error-linking).)
+* **Activity**: El nivel de actividad determinado por la cantidad de errores encontrados, su duración y la cantidad de eventos de UI.
+* **Dead Clicks**: Clics del usuario en etiquetas `a` y `button` que no generan ninguna actividad en la página después de 7 segundos (es decir, no se agregó, eliminó ni actualizó HTML; no se observaron cambios visuales en la página).
+* **Rage Clicks**: Cinco o más clics en un elemento inerte (no muestra actividad en la página después de 7 segundos). Los clics de frustración son un subconjunto de los clics inertes.
+* **LIVE**: Este indicador aparece cuando una repetición aún está en curso.
+
+La página de **Replay** también tiene dos widgets titulados &quot;Most Dead Clicks&quot; y &quot;Most Rage Clicks&quot; que muestran los selectores con más clics inertes o de frustración. Al expandir el selector, se mostrarán repeticiones de ejemplo en las que se hizo clic en ese selector. También puedes hacer clic en el Button &quot;See all selectors&quot; para ver todos los selectores que han recibido clics inertes o de frustración. Se requiere la versión del SDK `7.60.1` o superior para ver datos de clics inertes y de frustración en la página de **Replay**.
+
+De forma predeterminada, la dirección IP se usa para identificar cada repetición en esta página. Esto se puede cambiar en la configuración de tu organización y proyecto. Si deseas establecer un correo electrónico o un nombre de usuario en su lugar, llama a [Sentry.setUser()](/es/platform-redirect/?next=/enriching-events/identify-user) en tu configuración del lado del cliente. Si has habilitado la opción para evitar el almacenamiento de direcciones IP en la configuración a nivel de proyecto u organización, la dirección IP aparecerá redactada en la página de **Replay**. Para obtener más información, lee sobre [varias opciones de depuración de datos](/es/security-legal-pii/scrubbing/server-side-scrubbing/) en la aplicación de Sentry, ya sea a nivel de organización o de proyecto.
+
+Las repeticiones pueden aparecer en esta página mientras aún estén en curso. Verás un indicador LIVE para las repeticiones que aún estén en curso. No puedes eliminar repeticiones en curso.
+
+Cada repetición llevará a los usuarios a la página de [**Detalles de la Repetición**](/es/product/explore/session-replay/web/replay-details/).
+
+<div id="filtering-replays">
+  ## Filtrar repeticiones
+</div>
+
+Todas las repeticiones tienen campos clave integrados y pueden tener [etiquetas personalizadas](/es/platform-redirect/?next=/enriching-events/tags/) si las configuras. La barra de búsqueda funciona de forma similar a la del [Generador de consultas](/es/product/explore/discover-queries/query-builder/#filter-by-search-conditions) de Discover. Úsala para buscar claves y valores específicos. Esto filtrará tu lista de repeticiones para que puedas encontrar rápidamente las que cumplen los criterios que te interesan. Por ejemplo, puedes acotar tu búsqueda de repeticiones a un navegador específico usando `browser.version:` como campo clave y asignando la versión como valor. Para ver la lista de todos los campos clave integrados y las propiedades de las repeticiones, consulta nuestra documentación de [Propiedades de búsqueda](/es/concepts/search/searchable-properties/session-replay/).
+
+![Resalta el campo de Filtros de búsqueda en la página de índice de Session Replay](./img/replay-index-filtering.png)
+
+<div id="deleting-replays">
+  ## Eliminación de Replays
+</div>
+
+Los replays se pueden eliminar de forma individual o de forma masiva. La eliminación masiva de replays requiere acceso project:write o project:admin.
+
+Cuando se elimina un replay, se borra permanentemente de los servidores de Sentry, con la excepción de sus metadatos. Las filas de metadatos se archivan y permanecen inaccesibles para los usuarios. Se conservan solo hasta que se eliminen conforme a la [política de retención de datos](https://sentry.io/security/#data-retention) de tu organización. Estas filas de metadatos también pueden eliminarse de manera anticipada, pero hacerlo requiere intervención manual. Para solicitarlo, envía un ticket de soporte a support@sentry.io.
+
+Para eliminar un [replay individual](/es/product/explore/session-replay/web/replay-details/#delete-replays), ve a la página Replay Details y haz clic en el enlace &quot;Delete&quot;, que se encuentra debajo del botón &quot;...&quot; (más opciones).
+
+Para eliminar varios replays a la vez, ve a la página **Replay** y usa las casillas junto a cada fila de replay para seleccionar los que deseas eliminar. Luego, haz clic en el botón &quot;Delete&quot; para quitar los replays seleccionados. Eliminar una gran cantidad de replays puede tardar un tiempo. Si hay una tarea en ejecución, verás un banner en la parte superior de la lista de Replay y un enlace a &quot;Track Progress&quot;. También puedes visitar Settings &gt; Project &gt; MyProject &gt; Replays para ver el historial de tareas de eliminación anteriores.
+
+![](./img/replay-index-delete-visible.png)
+
+Como alternativa, puedes eliminar todos los replays que coincidan con una búsqueda haciendo clic en &quot;Select all&quot; en la parte superior de la lista de resultados. Esto selecciona todos los replays que coinciden con los filtros actuales, no solo los visibles en la página.
+
+![](./img/replay-index-delete-all.png)

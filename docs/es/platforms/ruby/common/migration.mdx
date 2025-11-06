@@ -1,0 +1,321 @@
+---
+title: Guía de migración
+sidebar_order: 8000
+description: "Aprende a migrar desde el SDK sentry-raven obsoleto."
+---
+
+<div id="table-of-content">
+  ## Tabla de contenidos
+</div>
+
+* [Ventajas](#benefits)
+* [Cambios importantes](#major-changes)
+* [Cambios de configuración](#configuration-changes)
+* [Cambios en la API](#api-changes)
+* [Aplicaciones de ejemplo](#example-apps)
+* [Bifurcación de la comunidad](#community-fork)
+
+<div id="benefits">
+  ## Beneficios
+</div>
+
+* **Interfaces unificadas con otros SDK:** El diseño de `sentry-raven` está desfasado en comparación con nuestros SDK modernos de Sentry. Si también usas otros SDK de Sentry, como el SDK de JavaScript de Sentry para tu aplicación de frontend, notarás que sus interfaces difieren bastante de la que ofrece `sentry-raven`. El nuevo SDK `sentry-ruby` proporciona una experiencia de usuario más coherente en todas las plataformas.
+
+* **Tracing:** El SDK de Sentry para Ruby incluye [tracing](/es/product/insights/overview/), que puedes habilitar si aún no lo has hecho (como se [explica aquí](/es/platforms/ruby/tracing/)).
+
+* **Soporte futuro:** `sentry-raven` ha entrado en modo de mantenimiento, lo que significa que no recibirá nuevas funcionalidades ni correcciones de errores importantes.
+
+* **Mayor extensibilidad:** A diferencia de `sentry-raven`, `sentry-ruby` está diseñado con la extensibilidad en mente y permitirá a la comunidad crear extensiones para distintas integraciones y funcionalidades.
+
+<div id="major-changes">
+  ## Cambios importantes
+</div>
+
+<Alert>
+  Ruby 2.3 y Rails 4 ya no reciben soporte.
+</Alert>
+
+<div id="integrations-were-extracted">
+  #### Se separaron las integraciones
+</div>
+
+El SDK de Ruby de Sentry sigue siendo compatible con `Rack` mediante un middleware incorporado, pero tendrás que instalar gems para las integraciones con `Rails`, `sidekiq`, `delayed_job` y otras bibliotecas.
+
+Las integraciones disponibles actualmente son:
+
+* [sentry-rails](https://github.com/getsentry/sentry-ruby/tree/master/sentry-rails)
+* [sentry-sidekiq](https://github.com/getsentry/sentry-ruby/tree/master/sentry-sidekiq)
+* [sentry-delayed&#95;job](https://github.com/getsentry/sentry-ruby/tree/master/sentry-delayed_job)
+* [sentry-resque](https://github.com/getsentry/sentry-ruby/tree/master/sentry-resque)
+
+<div id="removed-processors">
+  #### Procesadores eliminados
+</div>
+
+En `sentry-raven` contamos con distintas clases de procesadores para depurar datos. Sin embargo, la versión actual del SDK de Sentry para Ruby no admite estos procesadores. En su lugar, para proteger los datos sensibles de los usuarios, el SDK de Ruby incorpora una nueva opción de configuración: `send_default_pii`. Cuando el valor está establecido en `false` (predeterminado), no se enviará a Sentry información sensible como:
+
+* IP del usuario
+* cookie del usuario
+* cuerpo de la solicitud
+* parámetros de consulta
+
+Puedes volver a habilitarlo configurando:
+
+```ruby
+config.send_default_pii = true
+```
+
+En lo que respecta al saneamiento de datos sensibles, utiliza la función [Advanced Data Scrubbing](/es/security-legal-pii/scrubbing/advanced-datascrubbing/) de Sentry.
+
+<div id="new-components-and-structure">
+  #### Nuevos componentes y estructura
+</div>
+
+El SDK de Ruby de Sentry utiliza una estructura unificada que introduce dos nuevos componentes: `Hub` y `Scope` ([ambos documentados aquí](/es/platforms/ruby/enriching-events/scopes/)). La mayoría de los usuarios no interactuarán directamente con `Hub`, pero sí necesitarán `Scope` para configurar datos contextuales.
+
+<div id="context-interfaces-changed">
+  #### Cambiaron las interfaces de contexto
+</div>
+
+En `sentry-raven`, ofrecíamos utilidades como `Raven.user_context` para establecer datos contextuales. En nuestro SDK de Ruby actualizado, esas utilidades se eliminaron y tendrás que usar un enfoque diferente para configurar esos datos, por ejemplo:
+
+Configurar datos de forma global
+
+```ruby
+# Antes
+Raven.user_context(id: 1)
+
+# Después
+Sentry.set_user(id: 1)
+```
+
+Configurar datos en un alcance local
+
+```ruby
+# Antes
+Raven.tags_context(foo: "bar") do
+  Raven.capture_message("test")
+end
+
+# Después
+Sentry.with_scope do |scope|
+  scope.set_tags(foo: "bar")
+
+  Sentry.capture_message("test")
+end
+```
+
+<div id="configuration-changes">
+  ## Cambios en la configuración
+</div>
+
+<div id="removed">
+  #### Eliminado
+</div>
+
+```ruby
+config.sanitize_credit_cards
+config.sanitize_fields
+config.sanitize_fields_excluded
+config.sanitize_http_headers
+
+config.scheme
+config.secret_key
+config.server
+
+config.tags
+config.logger
+config.encoding
+config.silence_ready
+
+# por favor, usa solo config.before_send
+config.should_capture
+config.transport_failure_callback
+```
+
+<div id="renamedrelocated">
+  #### Renombrado/Reubicado
+</div>
+
+```ruby
+config.current_environment #=> config.environment
+config.environments #=> config.enabled_environments
+
+config.rails_report_rescued_exceptions #=> config.rails.report_rescued_exceptions with sentry-rails installed
+
+config.ssl #=> config.transport.ssl
+config.ssl_ca_file #=> config.transport.ssl_ca_file
+config.ssl_verification #=> config.transport.ssl_verification
+config.timeout #=> config.transport.timeout
+config.open_timeout #=> config.transport.open_timeout
+config.proxy #=> config.transport.proxy
+
+# Estas opciones están presentes en sentry-ruby 4.* pero se eliminaron en 5.0 con la eliminación de faraday
+config.http_adapter #=> config.transport.http_adapter
+config.faraday_builder #=> config.transport.faraday_builder
+```
+
+<div id="added">
+  #### Novedades
+</div>
+
+Esta sección solo incluye algunas incorporaciones importantes. Consulta la lista completa de opciones de configuración [aquí](/es/platforms/ruby/configuration/options/)
+
+```ruby
+# esto se comporta de manera similar a la antigua opción config.scheme
+config.transport.transport_class = MyTransportClass
+
+# sentry-ruby envía eventos de forma asíncrona con sus propios workers en segundo plano
+# el número predeterminado de workers es igual al número de procesadores de tu máquina
+# puedes ajustar el número con
+config.background_worker_threads = 10
+
+# para enviar eventos de forma síncrona como lo hace sentry-raven, establécelo en 0
+config.background_worker_threads = 0
+```
+
+<div id="api-changes">
+  ## Cambios en la API
+</div>
+
+En esta sección, ofrecemos ejemplos de código para guiarte por los cambios necesarios para la migración.
+
+**Instalación**
+
+Anterior:
+
+```ruby
+gem "sentry-raven"
+```
+
+Novedades:
+
+```ruby
+gem "sentry-ruby"
+
+# y las integraciones que necesitas
+gem "sentry-rails"
+gem "sentry-sidekiq"
+gem "sentry-delayed_job"
+gem "sentry-resque"
+```
+
+**Configuración**
+
+Anterior:
+
+```ruby
+Raven.configure do |config|
+  config.dsn = "DSN"
+end
+```
+
+Novedad:
+
+```ruby
+Sentry.init do |config|
+  config.dsn = "DSN"
+
+  # Agrega datos como encabezados de solicitud e IP de usuarios, si corresponde;
+  # consulta https://docs.sentry.io/platforms/ruby/data-management/data-collected/ para más información
+  config.send_default_pii = true
+end
+```
+
+**Configurar datos contextuales (global)**
+
+Anterior:
+
+```ruby
+Raven.user_context(id: 1)
+Raven.context.tags = { foo: "bar" }
+Raven.context.extra = { debug: true }
+```
+
+Novedad:
+
+```ruby
+Sentry.set_user(id: 1)
+Sentry.set_tags(foo: "bar")
+Sentry.set_extras(debug: true)
+```
+
+**Establecer datos contextuales (local)**
+
+Anterior:
+
+```ruby
+Raven.user_context(id: 1) do
+  # enviar evento
+end
+Raven.tag_context(foo: "bar") do
+  # enviar evento
+end
+Raven.extra_context(debug: true) do
+  # enviar evento
+end
+```
+
+Nuevo:
+
+```ruby
+Sentry.with_scope do |scope|
+  scope.set_user(id: 1)
+  scope.set_tags(foo: "bar")
+  scope.set_extras(debug: true)
+  # enviar evento
+end
+```
+
+**Captura manual de mensajes/excepciones**
+
+Versión anterior:
+
+```ruby
+Raven.capture_message("test", extra: { debug: true })
+```
+
+Nuevo:
+
+```ruby
+Sentry.capture_message("test", extra: { debug: true })
+```
+
+Las opciones de estos métodos también han cambiado. Las opciones disponibles actualmente son:
+
+* `contexts`
+* `tags`
+* `extra`
+* `user`
+* `level`
+* `fingerprint`
+* `backtrace`
+
+Para establecer el `transaction_name` (`transaction` en `sentry-raven`) del evento, usa
+
+```ruby
+Sentry.get_current_scope.set_transaction_name("NewTransaction")
+```
+
+<div id="exceptionraven_context">
+  ### `Exception#raven_context`
+</div>
+
+`sentry-ruby` ya no captura `raven_context` de las excepciones. Usa `set_tags` o `set_extra`, como arriba, para definir datos contextuales.
+
+<div id="example-apps">
+  ## Aplicaciones de ejemplo
+</div>
+
+* [Ejemplo de Rails](https://github.com/getsentry/sentry-ruby/tree/master/sentry-rails/examples/rails-6.0)
+* [Ejemplo de Sinatra](https://github.com/getsentry/sentry-ruby/tree/master/sentry-ruby/examples/sinatra)
+* Ejemplos de Sidekiq:
+  * [con Rails](https://github.com/getsentry/sentry-ruby/tree/master/sentry-rails/examples/rails-6.0)
+  * [sin Rails](https://github.com/getsentry/sentry-ruby/tree/master/sentry-sidekiq/example)
+
+<div id="community-fork">
+  ## Fork de la comunidad
+</div>
+
+Un fork mantenido por la comunidad de `sentry-ruby` que funciona con versiones antiguas de Ruby (2.1, 2.2 y 2.3) está [disponible aquí](https://github.com/ifad/sentry-legacy-ruby).
+Puedes usarlo en casos en los que te sea imposible actualizar, pero ten en cuenta que no lo admitimos oficialmente.

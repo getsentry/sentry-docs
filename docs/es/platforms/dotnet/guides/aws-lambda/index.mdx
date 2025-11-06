@@ -1,0 +1,85 @@
+---
+title: AWS Lambda
+sdk: sentry.dotnet.aspnetcore
+description: "Descubre la integración de Sentry para .NET con AWS Lambda y ASP.NET Core."
+---
+
+Sentry ofrece una integración con AWS Lambda ASP.NET Core Server a través del [paquete NuGet Sentry.AspNetCore](https://www.nuget.org/packages/Sentry.AspNetCore).
+
+<div id="features">
+  ## Funciones
+</div>
+
+Además de capturar errores, puedes supervisar las interacciones entre varios servicios o aplicaciones [habilitando el tracing](/es/concepts/key-terms/tracing/).
+
+Selecciona qué funciones de Sentry te gustaría instalar, además de Error Monitoring, para obtener a continuación las instrucciones correspondientes de instalación y configuración.
+
+<div id="install">
+  ## Instalación
+</div>
+
+<OnboardingOptionButtons options={['error-monitoring', 'performance']} />
+
+Añade la dependencia de Sentry:
+
+```powershell {tabTitle:Package Manager}
+Install-Package Sentry.AspNetCore -Version {{@inject packages.version('sentry.dotnet.aspnetcore') }}
+```
+
+```shell {tabTitle:.NET Core CLI}
+dotnet add package Sentry.AspNetCore -v {{@inject packages.version('sentry.dotnet.aspnetcore') }}
+```
+
+Puedes combinar esta integración con una biblioteca de registro como `log4net`, `NLog` o `Serilog` para incluir tanto los datos de la solicitud como tus logs a modo de breadcrumbs. Las integraciones de registro también capturan eventos cuando se registra un error.
+
+<div id="configure">
+  ## Configurar
+</div>
+
+Todas las configuraciones de `ASP.NET Core` son válidas aquí. Pero hay una en particular que es relevante.
+
+`FlushOnCompletedRequest` garantiza que todos los eventos se envíen. Esto se debe a que los hooks generales de ASP.NET Core para la finalización del proceso no tienen garantizada su ejecución en un entorno sin servidor. Esta configuración asegura que no se pierda ningún evento si AWS recicla el proceso.
+
+```csharp
+public class LambdaEntryPoint : Amazon.Lambda.AspNetCoreServer.APIGatewayProxyFunction
+{
+    protected override void Init(IWebHostBuilder builder)
+    {
+        builder
+            // Agregar Sentry
+            .UseSentry(options =>
+            {
+                options.Dsn = "___PUBLIC_DSN___";
+                // Al configurar por primera vez, para ver lo que está haciendo el SDK:
+                o.Debug = true;
+                // Agrega URL de solicitud y encabezados, IP y nombre de usuarios, etc.
+                o.SendDefaultPii = true;
+                // ___PRODUCT_OPTION_START___ performance
+                // Establece TracesSampleRate en 1.0 para capturar el 100%
+                // de las transacciones para el rastreo.
+                // Recomendamos ajustar este valor en producción
+                o.TracesSampleRate = 1.0;
+                // ___PRODUCT_OPTION_END___ performance
+                // Requerido en entornos sin servidor
+                options.FlushOnCompletedRequest = true;
+            })
+            .UseStartup<Startup>();
+    }
+}
+```
+
+Consulta la documentación de [Sentry ASP.NET Core](/es/platforms/dotnet/guides/aspnetcore/) para conocer todas las opciones disponibles.
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Este fragmento incluye un error intencional para que puedas comprobar que todo funciona en cuanto lo configures.
+
+<PlatformContent includePath="getting-started-verify" />
+
+<div id="samples">
+  ## Ejemplos
+</div>
+
+* Nuestros [ejemplos en GitHub](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.Aws.Lambda.AspNetCoreServer) muestran Sentry en AWS Lambda. (**C#**)

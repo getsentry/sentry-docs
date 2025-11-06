@@ -1,0 +1,55 @@
+---
+title: Solicitudes
+sidebar_order: 4
+---
+
+Todas las solicitudes a la API deben dirigirse al prefijo `/api/0/` y devolverán una respuesta en JSON:
+
+```bash
+curl -i https://sentry.io/api/0/
+```
+
+```http
+HTTP/1.0 200 OK
+Date: Sat, 14 Feb 2015 18:47:20 GMT
+Content-Type: application/json
+Content-Language: en
+Allow: GET, HEAD, OPTIONS
+
+{"version": "0"}
+```
+
+
+<div id="http-verbs">
+  ## Verbos HTTP
+</div>
+
+Sentry intenta atenerse a los verbos HTTP adecuados, pero siempre priorizamos la usabilidad frente a la corrección.
+
+| Método    | Descripción                                                             |
+| --------- | ----------------------------------------------------------------------- |
+| `DELETE`  | Se usa para eliminar recursos.                                          |
+| `GET`     | Se usa para obtener recursos.                                           |
+| `OPTIONS` | Describe el endpoint especificado.                                      |
+| `POST`    | Se usa para crear recursos.                                             |
+| `PUT`     | Se usa para actualizar recursos. Se aceptan datos parciales cuando es posible. |
+
+<div id="parameters-and-data">
+  ## Parámetros y datos
+</div>
+
+Cualquier parámetro que no esté incluido en la URL debe enviarse en formato JSON con el encabezado Content-Type `'application/json'`:
+
+```bash
+curl -i https://sentry.io/api/0/organizations/acme/projects/1/groups/ \
+    -d '{"status": "resolved"}' \
+    -H 'Content-Type: application/json'
+```
+
+A veces se especifican parámetros adicionales mediante la query string, incluso en solicitudes `POST`, `PUT` y `DELETE`:
+
+```bash
+curl -i https://sentry.io/api/0/organizations/acme/projects/1/groups/?status=unresolved \
+    -d '{"status": "resolved"}' \
+    -H 'Content-Type: application/json'
+```

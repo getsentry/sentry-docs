@@ -1,0 +1,78 @@
+---
+title: Google Crashpad
+description: "Aprende a usar Sentry con Google Crashpad."
+---
+
+[Crashpad](https://chromium.googlesource.com/crashpad/crashpad/+/master/README.md)
+es un sistema multiplataforma de código abierto para la notificación de fallos, escrito en C++ por Google.
+Es compatible con macOS, Windows y Linux (de forma limitada) y cuenta con un cargador para
+enviar minidumps a una URL configurada en cuanto se produce el fallo del proceso.
+
+<Alert>
+  Esta página describe el uso **autónomo** de Crashpad con Sentry. Te recomendamos encarecidamente que utilices nuestro [Native SDK](/es/platforms/native/). Para obtener información detallada sobre cómo usar Crashpad con el Native SDK, consulta la [documentación del backend de Crashpad](/es/platforms/native/configuration/backends/crashpad/).
+</Alert>
+
+Sigue la [documentación para desarrolladores de Crashpad](https://chromium.googlesource.com/crashpad/crashpad/+/HEAD/doc/developing.md) para obtener instrucciones sobre cómo compilar Crashpad desde el código fuente. Asegúrate de que los archivos de encabezado de crashpad estén en tu ruta de inclusión y añade una llamada a [StartHandler()](https://crashpad.chromium.org/doxygen/classcrashpad_1_1CrashpadClient.html#a810ad9941bedba543bf60507c31c55da) durante el inicio de tu programa:
+
+```cpp
+#include <map>
+#include <string>
+#include <vector>
+
+#include "client/crashpad_client.h"
+#include "client/settings.h"
+
+using namespace crashpad;
+
+bool startCrashpad() {
+  // Directorio de caché que almacenará la información de crashpad y los minidumps
+  base::FilePath database("path/to/crashpad/db");
+  // Ruta al ejecutable del manejador fuera de proceso
+  base::FilePath handler("path/to/crashpad_handler");
+  // URL utilizada para enviar los minidumps
+  std::string minidump_url("___MINIDUMP_URL___");
+  // PROXY utilizado para la URL
+  std::string http_proxy("");
+  // Anotaciones opcionales pasadas mediante --annotations al manejador
+  std::map<std::string, std::string> annotations;
+  // Argumentos opcionales para pasar al manejador
+  std::vector<std::string> arguments;
+
+  CrashpadClient client;
+  bool success = client.StartHandler(
+    handler,
+    database,
+    database,
+    minidump_url,
+    http_proxy,
+    annotations,
+    arguments,
+    /* reiniciable */ true,
+    /* inicio_asíncrono */ false
+  );
+
+  return success;
+}
+```
+
+Este método redirige los bloqueos al controlador de Crashpad. En macOS, esto se aplica a este proceso y a todos los procesos secundarios siguientes. En otras plataformas, los procesos secundarios también deben registrarse usando [SetHandlerIPCPipe()](https://crashpad.chromium.org/doxygen/classcrashpad_1_1CrashpadClient.html#a9f1d5d38e9b4f5781e3821551dcc39d5). Para obtener más información sobre cómo configurar el controlador de Crashpad, consulta [crashpad&#95;handler](https://chromium.googlesource.com/crashpad/crashpad/+/HEAD/handler/crashpad_handler.md).
+
+Si también quieres que Crashpad suba los bloqueos a Sentry, configura además la base de datos de Crashpad para cargas automáticas:
+
+```cpp
+// #include "client/crash_report_database.h"
+
+base::FilePath database("path/to/crashpad/db");
+std::unique_ptr<CrashReportDatabase> db =
+    crashpad::CrashReportDatabase::Initialize(database);
+
+if (db != nullptr && db->GetSettings() != nullptr) {
+  db->GetSettings()->SetUploadsEnabled(true);
+}
+```
+
+De forma predeterminada, el controlador de crashpad limitará las cargas a una por hora. Para desactivar esta limitación, pasa el argumento `--no-rate-limit` al controlador:
+
+```cpp
+arguments.push_back("--no-rate-limit");
+```

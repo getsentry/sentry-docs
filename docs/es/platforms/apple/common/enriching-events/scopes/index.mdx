@@ -1,0 +1,84 @@
+---
+title: Scopes y Hubs
+description: "Los SDK suelen gestionar automáticamente los scopes por ti en las integraciones con el framework. Aprende qué es un scope y cómo puedes usarlo a tu favor."
+---
+
+Cuando se captura y envía un evento a Sentry, los SDK combinan los datos de ese evento con información adicional del scope actual. Por lo general, los SDK gestionan automáticamente los scopes por ti en las integraciones con el framework y no necesitas preocuparte por ellos. Sin embargo, conviene que sepas qué es un scope y cómo puedes usarlo a tu favor.
+
+<div id="whats-a-scope-whats-a-hub">
+  ## Qué es un Scope, qué es un Hub
+</div>
+
+Puedes pensar en el hub como el punto central que nuestros SDK usan para enrutar un
+evento a Sentry. Cuando llamas a `init()`, se crea un hub y en él se crean un cliente y un
+scope en blanco. Ese hub luego se asocia con el hilo actual y, de forma interna, mantiene una pila de scopes.
+
+El scope contendrá información útil que debe enviarse junto con el
+evento. Por ejemplo, [contexts](../context/) o
+[breadcrumbs](../breadcrumbs/) se almacenan en
+el scope. Cuando se hace push de un scope, hereda todos los datos del scope padre,
+y cuando se hace pop, todas las modificaciones se revierten.
+
+Las integraciones predeterminadas del SDK harán push y pop de scopes de forma inteligente. Por
+ejemplo, las integraciones de frameworks web crearán y destruirán scopes alrededor de tus
+rutas o controladores.
+
+<div id="how-the-scope-and-hub-work">
+  ## Cómo funcionan el Scope y el Hub
+</div>
+
+Cuando empiezas a usar un SDK, se crean automáticamente un scope y un hub
+listos para usar. Es poco probable que interactúes directamente con el hub a menos que estés
+escribiendo una integración o quieras crear o eliminar scopes. Los scopes, por
+otro lado, están más orientados al usuario. Puedes llamar a <PlatformIdentifier name="configure-scope" /> en cualquier momento
+para modificar los datos almacenados en el scope. Esto es útil para cosas como
+[modificar el contexto](../context/).
+
+Cuando llamas a una función global como <PlatformIdentifier name="capture-event" />, internamente Sentry
+detecta el hub actual y le solicita capturar un evento. Internamente, el hub
+luego combinará el evento con los datos del scope superior.
+
+<div id="configuring-the-scope">
+  ## Configurar el scope
+</div>
+
+La operación más útil al trabajar con scopes es la función <PlatformIdentifier name="configure-scope" />. Puede usarse para reconfigurar el scope actual.
+
+Por ejemplo, puedes añadir etiquetas personalizadas o informar a Sentry sobre el usuario actualmente autenticado.
+
+<PlatformContent includePath="enriching-events/scopes/configure-scope" />
+
+También puedes aplicar esta configuración al desasignar un usuario durante el cierre de sesión:
+
+<PlatformContent includePath="enriching-events/unset-user" />
+
+Para saber qué información útil puede asociarse con los scopes, consulta
+[la documentación sobre contexto](../context/).
+
+<div id="local-scopes">
+  ## Ámbitos locales
+</div>
+
+También ofrecemos la posibilidad de establecer y configurar un ámbito dentro de una sola llamada. Esto suele
+llamarse <PlatformIdentifier name="with-scope" />, <PlatformIdentifier name="push-scope" /> o implementarse como un parámetro de función en los métodos de captura, según el SDK. Es muy útil si
+solo quieres enviar datos para un evento específico.
+
+<div id="using-scope-callback-parameter">
+  ### Uso del parámetro de callback de Scope
+</div>
+
+En el siguiente ejemplo usamos el parámetro de callback de scope, disponible para todos los métodos `capture`, para adjuntar un `level` y un `tag` a un único error específico:
+
+<PlatformContent includePath="enriching-events/scopes/scope-callback-param" />
+
+Antes de invocar el callback, el SDK crea un clon del scope actual, y los cambios
+realizados permanecerán aislados dentro de la función de callback. Esto te permite
+aislar más fácilmente fragmentos de información de contexto en ubicaciones específicas de tu código o
+incluso llamar a `clear` para eliminar temporalmente toda la información de contexto.
+
+<Alert title="Importante">
+
+Cualquier excepción que ocurra dentro de la función de callback para configurar un scope local no será
+capturada, y todos los errores que ocurran se ignorarán silenciosamente y **no** se reportarán.
+
+</Alert>

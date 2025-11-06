@@ -1,0 +1,46 @@
+---
+title: "Huella digital del SDK"
+description: "Aprende a cambiar la huella digital predeterminada en tu SDK."
+sidebar_order: 30
+---
+
+Todos los eventos tienen una huella digital. Los eventos con la misma huella digital se agrupan en un issue.
+
+De forma predeterminada, Sentry ejecuta uno de nuestros algoritmos de agrupación integrados para generar una huella digital basada en la información disponible en el evento, como `stacktrace`, `exception` y `message`. Para ampliar el comportamiento de agrupación predeterminado o cambiarlo por completo, puedes usar una combinación de las siguientes opciones:
+
+1. En tu SDK, usando la huella digital del SDK, como se documenta a continuación
+2. En tu proyecto, usando [Fingerprint Rules](/es/concepts/data-management/event-grouping/fingerprint-rules/) o [Stack Trace Rules](/es/concepts/data-management/event-grouping/stack-trace-rules/)
+
+En los SDK compatibles, puedes reemplazar la agrupación predeterminada de Sentry pasando el atributo de huella digital como un arreglo de cadenas. La longitud del arreglo de una huella digital no está restringida. Esto funciona de forma similar a la [funcionalidad de Fingerprint Rules](/es/concepts/data-management/event-grouping/fingerprint-rules/), que siempre está disponible y puede lograr resultados similares.
+
+<div id="basic-example">
+  ## Ejemplo básico
+</div>
+
+En el caso más básico, los valores se pasan directamente:
+
+<PlatformContent includePath="set-fingerprint/basic" />
+
+Puedes usar sustitución de variables para insertar valores dinámicos en la huella (fingerprint) que normalmente se calcula en el servidor. Por ejemplo, el valor `{{ default }}` se puede añadir para incluir en la huella todo el hash de agrupación que se genera normalmente. Estos valores son los mismos que en la creación de huellas del lado del servidor. Consulta [Variables](/es/concepts/data-management/event-grouping/fingerprint-rules/#variables) para obtener más información.
+
+<div id="group-errors-with-greater-granularity">
+  ## Agrupa los errores con mayor granularidad
+</div>
+
+En algunos escenarios, querrás agrupar los errores con mayor detalle.
+
+Por ejemplo, si tu aplicación consulta una interfaz de llamada a procedimiento remoto (RPC) o un servicio externo de interfaz de programación de aplicaciones (API), la traza de pila suele ser la misma, incluso si la solicitud saliente es muy distinta.
+
+El siguiente ejemplo desglosa aún más el grupo predeterminado que Sentry crearía (representado por `{{ default }}`), teniendo en cuenta algunos atributos del objeto de error:
+
+<PlatformContent includePath="set-fingerprint/rpc" />
+
+<div id="group-errors-more-aggressively">
+  ## Agrupa los errores de forma más agresiva
+</div>
+
+También puedes reemplazar por completo la agrupación de Sentry.
+
+Por ejemplo, si un error genérico, como un error de conexión a la base de datos, tiene muchas trazas de pila diferentes y nunca se agrupan, puedes reemplazar la agrupación de Sentry omitiendo `{{ default }}` del array:
+
+<PlatformContent includePath="set-fingerprint/database-connection" />

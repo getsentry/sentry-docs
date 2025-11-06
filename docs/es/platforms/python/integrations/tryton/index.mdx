@@ -1,0 +1,97 @@
+---
+title: Tryton
+description: "Aprende a usar Sentry con Tryton."
+---
+
+La integración de Tryton añade compatibilidad con el [Tryton Framework Server](https://www.tryton.org/).
+
+<div id="configure">
+  ## Configurar
+</div>
+
+Para configurar el SDK, inícialo con la integración en un script personalizado `wsgi.py`:
+
+Además de capturar errores, puedes supervisar las interacciones entre varios servicios o aplicaciones [habilitando el tracing](/es/concepts/key-terms/tracing/). También puedes recopilar y analizar perfiles de rendimiento de usuarios reales con el [profiling](/es/product/explore/profiling/).
+
+Selecciona qué funciones de Sentry deseas instalar, además de Error Monitoring, para obtener a continuación las instrucciones correspondientes de instalación y configuración.
+
+<OnboardingOptionButtons
+  options={[
+'error-monitoring',
+'performance',
+'profiling',
+]}
+/>
+
+```python {filename:wsgi.py}
+# wsgi.py
+import sentry_sdk
+from sentry_sdk.integrations.trytond import TrytondWSGIIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Agrega datos como encabezados de la solicitud e IP de los usuarios, si corresponde;
+    # consulta https://docs.sentry.io/platforms/python/data-management/data-collected/ para obtener más información
+    send_default_pii=True,
+    # ___PRODUCT_OPTION_START___ performance
+    # Establece traces_sample_rate en 1.0 para capturar el 100 %
+    # de las transacciones para el trazado.
+    traces_sample_rate=1.0,
+    # ___PRODUCT_OPTION_END___ performance
+    # ___PRODUCT_OPTION_START___ profiling
+    # Para recopilar perfiles de todas las sesiones de perfiles,
+    # establece `profile_session_sample_rate` en 1.0.
+    profile_session_sample_rate=1.0,
+    # Los perfiles se recopilarán automáticamente mientras
+    # haya un tramo (span) activo.
+    profile_lifecycle="trace",
+    # ___PRODUCT_OPTION_END___ profiling
+    integrations=[
+        TrytondWSGIIntegration(),
+    ],
+)
+
+from trytond.application import app as application
+
+# ...
+```
+
+En Tryton&gt;=5.4 se puede registrar un controlador de errores para responder al cliente
+con un mensaje de error personalizado que incluya el ID del evento de Sentry en lugar del traceback.
+
+```python {filename:wsgi.py}
+# wsgi.py
+# ...
+
+from trytond.exceptions import TrytonException, UserError
+
+@application.error_handler
+def _(app, request, e):
+    if isinstance(e, TrytonException):
+        return
+    else:
+        event_id = sentry_sdk.last_event_id()
+        data = UserError('Mensaje personalizado', f'{event_id}\n{e}')
+        return app.make_response(request, data)
+```
+
+<div id="behavior">
+  ## Comportamiento
+</div>
+
+* El SDK de Sentry para Python instalará la integración de Tryton. La integración se engancha a la instancia de la clase TrytonWSGI.
+
+* Se informan todas las excepciones no capturadas que no heredan de las excepciones de Tryton.
+
+* Los datos de la solicitud se adjuntan a todos los eventos: **método HTTP, URL, encabezados, datos de formulario, cargas JSON**. Sentry excluye los cuerpos sin procesar y las cargas de archivos multiparte. Sentry también excluye la información de identificación personal (como identificadores de usuario, nombres de usuario, cookies, encabezados de autorización, direcciones IP), a menos que configures `send_default_pii` en `True`.
+
+Cada solicitud tiene un ámbito independiente. Los cambios en el ámbito dentro de una vista, por ejemplo al establecer una etiqueta, solo se aplicarán a los eventos enviados como parte de la solicitud que se está procesando.
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+* Tryton: 4.6+
+* Python: 3.6+
+
+<Include name="python-use-older-sdk-for-legacy-support.mdx" />

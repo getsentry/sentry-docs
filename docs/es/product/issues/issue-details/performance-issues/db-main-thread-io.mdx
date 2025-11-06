@@ -1,0 +1,34 @@
+---
+title: Base de datos en el hilo principal
+sidebar_order: 20
+description: >-
+  Obtén más información sobre los problemas de base de datos en el hilo principal y cómo diagnosticarlos y solucionarlos.
+og_image: >-
+  /og-images/product-issues-issue-details-performance-issues-db-main-thread-io.png
+---
+
+El hilo principal de la interfaz de usuario en una aplicación móvil gestiona eventos de la interfaz, como pulsaciones de botones y desplazamientos de página. Para evitar bloqueos de la app y errores de “la aplicación no responde”, no se debe usar el hilo principal de la interfaz para realizar operaciones de larga duración, como consultas a la base de datos. Este tipo de operaciones bloquea toda la interfaz hasta que terminan y dificultan que la persona usuaria interactúe con la app.
+
+<div id="detection-criteria">
+  ## Criterios de detección
+</div>
+
+El detector de este problema de rendimiento analiza la duración total no superpuesta de los spans de base de datos en el hilo principal. Si supera los 16 ms, se crea un problema de rendimiento.
+
+Puedes configurar los umbrales del detector para los problemas de base de datos en el hilo principal en **Project Settings > Performance**:
+
+![Ajustes del umbral del detector de base de datos en el hilo principal](./img/db-on-main-thread-detector-settings.png)
+
+<div id="span-evidence">
+  ## Evidencia de spans
+</div>
+
+La evidencia de spans identifica la causa raíz del problema Database on Main Thread mostrándote tres aspectos principales:
+
+- **Nombre de la transacción**
+- **Span principal:** Dónde ocurrieron los spans de la base de datos
+- **Span problemático:** Los spans que realmente están ejecutando consultas de base de datos en el hilo principal
+
+![Database Span Evidence](./img/db-io.png)
+
+Puedes verla yendo a la página de **Issues** en Sentry, seleccionando tu proyecto de Android, haciendo clic en el error de base de datos que quieres revisar y luego desplazándote hasta la sección "Span Evidence" en la pestaña "Details".

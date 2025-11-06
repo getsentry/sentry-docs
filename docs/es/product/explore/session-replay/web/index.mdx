@@ -1,0 +1,85 @@
+---
+title: Repetición de sesión para la web
+sidebar_order: 10
+description: >-
+  Conoce Session Replay y sus reproducciones similares a un video de las
+  interacciones de los usuarios, que pueden ayudarte a detectar cuándo se
+  frustran y a crear una mejor experiencia web.
+og_image: /og-images/product-explore-session-replay-web.png
+---
+
+Session Replay te permite ver reproducciones similares a un video de las sesiones de usuario que pueden ayudarte a entender qué ocurrió antes, durante y después de un error o un problema de rendimiento. Podrás obtener un contexto de depuración más profundo sobre los problemas para reproducirlos y resolverlos más rápido, sin conjeturas. A medida que reproduces cada sesión, podrás ver cada interacción del usuario en relación con las solicitudes de red, los eventos del DOM y los mensajes de la consola. Es, en la práctica, como tener [DevTools](https://developer.chrome.com/docs/devtools/overview/) activo en tus sesiones de usuario en producción.
+
+Session Replay para la web ahora incluye un resumen de reproducción con IA que analiza automáticamente lo ocurrido durante una sesión de usuario y ofrece un breve “play-by-play” para ayudar a depurar problemas más rápido. En lugar de ver la reproducción completa, ahora puedes obtener una vista general rápida de lo sucedido y centrarte en las interacciones específicas que llevaron al problema. **Nota: Esta función está actualmente en beta, lo que significa que aún está en desarrollo y puede tener errores. Reconocemos la ironía.**
+
+Las reproducciones están integradas con otras partes del producto Sentry para que puedas ver cómo los errores y las transacciones lentas afectan la experiencia del usuario. Verás reproducciones de sesión asociadas con eventos de error en la página [Issue Details](/es/product/issues/issue-details/), y aquellas asociadas con transacciones lentas en la página [Transaction Summary](/es/product/insights/overview/transaction-summary/). Para las [reproducciones de errores de backend](/es/product/explore/session-replay/web/getting-started/#replays-for-backend-errors), cualquier error de backend que haya contribuido se incluirá en la línea de tiempo de la reproducción, en los [breadcrumbs](/es/product/issues/issue-details/breadcrumbs/) y en los errores.
+
+![Interfaz de usuario de Session Replay](./img/session-replay.png)
+
+<div id="what-is-session-replay">
+  ## ¿Qué es Session Replay?
+</div>
+
+Una reproducción de sesión **no** es una grabación de vídeo. Es una recreación similar a un vídeo de la sesión de un usuario, creada con la [biblioteca de grabación rrweb](https://www.rrweb.io/). Las reproducciones se generan a partir de instantáneas del estado del DOM de tu aplicación web (la representación en memoria del navegador del HTML). Al reproducir cada instantánea, verás algo similar a un vídeo de lo que el usuario hizo durante toda su sesión. La sesión del usuario incluye cualquier carga de página, actualización y navegación que ocurriera mientras estaba en tu sitio.
+
+![Interfaz de usuario de Session Replay](./img/session-replay-what-is-a-replay.png)
+
+El inicio de una grabación de reproducción de sesión puede activarse por:
+
+* Que una sesión de usuario forme parte de una tasa de muestreo, controlada por [`replaysSessionSampleRate`](/es/platforms/javascript/session-replay/#sampling). (Cuando un usuario carga una página, se decide si se muestrea o no).
+* Que ocurra un error durante una sesión que no se está grabando. La sesión se graba según [`replaysOnErrorSampleRate`](/es/platforms/javascript/session-replay/#sampling).
+* Llamar manualmente al método [`replay.start()`](/es/platforms/javascript/session-replay/understanding-sessions/#manually-starting-replay).
+
+El final de una grabación de reproducción de sesión puede activarse por:
+
+* Inactividad del usuario en la pestaña o página que se está grabando. (Se considera inactividad cuando un usuario no hace clic ni navega por el sitio durante más de 15 minutos. Los desplazamientos y movimientos del ratón, así como los eventos del teclado, actualmente no cuentan como actividad).
+* Que el usuario cierre la pestaña o página que se está grabando.
+* Que una grabación alcance el límite máximo de duración de la reproducción. (Actualmente, 60 minutos).
+* Llamar manualmente al método [`replay.stop()`](/es/platforms/javascript/session-replay/understanding-sessions/#manually-stopping-replay).
+
+<Alert>
+  A diferencia de las [sesiones](/es/product/releases/health/#session) en la página **Releases**, las sesiones de usuario en Session Replay pueden abarcar varias cargas de página.
+</Alert>
+
+<div id="supported-sdks">
+  ## SDKs compatibles
+</div>
+
+Session Replay es compatible con todas las aplicaciones basadas en navegador.
+Esto incluye sitios web estáticos, aplicaciones de una sola página y también aplicaciones renderizadas del lado del servidor. Esto incluye frameworks como:
+[Django](/es/platforms/python/integrations/django/),
+[Spring](/es/platforms/java/guides/spring-boot/),
+[ASP.NET](/es/platforms/dotnet/guides/aspnetcore/),
+[Laravel](/es/platforms/php/guides/laravel/),
+[Express](/es/platforms/javascript/guides/express/) y
+[Rails](/es/platforms/ruby/guides/rails/).
+Si no usas `npm` o `yarn`, puedes usar [nuestra etiqueta `script` del Loader](/es/platforms/javascript/install/loader/) en tu plantilla HTML principal.
+
+El SDK de Sentry que registra la repetición se ejecuta en el navegador del cliente y está integrado en `@sentry/browser` y en nuestros SDK de frameworks para navegador:
+
+* [Vanilla JavaScript](/es/platforms/javascript/session-replay/)
+* [Angular](/es/platforms/javascript/guides/angular/session-replay/)
+* [Astro](/es/platforms/javascript/guides/astro/session-replay/)
+* [Capacitor](/es/platforms/javascript/guides/capacitor/session-replay/)
+* [Electron](/es/platforms/javascript/guides/electron/session-replay/)
+* [Ember](/es/platforms/javascript/guides/ember/session-replay/)
+* [Gatsby](/es/platforms/javascript/guides/gatsby/session-replay/)
+* [Next.js](/es/platforms/javascript/guides/nextjs/session-replay/)
+* [React](/es/platforms/javascript/guides/react/session-replay/)
+* [Remix](/es/platforms/javascript/guides/remix/session-replay/)
+* [Svelte](/es/platforms/javascript/guides/svelte/session-replay/)
+* [SvelteKit](/es/platforms/javascript/guides/sveltekit/session-replay/)
+* [Vue](/es/platforms/javascript/guides/vue/session-replay/)
+
+<Include name="session-replay-for-backend-errors.mdx" />
+
+Asegúrate de haber configurado la [propagación de trazas](/es/product/sentry-basics/concepts/tracing/#trace-propagation) en tus proyectos de backend. Por ejemplo:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___";
+  tracePropagationTargets: ["https://myproject.org", /^\/api\//],
+});
+```
+
+<Include name="session-replay-for-backend-support.mdx" />

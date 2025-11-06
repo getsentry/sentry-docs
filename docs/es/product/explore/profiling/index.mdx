@@ -1,0 +1,112 @@
+---
+title: Perfilado
+sidebar_order: 50
+description: >-
+  El perfilado ofrece un nivel de visibilidad más profundo que el
+  trazado tradicional, elimina la necesidad de instrumentación personalizada
+  y habilita una visibilidad precisa a nivel de código en tu aplicación en un
+  entorno de producción.
+og_image: /og-images/product-explore-profiling.png
+---
+
+Los productos de perfilado de Sentry proporcionan visibilidad precisa a nivel de código sobre la ejecución de la aplicación en un entorno de producción.
+
+<div id="when-should-you-use-profiling">
+  ## ¿Cuándo deberías usar el perfilado?
+</div>
+
+El perfilado te ayuda a entender en qué se está gastando el tiempo en tu aplicación a nivel de **función**. Mientras que el [tracing](/es/concepts/key-terms/tracing/) puede ayudarte a capturar información sobre operaciones de alto nivel (solicitudes HTTP, consultas a bases de datos, renderizado de la UI, etc.) que consumen tiempo en tu aplicación, el perfilado te ayuda a depurar el rendimiento al visualizar las pilas de llamadas en cada hilo durante toda la ejecución de tu aplicación.
+
+Esto es especialmente útil cuando falta instrumentación explícita (spans y logs) que podría ayudarte a acotar dónde está ocurriendo un problema. El perfilado no requiere *instrumentación adicional* y capturará automáticamente información sobre las funciones y líneas de código que más tiempo consumen mientras se ejecuta tu aplicación.
+
+El perfilado te ayuda a identificar rápidamente cuellos de botella de rendimiento, lo que te permite incorporar el [rendimiento como una característica](https://blog.codinghorror.com/performance-is-a-feature/) desde el primer día.
+
+<div id="profiling-products">
+  ## Productos de perfilado
+</div>
+
+<Alert>
+  **Las plataformas actualmente compatibles son:**
+
+  * [Android (solo Java y Kotlin)](/es/platforms/android/profiling/)
+  * [iOS y macOS (solo Swift y Objective-C)](/es/platforms/apple/profiling/)
+  * [Python](/es/platforms/python/profiling/)
+  * [Node.js](/es/platforms/javascript/guides/node/profiling/)
+  * [PHP (incluye Laravel y Symfony)](/es/platforms/php/profiling/)
+  * [JavaScript en el navegador [beta]](/es/platforms/javascript/profiling/)
+  * [Ruby [beta]](/es/platforms/ruby/profiling/)
+  * [React Native [beta]](/es/platforms/react-native/profiling/)
+  * [Flutter [experimental, solo iOS y macOS]](/es/platforms/dart/guides/flutter/profiling/)
+  * [.NET [experimental]](/es/platforms/dotnet/profiling/)
+</Alert>
+
+Sentry admite el perfilado para casos de uso de backend y frontend con dos productos:
+
+* **Perfilado continuo** permite perfilar de forma continua los servicios de backend para encontrar rutas de código que provocan un uso excesivo de recursos y altos costos de infraestructura.
+* **Perfilado de la interfaz** permite perfilar flujos de usuario críticos (o sesiones completas) en apps de navegador y [móviles](/es/product/explore/profiling/mobile-app-profiling/) para detectar rutas de código que causan desplazamientos y animaciones entrecortados, alta latencia de interacción y tiempos de carga lentos que deterioran la experiencia de usuario.
+
+<div id="profiling-page">
+  ## Página de perfiles
+</div>
+
+En la página de [**Profiling**](https://sentry.io/orgredirect/organizations/:orgslug/profiling/), encontrarás métricas de alto nivel sobre las funciones más lentas de los proyectos seleccionados, así como funciones que hayan empeorado o mejorado su rendimiento en el intervalo de tiempo elegido.
+
+![Funciones más lentas y funciones con mayor regresión en la página de Profiling](./img/profiling-page-functions.png)
+
+En el widget **Funciones más lentas**, puedes hacer clic en el botón de puntos suspensivos (...) de cada función para ver una lista de perfiles de ejemplo que la contienen. En el widget **Funciones con mayor regresión/mejora**, puedes hacer clic en la duración de la función antes y después del cambio para ver perfiles de ejemplo de “antes y después” que la contienen.
+
+Debajo de las métricas de funciones, encontrarás dos pestañas: **Transacciones** y **Flamegraph agregado**.
+
+Si [tracing](/es/concepts/key-terms/tracing/) está habilitado, **Transacciones** muestra una lista de todas las transacciones instrumentadas en los proyectos seleccionados, lo que te permite desglosar los datos de perfiles por endpoints, rutas, flujos de usuario, etc. Ofrece una vista más enfocada del rendimiento en una parte *específica* de la aplicación.
+
+La pestaña **Flamegraph agregado** *no* requiere que tracing esté habilitado y mostrará una vista de alto nivel de las rutas de código más frecuentes en los proyectos seleccionados. Esto ofrece una vista más general de dónde se invierte el tiempo en un servicio o aplicación.
+
+<div id="transactions-tab">
+  ### Pestaña de transacciones
+</div>
+
+<Alert>
+  La lista de transacciones no se mostrará si el tracing no está habilitado para al menos uno de los proyectos seleccionados.
+</Alert>
+
+La pestaña **Transactions** muestra, de forma predeterminada, una lista de todas las transacciones de los proyectos seleccionados ordenadas por la frecuencia (recuento) de la transacción. También puede ordenarse por duración (p50/75/90/95), proyecto, marca de tiempo, etc., haciendo clic en los encabezados de las columnas de la tabla. La lista de transacciones también puede filtrarse especificando una consulta en la barra de búsqueda. Por ejemplo, puedes buscar transacciones de usuarios específicos o transacciones etiquetadas con un atributo personalizado.
+
+![Pestaña de transacciones en la página de Profiling](./img/profiling-page-transactions.png)
+
+Haz clic en el nombre de una transacción para ir a la página **Transaction Summary**, que contiene datos de rendimiento agregados correspondientes a esa transacción. De forma predeterminada, la pestaña **Profiles** está seleccionada y contiene un [gráfico de flamas agregado](/es/product/explore/profiling/flame-charts-graphs) que muestra las rutas de código más frecuentes perfiladas dentro de esa transacción. Este gráfico de flamas se comporta igual que el de la pestaña **Aggregate Flamegraph** descrita más abajo.
+
+![Pestaña Profiles en la página Transaction Summary](./img/transaction-summary-profiles.png)
+
+<div id="aggregate-flamegraph-tab">
+  ### Pestaña Aggregate Flamegraph
+</div>
+
+La pestaña **Aggregate Flamegraph** muestra un [gráfico de flamas](/es/product/explore/profiling/flame-charts-graphs) con información agregada sobre la frecuencia de rutas de código en los proyectos seleccionados.
+
+![Pestaña Aggregate Flamegraph en la página de Profiling](./img/profiling-page-aggregate-flamegraph.png)
+
+Los cuadros más anchos representan rutas de código más **frecuentes**, que probablemente sean oportunidades de optimización más relevantes. Puedes hacer clic en un cuadro para seleccionarlo; esto llenará la barra lateral derecha con enlaces a perfiles de ejemplo que contienen la función seleccionada.
+
+<div id="zooming-into-traces-using-profiling">
+  ## Acercarse a las trazas con perfiles
+</div>
+
+Si ya estás viendo una traza y no tienes suficiente información para depurar la causa raíz del problema, los datos de perfilado pueden ayudarte a cubrir los vacíos. Si hay datos de perfilado asociados a la traza, hay dos maneras de acceder a ellos desde la [**Vista de traza**](/es/concepts/key-terms/tracing/trace-view/).
+
+Una forma es seleccionar un span y desplazarte hacia abajo hasta la sección **Perfil** de los detalles del span:
+
+![Datos de perfil para un span en la Vista de traza](./img/trace-view-span-profile.png)
+
+El widget **Pilas más frecuentes en este span** muestra una lista paginada de pilas de llamadas en orden descendente por frecuencia, que indica en qué parte del código se invierte la mayor parte del tiempo en el span seleccionado. Haz clic en el botón **&gt;** para recorrer las demás pilas, o haz clic en el botón **Profile** para ver el perfil completo en el visor de flame graph.
+
+La otra forma es hacer clic en la pestaña **Profiles** en la Vista de traza, que mostrará una lista de eventos de perfil en *todos* los spans contenidos en la traza:
+
+![Pestaña Profiles en la Vista de traza](./img/trace-view-profiles.png)
+
+<div id="getting-started">
+  ## Primeros pasos
+</div>
+
+Consulta la [guía de introducción](/es/product/explore/profiling/getting-started) para empezar a usar Continuous Profiling y UI Profiling.
+
+<PageGrid />

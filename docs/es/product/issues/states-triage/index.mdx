@@ -1,0 +1,74 @@
+---
+title: Estado de los issues
+sidebar_order: 30
+description: Aprende cómo funcionan los estados de los issues y cómo realizar su triage.
+og_image: /og-images/product-issues-states-triage.png
+---
+
+Usa las etiquetas de estado asociadas a los issues en la página de [**Issues**](https://sentry.io/issues/) de Sentry para ayudarte a hacer triage y priorizar los problemas de tu aplicación que más te importan. Ten en cuenta que un issue solo puede tener **un estado a la vez.**
+
+Aquí tienes una lista de todos los estados, cómo se asignan a un issue y su término de búsqueda personalizado:
+
+| Estado         | Condición                                                                                                                                                                                                             | Término de búsqueda personalizado |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| **New**        | Un issue creado en los últimos 7 días.                                                                                                                                                                                | is:new                            |
+| **Ongoing**    | Un issue creado hace más de 7 días o que se marcó manualmente como revisado.                                                                                                                                          | is:ongoing                        |
+| **Escalating** | Un issue que superó su volumen de eventos previsto. Para más detalles, consulta [Escalating Issues Algorithm](escalating-issues). Ten en cuenta que, actualmente, la escalada no funciona para issues combinados/no combinados. | is:escalating                     |
+| **Regressed**  | Un issue resuelto que volvió a aparecer.                                                                                                                                                                              | is:regressed                      |
+| **Archived**   | Un issue marcado como archivado.                                                                                                                                                                                      | is:archived                       |
+| **Resolved**   | Un issue marcado como solucionado.                                                                                                                                                                                    | is:resolved                       |
+
+El siguiente diagrama muestra cómo se actualizan los estados automáticamente y de forma manual:
+
+![Diagrama de estado de los issues](./img/issue_statuses.png)
+
+Una forma de limitar los issues que ves es seleccionando una pestaña en la parte superior de la página de **Issues**. En la pestaña &quot;Unresolved&quot;, encontrarás issues `New`, `Ongoing`, `Escalating` y `Regressed`. También puedes acotar más el resultado eligiendo las pestañas &quot;For Review&quot;, &quot;Regressed&quot;, &quot;Escalating&quot; o &quot;Archived&quot;.
+
+<div id="manually-triaging-issues">
+  ## Clasificar issues manualmente
+</div>
+
+Aunque algunos estados de los issues se agregan y actualizan automáticamente, puedes `Archive` o `Resolve` un issue manualmente, lo que también cambiará su estado y lo eliminará de la lista `is:for_review`. Los elementos de la lista `is:for_review` son issues nuevos, regresivos o sin resolver que aún no se han revisado.
+
+<div id="archive">
+  ### Archivar
+</div>
+
+Archiva un issue para sacarlo del flujo de issues y pausar sus alertas hasta que el issue empeore. Archivar tiene sentido para issues ruidosos que son menos urgentes o no aplican a ti o a tu equipo. Archivar cambia el estado del issue a `Archived` y mueve el issue de &quot;Unresolved&quot; a la pestaña &quot;Archived&quot;.
+
+Sentry llevará automáticamente un issue de vuelta al principio de la lista y cambiará su estado a `Escalating` si los eventos de ese issue aumentan significativamente en un corto período de tiempo. Para saber más sobre cómo funciona, consulta [Escalating Issues Algorithm](escalating-issues). De forma predeterminada, los issues se archivan hasta que escalan. También hay una opción para marcar un issue como `Archived`:
+
+* Para siempre
+* Durante un período de tiempo determinado
+* Hasta que ocurra un número determinado de veces
+* Hasta que se vea afectado un número determinado de usuarios
+
+Si archivas un issue &quot;Para siempre&quot;, los eventos relacionados con ese issue se seguirán registrando, pero el issue nunca se etiquetará como en escalada incluso si cumple las condiciones para escalar. Aun puedes desarchivar cualquier issue archivado, incluidos aquellos que se han archivado &quot;Para siempre&quot;. Todos los issues desarchivados aparecerán entonces en la pestaña &quot;Unresolved&quot;.
+
+<div id="resolve">
+  ### Resolver
+</div>
+
+Puedes marcar manualmente un issue como `Resolved` cuando se haya solucionado. También puedes especificar más resolviéndolo en:
+
+* Tu próxima versión
+* Una versión actual
+* Otra versión
+
+o
+
+* [Incluyendo el ID del issue en un commit](/es/product/releases/associate-commits/?original_referrer=https%3A%2F%2Fdocs.sentry.io%2Fproduct%2Fissues%2Fstates-triage%2F#resolve-issues-by-commit)
+
+Si el mismo issue reaparece, su estado cambiará automáticamente a `Regressed`.
+
+<div id="delete">
+  ### Eliminar
+</div>
+
+Puedes quitar un problema de la lista eliminándolo, pero volverá a aparecer como uno nuevo si se repite.
+
+También hay una opción para `Delete and Discard Forever`, que hará que el problema no vuelva a mostrarse nunca, incluso si se repite. Cualquier evento futuro vinculado al problema eliminado de forma permanente se descartará automáticamente y no contará para [tu cuota](/es/pricing/quotas/).
+
+<Alert>
+  Descartar para siempre solo funciona para [Error Issues](/es/product/issues/issue-details/error-issues/?original_referrer=https%3A%2F%2Fdocs.sentry.io%2Fproduct%2Fissues%2Fstates-triage%2F). Otras categorías de problemas, como [Performance Issues](/es/product/issues/issue-details/performance-issues/?original_referrer=https%3A%2F%2Fdocs.sentry.io%2Fproduct%2Fissues%2Fstates-triage%2F), solo admiten la eliminación normal.
+</Alert>

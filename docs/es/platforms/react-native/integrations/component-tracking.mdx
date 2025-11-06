@@ -1,0 +1,83 @@
+---
+title: Seguimiento de componentes
+description: "Descubre cómo el SDK de React Native de Sentry te permite monitorizar el ciclo de vida de los componentes de tu aplicación."
+sidebar_order: 55
+---
+
+El SDK de React Native de Sentry ofrece seguimiento de componentes, una función que te permite monitorizar el rendimiento de tus componentes de React. El SDK exporta un componente de orden superior, `withProfiler`, que adjunta spans relacionados con React al span activo más reciente en el scope. Esto te permite obtener una vista detallada de cómo se comportan tus componentes para identificar montajes lentos o actualizaciones frecuentes que podrían estar afectando negativamente el rendimiento de tu aplicación.
+
+<div id="prerequisites">
+  ## Requisitos previos
+</div>
+
+* Para habilitar el seguimiento de componentes, debes configurar el tracing. Para más detalles sobre cómo hacerlo, consulta nuestra [documentación de tracing](/es/platforms/react-native/tracing/).
+
+<div id="add-withprofiler">
+  ## Agrega `withProfiler`
+</div>
+
+En el siguiente ejemplo, el componente de orden superior `withProfiler` se utiliza para instrumentar un componente de la aplicación.
+
+```javascript
+import React from "react";
+import * as Sentry from "@sentry/react-native";
+
+class App extends React.Component {
+  render() {
+    return (
+      <FancyComponent>
+        <NestedComponent someProp={2} />
+        <AnotherComponent />
+      </FancyComponent>
+    );
+  }
+}
+
+export default Sentry.withProfiler(App);
+```
+
+El React Profiler actualmente genera spans con tres tipos de códigos de operación: `ui.react.mount`, `ui.react.render` y `ui.react.update`, como se define a continuación:
+
+`ui.react.mount`
+
+El span que representa el tiempo que tardó en montarse el componente perfilado.
+
+`ui.react.render`
+
+El span que representa el tiempo que el componente perfilado permanece en una página. Este span solo se genera si el componente perfilado se monta y se desmonta mientras ocurre una transacción.
+
+`ui.react.update`
+
+El span que representa cuándo se actualizó el componente perfilado. Este span solo se genera si el componente perfilado ya se ha montado.
+
+<Alert>
+  En [React Strict Mode](https://react.dev/reference/react/StrictMode), ciertos métodos de los componentes se [invocan dos veces](https://react.dev/reference/react/StrictMode#fixing-bugs-found-by-double-rendering-in-development). Esto puede provocar spans duplicados de `ui.react.mount`. React Strict Mode solo se ejecuta en modo de desarrollo, por lo que no afectará tus trazas de producción.
+</Alert>
+
+<div id="profiler-options">
+  ### Opciones de Profiler
+</div>
+
+El componente de orden superior `withProfiler` ofrece varias opciones para una mayor personalización. Puedes pasarlas como segundo argumento a la función `withProfiler`.
+
+```javascript
+export default Sentry.withProfiler(App, { name: "NombreDeAppPersonalizado" });
+```
+
+`name` (string)
+
+El nombre del componente que se está perfilando. De forma predeterminada, el nombre se toma de la propiedad `displayName` del componente o de su propiedad `name`.
+
+`includeRender` (boolean)
+
+Opción para que el Profiler cree un span `ui.react.render`. (Se establece en true de forma predeterminada).
+
+`includeUpdates` (boolean)
+
+Opción para que el Profiler cree spans `react.update`. (Se establece en true de forma predeterminada). Recomendamos establecer esta prop en false para componentes que se volverán a renderizar con frecuencia, como los campos de texto. Los spans resultantes pueden generar mucho ruido.
+
+<div id="next-steps">
+  ## Próximos pasos:
+</div>
+
+* Para medir el tiempo hasta la primera visualización y hasta la visualización completa de tu aplicación React Native, consulta nuestra [guía de Time to Display](/es/platforms/react-native/tracing/instrumentation/time-to-display/).

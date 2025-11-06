@@ -1,0 +1,448 @@
+---
+draft: true
+categories: []
+toc: true
+title: Integraciones
+noindex: true
+tags: []
+---
+
+<Alert level="warning" title="Aviso de obsolescencia">
+  Un nuevo SDK de PHP ha sustituido esta versión obsoleta. Sentry mantiene esta documentación para quienes siguen utilizando el cliente anterior. Si usas PHP 7.1 o una versión posterior, te recomendamos usar el [SDK de PHP actualizado](/es/platforms/php/) para tus proyectos.
+</Alert>
+
+<div id="laravel">
+  ## Laravel
+</div>
+
+Laravel cuenta con soporte mediante un paquete nativo, [sentry-laravel](https://github.com/getsentry/sentry-laravel).
+
+<div id="laravel-5x">
+  ### Laravel 5.x
+</div>
+
+Instala el paquete `sentry/sentry-laravel`:
+
+```bash
+composer require sentry/sentry-laravel
+```
+
+Si usas Laravel 5.4 o anterior, debes agregar lo siguiente a tu `config/app.php` (en Laravel 5.5+ esto se detecta automáticamente):
+
+```php
+'providers' => array(
+    // ...
+    Sentry\SentryLaravel\SentryLaravelServiceProvider::class,
+)
+
+'aliases' => array(
+    // ...
+    'Sentry' => Sentry\SentryLaravel\SentryFacade::class,
+)
+```
+
+Agrega el reporte a Sentry en `App/Exceptions/Handler.php`:
+
+```php
+public function report(Exception $exception)
+{
+    if (app()->bound('sentry') && $this->shouldReport($exception)) {
+        app('sentry')->captureException($exception);
+    }
+
+    parent::report($exception);
+}
+```
+
+Crea el archivo de configuración de Sentry (`config/sentry.php`):
+
+```bash
+php artisan vendor:publish --provider="Sentry\SentryLaravel\SentryLaravelServiceProvider"
+```
+
+Añade tu DSN a `.env`:
+
+```bash
+SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
+```
+
+Finalmente, si deseas habilitar la retroalimentación de usuarios, puedes hacerlo creando una vista de error personalizada en *resources/views/errors/500.blade.php*.
+
+Para Laravel 5 hasta 5.4, debes abrir `App/Exceptions/Handler.php` y extender el método `render` para asegurarte de que el error 500 se renderice correctamente como una vista; a partir de la versión 5.5, este paso ya no es necesario y puedes pasar al siguiente:
+
+```php
+<?php
+
+use Symfony\Component\HttpKernel\Exception\HttpException;
+
+class Handler extends ExceptionHandler
+{
+    public function report(Exception $exception)
+    {
+        if (app()->bound('sentry') && $this->shouldReport($exception)) {
+            app('sentry')->captureException($exception);
+        }
+
+        parent::report($exception);
+    }
+
+    public function render($request, Exception $exception)
+    {
+        // Convierte todas las excepciones no HTTP en una excepción HTTP 500 adecuada
+        // si no hacemos esto, las excepciones se muestran con la plantilla por defecto
+        // en lugar de nuestra propia vista en resources/views/errors/500.blade.php
+        if ($this->shouldReport($exception) && !$this->isHttpException($exception) && !config('app.debug')) {
+            $exception = new HttpException(500, '¡Ups!');
+        }
+
+        return parent::render($request, $exception);
+    }
+}
+```
+
+A continuación, crea `resources/views/errors/500.blade.php` y incrusta el código de comentarios:
+
+```html
+<div class="content">
+  <div class="title">Algo ha salido mal.</div>
+
+  @if(app()->bound('sentry') && !empty(Sentry::getLastEventID()))
+  <div class="subtitle">ID de error: {{ Sentry::getLastEventID() }}</div>
+
+  <!-- Sentry JS SDK 2.1.+ required -->
+  <script src="https://cdn.ravenjs.com/3.3.0/raven.min.js"></script>
+
+  <script>
+    Raven.showReportDialog({
+      eventId: "{{ Sentry::getLastEventID() }}",
+      // usa el DSN público (¡no incluyas tu clave secreta!)
+      dsn: "___PUBLIC_DSN___",
+      user: {
+        name: "Jane Doe",
+        email: "jane.doe@example.com",
+      },
+    });
+  </script>
+  @endif
+</div>
+```
+
+¡Listo!
+
+<div id="laravel-4x">
+  ### Laravel 4.x
+</div>
+
+Instala el paquete `sentry/sentry-laravel`:
+
+Laravel 4.x es compatible hasta la versión 0.8.x.
+
+```bash
+composer require sentry/sentry-laravel
+```
+
+Añade el proveedor de servicios y la fachada de Sentry en `config/app.php`:
+
+```php
+'providers' => array(
+    // ...
+    'Sentry\SentryLaravel\SentryLaravelServiceProvider',
+)
+
+'aliases' => array(
+    // ...
+    'Sentry' => 'Sentry\SentryLaravel\SentryFacade',
+)
+```
+
+Crea el archivo de configuración de Sentry (`config/sentry.php`):
+
+```php
+php artisan config:publish sentry/sentry-laravel
+```
+
+Añade tu DSN a `config/sentry.php`:
+
+```php
+<?php
+
+return array(
+    'dsn' => '___PUBLIC_DSN___',
+
+    // ...
+);
+```
+
+Si deseas integrar Sentry fuera de los controladores de errores estándar, o si necesitas configurar opciones adicionales, puedes acceder a la instancia de Sentry a través de `$app`:
+
+```php
+$app['sentry']->setRelease(Git::sha());
+```
+
+<div id="lumen-5x">
+  ### Lumen 5.x
+</div>
+
+Instala el paquete `sentry/sentry-laravel`:
+
+```bash
+composer require sentry/sentry-laravel
+```
+
+Registra Sentry en `bootstrap/app.php`:
+
+```php
+$app->register('Sentry\SentryLaravel\SentryLumenServiceProvider');
+
+# Sentry debe registrarse antes de incluir las rutas
+require __DIR__ . '/../app/Http/routes.php';
+```
+
+Añade el reporte de Sentry a `app/Exceptions/Handler.php`:
+
+```php
+public function report(Exception $e)
+{
+    if (app()->bound('sentry') && $this->shouldReport($e)) {
+        app('sentry')->captureException($e);
+    }
+
+    parent::report($e);
+}
+```
+
+Crea el archivo de configuración de Sentry (`config/sentry.php`):
+
+```php
+<?php
+
+return array(
+    'dsn' => '___PUBLIC_DSN___',
+
+    // capturar la versión como SHA de Git
+    // 'release' => trim(exec('git log --pretty="%h" -n1 HEAD')),
+);
+```
+
+<div id="testing-with-artisan">
+  ### Pruebas con Artisan
+</div>
+
+Puedes probar tu configuración con el comando `artisan` proporcionado:
+
+```bash
+php artisan sentry:test
+[sentry] Configuración del cliente:
+-> server: https://sentry.io/api/3235/store/
+-> project: 3235
+-> public_key: e9ebbd88548a441288393c457ec90441
+-> secret_key: 399aaee02d454e2ca91351f29bdc3a07
+[sentry] Generando evento de prueba
+[sentry] Enviando evento de prueba con ID: 5256614438cf4e0798dc9688e9545d94
+```
+
+### Añadir contexto
+
+El mecanismo para añadir contexto variará según la versión de Laravel que uses, pero el enfoque general es el mismo. Busca un buen punto de entrada en tu aplicación donde el contexto que quieres añadir esté disponible, idealmente al inicio del proceso.
+
+En el siguiente ejemplo, usaremos un middleware:
+
+```php
+namespace App\Http\Middleware;
+
+use Closure;
+
+class SentryContext
+{
+    /**
+ * Gestiona una solicitud entrante.
+ *
+ * @param  \Illuminate\Http\Request $request
+ * @param  \Closure                 $next
+ *
+ * @return mixed
+ */
+    public function handle($request, Closure $next)
+    {
+        if (app()->bound('sentry')) {
+            /** @var \Raven_Client $sentry */
+            $sentry = app('sentry');
+
+            // Añadir contexto de usuario
+            if (auth()->check()) {
+                $sentry->user_context([...]);
+            } else {
+                $sentry->user_context(['id' => null]);
+            }
+
+            // Añadir contexto de etiquetas
+            $sentry->tags_context([...]);
+        }
+
+        return $next($request);
+    }
+}
+```
+
+<div id="configuration">
+  ### Configuración
+</div>
+
+Las siguientes opciones están disponibles para el cliente:
+
+`dsn`
+
+El DSN para la autenticación con Sentry.
+
+```php
+'dsn' => '___PUBLIC_DSN___',
+```
+
+`release`
+
+La versión de tu aplicación (p. ej., SHA de git)
+
+```php
+'release' => MyApp::getReleaseVersion(),
+```
+
+`breadcrumbs.sql_bindings`
+
+Captura los parámetros vinculados en las consultas SQL.
+
+De forma predeterminada, es `true`.
+
+```php
+'breadcrumbs.sql_bindings' => false,
+```
+
+`user_context`
+
+Captura automáticamente el user&#95;context.
+
+De forma predeterminada, es `true`.
+
+```php
+'user_context' => false,
+```
+
+<div id="monolog">
+  ## Monolog
+</div>
+
+{/* <!-- WIZARD monolog --> */}
+
+<div id="capturing-errors">
+  ### Captura de errores
+</div>
+
+Monolog es compatible con Sentry de forma nativa, así que solo necesitas configurar un handler:
+
+```php
+$client = new Raven_Client('___PUBLIC_DSN___');
+
+$handler = new Monolog\Handler\RavenHandler($client);
+$handler->setFormatter(new Monolog\Formatter\LineFormatter("%message% %context% %extra%\n"));
+
+$monolog->pushHandler($handler);
+```
+
+<div id="adding-context">
+  ### Agregar contexto
+</div>
+
+Puedes capturar el contexto mediante un processor de Monolog:
+
+```php
+$monolog->pushProcessor(function ($record) {
+    // registrar al usuario actual
+    $user = Acme::getCurrentUser();
+    $record['context']['user'] = array(
+        'name' => $user->getName(),
+        'username' => $user->getUsername(),
+        'email' => $user->getEmail(),
+    );
+
+    // Añadir varias etiquetas
+    $record['context']['tags'] = array('key' => 'value');
+
+    // Añadir contexto genérico diverso
+    $record['extra']['key'] = 'value';
+
+    return $record;
+});
+```
+
+<div id="breadcrumbs">
+  ### Breadcrumbs
+</div>
+
+Sentry ofrece un manejador de breadcrumbs para enviar automáticamente los logs como breadcrumbs:
+
+```php
+$client = new Raven_Client('___PUBLIC_DSN___');
+
+$handler = new \Raven_Breadcrumbs_MonologHandler($client);
+$monolog->pushHandler($handler);
+```
+
+{/* <!-- TODO-AÑADIR EJEMPLO DE VERIFICACIÓN --> */}
+
+<div id="symfony">
+  ## Symfony
+</div>
+
+Symfony es compatible mediante el paquete [sentry-symfony](https://github.com/getsentry/sentry-symfony) como un bundle nativo.
+
+<div id="symfony-2">
+  ### Symfony 2
+</div>
+
+{/* <!-- ASISTENTE de symfony2 --> */}
+
+Instala el paquete `sentry/sentry-symfony`:
+
+```bash
+composer require sentry/sentry-symfony:^2
+```
+
+<Alert level="warning" title="Versión más reciente">
+  Esta documentación se refiere a la v2.x del bundle. Esta versión no es compatible con el [cliente de la API unificada](/es/platforms/php/) más reciente.
+
+  Puedes actualizar a [la versión más reciente](/es/platforms/php/guides/symfony/) si usas PHP 7.1+ y Symfony 3.4+.
+</Alert>
+
+Habilita el bundle en `app/AppKernel.php`:
+
+```php
+public function registerBundles()
+{
+    $bundles = [
+        // …
+        new Sentry\SentryBundle\SentryBundle(),
+    );
+
+    // …
+}
+```
+
+Añade tu DSN a `app/config/config.yml`:
+
+```yaml
+sentry:
+  dsn: "___PUBLIC_DSN___"
+```
+
+Puedes verificar fácilmente que Sentry está registrando errores en tu aplicación de Symfony creando una ruta de depuración que lance una excepción:
+
+```php
+/**
+ * @Route("/debug-sentry")
+ */
+public function debug_sentry()
+{
+    throw new Exception('Mi primer error en Sentry.');
+}
+```
+
+Al visitar esta ruta, se generará una excepción que Sentry registrará.

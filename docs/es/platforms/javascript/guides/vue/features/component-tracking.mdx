@@ -1,0 +1,109 @@
+---
+title: Rastreo de componentes de Vue
+description: "Aprende cómo el SDK de Vue de Sentry te permite monitorear el rendimiento de renderizado de tu aplicación y sus componentes."
+sidebar_order: 10
+---
+
+El SDK de Vue de Sentry ofrece una función para monitorear el rendimiento de tus componentes de Vue: el rastreo de componentes. Al habilitar esta función, verás spans en tus transacciones que representan los eventos del ciclo de vida del componente y sus duraciones. Esto te permite obtener una vista detallada de cómo se comportan tus componentes para que puedas, por ejemplo, identificar inicializaciones lentas o actualizaciones frecuentes que podrían afectar el rendimiento de tu aplicación.
+
+<div id="usage">
+  ## Uso
+</div>
+
+<Alert>
+  Para habilitar el seguimiento de componentes, necesitas configurar el tracing. Para más detalles sobre cómo hacerlo, consulta nuestra [documentación de tracing](/es/platforms/javascript/guides/vue/tracing/).
+</Alert>
+
+<div id="initial-application-load">
+  ### Carga inicial de la aplicación
+</div>
+
+De forma predeterminada, el SDK de Vue hace seguimiento del rendimiento de renderizado de tu app (es decir, de su componente raíz) durante la carga inicial de la página. Esta operación se representa en la transacción de carga de página mediante el span **`ui.vue.render`**.
+
+<div id="child-component-tracking">
+  ### Seguimiento de componentes hijos
+</div>
+
+También puedes hacer seguimiento de los componentes hijos de tu app para obtener más detalles sobre el proceso de renderizado. Esta función creará spans para cada instancia de componente rastreada. Los spans se llaman **`ui.vue.[hook]`**, donde `[hook]` se reemplaza por cada etapa del ciclo de vida rastreada. Por ejemplo, el span que representa la etapa de montaje (el tiempo entre `beforeMount` y `mounted`) se llama `ui.vue.mount`.
+
+Para configurarlo, agrega la integración de Vue a tu llamada `Sentry.init()` y configura la opción `tracingOptions.trackComponents`.
+Pasa `true` para rastrear todos tus componentes hijos o especifica una lista de componentes individuales que quieres rastrear:
+
+```javascript {5-17}
+import * as Sentry from "@sentry/vue";
+
+Sentry.init({
+  integrations: [
+    Sentry.vueIntegration({
+      tracingOptions: {
+        trackComponents: true,
+        // OR
+        // O BIEN
+          "App",
+          "RwvHeader",
+          "RwvFooter",
+          "RwvArticleList",
+          "Pagination",
+        ],
+      },
+    }),
+  ],
+});
+```
+
+El valor por defecto de `trackComponents` es `false`.
+
+<div id="track-specific-component-lifecycle-hooks">
+  #### Seguir hooks del ciclo de vida específicos del componente
+</div>
+
+Puedes controlar qué hooks del ciclo de vida se deben seguir. Esto es útil si, por ejemplo, quieres saber si algunos componentes se eliminan durante la carga inicial de la página; en ese caso, puedes configurar la integración para que también siga los hooks de `unmount`:
+
+```javascript {8}
+import * as Sentry from "@sentry/vue";
+
+Sentry.init({
+  integrations: [
+    Sentry.vueIntegration({
+      tracingOptions: {
+        trackComponents: true,
+        hooks: ["mount", "update", "unmount"],
+      },
+    }),
+  ],
+});
+```
+
+El conjunto predeterminado de hooks registrados es `['activate', 'mount', 'update']`.
+
+En Vue 3, se pueden rastrear los siguientes hooks: `['activate', 'create', 'unmount', 'mount', 'update']`
+
+<Alert>
+  En Vue 2, usa `destroy` en lugar de `unmount`. `destroy` no funciona en Vue 3, ya que los nombres de los hooks del ciclo de vida [cambiaron](https://v3-migration.vuejs.org/breaking-changes/#other-minor-changes) en Vue 3.
+</Alert>
+
+Ten en cuenta que, al especificar `hooks`, usamos el verbo en su forma simple en lugar de los pares con `before` y la terminación `-ed`. Por ejemplo, `unmount` es correcto, mientras que `beforeUnmount` y `unmounted` son incorrectos.
+
+<div id="configure-a-timeout-for-component-tracking">
+  #### Configurar un tiempo de espera para el seguimiento de componentes
+</div>
+
+Puedes especificar cuánto tiempo debe esperar el span de renderizado raíz a que se renderice el último componente configurando la opción `timeout` en milisegundos.
+Cada nuevo ciclo de renderizado reinicia (debouncea) el tiempo de espera y este vuelve a contar desde cero. Una vez alcanzado el tiempo de espera, el seguimiento se da por concluido y toda la información de renderizado se envía a Sentry:
+
+```javascript {8}
+import * as Sentry from "@sentry/vue";
+
+Sentry.init({
+  integrations: [
+    Sentry.vueIntegration({
+      tracingOptions: {
+        trackComponents: true,
+        timeout: 500, // milisegundos
+      },
+    }),
+  ],
+});
+```
+
+El tiempo de espera predeterminado es `2000` milisegundos.

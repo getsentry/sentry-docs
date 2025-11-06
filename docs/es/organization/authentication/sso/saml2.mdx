@@ -1,0 +1,187 @@
+---
+title: Proveedor SAML personalizado
+sidebar_order: 5
+description: Aprende a integrar el proveedor SAML personalizado.
+og_image: /og-images/organization-authentication-sso-saml2.png
+---
+
+<Include name="feature-available-for-plan-business-no-trial.mdx" />
+
+Sentry ofrece un proveedor de autenticación genérico para la [autenticación basada en SAML2](https://en.wikipedia.org/wiki/Security_Assertion_Markup_Language), que permite a los propietarios de una organización de Sentry configurar manualmente cualquier IdP compatible con SAML2. A continuación se describen los pasos generales de la integración.
+
+<div id="setup">
+  # Configuración
+</div>
+
+<Alert level="warning">
+  Si cambias el slug de tu organización, tendrás que hacer la misma actualización en los pasos donde introduces los valores de configuración de SAML.
+</Alert>
+
+Sentry es compatible con los siguientes servicios SAML:
+
+* SSO iniciado por el Proveedor de Identidad y por el Proveedor de Servicios
+* SLO (cierre de sesión único) iniciado por el Proveedor de Identidad
+
+<div id="register-sentry-with-idp">
+  ## Registrar Sentry con el IdP
+</div>
+
+Antes de conectar Sentry con el proveedor de identidad (IdP), primero debes registrar Sentry como una aplicación en el IdP. Los endpoints SAML de Sentry son los siguientes, donde `YOUR_ORG_SLUG` se sustituye por el slug de tu organización:
+
+<table class="table">
+  <tbody valign="top">
+    <tr>
+      <th>ACS:</th>
+
+      <td>
+        <code class="docutils literal">
+          https://sentry.io/saml/acs/YOUR&#95;ORG&#95;SLUG/
+        </code>
+      </td>
+    </tr>
+
+    <tr>
+      <th>SLS:</th>
+
+      <td>
+        <code class="docutils literal">
+          https://sentry.io/saml/sls/YOUR&#95;ORG&#95;SLUG/
+        </code>
+      </td>
+    </tr>
+
+    <tr>
+      <th>Metadata:</th>
+
+      <td>
+        <code class="docutils literal">
+          https://sentry.io/saml/metadata/YOUR&#95;ORG&#95;SLUG/
+        </code>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+**¿Qué son estas tres cosas?**
+
+* `ACS` significa *Assertion Consumer Service*. Se utiliza para establecer una sesión según las reglas acordadas entre tu IdP y el proveedor de servicios con el que se integra. Ten en cuenta que el endpoint ACS de Sentry utiliza binding HTTP-POST.
+* `SLS` significa *Single Logout Service* y se usa para atender solicitudes de cierre de sesión del IdP.
+* `Metadata`, también denominada `entityID` en algunos sistemas, hace referencia a los datos de configuración de un IdP o un SP. En este caso, el endpoint de metadata en Sentry se refiere a los metadatos de la organización de Sentry en el lado del proveedor de servicios.
+
+Al configurar estos valores en el IdP, recuerda que Sentry no necesita proporcionar un certificado de firma para que la integración funcione.
+
+<div id="register-idp-with-sentry">
+  ## Registrar el IdP en Sentry
+</div>
+
+Hay tres métodos distintos para registrar tu IdP en Sentry: metadatos, XML y campos de datos. Cada método se detalla a continuación y producirá el mismo resultado final.
+
+<div id="using-metadata-url">
+  ### Uso de la URL de metadatos
+</div>
+
+Este método solo requiere una URL de metadatos proporcionada por la plataforma IdP. Una vez proporcionada, Sentry obtendrá automáticamente los metadatos que necesita.
+
+![](./img/saml2-metadata-url.png)
+
+<div id="using-provider-xml">
+  ### Uso de Provider XML
+</div>
+
+Para que este método funcione, un administrador debe proporcionar el contenido del archivo de metadatos generado por el IdP. Una vez que pegues el contenido directamente en el campo de texto, Sentry se encargará del resto. Ten en cuenta que Sentry no requiere un certificado de firma.
+
+![](./img/saml2-provider-xml.png)
+
+Aquí tienes un ejemplo de cómo se ve el contenido del Metadata XML.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" entityID="http://www.okta.com/SENTRY_APP_ID">
+  <md:IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+    <md:KeyDescriptor use="signing">
+      <ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+        <ds:X509Data>
+          <ds:X509Certificate>...</ds:X509Certificate>
+        </ds:X509Data>
+      </ds:KeyInfo>
+    </md:KeyDescriptor>
+    <md:NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified</md:NameIDFormat>
+    <md:NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress</md:NameIDFormat>
+    <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://YOUR_OKTA_ORG.okta.com/app/sentry/SENTRY_APP_ID/sso/saml" />
+    <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://YOUR_OKTA_ORG.okta.com/app/sentry/SENTRY_APP_ID/sso/saml" />
+  </md:IDPSSODescriptor>
+</md:EntityDescriptor>
+```
+
+<div id="using-provider-data">
+  ### Uso de datos del proveedor
+</div>
+
+Este método de registro es el más complejo y requiere hacer coincidir los campos de datos de un IdP. La forma más sencilla de lograrlo es buscar los valores en un archivo de metadatos como el que se muestra arriba.
+
+![](./img/saml2-provider-data.png)
+
+Según el ejemplo del archivo XML anterior, los valores de los campos que debes ingresar son los siguientes:
+
+* `EntityID`
+* `X509Certificate`
+* `SingleSignOnService`
+
+En este ejemplo, el IdP no proporciona `SingleLogoutService`, y Sentry lo considera un valor opcional.
+
+<div id="map-idp-attributes">
+  ## Mapear atributos del IdP
+</div>
+
+<Alert title="Nota sobre los nombres de los campos">
+  Los nombres de los campos de metadatos pueden variar de un proveedor a otro. Por ejemplo, Microsoft Azure AD se refiere a estos campos de metadatos como **Claims**, mientras que Okta los denomina **Attributes**. De manera similar, una plataforma podría usar **user.email**, mientras que otro proveedor usa **emailaddress**.
+</Alert>
+
+Aquí, los valores de los campos de los miembros de Sentry deben alinearse con los valores correspondientes de los miembros en el IdP. Los campos básicos obligatorios son el ID de usuario y la dirección de correo electrónico del IdP, pero Sentry también puede extraer opcionalmente los valores de nombre y apellido desde allí.
+
+![](./img/saml2-map-attributes.png)
+
+<div id="confirm-successful-registration">
+  ## Confirmar el registro correcto
+</div>
+
+Una vez que finalice el flujo de integración de SAML, la página de autenticación correspondiente reflejará el estado de una integración exitosa. Desde aquí, puedes enviar recordatorios a cualquier miembro que ya existiera antes de la integración, y recibirán un correo electrónico para vincular sus cuentas.
+
+![](./img/saml2-success.png)
+
+Como Sentry utiliza el aprovisionamiento Just-In-Time (JIT), los nuevos miembros se registran automáticamente en Sentry durante su primer intento de inicio de sesión con SAML SSO. A estas cuentas se les asignará el tipo de membresía según el rol predeterminado de membresía en la configuración de tu organización en Sentry.
+
+<div id="scim-provisioning">
+  ## Aprovisionamiento SCIM
+</div>
+
+SCIM está disponible para el aprovisionamiento automático de usuarios, la desprovisión y la asignación a equipos para IdP SAML2. [Configura Sentry para SCIM](/es/organization/authentication/sso/okta-sso/okta-scim/#sentry-configuration) y luego sigue la documentación de tu IdP para continuar con la configuración. Obtén más información sobre los endpoints de la API SCIM de Sentry en la [documentación de la API SCIM](/es/api/scim/).
+
+<div id="faq">
+  ## Preguntas frecuentes
+</div>
+
+<div id="what-is-the-process-for-adding-new-members-to-a-saml2-enabled-sentry-organization">
+  #### ¿Cuál es el proceso para añadir nuevos miembros a una organización de Sentry con SAML2 habilitado?
+</div>
+
+Sentry utiliza aprovisionamiento Just-In-Time para las cuentas de miembros; cualquier miembro nuevo creado en un proveedor de identidad tendrá una cuenta creada automáticamente en Sentry cuando intente iniciar sesión en Sentry por primera vez.
+
+<div id="what-happens-to-sentry-accounts-that-exist-prior-to-saml-being-enabledenforced">
+  #### ¿Qué sucede con las cuentas de Sentry que ya existían antes de habilitar/obligar SAML?
+</div>
+
+Los miembros existentes recibirán un correo electrónico informándoles de la nueva opción de autenticación con SAML en cuanto se active (independientemente de si se obliga) y podrán vincular las cuentas del sistema IdP con sus membresías de Sentry.
+
+<div id="does-sentry-deprovision-members-if-they-are-no-longer-present-in-the-identity-provider">
+  #### ¿Sentry da de baja a los miembros si ya no están en el Proveedor de Identidad?
+</div>
+
+Por ahora, la integración SAML2 de Sentry no da de baja automáticamente las cuentas de usuario inactivas.
+En su lugar, el miembro permanece en Sentry sin forma de iniciar sesión, ya que ya no puede acceder al IdP para autenticarse. De momento, las cuentas de miembros inactivos deberán eliminarse manualmente por un Manager o un Owner en Sentry.
+
+<div id="attempting-to-set-up-saml2-sso-with-an-idp-results-in-a-failure-with-the-message-the-provider-did-not-return-a-valid-user-identity-what-is-happening-here">
+  #### Intentar configurar SSO SAML2 con un IdP falla con el mensaje “The provider did not return a valid user identity.” ¿Qué está pasando?
+</div>
+
+El quid del asunto es que distintas plataformas de IdP (Okta, Azure AD, etc.) usan términos y convenciones diferentes para los campos necesarios a fin de que la integración funcione. Como resultado, es posible asignar valores incorrectos en Sentry, lo que provoca que el SSO falle con ese mensaje de error.

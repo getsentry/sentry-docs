@@ -1,0 +1,144 @@
+---
+title: Protección contra picos
+keywords: ["gestión de cuotas"]
+sidebar_order: 10
+description: "Aprende a gestionar tu cuota y asegura que tu volumen no se consuma de una sola vez con la Protección contra picos."
+---
+
+Un pico es un aumento significativo y temporal en el volumen de tus eventos. Como Sentry factura según la cantidad de eventos enviados mensualmente, los picos pueden consumir rápidamente tu cuota de todo el mes. La Protección contra picos te protege estableciendo un umbral para el promedio de eventos que envía cada uno de tus proyectos y descartando los que excedan ese umbral.
+
+Actualmente, la Protección contra picos se aplica a errores, transacciones o spans y adjuntos.
+
+<Alert>
+  La Protección contra picos no se aplica durante los periodos de prueba, ya que las cuotas por categoría son ilimitadas durante la duración de la prueba. Por ejemplo, las organizaciones nuevas en un periodo de prueba no estarán protegidas contra picos hasta que este finalice, incluso si los proyectos tienen habilitada la Protección contra picos.
+</Alert>
+
+<Alert>
+  Las notificaciones de la Protección contra picos están desactivadas de forma predeterminada para evitar exceso de ruido para los usuarios. Lee la sección de [notificaciones](/es/pricing/quotas/spike-protection/#notifications) a continuación para saber cómo activarlas en proyectos clave.
+</Alert>
+
+<div id="how-spike-protection-works">
+  ## Cómo funciona Spike Protection
+</div>
+
+Cualquier miembro del equipo con **permisos de Manager, Billing u Owner** puede habilitar Spike Protection por proyecto para tu organización. Para elegir en qué proyecto configurarlo, ve a **Settings &gt; Spike Protection**. Podrás activarlo para proyectos individuales o hacer clic en “Enable All” para configurarlo en todos tus proyectos a la vez.
+
+<Alert>
+  Si ya usas Sentry y tienes Spike Protection habilitado a nivel de organización, se te cambiará automáticamente al nuevo Spike Protection por proyecto. Todos tus proyectos tendrán Spike Protection habilitado de forma predeterminada, pero podrás ajustarlo en cualquier momento.
+</Alert>
+
+<div id="how-sentry-detects-spikes">
+  ## Cómo Sentry detecta picos
+</div>
+
+Sentry usa un algoritmo para establecer un umbral de pico para cada proyecto. Cuando se alcanza este umbral, se marca un pico. Luego, Sentry aplica un límite de velocidad dinámico a tu proyecto y comienza a descartar eventos para evitar que tu cuota se consuma demasiado rápido. Esto te protege de picos a corto plazo. Pero, debido a la naturaleza dinámica del algoritmo, si el volumen de eventos se mantiene alto durante un período prolongado, se convertirá en tu nueva referencia y podrías agotar tu cuota rápidamente.
+
+Los umbrales de pico se recalculan cada hora mientras dure el pico. Esto se hace para aumentar gradualmente los umbrales con el tiempo y adaptarse a nuevos patrones de tráfico.
+
+La protección contra picos se desactivará automáticamente una vez que pase el pico, hasta la próxima vez que se detecte uno.
+
+<div id="a-dynamic-algorithm">
+  ### Un algoritmo dinámico
+</div>
+
+Para adaptarse a ciertos patrones en la cantidad de eventos que envía tu aplicación, el algoritmo de Sentry evalúa el umbral horario de picos por proyecto teniendo en cuenta la estacionalidad diaria y horaria. Se basa en el mayor de dos cálculos: el primero, determinado por el número mínimo de eventos que se considerarían un pico según tu cuota; el segundo, una proyección ponderada basada en tu uso durante las últimas 168 horas (7 días).
+
+Se hace así para que los proyectos nuevos sin 7 días de datos puedan beneficiarse de la protección contra picos. Además, el cálculo del mínimo de eventos puede usarse para reducir los falsos positivos en proyectos más pequeños o recientes, de modo que los picos no se marquen incorrectamente. Sigue leyendo para conocer en detalle nuestro algoritmo de protección contra picos.
+
+<div id="notifications">
+  ## Notificaciones
+</div>
+
+Aunque las notificaciones de Spike Protection están desactivadas de forma predeterminada, puedes activarlas para los proyectos clave que quieras supervisar de dos maneras:
+
+* Añadiendo la acción de notificación por correo electrónico (“Notification Actions”). Esto enviará un correo a los usuarios con roles de Owner, Manager y Billing que estén vinculados a ese proyecto.
+
+![spike-protection-notification-email](https://user-images.githubusercontent.com/26800704/233509719-cacf233a-5618-43f8-9fd4-068f5c5217b3.png)
+
+* Añadiendo acciones de notificación de Slack o PagerDuty (“Notification Actions”) (si tienes estas integraciones instaladas). Esto notificará a los usuarios que estén vinculados al proyecto a través de Slack o PagerDuty.
+
+![spike-protection-notification-slack-pagerduty](https://user-images.githubusercontent.com/26800704/233509795-23825efb-a448-47e3-9b6c-f0d6aec0ecaa.png)
+
+<div id="managing-a-spike">
+  ## Gestión de picos
+</div>
+
+Recomendamos seguir estos pasos para gestionar los picos:
+
+* Comprueba qué incidencias están [consumiendo tu cuota](https://sentry.io/orgredirect/organizations/:orgslug/stats/).
+* Configura [límites de tasa](/es/pricing/quotas/manage-event-stream-guide/#rate-limiting) en las claves DSN de los proyectos relacionados con el pico.
+* Configura [alertas de métricas](/es/product/alerts/alert-types/#metric-alerts) para el número de eventos de un proyecto.
+* Si una versión específica del lanzamiento provocó el pico, añade el identificador de la versión a los [filtros de entrada](/es/pricing/quotas/manage-event-stream-guide/#inbound-data-filters) del proyecto para evitar aceptar eventos de esa versión.
+* Configura un [presupuesto de pago por uso](/es/pricing/#pricing-how-it-works) para asegurarte de contar con tiempo para ajustar tu volumen en caso de un pico futuro.
+
+Para revisar los eventos que se descartaron para ahorrar cuota con la protección contra picos (Spike Protection), ve a la pestaña &quot;Usage Stats&quot; de la página **Stats** de tu organización de Sentry y selecciona el evento de interés en el desplegable &quot;Category&quot;. Podrás ver detalles por proyecto de tus estadísticas usando el selector de proyecto.
+
+Para garantizar la precisión, la ventana de tiempo en la página **Stats** debe ser de entre un mínimo de 6 horas y un máximo de 30 días para que aparezcan los picos y el umbral de pico. Además, solo serán visibles los picos que duren más de una hora.
+
+Para ver picos de menos de una hora, visita el Audit Log de Sentry desde la página **Settings** y selecciona &quot;Audit Log&quot; en la sección &quot;ORGANIZATION&quot;. Podrás ver picos filtrando por spike-protection.activated, spike-protection.deactivated, spike-protection.disabled o spike-protection.enabled en el desplegable &quot;Select Action&quot;.
+
+![Umbral de límite de pico](./img/spike-limit-threshold.png)
+
+<div id="how-the-spike-protection-algorithm-works">
+  ## Cómo funciona el algoritmo de protección contra picos
+</div>
+
+Como se mencionó antes, nuestro algoritmo de protección contra picos se basa en el mayor de dos cálculos: uno de eventos mínimos y otro basado en el uso. Sigue leyendo para conocer los detalles de cómo funciona.
+
+<div id="minimum-event-calculation">
+  ### Cálculo mínimo de eventos
+</div>
+
+Este cálculo, primer paso de nuestro algoritmo, identifica un número mínimo de eventos usando tu cuota como guía. Este número toma el mayor valor entre un décimo de la cuota mínima de volumen reservado del plan Developer para ese tipo de evento y el resultado de la siguiente fórmula: `(3 \* your quota)/(720 \* number of projects)`. El número de proyectos se limita a 5 y se usa para ajustar el umbral mínimo. La ecuación supone que tu proyecto consumiría tres veces tu cuota total en 30 días si los eventos se ingieren de forma continua a esa tasa por hora, lo que marca el proyecto por un posible pico.
+
+<div id="usage-based-calculation">
+  ### Cálculo basado en el uso
+</div>
+
+Este cálculo, que es el segundo paso de nuestro algoritmo, obtiene datos por hora de los últimos siete días para proyectar los límites de picos para los próximos siete días. Estos datos se usan para calcular promedios ponderados que tienen en cuenta la estacionalidad semanal y horaria. Por ejemplo, el promedio ponderado calculado para el lunes a las 3 p. m. está más influenciado por los datos del propio lunes o de las horas cercanas a las 3 p. m. Luego, este promedio ponderado se multiplica por un factor igual a `5` veces la desviación estándar general de la última semana —este factor está acotado entre `3` y `6`.
+
+<div id="decay-factor-for-dropped-events">
+  ### Factor de atenuación para eventos descartados
+</div>
+
+Los eventos aceptados y los descartados se procesan por separado. Se aplica una atenuación exponencial a la contribución de los eventos descartados al umbral general. La contribución de los eventos descartados se reduce a ~10% del peso 24 horas después de un pico y es prácticamente nula dos días después de ese pico. Esto permite que la protección contra picos siga ajustándose (lentamente) a los aumentos de volumen, pero ofrezca una mejor protección en los días posteriores a un pico significativo.
+
+<div id="example">
+  ### Ejemplo
+</div>
+
+En este ejemplo, el proyecto normalmente ingiere entre 100 y 200 eventos por hora. Se produjo un pico que alcanzó los 50,000 eventos, como se muestra en el gráfico a continuación:
+![Spike zoomed out](./img/spike-protection-zoomed-out.png)
+
+En el siguiente gráfico, vemos un acercamiento del periodo de 12 horas del pico, junto con una línea que indica el límite de pico a medida que se va recalculando durante su transcurso:
+![Spike zoomed in plotted with spike limits](./img/spike-protection-zoomed-in.png)
+
+Durante el pico, el límite recalculado tiene el siguiente efecto:
+
+* 1.ª hora: se ingirieron 6k eventos, el límite se recalcula a 2083, se descartaron 3917 eventos
+* 2.ª hora: se ingirieron 34k eventos, el límite se recalcula a 2873, se descartaron 31217 eventos
+* 3.ª hora: se ingirieron 55k eventos, el límite se recalcula a 5452, ~49k eventos descartados
+* 4.ª hora: se ingirieron 49k eventos, el límite se recalcula a 7628, ~41k eventos descartados
+* 5.ª hora: se ingirieron 41k eventos, el límite se recalcula a 9371, ~31k eventos descartados
+
+Para este ejemplo en particular:
+
+* Cuota de la organización: 500k
+* Eventos ingeridos durante el pico: ~478k
+* Eventos aceptados en total: ~157k
+
+Aquí tienes un ejemplo de proyecciones del límite de pico para una semana, teniendo en cuenta la estacionalidad:
+
+![Spike limit projections with seasonality](./img/spike-protection-steady-state.png)
+
+Estas variaciones regulares en la ingesta de eventos no provocan un pico.
+
+<div id="bursty-projects">
+  ### Proyectos con ráfagas
+</div>
+
+Puede haber casos en los que, por diseño, un proyecto acepte de forma habitual un alto volumen de eventos en un periodo de tiempo muy corto —por ejemplo, proyectos que orquestan trabajos de cron/Airflow o ejecutores de tareas—. La siguiente captura de pantalla muestra un ejemplo de este tipo de comportamiento:
+
+![Un proyecto “con ráfagas” con picos intencionales.](./img/bursty_projects.png)
+
+Si este es el comportamiento esperado para un proyecto de tu organización, quizá te convenga desactivar la protección contra picos en la configuración del proyecto para asegurarte de que no se descarten eventos necesarios.

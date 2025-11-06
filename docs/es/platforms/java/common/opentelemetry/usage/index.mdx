@@ -1,0 +1,67 @@
+---
+title: Uso de OpenTelemetry
+sdk: sentry.java.opentelemetry-agent
+description: "Cómo usar OpenTelemetry con Sentry."
+sidebar_order: 160
+---
+
+<div id="opentelemetry-and-sentry">
+  ## OpenTelemetry y Sentry
+</div>
+
+Con el SDK de OpenTelemetry de Sentry, un `Span` de OpenTelemetry se convierte en una `Transaction` o un `Span` de Sentry. El primer `Span` que pasa por el `SpanProcessor` de Sentry se convierte en una `Transaction`, y cualquier `Span` hijo se adjunta a esa primera `Transaction` al comprobar el contexto del `Span` padre. Esto aplica tanto al `Span` raíz de OpenTelemetry como a cualquier `Span` de nivel superior del sistema. Por ejemplo, una solicitud enviada del frontend al backend creará un `Span` raíz de OpenTelemetry con su `Transaction` correspondiente en Sentry. La solicitud en el backend creará una nueva `Transaction` de Sentry para el `Span` de OpenTelemetry. La `Transaction` y el `Span` de Sentry quedan vinculados como un rastro para facilitar la navegación y el seguimiento de errores.
+
+<div id="manual-instrumentation-with-opentelemetry">
+  ### Instrumentación manual con OpenTelemetry
+</div>
+
+Si tienes el SDK de OpenTelemetry en tu classpath, también puedes instrumentar tu código manualmente usando la API de OpenTelemetry tal como se explica [en la documentación de OpenTelemetry](https://opentelemetry.io/docs/languages/java/api/#span).
+
+Un span creado manualmente para solicitudes HTTP debe declarar su `SpanKind`, así como el atributo `HttpAttributes.HTTP_REQUEST_METHOD`, para que Sentry pueda procesarlos correctamente:
+
+```java {tabTitle:Java}
+Span span = tracer.spanBuilder("myspan")
+  .setAttribute(HTTP_REQUEST_METHOD, "GET")
+  .setSpanKind(SpanKind.SERVER)
+  .startSpan();
+```
+
+```kotlin {tabTitle:Kotlin}
+val span = tracer.spanBuilder("myspan")
+  .setAttribute(HTTP_REQUEST_METHOD, "GET")
+  .setSpanKind(SpanKind.SERVER)
+  .startSpan()
+```
+
+
+<div id="capturing-http-headers">
+  ### Captura de encabezados HTTP
+</div>
+
+De forma predeterminada, OpenTelemetry no captura ningún encabezado HTTP. Sin embargo, esto se puede configurar mediante propiedades del sistema o variables de entorno, según la documentación de configuración de OpenTelemetry [aquí](https://opentelemetry.io/docs/zero-code/java/agent/instrumentation/http/#capturing-http-request-and-response-headers). Cada variable es una lista de nombres de encabezados HTTP separados por comas que deben capturarse.
+
+<Alert title="✨ Nota">
+
+Habilita solo los encabezados que realmente quieras enviar a Sentry. Algunos pueden contener datos sensibles como PII, cookies o tokens.
+
+</Alert>
+
+<div id="client-variables">
+  #### Variables del cliente
+</div>
+
+- `OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_REQUEST_HEADERS`
+- `OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_RESPONSE_HEADERS`
+
+<div id="server-variables">
+  #### Variables de servidor
+</div>
+
+- `OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_REQUEST_HEADERS`
+- `OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_RESPONSE_HEADERS`
+
+<div id="additional-configuration">
+  ## Configuración adicional
+</div>
+
+Si necesitas un control más detallado de Sentry, consulta la <PlatformLink to="/configuration/">página de configuración</PlatformLink>. Si quieres filtrar transacciones antes de enviarlas a Sentry (para eliminar los health checks, por ejemplo), puede resultarte útil la <PlatformLink to="/configuration/filtering/#filtering-transaction-events">página de filtrado</PlatformLink>.

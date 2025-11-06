@@ -1,0 +1,103 @@
+---
+title: Flujo de datos en autohospedado
+sidebar_title: Flujo de datos
+sidebar_order: 20
+description: Conoce el flujo de datos de Sentry autohospedado
+---
+
+Este diagrama muestra el flujo de datos de Sentry autohospedado. Es similar a [Arquitectura de la aplicación](/es/application-architecture/overview/), pero nos centramos más en los componentes autohospedados.
+
+```mermaid
+graph LR
+  kafka@{ shape: cyl, label: "Kafka\n(eventstream)" }
+  redis@{ shape: cyl, label: "Redis" }
+  postgres@{ shape: cyl, label: "Postgres" }
+  memcached@{ shape: cyl, label: "Memcached" }
+  clickhouse@{ shape: cyl, label: "Clickhouse" }
+  smtp@{ shape: win-pane, label: "Servidor SMTP" }
+  symbol-server@{ shape: win-pane, label: "Servidores de Símbolos Públicos/Privados" }
+  internet@{ shape: trap-t, label: "Internet" }
+
+  internet --> nginx
+
+  nginx -- Evento enviado por los SDKs --> relay
+  nginx -- Interfaz Web y API --> web
+
+  subgraph querier [Consultor de Eventos]
+    snuba-api --> clickhouse
+  end
+
+  subgraph processing [Procesamiento de Eventos]
+    kafka --> snuba-consumer --> clickhouse
+    snuba-consumer --> kafka
+    kafka --> snuba-replacer --> clickhouse
+    kafka --> snuba-subscription-scheduler --> clickhouse
+    kafka --> snuba-subscription-executor --> clickhouse
+    redis -- Como cola de celery --> sentry-consumer
+    kafka --> sentry-consumer --> kafka
+    kafka --> sentry-post-process-forwarder --> kafka
+    sentry-post-process-forwarder -- Evitando procesamiento concurrente del mismo evento --> redis
+
+    vroom-blob-storage@{ shape: cyl, label: "Almacenamiento Blob\n(por defecto es sistema de archivos)" }
+
+    kafka -- Procesamiento de eventos de perfilado --> vroom -- Republicar a Kafka para consumo de Snuba --> kafka
+    vroom --> snuba-api
+    vroom -- Almacenar datos de perfiles --> vroom-blob-storage
+
+    outgoing-monitors@{ shape: win-pane, label: "Monitores HTTP Salientes" }
+    redis -- Obteniendo configuraciones de uptime --> uptime-checker -- Publicando resultados de monitoreo de uptime --> kafka
+    uptime-checker --> outgoing-monitors
+  end
+
+  subgraph ui [Interfaz de Usuario Web]
+    sentry-blob-storage@{ shape: cyl, label: "Almacenamiento Blob\n(por defecto es sistema de archivos)" }
+
+    web --> worker
+    web --> postgres
+    web -- Capa de caché --> memcached
+    web -- Consultas sobre datos de eventos (errores, spans, etc.) (a snuba-api) --> snuba-api
+    web -- Avatares, adjuntos, etc. --> sentry-blob-storage
+    worker -- Como cola de celery --> redis
+    worker --> postgres
+    worker -- Correos de alertas y resúmenes --> smtp
+    web -- Enviando correos de prueba --> smtp
+  end
+
+  subgraph ingestion [Ingesta de Eventos]
+    relay@{ shape: rect, label: 'Relay' }
+    sentry_ingest_consumer[sentry-ingest-consumers]
+
+    relay -- Procesar envelope en tipos específicos --> kafka --> sentry_ingest_consumer -- Almacenando datos de eventos en caché (a redis) --> redis
+    relay -- Registrar instancia de relay --> web
+    relay -- Obteniendo configuraciones de proyecto (a redis) --> redis
+    sentry_ingest_consumer -- Simbolizar trazas de pila --> symbolicator --> symbol-server
+    sentry_ingest_consumer -- Guardar payload del evento en Nodestore --> postgres
+    sentry_ingest_consumer -- Republicar al topic de eventos --> kafka
+  end
+```
+
+<div id="event-ingestion-pipeline">
+  ### Canalización de ingesta de eventos
+</div>
+
+1. Los eventos del SDK se envían al servicio `relay`.
+2. Relay analiza el sobre entrante, verifica si el DSN y el ID de proyecto son válidos y lee la configuración del proyecto desde `redis`.
+3. Relay construye una nueva carga útil para que la consuman los consumidores de ingesta de Sentry y la envía a `kafka`.
+4. Los consumidores de Sentry `ingest-*` (donde `*` [comodín] representa el tipo de evento [errores, transacciones, perfiles, etc.]) consumen el evento, lo almacenan en caché en `redis` y inician la tarea `preprocess_event`.
+5. La tarea `preprocess_event` simbólica las trazas de pila con el servicio `symbolicator` y procesa el evento según su tipo.
+6. La tarea `preprocess_event` guarda la carga útil del evento en nodestore (el backend predeterminado de nodestore es `postgres`).
+7. La tarea `preprocess_event` publica el evento en `kafka` bajo el tema `events`.
+
+<div id="event-processing-pipeline">
+  ### Canal de procesamiento de eventos
+</div>
+
+1. El servicio `snuba-consumer` consume eventos del tópico `events` y los procesa. Después de que los eventos se escriben en ClickHouse, Snuba publica eventos de error y de transacción en `post-process-forwarder`.
+2. El consumidor `post-process-forwarder` de Sentry consume mensajes y lanza una tarea `post_process_group` por cada error e incidencia procesados.
+
+<div id="web-user-interface">
+  ### Interfaz de usuario web
+</div>
+
+1. El servicio `web` es lo que ves: la interfaz y API web de Django que provee el frontend de Sentry.
+2. El servicio `worker` consume principalmente tareas de `redis`, que actúa como una cola de Celery. Una tarea destacada es el envío de correos electrónicos a través del servidor SMTP.

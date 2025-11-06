@@ -1,0 +1,86 @@
+---
+title: Expo Router
+description: "Aprende a usar la instrumentación de Expo Router de Sentry."
+sidebar_order: 65
+---
+
+El paquete del SDK de React Native de Sentry incluye instrumentación para Expo Router. Esto te permite ver el rendimiento de tus transiciones de navegación y los errores que se producen durante ellas. Esta página te guiará para configurar la instrumentación y ajustarla a tus necesidades.
+
+<div id="initialization">
+  ## Inicialización
+</div>
+
+El siguiente fragmento de código muestra cómo inicializar la instrumentación.
+
+```javascript {6-8, 15-16, 20-25} {filename: app/_layout.tsx}
+import React from 'react';
+import { Slot, useNavigationContainerRef } from 'expo-router';
+import { isRunningInExpoGo } from 'expo';
+import * as Sentry from '@sentry/react-native';
+
+const navigationIntegration = Sentry.reactNavigationIntegration({
+  enableTimeToInitialDisplay: !isRunningInExpoGo(),
+});
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  // Establece tracesSampleRate en 1.0 para capturar el 100% de las transacciones para el rastreo.
+  // Recomendamos ajustar este valor en producción.
+  // Más información en
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  integrations: [navigationIntegration],
+  enableNativeFramesTracking: !isRunningInExpoGo(),
+});
+
+function RootLayout() {
+  const ref = useNavigationContainerRef();
+  React.useEffect(() => {
+    if (ref) {
+      navigationIntegration.registerNavigationContainer(ref);
+    }
+  }, [ref]);
+
+  return <Slot />;
+}
+
+export default Sentry.wrap(RootLayout);
+```
+
+<div id="options">
+  ## Opciones
+</div>
+
+Puedes configurar la instrumentación pasando un objeto de opciones al constructor:
+
+```javascript
+Sentry.reactNavigationIntegration({
+  enableTimeToInitialDisplay: true, // por defecto: false
+  routeChangeTimeoutMs: 1000, // por defecto: 1000
+  ignoreEmptyBackNavigationTransactions: true, // por defecto: true
+});
+```
+
+<div id="routechangetimeoutms">
+  ### routeChangeTimeoutMs
+</div>
+
+Esta opción indica cuánto tiempo esperará la instrumentación a que la ruta se monte tras iniciar un cambio antes de descartar la transacción. El valor predeterminado es `1_000`.
+
+<div id="enabletimetoinitialdisplay">
+  ### enableTimeToInitialDisplay
+</div>
+
+Esta opción activa la medición automática del tiempo hasta la primera visualización para cada ruta. Para obtener más información, consulta [Time to Initial Display](/es/platforms/react-native/tracing/instrumentation/time-to-display). El valor predeterminado es `false`.
+
+<div id="ignoreemptybacknavigationtransactions">
+  ### ignoreEmptyBackNavigationTransactions
+</div>
+
+Esto garantiza que las transacciones de rutas ya visitadas y sin spans no se incluyan en el muestreo. Esto elimina mucho ruido, de modo que la mayoría de las transacciones de navegación hacia atrás ahora se ignoran. El valor predeterminado es `true`.
+
+<div id="notes">
+  ## Notas
+</div>
+
+* Los cuadros lentos y congelados, el tiempo hasta la visualización inicial (Time To Initial Display) y el tiempo hasta la visualización completa (Time To Full Display) solo están disponibles en compilaciones nativas, no en Expo Go.

@@ -1,0 +1,139 @@
+---
+title: Opciones de compilación
+sidebar_order: 5
+description: "Conoce las opciones de configuración disponibles en tiempo de compilación para el SDK de SvelteKit."
+keywords:
+  [
+    "sveltekit",
+    "svelte",
+    "vite.config",
+    "sourcemaps",
+    "source maps",
+    "build",
+    "build-time",
+    "instrumentation",
+    "auto-instrumentation",
+  ]
+---
+
+El SDK de Sentry para SvelteKit es compatible con la instrumentación automática del código y la carga de mapas de origen durante el proceso de compilación de tu aplicación mediante los plugins de Vite `sentrySvelteKit` en tu archivo `vite.config.(js|ts)`.
+
+<div id="available-options">
+  ## Opciones disponibles
+</div>
+
+<TableOfContents ignoreIds={["available-options"]} />
+
+<div id="general-options">
+  ## Opciones generales
+</div>
+
+Estas opciones se pueden configurar en el nivel raíz del objeto de configuración `sentrySvelteKit`. La mayoría son relevantes para el proceso de carga de los mapas de origen.
+
+<SdkOption name="org" type="string" envVar="SENTRY_ORG">
+  El slug de la organización de Sentry asociada a la aplicación.
+</SdkOption>
+
+<SdkOption name="project" type="string" envVar="SENTRY_PROJECT">
+  El slug del proyecto de Sentry asociado a la aplicación.
+</SdkOption>
+
+<SdkOption name="authToken" type="string" envVar="SENTRY_AUTH_TOKEN">
+  El token de autenticación que se utilizará para toda la comunicación con Sentry. Se puede obtener en https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/.
+</SdkOption>
+
+<SdkOption name="sentryUrl" type="string" envVar="SENTRY_URL" defaultValue="https://sentry.io/">
+  La URL base de tu instancia de Sentry. Solo es relevante si usas una instancia autogestionada o distinta de sentry.io.
+</SdkOption>
+
+<SdkOption name="adapter" type="string">
+  De forma predeterminada, `sentrySvelteKit` intentará detectar tu adaptador de SvelteKit para configurar correctamente la carga de los mapas de origen. Si no usas uno de los [adaptadores compatibles](/es/platforms/javascript/guides/sveltekit/) o se detecta el incorrecto, puedes anular la detección con la opción `adapter`.
+</SdkOption>
+
+<div id="source-maps-options">
+  ## Opciones de mapas de origen
+</div>
+
+<SdkOption name="autoUploadSourceMaps" type="boolean">
+  Desactiva la carga automática de mapas de origen estableciendo `autoUploadSourceMaps` en `false`.
+</SdkOption>
+
+<div id="auto-instrumentation-options">
+  ## Opciones de auto-instrumentación
+</div>
+
+El SDK usa principalmente [hooks de SvelteKit](https://kit.svelte.dev/docs/hooks) para recopilar datos de errores y rendimiento. Sin embargo, SvelteKit aún no ofrece un hook para llamadas a la función `load` universales o solo del servidor. Por ello, el SDK utiliza un plugin de Vite para auto‑instrumentar las funciones `load`, de modo que no tengas que añadir manualmente un wrapper de Sentry en cada función.
+
+La auto‑instrumentación está habilitada de forma predeterminada cuando añades la llamada a la función `sentrySvelteKit()` en tu `vite.config.(js|ts)`.
+No obstante, puedes personalizar su comportamiento o desactivarla por completo.
+
+<Alert>
+  El SDK solo auto‑instrumentará funciones `load` en archivos `+page` o `+layout`
+  que no contengan ningún código relacionado con Sentry. Si tienes código
+  personalizado de Sentry en estos archivos, tendrás que [añadir manualmente un
+  wrapper de Sentry](/es/platforms/javascript/guides/sveltekit/apis/#load-function-instrumentation)
+  a tus funciones `load`.
+</Alert>
+
+<SdkOption name="autoInstrument" type="boolean | object" defaultValue="true">
+  Establece `autoInstrument` en `false` para desactivar la auto‑instrumentación de cualquier función `load`. Aun así, puedes [instrumentar manualmente](/es/platforms/javascript/guides/sveltekit/apis/#load-function-instrumentation) funciones `load` específicas.
+
+  ```javascript {filename:vite.config.(js|ts)} {7}
+  import { sveltekit } from '@sveltejs/kit/vite';
+  import { sentrySvelteKit } from '@sentry/sveltekit';
+
+  export default {
+    plugins: [
+      sentrySvelteKit({
+        autoInstrument: false;
+      }),
+      sveltekit(),
+    ],
+    // ... rest of your Vite config
+  };
+  ```
+
+  Como alternativa, puedes pasar un objeto a `autoInstrument` para personalizar qué funciones `load` deben instrumentarse.
+</SdkOption>
+
+<SdkOption name="autoInstrument.load" type="boolean" defaultValue="true">
+  Establécelo en `false` para desactivar la auto‑instrumentación de funciones `load` dentro de `+page.(js|ts)` o `+layout.(js|ts)`.
+
+  ```javascript {filename:vite.config.(js|ts)} {7-10}
+  import { sveltekit } from "@sveltejs/kit/vite";
+  import { sentrySvelteKit } from "@sentry/sveltekit";
+
+  export default {
+    plugins: [
+      sentrySvelteKit({
+        autoInstrument: {
+          load: false,
+        },
+      }),
+      sveltekit(),
+    ],
+    // ... rest of your Vite config
+  };
+  ```
+</SdkOption>
+
+<SdkOption name="autoInstrument.serverLoad" type="boolean" defaultValue="true">
+  Establécelo en `false` para desactivar la auto‑instrumentación de funciones `load` solo del servidor dentro de `+page.server.(js|ts)` o `+layout.server.(js|ts)`.
+
+  ```javascript {filename:vite.config.(js|ts)} {7-10}
+  import { sveltekit } from "@sveltejs/kit/vite";
+  import { sentrySvelteKit } from "@sentry/sveltekit";
+
+  export default {
+    plugins: [
+      sentrySvelteKit({
+        autoInstrument: {
+          serverLoad: false,
+        },
+      }),
+      sveltekit(),
+    ],
+    // ... rest of your Vite config
+  };
+  ```
+</SdkOption>

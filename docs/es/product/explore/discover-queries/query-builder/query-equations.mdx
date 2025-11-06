@@ -1,0 +1,154 @@
+---
+title: Agregar ecuaciones de consulta
+sidebar_order: 10
+description: >-
+  Aprende a escribir ecuaciones de consulta que realicen operaciones usando tus
+  columnas de consulta.
+og_image: /og-images/product-explore-discover-queries-query-builder-query-equations.gif
+---
+
+<Include name="feature-available-for-plan-trial-business.mdx" />
+
+En **Discover**, puedes agregar ecuaciones basadas en tus columnas de consulta. Cada columna actúa como una variable, ya que representa el resultado numérico de la consulta, y ese número se utiliza en la ecuación.
+
+Por ejemplo, tomemos una ecuación que calcula la razón entre el first contentful paint de una transacción (`measurements.fcp`) y el largest contentful paint de la transacción (`measurements.lcp`):
+
+equation = `measurements.fcp / measurements.lcp`
+
+La ecuación usará el resultado de cada una de esas columnas de consulta para calcular la razón. En este caso, los resultados de esas columnas de consulta son:
+
+* measurements.fcp = 50
+* measurements.lcp = 100
+
+La ecuación se convierte en:
+
+`50 / 100`
+
+El resultado de la ecuación se muestra en la tabla actualizada, como se ve en la grabación a continuación:
+
+![Agregar una ecuación en Discover](./img/add_equation.gif)
+
+Estas ecuaciones pueden ayudarte a calcular cosas como:
+
+* [El porcentaje de transacciones que se completaron dentro de un umbral](#calculate-the-percentage-of-transactions-completed)
+* [Un puntaje Apdex personalizado](#calculate-a-custom-apdex)
+* [Los mayores promedios de tiempos no relacionados con la base de datos](#find-largest-average-non-database-times)
+
+<div id="add-an-equation">
+  ## Agregar una ecuación
+</div>
+
+Para agregar una ecuación a una consulta
+
+1. Haz clic en el Button &quot;Columns&quot; para abrir el editor de columnas.
+2. Si aún no están incluidas en tu consulta, agrega las columnas que necesitas para tu ecuación.
+3. Haz clic en &quot;Add an Equation&quot;.
+4. Introduce tu ecuación seleccionando columnas, ingresando números (si es necesario) y agregando operadores.
+5. Haz clic en &quot;Apply&quot;.
+
+<div id="guidelines-for-equations">
+  ## Directrices para ecuaciones
+</div>
+
+Las ecuaciones deben:
+
+* Contener al menos un campo o una función
+* Contener al menos un operador
+* Tener operadores explícitos. Por ejemplo, `a(a+b)` no es válido; en su lugar, introduce `a * (a + b)`
+
+Las ecuaciones no pueden:
+
+* Mezclar campos y funciones
+* Incluir exponentes, ya que no están admitidos
+
+Las ecuaciones seguirán el orden de operaciones esperado: primero se resuelven los paréntesis; después, la división y la multiplicación; y por último, la suma y la resta. Las ecuaciones también pueden incluir números negativos.
+
+Las ecuaciones solo pueden operar sobre columnas y funciones numéricas, incluyendo:
+
+* Funciones:
+  * count
+  * count&#95;unique
+  * count&#95;if
+  * count&#95;web&#95;vitals
+  * failure&#95;count
+  * avg
+  * sum
+  * percentiles (p50, p75, etc.)
+  * apdex
+  * user&#95;misery
+  * eps() y epm()
+* Campos
+  * transaction.duration
+  * measurements.fp
+  * measurements.fcp
+  * measurements.lcp
+  * measurements.fid
+  * measurements.cls
+  * measurements.ttfb
+  * spans.browser
+  * spans.http
+  * spans.db
+  * spans.resource
+
+<div id="example-equations">
+  ## Ejemplos de ecuaciones
+</div>
+
+<div id="calculate-the-percentage-of-transactions-completed">
+  ### Calcula el porcentaje de transacciones completadas
+</div>
+
+Obtén el porcentaje de transacciones que se completaron dentro de un umbral
+
+1. Crea una nueva consulta con las siguientes tres columnas:
+   * Columna 1:
+     * Función `count_if`
+     * Campo `transaction.duration`
+     * Condición `less than or equal to`
+     * Establece el parámetro final en un umbral (por ejemplo, 300)
+   * Columna 2:
+     * Función `count`
+   * Columna 3:
+     * Campo `transaction`
+2. Agrega una ecuación e introduce `count_if(transaction.duration,lessOrEquals,300) / count() * 100` en el campo de la ecuación.
+
+<div id="calculate-a-custom-apdex">
+  ### Calcular un Apdex personalizado
+</div>
+
+[Apdex](/es/product/insights/overview/metrics/#apdex) se define como `(satisfied + tolerable*0.5 + frustrated*0)/total`. Si quieres cambiar el peso de tolerable a 0.2, crea la siguiente consulta y ecuación.
+
+1. Crea una nueva consulta con las siguientes cuatro columnas:
+   * Columna 1:
+     * Función `count_if`
+     * Campo `transaction.duration`
+     * Condición `is less than or equal to`
+     * Establece el parámetro final en un umbral de satisfied (por ejemplo, 300)
+   * Columna 2:
+     * Función `count_if`
+     * Campo `transaction.duration`
+     * Condición `is less than or equal to`
+     * Establece el parámetro final en un umbral de tolerable (por ejemplo, 1200)
+   * Columna 3:
+     * Función `Count()`
+   * Columna 4:
+     * Campo `transaction`
+2. Agrega una ecuación e introduce lo siguiente en el campo de la ecuación:
+
+   `(count_if(transaction.duration,lessOrEquals,300) + (count_if(transaction.duration,lessOrEquals,1200) - count_if(transaction.duration,lessOrEquals,300)) * 0.2)/count()`
+
+<div id="find-largest-average-non-database-times">
+  ### Encuentra los mayores tiempos promedio fuera de la base de datos
+</div>
+
+Encuentra las transacciones con el mayor tiempo que no provino de llamadas a la base de datos.
+
+1. Crea una nueva consulta con las siguientes dos columnas:
+   * Columna 1:
+     * Función `avg`
+     * Campo `transaction.duration`
+   * Columna 2:
+     * Función `avg`
+     * Campo `spans.db`
+2. Agrega una ecuación e ingresa `avg(transaction.duration) - avg(spans.db)` en el campo de la ecuación.
+3. Ordena por esta nueva ecuación.

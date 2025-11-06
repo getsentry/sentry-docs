@@ -1,0 +1,30 @@
+---
+title: Backends
+sidebar_order: 80
+description: Obtén más información sobre los backends, que amplían la funcionalidad del SDK de Sentry para la notificación de fallos.
+---
+
+*Los backends* amplían la funcionalidad del SDK para algunos frameworks
+y bibliotecas comunes. Al igual que los plugins, amplían la funcionalidad del SDK
+de Sentry.
+
+El SDK nativo puede usar diferentes backends responsables de capturar
+fallos. El backend se configura en tiempo de compilación con la opción de CMake `SENTRY_BACKEND`,
+que admite las siguientes opciones:
+
+* [`crashpad`](crashpad/): Usa el manejador crashpad fuera de proceso.
+  Es el predeterminado en Windows, macOS y Linux.
+* `breakpad`: Usa el manejador breakpad en proceso.
+* `inproc`: Un pequeño manejador en proceso compatible con todas las plataformas
+  y predeterminado en Android. Dejó de funcionar en macOS a partir de la versión 13 (“Ventura”).
+* `none`: Compila `sentry-native` sin un backend, por lo que no maneja
+  fallos. Se usa principalmente para pruebas.
+
+`Breakpad` e `inproc` se ejecutan ambos “en proceso”, por lo que se ejecutan en el mismo proceso
+que la aplicación para la que capturan fallos. Esto significa que estos backends no pueden
+enviar un fallo a Sentry inmediatamente después de que ocurra. En su lugar, el informe de fallo se
+escribe en disco y se envía la próxima vez que se ejecute la aplicación. Dado que `Crashpad`
+se ejecuta en un proceso diferente, no tiene esta limitación.
+
+La sección [Uso avanzado](/es/platforms/native/advanced-usage/backend-tradeoffs)
+explica las compensaciones al elegir el backend adecuado para tu caso de uso.

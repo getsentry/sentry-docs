@@ -1,0 +1,177 @@
+---
+title: Configuración de alertas de incidencias
+sidebar_order: 10
+description: Obtén más información sobre las opciones para configurar una alerta de incidencia.
+og_image: /og-images/product-alerts-create-alerts-issue-alert-config.png
+---
+
+Sentry ofrece varias opciones de configuración para crear una alerta de incidencia según las necesidades de tu organización.
+
+<div id="environment">
+  ## Entorno
+</div>
+
+Especifica qué <PlatformLink to="/configuration/environments/">entorno(s)</PlatformLink> usarán esta regla de alerta en particular. Este control filtra por la etiqueta `environment` en tus eventos. Este filtro es útil porque la urgencia y los flujos de trabajo que aplicas a las alertas de producción pueden diferir de los que aplicas a las alertas que se originan en tu entorno de QA, por ejemplo.
+
+La lista desplegable “Environment” aquí contiene los mismos entornos que están disponibles para el proyecto seleccionado en el filtro común “Environment” (esto no incluye los entornos ocultos). Seleccionar “All Environments” equivale a no aplicar ningún filtro de entorno.
+
+<div id="project">
+  ## Proyecto
+</div>
+
+Especifica qué proyecto usará esta regla de alerta en particular. La regla de alerta creada solo procesará eventos de ese proyecto.
+
+## Condiciones &quot;When&quot;: disparadores
+
+Las condiciones &quot;When&quot;, o disparadores, especifican qué tipo de actividad quieres supervisar para el incidente:
+
+* Se crea un nuevo incidente
+* Cambia de estado de `resolved` a `unresolved`
+* Cambia de estado de `archived` a `escalating`
+* La cantidad de eventos en un incidente supera cierto número o presenta un [cambio porcentual](#change-alerts) mayor en un intervalo
+* La cantidad de usuarios únicos supera cierto número o presenta un [cambio porcentual](#change-alerts) mayor en un intervalo
+* Un incidente afecta a más del [&#123;X&#125; por ciento de las sesiones en &#123;time&#125;](#percent-based-alerts)
+* Un nuevo incidente se marca como [high priority](/es/product/issues/issue-priority/)
+* Un incidente existente se marca como [high priority](/es/product/issues/issue-priority/)
+
+Los disparadores son opcionales. Si no seleccionas un disparador, se considera que las condiciones &quot;When&quot; se cumplen de forma predeterminada. Es decir, *todos* los eventos cumplirán esta condición.
+
+Obtén más información sobre los estados de los incidentes en [Issue States &amp; Triage](/es/product/issues/states-triage/).
+
+<div id="change-alerts">
+  ### Alertas por cambios
+</div>
+
+<Include name="feature-available-for-plan-trial-business.mdx" />
+
+Cuando seleccionas la cantidad de eventos o de usuarios afectados por una incidencia como desencadenante, puedes definirlo en función del cambio porcentual. Los desencadenantes por cambio porcentual son útiles para avisarte cuando el número de errores en una incidencia o el de usuarios únicos afectados difiere significativamente de lo habitual.
+
+Por ejemplo, una alerta puede activarse cuando una incidencia afecta a un 10% más de usuarios únicos en una hora respecto a hace una semana. Otro ejemplo sería cuando el número de eventos de una incidencia es un 40% mayor esta semana que hace 30 días.
+
+![Las condiciones que se pueden configurar para alertar sobre una incidencia.](./img/issue-change-alert.png)
+
+<div id="percent-based-alerts">
+  ### Alertas basadas en porcentaje
+</div>
+
+Puedes configurar un desencadenante cuando un problema afecte a más del &#123;X&#125;% de las [sesiones](/es/product/releases/health/#session) en &#123;time&#125;.
+
+*El porcentaje de sesiones afectadas* es una estimación que se calcula tomando el número de sesiones de la última hora y ajustándolo proporcionalmente a la ventana de alerta. Por ejemplo, si la alerta está configurada para revisar los últimos cinco minutos, el número de sesiones se estima tomando el número de sesiones de la última hora y dividiéndolo entre 12.
+
+Las alertas basadas en porcentaje solo se activarán si el número de sesiones en la última hora supera las 50.
+
+## Condiciones &quot;If&quot;: Filtros
+
+Sentry verifica las &quot;condiciones if&quot;, o filtros, después de que se cumplan las condiciones “When”, y estas ayudan a reducir el ruido filtrando los problemas que no coinciden con tus criterios. Puedes filtrar por propiedades del problema o del evento. Si se especifica un filtro de evento, solo se evalúa el evento que activó la alerta, por ejemplo:
+
+* El problema es más antiguo o más reciente que una determinada duración.
+* El problema ha ocurrido al menos &#123;X&#125; veces.
+* El problema está asignado a &#123;nadie/un equipo/un miembro&#125;.
+* El evento pertenece a la última versión.
+* El &#123;atributo&#125; del evento &#123;coincide&#125; con &#123;valor&#125;. Tipos de coincidencia: es igual, no es igual, empieza con, termina con, contiene, no contiene, está definido, no está definido, está en o no está en.
+* La &#123;etiqueta&#125; del evento &#123;coincide&#125; con &#123;valor&#125;. Tipos de coincidencia: es igual, no es igual, empieza con, termina con, contiene, no contiene, está definida, no está definida, está en o no está en.
+* El nivel del evento &#123;coincide&#125; con &#123;nivel&#125;. Tipos de coincidencia: igual que, menor o igual que, o mayor o igual que.
+
+Obtén más información sobre <PlatformLink to="/enriching-events/tags/">tags</PlatformLink> y [atributos del evento](/es/concepts/search/searchable-properties/#event-properties).
+
+<div id="then-conditions-actions">
+  ## Condiciones “Then”: Acciones
+</div>
+
+Las &quot;condiciones Then&quot;, o acciones, especifican qué debe ocurrir cuando se cumplen las condiciones del disparador y del filtro:
+
+* Enviar una notificación a [Suggested Assignees](#suggested_assignees), a un equipo o a un miembro.
+* Enviar una notificación a una integración, que puede incluir estas opciones según las integraciones que tengas instaladas:
+  * Enviar una notificación de [Slack](/es/organization/integrations/notification-incidents/slack/)
+  * Enviar una notificación de [Discord](/es/organization/integrations/notification-incidents/discord/)
+  * Enviar una notificación de [PagerDuty](/es/organization/integrations/notification-incidents/pagerduty/)
+  * Enviar una notificación de [Microsoft Teams](/es/organization/integrations/notification-incidents/msteams/)
+  * Enviar una notificación a todas las integraciones heredadas
+  * Enviar una notificación usando una [integración](/es/organization/integrations/) creada en la [plataforma de integraciones](/es/organization/integrations/integration-platform/#alerts)
+* Crear un issue en una [integración](/es/organization/integrations/), que incluye:
+  * [Jira](/es/organization/integrations/issue-tracking/jira/)
+  * [Azure DevOps](/es/organization/integrations/source-code-mgmt/azure-devops)
+
+Obtén más información sobre el [enrutamiento de alertas con integraciones](/es/product/alerts/create-alerts/routing-alerts/).
+
+<div id="suggested-assignees">
+  ### Asignados sugeridos
+</div>
+
+Los asignados sugeridos incluyen personas o equipos actualmente asignados al issue, propietarios del issue definidos en las [reglas de propiedad](/es/product/issues/ownership-rules/) y cualquiera identificado como autor de un [commit sospechoso](/es/product/issues/suspect-commits/). Cuando se activa una alerta, pueden elegir recibir notificaciones por correo electrónico o por Slack (según su [configuración de notificaciones](/es/product/alerts/notifications/notification-settings/)).
+
+Si no se encuentran asignados sugeridos, la notificación se enviará a los equipos o miembros especificados en la configuración de notificación de respaldo, como se muestra a continuación:
+
+![Asignados sugeridos con “notificar a todos los miembros del proyecto” seleccionado.](./img/suggested_assignee_all_members.png)
+
+Se notificará a los siguientes miembros según la opción seleccionada y su configuración de notificaciones:
+
+* **Todos los miembros del proyecto:** Se notificará a cada miembro del equipo que tenga acceso al proyecto. Esto podría notificar a un gran número de personas. Si dos equipos tienen acceso al proyecto, se notificará a cada miembro de ambos equipos.
+* **Miembros recientemente activos:** Los 20 miembros que iniciaron sesión más recientemente y que tienen acceso al proyecto.
+* **Nadie:** No se notificará a nadie.
+
+<div id="team-slack-notifications">
+  ### Notificaciones de Slack del equipo
+</div>
+
+Los equipos pueden configurar un canal de Slack para recibir notificaciones de alertas. Esto se puede hacer escribiendo `/sentry link team` en el canal de Slack deseado. Para ver el canal de Slack asociado de un equipo en [sentry.io](https://sentry.io), ve a **Settings &gt; Teams &gt; [Team] &gt; Notifications**.
+
+<div id="notification-tests">
+  ### Pruebas de notificaciones
+</div>
+
+Las pruebas de notificaciones te permiten comprobar si tus integraciones funcionan correctamente. Enviar una notificación de prueba crea un evento simulado y envía una notificación a todas las integraciones seleccionadas.
+
+<div id="action-interval-rate-limit">
+  ## Intervalo de acción (límite de frecuencia)
+</div>
+
+El intervalo de acción, o límite de frecuencia, controla con qué frecuencia puede activarse la regla de alerta para un problema en particular. Si las condiciones de la alerta coinciden con un problema, Sentry ejecuta las acciones solo si aún no se han ejecutado para ese problema dentro del período del límite de frecuencia. Por ejemplo, si un problema cumple las condiciones de alerta varias veces en un periodo de un minuto, pero tu umbral de frecuencia es de un minuto, solo recibirás una alerta una vez.
+
+Los intervalos disponibles son:
+
+* Minutos: 5, 10, 30, 60
+* Horas: 3, 12, 24
+* Días: 7, 30
+
+<div id="alert-preview">
+  ## Vista previa de la alerta
+</div>
+
+La vista previa muestra una lista de incidencias que habrían activado la alerta y la última vez que lo habrían hecho.
+
+No se puede mostrar la vista previa de reglas con cualquiera de los siguientes:
+
+* La incidencia está asignada a &#123;nadie/un equipo/un miembro&#125;.
+* El evento pertenece a la versión más reciente.
+* Una incidencia afecta a más del [&#123;X&#125; por ciento de las sesiones en &#123;time&#125;](#percent-based-alerts)
+* Sin condiciones de [&quot;When&quot;](#when-conditions-triggers)
+* Tanto las condiciones de [frecuencia de incidencias](#change-alerts) como los [filtros de eventos](#if-conditions-filters) (filtros que comienzan con &quot;The event&quot;)
+
+<div id="alert-name">
+  ## Nombre de la alerta
+</div>
+
+Ponle a tu alerta un nombre descriptivo que indique, por ejemplo, el equipo afectado y el tema. Por ejemplo: &quot;Latencia de frontend&quot;, &quot;Tasa de fallos de backend&quot; o &quot;Apdex de facturación&quot;.
+
+<div id="team">
+  ## Equipo
+</div>
+
+Puedes elegir un equipo para asociarlo a una alerta, de modo que los miembros de ese equipo puedan editarla. Ten en cuenta que solo puedes hacer esta asociación si eres miembro del equipo. Si no se selecciona ningún equipo, cualquiera puede editar la alerta.
+
+<div id="project-level-alert-settings">
+  ## Configuración de alertas a nivel de proyecto
+</div>
+
+En **[Project] &gt; Settings &gt; Alerts**, puedes configurar las plantillas del asunto de los correos de alerta y los ajustes de los resúmenes. Los usuarios de Sentry con permisos de propietario, responsable o administrador (y superiores) pueden cambiar estas configuraciones de notificación predeterminadas.
+
+<div id="digests">
+  ### Resúmenes
+</div>
+
+La función de resúmenes solo aplica a los correos electrónicos de alertas de issues (no a las notificaciones enviadas mediante integraciones) y, a diferencia del [intervalo de acción](#action-interval-rate-limit), limita la cantidad total de correos de alerta enviados para el proyecto. Esta configuración a nivel de proyecto te permite controlar los intervalos mínimo y máximo de entrega de alertas.
+
+El intervalo mínimo define con qué rapidez puede enviarse otro resumen tras el anterior. Cada nueva alerta reinicia el temporizador, retrasando el siguiente resumen hasta que se alcance el intervalo máximo. Si no ha habido un resumen reciente, la primera alerta se envía de inmediato.
+
+![Una barra deslizante para ajustar la frecuencia de los correos de alerta.](./img/alert-digest.png)

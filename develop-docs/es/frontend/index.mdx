@@ -1,0 +1,260 @@
+---
+title: Frontend
+description: Cómo escribimos código de frontend en Sentry.
+sidebar_order: 60
+---
+
+Esta guía se centra específicamente en la parte de frontend de [Sentry](https://github.com/getsentry/sentry).
+
+<div id="directory-structure">
+  ## Estructura del directorio
+</div>
+
+El código del frontend se encuentra actualmente en `static/app`.
+
+Desde marzo de 2025, `static/gsApp` y `static/gsAdmin` se han publicado como código abierto y se han fusionado en [Sentry](https://github.com/getsentry/sentry). Si buscas el historial de git anterior de esas carpetas, necesitas tener acceso a [Getsentry](https://github.com/getsentry/getsentry).
+
+<div id="folder-file-structure">
+  ## Estructura de carpetas y archivos
+</div>
+
+<div id="file-naming">
+  ### Nomenclatura de archivos
+</div>
+
+- Nombra los archivos de forma significativa, según cómo se usen las funciones o clases del módulo, o la sección de la aplicación en la que se utilicen.
+- A menos que sea necesario, no uses prefijos ni sufijos (p. ej., `dataScrubbingEditModal`, `dataScrubbingAddModal`); en su lugar, prefiere nombres como `dataScrubbing/editModal`.
+- Consejo: Nombra el archivo para que coincida con el componente o función que se exporta. Esto facilita que la gente sepa qué hay dentro del archivo y pueda reutilizarlo.
+
+<div id="using-indextsx">
+  ### Uso de `index.tsx?$`
+</div>
+
+Tener un archivo `index` en una carpeta permite importar implícitamente el archivo principal sin especificarlo.
+
+El uso de un archivo index debe cumplir las siguientes reglas:
+
+- Si la carpeta se crea para agrupar componentes que se usan juntos y existe un componente de entrada que utiliza los componentes de ese grupo (por ejemplo, avatar, idBadge), el componente de entrada debe ser el archivo index.
+- No uses un archivo `index.tsx?$` si la carpeta contiene componentes que se usan en otras partes de la app, independientemente del archivo de entrada (p. ej., actionCreators, panels).
+- No uses un archivo index solo para reexportar; es preferible importar los componentes individualmente.
+
+<div id="react">
+  ## React
+</div>
+
+<div id="defining-react-components">
+  ### Definir componentes de React
+</div>
+
+Los nuevos componentes deben crearse como componentes funcionales, usando declaraciones de función en lugar de funciones flecha.
+Las props deben declararse antes del componente.
+
+```typescript
+interface Props {
+  author: object;
+  content: string;
+  onEdit: (value: string) => void;
+}
+
+// usa desestructuración para las props
+export default function Note({author, content, onEdit}: Props) {
+  const handleChange = value => {
+    const user = ConfigStore.get('user');
+
+    if (user.isSuperuser) {
+      onEdit(value);
+    }
+  };
+
+  return (
+    <div onChange={handleChange}>{content}</div>
+  );
+}
+```
+
+
+<div id="components-vs-views">
+  ### Componentes vs vistas
+</div>
+
+Las carpetas `app/components/` y `app/views/` contienen componentes de React.
+
+- Coloca archivos en `app/views/` cuando el componente no se pueda reutilizar en otras partes del código.
+   - Por lo general, solo el diseño/estructura de páginas completas debería estar en esta carpeta; por ejemplo, los archivos importados por [routes.tsx](https://github.com/getsentry/sentry/blob/master/static/app/routes.tsx).
+- Coloca archivos en `app/components/` para cualquier otra cosa que _pueda_ reutilizarse.
+  - Si el componente acepta cualquier prop más allá de `RouteComponentProps`, entonces muy probablemente pertenece a `app/components/`.
+
+<div id="type-declarations">
+  ### Declaraciones de tipos
+</div>
+
+No seguimos ninguna regla estricta de “preferir type sobre interface” para las declaraciones de tipos, así que usar uno u otro queda a tu criterio. Dicho esto, existen [diferencias funcionales](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#differences-between-type-aliases-and-interfaces) entre ambos de las que deberías estar al tanto para usarlos apropiadamente.
+
+Como regla sencilla, prefiere interfaces cuando necesites fusión de declaraciones. La razón es que las intersecciones de tipos detectan mal los conflictos, producen resultados inesperados o indeseados y, cuando se usan con tipos grandes, [tienen peor rendimiento que las interfaces](https://github.com/microsoft/TypeScript/wiki/Performance#preferring-interfaces-over-intersections).
+
+Ejemplo:
+
+```typescript
+// Esto es válido y el resultado es un tipo "never"
+type A =
+{ color: "blue" } &
+{ color: "red" };
+
+interface B {
+  color: "blue";
+}
+// La interfaz 'C' extiende incorrectamente la interfaz 'B'.
+//   Los tipos de la propiedad 'color' son incompatibles.
+interface C extends B {
+  color: "red";
+}
+```
+
+
+<div id="event-handlers">
+  ### Manejadores de eventos
+</div>
+
+Usamos diferentes prefijos para distinguir mejor los manejadores de eventos de las props de callbacks de eventos.
+
+Usa el prefijo `handle` para los manejadores de eventos, p. ej.:
+
+```javascript
+<Button onClick={this.handleDelete}/>
+```
+
+Para las props de callbacks de eventos pasadas al componente, usa el prefijo `on`, por ejemplo:
+
+```javascript
+<Button onClick={this.props.onDelete}>
+```
+
+
+<div id="state-management">
+  ## Gestión del estado
+</div>
+
+<Alert>
+  Para obtener consejos sobre React Hooks, consulta <Link to="/frontend/using-hooks/">esta página</Link>.
+</Alert>
+
+Siempre que sea posible, utiliza los hooks integrados de React `useState` y `useReducer` para el estado.
+
+Actualmente también tenemos [Reflux](https://github.com/reflux/refluxjs) y [MobX](https://github.com/mobxjs/mobx) incluidos en package.json, pero se desaconseja usarlos en casos nuevos.
+
+Reflux implementa el patrón de flujo de datos unidireccional descrito por [Flux](https://facebook.github.io/flux/). Los stores se registran en `app/stores` y se usan para almacenar distintos datos que utiliza la aplicación. Las acciones deben registrarse en `app/actions`. Usamos funciones creadoras de acciones (en `app/actionCreators`) para despachar acciones. Los stores de Reflux escuchan las acciones y se actualizan en consecuencia.
+
+<div id="testing">
+  ## Pruebas
+</div>
+
+<Alert>
+  Para obtener consejos sobre React Testing Library (RTL), consulta <Link to="/frontend/using-rtl/">esta página</Link>.
+</Alert>
+
+Nota: ¡El nombre de tu archivo debe ser `.spec.tsx` para que Jest lo ejecute!
+
+Tenemos fixtures útiles definidos en [tests/js/fixtures/](https://github.com/getsentry/sentry/tree/master/tests/js/fixtures). ¡Úsalos! Si estás definiendo datos simulados de forma repetitiva, probablemente valga la pena agregarlos a esos archivos. `routerContext` es especialmente útil para proporcionar el objeto de contexto en el que se basan la mayoría de las vistas.
+
+`Client.addMockResponse()` es la mejor manera de simular solicitudes a la API. Es [nuestro código](https://github.com/getsentry/sentry/blob/master/static/app/__mocks__/api.tsx), así que si te resulta confuso, ¡simplemente coloca sentencias `console.log()` en su lógica!
+
+Marcar tu método de prueba como `async` y usar la utilidad `await tick();` puede permitir que el event loop vacíe los eventos pendientes y solucione esto:
+
+```javascript
+wrapper.find('ExpandButton').simulate('click');
+await tick();
+expect(wrapper.find('CommitRow')).toHaveLength(2);
+```
+
+
+<div id="babel-syntax-plugins">
+  ## Plugins de sintaxis de Babel
+</div>
+
+Hemos decidido usar únicamente propuestas de ECMAScript que estén en la fase 3 (o posteriores) (consulta [TC39 Proposals](https://github.com/tc39/proposals)).
+La única excepción a esto son los decoradores.
+
+<div id="new-syntax">
+  ## Sintaxis nueva
+</div>
+
+<div id="optional-chaining">
+  ### Encadenamiento opcional
+</div>
+
+El [encadenamiento opcional](https://github.com/tc39/proposal-optional-chaining) nos ayuda a acceder a objetos [anidados] sin tener que comprobar su existencia antes de cada acceso a propiedad o método. Si intentamos acceder a una propiedad de un objeto `undefined` o `null`, se detendrá y devolverá `undefined`.
+
+<div id="syntax">
+  #### Sintaxis
+</div>
+
+El operador de encadenamiento opcional se escribe `?.`. Puede aparecer en tres posiciones:
+
+```
+obj?.prop       // acceso opcional a propiedad estática
+obj?.[expr]     // acceso opcional a propiedad dinámica
+func?.(...args) // llamada opcional a función o método
+```
+
+> De https://github.com/tc39/proposal-optional-chaining
+
+
+<div id="nullish-coalescing">
+  ### Coalescencia nula
+</div>
+
+Es una forma de establecer un valor «predeterminado». Por ejemplo, antes harías algo como
+
+```javascript
+let x = volume || 0.5;
+```
+
+Lo cual es un problema, ya que `0` es un valor válido para `volume`, pero como se evalúa como `false`, no se hace cortocircuito en la expresión y el valor de `x` resulta ser `0.5`.
+
+Si en su lugar usáramos el [operador de fusión nula](https://github.com/tc39/proposal-nullish-coalescing)
+
+```javascript
+let x = volume ?? 0.5
+```
+
+Solo tomará el valor predeterminado `0.5` si `volume` es `null` o `undefined`.
+
+
+<div id="syntax">
+  #### Sintaxis
+</div>
+
+Caso base. Si la expresión del lado izquierdo del operador ?? se evalúa como undefined o null, se devuelve el lado derecho.
+
+```javascript
+const response = {
+  settings: {
+    nullValue: null,
+    height: 400,
+    animationDuration: 0,
+    headerText: '',
+    showSplashScreen: false
+  }
+};
+
+const undefinedValue = response.settings.undefinedValue ?? 'otro valor predeterminado'; // resultado: 'otro valor predeterminado'
+const nullValue = response.settings.nullValue ?? 'otro valor predeterminado'; // resultado: 'otro valor predeterminado'
+const headerText = response.settings.headerText ?? '¡Hola, mundo!'; // resultado: ''
+const animationDuration = response.settings.animationDuration ?? 300; // resultado: 0
+const showSplashScreen = response.settings.showSplashScreen ?? true; // resultado: false
+```
+
+> Desde https://github.com/tc39/proposal-nullish-coalescing
+
+
+<div id="lodash">
+  ## Lodash
+</div>
+
+Asegúrate de no importar utilidades de `lodash` usando el paquete predeterminado `lodash`. Existe una regla de `eslint` para garantizar que esto no suceda. En su lugar, importa la utilidad directamente, p. ej., `import isEqual from 'lodash/isEqual';`.
+
+Antes usábamos una combinación de [lodash-webpack-plugin](https://www.npmjs.com/package/lodash-webpack-plugin) y [babel-plugin-lodash](https://github.com/lodash/babel-plugin-lodash), pero es fácil pasar por alto estos plugins y su configuración al intentar usar una nueva utilidad de lodash (p. ej., [este PR](https://github.com/getsentry/sentry/pull/13834)). Con el tree shaking de `webpack` y la verificación de `eslint`, deberíamos poder mantener tamaños de bundle razonables.
+
+Consulta [este PR](https://github.com/getsentry/sentry/pull/15521) para más información.
+
+Preferimos usar el encadenamiento opcional y la fusión nullish en lugar de `get` de `lodash/get`.

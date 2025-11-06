@@ -1,0 +1,82 @@
+---
+title: Transportes
+sidebar_order: 30
+description: "Los transportes te permiten cambiar la forma en que se envían los eventos a Sentry."
+notSupported:
+  - javascript.capacitor
+  - javascript.cordova
+  - javascript.electron
+  - javascript.wasm
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+---
+
+El SDK de JavaScript utiliza un `transport` para enviar eventos a Sentry. En los navegadores modernos, la mayoría de los transportes utilizan la API `fetch` del navegador para enviar eventos. Los transportes descartarán un evento si no se puede enviar por falta de conexión.
+
+Puedes cambiar el transporte estableciendo la opción `transport` en la llamada a `init`. El SDK incluye algunos transportes integrados y también puedes crear los tuyos propios.
+
+<div id="makebrowserofflinetransport">
+  ## `makeBrowserOfflineTransport`
+</div>
+
+El transporte `makeBrowserOfflineTransport` es un transporte incorporado que utiliza la API `IndexedDB` para almacenar eventos cuando el navegador está sin conexión. Cuando el navegador vuelve a estar en línea, el transporte envía los eventos almacenados a Sentry. <PlatformLink to="/best-practices/offline-caching/">Más información sobre cómo usarlo.</PlatformLink>
+
+<div id="custom-transport">
+  ## Transporte personalizado
+</div>
+
+También puedes proporcionar a Sentry un transporte personalizado. El transporte debe cumplir con la interfaz `Transport`:
+
+```javascript
+interface Transport {
+  send(request: Envelope): Promise<TransportMakeRequestResponse>;
+  flush(timeout?: number): Promise<boolean>;
+}
+```
+
+También puedes usar la utilidad `createTransport` de `@sentry/core` para ayudarte con parte del código boilerplate:
+
+```javascript
+import { createTransport } from '@sentry/core';
+import * from '@sentry/browser';
+
+function makeFetchTransport(
+  options
+): Transport {
+  function makeRequest(request) {
+    const requestOptions: RequestInit = {
+      body: request.body,
+      method: 'POST',
+      referrerPolicy: 'origin',
+      headers: options.headers,
+      ...options.fetchOptions,
+    };
+
+    return fetch(options.url, requestOptions).then(response => {
+      return {
+        statusCode: response.status,
+        headers: {
+          'x-sentry-rate-limits': response.headers.get('X-Sentry-Rate-Limits'),
+          'retry-after': response.headers.get('Retry-After'),
+        },
+      };
+    });
+  }
+
+  return createTransport(options, makeRequest);
+}
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  transport: makeFetchTransport
+});
+```

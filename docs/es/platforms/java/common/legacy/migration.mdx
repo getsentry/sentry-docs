@@ -1,0 +1,186 @@
+---
+title: Migración de Raven a la versión 1.7
+sidebar_order: 1000
+---
+
+La antigua biblioteca `raven-java` se ha renovado por completo y pasó a llamarse `sentry-java`. El objetivo de la nueva versión fue mejorar las API, hacer que el cliente subyacente fuera completamente independiente de las integraciones de registro y renombrar (de `raven-*`) para mayor claridad.
+
+A continuación, encontrarás una breve guía que explica los cambios principales.
+
+<div id="android">
+  ## Android
+</div>
+
+Consulta nuestra nueva [documentación de Android](/es/platforms/android/).
+
+<div id="new-artifacts">
+  ## Nuevos artefactos
+</div>
+
+`Antes (raven-java)`
+
+Artefacto llamado `raven` (y otros: `raven-*`) dentro del grupo `com.getsentry.raven`. La última versión de la rama 8 fue la `8.0.x`.
+
+`Ahora (sentry-java)`
+
+Artefacto llamado `sentry` (y otros: `sentry-*`) dentro del grupo `io.sentry`. Se reinició desde la versión `1.0.0` (¡pero usa la versión más reciente!).
+
+<div id="new-packages">
+  ## Paquetes nuevos
+</div>
+
+`Antes (raven-java)`
+
+La raíz del paquete era `com.getsentry.raven`.
+
+Por ejemplo, el appender de `logback` antes se referenciaba en la configuración como `com.getsentry.raven.logback.SentryAppender`.
+
+`Ahora (sentry-java)`
+
+La raíz del paquete es `io.sentry`.
+
+Por ejemplo, el appender de `logback` ahora se referencia en la configuración como `io.sentry.logback.SentryAppender`.
+
+<div id="logging-integration-configuration">
+  ## Configuración de la integración de registros
+</div>
+
+`Antes (raven-java)`
+
+La mayor parte (o incluso toda) de la configuración se hacía en el propio appender del sistema de logs. Por ejemplo:
+
+```xml
+<appender name="Sentry" class="com.getsentry.raven.logback.SentryAppender">
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+        <level>WARN</level>
+    </filter>
+    <dsn>https://host:port/1?options</dsn>
+    <release>my-project-name@2.3.12</release>
+</appender>
+```
+
+`Now (sentry-java)`
+
+Aunque todavía es necesario configurar el propio `SentryAppender` para las integraciones de logging, la **configuración** de Sentry ya no se realiza en el mismo lugar.
+
+Esto se debe a que los appenders se inicializan solo cuando reciben el primer mensaje (en o por encima del umbral), lo que significa que Sentry no sabe cómo inicializarse ni configurarse hasta que se envía el primer evento. Esto puede parecer aceptable, pero impedía que los usuarios hicieran cosas antes de que se enviara un error, como registrar breadcrumbs, establecer el usuario actual y más.
+
+Por este motivo, ahora toda la configuración se realiza “fuera” de la propia integración de logging. Puedes configurar Sentry usando un archivo de propiedades (por defecto: `sentry.properties`) si prefieres el estilo anterior; [puedes encontrar más información en la página de configuración](/es/platforms/java/configuration/#configuration-methods).
+
+Por ejemplo:
+
+```xml
+<!-- logback.xml -->
+<appender name="Sentry" class="io.sentry.logback.SentryAppender">
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+        <level>WARN</level>
+    </filter>
+</appender>
+```
+
+```properties
+# sentry.properties
+dsn={DSN}?options
+release=1.0.0
+```
+
+```java
+// ahora puedes registrar breadcrumbs incluso antes de que se envíe el primer evento
+Sentry.getContext().recordBreadcrumb(
+  new BreadcrumbBuilder().setMessage("Se hizo una llamada a la base de datos.").build()
+);
+```
+
+```kotlin
+Sentry.getContext().recordBreadcrumb(
+  BreadcrumbBuilder().setMessage("Se realizó una llamada a la base de datos.").build()
+)
+```
+
+<div id="raven-class-changes">
+  ## Cambios en la clase Raven
+</div>
+
+`Antes (raven-java)`
+
+La clase `Raven` era el cliente principal y además podía almacenar estáticamente un cliente y enviar eventos sin que tuvieras que llevar el control de la instancia.
+
+`Ahora (sentry-java)`
+
+La clase de cliente principal ahora se llama `SentryClient`, y existe una clase independiente, `Sentry`, que puedes usar para inicializar Sentry de forma estática y enviar eventos.
+
+Por ejemplo:
+
+```java
+// El SentryClient estático puede inicializarse de forma diferida desde cualquier parte de tu aplicación.
+// Debes proporcionar tu DSN de alguna manera; consulta la documentación de configuración.
+Sentry.capture("¡Hola, mundo!");
+```
+
+```kotlin
+// El SentryClient estático puede inicializarse de forma diferida desde cualquier parte de tu aplicación.
+// De alguna manera tendrás que proporcionar tu DSN; consulta la documentación de configuración.
+Sentry.capture("¡Hola, mundo!")
+```
+
+<div id="configuration-via-dsn">
+  ## Configuración mediante DSN
+</div>
+
+`Antes (raven-java)`
+
+Las opciones llevaban el prefijo `raven.`, por ejemplo: `raven.async`.
+
+`Ahora (sentry-java)`
+
+Las opciones ya no llevan prefijo, por ejemplo: `async`.
+
+<div id="configuration-via-java-system-properties">
+  ## Configuración mediante propiedades del sistema de Java
+</div>
+
+`Antes (raven-java)`
+
+Solo se podían configurar ciertas opciones, y únicamente en las integraciones de registro. Por ejemplo: `sentry.release` estaba permitido, pero `sentry.async` no tenía efecto.
+
+`Ahora (sentry-java)`
+
+Todas las opciones pueden configurarse mediante propiedades del sistema de Java; por ejemplo, se respeta `sentry.async=false`.
+
+<div id="configuration-via-environment-variables">
+  ## Configuración mediante variables de entorno
+</div>
+
+`Antes (raven-java)`
+
+Solo se podían establecer ciertas opciones, y solo en las integraciones de logging. Por ejemplo, se permitía `SENTRY_RELEASE`, pero `SENTRY_ASYNC` no hacía nada.
+
+`Ahora (sentry-java)`
+
+Todas las opciones se pueden configurar mediante variables de entorno; por ejemplo, se respeta `SENTRY_ASYNC=false`.
+
+<div id="classes-renamed">
+  ## Clases renombradas
+</div>
+
+`Antes (raven-java)`
+
+Muchas clases contenían la palabra `Raven`. Por ejemplo, `RavenServletRequestListener`.
+
+`Ahora (sentry-java)`
+
+Todas las apariciones de `Raven` se han renombrado a `Sentry`. Por ejemplo, `SentryServletRequestListener`.
+
+Además, como se indicó arriba, la clase de cliente subyacente `Raven` pasó a ser `SentryClient`, por lo que `RavenFactory` también pasó a ser `SentryClientFactory` y `DefaultRavenFactory` se convirtió en `DefaultSentryClientFactory`.
+
+<div id="custom-factories">
+  ## Fábricas personalizadas
+</div>
+
+`Antes (raven-java)`
+
+Para personalizar, los usuarios normalmente creaban una subclase de `DefaultRavenFactory` y la registraban de una de varias (dolorosas) maneras.
+
+`Ahora (sentry-java)`
+
+Para personalizar, los usuarios crean una subclase de `DefaultSentryClientFactory` y luego indican esa clase con la opción `factory`, por ejemplo: `factory=my.company.MySentryClientFactory`. [Consulta la página de configuración](/es/platforms/java/configuration/) para obtener más información.

@@ -1,0 +1,83 @@
+---
+title: Plugin del compilador de Kotlin
+sidebar_order: 101
+description: "Aprende a usar el plugin del compilador de Kotlin de Sentry."
+---
+
+El [plugin del compilador de Kotlin de Sentry](https://github.com/getsentry/sentry-android-gradle-plugin) es una extensión del plugin de Sentry para Android Gradle y mejora las funciones existentes del SDK. Por ahora, su enfoque principal es optimizar las apps que usan Jetpack Compose etiquetando automáticamente las funciones `@Composable`.
+
+- <PlatformLink to="/enriching-events/viewhierarchy">Jerarquía de vistas</PlatformLink>
+- <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#user-interaction-instrumentation">Trazado de interacción del usuario</PlatformLink>
+
+<Alert>
+
+La versión mínima de Kotlin compatible es `1.8.20`.
+
+</Alert>
+
+<div id="how-it-works">
+  ## Cómo funciona
+</div>
+
+Dada una función `@Composable`:
+
+```kotlin
+@Composable
+fun LoginScreen() {
+    Column() {
+        // ...
+    }
+}
+```
+
+El complemento del compilador de Kotlin de Sentry lo transformará en lo siguiente:
+
+```kotlin
+@Composable
+fun LoginScreen() {
+    Column(modifier = Modifier.sentryTag("LoginScreen")) {
+        // ...
+    }
+}
+```
+
+
+<div id="setup">
+  ## Configuración
+</div>
+
+<div id="install-the-compiler-plugin">
+  ### Instala el complemento del compilador
+</div>
+
+Los complementos del compilador de Kotlin se ejecutan durante la compilación y, por lo tanto, deben aplicarse a *cada* módulo de Gradle pertinente. Agrega lo siguiente, por ejemplo, a tu `app/build.gradle`:
+
+```groovy {filename:app/build.gradle}
+plugins {
+  id "io.sentry.kotlin.compiler.gradle" version "{{@inject packages.version('sentry.kotlin.compiler-plugin', '3.7.0') }}"
+}
+```
+
+```kotlin {filename:app/build.gradle.kts}
+plugins {
+  id("io.sentry.kotlin.compiler.gradle") version "{{@inject packages.version('sentry.kotlin.compiler-plugin', '3.7.0') }}"
+}
+```
+
+
+<div id="add-the-runtime-dependency">
+  ### Agrega la dependencia de runtime
+</div>
+
+La dependencia de runtime también es necesaria; de lo contrario, el Compiler Plugin no podrá aplicar ningún cambio. Agrega lo siguiente en *cada* módulo `build.gradle` relevante. Si usas el Sentry Android Gradle Plugin, esto ya está hecho por ti para el módulo `app`.
+
+```kotlin {filename:app/build.gradle.kts}
+implementation("io.sentry:sentry-compose-android:{{@inject packages.version('sentry.java.android', '8.1.0') }}")
+```
+
+
+<div id="configuration">
+  ### Configuración
+</div>
+
+Por ahora no se requieren pasos adicionales. Consulta la documentación de <PlatformLink to="/enriching-events/viewhierarchy">Jerarquía de vistas</PlatformLink> y <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#user-interaction-instrumentation">Trazado de interacciones de usuario</PlatformLink> para ver qué funciones mejora el Sentry Kotlin Compiler Plugin.

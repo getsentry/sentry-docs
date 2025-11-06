@@ -1,0 +1,65 @@
+---
+title: Nombre de origen de datos (DSN)
+sidebar_order: 10
+description: >-
+  Un nombre de origen de datos (DSN) le indica a Sentry adónde enviar los eventos
+  para que se asocien con el proyecto correcto. Obtén más información sobre la
+  estructura y el uso del DSN aquí.
+og_image: /og-images/concepts-key-terms-dsn-explainer.png
+---
+
+Sentry te asigna automáticamente un nombre de origen de datos (DSN) cuando creas un proyecto para empezar a monitorear eventos en tu app.
+
+<div id="what-the-data-source-name-dsn-does">
+  ### Qué hace el nombre de origen de datos (DSN)
+</div>
+
+Un DSN le indica al SDK de Sentry adónde enviar los eventos para que se asocien con el proyecto correcto.
+
+Si no se proporciona este valor, los SDK intentarán leerlo de la variable de entorno `SENTRY_DSN`, cuando corresponda. Esta opción no aplica en casos como un navegador web, donde no existe el concepto de variables de entorno.
+
+Si un SDK no está inicializado o si se inicializa con un DSN vacío, el SDK no enviará ningún dato por la red, como las excepciones capturadas.
+
+<div id="dsn-utilization">
+  ### Uso de los DSN
+</div>
+
+Los DSN se pueden mantener públicos de forma segura porque solo permiten el envío de nuevos eventos y datos de eventos relacionados; no permiten el acceso de lectura a ninguna información.
+
+Si bien existe el riesgo de abuso de un DSN —donde cualquier usuario puede enviar eventos a tu organización con cualquier información que quiera—, esto es poco frecuente. Sentry ofrece controles para [bloquear IP](/es/platform-redirect/?next=/configuration/options/) y abordar preocupaciones similares. También puedes rotar (y revocar) DSN desde **[Project] &gt; Settings &gt; SDK Setup &gt; Client Keys (DSN)**.
+
+Si tu aplicación se distribuye en dispositivos de cliente, recomendamos, siempre que sea posible, contar con una forma de configurar el DSN de manera dinámica. En un escenario ideal, podrías “entregar” un nuevo DSN a tu aplicación sin que el cliente tenga que descargar la última versión. Reconocemos que esto no siempre es práctico, pero no podemos ofrecer más consejos, ya que este escenario depende de la implementación.
+
+<div id="where-to-find-your-data-source-name-dsn">
+  ### Dónde encontrar tu DSN (Data Source Name)
+</div>
+
+Si estás configurando un proyecto, puedes encontrar tu DSN en los fragmentos de código de instalación o configuración que se muestran en [sentry.io](https://sentry.io/) durante el proceso:
+
+![DSN en el fragmento de código](./img/create-new-project-04.png)
+
+También puedes encontrar el DSN en la configuración de tu proyecto, yendo a **[Project] &gt; Settings &gt; SDK Setup &gt; Client Keys (DSN)** en [sentry.io](https://sentry.io/).
+
+<div id="the-parts-of-the-data-source-name-dsn">
+  ### Partes del nombre de origen de datos (DSN)
+</div>
+
+El DSN configura el protocolo, la clave pública, la dirección del servidor y el identificador del proyecto. Está compuesto por las siguientes partes:
+
+`{PROTOCOL}://{PUBLIC_KEY}:{SECRET_KEY}@{HOST}{PATH}/{PROJECT_ID}`
+
+Por ejemplo:
+
+```javascript
+Sentry.init({ dsn: "https://public@sentry.example.com/1" });
+```
+
+Tiene la siguiente configuración:
+
+* URI = https://sentry.example.com
+* Clave pública = public
+* ID del proyecto = 1
+
+<Alert>
+  La parte secreta del DSN es opcional y está, en la práctica, obsoleta. Aunque los clientes aún la aceptarán si se proporciona, en versiones futuras de Sentry se ignorará por completo.
+</Alert>

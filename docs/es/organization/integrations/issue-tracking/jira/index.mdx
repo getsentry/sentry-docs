@@ -1,0 +1,300 @@
+---
+title: Jira
+sidebar_order: 1
+description: >-
+  Obtén más información sobre la integración de Sentry con Jira y cómo puede ayudar a
+  rastrear y resolver errores más rápido al vincular los errores de Sentry con las incidencias de Jira.
+og_image: /og-images/organization-integrations-issue-tracking-jira.png
+---
+
+<div id="install">
+  ## Instalar
+</div>
+
+<Alert>
+  Para instalar esta integración se requieren permisos de propietario, gestor o administrador de Sentry, y permisos de administrador de Jira. Esto incluye los siguientes permisos: `read`, `write`, `act_as_user` y `access_email_addresses`.
+</Alert>
+
+1. Ve a **Settings &gt; Integrations &gt; Jira**.
+
+![Install Jira integration](./img/jira-overview.png)
+
+2. Instala la app de Sentry desde el [Marketplace de Jira](https://marketplace.atlassian.com/apps/1219432/sentry-for-jira?hosting=cloud\&tab=overview).
+
+3. Si tienes un bloqueador de anuncios activado, desactívalo ahora o no podrás completar el paso 4.
+
+4. Selecciona qué organizaciones de Sentry quieres usar con Jira. Luego haz clic en el enlace mostrado para volver a Sentry.
+
+5. En Sentry, verás que aparece una nueva instancia de Jira en la página de Integrations.
+
+   ![Jira integration directory](./img/jira-install.png)
+
+Jira ahora debería estar autorizado para todos los proyectos de tu organización en Sentry.
+
+<div id="jira-serverdata-center">
+  ### Jira Server/Data Center
+</div>
+
+<Alert>
+  Desde febrero de 2024, Jira ha dejado de dar soporte a Jira Server. En consecuencia, hemos dejado de mantener la integración. Aún puedes usarla igual con su sucesor, Jira Data Center.
+</Alert>
+
+La integración de Jira Server de Sentry está desarrollada con [Application Links](https://confluence.atlassian.com/adminjiraserver/link-to-other-applications-938846918.html) y también debería poder integrarse con Jira Data Center.
+
+<div id="generate-an-rsa-publicprivate-key-pair">
+  #### Genera un par de claves RSA pública/privada
+</div>
+
+Para generar un par de claves RSA pública/privada, ejecuta los siguientes comandos en la terminal, uno por uno.
+
+```bash
+openssl genrsa -out jira_privatekey.pem 1024
+openssl req -newkey rsa:1024 -x509 -key jira_privatekey.pem -out jira_publickey.cer -days 365
+openssl pkcs8 -topk8 -nocrypt -in jira_privatekey.pem -out jira_privatekey.pcks8
+openssl x509 -pubkey -noout -in jira_publickey.cer  > jira_publickey.pem
+```
+
+<div id="create-a-new-application-link-in-jira">
+  #### Crea un nuevo enlace de aplicación en Jira
+</div>
+
+1. En Jira, haz clic en el ícono de engranaje y luego en **Applications &gt; Application Links**.
+
+2. Introduce lo siguiente como URL de la aplicación:
+   `https://sentry.io/extensions/jira-server/setup/`
+
+3. Haz clic en &quot;Create New Link&quot;. Si ves una advertencia que dice “No response was received from the URL you entered”, ignórala y haz clic en &quot;Continue&quot;.
+
+4. En el cuadro de diálogo que aparece, completa el formulario de la siguiente manera:
+
+   <table>
+     <tbody>
+       <tr>
+         <th>Application Name </th>
+         <td>Sentry </td>
+       </tr>
+
+       <tr>
+         <th>Application Type </th>
+         <td>Generic Application</td>
+       </tr>
+
+       <tr>
+         <th>Service Provider Name</th>
+         <td>Sentry</td>
+       </tr>
+
+       <tr>
+         <th>Consumer Key </th>
+         <td>(a tu elección, pero tenla a mano para el siguiente paso)</td>
+       </tr>
+
+       <tr>
+         <th>Shared Secret </th>
+         <td>sentry</td>
+       </tr>
+
+       <tr>
+         <th>Request Token URL </th>
+         <td>https://sentry.io</td>
+       </tr>
+
+       <tr>
+         <th>Access Token URL</th>
+         <td>https://sentry.io </td>
+       </tr>
+
+       <tr>
+         <th>Authorize URL </th>
+         <td>https://sentry.io </td>
+       </tr>
+
+       <tr>
+         <th>Create Incoming Link </th>
+         <td>No </td>
+       </tr>
+     </tbody>
+   </table>
+
+5. Haz clic en &quot;Continue&quot;. Esto te devolverá a la página **Configure Application Links**, donde verás una aplicación llamada Sentry.
+
+6. Haz clic en el ícono de lápiz junto a la aplicación Sentry.
+
+7. En el lado izquierdo del modal que aparece, haz clic en &quot;Incoming Authentication&quot;. Completa el formulario de la siguiente manera y haz clic en **Save**:
+
+   <table>
+     <tbody>
+       <tr>
+         <th>Consumer Key </th>
+         <td>(la consumer key del Paso II.4) </td>
+       </tr>
+
+       <tr>
+         <th>Consumer Name </th>
+         <td>Sentry</td>
+       </tr>
+
+       <tr>
+         <th>Public Key</th>
+         <td>(la public key que creaste en la Sección I)</td>
+       </tr>
+
+       <tr>
+         <th>Consumer Callback URL </th>
+         <td>https://sentry.io/extensions/jira-server/setup/</td>
+       </tr>
+
+       <tr>
+         <th>Allow 2-Legged OAuth </th>
+         <td>no</td>
+       </tr>
+     </tbody>
+   </table>
+
+<div id="connect-your-jira-server-application-with-sentry">
+  #### Conecta tu aplicación de Jira Server con Sentry
+</div>
+
+<Alert>
+  Confirma que [los rangos de IP de Sentry](/es/security-legal-pii/security/ip-ranges/) estén permitidos.
+</Alert>
+
+1. Ve a **Organization Settings &gt; Integrations**.
+2. Junto a Jira Server, haz clic en &quot;Install&quot;.
+3. En el cuadro de diálogo que aparece, haz clic en &quot;Add Installation&quot;.
+4. En la ventana que se abre, introduce la URL base de tu instancia de Jira Server, tu consumer key y tu private key. Haz clic en &quot;Submit&quot;. Luego, completa el proceso de OAuth cuando se te solicite.
+5. En Sentry, verás que aparece una nueva instancia de Jira Server en la página de Integrations.
+
+Ahora Jira debería estar autorizado para todos los proyectos de tu organización en Sentry.
+
+<div id="self-hosted-sentry-jira-integration">
+  ### Integración de Sentry autohospedado + Jira
+</div>
+
+Para instalar la integración de Jira con una instancia de Sentry autohospedada, sigue nuestra [develop-docs](https://develop.sentry.dev/integrations/jira/) y ve a la sección &quot;Installing Local Jira App&quot;.
+
+<div id="configure">
+  ## Configurar
+</div>
+
+Usa Jira para aprovechar la [gestión de incidencias](#issue-management), la [sincronización de incidencias](#issue-sync) y recibir [notificaciones](#issue-notifications) sobre cambios en el estado de las incidencias. Además, agrega [campos ignorados](#ignored-fields) para ocultar campos concretos en el formulario de creación de incidencias.
+
+<div id="issue-management">
+  ### Gestión de incidencias
+</div>
+
+El seguimiento de incidencias te permite crear incidencias de Jira desde Sentry y vincular incidencias de Sentry a incidencias de Jira existentes.
+
+<Alert title="Nota">
+  <p>
+    La gestión manual de incidencias está disponible para organizaciones con los planes Team, Business y
+    Enterprise.
+  </p>
+
+  <p>
+    La gestión automática de incidencias está disponible para organizaciones con los planes Business y Enterprise.
+  </p>
+</Alert>
+
+La gestión de incidencias puede configurarse de dos maneras: automática o manual.
+
+<div id="automatically">
+  #### Automáticamente
+</div>
+
+Para configurar la gestión de incidencias de forma automática, crea una [**alerta de incidencias**](/es/product/alerts-notifications/issue-alerts/). Al elegir la [**acción**](/es/product/alerts/create-alerts/issue-alert-config/#then-conditions-actions), selecciona **Create a new Jira issue**.
+
+![Acción de la regla de alerta para crear un ticket de Jira](./img/jira-ticket-rule.png)
+
+Se creará automáticamente una incidencia en Jira cuando se dispare la alerta.
+
+<div id="manually">
+  #### Manualmente
+</div>
+
+Para configurar la gestión de incidencias manualmente, una vez que hayas accedido a una incidencia específica de Sentry, encontrarás la sección **Linked Issues** en el panel derecho.
+
+![Vincular incidencia de Jira desde una incidencia de Sentry](./img/jira-link-issue.png)
+
+Aquí podrás crear o vincular incidencias de Jira.
+
+![Formulario para crear una incidencia de Jira](./img/jira-create-issue.png)
+
+<div id="issue-sync">
+  ### Sincronización de incidencias
+</div>
+
+Para minimizar la duplicación en el seguimiento de incidencias, puedes sincronizar comentarios, personas asignadas y actualizaciones de estado entre las incidencias de Sentry y los tickets de Jira, y viceversa. Cuando asignas una incidencia a alguien o actualizas un estado en Jira, los cambios también aparecerán en Sentry. Cuando resuelves una incidencia en Sentry, su estado se actualizará automáticamente en Jira. Cuando los tickets de Jira se marcan como Done, puedes configurar cómo debe resolverse la incidencia correspondiente en Sentry.
+
+<Alert title="Nota">
+  La sincronización de incidencias está disponible para organizaciones con los planes Team, Business y
+  Enterprise.
+</Alert>
+
+Para configurar la sincronización de incidencias, ve a **Organization Settings** &gt; **Integrations** y haz clic en &quot;Configure&quot; junto a tu instancia de Jira Server. En la página siguiente, puedes definir cómo quieres que la información se sincronice entre Sentry y Jira.
+
+![Sincroniza estados de Jira con Sentry](./img/jira-sync.png)
+
+<Alert title="Nota">
+  Si te aparece un error 4xx o 5xx durante o después de configurar la integración de Jira Server, consulta esta [sección de solución de problemas](#receiving-a-4xx5xx-error-for-the-jira-server-integration).
+</Alert>
+
+<div id="issue-notifications">
+  ### Notificaciones de incidencias
+</div>
+
+Las notificaciones de alerta en Sentry pueden enviarse a muchas integraciones compatibles, pero de forma predeterminada se envían por correo electrónico. Deberás configurar las [**Reglas de alerta**](/es/product/alerts-notifications/alerts/) de un proyecto para enrutar correctamente las notificaciones a una integración específica.
+
+<div id="ignored-fields">
+  ### Campos ignorados
+</div>
+
+Los campos ignorados son campos de Jira que están ocultos en el formulario para crear incidencias. Para añadir campos ignorados, ve a **Settings &gt; Integrations** y haz clic en &quot;Configure&quot; junto a tu instancia de Jira. Luego, desplázate hasta “Ignored Fields” e introduce una lista, separada por comas, con los ID de los campos de Jira.
+
+Los ID de los campos son distintos de las etiquetas del formulario de creación de incidencias. Si necesitas ayuda para encontrar el ID de un campo, consulta la documentación de Atlassian [aquí](https://confluence.atlassian.com/jirakb/how-to-find-id-for-custom-field-s-744522503.html).
+
+<div id="troubleshooting">
+  ## Resolución de problemas
+</div>
+
+<div id="trouble-with-self-hosted-sentry-installation">
+  ### Problemas con la instalación de Sentry Self-Hosted
+</div>
+
+Si tienes problemas para configurar Sentry Self-Hosted, verifica lo siguiente:
+
+* La URL de instalación proporcionada es un nombre de dominio completamente cualificado (FQDN) que se puede resolver en internet.
+* Las direcciones IP que Sentry utiliza para realizar solicitudes salientes están [permitidas](/es/security-legal-pii/security/ip-ranges/).
+* El acceso de Sentry a tu URL de instalación no está restringido por la ruta.
+
+### Mensaje &quot;Something went wrong&quot; con JIRA en la instalación SaaS de sentry.io
+
+![Mensaje de error Something went wrong](./img/jira-something-went-wrong.png)
+
+Este problema suele ocurrir si tienes un bloqueador de anuncios que bloquea la comunicación entre JIRA y Sentry durante la configuración. Para solucionarlo, desactiva tu bloqueador de anuncios y repite el proceso de instalación.
+
+<div id="cant-create-issues-using-a-custom-required-field">
+  ### No se pueden crear incidencias con un campo obligatorio personalizado
+</div>
+
+No admitimos campos obligatorios personalizados en la integración con Jira. Los únicos campos obligatorios que admitimos son los que prellenamos nosotros. Si es posible, puedes editar tus campos obligatorios en Jira o, como alternativa, crear primero un ticket en Jira y luego vincularlo en Sentry.
+
+<div id="issue-alert-not-creating-jira-issues">
+  ### La alerta de incidencia no crea tickets de Jira
+</div>
+
+Este problema ocurre cuando seleccionas una opción de prioridad para la alerta que no existe en el proyecto correspondiente. Si la configuración de tu proyecto incluye el campo &quot;Priority&quot;, el menú desplegable mostrará todas las prioridades de **todos** los proyectos. Asegúrate de que la prioridad guardada de tu alerta esté disponible en el proyecto que elegiste.
+
+<div id="receiving-a-4xx5xx-error-for-the-jira-server-integration">
+  ### Recepción de un error 4xx/5xx en la integración de Jira Server
+</div>
+
+Un error `400` suele generarse porque la instancia de Jira no es accesible públicamente. Asegúrate de que tu instancia sea enrutable (es decir, ¡que nuestro servidor pueda alcanzarla!). Si no lo es, tendrás que publicar tu instancia de Jira en Internet para que podamos acceder a ella.
+
+En el caso de un error `500`, lamentablemente la causa puede variar. Este error significa que no pudimos conectarnos a tu servidor desde el nuestro. Por ejemplo, quizá tu proxy no esté configurado correctamente o no permita nuestra IP. Si necesitas permitir nuestras direcciones IP, puedes encontrar una lista de nuestros rangos de IP [aquí](/es/security-legal-pii/security/ip-ranges/).
+
+<div id="unable-to-find-specific-user-when-using-reporter-field">
+  ### No se puede encontrar a un usuario específico al usar el campo Reportero
+</div>
+
+Asegúrate de que el usuario se haya añadido al proyecto correspondiente en Jira y que tenga el [permiso de usuario asignable](https://confluence.atlassian.com/jiracoreserver/permissions-overview-939937977.html).

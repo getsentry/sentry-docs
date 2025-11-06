@@ -1,0 +1,66 @@
+---
+title: Cliente AIOHTTP
+description: "Conoce la integración de AIOHTTP y cómo agrega soporte para el cliente HTTP de AIOHTTP."
+---
+
+La integración de [AIOHTTP](https://docs.aiohttp.org/en/stable/) instrumenta las solicitudes HTTP salientes mediante el cliente de AIOHTTP.
+
+Usa esta integración para crear spans de solicitudes salientes y asegurarte de que las trazas se propaguen correctamente a los servicios descendentes.
+
+Esta integración también es compatible con servidores AIOHTTP. Consulta la <PlatformLink to="/integrations/aiohttp/">documentación del servidor AIOHTTP</PlatformLink> para más detalles.
+
+<div id="install">
+  ## Instalar
+</div>
+
+Instala `sentry-sdk` desde PyPI con el extra `aiohttp`.
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[aiohttp]"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk[aiohttp]"
+```
+
+
+<div id="configure">
+  ## Configuración
+</div>
+
+Si tienes el paquete `aiohttp` en tus dependencias, la integración de AIOHTTP se habilitará automáticamente al inicializar el SDK de Sentry.
+
+<PlatformContent includePath="getting-started-config" />
+
+<div id="verify">
+  ## Verificar
+</div>
+
+```python
+import asyncio
+import aiohttp
+
+async def main():
+    sentry_sdk.init(...)  # same as above
+
+    with sentry_sdk.start_transaction(name="testing_sentry"):
+        async with aiohttp.ClientSession() as session:
+            async with session.get("https://sentry.io/") as response:
+                print("Código de estado:", response.status)
+            async with session.post("http://httpbin.org/post") as response:
+                print("Código de estado:", response.status)
+
+asyncio.run(main())
+```
+
+Esto creará una transacción llamada `testing_sentry` en la sección Performance de [sentry.io](https://sentry.io) y generará spans para las solicitudes HTTP salientes.
+
+Los datos pueden tardar unos instantes en aparecer en [sentry.io](https://sentry.io).
+
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+- AIOHTTP: 3.5+
+- Python: 3.7+

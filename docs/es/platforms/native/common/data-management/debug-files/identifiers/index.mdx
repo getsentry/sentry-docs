@@ -1,0 +1,59 @@
+---
+title: Identificadores de depuración
+description: "Conozca los requisitos de las herramientas de compilación que permiten a Sentry identificar de forma única los archivos de información de depuración entre compilaciones."
+sidebar_order: 2
+---
+
+Cada archivo de información de depuración especifica un identificador único. Los informes de fallos declaran
+estos identificadores para permitir que los depuradores y los sistemas de informes de fallos resuelvan los
+archivos correctos. Sentry distingue dos tipos de identificadores:
+
+* **Identificador de código**: El identificador único del ejecutable o de la biblioteca
+  dinámica —es decir, el archivo de código—. El contenido de este identificador depende
+  de la plataforma: los archivos Mach-O usan un UUID, los archivos ELF un hash SHA y los archivos PE usan
+  una concatenación de ciertos atributos del encabezado. Para WebAssembly usamos un
+  UUID incrustado en la sección `build_id` del archivo.
+
+* **Identificador de depuración**: El identificador único del archivo de acompañamiento de depuración. A diferencia
+  del identificador de código, Sentry impone la misma estructura en todas
+  las plataformas. En Windows, este es el identificador único real del archivo PDB; en todas
+  las demás plataformas, es una transformación con pérdida del identificador de código.
+
+Al cargar archivos de información de depuración en Sentry, la CLI y el servidor siempre
+calcularán un *Identificador de depuración* para cada archivo cargado. Este identificador se
+asocia con ejecutables y bibliotecas, así como con sus acompañantes de depuración, para garantizar
+que puedan localizarse de forma única mediante un mecanismo común.
+
+<Alert>
+  La información de depuración no tiene que estar asociada a versiones (releases). El identificador de depuración
+  único garantiza que Sentry pueda elegir los archivos correctos para cada informe de
+  fallo. Sin embargo, sigue siendo recomendable configurar las versiones en el cliente para
+  aprovechar otras funciones.
+</Alert>
+
+Para eventos nativos, la página de detalles de la incidencia muestra una lista de *Imágenes cargadas*.
+Esta lista contiene el ejecutable y todas las bibliotecas dinámicas cargadas, incluidos
+sus identificadores de depuración. Puede copiar este identificador y buscar los archivos exactos
+que coincidan con él en la pantalla de configuración de *Archivos de depuración*.
+
+`sentry-cli` puede ayudar a imprimir propiedades de archivos de información de depuración, como su
+identificador de depuración. Consulte [*Comprobación de archivos de información de depuración*](/es/cli/dif/#checking-files) para obtener más información.
+
+<PlatformContent includePath="debug-files-identifiers-gnu-build-identifiers" />
+
+<PlatformContent includePath="debug-files-identifiers-pdb-age-mismatches" />
+
+<div id="wasm-build-ids">
+  ## IDs de compilación de WASM
+</div>
+
+[WebAssembly es compatible con IDs de compilación](https://github.com/WebAssembly/tool-conventions/blob/main/BuildId.md) como una
+[sección personalizada](https://webassembly.github.io/spec/core/binary/modules.html#custom-section).
+
+`LLVM` (y, con él, la correspondiente toolchain `emscripten`) admite esto [desde la versión 17](https://github.com/llvm/llvm-project/commit/c7af9ae577bb04c5fe120fc07844a500818c8f47).
+
+Nuestra herramienta [`wasm-split`](https://github.com/getsentry/symbolicator/tree/master/crates/wasm-split)
+también puede usarse para añadir un ID de compilación si tu toolchain aún no lo admite. También te permite
+dividir y extraer información de depuración de tu archivo `*.wasm`.
+
+<PlatformContent includePath="debug-files-identifiers-proguard" />

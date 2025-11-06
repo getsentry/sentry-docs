@@ -1,0 +1,46 @@
+---
+title: Carga de archivos
+description: "Obtén información sobre cómo cargar archivos de información de depuración en Sentry."
+sidebar_order: 3
+---
+
+La forma más sencilla de proporcionar a Sentry archivos de información de depuración es
+cargarlos con `sentry-cli`. Según tu flujo de trabajo, quizá quieras
+cargarlos como parte de tu pipeline de compilación o al implementar y publicar tu
+aplicación:
+
+<Include name="common-imgs/debug-files-workflow" />
+
+<PlatformContent includePath="debug-files">
+  Los archivos se pueden cargar con el comando `debug-files upload`. Este comando escaneará de forma recursiva
+  una carpeta dada en busca de archivos y los cargará en Sentry:
+</PlatformContent>
+
+Para ver todas las opciones disponibles y más información, consulta [*Cargar información de depuración*](/es/cli/dif/#uploading-files).
+
+Los archivos de depuración deben cargarse antes de implementar o publicar tu
+aplicación para que se puedan procesar los informes de fallos. Para pruebas manuales, usa
+`sentry-cli debug-files upload --wait` antes de enviar el primer fallo o error nativo.
+
+Si subes un archivo que Sentry había reportado anteriormente como faltante en un
+informe de fallo, Sentry puede tardar hasta una hora en empezar a usar ese archivo para nuevos
+informes de fallos. Los eventos e incidencias existentes no se vuelven a procesar.
+
+En Sentry, tus archivos cargados están asociados a proyectos. Puedes ver y
+administrar las cargas en **Project Settings &gt; Debug Files**. Esta pantalla muestra las
+propiedades más importantes de los archivos de depuración:
+
+1. El identificador de depuración. Puede haber varias entradas que compartan el mismo
+   identificador si la información de depuración está dividida en varios archivos.
+2. El nombre del archivo de depuración. Sentry usa el nombre del sistema de archivos al
+   cargar el archivo con `sentry-cli`.
+3. La arquitectura y el tipo del archivo. Esto puede usarse para distinguir archivos
+   entre ejecutables y acompañantes de depuración si sus identificadores de depuración y nombres
+   coinciden.
+4. La información de depuración disponible en estos archivos. Esto puede incluir `unwind`,
+   `debug`, `symtab` y `sources`.
+5. Metadatos como el tamaño y la fecha/hora de la carga.
+
+Si varios proyectos requieren el mismo archivo, debe volverse a cargar. Sentry
+no accede a archivos de depuración almacenados en otros proyectos para simbolizar informes
+de fallos.

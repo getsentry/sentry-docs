@@ -1,0 +1,340 @@
+---
+title: Asistentes de configuración
+sidebar_order: 3
+og_image: /og-images/sdk-expected-features-setup-wizards.png
+---
+
+Algunos SDK admiten la configuración automática mediante Sentry Wizard para que poner en marcha el SDK sea lo más sencillo posible.
+Crear un asistente para tu SDK es totalmente opcional y no es un requisito al desarrollar un SDK.
+
+Esta página ofrece pautas sobre cómo desarrollamos asistentes para SDK y qué tener en cuenta al crear uno nuevo.
+
+Antes de empezar, algunos fundamentos importantes:
+
+- Los asistentes no forman parte del SDK en sí, sino que se distribuyen en un paquete independiente.
+- Actualmente, todos los asistentes se encuentran en el repositorio [`getsentry/sentry-wizard`](https://github.com/getsentry/sentry-wizard).
+- En este momento, todos los asistentes están escritos en TypeScript y se publican en el paquete `@sentry/wizard` en `npm` y `brew`.
+  En el futuro se podrán agregar destinos de publicación adicionales.
+
+<div id="expectations">
+  ## Expectativas
+</div>
+
+Los nuevos asistentes deben cumplir las siguientes expectativas y requisitos generales:
+
+<div id="easy-to-use">
+  ### Fácil de usar
+</div>
+
+Configurar un SDK con el asistente debería ser lo más sencillo posible para los usuarios.
+Un solo comando de shell, junto con algunas entradas simples del usuario durante el proceso, debería bastar para poner en marcha el SDK.
+Los asistentes deberían configurar automáticamente tanto como sea posible y solo solicitar datos del usuario cuando sea necesario.
+Piensa en diversas herramientas de CLI que crean nuevos proyectos por ti. Así es como queremos que funcione el asistente.
+
+Ejemplo de uso del asistente:
+
+```sh
+npx @sentry/wizard@latest -i sveltekit
+```
+
+<Alert level="warning">
+  Aunque el asistente debería ofrecer la forma más sencilla de configurar el SDK, no sustituye la documentación del SDK sobre cómo hacerlo de forma manual.
+  Mostrar el comando del asistente en la documentación de <Link to="https://docs.sentry.io/platforms/javascript/guides/nextjs/#install">Introducción</Link> y ofrecer una página adicional de <Link to="https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/">Configuración manual</Link> ha demostrado ser una buena práctica.
+</Alert>
+
+
+<div id="transparency">
+  ### Transparencia
+</div>
+
+Los asistentes interactúan con los proyectos de nuestros usuarios. Pueden modificar archivos, instalar paquetes o ajustar configuraciones.
+Es importante comunicar estos cambios a nuestros usuarios para que sepan cuál es el impacto.
+
+Por ejemplo:
+
+- Si el asistente crea o modifica un archivo, menciona el nombre de archivo específico en la salida de la consola.
+- Si se instalan paquetes nuevos, debe informar a los usuarios cuáles son.
+- Si algo falla en el proceso, debe notificar a los usuarios y ofrecer orientación sobre cómo solucionarlo o qué hacer a continuación.
+
+Relacionado con esto, los asistentes deben [comprobar el estado de git](#1-check-preconditions) del proyecto y advertir a los usuarios si no está en un estado limpio.
+Esto garantiza que los usuarios puedan revertir los cambios fácilmente si algo sale mal.
+
+<div id="respect-users-decisions">
+  ### Respetar las decisiones de los usuarios
+</div>
+
+Los asistentes deben permitir que los usuarios seleccionen las funciones principales de Sentry (p. ej., tracing, replay, profiling) que desean instalar.
+La configuración del SDK debe ser mínima; puede ser opinada («lo que tenga sentido para la plataforma»), pero
+debe respetar las decisiones de los usuarios.
+
+Algunos ejemplos:
+
+- No debemos habilitar una función que los usuarios hayan rechazado previamente (p. ej., establecer `tracesSampleRate` si los usuarios rechazaron anteriormente habilitar tracing)
+- Podemos configurar opciones adicionales, como la opción `tunnelRoute` en Next.js, pero deberíamos pedir consentimiento siempre que sea razonable. En este ejemplo, el consentimiento es importante porque configurar esta opción puede aumentar el tráfico de los usuarios y, por ende, su factura de infraestructura.
+- Podemos incluir opciones adicionales como `tracePropagationTargets` o `sendDefaultPii` a modo de comentarios, si creemos que son opciones de las que los usuarios deberían estar al tanto.
+
+<div id="cater-to-the-80">
+  ### Cubre al 80%
+</div>
+
+Dado que la mayoría de los asistentes modificarán activamente código o archivos de configuración, existe la posibilidad de que algo falle o se rompa.
+No pasa nada y es esperable siempre que seamos transparentes al respecto y avisemos de antemano a los usuarios de que vamos a modificar sus archivos.
+No podemos abarcar todos los casos límite, pero deberíamos intentar cubrir el 80% para que los proyectos típicos puedan configurarse con éxito.
+
+<div id="support-self-hosted-sentry">
+  ### Compatibilidad con Sentry autogestionado
+</div>
+
+Los asistentes deben poder usarlos todas las personas; por ello, debemos admitir Sentry autogestionado.
+Si aún no se especificó mediante el parámetro `--url`, los asistentes deben preguntar si los usuarios utilizan Sentry autogestionado y, en ese caso, solicitar la URL.
+
+<div id="wizard-flow">
+  ## Flujo del asistente
+</div>
+
+Al crear un nuevo asistente, el flujo de ejecución debería seguir, de forma aproximada, los pasos indicados. Se pueden agregar pasos adicionales según sea necesario.
+
+<Alert>
+
+Muchos de los pasos y comprobaciones individuales ya están implementados en <Link to="#building-blocks-and-helper-functions">funciones auxiliares</Link>.
+
+</Alert>
+
+<div id="1-check-preconditions">
+  ### 1. Comprobar requisitos previos
+</div>
+
+Un asistente debe verificar los requisitos previos necesarios para poder configurar el SDK.
+Los requisitos específicos dependen del SDK, pero algunos comunes son:
+
+- Verificar si el asistente se ejecuta en un repositorio de Git.
+- Verificar si el estado de Git del proyecto está limpio.
+- Verificar si el framework (p. ej., Next.js) está instalado en una versión compatible con el SDK.
+
+Si no se cumplen los requisitos previos, pregunta si las personas usuarias desean continuar de todas formas o interrumpe el asistente indicando el motivo cuando no haya posibilidad de una configuración exitosa.
+
+<div id="2-project-selection">
+  ### 2. Selección de proyecto
+</div>
+
+Para establecer el DSN correcto y configurar funciones adicionales (p. ej., carga de mapas de código fuente), el asistente necesita saber en qué proyecto se utiliza el SDK.
+Nuestros asistentes usarán un endpoint específico de la API de Sentry para iniciar sesión y obtener la lista de proyectos del usuario (consulta [Funciones auxiliares](#building-blocks-and-helper-functions)).
+
+<div id="3-sdk-configuration">
+  ### 3. Configuración del SDK
+</div>
+
+La parte más importante del asistente y donde probablemente debas implementar más lógica.
+La configuración del SDK es muy específica del propio SDK y del framework en el que se usa.
+Algunas tareas comunes incluyen:
+
+- Añadir el SDK a las dependencias del proyecto y descargarlo.
+- Añadir el código de inicialización del SDK al proyecto.
+- Configurar los source maps o la carga de artefactos de depuración.
+
+<Alert level="warning">
+
+Siempre que modifiques código en un archivo existente, ten en cuenta que algo puede salir mal.
+Intenta detectar si ya existe código de Sentry y pregunta si las personas usuarias quieren continuar de todos modos.
+Si el asistente falla, proporciona una alternativa para configurar manualmente el paso que falló.
+
+</Alert>
+
+<div id="4-verification">
+  ### 4. Verificación
+</div>
+
+De forma similar a como documentamos en nuestra guía la verificación de la configuración del SDK, el asistente debería proporcionar instrucciones sobre cómo verificar la nueva instalación de Sentry.
+Como mínimo, el asistente debería imprimir instrucciones en la consola.
+
+Si es posible, el asistente también debería añadir al proyecto una página o componente de ejemplo que genere un error.
+La implementación de este ejemplo depende del framework y es opcional.
+
+<div id="building-blocks-and-helper-functions">
+  ## Componentes y funciones auxiliares
+</div>
+
+Al crear un nuevo asistente, se recomienda reutilizar los componentes y las funciones auxiliares de nuestros asistentes más recientes.
+Muchos de los problemas comunes ya se han resuelto y extraído como funciones reutilizables.
+Por ejemplo, puedes usar el asistente de [NextJS](https://github.com/getsentry/sentry-wizard/tree/master/src/nextjs) como referencia.
+
+Si te encuentras con lógica que aún no sea reutilizable pero que podría aplicarse en otros asistentes, siéntete libre de extraerla.
+
+<Alert level="warning">
+
+Nuestros asistentes más antiguos usan un enfoque basado en clases y pasos que ya no se recomienda.
+Queremos mantener las cosas simples y evitar abstracciones innecesarias de ahora en adelante.
+
+</Alert>
+
+<div id="prompting-for-user-input">
+  ### Solicitar entrada del usuario
+</div>
+
+Esperar a la entrada siempre les da a los usuarios la oportunidad de cancelar o salir del asistente.
+Si creas un nuevo prompt, asegúrate de envolverlo con la función [`abortIfCancelled`](https://github.com/getsentry/sentry-wizard/blob/c5b7f72f306cde8e6516acc11a5c6b75acee60c6/src/utils/clack-utils.ts#L48).
+Esto se encargará de manejar correctamente las entradas de Cmd+C, vaciar los eventos de Sentry (si usas [telemetry](#telemetry)) y salir del proceso.
+Por ejemplo:
+
+```typescript
+const continueWithoutGit = await abortIfCancelled(
+  clack.confirm({
+    message:
+      'No estás dentro de un repositorio de git. El asistente creará y actualizará archivos. ¿Quieres continuar de todas formas?',
+  }),
+);
+```
+
+<Alert>
+  Muchos <Link to="https://github.com/getsentry/sentry-wizard/blob/master/src/utils/clack-utils.ts">helpers</Link> para preguntas específicas de entrada del usuario pueden reutilizarse.
+  Por ejemplo, todo el flujo de autenticación y selección de proyecto ya está <Link to="https://github.com/getsentry/sentry-wizard/blob/master/src/utils/clack-utils.ts#L518">contemplado</Link>.
+</Alert>
+
+
+<div id="handling-user-data">
+  ### Manejo de datos de usuario
+</div>
+
+Cada vez que subimos archivos (source maps, artefactos de depuración, etc.) a Sentry, debemos especificar un token de autenticación.
+Este token se obtiene o se genera cuando los usuarios inician sesión en el navegador.
+El asistente debe almacenar este token en un archivo de configuración para que pueda accederse a él más adelante, cuando los usuarios suban archivos.
+
+<Alert level="warning">
+
+**Importante:** Los tokens de autenticación **no deben** inyectarse directamente en el código del usuario. Deben mantenerse en secreto y no deben confirmarse en los repositorios de los usuarios.
+
+</Alert>
+
+Por lo tanto:
+
+- Usa nuestros helpers para almacenar el token en `.sentryclirc`, `sentry.properties` o `.env.sentry-build-plugins`.
+- Asegúrate de que el archivo creado se agregue al `.gitignore` de los usuarios (nuestros helpers se encargan de eso).
+- Asegúrate de que otros datos (p. ej., proyecto, organización, URL) no se almacenen en el mismo archivo que el token de autenticación.
+  Podemos insertar de forma segura todo excepto el token de autenticación en el código del usuario.
+
+<div id="code-modifications">
+  ### Modificaciones de código
+</div>
+
+Si necesitas modificar código, algunas de estas estrategias han demostrado ser útiles:
+
+- Modificaciones del AST con [`magicast`](https://github.com/unjs/magicast) o [`recast`](https://github.com/benjamn/recast).
+  Este es el enfoque recomendado, ya que es el más fiable y flexible.
+  Sin embargo, también es el más complejo y muchos casos límite deben tratarse de forma individual.
+- A veces, las expresiones regulares (regex) son suficientes para encontrar y reemplazar código en los lugares correctos.
+  Úsalas con precaución y solo si estás seguro de que no coincidirán con ubicaciones no deseadas.
+  Por ejemplo, es difícil detectar comentarios con expresiones regulares, por lo que podrías terminar detectando o reemplazando código comentado.
+
+<div id="ui-suggestions">
+  ## Sugerencias de UI
+</div>
+
+El asistente es una herramienta de CLI, pero aun así debemos prestar atención a la UI.
+Además de `clack`, usamos `chalk` para personalizar aún más la salida, p. ej., coloreando ciertas partes del resultado.
+Al mostrar mensajes, recomendamos las siguientes pautas, aunque apartarse de ellas está bien si tiene sentido.
+
+<div id="colors">
+  ### Colores
+</div>
+
+Usa los colores con moderación y de forma consistente.
+Puede que casos específicos requieran soluciones particulares, pero aquí van algunas recomendaciones:
+
+- Usa `clack.log.success` y, opcionalmente, `chalk.green` para mensajes de éxito (importantes).
+- Usa `clack.log.warn` y, opcionalmente, `chalk.yellow` para advertencias (importantes).
+  Por ejemplo, si ya se encontró código de Sentry en un archivo que el asistente debía modificar.
+- Usa `clack.log.error` y, opcionalmente, `chalk.red` para errores (importantes).
+- Usa `clack.log.info` durante el proceso para imprimir información adicional.
+- Usa `clack.log.step` para imprimir un mensaje al completar o al entrar a un nuevo paso que no requiera un mensaje de éxito.
+- Usa `chalk.cyan` para resaltar nombres de archivos, nombres de paquetes u otras partes importantes del mensaje.
+  Asegúrate de que los archivos modificados estén resaltados para aumentar la [transparencia](#transparency).
+- Para imprimir mensajes de introducción y cierre, usa `clack.intro` y `clack.outro`.
+- Para operaciones de larga duración (p. ej., descargas), considera usar [`clack.spinner`](https://github.com/natemoo-re/clack/tree/main/packages/prompts#spinner)
+
+<div id="copy-paste-snippets">
+  ### Fragmentos para copiar y pegar
+</div>
+
+Algunos asistentes (p. ej., el asistente de source maps) ofrecen fragmentos para copiar y pegar en lugar de modificar archivos en ciertas situaciones.
+Siempre puedes recurrir a esta opción si los code mods no son posibles o resultan demasiado complejos.
+
+Al imprimir fragmentos para copiar y pegar, asegúrate de usar `console.log` directamente, sin ningún helper de `clack`.
+Así evitarás que el fragmento se imprima con caracteres adicionales en la consola.
+Aunque esto rompe la coherencia de la interfaz, ofrece la mejor experiencia de copiar y pegar, que es lo que siempre queremos priorizar.
+
+Se recomienda imprimir un fragmento tipo `diff`, usando `chalk.gray` y `chalk.green(Bright)` para resaltar las líneas que necesitan ajustes.
+Por ejemplo:
+
+![Fragmento para copiar y pegar](./setup-wizard-copy-paste.png)
+
+Después de imprimir el fragmento, dales a los usuarios la oportunidad de copiar y pegar añadiendo una confirmación de que realizaron los cambios necesarios.
+
+<div id="telemetry">
+  ## Telemetría
+</div>
+
+Los asistentes pueden recopilar datos de telemetría y enviarlos a Sentry.
+Esto nos ayuda a entender cómo las personas usan el asistente, qué acciones realizan y qué podemos mejorar.
+
+<div id="getting-started">
+  ### Primeros pasos
+</div>
+
+La forma más fácil es usar la función envoltorio `withTelemetery`, disponible en el paquete `@sentry/wizard`:
+
+```typescript
+export async function runSourcemapsWizard(
+  options: WizardOptions,
+): Promise<void> {
+  return withTelemetry(
+    {
+      enabled: options.telemetryEnabled, // esto puede ser controlado por los usuarios
+      integration: 'sourcemaps', // nombre del asistente (argumento -i)
+    },
+    () => runSourcemapsWizardWithTelemetry(options),
+  );
+}
+```
+
+Esto creará un cliente básico de Sentry y enviará eventos (como sesiones, transacciones y errores simples) a Sentry.
+
+Si quieres añadir spans a pasos individuales dentro de un flujo de asistente, puedes usar la función auxiliar `traceStep`:
+
+```typescript
+const res = await traceStep('configuración-script-npm', () => setupNpmScriptInCI());
+```
+
+
+<div id="transparency">
+  ### Transparencia
+</div>
+
+Si decides recopilar datos de telemetría, asegúrate de ser transparente al respecto y de ofrecer la opción de exclusión `disable-telemetry`.
+Se recomienda mostrar un mensaje al respecto en la consola en la sección de introducción.
+Por ejemplo:
+
+```
+Este asistente de configuración envía datos de telemetría e informes de fallos a Sentry.
+Puedes desactivar esto ejecutando el asistente con la opción '--disable-telemetry'.
+```
+
+
+<div id="collecting-data">
+  ### Recopilación de datos
+</div>
+
+Aunque la supervisión de errores es estupenda, debemos tener _mucho_ cuidado con lo que capturamos en el asistente.
+Este es un programa que se ejecuta directamente en los equipos de nuestros usuarios y no podemos capturar ningún dato sensible.
+
+Por ejemplo, no podemos recopilar trazas de pila, ya que los nombres de archivo de los frames de la pila podrían contener rutas absolutas.
+Si usas el helper `withTelemetery`, filtrará automáticamente las trazas de pila por ti.
+
+<div id="what-to-collect">
+  ### Qué recopilar
+</div>
+
+Algunas sugerencias sobre qué recopilar:
+
+- Establece etiquetas (`Sentry.setTag`) para recopilar decisiones de los usuarios. Más tarde puedes consultar las etiquetas en los paneles de Sentry para hacer seguimiento de esas decisiones.
+- Establece etiquetas para recopilar versiones instaladas del SDK, versiones de frameworks, gestores de paquetes, etc.
+- Registra spans de pasos individuales dentro del flujo del asistente para medir el rendimiento o la duración.

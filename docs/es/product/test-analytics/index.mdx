@@ -1,0 +1,124 @@
+---
+title: Análisis de pruebas
+sidebar_order: 135
+description: Descubre cómo las herramientas de análisis de pruebas de Sentry pueden ayudarte a mejorar tu código.
+og_image: /og-images/product-test-analytics.png
+---
+
+Sentry Test Analytics ofrece información accionable sobre tus ejecuciones de pruebas en CI, ayudándote a identificar pruebas inestables, hacer seguimiento de fallos y optimizar tu conjunto de pruebas para lograr implementaciones más rápidas y confiables.
+
+<div id="why-use-test-analytics">
+  ## ¿Por qué usar Test Analytics?
+</div>
+
+* **Detecta pruebas inestables:** Identifica y soluciona rápidamente pruebas que fallan de forma intermitente, reduciendo el ruido y el tiempo de depuración desperdiciado
+* **Haz seguimiento de fallos y tendencias:** Supervisa los fallos acumulados, las pruebas más lentas y la eficiencia general de las ejecuciones para mejorar la confiabilidad del CI
+* **Obtén información procesable:** Mira qué líneas de código fallaron dentro de las pruebas y prioriza las correcciones
+* **Aprovecha la integración con Sentry:** Accede a los análisis de pruebas junto con tus datos de errores y rendimiento para una experiencia de desarrollo unificada
+
+<div id="getting-started">
+  ## Primeros pasos
+</div>
+
+<Alert>
+  Sentry Test Analytics se encuentra actualmente en <strong>beta</strong>. Las funciones en beta aún están en desarrollo y pueden contener errores.
+</Alert>
+
+![Panel de Test Analytics](./img/TA-dash.png)
+
+Para usar Sentry Test Analytics, debes instalar la [aplicación Sentry](https://github.com/apps/sentry) en tu organización de GitHub o en repositorios específicos. Una vez instalada, elige tu framework de reportes JUnit XML y [configura tus permisos](#permissions-and-repository-tokens) usando un secreto del repositorio.
+
+<Alert>
+  **El único formato de archivo de resultados de pruebas que admitimos es JUnit XML**. La mayoría de los frameworks de prueba permiten exportar resultados en este formato, con algo de configuración.
+
+  Cada framework de prueba tendrá ligeras diferencias en el formato JUnit XML que genera, pero nuestro objetivo es admitirlos todos.
+</Alert>
+
+**Hay dos formas de subir tus resultados de prueba:**
+
+<div id="1-use-github-actions-to-run-your-ci">
+  ### 1. Usa GitHub Actions para ejecutar tu CI
+</div>
+
+Si ya usas GitHub Actions, puedes utilizar el script `getsentry/prevent-action` para cargar los resultados de tus pruebas.
+
+```yaml
+- name: Subir resultados de pruebas a Sentry
+  if: ${{ !cancelled() }}
+  uses: getsentry/prevent-action@v0
+  with:
+    token: ${{ secrets.SENTRY_PREVENT_TOKEN }}
+```
+
+También puedes usar [OpenID Connect](https://docs.github.com/en/actions/concepts/security/openid-connect) en lugar de los tokens de Prevent como forma de autenticar tu flujo de trabajo de GitHub Actions.
+
+<div id="2-use-sentry-prevent-cli-to-upload-testing-reports">
+  ### 2. Usa [Sentry Prevent CLI](/es/product/test-analytics/sentry-prevent-cli/) para subir informes de pruebas
+</div>
+
+Si no usas GitHub Actions, instala Sentry Prevent CLI con `pip install sentry-prevent-cli` (para Python) o utiliza un binario.
+
+```bash {tabTitle:macos}
+curl -L https://github.com/getsentry/sentry-prevent-cli/releases/latest/download/sentry-prevent-cli-macos -o sentry-prevent-cli
+chmod +x sentry-prevent-cli
+```
+
+```bash {tabTitle:linux}
+curl -L https://github.com/getsentry/sentry-prevent-cli/releases/latest/download/sentry-prevent-cli-linux -o sentry-prevent-cli
+chmod +x sentry-prevent-cli
+```
+
+```bash {tabTitle:alpine linux}
+curl -L https://github.com/getsentry/sentry-prevent-cli/releases/latest/download/sentry-prevent-cli-alpine -o sentry-prevent-cli
+chmod +x sentry-prevent-cli
+```
+
+```bash {tabTitle:windows}
+curl -L https://github.com/getsentry/sentry-prevent-cli/releases/latest/download/sentry-prevent-cli-windows.exe -o sentry-prevent-cli.exe
+```
+
+```bash {tabTitle:linux arm64}
+curl -L https://github.com/getsentry/sentry-prevent-cli/releases/latest/download/sentry-prevent-cli-linux-arm64 -o sentry-prevent-cli
+chmod +x sentry-prevent-cli
+```
+
+```bash {tabTitle:alpine linux arm64}
+curl -L https://github.com/getsentry/sentry-prevent-cli/releases/latest/download/sentry-prevent-cli-alpine-arm64 -o sentry-prevent-cli
+chmod +x sentry-prevent-cli
+```
+
+Luego, sube los resultados de tus pruebas usando la CLI:
+
+```bash
+sentry-prevent-cli upload --report-type test-results --token <PREVENT_TOKEN>
+```
+
+<div id="run-your-test-suite">
+  ### Ejecuta tu suite de pruebas
+</div>
+
+Ahora que has configurado tu CI para subir los resultados de tus pruebas, puedes revisar los registros del flujo de trabajo para ver si la llamada a Sentry se realizó correctamente. Necesitas que algunas pruebas fallen para poder ver el informe de pruebas fallidas.
+
+<div id="viewing-test-analytics">
+  ## Ver análisis de pruebas
+</div>
+
+Después de que se ejecute tu flujo de trabajo, consulta las pruebas fallidas en el [panel de pruebas fallidas](https://sentry.io/prevent/tests/?filterBy=failedTests) o en los comentarios de tu pull request en GitHub.
+
+![Comentario de análisis de pruebas](./img/TA-comment.png)
+
+Puedes ver una vista completa de tus análisis de pruebas en el [panel de análisis de pruebas](https://sentry.io/prevent/tests/). Nota: El panel All Branches se actualiza cada 24 horas.
+
+<div id="permissions-and-repository-tokens">
+  ## Permisos y tokens del repositorio
+</div>
+
+Al configurar Test Analytics, se te pedirá que elijas los permisos de subida. Para GitHub Actions, puedes usar [OpenID Connect](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/about-security-hardening-with-openid-connect) o generar un token del repositorio. Con la CLI, genera un token del repositorio.
+
+Puedes encontrar una lista de tokens del repositorio en la [página de tokens](https://sentry.io/prevent/tokens/) de Sentry Prevent.
+
+<div id="read-next">
+  ## Lee a continuación
+</div>
+
+<PageGrid />

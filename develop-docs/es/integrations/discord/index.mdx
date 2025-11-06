@@ -1,0 +1,78 @@
+---
+title: Integración con Discord
+sidebar_title: Discord
+og_image: /og-images/integrations-discord.png
+---
+
+<div id="create-a-discord-bot">
+  ## Crea un bot de Discord
+</div>
+
+Para usar la integración de Discord de Sentry en tu instancia de Sentry, primero debes crear un bot de Discord. Ve al [Discord Developer Portal](https://discord.com/developers/applications) y haz clic en __New Application__.
+
+![Create bot](./create_bot.png)
+
+Después de crear el bot, deberías ser redirigido a su página de configuración.
+
+<div id="update-your-sentry-configuration">
+  ## Actualiza la configuración de Sentry
+</div>
+
+Sentry necesita las siguientes credenciales de Discord, que puedes encontrar en la configuración del bot:
+
+* *Application ID* y *Public key* están en **General Information**.
+* *Client secret* está en **OAuth2** &gt; **General**.
+* *Bot token* está en **Bot**.
+
+Añade lo siguiente al <code>config.yml</code> de tu instancia de Sentry:
+
+```yaml
+discord.application-id: "<id de aplicación>"
+discord.public-key: "<clave pública>"
+discord.client-secret: "<secreto del cliente>"
+discord.bot-token: "<token del bot>"
+```
+
+**NOTA**: Si estás desarrollando Sentry de forma local, usa una herramienta como Ngrok para exponer tu instancia local de Sentry a Internet. De lo contrario, la URI de redirección de OAuth2 no funcionará.
+
+Después de actualizar el <code>config.yml</code>, reinicia el servidor de Sentry para continuar con la configuración.
+
+
+<div id="configure-your-discord-interactions-endpoint">
+  ## Configura tu endpoint de interacciones de Discord
+</div>
+
+Ahora que Sentry está en funcionamiento y ya tiene tus credenciales de Discord, necesitamos configurar una forma para que Discord interactúe con Sentry.
+
+Vuelve a la configuración de tu aplicación de Discord, ve a **General Information** y busca **Interactions Endpoint URL**.
+
+![Interactions Endpoint URL](./interactions_endpoint_url.png)
+
+Aquí debes introducir el endpoint de interacciones de Discord que proporciona Sentry:
+
+```
+URL del endpoint de interacciones: {YOUR_DOMAIN}/extensions/discord/interactions/
+```
+
+Haz clic en **Save Changes**.
+
+<Alert>
+  Cuando ingreses la URL del Interactions Endpoint, Discord intentará verificarla. La verificación fallará si no has configurado correctamente las credenciales del bot, no has reiniciado tu servidor desde que las agregaste o tu servidor no está correctamente expuesto a Internet.
+</Alert>
+
+
+<div id="configure-your-discord-oauth2-redirect-uri">
+  ## Configura tu URI de redirección de OAuth2 de Discord
+</div>
+
+Ve a **OAuth2** &gt; **General** y busca **Redirects**.
+
+Aquí tendrás que introducir el endpoint de configuración de Discord:
+
+```
+URI de redireccionamiento de OAuth2: {YOUR_DOMAIN}/extensions/discord/setup/
+```
+
+Haz clic en **Save Changes**.
+
+¡Ahora ya estás listo para usar la integración de Discord en Sentry! Consulta nuestra [documentación sobre instalación y configuración de la integración de Discord](https://docs.sentry.io/product/integrations/notification-incidents/discord/) para los próximos pasos.

@@ -1,0 +1,330 @@
+---
+title: Migrar a 5.x
+sidebar_order: 200
+description: "Aprende a migrar a la versión 5 del SDK."
+---
+
+<div id="from-4x-to-5x">
+  ## De 4.x a 5.x
+</div>
+
+La versión 5 del SDK de React Native es compatible tanto con la arquitectura heredada (desde RN 0.65 en adelante) como con la arquitectura nueva (desde RN 0.69 en adelante), así como con el nuevo complemento de Gradle para React Native (introducido en RN 0.71).
+
+<div id="naming-and-behavior-changes">
+  ### Cambios de nombre y comportamiento
+</div>
+
+Cambia el nombre de las siguientes opciones de `Sentry.init`:
+
+* `enableAutoPerformanceTracking` a `enableAutoPerformanceTracing`
+* `enableOutOfMemoryTracking` a `enableWatchdogTerminationTracking`
+* `ReactNativeTracingOptions.idleTimeout` a `ReactNativeTracingOptions.idleTimeoutMs`
+* `ReactNativeTracingOptions.maxTransactionDuration` a `ReactNativeTracingOptions.finalTimeoutMs`
+
+Si usas `TouchEventBoundary` y `accessibilityLabel`, configura lo siguiente:
+
+```javascript
+Sentry.wrap(App, {
+  touchEventBoundaryProps: { labelName: "accessibilityLabel" },
+});
+```
+
+El rastro de la pila actual para `Sentry.captureMessage` se ha movido de `event.exception` a `event.threads`.
+
+El `breadcrumb.level` predeterminado es `info`; el valor `critical` se ha eliminado y `log` se ha convertido en `debug` en iOS y Android.
+
+La versión incluida de `sentry-cli` se ha actualizado a [v2.10.0](https://github.com/getsentry/sentry-cli/releases/tag/2.10.0). Revisa cómo usas `sentry-cli` para reflejar los [cambios incompatibles](https://github.com/getsentry/sentry-cli/releases/tag/2.0.0). Ten en cuenta que `upload-dsym` se ha reemplazado por `debug-files upload` y requiere una ruta. Asegúrate de revisar tu paso de compilación `Upload Debug Symbols` en tu proyecto de Xcode. El comando debería verse como en el ejemplo siguiente:
+
+```bash
+# Antes
+../node_modules/@sentry/cli/bin/sentry-cli upload-dsym
+
+# Después
+../node_modules/@sentry/cli/bin/sentry-cli debug-files upload "$DWARF_DSYM_FOLDER_PATH"
+```
+
+<div id="ios-specific-changes">
+  ### Cambios específicos de iOS
+</div>
+
+Los siguientes metadatos se sincronizan de `sentry-cocoa` a `react-native`:
+
+* `tags`
+* `extra`
+* `fingerprint`
+* `level`
+* `environment`
+* `breadcrumbs`
+
+El `fingerprint` sincronizado puede afectar la agrupación de incidencias en Sentry. El `event.fingerprint` de React Native se combina con el `fingerprint` de iOS sin duplicados, con los elementos de RN primero en el orden.
+
+`sentry-cocoa` se actualizó a la v8.0.0; sigue la migración correspondiente [aquí](/es/platforms/apple/migration/#migrating-from-7x-to-8x).
+
+`sentry-wizard` no aplica parches a proyectos de iOS para React Native 0.65 a 0.68. Estas versiones deben [parchearse manualmente](/es/platforms/react-native/manual-setup/manual-setup/#bundle-react-native-code-and-images).
+
+<div id="changes-to-minimum-supported-versions">
+  ### Cambios en las versiones mínimas compatibles
+</div>
+
+La versión mínima de iOS compatible se ha elevado a iOS 11. La API mínima de Android se ha elevado a 21. La versión mínima compatible de React Native es la 0.65.0.
+
+<div id="from-48x-to-49x">
+  ## De la 4.8.x a la 4.9.x
+</div>
+
+En la versión `4.9.0` se añadió una nueva función que permite enviar dependencias de JavaScript en tiempo de ejecución en los eventos para apps de React Native. No se requieren pasos manuales para habilitar esto en compilaciones de Android. Para iOS, debes parchear el `shellScript` en el archivo `ios/$projectName.xcodeproj/project.pbxproj`, donde `$projectName` probablemente sea el nombre de tu proyecto. Para ello, busca la fase `Bundle React Native code and images` y parchea el `shellScript`.
+
+React Native 0.69.0 y versiones posteriores:
+
+*Anterior*:
+
+```bash
+shellScript = "export SENTRY_PROPERTIES=sentry.properties\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $DERIVED_FILE_DIR/main.jsbundle.map\"\nset -e\n\nWITH_ENVIRONMENT=\"../node_modules/react-native/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"../node_modules/react-native/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT \\\"../node_modules/@sentry/cli/bin/sentry-cli react-native xcode $REACT_NATIVE_XCODE\\\"\"\n";
+```
+
+*Novedad*:
+
+```bash
+shellScript = "export SENTRY_PROPERTIES=sentry.properties\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $DERIVED_FILE_DIR/main.jsbundle.map\"\nset -e\n\nWITH_ENVIRONMENT=\"../node_modules/react-native/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"../node_modules/react-native/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT \\\"../node_modules/@sentry/cli/bin/sentry-cli react-native xcode $REACT_NATIVE_XCODE\\\"\"\n\n/bin/sh ../node_modules/@sentry/react-native/scripts/collect-modules.sh\n";
+```
+
+React Native 0.56.0 a 0.68.0:
+
+*Anterior*:
+
+```bash
+shellScript = "export NODE_BINARY=node\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $DERIVED_FILE_DIR/main.jsbundle.map\"\nexport SENTRY_PROPERTIES=../sentry.properties\n\n../node_modules/@sentry/cli/bin/sentry-cli react-native xcode \\\n  ../node_modules/react-native/scripts/react-native-xcode.sh\n";
+```
+
+*Nueva*:
+
+```bash
+shellScript = "export NODE_BINARY=node\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $DERIVED_FILE_DIR/main.jsbundle.map\"\nexport SENTRY_PROPERTIES=../sentry.properties\n\n../node_modules/@sentry/cli/bin/sentry-cli react-native xcode \\\n  ../node_modules/react-native/scripts/react-native-xcode.sh\n\n/bin/sh ../node_modules/@sentry/react-native/scripts/collect-modules.sh\n";
+```
+
+Consulta la [guía de migración del SDK de JS](https://github.com/getsentry/sentry-javascript/blob/f4861f8c3eab1181ab8e7544402b23770a992d6e/MIGRATION.md?plain=1#L81) para ver los cambios relacionados con la actualización a la versión `7.19.0`.
+
+<div id="from-46x-to-47x">
+  ## De la 4.6.x a la 4.7.x
+</div>
+
+Consulta la guía de migración del SDK de JS [aquí](https://github.com/getsentry/sentry-javascript/blob/f4861f8c3eab1181ab8e7544402b23770a992d6e/MIGRATION.md?plain=1#L89) y [aquí](https://github.com/getsentry/sentry-javascript/blob/f4861f8c3eab1181ab8e7544402b23770a992d6e/MIGRATION.md?plain=1#L93) para conocer los cambios relacionados con la actualización a la versión `7.16.0`.
+
+<div id="from-3x-to-4x">
+  ## De la 3.x a la 4.x
+</div>
+
+Al actualizar Sentry JavaScript a la v7, se introdujeron cambios importantes que rompen compatibilidad. Para saber más sobre lo que cambió, consulta el [registro de cambios incompatibles](https://github.com/getsentry/sentry-javascript/blob/7.0.0/CHANGELOG.md#breaking-changes) de Sentry JavaScript.
+
+Al actualizar Sentry Android a la v6, se introdujeron cambios importantes que rompen compatibilidad. Para saber más sobre lo que cambió, consulta la [guía de migración](/es/platforms/android/migration/#migrating-from-iosentrysentry-android-5x-to-iosentrysentry-android-600).
+
+<div id="from-30x-to-31x">
+  ## De la 3.0.x a la 3.1.x
+</div>
+
+`ReactNavigationV5Instrumentation` pasó a llamarse `ReactNavigationInstrumentation` y es compatible con todas las versiones de React Navigation desde la v5 en adelante, incluida la v6. Solo necesitas cambiar el nombre en cada lugar donde invoques el constructor de la instrumentación:
+
+```javascript
+// Antiguo
+const routingInstrumentation = new Sentry.ReactNavigationV5Instrumentation();
+// Nuevo
+const routingInstrumentation = new Sentry.ReactNavigationInstrumentation();
+```
+
+<div id="from-2x-to-3x">
+  ## De 2.x a 3.x
+</div>
+
+No es necesario realizar cambios al migrar de las versiones `2.x` a `3.x`, aunque deberás asegurarte de ejecutar `pod install` en iOS y de reconstruir tu aplicación en ambas plataformas.
+
+<div id="event-origin-and-environment-tags">
+  ### Etiquetas de origen del evento y entorno
+</div>
+
+Al actualizar desde versiones anteriores a la `3.x`, es posible que observes una discrepancia en los valores de la etiqueta `event.environment` en comparación con los eventos enviados desde el SDK antes de esta versión. Los eventos que se originan en código nativo de iOS ahora tendrán la etiqueta `event.environment` establecida en `native`. Obtén más información sobre estas etiquetas en la [guía de información de eventos](/es/platforms/react-native/usage/event-information/#event-origin-and-environment-tags).
+
+<div id="from-24x-to-25x">
+  ## De la 2.4.x a la 2.5.x
+</div>
+
+Los cambios que rompen la compatibilidad afectan solo a Android. No hay cambios de este tipo en otras plataformas.
+
+<div id="android-specific-changes">
+  ### Cambios específicos de Android
+</div>
+
+Sentry React Native versión `2.5.0` depende de Sentry Android `5.0.0`. Consulta la [guía de migración de Android para cambios específicos de Android](/es/platforms/android/migration/#migrating-from-iosentrysentry-android-430-to-iosentrysentry-android-500).
+
+`Settings.Secure.ANDROID_ID` se ha eliminado y se ha reemplazado por un `installationId` generado aleatoriamente. Esto puede afectar la cantidad de usuarios únicos que se muestran en la página de Issues y en Alerts. Si siempre has definido un usuario personalizado con `Sentry.setUser(customUser)`, el comportamiento no ha cambiado. Aunque no es necesario que hagas ningún cambio, si quieres mantener el comportamiento anterior, usa el siguiente fragmento de código, que utiliza la biblioteca [react-native-device-info](https://github.com/react-native-device-info/react-native-device-info).
+
+```javascript
+import { Platform } from "react-native";
+import DeviceInfo from "react-native-device-info";
+
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  // ...
+});
+
+// Solo añadir el procesador de eventos en Android
+if (Platform.OS === "android") {
+  Sentry.addGlobalEventProcessor((event) => {
+    // Obtener el ANDROID_ID
+    const id = DeviceInfo.getUniqueId();
+
+    // Si el usuario no existe, establecer el id como el identificador único.
+    if (!event.user) {
+      event.user = { id };
+    }
+
+    return event;
+  });
+}
+```
+
+## Instrumentación de React Navigation anterior a &lt;2.3.0
+
+Cambiamos el método de inicialización para React Navigation v5 y superiores y la instrumentación de enrutamiento para evitar un posible problema al usar linking. Ahora debes registrar el contenedor de navegación dentro de la prop `onReady` que se pasa a `NavigationContainer`.
+
+De:
+
+```javascript
+// Ejemplo de componente funcional antiguo
+const App = () => {
+  const navigation = React.useRef();
+
+  React.useEffect(() => {
+    routingInstrumentation.registerNavigationContainer(navigation);
+  }, []);
+
+  return <NavigationContainer ref={navigation}>...</NavigationContainer>;
+};
+
+// Ejemplo de componente de clase antiguo
+class App extends React.Component {
+  navigation = React.createRef();
+
+  componentDidMount() {
+    routingInstrumentation.registerNavigationContainer(navigation);
+  }
+
+  render() {
+    return <NavigationContainer ref={this.navigation}>...</NavigationContainer>;
+  }
+}
+```
+
+Para:
+
+```javascript
+// Ejemplo de componente funcional
+const App = () => {
+  const navigation = React.useRef();
+
+  return (
+    <NavigationContainer
+      ref={navigation}
+      onReady={() => {
+        // Registra el contenedor de navegación con la instrumentación dentro de onReady
+        routingInstrumentation.registerNavigationContainer(navigation);
+      }}
+    >
+      ...
+    </NavigationContainer>
+  );
+};
+
+// Ejemplo de componente de clase
+class App extends React.Component {
+  navigation = React.createRef();
+
+  render() {
+    return (
+      <NavigationContainer
+        ref={this.navigation}
+        onReady={() => {
+          // Registra el contenedor de navegación con la instrumentación dentro de onReady
+          routingInstrumentation.registerNavigationContainer(navigation);
+        }}
+      >
+        ...
+      </NavigationContainer>
+    );
+  }
+}
+```
+
+<div id="from-1x-to-2x">
+  ## De la 1.x a la 2.x
+</div>
+
+La versión más reciente de nuestro SDK de React Native para Sentry habilita el seguimiento del estado de salud de las versiones y los stack traces nativos de forma predeterminada.
+
+Esta versión del SDK usa el [endpoint de envelopes](https://develop.sentry.dev/sdk/envelopes/). Si usas Sentry autohospedado, el SDK requiere la versión 20.6.0 o posterior de Sentry. Si usas nuestro producto SaaS ([sentry.io](https://sentry.io)), no necesitas realizar ningún cambio ni acción.
+
+<div id="iosmacos">
+  ### iOS/macOS
+</div>
+
+Aunque la migración no introduce cambios incompatibles para iOS/macOS en la parte de React Native, recomendamos ejecutar `pod install` después de la actualización.
+
+<Alert>
+  Si usas directamente nuestro SDK de Cocoa, sigue la [guía de migración de 5.x a 6.x](/es/platforms/apple/migration/#migrating-from-5x-to-6x).
+</Alert>
+
+En iOS/macOS, ahora almacenamos los eventos en caché en sobres en el disco. Como consecuencia, podrías perder algunos eventos en caché durante la migración. Debido al elevado esfuerzo que implicaría, la migración de la 5.x a la 6.x no moverá esos pocos eventos en caché a sobres.
+
+<div id="android">
+  ### Android
+</div>
+
+Si usas React Native &lt;0.60, debes actualizar esta línea en tu `MainApplication.java`:
+
+De (versión anterior):
+
+```java
+import io.sentry.RNSentryPackage;
+```
+
+```kotlin
+import io.sentry.RNSentryPackage
+```
+
+Novedad:
+
+```java
+import io.sentry.react.RNSentryPackage;
+```
+
+```kotlin
+import io.sentry.react.RNSentryPackage
+```
+
+Aparte del cambio de una sola línea mencionado arriba, la migración no debería provocar cambios incompatibles en React Native.
+
+<Alert>
+  <markdown>
+    Si usas directamente nuestro SDK de Android, debes seguir su [guía de migración de 2.x a 3.x](/es/platforms/android/migration/#migrating-from-iosentrysentry-android-2x-to-iosentrysentry-android-3x).
+  </markdown>
+</Alert>
+
+<div id="from-0x-to-1x">
+  ## De la 0.x a la 1.x
+</div>
+
+Si actualizas desde una versión anterior del SDK de React Native de Sentry, desvincula el paquete para asegurarte de que el código generado se actualice a la última versión:
+
+```bash
+react-native unlink react-native-sentry
+```
+
+Después de eso, elimina `react-native-sentry` de tu `package.json`:
+
+```bash
+npm uninstall react-native-sentry --save
+# o
+yarn remove react-native-sentry
+```
+
+Desde ahí, puedes seguir las instrucciones de instalación estándar para `@sentry/react-native`.

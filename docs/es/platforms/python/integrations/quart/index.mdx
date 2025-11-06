@@ -1,0 +1,72 @@
+---
+title: Quart
+description: "Aprende a usar Sentry con Quart."
+---
+
+La integración de Quart agrega compatibilidad con el [framework web Quart](https://gitlab.com/pgjones/quart).
+
+<div id="install">
+  ## Instalación
+</div>
+
+Instala `sentry-sdk` desde PyPI con el extra `quart`:
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[quart]"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk[quart]"
+```
+
+<div id="configure">
+  ## Configuración
+</div>
+
+Si tienes el paquete `quart` en tus dependencias, la integración de Quart se habilitará automáticamente cuando inicialices el SDK de Sentry.
+
+<PlatformContent includePath="getting-started-config" />
+
+<div id="verify">
+  # Verificar
+</div>
+
+```python
+from quart import Quart
+
+sentry_sdk.init(...)  # igual que antes
+
+app = Quart(__name__)
+
+@app.route("/")
+async def hello():
+    1/0  # provoca un error
+    return {"hello": "world"}
+
+app.run()
+```
+
+Cuando visites [http://localhost:5000/](http://localhost:5000/), se creará una transacción en la sección Performance de [sentry.io](https://sentry.io). Además, se enviará un evento de error a [sentry.io](https://sentry.io) que quedará asociado a la transacción.
+
+Los datos pueden tardar unos instantes en aparecer en [sentry.io](https://sentry.io).
+
+<div id="behavior">
+  ## Comportamiento
+</div>
+
+* El SDK de Sentry para Python instalará la integración de Quart para todas tus apps.
+
+* Se notifican todas las excepciones que provocan un error interno del servidor, incluidas las de funciones ejecutadas antes/después del servicio y las tareas en segundo plano.
+
+* Los datos de la solicitud se adjuntan a todos los eventos: **método HTTP, URL, encabezados**. Sentry también excluye información de identificación personal (como IDs de usuario, nombres de usuario, cookies, encabezados de autorización, direcciones IP), a menos que configures `send_default_pii` en `True`.
+
+* Cada solicitud tiene un ámbito independiente. Los cambios en el ámbito dentro de una vista, por ejemplo al establecer una etiqueta, solo se aplicarán a los eventos enviados como parte de la solicitud que se está procesando.
+
+* Registrar con cualquier logger creará migas de pan (breadcrumbs) cuando la integración de [Logging](/es/platforms/python/integrations/logging/) esté habilitada (lo está de forma predeterminada).
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+* Quart: 0.16.1+
+* Python: 3.7+

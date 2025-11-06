@@ -1,0 +1,147 @@
+---
+title: Reproducción de sesiones para móviles
+sidebar_order: 20
+description: >-
+  Usa Reproducción de sesiones para móviles para obtener grabaciones de sesiones de usuarios. Podrás
+  reproducir problemas más rápido y comprender mejor el impacto en los usuarios.
+og_image: /og-images/product-explore-session-replay-mobile.png
+---
+
+Reproducción de sesiones te permite ver grabaciones de sesiones de usuarios, lo que puede ayudarte a entender qué sucedió antes, durante y después de que se produjera un error o un problema de rendimiento. Al reproducir cada sesión, podrás ver cada interacción del usuario en relación con solicitudes de red, errores de frontend y backend, spans de backend y más.
+
+Las reproducciones te ayudan a ver exactamente cómo los errores afectan la experiencia del usuario. Como están integradas con nuestro producto Issues, podrás ver reproducciones de sesión vinculadas a eventos de error en la página de [Detalles del issue](/es/product/issues/issue-details/) en Sentry. Para asegurarte de que los errores de backend también se incluyan en la reproducción, consulta nuestras [instrucciones de configuración de backend](/es/product/explore/session-replay/web/getting-started/#replays-for-backend-errors).
+
+![Interfaz de usuario de Reproducción de sesiones](./img/session-replay.png)
+
+<div id="what-is-session-replay">
+  ## ¿Qué es Session Replay?
+</div>
+
+Session Replay para dispositivos móviles funciona tomando instantáneas de la jerarquía de vistas, así como una captura de pantalla en el mismo fotograma, a una por segundo. Estas capturas se comprimen en un archivo de video que representa un segmento de la sesión del usuario. Todos estos pequeños segmentos se envían a Sentry con identificadores de traza adicionales, breadcrumbs y otra información útil para depuración, a fin de componer la sesión completa del usuario.
+
+La sesión del usuario (replay) dura hasta que el usuario cierra la app, la app se bloquea, el usuario envía la app a segundo plano por más de 30 segundos o la sesión alcanza 60 minutos de duración. El resultado es una reproducción en video que puede ayudarte a replicar errores en tu app móvil, incluidos problemas difíciles de depurar relacionados con APIs de backend y microservicios.
+
+Para ocultar cualquier contenido potencialmente sensible y preservar al máximo la privacidad del usuario, se utiliza la jerarquía de vistas para localizar la posición de controles como cuadros de texto, imágenes, etiquetas y botones. El ocultamiento se realiza con un bloque dibujado sobre estos controles, utilizando el color más predominante del control.
+
+![Session Replay Redacted](./img/session-replay-redacted.png)
+
+<div id="replay-details">
+  ## Detalles de la reproducción
+</div>
+
+Cada reproducción tiene una vista detallada que incluye el reproductor de video incrustado y un contexto de depuración completo. Al reproducir el video podrás ver cada interacción del usuario en relación con las solicitudes de red, errores de frontend y backend, spans de backend y más. Casi todos los componentes de esta página están conectados mediante marcas de tiempo.
+
+La siguiente lista muestra el desglose de cada componente y por qué es valioso:
+
+* **Breadcrumbs:** Los breadcrumbs de la reproducción muestran cuándo ocurrieron interacciones clave del usuario, específicamente: toques del usuario con el componente relevante, navegaciones, cuándo el usuario puso la app en segundo plano o en primer plano, y [breadcrumbs personalizados](/es/product/sentry-basics/integrate-backend/configuration-options/#breadcrumbs) definidos por tu organización. Los breadcrumbs también brindan información sobre el dispositivo de una sesión de usuario en momentos específicos:
+  * `device battery` (cuando cambia el nivel de batería o el estado de carga)
+  * `orientation` (cuando el usuario gira el dispositivo)
+  * `connectivity` (cuando este estado cambia entre wifi, datos móviles y sin conexión).
+
+Estos breadcrumbs están sincronizados con el reproductor de la reproducción y se desplazarán automáticamente a medida que avanza el video. Algunos [tipos de breadcrumb](/es/product/issues/issue-details/breadcrumbs/) visibles en Detalles del issue no coinciden 1:1 con la lista de breadcrumbs de la reproducción. En la página de Detalles de la reproducción, la secuencia de eventos que normalmente se ve en la página de Detalles del issue se muestra en su lugar en los componentes de Network y Console.
+
+* **Timeline:** Esta es la sección en la parte inferior de la página de Detalles de la reproducción que muestra dónde ocurren eventos significativos (como errores, batería del dispositivo e interacciones del usuario) a lo largo de la reproducción. Esto permite a los usuarios desplazarse fácilmente hasta eventos clave arrastrando a lo largo de la línea de tiempo. También muestra visualmente el tiempo transcurrido entre eventos y tiene una función de zoom para que puedas acercar y distinguir fácilmente entre eventos que ocurrieron muy seguidos.
+
+* **Network:** Esta es una lista de todas las solicitudes de red iniciadas por la app mientras la grabación de la reproducción estaba activa. A medida que se reproduce el video, hay un indicador visual que recorre la tabla de solicitudes de red, destacando qué solicitudes ocurrieron antes o junto a ese punto del video. Cuando una solicitud falla, se resalta en rojo. También puedes hacer clic en la marca de tiempo en el extremo derecho de cada solicitud para ir a ese punto en el reproductor de la reproducción.
+
+* **Console:** Algunos mensajes de depuración que no pertenecen a la lista de breadcrumbs aparecerán aquí. Por ejemplo, un `console.log` personalizado en React Native. Los registros de [Logcat](/es/platforms/android/integrations/logcat/) y [Timber](/es/platforms/android/integrations/timber/) también son compatibles y aparecerán aquí.
+
+* **Errors:** Todos los errores que ocurrieron en la reproducción (incluidos en tu backend), con enlaces a los eventos correspondientes y [issues](/es/product/issues/issue-details/error-issues/), así como el impacto que estos issues han tenido de forma holística en todos los usuarios de tu aplicación, visible al pasar el cursor sobre el ID del issue.
+
+* **Tags:** Una lista completa de campos integrados y etiquetas personalizadas asociadas con una reproducción, como la versión y el nombre del sistema operativo, las especificaciones del dispositivo, la release y los detalles del usuario.
+
+* **Trace:** Una vista que conecta todas las [traces](/es/product/sentry-basics/tracing/distributed-tracing/#traces-transactions-and-spans) que ocurrieron durante la reproducción.
+
+<div id="supported-sdks">
+  ## SDK compatibles
+</div>
+
+Session Replay para dispositivos móviles está disponible actualmente para Android e iOS en ambos SDK nativos, así como para React Native y Flutter.
+
+Recomendamos actualizar a la versión más reciente, pero las versiones mínimas compatibles son:
+
+* [iOS](/es/platforms/apple/guides/ios/session-replay/), [8.43.0](https://github.com/getsentry/sentry-cocoa/releases)
+* [Android](/es/platforms/android/session-replay/), [7.20.0](https://github.com/getsentry/sentry-java/releases)
+* [React Native](/es/platforms/react-native/session-replay/), [6.5.0](https://github.com/getsentry/sentry-react-native/releases)
+* [Flutter](/es/platforms/dart/guides/flutter/session-replay/), [8.12.0](https://github.com/getsentry/sentry-dart/releases)
+
+<Include name="session-replay-for-backend-errors.mdx" />
+
+Asegúrate de tener configurada la [propagación de trazas](/es/product/sentry-basics/concepts/tracing/#trace-propagation) en tus proyectos de backend. Por ejemplo:
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.tracePropagationTargets = ["MyAppDomain.com"]
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.tracePropagationTargets = @[@"MyAppDomain.com"]
+}];
+```
+
+```java {tabTitle:Java}
+SentryAndroid.init(context, options -> {
+    final ArrayList<String> tracePropagationTargets = new ArrayList<>();
+    tracePropagationTargets.add("https://api.myproject.org/");
+
+    options.setDsn("___PUBLIC_DSN___");
+    options.setTracePropagationTargets(tracePropagationTargets);
+});
+```
+
+```kotlin {tabTitle:Kotlin}
+SentryAndroid.init(context, { options ->
+    options.setDsn("___PUBLIC_DSN___")
+    options.setTracePropagationTargets(listOf(
+        "https://api.myproject.org/"
+    ))
+})
+```
+
+```javascript {tabTitle:JavaScript}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___";
+  tracePropagationTargets: ["https://myproject.org", /^\/api\//],
+});
+```
+
+<Include name="reproduccion-de-sesion-para-soporte-de-backend.mdx" />
+
+<div id="frequently-asked-questions">
+  ## Preguntas frecuentes
+</div>
+
+**¿Cómo protegen los datos de los usuarios?**
+
+Sentry está enfocada en la privacidad, por lo que proteger los datos de los usuarios es siempre una prioridad. Por eso, de forma predeterminada, nuestra configuración de privacidad es muy estricta y oculta todo el texto e imágenes para garantizar que no se recopile información sensible de los usuarios. También ofrecemos depuración con limpieza del lado del servidor para filtrar adicionalmente en el servidor como medida de precaución.
+
+Además, ofrecemos la opción de eliminar por tu cuenta repeticiones individuales desde la interfaz.
+
+**¿Cuál es la sobrecarga de rendimiento del paquete Replay?**
+
+En la mayoría de las aplicaciones móviles, la sobrecarga de rendimiento de nuestro SDK de cliente será imperceptible para los usuarios finales. En nuestras propias pruebas, la sobrecarga no fue perceptible para los usuarios. Sin embargo, estas pruebas no fueron exhaustivas y podrías descubrir que la sobrecarga de grabación afecta negativamente el rendimiento de tu aplicación móvil según su complejidad.
+
+Para reducir la sobrecarga de rendimiento, solo tomamos capturas de pantalla cuando hay cambios en la pantalla. Nuestra tasa de fotogramas predeterminada es de 1 fotograma por segundo.
+Si experimentas degradaciones de rendimiento después de instalar Session Replay, abre un issue en GitHub para tu SDK correspondiente: [Android](https://github.com/getsentry/sentry-java/issues/new/choose), [iOS](https://github.com/getsentry/sentry-cocoa/issues/new/choose), [React Native](https://github.com/getsentry/sentry-react-native/issues/new/choose) y [Flutter](https://github.com/getsentry/sentry-dart/issues/new/choose).
+
+**¿Cuánto cuesta usar Session Replay para móviles?**
+
+Session Replay para móviles está disponible actualmente para todos los planes. Consulta nuestra [página de precios](https://sentry.io/pricing/) para más detalles.
+
+**¿Están disponibles las excepciones no controladas (por ejemplo, crashes) como parte de Session Replay para móviles?**
+
+Sí, Session Replay para móviles cubre excepciones controladas y no controladas, así como ANR/App Hangs y crashes nativos (NDK). Asegúrate de usar la versión más reciente del SDK como se menciona en [SDKs compatibles](#sdks-supported).
+
+**¿Cómo funciona Session Replay para móviles si mi app está sin conexión?**
+
+Session Replay para móviles actualmente admite el modo sin conexión solo cuando se especifica `onErrorSampleRate`. Cuando ocurre un error, el SDK capturará el segmento grabado hasta ese momento (hasta 30 segundos) y lo almacenará en disco. Cuando la aplicación vuelva a estar en línea, ese segmento se enviará a Sentry junto con el error.
+
+Actualmente, `sessionSampleRate` no es compatible en modo sin conexión. Suscríbete a este [issue de GitHub](https://github.com/getsentry/sentry/issues/68287) para recibir actualizaciones.

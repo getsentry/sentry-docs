@@ -1,0 +1,278 @@
+---
+title: Trazas de pila legibles
+description: >-
+  Aprende a obtener trazas con números de línea y rutas de archivo en Sentry con el SDK
+  para Godot Engine.
+og_image: /og-images/platforms-godot-configuration-stack-traces.png
+---
+
+[Las compilaciones oficiales de Godot Engine solo incluyen plantillas sin archivos de información de depuración](https://github.com/godotengine/godot-proposals/issues/1342). Esta guía explica cómo crear esas plantillas y usarlas para exportar tu proyecto con información de depuración completa disponible en Sentry.
+
+Los archivos de información de depuración permiten que Sentry extraiga trazas de pila y aporte información adicional a partir de informes de fallos. Para obtener trazas de pila que incluyan nombres de funciones, números de línea y rutas de archivo, Sentry necesita tener estos archivos de información de depuración disponibles al procesar los volcados de fallos. Para ello, debes exportar tu proyecto de Godot usando una plantilla de exportación que incluya información de depuración.
+
+<div id="prerequisites">
+  ## Requisitos previos
+</div>
+
+Para obtener información de depuración, debemos compilar plantillas de exportación con símbolos de depuración. Necesitarás Git, la herramienta de compilación SCons, Python y un compilador de C++ instalado para tu plataforma de destino.
+
+Para Android, también necesitarás el SDK de Android (las herramientas de línea de comandos son suficientes). En macOS, no uses el SDK de Android proporcionado por Homebrew, ya que no se instalará en una ubicación unificada.
+
+Asegúrate de contar con un compilador de C++ compatible. En Windows, por ejemplo, puedes usar [Visual Studio Community 2022](https://visualstudio.microsoft.com/) con la carga de trabajo de C++ instalada; GCC en Linux y Clang en macOS.
+
+Aquí tienes algunas formas de instalar la herramienta de compilación **SCons**:
+
+```PowerShell {tabTitle:Windows}
+# Si tienes `scoop` instalado:
+scoop install scons
+```
+
+```bash {tabTitle:macOS}
+# Si tienes Homebrew instalado:
+brew install scons
+```
+
+```bash {tabTitle:Arch Linux}
+pacman -S scons
+```
+
+```bash {tabTitle:Ubuntu/Debian}
+sudo apt install scons
+```
+
+```bash {tabTitle:Using Python}
+# Instalar con una instalación de Python existente:
+python -m pip install scons
+
+# Actualizar:
+python -m pip install --upgrade scons
+```
+
+Para compilar en macOS también debes instalar el [Vulkan SDK](https://sdk.lunarg.com/sdk/download/latest/mac/vulkan-sdk.dmg).
+
+<Alert>
+  Para más información, consulta [Compilación desde el código fuente](https://docs.godotengine.org/en/stable/engine_details/development/compiling/index.html) en la documentación oficial de Godot. Incluye instrucciones detalladas para compilar Godot en diferentes plataformas y con distintas herramientas. Esta guía ofrece instrucciones simplificadas adaptadas a nuestro caso de uso y puede omitir algunos detalles que puedas necesitar.
+</Alert>
+
+<div id="getting-godot-source">
+  ## Obtener el código fuente de Godot
+</div>
+
+Empieza en una terminal con Git disponible. Clona el repositorio de Godot Engine y cambia a tu [etiqueta de versión preferida](https://github.com/godotengine/godot/releases) (o rama):
+
+```bash
+git clone https://github.com/godotengine/godot
+cd godot
+git checkout 4.5-stable
+```
+
+<Expandable title="Configuración adicional para Android">
+  Para compilar en Android, Godot requiere la biblioteca de control del ritmo de fotogramas Swappy. Descarga la biblioteca precompilada desde [https://github.com/godotengine/godot-swappy/releases](https://github.com/godotengine/godot-swappy/releases) y extrae el contenido del archivo en el directorio `thirdparty/swappy-frame-pacing/` dentro del árbol de código fuente de Godot que clonaste.
+</Expandable>
+
+<div id="compiling-templates">
+  ## Compilar plantillas
+</div>
+
+Para compilar las plantillas de exportación de Godot con símbolos de depuración, ejecuta los siguientes comandos:
+
+```bash {tabTitle:Windows/Linux}
+scons target=template_release production=yes debug_symbols=yes separate_debug_symbols=yes
+```
+
+```bash {tabTitle:macOS}
+scons target=template_release platform=macos arch=x86_64 production=yes debug_symbols=yes separate_debug_symbols=yes
+scons target=template_release platform=macos arch=arm64 production=yes debug_symbols=yes separate_debug_symbols=yes generate_bundle=yes
+```
+
+```bash {tabTitle:iOS}
+scons target=template_debug platform=ios production=yes debug_symbols=yes separate_debug_symbols=yes
+scons target=template_release platform=ios production=yes debug_symbols=yes separate_debug_symbols=yes generate_bundle=yes
+```
+
+```bash {tabTitle:Android}
+scons target=template_debug platform=android arch=arm32 production=yes debug_symbols=yes separate_debug_symbols=yes
+scons target=template_debug platform=android arch=arm64 production=yes debug_symbols=yes separate_debug_symbols=yes
+scons target=template_release platform=android arch=arm32 production=yes debug_symbols=yes separate_debug_symbols=yes
+scons target=template_release platform=android arch=arm64 production=yes debug_symbols=yes separate_debug_symbols=yes generate_android_binaries=yes
+```
+
+<Expandable title="Opciones explicadas">
+  * `target`: destino de compilación (p. ej., &quot;editor&quot; o &quot;template&#95;release&quot;)
+  * `arch`: arquitectura para compilar (p. ej., &quot;x86&#95;64&quot; o &quot;arm64&quot;)
+  * `production`: establece valores predeterminados de compilación para producción
+  * `debug_symbols`: incluye símbolos de depuración en la compilación
+  * `separate_debug_symbols`: extrae los símbolos a un archivo separado
+  * `generate_bundle`: genera un paquete de la aplicación (`godot_macos.zip` para macOS o `godot_ios.zip` para iOS)
+  * `generate_android_binaries`: genera AAR de plantilla para Android y un proyecto de plantilla de Gradle cuando finaliza la compilación (`android_source.zip`)
+
+  Para más información, ejecuta: `scons --help`
+</Expandable>
+
+Después de una compilación correcta, los archivos de las plantillas de exportación se generarán en el directorio `bin/` dentro del árbol de código fuente de Godot:
+
+**Windows (MSVC):** Encontrarás archivos ejecutables `.exe` junto a los archivos `.pdb` correspondientes que contienen la información de depuración.
+
+**macOS:** La compilación genera `godot_macos.zip`, que contiene un binario universal compatible con las arquitecturas x86&#95;64 y ARM64. Además, verás dos carpetas `.dSYM` separadas (paquetes de símbolos de depuración) para cada arquitectura.
+
+**iOS:** La compilación genera `godot_ios.zip`, que contiene frameworks universales con bibliotecas estáticas y archivos de proyecto de Xcode para las configuraciones de exportación de release y debug.
+
+**Android:** La compilación produce `android_source.zip`, que contiene la plantilla de compilación de Gradle con las bibliotecas de plantilla de exportación compiladas. Además, la compilación genera los archivos `android-template-release-native-symbols.zip` y `android-template-debug-native-symbols.zip`, que contienen los símbolos de depuración correspondientes para cada variante de plantilla.
+
+<Alert>
+  Obtén más información sobre los formatos de depuración en [Debug Information Files](/es/platforms/native/data-management/debug-files/).
+</Alert>
+
+<div id="exporting-project">
+  ## Exportar el proyecto
+</div>
+
+Con tus plantillas personalizadas compiladas, ahora puedes exportar tu proyecto con símbolos de depuración. Abre el diálogo de **Export** de Godot y configúralo así:
+
+1. Selecciona o agrega un ajuste preestablecido de exportación para tu plataforma de destino.
+
+2. Activa **Advanced Options** en la esquina superior derecha del diálogo.
+
+3. Configura la plantilla personalizada en la pestaña **Options**:
+
+   **Para Windows/Linux:**
+
+   * Busca la sección **Custom Template**
+   * En **Release**, busca y selecciona el ejecutable de la plantilla compilada en el directorio `bin/`
+
+   **Para macOS**
+
+   * Busca la sección **Custom Template**
+   * En **Release**, busca y selecciona el paquete `godot_macos.zip` en el directorio `bin/`
+
+   **Para iOS:**
+
+   * Busca la sección **Custom Template**
+   * En **Release** y **Debug**, busca y selecciona el mismo paquete `godot_ios.zip` en el directorio `bin/`
+
+   **Para Android:**
+
+   * Activa **Gradle Build** en la sección **Gradle**
+   * Configura **Android Source Template** para que apunte al archivo `android_source.zip` generado durante la compilación
+   * Instala la plantilla de compilación de Android yendo a **Project &gt; Install Android Build Template...** en el menú del editor
+
+Una vez configurado, tu ajuste preestablecido de exportación usará la plantilla personalizada que contiene la información de depuración necesaria para obtener rastreos de pila legibles en Sentry.
+
+![Export Dialog](./imgs/godot_export_dialog.png)
+
+Ahora deberías poder exportar tu proyecto usando esta plantilla. Asegúrate de desmarcar `Export with Debug` en el diálogo **Export Project...**, ya que necesitarás compilar y usar `template_debug` para esa opción.
+
+<Alert>
+  Si necesitas `Export with Debug`, puedes compilar una plantilla de depuración usando la opción `target=template_debug`. Las plantillas de depuración habilitan funciones de depuración en tu exportación, como puntos de interrupción y soporte para el depurador, pero rinden más lento que una compilación de release; por lo tanto, no se recomiendan al distribuir el juego a usuarios finales.
+</Alert>
+
+<div id="uploading-debug-symbols">
+  ## Carga de símbolos de depuración
+</div>
+
+Para obtener trazas de pila legibles en Sentry, también necesitas cargar tus símbolos de depuración. La forma más fácil de hacerlo es usando [Sentry CLI](/es/cli/). Esta herramienta te permite subir la información de depuración necesaria, haciendo que las trazas de pila sean útiles para depurar.
+
+<Expandable title="Instalar Sentry CLI">
+  ```PowerShell {tabTitle:Windows}
+  # En Windows, si tienes `scoop` instalado:
+  scoop install sentry-cli
+  ```
+
+  ```bash {tabTitle:macOS}
+  # En macOS, si tienes Homebrew instalado:
+  brew install getsentry/tools/sentry-cli
+  ```
+
+  ```bash {tabTitle:Arch Linux}
+  pacman -S sentry-cli
+  ```
+
+  ```npm {tabTitle:npm}
+  npm install @sentry/cli
+  ```
+
+  Para otros métodos, consulta [Instalación de Sentry CLI](/es/cli/installation/).
+</Expandable>
+
+Inicia sesión en Sentry mediante la CLI ejecutando el siguiente comando:
+
+```bash
+sentry-cli login
+```
+
+Se te pedirá que crees un token de autenticación en tu navegador. Sigue las instrucciones, genera el token y luego pégalo en la terminal cuando se te solicite.
+
+Para mostrar el contexto de código en línea en Sentry, `sentry-cli` puede escanear los archivos de depuración en busca de referencias al código fuente, resolverlas localmente y crear un archivo comprimido con todos los archivos de código referenciados llamado *source bundle*. `sentry-cli` puede crear el source bundle durante la carga de los archivos de información de depuración.
+
+Para subir a Sentry los archivos de información de depuración con el código fuente incluido, ejecuta el siguiente comando:
+
+```bash {tabTitle:Bash/PowerShell}
+sentry-cli debug-files upload --include-sources --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ bin
+```
+
+Esto sube archivos de información de depuración desde el directorio `bin` a Sentry, creando los paquetes de código fuente sobre la marcha.
+
+<Alert title="Nota importante para iOS">
+  Para proyectos de iOS, primero debes exportar el proyecto a un directorio y luego ejecutar el comando `sentry-cli debug-files upload` en ese directorio exportado en lugar del directorio `bin/`. Esto es necesario porque Godot usa un proyecto de Xcode con bibliotecas estáticas para las exportaciones de iOS, y los símbolos de depuración solo están disponibles una vez que finaliza el proceso de compilación de la exportación.
+</Alert>
+
+<Expandable title="Generar archivos de paquete de código fuente por separado">
+  También puedes crear los paquetes de código fuente por separado del paso de subida ejecutando:
+
+  ```PowerShell {tabTitle:Windows}
+  sentry-cli debug-files bundle-sources bin\godot.windows.template_release.x86_64.pdb
+  sentry-cli debug-files bundle-sources bin\godot.windows.template_release.x86_64.console.pdb
+  ```
+
+  ```bash {tabTitle:macOS}
+  sentry-cli debug-files bundle-sources bin/godot.macos.template_release.x86_64.dSYM
+  mv bin/godot.macos.template_release.src.zip bin/godot.macos.template_release.x86_64.src.zip
+  sentry-cli debug-files bundle-sources bin/godot.macos.template_release.arm64.dSYM
+  mv bin/godot.macos.template_release.src.zip bin/godot.macos.template_release.arm64.src.zip
+  ```
+
+  ```bash {tabTitle:Linux}
+  sentry-cli debug-files bundle-sources bin/godot.linuxbsd.template_release.x86_64.debugsymbols
+  ```
+</Expandable>
+
+Ejemplo de salida:
+
+```PowerShell
+$ sentry-cli debug-files upload --include-sources --org my-sentry-org --project my-game bin
+> Se encontraron 4 archivos de información de depuración
+  WARN    2025-05-12 12:03:13.130458600 -07:00 El archivo fuente excedió el límite máximo de tamaño de elemento (1572415). C:\Program Files (x86)\Windows Kits\10\include\10.0.22621.0\shared\winerror.h
+  WARN    2025-05-12 12:03:14.535023400 -07:00 El archivo fuente excedió el límite máximo de tamaño de elemento (1572415). C:\Program Files (x86)\Windows Kits\10\include\10.0.22621.0\shared\winerror.h
+  WARN    2025-05-12 12:03:15.349655900 -07:00 El archivo fuente excedió el límite máximo de tamaño de elemento (1152425). C:\Program Files (x86)\Windows Kits\10\include\10.0.22621.0\um\shobjidl_core.h
+  WARN    2025-05-12 12:03:15.947910200 -07:00 El archivo fuente excedió el límite máximo de tamaño de elemento (1145069). C:\Users\user\Projects\godot\4.4.1-stable\thirdparty\ufbx\ufbx.c
+> Se resolvió el código fuente para 2 archivos de información de depuración
+> Archivos de información de depuración preparados para carga
+> Carga completada en 10.049s
+> Se cargaron 6 archivos de información de depuración faltantes
+> Carga de archivos completa:
+
+  UPLOADED efc658cd-7481-4a15-93a5-9f8fa2b6c8a3-1 (godot.windows.template_release.x86_64.pdb; x86_64 sources)
+  UPLOADED efc658cd-7481-4a15-93a5-9f8fa2b6c8a3-1 (godot.windows.template_release.x86_64.pdb; x86_64 debug companion)
+  UPLOADED 050f8915-6eae-4054-8062-b90d75593f3a-1 (godot.windows.template_release.x86_64.console.pdb; x86_64 sources)
+  UPLOADED efc658cd-7481-4a15-93a5-9f8fa2b6c8a3-1 (godot.windows.template_release.x86_64.exe; x86_64 executable)
+  UPLOADED 050f8915-6eae-4054-8062-b90d75593f3a-1 (godot.windows.template_release.x86_64.console.exe; x86_64 executable)
+  UPLOADED 050f8915-6eae-4054-8062-b90d75593f3a-1 (godot.windows.template_release.x86_64.console.pdb; x86_64 debug companion)
+```
+
+<Alert>
+  Es posible que algunos archivos del código fuente del motor Godot de más de 10 MiB se excluyan del paquete. Verás advertencias al respecto en la salida de la consola. Aunque no supone un problema, los stack frames que apunten a esos archivos no mostrarán el contexto del código en línea.
+
+  Para obtener más información, consulta la documentación de [Sentry CLI](/es/cli/).
+</Alert>
+
+También puedes cargar archivos de depuración del propio SDK de Sentry ejecutando el siguiente comando desde el directorio de tu proyecto:
+
+```bash {tabTitle:Bash/PowerShell}
+sentry-cli debug-files upload --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ addons/sentry/
+```
+
+Esto sube los archivos de depuración del SDK a Sentry. Puedes repetir este paso para cualquier otra extensión nativa que uses en tu proyecto de Godot.
+
+¡Felicidades! Ya está todo listo. Tu proyecto exportado ahora debería generar trazas de pila simbolicadas en Sentry.
+
+![Problema simbolicado](./imgs/symbolicated_issue.png)

@@ -1,0 +1,108 @@
+---
+title: Instrumentación automática
+description: "Descubre qué instrumentación captura transacciones automáticamente."
+sidebar_order: 10
+---
+
+El SDK de Symfony incluye integraciones de trazado habilitadas de forma predeterminada. Para usarlas, actualiza a la última versión del SDK.
+
+Si los componentes (DBAL, Cache, Twig y el cliente HTTP) están instalados, `enabled` se establecerá en `true`, por lo que es probable que esta configuración sea la misma en tu aplicación.
+
+Estas integraciones se conectan a rutas críticas del framework y de los componentes. Como resultado, puede haber un impacto en el rendimiento. Si estás actualizando desde una versión anterior o instalando el SDK, podrías observar una degradación del rendimiento de tu aplicación, aunque puede que no sea perceptible. Si necesitas desactivar el trazado, puedes hacerlo estableciendo `enabled` en `false`.
+
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+  tracing:
+    enabled: true
+    dbal: # Consultas de base de datos
+      enabled: true
+    cache: # pools de caché
+      enabled: true
+    twig: # motor de plantillas
+      enabled: true
+    http_client: # Cliente HTTP de Symfony
+      enabled: true
+```
+
+Puedes ajustar las integraciones a tus necesidades si quieres desactivar una integración en particular.
+
+
+<div id="dbal">
+  ## DBAL
+</div>
+
+Esta integración permite rastrear las consultas a la base de datos como Spans. Al habilitar esta opción, se crearán Spans para tus consultas.
+
+Está activada de forma predeterminada. Para desactivar el seguimiento de consultas de base de datos, establece `enabled` en `false`.
+
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+  tracing:
+    dbal: # Consultas de base de datos
+      enabled: false
+```
+
+
+<div id="twig">
+  ## Twig
+</div>
+
+Esta integración añade trazado distribuido del renderizado de plantillas Twig con Sentry.
+
+Viene habilitada por defecto. Para desactivarla, establece `enabled` en `false`.
+
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+  tracing:
+    twig: # motor de plantillas
+      enabled: false
+```
+
+
+<div id="cache">
+  ## Caché
+</div>
+
+Esta integración agrega compatibilidad con el rastreo distribuido de pools de caché.
+
+Está habilitada de forma predeterminada. Para deshabilitarla, establece `enabled` en `false`.
+
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+  tracing:
+    cache: # pools de caché
+      enabled: false
+```
+
+
+<div id="http-client">
+  ## Cliente HTTP
+</div>
+
+Esta integración añade compatibilidad con el rastreo distribuido del cliente HTTP de Symfony.
+
+Está habilitada de forma predeterminada. Para deshabilitarla, establece `enabled` en `false`.
+
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+  tracing:
+    http_client: # Cliente HTTP de Symfony
+      enabled: false
+```
+
+Dado que el rastreo del cliente HTTP se basa en el [TraceableHttpClient](https://github.com/symfony/symfony/blob/558fec00b0fa92dc1499434355e5a35de162bbe7/src/Symfony/Component/HttpClient/TraceableHttpClient.php) de Symfony, ten en cuenta lo siguiente:
+
+* Usar el rastreo del cliente HTTP no ejecutará tus solicitudes de manera concurrente.
+* Para obtener mediciones de spans correctas, no asignes la respuesta de la solicitud a una variable si no piensas usarla.
+
+```php
+// Forma correcta
+$this->client->request('GET',
+    'https://example.com'
+);
+
+// Forma incorrecta
+$response = $this->client->request('GET',
+    'https://example.com'
+);
+```

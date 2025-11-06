@@ -1,0 +1,183 @@
+---
+title: Paquete de NPM
+description: >-
+  Aprende a instalar el paquete de NPM Sentry AWS para usar Sentry en tus
+  funciones Lambda
+sidebar_order: 2
+og_image: /og-images/platforms-javascript-guides-aws-lambda-install-npm.png
+---
+
+En esta guía aprenderás a configurar el SDK `@sentry/aws-serverless` para funciones de AWS Lambda usando NPM.
+Recomendamos iniciar el SDK automáticamente mediante variables de entorno para que solo tengas que hacer cambios mínimos en el código de tu función Lambda.
+Si necesitas más control sobre la configuración del SDK, también puedes [inicializarlo en el código](#option-b-manual-setup).
+
+Sin embargo, tendrás que modificar tu código y desplegar las dependencias de Sentry junto con el código de tu función. Si buscas la forma más sencilla de configurar Sentry, usa la [capa de Lambda](../layer).
+
+<div id="1-prerequisites">
+  ## 1. Requisitos previos
+</div>
+
+Antes de comenzar, asegúrate de contar con lo siguiente:
+
+* Tienes una función Lambda implementada en AWS.
+* Puedes implementar las dependencias (es decir, `node_modules`) junto con el código de tu función en AWS Lambda.
+
+<div id="2-install">
+  ## 2. Instalación
+</div>
+
+Además de capturar errores, puedes supervisar las interacciones entre varios servicios o aplicaciones al [habilitar el tracing](/es/concepts/key-terms/tracing/). También puedes recopilar y analizar perfiles de rendimiento de usuarios reales con [profiling](/es/product/explore/profiling/).
+
+Selecciona qué funciones de Sentry quieres instalar además de Error Monitoring para obtener a continuación las instrucciones correspondientes de instalación y configuración.
+
+<OnboardingOptionButtons options={["error-monitoring", "performance", "profiling"]} />
+
+Instala el SDK `@sentry/aws-serverless` con el gestor de paquetes de tu preferencia:
+
+<OnboardingOption optionId="profiling" hideForThisOption>
+  ```bash {tabTitle:npm}
+  npm install @sentry/aws-serverless
+  ```
+
+  ```bash {tabTitle:yarn}
+  yarn add @sentry/aws-serverless
+  ```
+
+  ```bash {tabTitle:pnpm}
+  pnpm add @sentry/aws-serverless
+  ```
+</OnboardingOption>
+
+<OnboardingOption optionId="profiling">
+  ```bash {tabTitle:npm}
+  npm install @sentry/aws-serverless @sentry/profiling-node
+  ```
+
+  ```bash {tabTitle:yarn}
+  yarn add @sentry/aws-serverless @sentry/profiling-node
+  ```
+
+  ```bash {tabTitle:pnpm}
+  pnpm add @sentry/aws-serverless @sentry/profiling-node
+  ```
+</OnboardingOption>
+
+<div id="3-setup-options">
+  ## 3. Opciones de configuración
+</div>
+
+<div id="option-a-automatic-setup-recommended">
+  ### Opción A: Configuración automática (recomendada)
+</div>
+
+Configura las siguientes variables de entorno en la configuración de tu función Lambda:
+
+```bash
+NODE_OPTIONS="--import @sentry/aws-serverless/awslambda-auto"
+SENTRY_DSN="___PUBLIC_DSN___"
+# ___PRODUCT_OPTION_START___ performance
+SENTRY_TRACES_SAMPLE_RATE="1.0"
+# ___PRODUCT_OPTION_END___ performance
+```
+
+Para configurar variables de entorno, ve a tu función de Lambda, selecciona **Configuration** y luego **Environment variables**:
+
+![](./img/env_vars.png)
+
+¡Listo! Asegúrate de volver a desplegar tu función y todo quedará en orden.
+
+<div id="option-b-manual-setup">
+  ### Opción B: Configuración manual
+</div>
+
+Para personalizar aún más la configuración del SDK, también puedes inicializarlo manualmente en tu función Lambda. La ventaja de este método de instalación es que puedes personalizar por completo la configuración del SDK de Sentry en una llamada a `Sentry.init`.
+
+Crea un archivo nuevo, por ejemplo `instrument.js`, para inicializar el SDK:
+
+```javascript {filename:instrument.js} {tabTitle:CommonJS}
+const Sentry = require("@sentry/aws-serverless");
+// ___PRODUCT_OPTION_START___ profiling
+const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+// ___PRODUCT_OPTION_END___ profiling
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Agrega encabezados de solicitud e IP para usuarios, para más información visita:
+  // https://docs.sentry.io/platforms/javascript/guides/aws-lambda/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ profiling
+  integrations: [nodeProfilingIntegration()],
+
+  // ___PRODUCT_OPTION_END___ profiling
+  // ___PRODUCT_OPTION_START___ performance
+  // Agrega Tracing configurando tracesSampleRate y agregando la integración
+  // Establece tracesSampleRate en 1.0 para capturar el 100% de las transacciones
+  // Recomendamos ajustar este valor en producción
+  // Más información en
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ profiling
+
+  // Establece la tasa de muestreo para profiling - esto es relativo a tracesSampleRate
+  profilesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ profiling
+});
+```
+
+```javascript {filename:instrument.mjs} {tabTitle:ESM}
+import * as Sentry from "@sentry/aws-serverless";
+// ___PRODUCT_OPTION_START___ profiling
+import { nodeProfilingIntegration } from "@sentry/profiling-node";
+// ___PRODUCT_OPTION_END___ profiling
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Agrega encabezados de solicitud e IP de usuarios, para más información visita:
+  // https://docs.sentry.io/platforms/javascript/guides/aws-lambda/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+  // ___PRODUCT_OPTION_START___ profiling
+  integrations: [nodeProfilingIntegration()],
+
+  // ___PRODUCT_OPTION_END___ profiling
+  // ___PRODUCT_OPTION_START___ performance
+  // Agrega Tracing configurando tracesSampleRate y agregando la integración
+  // Establece tracesSampleRate en 1.0 para capturar el 100% de las transacciones
+  // Recomendamos ajustar este valor en producción
+  // Más información en
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ profiling
+
+  // Establece la tasa de muestreo para profiling - es relativo a tracesSampleRate
+  profilesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ profiling
+});
+```
+
+<div id="load-the-sdk">
+  ##### Cargar el SDK
+</div>
+
+Para cargar el SDK antes de que se inicie tu función, debes precargar `instrument.js` estableciendo la variable de entorno `NODE_OPTIONS`:
+
+```bash
+NODE_OPTIONS="--import ./instrument.js"
+```
+
+Para configurar variables de entorno, ve a tu función de Lambda, selecciona **Configuration** y luego **Environment variables**.
+
+¡Listo! Asegúrate de volver a implementar tu función y ya está.
+
+<div id="using-the-v7-sdk">
+  ## Uso del SDK v7
+</div>
+
+Las instrucciones anteriores están escritas para la versión más reciente del SDK.
+
+**Para funciones CommonJS:** En las versiones del SDK anteriores a la 8, el paquete `@sentry/aws-serverless` se llamaba `@sentry/serverless`. Si usas una versión anterior, puedes seguir esta guía, pero reemplaza el paquete por `@sentry/serverless`.
+
+**Para funciones ESM:** El SDK v7 de `@sentry/serverless` no funciona correctamente con funciones Lambda basadas en ESM. Actualiza al SDK más reciente y sigue las instrucciones anteriores.

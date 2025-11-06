@@ -1,0 +1,177 @@
+---
+title: Zerolog
+description: "Zerolog es una biblioteca de logging rápida y eficiente para Go, diseñada para registro estructurado. Esta guía muestra cómo integrar Zerolog con Sentry."
+---
+
+Para ver un ejemplo completo, visita el [repositorio del código fuente del SDK de Go](https://github.com/getsentry/sentry-go/tree/master/_examples/zerolog).
+
+También tienes disponible la [documentación de la API al estilo Go Dev](https://pkg.go.dev/github.com/getsentry/sentry-go/zerolog).
+
+<div id="install">
+  ## Instalación
+</div>
+
+```bash
+go get github.com/getsentry/sentry-go
+go get github.com/getsentry/sentry-go/zerolog
+```
+
+<Break />
+
+
+<div id="configure">
+  ## Configuración
+</div>
+
+<div id="initialize-the-sentry-sdk">
+  ### Inicializa el SDK de Sentry
+</div>
+
+<PlatformContent includePath="getting-started-config" />
+
+<div id="options">
+  ### Opciones
+</div>
+
+sentryzerolog ofrece opciones para configurar la integración con Sentry. Requiere un `sentryzerolog.Config` que incluya `sentry.ClientOptions` y `sentryzerolog.Options`.
+La estructura `sentryzerolog.Options` tiene los siguientes campos:
+
+```go
+// Levels especifica los niveles de registro que activarán el envío de eventos a Sentry.
+// Solo se enviarán los mensajes de registro de estos niveles. Por defecto, los niveles son
+// Error, Fatal y Panic.
+Levels []zerolog.Level
+
+// WithBreadcrumbs, cuando está habilitado, añade entradas de registro como breadcrumbs en Sentry.
+// Los breadcrumbs proporcionan un rastro de eventos previos a un error, lo cual puede
+// ser invaluable para comprender el contexto de los problemas.
+WithBreadcrumbs bool
+
+// FlushTimeout establece la duración máxima permitida para el envío de eventos a Sentry.
+// Este es el límite de tiempo dentro del cual todos los eventos pendientes deben enviarse a Sentry
+// antes de que la aplicación finalice. Un uso típico es asegurar que todos los registros se envíen antes del
+// cierre de la aplicación. El timeout predeterminado suele ser de 3 segundos.
+FlushTimeout time.Duration
+```
+
+
+<div id="verify">
+  ## Verificar
+</div>
+
+```go
+// Configurar Zerolog para usar Sentry como escritor
+sentryWriter, err := sentryzerolog.New(sentryzerolog.Config{
+	ClientOptions: sentry.ClientOptions{
+		Dsn: "___PUBLIC_DSN___",
+	},
+	Options: sentryzerolog.Options{
+		Levels:          []zerolog.Level{zerolog.ErrorLevel, zerolog.FatalLevel, zerolog.PanicLevel},
+		WithBreadcrumbs: true,
+		FlushTimeout:    3 * time.Second,
+	},
+})
+if err != nil {
+	log.Fatal().Err(err).Msg("falló la creación del escritor de sentry")
+}
+defer sentryWriter.Close()
+
+// Usar el escritor de Sentry en Zerolog
+log.Logger = log.Output(zerolog.MultiLevelWriter(zerolog.ConsoleWriter{Out: os.Stderr}, sentryWriter))
+
+// Prueba de registro - esto se enviará a Sentry como evento
+log.Error().Msg("¡Este error se enviará a Sentry!")
+
+// Ejemplo de registro con contexto de error
+log.Error().Err(errors.New("error de prueba")).Msg("Ocurrió un error")
+```
+
+
+<div id="usage">
+  ## Uso
+</div>
+
+Para integrar Sentry con Zerolog, debes configurar un writer personalizado que envíe los logs a Sentry según los niveles definidos.
+
+```go
+import (
+	"errors"
+	"time"
+	"os"
+
+	"github.com/getsentry/sentry-go"
+	sentryzerolog "github.com/getsentry/sentry-go/zerolog"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+)
+
+func main() {
+	// Inicializar Sentry
+	err := sentry.Init(sentry.ClientOptions{
+		Dsn: "___PUBLIC_DSN___",
+		// Agrega encabezados de solicitud e IP de usuarios,
+		// visita: https://docs.sentry.io/platforms/go/data-management/data-collected/ para más info
+		SendDefaultPII: true,
+		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+			// Modificar o filtrar eventos antes de enviarlos a Sentry
+			return event
+		},
+		Debug:            true,
+		AttachStacktrace: true,
+	})
+	if err != nil {
+		log.Fatal().Err(err).Msg("falló la inicialización de sentry")
+	}
+	defer sentry.Flush(2 * time.Second)
+
+	// Configurar Zerolog para usar Sentry como escritor
+	sentryWriter, err := sentryzerolog.New(sentryzerolog.Config{
+		ClientOptions: sentry.ClientOptions{
+			Dsn: "___PUBLIC_DSN___",
+		},
+		Options: sentryzerolog.Options{
+			Levels:          []zerolog.Level{zerolog.ErrorLevel, zerolog.FatalLevel, zerolog.PanicLevel},
+			WithBreadcrumbs: true,
+			FlushTimeout:    3 * time.Second,
+		},
+	})
+	if err != nil {
+		log.Fatal().Err(err).Msg("no se pudo crear el escritor de sentry")
+	}
+	defer sentryWriter.Close()
+
+	// Usar el escritor de Sentry en Zerolog
+	log.Logger = log.Output(zerolog.MultiLevelWriter(zerolog.ConsoleWriter{Out: os.Stderr}, sentryWriter))
+
+	// Registrar una entrada InfoLevel en STDERR (no se envía a Sentry)
+	log.Info().Msg("La aplicación ha iniciado")
+
+	// Registrar una entrada ErrorLevel en STDERR y Sentry
+	log.Error().Msg("¡oh no!")
+
+	// Registrar una entrada FatalLevel en STDERR, enviar a Sentry y terminar la aplicación
+	log.Fatal().Err(errors.New("no se puede continuar")).Msg("ocurrió un error fatal")
+}
+```
+
+
+<div id="using-hubprovider-for-scoped-sentry-hubs">
+  ### Uso de `hubProvider` para hubs de Sentry con alcance
+</div>
+
+El hubProvider te permite configurar el hook de Sentry para usar un hub personalizado. Esto es especialmente útil cuando quieres acotar los registros a goroutines u operaciones específicas, lo que permite una agrupación y un contexto más precisos en Sentry.
+
+Puedes establecer una función hubProvider personalizada usando el método SetHubProvider:
+
+```go
+sentryHook.SetHubProvider(func() *sentry.Hub {
+    // Crear o devolver un hub de Sentry específico
+    return sentry.NewHub(sentry.GetCurrentHub().Client(), sentry.NewScope())
+})
+```
+
+Esto garantiza que los registros de contextos o hilos específicos usen el hub y el scope de Sentry adecuados.
+
+Usa Zerolog como de costumbre, y enviará automáticamente a Sentry los registros en o por encima de los niveles especificados.
+
+Nota: Asegúrate de vaciar Sentry antes de que la aplicación se cierre para evitar perder eventos pendientes.

@@ -1,0 +1,121 @@
+---
+title: Solución de problemas
+description: "Diagnostica y resuelve problemas comunes con el SDK de Capacitor."
+keywords: ["versión mínima", "destino de implementación"]
+sidebar_order: 9000
+---
+
+<div id="support-16-kb-page-sizes-on-android">
+  ## Compatibilidad con tamaños de página de 16 KB en Android
+</div>
+
+A partir de Android 15, AOSP admite dispositivos con un tamaño de página de 16 KB. Si tu app usa bibliotecas del NDK (directamente o a través de un SDK), tendrás que volver a compilarla para garantizar la compatibilidad con estos dispositivos.
+
+Actualiza a Sentry Capacitor SDK versión `1.5.0` o superior para admitir tamaños de página de 16 KB en dispositivos Android.
+
+Consulta la [documentación para desarrolladores de Android](https://developer.android.com/guide/practices/page-sizes) para actualizar y probar tu app con compatibilidad con tamaños de página de 16 KB.
+
+<div id="different-versions-for-sibling-sdks">
+  ## Versiones diferentes para SDKs relacionados
+</div>
+
+Si ves el siguiente error durante la compilación, los SDK relacionados instalados en tu app tienen versiones incompatibles:
+
+```javascript
+  node_modules/@sentry/types/types/globals.d.ts:2:11 - error TS2451: No se puede redeclarar la variable '__DEBUG_BUILD__' con ámbito de bloque.
+```
+
+Para evitar problemas al instalar paquetes o usar el código en otra máquina, debes usar la misma versión de Sentry Capacitor y @Sentry/Angular (o cualquier otro SDK relacionado) que exige la peer dependency de Sentry Capacitor en tu app.
+
+Correcto:
+
+```xml
+    "@sentry/angular": "7.13.0",
+    "@sentry/capacitor": "0.10.1"
+```
+
+Incorrecto:
+
+```xml
+    "@sentry/angular": "^7.13.0",
+    "@sentry/capacitor": "^0.10.1"
+```
+
+Puedes comprobar qué versión del SDK relacionado está instalada con el siguiente comando: `npm info @sentry/capacitor peerDependencies`.
+
+
+<div id="capacitor-2-on-ios">
+  ## Capacitor 2 en iOS
+</div>
+
+Capacitor 3 requiere como mínimo iOS 12.0. Por lo tanto, el SDK de Sentry debe cumplir con este requisito para ser compatible con Capacitor 3. Los usuarios en versiones anteriores pueden encontrarse con un error similar a:
+
+> Se encontraron especificaciones que satisfacen la dependencia SentryCapacitor (desde ../../node&#95;modules/@sentry/capacitor), pero requerían un destino de implementación mínimo más alto.
+
+Puedes solucionar esto aumentando el destino de implementación de iOS. Agrega el siguiente fragmento a tu `capacitor.config.json`:
+
+```json
+// capacitor.config.json
+{
+  "ios": {
+    "minVersion": "12.0"
+  }
+}
+```
+
+Luego, actualiza la configuración de iOS:
+
+```bash
+npx cap sync
+```
+
+
+<div id="capacitor-on-android">
+  ## Capacitor para Android
+</div>
+
+<div id="no-events-sent">
+  ### No se enviaron eventos
+</div>
+
+Comprueba si agregaste `SentryCapacitor` al bridge. Este paso es obligatorio en Capacitor 2 y opcional en Capacitor 3. (Solo es necesario si estás inicializando otros plugins con el método antiguo. En ese caso, te recomendamos usar `registerPlugin` en lugar del código en desuso para inicializar plugins.)
+
+```java
+import io.sentry.capacitor.SentryCapacitor;
+
+public class MainActivity extends BridgeActivity {
+  @Override
+  public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+
+    // Capacitor 3
+    registerPlugin(SentryCapacitor.class);
+
+    // Capacitor 2
+    this.init(savedInstanceState, new ArrayList<Class<? extends Plugin>>() {{
+      add(SentryCapacitor.class);
+    }});
+  }
+}
+```
+
+
+<div id="capacitor-on-ios">
+  ## Capacitor en iOS
+</div>
+
+<div id="capacitor-sync-failing">
+  ### Error de sincronización de Capacitor
+</div>
+
+Si te aparece el siguiente error:
+
+```
+CocoaPods no pudo encontrar versiones compatibles para el pod "Sentry"
+```
+
+Puedes solucionar esto actualizando tu repositorio de pods:
+
+```bash
+pod repo update
+```

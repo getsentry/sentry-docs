@@ -1,0 +1,17 @@
+---
+title: Pruebas unitarias
+sidebar_order: 20
+description: "Aprende sobre las pruebas unitarias con `ISentryClient` e `IHub`."
+---
+
+Si no quieres acoplar tu código a una clase estática como `SentrySdk`, especialmente para que tu código sea testeable, puedes usar dos abstracciones:
+
+- `ISentryClient`: expone el método `CaptureEvent` y su implementación, `SentryClient`, se encarga de poner en cola el evento para enviarlo a Sentry. También abstrae el transporte interno.
+- `IHub`: mantiene un cliente y el [scope](../enriching-events/scopes/) actual. De hecho, extiende `ISentryClient` y puede despachar llamadas al cliente correcto según el scope actual.
+
+Para permitir que distintos eventos conserven datos contextuales diferentes, necesitas saber en qué scope te encuentras; esto lo gestiona el [`Hub`](https://github.com/getsentry/sentry-dotnet/blob/master/src/Sentry/Internal/Hub.cs). Administra el scope y también un cliente.
+
+Si únicamente envías eventos sin modificar ni acceder al scope actual, entonces dependes de `ISentryClient`. Si quieres tener acceso al scope actual para configurarlo o vincularle un cliente diferente, dependes de `IHub`.
+
+Un ejemplo del uso de `IHub` para facilitar las pruebas es [SentryLogger](https://github.com/getsentry/sentry-dotnet/blob/master/src/Sentry.Extensions.Logging/SentryLogger.cs) y sus pruebas unitarias [SentryLoggerTests](https://github.com/getsentry/sentry-dotnet/blob/master/test/Sentry.Extensions.Logging.Tests/SentryLoggerTests.cs).
+`SentryLogger` depende de `IHub` porque modifica el scope (mediante `AddBreadcrumb`). Si solo enviara eventos, en su lugar debería depender de `ISentryClient`.

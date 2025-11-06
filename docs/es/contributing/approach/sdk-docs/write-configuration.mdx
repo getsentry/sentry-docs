@@ -1,0 +1,131 @@
+---
+title: Cómo escribir - Configuración
+noindex: true
+sidebar_order: 40
+---
+
+La sección de Configuración trata, como cabría esperar, de cómo las personas pueden configurar un SDK. Un nuevo framework puede adoptar el contenido común, que se encuentra en `/docs/platforms/<SDK>/common/configuration/`. Si lo deseas, revisa los archivos de ese directorio para ayudarte a resolver cualquier duda.
+
+<Alert >
+
+No modifiques el contenido común. Ese cambio se propagará a todas las guías que dependen de él. En su lugar, abre un issue en GitHub con tus preguntas o sugerencias.
+
+</Alert >
+
+La mayoría de estas páginas son bastante intuitivas, así que solo se ofrece información básica. Aun así, si surge alguna duda, abre un issue en GitHub.
+
+<div id="start-here">
+  ## Comienza aquí
+</div>
+
+Determina si la página corresponde:
+
+- Si el contenido _no corresponde_, agrega la guía a la lista `notSupported` en el frontmatter del archivo. Esto desactivará la visualización del contenido de esta guía.
+- Si el contenido _sí corresponde_, agrega el archivo `include` al directorio correcto según se indica para cada página. Si no se proporciona el ejemplo de código, la página mostrará un gran recuadro gris solicitando que los usuarios abran un issue por la muestra faltante.
+
+<div id="basic-options">
+  ### Opciones básicas
+</div>
+
+Este archivo es `options.mdx`. Explica todas las opciones de configuración.
+
+Para desarrollar contenido para este archivo:
+
+1. Crea la sección `configuration/config-intro/`, que cubre cómo se pueden configurar las opciones.
+2. Escribe los nombres de las opciones en el estilo propio de cada plataforma:
+   - **camelCase** para JavaScript/TypeScript, Java, Kotlin, Dart/Flutter, Android, Apple
+   - **PascalCase** para .NET, Unity, Unreal, PowerShell
+   - **snake_case** para Python, PHP, Ruby, Go, Rust, Elixir, Native (C/C++), Godot
+3. Para opciones individuales que ciertas categorías de plataforma NO admiten, usa `categoryNotSupported` en la declaración `SdkOption`. Por ejemplo:
+
+   `<SdkOption name="debug" type="boolean" defaultValue="false" categoryNotSupported={["browser"]}>`
+
+   Alternativamente, para opciones individuales que solo ciertas categorías de plataforma SÍ admiten, usa `categorySupported` en la declaración `SdkOption`. Por ejemplo:
+
+   `<SdkOption name="sendDefaultPii" type="boolean" defaultValue="false" categorySupported={["server", "serverless"]}>`
+
+4. Para el filtrado específico de guías (menos común), usa `PlatformSection` para envolver opciones que solo aplican a guías específicas. Por ejemplo:
+
+   `<PlatformSection supported={["javascript.react"]}>`
+
+5. Agrega metadatos cuando corresponda:
+   - `type` - el tipo de dato (p. ej., `boolean`, `string`, `number`, `object`)
+   - `defaultValue` - el valor predeterminado
+   - `envVar` - la variable de entorno asociada (si aplica)
+   - `availableSince` - versión del SDK en la que se introdujo (si se conoce)
+6. Agrega un `<TableOfContents ignoreIds={["core-options"]} />` al inicio de la sección de opciones disponibles para mejorar la navegación.
+
+<div id="releases-health">
+  ### Versiones y estado
+</div>
+
+Este archivo es `releases.mdx`. Explica cómo configurar el SDK para informar a Sentry sobre las versiones. Proporciona un ejemplo de código para que este SDK establezca una versión y luego añade el ejemplo de código a este directorio:
+
+- `/platform-includes/set-release/`
+
+Algunos matices:
+
+- Si añades un SDK relacionado con JavaScript, actualiza el párrafo relativo a los source maps, según corresponda, en la declaración `PlatformSection supported`.
+- Para los SDK que admiten el estado de versiones (release health), controlamos la visualización del contenido con una declaración `PlatformSection supported`. Para estos SDK, proporciona el siguiente ejemplo de código: darse de baja del seguimiento automático de sesiones, ubicado en `/platform-includes/configuration/auto-session-tracking`.
+
+<div id="environments">
+  ### Entornos
+</div>
+
+Este archivo es `environments.mdx`. Explica cómo configurar el SDK para definir un entorno.
+
+Añade el ejemplo de código a este directorio:
+
+- `/platform-includes/set-environment/`
+
+<div id="filtering-events">
+  ### Filtrado de eventos
+</div>
+
+Este archivo es `filtering.mdx`. Explica cómo configurar el SDK para filtrar los eventos enviados a Sentry. Añade ejemplos de código en estos directorios:
+
+- `/platform-includes/configuration/before-send/`
+- `/platform-includes/configuration/before-send-hint/`
+
+Activa o desactiva el contenido de "Using Hints", según corresponda para el SDK, agregándolo a la lista de `supported` o `notSupported`, y luego añade el ejemplo de código en estos directorios:
+
+- `/platform-includes/configuration/before-send-fingerprint/`
+- `/platform-includes/configuration/decluttering/`
+
+Activa o desactiva el contenido de "Using Sampling to Filter Transaction Events" agregando el SDK a la lista de `supported` o `notSupported`, y luego añade el ejemplo de código en este directorio:
+
+- `/platform-includes/performance/traces-sampler-as-filter/`
+
+<div id="sampling-events">
+  ### Muestreo de eventos
+</div>
+
+Este archivo es `sampling.mdx`. Explica cómo configurar la tasa de muestreo del SDK.
+
+Añade ejemplos de código en estos directorios:
+
+- `/platform-includes/configuration/sample-rate/`
+- `/platform-includes/performance/uniform-sample-rate/`
+- `/platform-includes/performance/sampling-function-intro/`
+- `/platform-includes/performance/default-sampling-context`
+- `/platform-includes/performance/custom-sampling-context`
+- `/platform-includes/performance/always-inherit-sampling-decision`
+- `/platform-includes/performance/force-sampling-decision`
+
+<div id="shutdown-and-draining">
+  ### Apagado y drenaje
+</div>
+
+Este archivo es `draining.mdx`. Agrega el contenido de ejemplo de drenaje a este directorio:
+
+- `/platform-includes/configuration/drain-example/`
+
+<div id="integrations">
+  ### Integraciones
+</div>
+
+Este contenido se desarrolla en el nivel principal del SDK/plataforma. Se ubica en `/docs/platforms/<SDK>/integrations/` o `/docs/platforms/<SDK>/common/integrations/` y suele incluir lo siguiente:
+
+1. Integraciones predeterminadas - `default.mdx` - las integraciones del sistema están habilitadas de forma predeterminada. Las documentamos para que los clientes sepan qué hacen y puedan deshabilitarlas si causan problemas.
+2. Integraciones de complemento - `plugin.mdx` - son fragmentos de código que amplían la funcionalidad para aplicaciones y/o frameworks específicos. Las documentamos para que los clientes vean qué hacen y que pueden habilitarse.
+3. Integraciones personalizadas - `custom.mdx` - explica cómo habilitar una integración personalizada.

@@ -1,0 +1,105 @@
+---
+title: Hono en Cloudflare
+description: "Aprende a instrumentar tu app de Hono en Cloudflare Workers y a capturar tus primeros errores con Sentry."
+---
+
+<PlatformContent includePath="getting-started-primer" />
+
+<Alert type="warning" title="Desuso del middleware de la comunidad">
+  El middleware de la comunidad `@hono/sentry` que utiliza `toucan-js` ha quedado en desuso en favor de
+  usar directamente `@sentry/cloudflare`.
+  Si actualmente usas el middleware `@hono/sentry` con `toucan-js`, deberías migrar a
+  `@sentry/cloudflare` directamente, como se muestra en esta guía.
+</Alert>
+
+<div id="step-1-install">
+  ## Paso 1: Instalar
+</div>
+
+Elige las funciones que quieres configurar y esta guía te mostrará cómo:
+
+<OnboardingOptionButtons options={["error-monitoring", "performance", "logs"]} />
+
+<PlatformContent includePath="getting-started-features-expandable" />
+
+<div id="install-the-sentry-sdk">
+  ### Instala el SDK de Sentry
+</div>
+
+Ejecuta el comando del gestor de paquetes que prefieras para añadir el SDK de Sentry a tu aplicación:
+
+<PlatformContent includePath="getting-started-install" />
+
+<div id="step-2-configure">
+  ## Paso 2: Configurar
+</div>
+
+La configuración principal de Sentry debe realizarse lo antes posible en el ciclo de vida de tu aplicación.
+
+<div id="wrangler-configuration">
+  ### Configuración de Wrangler
+</div>
+
+<PlatformContent includePath="getting-started-config" />
+
+<div id="initialize-the-sentry-sdk">
+  ### Inicializar el SDK de Sentry
+</div>
+
+<PlatformContent includePath="getting-started-config" platform="javascript.cloudflare.workers" />
+
+<div id="migration-from-community-middleware">
+  ### Migración desde el middleware de la comunidad
+</div>
+
+Si actualmente utilizas el middleware `@hono/sentry`, migra al middleware oficial `@sentry/cloudflare`:
+
+```javascript
+// Nuevo enfoque con el SDK oficial de Sentry
+import { Hono } from 'hono';
+import * as Sentry from '@sentry/cloudflare';
+
+const app = new Hono();
+
+// Envuelve tu aplicación con Sentry
+export default Sentry.withSentry(
+  (env: Env) => ({
+    dsn: '___PUBLIC_DSN___',
+    tracesSampleRate: 1.0,
+  }),
+  app
+);
+```
+
+<PlatformContent includePath="getting-started-capture-errors" platform="javascript.hono" />
+
+<div id="step-3-add-readable-stack-traces-with-source-maps-optional">
+  ## Paso 3: Añade trazas de pila legibles con source maps (opcional)
+</div>
+
+<PlatformContent includePath="getting-started-sourcemaps-short-version" platform="javascript.hono" />
+
+<div id="step-4-verify-your-setup">
+  ## Paso 4: Verifica tu configuración
+</div>
+
+<PlatformContent includePath="getting-started-verify" platform="javascript.hono" />
+
+<div id="next-steps">
+  ## Próximos pasos
+</div>
+
+A estas alturas, ya deberías haber integrado Sentry y estar enviando datos a tu proyecto en Sentry.
+
+Ahora es un buen momento para personalizar tu implementación y explorar temas más avanzados. Te recomendamos como siguientes pasos:
+
+* Aprende a [capturar errores manualmente](/es/platforms/javascript/guides/cloudflare/usage/)
+* Sigue [personalizando tu configuración](/es/platforms/javascript/guides/cloudflare/configuration/)
+* Aprovecha las [funciones específicas de Cloudflare](/es/platforms/javascript/guides/cloudflare/features)
+* Familiarízate con [las funciones del producto de Sentry](/es/product), como el tracing, los insights y las alertas
+
+<Expandable permalink={false} title="¿Tienes problemas para configurar el SDK?">
+  - Consulta las instrucciones de configuración para otros [frameworks en Cloudflare](/es/platforms/javascript/guides/cloudflare/frameworks/)
+  - Encuentra diversos temas de ayuda en <PlatformLink to="/troubleshooting">solución de problemas</PlatformLink>
+  - [Obtén soporte](https://sentry.zendesk.com/hc/en-us/)
+</Expandable>

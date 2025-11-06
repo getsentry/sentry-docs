@@ -1,0 +1,81 @@
+---
+title: Integración con Quartz
+description: "Aprende a enviar check-ins para tus jobs de Quartz."
+---
+
+La integración de Sentry con [Quartz](http://www.quartz-scheduler.org/) se proporciona mediante `SentryJobListener`, que debes agregar a la instancia de tu scheduler.
+
+La integración con Quartz se configura automáticamente si usas `spring-boot-starter-quartz` junto con `sentry-spring-boot-starter` o `sentry-spring-boot-jakarta-starter`. Sin embargo, aún debes especificar el slug del monitor como se muestra a continuación.
+
+Los check-ins también se pueden [enviar manualmente](/es/platforms/java/crons/) o, si usas la integración de Spring Boot de Sentry, puedes enviar check-ins para tus tareas con `@Scheduled` usando nuestra [anotación `@SentryCheckIn`](/es/platforms/java/guides/spring-boot/crons/).
+
+<div id="install">
+  ## Instalación
+</div>
+
+Para instalar, usa:
+
+```groovy {tabTitle:Gradle Plugin}
+plugins {
+  id "io.sentry.jvm.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.13.0') }}"
+}
+```
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-quartz:{{@inject packages.version('sentry.java.quartz', '6.30.0') }}'
+```
+
+```xml {tabTitle:Maven Plugin}{filename:pom.xml}
+<plugin>
+  <groupId>io.sentry</groupId>
+  <artifactId>sentry-maven-plugin</artifactId>
+  <version>{{@inject packages.version('sentry.java.maven-plugin', '0.0.2') }}</version>
+  <!-- Necesario para permitir la instalación automática del SDK de Sentry y las integraciones -->
+  <extensions>true</extensions>
+</plugin>
+```
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-quartz</artifactId>
+    <version>{{@inject packages.version('sentry.java.quartz', '6.30.0') }}</version>
+</dependency>
+```
+
+```scala {tabTitle: SBT}
+libraryDependencies += "io.sentry" % "sentry-quartz" % "{{@inject packages.version('sentry.java.quartz', '6.30.0') }}"
+```
+
+Para otros gestores de dependencias, consulta el [repositorio central de Maven](https://search.maven.org/artifact/io.sentry/sentry-quartz).
+
+<div id="set-up">
+  ## Configuración
+</div>
+
+Debes proporcionar el slug del monitor ya sea
+
+* al crear una instancia de Quartz `JobDetail`
+* o al crear una instancia de Quartz `Trigger`
+
+Para hacerlo, debes añadir una entrada al mapa de datos de los jobs:
+
+```java
+import io.sentry.quartz.SentryJobListener;
+
+// puedes configurar el slug del monitor en el detalle del trabajo
+JobDetailFactoryBean jobDetailFactory = new JobDetailFactoryBean();
+jobDetailFactory.setJobDataAsMap(Collections.singletonMap(SentryJobListener.SENTRY_SLUG_KEY, "<monitor-slug>"));
+
+// también puedes configurar el slug del monitor en el trigger
+SimpleTriggerFactoryBean trigger = new SimpleTriggerFactoryBean();
+trigger.setJobDataAsMap(Collections.singletonMap(SENTRY_SLUG_KEY, "monitor_slug_simple_trigger"));
+```
+
+<Alert>
+  Configurar el slug del monitor en el `Trigger` sobrescribirá lo definido en el `JobDetail`. Esto también significa que puedes configurar un monitor independiente por `Trigger`.
+</Alert>
+
+<Alert>
+  Configurar un listener global de trabajos usando un `SchedulerFactoryBeanCustomizer` en Spring Boot sobrescribirá el listener establecido por Sentry. Para que Sentry funcione correctamente, debes agregar una nueva instancia de `SentryJobListener` a los listeners globales de trabajos.
+</Alert>

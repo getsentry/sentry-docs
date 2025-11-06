@@ -1,0 +1,150 @@
+---
+title: Instrumentación automática
+sidebar_order: 20
+description: "Descubre qué transacciones se capturan después de habilitar el tracing."
+---
+
+<Alert>
+
+Para capturar transacciones, primero debes <PlatformLink to="/tracing/">configurar el tracing</PlatformLink>, si aún no lo has hecho.
+
+</Alert>
+
+<div id="spring-mvc-integration">
+  ### Integración con Spring MVC
+</div>
+
+Una vez habilitada, la integración de Sentry con Spring Boot captura cada solicitud HTTP entrante de Spring MVC y la convierte en una transacción mediante `SentryTracingFilter`. Los nombres de las transacciones siguen el patrón `<HTTP method> <Spring MVC route>`, por ejemplo, para una solicitud a un controlador como el siguiente:
+
+```java {tabTitle:Java}
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+@RestController
+class HelloController {
+
+  @GetMapping("/person/{id}")
+  Person person(@PathVariable Long id) {
+    ...
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+
+@RestController
+class HelloController {
+
+  @GetMapping("/person/{id}")
+  fun person(@PathVariable id: Long) {
+    ...
+  }
+}
+```
+
+Cada solicitud muestreada que ejecute este método del controlador se convertirá en una transacción `GET /person/{id}`.
+
+
+<div id="resttemplate-instrumentation">
+  ### Instrumentación de RestTemplate
+</div>
+
+La integración de Sentry con Spring Boot proporciona `SentrySpanRestTemplateCustomizer`, que crea un span para cada solicitud HTTP saliente ejecutada con un `RestTemplate`. Para usar un `RestTemplate` instrumentado, asegúrate de crear beans de `RestTemplate` con `RestTemplateBuilder`:
+
+```java {tabTitle:Java}
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.web.client.RestTemplate;
+
+@Configuration
+class AppConfig {
+  @Bean
+  RestTemplate restTemplate(RestTemplateBuilder builder) {
+    return builder.build();
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Bean
+import org.springframework.boot.web.client.RestTemplateBuilder
+import org.springframework.web.client.RestTemplate
+
+@Configuration
+class AppConfig {
+  @Bean
+  fun restTemplate(builder: RestTemplateBuilder) = builder.build()
+}
+```
+
+
+<div id="restclient-instrumentation">
+  ### Instrumentación de RestClient
+</div>
+
+La integración de Sentry con Spring Boot proporciona `SentrySpanRestClientCustomizer`, que crea un span para cada solicitud HTTP saliente ejecutada con un `RestClient`. Para usar un `RestClient` instrumentado, asegúrate de crear beans de `RestClient` con `RestClient.Builder`:
+
+```java {tabTitle:Java}
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.client.RestClient;
+
+@Configuration
+class AppConfig {
+  @Bean
+  RestClient restClient(RestClient.Builder builder) {
+    return builder.build();
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Bean
+import org.springframework.web.client.RestClient
+
+@Configuration
+class AppConfig {
+  @Bean
+  fun restClient(builder: RestClient.Builder) = builder.build()
+}
+```
+
+
+<div id="webclient-instrumentation">
+  ### Instrumentación de WebClient
+</div>
+
+La integración de Sentry con Spring Boot proporciona `SentrySpanWebClientCustomizer`, que crea un span para cada solicitud HTTP saliente ejecutada con un `WebClient`. Para usar un `WebClient` instrumentado, asegúrate de crear beans de `WebClient` con `WebClient.Builder`:
+
+```java {tabTitle:Java}
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.reactive.function.client.WebClient;
+
+@Configuration
+class AppConfig {
+  @Bean
+  WebClient webClient(WebClient.Builder builder) {
+    return builder.build();
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Bean
+import org.springframework.web.reactive.function.client.WebClient
+
+@Configuration
+class AppConfig {
+  @Bean
+  fun webClient(builder: WebClient.Builder) = builder.build()
+}
+```

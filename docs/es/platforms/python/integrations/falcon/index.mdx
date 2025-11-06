@@ -1,0 +1,121 @@
+---
+title: Falcon
+description: "Aprende a usar Sentry con Falcon."
+---
+
+La integración de Falcon agrega compatibilidad con el [framework web Falcon](https://falconframework.org/).
+Se ha confirmado que la integración funciona con Falcon 1.4 y 2.0.
+
+<div id="install">
+  ## Instalar
+</div>
+
+Instala `sentry-sdk` desde PyPI con el complemento `falcon`:
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[falcon]"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk[falcon]"
+```
+
+
+<div id="configure">
+  ## Configuración
+</div>
+
+Si tienes el paquete `falcon` en tus dependencias, la integración de Falcon se habilitará automáticamente al inicializar el SDK de Sentry.
+
+<PlatformContent includePath="getting-started-config" />
+
+<div id="verify">
+  ## Verificar
+</div>
+
+```python
+import falcon
+
+sentry_sdk.init(...)  # igual que arriba
+
+class HelloWorldResource:
+    def on_get(self, req, resp):
+        message = {
+            'hello': "world",
+        }
+        1 / 0  # lanza un error
+        resp.media = message
+
+app = falcon.App()
+app.add_route('/', HelloWorldResource())
+```
+
+Cuando abras [http://localhost:8000/](http://localhost:8000/) en tu navegador, se creará una transacción en la sección Performance de [sentry.io](https://sentry.io). Además, se enviará un evento de error a [sentry.io](https://sentry.io) y quedará vinculado a la transacción.
+
+Los datos pueden tardar unos instantes en aparecer en [sentry.io](https://sentry.io).
+
+
+<div id="behavior">
+  ## Comportamiento
+</div>
+
+<Include name="python-uwsgi-warning.mdx" />
+
+- El SDK de Sentry para Python instalará la integración de Falcon en todas tus apps. La integración se conecta a la clase base `falcon.API` mediante monkey patching.
+
+- Se informan todas las excepciones que derivan en un error interno del servidor.
+
+- Los datos de la solicitud se adjuntan a todos los eventos: **método HTTP, URL, encabezados, datos de formulario, cargas JSON**. Sentry excluye los cuerpos sin procesar y las cargas de archivos multipart. Sentry también excluye la información de identificación personal (como IDs de usuario, nombres de usuario, cookies, encabezados de autorización, direcciones IP), a menos que configures `send_default_pii` en `True`.
+
+- Cada solicitud tiene un ámbito independiente. Los cambios en el ámbito dentro de una vista, por ejemplo, establecer una etiqueta, solo se aplicarán a los eventos enviados como parte de la solicitud que se está procesando.
+
+<div id="options">
+  ## Opciones
+</div>
+
+Al agregar explícitamente `FalconIntegration` a tu llamada a `sentry_sdk.init()`, puedes configurar opciones de `FalconIntegration` para modificar su comportamiento:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.falcon import FalconIntegration
+
+sentry_sdk.init(
+    # igual que antes
+    integrations=[
+        FalconIntegration(
+            transaction_style="path",
+        ),
+    ],
+)
+```
+
+Puedes pasar los siguientes argumentos de palabra clave a `FalconIntegration()`:
+
+* `transaction_style`:
+
+  ```python
+  class MessageResource:
+      def on_get(self, req, resp, message_id):
+          msg = database.get_message(message_id)
+          resp.media = msg.as_json()
+
+  app = falcon.API()
+  app.add_route("/message/{message_id}", MessageResource())
+  ```
+
+  En el código anterior, la transacción quedaría como:
+
+  * `/myurl/b48a7686-ad8c-4c94-8c3b-412ec7f25db2123` si estableces `transaction_style="path"`.
+  * `/myurl/{message_id}` si estableces `transaction_style="uri_template"`.
+
+  El valor predeterminado es `"uri_template"`.
+
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+- Falcon: 1.4+
+- Python: 3.6+
+
+<Include name="python-use-older-sdk-for-legacy-support.mdx" />

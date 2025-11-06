@@ -1,0 +1,75 @@
+---
+title: Datos recopilados
+description: "Consulta qué datos recopila el SDK de Sentry."
+sidebar_order: 1
+---
+
+Sentry se toma muy en serio la privacidad de los datos y cuenta con configuraciones predeterminadas que priorizan la seguridad de la información, especialmente cuando se trata de datos de información de identificación personal (PII). Al añadir el SDK de Sentry a tu aplicación, permites que recopile datos y los envíe a Sentry durante la ejecución de tu aplicación.
+
+Los tipos de categorías y la cantidad de datos recopilados varían según las integraciones que hayas habilitado en el SDK de Sentry. A continuación, se muestra una lista de categorías de datos que recopila el SDK de Sentry para Ruby:
+
+<div id="http-headers">
+  ## Encabezados HTTP
+</div>
+
+De forma predeterminada, el SDK de Sentry incluirá encabezados HTTP no sensibles de una solicitud `Rack`. Los encabezados sensibles, como las direcciones IP y `HTTP_AUTHORIZATION`, se filtrarán de forma predeterminada.
+
+Para empezar a enviar todos los encabezados HTTP, establece `send_default_pii = true` en la llamada a `Sentry.init`.
+
+<div id="cookies">
+  ## Cookies
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía cookies.
+
+Si quieres enviar cookies, establece `send_default_pii = true` en la llamada a `Sentry.init`.
+
+<div id="users-ip-address">
+  ## Dirección IP de los usuarios
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía la dirección IP del usuario.
+
+Para habilitar el envío de las [direcciones IP del usuario desde el entorno Rack](https://github.com/getsentry/sentry-ruby/blob/cc1dc53c0d60a21db7ad95cac05590ec23c82910/sentry-ruby/lib/sentry/interfaces/request.rb#L7-L12), configura `send_default_pii = true` en la llamada a `Sentry.init`.
+
+<div id="request-url">
+  ## URL de la solicitud
+</div>
+
+La URL de la solicitud (sin el string de consulta) de las solicitudes HTTP salientes y entrantes **siempre se envía a Sentry**. Según tu aplicación, esto podría incluir datos personales (PII).
+
+<div id="request-query-string">
+  ## Cadena de consulta de la solicitud
+</div>
+
+La cadena de consulta de las solicitudes HTTP salientes y entrantes solo se envía a Sentry si `send_default_pii = true`, ya que podría contener información de identificación personal (PII), como tokens de autenticación.
+
+<div id="request-body">
+  ## Cuerpo de la solicitud
+</div>
+
+El cuerpo de la solicitud de las peticiones HTTP entrantes se envía a Sentry solo si `send_default_pii = true`.
+
+Intentamos decodificar cuerpos JSON y datos de formularios en codificación UTF-8. Las cargas útiles de bytes sin procesar no se enviarán a Sentry.
+
+<div id="source-context">
+  ## Contexto de origen
+</div>
+
+Cuando se envía a Sentry una excepción no controlada, se incluye una instantánea del código fuente alrededor de la línea donde se originó el error.
+
+Para dejar de enviar este contexto de origen a Sentry, establece `context_lines = nil`.
+
+<div id="local-variables-in-stack-trace">
+  ## Variables locales en la traza de la pila
+</div>
+
+De forma predeterminada, Sentry para Ruby no incluye variables locales en los frames de las excepciones capturadas, principalmente por motivos de rendimiento.
+
+Puedes empezar a enviar variables locales a Sentry estableciendo `include_local_variables = true` en la llamada a `Sentry.init`.
+
+<div id="sql-queries">
+  ## Consultas SQL
+</div>
+
+Aunque se envían consultas SQL a Sentry, ni la consulta completa (`UPDATE app_user SET password='supersecret' WHERE id=1;`) ni los valores de sus parámetros se envían nunca. En su lugar, se envía una versión parametrizada de la consulta (`UPDATE app_user SET password='%s' WHERE id=%s;`).

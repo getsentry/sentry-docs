@@ -1,0 +1,165 @@
+---
+draft: true
+categories: []
+toc: true
+title: JavaScript
+sidebar_order: 7
+noindex: true
+tags: []
+---
+
+<Alert level="warning" title="Nota">
+  Un nuevo SDK de JavaScript ha sustituido esta versión obsoleta. Sentry conserva esta documentación para clientes que usan el cliente antiguo. Recomendamos usar el [SDK de JavaScript actualizado](/es/platforms/javascript/) para proyectos nuevos.
+</Alert>
+
+Raven.js es el cliente oficial de JavaScript para navegador de Sentry. Informa automáticamente las excepciones de JavaScript no capturadas generadas en un entorno de navegador y proporciona una API completa para reportar tus propios errores.
+
+<Alert level="warning" title="Node.js">
+  Si usas Node.js en el servidor, necesitarás [sentry-node](/es/platforms/javascript/guides/node/).
+</Alert>
+
+<div id="installation">
+  ## Instalación
+</div>
+
+La manera más sencilla de cargar Raven.js es hacerlo directamente desde nuestro CDN. Esta etiqueta de script debe incluirse después de que se hayan cargado otras bibliotecas, pero antes del código principal de tu aplicación (p. ej., app.js):
+
+```html
+<script
+  src="https://cdn.ravenjs.com/3.26.4/raven.min.js"
+  crossorigin="anonymous"
+></script>
+```
+
+Para la instalación con npm u otros gestores de paquetes, consulta [*Instalación*](/es/platforms/javascript/legacy-sdk/install/).
+
+<div id="configuring-the-client">
+  ## Configurar el cliente
+</div>
+
+A continuación, debes configurar Raven.js para que use tu DSN de Sentry:
+
+```javascript
+Raven.config("___PUBLIC_DSN___").install();
+```
+
+Además, también se recomienda (aunque no es obligatorio) envolver el inicio de tu aplicación con *Raven.context*. Esto puede ayudar a detectar errores adicionales en ciertos contextos de ejecución.
+
+```javascript
+Raven.context(function () {
+  initMyApp();
+});
+```
+
+En este punto, Raven está listo para capturar cualquier excepción no controlada.
+
+Una vez que tengas Raven en funcionamiento, te recomendamos encarecidamente que consultes [*Configuración*](/es/platforms/javascript/legacy-sdk/config/) y [*Uso*](/es/platforms/javascript/legacy-sdk/usage/).
+
+<div id="manually-reporting-errors">
+  ## Informar errores manualmente
+</div>
+
+De forma predeterminada, Raven hace todo lo posible por capturar cualquier excepción no controlada.
+
+Para informar errores manualmente, envuelve el código potencialmente problemático en un bloque `try...catch` y llama a `Raven.captureException`:
+
+```javascript
+try {
+  doSomething(a[0]);
+} catch (e) {
+  Raven.captureException(e);
+}
+```
+
+Hay más maneras de informar errores. Para una guía completa al respecto, consulta [Reporting Errors Correctly](/es/platforms/javascript/legacy-sdk/usage/#raven-js-reporting-errors).
+
+<div id="adding-context">
+  ## Agregar contexto
+</div>
+
+Mientras un usuario ha iniciado sesión, puedes indicarle a Sentry que asocie los errores con los datos del usuario. Estos datos se envían con cada error, lo que te permite identificar qué usuarios se ven afectados.
+
+```javascript
+Raven.setUserContext({
+  email: "matt@ejemplo.com",
+  id: "123",
+});
+```
+
+Si en algún momento el usuario deja de estar autenticado, puedes llamar a `Raven.setUserContext()` sin argumentos para eliminar sus datos.
+
+Otros métodos similares son `Raven.setExtraContext` y `Raven.setTagsContext`, así como `Raven.context`. Consulta [Passing Additional Data](/es/platforms/javascript/legacy-sdk/usage/#raven-js-additional-context) para más información.
+
+<div id="breadcrumbs">
+  ## Migas de navegación
+</div>
+
+Las migas de navegación son eventos del navegador y del ciclo de vida de la aplicación que ayudan a comprender el estado de la aplicación previo a un fallo.
+
+De forma predeterminada, Raven.js instrumenta componentes integrados del navegador y eventos del DOM para recopilar automáticamente algunas migas de navegación útiles:
+
+> * XMLHttpRequests
+> * Cambios de URL / barra de direcciones
+> * Clics de la interfaz y eventos del DOM de pulsación de teclas
+> * Mensajes de la consola
+> * Errores anteriores
+
+También puedes registrar tus propias migas de navegación. Para obtener más información, consulta [Recording Breadcrumbs](/es/platforms/javascript/legacy-sdk/usage/#raven-js-recording-breadcrumbs).
+
+<div id="dealing-with-minified-source-code">
+  ## Cómo gestionar código fuente minificado
+</div>
+
+Raven y Sentry admiten [source maps](https://web.dev/articles/source-maps). Si proporcionas source maps además de tus archivos minificados, esos datos estarán disponibles en Sentry. Para obtener más información, consulta [Source Maps](/es/platforms/javascript/legacy-sdk/sourcemaps/).
+
+<div id="browser-compatibility">
+  ## Compatibilidad del navegador
+</div>
+
+Raven.js es compatible con todos los navegadores principales. En navegadores más antiguos, los informes de errores recopilados por Raven.js pueden incluir menos detalles; por ejemplo, faltar datos de la traza de llamadas o los números de columna del código fuente.
+
+La siguiente tabla describe qué funciones están disponibles en cada navegador compatible:
+
+| Navegador               | Números de línea | Números de columna | Traza de llamadas |
+| ----------------------- | ---------------- | ------------------ | ----------------- |
+| Chrome                  | ✓                | ✓                  | ✓                 |
+| Firefox                 | ✓                | ✓                  | ✓                 |
+| Edge                    | ✓                | ✓                  | ✓                 |
+| IE 11                   | ✓                | ✓                  | ✓                 |
+| IE 10                   | ✓                | ✓                  | ✓                 |
+| IE 9                    | ✓                | ✓                  |                   |
+| IE 8                    | ✓                |                    |                   |
+| Safari 6+               | ✓                | ✓                  | ✓                 |
+| iOS Safari 6+           | ✓                | ✓                  | ✓                 |
+| Opera 15+               | ✓                | ✓                  | ✓                 |
+| Android Browser 4.4     | ✓                | ✓                  | ✓                 |
+| Android Browser 4 - 4.3 | ✓                |                    |                   |
+
+En los navegadores con compatibilidad con Web Workers, Raven.js está diseñado para funcionar dentro de un contexto de Web Worker.
+
+En los navegadores no incluidos (p. ej., IE7), Raven.js está diseñado para degradar de forma elegante. Incluirlo en tu página no debería tener ningún efecto; simplemente no recopilará ni informará las excepciones no controladas.
+
+<div id="deep-dive">
+  ## Análisis en profundidad
+</div>
+
+Para obtener información más detallada sobre cómo sacar el máximo partido a Raven.js, hay documentación adicional disponible que cubre todo lo demás:
+
+* [Instalación](/es/platforms/javascript/legacy-sdk/install/)
+* [Configuración](/es/platforms/javascript/legacy-sdk/config/)
+* [Uso](/es/platforms/javascript/legacy-sdk/usage/)
+* [Integraciones](/es/platforms/javascript/legacy-sdk/integrations/)
+  * [AngularJS](/es/platforms/javascript/legacy-sdk/integrations/#angularjs)
+  * [Angular](/es/platforms/javascript/legacy-sdk/integrations/#angular)
+  * [Backbone](/es/platforms/javascript/legacy-sdk/integrations/#backbone)
+  * [Ember](/es/platforms/javascript/legacy-sdk/integrations/#ember)
+  * [React](/es/platforms/javascript/legacy-sdk/integrations/#react)
+  * [Vue.js (2.0)](/es/platforms/javascript/legacy-sdk/integrations/#vue)
+* [Mapas de código fuente](/es/platforms/javascript/legacy-sdk/sourcemaps/)
+* [Consejos y trucos](/es/platforms/javascript/legacy-sdk/tips/)
+
+Recursos:
+
+* [Descargas y CDN](https://ravenjs.com/)
+* [Seguimiento de errores](https://github.com/getsentry/raven-js/issues)
+* [Proyecto en GitHub](https://github.com/getsentry/raven-js)

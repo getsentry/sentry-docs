@@ -1,0 +1,265 @@
+---
+title: Opciones
+description: "Obtén más información sobre cómo configurar el SDK mediante opciones. Estas se pasan a la función init y, por lo tanto, se definen cuando el SDK se inicializa por primera vez."
+sidebar_order: 1
+---
+
+<PlatformContent includePath="configuration/config-intro" />
+
+<div id="core-options">
+  ## Opciones principales
+</div>
+
+<TableOfContents ignoreIds={["core-options"]} />
+
+Las opciones que pueden leerse desde una variable de entorno (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) se leen automáticamente.
+
+<SdkOption name="Dsn" type="string" envVar="SENTRY_DSN">
+  El DSN le indica al SDK adónde enviar los eventos. Si no se proporciona este valor, el SDK intentará leerlo de la variable de entorno `SENTRY_DSN`. Si esa variable tampoco existe, el SDK simplemente no enviará eventos.
+
+  En entornos de ejecución sin un entorno de procesos (como el navegador), esa alternativa no aplica.
+
+  Obtén más información sobre el [uso del DSN](/es/product/sentry-basics/dsn-explainer/#dsn-utilization).
+</SdkOption>
+
+<SdkOption name="StackTraceMode" type="enum" defaultValue="Enhanced">
+  * Original: formato de traza de pila predeterminado de .NET.
+  * Enhanced: **predeterminado**. Incluye `async`, tipo de retorno, argumentos y más.
+
+  Antes de la versión 3.0.0 del SDK de Sentry para .NET, no había un tratamiento especial para la traza de pila. Sentry informaba lo que .NET ponía a disposición en tiempo de ejecución.
+  Este comportamiento ahora se llama `StackTraceMode.Original`. Con la introducción de la 3.0, el nuevo modo predeterminado es `Enhanced`.
+
+  <Alert>
+    Cambiar este valor afectará la agrupación de incidencias, ya que el frame cambia de forma de manera significativa.
+  </Alert>
+</SdkOption>
+
+<SdkOption name="IsGlobalModeEnabled" type="bool" defaultValue="false">
+  Especifica si se debe usar el modo de administración de alcance global. Debe ser `true` para aplicaciones cliente y `false` para aplicaciones de servidor.
+
+  Ejemplos de escenarios en los que se debe establecer explícitamente en true:
+
+  * Aplicaciones de Universal Windows Platform (UWP)
+  * Aplicaciones WinForms
+  * Aplicaciones Windows Presentation Foundation (WPF)
+  * Aplicaciones de consola de un solo usuario
+
+  De manera predeterminada es `false`, a menos que sea en Blazor WASM, MAUI, Unity o Xamarin, donde el valor predeterminado es `true`.
+
+  Cuando el Modo global está **deshabilitado**, los datos almacenados en el scope se establecen en el [ExecutionContext](https://learn.microsoft.com/en-us/dotnet/api/system.threading.executioncontext) actual.
+  En aplicaciones de servidor, los datos almacenados en el scope solo están disponibles en el contexto de la solicitud en la que se crean.
+  En términos generales, el ExecutionContext se propaga a tareas e hilos secundarios, pero no a tareas e hilos principales.
+
+  Cuando el Modo global está **habilitado**, toda la aplicación comparte una única pila de scopes.
+
+  <Alert title="💡 Nota">
+    Desde la versión 5.0.0, la transacción siempre se establece en el ExecutionContext actual, independientemente del Modo global, para que los spans de la UI no se mezclen con transacciones en servicios en segundo plano.
+
+    Puede haber situaciones en las que esto no sea lo que quieres. Por ejemplo, podrías iniciar una transacción y luego ejecutar varias tareas en paralelo, cada una de las cuales realiza una solicitud HTTP. De forma predeterminada, la <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/">Instrumentación automática</PlatformLink> de Sentry creará spans como hijos de la transacción que encuentre almacenada en `Scope.Transaction` (que ahora es específica del ExecutionContext, incluso en Modo global).
+
+    Puedes anular este comportamiento y forzar que los spans auto-instrumentados tengan un padre específico estableciendo `Scope.Span`. [Un ejemplo de cómo hacerlo](https://github.com/getsentry/symbol-collector/blob/8a0fdb2594c3028f63f180b9b56b1efea1cbce34/src/SymbolCollector.Core/Client.cs#L74-L83) se puede encontrar en Symbol Collector.
+  </Alert>
+
+  Consulta la <PlatformLink to="/enriching-events/scopes/">documentación de Scopes y Hubs</PlatformLink> para obtener más información.
+</SdkOption>
+
+<SdkOption name="EnableBackpressureHandling" type="bool" defaultValue="false">
+  Especifica si se debe habilitar o no el manejo de backpressure.
+
+  Cuando está habilitado, la tasa de muestreo para trazas y errores se reducirá automáticamente cuando el SDK detecte problemas al enviar eventos a Sentry. Una vez que el sistema vuelva a estar estable, la tasa de muestreo se restaurará al valor configurado originalmente.
+
+  Actualmente el valor predeterminado es `false` (es decir, deshabilitado), pero se habilitará de forma predeterminada en una versión futura.
+</SdkOption>
+
+<SdkOption name="Debug" type="bool" defaultValue="false">
+  Activa o desactiva el modo de depuración. Si la depuración está habilitada, el SDK intentará imprimir información útil de depuración si algo sale mal al enviar el evento. El valor predeterminado siempre es `false`. En general, no se recomienda activarlo en producción, aunque activar el modo `debug` no ocasionará problemas de seguridad.
+</SdkOption>
+
+<SdkOption name="DiagnosticLevel" type="enum" defaultValue="debug">
+  Activar el modo `debug` hace que el SDK genere la mayor cantidad posible de datos de diagnóstico. Sin embargo, si prefieres reducir la verbosidad de los registros de diagnóstico del SDK de Sentry, configura esta opción para establecer el nivel adecuado:
+
+  * `debug`: **predeterminado** El modo más detallado
+  * `info`: Mensajes informativos
+  * `warning`: Advertencia de que algo podría no estar bien
+  * `error`: Solo se imprimen errores internos del SDK
+  * `fatal`: Solo se imprimen errores críticos
+
+  Para modelos de aplicación que no tienen una consola donde imprimir, puedes <PlatformLink to="/configuration/diagnostic-logger/">personalizar el registrador de diagnóstico del SDK</PlatformLink> para escribir en un archivo o en la ventana de depuración de Visual Studio.
+</SdkOption>
+
+<SdkOption name="Dist" type="string">
+  Establece la distribución de la aplicación. Las distribuciones se usan para diferenciar variantes de compilación o despliegue de la misma versión de una aplicación. Por ejemplo, la dist puede ser el número de build de una compilación de Xcode o el versionCode de una build de Android. La dist tiene una longitud máxima de 64 caracteres.
+</SdkOption>
+
+<SdkOption name="Release" type="string" envVar="SENTRY_RELEASE">
+  Establece la versión (release). Algunos SDK intentarán configurarla automáticamente desde el inicio, pero es mejor establecerla manualmente para garantizar que la versión esté sincronizada con tus integraciones de despliegue o las cargas de source maps. Los nombres de versión son cadenas, pero Sentry detecta algunos formatos y podría mostrarlos de manera diferente. Obtén más información sobre cómo enviar datos de versiones para que Sentry pueda informarte sobre regresiones entre versiones e identificar la posible fuente en [la documentación de versiones](/es/product/releases/) o el <SandboxLink scenario="releases">sandbox</SandboxLink>.
+
+  De forma predeterminada, el SDK intentará leer este valor de la variable de entorno `SENTRY_RELEASE` (en el SDK del navegador, se tomará de `window.SENTRY_RELEASE.id` si está disponible).
+</SdkOption>
+
+<SdkOption name="Environment" type="string" defaultValue="production" envVar="SENTRY_ENVIRONMENT">
+  Establece el entorno. Esta cadena es de formato libre y viene establecida por defecto. Una versión puede asociarse con más de un entorno para separarlos en la interfaz (piensa en `staging` vs `prod` o similar).
+
+  De forma predeterminada, el SDK reporta `debug` cuando el depurador está adjunto. De lo contrario, el entorno predeterminado es `production`.
+
+  Además, si estás ejecutando con la integración de ASP.NET Core, también verás el entorno como `staging`, si se ejecuta en staging, o `development`, si se ejecuta en modo de desarrollo.
+</SdkOption>
+
+<SdkOption name="SampleRate" type="float" defaultValue="1.0">
+  Configura la tasa de muestreo para eventos de error, en el rango de `0.0` a `1.0`. El valor predeterminado es `1.0`, lo que significa que se enviará el 100% de los eventos de error. Si se establece en `0.1`, solo se enviará el 10% de los eventos de error. Los eventos se seleccionan aleatoriamente.
+</SdkOption>
+
+<SdkOption name="MaxBreadcrumbs" type="int" defaultValue="100">
+  Esta variable controla la cantidad total de breadcrumbs que se deben capturar. El valor predeterminado es `100`, pero puedes configurarlo en cualquier número. Sin embargo, ten en cuenta que Sentry tiene un [tamaño máximo de carga útil](https://develop.sentry.dev/sdk/data-model/envelopes/#size-limits) y cualquier evento que exceda ese tamaño se descartará.
+</SdkOption>
+
+<SdkOption name="MaxCacheItems" type="int" defaultValue="30">
+  El número máximo de [envelopes](https://develop.sentry.dev/sdk/data-model/envelopes/) que se mantienen en caché. Los SDK usan envelopes para enviar datos, como eventos, adjuntos, comentarios de usuario y sesiones a sentry.io. Un envelope puede contener varios elementos, como un evento con una sesión y dos adjuntos. Según el uso del SDK, el tamaño de un envelope puede variar. Si el número de envelopes en la caché local supera `max-cache-items`, el SDK elimina el envelope más antiguo y migra las sesiones al siguiente envelope para mantener la integridad de las estadísticas de salud de tu release. El valor predeterminado es `30`.
+</SdkOption>
+
+<SdkOption name="AttachStacktrace" type="bool" defaultValue="true">
+  Cuando está habilitado, las trazas de pila se adjuntan automáticamente a todos los mensajes registrados. Las trazas de pila siempre se adjuntan a las excepciones; sin embargo, cuando se establece esta opción, las trazas de pila también se envían con los mensajes. Esta opción, por ejemplo, hace que las trazas de pila aparezcan junto a todos los mensajes de log.
+
+  El agrupamiento en Sentry es diferente para eventos con y sin traza de pila. Como resultado, obtendrás nuevos grupos a medida que habilites o deshabilites este indicador para ciertos eventos.
+</SdkOption>
+
+<SdkOption name="SendDefaultPii" type="bool" defaultValue="false">
+  Si este indicador está habilitado, ciertas informaciones de identificación personal (PII) son añadidas por las integraciones activas. De forma predeterminada, no se envía ningún dato de este tipo.
+
+  <Alert>
+    Si usas Sentry en tu app móvil, consulta nuestras [preguntas frecuentes sobre la privacidad de datos móviles](/es/security-legal-pii/security/mobile-privacy/) para ayudarte con los detalles de privacidad de apps en Apple App Store y Google Play.
+  </Alert>
+
+  Esta opción está desactivada de forma predeterminada.
+
+  Si habilitas esta opción, asegúrate de eliminar manualmente lo que no quieras enviar usando nuestras funciones para gestionar [*datos sensibles*](../../data-management/sensitive-data/).
+</SdkOption>
+
+<SdkOption name="ServerName" type="string">
+  Esta opción se puede usar para proporcionar un nombre de servidor. Cuando se indica, el nombre del servidor se envía y se conserva en el evento. En muchas integraciones, el nombre del servidor en realidad corresponde al nombre de host del dispositivo, incluso cuando la máquina no sea realmente un servidor.
+
+  Para aplicaciones ASP.NET y ASP.NET Core, el valor será, de forma predeterminada, el nombre del servidor. Para otros tipos de aplicaciones, el valor será, de forma predeterminada, el nombre del equipo solo cuando `SendDefaultPii` esté establecido en `true`, porque el nombre del equipo puede considerarse información de identificación personal (PII) en el caso de una app de escritorio o móvil.
+</SdkOption>
+
+<SdkOption name="InAppInclude" type="array">
+  Una lista de prefijos de cadena de nombres de módulos que pertenecen a la app. Esta opción tiene prioridad sobre `in-app-exclude`.
+
+  Sentry diferencia los frames de la pila que están directamente relacionados con tu aplicación (&quot;en la aplicación&quot;) de los frames que provienen de otros paquetes como la biblioteca estándar, frameworks u otras dependencias. El paquete de la aplicación se marca automáticamente como `inApp`. La diferencia es visible en [sentry.io](https://sentry.io), donde, de forma predeterminada, solo se muestran los frames &quot;en la aplicación&quot;.
+</SdkOption>
+
+<SdkOption name="InAppExclude" type="array">
+  Una lista de prefijos de cadena de nombres de módulos que no pertenecen a la app, sino a paquetes de terceros. Los módulos considerados fuera de la app se ocultarán de los stack traces de forma predeterminada.
+
+  Esta opción se puede anular usando <PlatformIdentifier name="InAppInclude" />.
+</SdkOption>
+
+<PlatformSection supported={["dotnet.aspnet", "dotnet.aspnetcore"]}>
+  <SdkOption name="MaxRequestBodySize" type="enum" defaultValue="none">
+    Este parámetro controla si las integraciones deben capturar los cuerpos de las solicitudes HTTP. Se puede establecer en uno de los siguientes valores:
+
+    * `none`: valor predeterminado. Nunca se envían cuerpos de solicitud.
+    * `small`: Solo se capturarán cuerpos de solicitud pequeños. El límite para &quot;pequeño&quot; depende del SDK (normalmente 4 KB).
+    * `medium`: Se capturarán solicitudes medianas y pequeñas (normalmente 10 KB).
+    * `always`: El SDK siempre capturará el cuerpo de la solicitud siempre que Sentry pueda interpretarlo.
+  </SdkOption>
+</PlatformSection>
+
+<PlatformSection supported={["dotnet.xamarin", "dotnet.maui"]}>
+  <SdkOption name="AttachScreenshot" type="bool" defaultValue="false">
+    Toma una captura de pantalla de la aplicación cuando ocurre un error y la incluye como archivo adjunto.
+    Obtén más información sobre cómo enriquecer eventos con capturas de pantalla en nuestra <PlatformLink to="/enriching-events/screenshots/">documentación de capturas de pantalla</PlatformLink>.
+  </SdkOption>
+</PlatformSection>
+
+<SdkOption name="SendClientReports" type="bool" defaultValue="true">
+  Establece este booleano en `false` para deshabilitar el envío de informes del cliente. Los informes del cliente son una función del protocolo que permite a los clientes enviar a Sentry informes de estado sobre sí mismos. Actualmente se usan principalmente para emitir resultados de eventos que nunca se enviaron.
+</SdkOption>
+
+<SdkOption name="CaptureFailedRequests" type="bool" defaultValue="true">
+  Una vez habilitada, esta función captura automáticamente errores del cliente HTTP, como códigos de respuesta erróneos, como eventos de error y los reporta a Sentry.
+</SdkOption>
+
+<div id="hooks">
+  ## Hooks
+</div>
+
+Estas opciones se pueden usar para integrar el SDK de varias maneras y personalizar el envío de eventos.
+
+<SdkOption name="SetBeforeSend" type="function">
+  Esta función se invoca con un mensaje específico del SDK o un objeto de evento de error, y puede devolver un objeto de evento modificado, o `null` para omitir el envío del evento. Esto puede usarse, por ejemplo, para eliminar manualmente PII antes de enviar.
+
+  Para cuando se ejecuta <PlatformIdentifier name="SetBeforeSend" />, todos los datos del scope ya se han aplicado al evento. Cualquier modificación posterior del scope no tendrá efecto.
+
+  Al filtrar según tipos de excepción, la excepción original (incluida cualquier `AggregateException`) se almacenará en `SentryEvent.Exception`. Sin embargo, el `MainExceptionProcessor` de Sentry desempaqueta automáticamente las AggregateExceptions, por lo que lo que verás en Sentry serán las distintas excepciones internas. Estas también están disponibles en el SDK inspeccionando la colección `SentryEvent.SentryExceptions`.
+</SdkOption>
+
+<SdkOption name="SetBeforeBreadcrumb" type="function">
+  Esta función se invoca con un objeto breadcrumb específico del SDK antes de que el breadcrumb se agregue al scope. Si la función no devuelve nada, el breadcrumb se descarta. Para dejar pasar el breadcrumb, devuelve el primer argumento, que contiene el objeto breadcrumb.
+  La devolución de llamada normalmente recibe un segundo argumento (llamado &quot;hint&quot;) que contiene el objeto original a partir del cual se creó el breadcrumb para personalizar aún más cómo debería verse el breadcrumb.
+</SdkOption>
+
+<SdkOption name="SetBeforeSendTransaction" type="function">
+  Esta función se invoca con un objeto de transacción específico del SDK y puede devolver un objeto de transacción modificado, o `null` para omitir el envío de la transacción. Esto puede usarse, por ejemplo, para eliminar manualmente PII antes de enviar.
+
+  Para cuando se ejecuta <PlatformIdentifier name="SetBeforeSendTransaction" />, todos los datos del scope ya se han aplicado al evento y cualquier modificación posterior del scope no tendrá efecto.
+</SdkOption>
+
+<div id="transport-options">
+  ## Opciones de transporte
+</div>
+
+Los transportes se usan para enviar eventos a Sentry. Se pueden personalizar hasta cierto punto para adaptarse mejor a implementaciones muy específicas.
+
+<SdkOption name="Transport" type="function">
+  Sustituye el transporte utilizado para enviar eventos. Su funcionamiento depende del SDK. Por ejemplo, puede usarse para capturar eventos en pruebas unitarias o para enviarlos mediante una configuración más compleja que requiera autenticación de proxy.
+</SdkOption>
+
+<SdkOption name="HttpProxy" type="string">
+  Cuando se establece, se puede configurar un proxy que se usará para las solicitudes salientes. También se usa para solicitudes HTTPS, a menos que se configure un `https-proxy` por separado. Sin embargo, no todos los SDK admiten un proxy HTTPS independiente. Los SDK intentarán, si es posible, usar por defecto el proxy configurado a nivel del sistema. Por ejemplo, en sistemas Unix se tomará la variable de entorno `http_proxy`.
+</SdkOption>
+
+<PlatformSection notSupported={["dotnet.xamarin", "dotnet.maui"]}>
+  <SdkOption name="CacheDirectoryPath" type="string">
+    Especifica un directorio local para almacenar en caché las cargas útiles. Cuando esta opción está habilitada (es decir, cuando se establece el directorio), el SDK de Sentry persistirá los sobres localmente antes de enviarlos a Sentry. Esta opción de configuración es especialmente útil si esperas que tu aplicación se ejecute en entornos con conectividad a internet limitada.
+
+    Predeterminado: no establecido (la caché está deshabilitada).
+  </SdkOption>
+</PlatformSection>
+
+<PlatformSection supported={["dotnet.xamarin"]}>
+  <SdkOption name="CacheDirectoryPath" type="string">
+    Especifica un directorio local para almacenar en caché las cargas útiles. Cuando esta opción está habilitada (es decir, cuando se establece el directorio), el SDK de Sentry persistirá los sobres localmente antes de enviarlos a Sentry. Esta opción de configuración es especialmente útil si esperas que tu aplicación se ejecute en entornos con conectividad a internet limitada.
+
+    El valor predeterminado es `Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)`.
+  </SdkOption>
+</PlatformSection>
+
+<PlatformSection supported={["dotnet.maui"]}>
+  <SdkOption name="CacheDirectoryPath" type="string">
+    Especifica un directorio local para almacenar en caché las cargas útiles. Cuando esta opción está habilitada (es decir, cuando se establece el directorio), el SDK de Sentry persistirá los sobres localmente antes de enviarlos a Sentry. Esta opción de configuración es especialmente útil si esperas que tu aplicación se ejecute en entornos con conectividad a internet limitada.
+
+    El valor predeterminado es `Path.Combine(FileSystem.CacheDirectory, "sentry")`. Consulta la [documentación de Microsoft](https://docs.microsoft.com/dotnet/maui/platform-integration/storage/file-system-helpers#platform-differences) para ver cómo `FileSystem.CacheDirectory` difiere en cada plataforma compatible.
+  </SdkOption>
+</PlatformSection>
+
+<SdkOption name="InitCacheFlushTimeout" type="int" defaultValue="1">
+  Cuando la caché está habilitada (es decir, <PlatformIdentifier name="CacheDirectoryPath" /> está establecido), esta opción controla el tiempo de espera que limita cuánto tiempo intentará el SDK vaciar la caché existente durante la inicialización. Ten en cuenta que vaciar la caché implica enviar la carga útil a Sentry en una operación bloqueante. Establecer esta opción en cero significa que Sentry **no** intentará vaciar la caché durante la inicialización, sino que lo hará cuando la siguiente carga útil se ponga en cola.
+
+  El valor predeterminado es `1` (un) segundo.
+</SdkOption>
+
+<SdkOption name="ShutdownTimeout" type="int">
+  Controla cuántos segundos esperar antes de cerrar. Los SDK de Sentry envían eventos desde una cola en segundo plano. A esta cola se le concede un tiempo determinado para vaciar los eventos pendientes. El valor predeterminado depende del SDK, pero suele ser de alrededor de dos segundos. Establecer este valor demasiado bajo puede causar problemas al enviar eventos desde aplicaciones de línea de comandos. Establecerlo demasiado alto hará que la aplicación se bloquee durante mucho tiempo para los usuarios que tengan problemas de conectividad de red.
+</SdkOption>
+
+<div id="tracing-options">
+  ## Opciones de trazas
+</div>
+
+<SdkOption name="TracesSampleRate" type="float" defaultValue="0.0">
+  Un número entre `0` y `1` que controla el porcentaje de probabilidad de que una transacción determinada se envíe a Sentry. (`0` representa el 0% y `1` representa el 100%.) Se aplica por igual a todas las transacciones creadas en la app. Para habilitar las trazas, debe definirse esto o <PlatformIdentifier name="TracesSampler" />.
+</SdkOption>
+
+<SdkOption name="TracesSampler" type="function">
+  Una función responsable de determinar el porcentaje de probabilidad de que una transacción determinada se envíe a Sentry. Recibirá automáticamente información sobre la transacción y el contexto en el que se crea, y debe devolver un número entre `0` (0% de probabilidad de envío) y `1` (100% de probabilidad de envío). También puede usarse para filtrar transacciones devolviendo 0 para aquellas que no se desean. Para habilitar las trazas, debe definirse esto o <PlatformIdentifier name="TracesSampleRate" />.
+</SdkOption>

@@ -1,0 +1,105 @@
+---
+title: Plugin de Gradle para Android de Sentry (AGP)
+description: "Aprende a configurar el plugin de Gradle para Android de Sentry para cargar automáticamente los source maps y los símbolos de depuración de tu proyecto de Expo."
+---
+
+<Alert>
+  El **Sentry AGP** sigue siendo una opción experimental del plugin de Sentry React Native para Expo. Si encuentras algún problema, háznoslo saber mediante un ticket en GitHub.
+</Alert>
+
+Para habilitar el plugin, modifica la configuración de la aplicación de Expo y agrega la opción `enableAndroidGradlePlugin` en la sección del plugin `@sentry/react-native/expo`.
+
+```javascript {tabTitle:app.json/app.config.json} {10-12}
+{
+  "expo": {
+    "plugins": [
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "___PROJECT_SLUG___",
+          "organization": "___ORG_SLUG___"
+          "experimental_android": {
+            "enableAndroidGradlePlugin": true,
+          }
+        }
+      ],
+  }
+}
+```
+
+
+<div id="configuration-options">
+  ## Opciones de configuración
+</div>
+
+Puedes configurar el complemento Sentry para Android de Gradle pasando un objeto de opciones a la clave `experimental_android` en la configuración del plugin.
+
+```javascript {tabTitle:app.json/app.config.json}
+{
+  "expo": {
+...
+    "plugins": [
+      [
+        "@sentry/react-native/expo",
+        {
+...
+          "experimental_android": {
+            "enableAndroidGradlePlugin": true,
+            "autoUploadProguardMapping": true,
+            "includeProguardMapping": true,
+            "dexguardEnabled": true,
+            "uploadNativeSymbols": true,
+            "autoUploadNativeSymbols": true,
+            "includeNativeSources": true,
+            "includeSourceContext": true,
+          }
+        }
+      ],
+...
+  }
+}
+```
+
+
+<div id="autouploadproguardmapping">
+  ### autoUploadProguardMapping
+</div>
+
+Esta opción indica si el plugin debe intentar subir automáticamente el archivo de mapeo a Sentry o no. Si se desactiva, el plugin ejecutará una prueba en seco y solo generará un UUID. En ese caso, el archivo de mapeo debe subirse manualmente mediante sentry-cli. De forma predeterminada, está habilitada.
+
+<div id="includeproguardmapping">
+  ### includeProguardMapping
+</div>
+
+Activa o desactiva el manejo del mapeo de Proguard para Sentry. Si está activado, el plugin generará un UUID y se encargará de subir el mapeo a Sentry. Si está desactivado, se excluirá toda la lógica relacionada con el mapeo de Proguard. De forma predeterminada, está activado.
+
+<div id="dexguardenabled">
+  ### dexguardEnabled
+</div>
+
+Indicador experimental para activar la integración con las herramientas de GuardSquare (Dexguard y External Proguard). Si está habilitado, el complemento intentará recoger y subir el archivo de mapeo generado por Dexguard y External Proguard. De forma predeterminada, está deshabilitado.
+
+<div id="uploadnativesymbols">
+  ### uploadNativeSymbols
+</div>
+
+Deshabilita o habilita la configuración automática de Native Symbols para Sentry. Esto ejecuta sentry-cli automáticamente, por lo que no tienes que hacerlo manualmente. De manera predeterminada, está habilitado.
+
+<div id="autouploadnativesymbols">
+  ### autoUploadNativeSymbols
+</div>
+
+Define si el complemento debe intentar subir automáticamente los símbolos de depuración nativos a Sentry o no. Si se desactiva, el complemento ejecutará un dry run. De forma predeterminada, está habilitado.
+
+<div id="includenativesources">
+  ### includeNativeSources
+</div>
+
+Incluye o no el código fuente del código nativo para Sentry. Esto ejecuta automáticamente sentry-cli con el parámetro --include-sources para que no tengas que hacerlo manualmente. Esta opción solo surte efecto cuando `uploadNativeSymbols` está habilitado. De forma predeterminada, está habilitada.
+
+<div id="includesourcecontext">
+  ### includeSourceContext
+</div>
+
+Genera un paquete de código fuente para JVM (Java, Kotlin, etc.) y sube tu código fuente a Sentry. Esto habilita el contexto de código fuente, lo que te permite ver tu código como parte de tus trazas de pila en Sentry. De forma predeterminada, está deshabilitado.

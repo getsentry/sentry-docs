@@ -1,0 +1,247 @@
+---
+title: HTTP
+sidebar_order: 100
+description: "Sigue esta guía para configurar y administrar monitores con la API de Sentry."
+---
+
+Sentry Crons te permite supervisar la disponibilidad y el rendimiento de cualquier tarea programada y recurrente. Una vez implementado, podrás recibir alertas y métricas para ayudarte a resolver errores, detectar tiempos de espera y prevenir interrupciones en tu servicio.
+
+<div id="requirements">
+  ## Requisitos
+</div>
+
+Para empezar a monitorizar tu tarea programada y recurrente:
+
+1. [Crea un nuevo monitor](https://sentry.io/issues/alerts/new/crons/) en Sentry.
+2. Configura check-ins o un heartbeat para tu tarea.
+
+Opcionalmente, puedes omitir el primer paso y [crear o actualizar (upsert) un monitor mediante un check-in](#creating-or-updating-a-monitor-through-a-check-in-optional). Consulta más abajo.
+
+<div id="check-ins-recommended">
+  ## Check-Ins (recomendado)
+</div>
+
+La supervisión de check-ins te permite seguir el progreso de un job completando dos check-ins: uno al inicio y otro al final. Este proceso en dos pasos permite que Sentry te notifique si tu job no comenzó cuando se esperaba (missed) o si superó su tiempo máximo de ejecución (failed).
+
+```bash {tabTitle: cURL}
+SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
+SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
+
+# 🟡 Notifica a Sentry que tu tarea está en ejecución:
+curl "${SENTRY_CRONS}?status=in_progress"
+
+# Ejecuta aquí tu tarea programada...
+
+# 🟢 Notifica a Sentry que tu tarea se completó correctamente:
+curl "${SENTRY_CRONS}?status=ok"
+```
+
+```http {tabTitle: HTTP}
+GET /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/?status=in_progress HTTP/1.1
+Host: ___ORG_INGEST_DOMAIN___
+
+GET /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/?status=ok HTTP/1.1
+Host: ___ORG_INGEST_DOMAIN___
+```
+
+Si falla la ejecución de tu job:
+
+```bash {tabTitle: cURL}
+# 🔴 Notifica a Sentry que tu tarea ha fallado:
+curl "${SENTRY_CRONS}?status=error"
+```
+
+```http {tabTitle: HTTP}
+GET /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/?status=error HTTP/1.1
+Host: ___ORG_INGEST_DOMAIN___
+```
+
+<Alert>
+  Si esperas que tus tareas programadas se solapen, lee sobre [Overlapping Jobs](#overlapping-jobs-optional) a continuación.
+</Alert>
+
+<div id="specifying-monitor-environments-optional">
+  ### Especificar entornos del monitor (opcional)
+</div>
+
+Al enviar check-ins a tu monitor, puedes especificar el `environment` del
+check-in. Esto te permite supervisar una misma programación en varios
+entornos.
+
+Si no especificas un entorno en tus check-ins, el valor predeterminado es `production`.
+
+<Alert>
+  Los entornos del monitor todavía están en desarrollo. Actualmente, después de que se registre un check-in
+  para un entorno específico, debes seguir enviando check-ins conforme a la
+  programación o eliminar el entorno del monitor; de lo contrario, se marcará como omitido.
+</Alert>
+
+```bash {tabTitle: cURL}
+SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
+SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
+
+# 🟡 Notifica a Sentry que tu trabajo se está ejecutando en el entorno de desarrollo:
+curl "${SENTRY_CRONS}?environment=dev&status=in_progress"
+
+# Ejecuta aquí la tarea programada...
+
+# 🟢 Notifica a Sentry que tu trabajo en el entorno de desarrollo se completó correctamente:
+curl "${SENTRY_CRONS}?environment=dev&status=ok"
+```
+
+<div id="creating-or-updating-a-monitor-through-a-check-in-optional">
+  ### Crear o actualizar un monitor mediante un check-in (opcional)
+</div>
+
+Sentry permite la creación o actualización automática de un monitor (upsert) a través del payload del check-in. Esto puede ser útil si tienes muchas tareas programadas o necesitas crearlas dinámicamente.
+
+```bash {tabTitle: cURL}
+SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
+SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
+
+# 🟡 Notifica a Sentry que tu tarea está en ejecución:
+curl -X POST "${SENTRY_CRONS}" \
+    --header 'Content-Type: application/json' \
+    --data-raw '{"monitor_config": {"schedule": {"type": "crontab", "value": "0 * * * *"}}, "status": "in_progress"}'
+```
+
+```http {tabTitle: HTTP}
+POST /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/ HTTP/1.1
+Host: ___ORG_INGEST_DOMAIN___
+Content-Type: application/json
+
+{
+    "monitor_config": {
+        "schedule": {"type": "crontab", "value": "0 * * * *"},
+        "checkin_margin": 1,
+        "max_runtime": 20,
+        "timezone": "America/Los_Angeles"
+        "failure_issue_threshold": 1,
+        "recovery_threshold": 1,
+    },
+    "status": "in_progress"
+}
+```
+
+Parámetros de `monitor_config`:
+
+`schedule_type`:
+
+La representación de la programación de tu monitor, ya sea `crontab` o `interval`.
+
+`schedule`:
+
+La programación del job:
+
+Es un objeto que especifica un `schedule_type` de `crontab` o `interval`. La estructura variará según el tipo:
+
+```json
+{"type": "crontab", "value": "0 * * * *"}
+{"type": "interval", "value": "2", "unit": "horas"}
+```
+
+`checkin_margin`:
+
+La cantidad de tiempo (en minutos) que Sentry debe esperar tu check-in antes de considerarlo omitido («período de gracia»). Opcional.
+
+<Alert>
+  Recomendamos que el margen de check-in sea menor o igual que el intervalo.
+</Alert>
+
+`max_runtime`:
+
+La cantidad de tiempo (en minutos) que se permite que tu job se ejecute antes de considerarse fallido. Opcional.
+
+`failure_issue_threshold`:
+
+El número de check-ins fallidos consecutivos necesarios antes de que se cree un issue. Opcional.
+
+`recovery_threshold`:
+
+El número de check-ins OK consecutivos necesarios antes de que se resuelva un issue. Opcional.
+
+`timezone`
+
+El `tz` donde se está ejecutando tu job. Generalmente es la zona horaria de tu servidor (como `America/Los_Angeles`). Consulta la [lista de zonas horarias de la base de datos tz](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). Opcional.
+
+<Alert level="warning">
+  Es importante proporcionar una zona horaria para crontabs no recurrentes, como `0 17 * * *` (todos los días a las 5 p. m.).
+</Alert>
+
+<div id="overlapping-jobs-optional">
+  ### Trabajos superpuestos (opcional)
+</div>
+
+Una ejecución de un trabajo que comienza antes de que haya finalizado la ejecución previa se denomina trabajo superpuesto. Esto ocurre si tienes un trabajo cuya duración de ejecución es mayor que el intervalo con el que está programado.
+
+Un ejemplo sencillo: tienes un trabajo que se ejecuta cada minuto (1), pero cada ejecución tarda cinco (5) minutos en completarse.
+
+Si ocurre esto, debes proporcionar un ID de check-in estable para tu ejecución en cada solicitud para evitar consecuencias no deseadas.
+
+Ejemplo de uso:
+
+```bash {tabTitle: cURL}
+CHECK_IN_ID="$(uuidgen)"
+
+SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
+SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
+
+# 🟡 Informa a Sentry que tu trabajo se está ejecutando con un ID de check-in:
+curl "${SENTRY_CRONS}?check_in_id=${CHECK_IN_ID}&status=in_progress"
+
+# Ejecuta tu tarea programada aquí...
+
+# 🟢 Informa a Sentry que tu trabajo se completó correctamente con un ID de check-in:
+curl "${SENTRY_CRONS}?check_in_id=${CHECK_IN_ID}&status=ok"
+```
+
+<div id="heartbeat">
+  ## Heartbeat
+</div>
+
+El monitoreo de Heartbeat informa a Sentry sobre el estado de una tarea mediante un único check-in. Esta configuración solo te notificará si tu tarea no se inició cuando se esperaba (missed). Si necesitas hacer seguimiento de una tarea para ver si superó su tiempo máximo de ejecución (failed), usa check-ins en su lugar.
+
+```bash {tabTitle: cURL}
+SENTRY_INGEST="https://___ORG_INGEST_DOMAIN___"
+SENTRY_CRONS="${SENTRY_INGEST}/api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/"
+
+# 🟢 Notifica a Sentry que tu tarea se completó correctamente:
+curl "${SENTRY_CRONS}?status=ok"
+```
+
+```http {tabTitle: HTTP}
+GET /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/?status=ok HTTP/1.1
+Host: ___ORG_INGEST_DOMAIN___
+```
+
+Si falla la ejecución de tu job:
+
+```bash {tabTitle: cURL}
+# 🔴 Notifica a Sentry que tu tarea ha fallado:
+curl "${SENTRY_CRONS}?status=error"
+```
+
+```http {tabTitle: HTTP}
+GET /api/___PROJECT_ID___/cron/<monitor_slug>/___PUBLIC_KEY___/?status=error HTTP/1.1
+Host: ___ORG_INGEST_DOMAIN___
+```
+
+<div id="alerts">
+  ## Alertas
+</div>
+
+Cuando tu tarea recurrente no hace check-in (omitida), se ejecuta más allá del tiempo máximo configurado (fallida) o informa manualmente un error, Sentry creará un evento de error con una etiqueta asociada a tu monitor.
+
+Para recibir alertas sobre estos eventos:
+
+1. Ve a **Alerts** en la barra lateral.
+2. Crea una nueva alerta y selecciona &quot;Issues&quot; en &quot;Errors&quot; como tipo de alerta.
+3. Configura tu alerta y define un filtro de coincidencia para usar: `The event's tags match {key} {match} {value}`.
+
+Ejemplo: `The event's tags match monitor.slug equals my-monitor-slug-here`
+
+<Include name="common-imgs/crons-alerts-example" />
+
+Obtén más información en [Configuración de alertas de Issues](/es/product/alerts/create-alerts/issue-alert-config/).
+
+<Include name="crons-rate-limits" />

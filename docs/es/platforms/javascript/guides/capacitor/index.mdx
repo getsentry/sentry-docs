@@ -1,0 +1,579 @@
+---
+title: Capacitor
+description: El SDK de Capacitor de Sentry permite el informe automático de errores, excepciones y mensajes. Incluye compatibilidad con fallos nativos en iOS y Android.
+sdk: sentry.javascript.capacitor
+categories:
+  - javascript
+  - browser
+  - mobile
+---
+
+<div id="features">
+  ## Funciones
+</div>
+
+Además de capturar errores, puedes supervisar las interacciones entre varios servicios o aplicaciones al [habilitar el tracing](/es/concepts/key-terms/tracing/). También puedes llegar más rápido a la causa de un error o problema de rendimiento viendo una reproducción tipo video de una sesión de usuario con [repetición de sesión](/es/product/explore/session-replay/web/getting-started/).
+
+Selecciona qué funciones de Sentry te gustaría instalar además de Error Monitoring para obtener a continuación las instrucciones correspondientes de instalación y configuración.
+
+<div id="install">
+  ## Instalación
+</div>
+
+<OnboardingOptionButtons options={["error-monitoring", "performance", "session-replay", "user-feedback", "logs"]} />
+
+Sentry captura datos mediante un SDK dentro del tiempo de ejecución de tu aplicación.
+
+Instala el SDK de Sentry para Capacitor junto con el SDK de Sentry correspondiente al framework que usas:
+
+```bash {tabTitle:Angular}
+# npm
+npm install @sentry/capacitor @sentry/angular --save
+
+# yarn
+yarn add @sentry/capacitor @sentry/angular
+
+# pnpm
+pnpm add @sentry/capacitor @sentry/angular
+```
+
+```bash {tabTitle:React}
+# npm
+npm install @sentry/capacitor @sentry/react --save
+
+# yarn
+yarn add @sentry/capacitor @sentry/react
+
+# pnpm
+pnpm add @sentry/capacitor @sentry/react
+```
+
+```bash {tabTitle:Vue}
+# npm
+npm install @sentry/capacitor @sentry/vue --save
+
+# yarn
+yarn add @sentry/capacitor @sentry/vue
+
+# pnpm
+pnpm add @sentry/capacitor @sentry/vue
+```
+
+```bash {tabTitle:Nuxt}
+# npm
+npm install @sentry/capacitor @sentry/nuxt --save
+
+# yarn
+yarn add @sentry/capacitor @sentry/nuxt
+
+# pnpm
+pnpm add @sentry/capacitor @sentry/nuxt
+```
+
+```bash {tabTitle:Other}
+# npm
+npm install @sentry/capacitor @sentry/browser --save
+
+# yarn
+yarn add @sentry/capacitor @sentry/browser
+
+# pnpm
+pnpm add @sentry/capacitor @sentry/browser
+```
+
+<div id="angular-version-compatibility">
+  ### Compatibilidad de versiones de Angular
+</div>
+
+Actualmente, el SDK de Sentry para Capacitor solo es compatible con Angular 14 y versiones posteriores.
+
+Si usas una versión anterior de Angular, también debes usar una versión anterior del SDK. Consulta la tabla a continuación para ver la compatibilidad:
+
+| Versión de Angular | SDK de Sentry recomendado                        |
+| ------------------ | ------------------------------------------------ |
+| 14 y posteriores   | `@sentry/capacitor` `@sentry/angular`            |
+| 12 o 13            | `@sentry/capacitor^0` `@sentry/angular-ivy@^7` * |
+| 10 o 11            | `@sentry/capacitor^0` `@sentry/angular@^7` *     |
+
+* Estas versiones del SDK ya no se mantienen ni se prueban. La versión 0 podría seguir recibiendo correcciones de errores, pero no garantizamos soporte.
+
+<div id="react-and-vue-version-compatibility">
+  ### Compatibilidad de versiones de React y Vue
+</div>
+
+Ambos frameworks son totalmente compatibles con las versiones actual y beta de Sentry para Capacitor.
+
+<div id="configure">
+  ## Configurar
+</div>
+
+La configuración debe realizarse lo antes posible en el ciclo de vida de tu aplicación.
+
+Luego, reenvía el método `init` desde el SDK de Sentry correspondiente al framework que uses, como Angular en este ejemplo:
+
+```typescript {tabTitle: Angular 14+} {filename: app.module.ts}
+import * as Sentry from "@sentry/capacitor";
+import * as SentryAngular from "@sentry/angular";
+
+Sentry.init(
+  {
+    dsn: "___PUBLIC_DSN___",
+    
+    // Añade encabezados de solicitud e IP para usuarios. Para más información, visita:
+    // https://docs.sentry.io/platforms/javascript/guides/capacitor/configuration/options/#sendDefaultPii
+    sendDefaultPii: true,
+  
+    // Define tu versión de lanzamiento, por ejemplo "getsentry@1.0.0"
+    release: "my-project-name@<release-name>",
+    // Define tu versión de distribución, por ejemplo "1"
+    dist: "<dist>",
+    // ___PRODUCT_OPTION_START___ logs
+    // Logs requiere @sentry/capacitor 2.0.0 o superior.
+    _experiments: {
+      enableLogs: true,
+      beforeSendLog: (log) => {
+        // Añade filtros personalizados a los logs.
+        return log;
+      }
+    },
+    // ___PRODUCT_OPTION_END___ logs
+    integrations: [
+      // ___PRODUCT_OPTION_START___ performance
+      // Registra y configura la integración de Tracing,
+      // que instrumenta automáticamente tu aplicación para monitorear su
+      // rendimiento, incluyendo instrumentación de enrutamiento personalizada de Angular
+      Sentry.browserTracingIntegration(),
+      // ___PRODUCT_OPTION_END___ performance
+      // ___PRODUCT_OPTION_START___ session-replay
+      // Registra la integración de Replay,
+      // que captura automáticamente las repeticiones de sesión
+      Sentry.replayIntegration(),
+      // ___PRODUCT_OPTION_END___ session-replay
+      // ___PRODUCT_OPTION_START___ user-feedback
+      Sentry.feedbackIntegration({
+        // La configuración adicional del SDK va aquí, por ejemplo:
+        colorScheme: "system",
+      }),
+      // ___PRODUCT_OPTION_END___ user-feedback
+    ],
+    // ___PRODUCT_OPTION_START___ performance
+
+    // Define tracesSampleRate en 1.0 para capturar el 100%
+    // de las transacciones para rastreo.
+    // Recomendamos ajustar este valor en producción.
+    // Más información en
+    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+    tracesSampleRate: 1.0,
+
+    // Define `tracePropagationTargets` para controlar en qué URLs debe habilitarse el rastreo distribuido
+    tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+    // ___PRODUCT_OPTION_END___ performance
+    // ___PRODUCT_OPTION_START___ session-replay
+
+    // Captura Replay para el 10% de todas las sesiones,
+    // más el 100% de las sesiones con error
+    // Más información en
+    // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+    // ___PRODUCT_OPTION_END___ session-replay
+  },
+  // Reenvía el método init desde @sentry/angular
+  SentryAngular.init
+);
+
+@NgModule({
+  providers: [
+    {
+      provide: ErrorHandler,
+      // Adjunta el ErrorHandler de Sentry
+      useValue: SentryAngular.createErrorHandler(),
+    },
+    // ___PRODUCT_OPTION_START___ performance
+    {
+      provide: SentryAngular.TraceService,
+      deps: [Router],
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: () => () => {},
+      deps: [SentryAngular.TraceService],
+      multi: true,
+    },
+    // ___PRODUCT_OPTION_END___ performance
+  ],
+})
+```
+
+```typescript {tabTitle: Angular 12, 13} {filename: app.module.ts}
+// Requiere @sentry/capacitor V0.
+import * as Sentry from "@sentry/capacitor";
+import * as SentryAngular from "@sentry/angular-ivy";
+
+Sentry.init(
+  {
+    dsn: "___PUBLIC_DSN___",
+    
+    // Agrega encabezados de solicitud y la IP de los usuarios; para más información, visita:
+    // https://docs.sentry.io/platforms/javascript/guides/capacitor/configuration/options/#sendDefaultPii
+    // Configura tu versión de lanzamiento, por ejemplo: "getsentry@1.0.0"
+
+    // Configura tu versión de distribución, por ejemplo: "1"
+    release: "my-project-name@<release-name>",
+    // Set your dist version, such as "1"
+    dist: "<dist>",
+    // ___PRODUCT_OPTION_START___ logs
+    // Los logs requieren Angular 14 o una versión más reciente.
+    // ___PRODUCT_OPTION_END___ logs
+    integrations: [
+      // ___PRODUCT_OPTION_START___ performance
+      // Registra y configura la integración de Tracing,
+      // que instrumenta automáticamente tu aplicación para supervisar su
+      // rendimiento, incluida la instrumentación personalizada del enrutamiento de Angular
+      new Sentry.BrowserTracing(),
+      // ___PRODUCT_OPTION_END___ performance
+      // ___PRODUCT_OPTION_START___ session-replay
+      // Registra la integración de Replay,
+      // que captura automáticamente las repeticiones de sesión (Session Replays)
+      new Sentry.Replay(),
+      // ___PRODUCT_OPTION_END___ session-replay
+      // ___PRODUCT_OPTION_START___ user-feedback
+      Sentry.feedbackIntegration({
+        // La configuración adicional del SDK va aquí, por ejemplo:
+        colorScheme: "system",
+      }),
+      // ___PRODUCT_OPTION_END___ user-feedback
+    ],
+
+    // ___PRODUCT_OPTION_START___ performance
+    // Establece tracesSampleRate en 1.0 para capturar el 100 %
+    // de las transacciones para tracing.
+    // Recomendamos ajustar este valor en producción
+    // Más información en
+    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+    tracesSampleRate: 1.0,
+
+    // Establece `tracePropagationTargets` para controlar en qué URL se debe habilitar el tracing distribuido
+    tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+    // ___PRODUCT_OPTION_END___ performance
+    // ___PRODUCT_OPTION_START___ session-replay
+
+    // Captura Replay para el 10 % de todas las sesiones,
+    // además del 100 % de las sesiones con un error
+    // Más información en
+    // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+    // ___PRODUCT_OPTION_END___ session-replay
+  },
+  // Reenvía el método init de @sentry/angular
+  SentryAngular.init
+);
+
+@NgModule({
+  providers: [
+    {
+      provide: ErrorHandler,
+      // Vincula el ErrorHandler de Sentry
+      useValue: SentryAngular.createErrorHandler(),
+    },
+    {
+      provide: SentryAngular.TraceService,
+      deps: [Router],
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: () => () => {},
+      deps: [SentryAngular.TraceService],
+      multi: true,
+    },
+  ],
+})
+```
+
+```typescript {tabTitle: React} {filename: index.tsx}
+import * as Sentry from "@sentry/capacitor";
+import * as SentryReact from "@sentry/react";
+
+Sentry.init(
+  {
+    dsn: "___PUBLIC_DSN___",
+    
+    // Añade encabezados de solicitud e IP de los usuarios, para más información visita:
+    // https://docs.sentry.io/platforms/javascript/guides/capacitor/configuration/options/#sendDefaultPii
+    sendDefaultPii: true,
+
+    // Define tu versión de lanzamiento, por ejemplo "getsentry@1.0.0"
+    release: "my-project-name@<release-name>",
+    // Define tu versión de distribución, por ejemplo "1"
+    dist: "<dist>",
+    // ___PRODUCT_OPTION_START___ logs
+    // Logs requiere @sentry/capacitor 2.0.0 o superior.
+    _experiments: {
+      enableLogs: true,
+      beforeSendLog: (log) => {
+        // Añade filtros personalizados a los logs.
+        return log;
+      }
+    },
+    // ___PRODUCT_OPTION_END___ logs
+    integrations: [
+      // ___PRODUCT_OPTION_START___ performance
+      // Registra y configura la integración de Tracing,
+      // que instrumenta automáticamente tu aplicación para monitorear su
+      // rendimiento, incluyendo instrumentación de enrutamiento personalizada de Angular
+      Sentry.browserTracingIntegration(),
+      // ___PRODUCT_OPTION_END___ performance
+      // ___PRODUCT_OPTION_START___ session-replay
+      // Registra la integración de Replay,
+      // que captura automáticamente las repeticiones de sesión
+      Sentry.replayIntegration(),
+      // ___PRODUCT_OPTION_END___ session-replay
+      // ___PRODUCT_OPTION_START___ user-feedback
+      Sentry.feedbackIntegration({
+        // La configuración adicional del SDK va aquí, por ejemplo:
+        colorScheme: "system",
+      }),
+      // ___PRODUCT_OPTION_END___ user-feedback
+    ],
+    // ___PRODUCT_OPTION_START___ performance
+
+    // Define tracesSampleRate en 1.0 para capturar el 100%
+    // de las transacciones para el rastreo.
+    // Recomendamos ajustar este valor en producción
+    // Más información en
+    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+    tracesSampleRate: 1.0,
+
+    // Define `tracePropagationTargets` para controlar en qué URLs debe habilitarse el rastreo distribuido
+    tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+    // ___PRODUCT_OPTION_END___ performance
+    // ___PRODUCT_OPTION_START___ session-replay
+
+    // Captura Replay para el 10% de todas las sesiones,
+    // más el 100% de las sesiones con error
+    // Más información en
+    // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+    // ___PRODUCT_OPTION_END___ session-replay
+  },
+  // Reenvía el método init de @sentry/react
+  SentryReact.init
+);
+```
+
+```typescript {tabTitle: Vue} {filename: main.ts}
+import * as Sentry from "@sentry/capacitor";
+import * as SentryVue from "@sentry/vue";
+import { createApp } from 'vue'
+
+const app = createApp(App)
+
+Sentry.init(
+  {
+    app,
+    dsn: "___PUBLIC_DSN___",
+    
+    // Añade encabezados de solicitud e IP para usuarios. Para más información, visita:
+    // https://docs.sentry.io/platforms/javascript/guides/capacitor/configuration/options/#sendDefaultPii
+    sendDefaultPii: true,
+
+    // Define tu versión de lanzamiento, por ejemplo "getsentry@1.0.0"
+    release: "my-project-name@<release-name>",
+    // Define tu versión de distribución, por ejemplo "1"
+    dist: "<dist>",
+    // ___PRODUCT_OPTION_START___ logs
+    // Logs requiere @sentry/capacitor 2.0.0 o superior.
+    _experiments: {
+      enableLogs: true,
+      beforeSendLog: (log) => {
+        // Añade filtros personalizados a los logs.
+        return log;
+      }
+    },
+    // ___PRODUCT_OPTION_END___ logs
+    integrations: [
+      // ___PRODUCT_OPTION_START___ performance
+      // Registra y configura la integración de Tracing,
+      // que instrumenta automáticamente tu aplicación para monitorear su
+      // rendimiento, incluyendo instrumentación de enrutamiento personalizado de Angular
+      Sentry.browserTracingIntegration(),
+      // ___PRODUCT_OPTION_END___ performance
+      // ___PRODUCT_OPTION_START___ session-replay
+      // Registra la integración de Replay,
+      // que captura automáticamente Session Replays
+      Sentry.replayIntegration(),
+      // ___PRODUCT_OPTION_END___ session-replay
+      // ___PRODUCT_OPTION_START___ user-feedback
+      Sentry.feedbackIntegration({
+        // La configuración adicional del SDK va aquí, por ejemplo:
+        colorScheme: "system",
+      }),
+      // ___PRODUCT_OPTION_END___ user-feedback
+    ],
+    // ___PRODUCT_OPTION_START___ performance
+
+    // Define tracesSampleRate en 1.0 para capturar el 100%
+    // de las transacciones para rastreo.
+    // Recomendamos ajustar este valor en producción.
+    // Más información en
+    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+    tracesSampleRate: 1.0,
+
+    // Define `tracePropagationTargets` para controlar en qué URLs debe habilitarse el rastreo distribuido
+    tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+    // ___PRODUCT_OPTION_END___ performance
+    // ___PRODUCT_OPTION_START___ session-replay
+
+    // Captura Replay para el 10% de todas las sesiones,
+    // más el 100% de las sesiones con error
+    // Más información en
+    // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+    // ___PRODUCT_OPTION_END___ session-replay
+  },
+
+  // Reenvía el método init desde @sentry/vue
+  SentryVue.init
+);
+```
+
+```typescript {tabTitle: Nuxt} {filename: sentry.client.config.ts}
+import * as Sentry from "@sentry/capacitor";
+import * as SentryNuxt from "@sentry/nuxt";
+
+Sentry.init(
+  {
+    dsn: "___PUBLIC_DSN___",
+    
+    // Añade encabezados de solicitud e IP para usuarios. Para más información, visita:
+    // https://docs.sentry.io/platforms/javascript/guides/capacitor/configuration/options/#sendDefaultPii
+    sendDefaultPii: true,
+
+    // Define tu versión de lanzamiento, por ejemplo "getsentry@1.0.0"
+    release: "my-project-name@<release-name>",
+    // Define tu versión de distribución, por ejemplo "1"
+    dist: "<dist>",
+    // ___PRODUCT_OPTION_START___ logs
+    // Logs requiere @sentry/capacitor 2.0.0 o superior.
+    _experiments: {
+      enableLogs: true,
+      beforeSendLog: (log) => {
+        // Añade filtros personalizados a los logs.
+        return log;
+      }
+    },
+    // ___PRODUCT_OPTION_END___ logs
+    integrations: [
+      // ___PRODUCT_OPTION_START___ performance
+      // Registra y configura la integración de Tracing,
+      // que instrumenta automáticamente tu aplicación para monitorear su
+      // rendimiento, incluyendo instrumentación de enrutamiento personalizada de Angular
+      Sentry.browserTracingIntegration(),
+      // ___PRODUCT_OPTION_END___ performance
+      // ___PRODUCT_OPTION_START___ session-replay
+      // Registra la integración de Replay,
+      // que captura automáticamente Session Replays
+      Sentry.replayIntegration(),
+      // ___PRODUCT_OPTION_END___ session-replay
+      // ___PRODUCT_OPTION_START___ user-feedback
+      Sentry.feedbackIntegration({
+        // La configuración adicional del SDK va aquí, por ejemplo:
+        colorScheme: "system",
+      }),
+      // ___PRODUCT_OPTION_END___ user-feedback
+    ],
+    // ___PRODUCT_OPTION_START___ performance
+
+    // Define tracesSampleRate en 1.0 para capturar el 100%
+    // de las transacciones para rastreo.
+    // Recomendamos ajustar este valor en producción.
+    // Más información en
+    // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+    tracesSampleRate: 1.0,
+
+    // Define `tracePropagationTargets` para controlar en qué URLs debe habilitarse el rastreo distribuido
+    tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+    // ___PRODUCT_OPTION_END___ performance
+    // ___PRODUCT_OPTION_START___ session-replay
+
+    // Captura Replay para el 10% de todas las sesiones,
+    // más el 100% de las sesiones con un error.
+    // Más información en
+    // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+    // ___PRODUCT_OPTION_END___ session-replay
+  },
+
+  // Reenvía el método init desde @sentry/nuxt
+  SentryNuxt.init
+);
+```
+
+También puedes usar las funciones disponibles del SDK de Sentry para el framework que utilices, como [Angular](/es/platforms/javascript/guides/angular/).
+
+<div id="source-maps">
+  ### Mapas de origen
+</div>
+
+Necesitas cargar mapas de origen para poder interpretar los eventos que recibes en Sentry.
+
+Si usas Capacitor con Ionic-Angular, carga tu carpeta outputPath (normalmente `www` o `dist`) en **cada compilación** que publiques. Los valores de `<release_name>` y `<dist>` deben coincidir con los valores pasados a `Sentry.init` para que los eventos se desminifiquen correctamente.
+
+```bash {tabTitle: Ionic Build & others}
+sentry-cli sourcemaps inject --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ ./www
+sentry-cli sourcemaps upload --release <release_name>  --dist <dist> ./www
+```
+
+```bash {tabTitle: Ionic Capacitor Build}
+
+# Android
+sentry-cli sourcemaps inject --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ ./android/app/src/main/assets/public
+sentry-cli sourcemaps upload --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ --release <release_name>  --dist <dist> ./android/app/src/main/assets/public
+find ./android/app/src/main/assets/public -type f -name '*.map' -delete # Opcional: elimina los sourcemaps de la aplicación móvil.
+
+# iOS
+sentry-cli sourcemaps inject --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ ./ios/App/App/public
+sentry-cli sourcemaps upload --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ --release <release_name> --dist <dist> ./ios/App/App/public,
+find ./ios/App/App/public -type f -name '*.map' -delete # Opcional: elimina los sourcemaps de la aplicación móvil.
+
+```
+
+<Alert level="warning" title="Importante">
+  Si compilas tu proyecto con `ionic capacitor build`, debes cargar los mapas de origen desde la carpeta de la app nativa (por ejemplo, android/app/build/assets), no desde el `outputPath` definido en tu proyecto web (como `www` o `dist`).
+</Alert>
+
+Más información sobre cómo cargar [mapas de origen](/es/platforms/javascript/guides/capacitor/sourcemaps/).
+
+<div id="provide-native-debug-information-ios">
+  ### Proporcionar información de depuración nativa (iOS)
+</div>
+
+Para que la información de la traza de pila de fallos nativos en iOS sea más fácil de entender, debes proporcionar información de depuración a Sentry. Esta información se proporciona [subiendo archivos dSYM](/es/platforms/javascript/guides/capacitor/dsym).
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Este fragmento incluye un error intencional para que puedas comprobar que todo funciona en cuanto lo configures.
+
+```javascript
+import * as Sentry from "@sentry/capacitor";
+
+Sentry.captureException("Test Captured Exception");
+```
+
+También puedes generar un error en cualquier parte de tu aplicación:
+
+```javascript
+throw new Error(`Error de prueba lanzado`);
+```
+
+<Alert>
+  Obtén más información sobre cómo capturar manualmente un error o un mensaje en nuestra <PlatformLink to="/usage/">documentación de uso</PlatformLink>.
+</Alert>
+
+Para ver y resolver el error registrado, inicia sesión en [sentry.io](https://sentry.io) y selecciona tu proyecto. Al hacer clic en el título del error, se abrirá una página donde podrás ver información detallada y marcarlo como resuelto.

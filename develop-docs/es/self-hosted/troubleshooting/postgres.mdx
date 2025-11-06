@@ -1,0 +1,35 @@
+---
+title: Solución de problemas en Postgres
+sidebar_title: Postgres
+sidebar_order: 4
+---
+
+<div id="nodestore-table-growing-rapidly">
+  ## La tabla de Nodestore crece rápidamente
+</div>
+
+[Nodestore](https://develop.sentry.dev/backend/application-domains/nodestore/) se utiliza para almacenar datos clave/valor. La tabla `nodestore_node` puede crecer con rapidez, especialmente cuando se usa intensivamente la función de Performance Monitoring, ya que los datos de trazas se almacenan en esta tabla.
+
+La tabla `nodestore_node` se limpia como parte de la tarea `cleanup`; sin embargo, es posible que Postgres no llegue a hacer vacuum de la tabla (sobre todo bajo alta carga), por lo que, aunque se eliminen las filas, siguen ocupando espacio en disco.
+
+Puedes usar `pg-repack`, que recompone una tabla en caliente creando una nueva y copiando los datos antes de eliminar la anterior. Conviene ejecutarlo después del script de limpieza y ten en cuenta que, al crear una tabla, **el uso de disco aumentará temporalmente antes de volver a bajar**.
+
+Ejemplo de script:
+
+```shell
+# Solo conservar los últimos 7 días de datos de nodestore. Hacemos un uso intensivo del monitoreo de rendimiento.
+docker compose run --rm -T web cleanup --days 7 -m nodestore -l debug
+# Esto garantiza que pg-repack exista antes de ejecutarse, ya que el contenedor se recrea en las actualizaciones
+docker compose run --rm -T postgres bash -c "apt update && apt install -y --no-install-recommends postgresql-14-repack && su postgres -c 'pg_repack -E info -t nodestore_node'"
+```
+
+Si el script anterior todavía no libera suficiente espacio en disco, puedes intentar lo siguiente en Postgres. Esto provocará pérdida de datos en los detalles de los eventos. *SENTRY&#95;RETENTION&#95;DAYS* deberá completarse manualmente.
+
+```sql
+DELETE FROM public.nodestore_node WHERE "timestamp" < NOW() - INTERVAL '[SENTRY_RETENTION_DAYS] DAY';
+VACUUM FULL public.nodestore_node;
+```
+
+`VACUUM FULL` compacta activamente las tablas al escribir una versión totalmente nueva del archivo de la tabla sin espacio muerto. Esto minimiza el tamaño de la tabla, pero puede llevar mucho tiempo. También requiere espacio adicional en disco para la nueva copia de la tabla hasta que la operación finalice.
+
+Para eventos de mayor volumen de procesamiento, se recomienda usar la implementación comunitaria de Nodestore respaldada por un almacenamiento de blobs como S3 o similar.

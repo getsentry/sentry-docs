@@ -1,0 +1,36 @@
+---
+title: Números de línea de IL2CPP
+description: "Aprende cómo el SDK proporciona números de línea a incidencias de compilaciones IL2CPP."
+sidebar_order: 10
+---
+
+Sentry puede proporcionarte números de línea en excepciones de C# en **compilaciones de producción y de desarrollo** con IL2CPP, en versiones de Unity `2020.3`, `2021.3` y posteriores.
+
+Unity te ofrece la opción de seleccionar [IL2CPP](https://docs.unity3d.com/Manual/IL2CPP.html) como backend de scripting. Esto genera código C++ a partir de tu código C# (IL) compilado, de ahí el nombre `IL to CPP`.
+
+El SDK de Sentry proporciona compatibilidad con números de línea para compilaciones IL2CPP en las siguientes plataformas:
+
+* Windows (*actualmente limitado a Unity 2021.3 o versiones más recientes)
+* macOS
+* Linux
+* Android
+* iOS
+* Xbox
+
+Cuando compilas con IL2CPP, los errores de tu juego ocurren en el código nativo. Además, la correspondencia entre tu código C# y el código C++ generado forma parte del proceso de compilación y no se incluye con tu juego. Eso significa que el evento que informa el SDK de Sentry solo puede contener la traza de pila nativa. Para proporcionarte números de línea de C#, el servidor de Sentry necesita acceder a esa correspondencia de líneas mediante los [archivos de información de depuración](/es/platforms/unity/data-management/debug-files/).
+
+La compatibilidad con números de línea en excepciones de C# con IL2CPP depende de la carga de símbolos de depuración.
+Con la carga automática de símbolos de depuración habilitada, el [SDK de Sentry cargará la correspondencia de líneas automáticamente](/es/platforms/unity/native-support/#debug-symbols).
+
+**Esta función está habilitada de forma predeterminada**. Puedes desactivarla desde la ventana de configuración del editor seleccionando **Tools -&gt; Sentry -&gt; Advanced -&gt; IL2CPP line numbers** o [de forma programática](/es/platforms/unity/configuration/options/#programmatic-configuration).
+
+```csharp
+// Si necesitas desactivar esta función, puedes establecerla en 'false':
+options.Il2CppLineNumberSupportEnabled = false;
+```
+
+<div id="known-limitations">
+  ### Limitaciones conocidas
+</div>
+
+Actualmente, la compatibilidad con números de línea es limitada cuando te suscribes de forma programática a eventos de clic del botón mediante `Button.onClick.AddListener`. No obstante, puedes configurar devoluciones de llamada desde el editor para sortear esta limitación.

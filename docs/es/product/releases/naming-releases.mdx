@@ -1,0 +1,60 @@
+---
+title: Nombres de las versiones
+sidebar_order: 3
+description: "Conoce las convenciones para nombrar versiones."
+---
+
+<div id="creating-releases">
+  ## Creación de versiones
+</div>
+
+Las versiones se crean directamente mediante la [gestión automática de versiones](/es/product/releases/setup/release-automation/), la [Sentry CLI](/es/cli/releases/) o manualmente a través de la [Sentry API](/es/api/releases/create-a-new-release-for-an-organization/).
+
+Las versiones también pueden crearse automáticamente por distintos sistemas; por ejemplo, al subir un mapa de origen (source map) o por algunos clientes cuando se ingiere un evento etiquetado con una versión. Por lo tanto, es importante establecer el nombre de la versión al compilar y desplegar tu aplicación. Obtén más información en nuestra documentación sobre [versiones](/es/platform-redirect/?next=/configuration/releases/).
+
+<div id="release-names">
+  ## Nombres de lanzamientos
+</div>
+
+Los ID de lanzamiento (a menudo llamados &quot;versión&quot; o &quot;nombre&quot;) se usan para identificar de forma única un lanzamiento en toda la organización de Sentry. Un nombre de lanzamiento puede estar asociado con compilaciones, eventos, sesiones, etc., de múltiples proyectos.
+
+<Alert>
+  Los lanzamientos son globales por organización; antepón algo específico del proyecto para diferenciarlos fácilmente.
+</Alert>
+
+El valor puede ser arbitrario, pero hay algunas restricciones. En todos los casos, el nombre del lanzamiento no puede:
+
+* contener saltos de línea, caracteres de tabulación, barras diagonales (`/`) o barras invertidas (`\`)
+* ser (en su totalidad) un punto (`.`), dos puntos (`..`) o un espacio ( )
+* exceder los 200 caracteres
+
+Aunque el valor puede ser arbitrario, recomendamos estas estrategias de nomenclatura:
+
+<div id="semantic-versioning">
+  ### Versionado semántico
+</div>
+
+Usa el formato `package@version` o `package@version+build` (por ejemplo, `my.project.name@2.3.12+1234`)
+
+* `package` es el identificador único del proyecto/app (`CFBundleIdentifier` en iOS, `packageName` en Android)
+* `version` sigue una estructura tipo semver: `<major>.<minor?>.<patch?>.<revision?>-<prerelease?>` (`CFBundleShortVersionString` en iOS, `versionName` en Android)
+* `build` es el número que identifica una iteración de tu app (`CFBundleVersion` en iOS, `versionCode` en Android)
+  **No** uses `VERSION_NUMBER (BUILD_NUMBER)` porque los paréntesis se usan solo con fines de visualización (foo@1.0+2 se muestra como 1.0 (2)); invocarlos provocará un error.
+
+Detectamos automáticamente si un proyecto usa versionado semántico o basado en el tiempo según:
+
+* Si hay ≤ 2 versiones en total: miramos la versión más reciente.
+* Si hay entre 3 y 9 versiones (inclusive): si alguna de las 3 versiones más recientes es semver, el proyecto es semver (es decir, versionado semántico).
+* Si hay 10 o más versiones: si alguna de las 3 versiones más recientes es semver y 3 de las 10 versiones más recientes son semver, entonces el proyecto es semver.
+
+<div id="commit-sha">
+  ### SHA del commit
+</div>
+
+Si usas un sistema de control de versiones como Git, te recomendamos usar el hash identificador (por ejemplo, el SHA del commit, `da39a3ee5e6b4b0d3255bfef95601890afd80709`). Puedes hacer que Sentry CLI determine automáticamente este hash para los sistemas de control de versiones compatibles y pasarlo, en tiempo de compilación, a tu código para que pueda usarse para etiquetar eventos.
+
+<div id="related-features">
+  ## Funciones relacionadas
+</div>
+
+Las estrategias de detección de regresiones y de ordenación de `release:latest` cambiarán según si el proyecto usa versionado semántico o versionado basado en SHA/tiempo.

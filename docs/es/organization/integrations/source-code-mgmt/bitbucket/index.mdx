@@ -1,0 +1,271 @@
+---
+title: Bitbucket
+sidebar_order: 1
+description: >-
+  Obtén más información sobre la integración de Sentry con Bitbucket y cómo puede detectar y
+  resolver errores más rápido usando los datos de tus commits de Bitbucket.
+og_image: /og-images/organization-integrations-source-code-mgmt-bitbucket.png
+---
+
+<div id="install">
+  ## Instalar
+</div>
+
+<Alert>
+  Para instalar esta integración, necesitas permisos de propietario, gestor o administrador en Sentry, y permisos de administrador en Bitbucket.
+</Alert>
+
+1. Ve a **Settings &gt; Integrations &gt; Bitbucket**.
+
+![Install BitBucket integration](./img/bitbucket-install-pg.png)
+
+2. Si tienes instalada la integración heredada de Bitbucket, usa el botón junto a Bitbucket para **Upgrade**. Si no la tienes instalada, usa el botón para **Install**.
+
+3. En el modal que aparecerá, haz clic en &quot;Add Installation&quot;.
+
+4. Se abrirá una ventana de instalación de Bitbucket. Selecciona la cuenta de Bitbucket a la que quieres conceder acceso a Sentry y haz clic en &quot;Grant Access&quot;.
+
+5. En tu nueva instancia de Bitbucket en Sentry, haz clic en &quot;Configure&quot;.
+
+   ![Configure BitBucket integration](./img/bitbucket-installed.png)
+
+6. Añade los repositorios de los que quieras recopilar datos de commits.
+
+   ![Add repositories](./img/bitbucket-add-repo.png)
+
+Bitbucket ahora debería estar habilitado para todos los proyectos de tu organización en Sentry.
+
+<div id="bitbucket-server">
+  ### Bitbucket Server
+</div>
+
+<div id="generate-an-rsa-publicprivate-key-pair">
+  #### Genera un par de claves RSA pública/privada
+</div>
+
+Para generar un par de claves RSA pública/privada, ejecuta estos comandos en la terminal, uno por uno.
+
+```
+openssl genrsa -out bitbucket_privatekey.pem 1024
+openssl req -newkey rsa:1024 -x509 -key bitbucket_privatekey.pem -out bitbucket_publickey.cer -days 365
+openssl pkcs8 -topk8 -nocrypt -in bitbucket_privatekey.pem -out bitbucket_privatekey.pcks8
+openssl x509 -pubkey -noout -in bitbucket_publickey.cer  > bitbucket_publickey.pem
+```
+
+<div id="create-a-new-application-link-in-bitbucket">
+  #### Crea un nuevo enlace de aplicación en Bitbucket
+</div>
+
+1. En Bitbucket, haz clic en el ícono de engranaje y luego en **Applications &gt; Application Links**.
+
+2. En &quot;Application Type&quot;, asegúrate de que &quot;Atlassian Product&quot; esté seleccionado.
+
+3. Ingresa lo siguiente como URL de la aplicación:
+   `https://sentry.io/extensions/bitbucket_server/setup/`
+
+4. Haz clic en &quot;Create New Link&quot;. Si aparece una advertencia que dice “No response was received from the URL you entered”, ignórala y haz clic en &quot;Continue&quot;.
+
+5. En el modal **Configure Application URL**, tu URL de la pantalla anterior debería aparecer en el cuadro &quot;Entered URL&quot;; asegúrate de marcar &quot;Use this URL&quot; antes de hacer clic en &quot;Continue&quot;.
+
+6. En el diálogo resultante, completa el formulario de la siguiente manera:
+
+   <table>
+     <tbody>
+       <tr>
+         <th>Application Name</th>
+         <td>Sentry</td>
+       </tr>
+
+       <tr>
+         <th>Application Type</th>
+         <td>Generic Application</td>
+       </tr>
+
+       <tr>
+         <th>Service Provider Name</th>
+         <td>Sentry</td>
+       </tr>
+
+       <tr>
+         <th>Consumer Key</th>
+         <td>(a tu elección, pero tenla a mano para el siguiente paso)</td>
+       </tr>
+
+       <tr>
+         <th>Shared Secret</th>
+         <td>sentry</td>
+       </tr>
+
+       <tr>
+         <th>Request Token URL</th>
+         <td>https://sentry.io</td>
+       </tr>
+
+       <tr>
+         <th>Access Token URL</th>
+         <td>https://sentry.io</td>
+       </tr>
+
+       <tr>
+         <th>Authorize URL</th>
+         <td>https://sentry.io</td>
+       </tr>
+
+       <tr>
+         <th>Create Incoming Link</th>
+         <td>No</td>
+       </tr>
+     </tbody>
+   </table>
+
+7. Haz clic en &quot;Continue&quot;. Esto te devolverá a la página **Configure Application Links**, donde verás una aplicación llamada Sentry.
+
+8. Haz clic en el ícono de lápiz junto a la aplicación Sentry.
+
+9. En el lado izquierdo del modal resultante, haz clic en &quot;Incoming Authentication&quot;. Completa el formulario de la siguiente manera y haz clic en &quot;Save&quot;:
+
+   <table>
+     <tbody>
+       <tr>
+         <th>Consumer Key</th>
+         <td>(la consumer key del Paso II.4)</td>
+       </tr>
+
+       <tr>
+         <th>Consumer Name</th>
+         <td>Sentry</td>
+       </tr>
+
+       <tr>
+         <th>Public Key</th>
+         <td>(la public key que creaste en la Sección I)</td>
+       </tr>
+
+       <tr>
+         <th>Consumer Callback URL</th>
+         <td>https://sentry.io/extensions/bitbucket&#95;server/setup/</td>
+       </tr>
+
+       <tr>
+         <th>Allow 2-Legged OAuth</th>
+         <td>no</td>
+       </tr>
+     </tbody>
+   </table>
+
+<div id="connect-your-bitbucket-server-application-with-sentry">
+  #### Conecta tu aplicación de Bitbucket Server con Sentry
+</div>
+
+Nota: Asegúrate de que se permitan los [rangos de IP de Sentry](/es/security-legal-pii/security/ip-ranges/).
+
+1. En Sentry, ve a **Organization Settings** &gt; **Integrations**.
+2. Junto a Bitbucket Server, haz clic en &quot;Install&quot;.
+3. En la ventana modal que aparezca, haz clic en &quot;Add Installation&quot;.
+4. En la ventana que se abra, introduce la URL base de tu instancia de Bitbucket Server, tu consumer key y tu private key. Haz clic en &quot;Submit&quot;. Luego completa el proceso de OAuth según se te indique.
+5. En Sentry, verás una nueva instancia de Bitbucket Server en la página de Integrations.
+
+Ahora Bitbucket debería estar autorizado para todos los proyectos de tu organización en Sentry.
+
+<div id="configure">
+  ## Configurar
+</div>
+
+Usa Bitbucket para [seguir commits](#commit-tracking), para la [gestión de incidencias](#issue-management) y para [resolver en el commit](#resolving-in-commit).
+
+<div id="commit-tracking">
+  ### Seguimiento de commits
+</div>
+
+El seguimiento de commits te permite identificar los commits problemáticos. Descubre qué commits probablemente causaron un problema y permite que tu equipo lo resuelva haciendo referencia al número de la incidencia en el mensaje del commit.
+
+Para más detalles, consulta la documentación completa sobre [seguimiento de commits y lanzamientos](/es/product/releases/setup/).
+
+<div id="issue-management">
+  ### Gestión de incidencias
+</div>
+
+<Alert>
+  Esta función solo es compatible con instancias heredadas de Bitbucket. Consulta [Bitbucket Support](https://support.atlassian.com/bitbucket-cloud/docs/use-the-issue-tracker/) para más información.
+</Alert>
+
+El seguimiento de incidencias te permite crear incidencias de Bitbucket desde Sentry y vincular incidencias de Sentry a incidencias existentes de Bitbucket.
+
+Cuando abras una incidencia específica, encontrarás la sección **Linked Issues** en el panel derecho. Aquí podrás crear o vincular incidencias de Bitbucket.
+
+![Vincular una incidencia de Bitbucket a una incidencia de Sentry](./img/bitbucket-link-issue.png)
+
+<div id="resolving-in-commit">
+  ### Resolver en el commit
+</div>
+
+Una vez que envíes datos de commits, puedes empezar a resolver incidencias incluyendo `fixes <SENTRY-SHORT-ID>` en tus mensajes de commit. Por ejemplo, un mensaje de commit podría verse así:
+
+```
+Evitar consultas vacías en usuarios
+
+Soluciona MYAPP-317
+```
+
+Cuando Sentry detecte esto, anotaremos automáticamente la incidencia correspondiente con una referencia al commit y, más tarde, cuando ese commit forme parte de una versión, marcaremos la incidencia como resuelta. El commit debe estar asociado a una versión. De lo contrario, si el commit se “squashea”, Sentry no sabrá cuándo se ha publicado el commit y es posible que la incidencia nunca se marque como una regresión.
+
+<div id="stack-trace-linking">
+  ### Vinculación de trazas de pila
+</div>
+
+La vinculación de trazas de pila te lleva de un archivo en la traza de pila de Sentry a ese mismo archivo en tu código fuente. Si tienes el seguimiento de commits configurado en Sentry, podemos llevarte a la versión exacta (usando el commit asociado con el evento) del código fuente en el momento en que ocurrió el error. De lo contrario, te llevaremos al estado actual del código fuente (usando la rama predeterminada).
+
+1. Ve a **Settings &gt; Integrations &gt; Bitbucket &gt; Configurations**.
+
+2. Haz clic en &quot;Configure&quot; (el ícono de engranaje) junto a tu instancia de Bitbucket.
+
+3. Haz clic en la pestaña &quot;Code Mappings&quot;.
+
+4. Configura una asignación de código para cada proyecto en el que quieras habilitar la vinculación de trazas de pila. Para crear una nueva asignación de código, haz clic en &quot;Add Mapping&quot;.
+
+5. Completa el formulario y luego haz clic en &quot;Save Changes&quot;. Cada campo del formulario se describe a continuación:
+
+   * **Project** (obligatorio): Este es el proyecto de Sentry.
+   * **Repo** (obligatorio): Este es el proyecto de Bitbucket asociado con el proyecto de Sentry anterior. Si utilizas más de un proyecto de Bitbucket por proyecto de Sentry, necesitarás varias asignaciones de código.
+   * **Branch** (obligatorio): Esta es la rama predeterminada de tu código a la que recurrimos si no tienes configurado el seguimiento de commits.
+   * **Stack Trace Root** y **Source Code Root** (opcional): Consulta a continuación para saber cómo determinar estos valores.
+
+<div id="stack-trace-root-and-source-code-root">
+  #### Raíz del Stack Trace y Raíz del Código Fuente
+</div>
+
+<Alert>
+  La siguiente información solo es válida para plataformas que utilizan rutas de archivo tradicionales. Las plataformas con nombres de paquetes requieren pasos adicionales. Para **Java**, consulta más información en la [página sobre contexto de código fuente](/es/platforms/java/source-context#setting-up-code-mappings).
+</Alert>
+
+Primero, navega a un stack trace que desees mapear. Busca un frame **In App**, que se identifica con una burbuja en el lado derecho del frame. El nombre del archivo aparecerá como el primer texto en el lado izquierdo del encabezado del frame. En este ejemplo, es `src/main.py`.
+
+<Include name="common-imgs/code-mappings-stacktrace" />
+
+Para ciertas plataformas nativas, el stack trace tendrá un aspecto diferente. En estos casos, puedes encontrar la ruta absoluta pasando el cursor sobre el nombre del archivo.
+
+![Resaltando dónde encontrar en la interfaz la ruta del archivo para stack traces nativos](./img/code-mappings-stacktrace-native.png)
+
+Si no estás seguro, puedes consultar el JSON del evento haciendo clic en el botón `{}` en el encabezado del evento. Busca el texto en el `filename` o `abs_path` del frame.
+
+<Include name="common-imgs/code-mappings-event-json" />
+
+A continuación, localiza el archivo que aparece en el stack trace dentro de tu proveedor de código fuente (por ejemplo, GitHub). En este ejemplo, la ruta es `flask/src/main.py` (`empower` se ignora ya que es el nombre del repositorio).
+
+<Include name="common-imgs/code-mappings-source-file" />
+
+Compara la ruta del archivo del stack trace con la ruta encontrada en tu repositorio de código fuente. En este ejemplo, la carpeta `src/` en el stack trace coincide con la carpeta `flask/src` en el código fuente. Con esta información, establece la **Stack Trace Root** en `src/` y la **Source Code Root** en `flask/src/`. Esto le indica a Sentry que reemplace todas las rutas de archivo que comiencen con `src/` por `flask/src/` al buscar el código fuente.
+
+Para obtener mejores resultados, recomendamos proporcionar siempre un valor no vacío para la **Stack Trace Root** cuando sea posible.
+
+<Include name="common-imgs/code-mappings-configure-modal" />
+
+<div id="troubleshooting">
+  ## Solución de problemas
+</div>
+
+Si tienes problemas para configurar Sentry con tu integración local (on‑premises), verifica lo siguiente:
+
+* La URL de instalación proporcionada es un nombre de dominio totalmente cualificado (FQDN) que se puede resolver en Internet.
+* Las direcciones IP que Sentry utiliza para realizar solicitudes salientes están [permitidas](/es/security-legal-pii/security/ip-ranges/).
+* El acceso de Sentry a tu URL de instalación no está restringido por la ruta.

@@ -1,0 +1,60 @@
+---
+title: Mapas fuente
+description: "Obtén más información sobre cómo cargar tus mapas fuente en Sentry."
+sidebar_order: 95
+---
+
+<Alert>
+  Esta guía asume que usas el SDK de Sentry para React Native en la versión `5.11.0` o superior.
+
+  Si estás en una versión anterior y quieres cargar mapas fuente, te recomendamos actualizar tu SDK a la versión más reciente.
+</Alert>
+
+Para obtener trazas de pila no minificadas del código JavaScript, se deben generar y cargar mapas fuente. El SDK de React Native gestiona los mapas fuente *automáticamente* para iOS con Xcode y para Android con Gradle, siempre que no uses valores personalizados.
+
+Elige una de las siguientes guías según tu configuración, o prueba la [carga automática](#set-up-automatic-upload) para comenzar.
+
+* [Expo](/es/platforms/react-native/sourcemaps/uploading/expo/)
+* [Hermes](/es/platforms/react-native/sourcemaps/uploading/hermes/)
+* [JavaScript Core (JSC)](/es/platforms/react-native/sourcemaps/uploading/jsc/)
+
+<div id="set-up-automatic-upload">
+  ## Configurar la carga automática
+</div>
+
+<Include name="react-native-sourcemaps-wizard-instructions.mdx" />
+
+El asistente te guiará por los siguientes pasos:
+
+* Iniciar sesión en Sentry y seleccionar un proyecto
+* Instalar los paquetes necesarios de Sentry
+* Configurar las herramientas de compilación de RN para generar y cargar mapas de fuentes
+
+Es compatible con JavaScriptCore (incluido RAM Bundle) y Hermes. Si quieres configurar manualmente la carga automática de mapas de fuentes, sigue los pasos en la página de [Configuración manual](/es/platforms/react-native/manual-setup/manual-setup).
+
+<div id="disable-automatic-upload">
+  ### Desactivar la carga automática
+</div>
+
+Si quieres desactivar la carga automática de los mapas de origen, puedes establecer la variable de entorno `SENTRY_DISABLE_AUTO_UPLOAD`:
+
+```bash
+export SENTRY_DISABLE_AUTO_UPLOAD=true
+```
+
+Añade la función `shouldSentryAutoUpload` en `android/app/build.gradle`:
+
+```gradle
+apply from: "../../../sentry.gradle"
+
+sentry {
+    autoUploadProguardMapping = shouldSentryAutoUpload()
+    uploadNativeSymbols = shouldSentryAutoUpload()
+}
+```
+
+<div id="debug-builds">
+  ### Compilaciones de depuración
+</div>
+
+La simbolización la gestiona directamente el servidor de desarrollo de Metro, que proporciona automáticamente lo necesario para convertir las trazas de pila en código fuente legible en un entorno de desarrollo. No es necesario cargar mapas de origen para este tipo de compilaciones, por lo que la carga automática de mapas de origen está deshabilitada.

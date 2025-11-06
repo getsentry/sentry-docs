@@ -1,0 +1,88 @@
+---
+title: arq
+description: "Aprende a usar Sentry con arq."
+---
+
+La integración de arq añade compatibilidad con el [sistema de colas de trabajos arq](https://arq-docs.helpmanual.io/).
+
+<div id="install">
+  ## Instalación
+</div>
+
+Instala `sentry-sdk` desde PyPI con el extra `arq`.
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[arq]"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk[arq]"
+```
+
+
+<div id="configure">
+  ## Configuración
+</div>
+
+Si tienes el paquete `arq` en tus dependencias, la integración de arq se habilitará automáticamente al inicializar el SDK de Sentry.
+
+<PlatformContent includePath="getting-started-config" />
+
+<div id="verify">
+  ## Verifica
+</div>
+
+<div id="enqueing-the-jobs-in-runpy">
+  ### Encolar las tareas en `run.py`:
+</div>
+
+```python
+import asyncio
+
+from arq import create_pool
+from arq.connections import RedisSettings
+
+async def main():
+    sentry_sdk.init(...)  # mismo que arriba
+    redis = await create_pool(RedisSettings())
+
+    with sentry_sdk.start_transaction(name="testing_sentry"):
+        r = await redis.enqueue_job("add_numbers", 1, 2)
+
+asyncio.run(main())
+```
+
+Cuando ejecutes `run.py`, se creará una transacción llamada `testing_sentry` en la sección Performance de [sentry.io](https://sentry.io) y se registrará un span para encolar el trabajo.
+
+Los datos pueden tardar unos instantes en aparecer en [sentry.io](https://sentry.io).
+
+
+<div id="job-definition-in-demopy">
+  ### Definición del job en `demo.py`:
+</div>
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.arq import ArqIntegration
+
+sentry_sdk.init(...)  # same as above
+
+async def add_numbers(ctx, a, b):
+    1/0 # ¡lanza un error!
+    return a + b
+
+class WorkerSettings:
+    functions = [add_numbers]
+```
+
+Cuando ejecutes un worker con `arq demo.WorkerSettings`, se creará una transacción llamada `add_numbers` en la sección Performance de [sentry.io](https://sentry.io), y también se creará un issue en Sentry y se asociará a la transacción.
+
+Los datos pueden tardar unos instantes en aparecer en [sentry.io](https://sentry.io).
+
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+- ARQ: 0.23+
+- Python: 3.7+

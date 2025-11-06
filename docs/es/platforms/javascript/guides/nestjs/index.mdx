@@ -1,0 +1,136 @@
+---
+title: Nest.js
+description: "Aprende a configurar Sentry en tu aplicación Nest.js y a capturar tus primeros errores."
+sdk: sentry.javascript.nestjs
+fallbackGuide: javascript.node
+categories:
+  - javascript
+  - server
+  - server-node
+---
+
+<PlatformContent includePath="getting-started-prerequisites" />
+
+<div id="step-1-install">
+  ## Paso 1: Instalar
+</div>
+
+Elige las funciones que quieres configurar y esta guía te mostrará cómo:
+
+<OnboardingOptionButtons options={["error-monitoring", "performance", "profiling", "logs"]} />
+
+<PlatformContent includePath="getting-started-features-expandable" />
+
+<div id="install-the-sentry-sdk">
+  ### Instala el SDK de Sentry
+</div>
+
+Ejecuta el comando del gestor de paquetes que prefieras para añadir el SDK de Sentry a tu aplicación:
+
+<PlatformContent includePath="getting-started-install" />
+
+<div id="step-2-configure">
+  ## Paso 2: Configuración
+</div>
+
+<div id="initialize-the-sentry-sdk">
+  ### Inicializa el SDK de Sentry
+</div>
+
+Para importar e inicializar Sentry, crea un archivo llamado `instrument.ts` en el directorio raíz de tu proyecto y añade el siguiente código:
+
+<PlatformContent includePath="getting-started-config" />
+
+<div id="apply-instrumentation-to-your-app">
+  ### Aplica la instrumentación a tu app
+</div>
+
+Asegúrate de importar el archivo `instrument.ts` antes de cualquier otro módulo:
+
+```typescript {filename: main.ts} {1-2}
+// ¡Importa esto primero!
+import "./instrument";
+
+// Ahora importa los demás módulos
+import { NestFactory } from "@nestjs/core";
+import { AppModule } from "./app.module";
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  await app.listen(3000);
+}
+
+bootstrap();
+```
+
+Luego, agrega el `SentryModule` como módulo raíz en tu módulo principal:
+
+```typescript {filename: app.module.ts} {2, 8}
+import { Module } from "@nestjs/common";
+import { SentryModule } from "@sentry/nestjs/setup";
+import { AppController } from "./app.controller";
+import { AppService } from "./app.service";
+
+@Module({
+  imports: [
+    SentryModule.forRoot(),
+    // ...otros módulos
+  ],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
+```
+
+<div id="step-3-capture-nestjs-errors">
+  ## Paso 3: Capturar errores en Nest.js
+</div>
+
+<PlatformContent includePath="getting-started-capture-errors" />
+
+<div id="step-4-add-readable-stack-traces-with-source-maps-optional">
+  ## Paso 4: Agrega trazas de pila legibles con mapas de origen (opcional)
+</div>
+
+Es probable que las trazas de pila en tus errores de Sentry no se parezcan a tu código real. Para solucionarlo, sube tus mapas de origen a Sentry.
+La forma más fácil de hacerlo es usando Sentry Wizard:
+
+```bash
+npx @sentry/wizard@latest -i sourcemaps
+```
+
+<div id="step-5-verify-your-setup">
+  ## Paso 5: Verifica tu configuración
+</div>
+
+Probemos tu configuración y confirmemos que Sentry funciona correctamente y está enviando datos a tu proyecto de Sentry.
+
+<PlatformContent includePath="getting-started-verify" />
+
+<div id="view-captured-data-in-sentry">
+  ### Ver los datos capturados en Sentry
+</div>
+
+Ahora, ve a tu proyecto en [Sentry.io](https://sentry.io/) para ver los datos recopilados (puede tardar unos momentos en aparecer).
+
+<PlatformContent includePath="getting-started-verify-locate-data" />
+
+<div id="next-steps">
+  ## Próximos pasos
+</div>
+
+A estas alturas, deberías haber integrado Sentry en tu aplicación Nest.js y ya estar enviando datos a tu proyecto de Sentry.
+
+Es un buen momento para personalizar tu configuración y explorar temas más avanzados.
+Te recomendamos seguir con:
+
+* Amplía Sentry a tu frontend con uno de nuestros [SDK de frontend](/es/)
+* Aprende a [capturar errores manualmente](/es/platforms/javascript/guides/nestjs/usage/)
+* Sigue [personalizando tu configuración](/es/platforms/javascript/guides/nestjs/configuration/)
+* Familiarízate con [las funcionalidades de producto de Sentry](/es/product), como trazas, insights y alertas
+
+<Expandable permalink={false} title="¿Tienes problemas para configurar el SDK?">
+  - Revisa métodos de <PlatformLink to="/install">instalación alternativos</PlatformLink>
+  - Encuentra diversos temas en <PlatformLink to="/troubleshooting">Solución de problemas</PlatformLink>
+  - [Obtén soporte](https://sentry.zendesk.com/hc/en-us/)
+</Expandable>

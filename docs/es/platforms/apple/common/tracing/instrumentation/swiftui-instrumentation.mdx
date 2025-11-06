@@ -1,0 +1,82 @@
+---
+title: Instrumentación de SwiftUI
+sidebar_order: 12
+description: Aprende a supervisar el rendimiento de tus vistas de SwiftUI.
+og_image: >-
+  /og-images/platforms-apple-common-tracing-instrumentation-swiftui-instrumentation.png
+---
+
+<Alert>
+  Esta función es estable desde la versión 8.17.0.
+</Alert>
+
+Puedes supervisar el rendimiento de tus vistas en un proyecto de SwiftUI con la biblioteca SentrySwiftUI, que puedes instalar mediante <PlatformLink to="/install/swift-package-manager/">SPM (Swift Package Manager)</PlatformLink> o CocoaPods:
+
+```ruby
+platform :ios, '13.0'
+use_frameworks! # Es importante
+
+target 'YourApp' do
+  pod 'SentrySwiftUI', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '{{@inject packages.version('sentry.cocoa') }}'
+end
+```
+
+> Si piensas agregar *SentrySwiftUI*, no necesitas añadir también la biblioteca *Sentry*, ya que la primera depende de la segunda.
+
+Para empezar a monitorear el rendimiento de tus vistas, debes envolverlas con `SentryTracedView`, así:
+
+```swift {tabTitle:Swift}
+
+import SentrySwiftUI
+
+var body: some View {
+    SentryTracedView("<Nombre de tu vista>"){
+        List {
+            // Tu código SwiftUI ...
+        }
+    }
+}
+```
+
+Puedes omitir el nombre de la transacción; Sentry usará el tipo de vista raíz como nombre. En el ejemplo anterior, el nombre de la transacción sería `List`.
+
+Como alternativa, puedes usar un modificador como este:
+
+```swift {tabTitle:Swift}
+
+import SentrySwiftUI
+
+var body: some View {
+    List {
+        // Your SwiftUI code ...
+    }.sentryTrace("<Nombre de tu vista>")
+}
+```
+
+Es posible usar `SentryTracedView` anidados para obtener una transacción más granular.
+
+```swift {tabTitle:Swift}
+
+import SentrySwiftUI
+
+var body: some View {
+    SentryTracedView("Mi pantalla fantástica"){
+        HStack {
+            SentryTracedView("Menú") {
+                List{
+                    // Tu código SwiftUI ...
+                }
+            }
+            SentryTracedView("Contenido") {
+                VStack{
+                    // Tu código SwiftUI ...
+                }
+            }
+        }
+    }
+}
+```
+
+Este es el resultado
+
+![Transacción con vistas con seguimiento anidadas](./img/nested-view-transaction.png)

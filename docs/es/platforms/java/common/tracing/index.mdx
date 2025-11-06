@@ -1,0 +1,65 @@
+---
+title: Configurar el tracing
+sidebar_title: Tracing
+description: "Aprende a habilitar el tracing en tu app y descubre información valiosa sobre el rendimiento de tu aplicación."
+sidebar_order: 4000
+supported:
+  - java
+  - java.spring-boot
+  - java.spring
+---
+
+Con [tracing](/es/product/insights/overview), Sentry rastrea el rendimiento de tu software, mide métricas como el rendimiento (throughput) y la latencia, y muestra el impacto de los errores en múltiples sistemas. Sentry captura trazas distribuidas compuestas por transacciones y spans, que miden servicios individuales y las operaciones dentro de esos servicios. Obtén más información sobre nuestro modelo en [Distributed Tracing](/es/product/sentry-basics/tracing/distributed-tracing/).
+
+<Alert>
+  Si vas a adoptar tracing en un entorno de alto rendimiento (high throughput), te recomendamos hacer pruebas antes del despliegue para asegurarte de que las características de rendimiento de tu servicio se mantengan conforme a lo esperado.
+</Alert>
+
+<Include name="opentelemetry-available.mdx" />
+
+<div id="requirements">
+  ## Requisitos
+</div>
+
+El rastreo está disponible para Sentry Java SDK a partir de la versión ≥ 4.0.
+
+<PlatformSection supported={["java.spring"]} notSupported={["java"]}>
+  ## Habilitar el rastreo
+
+  <PlatformContent includePath="performance/enable-tracing" />
+</PlatformSection>
+
+<div id="configure">
+  ## Configurar
+</div>
+
+Primero, habilita el tracing y configura la tasa de muestreo para las transacciones. Establece la tasa de muestreo para tus transacciones de una de estas maneras:
+
+* Configurando una tasa de muestreo uniforme para todas las transacciones usando la opción <PlatformIdentifier name="traces-sample-rate" /> en la configuración de tu SDK a un número entre `0` y `1`. (Por ejemplo, para enviar el 20% de las transacciones, establece <PlatformIdentifier name="traces-sample-rate" /> en `0.2`).
+* Controlando la tasa de muestreo según la propia transacción y el contexto en el que se captura, proporcionando una función a la opción de configuración <PlatformIdentifier name="traces-sampler" />.
+
+Estas dos opciones son mutuamente excluyentes. Si configuras ambas, <PlatformIdentifier name="traces-sampler" /> tendrá prioridad.
+
+<PlatformContent includePath="performance/configure-sample-rate" />
+
+Obtén más información sobre las <PlatformLink to="/configuration/options/#tracing-options">opciones</PlatformLink> de tracing, cómo usar la función <PlatformLink to="/configuration/sampling/#setting-a-sampling-function">tracesSampler</PlatformLink> o cómo <PlatformLink to="/configuration/sampling/#sampling-transaction-events">muestrear transacciones</PlatformLink>.
+
+<div id="verify">
+  ## Verificar
+</div>
+
+<PlatformSection supported={["java.spring", "java.spring-boot"]} notSupported={["java"]}>
+  Verifica que el tracing funcione correctamente usando nuestra <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/">instrumentación automática</PlatformLink> o iniciando y finalizando una transacción con <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">instrumentación personalizada</PlatformLink>.
+</PlatformSection>
+
+<PlatformSection supported={["java"]} notSupported={["java.spring", "java.spring-boot"]}>
+  Prueba el tracing iniciando y finalizando una transacción —es obligatorio hacerlo para poder enviar transacciones a Sentry—. Aprende cómo en nuestro contenido de <PlatformLink to="/tracing/instrumentation/custom-instrumentation/">instrumentación personalizada</PlatformLink>.
+</PlatformSection>
+
+Mientras haces pruebas, establece <PlatformIdentifier name="traces-sample-rate" /> en `1.0`, ya que eso garantiza que cada transacción se enviará a Sentry. Una vez que termines las pruebas, quizá quieras establecer un valor más bajo para <PlatformIdentifier name="traces-sample-rate" />, o cambiar a <PlatformIdentifier name="traces-sampler" /> para muestrear y filtrar selectivamente tus transacciones según datos contextuales.
+
+<div id="next-steps">
+  ## Siguientes pasos
+</div>
+
+<PageGrid />

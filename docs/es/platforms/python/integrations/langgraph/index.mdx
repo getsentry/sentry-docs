@@ -1,0 +1,143 @@
+---
+title: LangGraph
+description: "Aprende a usar Sentry con LangGraph."
+---
+
+Esta integración conecta Sentry con [LangGraph](https://github.com/langchain-ai/langgraph) en Python.
+
+Una vez que instales este SDK, podrás usar Sentry AI Agents Monitoring, un panel de Sentry que te ayuda a entender qué ocurre con tus solicitudes de IA. Sentry AI Monitoring recopilará automáticamente información sobre prompts, herramientas, tokens y modelos. Obtén más información en el [AI Agents Dashboard](/es/product/insights/ai/agents).
+
+<div id="install">
+  ## Instalar
+</div>
+
+Instala `sentry-sdk` desde PyPI con el extra `langgraph`:
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[langgraph]"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk[langgraph]"
+```
+
+<div id="configure">
+  ## Configuración
+</div>
+
+Si tienes el paquete `langgraph` en tus dependencias, la integración de LangGraph se habilitará automáticamente al inicializar el SDK de Sentry. Para contabilizar correctamente los tokens, debes desactivar la integración del proveedor de modelos que estés usando (p. ej., OpenAI o Anthropic).
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.openai import OpenAIIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    environment="local",
+    traces_sample_rate=1.0,
+    send_default_pii=True,
+    disabled_integrations=[OpenAIIntegration()],
+)
+```
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Comprueba que la integración funciona creando un flujo de trabajo de LangGraph y ejecutándolo. En estos ejemplos, creamos un grafo de agente sencillo que puede usar una herramienta de función para tirar un dado.
+
+```python
+import os
+import random
+from typing import Annotated, Literal, TypedDict
+
+from langchain.chat_models import init_chat_model
+from langchain_core.messages import AnyMessage, HumanMessage
+from langchain_core.tools import tool
+from langgraph.graph import END, StateGraph
+from langgraph.graph.message import add_messages
+from langgraph.prebuilt import ToolNode
+
+
+class State(TypedDict):
+    messages: Annotated[list[AnyMessage], add_messages]
+
+@tool
+def roll_die(sides: int = 6) -> str:
+    """Lanza un dado con un número determinado de caras"""
+    return f"Salió un {random.randint(1, sides)} en un dado de {sides} caras."
+
+def chatbot(state: State):
+    model = init_chat_model("gpt-4o-mini", model_provider="openai")
+    return {"messages": [model.bind_tools([roll_die]).invoke(state["messages"])]}
+
+def should_continue(state: State) -> Literal["tools", END]:
+    last_message = state["messages"][-1]
+    return "tools" if getattr(last_message, "tool_calls", None) else END
+
+with sentry_sdk.start_transaction(name="langgraph-openai"):
+    graph_builder = StateGraph(State)
+    graph_builder.add_node("chatbot", chatbot)
+    graph_builder.add_node("tools", ToolNode([roll_die]))
+    graph_builder.set_entry_point("chatbot")
+    graph_builder.add_conditional_edges("chatbot", should_continue)
+    graph_builder.add_edge("tools", "chatbot")
+    graph = graph_builder.compile()
+    result = graph.invoke({
+        "messages": [
+            HumanMessage(content="Hola, me llamo Alice. Por favor, lanza un dado de seis caras.")
+        ]
+    })
+    print(result)
+```
+
+Después de ejecutar este script, los datos resultantes deberían aparecer en la pestaña &quot;AI Spans&quot; de la página &quot;Explore&quot; &gt; &quot;Traces&quot; en Sentry.io, y en el [AI Agents Dashboard](/es/product/insights/ai/agents).
+
+Es posible que los datos tarden unos momentos en aparecer en [sentry.io](https://sentry.io).
+
+<div id="behavior">
+  ## Comportamiento
+</div>
+
+* La integración de LangGraph conectará automáticamente Sentry con todos los métodos compatibles de LangGraph.
+
+* Se registran todas las excepciones.
+
+<div id="options">
+  ## Opciones
+</div>
+
+Al añadir explícitamente `LanggraphIntegration` a la llamada `sentry_sdk.init()`, puedes configurar opciones de `LanggraphIntegration` para modificar su comportamiento:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.langgraph import LanggraphIntegration
+
+sentry_sdk.init(
+    # ...
+    # Agrega datos como entradas y respuestas;
+    # consulta https://docs.sentry.io/platforms/python/data-management/data-collected/ para obtener más información
+    send_default_pii=True,
+    integrations=[
+        LanggraphIntegration(
+            include_prompts=False,  # Las entradas y salidas del LLM no se enviarán a Sentry, a pesar de send_default_pii=True
+        ),
+    ],
+)
+```
+
+Puedes pasar los siguientes argumentos con nombre a `LanggraphIntegration()`:
+
+* `include_prompts`
+
+  Controla si las entradas y salidas del LLM deben enviarse a Sentry. Sentry considera estos datos como información de identificación personal (PII) de forma predeterminada. Si quieres incluirlos, establece `send_default_pii=True` en la llamada a `sentry_sdk.init()`. Para excluir explícitamente los prompts y las salidas aun con `send_default_pii=True`, configura la integración con `include_prompts=False`.
+
+  El valor predeterminado es `True`.
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+* OpenAI: 1.0+
+* Python: 3.9+
+* LangGraph: 0.6+

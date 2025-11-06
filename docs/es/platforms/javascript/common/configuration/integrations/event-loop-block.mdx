@@ -1,0 +1,163 @@
+---
+title: Bloqueo del Event Loop
+description: "Supervisa los bucles de eventos bloqueados en todos los hilos de una aplicación de Node.js."
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.electron
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.remix
+  - javascript.react-router
+  - javascript.astro
+  - javascript.tanstackstart-react
+---
+
+<Alert>
+
+Esta integración solo funciona en el entorno de ejecución de Node.js.
+
+</Alert>
+
+_Nombre de importación: `eventLoopBlockIntegration` de `@sentry/node-native`_
+
+La `eventLoopBlockIntegration` permite supervisar los bucles de eventos bloqueados en todos los hilos de una aplicación de Node.js. Las trazas de pila se capturan automáticamente cuando se detecta un bloqueo.
+
+<div id="installation">
+  ## Instalación
+</div>
+
+```bash {tabTitle:npm}
+npm install @sentry/node-native
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/node-native
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/node-native
+```
+
+
+<div id="usage">
+  ## Uso
+</div>
+
+<PlatformSection notSupported={["javascript.electron"]}>
+
+Si instrumentas tu aplicación con el flag `--import` de Node.js, Sentry se iniciará y esta instrumentación se aplicará automáticamente a todos los hilos de trabajo.
+
+`instrument.mjs`
+
+```javascript
+import { eventLoopBlockIntegration } from "@sentry/node-native";
+
+Sentry.init({
+  dsn: "__YOUR_DSN__",
+  // Supervisa bloqueos del event loop de más de 500 ms (se capturan automáticamente los stack traces)
+  integrations: [eventLoopBlockIntegration({ threshold: 500 })],
+});
+```
+
+`app.mjs`
+
+```javascript
+import { Worker } from "worker_threads";
+
+const worker = new Worker(new URL("./worker.mjs", import.meta.url));
+
+// Este hilo principal se supervisará por bloqueos del event loop
+```
+
+`worker.mjs`
+
+```javascript
+// Este hilo de trabajo también se supervisará por bloqueos del event loop
+```
+
+Inicia tu aplicación:
+
+```bash
+node --import instrument.mjs app.mjs
+```
+
+Si un hilo se bloquea más tiempo que el umbral configurado, se capturan automáticamente los stack traces de todos los hilos y se envían a Sentry.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.electron"]}>
+
+_(Disponible a partir de la versión 6.9.0)_
+
+```javascript
+import * as Sentry from "@sentry/electron/main";
+import { eventLoopBlockIntegration } from "@sentry/electron/native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [eventLoopBlockIntegration({ threshold: 500 })],
+});
+```
+
+</PlatformSection>
+
+<div id="configuration-options">
+  ## Opciones de configuración
+</div>
+
+Puedes pasar un objeto de configuración a `eventLoopBlockIntegration` para personalizar su comportamiento:
+
+```typescript
+interface ThreadBlockedIntegrationOptions {
+  /**
+   * Umbral, en milisegundos, para desencadenar un evento.
+   *
+   * Predeterminado: 1000 ms.
+   */
+  threshold: number;
+  /**
+   * Número máximo de eventos bloqueados que se enviarán por hora.
+   *
+   * Predeterminado: 1.
+   */
+  maxEventsPerHour: number;
+  /**
+   * Etiquetas que se incluirán con los eventos bloqueados.
+   */
+  staticTags: { [key: string]: Primitive };
+}
+```
+
+<PlatformSection notSupported={["javascript.electron"]}>
+  ## Ejemplo de configuración
+
+  ```javascript
+  import { eventLoopBlockIntegration } from "@sentry/node-native";
+
+  Sentry.init({
+    dsn: "__YOUR_DSN__",
+    integrations: [
+      eventLoopBlockIntegration({
+        threshold: 500, // Se activa después de 500 ms de bloqueo (las trazas de pila se capturan automáticamente)
+        maxEventsPerHour: 5, // Máximo de 5 eventos por hora
+        staticTags: {
+          component: "main-thread",
+          environment: "production",
+        },
+      }),
+    ],
+  });
+  ```
+</PlatformSection>

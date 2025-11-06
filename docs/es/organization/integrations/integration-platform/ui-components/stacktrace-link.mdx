@@ -1,0 +1,55 @@
+---
+title: Enlace en el rastro de pila
+sidebar_order: 3
+description: Conoce el componente de UI para enlaces en rastros de pila.
+og_image: >-
+  /og-images/organization-integrations-integration-platform-ui-components-stacktrace-link.png
+---
+
+Esta función te permite insertar un enlace dentro de un marco de un rastro de pila. El enlace incluye detalles del proyecto, el nombre del archivo y el número de línea. Puedes usarlo para ver el archivo en tu servicio o seguir depurando con una referencia útil:
+
+![Ejemplo de un rastro de pila usando Rookout.](./img/stack-trace-example.png)
+
+<div id="schema">
+  ## Esquema
+</div>
+
+```json {filename:schema.json}
+{
+  "elements": [
+    {
+      "type": "stacktrace-link",
+      "uri": <URI>,
+    }
+  ]
+}
+```
+
+<div id="attributes">
+  ## Atributos
+</div>
+
+* `uri` - (Obligatorio) El destino del enlace. Sentry añadirá automáticamente los siguientes parámetros de consulta al enlace. Consulta nuestra documentación de [URI Guidelines](/es/organization/integrations/integration-platform/ui-components/#uri-guidelines) para obtener ayuda sobre el formato.
+  * `installationId` - el ID de instalación de tu integración (te ayuda a determinar la organización de Sentry que realiza la solicitud)
+  * `projectSlug` - slug del proyecto al que pertenece la incidencia
+  * `filename` - ruta completa del archivo del frame de la pila
+  * `lineNo` - número de línea del stack trace en el archivo
+
+<div id="example">
+  ## Ejemplo
+</div>
+
+```json {filename:schema.json}
+{
+  "elements": [
+    {
+      "type": "stacktrace-link",
+      "uri": "/stacktrace-redirect"
+    }
+  ]
+}
+```
+
+Cada vez que un componente admita el atributo `uri`, Sentry hará una solicitud al servicio de terceros usando la URL base o su `webhook_url`.
+
+Para una descripción más completa de la gramática, consulta el [código fuente](https://github.com/getsentry/sentry/blob/cdb843e95a0994e6e51f12a14dc19f7c6cfc162c/src/sentry/sentry_apps/api/parsers/schema.py).

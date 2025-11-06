@@ -1,0 +1,73 @@
+---
+title: Jerarquía de vistas
+description: >-
+  Obtén más información sobre cómo depurar la jerarquía de vistas cuando ocurre un error. Sentry
+  combina la representación de la jerarquía de vistas con el evento original, brindándote
+  información adicional sobre los problemas.
+og_image: /og-images/platforms-unity-enriching-events-view-hierarchy.png
+---
+
+Sentry permite generar una representación JSON de la escena de un error y la incluye como un <PlatformLink to="/enriching-events/attachments/">adjunto</PlatformLink>.
+
+Esta función solo se aplica a SDK con interfaz de usuario, como los de aplicaciones móviles y de escritorio. Capturar la escena y crear la jerarquía de vistas requiere el hilo de la interfaz de usuario y, en caso de un bloqueo, puede que no esté disponible. Otro ejemplo en el que la jerarquía de vistas podría no estar disponible es cuando el evento ocurre antes de que la pantalla comience a cargarse. Por lo tanto, de forma inherente, esta función es una solución de mejor esfuerzo.
+
+<div id="enabling-view-hierarchy-attachments">
+  ## Habilitar adjuntos de la jerarquía de vistas
+</div>
+
+La depuración de la jerarquía de vistas es una función opcional. Puedes habilitar el adjunto de la jerarquía de vistas como se muestra a continuación desde **Tools &gt; Sentry**:
+
+![Options Screenshot Configuration](./img/editor-window.png)
+
+O, así, si [lo configuras de forma programática](/es/platforms/unity/configuration/options/):
+
+```csharp {tabTitle:ScriptableOptionsConfiguration}
+options.AttachViewHierarchy = true;
+```
+
+<div id="customize-view-hierarchy-capturing">
+  ### Personalizar la captura de la jerarquía de vistas
+</div>
+
+Como capturar la jerarquía de vistas puede ser una operación de alto consumo de recursos mientras el SDK recorre la escena en el momento de un error, tienes varios controles disponibles.
+
+<SdkOption name="MaxViewHierarchyRootObjects" type="int">
+  Te permite limitar la cantidad de gameobjects que se recorrerán e incluirán en la jerarquía de vistas.
+</SdkOption>
+
+<SdkOption name="MaxViewHierarchyDepth" type="int">
+  Te permite limitar la profundidad máxima de los gameobjects hijos que el SDK intentará recorrer para incluir en la jerarquía de vistas.
+</SdkOption>
+
+<SdkOption name="MaxViewHierarchyObjectChildCount" type="int">
+  Te permite limitar la cantidad máxima de gameobjects hijos por cada gameobject individual que el SDK intentará incluir en la jerarquía de vistas.
+</SdkOption>
+
+Estas opciones también están disponibles para configurarse de forma programática en el objeto de opciones:
+
+```csharp
+options.MaxViewHierarchyDepth = 10;
+options.MaxViewHierarchyRootObjects = 100;
+options.MaxViewHierarchyObjectChildCount = 20;
+```
+
+<div id="viewing-view-hierarchy-attachments">
+  ## Visualización de adjuntos de la jerarquía de vistas
+</div>
+
+Las jerarquías de vistas aparecen en la pestaña &quot;Attachments&quot;, donde puedes ver todos los adjuntos, así como los eventos asociados. Haz clic en el ID del evento para abrir la página [Issue Details](/es/product/issues/issue-details) de ese evento específico.
+
+<Include name="common-imgs/viewhierarchy-list-example" />
+
+En la página **Issue Details**, puedes interactuar con el adjunto de la jerarquía de vistas en una sección llamada &quot;View Hierarchy&quot;. Esta sección representa el estado de tu escena en el momento del evento de error. Hay dos visualizaciones: una vista en árbol y una vista detallada del nodo seleccionado. Puedes seleccionar nodos en el árbol para ver las propiedades recopiladas por el SDK. El SDK informa sobre las siguientes claves para cada nodo de la vista:
+
+* `Tag` La etiqueta del gameobject
+* `Position` La posición del gameobject
+* `Rotation` La rotación del gameobject en ángulos de Euler
+* `Scale` La escala del gameobject
+* `Active` Si el gameobject estaba activo
+* `Extra` Una lista con los nombres de todos los MonoBehaviours adjuntos a ese gameobject
+
+Esta función puede usarse como una herramienta exploratoria para depurar problemas de referencia o para comprender mejor la relación entre los gameobjects.
+
+![Ejemplo de jerarquía de vistas](./img/viewhierarchy-example-unity.png)

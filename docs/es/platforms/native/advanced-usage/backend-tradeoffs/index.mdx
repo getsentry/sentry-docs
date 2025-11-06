@@ -1,0 +1,90 @@
+---
+title: Compromisos del backend
+description: "Cómo elegir el backend de fallos adecuado en el SDK nativo."
+sidebar_order: 1000
+---
+
+El SDK nativo permite decidir, en tiempo de compilación, entre tres backends de fallos:
+
+* `crashpad`
+* `breakpad`
+* `inproc`
+
+<div id="why-is-crashpad-the-default">
+  ### ¿Por qué `crashpad` es el valor predeterminado?
+</div>
+
+Actualmente, `crashpad` es el valor predeterminado en todas las plataformas de escritorio porque
+
+* tiene un proceso `handler` externo que permite hacer instantáneas externas y enviar informes de fallos de inmediato (en lugar de en el próximo inicio exitoso de tu aplicación)
+* además, la toma de instantáneas, la gestión de informes y la carga fuera del proceso que falló son más seguras porque el `crashpad_handler` no se ve afectado por las corrupciones que provocaron el fallo
+* admite más tipos de errores en [Linux](/es/platforms/native/advanced-usage/signal-handling/#signals-of-interest) y Windows (`abort()` y otros fallos de `fast-fail`, manejo de corrupciones del heap)
+* en macOS, el `crashpad_handler` recibirá excepciones Mach `EXC_CRASH`, que el kernel genera durante la salida del proceso si no se ha manejado una señal POSIX terminal. Ninguno de los otros dos backends capturará esta excepción.
+* tiene más mantenimiento upstream (aunque la mayoría de los cambios afectan a plataformas nuevas como Fuchsia)
+* es el objetivo principal de las extensiones desarrolladas por Sentry para la implementación upstream de los handlers del backend (la mayoría no son una ventaja particular frente a los otros backends, sino cambios para alcanzar la paridad), incluyendo
+  * trazas de pila del lado del cliente (esto no está disponible actualmente en `breakpad`)
+  * manejo de adjuntos
+  * mecanismo de reintento para cargas de informes fallidas
+  * soporte de proxy HTTP
+  * compatibilidad con GCC y MinGW
+  * `FirstChanceHandler` en Windows y extensión de su sincronización para admitir hooks de Sentry
+  * cooperación con Easy Anti-Cheat de Epic
+  * scripts de compilación CMake (algunos usuarios usan nuestros forks del handler de backend solo por esta razón)
+
+<Alert>
+  Cuando tu escenario de despliegue deba esperar a que el `crashpad_handler` termine su trabajo antes de un apagado tras un fallo (systemd, Docker), en entornos Linux desde la versión del SDK [0.8.3](https://github.com/getsentry/sentry-native/releases/tag/0.8.3), y en entornos Windows desde la versión del SDK [0.9.0](https://github.com/getsentry/sentry-native/releases/tag/0.9.0), puedes habilitar la [opción `crashpad_wait_for_upload`](/es/platforms/native/configuration/options/#crashpad-wait-for-upload) para retrasar el apagado de la aplicación hasta que se complete la carga del informe de fallo.
+</Alert>
+
+<div id="when-shouldnt-i-use-the-crashpad-backend">
+  ### ¿Cuándo no debería usar el backend `crashpad`?
+</div>
+
+Sentry eligió `crashpad` como predeterminado en todas las plataformas porque ofrece numerosas ventajas. Sin embargo, hay casos de uso en los que `crashpad` no puede utilizarse o complica mucho la distribución o el despliegue. Ofrecemos otros backends para situaciones en las que
+
+* no puedes empaquetar o desplegar un ejecutable adicional (el `crashpad_handler`)
+* no puedes permitir que un proceso secundario se conecte a tu aplicación mediante `ptrace` (AWS Lambda, sandboxes de Flatpak o Snap)
+* la IPC entre tu proceso y el `crashpad_handler` está bloqueada por la configuración de seguridad o no está disponible en tu entorno de despliegue
+* quieres distribuir tu aplicación a través de la App Store de macOS
+* quieres definir hooks de crash en macOS porque allí el manejo de errores ocurre completamente en el `crashpad_handler`, mientras que en Linux y Windows al menos el manejo inicial ocurre en tu proceso, tras lo cual `crashpad_handler` toma el control y crea una instantánea del proceso para enviar un informe de crash
+
+En los casos anteriores, si no puedes flexibilizar los requisitos de tu entorno, debes elegir un backend en proceso (es decir, `breakpad` o `inproc`).
+
+<div id="how-do-i-decide-between-breakpad-or-inproc">
+  ### ¿Cómo decido entre `breakpad` o `inproc`?
+</div>
+
+Ambos backends son comparables en cuanto a cómo difieren de `crashpad`. Sin embargo, también hay diferencias considerables entre ambos:
+
+* `inproc` solo proporciona el backtrace del hilo que falla. `breakpad` registra todos los hilos en el minidump.
+* Al igual que `crashpad`, `breakpad` utiliza el mecanismo de manejo de errores de más bajo nivel en cada plataforma (macOS: puertos de excepciones de Mach, Windows: `UnhandledExceptionFilter`, Linux: manejadores de señales), aunque cubre un rango más reducido de errores, como se mencionó arriba.
+* `inproc` usa manejo de señales en macOS, lo que significa que solo obtienes una capa de compatibilidad POSIX sobre los puertos de excepciones de Mach. En Windows y Linux, se basa en los mismos mecanismos que `breakpad`.
+* Como resultado de elegir el manejo de señales en macOS, `inproc` actualmente no funciona en macOS desde que Apple eliminó el desenrollado desde los manejadores de señales.
+* `inproc` es excepcionalmente ligero y está escrito completamente en C, lo que significa que no depende de una pesada biblioteca de tiempo de ejecución de C++, la cual además se ve afectada con más frecuencia por incompatibilidades de ABI.
+* `breakpad` genera minidumps (como lo hace `crashpad`), mientras que `inproc` sigue la estructura de eventos de Sentry y delega principalmente en el desenrollador y en las capacidades de simbolización que proporciona el sistema operativo. La infraestructura de procesamiento de Sentry puede extraer más información del minidump proporcionado que de un simple stack trace y registros. Sin embargo, también significa que el contexto del fallo dentro del minidump permanecerá opaco hasta que se procese en el backend. En cambio, si fuera necesario, una instancia local de `relay` (u otro proxy a nivel de aplicación) podría procesar un evento completo de `inproc` con solo capacidades de análisis de JSON.
+
+<div id="so-when-do-i-choose-inproc">
+  ### Entonces, ¿cuándo elijo `inproc`?
+</div>
+
+`inproc` es actualmente el backend preferido para Android porque nos permite empaquetarlo con nuestro fork del desenrollador de la plataforma, `libunwindstack`, que ofrece una interfaz completa para el desenrollado y la simbolización (en lugar de depender de la interfaz mínima en espacio de usuario). Esto nos permite admitir una amplia gama de versiones de Android. Además, se prefiere hacer el recorrido de la pila en el dispositivo en Android, ya que no tenemos acceso a todos los símbolos del sistema para la simbolización del lado del servidor. Existe una [recopilación de símbolos de mejor esfuerzo](https://github.com/getsentry/symbol-collector), pero nunca será tan fiable como recorrer la pila en el dispositivo.
+
+`inproc` es la elección correcta si
+
+* quieres dependencias mínimas
+* quieres la huella más pequeña para el artefacto resultante
+* no necesitas admitir las versiones más recientes de macOS
+* consideras que el conjunto mínimo de funcionalidades, en comparación con `breakpad` y `crashpad`, es suficiente para tu caso
+
+<div id="summary">
+  ### Resumen
+</div>
+
+Si profundizas en los detalles, encontrarás muchos compromisos al elegir los backends. Lo anterior ofrece solo una visión preliminar. Además, es solo una instantánea de las capacidades actuales, donde algunos compromisos son circunstanciales y no responden a una estrategia específica ni a una necesidad tecnológica. La razón principal para ofrecer múltiples backends es cubrir la mayor cantidad posible de escenarios de uso, lo que requiere cierto criterio si decides apartarte de los valores predeterminados.
+
+Sentry sugiere la siguiente secuencia para tus evaluaciones de backend:
+
+* `crashpad` (predeterminado)
+* `breakpad`
+* `inproc`
+
+de más completo en funcionalidades a menos, donde bajar un nivel solo debería verse motivado por limitaciones del entorno. Con lo anterior, ahora cuentas con puntos de decisión de referencia para orientarte antes de empezar a evaluar tu escenario de reporte de errores.

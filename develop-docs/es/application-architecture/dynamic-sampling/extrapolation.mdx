@@ -1,0 +1,124 @@
+---
+title: Extrapolación
+sidebar_order: 5
+---
+
+El muestreo dinámico reduce la cantidad de datos ingeridos, tanto por rendimiento como por costos. Cuando está configurado, se ingiere una fracción de los datos según la tasa de muestreo especificada para un proyecto: si muestreas al 10% y al inicio tienes 1000 solicitudes a tu sitio en un periodo determinado, solo verás 100 spans en Sentry. Si no se compensa la tasa de muestreo, cualquier métrica derivada de estos spans representará de forma incorrecta el volumen real de la aplicación. Cuando distintas partes de la aplicación tienen tasas de muestreo diferentes, incluso habrá un sesgo hacia algunas de ellas, inclinando el volumen total hacia las partes con tasas más altas. Este sesgo afecta especialmente a atributos numéricos como la latencia, reduciendo su precisión. Para tener esto en cuenta, Sentry utiliza extrapolación para combinar los datos de forma inteligente y compensar las tasas de muestreo.
+
+<div id="accuracy-expressiveness">
+  ### Precisión y expresividad
+</div>
+
+¿Qué ocurre durante la extrapolación, cómo se trabaja con este tipo de datos y cuándo son precisos y expresivos los datos extrapolados? Empecemos con algunas definiciones:
+
+- **Precisión** se refiere a que los datos sean correctos. Por ejemplo, el número medido de spans corresponde al número real de spans que se ejecutaron. A medida que disminuyen las tasas de muestreo, la precisión también disminuye porque decisiones aleatorias menores pueden influir en el resultado de formas significativas.
+- **Expresividad** se refiere a que los datos puedan expresar algo sobre el estado del sistema observado. La expresividad hace referencia a la utilidad de los datos para el usuario en un caso de uso específico.
+
+<div id="modes">
+  ### Modos
+</div>
+
+Dadas estas propiedades, hay dos modos que se pueden usar para ver datos en Sentry: modo predeterminado y modo de muestra.
+
+- **Modo predeterminado** extrapola los datos ingeridos como se describe a continuación.
+- **Modo de muestra** no extrapola y presenta exactamente los datos que se ingirieron.
+
+Según el contexto y el caso de uso, un modo puede ser más útil que el otro. En general, el modo predeterminado es útil para todas las consultas que agregan sobre un conjunto de datos con volumen suficiente. A medida que el tamaño absoluto de la muestra disminuye por debajo de cierto umbral, el modo predeterminado se vuelve cada vez menos representativo. Hay escenarios en los que el usuario necesita cambiar temporalmente entre modos; por ejemplo, para examinar primero las cifras agregadas y luego profundizar en el número de muestras para la investigación. En ambos modos, el usuario puede examinar muestras individuales para profundizar en los detalles.
+
+<div id="benefits-of-extrapolation">
+  ### Beneficios de la extrapolación
+</div>
+
+A primera vista, la extrapolación puede parecer innecesariamente complicada. Sin embargo, para organizaciones de alto volumen, el muestreo es una forma de controlar costos y el volumen de egreso, además de reducir la cantidad de datos redundantes enviados a Sentry. ¿Por qué no simplemente mostramos al usuario los datos que envía? No extrapolamos por diversión; en realidad tiene beneficios importantes para el usuario:
+
+- **Los números corresponden al mundo real**: Cuando los datos se muestrean, hay cálculos que debes hacer para inferir cuáles son los números reales; por ejemplo, si tienes 1000 muestras con una tasa de muestreo del 10%, hay 10 000 solicitudes a tu aplicación. Con la extrapolación, no necesitas conocer tu tasa de muestreo para entender lo que tu aplicación realmente está haciendo. En su lugar, obtienes una vista del comportamiento real sin conocimientos adicionales ni cálculos de tu parte.
+
+- **Series temporales estables cuando cambian las tasas de muestreo**: Cada vez que cambias las tasas de muestreo, tanto el conteo como, posiblemente, la distribución de los valores cambiarán de alguna manera. Cuando cambias la tasa de muestreo del 10% al 1% por cualquier motivo, habrá un cambio repentino en todas las métricas asociadas. La extrapolación corrige esto, por lo que tus gráficos se mantienen estables y tus alertas no se activan cuando eso sucede.
+- **Combinación de distintas tasas de muestreo**: Cuando tus endpoints no tienen la misma tasa de muestreo, ¿cómo se supone que debes conocer el verdadero p90 cuando uno de tus endpoints se muestrea al 1% y otro al 100%, pero lo único que obtienes es el agregado de las muestras?
+
+<div id="how-does-extrapolation-work">
+  ## ¿Cómo funciona la extrapolación?
+</div>
+
+<div id="aggregates">
+  ### Agregados
+</div>
+
+Sentry permite agregar datos de distintas maneras; a continuación se muestran los agregados generalmente disponibles e indicando si se pueden extrapolar o no:
+
+| **Agregado** | **¿Se puede extrapolar?** |
+| --- | --- |
+| count | sí |
+| avg | sí |
+| sum | sí |
+| percentiles | sí |
+| min | no |
+| max | no |
+| count_unique | no |
+
+Cada uno de estos agregados tiene su propia forma de manejar la extrapolación, ya que, por ejemplo, los recuentos deben extrapolarse de un modo ligeramente distinto a los percentiles. Aunque `min` y `max` son técnicamente percentiles, actualmente no ofrecemos extrapolación debido a la menor estabilidad de los agregados extremos al muestrear. Por ejemplo, `p50` será más estable que `p99`; `min` y `max` son casos extremos.
+
+<div id="extrapolation-for-different-aggregates">
+  ### Extrapolación para distintos agregados
+</div>
+
+Para extrapolar, los pesos de muestreo se calculan como `1/sample rate`. Los pesos de muestreo de cada fila se usan de las siguientes maneras:
+
+- **Count**: Sumar el peso de muestreo.
+Ejemplo: la consulta `count()` pasa a ser `round(sum(sampling_weight))`.
+- **Sum**: Multiplicar cada valor por `sampling_weight`.
+Ejemplo: la consulta `sum(foo)` pasa a ser `sum(foo * sampling_weight)`.
+- **Average**: Calcular el promedio ponderado con el peso de muestreo.
+Ejemplo: la consulta `avg(foo)` pasa a ser `avgWeighted(foo, sampling_weight)`.
+- **Percentiles**: Calcular percentiles ponderados con el peso de muestreo.
+Ejemplo: la consulta `percentile(0.95)(foo)` pasa a ser `weightedPercentile(0.95)(foo, sampling_weight)`.
+
+Siempre que haya suficientes muestras, la tasa de muestreo en sí no importa tanto, pero debido al mecanismo de extrapolación, lo que sería una fluctuación de unas pocas muestras puede convertirse en un impacto absoluto mucho mayor, por ejemplo, en el conteo de vistas. Por supuesto, cuando un sitio recibe miles de millones de visitas, una fluctuación de 100 000 debida al ruido introducido por una tasa de muestreo de 0.00001 no es tan crítica.
+
+<div id="how-to-deal-with-extrapolation-in-the-product">
+  ## ¿Cómo abordar la extrapolación en el producto?
+</div>
+
+<div id="general-approach">
+  ### Enfoque general
+</div>
+
+En nuevas superficies de producto, decidir entre usar datos extrapolados o no extrapolados es delicado y debe evaluarse con cuidado. La configuración del modo de extrapolación, por lo general, debería ser una opción de vista temporal que se restablezca al modo predeterminado la próxima vez que el usuario abra la página. Al final, es un juicio del responsable de implementar la función, pero estas preguntas pueden servir de guía para tomar la decisión:
+
+- ¿Cuál debería ser el valor predeterminado y cómo debería funcionar el cambio entre modos?
+    - En la mayoría de los casos, la extrapolación debería estar activada por defecto al ver agregados y desactivada al ver muestras. El cambio, por lo general, debería ser una acción deliberada de la que los usuarios sean conscientes, y no un cambio implícito que simplemente se active al navegar por la interfaz.
+- ¿Tiene sentido mezclar datos extrapolados con datos no extrapolados?
+    - En la mayoría de los casos, mezclar ambos es receta para la confusión. Por ejemplo, ofrecer dos funciones para calcular un agregado, como p90_raw y p90_extrapolated en una interfaz de consultas, resultará muy confuso para la mayoría de los usuarios. Por lo tanto, en general, deberíamos evitar mezclar estos datos de forma implícita.
+- Cuando las tasas de muestreo cambian con el tiempo, ¿es importante mantener la consistencia de los puntos de datos a lo largo del tiempo?
+    - En las alertas, por ejemplo, la consistencia es muy importante porque el ruido afecta la confianza de los usuarios en el sistema de alertas. Un sistema que alerta cada vez que se cambian las tasas de muestreo no es muy práctico, especialmente en equipos grandes.
+- ¿Le importa más al usuario una estimación fiel de los datos agregados o los eventos reales que ocurrieron?
+    - Algunos escenarios, como visualizar métricas a lo largo del tiempo, se basan en agregados, mientras que depurar el problema de un usuario específico depende de ver los eventos concretos. El mejor modo depende del uso previsto del producto.
+
+<div id="switching-to-sample-mode">
+  ### Cambiar al modo de muestreo
+</div>
+
+El modo de muestreo está diseñado para ayudar a investigar eventos específicos. Estos son dos casos comunes en los que tiene más sentido:
+
+1. **Cuando tanto la tasa de muestreo como el volumen de eventos son bajos**: La extrapolación es menos confiable en estos casos. Puedes aumentar la tasa de muestreo para mejorar la precisión o cambiar al modo de muestreo para examinar los eventos reales; ambos enfoques son válidos según tus necesidades.
+2. **Cuando tienes una alta tasa de muestreo pero aun así ves volúmenes bajos de eventos**: En este caso, aumentar la tasa de muestreo no ayudará a capturar más datos, y el modo de muestreo te dará una visión más clara de los eventos que sí tienes.
+
+<div id="opting-out-of-extrapolation">
+  ### Cómo desactivar la extrapolación
+</div>
+
+Los usuarios pueden querer desactivar la extrapolación por distintos motivos. Siempre es posible establecer la tasa de muestreo de eventos específicos en el 100% y, por lo tanto, enviar todos los datos a Sentry, lo que equivale a desactivar la extrapolación y comportarse igual que en el modo de muestreo. Según su configuración, los usuarios pueden necesitar cambiar los ajustes de Dynamic Sampling o el callback de `traces sampler` de su SDK para ello.
+
+<div id="confidence">
+  ### Confianza
+</div>
+
+Cuando los usuarios aplican filtros sobre datos con un conteo muy bajo y, además, una baja tasa de muestreo —lo que da como resultado un conjunto de datos con alta extrapolación pero pocas muestras—, tanto desarrolladores como usuarios deben ser cautos con las conclusiones que extraigan. La plataforma de almacenamiento ofrece intervalos de confianza junto con las estimaciones extrapoladas para los distintos tipos de agregación, a fin de indicar cuándo existe una mayor incertidumbre en los datos. Este tipo de conjuntos de datos son intrínsecamente ruidosos y pueden contener información engañosa. Cuando se detecte esta situación, el usuario debería ser especialmente prudente con las conclusiones que saque de los datos agregados o cambiar al modo no predeterminado para investigar las muestras individuales.
+
+<div id="conclusion">
+  ## **Conclusión**
+</div>
+
+- La extrapolación aporta beneficios en muchas partes del producto, pero conlleva cierta complejidad inherente.
+- Algunos agregados pueden extrapolarse; otros no. Es posible que incorporemos esta capacidad a más agregados en el futuro.
+- Hay que tener mucho cuidado al exponer la extrapolación y, en especial, al permitir cambiar de modo para el usuario.

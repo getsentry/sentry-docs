@@ -1,0 +1,215 @@
+---
+title: Interfaz Span
+---
+
+La interfaz Span especifica una serie de eventos de aplicación con *temporización* que tienen una hora de inicio y de fin.
+
+Una [Transaction](/es/sdk/data-model/event-payloads/transaction/) puede contener cero o más spans en un atributo de matriz llamado `spans`. Los spans de la lista no tienen que estar ordenados; el servidor los ordenará por hora de inicio y fin.
+
+Aunque los atributos de un span se normalizarán en el servidor, un span es más útil cuando incluye al menos un `op` y una `description`.
+
+<div id="attributes">
+  ## Atributos
+</div>
+
+`span_id`:
+
+*Obligatorio*. Una cadena hexadecimal aleatoria de 16 caracteres.
+
+```json
+  {
+    "span_id": "99659d76b7cdae94"
+  }
+```
+
+`parent_span_id`:
+
+*Opcional*. Si este Span debe representarse como hijo de otro Span, establece esta propiedad en el id del padre.
+
+```json
+  {
+    "parent_span_id": "b0e6f15b45c36b12"
+  }
+```
+
+`trace_id`:
+
+*Obligatorio*. Determina a qué `trace` pertenece el span. El valor debe ser 16 bytes aleatorios codificados como una cadena hexadecimal (32 caracteres de longitud).
+
+```json
+  {
+    "trace_id": "1e57b752bc6e4544bbaa246cd1d05dee"
+  }
+```
+
+`op`
+
+Recomendado. Código breve que identifica el tipo de operación que está midiendo el span.
+
+Para más detalles, consulta <Link to="/sdk/performance/span-operations/">las convenciones de Sentry sobre operaciones de spans</Link>.
+
+```json
+  {
+    "op": "db.query"
+  }
+```
+
+`description`
+
+Opcional. Descripción más detallada de la operación del span, que identifica de forma única el span pero se mantiene consistente en todas sus instancias.
+
+```json
+  {
+    "description": "SELECT * FROM users WHERE last_active < DATE_SUB(CURRENT_DATE, INTERVAL 1 YEAR)`"
+  }
+```
+
+`start_timestamp`
+
+*Obligatorio*. Una marca de tiempo que indica cuándo comenzó la medición. El
+formato puede ser una cadena según lo definido en la [RFC
+3339](https://tools.ietf.org/html/rfc3339) o un valor numérico (entero o flotante)
+que representa la cantidad de segundos transcurridos desde la [época
+Unix](https://en.wikipedia.org/wiki/Unix_time). El valor de `start_timestamp` debe ser menor o
+igual que el valor de `timestamp`; de lo contrario, el span se descartará por inválido.
+
+```json
+  {
+    "start_timestamp": "2011-05-02T17:41:36.242Z"
+  }
+```
+
+o:
+
+```json
+  {
+    "start_timestamp": 1304358096.242
+  }
+```
+
+`timestamp`
+
+*Obligatorio*. Una marca temporal que indica cuándo finalizó la medición. El
+formato puede ser una cadena según lo definido en la [RFC
+3339](https://tools.ietf.org/html/rfc3339) o un valor numérico (entero o de coma flotante)
+que indica la cantidad de segundos transcurridos desde la [era Unix](https://en.wikipedia.org/wiki/Unix_time).
+
+```json
+  {
+    "timestamp": "2011-05-02T17:41:36.955Z"
+  }
+```
+
+o:
+
+```json
+  {
+    "timestamp": 1304358096.955
+  }
+```
+
+`status`
+
+*Opcional*. Describe el `status` del span/transaction.
+
+| Estado                       | Descripción                                                                                                    | Código de estado HTTP equivalente |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| `ok`                        | No es un error; se devuelve cuando la operación se completa correctamente                                      | 200 y estados HTTP 2XX            |
+| `cancelled`                 | La operación se canceló, normalmente por quien la invoca                                                       | 499                               |
+| `unknown` or `unknown_error` | Error desconocido generado por APIs que no devuelven suficiente información sobre el error                     | 500                               |
+| `invalid_argument`          | El cliente especificó un argumento no válido                                                                    | 400                               |
+| `deadline_exceeded`         | El plazo expiró antes de que la operación pudiera completarse correctamente                                    | 504                               |
+| `not_found`                 | No se encontró el contenido o se denegó la solicitud para toda una clase de usuarios                           | 404                               |
+| `already_exists`            | La entidad que se intentó crear ya existe                                                                       | 409                               |
+| `permission_denied`         | Quien la invoca no tiene permiso para ejecutar la operación especificada                                       | 403                               |
+| `resource_exhausted`        | El recurso se ha agotado; p. ej., cuota por usuario agotada, sistema de archivos sin espacio                   | 429                               |
+| `failed_precondition`       | El cliente no debe reintentar hasta que el estado del sistema se haya gestionado explícitamente                 | 400                               |
+| `aborted`                   | La operación se abortó                                                                                          | 409                               |
+| `out_of_range`              | Se intentó la operación fuera del rango válido; p. ej., buscar más allá del final de un archivo                | 400                               |
+| `unimplemented`             | La operación no está implementada o no es compatible/está habilitada para esta operación                        | 501                               |
+| `internal_error`            | Se han incumplido algunas invariantes esperadas por el sistema subyacente. Código reservado para errores graves | 500                               |
+| `unavailable`               | El servicio no está disponible actualmente; p. ej., por una condición transitoria                               | 503                               |
+| `data_loss`                 | Pérdida o corrupción irrecuperable de datos                                                                     | 500                               |
+| `unauthenticated`           | El solicitante no tiene credenciales de autenticación válidas para la operación                                 | 401                               |
+
+```json
+{
+  "status": "ok"
+}
+```
+
+`tags`
+
+*Opcional*. Un mapa o una lista de etiquetas para este evento. Las etiquetas deben tener valores de tipo cadena y cada etiqueta debe tener menos de 200 caracteres.
+
+```json
+  {
+    "tags": {
+      "ios_version": "4.0",
+      "context": "production"
+    }
+  }
+```
+
+`data`
+
+: *Opcional*. Datos arbitrarios asociados a este span.
+
+Las convenciones semánticas del campo `data` se describen en la <Link to="/sdk/performance/span-data-conventions/">documentación sobre convenciones de spans de Sentry</Link>.
+
+```json
+{
+  "data": {
+    "url": "http://localhost:8080/sockjs-node/info?t=1588601703755",
+    "status_code": 200,
+    "type": "xhr",
+    "method": "GET"
+  }
+}
+```
+
+`origen`
+
+: *Opcional*. El origen del span indica qué lo creó. Para más información, consulta [origen del rastro](/es/sdk/performance/trace-origin/).
+
+<div id="examples">
+  ## Ejemplos
+</div>
+
+El siguiente ejemplo muestra el Span como parte de la [Transaction](/es/sdk/data-model/event-payloads/transaction/) y omite otros atributos para simplificar.
+
+```json
+{
+  "spans": [
+    {
+      "trace_id": "1e57b752bc6e4544bbaa246cd1d05dee",
+      "span_id": "b01b9f6349558cd1",
+      "parent_span_id": "b0e6f15b45c36b12",
+      "op": "http",
+      "description": "GET /sockjs-node/info",
+      "status": "ok",
+      "start_timestamp": 1588601261.481961,
+      "timestamp": 1588601261.488901,
+      "tags": {
+        "http.status_code": "200"
+      },
+      "data": {
+        "url": "http://localhost:8080/sockjs-node/info?t=1588601703755",
+        "status_code": 200,
+        "type": "xhr",
+        "method": "GET"
+      },
+      "origin": "auto.http"
+    },
+    {
+      "trace_id": "1e57b752bc6e4544bbaa246cd1d05dee",
+      "span_id": "b980d4dec78d7344",
+      "parent_span_id": "9312d0d18bf51736",
+      "op": "update",
+      "description": "Vue <App>",
+      "start_timestamp": 1588601261.535386,
+      "timestamp": 1588601261.544196
+    }
+  ]
+}
+```

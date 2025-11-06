@@ -1,0 +1,395 @@
+---
+title: API unificada (en desuso)
+sidebar_order: 1
+og_image: /og-images/sdk-miscellaneous-unified-api.png
+---
+
+<Alert title="Nota" level="warning">
+La API unificada está en desuso. Nos ha servido bien durante años, pero estamos simplificando la API eliminando el Hub y trasladando parte de nuestra instrumentación a OpenTelemetry.
+</Alert>
+
+<Alert title="Nota">
+
+Todo lo escrito aquí suena muy bien. Sin embargo, vivimos en un mundo práctico y esperamos que cada plataforma se ajuste a lo que tiene sentido para sus desarrolladores. Lo que se describe a continuación no debe tomarse como reglas estrictas. Es una guía y debe verse como una herramienta para ayudar a los desarrolladores a crear SDK que funcionen bien entre sí.
+
+La máxima prioridad al crear SDK es ofrecer una API de alta calidad y una buena experiencia para desarrolladores; no dejes que la API unificada sea una excusa para construir cosas que no tengan sentido para un lenguaje dado.
+
+_Ejemplo de tipos:_ Los lenguajes tipados pueden ofrecer una experiencia para desarrolladores muy distinta a la de los dinámicos.
+
+_Ejemplo de plataforma:_ ¿Rust tiene excepciones? No. No nombres APIs para Rust como `captureException`.
+
+_Ejemplo de API unificada:_ Ya no nos gustan los Hubs y Scopes y estamos redefiniendo eso, <Link to="/sdk/hub_and_scope_refactoring/">Refactorización de Hub y Scope</Link>
+
+</Alert>
+
+Los nuevos SDK de Sentry deben seguir la API unificada y usar términos coherentes para referirse a los conceptos. Esta documentación explica qué es la API unificada y por qué existe.
+
+<div id="motivation">
+  ## Motivación
+</div>
+
+Sentry cuenta con una amplia variedad de SDK que se han desarrollado a lo largo de los años por diferentes desarrolladores y con ideas distintas. Esto ha provocado que el conjunto de funcionalidades de cada SDK sea diferente, que se usen conceptos y términos distintos, y que a menudo no esté claro cómo lograr lo mismo en diferentes plataformas.
+
+Además, esos SDK estaban centrados exclusivamente en el reporte de errores mediante clientes explícitos, lo que significaba que ciertas integraciones (como las breadcrumbs) a menudo no eran posibles.
+
+<div id="general-guidelines">
+  ## Directrices generales
+</div>
+
+- Queremos un lenguaje/redacción unificados para todas las API del SDK para facilitar el soporte y la documentación, y para que a los usuarios les resulte más fácil usar Sentry en distintos entornos.
+
+- Diseñar el SDK de modo que podamos añadir fácilmente nuevas funciones más allá del simple reporte de eventos (transacciones, APM, etc.) más adelante.
+
+- Diseñar el SDK de forma que, con la misma instancia de cliente, podamos trabajar de manera natural en el entorno de ejecución mediante inyección de dependencias, etc., y también usar un contexto implícito que envíe a clientes y ámbitos ya existentes para integrarse en la mayoría de los entornos. Esto es importante porque permite que los eventos incluyan datos de otras integraciones en el proceso.
+
+- Las tareas comunes deben ser fáciles y evidentes.
+
+- Para ayudar a bibliotecas de terceros, el caso de “Sentry no configurado” debe ser rápido (y ejecutarse de forma diferida).
+
+- La API común debe tener sentido en la mayoría de los lenguajes y no depender de construcciones poco comunes. Para que se sienta más natural, deberíamos tener en cuenta las particularidades del lenguaje y admitirlas explícitamente como alternativas (disposables, stack guards, etc.).
+
+<div id="simplified-visualization">
+  ## Visualización simplificada
+</div>
+
+![Visualización de la API unificada](./unified-api.png)
+
+<div id="terminology">
+  ## Terminología
+</div>
+
+- **minimal**: Un paquete de “fachada” independiente que vuelve a exportar un subconjunto de la funcionalidad del SDK mediante interfaces o proxies. Ese paquete no depende directamente del SDK; en su lugar, debe hacer que cada operación sea un no-op si el SDK no está instalado.
+
+  El propósito de dicho paquete es permitir que bibliotecas de terceros registren breadcrumbs y establezcan datos de contexto sin tener una dependencia estricta del SDK.
+
+- **hub**: Un objeto que gestiona el estado. Existe un hub global implícito, local al hilo o similar, que puede usarse de forma predeterminada. Los hubs pueden crearse manualmente.
+
+- **scope**: Un scope contiene datos que deberían enviarse implícitamente con los eventos de Sentry. Puede contener datos de contexto, parámetros extra, anulaciones de nivel, fingerprints, etc.
+
+- **client**: Un client es un objeto que se configura una vez y puede vincularse al hub. El usuario puede entonces autodetectar el client y enviarle llamadas. Normalmente los usuarios no necesitan trabajar directamente con el client. Lo hacen a través del hub o de funciones estáticas de conveniencia. El client es principalmente responsable de construir eventos de Sentry y enviarlos al transport.
+
+- **client options**: Son parámetros específicos del lenguaje y del runtime que se usan para configurar el client. Esto puede incluir release y environment, pero también cosas como qué integrations configurar, cómo funciona in-app, etc.
+
+- **context**: Los contexts aportan datos adicionales a Sentry. Existen contexts especiales (user y similares) y genéricos (`runtime`, `os`, `device`), etc. Consulta <Link to="/sdk/data-model/event-payloads/contexts">Contexts</Link> para algunas claves predefinidas; los usuarios también pueden añadir claves de contexto arbitrarias. _Nota: En SDKs más antiguos, puede que encuentres un concepto no relacionado de context, que ahora está obsoleto en favor de los scopes._
+
+- **tags**: Las tags pueden ser pares arbitrarios string→string con los que se pueden buscar eventos. Los contexts se convierten en tags.
+
+- **extra**: Datos verdaderamente arbitrarios adjuntos por los usuarios del client. Debe evitarse extra siempre que sea posible y, en su lugar, usar `context` estructurado, ya que se puede consultar y visualizar mejor.
+
+- **transport**: El transport es una construcción interna del client que abstrae el envío de eventos. Normalmente el transport se ejecuta en un hilo separado y recibe eventos para enviar mediante una cola. El transport es responsable de enviar, reintentar y manejar límites de tasa. El transport también podría persistir eventos no enviados entre reinicios si es necesario.
+
+- **integration**: Código que proporciona middlewares, bindings o hooks para determinados frameworks o entornos, junto con el código que inserta esos bindings y los activa. El uso de integrations no sigue una interfaz común.
+
+- **event processors**: Callbacks que se ejecutan para cada evento.
+  Pueden modificar y devolver el evento, o `null`.
+  Devolver `null` descartará el evento y no se procesará más.
+
+  Consulta [Event Pipeline](#event-pipeline) para más información.
+
+- **disabled SDK**: La mayor parte de la funcionalidad del SDK depende de un
+  client configurado y activo.
+  Sentry considera que el client está activo cuando tiene un _transport_.
+  De lo contrario, el client está inactivo y se considera que el SDK está “deshabilitado”.
+  En este caso, ciertos callbacks, como `configure_scope` o
+  _event processors_, pueden no invocarse.
+  Como resultado, no se registran breadcrumbs.
+
+<div id="static-api">
+  ## "API estática"
+</div>
+
+Las funciones de la API estática son la API más común orientada al usuario. Basta con importar estas funciones para empezar a enviar eventos a Sentry o configurar ámbitos. Estas funciones abreviadas deben exportarse en el espacio de nombres de nivel superior de tu paquete. Entre bambalinas, usan hubs y scopes (consulta [Concurrency](#concurrency) para más información) si están disponibles en esa plataforma.
+Ten en cuenta que todas las funciones listadas a continuación son mayormente alias de `Hub::get_current().function`.
+
+- `init(options)`: Este es el punto de entrada para cada SDK.
+
+Normalmente crea o reinicializa el hub global que se propaga a todos los hilos/contextos de ejecución nuevos, o crea un hub por hilo/contexto de ejecución.
+
+Recibe opciones (DSN, etc.), configura un cliente y lo vincula al hub actual o lo inicializa. Debe devolver un sustituto que pueda usarse para drenar eventos (un disposable).
+
+Esto podría devolver un handle o un guard para liberar. Cómo se implemente depende totalmente del SDK. Incluso podría ser un cliente si eso tiene sentido para el SDK. En Rust es un ClientInitGuard; en JavaScript podría ser un objeto auxiliar con un método close que se pueda await.
+
+Deberías poder llamarlo varias veces; al llamarlo por segunda vez, o bien desmonta el cliente anterior o decrementa un recuento de referencias del cliente anterior, etc.
+
+Llamarlo varias veces debería usarse solo para pruebas.
+No está definido qué sucede si llamas a `init` en cualquier momento que no sea el arranque de la aplicación.
+
+El usuario tiene que llamar a `init` una vez, pero se permite llamarlo con algún tipo de DSN deshabilitado. Por ejemplo, podría no pasarse ningún parámetro, etc.
+
+Además, también configura todas las integraciones predeterminadas.
+
+- `capture_event(event)`: Toma un evento ya armado y lo envía al hub actualmente activo. El objeto del evento puede ser un diccionario simple o un objeto tipado, lo que tenga más sentido en el SDK. Debe seguir el protocolo nativo lo más de cerca posible, ignorando cambios de nombre específicos de la plataforma (estilos de mayúsculas, etc.).
+
+- `capture_exception(error)`: Informa un objeto de error o excepción. Dependiendo de la plataforma, son posibles diferentes parámetros. La versión más obvia acepta solo un objeto de error, pero también son posibles variaciones en las que no se pasa ningún error y se usa la excepción actual.
+
+- `capture_message(message, level)`: Informa un mensaje. El nivel puede ser opcional en lenguajes con parámetros predeterminados; en ese caso debería ser `info` por defecto.
+
+- `add_breadcrumb(crumb)`: Añade una nueva breadcrumb al scope. Si el número total de breadcrumbs excede la configuración `max_breadcrumbs`, el SDK debería eliminar la breadcrumb más antigua. Esto funciona como la API del Hub en cuanto a lo que `crumb` puede ser. Si el SDK está deshabilitado, debería ignorar la breadcrumb.
+
+- `configure_scope(callback)`: Llama a un callback con un objeto de scope que se puede reconfigurar. Se utiliza para adjuntar datos contextuales a futuros eventos en el mismo scope.
+
+- `last_event_id()`: Debe devolver el último ID de evento emitido por el scope actual. Esto se utiliza, por ejemplo, para implementar diálogos de comentarios de usuario.
+
+- `start_session()`: Almacena una sesión en el scope actual y comienza a rastrearla. Normalmente adjunta una sesión totalmente nueva al scope y, de forma implícita, finaliza cualquier sesión ya existente.
+
+- `end_session()`: Finaliza la sesión, estableciendo un `status` y una `duration` apropiados, y la pone en cola para su envío a Sentry.
+
+<div id="concurrency">
+  ## Concurrencia
+</div>
+
+Todos los SDK deben contar con el concepto de almacenamiento de contexto seguro para la concurrencia. Lo que esto significa depende del lenguaje. La idea básica es que una persona usuaria del SDK pueda llamar a un método para proporcionar de forma segura información de contexto adicional para todos los eventos que están a punto de registrarse.
+
+Esto se implementa como una pila local al hilo en la mayoría de los lenguajes, pero en algunos (como JavaScript) podría ser global bajo la suposición de que esto tiene sentido en ese entorno.
+
+Aquí hay algunos patrones comunes de concurrencia:
+
+- **Hub vinculado al hilo**: En este patrón, cada hilo obtiene su propio "hub" que internamente gestiona una pila de ámbitos (scopes). Si se sigue este patrón, un hilo (el que llama a `init()`) se convierte en el hub "principal", que se usa como base para los hilos recién creados, los cuales obtendrán un hub basado en el principal (pero por lo demás independiente).
+
+- **Hub con ámbitos internos**: En algunas plataformas, como .NET, hay datos de contexto disponibles, en cuyo caso el hub puede gestionar internamente los ámbitos.
+
+- **Hub ficticio**: En algunas plataformas la concurrencia simplemente no existe de forma inherente. En ese caso, el hub podría estar ausente por completo o ser un singleton sin gestión de concurrencia.
+
+<div id="hub">
+  ## Hub
+</div>
+
+En circunstancias normales, el hub consiste en una pila de clientes y scopes.
+
+El SDK mantiene dos variables: el _hub principal_ (una variable global) y el _hub actual_ (una variable local al hilo o contexto de ejecución actual, también conocida a veces como async local o context local).
+
+- `Hub::new(client, scope)`: Crea un nuevo hub con el cliente y el scope proporcionados. El cliente puede reutilizarse entre hubs. El scope debe ser propiedad del hub (clónalo si es necesario).
+
+- `Hub::new_from_top(hub)` / alternativamente, sobrecargas nativas del constructor: Crea un nuevo hub clonando la pila superior de otro hub.
+
+- `get_current_hub()` / `Hub::current()` / `Hub::get_current()`: Función global o estática que devuelve el hub actual (del hilo).
+
+- `get_main_hub()` / `Hub::main()` / `Hub::get_main()`: En lenguajes donde el hilo principal es especial (modelo de "hub ligado al hilo"), esto devuelve el hub del hilo principal en lugar del hub del hilo actual. Es posible que no exista en todos los lenguajes.
+
+- `Hub::capture_event` / `Hub::capture_message` / `Hub::capture_exception`: Las llamadas de captura de mensaje/excepción terminan en capture event. `capture_event` combina el evento pasado con los datos del scope y lo envía al cliente. Como argumento adicional también recibe un hint.
+
+  Para el parámetro hint, consulta [hints](#hints).
+
+- `Hub::push_scope()`: Agrega una nueva capa de scope que hereda los datos previos. Debería devolver un disposable o un stack guard en los lenguajes donde tenga sentido. Cuando se utiliza el modelo de concurrencia de "hub con scope interno", estas llamadas suelen ser necesarias; de lo contrario, un scope podría compartirse incorrectamente por accidente.
+
+- `Hub::with_scope(callback)` (opcional): En Python podría ser un context manager, en Ruby una función de bloque. Agrega y retira un scope para trabajos de integración.
+
+- `Hub::pop_scope()` (opcional): Solo existe en lenguajes sin una mejor gestión de recursos. Es preferible tener esta función en el valor de retorno de `push_scope` o usar `with_scope`. A veces también se llama `pop_scope_unsafe` para indicar que no debería usarse directamente.
+
+- `Hub::configure_scope(callback)`: Invoca el callback con una referencia mutable al scope para realizar modificaciones. Esto también puede ser una instrucción `with` en los lenguajes que la tengan (Python). Si no hay un cliente activo vinculado a este hub, el SDK no debería invocar el callback.
+
+- `Hub::add_breadcrumb(crumb, hint)`: Agrega un breadcrumb al scope actual.
+
+  - Los argumentos que deberían admitirse son:
+    - una función que cree un breadcrumb
+    - un objeto breadcrumb ya creado
+    - una lista de breadcrumbs (opcional)
+  - En lenguajes sin una forma básica de sobrecarga, solo debería aceptarse un objeto breadcrumb en bruto.
+
+  El SDK debería ignorar el breadcrumb si no hay un cliente activo vinculado a este hub.
+
+  Para el parámetro hint, consulta [hints](#hints).
+
+- `Hub::client()` / `Hub::get_client()` (opcional): Accesor o getter que devuelve el cliente actual o `None`.
+
+- `Hub::bind_client(new_client)`: Vincula un cliente diferente al hub. Si el hub también es propietario del cliente creado por `init`, debe mantener una referencia a él si el hub es el objeto responsable de liberarlo.
+
+- `Hub::unbind_client()` (opcional): Forma opcional de desvincular en lenguajes donde `bind_client` no acepta valores anulables.
+
+- `Hub::last_event_id()`: Debe devolver el ID del último evento emitido por el scope actual. Esto se usa, por ejemplo, para implementar diálogos de comentarios de usuario.
+
+- `Hub::run(hub, callback)` `hub.run(callback)`, `run_in_hub(hub, callback)` (opcional): Ejecuta un callback con el hub vinculado como hub actual.
+
+<div id="scope">
+  ### Alcance
+</div>
+
+Un alcance contiene datos que se deben enviar implícitamente con los eventos de Sentry. Puede incluir datos de contexto, parámetros adicionales, sobrescrituras de nivel, huellas digitales, etc.
+
+El usuario puede modificar el alcance actual (para establecer extras, etiquetas, usuario actual) mediante la función global `configure_scope`. `configure_scope` recibe una función de retorno de llamada a la que se le pasa el alcance actual.
+
+El motivo de esta API basada en callbacks es la eficiencia. Si el SDK está deshabilitado, no debería invocar el callback, evitando así trabajo innecesario.
+
+```javascript
+Sentry.configureScope((scope) =>
+  scope.setExtra("character_name", "Mighty Fighter")
+);
+```
+
+* `scope.set_user(user)`: Combina de forma superficial la configuración del usuario (`email`, `username`, …). La eliminación de datos de usuario depende del SDK, ya sea con una función `remove_user` o sin pasar datos.
+
+* `scope.set_extra(key, value)`: Establece la clave extra con un valor arbitrario, sobrescribiendo un posible valor anterior. La eliminación de una clave depende del SDK, ya sea con una función `remove_extra` o sin pasar datos. Esta funcionalidad está obsoleta y se debería animar a los usuarios a usar contextos en su lugar.
+
+* `scope.set_extras(extras)`: Establece un objeto con pares clave/valor; es una función de conveniencia en lugar de múltiples llamadas a `set_extra`. Al igual que con `set_extra`, esto se considera una funcionalidad obsoleta.
+
+* `scope.set_flag(key, value)`: Establece el flag con un valor de cadena, sobrescribiendo un posible valor anterior. Las entradas no se pueden eliminar salvo por expiración.
+
+* `scope.set_tag(key, value)`: Establece la etiqueta con un valor de cadena, sobrescribiendo un posible valor anterior. La eliminación de una clave depende del SDK, ya sea con una función `remove_tag` o sin pasar datos.
+
+* `scope.set_tags(tags)`: Establece un objeto con pares clave/valor; es una función de conveniencia en lugar de múltiples llamadas a `set_tag`.
+
+* `scope.set_context(key, value)`: Establece la clave de contexto con un valor, sobrescribiendo un posible valor anterior. La eliminación de una clave depende del SDK, ya sea con una función `remove_context` o sin pasar datos. Los tipos los especifica el SDK.
+
+* `scope.set_level(level)`: Establece el nivel de todos los eventos enviados dentro de este scope.
+
+* `scope.set_transaction(transaction_name)`: Establece el nombre de la transacción actual.
+
+* `scope.set_fingerprint(fingerprint[])`: Establece la huella para agrupar juntos eventos específicos.
+
+* `scope.add_event_processor(processor)`: Registra una función procesadora de eventos. Recibe un evento y devuelve un evento nuevo o `None` para descartarlo. Esta es la base de muchas integraciones.
+
+* `scope.add_error_processor(processor)` (opcional): Registra una función procesadora de errores. Recibe un evento y un objeto de excepción y devuelve un evento nuevo o `None` para descartarlo. Se puede usar para extraer información adicional de un objeto de excepción que el SDK no puede extraer por sí mismo.
+
+* `scope.clear()`: Restablece un scope a los valores predeterminados y mantiene todos los procesadores de eventos registrados. Esto no afecta a los scopes padre ni hijo.
+
+* `scope.add_breadcrumb(breadcrumb)`: Agrega una migaja (breadcrumb) al scope actual.
+
+* `scope.clear_breadcrumbs()`: Elimina las migajas (breadcrumbs) actuales del scope.
+
+* `scope.apply_to_event(event[, max_breadcrumbs])`: Aplica los datos del scope al objeto de evento indicado. También aplica los procesadores de eventos almacenados internamente en el scope. Algunas implementaciones pueden querer establecer aquí un máximo de breadcrumbs.
+
+
+<div id="client">
+  ## Cliente
+</div>
+
+Un cliente es la parte del SDK responsable de crear eventos. Por ejemplo, el cliente debería convertir una excepción en un evento de Sentry. El cliente debe ser sin estado: recibe el Scope inyectado y delega el envío del evento al Transport.
+
+- `Client::from_config(config)`: (alternativamente, el constructor normal) Suele recibir un objeto con opciones + DSN.
+
+- `Client::capture_event(event, scope)`: Captura el evento combinándolo con otros datos y con los valores predeterminados del cliente. Además, si se pasa un scope a este sistema, los datos del scope se envían al transport interno.
+
+- `Client::close(timeout)`: Vacía la cola durante hasta timeout segundos. Si el cliente solo puede garantizar la entrega de eventos hasta el momento actual, se prefiere este método. Podría bloquear durante timeout segundos. El cliente debe deshabilitarse o desecharse después de llamar a close.
+
+- `Client::flush(timeout)`: Igual que `close`; la diferencia es que el cliente NO se desecha después de llamar a flush.
+
+<div id="hints">
+  ## Sugerencias
+</div>
+
+Opcionalmente, se admite un parámetro adicional para la captura de eventos y la adición de breadcrumbs: una sugerencia.
+
+Una sugerencia es específica del SDK, pero ofrece información de alto nivel sobre el origen del evento. Por ejemplo, si se capturó una excepción, la sugerencia podría incluir el objeto de la excepción original. No todos los SDK están obligados a proporcionar esto. No obstante, el parámetro está reservado para este propósito.
+
+<div id="event-pipeline">
+  ## Flujo de eventos
+</div>
+
+Un evento capturado por `capture_event` se procesa en el siguiente orden.
+**Nota**: El evento puede descartarse en cualquiera de las etapas, tras lo cual no se realiza ningún procesamiento adicional.
+
+1. Si el SDK está deshabilitado, Sentry descarta el evento de inmediato.
+2. El cliente toma muestras de eventos según la tasa de muestreo configurada.
+   Los eventos pueden descartarse aleatoriamente de acuerdo con la tasa de muestreo.
+3. Se aplica el alcance mediante `apply_to_event`. Los _procesadores de eventos_ del alcance
+   se invocan en orden.
+4. Sentry invoca el gancho _before-send_.
+5. Sentry envía el evento al transporte configurado.
+   El transporte puede descartar el evento si no tiene un DSN válido, si su
+   cola interna está llena o debido a la limitación de tasa, según lo solicitado por el servidor.
+
+<div id="options">
+  ## Opciones
+</div>
+
+Muchas opciones están estandarizadas en todos los SDK. Para ver la lista, consulta [la documentación principal de opciones](https://docs.sentry.io/platforms/javascript/configuration/).
+
+<div id="integrations">
+  ## Integraciones
+</div>
+
+Las integraciones te permiten configurar y ampliar la funcionalidad del SDK de forma modular. En general, recomendamos añadir funciones del SDK (como breadcrumbs, contexto, etc.) mediante integraciones en lugar de hacerlo directamente en el SDK, para que se puedan activar o desactivar según sea necesario.
+
+<div id="integration-public-api">
+  ### API pública de integraciones
+</div>
+
+Una integración debe poder configurarse mediante las opciones del SDK. Normalmente se usa la clave `integrations` en las opciones del SDK, que acepta un array de instancias de integraciones. Las instancias de integración deben crearse con la configuración necesaria y luego pasarse al SDK.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.browserTracingIntegration()],
+});
+```
+
+De forma predeterminada, al inicializar el SDK de Sentry se habilitará automáticamente un conjunto de integraciones por defecto que establecen la funcionalidad básica. Los SDK deberían ofrecer una forma de desactivar estas integraciones por defecto, o de activar o desactivar individualmente integraciones por defecto específicas.
+
+Internamente, el `client` debería poseer las instancias de las integraciones y ser responsable de invocar los métodos de cada integración en los momentos adecuados.
+
+La superficie del API de las integraciones no sigue una interfaz común en los SDK. A continuación se muestra un ejemplo de cómo es la interfaz de integración en los SDK de JavaScript, que es un buen punto de partida para diseñar una API de integración en otros SDK.
+
+```typescript
+/** Interfaz de integración */
+export interface Integration {
+  /**
+   * El nombre de la integración. Debe ser único para evitar conflictos con otras integraciones.
+   */
+  name: string;
+
+  /**
+   * Este hook solo se llama una vez, incluso si se crean múltiples clientes.
+   * No recibe ningún argumento y solo debe usarse para, por ejemplo, monkey patching global y cosas similares.
+   */
+  setupOnce?(): void;
+
+  /**
+   * Configura una integración para el cliente especificado.
+   * Recibe el cliente como argumento.
+   *
+   * Siempre que sea posible, usa esto en lugar de `setupOnce`, ya que este solo se ejecuta para el primer cliente,
+   * mientras que `setup` se ejecuta para cada cliente. Solo las cosas verdaderamente globales (por ejemplo, registrar manejadores globales)
+   * deben hacerse en `setupOnce`.
+   */
+  setup?(client: Client): void;
+
+  /**
+   * Este hook se activa después de que `setupOnce()` y `setup()` hayan sido llamados para todas las integraciones.
+   * Puedes usarlo si es importante que todas las demás integraciones se hayan ejecutado antes.
+   */
+  afterAllSetup?(client: Client): void;
+
+  /**
+   * Un hook opcional que permite preprocesar un evento _antes_ de que se pase a todos los demás procesadores de eventos.
+   */
+  preprocessEvent?(
+    event: Event,
+    hint: EventHint | undefined,
+    client: Client
+  ): void;
+
+  /**
+   * Un hook opcional que permite procesar un evento.
+   * Devuelve `null` para descartar el evento, o modifica el evento y devuélvelo.
+   * Recibe como tercer argumento el cliente para el cual se instaló la integración.
+   */
+  processEvent?(
+    event: Event,
+    hint: EventHint,
+    client: Client
+  ): Event | null | PromiseLike<Event | null>;
+}
+```
+
+
+<div id="adding-new-default-integrations">
+  ### Agregar nuevas integraciones predeterminadas
+</div>
+
+Agregar un nuevo comportamiento a un SDK (como nueva instrumentación o funcionalidad de procesamiento de eventos) debería hacerse mediante una integración siempre que sea posible. Esta integración puede ser predeterminada (con posibilidad de desactivación) u opcional, según el caso de uso.
+
+El factor que más influye en si una nueva integración debe ser predeterminada u opcional es la sobrecarga que introduce. Las integraciones predeterminadas deben ser livianas y no añadir una carga significativa al SDK. Si una parte de la instrumentación puede ocasionar problemas de rendimiento, debe ser opcional y se debe informar al usuario del posible impacto.
+
+Además, las integraciones predeterminadas deben estar bien probadas. Si una nueva integración está habilitada de forma predeterminada, debe probarse en todos los entornos y configuraciones compatibles para garantizar que no cause problemas. No deberíamos añadir nuevas integraciones predeterminadas sin las pruebas adecuadas.
+
+Si una integración predeterminada genera un volumen alto de datos nuevos (por ejemplo, muchos spans o transacciones), debería ser opcional y solo pasar a ser predeterminada en una nueva versión principal del SDK. Esto es para evitar que los usuarios se sorprendan por los nuevos datos y prevenir posibles problemas de rendimiento. En el caso de los spans, en particular, debemos asegurarnos de que los spans generados por una nueva integración no vuelvan las trazas demasiado ruidosas, lo que perjudica su utilidad.
+
+En general, podemos plantearnos las siguientes preguntas para determinar si una nueva integración debe ser predeterminada u opcional:
+
+- ¿La integración añade una sobrecarga significativa al SDK?
+- ¿La integración genera un volumen alto de datos nuevos?
+- ¿Es bajo el potencial de que la integración cause problemas?
+- ¿La integración puede presentar problemas de compatibilidad con otras integraciones o con el propio SDK?
+
+Los autores de integraciones y los responsables del SDK deben trabajar juntos para determinar el mejor enfoque para nuevas integraciones en función de las respuestas a estas preguntas.
+
+Si una integración se introduce como opcional, puede convertirse en predeterminada en una versión futura del SDK si está bien probada y no causa problemas.

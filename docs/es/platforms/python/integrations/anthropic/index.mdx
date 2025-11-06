@@ -1,0 +1,113 @@
+---
+title: Anthropic
+description: "Aprende a usar Sentry con Anthropic."
+---
+
+Esta integración conecta Sentry con el [Anthropic Python SDK](https://github.com/anthropics/anthropic-sdk-python).
+
+Una vez instalado el SDK, puedes usar Sentry AI Agents Monitoring, un panel de Sentry que te ayuda a entender qué ocurre con tus solicitudes de IA.
+
+Sentry AI Monitoring recopilará automáticamente información sobre prompts, herramientas, tokens y modelos. Obtén más información sobre el [AI Agents Dashboard](/es/product/insights/ai/agents).
+
+<div id="install">
+  ## Instalación
+</div>
+
+Instala `sentry-sdk` desde PyPI con el extra `anthropic`:
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[anthropic]"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk[anthropic]"
+```
+
+<div id="configure">
+  ## Configuración
+</div>
+
+Si tienes el paquete `anthropic` entre tus dependencias, la integración de Anthropic se habilitará automáticamente al inicializar el SDK de Sentry.
+
+<PlatformContent includePath="getting-started-config" />
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Comprueba que la integración funciona haciendo una solicitud de chat a Anthropic.
+
+```python
+import sentry_sdk
+from anthropic import Anthropic
+
+sentry_sdk.init(...)  # igual que arriba
+
+client = Anthropic(api_key="(tu clave de Anthropic)")
+
+def my_llm_stuff():
+    with sentry_sdk.start_transaction(name="The result of the AI inference"):
+        print(
+            client.messages.create(
+                model="claude-3-5-sonnet-20240620",
+                max_tokens=1024,
+                messages=[{"role": "user", "content": "di hola"}]
+            )
+            .content[0]
+            .text
+        )
+```
+
+Después de ejecutar este script, los datos resultantes deberían aparecer en la pestaña `AI Spans` en la página `Explore > traces > Trace` en Sentry.io.
+
+Si creaste manualmente un <PlatformLink to="/tracing/instrumentation/custom-instrumentation/ai-agents-module/#invoke-agent-span">Invoke Agent Span</PlatformLink> (no se hizo en el ejemplo anterior), los datos también aparecerán en el [AI Agents Dashboard](/es/product/insights/ai/agents).
+
+Es posible que los datos tarden unos momentos en aparecer en [sentry.io](https://sentry.io).
+
+<div id="behavior">
+  ## Comportamiento
+</div>
+
+* La integración de Anthropic conectará Sentry con los métodos compatibles de Anthropic automáticamente.
+
+* La función actualmente compatible es `messages.create` (tanto síncrona como asíncrona).
+
+* Sentry considera las entradas y salidas de LLM como PII (información de identificación personal) y no incluye estos datos de forma predeterminada. Si quieres incluirlos, establece `send_default_pii=True` en la llamada a `sentry_sdk.init()`. Para excluir explícitamente los prompts y las salidas a pesar de `send_default_pii=True`, configura la integración con `include_prompts=False`, como se muestra en la [sección Opciones](#options) a continuación.
+
+<div id="options">
+  ## Opciones
+</div>
+
+Al agregar explícitamente `AnthropicIntegration` a tu llamada a `sentry_sdk.init()`, puedes establecer opciones para `AnthropicIntegration` y cambiar su comportamiento:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.anthropic import AnthropicIntegration
+
+sentry_sdk.init(
+    # ...
+    # Agrega datos como entradas y respuestas;
+    # consulta https://docs.sentry.io/platforms/python/data-management/data-collected/ para más información
+    send_default_pii=True,
+    integrations=[
+        AnthropicIntegration(
+            include_prompts=False,  # Las entradas/salidas del LLM no se enviarán a Sentry, a pesar de send_default_pii=True
+        ),
+    ],
+)
+```
+
+Puedes pasar los siguientes argumentos con nombre a `AnthropicIntegration()`:
+
+* `include_prompts`:
+
+  Si se deben enviar a Sentry las entradas y salidas del LLM. Sentry considera estos datos como información de identificación personal (PII) de forma predeterminada. Si quieres incluirlos, establece `send_default_pii=True` en la llamada a `sentry_sdk.init()`. Para excluir explícitamente los prompts y las salidas a pesar de `send_default_pii=True`, configura la integración con `include_prompts=False`.
+
+  De forma predeterminada es `True`.
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+* Anthropic: 0.16.0+
+* Python: 3.8+

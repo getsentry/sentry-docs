@@ -1,0 +1,203 @@
+---
+title: Trazas de MCP
+sidebar_title: Trazas
+---
+
+El módulo MCP Server proporciona la instrumentación para los SDK de [Anthropic MCP](https://www.anthropic.com/news/model-context-protocol). Por ahora, solo es compatible con el [SDK de MCP para TypeScript](https://github.com/modelcontextprotocol/typescript-sdk/).
+
+<div id="spans-conventions">
+  ## Convenciones de spans
+</div>
+
+Para que los datos de tu servidor MCP aparezcan en Sentry, deben crearse spans específicos con nombres bien definidos y atributos de datos. Consulta lo siguiente.
+
+Seguimos el borrador de las [Convenciones semánticas de OpenTelemetry MCP](https://github.com/open-telemetry/semantic-conventions/pull/2083) lo más fielmente posible, con algunas incorporaciones de opinión para mejorar la observabilidad de MCP. Debemos estar atentos a las convenciones y actualizar esta guía según sea necesario, ya que actualmente están en borrador y sujetas a cambios.
+
+<div id="common-span-attributes">
+  ### Atributos comunes de los spans
+</div>
+
+Todos los spans del servidor MCP comparten atributos comunes y siguen patrones consistentes:
+
+| Data Attribute              | Type   | Requirement Level | Description                                                                   | Example                                |
+| :-------------------------- | :----- | :---------------- | :---------------------------------------------------------------------------- | :------------------------------------- |
+| `mcp.method.name`           | string | required          | El nombre del método de la solicitud o notificación.                          | `"tools/call"`                         |
+| `mcp.transport`             | string | required          | El método de transporte utilizado para la comunicación de MCP. **[2]**        | `"stdio"`                              |
+| `network.transport`         | string | required          | Protocolo de la capa de transporte OSI. **[3]**                               | `"pipe"`                               |
+| `mcp.request.id`            | string | optional          | Identificador único de la solicitud.                                          | `"42"`                                 |
+| `mcp.session.id`            | string | optional          | Identifica la sesión de MCP. Puede estar indefinido, ya que los servidores de MCP pueden ser sin estado. | `"191c4850af6c49..."`   |
+| `network.protocol.version`  | string | optional          | La versión del protocolo JSON-RPC utilizada.                                  | `"2.0"`                                |
+
+**[2]** Valores definidos para el atributo de datos `mcp.transport`:
+
+| Value        | Description                              |
+| :-------     | :------------------------------------    |
+| `"http"`     | Transporte HTTP                          |
+| `"sse"`      | Transporte Server-Sent Events            |
+| `"stdio"`    | Transporte de entrada/salida estándar    |
+| `"unknown"`* | Transporte desconocido (para transportes personalizados) |
+
+*`"unknown"` es un marcador de posición para transportes personalizados. Se puede intentar inferir el nombre a partir del objeto de transporte.
+
+**[3]** Valores definidos para el atributo de datos `network.transport`:
+
+| Value    | Description                           |
+| :------- | :------------------------------------ |
+| `"pipe"` | Tubería con nombre (para transporte stdio) |
+| `"tcp"`  | TCP (para transporte HTTP/SSE)        |
+
+<div id="session-management">
+  ### Gestión de sesiones
+</div>
+
+Los servidores MCP pueden ser con estado o sin estado. Comprender esta distinción es importante para implementar correctamente el trazado y manejar los datos de sesión. (Consulta [MCP Server Session Management](https://modelcontextprotocol.io/docs/concepts/transports#session-management) para más detalles.)
+
+<div id="stateless-vs-stateful-servers">
+  #### Servidores sin estado vs. con estado
+</div>
+
+**Servidores sin estado**: Estos servidores tratan cada solicitud de forma independiente, sin mantener el estado de la sesión entre solicitudes. El atributo `mcp.session.id` puede estar indefinido o no ser relevante para dichos servidores.
+
+**Servidores con estado**: Estos servidores mantienen el estado de la sesión a través de múltiples solicitudes del mismo cliente. Utilizan un `mcp.session.id` consistente que se comparte en todos los mensajes dentro del mismo ciclo de vida de la sesión. Todas las solicitudes MCP del cliente siempre deben incluir la cabecera HTTP `X-MCP-Session-Id` con el mismo valor.
+
+<div id="session-data-attributes">
+  #### Atributos de datos de la sesión
+</div>
+
+En servidores con estado, se recopilan metadatos adicionales de la sesión durante la fase de inicialización y se adjuntan a todos los spans posteriores dentro de la misma sesión. Esto aporta observabilidad y contexto para todo el ciclo de vida de la sesión.
+
+| Atributo de datos           | Tipo   | Nivel de requisito | Descripción                                                                    | Ejemplo                                |
+| :-------------------------- | :----- | :----------------- | :----------------------------------------------------------------------------- | :------------------------------------- |
+| `mcp.client.name`           | string | opcional           | Nombre de la aplicación cliente MCP.                                           | `"claude-desktop"`                     |
+| `mcp.client.title`          | string | opcional           | Título mostrado de la aplicación cliente MCP.                                  | `"Claude Desktop"`                     |
+| `mcp.client.version`        | string | opcional           | Versión de la aplicación cliente MCP.                                          | `"1.0.0"`                              |
+| `mcp.server.name`           | string | opcional           | Nombre de la aplicación de servidor MCP.                                       | `"my-mcp-server"`                      |
+| `mcp.server.title`          | string | opcional           | Título mostrado de la aplicación de servidor MCP.                              | `"My MCP Server"`                      |
+| `mcp.server.version`        | string | opcional           | Versión de la aplicación de servidor MCP.                                      | `"2.1.3"`                              |
+| `mcp.protocol.version`      | string | opcional           | Versión del protocolo MCP usada en la sesión.                                  | `"2024-11-05"`                         |
+
+<div id="session-lifecycle">
+  #### Ciclo de vida de la sesión
+</div>
+
+1. **Inicialización**: Durante la solicitud `initialize`, se establecen y almacenan los metadatos de la sesión (información del cliente, del servidor y versión del protocolo).
+
+2. **Propagación de la sesión**: En todas las solicitudes posteriores dentro de la misma sesión (llamadas a herramientas, solicitudes de mensaje, acceso a recursos), los metadatos de la sesión se adjuntan automáticamente a cada span.
+
+3. **Evolución**: A medida que la especificación de MCP evolucione, se podrán capturar y propagar metadatos adicionales a nivel de sesión, proporcionando un contexto más rico para la observabilidad.
+
+Este enfoque basado en sesiones nos permite:
+
+- Rastrear versiones de cliente y servidor en toda la infraestructura
+- Analizar la adopción y la compatibilidad de las versiones del protocolo
+- Agrupar y correlacionar todas las operaciones dentro de una sola sesión de cliente
+- Supervisar la duración y los patrones de la sesión
+
+<div id="mcp-server-span-types">
+  ### Tipos de spans del servidor MCP
+</div>
+
+Los spans del servidor MCP usan el valor de operación `"mcp.server"` y se agrupan en estas categorías:
+
+**Métodos del servidor** (op: `"mcp.server"`):
+
+- **Llamadas a herramientas** - `tools/call {tool_name}` - Ejecutar herramientas solicitadas por el cliente
+- **Solicitudes de prompts** - `prompts/get {prompt_name}` - Proporcionar plantillas de prompts a los clientes  
+- **Acceso a recursos** - `resources/read {resource_uri}` - Servir recursos a los clientes
+
+**Notificaciones** (op: `"mcp.notification.client_to_server"` o `"mcp.notification.server_to_client"`):
+
+- Mensajes unidireccionales que no esperan respuesta (p. ej., `notifications/cancelled`)
+
+**Otros** (op: `"mcp.server"`):
+
+- **Inicialización** - `initialize` - Gestionar la configuración de la conexión del cliente
+
+<div id="tool-call-span">
+  ### Span de llamada de herramienta
+</div>
+
+Describe las solicitudes de ejecución de herramientas MCP provenientes de clientes.
+
+- El `op` de los spans DEBE ser `"mcp.server"`.
+- El `name` del span DEBERÍA seguir el patrón `"tools/call {mcp.tool.name}"`. (p. ej., `"tools/call get_weather"`)
+- El atributo `mcp.method.name` DEBE ser `"tools/call"`.
+- El atributo `mcp.tool.name` DEBERÍA establecerse con el nombre de la herramienta. (p. ej., `"get_weather"`)
+- Todos los [Atributos comunes del span](#common-span-attributes) DEBERÍAN configurarse (todos los atributos comunes marcados como `required` DEBEN configurarse).
+
+Atributos adicionales en el span:
+
+| Atributo de datos                    | Tipo    | Nivel de requisito | Descripción                                                                      | Ejemplo                                |
+| :----------------------------------- | :------ | :----------------- | :------------------------------------------------------------------------------- | :------------------------------------- |
+| `mcp.tool.result.is_error`           | boolean | opcional           | Indica si la ejecución de la herramienta resultó en un error.                    | `true`                                 |
+| `mcp.tool.result.content_count`      | int     | opcional           | Número de elementos de contenido en el resultado de la herramienta.              | `3`                                    |
+| `mcp.tool.result.content`            | string  | opcional           | Contenido serializado del resultado de la herramienta. **[0]**                   | `"[{\"type\":\"text\"}]"`              |
+| `mcp.request.argument.<key>`         | string  | opcional           | Argumentos pasados a la herramienta. **[1]**                                     | `"Seattle, WA"`                        |
+
+**[0]**: Los atributos de span solo permiten tipos de datos primitivos. Esto significa que debes usar una versión en cadena de una lista de diccionarios. NO establezcas `[{"type": "text"}]`, sino la cadena `"[{\"type\": \"text\"}]"`.
+**[1]**: Los argumentos llevan el prefijo `mcp.request.argument.` seguido de la clave del argumento. Por ejemplo, si una herramienta recibe `{location: "Seattle, WA"}`, se convierte en `mcp.request.argument.location`.
+
+<div id="prompt-span">
+  ### Span de prompt
+</div>
+
+Describe las solicitudes de prompt MCP de los clientes.
+
+- El `op` del span DEBE ser `"mcp.server"`.
+- El `name` del span DEBERÍA seguir el patrón `"prompts/get {mcp.prompt.name}"`. (p. ej., `"prompts/get analyze-code"`)
+- El atributo `mcp.method.name` DEBE ser `"prompts/get"`.
+- El atributo `mcp.prompt.name` DEBERÍA establecerse con el nombre del prompt. (p. ej., `"analyze-code"`)
+- Todos los [Atributos comunes del span](#common-span-attributes) DEBERÍAN configurarse (todos los atributos comunes marcados como `required` DEBEN establecerse).
+
+Atributos adicionales en el span:
+
+| Atributo de datos                     | Tipo   | Nivel de requisito | Descripción                                                                    | Ejemplo                                |
+| :------------------------------------ | :----- | :----------------- | :----------------------------------------------------------------------------- | :------------------------------------- |
+| `mcp.request.argument.<key>`          | string | opcional           | Argumentos adicionales pasados al prompt. **[1]**                             | `"javascript"`                         |
+
+<div id="resource-span">
+  ### Intervalo de recurso
+</div>
+
+Describe las solicitudes de acceso a recursos MCP desde los clientes.
+
+- El `op` de los spans DEBE ser `"mcp.server"`.
+- El `name` del span DEBERÍA seguir el patrón `"resources/read {mcp.resource.uri}"` (p. ej., `"resources/read file:///path/to/file"`).
+- El atributo `mcp.method.name` DEBE ser `"resources/read"`.
+- El atributo `mcp.resource.uri` DEBERÍA establecerse con el URI del recurso (p. ej., `"file:///path/to/file"`).
+- Todos los [atributos comunes del span](#common-span-attributes) DEBERÍAN establecerse (todos los atributos comunes marcados como `required` DEBEN establecerse).
+
+Atributos adicionales en el span:
+
+| Atributo de datos                     | Tipo   | Nivel de requisito | Descripción                                                                    | Ejemplo                                |
+| :------------------------------------ | :----- | :----------------- | :----------------------------------------------------------------------------- | :------------------------------------- |
+| `mcp.resource.name`                   | string | opcional           | Nombre del recurso al que se accede.                                           | `"sentry-docs-platform"`               |
+
+<div id="initialize-span">
+  ### Inicializar span
+</div>
+
+Describe las solicitudes de inicialización de MCP desde los clientes.
+
+- El `op` del span DEBE ser `"mcp.server"`.
+- El `name` del span DEBERÍA ser `"initialize"`.
+- El atributo `mcp.method.name` DEBE ser `"initialize"`.
+- Todos los [Atributos comunes del span](#common-span-attributes) DEBERÍAN establecerse (todos los atributos comunes marcados como `required` DEBEN establecerse).
+
+Atributos adicionales del span:
+
+| Atributo de datos                     | Tipo   | Nivel de requisito | Descripción                                                                    | Ejemplo                                |
+| :------------------------------------ | :----- | :----------------- | :----------------------------------------------------------------------------- | :------------------------------------- |
+| `client.address`                      | string | optional           | Dirección del cliente: nombre de dominio o dirección IP.                       | `"127.0.0.1"`                          |
+| `client.port`                         | int    | optional           | Número de puerto del cliente.                                                  | `8080`                                 |
+
+<div id="notification-span">
+  ### Span de notificación
+</div>
+
+Describe los mensajes de notificación de MCP (mensajes unidireccionales que no esperan respuesta).
+
+- El valor de `op` del span DEBE ser "mcp.notification.client_to_server" o "mcp.notification.server_to_client".
+- El `name` del span DEBERÍA ser el nombre del método de notificación (p. ej., "notifications/cancelled").
+- El atributo `mcp.method.name` DEBE establecerse con el método de notificación (p. ej., "notifications/cancelled").
+- Se DEBERÍAN establecer todos los [atributos comunes del span](#common-span-attributes) (todos los atributos comunes marcados como `required` DEBEN establecerse).

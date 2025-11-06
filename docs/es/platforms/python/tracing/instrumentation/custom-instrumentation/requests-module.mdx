@@ -1,0 +1,49 @@
+---
+title: Instrumentar solicitudes HTTP
+sidebar_order: 2000
+description: "Aprende a instrumentar manualmente tu código para usar el módulo Requests de Sentry."
+---
+
+Como requisito previo para configurar [Requests](/es/product/insights/requests/), primero debes <PlatformLink to="/tracing/">configurar el tracing</PlatformLink>. Una vez hecho esto, el SDK de Python instrumentará automáticamente las solicitudes HTTP salientes realizadas a través de `HTTPConnection` y mostrará los datos en el [tablero de supervisión de requests](https://sentry.io/orgredirect/organizations/:orgslug/insights/backend/http/). Si eso no se ajusta a tu caso de uso, puedes configurarlo con la instrumentación personalizada descrita a continuación.
+
+<div id="custom-instrumentation">
+  ## Instrumentación personalizada
+</div>
+
+Para obtener información detallada sobre qué datos se pueden establecer, consulta las [especificaciones para desarrolladores del módulo Requests](https://develop.sentry.dev/sdk/performance/modules/requests/).
+
+<div id="wrap-http-requests-in-a-span">
+  ### Envuelve las solicitudes HTTP en un span
+</div>
+
+NOTA: Consulta las [convenciones de datos de spans HTTP](https://develop.sentry.dev/sdk/performance/span-data-conventions/#http) para ver la lista completa de atributos de datos de spans.
+
+Aquí tienes un ejemplo de una función instrumentada que realiza solicitudes HTTP:
+
+```python
+from urllib.parse import urlparse
+import requests
+
+def make_request(method, url):
+    span = sentry_sdk.start_span(
+        op="http.client",
+        name="%s %s" % (method, url),
+    )
+
+    span.set_data("http.request.method", method)
+
+    parsed_url = urlparse(url)
+    span.set_data("url", url)
+    span.set_data("server.address", parsed_url.hostname)
+    span.set_data("server.port", parsed_url.port)
+
+    response = requests.request(method=method, url=url)
+
+    span.set_data("http.response.status_code", response.status_code)
+    span.set_data("http.response_content_length", response.headers["content-length"])
+
+    span.finish()
+
+    return response
+
+```

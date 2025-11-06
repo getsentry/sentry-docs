@@ -1,0 +1,94 @@
+---
+title: Métodos de instalación
+description: Todos los métodos de instalación del SDK de Unreal Engine.
+sidebar_order: 2
+og_image: /og-images/platforms-unreal-install.png
+---
+
+Hay tres formas habituales de instalar un SDK para usar con Unreal Engine:
+
+1. Descargar un SDK precompilado desde la [página de lanzamientos de GitHub](https://github.com/getsentry/sentry-unreal/releases) e instalarlo
+2. Instalar desde [Epic Games Fab](https://www.fab.com/) ([antes conocido como el marketplace](https://www.unrealengine.com/en-US/blog/fab-epics-new-unified-content-marketplace-launches-today))
+3. Clonar y compilar el SDK tú mismo e instalarlo
+
+Si bien puedes usar cualquiera de los tres métodos para instalar Sentry, cada uno tiene sus propias limitaciones, como se describe a continuación.
+
+<div id="overview-of-sdk-versions">
+  ## Descripción general de las versiones del SDK
+</div>
+
+La siguiente tabla resalta algunas diferencias clave entre distintas versiones del SDK:
+
+| Característica               | __GitHub Releases__* | Fab                  | Build Yourself |
+|------------------------------|----------------------|----------------------|----------------|
+| Versiones del motor compatibles | 4.27 y posteriores   | 5.4 y posteriores    | 4.27 y posteriores |
+| Tipos de proyectos de UE compatibles | Solo C++             | Blueprint y C++      | Solo C++       |
+| Compilación cruzada para Linux ** | Compatible           | Configuración manual | Compatible     |
+
+Leyenda:
+`*`: Versión recomendada del SDK
+`**`: Para habilitar la compilación cruzada para Linux en Windows, la versión Fab del SDK incluye una utilidad del editor que precompila los binarios requeridos por UAT.
+
+<div id="installing-from-github-releases-recommended">
+  ## Instalación desde GitHub Releases (recomendado)
+</div>
+
+La [página de GitHub Releases](https://github.com/getsentry/sentry-unreal/releases) ofrece paquetes del plugin para todas las versiones del motor compatibles.
+
+Para instalar el SDK, descarga las fuentes más recientes desde la [página de Releases](https://github.com/getsentry/sentry-unreal/releases) y añádelas al directorio `Plugins` de tu proyecto. Al iniciar el proyecto de nuevo, UE te pedirá compilar los módulos Sentry y SentryEditor.
+
+<Alert>
+
+Actualmente, este método solo está disponible para proyectos de UE en C++. Los proyectos Blueprint pueden convertirse a C++ añadiendo una clase vacía desde el editor.
+
+</Alert>
+
+<Alert>
+
+Para evitar advertencias durante la compilación en versiones con licencia de Unreal Engine, elimina la clave `EngineVersion` del archivo `Sentry.uplugin`.
+
+</Alert>
+
+<div id="installing-from-fab">
+  ## Instalación desde Fab
+</div>
+
+El SDK de Sentry se puede descargar mediante el [proceso de instalación estándar](https://dev.epicgames.com/documentation/en-us/unreal-engine/working-with-plugins-in-unreal-engine#installingpluginsfromtheunrealenginemarketplace) desde su [página en Epic Games Fab](https://www.fab.com/listings/eaa89d9d-8d39-450c-b75f-acee010890a2).
+
+Este método se recomienda solo para proyectos de UE basados en Blueprint. Si ya tienes un proyecto de UE en C++ o no te importa convertir un proyecto de UE en Blueprint existente a C++, considera descargar el plugin desde GitHub.
+
+<div id="build-yourself">
+  ## Compílalo tú mismo
+</div>
+
+Para empezar, recomendamos clonar el [repositorio de Unreal SDK](https://github.com/getsentry/sentry-unreal) y ejecutar el script de inicialización:
+
+* `./scripts/init.sh` en macOS/Linux
+* `./scripts/init-win.ps1` en Windows
+
+<Alert>
+Los scripts de inicialización requieren tener instalado [GitHub CLI](https://cli.github.com/).
+</Alert>
+
+<Alert>
+Si el script de inicialización falla en Windows, verifica tu versión de PowerShell mostrando la variable integrada `$PSVersionTable`. Si la versión es `5.x`, actualizar a una versión más reciente de [PowerShell](https://github.com/powershell/powershell) puede resolver estos errores.
+</Alert>
+
+Este script vincula la versión descargada del plugin (el directorio [plugin-dev](https://github.com/getsentry/sentry-unreal/tree/b67076ad5dc419d46b4be70a0bd6e64c2357a82d/plugin-dev)) con la [aplicación de ejemplo](https://github.com/getsentry/sentry-unreal/tree/b67076ad5dc419d46b4be70a0bd6e64c2357a82d/sample) y descarga las compilaciones más recientes de los SDK nativos desde nuestro CI de GitHub.
+
+Tras la inicialización correcta, copia el contenido del directorio `plugin-dev` a `<your_project_root>/Plugins/Sentry`. Esto te permitirá usar Sentry en tu proyecto de Unreal Engine.
+
+<div id="confirm-installation">
+  ## Confirmar la instalación
+</div>
+
+Para asegurarte de que el plugin de Sentry esté habilitado después de completar la instalación, abre el editor y ve al menú **Settings &gt; Plugins &gt; Code Plugins** para comprobar la instalación.
+
+![Ventana de Sentry](../img/unreal_plugins_window.png)
+
+Para acceder a la API del plugin desde C++,
+añade compatibilidad con `Sentry` al script de compilación (`MyProject.build.cs`):
+
+```csharp
+PublicDependencyModuleNames.AddRange(new string[] { ..., "Sentry" });
+```

@@ -1,0 +1,218 @@
+---
+title: Arquitectura
+sidebar_order: 3
+og_image: /og-images/application-architecture-dynamic-sampling-architecture.png
+---
+
+La arquitectura que impulsa Dynamic Sampling está compuesta por varios componentes que trabajan juntos para acercar la tasa de muestreo de la organización a la fidelidad objetivo.
+
+Los dos componentes principales de la arquitectura son [Sentry](https://github.com/getsentry/sentry) y [Relay](https://github.com/getsentry/relay), pero hay varios otros subcomponentes que se utilizan para lograr el resultado deseado, como Redis, Celery, PostgreSQL y Snuba.
+
+![Arquitectura de Dynamic Sampling](./images/architecture.png)
+
+<div id="sampling-in-relay">
+  ## Muestreo en Relay
+</div>
+
+Relay es el primer componente involucrado en la canalización de muestreo dinámico. Se encarga de recibir eventos de los SDK, muestrearlos y reenviarlos al backend de Sentry. *En realidad, Relay hace mucho más que eso. Si quieres saber más, puedes consultar la documentación de Relay [aquí](https://docs.sentry.io/product/relay/).*
+
+Para que Relay pueda realizar el muestreo, debe ser capaz de **calcular la tasa de muestreo** para cada evento entrante. La configuración del muestreo se puede realizar mediante un **sistema basado en reglas** que permite definir comportamientos de muestreo complejos combinando reglas simples. Estas reglas se incorporan a la **configuración del proyecto**, que se calcula y se almacena en caché en Sentry. Esta configuración contiene una serie de campos que Relay utiliza para llevar a cabo muchas de sus tareas, incluido el muestreo.
+
+<div id="trace-and-transaction-sampling">
+  ### Muestreo de trazas y de transacciones
+</div>
+
+Sentry admite **dos tipos de muestreo fundamentalmente distintos**, descritos con más detalle [aquí](/es/dynamic-sampling/fidelity-and-biases/#trace-and-transaction-sampling).
+
+<div id="sampling-configuration">
+  ### Configuración de muestreo
+</div>
+
+Dentro de la configuración del proyecto hay un campo dedicado al muestreo, llamado `dynamicSampling`. Este campo contiene una lista de **reglas de muestreo** que se usan para calcular la tasa de muestreo de cada evento entrante. Las reglas se definirán en el campo `rulesV2`, dentro del objeto `dynamicSampling`.
+
+<div id="the-rule-definition">
+  #### Definición de la regla
+</div>
+
+Una **regla** es el componente principal de la configuración de muestreo y se define como [SamplingRule](https://getsentry.github.io/relay/relay_sampling/config/struct.SamplingRule.html) en Relay.
+
+El siguiente es un ejemplo de una regla codificada en JSON:
+
+```json
+{
+  "id": 1000,
+  "type": "trace",
+  "samplingValue": {
+    "type": "sampleRate",
+    "value": 0.5
+  },
+  "condition": {
+    "inner": [],
+    "op": "and",
+  },
+  "timeRange": {
+    "start": "2022-10-21 18:50:25+00:00",
+    "end": "2022-10-21 19:50:25+00:00"
+  },
+  "decayingFn": {
+    "type": "linear",
+    "decayedValue": 0.2
+  }
+}
+```
+
+<Alert title="✨ Nota">
+  Las reglas de muestreo dinámico siempre deben incluir un campo `condition`; de lo contrario, Relay ignorará por completo todo el conjunto de reglas de muestreo dinámico. Si quieres que una regla coincida con cada evento, configura la condición de la siguiente manera:
+
+  ```json
+  {
+    "condition": {
+      "inner": [],
+      "op": "and"
+    }
+  }
+  ```
+</Alert>
+
+<div id="fetching-the-sampling-configuration">
+  #### Obtención de la configuración de muestreo
+</div>
+
+Relay obtiene la configuración de muestreo desde Sentry mediante un modelo de extracción (pull). Esto se hace enviando periódicamente una solicitud al endpoint `/api/0/relays/projectconfigs/` (definido [aquí](https://github.com/getsentry/sentry/blob/master/src/sentry/api/endpoints/relay/project_configs.py#L34-L34)).
+
+En Sentry, la configuración se calculará si no se encuentra en caché (cache miss) y luego se almacenará en Redis. La caché se invalida cada vez que cambia la configuración; más detalles al respecto se proporcionarán más adelante.
+
+<div id="sampling-decision">
+  ### Decisión de muestreo
+</div>
+
+Una decisión de muestreo implica:
+
+1. Hacer coincidir el evento entrante y/o el DSC con la configuración.
+2. Obtener una tasa de muestreo a partir de la combinación de reglas `factor` y `sampleRate`.
+3. Tomar la decisión de muestreo usando un generador de números aleatorios.
+
+Si no se encuentra ninguna coincidencia, o si hay problemas durante la coincidencia, Relay aceptará el evento bajo el supuesto de que es preferible sobremuestrear a descartar eventos potencialmente importantes.
+
+Relay realiza el muestreo usando dos instancias de [SamplingConfig](https://getsentry.github.io/relay/relay_sampling/config/struct.SamplingConfig.html): la **configuración de muestreo no raíz** y la **configuración de muestreo raíz**. La configuración no raíz pertenece al proyecto del evento entrante, mientras que la configuración raíz pertenece al proyecto de la transacción principal del trace. Si no hay una configuración de muestreo raíz disponible, solo se realizará muestreo de transacciones.
+
+Con ambas configuraciones listas, Relay intentará hacer coincidir primero las reglas de transacción de la configuración no raíz y luego las reglas de trace de la configuración raíz. Si las configuraciones raíz y no raíz son las mismas, Relay realizará la coincidencia del mismo modo.
+
+Las cargas útiles inspeccionadas para la coincidencia varían según el tipo de regla que se esté evaluando:
+
+* `transaction`: una regla de transacción se cotejará con la carga útil de [Event](https://getsentry.github.io/relay/relay_event_schema/protocol/struct.Event.html) en sí.
+* `trace`: una regla de trace se cotejará con el [Dynamic Sampling Context](https://getsentry.github.io/relay/relay_sampling/dsc/struct.DynamicSamplingContext.html), que se mantiene consistente en todas las transacciones del trace.
+
+La coincidencia que realiza Relay se basa en el `samplingValue` de las reglas encontradas. Como se indicó anteriormente, según el tipo de `samplingValue`, Relay devolverá inmediatamente un resultado o continuará evaluando otras reglas. Puedes encontrar más detalles sobre el algoritmo de coincidencia en la implementación [aquí](https://getsentry.github.io/relay/relay_sampling/evaluation/struct.SamplingEvaluator.html#method.match_rules).
+
+<div id="example-of-sampling-decision">
+  #### Ejemplo de decisión de muestreo
+</div>
+
+Supongamos que Relay recibe una transacción entrante con los siguientes datos:
+
+```json
+{
+  "dsc": {
+    # Esta es la transacción de la cabecera del trazo.
+    "transaction": "/hello"
+  },
+  # Esta es la transacción del evento entrante.
+  "transaction": "/world",
+  "environment": "prod",
+  "release": "1.0.0"
+}
+```
+
+Y supongamos que esta es la configuración combinada de los proyectos raíz y no raíz:
+
+```json
+{
+  "rules": [
+    {
+      "id": 1,
+      "type": "transaction",
+      "samplingValue": {
+        "type": "factor",
+        "value": 2.0
+      },
+      "condition": {
+        # No es la sintaxis real, solo un ejemplo simplificado.
+        "trace.transaction": "/world"
+      }
+    },
+    {
+      "id": 2,
+      "type": "trace",
+      "samplingValue": {
+        "type": "sampleRate",
+        "value": 0.5
+      },
+      "condition": {
+        # No es la sintaxis real, solo un ejemplo simplificado.
+        "trace.transaction": "/hello"
+      }
+    }
+  ]
+}
+```
+
+En este caso, la evaluación se hará de **arriba hacia abajo** y ocurrirá lo siguiente:
+
+1. La regla `1` coincide con la carga del evento, ya que es de tipo `transaction`. El `samplingValue` es un `factor`, por lo que los factores acumulados pasan a ser `2.0 * 1.0`, donde `1.0` es el elemento neutro de la multiplicación.
+2. Como la regla `1` era una regla de factor, la evaluación continúa y la regla `2` se comparará con el DSC, ya que es de tipo `trace`. El `samplingValue` es un `sampleRate`, por lo tanto, la evaluación se detendrá y la tasa de muestreo se calculará como `2.0 * 0.5 = 1.0`, donde `2.0` es el factor acumulado de la regla anterior y `0.5` es la tasa de muestreo de la regla actual.
+
+<Alert title="✨ Nota">
+  Es importante tener en cuenta que una regla de `sampleRate` debe coincidir para que se tome una decisión de muestreo; si no se cumple esta condición, el evento se conservará. En la práctica, cada proyecto tendrá una regla de traza uniforme que siempre coincidirá e incluirá la tasa de muestreo base de la organización.
+</Alert>
+
+<div id="rules-generation-in-sentry">
+  ## Generación de reglas en Sentry
+</div>
+
+Sentry es el segundo componente del flujo de muestreo dinámico. Se encarga de generar las reglas que Relay utiliza para realizar el muestreo.
+
+La generación de reglas es el paso más complejo del flujo, ya que las reglas y sus valores de muestreo impactan directamente en cuánto se desvía el sistema de la tasa de fidelidad objetivo.
+
+<div id="generation-of-the-rules">
+  ### Generación de las reglas
+</div>
+
+La generación de reglas se realiza como parte de la **recomputación de la configuración del proyecto**, que ocurre:
+
+1. Cada vez que Relay solicita la configuración y no está en caché en Redis;
+2. Cada vez que la configuración se invalida manualmente.
+
+La invalidación de la configuración puede ocurrir en **varias circunstancias**, llamando a [la siguiente función](https://github.com/getsentry/sentry/blob/master/src/sentry/tasks/relay.py#L244-L244). Algunos ejemplos de cuándo ocurre la recomputación son: cuando se detecta una nueva release, cuando cambian ciertos ajustes del proyecto o cuando las tareas de Celery para calcular las tasas de muestreo variables terminan de ejecutarse.
+
+La generación de las reglas que formarán parte del recálculo de la configuración del proyecto está definida [aquí](https://github.com/getsentry/sentry/blob/master/src/sentry/dynamic_sampling/rules/base.py#L72-L72) y funciona siguiendo estos pasos:
+
+1. Obtener la lista de sesgos activos, ya que algunos pueden habilitarse o deshabilitarse por el usuario en la interfaz de Sentry;
+2. Determinar la tasa de muestreo base específica para cada proyecto;
+3. Calcular las reglas para cada sesgo usando toda la información disponible en ese momento (p. ej., en memoria o obtenida de Redis);
+4. Empaquetar las reglas en el campo `dynamicSampling.rulesV2` de la configuración del proyecto;
+5. Devolver el conjunto de reglas que se almacenará en la configuración del proyecto.
+
+<div id="redis-for-shared-state">
+  #### Redis para estado compartido
+</div>
+
+Ciertos sesgos requieren datos que **deben calcularse a partir de otras partes del sistema** (p. ej., cuando se crea una nueva versión) o por tareas en segundo plano que se ejecutan de forma asíncrona.
+
+Para estos casos de uso, decidimos usar una instancia independiente de Redis, que se utiliza para almacenar muchos tipos de información, como tasas de muestreo y versiones con impulso. Durante la generación de reglas, nos conectamos a esta instancia de Redis y obtenemos los datos necesarios para calcular las reglas.
+
+Una ilustración de cómo se usa Redis para hacer seguimiento de versiones con impulso (que se utilizan en el [sesgo de impulsar nuevas versiones](/es/dynamic-sampling/fidelity-and-biases/#boost-new-releases)):
+
+![Uso de Redis para versiones con impulso](./images/redisBoostedRelease.png)
+
+<div id="celery-tasks-for-asynchronous-processing">
+  #### Tareas de Celery para el procesamiento asíncrono
+</div>
+
+Ciertos sesgos requieren datos que **deben calcularse de forma asíncrona mediante tareas en segundo plano** debido a la complejidad del cálculo (por ejemplo, ejecutar consultas entre organizaciones en Snuba). Este es el caso del [sesgo de aumento para proyectos de bajo volumen](/es/dynamic-sampling/fidelity-and-biases/#boost-low-volume-projects) y del [sesgo de aumento para transacciones de bajo volumen](/es/dynamic-sampling/fidelity-and-biases/#boost-low-volume-transactions), que necesitan consultas costosas para obtener todos los datos necesarios para ejecutar los algoritmos de reequilibrio. Estas tareas son gestionadas por workers de Celery, que se programan automáticamente mediante trabajos cron configurados en Sentry.
+
+*Los datos calculados por estas tareas podrían, en teoría, calcularse secuencialmente durante la generación de reglas, pero por razones de escalabilidad optamos por usar tareas de Celery. Así, el cálculo de los datos puede paralelizarse y la generación de reglas puede realizarse más rápido.*
+
+Una ilustración de cómo se programan múltiples tareas de Celery para calcular los datos necesarios para la generación de reglas:
+
+![Uso de tareas de Celery para el procesamiento asíncrono](./images/celeryTasks.png)

@@ -1,0 +1,45 @@
+---
+title: Migración de la versión 6.x a la 7.0
+sidebar_order: 996
+description: "Descubre cómo migrar de la versión 6.x a la 7.0.0"
+---
+
+<div id="migrating-from-iosentrysentry-6x-to-iosentrysentry-700">
+  ## Migración de `io.sentry:sentry` `6.x` a `io.sentry:sentry` `7.0.0`
+</div>
+
+<div id="breaking-changes">
+  ### Cambios incompatibles
+</div>
+
+* Las clases de `sentry-android-okhttp` quedaron obsoletas en favor de `sentry-okhttp`, que es un módulo de Java puro y puede usarse en proyectos no Android. Consulta la documentación de [OkHttp Integration](/es/platforms/java/tracing/instrumentation/okhttp) para ver cómo usarlo.
+  * La clase `SentryOkHttpUtils` se eliminó de la API pública. Si la usabas, considera abrir una [solicitud de función](https://github.com/getsentry/sentry-java/issues).
+* Si usas `sentry-kotlin-extensions`, ahora requiere `kotlinx-coroutines-core` versión `1.6.1` o superior.
+* Se cambió el tipo de retorno de `SentryApolloInterceptor.BeforeSpanCallback` de `ISpan` a `ISpan?`.
+* `Scope` ahora implementa la interfaz `IScope`, por lo tanto, algunos métodos como `ScopeCallback.run` ahora aceptan `IScope`.
+* Algunas sobrecargas de `Sentry.startTransaction` ya no existen y, en su lugar, puedes establecer las opciones anteriores pasando un objeto `TransactionOptions`.
+
+Por ejemplo:
+
+```kotlin
+// antes
+val transaction = Sentry.startTransaction("name", "op", bindToScope = true)
+// ahora
+val transaction = Sentry.startTransaction("name", "op", TransactionOptions().apply { isBindToScope = true })
+```
+
+<div id="behavioral-changes">
+  ### Cambios de comportamiento
+</div>
+
+* El SDK ahora captura, de forma predeterminada, las solicitudes HTTP y GraphQL (Apollo) fallidas.
+  * Esto puede aumentar el consumo de eventos y afectar tu cuota, porque el SDK reportará las solicitudes de red fallidas como eventos de Sentry si usas las integraciones `sentry-okhttp` o `sentry-apollo-3`. Puedes personalizar qué errores quieres o no quieres reportar para [OkHttp](/es/platforms/java/tracing/instrumentation/okhttp/#http-client-errors) y [Apollo3](/es/platforms/java/tracing/instrumentation/apollo3/#graphql-client-errors), respectivamente.
+* El SDK ahora establece `ip_address` en &#123;&#123;auto&#125;&#125; de forma predeterminada, incluso si sendDefaultPII está deshabilitado.
+  * Te recomendamos usar, en su lugar, la opción &quot;Prevent Storing of IP Addresses&quot; en la configuración del proyecto &quot;Security &amp; Privacy&quot; en [sentry.io](https://sentry.io/).
+* La configuración `maxSpans` (valor predeterminado: 1000) ahora se aplica a los spans secundarios anidados. Esto significa que una sola transacción puede tener como máximo `maxSpans` elementos secundarios (anidados o no).
+
+<div id="sentry-self-hosted-compatibility">
+  ### Compatibilidad con Sentry autoalojado
+</div>
+
+* A partir de la versión `7.0.0` del SDK, se requiere [Sentry en la versión &gt;= v22.12.0](https://github.com/getsentry/self-hosted/releases) para ingerir correctamente transacciones con spans sin finalizar. Esto solo aplica a Sentry autoalojado. Si usas [sentry.io](https://sentry.io), no tienes que hacer nada.

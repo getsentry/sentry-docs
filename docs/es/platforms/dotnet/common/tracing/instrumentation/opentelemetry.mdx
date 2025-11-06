@@ -1,0 +1,39 @@
+---
+title: Compatibilidad con OpenTelemetry
+description: "Uso de OpenTelemetry con Sentry Performance."
+sidebar_order: 20
+---
+
+Puedes configurar tu [SDK de OpenTelemetry](https://opentelemetry.io/) para enviar trazas y spans a Sentry.
+
+<div id="install">
+  ## Instalar
+</div>
+
+<PlatformContent includePath="performance/opentelemetry-install" />
+
+<div id="usage">
+  ## Uso
+</div>
+
+<PlatformContent includePath="performance/opentelemetry-setup" />
+
+<div id="opentelemetry-and-sentry">
+  ## OpenTelemetry y Sentry
+</div>
+
+Con el SDK de OpenTelemetry de Sentry, un `Span` de OpenTelemetry se convierte en un `Transaction` o `Span` de Sentry. El primer `Span` que pasa por el `SpanProcessor` de Sentry es un `Transaction`, y cualquier `Span` hijo se adjunta a ese primer `Transaction` al comprobar el contexto del `Span` padre. Esto es válido tanto para el `Span` raíz de OpenTelemetry como para cualquier `Span` de nivel superior en el sistema. Por ejemplo, una solicitud enviada del frontend al backend creará un `Span` raíz de OpenTelemetry con un `Transaction` de Sentry correspondiente. La solicitud en el backend creará un nuevo `Transaction` de Sentry para el `Span` de OpenTelemetry. El `Transaction` y el `Span` de Sentry están vinculados como un rastro para fines de navegación y seguimiento de errores.
+
+<div id="capturing-exceptions">
+  ### Captura de excepciones
+</div>
+
+OpenTelemetry en .NET se implementa mediante el espacio de nombres System.Diagnostics.Activity. Sin embargo, no todas las funcionalidades de ese espacio de nombres son compatibles con OpenTelemetry. En particular, [no se recomienda](https://github.com/open-telemetry/opentelemetry-specification/pull/4333) usar los métodos `Activity.RecordException` o `Activity.AddException`. Usar cualquiera de estos métodos hará que **se elimine información valiosa de las excepciones** antes de que Sentry las capture.
+
+En su lugar, deberías registrar las excepciones (con `ILogger`) o capturarlas directamente con `SentrySdk.CaptureException`.
+
+<div id="additional-configuration">
+  ## Configuración adicional
+</div>
+
+Si necesitas un control más detallado sobre Sentry, consulta la <PlatformLink to="/configuration/">página de configuración</PlatformLink>. Si quieres filtrar transacciones antes de enviarlas a Sentry (por ejemplo, para eliminar los health checks), puede resultarte útil la <PlatformLink to="/configuration/filtering/#filtering-transaction-events">página de filtrado</PlatformLink>.

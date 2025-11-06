@@ -1,0 +1,96 @@
+---
+title: Ámbitos y hubs
+description: "Los SDK suelen gestionar automáticamente los ámbitos por ti en las integraciones con el framework. Aprende qué es un ámbito y cómo puedes aprovecharlo."
+---
+
+Cuando se captura un evento y se envía a Sentry, los SDK combinan los datos de ese evento con información adicional del ámbito actual. Por lo general, los SDK gestionan automáticamente los ámbitos por ti en las integraciones con el framework y no necesitas preocuparte por ellos. Aun así, conviene que sepas qué es un ámbito y cómo puedes aprovecharlo.
+
+<div id="whats-a-scope-whats-a-hub">
+  ## Qué es un Scope, qué es un Hub
+</div>
+
+Puedes pensar en el hub como el punto central que nuestros SDK usan para enrutar un evento a Sentry. Cuando llamas a `init()` se crea un hub y, en él, se crean un cliente y un scope en blanco. Ese hub se asocia con el hilo actual y, de forma interna, mantiene una pila de scopes.
+
+El scope contiene información útil que debe enviarse junto con el evento. Por ejemplo, los [contexts](../context/) o los [breadcrumbs](../breadcrumbs/) se almacenan en el scope. Cuando se hace push de un scope, hereda todos los datos del scope padre y, cuando se hace pop, se revierten todas las modificaciones.
+
+Las integraciones predeterminadas del SDK harán push y pop de scopes de forma inteligente. Por ejemplo, las integraciones con frameworks web crearán y destruirán scopes alrededor de tus rutas o controladores.
+
+<div id="how-the-scope-and-hub-work">
+  ## Cómo funcionan el Scope y el Hub
+</div>
+
+Cuando empiezas a usar un SDK, se crean automáticamente un scope y un hub listos para usar. Es poco probable que interactúes directamente con el hub a menos que estés escribiendo una integración o quieras crear o destruir scopes. Los scopes, por otro lado, están más orientados al usuario. Puedes modificar los datos almacenados en el scope en cualquier momento. Esto es útil para hacer cosas como [modificar el contexto](../context/).
+
+Cuando llamas a una función global como <PlatformIdentifier name="capture-event" />, Sentry detecta el hub actual y le solicita que capture un evento. Luego, internamente, el hub combinará el evento con los datos del scope superior.
+
+<div id="configuring-the-scope">
+  ## Configurar el alcance
+</div>
+
+Todos los datos pueden configurarse en el alcance global mediante métodos específicos de la clase `SentrySubsystem`.
+
+```cpp
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+USentryUser* SentryUser = NewObject<USentryUser>();
+SentryUser->SetEmail("john.doe@example.com");
+SentryUser->SetId(42);
+
+SentrySubsystem->SetUser(ScopeDelegate);
+SentrySubsystem->SetTag("my-tag", "my value");
+```
+
+También puedes aplicar esta configuración al desvincular a un usuario durante el cierre de sesión:
+
+<PlatformContent includePath="enriching-events/unset-user" />
+
+Para conocer qué información útil puede asociarse a los `scopes`, consulta
+[la documentación de contexto](../context/).
+
+
+<div id="local-scopes">
+  ## Ámbitos locales
+</div>
+
+También es posible establecer y configurar un ámbito en una sola llamada. Esto se implementa como un parámetro delegado en los métodos de captura. Es muy útil si solo quieres enviar datos para un evento específico.
+
+<div id="using-scope-callback-parameter">
+  ### Uso del parámetro de callback de Scope
+</div>
+
+En el siguiente ejemplo, usamos el parámetro de callback de scope, disponible para todos los métodos `capture`, para adjuntar un `level` y un `tag` a un único error específico:
+
+```cpp
+FConfigureScopeDelegate ScopeDelegate;
+ScopeDelegate.BindDynamic(this, &USomeClass::HandleScopeDelegate);
+
+void USomeClass::HandleScopeDelegate(USentryScope* Scope)
+{
+    Scope->SetTagValue("my-tag", "my value");
+    Scope->SetLevel(ESentryLevel::Error);
+}
+
+...
+
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+// se etiquetará con my-tag="my value"
+SentrySubsystem->CaptureMessageWithScope("Mensaje de error", ScopeDelegate);
+
+// no se etiquetará con my-tag
+SentrySubsystem->CaptureMessage("Mensaje de error");
+```
+
+Antes de invocar el callback, el SDK crea un clon del scope actual, y los cambios
+realizados permanecerán aislados dentro de la función de callback. Esto te permite
+aislar más fácilmente partes de la información de contexto en ubicaciones específicas de tu código o
+incluso llamar a `clear` para eliminar temporalmente toda la información de contexto.
+
+<Alert>
+  En Windows y Linux, el objeto de scope que se pasa al callback está vacío y no contiene ninguno de los datos del scope actual.
+</Alert>
+
+<Alert title="Importante">
+  Cualquier excepción que ocurra dentro de la función de callback al configurar un scope local no será
+  capturada, y todos los errores que ocurran se ignorarán silenciosamente y **no** se informarán.
+</Alert>

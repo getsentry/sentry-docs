@@ -1,0 +1,117 @@
+---
+title: Configuración de PyCharm
+description: >-
+  Si usas PyCharm para desarrollar, hay algunas cosas que debes configurar
+  para poder ejecutar y depurar.
+sidebar_order: 30
+og_image: /og-images/development-infrastructure-environment-pycharm.png
+---
+
+Este documento describe algunas configuraciones útiles para el desarrollo de Sentry.
+
+<div id="configurations">
+  ## Configuraciones:
+</div>
+
+Intérprete de Python: (asegúrate de que sea el intérprete del venv) p. ej., `~/venv/sentry/bin/python`
+
+![img/PyCharmPyInterpreter.png](img/PyCharmPyInterpreter.png)
+
+Para crear una configuración (de ejecución/depuración), ve a Run | Edit Configurations... (también disponible en la barra de herramientas predeterminada).
+
+![img/AddConfiguration.png](img/AddConfiguration.png)
+
+<div id="test-runner">
+  ### Ejecutor de pruebas
+</div>
+
+Sentry utiliza pytest para sus pruebas unitarias.
+
+Crea una configuración de pytest (en Pruebas de Python)
+
+Establece Target: **Custom**
+
+Argumentos adicionales: **tests/sentry**
+
+![img/AddPytestConfiguration.png](img/AddPytestConfiguration.png)
+
+<div id="dev-server-with-everything-needed">
+  ### Servidor de desarrollo con todo lo necesario
+</div>
+
+Para ejecutar (no depurar) con todo configurado (web, workers, cron):
+
+- Crea otra configuración de Python
+- Ruta del script: `<venv dir>/bin/sentry`, p. ej., `~/venv/sentry/bin/sentry`
+- Parámetros: `devserver --workers`
+- Intérprete de Python: el intérprete del venv
+- Directorio de trabajo: (la ruta `src` en tu directorio de instalación de Sentry), p. ej., ~/dev/sentry/src
+
+**Nota:** No podrás depurar los web workers con esta configuración (el web worker se inicia invocando un servidor uWSGI y no encontré una forma de adjuntarme a él).
+
+![img/PyCharmPyInterpreter.png](img/PyCharmPyInterpreter.png)
+
+<div id="getsentry-dev-server-with-everything-needed">
+  ### Servidor de desarrollo de getsentry con todo lo necesario
+</div>
+
+Puedes duplicar una configuración de ejecución de devserver de Sentry para ejecutarla desde el repositorio "getsentry", con los siguientes cambios:
+
+1. Cambia la ruta del script a `getsentry/.venv/bin/sentry` dentro de tu proyecto getsentry. (No confundir con `.venv/bin/getsentry`, que es un script de bash).
+2. Antepone los parámetros con `--config=<tu ruta>/getsentry/getsentry/settings.py`. El valor completo debería verse así: `--config=.../settings.py devserver --workers`.
+3. Cambia el intérprete de Python para que apunte a `.venv/bin/python` dentro de tu proyecto getsentry. Puede que necesites ir a la ventana global de "Preferences" de PyCharm y añadirlo como intérprete del proyecto ("Project: sentry > Project Interpreter").
+4. Cambia el directorio de trabajo a `getsentry/getsentry`.
+
+Ten en cuenta que las rutas en los pasos 2 y 4 se refieren al directorio llamado `getsentry` dentro del repositorio llamado `getsentry`. Si el repositorio también tiene un directorio padre llamado `getsentry` para corresponder al nombre de la organización de GitHub, las rutas correctas pueden contener [getsentry/getsentry/getsentry](https://en.wikipedia.org/wiki/Semantic_satiation).
+
+![img/PyCharmGetsentry.png](img/PyCharmGetsentry.png)
+
+<div id="debugging-with-pycharm">
+  ### Depuración con PyCharm
+</div>
+
+El comando `devserver` existe principalmente para lanzar demonios en procesos separados, por lo que no resulta muy útil acoplarle un depurador en su modo predeterminado.
+
+<div id="web-server">
+  #### Servidor web
+</div>
+
+El comando `devserver` tiene una opción especial que hace que el servidor web se inicie en un hilo del mismo proceso (en lugar de como el servicio `web`). Esto permite que la misma acción “Debug” de PyCharm que inicia el devserver se adjunte al servidor web y alcance puntos de interrupción en su back-end.
+
+Clona tu configuración de ejecución de devserver y agrega `--debug-server` al final del campo “Parameters”. Iníciala seleccionando “Debug” en lugar de “Run”.
+
+La opción `--debug-server` puede hacer que el proceso no responda correctamente a SIGINT y que se cierre de forma menos limpia que tu configuración original. Se recomienda mantener ambas, usando la primera con el comando “Run” y la segunda con el comando “Debug”.
+
+Puedes mantener la opción `--workers` junto con `--debug-server`, pero ten en cuenta que no será posible alcanzar puntos de interrupción en los workers, ni en otros servicios iniciados por el devserver.
+
+<div id="stand-alone-daemons">
+  #### Daemons independientes
+</div>
+
+Para conectar un depurador a un daemon individual que no sea `web`, crea una configuración de ejecución para ese daemon. Los siguientes atributos deben ser los mismos que en tu configuración de devserver. (Puedes clonarla y cambiar solo el campo "Parameters").
+
+- Script path: `<venv dir>/bin/sentry`, p. ej., `~/venv/sentry/bin/sentry`
+- Python interpreter: el intérprete del venv
+- Working dir: (la ruta `src` en el directorio de instalación de Sentry), p. ej., `~/dev/sentry/src`
+
+Configura los parámetros de la nueva configuración de ejecución con un comando `run` que inicie el daemon, por ejemplo:
+
+- `run cron`
+- `run worker -c 1`
+
+<div id="tips-and-troubleshooting">
+  #### Consejos y solución de problemas
+</div>
+
+- El mismo conjunto de modificaciones funcionará en las configuraciones de ejecución del proyecto `getsentry`, si quieres depurarlo.
+- El tipo de configuración de ejecución “Compound” de PyCharm es útil para iniciar varias configuraciones de ejecución a la vez. Puede ser conveniente configurar una si estás depurando uno o más procesos en segundo plano independientes junto con un devserver.
+
+![img/DevserverLeetSetup.png](img/DevserverLeetSetup.png)
+
+- Si quieres que Sentry se comporte de forma distinta en un entorno de depuración que en una ejecución normal, puedes añadir variables de entorno arbitrarias y luego comprobarlas en tu archivo `.sentry/sentry.conf.py`. Por ejemplo, la captura de pantalla de abajo muestra una configuración en la que el muestreo de APM está desactivado durante la depuración (ya que detenerse en puntos de interrupción contaminaría las mediciones de tiempo). Ten en cuenta que `PYCHARM_DEBUG` es un nombre arbitrario; no tiene un significado especial para PyCharm ni para Sentry.
+
+![img/PycharmRunConfigEnvVar.png](img/PycharmRunConfigEnvVar.png)
+
+- Si tus procesos ejecutados individualmente no están funcionando, puedes diagnosticar el problema depurando `devserver --debug-server` e insertando puntos de interrupción en `src/sentry/runner/commands/devserver.py`. Esto te permitirá inspeccionar manualmente los comandos que está ejecutando el comando `devserver`. (Busca la llamada a `manager.add_process` cerca del final). Intenta ajustar los parámetros en tus configuraciones de ejecución para que coincidan con esos comandos si aún no lo hacen.
+
+![img/DevserverTroubleshooting.png](img/DevserverTroubleshooting.png)

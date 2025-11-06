@@ -1,0 +1,291 @@
+---
+title: "Archivos de información de depuración"
+sidebar_order: 3
+description: "Los archivos de información de depuración permiten a Sentry extraer seguimientos de pila y ofrecer más información sobre los informes de fallos en la mayoría de las plataformas compiladas. La CLI de Sentry puede usarse para validar y cargar archivos de información de depuración."
+---
+
+Los archivos de información de depuración permiten a Sentry extraer seguimientos de pila y ofrecer más
+información sobre los informes de fallos en la mayoría de las plataformas compiladas. `sentry-cli` puede
+usarse para validar y cargar archivos de información de depuración. Para obtener información más general,
+consulta [*Archivos de información de depuración*](/es/platforms/native/data-management/debug-files/).
+
+<div id="permissions">
+  ## Permisos
+</div>
+
+`sentry-cli` requiere un [token de organización](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/) para poder subir los archivos de información de depuración.
+
+<Alert>
+  Los source maps, aunque también son archivos de información de depuración, se gestionan de forma diferente en Sentry. Para más información, consulta [Source Maps en sentry-cli](/es/cli/releases/#sentry-cli-sourcemaps).
+</Alert>
+
+<div id="checking-files">
+  ## Comprobación de archivos
+</div>
+
+No todos los archivos de información de depuración pueden ser utilizados por Sentry. Para comprobar si se pueden usar o no, puedes ejecutar el comando `sentry-cli debug-files check`:
+
+```bash
+sentry-cli debug-files check mylibrary.so.debug
+
+Verificación de archivo de información de depuración
+  Tipo: elf debug companion
+  Identificadores de depuración contenidos:
+    > 924e148f-3bb7-06a0-74c1-36f42f08b40e (x86_64)
+  Información de depuración contenida:
+    > symtab, debug
+  Utilizable: sí
+```
+
+Esto mostrará los identificadores de depuración del archivo de información de depuración y
+si cumple los requisitos básicos de Sentry.
+
+<div id="finding-files">
+  ## Buscar archivos
+</div>
+
+Si ves en la interfaz de Sentry que faltan archivos de información de depuración, pero no estás seguro de cómo encontrarlos, puedes usar el comando `sentry-cli debug-files find` para localizarlos:
+
+```bash
+sentry-cli debug-files find <identificador>
+```
+
+Además, `sentry-cli debug-files upload` puede buscar automáticamente archivos en una
+carpeta o archivo ZIP.
+
+<div id="creating-source-bundles">
+  ## Creación de paquetes de código fuente
+</div>
+
+Para obtener contexto de código fuente en línea en los rastreos de pila en la interfaz de Sentry, `sentry-cli` puede
+examinar archivos de depuración en busca de referencias a archivos de código fuente, resolverlas en el
+sistema de archivos local y empaquetarlas. El paquete de código fuente resultante es un archivo
+que contiene todos los archivos de código fuente referenciados por un archivo específico de información de depuración.
+
+Esto es particularmente útil cuando la compilación y la carga de los archivos de información de depuración
+están desacopladas. En ese caso, se puede crear un paquete de código fuente durante la compilación y
+cargarlo más adelante en cualquier momento con `sentry-cli debug-files upload`.
+
+Para crear un paquete de código fuente, usa el comando `debug-files bundle-sources` sobre una lista de
+archivos de información de depuración:
+
+```bash
+# en la máquina de compilación:
+sentry-cli debug-files bundle-sources /path/to/files...
+
+# en cualquier momento posterior:
+sentry-cli debug-files upload --type sourcebundle /path/to/bundles...
+```
+
+Para crear múltiples paquetes de código fuente para todos los archivos de información de depuración, usa el
+comando en cada archivo por separado.
+
+Como alternativa, agrega la opción `--include-sources` al comando `debug-files upload`,
+que genera paquetes de código fuente sobre la marcha durante la carga. Esto requiere que
+la carga se realice en la misma máquina donde se compila la aplicación:
+
+```bash
+sentry-cli debug-files upload --include-sources /ruta/a/archivos...
+```
+
+<Alert>
+  Esta función es compatible con herramientas de compilación que generan archivos de información de depuración
+  admitidos por Sentry, como DWARF y PDB. Esto se aplica a lenguajes como
+  C/C++/C#/Swift/Rust/Zig/etc.
+  Para Java/Kotlin y otros lenguajes de la JVM, usa uno de los complementos: [Maven](/es/platforms/java/maven/) o [Gradle](/es/platforms/java/gradle/).
+</Alert>
+
+<div id="uploading-files">
+  ## Carga de archivos
+</div>
+
+Usa el comando `sentry-cli debug-files upload` para cargar archivos de información de depuración en
+Sentry. El comando escaneará de forma recursiva las carpetas o archivos ZIP proporcionados.
+Los archivos que ya se hayan cargado se omiten automáticamente.
+
+Recomendamos cargar los archivos de información de depuración al publicar o lanzar tu
+aplicación. También puedes cargarlos durante el proceso de compilación. Consulta
+[*Archivos de información de depuración*](/es/platforms/native/data-management/debug-files/)
+para obtener más información.
+
+<Alert>
+  Debes especificar la organización y el proyecto con los que estás trabajando porque
+  los archivos de información de depuración se gestionan por proyecto. Para obtener más información, consulta
+  [Trabajar con proyectos](/es/cli/configuration/#sentry-cli-working-with-projects).
+</Alert>
+
+Puedes iniciar una carga básica de archivos de depuración con:
+
+```bash
+sentry-cli debug-files upload -o <org> -p <project> /path/to/files...
+
+> Se encontraron 2 archivos de información de depuración
+> Archivos de información de depuración preparados para carga
+> Se cargaron 2 archivos de información de depuración faltantes
+> Procesamiento de archivos completado:
+
+  PENDIENTE 1ddb3423-950a-3646-b17b-d4360e6acfc9 (MyApp; ejecutable x86_64)
+  PENDIENTE 1ddb3423-950a-3646-b17b-d4360e6acfc9 (MyApp; complemento de depuración x86_64)
+```
+
+Después de la carga, Sentry analiza los archivos para simbologizar eventos futuros. Si
+quieres enviar un fallo nativo a Sentry para verificar que todo funcione correctamente, asegúrate de que
+los archivos de depuración aparezcan en *Project Settings &gt; Debug Files*. Como alternativa,
+especifica `--wait` en la CLI, lo que bloqueará la ejecución hasta que el análisis en el servidor se
+complete:
+
+```bash
+sentry-cli debug-files upload -o <org> -p <project> --wait /path/to/files...
+
+> Se encontraron 2 archivos de información de depuración
+> Archivos de información de depuración preparados para subir
+> Se subieron 2 archivos de información de depuración faltantes
+> Procesamiento de archivos completado:
+
+      OK 1ddb3423-950a-3646-b17b-d4360e6acfc9 (MyApp; ejecutable x86_64)
+      OK 1ddb3423-950a-3646-b17b-d4360e6acfc9 (MyApp; compañero de depuración x86_64)
+```
+
+### Opciones de carga
+
+La salida de `--help` del comando enumera y explica todas las opciones:
+
+```bash
+sentry-cli debug-files upload --help
+```
+
+<div id="symbol-maps">
+  ### Mapas de símbolos
+</div>
+
+Si ocultas los símbolos de depuración de Apple, los archivos de depuración no contendrán
+muchos símbolos útiles. En ese caso, la carga con sentry-cli te advertirá que
+necesita BCSymbolMaps:
+
+```bash
+sentry-cli debug-files upload ...
+> Se encontraron 34 archivos de información de depuración
+> Advertencia: Se encontraron 10 archivos de símbolos con símbolos ocultos (se requieren BCSymbolMaps)
+```
+
+En este caso, necesitas las BCSymbolMaps que correspondan a tus archivos. Por lo general, las genera el proceso de compilación de Xcode. Indica el parámetro `--symbol-maps` y señala la carpeta que contiene los mapas de símbolos:
+
+```bash
+sentry-cli debug-files upload --symbol-maps ruta/a/symbolmaps ruta/a/debug/symbols
+```
+
+<div id="breakpad-files">
+  ### Archivos de Breakpad
+</div>
+
+A diferencia de los archivos nativos de depuración, los símbolos de Breakpad descartan mucha información
+que no es necesaria para procesar minidumps. En particular, las funciones inline no
+se declaran, por lo que Sentry no puede mostrar frames inline en los rastreos
+de pila.
+
+Si es posible, sube archivos nativos de depuración como dSYMs, PDB o ELF en lugar
+de símbolos de Breakpad.
+
+<div id="proguard-mapping-upload">
+  ## Carga de mapeos de ProGuard
+</div>
+
+`sentry-cli` se puede usar para cargar archivos de ProGuard en Sentry; sin embargo, en la mayoría de
+los casos usarías el [plugin de Gradle](https://github.com/getsentry/sentry-android-gradle-plugin) para hacerlo. Aun así, puede haber
+situaciones en las que cargues archivos de ProGuard manualmente. Por ejemplo,
+cuando solo publicas algunas de las compilaciones que estás creando.
+
+<Alert>
+  Debes especificar la organización y el proyecto con los que estás trabajando,
+  porque los archivos de ProGuard se gestionan a nivel de proyecto. Para obtener más información al respecto, consulta
+  [Trabajar con proyectos](/es/cli/configuration/#sentry-cli-working-with-projects).
+</Alert>
+
+El comando `upload-proguard` es el que se usa para cargar archivos de ProGuard. Toma la ruta a uno o más archivos de mapeo de ProGuard y los cargará en
+Sentry.
+
+```bash
+sentry-cli upload-proguard \
+    app/build/outputs/mapping/{BuildVariant}/mapping.txt
+```
+
+Dado que el SDK de Sentry para Android necesita conocer el UUID del archivo de mapeo, debes
+asociarlo con la carga. Sin embargo, primero tienes que colocar ese UUID en el archivo `AndroidManifest.xml`:
+
+```xml
+<application>
+  <meta-data android:name="io.sentry.proguard-uuid" android:value="A_VALID_UUID" />
+</application>
+```
+
+Se debe usar el mismo UUID para subir el archivo de asignación:
+
+```bash
+sentry-cli upload-proguard \
+    --uuid UN_UUID VÁLIDO \
+    app/build/outputs/mapping/{BuildVariant}/mapping.txt
+```
+
+Después de la carga, Sentry desofusca los eventos futuros.
+Para asegurarte de que funcionó, puedes ir a *Project Settings &gt; ProGuard* y comprobar si los archivos de mapping cargados aparecen en la lista.
+
+<div id="upload-options">
+  ### Opciones de subida
+</div>
+
+La salida de `--help` del comando enumera y explica todas las opciones:
+
+```bash
+sentry-cli upload-proguard --help
+```
+
+<div id="jvm-source-bundles">
+  ## Paquetes de código fuente para la JVM
+</div>
+
+Si usas una herramienta de compilación que no admitimos o prefieres no usar los complementos de Sentry para herramientas de compilación, tendrás que cargar manualmente los archivos del paquete de código fuente.
+
+Consulta aquí los complementos de herramientas de compilación que actualmente admitimos:
+
+* [Android](/es/platforms/android/enhance-errors/source-context/)
+* [Java](/es/platforms/java/source-context/)
+
+También puedes cargar archivos de ProGuard manualmente con `sentry-cli` para cualquier lenguaje basado en la JVM, como
+Java o Kotlin.
+
+<Alert>
+  Antes de poder cargar archivos fuente, debes configurar Sentry CLI con la organización y el proyecto para los que estás cargando los paquetes. Consulta la documentación de la CLI en
+  [Trabajar con proyectos](/es/cli/configuration/#sentry-cli-working-with-projects) para saber cómo hacerlo.
+</Alert>
+
+<div id="creating-a-source-bundle">
+  ### Crear un paquete de código fuente
+</div>
+
+Ejecuta el comando `debug-files bundle-jvm` para crear un paquete de código fuente para un directorio de código fuente.
+
+```bash
+sentry-cli debug-files bundle-jvm \
+    --output some/dir \
+    --debug-id A_VALID_UUID \
+    path/to/source/dir
+```
+
+Debes proporcionar el UUID del paquete de origen para que el SDK de Java/Android pueda enviarlo.
+Encontrarás más detalles en la documentación de [Source Context](/es/platforms/java/source-context/#manually-uploading-source-context) para Java y en la documentación de [Source Context](/es/platforms/android/enhance-errors/source-context/#manually-uploading-source-context) para Android.
+
+<div id="uploading-a-source-bundle">
+  ### Cargar un paquete de código fuente
+</div>
+
+El comando `debug-files upload` te permite subir a Sentry el paquete de código fuente que creaste.
+
+```bash
+sentry-cli debug-files upload \
+    --type jvm \
+    output/path/of/bundle-jvm/command
+```
+
+Después de la carga, Sentry adjuntará el contexto de código fuente a los eventos futuros.
+
+Para asegurarte de que estos pasos funcionaron, revisa **Project Settings &gt; Debug Files** en Sentry.io para comprobar si los archivos del paquete de código fuente subidos aparecen en la lista.

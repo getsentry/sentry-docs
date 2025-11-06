@@ -1,0 +1,75 @@
+---
+title: OpenFeature
+description: "Aprende a usar Sentry con OpenFeature."
+---
+
+La integración de [OpenFeature](https://openfeature.dev/) registra las evaluaciones de flags de características generadas por el SDK de OpenFeature. Este SDK es compatible con una amplia variedad de proveedores de feature flagging. Para ver la lista completa, visita la [página del ecosistema de OpenFeature](https://openfeature.dev/ecosystem?instant_search%5BrefinementList%5D%5Btype%5D%5B0%5D=Provider&instant_search%5BrefinementList%5D%5BallTechnologies%5D%5B0%5D=Python).
+
+Las evaluaciones de los flags se mantienen en memoria y se envían a Sentry en eventos de error y de transacción. **Por ahora, solo admitimos evaluaciones de flags booleanos.**
+
+<div id="install">
+  ## Instalar
+</div>
+
+Instala `sentry-sdk` desde PyPI con el extra `openfeature`.
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[openfeature]"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk[openfeature]"
+```
+
+
+<div id="configure">
+  ## Configurar
+</div>
+
+Agrega `OpenFeatureIntegration()` a tu lista de `integrations`:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.openfeature import OpenFeatureIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Agrega datos como encabezados de solicitud e IP de usuarios, si aplica;
+    # consulta https://docs.sentry.io/platforms/python/data-management/data-collected/ para más información
+    send_default_pii=True,
+    integrations=[
+        OpenFeatureIntegration(),
+    ],
+)
+```
+
+
+<div id="verify">
+  ## Verificar
+</div>
+
+La integración se comprueba evaluando una bandera de funcionalidad con tu SDK de OpenFeature antes de capturar una excepción.
+
+```python
+from openfeature import api
+import sentry_sdk
+
+api.set_provider(MyProviderOfChoice(...))
+client = api.get_client()
+client.get_boolean_value("hello", default_value=False)
+
+sentry_sdk.capture_exception(Exception("¡Algo salió mal!"))
+```
+
+Visita el sitio web de Sentry y confirma que tu evento de error ha registrado el feature flag «hello» y su valor «false».
+
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+- openfeature-sdk >= 0.7.1
+- sentry-sdk >= 2.19.2
+- python >= 3.8
+
+<PlatformContent includePath="feature-flags/next-steps" />

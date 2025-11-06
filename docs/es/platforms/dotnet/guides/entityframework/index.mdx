@@ -1,0 +1,123 @@
+---
+title: Entity Framework
+sdk: sentry.dotnet.entityframework
+description: Descubre la integración de .NET de Sentry con Entity Framework.
+og_image: /og-images/platforms-dotnet-guides-entityframework.png
+---
+
+Sentry ofrece una integración con `EntityFramework` mediante el [paquete NuGet Sentry.EntityFramework](https://www.nuget.org/packages/Sentry.EntityFramework).
+
+> ¿Buscas `EntityFramework Core`? Si apuntas a .NET Core 3.1 o versiones posteriores, eso ya viene integrado en el SDK principal de Sentry para .NET. También está habilitado de forma predeterminada para nuestras integraciones de ASP.NET y ASP.NET Core, incluso para versiones anteriores. En otros escenarios, puede que necesites añadir el paquete `Sentry.DiagnosticSource` y llamar a `AddDiagnosticSourceIntegration`, [como se describe aquí](/es/platforms/dotnet/tracing/instrumentation/automatic-instrumentation/#diagnosticsource-integration). (El resto de esta página describe nuestra integración con EF6, no con EF Core.)
+
+<div id="overview-of-the-features">
+  ## Descripción general de las funcionalidades
+</div>
+
+* Consultas como breadcrumbs
+* Errores de validación
+
+Todas las consultas ejecutadas se agregan como breadcrumbs y se envían con cualquier evento que ocurra en el mismo [scope](enriching-events/scopes/). Además, los errores de validación también se incluyen como `Extra`.
+
+<div id="features">
+  ## Funcionalidades
+</div>
+
+Además de capturar errores, puedes supervisar las interacciones entre varios servicios o aplicaciones si [habilitas el tracing](/es/concepts/key-terms/tracing/).
+
+Selecciona qué funcionalidades de Sentry quieres instalar, además del monitoreo de errores, para obtener a continuación las instrucciones correspondientes de instalación y configuración.
+
+<div id="install">
+  ## Instalación
+</div>
+
+<OnboardingOptionButtons options={['error-monitoring', 'performance']} />
+
+```powershell {tabTitle:Package Manager}
+Install-Package Sentry.EntityFramework -Version {{@inject packages.version('sentry.dotnet.ef') }}
+```
+
+```shell {tabTitle:.NET Core CLI}
+dotnet add package Sentry.EntityFramework -v {{@inject packages.version('sentry.dotnet.ef') }}
+```
+
+Este paquete amplía el SDK principal de `Sentry`. Esto significa que, además de las funcionalidades de EF, con este paquete también tendrás acceso a todas las APIs y funciones disponibles en el SDK principal de `Sentry`.
+
+<div id="configuration">
+  ## Configuración
+</div>
+
+Añade la compatibilidad con Entity Framework 6 a tu proyecto en un solo paso:
+
+* Al inicializar el SDK, llama al método de extensión `AddEntityFramework()` en `SentryOptions`. Esto registrará todos los procesadores de errores para extraer datos adicionales —como errores de validación— de las excepciones generadas por Entity Framework.
+
+<div id="example-configuration">
+  ### Ejemplo de configuración
+</div>
+
+Por ejemplo, al configurar una aplicación de ASP.NET con *global.asax*:
+
+```csharp {filename:global.asax}
+using System;
+using System.Configuration;
+using Sentry.AspNet;
+
+public class MvcApplication : System.Web.HttpApplication
+{
+    private IDisposable _sentrySdk;
+
+    protected void Application_Start()
+    {
+        _sentrySdk = SentrySdk.Init(options =>
+        {
+            // Almacenamos el DSN dentro de Web.config
+            options.Dsn = ConfigurationManager.AppSettings["SentryDsn"];
+            // Añade URL de solicitud y encabezados, IP y nombre de usuarios, etc.
+            options.SendDefaultPii = true;
+            // ___PRODUCT_OPTION_START___ performance
+            // Establece traces_sample_rate en 1.0 para capturar el 100% de las transacciones para el monitoreo de rendimiento.
+            // Recomendamos ajustar este valor en producción.
+            options.TracesSampleRate = 1.0;
+            // ___PRODUCT_OPTION_END___ performance
+            // Añade la integración de EntityFramework
+            options.AddEntityFramework();
+        });
+    }
+
+    // Capturador global de errores
+    protected void Application_Error() => Server.CaptureLastError();
+
+    // ___PRODUCT_OPTION_START___ performance
+    protected void Application_BeginRequest()
+    {
+        Context.StartSentryTransaction();
+    }
+
+    protected void Application_EndRequest()
+    {
+        Context.FinishSentryTransaction();
+    }
+
+    // ___PRODUCT_OPTION_END___ performance
+    public override void Dispose()
+    {
+        _sentrySdk.Dispose();
+        base.Dispose();
+    }
+}
+```
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Este fragmento incluye un error intencional para que puedas comprobar que todo funciona en cuanto lo configures.
+
+<PlatformContent includePath="getting-started-verify" />
+
+<div id="sample">
+  ## Ejemplo
+</div>
+
+Consulta un [ejemplo](https://github.com/getsentry/sentry-dotnet-ef/tree/master/samples/Sentry.Samples.AspNet.Mvc) totalmente funcional para verlo en acción.
+
+![Ejemplo de migas de pan en Sentry](./img/dotnet-entityframework.png)

@@ -1,0 +1,28 @@
+---
+title: Informar errores HTTP
+sidebar_order: 100
+description: "Aprende a reportar errores HTTP con Django."
+---
+
+Si quieres reportar `404 Not Found` y otros errores aparte de excepciones no controladas (`500 Internal Server Error`) a Sentry, puedes escribir tu propia vista de Django para esos códigos de estado. Por ejemplo:
+
+```python
+# urls.py
+handler404 = 'mysite.views.my_custom_page_not_found_view'
+
+# views.py
+import sentry_sdk
+from django.http import HttpResponseNotFound
+
+def my_custom_page_not_found_view(*args, **kwargs):
+    sentry_sdk.capture_message("¡Página no encontrada!", level="error")
+
+    # devuelve cualquier respuesta aquí, por ejemplo:
+    return HttpResponseNotFound("No encontrado")
+```
+
+El mensaje de error que envíes a Sentry incluirá los datos habituales de la solicitud.
+
+Para más detalles sobre `capture_message()`, consulta la [documentación de la API](https://getsentry.github.io/sentry-python/api.html#sentry_sdk.api.capture_message).
+
+Consulta [Personalización de las vistas de error](https://docs.djangoproject.com/en/3.0/topics/http/views/#customizing-error-views) en la documentación de Django para obtener más información. También puedes consultar nuestra <PlatformLink to="/troubleshooting/">información de solución de problemas</PlatformLink>.

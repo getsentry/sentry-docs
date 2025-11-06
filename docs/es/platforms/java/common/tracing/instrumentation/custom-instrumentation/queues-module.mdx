@@ -1,0 +1,130 @@
+---
+title: Colas de instrumentación
+sidebar_order: 3000
+description: "Aprende a instrumentar manualmente tu código para usar el módulo Queues de Sentry."
+---
+
+Sentry incluye instrumentación automática para los sistemas de colas de mensajería más comunes. Si el tuyo no está admitido, aún puedes instrumentar spans y transacciones personalizados en torno a tus productores y consumidores de colas para asegurarte de contar con datos de rendimiento sobre tus colas de mensajería.
+
+<div id="producer-instrumentation">
+  ## Instrumentación del productor
+</div>
+
+Para empezar a capturar métricas de rendimiento, usa la función `startChild()` para envolver los eventos de tu productor de colas. El `op` del span debe establecerse en `queue.publish`. Incluye los siguientes datos del span para enriquecer tus spans de productor con métricas de colas:
+
+| Atributo de datos | Tipo | Descripción |
+|:--|:--|:--|
+| `messaging.message.id ` | string | Identificador del mensaje |
+| `messaging.destination.name` | string | Nombre de la cola o del tema |
+| `messaging.message.body.size` | int | Tamaño del cuerpo del mensaje en bytes |
+
+El span `queue.publish` debe existir dentro de una transacción para que se reconozca como un span de productor. Si utilizas un framework compatible, la transacción la crea la integración. Si utilizas Java puro, puedes iniciar una nueva con `Sentry.startTransaction()`.
+
+También debes incluir encabezados de traza en tu mensaje para que tus consumidores puedan continuar tu traza cuando se procese tu mensaje.
+
+```java
+MyCustomQueue connection = MyCustomQueue.connect();
+
+// El mensaje que quieres enviar a la cola
+String queue = "messages";
+String message = "¡Hola Mundo!";
+String messageId = "abc123";
+
+// Crear transacción
+ITransaction transaction = Sentry.startTransaction("queue_producer_transaction", "function");
+
+try {
+    final SentryTraceHeader traceparent = Sentry.getTraceparent();
+    final BaggageHeader baggage = Sentry.getBaggage();
+
+    ISpan span = transaction.startChild("queue.publish", "queue_producer");
+    try {
+        // Establecer datos del span
+        span.setData("messaging.message.id", messageId);
+        span.setData("messaging.destination.name", queue);
+        span.setData("messaging.message.body.size", message.getBytes(StandardCharsets.UTF_8).length);
+
+        // Publicar el mensaje en la cola (incluyendo marca de tiempo actual)
+        long now = Instant.now().getEpochSecond();
+
+        connection.publish(queue, message, now, traceparent, baggage);
+    } catch (Exception e) {
+        span.setThrowable(e);
+        span.setStatus(SpanStatus.INTERNAL_ERROR);
+        throw e;
+    } finally {
+        span.finish();
+    }
+} catch (Exception e) {
+    transaction.setThrowable(e);
+    transaction.setStatus(SpanStatus.INTERNAL_ERROR);
+    throw e;
+} finally {
+    transaction.finish();
+}
+```
+
+
+<div id="consumer-instrumentation">
+  ## Instrumentación del consumidor
+</div>
+
+Para empezar a capturar métricas de rendimiento, usa la función `startChild()` para envolver tus consumidores de cola. El `op` de tu span debe establecerse en `queue.process`. Incluye los siguientes datos de span para enriquecer tus spans de consumidor con métricas de la cola:
+
+| Data Attribute | Type | Description |
+|:--|:--|:--|
+| `messaging.message.id ` | string | El identificador del mensaje |
+| `messaging.destination.name` | string | El nombre de la cola o del tópico |
+| `messaging.message.body.size` | number | Tamaño del cuerpo del mensaje en bytes |
+| `messaging.message.retry.count ` | number | La cantidad de veces que se intentó procesar un mensaje |
+| `messaging.message.receive.latency ` | number | El tiempo en milisegundos que un mensaje esperó en la cola para ser procesado |
+
+Tu span `queue.process` debe existir dentro de una transacción para que se reconozca como un span de consumidor. Si usas un framework compatible, la transacción la crea la integración. Si usas Java puro, puedes iniciar una nueva con `Sentry.startTransaction()`.
+
+Usa `Sentry.continueTrace()` para conectar tus spans de consumidor con sus spans de productor asociados, y `setStatus()` para marcar el trazado de tu mensaje como correcto o fallido.
+
+```java
+MyCustomQueue connection = MyCustomQueue.connect();
+
+// Obtener mensaje de las colas
+String queue = "messages";
+Message message = connection.consume(queue);
+
+// Calcular latencia (opcional, pero valioso)
+Instant now = Instant.now();
+Instant messageTime = Instant.ofEpochSecond(message.getTimestamp());
+Duration latency = Duration.between(messageTime, now);
+
+// Crear transacción
+final TransactionContext transactionContext = Sentry.continueTrace(sentryTraceHeader, baggageHeader);
+ITransaction transaction = Sentry.startTransaction(transactionContext, "queue_consumer_transaction", "function");
+
+try {
+    ISpan span = transaction.startChild("queue.process", "queue_consumer")
+
+    try {
+        // Establecer datos del span
+        span.setData("messaging.message.id", message.getMessageId());
+        span.setData("messaging.destination.name", queue);
+        //
+        span.setData("messaging.message.body.size", message.getBody().getBytes(StandardCharsets.UTF_8).length);
+        span.setData("messaging.message.receive.latency", latency.toMillis());
+        span.setData("messaging.message.retry.count", 0);
+
+        // Procesar el mensaje
+        processMessage(message);
+    } catch (Exception e) {
+        span.setThrowable(e);
+        span.setStatus(SpanStatus.INTERNAL_ERROR);
+        throw e;
+    } finally {
+        span.finish();
+    }
+} catch (Exception e) {
+    transaction.setThrowable(e);
+    transaction.setStatus(SpanStatus.INTERNAL_ERROR);
+    throw e;
+} finally {
+    transaction.finish();
+}
+```

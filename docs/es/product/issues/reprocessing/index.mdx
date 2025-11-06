@@ -1,0 +1,60 @@
+---
+title: Reprocesamiento
+sidebar_order: 50
+description: Aprende a reprocesar errores con nuevos archivos de depuración.
+og_image: /og-images/product-issues-reprocessing.png
+---
+
+Sentry utiliza [archivos de información de depuración](/es/platforms/native/data-management/debug-files/) solo después de que se hayan subido. El *reprocesamiento* te permite aplicar archivos de información de depuración a eventos de error que ya ocurrieron.
+
+<Include name="only-error-issues-note.mdx" />
+
+Puedes encontrar la siguiente acción al ver un issue:
+
+!["Acción "Reprocess Event" entre las acciones avanzadas en la página de detalles del issue](./img/reprocessing-action.png)
+
+El cuadro de diálogo requiere dos respuestas:
+
+* Cuántos eventos reprocesar: Si se deja vacío, se reprocesan todos los eventos
+  y podrían moverse a otros issues (nuevos o existentes) si el stack trace
+  cambió significativamente. Si proporcionas un número, por ejemplo, 20, se
+  reprocesan los 20 eventos más recientes y los demás se dejan tal cual.
+
+* Qué hacer con los eventos restantes: Si eliges reprocesar, por ejemplo, solo 20
+  eventos de 100, puedes decidir qué pasa con los otros 80 eventos.
+  De forma predeterminada, se mantienen donde están (el issue que estás viendo).
+  Alternativamente, puedes elegir eliminarlos.
+
+Después de presionar &quot;Reprocess Events&quot;, **el issue se bloquea y se oculta de
+tu flujo de issues mientras el reprocesamiento está en curso.** A medida que se migran datos entre
+issues, [sentry.io](https://sentry.io) no permite ninguna acción, como resolver o asignar el issue, para garantizar
+la consistencia de los datos y evitar la pérdida de datos.
+
+Ten en cuenta que aún puedes acceder al issue manualmente buscando
+`is:reprocessing` (eliminando todos los demás términos de búsqueda) si lo necesitas.
+
+<div id="caveats">
+  ## Advertencias
+</div>
+
+El cuadro de diálogo para iniciar el reprocesamiento menciona algunas advertencias que deberías conocer y comprender antes de comenzar.
+
+* **Glitches de datos.** Durante el reprocesamiento puedes observar inconsistencias temporales de datos en todo el producto. Podrías ver que un evento pertenece a dos incidencias a la vez y que aparece dos veces en las consultas de Discover.
+
+  Esas inconsistencias desaparecen cuando finaliza el reprocesamiento. Sin embargo, según tu plataforma y la cantidad de eventos implicados, el reprocesamiento puede llevar un tiempo.
+
+* **Debe estar habilitado el almacenamiento de adjuntos.** Si tus eventos provienen de minidumps o de informes de fallos de Unreal, debes tener habilitado el [almacenamiento de adjuntos](/es/platforms/native/enriching-events/attachments/#crash-reports-and-privacy).
+
+  Si falta el minidump de un evento por cualquier motivo, el evento **no se reprocesará**. Las razones incluyen:
+
+  * El almacenamiento de minidumps está deshabilitado.
+  * El proyecto almacena solo un [número limitado de minidumps](/es/platforms/native/guides/minidumps/enriching-events/attachments/#enabling-minidump-storage) por incidencia.
+  * Te quedaste sin cuota de adjuntos.
+
+* **Se aplica la cuota.** Cada evento que elijas reprocesar cuenta contra la cuota de tu plan por segunda vez. No se aplican los límites de tasa ni la protección contra picos.
+
+* **Los archivos de depuración no se aplican de inmediato.** Cuando subes archivos de información de depuración, ya sea a tu propio servidor de símbolos o a Sentry, se aplican únicamente una hora después de que caduquen las cachés internas. Espera al menos una hora después de subir los DIF antes de reprocesar.
+
+* **Las alertas no se aplican, con matices.** Las alertas de incidencia no se activan para eventos reprocesados y los eventos nuevos no están sujetos al reenvío de datos.
+
+  Por lo general, las alertas de métricas tampoco se activan. Sin embargo, están sujetas a las inconsistencias de datos mencionadas arriba. Si creaste una alerta de métricas con una ventana de medición de 24 horas y un evento que reprocesas ocurrió en las últimas 24 horas, se contará temporalmente dos veces mientras los eventos se reprocesan. Esto puede activar una alerta de métricas.

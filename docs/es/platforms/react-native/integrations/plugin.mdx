@@ -1,0 +1,110 @@
+---
+title: Integraciones enchufables
+description: "Obtén más información sobre las integraciones enchufables: HttpClient y RewriteFrames, que son fragmentos de código que amplían la funcionalidad para aplicaciones y/o frameworks específicos."
+---
+
+El SDK de Sentry usa integraciones para conectarse con bibliotecas populares, instrumentar tu aplicación automáticamente y ofrecerte los mejores datos desde el primer momento.
+
+Las integraciones agregan automáticamente instrumentación de errores, de rendimiento y/o información de contexto adicional a tu aplicación. Algunas vienen habilitadas de forma predeterminada, pero puedes deshabilitarlas o modificar su configuración. Otras se pueden añadir para ampliar la funcionalidad predeterminada del SDK.
+
+<div id="adding-an-integration">
+  ## Añadir una integración
+</div>
+
+Puedes agregar integraciones adicionales en tu llamada a `init`:
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.dedupeIntegration()],
+});
+```
+
+Como alternativa, puedes añadir integraciones mediante `Sentry.addIntegration()`.
+Esto es útil si solo quieres habilitar una integración en un entorno específico o si prefieres cargarla más tarde.
+Para los demás casos, te recomendamos usar la opción `integrations`.
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  integrations: [],
+});
+
+Sentry.addIntegration(Sentry.dedupeIntegration());
+```
+
+
+<div id="httpclient">
+  ### HttpClient
+</div>
+
+*(Nuevo en la versión 5.3.0)*
+
+*Nombre de importación: `Sentry.httpContextIntegration`*
+
+Esta integración captura errores en solicitudes fallidas de Fetch y XHR y adjunta información de la solicitud y la respuesta.
+
+De forma predeterminada, los eventos de error no incluyen datos de encabezados ni cookies. Puedes cambiar este comportamiento configurando la opción `sendDefaultPii` en `true`.
+
+```javascript {tabTitle:npm}
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.httpClientIntegration()]
+
+  // Esta opción es necesaria para capturar cabeceras y cookies.
+  sendDefaultPii: true,
+});
+```
+
+<Alert level="warning" title="Nota">
+  Debido a las limitaciones de las API Fetch y XHR, la recopilación de cookies y encabezados tanto en las solicitudes como en las respuestas se realiza en la medida de lo posible. Es posible que falten algunos encabezados en el evento creado por la integración.
+</Alert>
+
+
+<div id="rewriteframes">
+  ### RewriteFrames
+</div>
+
+*Nombre de importación: `Sentry.rewriteFramesIntegration`*
+
+Esta integración te permite aplicar una transformación a cada frame del stack trace. En el caso más sencillo, puede usarse para cambiar el nombre del archivo del que se origina el frame, o puede recibir una función iteradora para aplicar cualquier transformación arbitraria.
+
+En equipos con Windows, debes usar rutas de Unix y omitir la letra de la unidad en la opción `root` para habilitarla. Por ejemplo, `C:\\Program Files\\Apache\\www` no funcionará; en cambio, `/Program Files/Apache/www` sí.
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [Sentry.rewriteFramesIntegration(
+    {
+      // ruta raíz que se eliminará del nombre de archivo del frame actual por el iterador predeterminado si el nombre de archivo es una ruta absoluta
+      root: string;
+
+      // prefijo personalizado que utilizará el iterador predeterminado (predeterminado: `app://`)
+      prefix: string;
+
+      // función que recibe el frame, aplica una transformación y lo devuelve
+      iteratee: (frame) => frame;
+    }
+  )],
+});
+```
+
+
+<div id="usage-examples">
+  #### Ejemplos de uso
+</div>
+
+Usaremos `bundles/bundle1.js` como una ruta completa de ejemplo a tu archivo para la tabla a continuación:
+
+| Uso                                       | Ruta en la traza de pila | Descripción                                                                                                                                    |
+| ----------------------------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RewriteFrames()`                         | `app:///bundle1.js`       | El comportamiento predeterminado es reemplazar la ruta absoluta, excepto el nombre de archivo, y agregar el prefijo predeterminado (`app:///`). |
+| `RewriteFrames({root: '/bundles'})`       | `app:///bundle1.js`       | El `root` se define como `/bundles`. Solo se recorta esa parte desde el comienzo de la ruta.                                                   |
+| `RewriteFrames({iteratee: () => {} })`    | `app:///bundle.js`        | El número al final de un bundle puede ser un hash de archivo. Esto es común en apps de Expo. Puedes eliminarlo en el callback `iteratee`.      |

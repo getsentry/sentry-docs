@@ -1,0 +1,110 @@
+---
+title: Instrumentación personalizada
+description: "Aprende a capturar datos de rendimiento en cualquier acción de tu aplicación."
+sidebar_order: 20
+---
+
+<Alert>
+
+Para capturar transacciones y spans adaptados a las necesidades de tu organización, primero debes <PlatformLink to="/tracing/">configurar el tracing.</PlatformLink>
+
+</Alert>
+
+<PlatformContent includePath="performance/enable-manual-instrumentation" />
+
+<PlatformContent includePath="performance/add-spans-example" />
+
+<PlatformContent includePath="performance/retrieve-transaction" />
+
+<div id="adding-span-transaction-data-attributes">
+  ## Agregar atributos de datos a spans y transacciones
+</div>
+
+Puedes capturar atributos de datos junto con tus spans y transacciones. Puedes especificar atributos de datos al iniciar un span o una transacción:
+
+```go
+http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+  ctx := r.Context()
+
+  options := []sentry.SpanOption{
+    // Establece el OP según los valores de https://develop.sentry.dev/sdk/performance/span-operations/
+    sentry.WithOpName("http.server"),
+    sentry.ContinueFromRequest(r),
+    sentry.WithTransactionSource(sentry.SourceURL),
+  }
+
+  // Crea una transacción y asigna atributos de datos
+  transaction := sentry.StartTransaction(ctx,
+    fmt.Sprintf("%s %s", r.Method, r.URL.Path),
+    options...,
+  )
+  transaction.SetData("dataAttr1", 42)
+  transaction.SetData("dataAttr2", true)
+  // código omitido...
+  transaction.Finish()
+
+  // ... o crea un span y asigna atributos de datos
+  span := sentry.StartSpan(ctx, "span1")
+  span.SetData("dataAttr1", 42)
+  span.SetData("dataAttr2", true)
+  // código omitido...
+  span.Finish()
+})
+```
+
+O puedes añadir atributos de datos a una transacción o a un span existentes:
+
+```go
+http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+  ctx := r.Context()
+  transaction := sentry.TransactionFromContext(ctx)
+
+  if transaction != nil {
+    transaction.SetData("dataAttr1", 42)
+    transaction.SetData("dataAttr2", true)
+  }
+
+  span := sentry.SpanFromContext(ctx)
+  span.SetData("dataAttr1", 42)
+  span.SetData("dataAttr2", true)
+})
+```
+
+O puedes actualizar los datos de transacciones y spans existentes mediante:
+
+```go
+if d, found := transaction.Data["dataAttr1"]; found {
+  if dataAttr1, ok := d.(int); ok {
+    transaction.SetData("dataAttr1", dataAttr1.(int)+42)
+  }
+}
+
+if d, found := span.Data["dataAttr1"]; found {
+  if dataAttr1, ok := d.(int); ok {
+    span.SetData("dataAttr1", dataAttr1.(int)+42)
+  }
+}
+})
+```
+
+Para añadir atributos de datos a la transacción y a todos sus spans, puedes usar `BeforeSendTransaction`:
+
+```go
+sentry.Init(sentry.ClientOptions{
+  Dsn: "___PUBLIC_DSN___",
+  BeforeSendTransaction: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+    for _, sp := range event.Spans {
+      sp.SetData("dataAttr1", 42)
+      sp.SetData("dataAttr2", true)
+    }
+
+    dataCtx, ok := event.Contexts["trace"]["data"].(map[string]any)
+    if !ok {
+      dataCtx = make(map[string]any)
+      event.Contexts["trace"]["data"] = dataCtx
+    }
+    dataCtx["num"] = 42
+    return event
+  },
+})
+```

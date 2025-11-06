@@ -1,0 +1,214 @@
+---
+title: Cargas útiles de transacciones
+---
+
+Las transacciones se usan para enviar eventos de trazabilidad a Sentry.
+
+Las transacciones deben incluirse en un [Envelope](/es/sdk/data-model/envelopes/) y, por lo tanto, enviarse al endpoint de Envelope.
+
+<Alert title="Nota sobre compatibilidad retroactiva">
+  Los Envelopes son un formato nuevo y, por lo tanto, solo funcionan en Sentry &gt;= 10. Puedes encontrar más
+  información en la página de <Link to="/sdk/data-model/envelopes/">Envelope</Link>.
+</Alert>
+
+<div id="anatomy">
+  ## Anatomía
+</div>
+
+Una transacción es básicamente un [span](/es/sdk/data-model/event-payloads/span/) combinado con un [evento](/es/sdk/data-model/event-payloads/). Al usar
+tracing con nuestros SDK, normalmente creas un árbol de spans; el nodo raíz y, por lo tanto, todo el árbol se considera la transacción.
+Así que, técnicamente, una transacción es solo un span. Una transacción también debe tener un `contexts.trace` (que contiene algunos datos del [span](/es/sdk/data-model/event-payloads/span/)) y algunas otras
+propiedades que se cubrirán en la siguiente sección.
+
+Las transacciones son [eventos](/es/sdk/data-model/event-payloads/) enriquecidos con datos de [span](/es/sdk/data-model/event-payloads/span/).
+Aquí solo vamos a enumerar lo que es importante para una transacción.
+
+`type`
+
+Obligatorio. Una transacción debe tener este valor establecido en `transaction`.
+
+```json
+  {
+    "type": "transaction"
+  }
+```
+
+`start_timestamp`
+
+*Obligatorio*. Una marca de tiempo que indica cuándo comenzó la medición. El
+formato puede ser una cadena tal como se define en la [RFC
+3339](https://tools.ietf.org/html/rfc3339) o un valor numérico (entero o de coma flotante)
+que representa la cantidad de segundos transcurridos desde la [época Unix](https://en.wikipedia.org/wiki/Unix_time). El valor de `start_timestamp` debe ser menor o
+igual que el valor de `timestamp`; de lo contrario, el span se descartará por ser inválido.
+
+```json
+  {
+    "start_timestamp": "2011-05-02T17:41:36.242Z"
+  }
+```
+
+o:
+
+```json
+  {
+    "start_timestamp": 1304358096.242
+  }
+```
+
+`timestamp`
+
+*Obligatorio*. Una marca de tiempo que indica cuándo finalizó la medición. El
+formato puede ser una cadena según lo definido en la [RFC
+3339](https://tools.ietf.org/html/rfc3339) o un valor numérico (entero o de coma flotante)
+que representa la cantidad de segundos transcurridos desde la [época Unix](https://en.wikipedia.org/wiki/Unix_time).
+
+```json
+  {
+    "timestamp": "2011-05-02T17:41:36.955Z"
+  }
+```
+
+o:
+
+```json
+  {
+    "timestamp": 1304358096.955
+  }
+```
+
+`contexts.trace`
+
+*Recomendado*. Una transacción debe incluir una entrada específica `contexts.trace` que contenga información de trazado. Consulta la [documentación de Trace Context](/es/sdk/data-model/event-payloads/contexts/#trace-context).
+
+```json
+{
+  "contexts": {
+    "trace": {
+      "op": "navigation",
+      "description": "El usuario hizo clic en <Link />",
+      "trace_id": "743ad8bbfdd84e99bc38b4729e2864de",
+      "span_id": "a0cfbde2bdff3adc",
+      "status": "correcto",
+      "parent_span_id": "99659d76b7cdae94"
+    }
+  }
+}
+```
+
+`spans`
+
+*Recomendado*. Una lista de [spans](/es/sdk/data-model/event-payloads/span/).
+
+```json
+{
+  "spans": [
+    {
+      "start_timestamp": 1588601261.481961,
+      "description": "GET /sockjs-node/info",
+      "tags": {
+        "http.status_code": "200"
+      },
+      "timestamp": 1588601261.488901,
+      "parent_span_id": "b0e6f15b45c36b12",
+      "trace_id": "1e57b752bc6e4544bbaa246cd1d05dee",
+      "op": "http",
+      "data": {
+        "url": "http://localhost:8080/sockjs-node/info?t=1588601703755",
+        "status_code": 200,
+        "type": "xhr",
+        "method": "GET"
+      },
+      "span_id": "b01b9f6349558cd1"
+    },
+    {
+      "start_timestamp": 1588601261.535386,
+      "description": "Vue <App>",
+      "timestamp": 1588601261.544196,
+      "parent_span_id": "9312d0d18bf51736",
+      "trace_id": "1e57b752bc6e4544bbaa246cd1d05dee",
+      "op": "update",
+      "span_id": "b980d4dec78d7344"
+    }
+  ]
+}
+```
+
+`measurements`
+
+*Opcional*. Objeto que contiene medidas estándar o personalizadas, con claves que indican el nombre de cada medida.
+
+* Las claves de medición estándar admitidas actualmente se toman de la siguiente lista extraída de [aquí](https://github.com/getsentry/sentry/blob/a8c960a933d2ded5225841573d8fc426a482ca9c/static/app/utils/discover/fields.tsx#L654-L676).
+
+```json
+[
+  // Web
+  "fp",
+  "fcp",
+  "lcp",
+  "fid",
+  "cls",
+  "ttfb",
+  "ttfb.requesttime",
+
+  // Móvil
+  "app_start_cold",
+  "app_start_warm",
+  "frames_total",
+  "frames_slow",
+  "frames_frozen",
+
+  // React Native
+  "frames_slow_rate",
+  "frames_frozen_rate",
+  "stall_count",
+  "stall_total_time",
+  "stall_longest_time",
+  "stall_percentage"
+]
+```
+
+* Para las mediciones conocidas enumeradas arriba, Sentry infiere automáticamente las unidades. Las mediciones personalizadas necesitan que se especifiquen las unidades; si faltan, Relay las establecerá en `"none"` de forma predeterminada. La lista completa de unidades admitidas se detalla en [`MetricUnit` de Relay](https://getsentry.github.io/relay/relay_metrics/enum.MetricUnit.html). La ingesta de eventos de Sentry admite unidades personalizadas arbitrarias, pero muchos SDK no expondrán una interfaz genérica para unidades definidas por el usuario.
+
+```json
+{
+  "measurements": {
+    "lcp": { "value": 100 },
+    "fp": { "value": 123 },
+    "my.custom.metric": { "value": 456, "unit": "millisecond" }
+  }
+}
+```
+
+<div id="transaction-annotations">
+  ## Anotaciones de transacción
+</div>
+
+`transaction_info`
+
+*Recomendado*. Información adicional sobre el nombre de la transacción.
+
+```json
+{
+  "transaction_info": {
+    "source": "ruta"
+  }
+}
+```
+
+`transaction_info.source`
+
+*Obligatorio*. Esta información la requiere el muestreo dinámico.
+Contiene datos sobre cómo se determinó el nombre de la transacción.
+El servidor usará esto para decidir si eliminar o no identificadores
+del nombre de la transacción o reemplazar el nombre completo por un marcador de posición. El `source` debe
+ser establecido únicamente por las integraciones y no directamente por los desarrolladores.
+
+| Source      | Descripción                                                                                                                      | <div style={{width:"220px"}}>Ejemplos</div>              |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `custom`    | Nombre definido por el usuario; consulta [`setTransactionName()`](https://docs.sentry.io/platforms/javascript/enriching-events/transaction-name/) | `my_transaction`                                         |
+| `url`       | URL sin procesar, potencialmente con identificadores.                                                                            | `/auth/login/john123/`<br />`GET /auth/login/john123/`  |
+| `route`     | URL/ruta parametrizada                                                                                                           | `/auth/login/:userId/`<br />`GET /auth/login/{user}/`   |
+| `view`      | Nombre de la vista que gestiona la solicitud.                                                                                    | `UserListView`                                           |
+| `component` | Derivado de un componente de software, como el nombre de una función o clase.                                                    | `AuthLogin.login`<br /> `LoginActivity.login_button`     |
+| `task`      | Nombre de una tarea en segundo plano (p. ej., una tarea de Celery).                                                              | `sentry.tasks.do_something`                              |
+| `unknown`   | *Valor establecido por Relay para SDK heredados. Los SDK no deben establecer este valor explícitamente.*                         |                                                          |

@@ -1,0 +1,129 @@
+---
+title: Splunk (Versión heredada)
+sidebar_order: 1
+description: >-
+  Obtén más información sobre la integración de Splunk de Sentry, que te permite enviar
+  eventos de Sentry a Splunk.
+og_image: /og-images/organization-integrations-data-visualization-splunk.png
+---
+
+<Alert>
+  La integración de Splunk está en desuso y no está disponible para instalarse en proyectos nuevos.
+</Alert>
+
+Conecta Splunk con Sentry usando la función [Data Forwarding](/es/concepts/data-management/data-forwarding/).
+
+<Alert>
+  Solo ofrecemos soporte para planes de Splunk Cloud. No ofrecemos soporte para planes de Splunk Enterprise. Consulta la [documentación de Splunk](https://dev.splunk.com/) para obtener detalles específicos sobre tu instalación de Splunk.
+</Alert>
+
+Esta integración debe configurarse en cada proyecto en el que desees usarla. Está mantenida y respaldada por la [comunidad de Sentry](https://open.sentry.io/).
+
+<div id="install-and-configure">
+  ## Instalar y configurar
+</div>
+
+<Alert>
+  Para instalar esta integración se requieren permisos de propietario, gestor o administrador de Sentry.
+</Alert>
+
+Ve a **Settings &gt; Integrations &gt; Splunk**
+
+![Instalar la integración de Splunk](./img/splunk.png)
+
+<div id="enabling-hec">
+  ### Habilitar HEC
+</div>
+
+Para empezar, primero debes habilitar el HTTP Event Collector:
+
+En **Settings**, selecciona **Data Inputs**:
+
+![Splunk settings](./img/splunk-settings.png)
+
+Selecciona **HTTP Event Collector** en Local Inputs:
+
+![Splunk data inputs](./img/splunk-data-inputs.png)
+
+En la configuración de tu HEC, haz clic en &quot;Global Settings&quot;:
+
+![Splunk HEC inputs](./img/splunk-hec-inputs.png)
+
+Cambia **All Tokens** a **Enabled** y toma nota del número de puerto HTTP (`8088` de forma predeterminada):
+
+![Splunk global settings](./img/splunk-hec-global-settings.png)
+
+<Alert>
+  Si estás ejecutando Splunk en un entorno con privilegios, puede que necesites exponer el puerto de HEC.
+</Alert>
+
+<div id="creating-a-sentry-input">
+  ### Creación de una entrada de Sentry
+</div>
+
+En HTTP Event Collector, crea una nueva entrada de Sentry haciendo clic en &quot;New Token&quot;:
+
+![Entrada de Sentry en Splunk](./img/splunk-new-http-input.png)
+
+Introduce un nombre (p. ej., `Sentry`) y haz clic en &quot;Next&quot;:
+
+![Introducir un nombre en Splunk](./img/splunk-new-input-name.png)
+
+Selecciona el índice al que quieras dar acceso (p. ej., `main`) y haz clic en &quot;Review&quot;:
+
+![Seleccionar índice en Splunk](./img/splunk-new-input-index.png)
+
+Se te pedirá que revises los detalles de la entrada. Haz clic en &quot;Submit&quot; para continuar:
+
+![Revisar el formulario antes de enviar](./img/splunk-new-input-review.png)
+
+La entrada se ha creado y deberías ver el **Token Value**:
+
+![El token se ha creado correctamente en Splunk](./img/splunk-new-input-final.png)
+
+<div id="enabling-splunk-forwarding">
+  ### Habilitar el reenvío a Splunk
+</div>
+
+Para habilitar el reenvío a Splunk, necesitarás lo siguiente:
+
+* La URL de tu instancia (consulta la nota a continuación)
+* El valor del token HEC de Sentry
+
+En Sentry, ve al proyecto del que quieres reenviar eventos y haz clic en &quot;Project Settings&quot;.
+
+<div id="data-forwarding">
+  ### Reenvío de datos
+</div>
+
+Configura el [reenvío de datos](/es/concepts/data-management/data-forwarding/) en **[Project] &gt; Settings &gt; Data Forwarding** y proporciona la información requerida para la integración correspondiente.
+
+Después de ir a **Data Forwarding**, habilita la integración de Splunk:
+
+![Página de configuración del reenvío de datos](./img/splunk-data-forwarding-setting.png)
+
+La URL de tu instancia variará según el tipo de servicio de Splunk que uses. Si usas Splunk Cloud de autoservicio, la URL de la instancia será la URL de la instancia de Splunk que ejecuta el HTTP Event Collector (HEC):
+
+```
+https://<host>:8088
+```
+
+Para todos los demás planes de Splunk Cloud, usarás el prefijo `http-inputs`:
+
+```
+https://http-inputs-<host>:8088
+```
+
+Si usas Splunk detrás de tu firewall, deberás especificar el host correspondiente.
+
+Una vez que hayas completado los campos obligatorios, haz clic en **Guardar cambios**:
+
+![Splunk settings form](./img/splunk-data-forwarding-setting-complete.png)
+
+Ahora empezaremos a reenviar todos los eventos nuevos a tu instancia de Splunk.
+
+<Alert>
+  Sentry limitará internamente el número máximo de eventos enviados a tu instancia de Splunk a 1000 por segundo.
+</Alert>
+
+![Splunk page showing Sentry data](./img/splunk-search-sentry.png)

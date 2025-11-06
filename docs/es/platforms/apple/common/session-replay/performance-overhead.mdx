@@ -1,0 +1,88 @@
+---
+title: Sobrecarga de rendimiento
+sidebar_order: 5502
+description: "Obtén información sobre cómo habilitar Session Replay afecta el rendimiento de tu aplicación."
+notSupported:
+  - apple.macos
+  - apple.watchos
+  - apple.tvos
+  - apple.visionos
+---
+
+<PlatformSection notSupported={["apple.ios"]}>
+  <Include name="apple-session-replay-support-alert" />
+</PlatformSection>
+
+<PlatformSection notSupported={["apple", "apple.macos", "apple.tvos", "apple.watchos", "apple.visionos"]}>
+  Si estás pensando en habilitar Session Replay, primero es importante entender el posible impacto en el rendimiento de tu app. Si bien las métricas precisas requieren pruebas realistas en las que apliques patrones de uso típicos y correlaciones los resultados con tus métricas de negocio, para ofrecer una referencia medimos la sobrecarga usando la app de código abierto [Pocket Casts](https://github.com/Automattic/pocket-casts-ios).
+
+  Puedes obtener más información sobre las distintas optimizaciones de sobrecarga de rendimiento implementadas en el iOS Replay SDK en la documentación de [Sobrecarga de rendimiento de Replay](/es/product/explore/session-replay/mobile/performance-overhead/).
+
+  ## Benchmarking del iOS Replay SDK
+
+  La app Pocket Casts ofrece una mezcla diversa de componentes, lo que la convierte en una candidata ideal para las pruebas. Así se realizaron los benchmarks:
+
+  * **Configuración:** Se habilitó el enmascaramiento completo y se usaron compilaciones de release optimizadas.
+  * **Flujo de usuario:** Se ejecutó el mismo flujo 10 veces para garantizar la consistencia.
+  * **Representación del mundo real:** Este enfoque refleja de cerca el rendimiento en escenarios reales.
+
+  Los benchmarks se ejecutaron en un iPhone 14 Pro. Ten en cuenta que la grabación activa de Session Replay puede introducir fotogramas lentos en dispositivos iOS más antiguos y de gama baja (por ejemplo, iPhone 8).
+
+  ### Resultados
+
+  A continuación se muestran los resultados de las pruebas de benchmarking, presentados como valores medianos para reflejar la sobrecarga típica.
+
+  | Métrica                | Solo Sentry SDK | Sentry + Replay SDK  |
+  | ---------------------- | --------------- | -------------------- |
+  | FPS                    | 55 fps          | 53 fps               |
+  | Memoria                | 102 MB          | 121 MB               |
+  | CPU                    | 4%              | 13%                  |
+  | Tiempo de inicio en frío de la app | 1264.80 ms      | 1265 ms              |
+  | Tiempo del hilo principal | n/a             | 43 ms                |
+  | Ancho de banda de red  | n/a             | 10 KB/s de grabación |
+
+  ## Reducir la sobrecarga de rendimiento
+
+  Para minimizar el impacto en el rendimiento del Replay SDK, considera lo siguiente:
+
+  ### Cambiar la calidad de Replay
+
+  Reducir la calidad de las capturas de pantalla y los videos puede disminuir significativamente el uso de CPU, memoria y ancho de banda de red. Así puedes hacerlo:
+
+  ```swift
+  SentrySDK.start(configureOptions: { options in
+    // esto reducirá la compresión de la captura a 10 y el bitrate a 50 kbps
+    options.sessionReplay.quality = .low // el valor predeterminado es .medium
+  })
+  ```
+
+  ### Deshabilitar Replay en dispositivos de gama baja
+
+  Si el Replay SDK causa problemas de rendimiento en dispositivos de gama baja (por ejemplo, [así](https://github.com/getsentry/relay/blob/695b459e03481f7d799f07b2b901b140e5d5753d/relay-event-schema/src/protocol/device_class.rs#L21-L37) es como Sentry determina la clase de dispositivo), puedes deshabilitarlo específicamente para esos dispositivos:
+
+  ```swift
+  SentrySDK.start(configureOptions: { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.debug = true
+
+    options.sessionReplay.onErrorSampleRate = if isLowEnd() { 0.0 } else { 1.0 }
+    options.sessionReplay.sessionSampleRate = if isLowEnd() { 0.0 } else { 0.1 }
+  })
+  ```
+
+  ### Deshabilitar View Renderer V2
+
+  A partir de la v8.50.0, el renderizador de vistas V2, hasta 5 veces más rápido, se usa de forma predeterminada, reduciendo el impacto de Session Replay en el hilo principal y las posibles caídas de fotogramas. En versiones anteriores (v8.47.0 y superiores), ya puedes habilitarlo estableciendo `enableExperimentalViewRenderer=true`.
+
+  Aunque recomendamos el nuevo renderizador de vistas, si experimentas problemas, puedes optar por no usarlo configurando el siguiente indicador:
+
+  ```swift
+  SentrySDK.start(configureOptions: { options in
+    options.sessionReplay.enableViewRendererV2 = false
+  })
+  ```
+
+  <Alert title="✨ Nota">
+    El renderizador de vistas anterior quedará obsoleto y se eliminará en una versión futura.
+  </Alert>
+</PlatformSection>

@@ -1,0 +1,127 @@
+---
+title: Migrarse a SaaS
+sidebar_order: 300
+description: >-
+  Conozca más sobre los motivos para pasar a la solución SaaS de Sentry, que para
+  muchos clientes es menos costosa de mantener y más fácil de escalar y brindar soporte.
+og_image: /og-images/concepts-migration.png
+---
+
+Sentry ofrece una solución en la nube, como software como servicio (SaaS), además de una solución autogestionada; ambas son funcionalmente iguales. Sin embargo, muchos clientes descubren que Sentry autogestionado puede volverse rápidamente costoso de mantener, escalar y dar soporte, por lo que nuestro producto SaaS resulta la opción mejor y más económica. Para facilitar la transición de autogestionado a SaaS, ofrecemos un proceso de autoservicio conocido como “relocation”.
+
+<Alert>
+  Mira este video sobre <a href="https://sentry.io/resources/migrate-to-sentry-saas-workshop/" className="plausible-event-name=migrating+to+saas+video">**Migración a Sentry SaaS**</a> para conocer nuestras herramientas de relocation.
+</Alert>
+
+Para profundizar al considerar SaaS, echa un vistazo a:
+
+* [¿Self Hosted o Cloud Sentry?](https://sentry.io/_/resources/about-sentry/self-hosted-vs-cloud/)
+* [XS:Code &gt; El open source es gratis, pero caro](https://dev.to/helad11/open-source-is-free-but-expensive-3h8a)
+* [Preguntas frecuentes sobre la migración](https://sentry.io/from/self-hosted/)
+
+<div id="relocating-to-cloud">
+  ## Migración a la nube
+</div>
+
+Si tu organización comenzó con Sentry autogestionado, has invertido tiempo y esfuerzo en configurar y personalizar tu organización de Sentry. Ese trabajo no se perderá si decides pasar a una cuenta SaaS, porque no tendrás que empezar desde cero. Podrás migrar gran parte de lo que has configurado a tu nueva cuenta.
+
+Para que esta migración sea lo más fluida posible, Sentry ofrece un flujo de trabajo que te permite conservar la mayoría de los ajustes y configuraciones de tu cuenta al pasar a SaaS. Solo necesitarás acceso de propietario a tu instalación autogestionada y una forma de acceder a ella desde la terminal.
+
+<div id="what-youll-keep">
+  ### Lo que conservarás
+</div>
+
+Todas las configuraciones, la estructura de equipos y proyectos, y la mayor parte de los metadatos se trasladarán. En concreto, para cada organización que [elijas trasladar](#2-choose-which-organizations-to-relocate), esto incluye:
+
+* Todos los ajustes de la organización
+* Cuentas de usuario y opciones para todos los miembros de la organización
+* Proyectos y sus ajustes
+* Equipos y sus ajustes
+* Reglas de alerta
+* Tareas cron
+* Tableros
+* Depuradores de datos habilitados
+* Repositorios
+* Búsquedas recientes y guardadas
+
+<div id="what-gets-left-behind">
+  ### Qué se queda atrás
+</div>
+
+No se transferirán los datos relacionados con incidencias específicas, eventos, trazas de pila o archivos como reproducciones y mapas de origen. Además, por motivos de seguridad, tendrás que volver a conectar y reautenticar todas tus integraciones, y tus usuarios deberán volver a conectar su 2FA y crear nuevos tokens de API después de la reubicación.
+
+A continuación, una lista no exhaustiva de algunos elementos que no se reubicarán:
+
+* Integraciones, incluidas las partes de elementos reubicados que dependan de ellas (p. ej., si una regla de alerta activa notificaciones de Slack, ese disparador se omitirá)
+* Webhooks
+* Incidencias
+* Eventos
+* Reproducciones y/o otros [adjuntos de eventos](/es/platforms/javascript/enriching-events/attachments/)
+* Mapas de origen, [archivos de información de depuración](/es/cli/dif/) y/o [IDs de depuración](/es/platforms/javascript/sourcemaps/troubleshooting_js/debug-ids/)
+* Información de versiones, incluidas referencias a repositorios externos mediante Pull Requests específicos
+* Información de despliegues
+* Avatares personalizados
+
+Cabe destacar que, si bien no podremos transferir los datos históricos de eventos, los nuevos eventos entrantes poblarán los proyectos en tu organización reubicada tan pronto como [actualices tus DSN](#5-update-your-dsns). Todos los miembros de la organización reubicada serán notificados automáticamente y volverán a ser invitados por correo electrónico una vez que se complete la reubicación.
+
+<div id="version-support-window">
+  ### Ventana de compatibilidad de versiones
+</div>
+
+La reubicación autogestionada solo es posible desde las dos versiones menores autohospedadas más recientes. Es decir, si la última versión autohospedada es la 24.2.3, tu instalación autohospedada debe estar al menos en la versión 24.1.0 para poder reubicarse correctamente.
+
+Si deseas reubicar desde una versión anterior, te pedimos que primero [actualices](https://develop.sentry.dev/self-hosted/releases/) tu instalación autohospedada a la versión más reciente. Si por alguna razón esto no es posible, por favor [contacta al soporte](https://sentry.io/contact/enterprise/) para recibir más orientación.
+
+<div id="data-security">
+  ### Seguridad de los datos
+</div>
+
+Tus datos estarán cifrados de extremo a extremo durante el proceso de migración. El único archivo que viajará por la red será un tarball cifrado que nunca almacenaremos en texto sin formato y que eliminaremos dentro de los 30 días posteriores al inicio de tu migración.
+
+<div id="how-to-relocate">
+  ## Cómo mudarse
+</div>
+
+<div id="1-sign-up-with-a-promo-code">
+  ### 1. Regístrate con un código promocional
+</div>
+
+Antes de comenzar el proceso de traslado, [regístrate](https://sentry.io/signup/relocate/) para crear una cuenta nueva en Sentry. Si ya tienes una cuenta de Sentry, inicia sesión y ve a la [página de traslado](https://sentry.io/relocation/). En cualquiera de los casos, deberías ver una página como esta:
+
+![Página de introducción al traslado](./img/relocation-landing-page.png)
+
+**Para recibir un crédito de 100 USD, asegúrate de usar el código promocional `relocate100` en esta página.**
+
+<div id="2-choose-which-organizations-to-relocate">
+  ### 2. Elige qué organizaciones trasladar
+</div>
+
+Tu instalación autoalojada puede tener varias organizaciones, cada una identificada por un slug único. Deberás decidir qué slugs de organización conservar. Siempre puedes cambiarlos después del traslado desde la página **Organization Settings**.
+
+![Cambiar el slug de la organización en la página de configuración](./img/org-slug.png)
+
+<div id="3-follow-the-in-app-relocation-instructions">
+  ### 3. Sigue las instrucciones de reubicación en la aplicación
+</div>
+
+El resto de las instrucciones en la aplicación te guiarán por los detalles específicos de cómo exportar los datos reubicables de tu instancia autogestionada (self‑hosted). Esto requerirá acceso a la terminal de la máquina que ejecuta tu instancia autogestionada. Aquí tienes un resumen rápido:
+
+* Se te pedirá que guardes en tu máquina autogestionada una clave pública que generamos en el backend de SaaS
+* Luego usarás esta clave para ejecutar un comando que generará un archivo tar cifrado con todos tus datos
+* Por último, se te pedirá que subas este archivo
+
+La mayoría de las reubicaciones se completan en menos de una hora, aunque ciertos casos grandes o complejos pueden tardar un poco más. Si no recibes noticias nuestras en 24 horas, por favor [contacta con soporte](https://sentry.io/contact/enterprise/) para obtener más ayuda.
+
+<div id="4-choose-a-plan">
+  ### 4. Elige un plan
+</div>
+
+Una vez que completes la migración, puedes elegir el [plan de precios](https://sentry.io/pricing/) que mejor se adapte a tus necesidades. Ten en cuenta que el precio del plan varía según tu [volumen de eventos](/es/product/accounts/quotas/).
+
+Si esperas volúmenes más altos o te interesan nuestras capacidades Enterprise (soporte prioritario y acuerdos de nivel de servicio, y opciones de inquilino único, por ejemplo), por favor [contáctanos](https://sentry.io/contact/enterprise/) acerca de nuestro **Plan Enterprise**.
+
+<div id="5-update-your-dsns">
+  ### 5. Actualiza tus DSN
+</div>
+
+Aunque los datos de tu proyecto se han trasladado por completo, los DSN de todos tus proyectos habrán cambiado, ya que ahora están en https://sentry.io en lugar de tu anterior dominio autogestionado. Esto significa que tendrás que actualizar el [DSN](/es/product/sentry-basics/dsn-explainer/) que usas en cada uno de tus SDK para cada proyecto correspondiente. Una vez completes este paso, deberías empezar a ver incidencias y eventos (¡aunque ojalá no demasiados!) apareciendo como antes.

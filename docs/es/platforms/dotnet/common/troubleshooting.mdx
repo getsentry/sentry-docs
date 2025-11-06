@@ -1,0 +1,202 @@
+---
+title: Solución de problemas
+sidebar_order: 9000
+description: "Obtén más información sobre cómo solucionar problemas comunes con el SDK de .NET. "
+---
+
+<PlatformSection supported={["dotnet.maui", "dotnet.apple"]}>
+  ## Las trazas de pila no están simbolizadas en iOS, macOS y Mac Catalyst
+
+  Al compilar aplicaciones de .NET MAUI en modo de publicación (release) para iOS, macOS o Mac Catalyst, es posible que veas trazas de pila sin simbolizar en Sentry, donde los nombres de las funciones aparecen como direcciones de memoria en lugar de nombres de métodos legibles.
+
+  Esto se debe a **un problema en el SDK de .NET** que afecta cómo se maneja la información de depuración al compilar para plataformas de Apple en modo de publicación. Este problema se ha reportado a Microsoft y se está haciendo seguimiento en el repositorio del runtime de .NET.
+
+  Si este problema afecta a tu aplicación:
+
+  1. Visita el [.NET runtime issue](https://github.com/dotnet/runtime/issues/118700)
+  2. Añade una reacción (👍) para indicar que te afecta
+  3. Considera añadir un comentario describiendo tu caso de uso
+
+  Esto ayudará a Microsoft a priorizar la corrección según el impacto en la comunidad.
+
+  ### Soluciones alternativas
+
+  Hasta que el problema se resuelva correctamente, la simbolización en plataformas de Apple solo es posible deshabilitando el stripping. Por ejemplo, añade lo siguiente a tus archivos `*.csproj`:
+
+  ```xml
+  <PropertyGroup>
+    <EnableAssemblyILStripping>false</EnableAssemblyILStripping>
+  </PropertyGroup>
+  ```
+
+  **Nota importante**: Esto puede aumentar significativamente el tamaño de tu aplicación.
+
+  ### Versiones afectadas
+
+  Este problema afecta a:
+
+  * Aplicaciones .NET 9 dirigidas a iOS, macOS y Mac Catalyst
+  * Aplicaciones compiladas en modo de publicación con trimming habilitado
+  * Afecta específicamente a los target frameworks `net9.0-ios*`
+</PlatformSection>
+
+<div id="sentry-cli-not-configured">
+  ## Sentry CLI no está configurado
+</div>
+
+Es posible que aparezca el siguiente mensaje en la salida de tu compilación:
+
+> Sentry CLI no está completamente configurado con autenticación, organización y proyecto.
+
+Actualmente, el mensaje se muestra solo como informativo, aunque podríamos cambiarlo a una advertencia en el futuro.
+Esto significa que estás compilando con la configuración `Release` y no has configurado completamente
+[MSBuild para Sentry CLI](../configuration/msbuild/). Puedes resolverlo de una de las siguientes maneras:
+
+* Puedes habilitar Sentry CLI en tu compilación proporcionando los detalles de configuración, como se describe [en la documentación](../configuration/msbuild/).
+
+* Puedes evitar que se genere el mensaje estableciendo la propiedad `<UseSentryCLI>false</UseSentryCLI>` en el archivo de tu proyecto .NET,
+  o con `/p:UseSentryCLI=false` en la línea de comandos de `dotnet build` o `msbuild`. Sentry CLI se desactivará.
+
+* Puedes no hacer nada y simplemente ignorar el mensaje. Sentry CLI se desactivará.
+
+Ten en cuenta que, si Sentry CLI está desactivado, los archivos de información de depuración como los símbolos PDB
+no se enviarán a Sentry. Si Sentry no puede localizar símbolos, no podrá realizar la simbolización de trazas de pila.
+Esto significa que, para algunos tipos de proyectos (según la configuración), es posible que no veas nombres de archivo y números de línea
+que te ayuden a ubicar el origen de una excepción.
+
+<div id="detected-package-version-outside-of-dependency-constraint">
+  ## Versión de paquete detectada fuera de la restricción de dependencias
+</div>
+
+En aplicaciones de .NET para Android, el SDK de Sentry necesita usar un número limitado de API de Android que forman parte del sistema operativo. De forma implícita, Sentry depende de [varios paquetes de Java](https://github.com/getsentry/sentry-dotnet/blob/ebc1115d6c928ff56244afa3a1ce1d79b078fbf4/src/Sentry.Bindings.Android/Sentry.Bindings.Android.csproj#L45-L56).
+
+Si usas bibliotecas de terceros que dependen de versiones diferentes de esos mismos paquetes de Java, podrías ver las advertencias `NU1605`, `NU1608` y/o `NU1107` al intentar ejecutar `dotnet restore`.
+
+Sentry solo especifica una versión mínima de los paquetes de Java de los que depende, por lo que es compatible con cualquier versión superior de esos mismos paquetes. Sin embargo, estos paquetes de Java traen sus propias dependencias, que por lo tanto se convierten en dependencias transitivas para Sentry. Las dependencias transitivas del SDK de Sentry a veces pueden ser incompatibles con las dependencias transitivas de otras bibliotecas de terceros, y NuGet no es lo suficientemente inteligente como para resolver esos conflictos sin algo de orientación.
+
+Estos problemas deben resolverse caso por caso, pero el siguiente ejemplo debería mostrar cómo puedes solucionarlos si te los encuentras en tu propia aplicación.
+
+<div id="example-problem">
+  ### Ejemplo de problema
+</div>
+
+Si utilizas `Sentry` `5.7.0` en una aplicación de .NET para Android dirigida a `net9.0-android`, Sentry tendrá varias [dependencias directas](https://www.nuget.org/packages/Sentry/5.7.0#dependencies-body-tab). Sin embargo, esas dependencias directas tienen a su vez sus propias dependencias, que en el caso de Sentry son dependencias transitivas.
+
+Si además usas `Microsoft.Maui.Essentials` en la versión `9.0.50`, en última instancia depende de versiones en conflicto de esas mismas dependencias transitivas.
+
+En este escenario verás una advertencia o un error como el siguiente al ejecutar `dotnet restore`:
+
+```
+NU1608: Se detectó una versión del paquete fuera de la restricción de dependencia: Xamarin.AndroidX.Lifecycle.Common.Java8 2.8.5.1 requiere Xamarin.AndroidX.Lifecycle.Common (>= 2.8.5.1 && < 2.8.6), pero se resolvió la versión Xamarin.AndroidX.Lifecycle.Common 2.8.7.2.
+```
+
+<div id="example-solution">
+  ### Solución de ejemplo
+</div>
+
+Para resolver el problema anterior, puedes usar [Transitive Pinning](https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management#transitive-pinning) para fijar versiones explícitas de las dependencias transitivas (en lugar de dejar que NuGet las resuelva automáticamente).
+
+Para habilitar Transitive Pinning, agrega lo siguiente a tu archivo `csproj` o `Directory.Build.props`:
+
+```xml
+<PropertyGroup>
+  <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+</PropertyGroup>
+```
+
+Luego puedes fijar las versiones adecuadas de la dependencia transitiva que te está causando problemas:
+
+```xml
+<ItemGroup>
+    <PackageReference Include="Xamarin.AndroidX.Lifecycle.Common.Java8" Version="2.8.7.2" />
+</ItemGroup>
+```
+
+Aunque el SDK de Sentry solo requiere `Xamarin.AndroidX.Lifecycle.Common.Java8 2.8.5.1`, esa versión resulta problemática porque fija la dependencia transitiva `Xamarin.AndroidX.Lifecycle.Common` al rango `(>= 2.8.5.1 && < 2.8.6)`. Al anclar explícitamente `Xamarin.AndroidX.Lifecycle.Common.Java8` en `2.8.7.2` para que coincida con la versión usada por `Microsoft.Maui.Essentials`, podemos resolver el conflicto.
+
+<div id="updating-to-4120-broke-my-net-ios-app">
+  ## Actualizar a la 4.12.0 rompió mi app .NET para iOS
+</div>
+
+Se agregó compatibilidad con Xcode 16.0 en la versión 4.12.0 del Sentry SDK para .NET.
+Si usas Xcode 16.0, necesitas actualizar al SDK versión 4.12.0 o posterior.
+Si aún usas Xcode 15.4 o anterior, debes seguir usando la versión 4.11.0 o anterior.
+
+Usar Xcode 16 para compilar aplicaciones .NET destinadas a iOS y Mac Catalyst requiere la carga de trabajo de .NET para iOS SDK versión 18.0.8303. Compilamos la versión 4.12.0 del SDK con Xcode 16 para admitir este escenario. Eso, lamentablemente, rompe la compatibilidad para quienes usan una versión anterior de Xcode.
+
+Por lo tanto, si usas la versión 4.12.x del SDK y apuntas a iOS o Mac Catalyst, necesitarás instalar y usar Xcode 16 y la carga de trabajo iOS SDK 18.0.8303.
+
+Ten en cuenta que .NET 9 también admitirá Xcode 16 cuando se publique el próximo mes (nov 2024).
+
+<div id="the-event-is-dropped-by-sentry-because-its-too-large">
+  ## Sentry descarta el evento porque es demasiado grande
+</div>
+
+> Sentry: (Error) Sentry rechazó el envelope 5bfe4129cb2446c08768b16479865035. Código de estado: RequestEntityTooLarge. Detalle del error: no se pudo leer el cuerpo de la solicitud. Causas del error: una carga útil alcanzó el límite de tamaño.
+
+Puedes hacer que el [SDK de .NET de Sentry escriba estos envelopes en una ruta](https://github.com/getsentry/sentry-dotnet/blob/e62013ca63436d2a786fb229570e96f42c7c4044/src/Sentry/Http/HttpTransportBase.cs#L341-L363) para diagnosticar por qué son demasiado grandes.
+Establece la variable de entorno `SENTRY_KEEP_LARGE_ENVELOPE_PATH` en el directorio donde quieres que se escriban.
+Asegúrate de que el proceso en el que se ejecuta el SDK tenga permisos de escritura.
+
+<div id="user-ip-address-in-sentry-shows-up-as-the-server-ip">
+  ## La dirección IP del usuario en Sentry aparece como la IP del servidor
+</div>
+
+Si usas un servidor proxy que confía en `X-Forwarded-For`, quizá debas [configurar ASP.NET Core para que lo reconozca](https://docs.microsoft.com/aspnet/core/host-and-deploy/proxy-load-balancer).
+
+Consulta [este issue de GitHub](https://github.com/getsentry/sentry-dotnet/issues/258) para más contexto.
+
+<div id="unhandled-exceptions-are-not-captured-when-using-an-async-main-method">
+  ## No se capturan las excepciones no controladas al usar un método `Main` asincrónico
+</div>
+
+A partir de C# 7.1, el [método `Main` de un programa](https://docs.microsoft.com/dotnet/csharp/fundamentals/program-structure/main-command-line) puede declararse de forma sincrónica o asincrónica.
+Esto se amplía en C# 9 con el uso de [instrucciones de nivel superior](https://learn.microsoft.com/dotnet/csharp/fundamentals/program-structure/top-level-statements), que también pueden declararse de forma sincrónica o asincrónica.
+
+Al usar cualquiera de estas características con versiones anteriores del SDK de Sentry .NET, cuando se llama a `SentrySdk.Init` dentro de una instrucción `using`, es posible que no se capturen las excepciones no controladas.
+Además, si usabas un `Main` asincrónico, es posible que las transacciones asociadas no se marcaran como fallidas ni se enviaran a Sentry.
+
+Estos problemas se han resuelto por completo a partir de la versión 3.31.0 del SDK de Sentry .NET. Para usar un `Main` asincrónico de forma segura, actualiza a la versión más reciente.
+Ya no es necesario disponer del resultado de llamar a `SentrySdk.Init`.
+
+<div id="obfuscated-code-and-stack-traces">
+  ## Código ofuscado y stack traces
+</div>
+
+Es importante definir qué significa ofuscación. Si obtienes stack traces ilegibles debido a la falta de [archivos de depuración](/es/platforms/dotnet/data-management/debug-files/), basta con habilitar la carga de archivos de depuración, que el [SDK de Sentry mediante MSBuild](/es/platforms/dotnet/guides/aspnet/configuration/msbuild/) realiza automáticamente.
+
+Algunas herramientas personalizadas ofuscan el Lenguaje intermedio (IL) de .NET para dificultar la ingeniería inversa; Sentry actualmente no admite estas herramientas. Esto se debe a que cada ofuscador utiliza su propia lógica a la hora de desofuscar, lo que hace inviable implementar soporte universal.
+
+Si trabajas con código ofuscado, tienes varias opciones:
+
+1. **Usar un servicio proxy**: Puedes enrutar las excepciones a través de tu propio servicio web proxy, donde podrás desofuscar los stack traces antes de enviarlos a Sentry. Esto te da control total sobre el proceso de desofuscación.
+
+2. **Conservar los nombres de los métodos**: Muchas herramientas de ofuscación permiten desactivar la ofuscación de los nombres de los métodos mientras se sigue ofuscando el código dentro de ellos. Este enfoque produce stack traces más legibles y mantiene la protección del código. Configura tu ofuscador para conservar los nombres de los métodos si este equilibrio entre legibilidad y seguridad se ajusta a tus necesidades.
+
+3. **Contribuir a Symbolic**: [Nuestra biblioteca de symbolication es de código abierto](https://github.com/getsentry/symbolic). Puedes abrir un ticket para debatir con los mantenedores la posibilidad de añadir soporte.
+
+<div id="proxy-server">
+  ## Servidor proxy
+</div>
+
+A menudo, tu servidor solo puede acceder a Internet a través de un servidor proxy.
+Si ese es el caso, asegúrate de que el servidor proxy esté configurado para que el `HttpClient`
+usado por el SDK de Sentry pueda detectarlo.
+
+```csharp
+(SentryOptions options) =>
+{
+    // Lee la dirección del proxy desde, por ejemplo, tu configuración
+    options.HttpProxy = new WebProxy(new Uri("http://proxyserver:80/"));
+};
+```
+
+Como alternativa, puedes configurar el proxy predeterminado que usarán todas las instancias de `HttpClient` si no se establece explícitamente un proxy.
+
+```csharp
+System.Net.Http.HttpClient.DefaultProxy = new WebProxy(new Uri("http://proxyserver:80/"));
+```
+
+Para obtener más información, consulta la [propiedad HttpClient.DefaultProxy](https://learn.microsoft.com/dotnet/api/system.net.http.httpclient.defaultproxy).
+
+<PlatformContent includePath="troubleshooting" />

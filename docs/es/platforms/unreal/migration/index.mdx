@@ -1,0 +1,193 @@
+---
+title: Guía de migración
+description: "Obtén más información sobre cómo migrar a la versión actual."
+sidebar_order: 8000
+---
+
+<Alert>
+Recomendamos comenzar por la guía correspondiente a la versión más cercana a la que usas actualmente; puede que tengas que desplazarte hacia abajo antes de pasar a la guía más reciente.
+</Alert>
+
+<div id="migrating-to-100">
+  ## Migración a la 1.0.0
+</div>
+
+### Cambios importantes
+
+<div id="sentry-classes-instantiation">
+  #### Instanciación de clases de Sentry
+</div>
+
+Los objetos de clase de Sentry creados mediante `NewObject<T>` en C++ o `ConstructObjectFromClass` en Blueprints ahora requieren una llamada explícita a su método `Initialize` (si está disponible) antes de usarlos. En Blueprints, se recomienda usar las funciones de la biblioteca de Sentry para crear estas entidades, ya que llaman automáticamente a `Initialize` y devuelven un objeto completamente inicializado y listo para usar.
+
+<div id="cleanup-public-classes">
+  #### Limpieza de clases públicas
+</div>
+
+Hemos depurado nuestra API pública eliminando algunas funciones y clases para simplificar el SDK y evitar ambigüedades. Se realizaron los siguientes cambios:
+
+- Se eliminó la clase `USentryId` y se reemplazaron sus usos por `FString`
+- Se eliminó la función `USentrySubsystem::ConfigureScope`
+- Se eliminó la función `USentryLibrary::StringToBytesArray`
+- Se eliminó la función `USentryLibrary::ByteArrayToString`
+- Se eliminó la función `USentryLibrary::SaveStringToFile`
+- Se eliminó la función `USentryScope::SetEnvironment`
+- Se eliminó la función `USentryScope::GetEnvironment`
+- Se eliminó la función `USentryScope::SetDist`
+- Se eliminó la función `USentryScope::GetDist`
+
+<div id="user-feedback">
+  #### Comentarios de usuarios
+</div>
+
+Hemos rediseñado la función de comentarios de usuarios, por lo que ahora ya no necesita estar asociada a un evento específico y la única entrada obligatoria es el mensaje de texto. Si usabas esta funcionalidad en tu proyecto, considera actualizarla en consecuencia:
+
+* Sustituye las referencias a la clase `USentryUserFeedback` por `USentryFeedback`
+* Sustituye los usos de la función `USentrySubsystem::CaptureUserFeedback` por `USentrySubsystem::CaptureFeedback`
+* Sustituye los usos de la función `USentryLibrary::CreateSentryUserFeedback` por `USentryLibrary::CreateSentryFeedback`
+
+```cpp
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+FString Message = TEXT("Mensaje de comentarios");
+FString Name = TEXT("Juan Pérez");
+FString Email = TEXT("prueba@email.com");
+FString EventId = TEXT("c3829f10764848442d813c4124cf44a0");
+
+// Enviar comentarios de usuario antes de la v1.0.0
+
+USentryUserFeedback* Feedback = NewObject<USentryUserFeedback>();
+
+Feedback->Initialize(EventId);
+
+Feedback->SetName(Name);        // opcional
+Feedback->SetEmail(Email);      // opcional
+Feedback->SetComment(Message);  // opcional
+
+SentrySubsystem->CaptureUserFeedback(Feedback);
+
+// Enviar comentarios de usuario en la v1.0.0
+
+USentryFeedback* Feedback = NewObject<USentryFeedback>();
+
+Feedback->Initialize(Message);
+
+Feedback->SetName(Name);                // opcional
+Feedback->SetContactEmail(Email);       // opcional
+Feedback->SetAssociatedEvent(EventId);  // opcional
+
+SentrySubsystem->CaptureFeedback(Feedback);
+```
+
+
+<div id="tracing">
+  #### Trazas
+</div>
+
+La función `USentrySubsystem::StartTransactionWithContextAndOptions` ahora recibe una estructura `FSentryTransactionOptions` en lugar de un `TMap<FString, FString>`, lo que mejora la claridad y permite una mejor extensibilidad a futuro.
+
+Además, la clase `USentrySamplingContext` ahora utiliza `FSentryVariant` en lugar de cadenas para los valores personalizados del contexto de muestreo.
+
+```cpp
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+// Iniciar una transacción con contexto y opciones antes de la v1.0.0
+
+USentryTransactionContext* TransactionContext = ...
+
+TMap<FString, FString> Options;
+Options.Add("key1", "value1");
+Options.Add("key2", "value2");
+
+SentrySubsystem->StartTransactionWithContextAndOptions(TransactionContext, Options);
+
+// Iniciar una transacción con contexto y opciones en la v1.0.0
+
+USentryTransactionContext* TransactionContext = ...
+
+FSentryTransactionOptions Options;
+Options.CustomSamplingContext.Add("key1", FSentryVariant("value1"));
+Options.CustomSamplingContext.Add("key2", FSentryVariant("value2"));
+
+SentrySubsystem->StartTransactionWithContextAndOptions(TransactionContext, Options);
+```
+
+
+<div id="event-id-format-windowslinux">
+  #### Formato del ID de evento (Windows/Linux)
+</div>
+
+En Windows y Linux, la función `ToString` de la clase `SentryId` ahora devuelve la cadena depurada, sin guiones.
+
+<div id="global-scope-configuration">
+  #### Configuración del alcance global
+</div>
+
+Con la eliminación de `USentrySubsystem::ConfigureScope`, los valores del alcance global (etiquetas, contexto, adjuntos, etc.) ahora deben configurarse directamente a través de la interfaz del subsistema.
+
+```cpp
+USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+
+// Configurar el ámbito global antes de la v1.0.0
+
+SentrySubsystem->ConfigureScope(FConfigureScopeNativeDelegate::CreateLambda([](USentryScope* Scope)
+{
+    Scope->SetTag(...);
+    Scope->SetContext(...);
+    Scope->AddAttachment(...);
+}));
+
+// Configurar el ámbito global en la v1.0.0
+
+SentrySubsystem->SetTag(...);
+SentrySubsystem->SetContext(...);
+SentrySubsystem->AddAttachment(...);
+```
+
+
+<div id="issue-grouping">
+  ### Agrupación de incidencias
+</div>
+
+El SDK de Unreal ya no modifica las pilas de llamadas de los eventos de aserción recortando los marcos superiores relacionados con la lógica interna de gestión de aserciones del motor. Antes, esto se hacía para evitar que todas las aserciones se agruparan en una única incidencia de Sentry. Con este cambio, la agrupación de incidencias ahora la gestiona íntegramente el servidor de Sentry.
+
+<div id="sdk-configuration-changes">
+  ### Cambios en la configuración del SDK
+</div>
+
+- Las propiedades <PlatformIdentifier name="environment" /> y <PlatformIdentifier name="dist" /> ahora deben configurarse en la configuración del complemento y ya no pueden modificarse de forma programática mediante la configuración del ámbito.
+
+- Sentry ya no puede deshabilitarse para plataformas específicas usando la opción `Enable for Build Platform Types` en la configuración del complemento (`General -> Misc`) o la propiedad EnableTargetPlatforms en el archivo de configuración del proyecto.
+
+- Si actualizas desde una versión anterior a la 0.9.0, los ajustes heredados `DsnUrl`, `EnableVerboseLogging` y `EnableStackTrace` ya no se leerán automáticamente del archivo de configuración del proyecto. En su lugar, debes volver a configurarlos en la configuración del complemento para adoptar el nuevo formato.
+
+- En plataformas móviles, el muestreador de trazas predeterminado ya no se creará automáticamente. Ahora debes establecer explícitamente la propiedad `Traces Sampler` en la configuración del complemento para habilitar el monitoreo del rendimiento (`General -> Performance Monitoring`).
+
+<div id="crash-reporter-changes">
+  ### Cambios en Crash Reporter
+</div>
+
+Los campos `Epic Account Id` y `Login Id` ya no se incluyen en el contexto `Crash Info` para los fallos capturados en Windows y Linux con el Crash Reporter predeterminado. Estos campos están destinados al uso interno de Epic Games y no aportan ningún valor significativo externamente.
+
+<div id="migrating-to-0190">
+  ## Migración a la 0.19.0
+</div>
+
+<div id="breaking-changes">
+  ### Cambios incompatibles
+</div>
+
+- Se cambió el nombre de la propiedad `OnError` del delegado de la clase `FSentryOutputDeviceError` a `OnAssert`
+
+<div id="migrating-to-0150">
+  ## Migración a la versión 0.15.0
+</div>
+
+<div id="breaking-changes">
+  ### Cambios incompatibles
+</div>
+
+Para poder capturar fallos del editor, la clase base de `USentrySubsystem` se cambió a `UEngineSubsystem`.
+
+- Si usas la API de Blueprint del plugin, tendrás que recrear todos los nodos `Get Sentry Subsystem`.
+- Si usas la API de C++ del plugin, actualiza tu implementación para acceder a `USentrySubsystem` mediante el puntero `GEngine`.

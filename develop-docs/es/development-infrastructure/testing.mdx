@@ -1,0 +1,409 @@
+---
+title: Consejos para pruebas
+description: En Sentry ejecutamos varios tipos de pruebas como parte de nuestro proceso de CI. Esta sección busca documentar algunos ayudantes específicos de Sentry y ofrecer pautas sobre qué tipos de pruebas deberías considerar incluir al crear nuevas funciones.
+sidebar_order: 60
+---
+
+<div id="getting-setup">
+  ## Configuración inicial
+</div>
+
+Las pruebas de aceptación y de Python requieren un conjunto funcional de devservices. Se recomienda usar `devservices` para asegurarte de que tienes los servicios necesarios en ejecución. Si también usas tu entorno local para hacer pruebas, conviene usar la opción `--project` para separar los volúmenes de las pruebas locales de los volúmenes de la suite de pruebas:
+
+```shell
+# Iniciar servicios para pruebas
+devservices up
+
+# Verificar que los contenedores se iniciaron correctamente
+devservices status
+```
+
+<div id="python-tests">
+  ## Pruebas de Python
+</div>
+
+Para las pruebas de Python usamos [pytest](https://docs.pytest.org/en/latest/) y las herramientas de prueba
+que proporciona Django. Sobre esta base hemos añadido algunos casos de prueba básicos (en `sentry.testutils.cases`).
+
+La mayor parte de nuestra batería de pruebas se centra en pruebas de integración de endpoints. Estas pruebas nos ayudan a garantizar que
+las API que utilizan nuestros clientes, integraciones y la aplicación de front‑end sigan funcionando como se espera. Debes
+procurar incluir pruebas que cubran los distintos roles de usuario y escenarios de acceso entre organizaciones/equipos,
+así como escenarios con datos no válidos, ya que a menudo se pasan por alto en las pruebas manuales.
+
+<div id="running-pytest">
+  ### Ejecutar `pytest`
+</div>
+
+Puedes usar `pytest` para ejecutar un directorio, un archivo o una prueba individual, según el alcance de tus cambios:
+
+```shell
+# Ejecutar pruebas para un directorio completo
+pytest tests/sentry/api/endpoints/
+
+# Ejecutar pruebas para todos los archivos que coincidan con un patrón en un directorio
+pytest tests/sentry/api/endpoints/test_organization_*.py
+
+# Ejecutar prueba desde un solo archivo
+pytest tests/sentry/api/endpoints/test_organization_group_index.py
+
+# Ejecutar una sola prueba
+pytest tests/snuba/api/endpoints/test_organization_events_distribution.py::OrganizationEventsDistributionEndpointTest::test_this_thing
+
+# Ejecutar todas las pruebas en un archivo que coincidan con una subcadena
+pytest tests/snuba/api/endpoints/test_organization_events_distribution.py -k method_name
+
+# Al ejecutar pruebas, Django reconstruye la base de datos en cada ejecución, lo que puede hacer
+# que el tiempo de inicio de tus pruebas sea lento. Para evitar esto puedes usar el flag `--reuse-db`,
+# de modo que la base de datos persista entre ejecuciones. Esto debería mejorar significativamente
+# el tiempo de inicio de tus pruebas después de la primera vez que lo uses.
+# Nota: Si el esquema cambia, es posible que necesites ejecutar con `--create-db` una vez para
+# tener el esquema más reciente.
+pytest --reuse-db tests/sentry/api/endpoints/
+```
+
+Algunas opciones de uso frecuente para `pytest` son:
+
+* `-k` Filtra métodos o clases de prueba por una subcadena.
+* `-s` No captura stdout al ejecutar las pruebas.
+
+Consulta la documentación de [pytest](http://doc.pytest.org/en/latest/usage.html) para ver más opciones de uso.
+
+<div id="creating-data-in-tests">
+  ### Crear datos en pruebas
+</div>
+
+Sentry también ha incorporado una serie de métodos auxiliares de fábrica que te ayudan a generar datos para tus pruebas.
+Los métodos de fábrica en `sentry.testutils.factories` están disponibles en todas nuestras clases de la suite de pruebas. Usa estos métodos
+para crear la organización, los proyectos y otros estados basados en Postgres necesarios.
+
+También debes usar `store_event()` para almacenar eventos de forma similar a como lo hace la
+aplicación en producción. Almacenar eventos requiere que tu prueba herede
+de `SnubaTestCase`. Al usar `store_event()`, asegúrate de establecer una marca de tiempo
+en el pasado en el evento. Si se omite, la marca de tiempo usa &#39;now&#39;, lo que puede
+provocar que no se recojan eventos debido a los límites de marca de tiempo.
+
+```python
+from sentry.testutils.helpers.datetime import before_now
+from sentry.utils.samples import load_data
+
+def test_query(self):
+    data = load_data("python", timestamp=before_now(minutes=1))
+    event = self.store_event(data, project_id=self.project.id)
+```
+
+<div id="setting-options-and-feature-flags">
+  ### Configuración de opciones y banderas de funciones
+</div>
+
+Si tus pruebas son para endpoints con banderas de funciones o requieren establecer opciones específicas, puedes usar métodos auxiliares para modificar los datos de configuración y dejarlos en el estado correcto:
+
+```python
+def test_success(self):
+    with self.feature('organization:new-thing'):
+        with self.options({'option': 'value'}):
+            # Ejecuta la lógica de prueba con las funcionalidades y opciones configuradas.
+
+    # Desactiva la funcionalidad new-thing.
+    with self.feature({'organization:new-thing': False}):
+        # Ejecuta tu lógica con una funcionalidad desactivada.
+```
+
+<div id="notes-on-database-tests">
+  ### Notas sobre las pruebas de base de datos
+</div>
+
+Por el amor de Dios, deja de escribir pruebas usando la clase de pruebas de Django. Sin embargo,
+si por cualquier motivo estás extendiendo una de ellas y no te sientes lo suficientemente motivado
+para convertirlas en pruebas con estilo funcional, ten mucho cuidado al usarla
+para funcionalidad no relacionada con la base de datos.
+
+La clase `TestCase` de Django tiene un coste increíblemente alto debido a la gestión de la base de datos,
+y no todas las pruebas requieren la base de datos. Para comprobar si tus nuevas pruebas
+están usando la base de datos innecesariamente, exporta la variable de entorno `SENTRY_DETECT_TESTCASE_MISUSE`
+y asígnale el valor `1`:
+
+```
+SENTRY_DETECT_TESTCASE_MISUSE=1 pytest my_new_test.py
+```
+
+Si el runner de pruebas detecta que usaste la clase `TestCase` de Django pero al final
+no la necesitabas, te echará la bronca. Esto te evita que otros
+desarrolladores te echen la bronca más tarde por ralentizar el CI.
+
+<div id="database-tests-on-temporary-models">
+  ### Pruebas de base de datos en modelos temporales
+</div>
+
+Si tienes un caso de uso en el que necesitas probar algún comportamiento de un modelo (por ejemplo, un campo personalizado o una consulta/lookup personalizado), ese tipo de pruebas no deberían estar ligadas a los modelos existentes, ya que estos pueden cambiar en cualquier momento.
+
+En el código, para este caso, tenemos una aplicación especial de Django, `fixtures`, que no generará migraciones, y los modelos creados como parte de esta aplicación no llegarán a producción, sino que solo existirán durante la ejecución de la prueba. Hay [varios ejemplos](https://github.com/getsentry/sentry/blob/774af7dc287a1f9199ce855953c9e9184d8bb9c5/tests/sentry/db/models/fields/test_jsonfield.py) de esto en nuestro repositorio.
+
+Para crear modelos de prueba, modifica el `Meta` de tu modelo de prueba y asigna el modelo a la aplicación `fixtures`:
+
+```python
+class MyTestModel(models.Model):
+    ... # algunos campos
+
+    class Meta:
+        app_label = "fixtures"
+
+```
+
+<div id="external-services">
+  ### Servicios externos
+</div>
+
+Usa la biblioteca `responses` para agregar respuestas simuladas a las solicitudes de API salientes que realiza tu código.
+Esto te ayudará a simular escenarios de éxito y error con relativa facilidad.
+
+<div id="working-with-time-reliably">
+  ### Trabajar de manera confiable con el tiempo
+</div>
+
+Al escribir pruebas relacionadas con la ingesta de eventos, debemos operar con la
+restricción de que los eventos no pueden tener más de 30 días. Como todos los eventos deben
+ser recientes, no podemos usar estrategias tradicionales de congelación del tiempo para obtener datos
+consistentes en las pruebas. En lugar de elegir puntos arbitrarios en el tiempo, trabajamos hacia atrás
+desde el presente y contamos con algunas funciones auxiliares para hacerlo:
+
+```python
+from sentry.testutils.helpers.datetime import before_now, iso_format
+
+five_min_ago = before_now(minutes=5)
+iso_timestamp = iso_format(five_min_ago)
+```
+
+Estas funciones generan objetos de fecha y hora, y cadenas en formato ISO 8601, relativas al presente, lo que te permite programar eventos con desplazamientos temporales conocidos sin infringir la restricción de 30 días que impone relay.
+
+<div id="inspecting-sql-queries-in-tests">
+  ### Inspección de consultas SQL en pruebas
+</div>
+
+Añade lo siguiente a `conftest.py` en la raíz del proyecto:
+
+```python
+@pytest.fixture(scope="function", autouse=True)
+def log_sql(request):
+    from django.conf import settings
+    from django.db import connections, reset_queries
+
+    reset_queries()
+    settings.DEBUG = True
+
+    yield
+
+            print(f"\nRegistro de consultas desde {request.node.nodeid}")
+    for connection in connections.all():
+        for query in connection.queries:
+            print(f"{connection.alias}: {query['sql']}")
+```
+
+Ahora todo el SQL ejecutado durante las pruebas se imprimirá en stdout. Se recomienda
+acotar la salida usando el selector `-k` de pytest. Ten en cuenta también que
+debes pasar `-s` para ver stdout.
+
+<div id="silo-modes">
+  ### Modos de silo
+</div>
+
+La suite de pruebas reconoce los [modos de silo](/es/architecture/#silo-modes) y, de forma predeterminada, las pruebas se ejecutan en el modo `REGION`. Para que las pruebas se ejecuten en modo `CONTROL`, puedes usar la anotación `control_silo_test`. Para que las pruebas se ejecuten en todos los modos de silo, puedes usar `all_silo_test`:
+
+```python
+from sentry.testutils.silo import all_silo_test, control_silo_test
+
+@control_silo_test
+class UserDetailsTest(TestCase):
+    ...
+
+@all_silo_test
+class AllSiloUserDetailsTest(TestCase):
+    ...
+```
+
+A menudo necesitarás crear o actualizar registros de usuario al escribir pruebas para el código de silos por región. Si usas el modelo de usuario directamente, te encontrarás con errores relacionados con límites de silo incorrectos. Para evitar esos errores, puedes cambiar temporalmente la asignación del silo actual.
+
+```python
+from sentry.silo import SiloMode
+from sentry.testutils.silo import assume_test_silo_mode_of
+
+with assume_test_silo_mode_of(UserOption):
+    UserOption.objects.clear_local_cache()
+```
+
+La función `assume_test_silo_mode_of(model)` cambiará temporalmente el modo de silo activo para que coincida con el modo de silo del modelo indicado. Si deseas especificar explícitamente el modo de silo, puedes usar `assume_test_silo_mode(SiloMode.CONTROL)` para cambiar al modo control.
+
+<div id="flushing-outbox-messages">
+  ### Vaciado de mensajes de la bandeja de salida
+</div>
+
+En las pruebas, si creas o actualizas registros que usan mensajes asíncronos de la bandeja de salida, puedes forzar su entrega y procesamiento en las pruebas usando `outbox_runner`:
+
+```python
+from sentry.testutils.outbox import outbox_runner
+
+with outbox_runner():
+    member = OrganizationMember(
+        organization=self.organization,
+        email="foo@example.com"
+    )
+    member.token = member.generate_token()
+    member.save()
+```
+
+El código anterior actualizará a un miembro y vaciará los mensajes relevantes del outbox para su entrega, sincronizando los datos en las tablas del silo de control. También puedes usar `outbox_runner` de forma independiente para vaciar el estado basado en outbox, como los registros de auditoría:
+
+```python
+response = self.get_success_response(
+    self.project.organization.slug, self.project.slug, status_code=302
+)
+# Vaciar bandejas de salida para registros de auditoría
+with outbox_runner():
+    pass
+
+with assume_test_silo_mode_of(AuditLogEntry):
+    assert (
+        AuditLogEntry.objects.get(
+            organization_id=self.project.organization_id,
+            event=audit_log.get_event_id("PROJECT_EDIT"),
+        ).data.get("old_slug")
+        == self.project.slug
+    )
+```
+
+<div id="transaction-safety">
+  ### Seguridad de las transacciones
+</div>
+
+De forma predeterminada, la suite de pruebas valida algunas restricciones de seguridad y consistencia de datos. Las operaciones no permitidas son:
+
+1. Las transacciones no pueden abarcar varias conexiones de base de datos. No permitimos que una transacción incluya cambios en una conexión de base de datos distinta. Por ejemplo, un modelo en las conexiones `default` y `crons` no puede participar en la misma transacción.
+2. Las transacciones no pueden incluir llamadas RPC. Dado que las llamadas RPC pueden atravesar la red, no pueden formar parte de una transacción.
+3. Cualquier modelo que use outboxes no puede modificarse con `QuerySet.update()` ni con otras operaciones de actualización que no generen outboxes.
+
+<div id="disabling-transaction-safety">
+  ### Desactivar la seguridad de transacciones
+</div>
+
+Si bien las herramientas de seguridad de transacciones ofrecen una buena base, hay escenarios en los que necesitamos omitir estas verificaciones. Un ejemplo es realizar una llamada RPC de solo lectura dentro de una transacción o modificar un registro para reproducir estados no válidos.
+Para omitir una verificación de consistencia del outbox, usa `unguarded_write`:
+
+```python
+from sentry.silo import unguarded_write
+
+with unguarded_write(using=router.db_for_write(User)):
+    user.update(name="sara")
+
+```
+
+Para omitir la verificación de RPC dentro de una transacción, usa `in_test_hide_transaction_boundary`:
+
+```python
+from sentry.db.postgres.transactions import in_test_hide_transaction_boundary
+
+with in_test_hide_transaction_boundary():
+    users = user_service.get_many(filter={"user_ids": list(owners)})
+```
+
+<Alert type="warning">
+  No se recomienda omitir las comprobaciones de seguridad y su uso puede causar problemas de consistencia
+  y pérdida de datos.
+</Alert>
+
+<div id="acceptance-tests">
+  ## Pruebas de aceptación
+</div>
+
+Nuestras pruebas de aceptación utilizan Selenium y ChromeDriver para simular a un usuario usando la
+aplicación de front-end y toda la pila de backend. En Sentry usamos las pruebas de aceptación con dos objetivos:
+
+1. Cubrir flujos de trabajo que no se pueden cubrir solo con pruebas de endpoints o únicamente con Jest.
+2. Preparar capturas para pruebas de regresión visual mediante nuestras
+   GitHub Actions de regresión visual.
+
+Las pruebas de aceptación se encuentran en `tests/acceptance` y se ejecutan localmente con `pytest`.
+
+<div id="running-acceptance-tests">
+  ### Ejecución de pruebas de aceptación
+</div>
+
+Al ejecutar las pruebas de aceptación, webpack se ejecutará automáticamente para compilar los recursos estáticos.
+Si modificas archivos JavaScript mientras creas o editas pruebas de aceptación, deberás ejecutar
+`rm .webpack.meta` después de cada cambio para forzar la reconstrucción de los recursos estáticos.
+
+```shell
+# Ejecuta una sola prueba de aceptación.
+pytest tests/acceptance/test_organization_group_index.py \
+    -k test_with_onboarding
+
+# Ejecuta el navegador con interfaz visible para poder verlo.
+pytest tests/acceptance/test_organization_group_index.py \
+    --no-headless=true \
+    -k test_with_onboarding
+
+# Ejecuta el navegador con una red artificialmente lenta (útil para depurar
+# pruebas inestables).
+pytest tests/acceptance/test_organization_group_index.py \
+    --no-headless=true \
+    --slow-network=true \
+    -k test_with_onboarding
+
+# Abre cada imagen de la captura
+SENTRY_SCREENSHOT=1 VISUAL_SNAPSHOT_ENABLE=1 \
+    pytest tests/acceptance/test_organization_group_index.py \
+    -k test_with_onboarding
+```
+
+<Alert title="¡Consejo!">
+  Si ves `WARNING: Failed to gather log types: Message: unknown command:
+        Cannot call non W3C standard command while in W3C mode`, significa que `Webpack` no compiló correctamente los recursos.
+</Alert>
+
+<div id="locating-elements">
+  ### Ubicación de elementos
+</div>
+
+Como usamos Emotion, nuestros nombres de clase por lo general no sirven para la automatización del navegador. En su lugar, utilizamos ampliamente atributos `data-test-id` para definir puntos de anclaje para la automatización del navegador y pruebas de Jest.
+
+<div id="dealing-with-asynchronous-actions">
+  ### Gestión de acciones asíncronas
+</div>
+
+Todos nuestros datos se cargan de forma asíncrona en el frontend, y las pruebas de aceptación deben tener en cuenta
+las distintas latencias y tiempos de respuesta. Preferimos usar las funciones `wait_until*` de Selenium para consultar el DOM
+hasta que los elementos estén presentes o visibles. No usamos `sleep()`.
+
+<div id="dealing-with-always-changing-data">
+  #### Cómo manejar datos que cambian constantemente
+</div>
+
+Como la regresión visual compara capturas de imágenes y una parte importante de
+nuestros datos corresponde a series temporales, a menudo necesitamos sustituir el contenido basado en el tiempo
+por datos “fijos”. Puedes usar el helper `getDynamicText` para proporcionar contenido fijo
+para componentes o datos que dependen de la hora actual o varían con demasiada
+frecuencia como para incluirse en una captura visual.
+
+<div id="jest-tests">
+  ## Pruebas con Jest
+</div>
+
+Nuestra suite de Jest incluye pruebas funcionales y unitarias para componentes de frontend. Preferimos escribir pruebas funcionales
+que interactúen con los componentes y observen los resultados (navegación, llamadas a la API) en lugar de comprobar el paso de props y las mutaciones de estado.
+Consulta el [Frontend Handbook](/es/frontend/#testing) para más consejos sobre pruebas con Jest.
+
+```shell
+# Ejecutar jest en modo interactivo
+pnpm test
+
+# Ejecutar una sola prueba
+pnpm test tests/js/spec/views/issueList/overview.spec.js
+```
+
+<div id="api-fixtures">
+  ### Fixtures de API
+</div>
+
+Como nuestras pruebas de Jest se ejecutan sin una API, contamos con una variedad de generadores de fixtures para ayudar a crear
+cargas de respuesta de la API. Se pueden importar con el alias `sentry-fixture/*`. Puedes crear nuevas fixtures
+en `sentry/fixtures/js-stubs/`.
+
+También deberías usar `MockApiClient.addMockResponse()` para definir las respuestas de las llamadas a la API que harán tus componentes. No simular un endpoint hará que las pruebas fallen.

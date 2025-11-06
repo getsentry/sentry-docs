@@ -1,0 +1,211 @@
+---
+title: Habilitar commits sospechosos y enlace de trazas de pila
+sidebar_order: 5
+description: >-
+  Aprende a integrar tu código fuente con Sentry para que Sentry pueda
+  rastrear commits y mostrar commits sospechosos y sugerir responsables, lo que
+  te ayudará a resolver problemas más rápido.
+og_image: /og-images/product-sentry-basics-integrate-frontend-configure-scms.png
+---
+
+<Include name="only-error-issues-note.mdx" />
+
+Sentry utiliza metadatos de los commits de tus repositorios de código para ayudarte a resolver problemas más rápido. Esto se hace sugiriendo *commits sospechosos* que podrían haber introducido un error directamente en la página de **Detalles de la incidencia**. También permite que Sentry muestre *responsables sugeridos* — la lista de autores de esos commits — y proponga asignarlos para resolver la incidencia.
+
+Ahora que has creado una versión, puedes indicarle a Sentry qué commits están asociados con esta última versión de tu código; a esto se le llama *seguimiento de commits*.
+
+<div id="1-integrate-your-github-account-and-repository">
+  ## 1. Integra tu cuenta y repositorio de GitHub
+</div>
+
+Usa la integración de GitHub de Sentry para vincular tu repositorio de código fuente a tu proyecto de Sentry. Esto permite que Sentry use los metadatos de los commits para ayudarte a agilizar la gestión de issues.
+
+1. Para integrar GitHub con tu organización de Sentry, sigue las [instrucciones para instalar la integración de GitHub](/es/organization/integrations/source-code-mgmt/github/#install). Asegúrate de concederle a la integración acceso al repositorio adecuado; en este caso, al repositorio `frontend-tutorial` que bifurcaste.
+
+   Después de agregar la integración, deberías ser redirigido a una página que muestre tus repositorios de GitHub en Sentry. Verifica que se hayan agregado los repos correctos.
+
+2. Ve a la pestaña &quot;Code Mappings&quot;.
+
+3. Haz clic en &quot;Add Code Mapping&quot;.
+
+4. Completa la información solicitada para agregar una asignación de código entre tu proyecto de Sentry y la rama `main` o `master` del repositorio `frontend-tutorial`. Indícale a Sentry que tus componentes están en el directorio `src/`:
+
+   ![Add code mapping](./img/configure-scms-09.png)
+
+<div id="ui-walkthrough">
+  ### Recorrido por la interfaz
+</div>
+
+Sigue la demostración interactiva a continuación para ver cómo integrar tu cuenta y tu repositorio de GitHub.
+
+<Arcade src="https://demo.arcade.software/OlEYtzImezSBwsV8SVc8?embed" />
+
+<div id="2-set-up-commit-tracking">
+  ## 2. Configura el seguimiento de commits
+</div>
+
+Una *release* es una versión de tu código desplegada en un entorno. Consulta la documentación de [Releases](/es/product/releases/) para obtener más información. Sentry usa las releases para vincular tus source maps y tu código fuente. Las releases también pueden usarse para habilitar la función [Suspect Commits](/es/product/issues/suspect-commits/) de Sentry.
+
+El plugin de webpack de Sentry puede configurar automáticamente la información de la release y enviarla a Sentry cuando generas una nueva build de tu proyecto. Activemos esta función.
+
+1. Vuelve a tu proyecto `frontend-tutorial` y detenlo con `Ctrl + C`.
+
+2. Crea un token de autenticación de Sentry:
+
+   <OrgAuthTokenNote />
+
+   ```bash {filename:.env}
+   SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+   ```
+
+   Necesitarás pasar tu token de autenticación al comando de build más adelante. Recomendamos guardarlo en una variable de entorno. Los tokens de autenticación deben mantenerse siempre en secreto, así que evita almacenarlo en tu control de versiones.
+
+3. Para empezar a asociar commits y releases, agrega las siguientes líneas de código a `webpack.config.js` en la configuración del plugin de webpack de Sentry:
+
+   ```javascript {filename:webpack.config.js}
+      sentryWebpackPlugin({
+         org: "___ORG_SLUG___",
+         project: "___PROJECT_SLUG___",
+         authToken: process.env.SENTRY_AUTH_TOKEN,
+
+         // Enable automatically creating releases and associating commits
+         release: {
+           create: true,
+           setCommits: {
+              auto: true,
+           },
+         },
+      }),
+   ```
+
+4. Guarda el archivo.
+
+<div id="3-create-a-new-error-and-commit">
+  ## 3. Crear un nuevo error y hacer commit
+</div>
+
+Ahora que las releases están configuradas para rastrear commits, ajusta el error y crea un nuevo commit para comprobar que esto funciona.
+
+1. En `src/components/App.js`, edita la línea 97. Esto garantizará que Sentry reconozca un nuevo error que pueda asociar con la release que crearás.
+
+   ```javascript {filename:src/components/App.js}
+   this.myCodeIsMorePerfect();
+   ```
+
+2. Guarda el archivo.
+
+3. Añade todos tus cambios a git con:
+
+   ```bash
+   git commit -am 'Added a new error and some other stuff'
+   git push
+   ```
+
+4. Crea otra compilación de producción. Durante este proceso, el plugin de webpack creará una nueva release y asociará tu commit con esa release.
+
+   ```bash
+   npm run build
+   ```
+
+5. Ejecuta tu compilación de producción:
+
+   ```bash
+   npx serve build
+   ```
+
+6. Crea un nuevo issue para Sentry generando otro error en tu app. Abre la URL en la que se está ejecutando tu app, añade productos a tu carrito y haz clic en “Checkout”. Pronto deberías ver un nuevo issue en Sentry.
+
+<div id="4-verify-suspect-commits-and-suggested-assignees">
+  ## 4. Verifica los commits sospechosos y los asignados sugeridos
+</div>
+
+Ahora los commits sospechosos y los asignados sugeridos deberían empezar a aparecer en la página de **Detalles del issue**. Sentry los determina usando los archivos observados en la traza de pila, los autores de esos archivos y las reglas de propiedad.
+
+1. Revisa tu correo electrónico para ver la alerta sobre el nuevo error. Observa que se ha añadido una nueva sección &quot;Suspect Commits&quot; al correo.
+
+   ![Correo de Suspect Commits](./img/issue_email_suspect_commits.png)
+
+2. Haz clic en &quot;View on Sentry&quot; para abrir la página de **Detalles del issue**.
+
+3. Verifica que la sección &quot;Suspect Commits&quot; ahora apunte al commit sospechoso que probablemente introdujo el error. Puedes hacer clic en el enlace del commit para ver los detalles del commit en GitHub.
+
+4. En el panel derecho, haz clic en &quot;Assigned To&quot; para abrir el menú desplegable y ver los asignados sugeridos. Verás que el autor del commit sospechoso aparece como asignado sugerido para este issue.
+
+   ![Asignados sugeridos](./img/suggested_assignees.png)
+
+   Puedes asignar el issue al asignado sugerido haciendo clic en su correo electrónico. Alternativamente, puedes elegir asignar el issue a otros usuarios o equipos asociados con el proyecto.
+
+<div id="ui-walkthrough">
+  ### Recorrido por la interfaz
+</div>
+
+La siguiente demostración interactiva muestra cómo ver commits sospechosos y responsables sugeridos para un issue.
+
+<Arcade src="https://demo.arcade.software/XIrI8grPiEtHHSfCpCOt?embed" />
+
+<div id="5-verify-release-configuration">
+  ## 5. Verificar la configuración de la versión
+</div>
+
+Verifica que las versiones se hayan configurado correctamente.
+
+1. En la sección &quot;Tags&quot; del panel principal, busca la etiqueta `release` y pasa el cursor sobre el enlace del ID de la versión. Deberías ver en la ventana emergente que la versión ahora incluye datos de commits.
+
+2. Haz clic en el enlace del ID de la versión para abrir la página **Detalles de la versión**.
+
+3. Selecciona la pestaña &quot;Commits&quot;. Observa que la versión ahora incluye la lista de commits asociada.
+
+<div id="ui-walkthrough">
+  ### Recorrido por la interfaz
+</div>
+
+La demo interactiva a continuación muestra cómo ver los commits asociados a la versión.
+
+<Arcade src="https://demo.arcade.software/9MPvlig6reJdsDgm9TDZ?embed" />
+
+<div id="6-use-stack-trace-links">
+  ## 6. Usa enlaces de stack trace
+</div>
+
+Los enlaces de stack trace te permiten pasar de un stack trace en [sentry.io](https://sentry.io) al archivo correspondiente en tu proveedor de código. Esto se logra haciendo coincidir la ruta del archivo en el stack trace con la ruta del archivo en tu proveedor de código.
+
+1. Ve a la página de **Detalles del issue** del error que generaste en el paso anterior.
+
+2. Haz clic en &quot;Dinos dónde está tu código fuente&quot; para que Sentry pueda verificar tu mapeo de código.
+
+3. En la ventana emergente, verifica o introduce la ruta del archivo y la URL correcta de GitHub.
+
+4. Haz clic en &quot;Guardar&quot;. Ahora deberías ver que el stack trace está vinculado al archivo de código en GitHub.
+
+5. Haz clic en &quot;Abrir esta línea en GitHub&quot; para ir directamente a la línea de código que provoca el error.
+
+<div id="ui-walkthrough">
+  ### Recorrido por la interfaz
+</div>
+
+La demostración interactiva a continuación explica cómo configurar y ver los enlaces de trazas de pila en la interfaz.
+
+<Arcade src="https://demo.arcade.software/gfwrOiPMJ0lxasNIvJI3?embed" />
+
+<div id="more-information">
+  ## Más información
+</div>
+
+Con GitHub integrado y tus versiones vinculadas a tu código fuente y commits, puedes usar los commits sospechosos de Sentry, los responsables sugeridos y los enlaces a rastros de pila para ayudarte a priorizar y resolver problemas más rápido. Para obtener más información sobre cómo sacar el máximo provecho de las versiones e integraciones, consulta estos recursos:
+
+* [Crear versión y asociar commits](/es/product/releases/setup/)
+* [Integraciones globales](/es/organization/integrations/)
+
+<div id="next-steps">
+  ## Próximos pasos
+</div>
+
+Ahora deberías tener la supervisión de errores de Sentry configurada, con source maps y commits sospechosos en funcionamiento.
+
+Además de la supervisión de errores, Sentry ofrece otras funciones para ayudarte a detectar y solucionar problemas en tus aplicaciones, como:
+
+* [Session Replay](/es/product/explore/session-replay/) para ver una reproducción tipo vídeo de las sesiones de tus usuarios cuando se producen errores.
+* [Insights](/es/product/insights/) para hacer un seguimiento del rendimiento de la aplicación y de los errores en todos los servicios.
+* [Profiling](/es/product/explore/profiling/) para obtener una visibilidad más profunda sobre el trazado tradicional.
+
+Además, [Codecov](https://docs.codecov.com/docs) te ofrece informes automatizados de cobertura de código como parte de tu CI/CD.

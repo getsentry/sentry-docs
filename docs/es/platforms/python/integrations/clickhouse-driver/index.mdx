@@ -1,0 +1,64 @@
+---
+title: clickhouse-driver
+description: "Obtén información sobre cómo importar la integración de clickhouse-driver y cómo captura las consultas de clickhouse-driver como breadcrumbs."
+---
+
+La integración de clickhouse-driver captura las consultas de
+[clickhouse-driver](https://github.com/mymarilyn/clickhouse-driver) como breadcrumbs y spans.
+La integración está disponible para clickhouse-driver 0.2.0 o versiones posteriores.
+
+<div id="install">
+  ## Instalación
+</div>
+
+Instala `sentry-sdk` con el extra `clickhouse-driver`.
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[clickhouse-driver]"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk[clickhouse-driver]"
+```
+
+
+<div id="configure">
+  ## Configurar
+</div>
+
+Si tienes el paquete `clickhouse-driver` en tus dependencias, la integración de clickhouse-driver se habilitará automáticamente al inicializar el SDK de Sentry.
+
+<PlatformContent includePath="getting-started-config" />
+
+De forma predeterminada, no se recuperan los parámetros de la consulta. Para verlos en Sentry, habilita `send_default_pii`. Consulta <PlatformLink to="/configuration/options/#send-default-pii">Opciones básicas</PlatformLink> para más detalles.
+
+<div id="verify">
+  ## Verifica
+</div>
+
+```python
+from clickhouse_driver import Client
+
+def main():
+    sentry_init(...)  # mismo que arriba
+
+    with sentry_sdk.start_transaction(name="testing_sentry"):
+        client = Client(host=DATABASE_HOST)
+        client.execute("DROP TABLE IF EXISTS sentry_test")
+        client.execute("CREATE TABLE sentry_test (x Int32) ENGINE = Memory")
+        client.execute("INSERT INTO sentry_test (x) VALUES", [{"x": 100}])
+
+main()
+```
+
+Esto creará una transacción llamada `testing_sentry` en la sección Performance de [sentry.io](https://sentry.io) y generará spans para las operaciones de base de datos.
+
+Los datos pueden tardar unos instantes en aparecer en [sentry.io](https://sentry.io).
+
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+- clickhouse-driver >= 0.2.0
+- Python >= 3.8

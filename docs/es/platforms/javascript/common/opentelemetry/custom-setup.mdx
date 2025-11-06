@@ -1,0 +1,178 @@
+---
+title: Usa tu configuración existente de OpenTelemetry
+description: "Aprende a usar tu configuración personalizada existente de OpenTelemetry con Sentry."
+supported:
+  - javascript.nextjs
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.bun
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.astro
+  - javascript.remix
+  - javascript.react-router
+  - javascript.tanstackstart-react
+notSupported:
+  - javascript
+sidebar_order: 0
+---
+
+<Alert>
+
+Usa esta guía cuando ya tengas una configuración de OpenTelemetry completamente personalizada o cuando planees añadir una configuración personalizada de OpenTelemetry junto con el SDK de Sentry.
+
+Si lo que buscas es simplemente añadir instrumentación individual de OpenTelemetry a tu configuración de Sentry, lee mejor <PlatformLink to="/opentelemetry/using-opentelemetry-apis/#adding-additional-opentelemetry-instrumentation">Cómo añadir instrumentación adicional de OpenTelemetry</PlatformLink>.
+
+</Alert>
+
+<PlatformContent includePath="performance/opentelemetry-setup" />
+
+<div id="using-sentry-for-error-monitoring-only">
+  ## Uso de Sentry solo para el monitoreo de errores
+</div>
+
+Si tienes una configuración personalizada de OpenTelemetry y solo quieres usar Sentry para el monitoreo de errores, puedes omitir agregar `SentrySpanProcessor`. Aun así, deberás agregar `SentryContextManager`, `SentryPropagator` y `SentrySampler` a tu configuración, incluso si no quieres enviar ningún dato de trazas a Sentry. Sigue leyendo para saber por qué esto es necesario.
+
+Para que el SDK de Sentry funcione como se espera y esté sincronizado con OpenTelemetry, necesitamos que algunos componentes estén presentes.
+
+**Componentes necesarios para que Sentry funcione correctamente:**
+
+- **SentryContextManager**: Garantiza que el contexto de OpenTelemetry esté sincronizado con Sentry, por ejemplo, para aislar correctamente los datos entre solicitudes simultáneas.
+- **SentrySampler**: Garantiza que se respete el `tracesSampleRate` de Sentry. Incluso si no usas Sentry para trazas, igual necesitarás esto para que la propagación de trazas funcione como se espera. Lee [Uso de un muestreador personalizado](./#using-a-custom-sampler) si quieres usar un muestreador personalizado.
+- **SentryPropagator**: Garantiza que la propagación de trazas funcione correctamente.
+- [Instrumentación requerida](./#required-instrumentation): Garantiza que la propagación de trazas funcione correctamente.
+
+**Componentes adicionales necesarios para usar también Sentry para trazas:**
+
+- **SentrySpanProcessor**: Garantiza que los spans se envíen correctamente a Sentry.
+
+<Alert>
+  Se necesita la propagación de trazas para que Sentry conecte automáticamente los servicios
+  entre sí. (Por ejemplo, si quieres conectar el frontend y el backend, o
+  diferentes servicios de backend). Esto hace posible ver errores relacionados
+  entre servicios.{" "}
+  <PlatformLink to="/tracing/trace-propagation">
+    Más información sobre la propagación de trazas.
+  </PlatformLink>
+</Alert>
+
+El siguiente fragmento de código muestra cómo configurar Sentry solo para el monitoreo de errores:
+
+<PlatformContent includePath="performance/opentelemetry-setup/error-monitoring-only" />
+
+<div id="required-instrumentation">
+  ## Instrumentación requerida
+</div>
+
+De forma predeterminada, Sentry registrará la instrumentación de OpenTelemetry para capturar automáticamente spans de trazas que abarcan solicitudes HTTP entrantes y salientes, consultas a bases de datos y más.
+
+Si el tracing no está habilitado (no se define `tracesSampleRate` en la configuración del SDK), solo se registrará una cantidad mínima de instrumentación de OpenTelemetry. Esto incluye lo siguiente:
+
+{/* prettier-ignore-start */}
+
+* Una instrumentación HTTP específica de Sentry que gestiona el aislamiento de solicitudes y la propagación de trazas. Puede funcionar en paralelo con [@opentelemetry/instrumentation-http](https://www.npmjs.com/package/@opentelemetry/instrumentation-http), si la registras.
+* <PlatformLink to="/configuration/integrations/nodefetch/">nativeNodeFetchIntegration</PlatformLink> registra [opentelemetry-instrumentation-fetch-node](https://www.npmjs.com/package/opentelemetry-instrumentation-fetch-node), necesaria para la propagación de trazas.
+
+{/* prettier-ignore-end */}
+
+<PlatformSection notSupported={["javascript.aws-lambda", "javascript.gcp-functions"]}>
+  <Alert>
+    Si el tracing no está habilitado, las instrumentaciones de rendimiento no se
+    registrarán, pero aun así se incluirán en el bundle. Si quieres
+    reducir el tamaño del bundle o las dependencias usadas, también puedes{" "}
+
+    <PlatformLink to="/configuration/tree-shaking/#setting-up-sentry-without-performance-integrations">
+      Configurar Sentry sin integraciones de rendimiento
+    </PlatformLink>
+  </Alert>
+</PlatformSection>
+
+Estas son necesarias para asegurarte de que la propagación de trazas funcione correctamente.
+
+Si quieres añadir tu propia instrumentación de http/node-fetch, debes seguir estos pasos:
+
+
+<div id="custom-http-instrumentation">
+  ### Instrumentación HTTP personalizada
+</div>
+
+_Disponible desde la versión 8.35.0 del SDK_
+
+Puedes agregar tu propia instancia de `@opentelemetry/instrumentation-http` en tu configuración de OpenTelemetry. Sin embargo, en este caso debes desactivar la creación de spans en la `httpIntegration` de Sentry:
+
+<PlatformSection notSupported={["javascript.bun"]}>
+  ```javascript
+  const sentryClient = Sentry.init({
+  dsn: "___DSN___",
+  skipOpenTelemetrySetup: true,
+  integrations: [Sentry.httpIntegration({ spans: false })],
+});
+  ```
+</PlatformSection>
+
+<PlatformSection supported={["javascript.bun"]}>
+```javascript
+  const sentryClient = Sentry.init({
+  dsn: "___DSN___",
+  skipOpenTelemetrySetup: true,
+  integrations: (integrations) =>
+  // También filtra la integración BunServer para evitar emitir spans duplicados desde Sentry y tu instrumentación de OTel personalizada
+  integrations.filter((i) => i.name !== "BunServer")
+});
+```
+</PlatformSection>
+
+Es importante que `httpIntegration` siga registrada de esta manera para garantizar que el SDK de Sentry pueda aislar correctamente las solicitudes, por ejemplo, al capturar errores.
+
+<div id="custom-node-fetch-instrumentation">
+  ### Instrumentación personalizada de Node Fetch
+</div>
+
+Si el tracing está deshabilitado, la instrumentación de Node Fetch no emitirá spans. En este escenario, solo inyectará encabezados de propagación de trazas específicos de Sentry. Puedes agregar tu propia instrumentación de Node Fetch además de esta, la cual puede emitir spans según prefieras.
+
+<div id="using-a-custom-sampler">
+  ## Uso de un muestreador personalizado
+</div>
+
+Si bien puedes usar tu propio muestreador, te recomendamos usar `SentrySampler`. Esto garantizará que se envíe a Sentry el subconjunto correcto de trazas según tu `tracesSampleRate`. También asegurará que todas las demás funciones de Sentry, como la propagación de trazas, funcionen como se espera. Si necesitas usar tu propio muestreador, asegúrate de envolver tu `SamplingResult` con nuestro método `wrapSamplingDecision`, como en el siguiente ejemplo:
+
+<PlatformContent includePath="performance/opentelemetry-setup/with-custom-sampler" />
+
+<Alert title="¿Por qué se recomienda registrar tú mismo los loader hooks?">
+
+Se recomienda registrar tus propios loader hooks de ESM cuando tienes una configuración de OpenTelemetry completamente personalizada, ante todo porque tiene más sentido desde el punto de vista arquitectónico.
+Probablemente te tomaste el trabajo de configurar OpenTelemetry por separado y ahora quieres añadir Sentry a tu aplicación sin interferir con tu configuración de OpenTelemetry.
+
+Además, hay algunas dificultades que pueden evitarse fácilmente registrando tus propios hooks:
+
+- Registrar loader hooks varias veces puede dar lugar a la creación de spans duplicados. [Más detalles.](https://github.com/getsentry/sentry-javascript/issues/14065#issuecomment-2435546961)
+- La instrumentación de OpenTelemetry en ESM es muy sensible a _cuándo_ se agrega en relación con _cuándo_ se registran los loader hooks.
+  El control sobre esto debería permanecer en manos del responsable de la configuración de OpenTelemetry y no del SDK de Sentry.
+
+</Alert>
+
+<PlatformSection
+  notSupported={[
+    "javascript.nextjs",
+    "javascript.aws-lambda",
+    "javascript.nuxt",
+    "javascript.solidstart",
+    "javascript.tanstackstart-react",
+  ]}
+>
+  <PlatformCategorySection supported={["server", "serverles"]}>
+    <PlatformLink to="/install">
+      Obtén más información sobre los métodos de instalación de ESM.
+    </PlatformLink>
+  </PlatformCategorySection>
+</PlatformSection>

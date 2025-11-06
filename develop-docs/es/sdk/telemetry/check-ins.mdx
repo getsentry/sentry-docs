@@ -1,0 +1,175 @@
+---
+title: Registro de check-ins
+sidebar_order: 1
+---
+
+<div id="cron-monitor-check-in-payload">
+  ## Carga útil de check-in del monitor cron
+</div>
+
+Un check-in es un elemento en un sobre llamado `check_in`. Consta de una carga útil JSON que luce aproximadamente así:
+
+```json
+{
+  "check_in_id": "83a7c03ed0a04e1b97e2e3b18d38f244",
+  "monitor_slug": "my-monitor",
+  "status": "en progreso",
+  "duration": 10.0,
+  "release": "1.0.0",
+  "environment": "producción",
+  "contexts": {
+    "trace": {
+      "trace_id": "8f431b7aa08441bbbd5a0100fd91f9fe"
+    }
+  }
+}
+```
+
+The following fields exist:
+
+`check_in_id`
+
+: **Cadena, obligatorio**. ID de check-in (único y generado por el cliente).
+
+This may be provided as a empty UUID (128 bit zero value) to indicate to
+Sentry that the checkin should update the most recent &quot;in&#95;progress&quot; check-in.
+If the most recent check-in is not in progress a new one will be created
+instead.
+
+`monitor_slug`
+
+: **Cadena, obligatorio**. El slug distintivo del monitor.
+
+`status`
+
+: **Cadena, obligatorio**. El estado del check-in. Puede ser uno de los siguientes:
+
+* `in_progress`: El check-in ha comenzado.
+  * `ok`: El check-in se ha completado correctamente.
+  * `error`: El check-in ha fallado.
+
+`duration`
+
+: *Número, opcional*. La duración del check-in en segundos. Solo tendrá efecto si el
+estado es `ok` o `error`.
+
+`release`
+
+: *Cadena, opcional*. La release.
+
+`environment`
+
+: *Cadena, opcional*. El entorno.
+
+`monitor_config`
+
+: *Objeto, opcional*. Una configuración de monitor (definida abajo) que se almacena con el
+check-in para verificar el estado del monitor en el momento del check-in.
+
+`contexts`
+
+: *Objeto, opcional*. Un diccionario de información contextual sobre el entorno que ejecuta
+el check-in. Por ahora solo admitimos el [trace context](/es/sdk/data-model/event-payloads/contexts/#trace-context)
+y usamos el `trace_id` para vincular check-ins con errores asociados.
+
+<div id="monitor-upsert-support">
+  ## Compatibilidad con upsert de monitores
+</div>
+
+Además de enviar los detalles del check-in, el SDK también puede proporcionar la
+configuración del monitor, lo que permite crear o actualizar monitores al enviar
+check-ins.
+
+```json
+{
+  "check_in_id": "83a7c03ed0a04e1b97e2e3b18d38f244",
+  "monitor_slug": "b7645b8e-b47d-4398-be9a-d16b0dac31cb",
+  "status": "en_progreso",
+  "monitor_config": {
+    "schedule": {
+      "type": "crontab",
+      "value": "0 * * * *"
+    },
+    "checkin_margin": 5,
+    "max_runtime": 30,
+    "failure_issue_threshold": 2,
+    "recovery_threshold": 2,
+    "timezone": "America/Los_Angeles",
+    "owner": "user:john@example.com"
+  }
+}
+```
+
+Los siguientes campos existen bajo la clave `monitor_config`:
+
+`schedule`
+
+: **Objeto, obligatorio**. [Consulta la configuración de la programación](#schedule-configuration).
+
+`checkin_margin`
+
+: *Número, opcional*. El margen permitido, en minutos después de la hora de check-in esperada, durante el cual no se considerará que el monitor se ha omitido.
+
+`max_runtime`
+
+: *Número, opcional*. La duración permitida, en minutos, que el monitor
+puede estar `in_progress` antes de considerarse fallido por tiempo de espera.
+
+`failure_issue_threshold`
+
+: *Número, opcional*. La cantidad de check-ins fallidos consecutivos necesarias
+antes de que se cree un issue.
+
+`recovery_threshold`
+
+: *Número, opcional*. La cantidad de check-ins correctos consecutivos necesarias
+antes de que se resuelva un issue.
+
+`timezone`
+
+: *String, opcional*. Una cadena de la [`base de datos tz`](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
+que representa la zona horaria en la que se ejecuta la programación del monitor.
+
+`owner`
+
+: *String, opcional*. Una cadena identificadora de actor. Tiene este formato:
+`user:john@example.com` `team:a-sentry-team`. También se pueden usar IDs, pero
+resultará en una mala DX.
+
+<div id="schedule-configuration">
+  ### Configuración de programación
+</div>
+
+<Alert>
+  Este formato de configuración difiere ligeramente del que aceptan las API de frontend de monitors.
+</Alert>
+
+`type`
+
+: **String, obligatorio**. Puede ser `crontab` o `interval`.
+
+<div id="using-crontab">
+  #### Uso de `crontab`
+</div>
+
+`value`
+
+: **Cadena, obligatorio**. La cadena de programación de crontab, p. ej., `0 * * * *`.
+
+<div id="using-interval">
+  #### Uso de `interval`
+</div>
+
+`value`
+
+: **Número, obligatorio**. El valor del intervalo.
+
+`unit`
+
+: **Cadena, obligatoria**. La unidad del intervalo. Debe ser una de: `year`, `month`, `week`, `day`, `hour`, `minute`.
+
+<div id="interaction-with-beforesend">
+  ## Interacción con `beforeSend`
+</div>
+
+Los eventos de check-in en el SDK **no** deben pasar por `beforeSend`. Los SDK pueden implementar opcionalmente un hook específico, `beforeSendCheckIn`, que solo se aplica a los eventos de check-in.

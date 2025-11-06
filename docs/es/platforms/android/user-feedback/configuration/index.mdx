@@ -1,0 +1,309 @@
+---
+title: Configurar comentarios de los usuarios
+sidebar_order: 6900
+description: "Obtén información sobre los campos generales de configuración de los comentarios de los usuarios."
+---
+
+<div id="user-feedback-widget">
+  ## Widget de comentarios de usuarios
+</div>
+
+El Widget de comentarios de usuarios ofrece muchas opciones de personalización y, si las disponibles no son suficientes, puedes [usar tu propia interfaz](#bring-your-own-widget).
+El widget consiste en un Button personalizado que abre el formulario y un AlertDialog personalizado que permite a los usuarios enviar comentarios.
+
+<div id="hooks">
+  ### Hooks
+</div>
+
+Hay hooks disponibles para que puedas reaccionar cuando el usuario abre o cierra el formulario, lo envía correctamente o se produce un error:
+
+| Hook              | Type                      | Description                                                              |
+| ----------------- | ------------------------- | ------------------------------------------------------------------------ |
+| `onFormOpen`      | `() -> Void`              | Se llama cuando se abre el formulario de feedback.                       |
+| `onFormClose`     | `() -> Void`              | Se llama cuando se cierra el formulario de feedback.                     |
+| `onSubmitSuccess` | `(Feedback) -> Void`      | Se llama cuando el feedback se envía correctamente mediante el formulario preparado. |
+| `onSubmitError`   | `(Feedback) -> Void`      | Se llama cuando ocurre un error al enviar feedback mediante el formulario preparado. |
+
+`onSubmitSuccess` y `onSubmitError` reenvían el objeto de feedback enviado, que contiene las siguientes propiedades:
+
+* `message`: El mensaje que el usuario ingresó en el formulario de feedback.
+* `name`: El nombre que el usuario ingresó en el formulario de feedback.
+* `contactEmail`: El correo electrónico que el usuario ingresó en el formulario de feedback.
+
+Ejemplo:
+
+```java
+SentryAndroid.init(context, options -> {
+    options.getFeedbackOptions().setOnFormOpen(() -> System.out.println("Formulario abierto"));
+    options.getFeedbackOptions().setOnFormClose(() -> System.out.println("Formulario cerrado"));
+    options.getFeedbackOptions().setOnSubmitSuccess((feedback) -> System.out.println("Feedback enviado correctamente: " + feedback.toString()));
+    options.getFeedbackOptions().setOnSubmitError((feedback) -> System.out.println("Error al enviar el feedback: " + feedback.toString()));
+});
+```
+
+```kotlin
+SentryAndroid.init(this) { options ->
+    options.feedbackOptions.onFormOpen = Runnable { println("Formulario abierto") }
+    options.feedbackOptions.onFormClose = Runnable { println("Formulario cerrado") }
+    options.feedbackOptions.onSubmitSuccess = SentryFeedbackOptions.SentryFeedbackCallback {
+        println("Comentarios enviados correctamente: $it")
+    }
+    options.feedbackOptions.onSubmitError = SentryFeedbackOptions.SentryFeedbackCallback {
+        println("Error al enviar los comentarios: $it")
+    }
+}
+```
+
+
+<div id="widget">
+  ### Widget
+</div>
+
+El widget es un botón personalizado que abre el formulario de comentarios. Como tal, puedes tratarlo como cualquier View y personalizarlo mediante sus atributos XML o de forma programática.
+Los atributos predeterminados del widget son:
+
+| Atributo                   | Valor predeterminado                        |
+| -------------------------- | ------------------------------------------- |
+| `android:drawablePadding`  | `4dp`                                       |
+| `android:drawableStart`    | `@drawable/baseline_campaign_24`            |
+| `android:textAllCaps`      | `false`                                     |
+| `android:background`       | `@drawable/oval_button_ripple_background`   |
+| `android:padding`          | `12dp`                                      |
+| `android:textColor`        | `?android:attr/colorForeground`             |
+| `android:text`             | `"Report a Bug"`                            |
+
+Ejemplo:
+
+```xml {filename:myLayout.xml}
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:orientation="vertical">
+
+    <io.sentry.android.core.SentryUserFeedbackButton
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"/>
+</LinearLayout>
+```
+
+```java
+import io.sentry.android.core.SentryUserFeedbackButton;
+
+SentryUserFeedbackButton widget = new SentryUserFeedbackButton(context);
+```
+
+```kotlin
+import io.sentry.android.core.SentryUserFeedbackButton
+
+val widget = SentryUserFeedbackButton(context)
+```
+
+
+<div id="form-configuration">
+  ### Configuración del formulario
+</div>
+
+Puedes personalizar qué elementos del formulario se muestran, si son obligatorios e incluso rellenar previamente cierta información, en `SentryOptions.SentryFeedbackOptions`:
+
+| Opción                        | Tipo     | Predeterminado                           | Descripción                                                                                                               |
+| ----------------------------- | -------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `showBranding`                | `Bool`   | `true`                                   | Muestra el logotipo de Sentry dentro del formulario                                                                       |
+| `isNameRequired`              | `Bool`   | `false`                                  | Obliga a completar el campo de nombre en el formulario de comentarios.                                                    |
+| `showName`                    | `Bool`   | `true`                                   | Muestra el campo de nombre en el formulario de comentarios. Se ignora si `isNameRequired` es `true`.                      |
+| `isEmailRequired`             | `Bool`   | `false`                                  | Obliga a completar el campo de correo electrónico en el formulario de comentarios.                                        |
+| `showEmail`                   | `Bool`   | `true`                                   | Muestra el campo de correo electrónico en el formulario de comentarios. Se ignora si `isEmailRequired` es `true`.         |
+| `useSentryUser`               | `Bool`   | `true`                                   | Rellena los campos `email` y `name` con los valores del usuario del SDK de Sentry establecidos mediante `SentrySDK.setUser`. |
+
+Ejemplo:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.feedback.is-name-required" android:value="true" />
+    <meta-data android:name="io.sentry.feedback.show-name" android:value="false" />
+    <meta-data android:name="io.sentry.feedback.is-email-required" android:value="false" />
+    <meta-data android:name="io.sentry.feedback.show-email" android:value="false" />
+    <meta-data android:name="io.sentry.feedback.use-sentry-user" android:value="false" />
+    <meta-data android:name="io.sentry.feedback.show-branding" android:value="false" />
+</application>
+```
+
+```java
+SentryAndroid.init(context, options -> {
+    options.getFeedbackOptions().setNameRequired(true);
+    options.getFeedbackOptions().setShowName(false);
+    options.getFeedbackOptions().setEmailRequired(true);
+    options.getFeedbackOptions().setShowEmail(false);
+    options.getFeedbackOptions().setUseSentryUser(false);
+    options.getFeedbackOptions().setShowBranding(false);
+});
+```
+
+```kotlin
+SentryAndroid.init(this) { options ->
+    options.feedbackOptions.isNameRequired = true
+    options.feedbackOptions.isShowName = false
+    options.feedbackOptions.isEmailRequired = true
+    options.feedbackOptions.isShowEmail = false
+    options.feedbackOptions.isUseSentryUser = false
+    options.feedbackOptions.isShowBranding = false
+}
+```
+
+
+<div id="form-label-customization">
+  ### Personalización de etiquetas del formulario
+</div>
+
+Puedes personalizar las etiquetas y los marcadores de posición del formulario.
+Nota: aquí no se admiten opciones del manifiesto por motivos de internacionalización:
+
+| Opción                        | Tipo     | Predeterminado                           | Descripción                                                                                                               |
+| ----------------------------- | -------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `formTitle`                   | `String` | `"Report a Bug"`                         | El título del formulario de comentarios.                                                                                  |
+| `messageLabel`                | `String` | `"Description"`                          | La etiqueta del campo de entrada para la descripción del comentario.                                                      |
+| `messagePlaceholder`          | `String` | `"What's the bug? What did you expect?"` | El marcador de posición del campo de descripción del comentario.                                                          |
+| `isRequiredLabel`             | `String` | `" (Required)"`                          | El texto que se añade a la etiqueta del título para indicar que un campo es obligatorio.                                  |
+| `successMessageText`          | `String` | `"Thank you for your report!"`           | El mensaje que se muestra tras enviar correctamente el comentario.                                                        |
+| `nameLabel`                   | `String` | `"Name"`                                 | La etiqueta junto al campo de entrada del nombre.                                                                         |
+| `namePlaceholder`             | `String` | `"Your Name"`                            | El marcador de posición del campo de nombre.                                                                              |
+| `emailLabel`                  | `String` | `"Email"`                                | La etiqueta junto al campo de entrada del correo electrónico.                                                             |
+| `emailPlaceholder`            | `String` | `"your.email@example.org"`               | El marcador de posición del campo de correo electrónico.                                                                  |
+| `submitButtonLabel`           | `String` | `"Send Bug Report"`                      | La etiqueta del botón de envío.                                                                                           |
+| `cancelButtonLabel`           | `String` | `"Cancel"`                               | La etiqueta del botón de cancelar.                                                                                        |
+
+Ejemplo:
+
+```java
+SentryAndroid.init(context, options -> {
+    options.getFeedbackOptions().setFormTitle("¡Queremos saber de ti!");
+    options.getFeedbackOptions().setMessageLabel("Comentarios");
+    options.getFeedbackOptions().setMessagePlaceholder("Escribe tus comentarios");
+    options.getFeedbackOptions().setIsRequiredLabel(" *");
+    options.getFeedbackOptions().setSuccessMessageText("¡Gracias por tus comentarios!");
+    options.getFeedbackOptions().setNameLabel("Nombre completo");
+    options.getFeedbackOptions().setNamePlaceholder("Escribe tu nombre completo");
+    options.getFeedbackOptions().setEmailLabel("Correo electrónico");
+    options.getFeedbackOptions().setEmailPlaceholder("Escribe tu correo electrónico");
+    options.getFeedbackOptions().setSubmitButtonLabel("Enviar");
+    options.getFeedbackOptions().setCancelButtonLabel("Atrás");
+});
+```
+
+```kotlin
+SentryAndroid.init(this) { options ->
+    options.feedbackOptions.formTitle = "¡Queremos saber de ti!"
+    options.feedbackOptions.messageLabel = "Comentarios"
+    options.feedbackOptions.messagePlaceholder = "Escribe tus comentarios"
+    options.feedbackOptions.isRequiredLabel = " *"
+    options.feedbackOptions.successMessageText = "¡Gracias por tus comentarios!"
+    options.feedbackOptions.nameLabel = "Nombre completo"
+    options.feedbackOptions.namePlaceholder = "Escribe tu nombre completo"
+    options.feedbackOptions.emailLabel = "Correo electrónico"
+    options.feedbackOptions.emailPlaceholder = "Escribe tu correo electrónico"
+    options.feedbackOptions.submitButtonLabel = "Enviar"
+    options.feedbackOptions.cancelButtonLabel = "Volver"
+}
+```
+
+
+<div id="theme-customization">
+  ### Personalización del tema
+</div>
+
+El formulario de comentarios de usuario se integra con el tema de la app de forma predeterminada y puede personalizarse mediante un estilo XML propio.
+Estos son los atributos que utiliza el formulario:
+
+| Atributo de estilo de Android     | Descripción                                                 |
+| --------------------------------- | ----------------------------------------------------------- |
+| `android:windowTitleStyle`        | Estilo del título del cuadro de diálogo de comentarios      |
+| `android:textColor`               | Color del título, del texto del botón Cancelar y de los textos no editables. |
+| `android:editTextColor`           | Color de los textos editables.                              |
+| `android:textColorHint`           | Color del texto de sugerencia de los campos editables.      |
+| `android:textColorPrimaryInverse` | Color del texto del botón Enviar.                           |
+| `android:colorPrimary`            | Color de fondo del botón Enviar.                            |
+| `android:colorBackground`         | Color de fondo del botón Cancelar.                          |
+| `android:colorForeground`         | Tinte de color del logotipo.                                |
+
+El tema que usa el formulario es el definido en el tema de la aplicación como `android:dialogTheme`.
+También puede definirse un tema personalizado al instanciarlo:
+
+```java
+SentryUserFeedbackDialog dialog = new SentryUserFeedbackDialog.Builder(context, R.style.MyAppDialogTheme).create();
+```
+
+```kotlin
+val dialog = SentryUserFeedbackDialog.Builder(context, R.style.MyAppDialogTheme).create()
+```
+
+Aquí tienes un ejemplo de cómo personalizar el formulario de comentarios:
+
+```xml {filename:styles.xml}
+<!-- Tema de la aplicación. -->
+<style name="MyAppTheme" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+  <!-- ... Personalizaciones del tema actual ... -->
+
+  <!-- Define un tema de diálogo si aún no está configurado. -->
+  <item name="android:dialogTheme">@style/MyAppDialogTheme</item>
+</style>
+
+<!-- Tema de diálogo de la aplicación. -->
+<style name="MyAppDialogTheme" parent="Theme.MaterialComponents.DayNight.Dialog">
+  <!-- Define el estilo del título del diálogo de comentarios. -->
+  <item name="android:windowTitleStyle">@style/FeedbackFormTitleStyle</item>
+
+  <!-- Define el color del título, texto del botón cancelar y textos no editables. -->
+  <item name="android:textColor">@color/colorPrimary</item>
+  <!-- Define el color de los textos editables. -->
+  <item name="android:editTextColor">@color/colorPrimaryDark</item>
+  <!-- Define el color de la sugerencia de los textos editables. -->
+  <item name="android:textColorHint">@color/colorPrimaryDark</item>
+  <!-- Define el color del texto del botón enviar. -->
+  <item name="android:textColorPrimaryInverse">@android:color/white</item>
+
+  <!-- Define el color de fondo del botón enviar. -->
+  <item name="android:colorPrimary">@color/colorPrimary</item>
+  <!-- Define el color de fondo del botón cancelar. -->
+  <item name="android:colorBackground">@android:color/black</item>
+  <!-- Define el tinte de color del logo. -->
+  <item name="android:colorForeground">@color/colorPrimary</item>
+</style>
+
+<style name="FeedbackFormTitleStyle">
+  <!-- Personaliza tu tema aquí. -->
+  <item name="android:textAppearance">@style/TextAppearance.AppCompat.Title</item>
+</style>
+```
+
+
+<div id="bring-your-own-widget">
+  ### Trae tu propio widget
+</div>
+
+También puedes usar tus propios componentes de UI para recopilar feedback y pasar el objeto de datos de feedback a la función `Sentry.captureFeedback(Feedback)`:
+
+```java
+import io.sentry.Sentry;
+import io.sentry.protocol.Feedback;
+
+Feedback feedback = new Feedback("Encontré un error mientras usaba la aplicación.");
+feedback.setName("John Doe");
+feedback.setContactEmail("john.doe@example.com");
+// Opcionalmente asociar el feedback con un evento
+SentryId sentryId = Sentry.captureMessage("Mi mensaje");
+feedback.setAssociatedEventId(sentryId);
+Sentry.captureFeedback(feedback);
+```
+
+```kotlin
+import io.sentry.Sentry
+import io.sentry.protocol.Feedback
+
+val feedback = Feedback("Encontré un error mientras usaba la aplicación.")
+feedback.name = "John Doe"
+feedback.contactEmail = "john.doe@example.com"
+// Opcionalmente asociar el feedback con un evento
+val sentryId = Sentry.captureMessage("Mi mensaje")
+feedback.associatedEventId = sentryId
+Sentry.captureFeedback(feedback)
+```

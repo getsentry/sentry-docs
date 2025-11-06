@@ -1,0 +1,183 @@
+---
+title: Nx CLI
+description: "Sube tus mapas de código fuente con la Nx CLI y el plugin de Webpack de Sentry."
+sidebar_order: 0
+supported:
+  - javascript.angular
+---
+
+Si usas [`@nx/angular`](https://nx.dev/packages/angular), puedes utilizar la Nx CLI junto con uno de nuestros plugins del empaquetador (como Webpack o esbuild) para subir automáticamente mapas de código fuente a Sentry al compilar tu aplicación (con `nx build`, por ejemplo).
+
+Debido a la arquitectura de `@nx/angular`, primero tendrás que configurar un ejecutor que permita registrar plugins del empaquetador.
+Al final, podrás subir automáticamente los mapas de código fuente cada vez que generes una compilación de producción de tu aplicación.
+
+Configura tu aplicación para subir mapas de código fuente en tres pasos.
+
+<div id="1-configure-projectjson">
+  ## 1. Configura `project.json`
+</div>
+
+Antes de registrar el plugin del empaquetador de Sentry, asegúrate primero de que puedes registrar plugins (como plugins de webpack o esbuild) con tu ejecutor actual (o Angular builder).
+Normalmente, esto es posible si tienes acceso a un `webpack.config.js` o a un archivo de configuración similar.
+Si ya es así, pasa al [paso 2](#2-register-the-sentry-webpack-plugin).
+
+Si no puedes registrar un plugin, tendrás que cambiar el ejecutor en tu `project.json` por uno personalizado que te permita registrarlo (como [`@nx/angular:webpack-browser`](https://nx.dev/nx-api/angular/executors/webpack-browser) o [`@nx/angular:browser-esbuild`](https://nx.dev/nx-api/angular/executors/browser-esbuild)).
+
+Consulta el siguiente ejemplo: en tu `project.json`, reemplaza el ejecutor predeterminado (`@angular-devkit/build-angular:browser`) por `@nx/angular:webpack-browser`:
+
+```javascript {filename:project.json}
+{
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:webpack-browser",
+      "options": {
+        "customWebpackConfig": {
+          "path": "./webpack.config.js" // ruta a tu webpack.config.js
+        },
+        "sourceMap": { // habilitar la generación de mapas fuente
+            "scripts": true,
+         }
+        // ... otras opciones
+      },
+      // ... otras opciones
+    }
+  }
+}
+```
+
+
+<div id="2-register-the-sentry-bundler-plugin">
+  ## 2. Registra el plugin de empaquetado de Sentry
+</div>
+
+<Alert>
+  Esta guía asume que estás usando un SDK de Sentry en la versión `7.47.0` o superior.
+
+  Si estás en una versión anterior y quieres cargar source maps, te recomendamos actualizar tu SDK a la versión más reciente.
+</Alert>
+
+Para cargar source maps debes configurar un [Organization Token](https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/).
+
+Como alternativa, también puedes usar un [Personal Token](https://sentry.io/orgredirect/organizations/:orgslug/settings/account/api/auth-tokens/), con los permisos &quot;Project: Read &amp; Write&quot; y &quot;Release: Admin&quot;.
+
+Los tokens de autenticación pueden pasarse al plugin explícitamente con la opción `authToken`, mediante la variable de entorno `SENTRY_AUTH_TOKEN`, o con un archivo `.env.sentry-build-plugin` (no olvides agregarlo a tu archivo `.gitignore`, ya que es información sensible) en el directorio de trabajo al compilar tu proyecto.
+Recomendamos agregar el token de autenticación a tu entorno de CI/CD como una variable de entorno.
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env.sentry-build-plugin}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+
+<div id="webpack">
+  ### Webpack
+</div>
+
+Instala el complemento de Sentry para Webpack:
+
+```shell {tabTitle:npm}
+npm install @sentry/webpack-plugin --save-dev
+```
+
+```shell {tabTitle:yarn}
+yarn add @sentry/webpack-plugin --dev
+```
+
+```shell {tabTitle:pnpm}
+pnpm add @sentry/webpack-plugin --save-dev
+```
+
+Registra el plugin de Sentry para webpack en tu `webpack.config.js`:
+
+```javascript {filename:webpack.config.js}
+const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
+
+module.exports = {
+  // ... otra configuración arriba ...
+
+  devtool: "source-map", // La generación de source maps debe estar activada
+  plugins: [
+    sentryWebpackPlugin({
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }),
+  ],
+};
+```
+
+<Alert>
+  Generar sourcemaps puede exponerlos públicamente y provocar la filtración de tu
+  código fuente. Puedes evitarlo configurando tu servidor para denegar el acceso
+  a los archivos `.js.map` o usando la opción [`sourcemaps.filesToDeleteAfterUpload` del Sentry Webpack Plugin](https://www.npmjs.com/package/@sentry/webpack-plugin#sourcemapsfilestodeleteafterupload)
+  para eliminar los sourcemaps después de subirlos a Sentry.
+</Alert>
+
+Obtén más información sobre cómo configurar el plugin en nuestra [documentación del plugin de Sentry para Webpack](https://www.npmjs.com/package/@sentry/webpack-plugin).
+
+
+<div id="esbuild">
+  ### esbuild
+</div>
+
+Instala el complemento de Sentry para esbuild:
+
+```shell {tabTitle:npm}
+npm install @sentry/esbuild-plugin --save-dev
+```
+
+```shell {tabTitle:yarn}
+yarn add @sentry/esbuild-plugin --dev
+```
+
+```shell {tabTitle:pnpm}
+pnpm add @sentry/esbuild-plugin --save-dev
+```
+
+Luego, sigue la [documentación oficial de Nx](https://nx.dev/nx-api/angular/executors/browser-esbuild#examples) para registrar el complemento de esbuild de Sentry (`@sentry/esbuild-plugin`) en tu archivo `project.json`. Por ejemplo:
+
+```json {filename:project.json}
+{
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:browser-esbuild",
+      "options": {
+        "plugins": [
+          {
+            "path": "@sentry/esbuild-plugin",
+            "options": {
+              "org": "___ORG_SLUG___",
+              "project": "___PROJECT_SLUG___",
+              "authToken": "___SENTRY_AUTH_TOKEN___"
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+<Alert>
+  Generar mapas de origen (sourcemaps) puede exponerlos públicamente y filtrar tu
+  código fuente. Puedes evitarlo configurando tu servidor para
+  denegar el acceso a los archivos `.js.map`, o usando la opción [`sourcemaps.filesToDeleteAfterUpload` del Sentry Esbuild Plugin](https://www.npmjs.com/package/@sentry/esbuild-plugin#sourcemapsfilestodeleteafterupload)
+  para eliminar los mapas de origen después de subirlos a Sentry.
+</Alert>
+
+
+<div id="3-upload">
+  ## 3. Carga
+</div>
+
+Para subir los mapas de origen, compila tu aplicación de Angular:
+
+```bash
+nx build
+```
+
+<Alert>
+  El complemento de webpack de Sentry no sube mapas de origen en modo watch o en modo desarrollo.
+  Recomendamos ejecutar una compilación de producción para probar tu implementación.
+</Alert>

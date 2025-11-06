@@ -1,0 +1,102 @@
+---
+title: Resolución de problemas con Docker
+sidebar_title: Docker
+sidebar_order: 3
+---
+
+<div id="fail-docker-compose-is-required-to-run-self-hosted-error-but-docker-compose-is-installed">
+  ## Error `FAIL: Docker Compose is required to run self-hosted` pero Docker Compose está instalado
+</div>
+
+Entre las versiones 25.1.0 y 25.4.0, los usuarios que no tenían instalado el complemento `docker compose` y dependían únicamente de `docker-compose` se encontrarán con algunos problemas. En particular, en la distribución Amazon Linux 2023, que no incluye el paquete `docker-compose-plugin`, puede que necesites instalar por separado la versión independiente de `docker-compose`. Consulta la [guía de instalación de docker/compose](https://github.com/docker/compose?tab=readme-ov-file#linux) para más detalles.
+
+<div id="container-healthcheck">
+  ## Comprobación de estado del contenedor
+</div>
+
+Puede haber situaciones en las que quieras ajustar el intervalo, el tiempo de espera o los reintentos de la comprobación de estado según tus necesidades. Puedes hacerlo editando los valores de las variables `HEALTHCHECK_INTERVAL`, `HEALTHCHECK_TIMEOUT` y `HEALTHCHECK_RETRIES` en `.env`.
+
+A veces podrías ver un error como este
+
+```
+el contenedor del servicio "${servicename}" no está en buen estado
+```
+
+Por lo general, se soluciona ejecutando `docker compose down` y `docker compose up --wait`, o volver a ejecutar el script de instalación.
+
+
+<div id="docker-network-conflicting-ip-address">
+  ## Conflicto de direcciones IP en la red de Docker
+</div>
+
+Self-hosted Sentry usa la red de puente (bridge) de Docker, que utiliza un rango de IP privadas específico. De forma predeterminada, Docker usa el rango `172.17.0.0/16` (`172.17.0.0`-`172.17.255.255`). Esto puede generar conflictos con tu red privada. Puedes cambiar el rango de IP predeterminado de Docker configurando el archivo `/etc/docker/daemon.json`. Si el archivo no existe, puedes crearlo.
+
+Suponiendo que tus rangos de IP seguros sean `10.147.0.0/16` y `10.146.0.0/16`, tu configuración sería:
+
+```json
+{
+    "default-address-pools": [
+   {
+     "base": "10.147.0.0/16",
+     "size": 24
+   },
+   {
+     "base": "10.146.0.0/16",
+     "size": 24
+   }
+ ]
+}
+```
+
+Para aplicar la nueva configuración del daemon de Docker, reinicia el servicio de Docker con `systemctl restart docker`.
+
+Asegúrate de usar [rangos de IP privadas válidos](https://en.wikipedia.org/wiki/Reserved_IP_addresses), es decir, dentro de estos rangos:
+
+* `10.0.0.0/8` (rango de direcciones de `10.0.0.0` a `10.255.255.255`)
+* `100.64.0.0/10` (rango de direcciones de `100.64.0.0` a `100.127.255.255`)
+* `172.16.0.0/12` (rango de direcciones de `172.16.0.0` a `172.31.255.255`)
+* `192.0.0.0/24` (rango de direcciones de `192.0.0.0` a `192.0.0.255`)
+* `192.168.0.0/16` (rango de direcciones de `192.168.0.0` a `192.168.255.255`)
+* `198.18.0.0/15` (rango de direcciones de `198.18.0.0` a `198.19.255.255`)
+
+Para más información, consulta el artículo de Matthew Stratiotto sobre [la guía definitiva de la opción default-address-pools de Docker](https://straz.to/2021-09-08-docker-address-pools/).
+
+
+<div id="logs-disk-usage">
+  ## Uso de disco de los registros
+</div>
+
+Si sospechas que los registros persistentes de los contenedores de Docker están ocupando mucho espacio en tu disco, puedes limitar la cantidad de registros que se conservan en Docker configurando el archivo `/etc/docker/daemon.json`. Si el archivo no existe, puedes crearlo.
+
+```json
+{
+  "log-driver": "local",
+  "log-opts": {"max-size": "10m", "max-file": "3"}
+}
+```
+
+Para aplicar la nueva configuración del daemon de Docker, reinicia el servicio de Docker con `systemctl restart docker`.
+
+Si quieres eliminar inmediatamente los registros de Docker, puedes ejecutar esto como usuario `root`:
+
+```shell
+truncate -s 0 /var/lib/docker/containers/**/*-json.log
+```
+
+
+<div id="image-and-builder-cleanup">
+  ## Limpieza de imágenes y builders
+</div>
+
+Ejecutar `./install.sh` creará un nuevo contenedor de Docker de Sentry; si lo ejecutas con frecuencia, Docker podría consumir espacio en disco. Puedes limpiar de forma segura contenedores, imágenes o builders de Docker antiguos o innecesarios para recuperar espacio en disco. Ejecutar estos comandos no afectará a los contenedores y volúmenes que estén en ejecución actualmente.
+
+```shell
+docker container prune
+docker builder prune
+docker image prune --all
+# ADVERTENCIA: Ejecutar "volume prune" podría eliminar el volumen `sentry-vroom`, ya que no es un volumen externo.
+docker volume prune
+docker network prune
+```
+
+Añade la opción `-f` para omitir la confirmación al eliminar.

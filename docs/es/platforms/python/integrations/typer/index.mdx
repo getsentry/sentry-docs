@@ -1,0 +1,64 @@
+---
+title: Typer
+description: Aprende a usar Sentry para capturar excepciones de Typer.
+---
+
+La `TyperIntegration` captura las excepciones que se producen al usar aplicaciones de [Typer CLI](https://typer.tiangolo.com/).
+
+<div id="install">
+  ## Instalación
+</div>
+
+Instala Typer y el SDK de Sentry para Python.
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk" "typer"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk" "typer"
+```
+
+
+<div id="configure">
+  ## Configurar
+</div>
+
+Para habilitar `TyperIntegration`, agrégalo a la lista `integrations` de tu `sentry_sdk.init`.
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.typer import TyperIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Agrega datos como encabezados de la solicitud e IP de los usuarios, si corresponde;
+    # consulta https://docs.sentry.io/platforms/python/data-management/data-collected/ para obtener más información
+    send_default_pii=True,
+    integrations=[TyperIntegration()],
+)
+```
+
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Crea una pequeña aplicación de línea de comandos:
+
+```python
+import typer
+import sentry_sdk
+from sentry_sdk.integrations.typer import TyperIntegration
+
+sentry_sdk.init(...)  # ver arriba
+
+def main():
+    1 / 0
+
+if __name__ == "__main__":
+    typer.run(main)
+```
+
+Cuando ejecutes esto, Sentry capturará el `ZeroDivisionError` de la función `main()`
+y podrás verlo en [sentry.io](https://sentry.io).

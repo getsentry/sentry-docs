@@ -1,0 +1,121 @@
+---
+draft: true
+categories: []
+toc: true
+title: Uso básico
+tags: []
+---
+
+<Alert level="warning" title="Aviso de deprecación">
+  Un nuevo SDK de Python ha sustituido esta versión obsoleta. Sentry conserva esta documentación para clientes que siguen usando el cliente antiguo. Recomendamos usar el [SDK de Python actualizado](/es/platforms/python/) para proyectos nuevos.
+</Alert>
+
+Este documento ofrece una descripción general básica de cómo usar el cliente raven directamente con Python.
+
+<div id="capture-an-error">
+  ## Capturar un error
+</div>
+
+El uso más básico de raven es registrar un error específico que ocurre:
+
+```python
+from raven import Client
+
+client = Client('___DSN___')
+
+try:
+    1 / 0
+except ZeroDivisionError:
+    client.captureException()
+```
+
+<div id="reporting-an-event">
+  ## Reportar un evento
+</div>
+
+Para reportar un evento arbitrario puedes usar el método [`capture()`](/es/platforms/python/legacy-sdk/api/#raven.Client.capture "raven.Client.capture"). Este es el método de más bajo nivel disponible. Sin embargo, en la mayoría de los casos querrás usar el método [`captureMessage()`](/es/platforms/python/legacy-sdk/api/#raven.Client.captureMessage "raven.Client.captureMessage"), que reporta directamente un mensaje:
+
+```python
+client.captureMessage('Algo salió terriblemente mal')
+```
+
+<div id="adding-context">
+  ## Añadir contexto
+</div>
+
+El cliente de raven mantiene internamente un mapeo local al hilo que puede transportar información adicional. Cada vez que se envía un mensaje a Sentry, esos datos adicionales se transmitirán.
+
+Por ejemplo, si usas un framework web, puedes usar esto para inyectar información adicional en el contexto. La primitiva básica para ello es el atributo [`context`](/es/platforms/python/legacy-sdk/api/#raven.Client.context "raven.Client.context"). Proporciona las funciones *merge()* y *clear()* que pueden usarse:
+
+```python
+def handle_request(request):
+    client.context.merge({'user': {
+        'email': request.user.email
+    }})
+    try:
+        ...
+    finally:
+        client.context.clear()
+```
+
+Además, a partir de Raven 5.14 puedes vincular el contexto al hilo actual para habilitar la compatibilidad con breadcrumbs llamando a *activate()*. La desactivación ocurre al llamar a *clear()*. Esto también se puede lograr usando el objeto de contexto con la instrucción *with*. Esto es necesario para habilitar la captura de breadcrumbs. Las integraciones de frameworks suelen hacer esto automáticamente.
+
+Estos dos ejemplos son equivalentes:
+
+```python
+def handle_request(request):
+    client.context.activate()
+    client.context.merge({'user': {
+        'email': request.user.email
+    }})
+    try:
+        ...
+    finally:
+        client.context.clear()
+```
+
+Con un gestor de contexto:
+
+```python
+def handle_request(request):
+    with client.context:
+        client.context.merge({'user': {
+            'email': request.user.email
+        }})
+        try:
+            ...
+        finally:
+            client.context.clear()
+```
+
+<div id="testing-the-client">
+  ## Probar el cliente
+</div>
+
+Una vez que hayas configurado tu servidor, puedes probar el cliente de Raven usando su CLI:
+
+```bash
+raven test ___DSN___
+```
+
+Si has configurado tu entorno para que `SENTRY_DSN` esté disponible, puedes simplemente omitir el argumento DSN opcional:
+
+```bash
+raven test
+```
+
+Deberías obtener algo como lo siguiente, suponiendo que configuraste todo correctamente:
+
+```bash
+raven test sync+___DSN___
+Usando la configuración de DSN:
+  sync+___DSN___
+
+Configuración del cliente:
+  servidores     : ___API_URL___/api/store/
+  proyecto       : ___PROJECT_ID___
+  clave_pública  : ___PUBLIC_KEY___
+  clave_secreta  : ___SECRET_KEY___
+
+Enviando un mensaje de prueba... ¡correcto!
+```

@@ -1,0 +1,216 @@
+---
+title: Compilación de Ionic Capacitor
+description: "Carga tus source maps con Ionic Capacitor y Sentry CLI."
+sidebar_order: 2
+Supported:
+  - javascript.capacitor
+---
+
+En esta guía, aprenderás a cargar correctamente los source maps de TypeScript usando nuestra herramienta `sentry-cli`.
+
+<Include name="debug-id-requirement.mdx" />
+
+<Alert>
+  Esta guía solo aplica si estás usando el comando `ionic capacitor build` para compilar tu proyecto. Si usas otro comando, probablemente debas seguir la guía correspondiente.
+</Alert>
+
+<div id="automatic-setup">
+  ## Configuración automática
+</div>
+
+Puedes usar Sentry Wizard para realizar una configuración inicial, pero aún serán necesarios cambios manuales para configurar los source maps
+en esta configuración de compilación.
+
+<Include name="sourcemaps-wizard-instructions.mdx" />
+
+<div id="manual-setup">
+  ## Configuración manual
+</div>
+
+<div id="1-generate-source-maps">
+  ### 1. Generar mapas de origen
+</div>
+
+Primero, configura el compilador de TypeScript para generar mapas de origen:
+
+```json {filename:tsconfig.json}
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "inlineSources": true,
+
+    // Establece `sourceRoot` en "/" para quitar el prefijo de la ruta de compilación de
+    // las referencias del código fuente generado. Esto mejorará la agrupación de issues en Sentry.
+    "sourceRoot": "/"
+  }
+}
+```
+
+<Alert>
+  Generar mapas de origen puede exponerlos públicamente y provocar la filtración de tu código fuente. Puedes evitarlo configurando el servidor para denegar el acceso a los archivos `.js.map`, o eliminando los mapas de origen antes de implementar tu aplicación.
+</Alert>
+
+<div id="2-configure-sentry-cli">
+  ### 2. Configurar Sentry CLI
+</div>
+
+<Alert>
+  Consulta las [instrucciones de instalación de Sentry CLI](/es/cli/installation/).
+
+  Para obtener más información sobre la configuración de `sentry-cli`, visita la [documentación de configuración de Sentry CLI](/es/cli/configuration/).
+</Alert>
+
+Asegúrate de que `sentry-cli` esté configurado para tu proyecto. Para ello, puedes usar variables de entorno:
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env.local}
+SENTRY_ORG=___ORG_SLUG___
+SENTRY_PROJECT=___PROJECT_SLUG___
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+<div id="3-inject-debug-ids-into-artifacts">
+  ### 3. Inyectar Debug IDs en artefactos
+</div>
+
+Los Debug IDs se usan para hacer coincidir el marco de pila de un evento con su correspondiente fuente minificada y el archivo de source map. Visita [¿Qué son los Debug IDs?](/es/platforms/javascript/sourcemaps/troubleshooting_js/debug-ids/) para obtener más información.
+
+Para inyectar Debug IDs, usa el siguiente comando después de compilar tu proyecto:
+
+```bash
+// Las rutas pueden variar, así que verifica dónde están tus carpetas assets/public y App/public.
+sentry-cli sourcemaps inject /ruta/a/directorio/android/app/src/main/assets/public
+sentry-cli sourcemaps inject /ruta/a/directorio/ios/App/public
+```
+
+<div id="verify-debug-ids-were-injected-in-artifacts">
+  #### Verifica que los Debug IDs se hayan inyectado en los artefactos
+</div>
+
+Al final de los archivos de código fuente minificados, deberías incluir un comentario llamado `debugId`, así:
+
+```javascript {filename:example_minified_file.js}
+...
+//# debugId=<debug_id>
+//# sourceMappingURL=<sourcemap_url>
+```
+
+Los mapas de origen también deben incluir un campo llamado `debug_id`:
+
+```json {filename:example_source_map.js.map}
+{
+    ...
+    "debug_id":"<debug_id>",
+    ...
+}
+```
+
+<div id="4-upload-artifact-bundle">
+  ### 4. Cargar el paquete de artefactos
+</div>
+
+Después de inyectar los Debug IDs en tus artefactos, súbelos con el siguiente comando:
+
+```bash
+// Las rutas pueden variar, así que verifica dónde están tus carpetas assets/public y App/public.
+sentry-cli sourcemaps upload /ruta/al/directorio/android/app/src/main/assets/public
+sentry-cli sourcemaps upload /ruta/al/directorio/ios/App/public
+
+```
+
+<div id="verify-that-artifact-bundles-were-uploaded">
+  #### Verifica que los Artifact Bundles se hayan subido
+</div>
+
+Abre Sentry y ve a **Project Settings &gt; Source Maps**. Si seleccionas “Artifact Bundles” en la navegación con pestañas, verás todos los artifact bundles que se han subido correctamente a Sentry.
+
+<div id="5-deploy-your-application">
+  ### 5. Despliega tu aplicación
+</div>
+
+Si estás siguiendo esta guía desde tu máquina local, entonces has conseguido:
+
+1. Generar archivos de código minimizado y mapas de origen (artefactos) al ejecutar el proceso de compilación de tu aplicación
+2. Inyectar IDs de depuración en los artefactos que acabas de generar
+3. Subir esos artefactos a Sentry con nuestro comando de carga
+
+El último paso es desplegar una nueva versión de tu aplicación usando los artefactos generados en el primer paso. **Recomendamos firmemente integrar `sentry-cli` en tu canalización (pipeline) de CI/CD**, para que cada despliegue posterior inyecte automáticamente IDs de depuración en cada artefacto y los suba directamente a Sentry.
+
+<div id="optional-steps">
+  ### Pasos opcionales
+</div>
+
+<Alert title="Advertencia">
+  Sigue estos pasos opcionales solo si has determinado que realmente los necesitas.
+  Usar los valores `release` y `dist` hará que la carga de tu artefacto sea más específica, pero también volverá todo el proceso menos tolerante, lo que puede provocar que Sentry no desminifique tu código.
+</Alert>
+
+<div id="associating-release-with-artifact-bundle">
+  #### Asociar `release` con el paquete de artefactos
+</div>
+
+Incluye la propiedad `release` en las opciones de tu SDK.
+
+```javascript
+Sentry.init({
+  // Este valor debe ser idéntico al nombre de la versión especificado durante la carga
+  // con `sentry-cli`.
+  release: "<release_name>",
+});
+```
+
+Después, ejecuta el comando `sourcemaps upload` con la opción adicional `--release`. Asegúrate de que el valor indicado para `<release_name>` sea el mismo que el configurado en las opciones de tu SDK.
+
+```bash
+// Las rutas pueden variar, así que verifica dónde están las carpetas assets/public y App/public.
+sentry-cli sourcemaps upload --release=<release_name> /path/to/directory/android/app/src/main/assets/public
+sentry-cli sourcemaps upload --release=<release_name> /path/to/directory/ios/App/public
+```
+
+<Alert>
+  Ejecutar `upload` con `--release` **no crea automáticamente una versión en Sentry**.
+  Espera a que se envíe a Sentry el primer evento con la nueva versión definida en `Sentry.init`, o crea una versión con el mismo nombre en un paso aparte [con la CLI](/es/cli/releases).
+</Alert>
+
+<div id="associating-dist-with-your-artifact-bundle">
+  #### Asociar `dist` con tu paquete de artefactos
+</div>
+
+Además de `release`, puedes agregar un `dist` a los artefactos que subas para establecer el identificador de distribución de los archivos cargados. Para hacerlo, ejecuta el comando `sourcemaps upload` con la opción adicional `--dist`.
+
+Incluye las propiedades `release` y `dist` en las opciones de tu SDK.
+
+```javascript
+Sentry.init({
+  // Estos valores deben coincidir exactamente con los nombres de release y dist especificados al cargar
+  // con `sentry-cli`.
+  release: "<release_name>",
+  dist: "<dist_name>",
+});
+```
+
+El identificador de distribución se utiliza para distinguir entre varios archivos con el mismo nombre dentro de una sola versión. `dist` puede usarse para diferenciar variantes de compilación o de despliegue.
+
+```bash
+
+// Las rutas pueden variar, así que verifica dónde están las carpetas assets/public y App/public.
+sentry-cli sourcemaps upload --release=<release_name> --dist=<dist_name> /ruta/al/directorio/android/app/src/main/assets/public
+sentry-cli sourcemaps upload --release=<release_name> --dist=<dist_name> /ruta/al/directorio/ios/App/public
+```
+
+<div id="dealing-with-tslib">
+  ## Cómo manejar TSLib
+</div>
+
+Durante la compilación, TypeScript inyecta algunas de sus dependencias en tiempo de ejecución en los archivos de salida si es necesario. Puede incluir cosas como polyfills para generadores o APIs que quizá no estén disponibles en todos los entornos. Sin embargo, el hecho de no contar con las fuentes originales impide mapear los frames del código compilado a los archivos fuente.
+
+Como solución, debes indicarle al compilador de TypeScript que use `tslib`, su propio paquete de terceros (que forma parte del compilador internamente), en lugar de inyectar dependencias en tiempo de ejecución. Solo necesitas cambiar el archivo de configuración de TypeScript, no tu código fuente. Así:
+
+1. Asegúrate de que `tslib` esté incluida como dependencia en tu `package.json`.
+2. Luego, agrega dos entradas en la sección `compilerOptions` de tu `tsconfig.json`:
+
+* `"noEmitHelpers": true` y
+* `"importHelpers": true`.
+
+¡Listo! Ahora deberías poder mapear correctamente los source maps de todos los frames de tu stack trace, incluidos los fragmentos internos del compilador de TypeScript.

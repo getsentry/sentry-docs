@@ -1,0 +1,120 @@
+---
+title: Datos recopilados
+description: "Consulta qué datos recopila el SDK de Sentry."
+sidebar_order: 1
+---
+
+Sentry se toma muy en serio la privacidad de los datos y cuenta con configuraciones predeterminadas que priorizan la seguridad de la información, especialmente cuando se trata de datos de identificación personal (PII). Cuando agregas el SDK de Sentry a tu aplicación, permites que recopile datos y los envíe a Sentry durante la ejecución de tu aplicación.
+
+Los tipos de categorías y la cantidad de datos recopilados varían según las integraciones que hayas habilitado en el SDK de Sentry. En esta página se enumeran las categorías de datos que recopila el SDK de Sentry para Flutter.
+
+Muchas de las categorías aquí listadas requieren que habilites la <PlatformLink to="/configuration/options/#sendDefaultPii">opción sendDefaultPii</PlatformLink>.
+
+<div id="http-headers">
+  ## Encabezados HTTP
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía encabezados HTTP. Incluso cuando el envío de encabezados HTTP está habilitado, contamos con una [lista de bloqueo](https://github.com/getsentry/sentry-dart/blob/ea1d45d64f52551e2e033c50b0ff8512e3d8a4e3/dart/lib/src/utils/http_sanitizer.dart#L9C1-L21C1) que filtra cualquier encabezado que contenga datos sensibles.
+
+Para empezar a enviar encabezados HTTP, establece <PlatformLink to="/configuration/options/#sendDefaultPii">`sendDefaultPii = true`</PlatformLink>.
+
+<div id="information-about-logged-in-user">
+  ## Información sobre el usuario autenticado
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía información sobre el usuario autenticado, como la dirección de correo electrónico, el ID de usuario o el nombre de usuario. Incluso si se habilita, el tipo de información del usuario autenticado que podrás enviar depende de las integraciones que actives en el SDK de Sentry. La mayoría de las integraciones no enviarán ninguna información de usuario. Algunas solo establecerán el ID de usuario, pero hay otras que establecerán el ID de usuario, el nombre de usuario y la dirección de correo electrónico.
+
+Para empezar a enviar información del usuario autenticado, configura <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii = true`</PlatformLink>.
+
+<div id="users-ip-addresses">
+  ## Direcciones IP de los usuarios
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía la dirección IP del usuario. Una vez habilitado, los servicios de backend de Sentry inferirán la dirección IP del usuario a partir de la solicitud entrante, a menos que ciertas integraciones que puedes habilitar sustituyan este comportamiento.
+
+Para habilitar el envío de la dirección IP del usuario, establece <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii = true`</PlatformLink>.
+
+<div id="request-url">
+  ## URL de la solicitud
+</div>
+
+La URL completa de las solicitudes HTTP salientes y entrantes **siempre se envía a Sentry**. Dependiendo de tu aplicación, esto podría incluir datos personales (PII).
+
+<div id="request-query-string">
+  ## Cadena de consulta de la solicitud
+</div>
+
+La cadena de consulta completa de las solicitudes HTTP, tanto salientes como entrantes, **siempre se envía a Sentry**. Según tu aplicación, esto podría incluir datos personales (PII).
+
+<div id="request-body">
+  ## Cuerpo de la solicitud
+</div>
+
+El cuerpo de la solicitud de las peticiones HTTP entrantes puede enviarse a Sentry. Que se envíe o no depende del tipo y el tamaño del cuerpo de la solicitud, como se describe a continuación:
+
+* **Tipo de cuerpo de la solicitud:**
+  * Se envían los cuerpos en JSON y en formularios
+* **Tamaño del cuerpo de la solicitud:** Existe una opción <PlatformLink to="/configuration/options/#maxRequestBodySize">maxRequestBodySize</PlatformLink> que está establecida en `NONE` de forma predeterminada. Esto significa que, por defecto, no se envía ningún cuerpo de la solicitud a Sentry.
+
+<div id="source-context">
+  ## Contexto de código fuente
+</div>
+
+Nuestra herramienta [sentry&#95;dart&#95;plugin](https://pub.dev/packages/sentry_dart_plugin) puede subir tu código fuente a Sentry, lo que permite mostrar las líneas de código donde ocurrió un error en la página de detalles de la incidencia.
+
+Para habilitar el envío de este contexto de código fuente a Sentry, activa la función como se describe en <PlatformLink to="/upload-debug/#source-context">la documentación de Source Context</PlatformLink>.
+
+<div id="file-io">
+  ## E/S de archivos
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía el nombre ni la ruta de los archivos cuando [instrumenta la E/S de archivos](/es/platforms/dart/integrations/file/).
+
+Si quieres enviar nombres y rutas de archivos, establece <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii = true`</PlatformLink>.
+
+<div id="device-information">
+  ## Información del dispositivo
+</div>
+
+De forma predeterminada, el SDK de Sentry no envía el nombre del dispositivo.
+
+Si quieres enviar el nombre del dispositivo, configura <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii = true`</PlatformLink>.
+
+<div id="runtime-information">
+  ## Información de ejecución
+</div>
+
+De forma predeterminada, el SDK recopila información básica de ejecución, como la versión de Dart y la plataforma.
+
+Cuando <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii = true`</PlatformLink>, se recopilan detalles adicionales de ejecución:
+
+* Ruta del ejecutable, p. ej., `flutter`
+* Ubicaciones resueltas del ejecutable, p. ej., `/system/bin/app_process64`
+* Ruta del script, p. ej., `file:///main.dart`
+
+<div id="sql-queries">
+  ## Consultas SQL
+</div>
+
+Aunque las consultas SQL se envían a Sentry, ni la consulta SQL completa (`UPDATE app_user SET password='supersecret' WHERE id=1;`) ni los valores de sus parámetros se enviarán nunca. En su lugar, se envía una versión con parámetros de la consulta (`UPDATE app_user SET password=? WHERE id=?;`).
+
+<div id="user-interaction-data">
+  ## Datos de interacción de usuario
+</div>
+
+De forma predeterminada, el SDK recopila datos básicos de interacción con la interfaz de usuario (IU) y protege la información sensible excluyendo el contenido de texto. Esto significa que se registran los clics en botones y otras interacciones con la IU, pero sin ningún texto ni etiquetas que puedan contener datos personales o sensibles.
+
+Cuando <PlatformLink to="/configuration/options/#send-default-pii">`sendDefaultPii = true`</PlatformLink>, el SDK también recopila contenido de texto de elementos de la IU, incluidos:
+
+* Contenido de texto de los botones (por ejemplo, las etiquetas de botón &quot;Submit&quot; o &quot;Cancel&quot;)
+* Etiquetas semánticas que ayudan a describir elementos de la IU para fines de accesibilidad
+* Mensajes de información emergente (tooltips) que aparecen al pasar el cursor sobre elementos de la IU
+* Etiquetas de texto de íconos y otros componentes de la IU
+
+Este contenido de texto adicional puede ser útil para depurar y comprender las interacciones de los usuarios, pero debe habilitarse con precaución si tu IU contiene información sensible.
+
+<div id="session-replay">
+  ## Reproducción de sesiones
+</div>
+
+De forma predeterminada, nuestro SDK de Reproducción de sesiones oculta todo el texto, las imágenes, las webviews y la información que introduce el usuario. Esto ayuda a garantizar que no se expongan datos sensibles. Puedes encontrar <PlatformLink to="/session-replay/#redact-session-replay-via-masking/">más detalles en la documentación de Reproducción de sesiones</PlatformLink>.

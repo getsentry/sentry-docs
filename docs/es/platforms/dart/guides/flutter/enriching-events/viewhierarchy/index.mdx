@@ -1,0 +1,67 @@
+---
+title: "Jerarquía de vistas"
+description: "Obtén más información sobre cómo depurar la jerarquía de vistas cuando ocurre un error. Sentry asocia la representación de la jerarquía de vistas con el evento original, brindándote información adicional sobre los problemas."
+---
+
+Sentry permite generar una representación JSON de la jerarquía de vistas de un error y la incluye como un <PlatformLink to="/enriching-events/attachments/">adjunto</PlatformLink>.
+
+Esta función solo aplica a SDK con interfaz de usuario, como los de aplicaciones móviles y de escritorio. En algunos entornos, como iOS nativo, generar la jerarquía de vistas requiere el hilo de la UI y, en caso de un bloqueo, puede que no esté disponible. Otro ejemplo en el que la jerarquía de vistas podría no estar disponible es cuando el evento ocurre antes de que la pantalla comience a cargarse. Por lo tanto, esta función es, por naturaleza, una solución de mejor esfuerzo.
+
+<Alert>
+  La desofuscación de jerarquías de vistas es totalmente compatible en SDK nativos y en React Native, pero actualmente no es compatible con Flutter.
+</Alert>
+
+<div id="enabling-view-hierarchy-attachments">
+  ## Activar adjuntos de jerarquía de vistas
+</div>
+
+La depuración de la jerarquía de vistas es una función opcional. Puedes activarla como se muestra a continuación:
+
+<PlatformContent includePath="enriching-events/attach-viewhierarchy" />
+
+<div id="customize-view-hierarchy-capturing">
+  ### Personalizar la captura de la jerarquía de vistas
+</div>
+
+De forma predeterminada, Flutter limita las capturas de la jerarquía de vistas a una vez cada 2 segundos para minimizar el impacto en el rendimiento. Aunque este intervalo de “debounce” no se puede cambiar, puedes personalizar el comportamiento de la captura implementando la devolución de llamada `beforeCaptureViewHierarchy` en tus `SentryFlutterOptions`.
+
+Esta devolución de llamada te da un control granular sobre las capturas de la jerarquía de vistas según los datos del evento y la sugerencia (hint), lo que te permite implementar lógica condicional.
+
+<Alert>
+  El parámetro `shouldDebounce` es `true` si el “debounce” está activo.
+  Si quieres capturar jerarquías de vistas independientemente del “debounce”, puedes ignorar el parámetro `shouldDebounce`.
+</Alert>
+
+```dart {tabTitle: Respect debounce} {2-9}
+await SentryFlutter.init((options) {
+  options.beforeCaptureViewHierarchy = (event, hint, shouldDebounce) async {
+    // Si el “debounce” está activo, omitir la captura
+    if (shouldDebounce) {
+      return false;
+    }
+    // Capturar la jerarquía de vistas si es un evento fatal
+    return event.level == SentryLevel.fatal;
+  };
+});
+```
+
+```dart {tabTitle: Ignore debounce} {2-4}
+await SentryFlutter.init((options) {
+  options.beforeCaptureViewHierarchy = (event, hint, shouldDebounce) async {
+    // Captura la jerarquía de vistas si es un evento fatal, sin importar el debounce
+    return event.level == SentryLevel.fatal;
+  };
+});
+```
+
+<div id="viewing-view-hierarchy-attachments">
+  ## Visualización de adjuntos de jerarquía de vistas
+</div>
+
+Las jerarquías de vistas aparecen en la pestaña &quot;Attachments&quot;, donde puedes ver todos los adjuntos, así como los eventos asociados. Haz clic en el ID del evento para abrir la página de [Detalles del issue](/es/product/issues/issue-details) de ese evento en específico.
+
+<Include name="common-imgs/viewhierarchy-list-example" />
+
+En la página de **Detalles del issue**, puedes interactuar con el adjunto de jerarquía de vistas en una sección llamada &quot;View Hierarchy&quot;. Esta sección representa el estado de tu aplicación en el momento en que ocurrió el error. Hay tres visualizaciones: vista en árbol, wireframe y vista detallada del nodo seleccionado. Puedes seleccionar nodos tanto en el árbol como en el wireframe para ver las propiedades recopiladas por el SDK. El SDK informa las siguientes claves para cada nodo de la vista: `alpha`, `visible`, `x`, `y`, `width`, `height`, `type` e `identifier` si corresponde, aunque puede haber valores adicionales específicos del SDK. Esta función puede usarse como herramienta de exploración para depurar problemas de diseño, visualizar contenido renderizado innecesariamente o comprender mejor la relación entre las vistas.
+
+<Include name="common-imgs/viewhierarchy-example" />

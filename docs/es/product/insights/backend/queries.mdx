@@ -1,0 +1,145 @@
+---
+title: Consultas
+sidebar_order: 0
+description: >-
+  Con Consultas en Sentry, puedes ver fácilmente las consultas a la base de
+  datos, corregir errores de rendimiento y supervisar el rendimiento de las
+  consultas.
+og_image: /og-images/product-insights-backend-queries.png
+---
+
+Si tienes [Insights](/es/product/insights/) habilitado y tu aplicación consulta una base de datos, puedes ver cómo rinden tus consultas en Sentry.
+
+La supervisión de consultas de Sentry te ayuda a investigar el rendimiento de tus consultas y obtener más información para mejorarlas.
+
+Comienza con la página de [**Consultas**](#queries-page), donde obtendrás una vista general de alto nivel del estado de tus consultas. Desde allí, puedes profundizar en la página de [**Resumen de consulta**](#query-summary-page) de una consulta específica y luego revisar eventos de muestra en la [Lista de muestras](#sample-list) para comprender mejor el contexto de su rendimiento en un endpoint específico.
+
+La demostración interactiva a continuación muestra cómo obtener información sobre el rendimiento de tus consultas.
+
+<Arcade src="https://demo.arcade.software/YwpxKWDVwi6CtDcOOw6a?embed" />
+
+<br />
+
+<div id="prerequisites-and-limitations">
+  ## Requisitos y limitaciones
+</div>
+
+El widget y las páginas de consultas están disponibles únicamente para proyectos de backend con el monitoreo de rendimiento habilitado.
+
+<div id="recommended-sdk-versions">
+  ### Versiones de SDK recomendadas
+</div>
+
+El monitoreo de consultas funciona mejor con versiones de SDK actualizadas. Se recomiendan las siguientes versiones mínimas:
+
+* [Python SDK v1.29.2](https://github.com/getsentry/sentry-python/releases/tag/1.29.2)
+* [JavaScript SDKs v7.63.0](https://github.com/getsentry/sentry-javascript/releases/tag/7.63.0)
+* [Laravel SDK v3.8.0](https://github.com/getsentry/sentry-laravel/releases/tag/3.8.0)
+* [Cocoa SDK v8.11.0](https://github.com/getsentry/sentry-cocoa/releases/tag/8.11.0)
+* [Java SDK v6.29.0](https://github.com/getsentry/sentry-java/releases/tag/6.29.0)
+* [Ruby SDK v5.11.0](https://github.com/getsentry/sentry-ruby/releases/tag/5.11.0)
+* [.NET SDK v3.39.0](https://github.com/getsentry/sentry-dotnet/releases/tag/3.39.0)
+* [Symfony SDK v4.11.0](https://github.com/getsentry/sentry-symfony/releases/tag/4.11.0)
+* [Android SDK v6.30.0](https://github.com/getsentry/sentry-java/releases/tag/6.30.0)
+
+<div id="span-eligibility">
+  ### Elegibilidad de spans
+</div>
+
+Sentry intenta extraer métricas para todos los dialectos similares a SQL, así como para MongoDB. Otras bases de datos NoSQL como Elasticsearch, bases de datos de grafos como Neo4j y otros sistemas de bases de datos no SQL no son actualmente elegibles para esta función.
+
+Si estás usando <PlatformLink to="/tracing/instrumentation/automatic-instrumentation">instrumentación automática</PlatformLink>, el monitoreo del rendimiento de consultas debería funcionar sin configuración adicional. Si has instrumentado Sentry manualmente, asegúrate de que tus spans cumplan con nuestros estándares para obtener la mejor experiencia:
+
+* El campo `op` del span está configurado con un [valor apto](https://develop.sentry.dev/sdk/performance/span-operations/#database).
+* La descripción del span contiene la consulta completa y parametrizada (por ejemplo, &quot;SELECT * FROM users WHERE id = ?&quot;). Los marcadores de posición compatibles para SQL son `%s`, `?`, `:c0` (por ejemplo, `:c0`, `:c1`) y `$1` (por ejemplo, `$1`, `$2`). Las descripciones de spans de MongoDB deben contener JSON válido, y los marcadores de posición deben ser la cadena &quot;?&quot;.
+* El valor de los datos del span `db.system` está configurado con el [identificador correcto](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-spans.md) (por ejemplo, &quot;postgresql&quot; o &quot;mongodb&quot;).
+
+<div id="queries-page">
+  ## Página de consultas
+</div>
+
+La página de **Consultas** te ofrece una vista rápida del rendimiento de las consultas de tu aplicación para los proyectos seleccionados. Puedes usarla como punto de partida para investigar consultas potencialmente problemáticas y profundizar para entender mejor cómo distintas consultas afectan el rendimiento de tu app.
+
+Abre la página de **Consultas** haciendo clic en &quot;Queries&quot; en la barra lateral, bajo &quot;Insights&quot;. Alternativamente, la página de **Rendimiento** también muestra las consultas de mayor impacto en el widget &quot;Most Time-Consuming Queries&quot;. Puedes hacer clic en &quot;View All&quot; para abrir la página de **Consultas** desde allí.
+
+En la parte superior, los gráficos de resumen de consultas por minuto (throughput) y duración promedio ofrecen una visión de alto nivel del rendimiento de tu base de datos. Si ves una anomalía o quieres investigar más un rango temporal, puedes hacer clic y arrastrar para seleccionar un rango directamente en un gráfico y filtrar los datos para ese intervalo.
+
+La tabla de descripción de consultas a continuación muestra una lista de consultas, su volumen (consultas por minuto), duración promedio y el tiempo total que tu app dedicó a ejecutar esa consulta (tiempo invertido). Las descripciones de consultas están parametrizadas, por lo que tus consultas pueden verse ligeramente distintas.
+
+De forma predeterminada, esta tabla se ordena por mayor [tiempo invertido](#what-is-time-spent). Esto significa que las consultas en la parte superior suelen ser muy lentas, muy frecuentes o ambas. Puedes cambiarlo para ordenar por consultas por minuto y ver las más frecuentes, o por duración promedio para ver las más lentas.
+
+También puedes usar los menús desplegables de arriba para filtrar todos los datos por comandos específicos (como `SELECT` y `UPDATE`) y por las tablas/colecciones consultadas.
+
+Para ver más detalles, haz clic en una consulta de la tabla para abrir su página de **Resumen de consulta**.
+
+<div id="query-parameterization">
+  ### Parametrización de consultas
+</div>
+
+A veces, Sentry procesa las consultas y las simplifica para mejorar la legibilidad. Por ejemplo, para consultas SQL:
+
+* Se eliminan los nombres de tabla de las selecciones de columnas cuando es posible (p. ej., `SELECT "users"."name", "users"."id", "users.age" FROM users` se convierte en `SELECT name, id, age FROM users`)
+* Las listas largas de argumentos de `SELECT` se contraen (p. ej., `SELECT id, name, age, city, country, phone FROM users` se convierte en `SELECT .. FROM users`)
+* Las listas largas de argumentos de `VALUES` se contraen (p. ej., `INSERT INTO users (id, email, name, age) VALUES (%s %s %s %s)` se convierte en `INSERT INTO users (..) VALUES (%s)`)
+* Las sentencias `CASE / WHEN` se contraen
+
+Para consultas de MongoDB:
+
+* Los valores terminales se sustituyen por el marcador de posición `"?"`
+* Se aplica una profundidad máxima a los objetos de consulta con anidación profunda
+
+Puedes ver la consulta completa al pasar el cursor sobre una descripción truncada o haciendo clic para abrir su página de **Resumen de consulta**.
+
+<div id="query-summary-page">
+  ## Página de resumen de la consulta
+</div>
+
+Para abrir la página de **Resumen de la consulta**, haz clic en la consulta ya sea en la tabla del widget &quot;Consultas más costosas&quot; de la página de **Rendimiento** o en la tabla de la página de **Consultas**.
+
+En la parte superior de la página se muestran las consultas por minuto, la duración promedio y el tiempo dedicado para el rango de tiempo seleccionado. La consulta completa aparece debajo de estas métricas, seguida de gráficos de consultas por minuto y de duración promedio. También se muestra la ubicación de origen de la consulta en el código, si está disponible.
+
+En la parte inferior, encontrarás una lista de endpoints donde aparece la consulta, ordenados por el mayor tiempo que tu aplicación pasó en ese intervalo.
+
+Si quieres investigar un endpoint específico, haz clic en él para abrir una barra lateral que muestra algunos eventos de ejemplo.
+
+<div id="query-sources">
+  ## Fuentes de consulta
+</div>
+
+<Alert>
+  Las fuentes de consulta actualmente están disponibles en los SDK de Sentry para [Laravel](/es/platforms/php/guides/laravel/configuration/laravel-options/#more-configuration) (habilitado de forma predeterminada) y [Python](/es/platforms/python/configuration/options/#enable-db-query-source) (habilitado de forma predeterminada). Para reducir el impacto en el rendimiento, Sentry solo adjunta fuentes a las consultas que sean más lentas que un umbral configurable ([Python](/es/platforms/python/configuration/options/#db-query-source-threshold-ms), [Laravel](/es/platforms/php/guides/laravel/configuration/laravel-options/#more-configuration)).
+</Alert>
+
+El origen de una consulta es la ubicación en el código de tu aplicación que la desencadenó. Sentry determina automáticamente el origen examinando el [rastreo de pila](/es/product/sentry-basics/integrate-frontend/upload-source-maps/) y lo adjunta a los datos de la consulta.
+
+Puedes ver el origen de la consulta debajo de su descripción en la página **Query Summary**, como se muestra en la imagen a continuación. Si tienes habilitada una [integración de gestión de código fuente](/es/organization/integrations/source-code-mgmt/), Sentry también mostrará un enlace para abrir el origen de la consulta en el repositorio correspondiente.
+
+![Ejemplo de origen de la consulta](../img/query-source-laravel.png)
+
+<div id="sample-list">
+  ## Lista de muestras
+</div>
+
+Haz clic en un endpoint para abrir su lista de muestras. Este panel lateral muestra métricas resumidas (QPM y duración promedio) para la consulta en el endpoint específico.
+
+La tabla muestra una lista de eventos de muestra, su duración de span y la diferencia con respecto a la duración promedio. Esta tabla está ordenada por la mayor duración de span.
+
+Sentry encuentra automáticamente una variedad de muestras para ayudarte a investigar problemas de rendimiento. Los eventos seleccionados cubrirán todo el intervalo de tiempo elegido, así como un rango de duraciones (más rápidas, más lentas y cercanas a la duración promedio). Puedes hacerte una idea de las características de rendimiento comparando distintos eventos de muestra.
+
+Estos mismos eventos también se muestran como triángulos en el gráfico de duración promedio de arriba.
+
+Puedes generar una nueva lista aleatoria de eventos de muestra haciendo clic en el Button &quot;Try Different Samples&quot; al final.
+
+Desde la lista de muestras, puedes profundizar en ejemplos buenos, promedio o malos de una consulta determinada dentro de un endpoint específico. Haz clic en un ID de evento para ver en detalle el span de la consulta dentro de la cascada de spans de la [página Trace View](/es/concepts/key-terms/tracing/trace-view/).
+
+<div id="what-is-time-spent">
+  ## ¿Qué es el tiempo invertido?
+</div>
+
+De forma predeterminada, las consultas se ordenan por **tiempo invertido**, que sirve como indicador del impacto relativo de una consulta determinada.
+
+Cada consulta a la base de datos tarda algo de tiempo en ejecutarse. Cuando una aplicación envía una consulta, espera a que la base de datos la reciba, la procese, la ejecute y devuelva el resultado. En Sentry, el tiempo total desde que se envía la consulta hasta que se recibe el resultado completo se denomina **duración** de la consulta. El **tiempo invertido** de la consulta es la suma de todas sus duraciones en un período determinado.
+
+Por ejemplo, una aplicación podría enviar una consulta como `SELECT * FROM users LIMIT 10` cada vez que un usuario llama al endpoint `/users`. La consulta podría tardar entre 100 ms y 200 ms en ejecutarse, y el endpoint podría llamarse entre 10 y 100 veces por minuto según la hora del día. El tiempo invertido de la consulta es la suma de todas sus duraciones que se produzcan en un período dado. Dicho de otro modo, el tiempo invertido es el producto de la duración promedio y las consultas por minuto. En una aplicación de alto volumen, el tiempo invertido de una consulta podría medirse en semanas o meses.
+
+El tiempo invertido es una forma útil de medir el impacto relativo de una consulta frente a otras en una aplicación. Por ejemplo, si el tiempo invertido de una consulta es de 7 días y el de otra es de solo 2 horas, probablemente sea más útil corregir la consulta con más tiempo invertido. Incluso una pequeña mejora en la duración generaría una mejora general significativa. El tiempo invertido también puede ser una señal contundente de que algo anda mal. Las consultas que de repente empiezan a acaparar más tiempo suelen indicar un problema.

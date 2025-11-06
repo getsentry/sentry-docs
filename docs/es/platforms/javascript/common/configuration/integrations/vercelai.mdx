@@ -1,0 +1,219 @@
+---
+title: Vercel AI
+description: "Añade instrumentación para el Vercel AI SDK."
+supported:
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.deno
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.cloudflare
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.electron
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.solidstart
+  - javascript.sveltekit
+  - javascript.react-router
+  - javascript.remix
+  - javascript.astro
+  - javascript.bun
+  - javascript.tanstackstart-react
+---
+
+<Alert>
+
+Requiere la versión `10.6.0` o posterior del SDK para Node.js, Cloudflare Workers, Vercel Edge Functions y Bun.
+Requiere la versión `10.12.0` o posterior del SDK para Deno.
+
+</Alert>
+
+_Nombre de importación: `Sentry.vercelAIIntegration`_
+
+`vercelAIIntegration` añade instrumentación para el SDK [`ai`](https://www.npmjs.com/package/ai) de Vercel para capturar spans usando la [`telemetría integrada del AI SDK`](https://sdk.vercel.ai/docs/ai-sdk-core/telemetry).
+
+<PlatformSection notSupported={["javascript.cloudflare", "javascript.nextjs"]}>
+  Está habilitada de forma predeterminada y capturará automáticamente spans de todas las llamadas a funciones de `ai`.
+  Puedes optar por capturar entradas y salidas configurando `recordInputs` y `recordOutputs` en la configuración de la integración:
+
+```javascript
+Sentry.init({
+  dsn: "____PUBLIC_DSN____"
+  tracesSampleRate: 1.0,
+  integrations: [
+    Sentry.vercelAIIntegration({
+      recordInputs: true,
+      recordOutputs: true,
+    }),
+  ],
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={['javascript.cloudflare']}>
+Esta integración no está habilitada de forma predeterminada. Debes habilitarla manualmente pasando `Sentry.vercelAIIntegration()` a `Sentry.init`:
+
+```javascript
+Sentry.init({
+  dsn: "____PUBLIC_DSN____"
+  tracesSampleRate: 1.0,
+  integrations: [Sentry.vercelAIIntegration()],
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={['javascript.nextjs']}>
+Esta integración está habilitada de forma predeterminada en el runtime de Node, pero no en el runtime de Edge. Debes habilitarla manualmente pasando `Sentry.vercelAIIntegration()` a `Sentry.init` en tu archivo `sentry.edge.config.js`:
+
+```javascript {filename: 'sentry.edge.config.(js|ts)'}
+Sentry.init({
+  dsn: "____PUBLIC_DSN____"
+  tracesSampleRate: 1.0,
+  integrations: [Sentry.vercelAIIntegration()],
+});
+```
+
+</PlatformSection>
+
+<PlatformSection supported={['javascript.cloudflare', 'javascript.nextjs']}>
+Para capturar spans correctamente, pasa el objeto `experimental_telemetry` con `isEnabled: true` a cada llamada a las funciones `generateText`, `generateObject` y `streamText`. Para más detalles, consulta la documentación de [AI SDK Telemetry Metadata](https://sdk.vercel.ai/docs/ai-sdk-core/telemetry#telemetry-metadata).
+
+```javascript
+const result = await generateText({
+  model: openai("gpt-4o"),
+  experimental_telemetry: {
+    isEnabled: true,
+    recordInputs: true,
+    recordOutputs: true,
+  },
+});
+```
+
+</PlatformSection>
+
+<PlatformSection notSupported={['javascript.cloudflare']}>
+<div id="options">
+  ## Opciones
+</div>
+
+<div id="force">
+  ### `force`
+</div>
+
+Requiere la versión `9.29.0` o posterior del SDK.
+
+_Tipo: `boolean`_
+
+Fuerza que la integración esté activa, incluso cuando el módulo `ai` no se detecte o no esté disponible. Esto es útil cuando quieres garantizar que la integración siempre esté habilitada, independientemente de la detección del módulo.
+
+El valor predeterminado es `false`.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.vercelAIIntegration({ force: true })],
+});
+```
+
+<PlatformSection supported={["javascript.nextjs"]}>
+  Esta opción no está disponible en el entorno Edge. Allí, la integración se
+  fuerza cuando está habilitada.
+</PlatformSection>
+
+<PlatformSection notSupported={['javascript.nextjs']}>
+<div id="recordinputs">
+  ### `recordInputs`
+</div>
+
+Requiere la versión `9.27.0` o posterior del SDK.
+
+_Tipo: `boolean`_
+
+Registra las entradas en la llamada a la función `ai`.
+
+De forma predeterminada es `true` si `sendDefaultPii` es `true` o si estableces explícitamente `experimental_telemetry.isEnabled` en `true` en los puntos de llamada de tu función `ai`.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.vercelAIIntegration({ recordInputs: true })],
+});
+```
+
+<div id="recordoutputs">
+  ### `recordOutputs`
+</div>
+
+Requiere la versión `9.27.0` o posterior del SDK.
+
+_Tipo: `boolean`_
+
+Registra las salidas en la llamada a la función `ai`.
+
+De forma predeterminada es `true` si `sendDefaultPii` es `true` o si estableces explícitamente `experimental_telemetry.isEnabled` en `true` en los puntos de llamada de tu función `ai`.
+
+```javascript
+Sentry.init({
+  integrations: [Sentry.vercelAIIntegration({ recordOutputs: true })],
+});
+```
+
+</PlatformSection>
+
+</PlatformSection>
+
+<div id="identifying-functions">
+  ## Identificación de funciones
+</div>
+
+Para facilitar la correlación de los spans capturados con las llamadas a función, recomendamos establecer `functionId` en `experimental_telemetry` en todas las llamadas a funciones de generación:
+
+```javascript
+const result = await generateText({
+  model: openai("gpt-4o"),
+  experimental_telemetry: {
+    isEnabled: true,
+    functionId: "my-awesome-function",
+  },
+});
+```
+
+
+<div id="configuration">
+  ## Configuración
+</div>
+
+De forma predeterminada, esta integración añade compatibilidad de trazas a todas las llamadas a la función `ai`. Si necesitas desactivar la recopilación de spans para una llamada específica, puedes hacerlo configurando `experimental_telemetry.isEnabled` en `false` en el primer argumento de la llamada a la función.
+
+```javascript
+const result = await generateText({
+  model: openai("gpt-4o"),
+  experimental_telemetry: { isEnabled: false },
+});
+```
+
+Si estableces `experimental_telemetry.recordInputs` y `experimental_telemetry.recordOutputs`, se anulará el comportamiento predeterminado de recopilar entradas y salidas para esa llamada de función.
+
+```javascript
+const result = await generateText({
+  model: openai("gpt-4o"),
+  experimental_telemetry: {
+    isEnabled: true,
+    recordInputs: true,
+    recordOutputs: true,
+  },
+});
+```
+
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+- `ai`: `>=3.0.0 <6`

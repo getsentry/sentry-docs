@@ -1,0 +1,108 @@
+---
+title: Importación dinámica (experimental)
+sidebar_order: 3
+description: "Descubre cómo el Nuxt SDK aprovecha input() dinámico en el resultado de la compilación."
+---
+
+<div id="understanding-the-import-expression">
+  ## Comprender la expresión `import()`
+</div>
+
+<Alert level="warning">
+  Este método de instalación no funciona con las versiones más recientes de Nuxt/Nitro.
+
+  Recomendamos leer la guía para instalar el SDK con la <PlatformLink to="/install/cli-import">opción de la CLI `--import`</PlatformLink> o con el <PlatformLink to="/install/limited-server-tracing">trazado limitado del servidor</PlatformLink>
+</Alert>
+
+La expresión `import()`, o importación dinámica, permite una carga flexible y condicional de módulos en ESM.
+Node.js generará un grafo de módulos independiente para cualquier código envuelto en un `import()` dinámico. Este grafo independiente se evalúa **después** de todos los módulos que se importan de forma estática.
+
+Al usar el SDK de Sentry para Nuxt, la aplicación del lado del servidor se envolverá en un `import()` dinámico, mientras que la configuración de Sentry se importará con un `import` estático.
+Esto permite inicializar el SDK de Sentry para Nuxt al inicio, mientras que el runtime del servidor Nitro se carga más tarde porque se `import()`a.
+Esta inicialización temprana de Sentry es necesaria para configurar correctamente la instrumentación del SDK en varias bibliotecas.
+
+<div id="scenarios-where-import-doesnt-work">
+  ## Escenarios en los que `import()` no funciona
+</div>
+
+Según tu configuración y la versión de Nitro que uses, a veces el lado del servidor no se inicializa correctamente.
+La salida de la compilación **no debe** incluir un `import` normal del runtime de Nitro (p. ej., `import './chunks/nitro/nitro.mjs'`).
+Consulta el [issue de GitHub aquí](https://github.com/getsentry/sentry-javascript/issues/14514) para más información.
+
+Como solución temporal, puedes añadir las siguientes anulaciones en tu aplicación:
+
+```json {tabTitle:npm} {filename:package.json}
+"overrides": {
+  "nitropack": "~2.9.7",
+  "@vercel/nft": "^0.27.4"
+}
+```
+
+```json {tabTitle:yarn} {filename:package.json}
+"resolutions": {
+  "nitropack": "~2.9.7",
+  "@vercel/nft": "^0.27.4"
+}
+```
+
+```json {tabTitle:pnpm} {filename:package.json}
+"pnpm": {
+  "overrides": {
+    "nitropack": "~2.9.7",
+    "@vercel/nft": "^0.27.4"
+  }
+}
+```
+
+También puedes consultar la guía para instalar el SDK con la <PlatformLink to="/install/cli-import">opción de la CLI `--import`</PlatformLink> o <PlatformLink to="/install/limited-server-tracing">limited-server-tracing</PlatformLink>.
+
+
+<div id="initializing-sentry-with-dynamic-import">
+  ## Inicializar Sentry con `import()` dinámico
+</div>
+
+Activa el `import()` dinámico configurando `autoInjectServerSentry`:
+
+```typescript {filename:nuxt.config.ts} {3}
+export default defineNuxtConfig({
+  sentry: {
+    autoInjectServerSentry: 'experimental_dynamic-import'
+  },
+})
+```
+
+Después de configurar esto, el SDK de Sentry para Nuxt agregará una configuración en tiempo de compilación para que tu aplicación quede envuelta con `import()`,
+asegurando que Sentry se inicialice antes que cualquier otro módulo.
+
+El archivo de entrada del servidor de Nuxt se verá algo así:
+
+```javascript {filename:.output/server/index.mjs}
+// Nota: El archivo puede contener algunas importaciones y código relacionados con IDs de depuración
+Sentry.init({
+  dsn: "..."
+});
+
+import('./chunks/nitro/nitro.mjs').then(function (n) { return n.r; });
+```
+
+
+<div id="re-exporting-serverless-handler-functions">
+  ## Reexportación de funciones handler sin servidor
+</div>
+
+Sentry detecta automáticamente las funciones handler sin servidor en el resultado de la compilación y las reexporta desde el archivo de entrada del servidor.
+
+De forma predeterminada, Sentry reexporta funciones llamadas `handler`, `server` y exportaciones `default`. Esto funcionará en la mayoría de los casos y no se requiere ninguna otra acción.
+Si tu función sin servidor tiene un nombre personalizado, puedes anularlo con `experimental_entrypointWrappedFunctions`:
+
+```javascript {filename: nuxt.config.ts} {7}
+export default defineNuxtConfig({
+  modules: ["@sentry/nuxt/module"],
+
+  sentry: {
+    // Personaliza los nombres de las funciones detectadas
+    // Valor por defecto: ['default', 'handler', 'server']
+    experimental_entrypointWrappedFunctions: ['customFunctionName']
+  },
+});
+```

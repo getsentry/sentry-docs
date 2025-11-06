@@ -1,0 +1,480 @@
+---
+title: Elementos del sobre
+sidebar_order: 2
+---
+
+Cada sobre consta de encabezados y de una lista, que puede estar vacía, de elementos, cada uno
+con sus propios encabezados. Los encabezados obligatorios dependen de los elementos del
+sobre. Esta sección describe todos los tipos de elementos y sus respectivos encabezados
+requeridos. Cabe señalar que la lista de tipos de elementos no coincide con las categorías de datos
+usadas para la [limitación de tasa](/es/sdk/expected-features/rate-limiting/#definitions) y los informes del cliente.
+
+El tipo de un elemento se declara en el encabezado `type`, y el tamaño de la carga útil
+en `length`. Consulta el formato de serialización para ver una lista de encabezados de elementos comunes.
+Los encabezados descritos en esta sección son **además de los encabezados comunes**.
+
+<div id="event">
+  ### Evento
+</div>
+
+Tipo de elemento `"event"`. Este elemento contiene una [carga útil de evento](/es/sdk/data-model/event-payloads/) de error o predeterminada,
+codificada en JSON.
+
+**Restricciones:**
+
+* Este elemento puede aparecer como máximo una vez por Envelope.
+* Este elemento es mutuamente exclusivo con elementos `"transaction"`.
+
+**Encabezados del Envelope:**
+
+`event_id`
+
+: **Cadena UUID, obligatorio.** Corresponde al campo `event_id` de la carga útil del
+evento. Se requiere que los clientes generen de antemano un identificador de evento
+y lo establezcan al menos en los encabezados del Envelope. Si el identificador no coincide
+entre el Envelope y la carga útil, el encabezado del Envelope tiene prioridad.
+
+**Encabezados adicionales del elemento:**
+
+*Ninguno*
+
+<div id="transaction">
+  ### Transacción
+</div>
+
+Tipo de Item `"transaction"`. Este Item contiene una carga útil de transacción codificada
+en JSON.
+
+**Restricciones:**
+
+* Este Item puede aparecer como máximo una vez por Envelope.
+* Este Item es mutuamente exclusivo con los Items `"event"`.
+
+**Encabezados del Envelope:**
+
+`event_id`
+
+: **Cadena UUID, obligatorio.** Corresponde al campo `event_id` de la
+carga útil de la transacción. Se requiere que los clientes generen un identificador de evento
+con antelación y lo establezcan al menos en los encabezados del Envelope. Si el identificador
+no coincide entre el Envelope y la carga útil, el encabezado del Envelope tiene
+precedencia.
+
+**Encabezados adicionales del Item:**
+
+*Ninguno*
+
+<div id="attachment">
+  ### Adjunto
+</div>
+
+Tipo de elemento `"attachment"`. Este elemento contiene la carga útil sin procesar de un archivo adjunto. Siempre está asociado a un evento o transacción.
+
+**Restricciones:**
+
+* Este elemento puede aparecer varias veces por sobre Envoltorio (Envelope).
+* Para los adjuntos de **minidump** y **apple crash report**, el elemento `"event"` correspondiente debe enviarse dentro del mismo Envoltorio.
+* Los adjuntos genéricos pueden ingerirse por separado de sus eventos. Recomendamos enviarlos en el mismo Envoltorio, lo que permite una limitación de tasa y un filtrado más eficientes.
+* Los adjuntos genéricos enviados en Envoltorios separados pueden descartarse independientemente de un evento. Para garantizar un manejo coherente, considera enviarlos en la misma solicitud.
+* El servidor de Sentry admite adjuntos especiales para ingerir cargas útiles de eventos por compatibilidad con versiones anteriores. Estos no forman parte de la API pública oficial y no se debe depender de su comportamiento.
+
+**Encabezados del Envoltorio:**
+
+`event_id`
+
+: **Cadena UUID, obligatoria.** El identificador del evento o transacción.
+
+**Encabezados adicionales del elemento:**
+
+`filename`
+
+: **Cadena, obligatoria.** El nombre del archivo cargado sin el componente de ruta.
+
+`attachment_type`
+
+: *Cadena, opcional.* El tipo especial de este adjunto. Los valores posibles son:
+
+* **`event.attachment` (predeterminado)**: Un adjunto estándar sin significado especial.
+* `event.minidump`: Un archivo minidump que crea un evento de error y se simboliza. El archivo debe comenzar con los bytes mágicos `MDMP`.
+* `event.applecrashreport`: Un archivo de informe de fallos de Apple que crea un evento de error y se simboliza.
+* `unreal.context`: Un archivo XML que contiene metadatos de fallos de UE4. Durante la ingestión del evento, se extraen de este archivo los contextos del evento y los campos “extra”.
+* `unreal.logs`: Un archivo de registro de texto plano obtenido de fallos de UE4. Durante la ingestión del evento, los últimos registros se extraen como breadcrumbs del evento.
+* `event.view_hierarchy`: Un archivo JSON con una estructura predefinida; consulta la [RFC n.º 33](https://github.com/getsentry/rfcs/blob/main/text/0033-view-hierarchy.md).
+
+`content_type`
+
+: *Cadena, opcional.* El tipo de contenido de la carga útil del adjunto. Se puede usar cualquier [tipo MIME](https://www.iana.org/assignments/media-types/media-types.xhtml); el valor predeterminado es `application/octet-stream`.
+
+<div id="session">
+  ### Sesión
+</div>
+
+El tipo de elemento `"session"` contiene una única inicialización de sesión o una actualización de una sesión existente para Release Health.
+
+Consulta la documentación de <Link to="/sdk/telemetry/sessions/">sessions</Link> para conocer los detalles del payload.
+
+**Restricciones:**
+
+* Este elemento puede aparecer varias veces por sobre.
+* La ingesta puede limitar el número máximo de elementos por sobre; consulta *Ingestion*.
+
+**Encabezados de elemento adicionales:**
+
+*Ninguno*
+
+<div id="sessions">
+  ### Sesiones
+</div>
+
+El tipo de elemento `"sessions"` contiene grupos de recuentos de sesiones preagregados.
+
+Consulta la documentación de <Link to="/sdk/telemetry/sessions/">sessions</Link> para conocer los detalles del payload.
+
+**Restricciones:**
+
+* Este elemento puede aparecer varias veces por Envelope.
+* La ingesta puede limitar el número máximo de elementos por Envelope; consulta *Ingestion*.
+
+**Encabezados de elemento adicionales:**
+
+*Ninguno*
+
+<div id="user-feedback">
+  ### Comentarios de usuarios
+</div>
+
+El tipo de elemento `"feedback"` contiene un evento con un contexto de comentarios en la carga útil codificada en JSON.
+
+Ejemplo de carga útil:
+
+```json
+{
+  "event_id": "9ec79c33ec9942ab8353589fcb2e04dc",
+  "timestamp": "2011-05-02T17:41:36Z",
+  "platform": "javascript",
+  "level": "error",
+  "contexts": {
+    "feedback": {
+      "contact_email": "john@example.com",
+      "name": "John Smith",
+      "message": "¡Me encanta la repetición de sesión!",
+      "url": "https://sentry.io/replays/",
+      "associated_event_id": "32fd1995636d446385016e2747623e11",
+      "replay_id": "82840977e85b4ed3bc27f7b5b25cec15"
+    }
+  }
+}
+```
+
+**Atributos de la carga útil**
+
+Solo documentamos los atributos del objeto `contexts.feedback`, que es **obligatorio**
+para este tipo de elemento. Para otros atributos, consulta [Cargas útiles de eventos](/es/sdk/data-model/event-payloads/).
+
+`message`
+
+: **String, obligatorio.** Comentarios del usuario que describen lo ocurrido y/o comparten
+opiniones. La longitud máxima es de **4096 caracteres**.
+
+`contact_email`
+
+: *String, opcional.* El correo electrónico del usuario que envió la opinión. Si se omite, Sentry intenta completar este dato con el contexto del usuario. Las opiniones anónimas (sin nombre ni correo) también se aceptan.
+
+`name`
+
+: *String, opcional.* El nombre del usuario que envió la opinión. Si se omite, Sentry intenta completar este dato con el contexto del usuario. Las opiniones anónimas (sin nombre ni correo) también se aceptan.
+
+`url`
+
+: *String, opcional.* La URL de la página web en la que estaba el usuario al enviar la opinión.
+Esto puede usarse para buscar o configurar alertas relacionadas con la opinión.
+
+`associated_event_id`
+
+: *UUID String, opcional.* El identificador de un evento de error en el mismo proyecto.
+Úsalo para vincular explícitamente un error relacionado en la interfaz de opiniones.
+
+`replay_id`
+
+: *UUID String, opcional.* El identificador de una Session Replay relacionada en el mismo
+proyecto. Sentry usa este ID para renderizar un clip de Replay en la interfaz de opiniones.
+
+**Adjuntar capturas de pantalla:**
+
+Puedes asociar capturas de pantalla a una opinión enviando datos de imagen como
+[elementos adjuntos](/es/sdk/data-model/envelope-items/#attachment), con `event_id`
+correspondiente al elemento de opinión. Recomendamos enviar los elementos en el mismo
+Envelope.
+
+**Restricciones:**
+
+* Este elemento puede aparecer como máximo una vez por Envelope.
+* Este elemento es mutuamente excluyente con los elementos `"transaction"`.
+
+**Encabezados de Envelope obligatorios:**
+
+`event_id`
+
+: **UUID String, obligatorio.** Corresponde al campo `event_id` del payload del evento.
+**No es igual al campo `associated_event_id`** en el contexto de opiniones.
+Los clientes deben generar un identificador de evento con antelación
+y establecerlo al menos en los encabezados del Envelope. Si el identificador no coincide
+entre el Envelope y el payload, el encabezado del Envelope tiene prioridad.
+
+<div id="user-report-deprecated">
+  ### Informe de usuario - Obsoleto
+</div>
+
+Tipo de elemento `"user_report"`. Esta es una forma antigua y obsoleta de enviar comentarios de los usuarios. Sigue funcionando para que los SDK antiguos no se rompan. Las nuevas implementaciones deben usar el tipo de elemento `feedback` descrito arriba.
+
+Este elemento funciona asociando información del usuario y comentarios a un evento. Si tanto el elemento como su evento asociado se aceptan, lo convertimos en un comentario de usuario.
+
+El elemento contiene una carga útil JSON como esta:
+
+```json
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc","email":"john@example.com","name":"John Me","comments":"Se rompió."}\n
+```
+
+**Atributos del payload**
+
+`event_id`
+
+: **Cadena UUID, obligatorio.** El identificador del evento asociado, idealmente
+un error.
+
+`email`
+
+: *Cadena, recomendado.* El correo electrónico del usuario.
+
+`name`
+
+: *Cadena, recomendado.* El nombre del usuario.
+
+`comments`
+
+: *Cadena, recomendado.* Comentarios del usuario sobre lo ocurrido. La longitud máxima es de **4096 caracteres**.
+
+**Restricciones:**
+
+* Este elemento puede aparecer una vez por Envelope.
+* Los informes de usuario pueden ingerirse por separado de sus eventos. Sin embargo, recomendamos
+  enviarlos en el mismo Envelope.
+* No puedes asociar varios informes de usuario al mismo evento.
+* El evento no puede tener más de 30 minutos de antigüedad.
+* Si el evento no existe en el mismo proyecto o nunca se ingirió, el informe
+  se descarta y nunca se convierte en feedback.
+
+**Encabezados del Envelope:**
+
+`event_id`
+
+: **Cadena UUID, obligatorio.** Corresponde al campo `event_id` del payload.
+Si el identificador no coincide entre el Envelope y el payload, el encabezado del
+Envelope tiene prioridad.
+
+**Encabezados de elementos adicionales:**
+
+*Ninguno*
+
+<div id="client-report">
+  ### Informe de cliente
+</div>
+
+El tipo de elemento `"client_report"` contiene una carga útil de informe de cliente codificada en JSON.
+
+Consulta la documentación de <Link to="/sdk/telemetry/client-reports/">client reports</Link> para obtener los detalles de la carga útil.
+
+**Restricciones:**
+
+* Este elemento puede aparecer varias veces por Envelope, pero procura no enviar más informes de cliente de los necesarios.
+* Este elemento puede incluirse en un Envelope junto con otros elementos o enviarse por sí solo.
+
+**Encabezados del Envelope:**
+
+*Ninguno*
+
+**Encabezados adicionales del elemento:**
+
+*Ninguno*
+
+<div id="replay-event">
+  ### Evento de reproducción
+</div>
+
+El tipo de ítem `"replay_event"` contiene una carga útil de reproducción codificada en JSON.
+
+Consulta la documentación de <Link to="/sdk/telemetry/replays/">replays</Link> para ver los detalles de la carga útil.
+
+**Restricciones:**
+
+* Este ítem puede aparecer como máximo una vez por Envelope.
+* Este ítem debe enviarse junto con un ítem de grabación de reproducción.
+
+**Encabezados del Envelope:**
+
+*Ninguno*
+
+**Encabezados adicionales del ítem:**
+
+*Ninguno*
+
+<div id="replay-recording">
+  ### Grabación de Replay
+</div>
+
+El tipo de elemento `"replay_recording"` contiene una carga útil de grabación de Replay codificada en JSON *o* en un JSON comprimido con gzip.
+
+Consulta la documentación de <Link to="/sdk/telemetry/replays/">replays</Link> para ver los detalles de la carga útil.
+
+**Restricciones:**
+
+* Este elemento puede aparecer como máximo una vez por Envelope.
+* Este elemento debe enviarse junto con un elemento de evento de Replay.
+
+**Encabezados de Envelope:**
+
+*Ninguno*
+
+**Encabezados adicionales del elemento:**
+
+`length`
+
+: **entero, obligatorio.** Tamaño de la carga útil de la grabación de Replay
+
+<div id="profile">
+  ### Perfil
+</div>
+
+Tipo de elemento `"profile"`. Este elemento contiene una carga útil de perfil codificada
+en JSON.
+
+**Restricciones:**
+
+* Este elemento puede aparecer como máximo una vez por sobre.
+* Este elemento debe estar en la misma sobre que la transacción asociada.
+
+**Encabezados de la sobre:**
+
+*Ninguno*
+
+**Encabezados adicionales del elemento:**
+
+*Ninguno*
+
+<div id="profile-chunk">
+  ### Fragmento de perfil
+</div>
+
+Tipo de elemento `"profile_chunk"`. Este elemento contiene una carga útil `profile_chunk` (formato de muestra de perfil V2) codificada en JSON.
+
+**Restricciones:**
+
+*Ninguna*
+
+**Encabezados del sobre:**
+
+*Ninguno*
+
+**Encabezados adicionales del elemento:**
+
+*Ninguno*
+
+<div id="check-ins">
+  ### Check-Ins
+</div>
+
+El tipo de Item `"check_in"` contiene una carga de check-in codificada en JSON.
+
+Consulta la documentación de <Link to="/sdk/check-ins/">Check-Ins</Link> para conocer los detalles de la carga.
+
+**Restricciones:**
+
+* Este Item puede aparecer como máximo una vez por Envelope.
+* Este Item puede incluirse en un Envelope junto con otros Items o enviarse por sí solo.
+
+**Envelope Headers:**
+
+*Ninguno*
+
+**Additional Item Headers:**
+
+*Ninguno*
+
+<div id="log">
+  ### Registro
+</div>
+
+El tipo de elemento `"log"` contiene una matriz de cargas de registro codificadas como JSON. Esto permite enviar varias cargas de registro en un único elemento del sobre.
+
+Solo se permite un único contenedor de registros por sobre. El campo `item_count` en el encabezado del elemento del sobre debe coincidir con la cantidad de registros enviados; no es opcional. El campo `content_type` en el encabezado del elemento del sobre debe establecerse en `application/vnd.sentry.items.log+json`.
+
+Está bien mezclar registros de diferentes trazas en el mismo elemento del sobre de registro, pero si lo haces, NO debes adjuntar un DSC (dynamic sampling context) al encabezado del sobre.
+
+Consulta la documentación de <Link to="/sdk/telemetry/logs">Logs</Link> para obtener los detalles de la carga útil. Para un ejemplo de sobre `log`, consulta el [Apéndice A de la documentación de Logs](/es/sdk/telemetry/logs#appendix-a-log-envelope-item-payload).
+
+Ejemplo:
+
+```json
+{
+	"type": "log",
+	"item_count": 5,
+	"content_type": "application/vnd.sentry.items.log+json"
+}
+{
+	"items": [{..log..}, {..log..}, {..log..}, {..log..}, {..log..}]
+}
+```
+
+**Restricciones:**
+
+*Ninguna*
+
+**Encabezados del sobre:**
+
+*Ninguno*
+
+**Encabezados de elementos adicionales:**
+
+`item_count`
+
+: **integer, obligatorio.** El número de entradas de registro en el sobre.
+
+`content_type`
+
+: **string, obligatorio.** El tipo de contenido de las entradas de registro. Debe ser `application/vnd.sentry.items.log+json`.
+
+<div id="otel-logs">
+  ### Registros de Otel
+</div>
+
+El tipo de elemento `"otel_log"` contiene una carga útil de OpenTelemetry Logs codificada como JSON. Se pueden enviar varios elementos de envoltura de registros de Otel en un solo sobre.
+
+Consulta la documentación de <Link to="/sdk/telemetry/logs">Logs</Link> para obtener detalles sobre la carga útil.
+
+**Restricciones:**
+
+*Ninguna*
+
+**Encabezados del sobre:**
+
+*Ninguno*
+
+**Encabezados de elementos adicionales:**
+
+*Ninguno*
+
+<div id="spans">
+  ### Spans
+</div>
+
+Para la versión 2 del protocolo de spans, consulta el <Link to="/sdk/telemetry/spans/span-protocol">protocolo de spans</Link>.
+
+<div id="reserved-types">
+  ### Tipos reservados
+</div>
+
+Los tipos reservados no pueden ser escritos por ninguna implementación. Están reservados para uso futuro o interno. Esta es la lista completa de tipos de Item reservados:
+
+* `security`
+* `unreal_report`
+* `form_data`

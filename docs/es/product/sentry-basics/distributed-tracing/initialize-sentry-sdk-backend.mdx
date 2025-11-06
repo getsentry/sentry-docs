@@ -1,0 +1,171 @@
+---
+title: Añade el SDK de Sentry a tu proyecto de backend
+sidebar_order: 4
+description: "Aprende a añadir el SDK de Sentry a tu base de código de backend."
+---
+
+Esta sección te guía para importar la aplicación de ejemplo en tu entorno de desarrollo local, añadir el SDK de Sentry e inicializarlo.
+
+Si estás usando tu propio código, puedes omitir esta sección. En su lugar:
+
+* Selecciona tu [plataforma](/es/platforms/) y sigue la guía de **Primeros pasos** para añadir el SDK de Sentry a tu código.
+* Luego, pasa al [siguiente paso](/es/product/sentry-basics/distributed-tracing/generate-first-error/).
+
+<div id="1-clone-the-sample-application">
+  ## 1. Clona la aplicación de ejemplo
+</div>
+
+La aplicación de ejemplo es un backend básico que usa Express y Node.
+
+1. Haz un fork del [repositorio de la aplicación de ejemplo](https://github.com/getsentry/tracing-tutorial-backend) en GitHub.
+
+2. Clona el repositorio forkeado en tu entorno local:
+
+   ```bash
+   git clone git@github.com:<your_username>/tracing-tutorial-backend.git
+   ```
+
+3. Abre el proyecto `tracing-tutorial-backend` en tu editor de código preferido.
+
+<div id="2-add-the-sentry-node-sdk">
+  ## 2. Agrega el SDK de Sentry para Node
+</div>
+
+Sentry captura datos mediante un SDK específico de la plataforma que agregas al tiempo de ejecución de tu aplicación. Para usar el SDK, impórtalo y configúralo en tu código fuente. Este proyecto de demostración usa el [SDK de Sentry para Node](https://github.com/getsentry/sentry-javascript/tree/master/packages/node).
+
+1. Navega a la carpeta del proyecto `tracing-tutorial-backend` e instala el SDK de Sentry para Express usando npm.
+
+   ```bash {tabTitle:npm}
+   npm install --save @sentry/node @sentry/profiling-node
+   ```
+
+   ```bash {tabTitle:yarn}
+   yarn add @sentry/node @sentry/profiling-node
+   ```
+
+   ```bash {tabTitle:pnpm}
+   pnpm add @sentry/node @sentry/profiling-node
+   ```
+
+2. Crea un archivo en la raíz de tu proyecto y llámalo `instrument.js`. Importa e inicializa el SDK con el siguiente código:
+
+   ```javascript {filename:instrument.js}
+   const Sentry = require("@sentry/node");
+   const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+
+   Sentry.init({
+     dsn: "sample_DSN_key",
+     integrations: [nodeProfilingIntegration()],
+     // Tracing
+     // Capture 100% of the transactions
+     tracesSampleRate: 1.0,
+
+     // Set sampling rate for profiling - this is relative to tracesSampleRate
+     profilesSampleRate: 1.0,
+   });
+   ```
+
+   Es importante importar e inicializar el SDK lo antes posible en el ciclo de vida de tu aplicación para que Sentry pueda capturar errores durante todo el ciclo.
+
+3. Agrega tu DSN a la configuración del SDK de Sentry.
+
+   Pega el valor del DSN que copiaste del proyecto creado en la [sección anterior](/es/product/sentry-basics/distributed-tracing/create-new-project/). NOTA: Este DSN debe ser **distinto** del que usaste para configurar Sentry en tu proyecto de frontend. Tus proyectos de frontend y backend deben tener cada uno un DSN único.
+
+   ```javascript {filename:instrument.js}
+   Sentry.init({
+     dsn: "<your_DSN_key>",
+     // ...
+   });
+   ```
+
+4. Guarda el archivo.
+
+   Las opciones establecidas en `Sentry.init()` constituyen la configuración del SDK. La única opción de configuración obligatoria es el DSN. Sin embargo, el SDK admite muchas otras opciones de configuración. Obtén más información en nuestra documentación de [Configuration](/es/platforms/javascript/guides/react/configuration/).
+
+   La configuración anterior habilita la supervisión de errores de Sentry, así como las funciones de [**Tracing**](/es/product/tracing/) y [**Session Replay**](/es/platforms/javascript/guides/react/session-replay).
+
+5. Importa `instrument.js` al inicio de tu archivo `server.js`. Luego importa `Sentry` y configura el manejador de errores después de todos los controladores y antes de cualquier otro middleware:
+
+```javascript diff {filename:server.js}
++    // IMPORTANTE: Asegúrate de importar `instrument.js` al inicio de tu archivo.
++    // Si usas la sintaxis de Módulos ECMAScript (ESM), usa `import "./instrument.js";`
++    require("./instrument.js");
+
++    // Todas las demás importaciones a continuación
++    // Importa con `import * as Sentry from "@sentry/node"` si usas ESM
+   const Sentry = require("@sentry/node");
+   const express = require("express");
+   const productsRoute = require('./routes/products');
+   const cors = require('cors')
+
+   const app = express();
+
+   app.use(express.static('public'));
+   app.use(cors());
+
+   app.get('/', (req, res) => {
+       res.send('<h1>¡Hola, aquí el servidor Express.js!</h1>');
+   });
+
+   app.get("/products/debug-sentry", (req, res) => {
+     console.log("¡Error de Sentry lanzado!");
+     throw new Error("¡Mi primer error de Sentry!");
+   });
+
++    // El manejador de errores debe registrarse antes de cualquier otro middleware de errores y después de todos los controladores
++    Sentry.setupExpressErrorHandler(app);
+
++    // Manejador de errores de respaldo opcional
++    app.use(function onError(err, req, res, next) {
++        // El id del error se adjunta a `res.sentry` para devolverlo
++        // y mostrarlo opcionalmente al usuario para soporte.
++        console.log('¡Error 500 lanzado!');
++        res.statusCode = 500;
++        res.end(res.sentry + "\n");
++    });
+
+   app.use('/products', productsRoute);
+
+   const port = 3001;
+
+    app.listen(port, () => {
+       console.log(`El servidor está corriendo en el puerto 3001`);
+   });
+
+```
+
+<div id="3-build-and-run-the-sample-application">
+  ## 3. Compila y ejecuta la aplicación de ejemplo
+</div>
+
+En la carpeta del proyecto `tracing-tutorial-backend`:
+
+1. Instala las dependencias del proyecto.
+
+   ```bash
+   npm install
+   ```
+
+2. Inicia la aplicación en modo de desarrollo:
+
+   ```bash
+   node server.js
+   ```
+
+   Una vez que la aplicación se inicie, verás un mensaje de confirmación similar a este en tu terminal:
+
+   ```bash
+   Server is running on port 3001
+   ```
+
+> **Sugerencia para la resolución de problemas**: Si la aplicación no se inicia debido a errores de sintaxis o a dependencias/módulos faltantes, asegúrate de usar Node 18+ y vuelve a instalar las dependencias. Si usas [nvm](https://github.com/nvm-sh/nvm), verifica que estás en la versión correcta de Node con `nvm use 18` y luego `npm install`.
+
+1. Abre la aplicación de ejemplo en tu navegador.
+
+   La aplicación de ejemplo debería estar ejecutándose en [http://localhost:3001/](http://localhost:3001/) o en la URL que aparece en tu terminal en el paso anterior.
+
+<div id="next">
+  ## Siguiente
+</div>
+
+¡Bien hecho! Ahora tienes una aplicación de backend de Express de ejemplo en ejecución con el SDK de Sentry inicializado. A continuación, [genera tu primer error entre proyectos](/es/product/sentry-basics/distributed-tracing/generate-first-error/) para empezar a usar la función de trazado distribuido de Sentry.

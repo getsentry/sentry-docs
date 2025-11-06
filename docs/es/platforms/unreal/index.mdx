@@ -1,0 +1,122 @@
+---
+title: Unreal Engine
+caseStyle: PascalCase
+supportLevel: production
+sdk: sentry.unreal
+categories:
+  - mobile
+  - desktop
+  - console
+  - gaming
+og_image: /og-images/platforms-unreal.png
+---
+
+El SDK de Unreal Engine se basa en otros SDK de Sentry y los amplía con funciones específicas de Unreal Engine. Ofrece a los desarrolladores pistas útiles sobre dónde y por qué pudo ocurrir un error o un problema de rendimiento.
+
+**Funciones:**
+
+* Compatibilidad nativa con el seguimiento automático de errores por bloqueo en:
+  * Windows (UE 5.2+) y Linux, usando el [SDK nativo](/es/platforms/native/) para admitir C y C++ con minidumps
+  * macOS, usando el [SDK de macOS](/es/platforms/apple/guides/macos/) para admitir Objective-C, Swift, C y C++
+  * iOS, usando el [SDK de iOS](/es/platforms/apple/guides/ios/) para admitir Objective-C, Swift, C y C++
+  * Android, usando el [SDK de Android](/es/platforms/android/) para admitir Java, Kotlin, C y C++
+* Compatible con el [Crash Reporter Client](/es/platforms/unreal/configuration/setup-crashreporter/) incluido con Unreal Engine
+* Compatibilidad con [PlayStation](/es/platforms/playstation/), [Xbox](/es/platforms/xbox/) y [Nintendo Switch](/es/platforms/nintendo-switch/)
+* [Salud de la versión](/es/platforms/unreal/configuration/releases/) para hacer seguimiento de usuarios y sesiones sin bloqueos
+
+<Alert level="warning">
+  Para capturar automáticamente bloqueos en Windows con UE 5.1 o anterior, debes configurar el [Crash Reporter Client](/es/platforms/unreal/configuration/setup-crashreporter/). A partir de UE 5.2, la API proporcionada te permite alternar entre soluciones de gestión de bloqueos predeterminadas (CRC) y de terceros (Sentry), por lo que el paso de configuración de CRC no es necesario. Ambas son mutuamente excluyentes y no se pueden usar simultáneamente.
+</Alert>
+
+En esta página te ayudamos a poner en marcha el SDK de Sentry.
+
+¿Aún no tienes una cuenta ni un proyecto de Sentry? Visita [sentry.io](https://sentry.io/signup/) y luego regresa a esta página.
+
+<div id="install">
+  ## Instalación
+</div>
+
+Sentry captura datos mediante un SDK en el tiempo de ejecución de tu aplicación.
+
+El SDK de Unreal Engine (UE) cuenta con soporte oficial para las tres versiones más recientes de UE. No obstante, es probable que también sea compatible con versiones anteriores del motor, según las funciones y la funcionalidad específicas que necesites.
+
+Recomendamos descargar el código fuente más reciente del plugin desde la [página de Releases en GitHub](https://github.com/getsentry/sentry-unreal/releases), pero también admitimos [métodos de instalación alternativos](/es/platforms/unreal/install/).
+
+Para integrar Sentry en tu proyecto de Unreal Engine usando el paquete de GitHub, selecciona el artefacto que coincida con tu versión de Unreal Engine. Coloca los archivos extraídos en el directorio `Plugins` de tu proyecto. En el siguiente inicio del proyecto, UE te pedirá compilar los módulos Sentry y SentryEditor.
+
+<Alert>
+  Actualmente, este método está disponible solo para proyectos de UE en C++. Los proyectos de Blueprint se pueden convertir a C++ agregando una clase vacía desde el editor.
+</Alert>
+
+Para asegurarte de que el plugin de Sentry se haya habilitado tras completar la instalación, ve al editor y navega al menú **Settings &gt; Plugins &gt; Code Plugins** y verifica la instalación.
+
+![Ventana de Sentry](./img/unreal_plugins_window.png)
+
+Para acceder a la API del plugin desde C++,
+agrega compatibilidad con `Sentry` al script de compilación (`MyProject.build.cs`):
+
+```csharp
+PublicDependencyModuleNames.AddRange(new string[] { ..., "Sentry" });
+```
+
+<div id="configure">
+  ## Configurar
+</div>
+
+La configuración mínima necesaria es el [DSN](/es/product/sentry-basics/dsn-explainer/) de tu proyecto:
+
+```json {tabTitle: Public DSN}
+{
+  "public-dsn": "___PUBLIC_DSN___"
+}
+```
+
+<Alert>
+  Si has iniciado sesión, también puedes ir a la configuración de tu proyecto y copiar su DSN directamente desde allí.
+</Alert>
+
+Sentry se puede configurar desde la ventana de configuración de Sentry.
+Puedes acceder a la ventana desde el menú del editor: **Project Settings &gt; Plugins &gt; Sentry**.
+
+![Sentry settings window](./img/unreal_window.png)
+
+De forma predeterminada, el SDK se inicializa automáticamente al iniciar la aplicación. Como alternativa, puedes desactivar la opción `Initialize SDK automatically` y, en ese caso, será necesaria la inicialización explícita del SDK.
+
+Para anular la configuración del SDK en tiempo de ejecución, usa el método `InitializeWithSettings` de la clase `SentrySubsystem`.
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Este fragmento incluye la captura de mensajes, para que puedas comprobar que todo funciona en cuanto lo configures:
+
+```cpp
+#include "SentrySubsystem.h"
+
+void Verify()
+{
+    // Captura de mensaje
+    USentrySubsystem* SentrySubsystem = GEngine->GetEngineSubsystem<USentrySubsystem>();
+    SentrySubsystem->CaptureMessage(TEXT("Captura de mensaje"));
+}
+```
+
+El mismo resultado puede obtenerse llamando a la función correspondiente en Blueprint:
+
+![Sentry capture message BP](./img/unreal_bp_message.png)
+
+<Alert>
+  Obtén más información sobre cómo capturar manualmente un error o un mensaje en nuestra <PlatformLink to="/usage/">documentación de uso</PlatformLink>.
+</Alert>
+
+Para ver y resolver el error registrado, inicia sesión en [sentry.io](https://sentry.io) y selecciona tu proyecto. Al hacer clic en el título del error, se abrirá una página donde podrás ver información detallada y marcarlo como resuelto.
+
+<div id="store-minidumps-as-attachments">
+  ## Guardar minidumps como archivos adjuntos
+</div>
+
+<Include name="store-minidumps-as-attachments-intro" />
+
+<Alert>☝ Esta función es compatible con Windows, Linux y Android.</Alert>
+
+<Include name="store-minidumps-as-attachments-configuration" />

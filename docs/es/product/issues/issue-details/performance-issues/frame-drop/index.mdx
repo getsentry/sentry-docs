@@ -1,0 +1,206 @@
+---
+title: Caída de fotogramas
+description: >-
+  Obtén más información sobre cómo detectamos problemas de caída de fotogramas y
+  qué puedes hacer para solucionarlos.
+sidebar_order: 30
+og_image: /og-images/product-issues-issue-details-performance-issues-frame-drop.png
+---
+
+El hilo principal (o de la UI) en una app móvil se encarga de toda la interacción del usuario y debe poder responder a gestos y toques en tiempo real. Si una operación de larga duración bloquea el hilo principal, la app deja de responder, lo que afecta la calidad de la experiencia del usuario.
+
+Podemos detectar algunas causas específicas de un bloqueo del hilo principal, como la decodificación de [imágenes](/es/product/issues/issue-details/performance-issues/image-decoding-main-thread/), de [JSON](/es/product/issues/issue-details/performance-issues/json-decoding-main-thread/) o la [búsqueda de cadenas con expresiones regulares](/es/product/issues/issue-details/performance-issues/regex-main-thread/), pero hay muchas otras cosas que podrían provocar un bloqueo. Si un bloqueo del hilo principal hace que tu app pierda fotogramas de la UI, pero no coincide con uno de nuestros detectores específicos, Sentry lo informa bajo el tipo de problema genérico “Caída de fotogramas”.
+
+<div id="detection-criteria">
+  ## Criterios de detección
+</div>
+
+Para que Sentry detecte problemas de caída de fotogramas (Frame Drop), debe estar habilitado el [profiling](/es/product/explore/profiling/). Una vez configurado, Sentry buscará perfiles que registren un fotograma de la interfaz congelado y luego identificará la llamada de función de la aplicación que consuma más tiempo y retrase el siguiente vsync del enlace de visualización. En una cadena de llamadas sin tiempo propio, se elegirá la más profunda.
+
+<Alert>
+  La versión mínima compatible para Cocoa es `8.12.0`.
+</Alert>
+
+<div id="function-evidence">
+  ## Evidencia de la función
+</div>
+
+Para encontrar más información sobre tu problema de caída de fotogramas, ve a la página de **Detalles de la incidencia** y desplázate hasta la sección &quot;Evidencia de la función&quot;, que muestra lo siguiente:
+
+* **Nombre de la transacción:** El nombre de la transacción en la que se detectó la incidencia.
+* **Función sospechosa:** La función que desencadenó la detección de la incidencia.
+* **Duración:** Cuánto tardó la función en ejecutarse y cuántas muestras consecutivas del profiler contenían dicha función.
+
+![Evidencia de la función en caída de fotogramas](./img/frame-drop-function-evidence.png)
+
+Para ver el perfil completo asociado con la incidencia, haz clic en el botón &quot;View Profile&quot;.
+
+El perfil indicará desde dónde se llamó a la función sospechosa, junto con otras funciones llamadas *por* la función sospechosa:
+
+![Perfil de caída de fotogramas](./img/frame-drop-profile.png)
+
+<div id="stack-trace">
+  ## Trazado de pila
+</div>
+
+La sección “Trazado de pila” muestra una vista completa del trazado, destacando el marco de la función de larga duración:
+
+![Trazado de pila de caída de fotogramas](./img/frame-drop-stack-trace.png)
+
+<div id="examples">
+  ## Ejemplos
+</div>
+
+<div id="ios">
+  ### iOS
+</div>
+
+El siguiente código ejecuta un bucle `while` de larga ejecución en el hilo principal:
+
+```objc
+// dado un array de strings de números...
+
+NSMutableOrderedSet<NSString *> *sortedEvenNumbers = [NSMutableOrderedSet<NSString *> orderedSet];
+[numbers enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger __unused idx, BOOL * _Nonnull __unused stop) {
+    if (obj.integerValue % 2 == 0) {
+        [sortedEvenNumbers addObject:obj];
+    }
+}];
+```
+
+El rendimiento podría mejorar si se traslada el cálculo pesado fuera del hilo principal. La forma más sencilla es enviarlo a una cola con menor calidad de servicio (QoS) (o a una `NSOperationQueue`):
+
+```objc {tabTitle:Dispatch to Background Queue}
+// dado un array de cadenas numéricas...
+
+NSMutableOrderedSet<NSString *> *sortedEvenNumbers = [NSMutableOrderedSet<NSString *> orderedSet];
+dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+    [numbers enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger __unused idx, BOOL * _Nonnull __unused stop) {
+        if (obj.integerValue % 2 == 0) {
+            [sortedEvenNumbers addObject:obj];
+        }
+    }];
+});
+```
+
+Otra opción a considerar para los bucles es paralelizar las iteraciones. Hay varias formas de hacerlo:
+
+1. Si estás iterando una colección de Foundation, puede que ya estés usando `enumerateObjects` o `enumerateKeysAndObjects`. Cámbialo por `-[NSArray|NSSet|NSOrderedSet enumerateObjectsWithOptions:usingBlock:]` o `-[NSDictionary enumerateKeysAndObjectsWithOptions:usingBlock:]`, con la opción `NSEnumerationConcurrent`. Ten en cuenta que modificar la colección dentro del bloque provocará una excepción. Esto es, aproximadamente, equivalente a enviar cada iteración del cuerpo del bucle a una cola concurrente de GCD.
+
+2. Usa `dispatch_apply` para ejecutar las iteraciones de un bucle general en una cola concurrente.
+
+```objc {tabTitle:Foundation Collection Concurrent Enumeration}
+// dado un array de cadenas numéricas...
+
+NSMutableOrderedSet<NSString *> *sortedEvenNumbers = [NSMutableOrderedSet<NSString *> orderedSet];
+[numbers enumerateObjectsWithOptions:NSEnumerationConcurrent usingBlock:^(NSString * _Nonnull obj, NSUInteger __unused idx, BOOL * _Nonnull __unused stop) {
+    if (obj.integerValue % 2 == 0) {
+        [sortedEvenNumbers addObject:obj];
+    }
+}];
+```
+
+```objc {tabTitle:dispatch_apply}
+// dado un array de strings de números...
+
+NSMutableOrderedSet<NSString *> *sortedEvenNumbers = [NSMutableOrderedSet<NSString *> orderedSet];
+dispatch_apply(numberOfNumbers, dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^(size_t iteration) {
+    NSString *number = numbers[iteration];
+    if (number.integerValue % 2 == 0) {
+        [sortedEvenNumbers addObject:number];
+    }
+});
+```
+
+Hay varias cosas que tener en cuenta al introducir concurrencia:
+
+* Puede que necesites `@synchronize` en secciones críticas, usar semáforos o enviar de vuelta a una cola serial (o a la cola principal para trabajo de UI).
+* Puede que no puedas paralelizar bucles cuyas iteraciones dependan entre sí o donde el orden sea importante.
+* La paralelización puede ser menos eficiente para colecciones pequeñas porque [crear hilos tiene su propio coste](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/AboutThreads/AboutThreads.html#//apple_ref/doc/uid/10000057i-CH6-SW20). ¡Así que siempre mide primero!
+* Tanto `enumerateObjects...` como `dispatch_apply` son sincrónicos y no devolverán hasta que todas las iteraciones hayan finalizado. Lanza su invocación de forma asíncrona fuera de la cola principal para evitar esperas.
+
+<div id="android">
+  ### Android
+</div>
+
+La siguiente función ejecuta un bucle `for` de larga ejecución para ordenar una lista:
+
+```kotlin
+// ordena una lista de números, con los números pares antes de los impares
+fun sortEvenOdd(numbers: List<Int>): List<Int> {
+    val newList = ArrayList<Int>()
+    for (n in numbers) {
+        if (n % 2 == 0) {
+            val i = newList.indexOfFirst { it % 2 == 1 }
+            newList.add(i.takeIf { it != -1 } ?: 0, n)
+        } else {
+            val i = newList.indexOfLast { it % 2 == 1 }
+            newList.add(i.takeIf { it != -1 } ?: newList.size, n)
+        }
+    }
+    return newList
+}
+```
+
+El rendimiento podría mejorar si se traslada el cómputo intensivo fuera del hilo principal a una corrutina:
+
+```kotlin
+// ordena una lista de números, con los números pares antes de los impares, luego llama a onSorted con la lista ordenada como parámetro.
+fun sortEvenOdd(numbers: List<Int>, onSorted: (sorted: List<Int>) -> Unit): List<Int> {
+    lifecycleScope.launch(Dispatchers.Default) {
+    val newList = ArrayList<Int>()
+        for (n in numbers) {
+            if (n % 2 == 0) {
+            if (n % 2 == 0) {
+                val i = newList.indexOfFirst { it % 2 == 1 }
+                newList.add(i.takeIf { it != -1 } ?: 0, n)
+            } else {
+                val i = newList.indexOfLast { it % 2 == 1 }
+                newList.add(i.takeIf { it != -1 } ?: newList.size, n)
+            }
+        }
+        withContext(Dispatchers.Main) {
+            // Continuar el cálculo en el hilo principal
+            onSorted(newList)
+        }
+    }
+}
+```
+
+No existe una forma generalmente aplicable de mejorar el rendimiento de algoritmos personalizados, ya que cada uno es diferente.
+
+En nuestro ejemplo anterior, por cada elemento de la lista analizamos cada número, realizamos una búsqueda para encontrar el índice adecuado para colocar el elemento y, finalmente, lo insertamos en la lista.
+
+Al usar dos listas separadas para números pares e impares podemos evitar el paso de búsqueda, ya que el índice adecuado siempre será el final de la lista.
+Además, debido a la naturaleza de ArrayList, insertar un elemento en medio de la lista es más lento que insertarlo al final.
+
+Teniendo en cuenta estas consideraciones, se puede acelerar esta función:
+
+```kotlin
+// ordena una lista de números, con los números pares antes de los impares, luego llama a onSorted con la lista ordenada como parámetro.
+fun sortEvenOddFaster(numbers: List<Int>, onSorted: (sorted: List<Int>) -> Unit): List<Int> {
+    lifecycleScope.launch(Dispatchers.Default) {
+        val evenList = ArrayList<Int>(numbers.size)
+        val oddList = ArrayList<Int>(numbers.size)
+        for (n in numbers) {
+            if (n % 2 == 0) {
+                evenList.add(n)
+            } else {
+                oddList.add(n)
+            }
+        }
+        evenList.addAll(oddList)
+        withContext(Dispatchers.Main) {
+            // Continuar el cálculo en el hilo principal
+            onSorted(evenList)
+        }
+    }
+}
+```
+
+Hay varias consideraciones a tener en cuenta para mejorar el rendimiento de un algoritmo:
+
+* Puedes paralelizar el trabajo usando threads (o coroutines de Kotlin).
+* Explora y encuentra las mejores estructuras de datos para tu caso específico.
+* Algunas estructuras se pueden cachear y reutilizar dentro de tu función, reduciendo el uso de memoria.
+* Evalúa diferentes enfoques para resolver un problema.

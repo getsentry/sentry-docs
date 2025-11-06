@@ -1,0 +1,42 @@
+---
+title: Flujo de trabajo
+sidebar_order: 50
+---
+
+También puede interesarte <Link to="/application/sentry-vs-getsentry/">Sentry vs. getsentry</Link>.
+
+<div id="testing-sentry-commits-in-getsentry">
+  ## Probar commits de Sentry en Getsentry
+</div>
+
+Cuando crees un PR, añade `requires <PR link>`
+en el cuerpo. La acción de GitHub `getsentry/action-get-dependent-pr`
+tomará este valor y actualizará la revisión de Sentry durante el CI. Esto es una medida
+temporal para validar rápidamente un cambio: se deben confirmar cambios compatibles
+hacia atrás y hacia adelante en `sentry`, ya que los commits no pueden fusionarse
+al unísono.
+
+NOTA: Si te das cuenta después de abrirlo, edita el cuerpo del PR y luego sube un nuevo commit.
+
+<div id="fast-reverting-a-change">
+  ## Revertir rápidamente un cambio
+</div>
+
+Si un PR fusionado en `sentry` o `getsentry` necesita revertirse de inmediato
+(por ejemplo, durante un incidente o para desatascar el CI), se puede aplicar la etiqueta **`[Trigger: Revert]`**
+al PR. Una acción de GitHub procesará la etiqueta y
+aplicará la reversión directamente a la rama principal.
+
+<div id="python-typechecking">
+  ## Comprobación de tipos en Python
+</div>
+
+Estamos incorporando tipado poco a poco en nuestra base de código de Python, usando `mypy` para comprobar los tipos. Mientras lo hacemos, hay algunas cosas útiles que conviene saber:
+
+- A medida que crees o trabajes en archivos de Python, añade tipado donde puedas. Si es posible, intenta seguir las [mejores prácticas de tipado en Python](https://typing.readthedocs.io/en/latest/source/best_practices.html), lo que puede implicar que también tengas que añadir `from __future__ import annotations` como primera línea del archivo. Para más información sobre el uso de tipos en Python, consulta [la documentación de typing](https://typing.readthedocs.io/en/latest/index.html).
+
+- Comprueba que el archivo que estás modificando no esté en la lista de exclusión de `pyproject.toml`. En otras palabras, necesitas incluir explícitamente el archivo para que se realice la comprobación de tipos.
+
+- Para probar los tipos localmente, puedes ejecutar `mypy path/to/file` o simplemente `mypy` para ejecutarlo en todos los archivos.
+
+- Para ejecutar `mypy` automáticamente durante el pre-push, exporta la variable de entorno `SENTRY_MYPY_PRE_PUSH` con el valor `1`.

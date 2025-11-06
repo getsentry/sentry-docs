@@ -1,0 +1,102 @@
+---
+title: Hono
+description: Aprende a configurar Sentry manualmente en tu app de Hono y a capturar tus primeros errores.
+sdk: sentry.javascript.hono
+fallbackGuide: javascript.node
+categories:
+  - javascript
+  - server
+  - server-node
+---
+
+<PlatformContent includePath="getting-started-primer" />
+
+<Alert type="warning" title="Configuración específica del runtime">
+  Esta guía se centra en el **runtime de Node.js** para Hono. Para otros runtimes, consulta los enlaces de abajo.
+  Si usas el middleware `@sentry/cloudflare`, consulta la [guía de Hono en Cloudflare](/es/platforms/javascript/guides/cloudflare/frameworks/hono/).
+</Alert>
+
+<div id="runtime-support">
+  ## Compatibilidad en tiempo de ejecución
+</div>
+
+Hono funciona en varios entornos de JavaScript. Elige el SDK de Sentry adecuado para tu entorno:
+
+* **Node.js**: Usa `@sentry/node` (esta guía)
+* **Cloudflare Workers**: Usa `@sentry/cloudflare` - consulta nuestra [guía de Hono en Cloudflare](/es/platforms/javascript/guides/cloudflare/frameworks/hono/)
+* **Deno**: Usa `@sentry/deno` - consulta nuestra [guía de Deno](/es/platforms/javascript/guides/deno/) (Beta)
+* **Bun**: Usa `@sentry/bun` - consulta nuestra [guía de Bun](/es/platforms/javascript/guides/bun/)
+
+<Alert>
+  El middleware comunitario `@hono/sentry` se ha quedado obsoleto en favor de los paquetes oficiales de Sentry,
+  que ofrecen mejor rendimiento y más funciones. Si actualmente usas el middleware `@hono/sentry`, tendrás que migrar a `@sentry/cloudflare`.
+</Alert>
+
+<div id="runtime-specific-setup">
+  ## Configuración específica del tiempo de ejecución
+</div>
+
+<div id="nodejs-runtime-this-guide">
+  ### Entorno de ejecución de Node.js (esta guía)
+</div>
+
+Esta guía se centra en Node.js. La configuración utiliza `@sentry/node` y sigue los patrones estándar de Node.js.
+
+<PlatformContent includePath="getting-started-node" />
+
+<div id="other-runtimes">
+  ### Otros entornos de ejecución
+</div>
+
+Para otros entornos, usa el SDK de Sentry correspondiente:
+
+<Expandable title="Deno Runtime (Beta)">
+  ```javascript
+  // Para Deno, usa @sentry/deno (actualmente en Beta)
+  import * as Sentry from "npm:@sentry/deno";
+  import { Hono } from "hono";
+
+  Sentry.init({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+  });
+
+  const app = new Hono();
+  // Configuración de tu app Hono...
+  ```
+</Expandable>
+
+<Expandable title="Bun Runtime">
+  ```javascript
+  // Para Bun, usa @sentry/bun
+  import * as Sentry from "@sentry/bun";
+  import { Hono } from "hono";
+
+  // Inicializa Sentry antes de importar otros módulos
+  Sentry.init({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+  });
+
+  const app = new Hono();
+  // Configuración de tu app Hono...
+  ```
+</Expandable>
+
+<Expandable title="Cloudflare Workers">
+  ```javascript
+  // Para Cloudflare Workers, usa @sentry/cloudflare
+  import * as Sentry from "@sentry/cloudflare";
+  import { Hono } from "hono";
+
+  const app = new Hono();
+
+  export default Sentry.withSentry(
+    (env: Env) => ({
+      dsn: "___PUBLIC_DSN___",
+      tracesSampleRate: 1.0,
+    }),
+    app
+  );
+  ```
+</Expandable>

@@ -1,0 +1,502 @@
+---
+title: Instrumentación de ejemplo
+description: "Ejemplos de uso de métricas de span para depurar problemas de rendimiento y supervisar el comportamiento de la aplicación en aplicaciones de Python."
+sidebar_order: 10
+---
+
+<Alert>
+
+Estos ejemplos asumen que ya has <PlatformLink to="/tracing/">configurado el tracing</PlatformLink> en tu aplicación.
+
+</Alert>
+
+Esta guía ofrece ejemplos prácticos del uso de atributos y métricas de span para resolver desafíos comunes de supervisión y depuración en aplicaciones de Python. Cada ejemplo muestra cómo instrumentar distintos componentes y cómo funcionan juntos dentro de un trace distribuido para ofrecer visibilidad de extremo a extremo.
+
+<div id="file-upload-and-processing-pipeline">
+  ## Flujo de carga y procesamiento de archivos
+</div>
+
+**Desafío:** Entender los cuellos de botella y los errores en operaciones de procesamiento de archivos de múltiples pasos, tanto en el manejo de solicitudes como en los servicios de procesamiento.
+
+**Solución:** Hacer un seguimiento de todo el flujo de procesamiento de archivos con métricas detalladas en cada etapa, desde el manejo inicial del archivo hasta su procesamiento y almacenamiento.
+
+**Instrumentación de la aplicación cliente:**
+
+```python
+# Gestión de solicitudes de carga de archivos
+import sentry_sdk
+import time
+from pathlib import Path
+import requests
+from contextlib import contextmanager
+
+with sentry_sdk.start_span(op="upload", name="Upload File") as span:
+    try:
+        # Iniciar el proceso de carga con la biblioteca requests
+        file_path = Path("/path/to/uploads/user-profile.jpg")
+        
+        # Hacer un seguimiento del progreso con un administrador de contexto
+        @contextmanager
+        def track_progress(total_size):
+            start = time.time()
+            bytes_sent = 0
+            
+            class ProgressTracker:
+                def __call__(self, monitor):
+                    nonlocal bytes_sent
+                    bytes_sent = monitor.bytes_read
+                    progress_percent = (bytes_sent / total_size) * 100
+                    span.set_data("upload.percent_complete", progress_percent)
+                    span.set_data("upload.bytes_transferred", bytes_sent)
+            
+            yield ProgressTracker()
+            
+            # Registrar el tiempo total al salir del contexto
+            span.set_data("upload.total_time_ms", (time.time() - start) * 1000)
+        
+        # Usar el seguimiento de progreso con requests
+        with track_progress(file_path.stat().st_size) as progress_callback:
+            with open(file_path, "rb") as f:
+                response = requests.post(
+                    "https://api.example.com/upload",
+                    files={"file": f},
+                    headers={"X-Sentry-Trace": sentry_sdk.get_traceparent()},  # Propagar el contexto de traza
+                    stream=True,
+                    hooks={"response": progress_callback}
+                )
+            
+            # Establecer los datos finales tras la finalización
+            span.set_data("upload.success", response.ok)
+            if response.ok:
+                result = response.json()
+                span.set_data("upload.server_file_id", result["file_id"])
+            
+            return response
+        
+    except Exception as error:
+        # Registrar información del fallo
+        span.set_data("upload.success", False)
+        span.set_data("upload.error_type", error.__class__.__name__)
+        span.set_data("upload.error_message", str(error))
+        span.set_status(sentry_sdk.SpanStatus.ERROR)
+        raise
+```
+
+**Instrumentación de aplicaciones de servidor:**
+
+```python
+# Servicio de procesamiento de archivos
+import sentry_sdk
+from pathlib import Path
+import boto3
+
+with sentry_sdk.start_span(
+    op="file.process.service",
+    name="Servicio de procesamiento de archivos"
+) as span:
+    # Implementación del procesamiento de archivos
+    file_path = Path("/tmp/uploads/user-profile.jpg")
+    
+    # Procesar el archivo
+    try:
+        # Registrar pasos de procesamiento individuales
+        with sentry_sdk.start_span(op="scan", name="Análisis de virus") as scan_span:
+            # Implementación del análisis de virus
+            scan_span.set_data("scan.engine", "clamav")
+            scan_span.set_data("scan.result", "sin amenazas")
+        
+        # Subir a S3
+        s3_client = boto3.client('s3', region_name='us-west-2')
+        upload_start = time.time()
+        s3_client.upload_file(
+            str(file_path),
+            'my-bucket',
+            'uploads/user-profile.jpg'
+        )
+        
+        span.set_data("storage.actual_upload_time_ms", 
+                         (time.time() - upload_start) * 1000)
+    
+    except Exception as e:
+        span.set_status(sentry_sdk.SpanStatus.ERROR)
+        span.set_data("error.message", str(e))
+        raise
+```
+
+**Cómo funciona el trace en conjunto:**
+El span de la aplicación cliente inicia el trace y gestiona la carga del archivo. Propaga el contexto del trace al servidor a través de los encabezados de la solicitud. El span del servidor continúa el trace, procesa el archivo y lo almacena. Esto crea una imagen completa del recorrido del archivo, lo que te permite:
+
+* Identificar cuellos de botella en cualquier etapa (preparación de la solicitud, transferencia de red, procesamiento, almacenamiento)
+* Medir tiempos de procesamiento de extremo a extremo y tasas de éxito
+* Monitorear el uso de recursos en toda la pila
+* Correlacionar problemas en el manejo de solicitudes con errores del servicio de procesamiento
+
+
+<div id="llm-integration-monitoring">
+  ## Monitoreo de la integración con LLM
+</div>
+
+**Desafío:** Gestionar los costos (uso de tokens) y el rendimiento de las integraciones con LLM en aplicaciones Python.
+
+**Solución:** Seguimiento de todo el flujo de interacción con el LLM, desde la solicitud inicial hasta el procesamiento de la respuesta.
+
+**Instrumentación de la aplicación cliente:**
+
+```python
+# Manejo de solicitudes de LLM en una aplicación Flask
+import sentry_sdk
+import time
+import openai
+from flask import jsonify
+
+@app.route("/ask", methods=["POST"])
+def handle_llm_request():
+    with sentry_sdk.start_span(op="gen_ai.generate_text", name="Generar texto") as span:
+        start_time = time.time() * 1000  # Convertir a milisegundos
+        
+        # Iniciar la transmisión de la respuesta desde la API del LLM
+        user_input = request.json["question"]
+        
+        response_chunks = []
+        first_token_received = False
+        tokens_received = 0
+        
+        # Using OpenAI's streaming API
+        try:
+            for chunk in openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[{"role": "user", "content": user_input}],
+                stream=True
+            ):
+                tokens_received += 1
+                content = chunk.get("choices", [{}])[0].get("delta", {}).get("content", "")
+                response_chunks.append(content)
+                
+                # Registrar el tiempo hasta el primer token
+                if not first_token_received and content:
+                    first_token_received = True
+                    time_to_first_token = (time.time() * 1000) - start_time
+                    span.set_data("response.time_to_first_token_ms", time_to_first_token)
+            
+            # Registrar las métricas finales después de que termine la transmisión
+            total_request_time = (time.time() * 1000) - start_time
+            
+            span.set_data("response.total_time_ms", total_request_time)
+            span.set_data("response.format", "text")
+            span.set_data("response.tokens_received", tokens_received)
+            
+            return jsonify({
+                "response": "".join(response_chunks),
+                "tokens": tokens_received
+            })
+            
+        except Exception as error:
+            span.set_status(sentry_sdk.SpanStatus.ERROR)
+            span.set_data("error.type", error.__class__.__name__)
+            span.set_data("error.message", str(error))
+            return jsonify({"error": str(error)}), 500
+```
+
+**Instrumentación de aplicaciones de servidor:**
+
+```python
+# Servicio de procesamiento de LLM (p. ej., en un microservicio independiente)
+import sentry_sdk
+import time
+import openai
+
+def process_llm_request(request_data):
+    with sentry_sdk.start_span(
+        op="gen_ai.generate_text",
+        name="Generate Text"
+    ) as span:
+        start_time = int(time.time() * 1000)  # Hora actual en milisegundos
+        
+        try:
+            # Comprobar los límites de solicitud antes de procesar
+            rate_limits = check_rate_limits()
+            span.set_data("llm.rate_limit_remaining", rate_limits["remaining"])
+            
+            # Preparar el prompt con contexto adicional
+            prepared_prompt = enhance_prompt(request_data["question"])
+            
+            # Realizar la llamada a la API del proveedor de LLM
+            response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[{"role": "system", "content": "Eres un asistente servicial."},
+                         {"role": "user", "content": prepared_prompt}],
+                temperature=0.7,
+                max_tokens=4096
+            )
+            
+            # Registrar el uso de tokens y las métricas de rendimiento
+            span.set_data("llm.prompt_tokens", response.usage.prompt_tokens)
+            span.set_data("llm.completion_tokens", response.usage.completion_tokens)
+            span.set_data("llm.total_tokens", response.usage.total_tokens)
+            span.set_data("llm.api_latency_ms", int(time.time() * 1000) - start_time)
+            
+            # Calcular y registrar el costo según el uso de tokens
+            cost = calculate_cost(
+                response.usage.prompt_tokens,
+                response.usage.completion_tokens,
+                "gpt-4"
+            )
+            span.set_data("llm.cost_usd", cost)
+            
+            return {
+                "response": response.choices[0].message.content,
+                "usage": response.usage
+            }
+            
+        except Exception as error:
+            # Registrar la información del error
+            span.set_data("error", True)
+            span.set_data("error.type", error.__class__.__name__)
+            span.set_data("error.message", str(error))
+            
+            # Comprobar si es un error por límite de solicitudes
+            is_rate_limit = "rate_limit" in str(error).lower()
+            span.set_data("error.is_rate_limit", is_rate_limit)
+            span.set_status(sentry_sdk.SpanStatus.ERROR)
+            
+            raise
+```
+
+**Cómo funciona el trace en conjunto:**
+El span de la aplicación cliente captura el manejo inicial de la solicitud, mientras que el span del servidor registra la interacción real con la API del LLM. El trace distribuido muestra el flujo completo desde la entrada hasta la respuesta, lo que te permite:
+
+
+- Analiza los tiempos de respuesta de punta a punta
+- Haz seguimiento de los costos y los patrones de uso de tokens
+- Optimiza el rendimiento de la integración con la API
+- Supervisa los límites de solicitud y las cuotas del servicio
+- Relaciona las entradas de los usuarios con el rendimiento del modelo
+
+<div id="e-commerce-transaction-flow">
+  ## Flujo de transacciones de e‑commerce
+</div>
+
+**Desafío:** Comprender todo el flujo de compra e identificar problemas que afectan los ingresos en toda la pila de la aplicación.
+
+**Solución:** Hacer un seguimiento de todo el proceso de transacción, desde la solicitud a la API hasta la preparación/entrega del pedido.
+
+**Instrumentación de la aplicación cliente:**
+
+```python
+# Vista de Django que maneja la solicitud de pago
+import sentry_sdk
+import time
+from django.views import View
+from django.http import JsonResponse
+
+class CheckoutView(View):
+    def post(self, request):
+        with sentry_sdk.start_span(op="order", name="Procesar pedido") as span:
+            # Validar la solicitud de pago
+            validation_start = time.time()
+            validation_result = self.validate_checkout_data(request.POST)
+            span.set_data("request.validation_time_ms", 
+                             (time.time() - validation_start) * 1000)
+            
+            if not validation_result["valid"]:
+                span.set_data("request.validation_success", False)
+                span.set_data("request.validation_errors", validation_result["errors"])
+                return JsonResponse({"errors": validation_result["errors"]}, status=400)
+            
+            # Procesar el pedido
+            try:
+                order_result = self.process_order(request)
+                
+                # Actualizar el span con los resultados del pedido
+                span.set_data("order.id", order_result["order_id"])
+                span.set_data("order.success", True)
+                
+                # Vaciar el carrito y devolver la confirmación
+                request.session["cart"] = []
+                request.session["cart_total"] = 0
+                
+                return JsonResponse({"order_id": order_result["order_id"]})
+                
+            except Exception as e:
+                span.set_status(sentry_sdk.SpanStatus.ERROR)
+                span.set_data("order.success", False)
+                span.set_data("error.message", str(e))
+                return JsonResponse({"error": str(e)}, status=500)
+```
+
+**Instrumentación de aplicaciones de servidor:**
+
+```python
+# Servicio de procesamiento de pedidos
+import sentry_sdk
+import stripe
+from decimal import Decimal
+
+def process_order(order_data):
+    with sentry_sdk.start_span(
+        op="inventory",
+        name="Comprobar inventario"
+    ) as span:
+        try:
+            # Comprobar disponibilidad de inventario
+            inventory_start = time.time()
+            inventory_result = check_inventory(order_data["items"])
+            span.set_data("inventory.check_time_ms", 
+                             (time.time() - inventory_start) * 1000)
+            span.set_data("inventory.all_available", inventory_result["all_available"])
+            
+            if not inventory_result["all_available"]:
+                span.set_data("inventory.unavailable_items", 
+                                 inventory_result["unavailable_items"])
+                raise ValueError("Algunos artículos no tienen existencias")
+            
+            # Procesar el pago con Stripe
+            payment_start = time.time()
+            stripe.api_key = "sk_test_..."
+            payment_intent = stripe.PaymentIntent.create(
+                amount=int(Decimal(order_data["total"]) * 100),  # Convertir a céntimos
+                currency="usd",
+                payment_method=order_data["payment_method_id"],
+                confirm=True
+            )
+            
+            span.set_data("payment.processing_time_ms", 
+                             (time.time() - payment_start) * 1000)
+            span.set_data("payment.transaction_id", payment_intent.id)
+            span.set_data("payment.success", payment_intent.status == "succeeded")
+            
+            # Crear registro de cumplimiento de pedidos
+            fulfillment = create_fulfillment(order_data["order_id"])
+            span.set_data("fulfillment.id", fulfillment["id"])
+            span.set_data("fulfillment.warehouse", fulfillment["warehouse"])
+            span.set_data("fulfillment.shipping_method", fulfillment["shipping_method"])
+            span.set_data("fulfillment.estimated_delivery", 
+                             fulfillment["estimated_delivery"].isoformat())
+            
+            return {
+                "success": True,
+                "order_id": order_data["order_id"],
+                "payment_id": payment_intent.id,
+                "fulfillment_id": fulfillment["id"]
+            }
+            
+        except Exception as e:
+            span.set_status(sentry_sdk.SpanStatus.ERROR)
+            span.set_data("error.message", str(e))
+            span.set_data("order.success", False)
+            raise
+```
+
+**Cómo funciona el trazo en conjunto:**
+El span de la aplicación cliente registra la solicitud inicial del pedido, mientras que el span del servidor se encarga del procesamiento y la entrega del pedido. El trazo distribuido ofrece visibilidad de todo el flujo de compra, lo que te permite:
+
+* Analizar el rendimiento de las transacciones y las tasas de éxito
+* Registrar los tiempos y los errores del procesamiento de pagos
+* Supervisar el impacto de la disponibilidad de inventario en las conversiones
+* Medir los tiempos de finalización del pedido de extremo a extremo
+* Identificar puntos de fricción en el proceso de transacción
+
+
+<div id="data-processing-pipeline">
+  ## Flujo de procesamiento de datos
+</div>
+
+**Desafío:** Entender el rendimiento y la confiabilidad de los flujos de procesamiento de datos distribuidos, desde la solicitud del trabajo hasta su finalización.
+
+**Solución:** Seguimiento integral del ciclo de vida del trabajo abarcando la gestión de colas, las etapas de procesamiento y el rendimiento de los workers.
+
+**Instrumentación de la aplicación cliente:**
+
+```python
+# Envío de tareas en Celery
+import sentry_sdk
+from celery import shared_task
+import time
+from datetime import datetime, timedelta
+
+def submit_processing_job(data_file_path, priority="medium"):
+    with sentry_sdk.start_span(op="job", name="Procesar tarea") as span:
+        # Submit job to Celery
+        try:
+            # Configurar la tarea y enviarla
+            task = process_data_file.apply_async(
+                args=[str(data_file_path)],
+                kwargs={"priority": priority},
+                queue="data_processing"
+            )
+            
+            span.set_data("job.id", task.id)
+            span.set_data("job.submission_success", True)
+            
+            # Empezar a monitorear el progreso de la tarea
+            monitoring_result = setup_task_monitoring(task.id)
+            span.set_data("monitor.callback_url", monitoring_result["callback_url"])
+            
+            return {
+                "job_id": task.id,
+                "status": "enviada",
+                "monitoring_url": monitoring_result["status_url"]
+            }
+            
+        except Exception as e:
+            span.set_status(sentry_sdk.SpanStatus.ERROR)
+            span.set_data("job.submission_success", False)
+            span.set_data("error.message", str(e))
+            raise
+
+@shared_task(name="tasks.process_data_file")
+def process_data_file(file_path, priority="medium"):
+    with sentry_sdk.start_span(
+        op="process",
+        name="Procesamiento de datos"
+    ) as span:
+        try:
+            # Implementación del procesamiento con seguimiento por etapas
+            span.set_data("processing.current_stage", "parse")
+            data = parse_data_file(file_path)
+            
+            span.set_data("processing.current_stage", "transform")
+            transformed_data = transform_data(data)
+            
+            span.set_data("processing.current_stage", "validate")
+            validation_result = validate_data(transformed_data)
+            span.set_data("validation.errors_count", len(validation_result["errors"]))
+            
+            span.set_data("processing.current_stage", "export")
+            export_result = export_processed_data(transformed_data)
+            
+            # Registrar el uso de recursos
+            span.set_data("resource.cpu_percent", psutil.cpu_percent())
+            span.set_data("resource.memory_used_mb", 
+                             psutil.Process().memory_info().rss / (1024 * 1024))
+            
+            # Actualizar el resultado final de la tarea
+            span.set_data("outcome.status", "completed")
+            span.set_data("outcome.records_processed", len(data))
+            span.set_data("outcome.output_size_bytes", 
+                             os.path.getsize(export_result["output_path"]))
+            
+            return {
+                "success": True,
+                "records_processed": len(data),
+                "output_path": export_result["output_path"]
+            }
+            
+        except Exception as e:
+            span.set_status(sentry_sdk.SpanStatus.ERROR)
+            span.set_data("outcome.status", "error")
+            span.set_data("error.message", str(e))
+            span.set_data("error.stage", span.get_data("processing.current_stage"))
+            raise
+```
+
+**Cómo funciona el trace en conjunto:**
+Este ejemplo muestra tanto el envío como el procesamiento del job como un único trace, algo común en patrones de tareas distribuidas con Celery. Los spans cubren todo el ciclo de vida del job, lo que te permite:
+
+* Supervisar la salud de la cola de tareas y los tiempos de procesamiento
+* Medir el uso de recursos de los workers
+* Identificar cuellos de botella en etapas específicas del procesamiento
+* Analizar la eficiencia de la planificación de jobs y los tiempos de espera en la cola
+* Supervisar el rendimiento de datos y las tasas de error
+
+Para obtener más información sobre cómo implementar estos ejemplos de forma eficaz, consulta nuestra <PlatformLink to="/tracing/span-metrics/">guía de Span Metrics</PlatformLink>, que incluye prácticas recomendadas y pautas de implementación detalladas.

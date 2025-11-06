@@ -1,0 +1,32 @@
+---
+title: Solución de problemas
+description: "Solución de problemas comunes en Go"
+keywords: ["go", "troubleshooting"]
+sidebar_order: 9000
+supported:
+  - go
+  - go.echo
+  - go.fasthttp
+  - go.gin
+  - go.http
+  - go.iris
+  - go.negroni
+---
+
+<div id="missing-stack-trace">
+  ## Traza de pila ausente
+</div>
+
+Como el SDK de Go intenta leer los archivos fuente de tu disco local, es posible que estés compilando el binario y desplegándolo de manera que el código fuente quede inaccesible.
+
+Esto es común en Go porque puedes compilar el binario y luego ya no necesitas el código fuente. Sin acceso al código fuente, sin embargo, no podemos correlacionar nada y no admitimos subir el código fuente de Go con una versión para unir estos datos.
+
+Puedes ver [en la sección de Serverless](/es/platforms/go/serverless/#source-context) cómo empaquetar el código fuente junto con el binario, lo cual también aplica a otras formas de despliegue.
+
+<div id="avoiding-temporary-file-leaks-in-file-upload-handlers">
+  ## Evitar fugas de archivos temporales en los manejadores de carga de archivos
+</div>
+
+El middleware del SDK de Go de Sentry debe modificar el contexto de la solicitud para funcionar correctamente. Esto hace que se pase una copia superficial de la solicitud a los manejadores aguas arriba. Esto significa que los archivos temporales creados al llamar a `ParseMultipartForm` en esta solicitud no se limpiarán automáticamente. Es importante limpiar estos archivos llamando a `request.Multipart.RemoveAll()` después.
+
+Consulta la [documentación de multipart](https://pkg.go.dev/mime/multipart#Form.RemoveAll) para obtener más información.

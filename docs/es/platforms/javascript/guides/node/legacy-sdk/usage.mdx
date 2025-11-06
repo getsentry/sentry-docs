@@ -1,0 +1,391 @@
+---
+draft: true
+categories: []
+toc: true
+title: Uso
+sidebar_order: 1
+noindex: true
+tags: []
+---
+
+<Alert level="warning" title="Aviso de obsolescencia">
+  Un nuevo SDK de Node ha sustituido esta versión obsoleta. Sentry conserva esta documentación para clientes que usan el cliente antiguo. Recomendamos usar el [SDK de Node actualizado](/es/platforms/javascript/guides/node/) en tus proyectos.
+</Alert>
+
+<div id="capturing-errors">
+  ## Captura de errores
+</div>
+
+Puedes usar `captureException` para informar manualmente los errores:
+
+```javascript
+try {
+  throw new Error();
+} catch (e) {
+  // Puedes obtener el eventId como valor de retorno sincrónico o mediante el callback
+  var eventId = Raven.captureException(e, function (sendErr, eventId) {
+    // Este callback se ejecuta una vez que el informe se ha enviado a Sentry
+    if (sendErr) {
+      console.error("No se pudo enviar la excepción capturada a Sentry");
+    } else {
+      console.log("Excepción capturada y enviada a Sentry correctamente");
+    }
+  });
+}
+```
+
+Ahora bien, el patrón de uso recomendado es ejecutar todo tu programa dentro de un contexto de Raven:
+
+```javascript
+var Raven = require("raven");
+
+Raven.config("___PUBLIC_DSN___").install();
+Raven.context(function () {
+  // todo tu código va aquí
+});
+```
+
+Raven capturará y notificará automáticamente cualquier error no controlado que se origine dentro de esta función (o en cualquier cosa que esta llame, etc.), así que no tienes que usar *captureException* manualmente en todas partes. Esto también le da a tu código acceso a métodos de contexto. Consulta más abajo para obtener más información sobre los contextos.
+
+<div id="contextwrap">
+  ## context/wrap
+</div>
+
+`Raven.context` te permite envolver cualquier función para ejecutarla de inmediato. Bajo el capó, esto utiliza [domains](https://nodejs.org/api/domain.html) para envolver, capturar y registrar cualquier excepción que se origine en la función.
+
+```javascript
+Raven.context(function () {
+  doSomething(a[0]);
+});
+```
+
+`Raven.wrap` envuelve una función de forma similar a `Raven.context`, pero en lugar de invocarla, devuelve otra función. Esto es especialmente útil al pasar una función de devolución de llamada (callback).
+
+```javascript
+var doIt = function () {
+  // haciendo cosas interesantes
+};
+
+setTimeout(Raven.wrap(doIt), 1000);
+```
+
+Nos referimos al código envuelto con `Raven.context` o `Raven.wrap` como código dentro de un contexto. El código dentro de un contexto tiene acceso a los métodos `setContext`, `mergeContext` y `getContext` para asociar datos con ese contexto.
+
+```javascript
+Raven.setContext({
+  user: {
+    username: "lewis",
+  },
+});
+
+Raven.mergeContext({
+  tags: {
+    component: "api",
+  },
+});
+
+console.log(Raven.getContext());
+// { usuario: ..., etiquetas: ... }
+```
+
+Un contexto suele corresponder a una solicitud; si estás usando nuestro middleware de Express, cada solicitud se envuelve automáticamente en su propio contexto, por lo que puedes usar los métodos de contexto de Raven desde cualquiera de tus middleware o controladores. Un contexto también podría corresponder, por ejemplo, al ciclo de vida de una conexión o a un trabajo que se ejecuta en un proceso worker.
+
+Algunas claves destacadas que puedes configurar incluyen `user`, `tags` y `extra`. Estos tipos de datos de contexto adicional se detallan más en [Datos adicionales](#raven-node-additional-data).
+
+Dado que los `domains` no son compatibles en las `Promise` nativas hasta Node.js v8, se requiere la versión `>=8.0.0` si deseas acceder al contexto en los rechazos de `Promise`. Cuando se usa una versión anterior de Node.js, simplemente se omitirá y se utilizará el contexto establecido globalmente. El contexto para los controladores de errores normales y las llamadas a `context/wrap` funciona en todas las versiones, incluida la v0.x.
+
+<div id="tracking-users">
+  ## Seguimiento de usuarios
+</div>
+
+Mientras un usuario tenga sesión iniciada, puedes indicarle a Sentry que asocie los errores con los datos del usuario. Esto es simplemente un uso particular de los métodos de contexto descritos arriba:
+
+```javascript
+Raven.setContext({
+  user: {
+    email: "matt@example.com",
+    id: "123",
+  },
+});
+```
+
+Estos datos se incluyen junto con cualquier error o mensaje, lo que te permite ver qué usuarios están afectados por los problemas.
+
+<div id="capturing-messages">
+  ## Captura de mensajes
+</div>
+
+```javascript
+client.captureMessage("¡Error!", function (err, eventId) {
+  // El mensaje ya se ha enviado a Sentry
+});
+```
+
+<div id="additional-data">
+  ## Datos adicionales
+</div>
+
+Todos los atributos opcionales se pasan como parte de las opciones a `captureException` y `captureMessage`.
+
+`user`
+
+Contexto de usuario para este evento. Debe ser un objeto/diccionario. Los elementos hijos pueden ser de cualquier tipo nativo de JSON.
+
+```javascript
+{
+  user: {
+    name: "matt";
+  }
+}
+```
+
+Si estás dentro de un contexto y los datos de ese contexto incluyen una clave `user`, esos datos se integrarán aquí.
+
+`request`
+
+Alias: `req`. El objeto `request` asociado a este evento, proveniente de un servidor HTTP de Node, Express, Koa o similar. Se analizará para extraer detalles de la solicitud y el contexto de usuario desde `request.user`, si está presente. Solo obtendrá los datos gestionados por el servidor: `headers`, `method`, `host`, `protocol`, `url`, `query`, `cookies`, `body`, `ip` y `user`.
+
+```javascript
+app.use(function (req, res, next) {
+  if (someError) {
+    Raven.captureException(someError, { req: req });
+  }
+});
+```
+
+Ten en cuenta que el middleware de Express `Raven.requestHandler()` agrega automáticamente el objeto `req` al contexto, así que no necesitarás proporcionarlo manualmente.
+
+`tags`
+
+Etiquetas con las que indexar este evento. Debe ser un mapa de cadenas.
+
+```javascript
+{
+  tags: {
+    key: "value";
+  }
+}
+```
+
+Si estás dentro de un contexto y los datos de tu contexto incluyen una clave de *tags*, esos datos se integrarán aquí. También puedes definir etiquetas globales para que se combinen con todos los eventos pasando la opción `tags` a `config`.
+
+`extra`
+
+Contexto adicional para este evento. Debe ser un objeto/diccionario. Sus valores pueden ser de cualquier tipo nativo de JSON.
+
+```javascript
+{
+  extra: {
+    key: "value";
+  }
+}
+```
+
+Si estás dentro de un contexto y los datos de tu contexto incluyen una clave *extra*, esos datos se incorporarán a este. También puedes definir datos adicionales de forma global para que se combinen con todos los eventos pasando la opción `extra` a `config`.
+
+`fingerprint`
+
+La huella para agrupar este evento. Obtén más información sobre cómo [Sentry agrupa los errores](/es/concepts/data-management/event-grouping/).
+
+```javascript
+{
+  // no agrupes los eventos del mismo NODE_ENV
+  fingerprint: ["{{ default }}", process.env.NODE_ENV];
+}
+```
+
+`level`
+
+El nivel del evento. De forma predeterminada, es `error`.
+
+```javascript
+{
+  level: "warning";
+}
+```
+
+Sentry reconoce los siguientes niveles:
+
+* debug (el menos grave)
+* info
+* warning
+* error
+* fatal (el más grave)
+
+<div id="recording-breadcrumbs">
+  ## Registro de breadcrumbs
+</div>
+
+Los breadcrumbs son registros de eventos del servidor y del ciclo de vida de la aplicación que ayudan a comprender el estado de la aplicación antes de un fallo.
+
+Podemos capturar breadcrumbs, asociarlos a un contexto y enviarlos junto con cualquier error capturado en ese contexto:
+
+```javascript
+Raven.context(function () {
+  Raven.captureBreadcrumb({
+    message: "Confirmación de pago recibida",
+    category: "pago",
+    data: {
+      amount: 312,
+    },
+  });
+  // los errores lanzados aquí incluirán el breadcrumb
+});
+```
+
+Para obtener más información sobre los tipos de datos que se pueden recopilar mediante breadcrumbs, consulta la [especificación de la API de cliente de breadcrumbs](/es/platforms/javascript/guides/node/enriching-events/breadcrumbs/).
+
+Raven se puede configurar para capturar automáticamente breadcrumbs para ciertos eventos, como:
+
+> * solicitudes HTTP/HTTPS
+> * mensajes de la consola
+> * consultas de PostgreSQL
+
+La recopilación automática de breadcrumbs está desactivada de forma predeterminada. Puedes habilitarla con una opción de configuración:
+
+```javascript
+Raven.config("___PUBLIC_DSN___", {
+  autoBreadcrumbs: true,
+});
+```
+
+O simplemente habilita tipos específicos de breadcrumbs automáticos:
+
+```javascript
+Raven.config("___PUBLIC_DSN___", {
+  autoBreadcrumbs: {
+    http: true,
+  },
+});
+```
+
+Para obtener más información sobre la configuración de las breadcrumbs, consulta [*Configuration*](/es/platforms/javascript/guides/node/legacy-sdk/config/).
+
+<div id="event-ids">
+  ## IDs de evento
+</div>
+
+Para facilitar la referencia a un evento (tanto para el desarrollador como para el cliente), puedes obtener un ID de evento de cualquier mensaje o excepción capturado. Se proporciona tanto como valor de retorno sincrónico del método de captura como argumento del callback:
+
+```javascript
+var eventId = Raven.captureException(e, function (sendErr, eventId2) {
+  // eventId === eventId2
+});
+```
+
+<div id="promises">
+  ## Promesas
+</div>
+
+De forma predeterminada, Raven no captura los rechazos de promesas no manejados. Puedes habilitar su captura automática:
+
+```javascript
+Raven.config("___PUBLIC_DSN___", {
+  captureUnhandledRejections: true,
+}).install();
+```
+
+<div id="global-fatal-error-handler">
+  ## Manejador global de errores fatales
+</div>
+
+El método `install` configura un oyente global para excepciones no controladas, y `context` y `wrap` también pueden capturarlas. Estas son situaciones en las que Raven intercepta lo que de otro modo sería una excepción fatal que terminaría el proceso. Un proceso, por lo general, no debería continuar ejecutándose tras eventos de este tipo (consulta la [documentación de Node](https://nodejs.org/api/process.html#process_event_uncaughtexception)), por lo que Raven tiene el concepto de “manejador de errores fatales”. Cuando Raven captura una excepción que de otra manera sería fatal, la registra (la envía a Sentry) y luego llama al manejador de errores fatales.
+
+De forma predeterminada, el manejador de errores fatales imprime el error y luego finaliza el proceso. Si quieres realizar tu propia limpieza, registro previo a la salida u otros procedimientos de apagado, puedes proporcionar tu propio manejador de errores fatales como argumento a `install()`.
+
+El callback del manejador de errores fatales será lo último que se ejecute antes de que el proceso deba apagarse. Puede hacer lo que sea necesario, incluidas operaciones asíncronas, para intentar limpiar y apagar el proceso de la mejor manera posible, pero no debe lanzar excepciones y, bajo ninguna circunstancia, debe permitir que el proceso siga ejecutándose indefinidamente. Esto significa que probablemente debería hacer una llamada explícita a `process.exit()`.
+
+Después de capturar una excepción fatal, Raven intentará, en la medida de lo posible, enviarla a Sentry antes de llamar al manejador de errores fatales. Si el envío falla, se pasará un objeto de error `sendErr`, y en caso contrario se proporcionará el `eventId`. En cualquiera de los casos, el objeto de error que provoca el apagado se pasa como primer parámetro.
+
+```javascript
+Raven.install(function (err, sendErr, eventId) {
+  if (!sendErr) {
+    console.log(
+      "Error fatal enviado exitosamente con eventId " + eventId + " a Sentry:"
+    );
+    console.error(err.stack);
+  }
+  console.log("Esta es tu vaina; aquí oxídate y déjame morir.");
+  process.exit(1);
+});
+```
+
+<div id="events">
+  ## Eventos
+</div>
+
+Si quieres saber si un evento se registró o generó un error, las instancias de Raven emiten dos eventos: *logged* y *error*:
+
+```javascript
+Raven.on("logged", function () {
+  console.log("¡Genial, funcionó!");
+});
+
+Raven.on("error", function (e) {
+  // El evento contiene información sobre la falla:
+  //   e.reason -- cuerpo de respuesta sin procesar
+  //   e.statusCode -- código de estado de la respuesta
+  //   e.response -- objeto de respuesta http sin procesar
+
+  console.log("vaya, no se pudo registrar el evento");
+});
+
+Raven.captureMessage("Boom");
+```
+
+<div id="configuring-the-http-transport">
+  ## Configuración del transporte HTTP
+</div>
+
+```javascript
+Raven.config("___PUBLIC_DSN___", {
+  transport: new raven.transports.HTTPSTransport({ rejectUnauthorized: false }),
+});
+```
+
+<div id="disable-raven">
+  ## Desactivar Raven
+</div>
+
+Pasar cualquier valor falso como el DSN desactivará el envío de eventos al servidor:
+
+```javascript
+Raven.config(process.env.NODE_ENV === "production" && "___PUBLIC_DSN___");
+```
+
+<div id="disable-console-alerts">
+  ## Desactivar las alertas de consola
+</div>
+
+Raven mostrará alertas en la consola cuando uses una API obsoleta o cuando el comportamiento pueda resultar inesperado, por ejemplo, si no hay ningún DSN configurado.
+
+Estas alertas pueden ser útiles durante la configuración inicial o al actualizar a nuevas versiones de Raven, pero una vez que tengas todo configurado y en marcha, recomendamos desactivarlas:
+
+```javascript
+Raven.disableConsoleAlerts();
+```
+
+<div id="multiple-instances">
+  ## Varias instancias
+</div>
+
+Por lo general, solo hay una instancia de Raven:
+
+```javascript
+var Raven = require("raven");
+// Raven ya es una instancia de Raven, y hacemos todo en base a esa instancia
+```
+
+Esto debería ser suficiente para casi todos los usuarios, pero por diversas razones algunos podrían querer tener varias instancias. Puedes crear instancias adicionales así:
+
+```javascript
+var Raven2 = new Raven.Client();
+```
+
+<div id="dealing-with-minified-source-code">
+  ## Cómo manejar código minificado
+</div>
+
+Raven y Sentry son compatibles con los [source maps](https://web.dev/articles/source-maps).
+
+Hemos proporcionado algunas instrucciones para crear source maps en [Source Maps](/es/platforms/javascript/guides/node/legacy-sdk/sourcemaps/).

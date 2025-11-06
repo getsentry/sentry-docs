@@ -1,0 +1,60 @@
+---
+title: Almacenamiento de archivos
+---
+
+Sentry ofrece una abstracción llamada “filestore” que se utiliza para almacenar archivos (como artefactos de lanzamiento).
+
+El backend predeterminado guarda los archivos en el disco local, en `/tmp/sentry-files`, lo cual no es adecuado para entornos de producción.
+
+<div id="file-system-backend">
+  ## Backend del sistema de archivos
+</div>
+
+```yaml
+filestore.backend: "filesystem"
+filestore.options:
+  location: "/tmp/sentry-files"
+```
+
+
+<div id="google-cloud-storage-backend">
+  ## Backend de Google Cloud Storage
+</div>
+
+Además de la configuración a continuación, asegúrate de que el entorno de la shell tenga definida la variable `GOOGLE_APPLICATION_CREDENTIALS`. Para obtener más información, consulta la [documentación de Google Cloud sobre cómo configurar la autenticación](https://cloud.google.com/storage/docs/reference/libraries#setting_up_authentication).
+
+```yaml
+filestore.backend: "gcs"
+filestore.options:
+  bucket_name: "..."
+```
+
+
+<div id="amazon-s3-backend">
+  ## Backend de Amazon S3
+</div>
+
+El backend de almacenamiento de S3 admite la autenticación mediante una clave de acceso o mediante roles de instancia de IAM. Si usas lo segundo, omite `access_key` y `secret_key`. De forma predeterminada, los objetos de S3 se crean con la ACL `public-read`, lo que significa que la cuenta o rol utilizado debe tener el permiso `PutObjectAcl` además de `PutObject`, junto con `GetObject` y `DeleteObject`. Si no quieres que tus archivos subidos sean accesibles públicamente, puedes establecer `default_acl` en `private`.
+
+```yaml
+filestore.backend: "s3"
+filestore.options:
+  access_key: "..."
+  secret_key: "..."
+  bucket_name: "..."
+  default_acl: "..."
+```
+
+
+<div id="minio-s3-backend">
+  ## Backend de S3 de MinIO
+</div>
+
+```yaml
+filestore.backend: "s3"
+filestore.options:
+  access_key: "..."
+  secret_key: "..."
+  bucket_name: "..."
+  endpoint_url: "https://minio.example.org/"
+```

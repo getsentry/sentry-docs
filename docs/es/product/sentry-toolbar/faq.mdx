@@ -1,0 +1,76 @@
+---
+title: Preguntas frecuentes
+sidebar_order: 30
+description: "Preguntas frecuentes sobre la Sentry Toolbar."
+---
+
+<Expandable permalink title="¿En qué entornos debería habilitar la Toolbar?">
+
+Dado que la Sentry Toolbar será visible para las personas usuarias dentro de tu aplicación, es importante considerar en qué entornos debería mostrarse.
+
+Si tu aplicación web requiere autenticación para acceder:
+- En desarrollo y staging, inicializa siempre la Sentry Toolbar.
+- En producción, inicializa la Sentry Toolbar de forma condicional cuando haya iniciado sesión una persona empleada.
+
+Si tu aplicación web no requiere autenticación:
+- En los entornos de desarrollo y staging, inicializa la Toolbar en todo momento.
+- En los entornos de producción, no inicialices la Toolbar.
+
+Inicializar la Sentry Toolbar permite que todas las personas desarrolladoras y quienes prueban el software pasen rápidamente de la página que están viendo a Sentry para seguir depurando.
+En producción puede facilitar que las personas desarrolladoras reproduzcan problemas, pero no debería inicializarse para todo el mundo en el sitio; solo cuando la visite una persona empleada/ingeniera, etc.
+
+Una vez decidas dónde y cuándo quieres que aparezca la Toolbar, escribe esas condiciones en tu base de código. La implementación específica tendrás que desarrollarla según cómo funcione tu aplicación y cómo esté organizado tu equipo.
+
+</Expandable>
+
+<Expandable permalink title="¿Cómo puedo inicializar la Toolbar de forma condicional?">
+
+La implementación de las condiciones específicas para inicializar la Toolbar variará de una aplicación a otra y según el framework o la biblioteca de plantillas en uso.
+
+Por ejemplo, las condiciones para mostrar la Toolbar en desarrollo y staging podrían verse así, si se escriben en JavaScript:
+
+```html {tabTitle:CDN}
+<script>
+const env = process.env.ENVIRONMENT || 'development';
+const isDev = env === 'development' || env === 'staging';
+
+if (isDev) {
+  window.SentryToolbar.init({ ... });
+}
+</script>
+```
+```javascript {tabTitle:React}
+const env = process.env.ENVIRONMENT || 'development';
+const isDev = env === 'development' || env === 'staging';
+
+useSentryToolbar({
+  enabled: isDev,
+  initProps: {
+    ...
+  },
+})
+```
+</Expandable>
+
+<Expandable permalink title="¿Por qué la Toolbar se queda atascada con 'Connecting to ...'?">
+
+Si ves el mensaje "Connecting to ..." en la Toolbar, significa que no puede conectarse al servidor de Sentry. Esto puede suceder por varias razones:
+
+1. Revisa la consola de tu navegador por un mensaje como `Refused to frame 'https://my-org.sentry.io/toolbar/sentry/javascript/iframe/' because it violates the following Content Security Policy directive: "frame-src 'self'".` Esto significa que tu sitio no permite que se cargue el iframe de la Toolbar. Para solucionarlo, puedes agregar tu dominio de Sentry en la directiva [`frame-src`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/frame-src) de tu CSP. El resultado sería un encabezado de respuesta que diga `Content-Security-Policy: frame-src my-org.sentry.io;`
+
+2. El servidor de Sentry está caído o inaccesible. Si este es el caso, verifica lo siguiente:
+    - Revisa la [página de estado de Sentry](https://status.sentry.io/) para ver si hay algún problema.
+    - Si el servidor de Sentry está caído, puedes intentarlo de nuevo más tarde.
+    - Si el servidor de Sentry es inaccesible, puedes intentarlo de nuevo más tarde.
+</Expandable>
+
+<Expandable permalink title="¿Hay planes para incluir la Toolbar en el SDK de JavaScript?">
+
+La [Sentry Toolbar](https://github.com/getsentry/sentry-toolbar) y el [SDK de JavaScript](https://github.com/getsentry/sentry-javascript) son funcionalidades distintas que intencionalmente mantenemos separadas.
+
+Algunas de las diferencias entre ambas incluyen:
+  - La Toolbar es un producto de interfaz centrado en facilitar la localización y acción sobre datos existentes, mientras que el SDK funciona como infraestructura para recopilar y enviar datos al servidor.
+  - La Toolbar tiene un conjunto diferente de [dependencias](https://github.com/getsentry/sentry-toolbar/blob/main/package.json) y usa APIs del navegador que el SDK de JavaScript no utiliza. Por ejemplo, la Toolbar interactúa con elementos como cookies y almacenamiento local. Al mantener estas partes del código separadas, es más fácil auditar el [código del SDK en GitHub](https://github.com/getsentry/sentry-javascript) para verificar que no persiste información en los navegadores de las personas usuarias finales.
+  - Las instrucciones de configuración y despliegue son muy diferentes. El SDK se despliega mejor en entornos de staging y producción, y puede configurarse fácilmente con variables de entorno. La Sentry Toolbar requiere consideraciones especiales para desplegarla en producción, generalmente creando una condición para que solo se incluya para miembros de tu propia organización de Sentry.
+
+</Expandable>

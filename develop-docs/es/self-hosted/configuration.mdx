@@ -1,0 +1,93 @@
+---
+title: Configuración autohospedada
+sidebar_title: Configuración
+sidebar_order: 1
+description: Aprende a configurar tu propio Sentry autohospedado
+---
+
+<div id="updating-basic-configuration">
+  ## Actualizar la configuración básica
+</div>
+
+Muy probablemente también querrás ajustar la configuración predeterminada de tu instalación de Sentry. Para ello, tienes disponibles estas opciones:
+
+1. **`sentry/config.yml`**—Contiene la mayoría, si no todas, las opciones de configuración que puedes ajustar. Este archivo se genera a partir de [`sentry/config.example.yml`](https://github.com/getsentry/self-hosted/blob/master/sentry/config.example.yml) en el momento de la instalación. El propio archivo documenta las opciones de configuración más habituales como comentarios en el código. Algunas configuraciones comunes en este archivo incluyen:
+
+   1. `system.url-prefix` (te pedimos que lo configures en la pantalla de bienvenida, justo después de la instalación). Aun así, se recomienda descomentarlo y establecer la URL accesible de tu instalación de Sentry self-hosted. Si no puedes hacer clic en los enlaces de los correos o tus dominios DSN aparecen vacíos, casi seguro necesitas completar este campo.
+
+   2. `mail.*` (aunque incluimos un servidor SMTP básico)
+
+   3. integraciones con GitHub, Slack, etc.
+
+2. **`sentry/sentry.conf.py`**—Contiene configuración más avanzada. Este archivo se genera a partir de [`sentry/sentry.conf.example.py`](https://github.com/getsentry/self-hosted/blob/master/sentry/sentry.conf.example.py) durante la instalación.
+
+3. **`sentry/enhance-image.sh`**—Para instalar plugins y sus dependencias o realizar otras modificaciones a la imagen base de Sentry, copia `sentry/enhance-image.example.sh` a `sentry/enhance-image.sh` y añade allí los pasos necesarios. Por ejemplo, puedes usar `apt-get` para instalar dependencias y `pip` para instalar plugins. Después de modificar `sentry/enhance-image.sh`, ejecuta `./install.sh` de nuevo para aplicarlas.
+
+4. **Variables de entorno**—Las claves disponibles están definidas en [.env](https://github.com/getsentry/self-hosted/blob/master/.env). Usa algún método propio de tu sistema para establecer variables de entorno si necesitas sobrescribir alguna. Para evitar cambios en Git, crea un archivo llamado `.env.custom` e inserta allí tus variables de entorno específicas del sistema. Para usarlo, ejecuta: `docker compose --env-file /path/to/.env.custom up --wait`.
+
+5. [Geolocation](/es/self-hosted/geolocation/) utiliza **un archivo de configuración personalizado** para ajustarse a la tecnología subyacente.
+
+Puedes encontrar más información sobre cómo configurar Sentry en [la sección de configuración de nuestra documentación para desarrolladores](/es/config/).
+
+<Alert title="Nota">
+  Una vez que cambies tu configuración, se recomienda encarecidamente volver a ejecutar el script <code>./install.sh</code> en lugar de reiniciar todos los servicios con <code>docker compose restart</code>. Esto garantiza que no falten otras configuraciones o migraciones cuando se habilita algo.
+</Alert>
+
+<div id="event-retention">
+  ### Retención de eventos
+</div>
+
+Sentry incluye una tarea cron de limpieza que elimina, de forma predeterminada, los eventos con más de `90 días`. Si quieres cambiarlo, puedes editar la variable de entorno `SENTRY_EVENT_RETENTION_DAYS` en `.env` o simplemente sobrescribirla en tu entorno.
+
+<div id="installing-a-specific-sha">
+  ### Instalar un SHA específico
+</div>
+
+Si quieres instalar una versión específica de Sentry, usa las etiquetas/releases del repositorio self-hosted.
+
+Publicamos continuamente la imagen de Docker para cada commit en [Sentry](https://github.com/getsentry/sentry), y de otros servicios como [Snuba](https://github.com/getsentry/snuba) o [Symbolicator](https://github.com/getsentry/symbolicator) en [nuestro Docker Hub](https://hub.docker.com/u/getsentry), y etiquetamos la última versión de la rama master como `:nightly`. Esto suele ser también lo que está en sentry.io y lo que usa el script de instalación. Puedes usar una imagen personalizada de Sentry, por ejemplo una versión modificada que hayas creado tú mismo, o usar el hash de un commit específico como etiqueta de la imagen configurando la variable de entorno `SENTRY_IMAGE` con ese nombre de imagen antes de ejecutar `./install.sh`:
+
+```bash
+SENTRY_IMAGE=getsentry/sentry:83b138090a3078352e3f733de7209fb02ef4f98a ./install.sh
+```
+
+Ten en cuenta que esto puede no funcionar para todos los SHAs de commit, ya que este repositorio evoluciona junto con Sentry y sus proyectos satélite. Se recomienda encarecidamente revisar una versión de este repositorio que esté cerca de la marca de tiempo del commit de Sentry que estás instalando.
+
+<div id="enabling-preview-features">
+  ### Habilitar funciones en vista previa
+</div>
+
+Solo las funciones que han alcanzado el estado de disponibilidad general (GA) se habilitarán de forma predeterminada en implementaciones autogestionadas. Como usuarios, pueden probar funciones nuevas antes de que lleguen a GA agregando los componentes de infraestructura necesarios y los flags de características. Las funciones en vista previa se registran y documentan mediante [issues de GitHub con la etiqueta Type: Pre-release Feature](https://github.com/getsentry/self-hosted/labels/Type%3A%20Pre-release%20Feature).
+
+<div id="customize-dotenv-env-file">
+  ### Personalizar el archivo DotEnv (.env)
+</div>
+
+Las configuraciones específicas del entorno se pueden definir en el archivo `.env.custom`. Estará ubicado en el directorio raíz de la instalación de Sentry y, si existe, se ignorará por completo el archivo `.env`.
+
+De forma predeterminada, no existe un archivo `.env.custom`. En ese caso, puedes crearlo manualmente copiando `.env` a un nuevo `.env.custom` y ajustando allí tu configuración.
+
+Recuerda revisar si el archivo `.env` cambió cuando actualices Sentry, para ajustar tu `.env.custom` en consecuencia si es necesario, ya que `.env` se ignora por completo cuando existe `.env.custom`.
+
+Para todos los comandos de Docker Compose, deberías especificar tu `.env.custom`; de lo contrario, se usará el archivo `.env` predeterminado. Algunos ejemplos:
+
+```bash
+docker compose --env-file .env.custom up --wait
+
+# También puedes especificar el archivo `.env` original como alternativa si la
+# variable de entorno no existe en el archivo `.env.custom`.
+docker compose --env-file .env --env-file .env.custom up --wait
+```
+
+<div id="configuration-topics">
+  ### Temas de configuración
+</div>
+
+Aquí encontrarás más información sobre temas específicos de configuración relacionados con el autoalojamiento:
+
+* [Raíces de CA personalizadas](/es/self-hosted/custom-ca-roots/)
+* [Correo electrónico](/es/self-hosted/email/)
+* [Geolocalización](/es/self-hosted/geolocation/)
+* [Inicio de sesión único (SSO)](/es/self-hosted/sso/)
+* [Política de seguridad de contenidos](/es/self-hosted/experimental/csp/)
+* [Solo errores](/es/self-hosted/experimental/errors-only/)

@@ -1,0 +1,273 @@
+---
+title: Solución de problemas
+description: "Aunque no esperamos que la mayoría de los usuarios de nuestro SDK se topen con estos problemas, aquí documentamos casos extremos."
+sidebar_order: 9000
+---
+
+<div id="general">
+  ## General
+</div>
+
+Usa la información de esta página para ayudar a responder estas preguntas:
+
+- "¿Qué hago si los datos del scope se filtran entre solicitudes?"
+- "¿Qué hago si mi transacción tiene spans anidados cuando deberían ser paralelos?"
+- "¿Qué hago si el SDK tiene problemas para enviar eventos a Sentry?"
+
+<Expandable title="Addressing Concurrency Issues">
+  La respuesta corta a las dos primeras preguntas: asegúrate de que tus `contextvars` funcionen y
+  de que tu scope de aislamiento se clone para cada unidad de concurrencia.
+
+  Python admite varias soluciones distintas para la concurrencia, incluidos los hilos y
+  las corrutinas.
+
+  El SDK de Python hace todo lo posible por determinar cómo deben fluir los datos contextuales, como las etiquetas definidas
+  con `sentry_sdk.set_tags`, a lo largo de tu flujo de control. En la mayoría
+  de los casos funciona perfectamente, pero en algunas situaciones hay que tener
+  un cuidado especial. Esto es especialmente cierto cuando se trabaja con una base de código que hace concurrencia
+  fuera de las integraciones del framework proporcionadas.
+
+  La recomendación general es tener un scope de aislamiento por "unidad de concurrencia"
+  (hilo/corrutina/etc.). El SDK garantiza que cada hilo tenga un scope independiente mediante `ThreadingIntegration`.
+  Si haces concurrencia con corrutinas de `asyncio`, asegúrate de usar `AsyncioIntegration`,
+  que clonará el scope correcto en tus `Task`s.
+
+  El patrón general de uso para crear un nuevo scope de aislamiento es:
+
+  ```python
+  with sentry_sdk.isolation_scope() as scope:
+  # In this block scope refers to a new fork of the original isolation scope,
+  # with the same client and the same initial scope data.
+  ```
+
+  Consulta la sección <PlatformLink to="/integrations/default-integrations/#threading">Threading</PlatformLink>
+  para ver un ejemplo más completo que implica bifurcar el scope de aislamiento.
+</Expandable>
+
+<Expandable title="Context Variables vs Thread Locals">
+
+  El SDK de Python usa [thread locals](https://docs.python.org/3/library/threading.html#thread-local-data) para
+  mantener los datos contextuales donde corresponden. Hay algunas situaciones en las que este
+  enfoque falla.
+
+  Sigue leyendo si no puedes averiguar por qué los datos contextuales se filtran entre solicitudes HTTP
+  o si los datos faltan o aparecen en el lugar y momento equivocados.
+
+<div id="python-2-thread-locals-and-gevent">
+  #### Python 2: Thread Locals y gevent
+</div>
+
+  Si el SDK está instalado en Python 2, no hay mucho más que usar que los
+  mencionados thread locals, así que el SDK usará justamente eso.
+
+  El código que usa bibliotecas asíncronas como **`twisted` no es compatible** en el
+  sentido de que experimentarás filtraciones de datos contextuales entre tareas/cualesquiera límites lógicos,
+  al menos de forma predeterminada.
+
+  El código que usa bibliotecas asíncronas más "mágicas" como **`gevent` o `eventlet`
+  funcionará bien** siempre que esas bibliotecas estén configuradas para hacer monkeypatch
+  a la biblioteca estándar. Si solo usas esas bibliotecas en el contexto de ejecutar
+  `gunicorn`, ese es el caso, por ejemplo.
+
+<div id="python-3-context-variables-or-thread-locals">
+  #### Python 3: Context Variables o Thread Locals
+</div>
+
+  Python 3 introdujo `asyncio` que, al igual que Twisted, tenía el problema de no
+  tener ningún concepto de adjuntar datos contextuales a tu flujo de control. Eso
+  significa que en Python 3.6 y anteriores, el SDK no puede evitar filtraciones de
+  datos contextuales.
+
+  Python 3.7 solucionó este problema con el módulo de la biblioteca estándar `contextvars`, que es
+  básicamente thread locals que también funcionan en código basado en asyncio. El SDK
+  intentará usar ese módulo en lugar de thread locals si está disponible.
+
+  **Para Python 3.6 y anteriores, instala `aiocontextvars` desde PyPI**, que es un
+  backport totalmente funcional de `contextvars`. El SDK comprobará este paquete
+  y lo usará en lugar de thread locals.
+
+</Expandable>
+
+<Expandable title="Variables de contexto vs gevent/eventlet">
+  Si usas `gevent` (anterior a 20.5) o `eventlet` en tu aplicación y
+  lo has configurado para aplicar monkeypatch a la stdlib, el SDK se abstendrá de usar
+  `contextvars` incluso si está disponible.
+
+  La razón es que ambas bibliotecas aplican monkeypatch solo al módulo
+  `threading`, y no al módulo `contextvars`.
+
+  Un caso práctico donde esto sucede es si usas Django
+  3.0 dentro de un worker `gunicorn+gevent` en Python 3.7. En ese escenario, el
+  módulo `threading` con monkeypatch respetará el flujo de control de un worker de gunicorn,
+  mientras que `contextvars` sin parche no lo hará.
+
+  Se complica más si usas Django Channels en la misma app pero en un
+  proceso de servidor separado, ya que es un uso legítimo de `asyncio` para el cual
+  `contextvars` se comporta de manera más correcta. Asegúrate de que tu servidor de websockets de Channels
+  no importe ni use gevent en absoluto (y mucho menos llame a
+  `gevent.monkey.patch_all`), y todo debería estar bien.
+
+  Aun así, hay casos límite donde este comportamiento se rompe por completo,
+  como mezclar código de asyncio con código basado en gevent/eventlet. En ese caso
+  no hay una respuesta correcta y _estática_ sobre qué biblioteca de contexto usar. Incluso así,
+  el monkeypatching agresivo de gevent probablemente interferirá de una manera que no se puede
+  solucionar desde el propio SDK.
+
+  Este [problema se ha solucionado con gevent 20.5](https://github.com/gevent/gevent/issues/1407), pero sigue existiendo con
+  eventlet.
+</Expandable>
+
+<Expandable title="Problemas de red">
+
+Tu SDK podría tener problemas para enviar eventos a Sentry. Podrías ver
+`"Remote end closed connection without response"`, `"Connection aborted"`,
+`"Connection reset by peer"`, u otros mensajes de error similares en tus registros.
+En el caso de errores y datos de trazas, esto se manifiesta como errores y transacciones
+que faltan en Sentry. En el caso de monitores de cron, podrías ver crons
+marcados como expirados en Sentry cuando sabes que se ejecutaron correctamente. El propio SDK
+podría estar registrando errores sobre el restablecimiento de la conexión o el
+servidor cerrando la conexión sin respuesta.
+
+Si te ocurre esto, intenta activar la opción de configuración <PlatformLink to="/configuration/options/#keep-alive">keep-alive</PlatformLink>, disponible en versiones del SDK
+`1.43.0` y posteriores.
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    # your usual options
+    keep_alive=True,
+)
+```
+
+Si necesitas un control más detallado sobre el comportamiento del socket, consulta
+<PlatformLink to="/configuration/options/#socket-options">socket-options</PlatformLink>.
+</Expandable>
+
+<Expandable title="Advertencia sobre multiprocessing a partir de Python 3.12">
+
+Si estás en Python 3.12 o superior, podrías ver la siguiente advertencia de deprecación en entornos Linux, ya que el SDK crea varios hilos.
+
+```
+DeprecationWarning: This process is multi-threaded, use of fork() may lead to deadlocks in the child.
+```
+
+Para eliminar esta advertencia, establece el [método de inicio de multiprocessing en `spawn` o `forkserver`](https://docs.python.org/3.14/library/multiprocessing.html#contexts-and-start-methods).
+Recuerda hacerlo solo en el bloque `__main__`.
+
+```python
+import sentry_sdk
+import multiprocessing
+import concurrent.futures
+
+sentry_sdk.init()
+
+if __name__ == "__main__":
+    multiprocessing.set_start_method("spawn")
+    pool = concurrent.futures.ProcessPoolExecutor()
+    pool.submit(sentry_sdk.capture_message, "world")
+```
+</Expandable>
+
+<Expandable title="¿Por qué se truncó el valor de mi etiqueta?">
+
+  Actualmente, cada etiqueta tiene un límite máximo de 200 caracteres. Las etiquetas que superen ese límite se truncarán, lo que puede provocar la pérdida de información importante. Para conservar estos datos, puedes repartirlos en varias etiquetas.
+
+  Por ejemplo, una solicitud etiquetada con más de 200 caracteres:
+
+  `https://empowerplant.io/api/0/projects/ep/setup_form/?user_id=314159265358979323846264338327&tracking_id=EasyAsABC123OrSimpleAsDoReMi&product_name=PlantToHumanTranslator&product_id=161803398874989484820458683436563811772030917980576`
+
+  La solicitud anterior, de más de 200 caracteres, se truncará a:
+
+  `https://empowerplant.io/api/0/projects/ep/setup_form/?user_id=314159265358979323846264338327&tracking_id=EasyAsABC123OrSimpleAsDoReMi&product_name=PlantToHumanTranslator&product_id=1618033988749894848`
+
+  <PlatformContent includePath="performance/control-data-truncation" />
+
+</Expandable>
+
+<div id="profiling">
+  ## Perfilado
+</div>
+
+<Expandable title="¿Por qué no veo datos de perfilado?">
+
+Si no ves datos de perfilado en [sentry.io](https://sentry.io), prueba lo siguiente:
+
+- Asegúrate de que <PlatformLink to="/tracing/">Tracing esté habilitado</PlatformLink>.
+- Verifica que la instrumentación automática esté enviando datos de rendimiento a Sentry yendo a la página **Performance** en [sentry.io](https://sentry.io).
+- Si la instrumentación automática no está enviando datos de rendimiento, intenta usar <PlatformLink to="/tracing/instrumentation/custom-instrumentation">instrumentación personalizada</PlatformLink>.
+- Habilita el <PlatformLink to="/configuration/options/#debug">modo de depuración</PlatformLink> en el SDK y revisa los registros.
+
+<div id="upgrading-from-older-sdk-versions">
+  ### Actualización desde versiones anteriores del SDK
+</div>
+
+<div id="transaction-based-profiling">
+  #### Perfilado basado en transacciones
+</div>
+
+La función de perfilado basado en transacciones era experimental antes de la versión `1.18.0`. Para actualizar tu SDK a la versión más reciente, elimina `profiles_sample_rate` de `_experiments` y configúralo en las opciones de nivel superior.
+
+```python diff
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    traces_sample_rate=1.0,
+-   _experiments={
+-       "profiles_sample_rate": 1.0,  # for versions before 1.18.0
+-   },
++   profiles_sample_rate=1.0,
+)
+```
+
+<div id="continuous-profiling">
+  #### Perfilado continuo
+</div>
+
+La función de perfilado continuo era experimental antes de la versión `2.24.1`. Para actualizar tu SDK a la versión más reciente:
+
+- Elimina `continuous_profiling_auto_start` de `_experiments` y configura `profile_lifecycle="trace"` en las opciones de nivel superior.
+- Agrega `profile_session_sample_rate` a las opciones de nivel superior.
+
+</Expandable>
+
+<div id="crons">
+  ## Crons
+</div>
+
+<PlatformContent includePath="crons/troubleshooting" />
+
+<Expandable title="¿Por qué los errores de trabajos recurrentes no aparecen en la página de detalles de mi monitor?">
+
+  Puede que no hayas <PlatformLink to="/crons/#connecting-errors-to-cron-monitors">vinculado los errores a tu monitor</PlatformLink>.
+
+</Expandable>
+
+<Expandable title="¿Por qué mis monitores aparecen como fallidos?">
+
+  El SDK podría estar experimentando problemas de red. Obtén más información sobre <PlatformLink to="/troubleshooting/#network-issues">la solución de problemas de red</PlatformLink>.
+
+</Expandable>
+
+<Expandable title="¿Por qué no recibo alertas cuando mi monitor falla?">
+
+  Puede que no hayas <PlatformLink to="/crons/#alerts">configurado alertas para tu monitor</PlatformLink>.
+
+</Expandable>
+
+<Expandable title="¿Cuál es la política de retención de datos de crons para los check-ins?">
+
+  Nuestra política de retención de datos actual es de 90 días.
+
+</Expandable>
+
+<Expandable title="¿Admiten un horario de monitor con una expresión crontab de seis campos?">
+
+  Actualmente, solo admitimos expresiones crontab de cinco campos.
+
+</Expandable>
+
+<Expandable title="¿También puedo monitorear tareas asíncronas?">
+
+  Sí, solo asegúrate de usar la versión `1.44.1` del SDK o posterior, ya que fue cuando se añadió la compatibilidad con el monitoreo de funciones asíncronas.
+
+</Expandable>

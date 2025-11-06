@@ -1,0 +1,202 @@
+---
+title: Outboxes
+sidebar_order: 110
+---
+
+Las outboxes son unidades de trabajo diferidas respaldadas por una base de datos que sustentan gran parte de los flujos de consistencia eventual de nuestro sistema. Se diseñaron con un par de características clave en mente:
+
+- **Durabilidad:** Las outboxes se almacenan como filas en la base de datos que normalmente se confirman de forma transaccional junto con las actualizaciones del modelo asociadas. Se conservan hasta que el código de procesamiento indica que el trabajo se completó correctamente.
+- **Reintento:** Si un procesador de outboxes falla por cualquier motivo, se volverá a procesar indefinidamente hasta que tenga éxito.
+    - _Nota:_ No admitimos deadlettering, lo que significa que una outbox que bloquee el avance seguirá acumulando trabajo hasta que se corrija el código de procesamiento.
+
+<div id="outbox-properties">
+  ## Propiedades del outbox
+</div>
+
+Un outbox consta de las siguientes partes:
+
+`shard_scope`
+
+: El grupo operativo al que pertenece el outbox. Suele alinearse con los modelos o dominios a los que aplica el outbox.
+
+`shard_identifier`
+
+: El shard o identificador de agrupación.
+
+`object_identifier`
+
+: El ID del objeto de modelo afectado (si corresponde).
+  *Nota:* No todos los outbox tienen un modelo de destino explícito, por lo que se puede establecer un valor único arbitrario si es necesario. Ten en cuenta que este identificador se usa junto con `shard_identifier` para fines de consolidación.
+
+`category`
+
+: La operación específica a la que corresponde el outbox, por ejemplo `USER_UPDATE` y `PROVISION_ORGANIZATION`.
+
+`payload`
+
+: Un JSON arbitrario con datos adicionales requeridos por el código de procesamiento del outbox.
+
+`scheduled_for`
+
+: La fecha y hora en que el outbox debe ejecutarse a continuación.
+
+`scheduled_from`
+
+: La fecha y hora en que se estableció por última vez el valor de `scheduled_for`.
+
+<div id="outbox-sharding">
+  ## Fragmentación de Outbox
+</div>
+
+Los shards de outbox son grupos de outboxes que representan un bloque de trabajo interdependiente que debe procesarse en un orden específico. El shard de un outbox se determina mediante la combinación de sus columnas `shard_scope` y `shard_identifier`, y elegir valores adecuados para ambas es esencial.
+
+Las instancias de `ControlOutbox` tienen una columna adicional de fragmentación a considerar: `region`, que garantiza que cada región procese su propio shard de trabajo de manera independiente de las demás.
+
+Algunos ejemplos prácticos:
+
+- Los outboxes con alcance de Organization usan el ID de la organización como identificador de shard, lo que significa que Organization, Project, Org Auth Token Updates (¡y más!) de una misma organización se procesan todos en orden. Si alguno de estos outboxes se atasca, todo el shard empezará a acumular retraso; así que ten en cuenta los puntos de fallo.
+- Los outboxes de eventos del registro de auditoría tienen su propio alcance y usan identificadores de shard distintos para cada outbox, lo que garantiza que se procesen de forma individual sin riesgo de quedar bloqueados por otros outboxes.
+
+<div id="synchronous-vs-asynchronous-outboxes">
+  ## Buzones de salida síncronos vs asíncronos
+</div>
+
+Al crear un nuevo mensaje en el buzón de salida, puedes intentar procesarlo de inmediato de forma síncrona o posponer el trabajo para más tarde. Decidir qué enfoque tomar depende por completo del caso de uso y del origen de la creación del buzón de salida.
+
+Algunas pautas rápidas para decidir:
+
+1. ¿El buzón de salida fue creado por una solicitud de API que necesita informar el estado de la operación al solicitante? (procésalo de forma síncrona)
+2. ¿El buzón de salida fue el resultado de una tarea, de un proceso automático o de una solicitud de webhook? (procésalo de forma asíncrona)
+
+Por suerte, elegir el comportamiento deseado es sencillo:
+
+```python
+from django.db import router, transaction
+from sentry.models.outbox import outbox_context
+
+# Procesamiento síncrono del outbox
+with outbox_context(transaction.atomic(router.db_for_write(<model_name_here>)):
+	RegionOutbox(...).save()
+
+# Procesamiento asíncrono del outbox
+with outbox_context(flush=False):
+	RegionOutbox(...).save()
+```
+
+Ambos ejemplos requieren usar el administrador de contexto `outbox_context`, pero la diferencia clave está en los argumentos que se le pasan.
+
+
+<div id="synchronous-outboxes">
+  ### Outboxes sincrónicas
+</div>
+
+Suministrar una transacción a `outbox_context` indica la intención de procesar inmediatamente el outbox después de que la transacción proporcionada se haya confirmado. Esto se gestiona mediante los controladores `on_commit` de Django, que el administrador de contexto genera automáticamente.
+
+El administrador de contexto intentará vaciar todos los outboxes generados dentro de su ámbito, a menos que sus operaciones de creación estén envueltas en un administrador de contexto asincrónico anidado:
+
+```python
+with outbox_context(transaction.atomic(router_db_for_write(<model_type>):
+	sync_outbox = RegionOutbox(...).save()
+
+	with outbox_context(flush=False):
+		async_outbox = RegionOutbox(...).save()
+```
+
+Dado que el procesamiento ocurre *después de que la transacción se haya confirmado*, cualquier outbox que no pueda procesarse se trata como outbox asíncrono tras sus intentos iniciales de vaciado.
+
+
+<div id="asynchronous-outboxes">
+  ### Buzones de salida asíncronos
+</div>
+
+Usar `outbox_context` con `flush=False` en lugar de una transacción omite por completo la creación de los controladores `on_commit`, lo que significa que cualquier buzón de salida creado dentro del administrador de contexto no se procesará en el hilo actual. En su lugar, los recogerá una tarea periódica futura de Celery que consultará todos los fragmentos de buzones de salida pendientes e intentará procesarlos.
+
+<div id="choosing-an-outboxs-silo-and-database">
+  ## Elegir el silo y la base de datos de una outbox
+</div>
+
+Las outboxes deben estar en el mismo silo y la misma base de datos que los modelos o procesos que las generan.
+
+Por ejemplo, los cambios en el modelo `Organization` generan outboxes `OrganizationUpdate`. Como `Organization` es un modelo de silo regional que se almacena en la base de datos `sentry`, la outbox `OrganizationUpdate` es un `RegionOutbox` que también se almacena en la base de datos `sentry`.
+
+Mantener ambos modelos en la misma base de datos garantiza que tanto el cambio del modelo como la creación del mensaje de outbox puedan confirmarse en la misma transacción de base de datos para mantener la consistencia.
+
+<div id="coalescing">
+  ## Coalescencia
+</div>
+
+Las outboxes se coalescen para evitar que la contrapresión tumbe nuestros sistemas después de que se libere un shard de outbox bloqueado. Logramos esto asumiendo que el último mensaje de un grupo de coalescencia es la fuente de la verdad, ignorando cualquier mensaje anterior del grupo.
+
+El grupo de coalescencia de una outbox se determina por la combinación de sus columnas de sharding, `category` y `object_identifier`.
+
+Esta estrategia de coalescencia implica que cualquier payload de outbox con estado y dependiente del orden dentro del mismo grupo de coalescencia provocará pérdida de datos cuando se procese el grupo. Si deseas omitir la coalescencia por completo, puedes establecer un identificador de objeto arbitrario y único para garantizar que los mensajes se ejecuten individualmente y en orden; sin embargo, esto puede causar cuellos de botella graves, así que procede con cautela.
+
+<div id="processing-outboxes">
+  ## Procesamiento de outboxes
+</div>
+
+Los procesadores de outboxes se implementan como receptores de señales de Django, con el remitente del receptor establecido en la categoría del outbox. Aquí tienes un ejemplo de un receptor que maneja outboxes de actualización de proyectos:
+
+```python
+from sentry.models.outbox import OutboxCategory, process_region_outbox
+
+@receiver(process_region_outbox, sender=OutboxCategory.PROJECT_UPDATE)
+def process_project_updates(object_identifier: int, shard_identifier: int, payload: Any, **kwargs):
+    pass
+```
+
+A cada receptor se le pasan las siguientes propiedades del outbox como argumentos:
+
+* `object_identifier`
+* `shard_identifier`
+* `payload`
+* `region_name` [solo ControlOutbox]
+
+Si el receptor lanza una excepción, se detendrá el procesamiento del shard y se programará todo el shard para un procesamiento futuro. Si el receptor termina correctamente, se eliminará el grupo de consolidación del outbox y se procesará el siguiente mensaje del outbox en el shard.
+
+Como cualquier mensaje del outbox puede reintentarse varias veces en estos casos excepcionales, es crucial que estos receptores de procesamiento sean idempotentes.
+
+
+<div id="steps-for-adding-a-new-outbox">
+  ## Pasos para agregar un nuevo Outbox
+</div>
+
+1. Agrega un enum de categoría
+2. Elige un ámbito de outbox
+3. Elige un identificador de shard y un identificador de objeto
+4. Crea un receptor para procesar el nuevo tipo de outbox
+5. Actualiza tu código para guardar nuevos outboxes dentro de un contexto de outbox
+
+<div id="possible-issues-to-be-mindful-of">
+  ## Posibles problemas a tener en cuenta
+</div>
+
+<div id="deadlocking">
+  ### Interbloqueo
+</div>
+
+Si un procesador de outbox realiza una solicitud RPC a otro silo que, a su vez, genera una outbox procesada de forma sincrónica, esto puede causar un interbloqueo si cualquiera de las outboxes en la partición (shard) de la nueva outbox generada también genera o procesa una outbox dirigida al silo de origen.
+
+Es una situación poco frecuente, pero la hemos encontrado en producción. Asegúrate de elegir con cuidado el alcance de tus outboxes y los casos de uso de procesamiento sincrónico, minimizando siempre que sea posible la interdependencia entre outboxes de distintos silos.
+
+<div id="data-inconsistency-between-silos">
+  ### **Inconsistencia de datos entre silos**
+</div>
+
+No hay garantía de que un outbox se procese a tiempo. Esto puede hacer que los datos entre nuestros silos se desfasen; tenlo en cuenta al escribir código que dependa de los outboxes para sincronizar datos.
+
+<div id="when-to-use-outboxes">
+  ## Cuándo usar Outboxes
+</div>
+
+- La operación requiere reintentos y persistencia.
+- La operación puede posponerse y alcanzar consistencia eventual.
+- Se acepta una latencia mayor que la de una solicitud típica de API o RPC (&lt;10s).
+
+<div id="when-not-to-use-outboxes">
+  ## Cuándo no usar Outboxes
+</div>
+
+- El trabajo puede tardar más de 10 segundos en procesarse. Esta es una limitación actual debido a cómo adquirimos bloqueos en los shards del outbox al procesarlos.
+- Los datos están ordenados y tienen baja cardinalidad, por lo que no pueden fragmentarse de forma eficiente.
+- El código dependiente requiere garantías de consistencia fuerte entre silos.

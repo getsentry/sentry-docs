@@ -1,0 +1,141 @@
+---
+title: Pautas de operación
+description: "Conozca nuestras pautas de operación al alojar por cuenta propia Relays externos."
+sidebar_order: 5
+---
+
+Esta página repasa nuestras pautas de operación al alojar por cuenta propia Relays externos, es decir, Relays que se ejecutan en su propio hardware y reenvían eventos a `sentry.io`.
+
+<div id="general-considerations">
+  ## Consideraciones generales
+</div>
+
+* Recomendamos [ejecutar Relay](/es/product/relay/getting-started/) usando la imagen oficial de Docker (`getsentry/relay`) disponible en [Docker Hub](https://hub.docker.com/r/getsentry/relay/) y etiquetada con su identificador de revisión de Git, en lugar de compilarlo desde el código fuente.
+
+* Recomendamos ejecutar al menos dos instancias de Relay (contenedores) con un proxy inverso (como [HAProxy](https://www.haproxy.org/) o [Nginx](https://nginx.org)) delante de ellas para mejorar la disponibilidad, simplificar las actualizaciones de Relay y contar con compatibilidad con SSL/TLS.
+
+* Para supervisar tu configuración de Relay, habilita [Logging](/es/product/relay/monitoring/#logging), [Metrics](/es/product/relay/monitoring/#metrics) y [Health Checks](/es/product/relay/monitoring/#health-checks).
+
+<div id="system-requirements-and-recommendations">
+  ## Requisitos y recomendaciones del sistema
+</div>
+
+Las siguientes recomendaciones suponen que Relay se ejecuta en Docker.
+
+| Recurso | Recomendaciones                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CPU      | - **Requerido**: arquitectura de CPU x86-64 (amd64) o AArch64 (arm64)<br /> - CPU multinúcleo [[1]](#multi-core-cpu)                                                                                                                                                                                                                                                                                                                                                          |
+| Memoria  | - Se recomiendan al menos 2 GB de RAM por contenedor de Relay.                                                                                                                                                                                                                                                                                                                                                                                       |
+| Red      | - Ancho de banda: Asegúrate de contar con suficiente capacidad para recibir y reenviar el volumen de datos previsto. Relay comprime todas las solicitudes al upstream `sentry.io` de forma predeterminada, pero la tasa de compresión puede variar según los tipos y formatos de los eventos enviados.<br /> - Latencia: Relay puede tolerar retrasos de red hasta cierto punto; sin embargo, se recomienda que el tiempo de ida y vuelta al upstream sea inferior a 5 segundos. |
+| Almacenamiento  | - El almacenamiento en disco solo es necesario si se configura el [spooling](/es/product/relay/options/#spooling). Consulta la opción de configuración `spool.envelopes.max_memory_size`. De lo contrario, Relay no requiere almacenamiento en disco.                                                                                                                                                                                                                                        |
+
+<p id="multi-core-cpu">
+  [[1]](#multi-core-footnote) Relay es una aplicación multihilo que intenta aprovechar todos los núcleos de CPU disponibles. Por ello, Sentry recomienda encarecidamente ejecutar Relay en CPUs multinúcleo. Si se espera que tu configuración maneje más de 100 solicitudes por segundo, recomendamos ejecutar Relay con al menos cuatro (4) núcleos de CPU. De forma predeterminada, cada instancia de Relay utilizará el número total de núcleos disponibles para ajustar el tamaño de sus pooles de hilos. Puedes ajustar este comportamiento configurando `limits.max_thread_count`.
+</p>
+
+<div id="relay-binary">
+  ## Binario de Relay
+</div>
+
+Cada versión de Relay también proporciona un conjunto de binarios compilados para los sistemas operativos que se indican a continuación.
+
+| Sistema operativo | Versión                   |
+|-------------------|---------------------------|
+| Ubuntu x64        | 20.04                     |
+| Ubuntu ARM        | 22.04                     |
+| macOS             | macOS Sonoma (versión 14) |
+| Windows           | Windows Server 2022       |
+
+Daremos soporte a los binarios de Ubuntu durante 2 años después de que finalice el soporte LTS oficial para permitir que los clientes con soporte extendido sigan usando Relay.
+
+Los binarios de Windows y macOS se compilan con GitHub Runners. Daremos soporte a las versiones de esos sistemas operativos mientras GitHub las siga soportando.
+
+<div id="example-configuration">
+  ## Configuración de ejemplo
+</div>
+
+Esta configuración de ejemplo define ajustes básicos de registro y métricas, y también cambia el nivel de concurrencia predeterminado.
+
+```yaml
+---
+relay:
+  # El nombre de host upstream se obtiene de cualquiera de tus DSN.
+  # Ve a la Configuración de tu proyecto y luego a "Client Keys (DSN)" para verlos.
+  upstream: https://___ORG_INGEST_DOMAIN___.
+  host: 0.0.0.0
+  port: 3000
+logging:
+  level: info
+  format: json
+metrics:
+  statsd: 127.0.0.1:8126
+  prefix: relay
+limits:
+  # Tamaño base de varios grupos de hilos internos. Por defecto, es el número de núcleos lógicos de CPU
+  max_thread_count: 8
+```
+
+Consulta la página [Opciones de configuración](/es/product/relay/options/) para ver descripciones detalladas de todas las opciones disponibles.
+
+<div id="performance-tuning">
+  ## Ajuste de rendimiento
+</div>
+
+Relay ofrece una variedad de [opciones de configuración](/es/product/relay/options/). Cambiar algunas opciones afecta más el comportamiento de Relay que otras.
+La siguiente lista señala algunas opciones que deberías revisar primero cuando quieras ajustar Relay al entorno y la carga de trabajo de tu organización:
+
+* `limits.max_concurrent_requests` (predeterminado: 100)
+
+  Número de solicitudes concurrentes que tu instancia de Relay puede enviar al upstream (Sentry). Si tu volumen de eventos o la latencia de conexión con Sentry son altos, puedes aumentar este valor para obtener mayor rendimiento, aunque ese incremento será a costa de conexiones de red adicionales.
+
+* `cache.event_buffer_size` (predeterminado: 1000)
+
+  Cantidad de eventos que Relay puede almacenar en su cola local antes de empezar a rechazar nuevos eventos.
+  Aumentar este valor también incrementará el consumo potencial de memoria de Relay cuando, por ejemplo, problemas de red impidan que Relay reenvíe los mensajes recibidos a Sentry.
+
+* `cache.event_expiry` (en segundos, predeterminado: 600)
+
+  Tiempo que Relay puede mantener los eventos en memoria antes de descartarlos. Puedes aumentar este valor si prevés que tu Relay necesite mantener eventos en memoria por más tiempo que el valor predeterminado.
+
+* `cache.project_expiry` (en segundos, predeterminado: 300)
+
+  Para mantenerse operativo, Relay obtiene periódicamente las configuraciones de proyecto del upstream de Sentry. Este ajuste controla cada cuánto tiempo Relay obtiene esa configuración. Puedes reducir este valor para que la propagación de la configuración sea más frecuente. Por ejemplo, si luego cambias las opciones de depuración de datos en la configuración de tu proyecto en Sentry, tu instancia de Relay se enterará de esos cambios más rápido.
+
+* `cache.project_grace_period` (en segundos, predeterminado: 0)
+
+  Tiempo durante el cual se puede seguir usando una configuración de proyecto después de haber expirado.
+  Aumentar este valor puede ayudar cuando el upstream no está disponible; por ejemplo, debido a problemas de red.
+
+<div id="request-routing">
+  ## Enrutamiento de solicitudes
+</div>
+
+Los SDK se comunican con Sentry mediante un conjunto de endpoints. Relay ofrece la misma API para funcionar como un reemplazo directo sin fricciones. Para ello, deben estar accesibles los siguientes endpoints:
+
+* `/api/<project-id>/envelope/`
+* `/api/<project-id>/minidump/`
+* `/api/<project-id>/security/`
+* `/api/<project-id>/store/`
+* `/api/<project-id>/unreal/<sentry-key>/`
+* `/api/<project-id>/nel/`
+* `/api/<project-id>/csp-report/`
+* `/api/<project-id>/cron/<monitor-slug>/`
+* `/api/<project-id>/cron/<monitor-slug>/<sentry-key>/`
+
+Según el SDK o el cliente, las solicitudes a estos endpoints se realizan con content-encoding comprimido o transfer-encoding fragmentado. Según la infraestructura delante de Relay, verifica que las siguientes cabeceras HTTP estén configuradas correctamente:
+
+* `Host`: el nombre de host público de este Relay
+* `X-Forwarded-For`: la dirección IP del cliente
+* `X-Sentry-Auth`: el valor proporcionado por el cliente
+
+<Alert>
+  Los proxies suelen establecer un tamaño máximo de cuerpo predeterminado para las solicitudes. En especial, los informes de fallos nativos y los adjuntos pueden superar estos límites. Recomendamos configurar un tamaño máximo de cuerpo del cliente de *100 MB*.
+</Alert>
+
+Internamente, Relay realiza solicitudes al upstream configurado para reenviar datos y obtener la configuración del proyecto. **Desaconsejamos encarecidamente** restringir estas solicitudes. Actualmente, Relay realiza solicitudes a los siguientes endpoints para su funcionamiento básico:
+
+* Todos los endpoints anteriores
+* `/api/0/relays/projectconfigs/`
+* `/api/0/relays/publickeys/`
+* `/api/0/relays/register/challenge/`
+* `/api/0/relays/register/response/`

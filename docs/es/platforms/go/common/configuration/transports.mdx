@@ -1,0 +1,59 @@
+---
+title: Transportes
+sidebar_order: 4
+description: "Los transportes te permiten cambiar la forma en que se entregan los eventos a Sentry."
+---
+
+Los transportes te permiten cambiar la forma en que se entregan los eventos a Sentry.
+
+El propio SDK de Sentry para Go proporciona dos transportes integrados: `HTTPTransport`, que no bloquea y se usa de forma predeterminada, y `HTTPSyncTransport`, que es bloqueante. Cada transporte ofrece opciones de configuración ligeramente diferentes.
+
+<div id="usage">
+  ## Uso
+</div>
+
+Para configurar el transporte, proporciona una instancia de la interfaz `sentry.Transport` en `ClientOptions`.
+
+```go
+sentrySyncTransport := sentry.NewHTTPSyncTransport()
+sentrySyncTransport.Timeout = time.Second * 3
+
+sentry.Init(sentry.ClientOptions{
+    Dsn: "___PUBLIC_DSN___",
+    Transport: sentrySyncTransport,
+})
+```
+
+Cada transporte proporciona su propia función de creación: `NewHTTPTransport` y `NewHTTPSyncTransport`, respectivamente.
+
+
+<div id="options">
+  ## Opciones
+</div>
+
+<div id="httptransport">
+  ## HTTPTransport
+</div>
+
+```go
+// HTTPTransport es una implementación predeterminada de la interfaz `Transport` utilizada por `Client`.
+type HTTPTransport struct {
+	// Tamaño del búfer de transporte. El valor predeterminado es 30.
+	BufferSize int
+	// Tiempo de espera para solicitudes del cliente HTTP. El valor predeterminado es 30 segundos.
+	Timeout time.Duration
+}
+```
+
+
+<div id="httpsynctransport">
+  ## TransporteSincronoHTTP
+</div>
+
+```go
+// HTTPSyncTransport es una implementación de la interfaz `Transport` que se bloquea después de cada evento capturado.
+type HTTPSyncTransport struct {
+	// Tiempo de espera de solicitud del cliente HTTP. Por defecto es 30 segundos.
+	Timeout time.Duration
+}
+```

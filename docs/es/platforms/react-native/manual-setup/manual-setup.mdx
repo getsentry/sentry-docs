@@ -1,0 +1,236 @@
+---
+title: Configuración manual
+description: "Obtén información sobre la configuración manual para iOS y Android."
+sidebar_order: 3
+---
+
+Si no puedes (o prefieres no) ejecutar la [configuración automática](/es/platforms/react-native), sigue las instrucciones a continuación para configurar tu aplicación.
+
+<div id="install-sdk-package">
+  ## Instalar el paquete del SDK
+</div>
+
+Instala el paquete `@sentry/react-native`:
+
+```bash {tabTitle:npm}
+npm install @sentry/react-native --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/react-native
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/react-native
+```
+
+<div id="ios">
+  ## iOS
+</div>
+
+En iOS, el SDK de Sentry integra el proceso de empaquetado de React Native para cargar los mapas de origen automáticamente. El SDK también añade una nueva fase de compilación en Xcode para cargar símbolos de depuración y garantizar que obtengas trazas de pila legibles en tus fallos nativos.
+
+<div id="add-privacy-manifest">
+  ### Añadir el manifiesto de privacidad
+</div>
+
+El SDK necesita acceder a cierta información del dispositivo y de la aplicación para funcionar correctamente. Algunas de las API necesarias para ello se consideran relevantes para la privacidad. Añade el manifiesto de privacidad a tu proyecto de Xcode para asegurarte de que tu app cumpla con las directrices de Apple. Lee la guía [Apple Privacy Manifest](/es/platforms/react-native/data-management/apple-privacy-manifest/) para obtener más información sobre cómo añadir las entradas requeridas por los SDK de Sentry.
+
+<div id="add-sentryproperties">
+  ### Agrega `sentry.properties`
+</div>
+
+Agrega un archivo `sentry.properties` a tu directorio `ios`.
+
+```properties {filename: ios/sentry.properties}
+defaults.url=https://sentry.io/
+defaults.org=___ORG_SLUG___
+defaults.project=___PROJECT_SLUG___
+auth.token=___ORG_AUTH_TOKEN___
+```
+
+<div id="configure-automatic-source-maps-upload">
+  ### Configurar la carga automática de los mapas de origen
+</div>
+
+Modificamos ligeramente la fase de compilación de React Native (“Bundle React Native code and images”) a partir de esto:
+
+```bash {filename:Bundle React Native code and images}
+set -e
+
+WITH_ENVIRONMENT="../node_modules/react-native/scripts/xcode/with-environment.sh"
+REACT_NATIVE_XCODE="../node_modules/react-native/scripts/react-native-xcode.sh"
+
+/bin/sh -c "$WITH_ENVIRONMENT $REACT_NATIVE_XCODE"
+```
+
+A esto:
+
+```bash {filename:Bundle React Native code and images}
+set -e
+
+WITH_ENVIRONMENT="../node_modules/react-native/scripts/xcode/with-environment.sh"
+SENTRY_XCODE="../node_modules/@sentry/react-native/scripts/sentry-xcode.sh"
+
+# RN 0.81.1+
+/bin/sh -c "$WITH_ENVIRONMENT $SENTRY_XCODE"
+
+# RN 0.69 - 0.80.0
+# BUNDLE_REACT_NATIVE="/bin/sh $SENTRY_XCODE"
+# /bin/sh -c "$WITH_ENVIRONMENT \"$BUNDLE_REACT_NATIVE\""
+
+# RN 0.46 – 0.68
+# BUNDLE_REACT_NATIVE="/bin/sh $SENTRY_XCODE"
+# /bin/sh -c "$BUNDLE_REACT_NATIVE"
+```
+
+Para cambiar el comportamiento predeterminado, pasa las siguientes variables de entorno en `.xcode.env` o en el script de la fase de compilación (Build Phase):
+
+```bash {filename:.xcode.env}
+export SENTRY_PROPERTIES=path/to/sentry.properties
+export SENTRY_DISABLE_AUTO_UPLOAD=true # Desactiva temporalmente la subida de source maps
+
+export AUTO_RELEASE=true # Detecta automáticamente la versión desde el proyecto de Xcode
+export SENTRY_CLI_EXECUTABLE="path/to/@sentry/cli/bin/sentry-cli"
+export SENTRY_CLI_EXTRA_ARGS="--extra --flags" # Argumentos adicionales para sentry-cli en todas las fases de compilación
+export SENTRY_CLI_RN_XCODE_EXTRA_ARGS="--extra --flags"
+
+export SOURCE_MAP_PATH="path/to/source-maps" # Ruta desde la que collect-modules debe leer los módulos
+export SENTRY_COLLECT_MODULES="path/to/collect-modules.sh"
+export MODULES_PATHS="../node_modules,../my-custom-module"
+```
+
+De forma predeterminada, la subida de source maps para compilaciones del simulador de depuración está desactivada para mejorar el rendimiento. Si quieres generar source maps para compilaciones de depuración, puedes pasar `--allow-fetch` como parámetro a `SENTRY_CLI_RN_XCODE_EXTRA_ARGS` en el script mencionado arriba.
+
+<div id="configure-automatic-debug-symbols-upload">
+  ### Configurar la carga automática de símbolos de depuración
+</div>
+
+Para subir símbolos de depuración a Sentry, crea una nueva fase de compilación Run Script usando el siguiente script:
+
+```bash {filename:Upload Debug Symbols to Sentry}
+/bin/sh ../node_modules/@sentry/react-native/scripts/sentry-xcode-debug-files.sh
+```
+
+Para modificar el comportamiento predeterminado, puedes establecer las siguientes variables de entorno en `.xcode.env` o en el script de la fase de compilación (Build Phase):
+
+```bash {filename:.xcode.env}
+export SENTRY_PROPERTIES=path/to/sentry.properties
+export SENTRY_DISABLE_AUTO_UPLOAD=true # Deshabilitar temporalmente la carga de símbolos de depuración
+
+export SENTRY_INCLUDE_NATIVE_SOURCES=true # Cargar fuentes nativas de iOS
+export SENTRY_CLI_EXECUTABLE="path/to/@sentry/cli/bin/sentry-cli"
+export SENTRY_CLI_EXTRA_ARGS="--extra --flags" # Argumentos adicionales para sentry-cli en todas las fases de compilación
+export SENTRY_CLI_DEBUG_FILES_UPLOAD_EXTRA_ARGS="--extra --flags"
+```
+
+Para más información sobre qué opciones usar en `SENTRY_CLI_DEBUG_FILES_UPLOAD_EXTRA_ARGS`, visita la documentación de [Sentry CLI Apple Debug Symbols](/es/platforms/apple/dsym/#sentry-cli).
+
+<div id="using-node-with-nvm-or-volta">
+  ### Usar Node con nvm o Volta
+</div>
+
+Si usas nvm o Volta, Xcode puede tener problemas para localizar el binario predeterminado de Node. La solución sugerida en este [ejemplo de resolución de problemas](/es/platforms/react-native/troubleshooting/#using-node-with-nvm-or-volta) puede ayudarte.
+
+<div id="android">
+  ## Android
+</div>
+
+En Android, nos integramos con Gradle para el proceso de generación de los mapas de origen. Cuando ejecutes `npx @sentry/wizard@latest -i reactNative`, los archivos de Gradle se actualizarán automáticamente. Si no puedes o no quieres hacerlo, sigue los pasos a continuación para actualizar los archivos.
+
+<div id="add-sentryproperties">
+  ### Agrega `sentry.properties`
+</div>
+
+Agrega un archivo `sentry.properties` en tu directorio `android`.
+
+```properties {filename: android/sentry.properties}
+defaults.url=https://sentry.io/
+defaults.org=___ORG_SLUG___
+defaults.project=___PROJECT_SLUG___
+auth.token=___ORG_AUTH_TOKEN___
+```
+
+<div id="enable-gradle-integration">
+  ### Habilitar la integración con Gradle
+</div>
+
+Activa la integración con Gradle en tu archivo `android/app/build.gradle` agregando la siguiente línea antes de las opciones de `android`:
+
+```groovy {filename:android/app/build.gradle}
+apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
+```
+
+Para modificar el comportamiento predeterminado, puedes usar las siguientes opciones de integración de Sentry para Gradle y variables de entorno:
+
+```bash
+export SENTRY_PROPERTIES=path/to/sentry.properties
+export SENTRY_DISABLE_AUTO_UPLOAD=true # Deshabilitar temporalmente la carga de source maps
+
+export SENTRY_DIST=1234
+export SENTRY_RELEASE=app@1.0.0
+```
+
+```groovy {filename:android/app/build.gradle}
+project.ext.sentryCli = [
+    logLevel: "debug" // Habilita la salida de depuración detallada
+    sentryProperties: "path/to/sentry.properties",
+    flavorAware: false, // Cuando está habilitado, busca sentry-{flavor}-{build_type}.properties
+    modulesPaths: [
+      "node_modules",
+      "../node_modules",
+    ],
+    skipCollectModules: false,
+
+    collectModulesScript: "path/to/node_modules/@sentry/react-native/dist/js/tools/collectModules.js",
+    copyDebugIdScript: "path/to/node_modules/@sentry/react-native/scripts/copy-debugid.js",
+    hasSourceMapDebugIdScript: "path/to/node_modules/@sentry/react-native/scripts/has-sourcemap-debugid.js",
+]
+
+apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
+```
+
+<div id="enable-sentry-agp">
+  ### Habilitar Sentry AGP
+</div>
+
+Puedes habilitar la carga de símbolos nativos y otras funciones agregando la dependencia [Sentry Android Gradle Plugin (AGP)](/es/platforms/android/configuration/gradle) a `android/build.gradle`.
+
+```groovy {filename:android/build.gradle}
+buildscript {
+    dependencies {
+        // Otras dependencias...
+        classpath("io.sentry:sentry-android-gradle-plugin:{{@inject packages.version('sentry.java.android.gradle-plugin', '3.0.0') }}")
+    }
+}
+```
+
+Puedes configurar las opciones del complemento en `android/app/build.gradle`, como se muestra a continuación:
+
+```groovy {filename:android/app/build.gradle}
+apply plugin: "io.sentry.android.gradle"
+
+sentry {
+    // Habilita o deshabilita la configuración automática de símbolos nativos
+    // para Sentry. Esto ejecuta sentry-cli automáticamente,
+    // por lo que no necesitas hacerlo manualmente.
+    // Por defecto está deshabilitado.
+    uploadNativeSymbols = true
+
+    // Habilita o deshabilita la carga automática del código fuente nativo de la aplicación a Sentry.
+    // Esto ejecuta sentry-cli con el parámetro --include-sources automáticamente,
+    // por lo que no necesitas hacerlo manualmente.
+    // Esta opción solo tiene efecto cuando [uploadNativeSymbols] está habilitado.
+    // Por defecto está deshabilitado.
+    includeNativeSources = true
+
+    // `@sentry/react-native` incluye un `sentry-android` compatible
+    // Esta opción instalaría la última versión incluida con el SDK o SAGP (Sentry Android Gradle Plugin),
+    // la cual podría ser incompatible con el SDK de React Native
+    // Habilita la instalación automática de componentes de Sentry (SDK de sentry-android e integraciones de okhttp, timber y fragment).
+    // Por defecto está habilitado.
+    autoInstallation {
+      enabled = false
+    }
+}
+```

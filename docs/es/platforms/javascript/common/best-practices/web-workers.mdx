@@ -1,0 +1,189 @@
+---
+title: Web Workers
+description: "Aprende a usar el SDK de navegador de Sentry con la API de Web Workers."
+keywords: ["webworkers"]
+sidebar_order: 9000
+supported:
+  - javascript
+notSupported:
+  - javascript.cordova
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.deno
+  - javascript.cloudflare
+  - javascript.bun
+---
+
+El SDK de navegador de Sentry es compatible con la [API de Web Workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API).
+Puedes usar el SDK de distintas maneras, aunque recomendamos inicializarlo en el hilo principal para capturar automáticamente los errores no controlados de los workers.
+
+<div id="recommended-setup">
+  ## Configuración recomendada
+</div>
+
+*Disponible desde*: 9.40.0
+
+Para capturar errores no controlados de los Web Workers, inicializa Sentry en el código de tu aplicación que se ejecuta en el hilo principal
+y avisa al SDK sobre el web worker:
+
+```javascript {filename:index.js} {1-5,9-10}
+import * as Sentry from "@sentry/browser";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+});
+
+const worker = new Worker("worker.js");
+
+// Agrega la integración antes de escuchar los mensajes del worker
+Sentry.addIntegration(Sentry.webWorkerIntegration({ worker }));
+
+worker.onmessage = (event) => {
+  // ...
+}
+```
+
+Luego, establece la comunicación entre el worker y el SDK:
+
+```javascript {filename:worker.js}{1-4}
+import * as Sentry from "@sentry/browser";
+
+// Llama a esto antes de enviar cualquier mensaje
+Sentry.registerWebWorker({ self })
+
+// Los errores del callback `onmessage` de `worker.js`
+// se capturarán automáticamente.
+self.postMessage("¡Trabajador listo!");
+self.onmessage = (event) => {
+  // ...
+}
+```
+
+<Alert level="warning" title="El orden importa">
+  Asegúrate de inicializar Sentry tanto en el hilo principal como en el worker antes de que cualquiera empiece a escuchar mensajes.
+  El SDK de Sentry envía mensajes del worker al hilo principal, así que si empiezas a escuchar antes de que Sentry esté inicializado,
+  los mensajes aparecerán en tus escuchas y tendrás que gestionarlos manualmente.
+</Alert>
+
+
+<div id="multiple-workers">
+  ### Varios workers
+</div>
+
+La `sentryWebWorkerIntegration` te permite registrar varios workers.
+Puedes añadirlos al inicializar la integración o más adelante.
+Esto es útil si tienes workers que se inicializan en distintos momentos del ciclo de vida de tu aplicación.
+
+```javascript {filename:index.js} {1-5, 10-14, 18}
+import * as Sentry from "@sentry/browser";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+});
+
+const worker1 = new Worker("worker.js");
+const worker2 = new Worker("worker2.js");
+
+// Se pueden añadir varios workers directamente:
+const webWorkerIntegration = Sentry.webWorkerIntegration({ worker: [worker1, worker2] });
+Sentry.addIntegration(webWorkerIntegration);
+
+// o más adelante:
+const worker3 = new Worker("worker3.js");
+webWorkerIntegration.addWorker(worker3);
+```
+
+<Alert level="warning" title="Ten en cuenta">
+  * Cada worker debe llamar a `Sentry.registerWebWorker({ self })` para registrarse en el SDK.
+  * ¡No llames a `Sentry.webWorkerIntegration()` más de una vez! Esto puede causar comportamientos inesperados.
+</Alert>
+
+
+<div id="manually-capturing-errors">
+  ## Captura manual de errores
+</div>
+
+Para capturar errores o mensajes manualmente mediante `Sentry.captureMessage` o `Sentry.captureException` dentro de Web Workers, también puedes importar el SDK en el worker e inicializarlo.
+
+```javascript {filename:worker.js} {1-5,9}
+import * as Sentry from "@sentry/browser";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+});
+
+self.onmessage = (message) => {
+  // This message will be captured
+  Sentry.captureMessage("Mensaje recibido");
+
+  // Este error también será capturado.
+  throw new Error();
+};
+```
+
+Ten en cuenta que inicializar el SDK en el worker lo **desacopla por completo** del SDK que se ejecuta en el hilo principal.
+Esto significa que datos como el usuario, etiquetas, trazas o el ámbito configurado en una parte no se compartirán con la otra.
+
+A veces, este es el enfoque más adecuado, por ejemplo, si desarrollas un worker que se usa en aplicaciones variadas.
+Otras veces, si el worker es solo parte de tu aplicación, probablemente quieras usar el [SDK desde el hilo principal](#recommended-setup).
+
+<Alert level="warning" title="Tenlo en cuenta">
+  Si inicializas el SDK en el worker, no uses `Sentry.webWorkerIntegration` para registrar el worker.
+  Del mismo modo, no uses `Sentry.registerWebWorker` en el worker. Ambos métodos solo deben usarse cuando dependes del SDK [desde el hilo principal](#recommended-setup).
+</Alert>
+
+
+<div id="integrations">
+  ### Integraciones
+</div>
+
+Ten en cuenta que, si usas integraciones no predeterminadas dentro de los web workers, puede que no funcionen como se espera.
+Sin embargo, las integraciones no predeterminadas habilitadas en el SDK del hilo principal no se verán afectadas y funcionarán como se espera.
+Esto incluye Session Replay.
+
+<div id="source-maps">
+  ## Mapas de código fuente
+</div>
+
+Para asegurarte de que los errores de los web workers se mapeen correctamente a su código fuente original, debes proporcionar mapas de código fuente a Sentry.
+Es probable que ya estés enviando mapas de código fuente a Sentry para el código principal de tu aplicación, pero quizá necesites hacer ajustes para tu worker.
+
+Es importante asegurarte de que tu bundler también **genere mapas de código fuente** para los paquetes del worker.
+
+<div id="vite">
+  ### Vite
+</div>
+
+Si usas Vite para compilar tu worker, ten en cuenta que la compilación del worker no utiliza el mismo plugin que la compilación del código principal.
+Por lo tanto, debes añadir el plugin de Vite de Sentry a la compilación del worker, además del array `plugins` de nivel superior:
+
+```javascript {filename:vite.config.mjs}{1-4,8-9,13,16-17}
+const sentryPlugin = sentryVitePlugin({
+  org: "sentry-sdks",
+  project: "javascript",
+});
+
+export default defineConfig({
+  build: {
+    // Esto habilita los mapas de código fuente para los paquetes principal y de worker
+    sourcemap: "hidden",
+  },
+
+  // Plugin de Vite para el paquete principal
+  plugins: [sentryPlugin],
+
+  worker: {
+    // Plugin de Vite para el paquete del worker
+    plugins: () => [...sentryPlugin],
+  },
+});
+```

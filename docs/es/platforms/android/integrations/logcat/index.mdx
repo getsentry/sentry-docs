@@ -1,0 +1,143 @@
+---
+title: Logcat
+caseStyle: canonical
+supportLevel: production
+description: Obtén más información sobre la integración de Logcat de Sentry para el SDK de Android.
+categories:
+  - mobile
+og_image: /og-images/platforms-android-integrations-logcat.png
+---
+
+<Alert>
+
+Compatible con la versión `6.17.0` o superior del SDK de Android de Sentry.
+
+Compatible con la versión `3.5.0` o superior del complemento Sentry Android Gradle.
+
+</Alert>
+
+La integración de Logcat de Sentry añade compatibilidad para reportar automáticamente como breadcrumbs las llamadas de registro por encima de un nivel mínimo de logging.
+Cualquier llamada `android.Log.*` dentro del paquete de tu app se captura como breadcrumb, incluidas las que provienen de bibliotecas de terceros empaquetadas con la app.
+
+![Logcat Breadcrumbs](./img/logcat-breadcrumbs.png)
+
+<div id="installation-with-the-sentry-android-gradle-plugin">
+  ## Instalación con el complemento de Gradle de Sentry para Android
+</div>
+
+<div id="install">
+  ### Instalación
+</div>
+
+Para usar la integración de Logcat, agrega el complemento Sentry Android Gradle en `build.gradle`:
+
+```groovy {filename:app/build.gradle}
+plugins {
+  id "io.sentry.android.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.5.0') }}"
+}
+```
+
+```kotlin {filename:app/build.gradle.kts}
+plugins {
+  id("io.sentry.android.gradle") version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.5.0') }}"
+}
+```
+
+
+<div id="configure">
+  ### Configurar
+</div>
+
+La autoinstrumentación está habilitada de forma predeterminada, por lo que no hace falta ninguna configuración adicional. Si quieres desactivar la instrumentación de Logcat o cambiar el nivel mínimo de registro, tienes estas opciones:
+
+```groovy {filename:app/build.gradle}
+import io.sentry.android.gradle.extensions.InstrumentationFeature
+import io.sentry.android.gradle.instrumentation.logcat.LogcatLevel
+
+sentry {
+  tracingInstrumentation {
+    enabled = true
+
+    logcat {
+      enabled = true
+      minLevel = LogcatLevel.WARNING
+    }
+  }
+}
+```
+
+```kotlin {filename:app/build.gradle.kts}
+import java.util.EnumSet
+import io.sentry.android.gradle.extensions.InstrumentationFeature
+import io.sentry.android.gradle.instrumentation.logcat.LogcatLevel
+
+sentry {
+  tracingInstrumentation {
+    enabled.set(true)
+
+    logcat {
+      enabled.set(true)
+      minLevel.set(LogcatLevel.WARNING)
+    }
+  }
+}
+```
+
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Este fragmento provoca un error intencional para que puedas comprobar que todo funciona después de configurarlo:
+
+```kotlin
+import androidx.appcompat.app.AppCompatActivity
+import android.os.Bundle
+import io.sentry.Sentry
+import android.util.Log
+
+class MyActivity : AppCompatActivity() {
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    Log.w("MyTag", "Mensaje de advertencia.")
+
+    Sentry.captureException(Exception("Mi excepción"))
+  }
+}
+```
+
+```java
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import java.lang.Exception;
+import io.sentry.Sentry;
+import android.util.Log;
+
+public class MyActivity extends AppCompatActivity {
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    Log.w("MyTag", "Mensaje de advertencia.");
+
+    Sentry.captureException(new Exception("Mi excepción"));
+  }
+}
+```
+
+<Alert>
+  Obtén más información sobre cómo capturar manualmente un error o un mensaje en nuestra <PlatformLink to="/usage/">documentación de uso</PlatformLink>.
+</Alert>
+
+Para ver y resolver el mensaje registrado, inicia sesión en [sentry.io](https://sentry.io) y abre tu proyecto. Haz clic en el título del error para abrir una página donde puedes ver los detalles del error y marcarlo como resuelto.
+
+
+<div id="support-with-sentry-logs">
+  ## Compatibilidad con Sentry Logs
+</div>
+
+<Alert>
+
+Los Sentry Logs para Logcat son compatibles a partir de la versión `8.17.0` del SDK de Sentry para Android y posteriores.
+
+</Alert>
+
+Si está habilitado, los registros de Logcat con un nivel igual o superior a `minLevel` capturados por Sentry se envían automáticamente como <PlatformLink to="/logs/">Sentry Logs</PlatformLink>.

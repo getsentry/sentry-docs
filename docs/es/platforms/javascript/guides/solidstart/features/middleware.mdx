@@ -1,0 +1,31 @@
+---
+title: Middleware de Solid
+description: "Conoce el middleware de Sentry para mejorar la instrumentación."
+---
+
+El middleware de Sentry mejora los datos que Sentry recopila en el lado del servidor al habilitar el trazado distribuido entre el cliente y el servidor.
+
+Añade el middleware de Sentry a tu archivo `middleware.ts`. Si aún no tienes un archivo `middleware.ts`, crea uno:
+
+```typescript {filename:middleware.ts}
+import { sentryBeforeResponseMiddleware } from '@sentry/solidstart/middleware';
+import { createMiddleware } from '@solidjs/start/middleware';
+
+export default createMiddleware({
+  onBeforeResponse: [
+    sentryBeforeResponseMiddleware(),
+    // Añade tus otros manejadores de middleware después de `sentryBeforeResponseMiddleware`
+  ],
+});
+```
+
+Y especifica `middleware.ts` en `app.config.ts`:
+
+```typescript {filename:app.config.ts}
+import { defineConfig } from '@solidjs/start/config';
+
+export default defineConfig({
+  // ...
+  middleware: './src/middleware.ts',
+});
+```

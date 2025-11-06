@@ -1,0 +1,76 @@
+---
+title: JavaScript Core
+description: "Sube mapas de origen para aplicaciones de React Native con el motor JavaScript Core."
+---
+
+El SDK de React Native de Sentry funciona de forma predeterminada con aplicaciones que usan el motor JavaScript Core (JSC). Para ver trazas de pila legibles en el producto, es necesario subir los mapas de origen a Sentry. Esta guía explica cómo subir manualmente mapas de origen del motor JSC.
+
+<div id="set-up-automatic-upload">
+  ## Configurar la subida automática
+</div>
+
+<Include name="react-native-sourcemaps-wizard-instructions.mdx" />
+
+<div id="manual-upload">
+  ## Carga manual
+</div>
+
+Para cargar mapas de origen de forma manual, primero debes generar los mapas de origen y el bundle. Luego compila el bundle de bytecode de Hermes y, por último, sube el source map a Sentry.
+
+Comienza agregando el plugin Sentry React Native Metro a tu `metro.config.js`:
+
+```javascript {filename="metro.config.js"}
+const { getDefaultConfig } = require("@react-native/metro-config");
+const { withSentryConfig } = require('@sentry/react-native/metro');
+
+const config = getDefaultConfig(__dirname);
+module.exports = withSentryConfig(config);
+```
+
+Genera el paquete de Metro (React Native) y los mapas de origen:
+
+```bash {tabTitle:Android}
+npx react-native bundle \
+  --dev false \
+  --minify true \
+  --platform android \
+  --entry-file index.js \
+  --reset-cache \
+  --bundle-output index.android.bundle \
+  --sourcemap-output index.android.bundle.map
+```
+
+```bash {tabTitle:iOS}
+npx react-native bundle \
+  --dev false \
+  --minify true \
+  --platform ios \
+  --entry-file index.js \
+  --reset-cache \
+  --bundle-output main.jsbundle \
+  --sourcemap-output main.jsbundle.map
+```
+
+Asegúrate de que `sentry-cli` esté configurado para tu proyecto y de definir tus variables de entorno:
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env}
+SENTRY_ORG=___ORG_SLUG___
+SENTRY_PROJECT=___PROJECT_SLUG___
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+Sube el paquete y el mapa de origen a Sentry:
+
+```bash {tabTitle:Android}
+node_modules/@sentry/cli/bin/sentry-cli sourcemaps upload \
+  --strip-prefix /ruta/a/raíz/del/proyecto \
+  index.android.bundle index.android.bundle.map
+```
+
+```bash {tabTitle:iOS}
+node_modules/@sentry/cli/bin/sentry-cli sourcemaps upload \
+  --strip-prefix /ruta/a/raíz/del/proyecto \
+  main.jsbundle main.jsbundle.map
+```

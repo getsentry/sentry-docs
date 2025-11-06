@@ -1,0 +1,224 @@
+---
+title: Resolución de problemas de Kafka
+sidebar_title: Kafka
+sidebar_order: 2
+---
+
+<div id="how-kafka-works">
+  ## Cómo funciona Kafka
+</div>
+
+Esta sección está dirigida a quienes tienen problemas con Kafka, pero aún no están familiarizados con él. A grandes rasgos, Kafka es un broker de mensajería que almacena mensajes en un log, en un formato muy similar a un arreglo. Recibe mensajes de productores que escriben en un tema (topic) específico y luego se los envía a consumidores suscritos a ese tema. Los consumidores pueden entonces procesar los mensajes.
+
+Internamente, cuando un mensaje entra en un tema, se escribe en una determinada partición. Puedes pensar en una partición como una caja física que almacena mensajes de un tema específico. En una configuración distribuida de Kafka, cada partición podría almacenarse en una máquina/nodo distinto, pero si solo tienes una única instancia de Kafka, entonces todas las particiones se almacenan en la misma máquina.
+
+Cuando un productor envía un mensaje a un tema, se fijará en un número de partición según la clave de partición (por ejemplo: partición 1, partición 2, etc.) o elegirá una partición de manera round-robin. Luego, un consumidor se suscribirá a un tema y Kafka le asignará automáticamente una o más particiones. El consumidor empezará entonces a recibir mensajes de las particiones asignadas. **Importante: el número de consumidores no puede exceder el número de particiones**. Si tienes más consumidores que particiones, los consumidores adicionales no recibirán mensajes.
+
+Cada mensaje en un tema tendrá un "offset" (número). Puedes pensar en esto como un "índice" en un arreglo. El offset será usado por el consumidor para llevar el control de su posición en el log y cuál fue el último mensaje que consumió. Los offsets están acotados al ámbito de una partición; por lo tanto, distintas particiones de un mismo tema pueden tener los mismos números de offset. Si el consumidor no puede mantenerse al día con el productor, empezará a quedarse atrás. La mayoría de las veces queremos que el "lag" sea lo más bajo posible. La solución más sencilla al retraso es agregar más particiones e incrementar el número de consumidores.
+
+La diferencia con otros tipos de colas o brokers como RabbitMQ o Redis es que Kafka tiene un concepto llamado "tiempo de retención". Los mensajes que se almacenan en Kafka y son consumidos por los consumidores no se eliminan de inmediato. En su lugar, se almacenan durante un período de tiempo determinado. De forma predeterminada, Sentry autogestionado usa Kafka con un tiempo de retención de 24 horas. Esto significa que los mensajes con más de 24 horas se eliminarán. Si deseas cambiar el tiempo de retención, puedes hacerlo modificando la variable de entorno `KAFKA_LOG_RETENTION_HOURS` en el servicio `kafka`.
+
+<div id="visualize-kafka">
+  ### Visualizar Kafka
+</div>
+
+Puedes visualizar los consumidores de Kafka y sus offsets añadiendo un contenedor adicional, como [Kafka UI](https://github.com/provectus/kafka-ui) o [Redpanda Console](https://github.com/redpanda-data/console), a tu Docker Compose.
+
+Kafka UI:
+
+```yaml
+kafka-ui:
+  image: provectuslabs/kafka-ui:latest
+  restart: on-failure
+  environment:
+    KAFKA_CLUSTERS_0_NAME: "local"
+    KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka:9092"
+    DYNAMIC_CONFIG_ENABLED: "true"
+  ports:
+    - "8080:8080"
+  depends_on:
+    - kafka
+```
+
+O bien, puedes usar Redpanda Console:
+
+```yaml
+redpanda-console:
+  image: docker.redpanda.com/redpandadata/console:latest
+  restart: on-failure
+  entrypoint: /bin/sh
+  command: -c "echo \"$$CONSOLE_CONFIG_FILE\" > /tmp/config.yml; /app/console"
+  environment:
+    CONFIG_FILEPATH: "/tmp/config.yml"
+    CONSOLE_CONFIG_FILE: |
+      kafka:
+        brokers: ["kafka:9092"]
+        sasl:
+          enabled: false
+      schemaRegistry:
+        enabled: false
+      kafkaConnect:
+        enabled: false
+  ports:
+    - "8080:8080"
+  depends_on:
+    - kafka
+```
+
+Se recomienda poner esto en `docker-compose.override.yml` en lugar de modificar directamente tu `docker-compose.yml`. Luego podrás acceder a la interfaz en `http://localhost:8080/` (o `http://<your-ip>:8080/` si estás usando un proxy inverso).
+
+
+<div id="offset-out-of-range-error">
+  ## Error de desbordamiento de desplazamiento
+</div>
+
+```log
+Exception: KafkaError{code=OFFSET_OUT_OF_RANGE,val=1,str="Broker: Offset fuera de rango"}
+```
+
+Esto ocurre cuando Kafka y los consumidores se desincronizan. Las posibles causas son:
+
+1. Quedarse sin espacio en disco o memoria
+2. Un pico sostenido de eventos que provoque tiempos de procesamiento muy largos, haciendo que Kafka descarte mensajes al superar el tiempo de retención
+3. Problemas de desincronización de fecha/hora por un reinicio o un ciclo de suspensión/reanudación
+
+Idealmente, deberías tener cero lag en todos los grupos de consumidores. Si un grupo de consumidores presenta mucho lag, debes investigar si se debe a un consumidor desconectado (por ejemplo, un contenedor de Sentry/Snuba desconectado de Kafka) o a un consumidor atascado procesando un mensaje en particular. Si es un consumidor desconectado, puedes reiniciar el contenedor o restablecer el offset de Kafka a &quot;earliest&quot;. De lo contrario, puedes restablecer el offset de Kafka a &quot;latest&quot;.
+
+<Alert level="info" title="Consejo">
+  Elige &quot;earliest&quot; si quieres volver a procesar eventos desde el principio. Elige &quot;latest&quot; si aceptas perder eventos antiguos y quieres empezar a procesar los más recientes.
+</Alert>
+
+
+<div id="recovery">
+  ### Recuperación
+</div>
+
+<Alert level="warning" title="Advertencia">
+Estas soluciones pueden provocar pérdida de datos durante el período de retención de eventos de Kafka (24 horas de forma predeterminada) al restablecer el offset de los consumidores.
+</Alert>
+
+<div id="proper-solution">
+  #### Solución correcta
+</div>
+
+La solución _correcta_ es la siguiente ([reportada](https://github.com/getsentry/self-hosted/issues/478#issuecomment-666254392) por [@rmisyurev](https://github.com/rmisyurev)). Este ejemplo usa `snuba-consumers` con el tópico `events`. El nombre de tu grupo de consumidores y el nombre del tópico pueden variar.
+
+1. Detén el contenedor correspondiente de Sentry/Snuba que esté usando el grupo de consumidores (puedes ver los contenedores correspondientes inspeccionando el archivo `docker-compose.yml`):
+   ```shell
+   docker compose stop snuba-errors-consumer snuba-outcomes-consumer snuba-outcomes-billing-consumer
+   ```
+2. Obtén la lista de consumidores:
+   ```shell
+   docker compose exec kafka kafka-consumer-groups --bootstrap-server kafka:9092 --list
+   ```
+3. Obtén información del grupo:
+   ```shell
+   docker compose exec kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers --describe
+   ```
+4. Observa qué ocurrirá con el offset usando un dry-run (opcional):
+   ```shell
+   docker compose exec kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers --topic events --reset-offsets --to-latest --dry-run
+   ```
+5. Establece el offset al último y ejecuta:
+   ```shell
+   docker compose exec kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers --topic events --reset-offsets --to-latest --execute
+   ```
+6. Inicia los contenedores de Sentry/Snuba que detuviste previamente:
+   ```shell
+   docker compose start snuba-errors-consumer snuba-outcomes-consumer snuba-outcomes-billing-consumer
+   ```
+
+<Alert level="info" title="Consejos">
+* Puedes reemplazar <code>snuba-consumers</code> por otros grupos de consumidores o <code>events</code> por otros tópicos cuando sea necesario.
+* Puedes restablecer el offset a "earliest" en lugar de "latest" si quieres empezar desde el principio.
+* Si tienes Kafka UI o Redpanda Console, puedes restablecer los offsets desde la interfaz web en lugar de la CLI.
+</Alert>
+
+<div id="another-option">
+  #### Otra opción
+</div>
+
+Esta opción es la siguiente ([reportada](https://github.com/getsentry/self-hosted/issues/1690) por [@gabn88](https://github.com/gabn88)):
+
+1. Configura el offset al más reciente y ejecuta:
+   ```shell
+   docker compose exec kafka kafka-consumer-groups --bootstrap-server kafka:9092 --all-groups --all-topics --reset-offsets --to-latest --execute
+   ```
+
+A diferencia de la solución adecuada, esto implica restablecer los offsets de todos los grupos de consumidores y de todos los topics.
+
+<div id="nuclear-option">
+  #### Opción nuclear
+</div>
+
+<Alert level="warning" title="Advertencia">
+  La _opción nuclear_ consiste en eliminar todos los volúmenes relacionados con Kafka y recrearlos, lo cual _sí_ provocará pérdida de datos. Cualquier dato pendiente allí desaparecerá al eliminar estos volúmenes.
+</Alert>
+
+1. Detén la instancia:
+   ```shell
+   docker compose down --volumes
+   ```
+2. Elimina el volumen de Kafka:
+   ```shell
+   docker volume rm sentry-kafka
+   ```
+
+ 3. Vuelve a ejecutar el script de instalación:
+    ```shell
+    ./install.sh
+    ```
+ 4. Inicia la instancia:
+    ```shell
+    docker compose up --wait
+    ```
+
+<div id="consumers-lagging-behind">
+  ## Consumidores rezagados
+</div>
+
+Si notas una ingestión muy lenta y los consumidores van rezagados, probablemente no estén pudiendo seguir el ritmo de los productores. Esto puede suceder si no alcanzan la tasa a la que se producen los mensajes. Para solucionarlo, puedes aumentar el número de particiones y el número de consumidores.
+
+1. Por ejemplo, si ves que el grupo de consumidores `ingest-consumer` tiene mucho lag y está suscrito al tema `ingest-events`, primero necesitas aumentar el número de particiones de ese tema.
+   ```bash
+   docker compose exec kafka kafka-topics --bootstrap-server kafka:9092 --alter --partitions 3 --topic ingest-events
+   ```
+2. Verifica que el número de particiones del tema ahora sea 3.
+   ```bash
+   docker compose exec kafka kafka-topics --bootstrap-server kafka:9092 --describe --topic ingest-events
+   ```
+3. Luego, aumenta el número de consumidores del grupo. En el `docker-compose.yml` puedes ver que el contenedor que consume el tema `ingest-events` con el grupo `ingest-consumer` es el contenedor `events-consumer`. Pero no modificaremos el `docker-compose.yml` directamente; en su lugar, crearemos un archivo nuevo llamado `docker-compose.override.yml` y agregaremos lo siguiente:
+   ```yaml
+   services:
+     events-consumer:
+       deploy:
+         replicas: 3
+   ```
+   Esto aumentará a 3 el número de consumidores del grupo `ingest-consumer`.
+4. Finalmente, necesitas reiniciar el contenedor `events-consumer`. Puedes hacerlo ejecutando el siguiente comando:
+   ```bash
+   docker compose up -d --wait events-consumer
+   ```
+5. Observa los registros de `events-consumer`; no deberías ver errores de consumo. Déjalo correr un tiempo (normalmente desde unos minutos hasta unas horas) y observa el lag de los temas de Kafka.
+
+<Alert level="info" title="Consejo">
+La definición de “lag normal” varía según los recursos de tu sistema. Si ejecutas una instancia pequeña, puedes esperar un lag normal de unos cientos de mensajes. Si ejecutas una instancia grande, puedes esperar un lag normal de unos miles de mensajes.
+</Alert>
+
+<div id="reducing-disk-usage">
+  ## Reducir el uso de disco
+</div>
+
+Si quieres reducir el espacio en disco que utiliza Kafka, tendrás que calcular cuidadosamente cuántos datos estás incorporando, cuánta pérdida de datos puedes tolerar y luego seguir las recomendaciones de [esta excelente publicación en StackOverflow](https://stackoverflow.com/a/52970982/90297) o [esta publicación en nuestro foro de la comunidad](https://forum.sentry.io/t/sentry-disk-cleanup-kafka/11337/2?u=byk).
+
+También puedes añadir lo siguiente a las variables de entorno del contenedor de Kafka (por [@csvan](https://github.com/getsentry/self-hosted/issues/3389#issuecomment-2453567691)):
+
+```yaml
+services:
+  kafka:
+    # ...
+    environment:
+      KAFKA_LOG_RETENTION_HOURS: 24
+      KAFKA_LOG_CLEANER_ENABLE: true
+      KAFKA_LOG_CLEANUP_POLICY: delete
+```

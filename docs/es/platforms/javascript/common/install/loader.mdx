@@ -1,0 +1,418 @@
+---
+title: Script de carga
+sidebar_order: 10
+description: Conoce el script de carga de JavaScript de Sentry
+notSupported:
+  - javascript.angular
+  - javascript.astro
+  - javascript.bun
+  - javascript.deno
+  - javascript.capacitor
+  - javascript.cordova
+  - javascript.electron
+  - javascript.ember
+  - javascript.gatsby
+  - javascript.nextjs
+  - javascript.nuxt
+  - javascript.react
+  - javascript.vue
+  - javascript.wasm
+  - javascript.remix
+  - javascript.react-router
+  - javascript.solidstart
+  - javascript.svelte
+  - javascript.sveltekit
+  - javascript.node
+  - javascript.aws-lambda
+  - javascript.azure-functions
+  - javascript.connect
+  - javascript.express
+  - javascript.fastify
+  - javascript.gcp-functions
+  - javascript.hapi
+  - javascript.hono
+  - javascript.koa
+  - javascript.nestjs
+  - javascript.cloudflare
+  - javascript.tanstackstart-react
+og_image: /og-images/platforms-javascript-common-install-loader.png
+---
+
+El script de carga es la forma más sencilla de inicializar el SDK de Sentry. También mantiene tu SDK de Sentry actualizado automáticamente y ofrece opciones de configuración para distintas funciones de Sentry.
+
+<div id="using-the-loader">
+  ## Uso del loader
+</div>
+
+Para usar el loader, ve a la interfaz de Sentry y navega a **Settings &gt; Projects &gt; (select project) &gt; SDK Setup &gt; Loader Script**. Copia la etiqueta del script e inclúyela como el primer script de tu página. Al incluirlo primero, permites que capture y almacene en búfer los eventos de cualquier script posterior, a la vez que te aseguras de que el SDK completo no se cargue hasta que todo lo demás haya terminado de ejecutarse.
+
+```html
+<script
+  src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js"
+  crossorigin="anonymous"
+></script>
+```
+
+De forma predeterminada, Tracing y Session Replay están desactivados.
+
+<div id="source-maps">
+  ## Mapas de origen
+</div>
+
+Para obtener trazas de pila correctas de archivos de recursos minificados cuando uses el Loader Script, tendrás que [alojar públicamente tus mapas de origen](/es/platforms/javascript/sourcemaps/uploading/hosting-publicly/) o [subirlos a Sentry](/es/platforms/javascript/sourcemaps/).
+
+<div id="loader-configuration">
+  ## Configuración del cargador
+</div>
+
+El cargador tiene algunas opciones de configuración:
+
+* Qué versión del SDK cargar
+* Usar Tracing
+* Usar Session Replay
+* Habilitar la depuración del SDK
+
+<div id="sdk-version">
+  ### Versión del SDK
+</div>
+
+Para configurar la versión, usa el menú desplegable en los ajustes de &quot;Loader Script&quot;, justo debajo de la etiqueta de script que copiaste anteriormente.
+
+![JavaScript Loader Settings](./img/js-loader-settings.png)
+
+Ten en cuenta que, debido al caché, los cambios de versión realizados aquí pueden tardar unos minutos en aplicarse.
+
+<div id="load-timing">
+  ### Momento de carga
+</div>
+
+Si solo usas el Loader para errores, el loader no cargará el SDK completo hasta que lo active uno de los siguientes eventos:
+
+* un error no controlado
+* un rechazo de promesa no controlado
+* una llamada a `Sentry.captureException`
+* una llamada a `Sentry.captureMessage`
+* una llamada a `Sentry.captureEvent`
+
+Una vez que ocurra uno de ellos, el loader pondrá ese evento en búfer y solicitará inmediatamente el SDK completo desde nuestro CDN. Cualquier evento que ocurra entre esa solicitud y la finalización de la inicialización del SDK también se pondrá en búfer, y todos los eventos en búfer se enviarán a Sentry una vez que el SDK esté completamente inicializado.
+
+Como alternativa, puedes configurar el loader para solicitar el SDK completo antes: aún como parte de la carga de la página, pero después de que se haya ejecutado el resto del JavaScript en la página. (En otras palabras, en un ciclo de eventos posterior). Para hacerlo, incluye `data-lazy="no"` en tu etiqueta de script.
+
+```html
+<script
+  src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js"
+  crossorigin="anonymous"
+  data-lazy="no"
+></script>
+```
+
+Por último, si quieres controlar el momento tú mismo, puedes llamar a `Sentry.forceLoad()`. Puedes hacerlo tan pronto como inmediatamente después de que se ejecute el cargador (lo que tiene el mismo efecto que configurar `data-lazy="no"`) y tan tarde como el primer error no gestionado, el primer rechazo de promesa no gestionado o la primera llamada a `Sentry.captureMessage` o `Sentry.captureEvent` (lo que tiene el mismo efecto que no llamarlo en absoluto). Ten en cuenta que no puedes retrasar la carga más allá de cualquiera de los eventos desencadenantes mencionados.
+
+Si Tracing y/o Session Replay está habilitado, el SDK descargará e inicializará inmediatamente el bundle para asegurarse de que pueda capturar transacciones y/o reproducciones en cuanto cargue la página.
+
+<div id="sdk-configuration">
+  ## Configuración del SDK
+</div>
+
+Aunque el Loader Script funcionará desde el primer momento sin necesidad de configuración en tu aplicación, puedes configurar el SDK según tus necesidades.
+
+<div id="default-configuration">
+  ### Configuración predeterminada
+</div>
+
+Para Tracing, el SDK se inicializará con `tracesSampleRate: 1` de forma predeterminada. Esto significa que el SDK capturará todas las trazas.
+
+Para Session Replay, los valores predeterminados son `replaysSessionSampleRate: 0.1` y `replaysOnErrorSampleRate: 1`. Esto significa que se capturarán reproducciones para el 10% de las sesiones normales y para todas las sesiones con un error.
+
+<div id="release-configuration">
+  ### Configuración de la publicación
+</div>
+
+Puedes configurar la publicación añadiendo lo siguiente a tu página:
+
+```html
+<script>
+  window.SENTRY_RELEASE = {
+    id: "...",
+  };
+</script>
+```
+
+<div id="custom-configuration">
+  ### Configuración personalizada
+</div>
+
+El script de carga siempre incluye una llamada a `Sentry.init` con una configuración predeterminada, incluido tu DSN. Si quieres <PlatformLink to="/configuration/options/">configurar tu SDK</PlatformLink> más allá de eso, puedes configurar una llamada de inicialización personalizada definiendo una función `window.sentryOnLoad`. Todo lo que se defina dentro de esta función *siempre* se ejecutará primero, antes de que se llame a cualquier otro método del SDK.
+
+**Asegúrate de definir esta función *antes* de agregar el script de carga, para garantizar que pueda ejecutarse en el momento adecuado:**
+
+```html
+<script>
+  // Configura sentryOnLoad antes de añadir el Loader Script
+  window.sentryOnLoad = function () {
+    Sentry.init({
+      // añade configuración personalizada aquí
+    });
+  };
+</script>
+
+<script
+  src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js"
+  crossorigin="anonymous"
+></script>
+```
+
+Dentro de la función `window.sentryOnLoad`, puedes configurar una llamada personalizada a `Sentry.init()`. Puedes configurar el SDK exactamente como lo harías si usaras el CDN, con una diferencia: tu llamada a `Sentry.init()` no necesita incluir el DSN, ya que ya está establecido. Dentro de esta función, se garantiza que el SDK completo de Sentry esté cargado y disponible.
+
+```html
+<script>
+  // Configura sentryOnLoad antes de agregar el Loader Script
+  window.sentryOnLoad = function () {
+    Sentry.init({
+      release: " ... ",
+      environment: " ... "
+    });
+    Sentry.setTag(...);
+    // etc.
+  };
+</script>
+```
+
+<div id="guarding-sdk-function-calls">
+  ### Proteger las llamadas a funciones del SDK
+</div>
+
+De forma predeterminada, el loader se asegurará de que puedas invocar estas funciones directamente en `Sentry` en cualquier momento, incluso si el SDK aún no se ha cargado:
+
+* `Sentry.captureException()`
+* `Sentry.captureMessage()`
+* `Sentry.captureEvent()`
+* `Sentry.addBreadcrumb()`
+* `Sentry.withScope()`
+* `Sentry.showReportDialog()`
+
+Si quieres llamar a cualquier otro método al usar el loader, debes protegerlo con `Sentry.onLoad()`. Cualquier callback pasado a `onLoad()` se ejecutará de inmediato (si el SDK ya está cargado) o más tarde, una vez que el SDK se haya cargado:
+
+```html
+<script>
+  window.sentryOnLoad = function () {
+    Sentry.init({
+      // ...
+    });
+  };
+</script>
+
+<script src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js" crossorigin="anonymous"></script>
+
+<script>
+  // Protégete ante la posibilidad de que window.Sentry no esté disponible, p. ej., por bloqueadores de anuncios
+  window.Sentry &&
+    Sentry.onLoad(function () {
+      // Dentro de este callback,
+      // garantizamos que `Sentry` está completamente cargado y que todas las API están disponibles
+      const client = Sentry.getClient();
+      // haz algo personalizado aquí
+    });
+</script>
+```
+
+<div id="limitations-of-errors-only-capturing">
+  ## Limitaciones de la captura solo de errores
+</div>
+
+Cuando uses el Loader Script únicamente para errores, el script inyecta el SDK de forma asíncrona. Esto significa que solo se capturarán y pondrán en cola los *errores no controlados* y los *rechazos de promesas no controlados* antes de que el SDK se cargue por completo. En concreto, la captura de [breadcrumbs](../../enriching-events/breadcrumbs/) no estará disponible hasta que el SDK esté completamente cargado e inicializado. Para reducir el tiempo durante el cual estas funciones no están disponibles, establece `data-lazy="no"` o llama a `forceLoad()` como se describió arriba.
+
+Si quieres entender el funcionamiento interno del propio loader, puedes leer el código fuente documentado en todo su esplendor en el [repositorio de Sentry](https://github.com/getsentry/sentry/blob/master/src/sentry/templates/sentry/js-sdk-loader.ts).
+
+<div id="limitations-of-tracing">
+  ## Limitaciones del tracing
+</div>
+
+Como el script del cargador inyecta el SDK real de forma asíncrona para mantener un alto rendimiento en la carga de la página, la funcionalidad de tracing del SDK solo está disponible una vez que el SDK se haya cargado e inicializado.
+Esto significa que, si por ejemplo tienes llamadas a `fetch` justo al inicio de tu aplicación, puede que no se tracen.
+Si esto es un problema crítico para ti, tienes dos opciones para asegurarte de que todas tus llamadas a `fetch` se tracen:
+
+* Inicializa el SDK en `window.sentryOnLoad` como se describe en [Custom Configuration](#custom-configuration). Luego realiza la llamada a `fetch` en el callback `Sentry.onload`.
+  <Expandable title="Example">
+    ```html
+    <script>
+      window.sentryOnLoad = function () {
+        Sentry.init({
+          // ...
+        });
+      };
+    </script>
+
+    <script src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js" crossorigin="anonymous"></script>
+
+    <script>
+      Sentry.onLoad(function () {
+        fetch("/api/users");
+      });
+    </script>
+    ```
+  </Expandable>
+* Usa los [paquetes de CDN](#cdn) en lugar del loader script. Esto garantizará que el SDK se cargue de forma síncrona y que todas tus llamadas a `fetch` se tracen.
+
+<Alert level="warning">
+  Ten en cuenta que ambas opciones agregarán retraso a tus llamadas a `fetch` o disminuirán el rendimiento de carga de la página. En última instancia, este es el equilibrio entre cargar el SDK de Sentry de forma diferida (lazy) o inmediata (eager).
+</Alert>
+
+<div id="cdn">
+  ## CDN
+</div>
+
+Sentry admite cargar el SDK de JavaScript desde un CDN. Por lo general, recomendamos usar nuestro Loader en su lugar. Si realmente debes usar un CDN, consulta [Paquetes disponibles](#available-bundles) a continuación.
+
+<div id="full-bundle">
+  ## Paquete completo
+</div>
+
+Para usar todas las funciones de Sentry, incluido el monitoreo de errores, el rastreo, [Session Replay](../../session-replay) y [User Feedback](../../user-feedback), puedes usar el siguiente paquete:
+
+```html {tabTitle: CDN}
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/bundle.tracing.replay.feedback.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'bundle.tracing.replay.feedback.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+```
+
+<div id="performance-bundle">
+  ## Paquete de rendimiento
+</div>
+
+Para usar Sentry para errores y trazas, puedes usar el siguiente paquete:
+
+```html {tabTitle: CDN}
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/bundle.tracing.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'bundle.tracing.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+```
+
+<div id="performance-replay-bundle">
+  ## Paquete de rendimiento y reproducción
+</div>
+
+Para usar Sentry para gestión de errores y trazas, así como para [reproducción de sesiones](../../session-replay), puedes usar el siguiente paquete:
+
+```html {tabTitle: CDN}
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/bundle.tracing.replay.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'bundle.tracing.replay.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+```
+
+<div id="errors-replay-bundle">
+  ## Paquete de Errores y Replay
+</div>
+
+Para usar Sentry para el monitoreo de errores y para [Session Replay](../../session-replay), pero **no para tracing**, puedes usar el siguiente paquete:
+
+```html {tabTitle: CDN}
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/bundle.replay.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'bundle.replay.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+```
+
+<div id="errors-only-bundle">
+  ## Paquete solo de errores
+</div>
+
+Si usas Sentry únicamente para el monitoreo de errores, puedes utilizar el siguiente paquete:
+
+```html {tabTitle: CDN}
+<script
+  src="https://browser.sentry-cdn.com/{{@inject packages.version('sentry.javascript.browser') }}/bundle.min.js"
+  integrity="sha384-{{@inject packages.checksum('sentry.javascript.browser', 'bundle.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+```
+
+<div id="usage-configuration">
+  ## Uso y configuración
+</div>
+
+Una vez que hayas incluido el paquete del SDK de Sentry en tu página, podrás usar Sentry en tu propio paquete:
+
+```javascript {tabTitle: CDN}
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  // esto asume que tu proceso de compilación reemplaza `process.env.npm_package_version` por un valor
+  release: "my-project-name@" + process.env.npm_package_version,
+  integrations: [
+    // Si usas un paquete con el tracing habilitado, añade la integración BrowserTracing
+    Sentry.browserTracingIntegration(),
+    // Si usas un paquete con la repetición de sesiones habilitada, añade la integración Replay
+    Sentry.replayIntegration(),
+  ],
+
+  // Recomendamos ajustar este valor en producción, o usar tracesSampler
+  // para un control más fino
+  tracesSampleRate: 1.0,
+
+  // Configura `tracePropagationTargets` para controlar en qué URL debe habilitarse el rastreo distribuido
+  tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+});
+```
+
+<div id="available-bundles">
+  ## Paquetes disponibles
+</div>
+
+Nuestro CDN hospeda una variedad de paquetes:
+
+* `bundle.<modifiers>.js` es `@sentry/browser` solo con monitoreo de errores
+* `bundle.tracing.<modifiers>.js` es `@sentry/browser` con errores y trazas
+* `bundle.replay.<modifiers>.js` es `@sentry/browser` con errores y reproducción de sesiones
+* `bundle.feedback.<modifiers>.js` es `@sentry/browser` con errores y comentarios de usuarios
+* `bundle.tracing.replay.<modifiers>.js` es `@sentry/browser` con errores, trazas y reproducción de sesiones
+* `bundle.tracing.replay.feedback.<modifiers>.js` es `@sentry/browser` con errores, trazas, reproducción de sesiones y comentarios de usuarios
+
+Además, cada una de las integraciones en `@sentry/integrations` está disponible como un paquete llamado `<integration-name>.<modifiers>.js`.
+
+Desde la v8 del SDK, los paquetes son ES6 de forma predeterminada. Si necesitas compatibilidad con ES5, asegúrate de añadir tú mismo un polyfill para las funcionalidades de ES5. Como alternativa, puedes usar los paquetes de la v7 y añadir el modificador `.es5`.
+
+Cada versión tiene tres variantes de paquete:
+
+* minificado (`.min`)
+* sin minificar (sin `.min`), incluye registros de depuración
+* minificado con registros de depuración (`.debug.min`)
+
+Los paquetes que incluyen registros de depuración muestran mensajes de registro más detallados, lo que puede ayudar a depurar problemas. Asegúrate de <PlatformLink to="/configuration/options/#debug">habilitar la depuración</PlatformLink> para ver los mensajes de depuración en la consola.
+Los paquetes sin minificar y con registros de depuración tienen un tamaño mayor que los minificados.
+
+Por ejemplo:
+
+* `bundle.js` es `@sentry/browser`, compilado a ES6 pero sin minificar, con registros de depuración incluidos (como ocurre con todos los paquetes sin minificar)
+* `bundle.tracing.debug.min.js` es `@sentry/browser` con trazas habilitadas, minificado, con registros de depuración del SDK incluidos
+
+<JsBundleList />
+
+Para encontrar los hashes de integridad de versiones anteriores del SDK, puedes consultar nuestro registro de versiones del SDK para el Browser SDK [aquí](https://github.com/getsentry/sentry-release-registry/tree/master/packages/npm/@sentry/browser).
+
+<div id="additional-configuration">
+  ## Configuración adicional
+</div>
+
+<div id="using-defer">
+  ### Uso de defer
+</div>
+
+Si usas el atributo de script [`defer`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script#attr-defer), te recomendamos encarecidamente colocar primero la etiqueta de script del SDK para navegador y marcar todos tus demás scripts con `defer` (pero no con `async`). Esto garantizará que el SDK de Sentry se ejecute antes que cualquiera de los otros.
+
+De lo contrario, es posible que se produzcan errores antes de que Sentry se cargue, lo que significa que estarás a ciegas frente a esos problemas.
+
+<div id="content-security-policy">
+  ### Política de seguridad de contenido
+</div>
+
+Si tienes configurada una Política de seguridad de contenido (CSP) en tu sitio, deberás añadir el `script-src` desde donde cargas el SDK y el origen de tu DSN. Por ejemplo:
+
+* `script-src: https://browser.sentry-cdn.com https://js.sentry-cdn.com`
+* `connect-src: *.sentry.io`

@@ -1,0 +1,51 @@
+---
+title: Instrumentación personalizada
+description: "Aprende a capturar datos de rendimiento en cualquier acción de tu app."
+sidebar_order: 20
+---
+
+<Alert>
+
+Para capturar transacciones y spans personalizados según las necesidades de tu organización, primero debes <PlatformLink to="/tracing/">configurar el tracing.</PlatformLink>
+
+</Alert>
+
+<PlatformContent includePath="performance/enable-manual-instrumentation" />
+
+<PlatformContent includePath="performance/add-spans-example" />
+
+<PlatformContent includePath="performance/retrieve-transaction" />
+
+<PlatformContent includePath="performance/concurrency" />
+
+<PlatformContent includePath="performance/connect-errors-spans" />
+
+<div id="adding-span-transaction-data-attributes">
+  ## Agregar atributos de datos a Span y Transaction
+</div>
+
+Puedes capturar atributos de datos junto con tus spans y transactions. Puedes establecer atributos de datos al iniciar un span o una transaction:
+
+```rust
+use serde_json::json;
+
+// Crea una transacción y asigna atributos de datos...
+let tx_ctx = sentry::TransactionContext::new("Transacción de ejemplo", "http.server");
+let transaction = sentry::start_transaction(tx_ctx);
+transaction.set_data("attribute_1", "hola".into());
+transaction.set_data("attribute_2", 42.into());
+
+// ...o crea un span y asigna atributos de datos
+let span = transaction.start_child("http.client", "Span de ejemplo");
+span.set_data("is_ok", true.into());
+span.set_data("other_data", json!({ "an": "object" }));
+```
+
+O puedes añadir atributos de datos a un span existente:
+
+```rust
+let span = Hub::current().configure_scope(|scope| scope.get_span());
+if let Some(span) = span {
+    span.set_data("hello", "world".into());
+}
+```

@@ -1,0 +1,77 @@
+---
+title: log4net
+sdk: sentry.dotnet.log4net
+description: Conoce la integración de Sentry con .NET y log4net.
+og_image: /og-images/platforms-dotnet-guides-log4net.gif
+---
+
+Sentry ofrece una integración con log4net a través del [paquete NuGet Sentry.Log4Net](https://www.nuget.org/packages/Sentry.Log4Net).
+
+Sin cambiar una sola línea de código, este paquete puede inicializar el SDK de Sentry y capturar eventos, incluyendo propiedades adicionales como los datos de `Exception`, entre otros.
+
+<div id="install">
+  ## Instalación
+</div>
+
+Añade la dependencia de Sentry:
+
+```powershell {tabTitle:Package Manager}
+Install-Package Sentry.Log4Net -Version {{@inject packages.version('sentry.dotnet.log4net') }}
+```
+
+```shell {tabTitle:.NET Core CLI}
+dotnet add package Sentry.Log4Net -v {{@inject packages.version('sentry.dotnet.log4net') }}
+```
+
+Este paquete extiende el SDK principal de `Sentry`. Esto significa que, además del `Appender` de log4net, con este paquete también tendrás acceso a toda la API y a las funciones disponibles en el SDK principal de `Sentry`.
+
+<div id="configure">
+  ## Configurar
+</div>
+
+Una vez que el paquete de integración de log4net esté instalado en tu proyecto, puedes modificar el archivo de configuración para agregar el appender.
+Puedes hacerlo, por ejemplo, en `app.config` para aplicaciones de consola y escritorio, o en `web.config` en el caso de ASP.NET.
+
+```xml {filename:app.config}
+  <appender name="SentryAppender" type="Sentry.Log4Net.SentryAppender, Sentry.Log4Net">
+    <Dsn value="___PUBLIC_DSN___"/>
+    <!--Envía el valor Identity del evento de registro como usuario-->
+    <SendIdentity value="true" />
+    <threshold value="INFO" />
+  </appender>
+```
+
+<Alert>
+  Solo se expone un subconjunto de opciones mediante la configuración del appender de log4net. Si deseas acceder a una [opción del SDK](/es/platforms/dotnet/configuration/options/) que no figura a continuación, tendrás que inicializar el SDK con [SentrySdk.Init](/es/platforms/dotnet/) en lugar de hacerlo mediante esta integración, como se describe a continuación.
+</Alert>
+
+<div id="sendidentity">
+  ### SendIdentity
+</div>
+
+En el ejemplo anterior, la marca `SendIdentity` estaba activada. El SDK tomará el valor `Identity` de log4net y lo informará a Sentry como el ID del usuario.
+
+<div id="dsn">
+  ### DSN
+</div>
+
+En el ejemplo anterior también puedes ver que se establece el DSN. Eso le indica a `SentryAppender` que inicialice el SDK.
+
+Esta es solo una de las formas de inicializar el SDK. Si deseas configurar el SDK de forma programática, puedes **omitir el DSN** en la sección de configuración del appender. El SDK debe inicializarse solo **una vez** y, dado que otras integraciones (como ASP.NET) también pueden inicializarlo, solo necesitas pasar el DSN a una de ellas.
+Un caso común para no agregar el DSN al archivo de configuración XML (lo que lo inicializaría mediante la integración de log4net) es querer tener acceso completo a las [opciones del SDK](/es/platforms/dotnet/guides/log4net/configuration/options/).
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Este fragmento incluye un error intencional para que puedas comprobar que todo funciona en cuanto lo configures.
+
+<PlatformContent includePath="getting-started-verify" />
+
+<div id="sample">
+  ## Ejemplo
+</div>
+
+Consulta un [app.config de ejemplo](https://github.com/getsentry/sentry-dotnet/blob/main/samples/Sentry.Samples.Log4Net/app.config) o un [ejemplo completo y funcional](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.Log4Net) para verlo en acción.
+
+![Evento de ejemplo en Sentry](./img/log4net-sample.gif)

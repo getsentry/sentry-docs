@@ -1,0 +1,60 @@
+---
+title: Consultas lentas de BD
+sidebar_order: 30
+description: Más información sobre los problemas de consultas lentas de BD y cómo diagnosticarlos y solucionarlos.
+og_image: /og-images/product-issues-issue-details-performance-issues-slow-db-queries.png
+---
+
+Los problemas de consultas lentas de BD se generan cuando una consulta SQL `SELECT` específica en tu aplicación tarda constantemente más de `500 ms` en resolverse.
+
+<div id="detection-criteria">
+  ## Criterios de detección
+</div>
+
+El detector de este problema de rendimiento analiza spans individuales de base de datos con los siguientes criterios:
+
+- La operación del span comienza con `db` y la consulta se guarda en la descripción del span
+- La consulta es específicamente un `SELECT`
+- La duración del span es de al menos `500 ms`
+
+Ten en cuenta que no se creará un problema a menos que la consulta en cuestión tarde de forma constante más de `500 ms`. Más específicamente, el problema solo se creará si la misma consulta se detecta como lenta
+en 100 eventos dentro de un período de 24 horas.
+
+Puedes configurar los umbrales del detector para los problemas de Slow DB Query en **Project Settings > Performance**:
+
+![Slow DB Query detector threshold settings](./img/slow-db-queries-detector-settings.png)
+
+<Alert>
+
+Estas configuraciones solo pueden ser editadas por usuarios con roles de propietario, manager o admin a nivel de equipo.
+
+</Alert>
+
+<div id="span-evidence">
+  ## Evidencia de span
+</div>
+
+Puedes obtener información adicional sobre tu Slow DB Query consultando los siguientes campos en la "Evidencia de span":
+
+- Transaction name
+- Slow DB Query
+- Duration Impact - La duración de la consulta en comparación con toda la transacción, para poner en perspectiva cuánto de la transacción ocupa la consulta
+
+![Evidencia de span de Slow DB Query](./img/span-evidence.png)
+
+Vela yendo a la página de **Issues** en Sentry, seleccionando tu proyecto, haciendo clic en el issue de Slow DB Query que quieres examinar y luego desplazándote hacia abajo hasta la sección "Evidencia de span" en la pestaña "Details".
+
+<div id="fixing-slow-db-queries">
+  ## Cómo corregir consultas lentas en la base de datos
+</div>
+
+Las consultas lentas suelen producirse cuando se interrogan tablas sin índice. Para evitarlo, asegúrate de que tu tabla esté correctamente indexada. Aunque no haya otras soluciones obvias, hay pasos que puedes seguir para acotar las causas de la lentitud de tu consulta.
+
+Si tu versión de SQL lo admite, puedes ejecutar un comando `EXPLAIN` sobre tu consulta. Esto te mostrará un plan de ejecución. El plan desglosa los pasos que realizará tu base de datos para ejecutar la consulta, junto con información adicional, como su coste.
+
+El coste es un valor arbitrario, pero varía según lo “caro” que sea ese tramo de la consulta. Puedes comparar el coste de cada paso para determinar cuáles son los más caros. Además, puedes ejecutar `EXPLAIN ANALYZE`, que ejecutará la consulta y devolverá la misma información que un `EXPLAIN` normal, más el tiempo real invertido por cada paso de tu consulta (ten cuidado de no ejecutar esto en consultas destructivas, ¡se ejecutarán por completo!).
+
+Puedes obtener más información sobre `EXPLAIN` en los siguientes recursos:
+
+- [Documentación de PostgreSQL: EXPLAIN](https://www.postgresql.org/docs/current/sql-explain.html)
+- [Documentación de MySQL: Optimización de consultas con EXPLAIN](https://dev.mysql.com/doc/refman/8.0/en/using-explain.html)

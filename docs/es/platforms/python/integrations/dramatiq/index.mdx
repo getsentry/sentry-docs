@@ -1,0 +1,79 @@
+---
+title: Dramatiq
+description: "Aprende a importar y usar la integración de Dramatiq."
+---
+
+La integración de Dramatiq añade compatibilidad con la biblioteca de tareas en segundo plano [Dramatiq](https://dramatiq.io/).
+
+La integración de Dramatiq solo informa de errores. Aún no se admite el tracing. Si quieres más instrumentación, debes hacer [instrumentación personalizada](/es/platforms/python/tracing/instrumentation/custom-instrumentation/).
+
+<Alert>
+  Este es el sucesor de la `DramatiqIntegration` original, que puede encontrarse aquí: https://github.com/jacobsvante/sentry-dramatiq
+
+  El mantenedor original ha [donado la integración a Sentry](https://github.com/getsentry/sentry-python/issues/3387), para que podamos encargarnos del mantenimiento.
+</Alert>
+
+<div id="install">
+  ## Instalación
+</div>
+
+Para empezar, instala `sentry-sdk` desde PyPI.
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk"
+```
+
+<div id="configure">
+  ## Configuración
+</div>
+
+Añade `DramatiqIntegration()` a tu lista de `integrations`:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.dramatiq import DramatiqIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Agrega datos como encabezados de la solicitud y la IP de los usuarios, si corresponde;
+    # consulta https://docs.sentry.io/platforms/python/data-management/data-collected/ para obtener más información
+    send_default_pii=True,
+    integrations=[
+        DramatiqIntegration(),
+    ],
+)
+```
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Provoca un error en tu código para comprobar que la integración está enviando eventos a Sentry.
+
+```python
+import dramatiq
+
+import sentry_sdk
+sentry_sdk.init(...)  # igual que antes
+
+@dramatiq.actor(max_retries=0)
+def dummy_actor(x, y):
+    return x / y
+
+dummy_actor.send(5, 0)
+```
+
+Al ejecutar esto, se generará un evento de error (`ZeroDivisionError`) que deberías poder ver en [sentry.io](https://sentry.io).
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+* Dramatiq: 1.13+
+* Python: 3.6+
+
+<Include name="python-use-older-sdk-for-legacy-support.mdx" />

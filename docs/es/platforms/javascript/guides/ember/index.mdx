@@ -1,0 +1,206 @@
+---
+title: Ember
+description: "Aprende a configurar Sentry en tu aplicación de Ember y registra tus primeros errores."
+sdk: sentry.javascript.ember
+categories:
+  - javascript
+  - browser
+---
+
+<PlatformContent includePath="getting-started-prerequisites" />
+
+<div id="step-1-install">
+  ## Paso 1: Instalar
+</div>
+
+Elige las funciones que quieres configurar y esta guía te mostrará cómo hacerlo:
+
+<OnboardingOptionButtons
+  options={[
+  "error-monitoring",
+  "performance",
+  "session-replay",
+  "user-feedback",
+  "logs",
+]}
+/>
+
+<PlatformContent includePath="getting-started-features-expandable" />
+
+<div id="install-the-sentry-sdk">
+  ### Instala el SDK de Sentry
+</div>
+
+Ejecuta el comando de tu gestor de paquetes preferido para añadir el SDK de Sentry a tu aplicación:
+
+<PlatformContent includePath="getting-started-install" />
+
+<div id="step-2-configure">
+  ## Paso 2: Configuración
+</div>
+
+<div id="initialize-the-sdk">
+  ### Inicializa el SDK
+</div>
+
+La configuración debe realizarse lo antes posible en el ciclo de vida de tu aplicación. Añade lo siguiente a tu archivo `app/app.js`:
+
+```javascript {filename:app.js}
+import Application from "@ember/application";
+import Resolver from "ember-resolver";
+import loadInitializers from "ember-load-initializers";
+import config from "./config/environment";
+
+import * as Sentry from "@sentry/ember";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Agrega encabezados de solicitud e IP de los usuarios; para obtener más información, visita:
+  // https://docs.sentry.io/platforms/javascript/guides/ember/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+
+  // ___PRODUCT_OPTION_START___ session-replay
+  integrations: [
+    Sentry.replayIntegration(),
+    // ___PRODUCT_OPTION_START___ user-feedback
+    Sentry.feedbackIntegration({
+      // La configuración adicional del SDK va aquí; por ejemplo:
+      colorScheme: "system",
+    }),
+    // ___PRODUCT_OPTION_END___ user-feedback
+  ],
+  // ___PRODUCT_OPTION_END___ session-replay
+  // ___PRODUCT_OPTION_START___ logs
+
+  // Habilita el envío de logs a Sentry
+  enableLogs: true,
+  // ___PRODUCT_OPTION_END___ logs
+
+  // ___PRODUCT_OPTION_START___ performance
+  // Establece tracesSampleRate en 1.0 para capturar el 100 %
+  // de las transacciones de trazado.
+  // Recomendamos ajustar este valor en producción
+  // Obtén más información en
+  // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
+  tracesSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ performance
+  // ___PRODUCT_OPTION_START___ session-replay
+
+  // Captura Replay para el 10 % de todas las sesiones,
+  // y para el 100 % de las sesiones con un error
+  // Obtén más información en
+  // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  // ___PRODUCT_OPTION_END___ session-replay
+});
+
+export default class App extends Application {
+  modulePrefix = config.modulePrefix;
+  podModulePrefix = config.podModulePrefix;
+  Resolver = Resolver;
+}
+```
+
+<div id="step-3-add-readable-stack-traces-with-source-maps-optional">
+  ## Paso 3: Añadir rastreos de pila legibles con mapas de origen (opcional)
+</div>
+
+<PlatformContent includePath="getting-started-sourcemaps-short-version" />
+
+<div id="step-4-avoid-ad-blockers-with-tunneling-optional">
+  ## Paso 4: Evita los bloqueadores de anuncios con tunelización (opcional)
+</div>
+
+<PlatformContent includePath="getting-started-tunneling" />
+
+<div id="step-5-verify-your-setup">
+  ## Paso 5: Verifica tu configuración
+</div>
+
+Probemos tu configuración y confirmemos que Sentry funciona correctamente y está enviando datos a tu proyecto en Sentry.
+
+<div id="issues">
+  ### Incidencias
+</div>
+
+Para comprobar que Sentry captura errores y crea incidencias en tu proyecto de Sentry, añade el siguiente botón de prueba a una de tus plantillas; al hacer clic, se producirá un error que Sentry registrará:
+
+```handlebars {filename: application.hbs}
+{{! rest of your page }}
+<button type="button" {{on "click" this.throwTestError}}>
+  Probar error de Sentry
+</button>
+```
+
+A continuación, añade la acción correspondiente a tu controlador o componente:
+
+```javascript {filename: application.js}
+import Controller from "@ember/controller";
+import { action } from "@ember/object";
+
+export default class ApplicationController extends Controller {
+  @action
+  throwTestError() {
+    throw new Error("Error de prueba de Sentry");
+  }
+}
+```
+
+<OnboardingOption optionId="performance" hideForThisOption>
+  Abre la página en un navegador y haz clic en el botón para provocar un error en el frontend.
+</OnboardingOption>
+
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
+
+<OnboardingOption optionId="performance">
+  ### Trazas
+
+  Para probar la configuración de trazas, actualiza el fragmento de código anterior para iniciar una traza y medir el tiempo que tarda en ejecutarse tu código:
+
+  ```javascript {filename: application.js} {3,8-12}
+  import Controller from "@ember/controller";
+  import { action } from "@ember/object";
+  import * as Sentry from "@sentry/ember";
+
+  export default class ApplicationController extends Controller {
+    @action
+    throwTestError() {
+      Sentry.startSpan({ op: "test", name: "Example Span" }, () => {
+        setTimeout(() => {
+          throw new Error("Sentry Test Error");
+        }, 99);
+      });
+    }
+  }
+  ```
+
+  Abre la página en un navegador y haz clic en el botón para provocar un error en el frontend y generar una traza.
+</OnboardingOption>
+
+<div id="view-captured-data-in-sentry">
+  ### Ver los datos capturados en Sentry
+</div>
+
+Ahora ve a tu proyecto en [Sentry.io](https://sentry.io) para ver los datos recopilados (pueden tardar unos momentos en aparecer).
+
+<PlatformContent includePath="getting-started-verify-locate-data" />
+
+<div id="next-steps">
+  ## Próximos pasos
+</div>
+
+A estas alturas, deberías haber integrado Sentry en tu aplicación Ember y ya estar enviando datos a tu proyecto de Sentry.
+
+Este es un buen momento para personalizar tu configuración y explorar temas más avanzados.
+Te recomendamos seguir estos pasos:
+
+* Aprende a [capturar errores manualmente](/es/platforms/javascript/guides/ember/usage/)
+* Sigue [personalizando tu configuración](/es/platforms/javascript/guides/ember/configuration/)
+* Familiarízate con [las funciones del producto de Sentry](/es/product/), como el tracing, los insights y las alertas
+
+<Expandable permalink={false} title="¿Tienes problemas para configurar el SDK?">
+  - Encuentra distintos temas en [Solución de problemas](/es/platforms/javascript/guides/ember/troubleshooting/)
+  - [Obtén ayuda](https://sentry.zendesk.com/hc/en-us/)
+</Expandable>

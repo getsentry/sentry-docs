@@ -1,0 +1,141 @@
+---
+title: Trabajadores asíncronos
+sidebar_order: 70
+---
+
+<Alert level="warning" title="Obsoleto">
+Los workers de Celery están obsoletos y se eliminarán a partir de la versión self-hosted 25.10.x.
+</Alert>
+
+Sentry incluye una cola integrada para procesar tareas de forma más asíncrona. Por ejemplo, cuando llega un evento, en lugar de escribirlo en la base de datos de inmediato, envía una tarea a la cola para poder devolver la solicitud de inmediato, y los workers en segundo plano se encargan de guardar esos datos.
+
+Sentry utiliza la biblioteca [Celery](https://docs.celeryproject.org/) para gestionar los workers.
+
+<div id="registering-a-task">
+  ## Registrar una tarea
+</div>
+
+Sentry configura las tareas con un decorador especial que nos permite controlar de forma más explícita la función invocable.
+
+```python
+from sentry.tasks.base import instrumented_task
+
+@instrumented_task(
+    name="sentry.tasks.do_work",
+    queue="important_queue",
+    default_retry_delay=60 * 5,
+    max_retries=None,
+)
+def do_work(kind_of_work, **kwargs):
+    # ...
+```
+
+Hay algunos puntos importantes:
+
+* El nombre de la tarea *debe* declararse.
+
+  El nombre de la tarea es cómo Celery identifica los mensajes (solicitudes) y qué
+  función y worker deben manejar esos mensajes. Si las tareas
+  no tienen nombre, Celery derivará uno del módulo y la función,
+  lo que ata el nombre a la ubicación del código y lo vuelve más frágil para el
+  mantenimiento futuro.
+
+* Las tareas *deben* aceptar `**kwargs` para manejar la compatibilidad progresiva.
+
+  Esto garantiza que las tareas acepten cualquier mensaje que esté en
+  la cola en lugar de fallar por argumentos desconocidos. Ayuda con
+  cambios progresivos hacia atrás y hacia adelante; los despliegues no son instantáneos y
+  los mensajes pueden producirse con múltiples versiones de argumentos.
+
+  Aunque esto permite avanzar y retroceder sin fallos completos
+  de tareas, se debe tener cuidado para que los workers manejen
+  mensajes con argumentos antiguos y nuevos al cambiar los
+  argumentos. Esto reduce un poco la cantidad de cambios requeridos en
+  una migración y brinda algo más de flexibilidad operativa, pero
+  la pérdida de mensajes por argumentos desconocidos sigue siendo inaceptable.
+
+  Al agregar un argumento a una tarea existente, crea un PR que agregue el
+  nuevo parámetro con un valor predeterminado seguro y espera a que se despliegue antes de
+  fusionar un PR que comience a usar ese valor. El nuevo argumento debe
+  ser opcional para permitir rollbacks.
+
+* Las tareas *deberían* reintentarse automáticamente en caso de fallo.
+
+* Los argumentos de las tareas *deberían* ser de tipos primitivos y pequeños.
+
+  Los argumentos de las tareas se serializan en el mensaje enviado a través de los
+  brokers y los workers necesitan deserializarlos de nuevo. Hacer esto
+  con tipos complejos es frágil y debe evitarse. P. ej., es preferible
+  pasar un ID a la tarea que pueda usarse para cargar los datos desde caché
+  en lugar de los datos en sí.
+
+  Del mismo modo, para mantener a los brokers de mensajes y a los workers funcionando
+  eficientemente, serializar valores grandes en el mensaje produce
+  mensajes grandes, colas grandes y más sobrecarga de (de)serialización, por lo que
+  debe evitarse.
+
+* El módulo de las tareas *debe* agregarse a `CELERY_IMPORTS` *y* `TASKWORKER_IMPORTS`.
+
+  Los workers de Celery (y Taskbroker) deben encontrar la tarea por nombre; solo pueden hacerlo si
+  el worker ha importado el módulo con la función de tarea decorada,
+  porque esto es lo que registra la tarea por nombre. Por lo tanto, cada módulo
+  que contenga una tarea debe agregarse a las opciones `CELERY_IMPORTS` y `TASKWORKER_IMPORTS` en
+  `src/sentry/conf/server.py`.
+
+  Tenemos una configuración separada para los workers de Taskbroker hasta que desaprobemos por completo a los workers de Celery.
+
+
+<div id="running-a-worker">
+  ## Ejecución de un Worker
+</div>
+
+Puedes ejecutar Workers con la [CLI de Sentry](https://docs.sentry.io/cli/).
+
+```bash
+$ sentry run worker
+```
+
+
+<div id="starting-the-cron-process">
+  ## Inicio del proceso de Cron
+</div>
+
+Sentry programa trabajos rutinarios mediante un proceso de cron:
+
+```bash
+SENTRY_CONF=/etc/sentry sentry run cron
+```
+
+
+<div id="configuring-the-broker">
+  ## Configuración del broker
+</div>
+
+Sentry admite dos brokers principales que puedes ajustar según tu carga de trabajo: RabbitMQ y Redis.
+
+<div id="redis">
+  ### Redis
+</div>
+
+El broker predeterminado es Redis y funcionará en la mayoría de las situaciones. La principal limitación de usar Redis es que todo el trabajo pendiente debe caber en la memoria.
+
+```python
+BROKER_URL = "redis://localhost:6379/0"
+```
+
+Si tu conexión a Redis requiere una contraseña para autenticarse, debes usar el siguiente formato:
+
+```python
+BROKER_URL = "redis://:password@localhost:6379/0"
+```
+
+
+<div id="rabbitmq">
+  ### RabbitMQ
+</div>
+
+Si trabajas con una carga de trabajo alta o te preocupa que la carga pendiente no quepa en memoria, RabbitMQ es un candidato ideal para respaldar los workers de Sentry.
+
+```python
+BROKER_URL = "amqp://guest:guest@localhost:5672/sentry"
+```

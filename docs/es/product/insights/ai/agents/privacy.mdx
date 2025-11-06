@@ -1,0 +1,41 @@
+---
+title: Privacidad de datos
+sidebar_order: 20
+description: >-
+  Aprende a controlar la recopilación de datos y a proteger información confidencial en la
+  monitorización de agentes de IA.
+og_image: /og-images/product-insights-ai-agents-privacy.png
+---
+
+<div id="sdk-pii-settings">
+  ## Configuración de PII del SDK
+</div>
+
+De forma predeterminada, las integraciones del agente de Sentry AI respetan los [ajustes de PII de tu SDK](/es/platforms/javascript/guides/nextjs/data-management/data-collected/):
+
+* `sendDefaultPii: false` - Solo se recopilan metadatos como nombres de modelos, recuento de tokens, nombres de herramientas y tiempos de ejecución.
+* `sendDefaultPii: true` - Se capturan las entradas, salidas, prompts e respuestas completas de modelos y herramientas de IA.
+
+Puedes modificar este comportamiento configurándolo a nivel de llamada de función. Para más detalles, consulta la [Configuración](/es/platforms/javascript/guides/nextjs/configuration/integrations/vercelai/#configuration).
+
+<div id="server-side-pii-scrubbing">
+  ## Depuración de PII en el lado del servidor
+</div>
+
+<Alert level="info">
+  Sentry incluye [depuración de datos del lado del servidor](/es/security-legal-pii/scrubbing/server-side-scrubbing/) que detecta y elimina automáticamente datos sensibles comunes, como números de tarjeta de crédito, números de seguridad social y contraseñas, de la mayoría de los datos de eventos.
+
+  Sin embargo, los siguientes atributos de span de agentes de IA no están protegidos de forma predeterminada:
+
+  * `gen_ai.prompt`
+  * `gen_ai.request.messages`
+  * `gen_ai.tool.input`
+  * `gen_ai.tool.output`
+  * `gen_ai.response.tool_calls`
+  * `gen_ai.response.text`
+  * `gen_ai.response.object`
+</Alert>
+
+Si deseas habilitar la depuración de datos para cualquiera de estos campos, puedes agregar una regla de [depuración de datos avanzada](/es/product/data-management-settings/scrubbing/advanced-datascrubbing/) a nivel de organización o proyecto en la sección **Security &amp; Privacy** [settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/organization/security-and-privacy) con el siguiente formato: `$span.data.'<span attribute>'`.
+
+![Campos confidenciales adicionales](./img/advanced-scrubbing-rule.png)

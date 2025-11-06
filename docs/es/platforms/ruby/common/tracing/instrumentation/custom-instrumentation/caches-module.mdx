@@ -1,0 +1,95 @@
+---
+title: Instrumentación de cachés
+sidebar_order: 1000
+description: "Aprende a instrumentar manualmente tu código para usar el módulo Caches de Sentry. "
+---
+
+Una caché puede usarse para acelerar la recuperación de datos y así mejorar el rendimiento de la aplicación. En lugar de obtener datos de una capa potencialmente lenta, tu aplicación los obtendrá de la memoria (en el mejor de los casos). El uso de caché puede acelerar cargas de trabajo con muchas lecturas en aplicaciones como portales de preguntas y respuestas, videojuegos, compartición de medios y redes sociales.
+
+Sentry ofrece un [panel de monitoreo de cachés](https://sentry.io/orgredirect/organizations/:orgslug/insights/backend/caches/) para obtener una vista general de las cachés de tu aplicación.
+
+Para que Sentry pueda ofrecerte una visión general del rendimiento de tu caché, tendrás que crear dos spans: uno que indique que algo se está guardando en la caché y otro que indique que algo se está recuperando de la caché.
+
+Asegúrate de que haya una transacción en ejecución cuando crees los spans. Si estás usando un framework web como Rails, esas transacciones se crearán automáticamente. Consulta <PlatformLink to='/tracing/'>Monitoreo del rendimiento</PlatformLink> para más información.
+
+Para obtener información detallada sobre qué datos se pueden configurar, consulta la [Especificación del módulo de cachés para desarrolladores](https://develop.sentry.dev/sdk/performance/modules/caches/).
+
+<div id="manual-instrumentation">
+  ## Instrumentación manual
+</div>
+
+Sigue estos pasos para asegurarte de que los spans relacionados con la caché se envíen correctamente a Sentry.
+
+<div id="add-span-when-putting-data-into-the-cache">
+  ### Agrega un span al guardar datos en la caché
+</div>
+
+1. Establece el valor en caché con la biblioteca de caché que estés usando.
+2. Envuelve la parte de tu aplicación que utiliza el valor en caché con `Sentry.with_child_span { |span| ... }`
+3. Configura `op` como `cache.put`.
+4. Configura `cache.item_size` como un entero que represente el tamaño del elemento en caché.
+
+(Los pasos descritos arriba están documentados en el fragmento).
+
+```ruby
+key = 'myCacheKey123'
+value = 'El valor que quiero guardar en caché.'
+
+Sentry.with_child_span(op: 'cache.put') do |span|
+  # Establece una clave en tu caché usando tu solución de almacenamiento personalizada
+  my_cache.set(key, value)
+
+  # Describe el servidor de caché al que accedes
+  span.set_data('network.peer.address', 'cache.example.com/supercache')
+  span.set_data('network.peer.port', 9000)
+
+  # Agrega las claves que quieres establecer
+  span.set_data('cache.key', [key])
+
+  # Agrega el tamaño del valor que guardaste en caché
+  span.set_data('cache.item_size', value.size)  # Advertencia: si el valor es muy grande, esto podría consumir mucha memoria
+end
+```
+
+
+<div id="add-span-when-retrieving-data-from-the-cache">
+  ### Agrega un span al recuperar datos de la caché
+</div>
+
+1. Obtén el valor en caché de la biblioteca de caché que estés usando.
+2. Envuelve la parte de tu aplicación que usa el valor en caché con `Sentry.with_child_span { |span| ... }`.
+3. Establece `op` en `cache.get`.
+4. Establece `cache.hit` en un valor booleano que indique si el valor se obtuvo correctamente de la caché o no.
+5. Establece `cache.item_size` en un entero que represente el tamaño del elemento almacenado en caché.
+
+(Los pasos descritos arriba están documentados en el fragmento).
+
+```ruby
+key = 'myCacheKey123'
+value = nil
+
+Sentry.with_child_span(op: 'cache.get') do |span|
+  # Obtén una clave de tu solución de caché
+  value = my_cache.get(key)
+
+  # Describe el servidor de caché al que estás accediendo
+  span.set_data('network.peer.address', 'cache.example.com/supercache')
+  span.set_data('network.peer.port', 9000)
+
+  # Agrega las claves que acabas de recuperar del caché
+  span.set_data('cache.key', [key])
+
+  if value
+    # Si recuperaste un valor, hubo un acierto en el caché
+    span.set_data('cache.hit', True)
+
+    # Opcionalmente también agrega el tamaño del valor que recuperaste
+    span.set_data('cache.item_size', value.size)
+  else
+    # Si no pudiste recuperar un valor, hubo un fallo
+    span.set_data('cache.hit', False)
+  end
+end
+```
+
+Ahora deberías tener los spans correctos en su lugar. Ve al [panel de caché](https://sentry.io/orgredirect/organizations/:orgslug/insights/backend/caches/) para ver cómo está rindiendo tu caché.

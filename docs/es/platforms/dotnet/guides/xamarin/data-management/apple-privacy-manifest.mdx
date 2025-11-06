@@ -1,0 +1,111 @@
+---
+title: Manifiesto de privacidad de Apple
+description: "Soluciona problemas comunes con el Manifiesto de privacidad de Apple y el SDK de Sentry para Xamarin."
+sidebar_order: 50
+---
+
+<Alert>
+Esta guía requiere [@sentry/xamarin@2.1.0](https://github.com/getsentry/sentry-xamarin/releases/tag/2.1.0) o una versión posterior.
+</Alert>
+
+Los SDK de Sentry ofrecen captura de errores y trazas para aplicaciones móviles que se ejecutan en dispositivos Apple. Para hacerlo, el SDK necesita acceder a cierta información del dispositivo y de la aplicación. Algunas de las API necesarias para ello se consideran relevantes para la privacidad por parte de Apple. Para enviar apps al App Store, Apple exige que todas las apps —y las bibliotecas usadas dentro de ellas— incluyan archivos de manifiesto de privacidad que indiquen qué API se utilizan y con qué motivos permitidos. Para más detalles, consulta las directrices de Apple sobre [Describing use of required reason API](https://developer.apple.com/documentation/bundleresources/privacy_manifest_files/describing_use_of_required_reason_api).
+
+<Alert>
+La información y los pasos de esta guía siguen en desarrollo y podrían cambiar debido a nuevas herramientas o a [requisitos de Apple](https://developer.apple.com/documentation/bundleresources/privacy_manifest_files) actualizados.
+</Alert>
+
+Durante el proceso de compilación, el SDK añadirá a tu proyecto un archivo de manifiesto de privacidad que contiene únicamente la información requerida que utiliza el SDK. Si aportas tu propio manifiesto de privacidad, deberás incluir las reglas siguientes en tu archivo `privacyinfo.xcprivacy`. Esta guía te ayudará a crear el manifiesto de privacidad para tus aplicaciones de Xamarin.
+
+<div id="before-you-start">
+  ## Antes de empezar
+</div>
+
+Ten en cuenta que el manifiesto de privacidad de la aplicación abarca todos los usos de datos (mediante `NSPrivacyCollectedDataTypes`) y los usos de API (mediante `NSPrivacyAccessedAPITypes`) de *toda la aplicación* y *todas las bibliotecas incluidas*. Los ejemplos a continuación reflejan los requisitos actuales solo para los SDK de Sentry. Si usas otras bibliotecas que acceden a API relevantes para la privacidad, también debes incluirlas en el manifiesto de privacidad.
+
+<div id="create-a-privacy-manifest">
+  ## Crear un manifiesto de privacidad
+</div>
+
+Primero, debes crear un archivo de manifiesto de privacidad en tu proyecto de iOS. Este archivo debe llamarse `PrivacyInfo.xcprivacy` y colocarse en la raíz de tu proyecto de Xcode. Sigue la guía de Apple [Privacy manifest files](https://developer.apple.com/documentation/bundleresources/privacy_manifest_files#4284009) para crear el archivo.
+
+```xml {filename:PrivacyInfo.xcprivacy}
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeCrashData</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypePerformanceData</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeOtherDiagnosticData</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+	</array>
+    <key>NSPrivacyAccessedAPITypes</key>
+    <array>
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>C617.1</string>
+            </array>
+        </dict>
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategorySystemBootTime</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>35F9.1</string>
+            </array>
+        </dict>
+    </array>
+</dict>
+</plist>
+```
+
+Después de agregar el archivo de manifiesto de privacidad, no olvides cambiar las propiedades del archivo a `bundle resource` y establecer `Copy to Output Directory` en `Copy if newer`.
+
+
+<div id="troubleshooting">
+  ## Solución de problemas
+</div>
+
+- Para obtener más información sobre cómo generar el manifiesto de privacidad con Xamarin, consulta la guía [Privacy manifests](https://devblogs.microsoft.com/dotnet/apple-privacy-manifest-support/) de Microsoft.
+
+- Las API enumeradas son necesarias para que el SDK funcione correctamente y no es posible excluirlas.
+
+- Si estás usando una versión anterior del SDK, es posible que necesites actualizar a la versión [2.1.0](https://github.com/getsentry/sentry-xamarin/releases/tag/2.1.0) o posterior para incluir automáticamente el manifiesto de privacidad si no has proporcionado uno.
+
+- Para comprobar que el manifiesto de privacidad se incluye correctamente en tu app, compila y envía tu app a App Store o a TestFlight para pruebas externas. Si falta el manifiesto, recibirás un correo electrónico de Apple con el asunto “The uploaded build for YourAppName has one or more issues”, que enumera las declaraciones de API faltantes.

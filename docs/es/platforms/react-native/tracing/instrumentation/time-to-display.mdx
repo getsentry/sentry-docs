@@ -1,0 +1,114 @@
+---
+title: Tiempo hasta la visualización
+sidebar_order: 30
+sdk: sentry.javascript.react-native
+
+description: "Aprende a medir el tiempo hasta la visualización con el SDK de Sentry para React Native."
+---
+
+El paquete del SDK de React Native de Sentry incluye una función de trazabilidad que te permite medir el [tiempo hasta la visualización](/es/product/insights/mobile/mobile-vitals/#time-to-initial-display-and-time-to-full-display) de tu aplicación. Esta guía te mostrará cómo usar el SDK de React Native de Sentry para medir el tiempo hasta la visualización en tu aplicación.
+
+El tiempo hasta la visualización consta de dos partes: tiempo hasta la visualización inicial (TTID) y tiempo hasta la visualización completa (TTFD). TTID mide el tiempo que tarda en mostrarse el primer fotograma, mientras que TTFD mide el tiempo que tarda en mostrarse el contenido completo para que el usuario pueda interactuar.
+
+<div id="automatic-time-to-initial-display-for-react-navigation">
+  ## Medición automática del tiempo hasta la visualización inicial en React Navigation
+</div>
+
+Para medir automáticamente el tiempo hasta la visualización inicial de las pantallas de React Navigation, habilita la opción `enableTimeToInitialDisplay` en tu instancia de `Sentry.ReactNavigationInstrumentation`.
+
+<Include name="react-native-react-navigation-setup.mdx" />
+
+<div id="notes">
+  ### Notas
+</div>
+
+* Para obtener más información sobre la integración de React Navigation en Sentry, consulta la [página de instrumentación automática](/es/platforms/react-native/tracing/instrumentation/automatic-instrumentation).
+
+* El tiempo medido de Time to Initial Display empieza cuando React Navigation despacha el evento de navegación y termina cuando se renderiza el fotograma siguiente a la inicialización del componente nativo Screen.
+
+* Si la pantalla está animada, el tiempo medido de Time to Initial Display incluirá el tiempo que tarda en completarse la animación (excepto en las animaciones impulsadas por JavaScript en iOS).
+
+* Time to Initial Display solo está disponible a partir de React Navigation versión 5.
+
+<div id="using-time-to-display-with-tabnavigator">
+  ### Uso de Time to Display con TabNavigator
+</div>
+
+Al usar `TabNavigator` de React Navigation u otros navegadores que **precargan o reutilizan rutas**, la instrumentación automática con `enableTimeToInitialDisplay` puede no crear siempre un span de `TimeToInitialDisplay`. Esto se debe a que el auto-TTID solo registra la primera vez que se ve una ruta; en rutas precargadas o ya visitadas, el TTID puede omitirse. Dado que `TimeToFullDisplay` depende de un span de TTID activo, esto puede resultar en spans de TTFD faltantes en Sentry.
+
+Las versiones recientes del SDK de React Native han introducido correcciones y alternativas para algunos de estos casos. Sin embargo, el equipo de móviles de Sentry ha verificado que **[la instrumentación personalizada/manual](/es/platforms/react-native/tracing/instrumentation/custom-instrumentation/) sigue siendo la solución más confiable** hoy en día, especialmente para escenarios de navegación con pestañas.
+
+Recomendamos agregar explícitamente ambos componentes en las pantallas dentro de un `TabNavigator`:
+
+```jsx
+<TimeToInitialDisplay record={true} />
+<TimeToFullDisplay record={isLoading === false} />
+```
+
+<div id="time-to-initial-display-overwrite">
+  ## Sobrescritura de Time To Initial Display
+</div>
+
+Cuando el Time to Initial Display capturado automáticamente no cumple tus requisitos, puedes reemplazarlo usando el componente `Sentry.TimeToInitialDisplay`.
+
+```jsx {8} {tabTitle: <TimeToInitialDisplay />}
+import * as Sentry from "@sentry/react-native";
+import * as React from "react";
+import { View } from "react-native";
+
+function MyComponent() {
+  return (
+    <View>
+      <Sentry.TimeToInitialDisplay record={true} />
+    </View>
+  );
+}
+```
+
+<div id="time-to-full-display">
+  ## Tiempo hasta la visualización completa
+</div>
+
+Para medir cuándo una pantalla se muestra por completo, puedes usar el componente `Sentry.TimeToFullDisplay`.
+
+```jsx {17} {tabTitle: <TimeToFullDisplay />}
+import * as Sentry from "@sentry/react-native";
+import { useState, useEffect } from "react";
+import { View, Text } from "react-native";
+
+function MyComponent() {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    fetch('https://example.com/data')
+      .then(response => response.json())
+      .then(data => setData(data));
+  }, []);
+
+  const shouldRecordFullDisplay = data !== null;
+  return (
+    <View>
+      <Sentry.TimeToFullDisplay record={shouldRecordFullDisplay} />
+      {data ? <Text>{data}</Text> : <Text>Cargando...</Text>}
+    </View>
+  );
+}
+```
+
+## Notas
+
+* Los componentes `Sentry.TimeToInitialDisplay` y `Sentry.TimeToFullDisplay` se comportan igual que `<></>` cuando envuelven otros componentes.
+
+* Cualquier animación programada que se ejecute después de que se registren los componentes `Sentry.TimeToInitialDisplay` y `Sentry.TimeToFullDisplay` no se incluirá en los valores medidos de Time to Display.
+
+* Esta guía asume que usas el SDK de Sentry para React Native en la versión 5.20.0 o posterior.
+
+<div id="troubleshooting">
+  ## Solución de problemas
+</div>
+
+* Time To Display aún no está disponible en la web.
+
+* Time To Display es compatible con aplicaciones de Expo, pero no funciona con Expo Go. Compila los proyectos nativos para probar esta característica.
+
+* Time To Display requiere los componentes nativos de Sentry. Al actualizar desde versiones anteriores del SDK, vuelve a compilar los proyectos nativos para asegurarte de que los componentes nativos estén al día.

@@ -1,0 +1,136 @@
+---
+draft: true
+categories: []
+toc: true
+title: Transportes
+noindex: true
+tags: []
+---
+
+<Alert level="warning" title="Aviso de obsolescencia">
+  Un nuevo SDK de Python ha sustituido esta versión obsoleta. Sentry mantiene esta documentación para clientes que usan el cliente antiguo. Recomendamos usar el [SDK de Python actualizado](/es/platforms/python/) para proyectos nuevos.
+</Alert>
+
+Un transporte es el mecanismo mediante el cual Raven envía la solicitud HTTP al servidor de Sentry. De forma predeterminada, Raven utiliza un transporte asíncrono con subprocesos, pero puedes ajustar esto fácilmente pasando tu propia clase de transporte.
+
+La clase de transporte se pasa mediante el parámetro `transport` en `Client`:
+
+```python
+from raven import Client
+
+Client('...', transport=TransportClass)
+```
+
+Las opciones se pasan a los transportes mediante la cadena de consulta.
+
+Todos los transportes deben admitir al menos las siguientes opciones:
+
+`timeout = 1`
+
+El tiempo de espera de una respuesta del servidor, en segundos.
+
+`verify_ssl = 1`
+
+Si la conexión es HTTPS, validar el certificado y el nombre de host.
+
+`ca_certs = [raven]/data/cacert.pem`
+
+Un conjunto de certificados que se usará al validar conexiones SSL.
+
+Por ejemplo, para aumentar el tiempo de espera y desactivar la verificación de SSL:
+
+```python
+SENTRY_DSN = '___DSN___?timeout=5&verify_ssl=0'
+```
+
+<div id="eventlet">
+  ## Eventlet
+</div>
+
+Solo debe usarse dentro de un bucle de E/S de Eventlet.
+
+```python
+from raven.transport.eventlet import EventletHTTPTransport
+
+Client('...', transport=EventletHTTPTransport)
+```
+
+<div id="gevent">
+  ## Gevent
+</div>
+
+Debe usarse únicamente dentro de un bucle de E/S de Gevent.
+
+```python
+from raven.transport.gevent import GeventedHTTPTransport
+
+Client('...', transport=GeventedHTTPTransport)
+```
+
+<div id="requests">
+  ## Requests
+</div>
+
+Requiere la biblioteca `requests`. Sincrónico.
+
+```python
+from raven.transport.requests import RequestsHTTPTransport
+
+Client('...', transport=RequestsHTTPTransport)
+```
+
+Como alternativa, también existe un cliente con hilos para Requests:
+
+```python
+from raven.transport.threaded_requests import ThreadedRequestsHTTPTransport
+
+Client('...', transport=ThreadedRequestsHTTPTransport)
+```
+
+<div id="sync">
+  ## Síncrono
+</div>
+
+Un transporte síncrono bloqueante.
+
+```python
+from raven.transport.http import HTTPTransport
+
+Client('...', transport=HTTPTransport)
+```
+
+<div id="threaded-default">
+  ## Con subprocesos (predeterminado)
+</div>
+
+Inicia un trabajador asíncrono para procesar mensajes.
+
+```python
+from raven.transport.threaded import ThreadedHTTPTransport
+
+Client('...', transport=ThreadedHTTPTransport)
+```
+
+<div id="tornado">
+  ## Tornado
+</div>
+
+Solo debería usarse dentro de un bucle de E/S de Tornado.
+
+```python
+from raven.transport.tornado import TornadoHTTPTransport
+
+Client('...', transport=TornadoHTTPTransport)
+```
+
+<div id="twisted">
+  ## Twisted
+</div>
+
+Debe usarse únicamente dentro de un bucle de eventos de Twisted.
+
+```python
+from raven.transport.twisted import TwistedHTTPTransport
+
+Client('...', transport=TwistedHTTPTransport)
+```

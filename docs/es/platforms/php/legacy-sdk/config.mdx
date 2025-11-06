@@ -1,0 +1,287 @@
+---
+draft: true
+categories: []
+toc: true
+title: Configuración
+noindex: true
+tags: []
+---
+
+<Alert level="warning" title="Aviso de desaprobación">
+  Un nuevo SDK de PHP ha sustituido esta versión en desuso. Sentry conserva esta documentación para quienes aún usan el cliente anterior. Si usas PHP 7.1 o posterior, te recomendamos utilizar el [SDK de PHP actualizado](/es/platforms/php/) para tus proyectos.
+</Alert>
+
+Existen varias opciones que te permiten configurar el comportamiento de `Raven_Client`. Se pasan como segundo parámetro del constructor y se espera que sean un arreglo de pares clave-valor:
+
+```php
+$client = new Raven_Client($dsn, array(
+    'option_name' => 'value',
+));
+```
+
+<div id="available-settings">
+  ## Configuraciones disponibles
+</div>
+
+Las siguientes opciones de configuración están disponibles para el cliente:
+
+`name`
+
+Una cadena para sobrescribir el valor predeterminado del nombre de host del servidor.
+
+De forma predeterminada, usa `Raven_Compat::gethostname()`.
+
+`etiquetas`
+
+Un array de etiquetas que se aplicarán a los eventos en este contexto.
+
+```php
+'tags' => array(
+    'php_version' => phpversion(),
+)
+```
+
+```php
+$client->tags_context(array(
+    'php_version' => phpversion(),
+));
+```
+
+`release`
+
+La versión de tu aplicación (p. ej., SHA de git)
+
+```php
+'release' => MyApp::getReleaseVersion(),
+```
+
+```php
+$client->setRelease(MyApp::getReleaseVersion());
+```
+
+`environment`
+
+El entorno en el que se ejecuta tu aplicación.
+
+```php
+'environment' => 'production',
+```
+
+```php
+$client->setEnvironment('production');
+```
+
+`app_path`
+
+La ruta raíz del código de tu aplicación.
+
+```php
+'app_path' => app_root(),
+```
+
+```php
+$client->setAppPath(app_root());
+```
+
+`excluded_app_paths`
+
+Rutas que excluir de la detección de app&#95;path.
+
+```php
+'excluded_app_paths' => array(app_root() . '/cache'),
+```
+
+```php
+$client->setExcludedAppPaths(array(app_root() . '/cache'));
+```
+
+`prefijos`
+
+Prefijos que deben eliminarse de los nombres de archivo para crear rutas relativas.
+
+```php
+'prefixes' => array(
+    '/www/php/lib',
+),
+```
+
+```php
+$client->setPrefixes(array(
+    '/www/php/lib',
+));
+```
+
+`sample_rate`
+
+El factor de muestreo que se aplicará a los eventos. Un valor de 0,00 impedirá enviar cualquier evento y un valor de 1,00 enviará el 100% de los eventos.
+
+```php
+// enviar el 50 % de los eventos
+'sample_rate' => 0.5,
+```
+
+`send_callback`
+
+Una función que se llamará cada vez que haya datos listos para enviar. Dentro de la función puedes modificar los datos o, alternativamente, devolver `false` para indicarle al SDK que no envíe el evento.
+
+```php
+'send_callback' => function(&$data) {
+    // eliminar datos HTTP
+    @unset($data['request']);
+},
+```
+
+```php
+$client->setSendCallback(function($data) {
+    // no enviar eventos si es POST
+    if ($_SERVER['REQUEST_METHOD'] === 'POST')
+    {
+        return false;
+    }
+});
+```
+
+`curl_method`
+
+De forma predeterminada, «sync».
+
+Métodos disponibles:
+
+* `sync` (predeterminado): envía las solicitudes de inmediato cuando se realizan
+* `async`: utiliza un controlador curl&#95;multi para envíos asíncronos bajo el principio de “mejor esfuerzo”
+* `exec`: envía eventos de forma asíncrona creando (fork) un proceso de curl por cada elemento
+
+`curl_path`
+
+Por defecto: «curl».
+
+Especifique la ruta del binario de curl que se usará con el método de curl «exec».
+
+`transport`
+
+Configura un transporte personalizado para modificar cómo se envían los eventos de Sentry.
+
+```php
+'transport' => function($client, $data) {
+    $myHttpClient->send(array(
+        'url'     => $client->getServerEndpoint(),
+        'method'  => 'POST',
+        'headers' => array(
+            'Content-Encoding' => 'gzip',
+            'Content-Type'     => 'application/octet-stream',
+            'User-Agent'       => $client->getUserAgent(),
+            'X-Sentry-Auth'    => $client->getAuthHeader(),
+        ),
+        'body'    => gzcompress(jsonEncode($data)),
+    ))
+},
+```
+
+```php
+$client->setTransport(...);
+```
+
+`trace`
+
+Establece esto en `false` para deshabilitar el rastreo de reflexión (argumentos de llamadas a funciones) en las trazas de pila.
+
+`logger`
+
+Ajusta el nombre predeterminado del logger para los mensajes.
+
+De forma predeterminada, `php`.
+
+`ca_cert`
+
+La ruta al paquete de certificados de la CA.
+
+Por defecto, utiliza el bundle común que incluye getsentry.com: ./data/cacert.pem
+
+Precauciones:
+
+* Se ignora el paquete de CA a menos que curl muestre un error indicando que necesita un certificado.
+* Actualmente, la opción solo se utiliza en el transporte síncrono de curl.
+
+`curl_ssl_version`
+
+La versión de SSL (2 o 3) que se utilizará. De forma predeterminada, PHP intentará determinarla automáticamente, aunque en algunos casos debe configurarse manualmente.
+
+`message_limit`
+
+De forma predeterminada, 1024 caracteres.
+
+Este valor se utiliza para truncar variables de mensajes y marcos. Sin embargo, no se garantiza que la longitud total del mensaje esté restringida por este valor.
+
+`processors`
+
+Una lista de clases que se usarán para procesar los datos antes de enviarlos a Sentry. De forma predeterminada, se usa `Raven_Processor_SanitizeDataProcessor`
+
+`processorOptions`
+
+Opciones que se pasarán a la función `setProcessorOptions()` en una subclase de `Raven_Processor` antes de que ese procesador se agregue a la lista de procesadores que usa `Raven_Client`
+
+A continuación se muestra un ejemplo de cómo sobrescribir las expresiones regulares en `Raven_Processor_SanitizeDataProcessor`:
+
+```php
+'processorOptions' => array(
+    'Raven_Processor_SanitizeDataProcessor' => array(
+                'fields_re' => '/(contraseña_usuario|token_usuario|secreto_usuario)/i',
+                'values_re' => '/^(?:\d[ -]*?){15,16}$/'
+            )
+)
+```
+
+`timeout`
+
+Tiempo máximo, en segundos, para enviar solicitudes al servidor de Sentry; el valor predeterminado es 2 segundos.
+
+```php
+'timeout' => 2,
+```
+
+`excluded_exceptions`
+
+Excepciones que no deben registrarse; las excepciones que hereden de las de esta lista también se excluirán. De forma predeterminada, es un arreglo vacío.
+
+En el siguiente ejemplo, si excluyes `LogicException`, también se excluirá `BadFunctionCallException`, ya que hereda de `LogicException`.
+
+```php
+'excluded_exceptions' => array('LogicException'),
+```
+
+`ignore_server_port`
+
+De forma predeterminada, el puerto del servidor se añadirá a la URL registrada cuando no sea un puerto estándar (80, 443). Configurarlo en `true` ignorará por completo el puerto del servidor y evitará que se agregue a la URL registrada.
+
+```php
+'ignore_server_port' => true,
+```
+
+<div id="providing-request-context">
+  ## Proporcionar contexto de la solicitud
+</div>
+
+La mayoría de las veces no llamas a Raven directamente, pero aun así quieres proporcionar contexto adicional. Este ciclo de vida suele consistir en lo siguiente:
+
+* Establecer contexto mediante un middleware (p. ej., el usuario autenticado)
+* Enviar todo el contexto proporcionado con cualquier evento durante el ciclo de vida de la solicitud
+* Limpiar el contexto
+
+Hay tres métodos principales para proporcionar contexto de la solicitud:
+
+```php
+// vincula al usuario que inició sesión
+$client->user_context(array('email' => 'foo@example.com'));
+
+// etiqueta la solicitud con algo interesante
+$client->tags_context(array('interesting' => 'yes'));
+
+// proporciona un poco de contexto adicional
+$client->extra_context(array('happiness' => 'very'));
+```
+
+Si realizas solicitudes adicionales durante el ciclo de vida, también deberás asegurarte de limpiar el contexto (para restablecer su estado):
+
+```php
+$client->context->clear();
+```

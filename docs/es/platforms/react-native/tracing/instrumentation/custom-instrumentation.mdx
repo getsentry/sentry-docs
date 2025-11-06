@@ -1,0 +1,308 @@
+---
+title: Instrumentación personalizada
+description: "Aprende a capturar datos de rendimiento en cualquier acción de tu app."
+sidebar_order: 20
+---
+
+<Alert>
+  Para capturar transacciones y spans adaptados a las necesidades de tu organización, primero debes <PlatformLink to="/tracing/">configurar el tracing.</PlatformLink>
+</Alert>
+
+Para añadir datos de rendimiento personalizados a tu aplicación, necesitas incorporar instrumentación personalizada en forma de spans. Los spans permiten medir el tiempo que tarda en realizarse una acción específica. Por ejemplo, puedes crear un span para medir cuánto tarda en ejecutarse una función.
+
+Para empezar, importa el SDK.
+
+```javascript
+import * as Sentry from "@sentry/react-native";
+```
+
+Hay tres funciones clave para crear spans:
+
+* [startSpan](#starting-an-active-span-startspan): Crea un nuevo span activo que termina automáticamente. Probablemente querrás usar esta función.
+* [startSpanManual](#starting-an-active-span-with-manual-end-startspanmanual): Crea un nuevo span activo que debe finalizarse manualmente.
+* [startInactiveSpan](#starting-inactive-spans-startinactivespan): Crea un nuevo span inactivo que debe finalizarse manualmente.
+
+
+<div id="active-vs-inactive-spans">
+  ## Spans activos vs. inactivos
+</div>
+
+Si hay un span activo cuando se inicia uno nuevo, el nuevo span comenzará automáticamente como hijo del que está activo. Esto significa que, si un span se inicia como **span activo**, será el span padre y cualquier span creado dentro del callback será hijo de ese span. Los errores se asociarán al span padre, si existe.
+
+En cambio, los **spans inactivos** nunca tendrán hijos asociados automáticamente. Esto es útil si no te interesa capturar la actividad de los hijos.
+
+Una restricción clave de los spans activos es que solo pueden activarse dentro de un callback. Esta restricción existe porque, de lo contrario, sería imposible asociar los spans hijos con el span padre correcto al trabajar con código asíncrono.
+
+Si no puedes envolver el código en ejecución en un callback (por ejemplo, al trabajar con hooks o similares), tendrás que trabajar con spans inactivos y puedes combinarlo con [withActiveSpan](#withactivespan) para asociar manualmente los spans hijos con el span padre correcto.
+
+<div id="span-hierarchy">
+  ## Jerarquía de spans
+</div>
+
+En entornos de navegador y móvil, los spans se recogen en una jerarquía plana donde, de forma predeterminada, cada span es hijo directo del span raíz.
+
+La razón principal para mantener una jerarquía plana es que, si varias operaciones asíncronas se inician en paralelo, no sería posible determinar qué span es el padre de qué span hijo. Imagina el siguiente ejemplo:
+
+```javascript
+Sentry.startSpan({ name: "span 1" }, async () => {
+  await fetch("https://example.com/1");
+  await fetch("https://example.com/2");
+  await fetch("https://example.com/3");
+});
+
+Sentry.startSpan({ name: "span 2" }, async () => {
+  await fetch("https://example.com/4");
+  await fetch("https://example.com/5");
+  await fetch("https://example.com/6");
+});
+```
+
+En el navegador, no habría forma de saber que `span 1` solo está activo dentro de su callback, mientras que `span 2` está activo en el otro callback. Sin una jerarquía plana, *todas* las spans de fetch pasarían a ser hijas de `span 2`. Esto sería engañoso y confuso, por lo que hemos hecho que, en el navegador, **todas las spans sean hijas del span raíz** (que suele ser el span de carga de página o de navegación) de forma predeterminada. Así, siempre tendrás una jerarquía plana de spans.
+
+Este es un compromiso que hemos asumido para garantizar que los datos capturados sean precisos y fiables. Si necesitas capturar una jerarquía más compleja de spans, puedes desactivar este comportamiento configurando `parentSpanIsAlwaysRootSpan: false`:
+
+```javascript
+Sentry.init({
+  parentSpanIsAlwaysRootSpan: false,
+});
+```
+
+Si optas por volver al comportamiento de jerarquía completa, donde los spans son hijos del span activo, asegúrate de que no haya varias operaciones asíncronas paralelas que inicien spans. De lo contrario, podrías obtener datos incorrectos.
+
+
+<div id="span-starting-options">
+  ## Opciones para iniciar un span
+</div>
+
+Las siguientes opciones se pueden usar para todas las funciones que inician un span:
+
+| Opción             | Tipo                        | Descripción                                                                                                            |
+| ------------------ | --------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `name`             | `string`                    | El nombre del span.                                                                                                    |
+| `op`               | `string`                    | La operación del span.                                                                                                 |
+| `startTime`        | `number`                    | La hora de inicio del span.                                                                                            |
+| `attributes`       | `Record<string, Primitive>` | Atributos para adjuntar al span.                                                                                       |
+| `parentSpan`       | `Span`                      | Si se establece, el span será hijo del span especificado; de lo contrario, será hijo del span activo actual.           |
+| `onlyIfParent`     | `boolean`                   | Si es true, se omite el span si no hay un span padre activo.                                                           |
+| `forceTransaction` | `boolean`                   | Si es true, garantiza que este span aparezca como una transacción en la interfaz de Sentry.                            |
+
+La única opción obligatoria es `name`. Todas las demás son opcionales.
+
+<div id="starting-an-active-span-startspan">
+  ## Iniciar un span activo (`startSpan`)
+</div>
+
+Para la mayoría de los casos, recomendamos iniciar spans activos con `Sentry.startSpan()`. Esto creará un nuevo span que estará activo dentro del callback proporcionado y se cerrará automáticamente cuando dicho callback termine. El callback puede ser sincrónico o asincrónico (una promesa). En el caso de un callback asincrónico, el span se cerrará cuando la promesa se resuelva o sea rechazada. Si el callback proporcionado lanza un error o rechaza, el span se marcará como fallido.
+
+<PlatformContent includePath="performance/start-span" />
+
+<div id="starting-an-active-span-with-manual-end-startspanmanual">
+  ## Iniciar un span activo con finalización manual (`startSpanManual`)
+</div>
+
+Hay ocasiones en las que no quieres que un span termine automáticamente en cuanto finalice el callback. En ese caso, puedes usar `Sentry.startSpanManual()`. Esto iniciará un nuevo span activo dentro del callback proporcionado, pero no finalizará automáticamente cuando el callback termine. Tendrás que finalizar el span manualmente llamando a `span.end()`.
+
+<PlatformContent includePath="performance/start-span-manual" />
+
+<div id="starting-inactive-spans-startinactivespan">
+  ## Iniciar spans inactivos (`startInactiveSpan`)
+</div>
+
+Para agregar spans que no estén activos, puedes crear spans independientes. Esto es útil cuando tienes trabajo agrupado bajo un único span padre, pero que es independiente del span activo actual. Sin embargo, en la mayoría de los casos querrás crear y usar la API [startSpan](#starting-an-active-span-startspan) indicada arriba.
+
+<PlatformContent includePath="performance/start-inactive-span" />
+
+<div id="starting-spans-as-children-of-a-specific-span">
+  ## Iniciar spans como hijos de un span específico
+</div>
+
+De forma predeterminada, cualquier span que inicies será hijo del span activo en ese momento. Si quieres un comportamiento diferente, puedes hacer que los spans sean hijos de un span específico con la opción `parentSpan`:
+
+```js
+const parentSpan = Sentry.startInactiveSpan({ name: "Span principal" });
+const childSpan = Sentry.startInactiveSpan({ name: "Span secundario", parentSpan });
+
+childSpan.end();
+parentSpan.end();
+```
+
+Esta opción también está disponible para `startSpan` y `startSpanManual`.
+
+
+<div id="utilities-that-work-with-spans">
+  ## Utilidades que funcionan con spans
+</div>
+
+Ofrecemos algunas utilidades útiles que pueden ayudarte con la instrumentación personalizada.
+
+<div id="getactivespan">
+  ### `getActiveSpan`
+</div>
+
+Devuelve la traza activa actual.
+
+```javascript
+const activeSpan = Sentry.getActiveSpan();
+```
+
+
+<div id="getrootspan">
+  ### `getRootSpan`
+</div>
+
+Devuelve el span raíz de un span dado. Si el span ya es el raíz, devolverá el mismo span.
+
+```javascript
+const spanActiva = Sentry.getActiveSpan();
+const spanRaíz = spanActiva ? Sentry.getRootSpan(spanActiva) : undefined;
+```
+
+
+<div id="withactivespan">
+  ### `withActiveSpan`
+</div>
+
+Este método te permite establecer un span como activo durante la ejecución de un callback. Puedes usarlo junto con `startInactiveSpan` para asociar manualmente los spans hijos con el span padre correcto:
+
+```javascript
+const span = Sentry.startInactiveSpan({ name: "Span principal" });
+
+Sentry.withActiveSpan(span, () => {
+  // `span` ahora está activo; cualquier otro span será su hijo
+  Sentry.startSpan({ name: "Span hijo" }, () => {
+    // Haz algo
+  });
+});
+```
+
+También puedes pasar `null` a `withActiveSpan` para asegurarte de que un span no tenga padre:
+
+```javascript
+Sentry.withActiveSpan(null, () => {
+  // Esto no tendrá un span padre, sin importar qué
+  Sentry.startSpan({ name: "Span principal" }, () => {
+    // Haz algo
+  });
+});
+```
+
+Como alternativa, puedes usar la opción `parentSpan` para obtener el mismo resultado:
+
+```javascript
+const span = Sentry.startInactiveSpan({ name: "Span principal" });
+const childSpan = Sentry.startInactiveSpan({
+  name: "Span secundario",
+  parentSpan: span,
+});
+```
+
+
+<div id="suppresstracing">
+  ### `suppressTracing`
+</div>
+
+Evita la creación de spans muestreados durante la ejecución del callback. Esto es útil cuando quieres impedir que se capturen ciertos spans. Por ejemplo, si no quieres crear spans para una solicitud `fetch` específica, puedes hacer:
+
+```javascript
+Sentry.suprimirTrazado(() => {
+  fetch("https://example.com");
+});
+```
+
+
+<div id="improving-span-data">
+  ## Mejora de los datos de spans
+</div>
+
+<div id="adding-span-attributes">
+  ### Añadir atributos de span
+</div>
+
+Puedes capturar atributos de span junto con tus spans. Los atributos de span pueden ser de tipo `string`, `number` o `boolean`, así como arreglos (no mixtos) de estos tipos. Puedes especificar atributos al iniciar un span:
+
+```javascript
+Sentry.startSpan(
+  {
+    attributes: {
+      attr1: "value1",
+      attr2: 42,
+      attr3: true,
+    },
+  },
+  () => {
+    // Haz algo
+  }
+);
+```
+
+También puedes agregar atributos a un span existente:
+
+```javascript
+const span = Sentry.getActiveSpan();
+if (span) {
+  span.setAttribute("attr1", "value1");
+  // O para establecer varios atributos a la vez:
+  span.setAttributes({
+    attr2: 42,
+    attr3: true,
+  });
+}
+```
+
+
+<div id="adding-attributes-to-all-spans">
+  ### Añadir atributos a todos los spans
+</div>
+
+Para añadir un atributo a todos los spans, utiliza el callback `beforeSendTransaction`:
+
+```javascript
+Sentry.init({
+  // dsn, ...
+  beforeSendTransaction(event) {
+
+    // establece el atributo en el span raíz
+    event.contexts.trace.data = {
+      ...event.contexts.trace.data,
+      myAttribute: "myValue",
+    }
+
+    // y en todos los spans secundarios
+    event.spans.forEach(span => {
+      span.data = {
+        ...span.data,
+        myAttribute: "myValue",
+      }
+    });
+  }
+});
+```
+
+
+<div id="adding-span-operations-op">
+  ### Agregar operaciones de span ("op")
+</div>
+
+Los spans pueden tener una operación asociada, lo que ayuda a activar Sentry e identificar contexto adicional sobre el span. Por ejemplo, los spans relacionados con bases de datos tienen asociada la operación de span `db`. El producto Sentry ofrece controles, visualizaciones y filtros adicionales para spans con operaciones reconocidas.
+
+Sentry mantiene una [lista de operaciones de span conocidas](https://develop.sentry.dev/sdk/performance/span-operations/#list-of-operations) y se recomienda usar una de ellas si aplica a tu span.
+
+<PlatformContent includePath="performance/span-operations" />
+
+<div id="updating-the-span-name">
+  ### Actualizar el nombre del span
+</div>
+
+Puedes cambiar el nombre de un span en cualquier momento:
+
+```javascript
+const span = Sentry.getActiveSpan();
+if (span) {
+  span.updateName("Nombre nuevo");
+}
+```
+
+Tenga en cuenta que, en ciertos escenarios, el SDK sobrescribirá el nombre del span. Esto ocurre con spans que tengan cualquiera de las siguientes combinaciones de atributos:
+
+* Los spans con los atributos `http.method` o `http.request.method` tendrán su nombre establecido automáticamente como el método + la ruta de la URL
+* Los spans con el atributo `db.system` tendrán su nombre establecido automáticamente como el sistema + la instrucción

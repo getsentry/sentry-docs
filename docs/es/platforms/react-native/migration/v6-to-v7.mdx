@@ -1,0 +1,106 @@
+---
+title: Migrar de la 6.x a la 7.x
+sidebar_order: 99
+description: "Aprende a migrar de la versión 6 a la versión 7 del SDK de Sentry React Native"
+---
+
+El objetivo principal de la versión 7 del SDK de Sentry React Native es ofrecer compatibilidad con las versiones 9 y 10 de Sentry JavaScript. Esta actualización incluye cambios incompatibles debido a la actualización al SDK de JavaScript v10, la eliminación de API obsoletas y una reorganización de la estructura del paquete npm.
+
+<div id="important-changes-in-dependencies">
+  ## Cambios importantes en las dependencias
+</div>
+
+El SDK de Sentry React Native se distribuye con la versión 10 del SDK de Sentry JavaScript como dependencia. Esta versión incluye dos actualizaciones importantes (Sentry JavaScript v9 y v10) y varios cambios de comportamiento que no serán detectados por comprobadores de tipos, linters ni pruebas, por lo que recomendamos leer detenidamente toda la guía de migración en lugar de depender de herramientas automáticas. Sigue la [migración a v9](#major-changes-in-sentry-js-sdk-v9) y la [migración a v10](#major-changes-in-sentry-js-sdk-v10) para completar la actualización.
+
+La versión inicial `@sentry/react-native@7.0.0` se distribuye con `@sentry/core@10.8.0`. Usa siempre la versión exacta del SDK de JavaScript si la agregas manualmente a tu proyecto. Cualquier otra versión podría no ser compatible con el SDK de React Native.
+
+La versión 7 también incluye una actualización importante de la dependencia del SDK de Android, que introduce cambios de comportamiento, cambios incompatibles y deprecaciones. Si usas el SDK de Android directamente, sigue la [guía de migración del SDK de Android versión 8](/es/platforms/android/migration/#migrating-from-iosentrysentry-7x-to-iosentrysentry-800).
+
+<div id="major-changes-in-sentry-js-sdk-v9">
+  ### Cambios importantes en Sentry JS SDK v9
+</div>
+
+Esta actualización incluye numerosos cambios en el comportamiento y en las API, principalmente relacionados con la instrumentación de spans y la eliminación de APIs. Para estos y otros cambios generales de la versión 9 del SDK de JavaScript, consulta la [guía de migración del SDK de JavaScript de la 8.x a la 9.x](/es/platforms/javascript/guides/react/migration/v8-to-v9/).
+
+<div id="major-changes-in-sentry-js-sdk-v10">
+  ### Cambios importantes en Sentry JS SDK v10
+</div>
+
+Esta actualización incluye una corrección para controlar si el backend debe deducir y almacenar las direcciones IP de los usuarios. También incorpora mejoras en la API relacionadas con `BaseClient`, `hasTracingEnabled` y `logger` de `@sentry/core`. Para obtener más detalles y otros cambios generales en la versión 10 del SDK de JavaScript, consulta la [guía de migración del SDK de JavaScript de la versión 9.x a la 10.x](/es/platforms/javascript/guides/react/migration/v9-to-v10/).
+
+<div id="self-hosted-sentry-compatibility">
+  ### Compatibilidad con Sentry autoalojado
+</div>
+
+A partir de la versión 7.0.0, el SDK de Sentry para React Native solo será compatible con instancias de Sentry autoalojadas a partir de la versión 25.2.0.
+
+<div id="important-react-native-sdk-7x-changes">
+  ## Cambios importantes en el SDK de React Native `7.x`
+</div>
+
+Esta sección describe los cambios de la API en el SDK de Sentry para React Native, versión 7.
+
+<div id="captureuserfeedback-is-now-removed">
+  ### `captureUserFeedback` se ha eliminado
+</div>
+
+Puedes usar el fragmento actualizado para capturar comentarios de los usuarios:
+
+```javascript diff
++ import { captureFeedback } from '@sentry/react-native';
+- import { captureUserFeedback } from '@sentry/react-native';
+
++ captureUserFeedback({
+- captureFeedback({
+    name: 'mi nombre',
+    email: 'miemail@sentry.io',
+    message: 'se ha roto',
+    associatedEventId: 'eventID',
+  });
+```
+
+Además, puedes ver nuestra nueva integración de comentarios consultando la [guía de configuración de comentarios de usuarios](../../user-feedback/configuration/)
+
+<div id="autosessiontracking-united-with-enableautosessiontracking">
+  ### `autoSessionTracking` se unifica con `enableAutoSessionTracking`
+</div>
+
+Se eliminó la clave de opción `autoSessionTracking`. Usa `enableAutoSessionTracking` en su lugar; viene activada de forma predeterminada.
+
+```javascript diff
+Sentry.init({
++  enableAutoSessionTracking: true,
+-  autoSessionTracking: true,
+});
+```
+
+<div id="browserreplayintegration-can-be-used-directly-without-the-isweb-check">
+  ### `browserReplayIntegration` puede usarse directamente sin la comprobación `isWeb`
+</div>
+
+La comprobación ahora se realiza dentro de la integración, lo que simplifica los flujos de trabajo.
+
+```javascript diff
+Sentry.init({
++  integrations: [ Sentry.browserReplayIntegration() ],
+-  integrations: (defaultIntegrations) => {
+-    if (Platform.OS === 'web') {
+-      defaultIntegrations.push(Sentry.browserReplayIntegration());
+-    }
+-    return defaultIntegrations;
+-  },
+});
+```
+
+<div id="coldwarm-app-start-spans-were-renamed-to-coldwarm-start">
+  ### Los spans `Cold/Warm App Start` se renombraron a `Cold/Warm Start`
+</div>
+
+Se quitó la palabra `App` de la descripción del span. Si tienes alguna lógica en tu aplicación o en Sentry basada en esta descripción de span, asegúrate de actualizarla.
+
+<div id="detection-of-expo-go-uses-expogo-module">
+  ### La detección de Expo Go usa el módulo `ExpoGo`
+</div>
+
+A partir de la versión 7.0.0, el SDK de Sentry para React Native utilizará el módulo `ExpoGo` para detectar si la aplicación se está ejecutando en Expo Go. Esto difiere del comportamiento anterior, en el que el SDK comprobaba la propiedad obsoleta `appOwnership`. Este nuevo enfoque no funciona con Expo SDK 49 ni versiones anteriores.
+La versión mínima compatible de Expo SDK es la 50, igual que en el SDK de Sentry para React Native v6.

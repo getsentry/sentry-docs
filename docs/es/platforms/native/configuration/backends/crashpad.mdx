@@ -1,0 +1,52 @@
+---
+title: Crashpad
+---
+
+[Crashpad](https://chromium.googlesource.com/crashpad/crashpad/+/master/README.md)
+es un sistema multiplataforma de informes de fallos de código abierto, escrito en C++ por Google.
+Es compatible con macOS, Windows y Linux, e incluye un cargador para
+enviar minidumps a una URL configurada en cuanto el proceso se bloquea.
+
+Para usar el backend de Crashpad con el SDK nativo, configura la compilación de CMake
+con la opción `SENTRY_BACKEND=crashpad`. Esto creará automáticamente un
+ejecutable `crashpad_handler` junto a la biblioteca `sentry`.
+
+```shell
+cmake -B build -D SENTRY_BACKEND=crashpad
+```
+
+El SDK buscará automáticamente un ejecutable `crashpad_handler` en el mismo
+directorio que la aplicación en ejecución. También usará el directorio `.sentry-native`
+como base de datos de forma predeterminada, en relación con el directorio de trabajo actual
+de tu aplicación.
+En esta ubicación se almacenan temporalmente los minidumps antes de subirse a Sentry.
+
+Ambas rutas se pueden personalizar así:
+
+```c
+sentry_options_t *options = sentry_options_new();
+sentry_options_set_handler_path(options, "ruta/al/crashpad_handler");
+sentry_options_set_database_path(options, "directorio-bd-sentry");
+sentry_init(options);
+```
+
+El ejecutable del controlador de Crashpad debe distribuirse junto con tu aplicación para
+poder iniciarse al inicializar el SDK. La ruta se evalúa
+según las reglas de búsqueda del shell en tiempo de ejecución.
+
+Se recomienda especificar tanto la ruta al ejecutable `crashpad_handler`
+como la ruta al directorio de la base de datos de forma manual.
+
+También puedes usar Crashpad en casos de uso multiproceso. Para ello, inicializa
+Sentry por separado en cada proceso, de modo que cada proceso inicie su propio
+controlador de Crashpad, ya sea en una ruta de base de datos independiente o usando una ruta de base de datos
+compartida. Cada ejecución usará su propio directorio de ejecución y hay un mecanismo de bloqueo
+a nivel del sistema de archivos.
+
+<div id="known-limitations">
+  ## Limitaciones conocidas
+</div>
+
+Al usar el backend Crashpad en macOS, no se puede determinar de forma confiable el estado de las sesiones que se bloquearon y pueden clasificarse como salidas [`abnormal`](/es/product/releases/health/release-details/) en su lugar.
+
+Si quieres publicar tu aplicación en la App Store de macOS o distribuirla en modo “sandbox” fuera de ella, el cliente crashpad no podrá iniciar el ejecutable `crashpad_handler` (debido a las restricciones del sandbox). Para estos objetivos de despliegue, recomendamos usar el backend `breakpad`.

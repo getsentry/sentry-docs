@@ -1,0 +1,848 @@
+---
+title: Guía de migración
+sidebar_order: 8000
+description: "Cómo migrar entre versiones del SDK de Sentry para Android."
+---
+
+<div id="migrating-from-iosentrysentry-7x-to-iosentrysentry-800">
+  ## Migración de `io.sentry:sentry` `7.x` a `io.sentry:sentry` `8.0.0`
+</div>
+
+<div id="breaking-changes">
+  ### Cambios incompatibles
+</div>
+
+* `Contexts` ya no hereda de `ConcurrentHashMap`; en su lugar, ofrecemos un conjunto seleccionado de métodos.
+* `sentry-android-okhttp` se ha eliminado en favor de `sentry-okhttp`, lo que hace que el módulo sea independiente de Android ([#3510](https://github.com/getsentry/sentry-java/pull/3510))
+* Invocar `Sentry.init()` en Android ahora arroja una `IllegalArgumentException`; utiliza `SentryAndroid.init()` en su lugar  ([#3596](https://github.com/getsentry/sentry-java/pull/3596))
+* Se eliminaron las métricas del SDK ([#3774](https://github.com/getsentry/sentry-java/pull/3774))
+  * Las métricas volverán, pero aún no sabemos exactamente en qué forma
+* La opción `enableTracing` (también conocida como `enable-tracing`) se eliminó del SDK ([#3776](https://github.com/getsentry/sentry-java/pull/3776))
+  * En su lugar, establezca `tracesSampleRate` en un valor &gt;= 0.0 para habilitar el monitoreo de rendimiento. El valor predeterminado es `null`, lo que significa que el rendimiento está deshabilitado.
+* Cambiar los sub-spans de OkHttp a atributos de span ([#3556](https://github.com/getsentry/sentry-java/pull/3556))
+  * Esto reducirá la cantidad de spans que crea el SDK
+* Reemplaza los métodos y bloques `synchronized` por `ReentrantLock` (`AutoClosableReentrantLock`) ([#3715](https://github.com/getsentry/sentry-java/pull/3715))
+  * Si estás creando subclases de alguna clase de Sentry, verifica si la clase padre usaba `synchronized` anteriormente. En ese caso, asegúrate de usar el mismo objeto de bloqueo que la clase padre.
+* La opción `traceOrigins` (`io.sentry.traces.tracing-origins` en el manifiesto) se ha eliminado; utiliza `tracePropagationTargets` (`io.sentry.traces.trace-propagation-targets` en el manifiesto) en su lugar ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+* La opción `profilingEnabled` (`io.sentry.traces.profiling.enable` en el manifiesto) se ha eliminado; utiliza `profilesSampleRate` (`io.sentry.traces.profiling.sample-rate` en el manifiesto) en su lugar ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+  * En su lugar, establezca `profileSampleRate` en un valor &gt;= 0.0 para habilitar la generación de perfiles. El valor predeterminado es `null`, lo que significa que la generación de perfiles está deshabilitada.
+* Se ha eliminado la opción `shutdownTimeout`; usa `shutdownTimeoutMillis` en su lugar ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+* Se eliminó la opción `profilingTracesIntervalMillis` para Android ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+* Se ha eliminado la opción de manifiesto `io.sentry.session-tracking.enable` ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+* El método `Sentry.traceHeaders()` se ha eliminado; usa `Sentry.getTraceparent()` en su lugar ([#3718](https://github.com/getsentry/sentry-java/pull/3718))
+* Se eliminó el método `Sentry.reportFullDisplayed()`. Usa `Sentry.reportFullyDisplayed()` en su lugar ([#3717](https://github.com/getsentry/sentry-java/pull/3717))
+* `User.other` se ha eliminado; usa `data` en su lugar ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+* `SdkVersion.getIntegrations()` se ha eliminado; usa `getIntegrationSet` en su lugar ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+* `SdkVersion.getPackages()` se ha eliminado; usa `getPackageSet()` en su lugar ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+* `Device.language` se ha eliminado; usa `locale` en su lugar ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+* Se han eliminado `TraceContext.user` y la clase `TraceContextUser`; utiliza `userId` en `TraceContext` en su lugar ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+* Se ha eliminado `TransactionContext.fromSentryTrace()`. Usa `Sentry.continueTrace()` en su lugar ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+* Se ha eliminado `SentryDataFetcherExceptionHandler`; utiliza `SentryGenericDataFetcherExceptionHandler` junto con `SentryInstrumentation` en su lugar ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+* Se eliminó uno de los constructores de `AndroidTransactionProfiler`; usa otro distinto ([#3780](https://github.com/getsentry/sentry-java/pull/3780))
+* Usar String en lugar de UUID para SessionId ([#3834](https://github.com/getsentry/sentry-java/pull/3834))
+  * El constructor de `Session` ahora recibe un `String` en lugar de un `UUID` para el parámetro `sessionId`.
+  * `Session.getSessionId()` ahora devuelve un `String` en lugar de un `UUID`.
+* El nivel minSdk de Android para todos los módulos de Android ahora es 21 ([#3852](https://github.com/getsentry/sentry-java/pull/3852)) ([#3851](https://github.com/getsentry/sentry-java/pull/3851))
+* Todos los códigos de estado inferiores a 400 ahora se asignan a `SpanStatus.OK` ([#3869](https://github.com/getsentry/sentry-java/pull/3869))
+* `transaction.data` ha pasado de `extra` a `contexts.trace.data` (#3735)
+  * Si estabas filtrando datos, por ejemplo en `beforeSendTransaction`, actualiza en consecuencia
+
+<div id="deprecations">
+  ### Deprecaciones
+</div>
+
+* `Hub` se ha quedado obsoleto; estamos reemplazando lo siguiente:
+  * `IHub` se ha reemplazado por `IScopes`; sin embargo, deberías poder pasar instancias de `IHub` a código que espera `IScopes`, lo que permite una migración más sencilla.
+  * `HubAdapter.getInstance()` se ha reemplazado por `ScopesAdapter.getInstance()`
+  * El método `.clone()` en `IHub`/`IScopes` se ha quedado obsoleto; utiliza `.pushScope()` o `.pushIsolationScope()` en su lugar
+  * Algunos métodos internos como `.getCurrentHub()` y `.setCurrentHub()` también se han reemplazado.
+* `Sentry.popScope` se ha reemplazado por llamar a `.close()` en el token devuelto por `Sentry.pushScope()` y `Sentry.pushIsolationScope()`. El token también se puede usar en un bloque `try-with-resources` como este:
+
+```
+try (final @NotNull ISentryLifecycleToken ignored = Sentry.pushScope()) {
+  // este bloque tiene su propio ámbito actual
+}
+```
+
+así como:
+
+```
+try (final @NotNull ISentryLifecycleToken ignored = Sentry.pushIsolationScope()) {
+  // este bloque tiene su propio ámbito de aislamiento
+}
+```
+
+También puedes usar `LifecycleHelper.close(token)`, por ejemplo, si necesitas pasar el token para cerrarlo más adelante.
+
+<div id="behavioral-changes">
+  ### Cambios de comportamiento
+</div>
+
+* Estamos introduciendo nuevos tipos de `Scope` en el SDK, lo que permite un mejor control sobre qué datos se adjuntan y dónde. Antes había una pila de scopes que se apilaban y desapilaban. En su lugar, ahora bifurcamos scopes para un ciclo de vida dado y luego restauramos los scopes anteriores. Dado que `Hub` ya no existe, tampoco se clona más. La separación de datos ahora se realiza a través de los diferentes tipos de scope, facilitando manipular exactamente lo que necesitas sin tener que adjuntar datos en el momento preciso para que se apliquen donde se desea.
+  * El scope global se adjunta a todos los eventos creados por el SDK. También puede modificarse antes de que se llame a `Sentry.init`. Se puede manipular usando `Sentry.configureScope(ScopeType.GLOBAL, (scope) -> { ... })`.
+  * El scope de aislamiento puede usarse, por ejemplo, para adjuntar datos a todos los eventos que surjan mientras se maneja una solicitud entrante. También puede usarse para otros fines de aislamiento. Se puede manipular usando `Sentry.configureScope(ScopeType.ISOLATION, (scope) -> { ... })`. El SDK bifurca automáticamente el scope de aislamiento en ciertos casos como solicitudes entrantes, trabajos CRON, `@Async` de Spring y más.
+  * El scope actual se bifurca con frecuencia y los datos que se le agregan solo se añaden a los eventos que se crean mientras este scope está activo. Los datos también se propagan a los scopes hijos recién bifurcados, pero no a los padres.
+* `Sentry.popScope` se ha desaprobado; en su lugar, llama a `.close()` en el token devuelto por `Sentry.pushScope` o úsalo tal como se describe con más detalle en la &quot;Guía de migración&quot;.
+* Hemos elegido un scope predeterminado que se usa para `Sentry.configureScope()` así como para APIs como `Sentry.setTag()`
+  * En Android, el tipo predeterminado es el scope `CURRENT`
+  * En Backend y otras aplicaciones JVM, el predeterminado es el scope `ISOLATION`
+* Los procesadores de eventos en `Scope` ahora pueden ordenarse sobrescribiendo el método `getOrder` en implementaciones de `EventProcessor`. NOTA: Este orden solo aplica a los procesadores de eventos en `Scope` y no a `SentryOptions` por el momento. No dudes en solicitarlo si lo necesitas.
+* `Hub` está desaprobado en favor de `Scopes`, junto con algunas APIs relacionadas con `Hub`. Puedes encontrar más detalles en la sección &quot;Guía de migración&quot;.
+* (Android) La capa JNI para sentry-native ahora se ha trasladado de sentry-java a sentry-native ([#3189](https://github.com/getsentry/sentry-java/pull/3189))
+  * Esto ahora incluye compatibilidad con Prefab para sentry-native, lo que te permite vincular y acceder a la API de sentry-native dentro del código nativo de tu app
+  * Consulta el ejemplo `sentry-samples/sentry-samples-android` para ver cómo configurar CMake y consumir `sentry.h`
+* (Android) Reemplazar el id de hilo por el id de hilo del kernel en los datos de span ([#3706](https://github.com/getsentry/sentry-java/pull/3706))
+* (Android) Habilitar Performance V2 de forma predeterminada ([#3824](https://github.com/getsentry/sentry-java/pull/3824))
+  * Con este cambio, los spans de inicio en frío de la app incluirán spans para ContentProviders, Application y la carga de Activity.
+
+### Compatibilidad con Sentry autohospedado
+
+* La versión requerida de Sentry en la versión `8.0.0` del SDK se mantiene sin cambios. Se requiere [Sentry &gt;= v22.12.0](https://github.com/getsentry/self-hosted/releases). Esto solo aplica para Sentry autohospedado. Si usas [sentry.io](https://sentry.io), no necesitas hacer nada.
+
+<div id="sentry-android-sdk-compatibility">
+  ### Compatibilidad del SDK de Sentry para Android
+</div>
+
+Debes usar el complemento de Gradle de Sentry 5.+ junto con el SDK de Sentry para Android 8.+; de lo contrario, podría fallar en tiempo de ejecución debido a dependencias que faltan.
+
+<div id="migration-from-iosentrysentry-android-gradle-plugin3xx-to-iosentrysentry-android-gradle-plugin400">
+  ## Migración de `io.sentry:sentry-android-gradle-plugin:3.x.x` a `io.sentry:sentry-android-gradle-plugin:4.0.0`
+</div>
+
+### Cambios importantes
+
+* Se actualizó el SDK de Sentry para Android a la versión `7.0.0`. Consulta la [sección siguiente](#migrating-from-iosentrysentry-android-6x-to-iosentrysentry-android-700) para obtener detalles sobre los cambios del SDK.
+* Se cambió el nombre del indicador `experimentalGuardsquareSupport` a `dexguardEnabled`.
+
+<div id="sentry-android-sdk-compatibility">
+  ### Compatibilidad del SDK de Sentry para Android
+</div>
+
+Debes usar el complemento de Gradle de Sentry 4.+ junto con el SDK de Sentry para Android 7.+; de lo contrario, podría fallar en tiempo de ejecución debido a una incompatibilidad binaria. Si no puedes hacerlo por algún motivo, puedes especificar la versión de Sentry mediante el bloque de configuración del complemento:
+
+```kotlin
+sentry {
+  autoInstallation {
+    sentryVersion.set("7.0.0")
+  }
+}
+```
+
+Del mismo modo, si tienes una dependencia del SDK de Sentry (p. ej., `sentry-android-core`) en uno de tus módulos de Gradle y la actualizas a la versión 7.+, asegúrate de que el complemento de Gradle esté en la versión 4.+ o especifica la versión del SDK como se muestra en el fragmento anterior.
+
+<div id="migrating-from-iosentrysentry-android-6x-to-iosentrysentry-android-700">
+  ## Migrar de `io.sentry:sentry-android 6.x` a `io.sentry:sentry-android 7.0.0`
+</div>
+
+<div id="breaking-changes">
+  ### Cambios incompatibles
+</div>
+
+* El nivel mínimo de API admitido se actualizó a 19 (`minSdk`).
+* Las clases `sentry-android-okhttp` se marcaron como obsoletas en favor de `sentry-okhttp`, que es un módulo de Java puro y puede usarse en proyectos no Android.
+  * La clase `SentryOkHttpUtils` se eliminó de la API pública. Si la usabas, considera enviar una [solicitud de función](https://github.com/getsentry/sentry-java/issues).
+* Si usas `sentry-kotlin-extensions`, ahora requiere `kotlinx-coroutines-core` versión `1.6.1` o superior.
+* `enableNdk` y `enableScopeSync` se trasladaron de `SentryOptions` a `SentryAndroidOptions`.
+* Se cambió el tipo de retorno de `SentryApolloInterceptor.BeforeSpanCallback` de `ISpan` a `ISpan?`.
+* `Scope` ahora implementa la interfaz `IScope`, por lo tanto, algunos métodos como `ScopeCallback.run` ahora aceptan `IScope`.
+* Algunas sobrecargas de `Sentry.startTransaction` ya no existen y, en su lugar, puedes configurar las opciones anteriores pasando un objeto `TransactionOptions`.
+
+Por ejemplo:
+
+```kotlin
+// anterior
+val transaction = Sentry.startTransaction("name", "op", bindToScope = true)
+// nuevo
+val transaction = Sentry.startTransaction("name", "op", TransactionOptions().apply { isBindToScope = true })
+```
+
+### Cambios de Comportamiento
+
+* `Sentry.getSpan()` ahora devuelve el span/transacción raíz en lugar del último span.
+  * Esto hará que la jerarquía de spans sea más ligera y legible.
+* El SDK ahora captura por defecto las solicitudes HTTP y GraphQL (Apollo) fallidas.
+  * Esto puede aumentar tu consumo de eventos y afectar tu cuota, porque reportaremos las solicitudes de red fallidas como eventos de Sentry si estás usando las integraciones `sentry-android-okhttp` o `sentry-apollo-3` por defecto. Puedes personalizar qué errores quieres o no reportar para [OkHttp](/es/platforms/android/integrations/okhttp/#http-client-errors) y [Apollo3](/es/platforms/android/integrations/apollo3/#graphql-client-errors) respectivamente.
+* Se agregó un tiempo límite para transacciones automáticas.
+  * Esto afecta todas las transacciones generadas automáticamente en Android (UI, clics). El tiempo límite predeterminado es de 30s, lo que significa que la transacción automática se finalizará forzosamente con el estado `deadline_exceeded` cuando alcance el límite.
+* El SDK ahora establece `ip_address` en &#123;&#123;auto&#125;&#125; por defecto, incluso si sendDefaultPII está deshabilitado.
+  * Recomendamos que en su lugar uses la opción &quot;Prevent Storing of IP Addresses&quot; en la configuración del proyecto &quot;Security &amp; Privacy&quot; en [sentry.io](https://sentry.io/).
+* La configuración `maxSpans` (predeterminada en 1000) ahora se aplica a los spans hijos anidados. Esto significa que una sola transacción puede tener como máximo un número de `maxSpans` hijos (anidados o no).
+
+<div id="sentry-integrations-version-compatibility">
+  ### Compatibilidad de versiones de las integraciones de Sentry
+</div>
+
+Asegúrate de alinear *todas* las dependencias de Sentry (como `-timber`, `-okhttp` u otros paquetes) a la misma versión al actualizar el SDK a la 7.+; de lo contrario, se producirá un fallo en tiempo de ejecución por incompatibilidad binaria.
+
+Por ejemplo, si estás usando el [Sentry Android Gradle plugin](https://github.com/getsentry/sentry-android-gradle-plugin) con la [funcionalidad](/es/platforms/android/configuration/gradle/#auto-installation) `autoInstallation` (habilitada de forma predeterminada), asegúrate de usar la versión 4.+ del plugin de Gradle junto con la versión 7.+ del SDK. Si por alguna razón no puedes hacerlo, puedes especificar la versión de Sentry mediante el bloque de configuración del plugin:
+
+```kotlin
+sentry {
+  autoInstallation {
+    sentryVersion.set("7.0.0")
+  }
+}
+```
+
+Del mismo modo, si tienes una dependencia de Sentry SDK (p. ej., `sentry-android-core`) en uno de tus módulos de Gradle y la actualizas a la 7.+, asegúrate de que el complemento de Gradle esté en la 4.+ o especifica la versión del SDK como se muestra en el fragmento de arriba.
+
+### Compatibilidad de Sentry autogestionado
+
+* A partir de la versión `7.0.0` de `sentry`, se requiere [Sentry versión &gt;= v22.12.0](https://github.com/getsentry/self-hosted/releases) para ingerir correctamente transacciones con spans sin finalizar. Esto solo aplica a Sentry autogestionado. Si usas [sentry.io](https://sentry.io), no necesitas hacer nada.
+
+<div id="migrating-from-iosentrysentry-android-614x-to-iosentrysentry-android-6150">
+  ## Migración de `io.sentry:sentry-android 6.14.x` a `io.sentry:sentry-android 6.15.0`
+</div>
+
+Las integraciones `sentry-compose-android` y `sentry-compose` ahora declaran sus dependencias ascendentes como `compileOnly`. Asegúrate de incluir las dependencias `androidx.navigation:navigation-compose`, `androidx.compose.runtime:runtime` y `androidx.compose.ui:ui` en el classpath si usas esas integraciones. De lo contrario, la aplicación se cerrará con una excepción `NoClassDefFoundError`.
+
+<div id="migrating-from-iosentrysentry-android-62x-to-iosentrysentry-android-630">
+  ## Migración de `io.sentry:sentry-android 6.2.x` a `io.sentry:sentry-android 6.3.0`
+</div>
+
+Las integraciones `sentry-android-okhttp`, `sentry-android-fragment` y `sentry-android-timber` ahora declaran sus dependencias ascendentes como `compileOnly`. Asegúrate de incluir las dependencias de `okhttp`, `fragment` y `timber` en el classpath si usas esas integraciones, o la aplicación se cerrará con una excepción `NoClassDefFoundError`.
+
+<div id="migrating-from-iosentrysentry-android-6x-to-iosentrysentry-android-620">
+  ## Migrar de `io.sentry:sentry-android 6.x` a `io.sentry:sentry-android 6.2.0`
+</div>
+
+* El complemento de Kotlin se actualiza a `1.6.10`.
+
+Esta versión sigue siendo compatible con Kotlin `1.4`.
+
+<Alert>
+  Esto solo afecta a las integraciones escritas en Kotlin, como `timber`, `fragment`, `okhttp`, `navigation` y `compose`.
+</Alert>
+
+<div id="migrating-from-iosentrysentry-android-5x-to-iosentrysentry-android-600">
+  ## Migración de `io.sentry:sentry-android 5.x` a `io.sentry:sentry-android 6.0.0`
+</div>
+
+* El complemento de Kotlin se actualiza a `1.5`.
+
+* La `languageVersion` de Kotlin se actualiza a `1.4`.
+
+* Se elimina `Gson` como dependencia transitiva y pasa a incluirse en el SDK.
+  * Las clases de protocolo ahora implementan las interfaces `JsonSerializable` y `JsonDeserializer`.
+
+* `SentryOptions#shutdownTimeout` pasa a llamarse `shutdownTimeoutMillis`.
+
+* Se eliminaron los métodos marcados como `@Deprecated` y `@ApiStatus.ScheduledForRemoval`
+  * `ITransaction#setRequest`
+  * `ITransaction#getRequest`
+  * `ITransaction#getContexts`
+  * `SentryBaseEvent#getOriginThrowable`
+  * `SentryOptions#getCacheDirSize`
+  * `SentryOptions#setCacheDirSize`
+  * `SentryOptions#isEnableSessionTracking`
+  * `SentryOptions#setEnableSessionTracking`
+
+* Se eliminaron abstracciones innecesarias
+  * `IBuildInfoProvider` ahora es únicamente `BuildInfoProvider`.
+  * `IHandler` ahora es únicamente `MainLooperHandler`.
+
+* `ISpan` ahora tiene mayor precisión usando `System#nanoTime` en lugar de milisegundos.
+
+* `Hints` cambió su tipo de `Object` a `io.sentry.Hint`
+
+*Anterior*:
+
+```kotlin
+Sentry.captureException(RuntimeException("exception"), "myStringHint")
+```
+
+*Nueva*:
+
+```kotlin
+val hints = mutableMapOf<String, Any>("miHint" to "miStringHint")
+Sentry.captureException(RuntimeException("exception"), hints)
+```
+
+* `SentryOptions#enableScopeSync` ahora está habilitado de forma predeterminada; para desactivarlo, consulta el fragmento de código a continuación.
+
+```xml {filename:AndroidManifest.xml}
+<meta-data android:name="io.sentry.ndk.scope-sync.enable" android:value="false" />
+```
+
+* `SentryOptions#sendClientReports` ahora está activado de forma predeterminada. Para desactivarlo, usa el siguiente fragmento de código:
+
+```xml {filename:AndroidManifest.xml}
+<meta-data android:name="io.sentry.send-client-reports" android:value="false" />
+```
+
+<div id="sentry-self-hosted-compatibility">
+  ### Compatibilidad con Sentry autogestionado
+</div>
+
+* A partir de la versión `6.0.0` de `sentry`, se requiere [Sentry &gt;= v21.9.0](https://github.com/getsentry/self-hosted/releases) o tendrás que desactivar manualmente el envío de informes del cliente con la opción `sendClientReports`. Esto solo aplica a Sentry autogestionado. Si usas [sentry.io](https://sentry.io), no necesitas hacer nada.
+
+Hay más cambios y refactorizaciones, pero no afectan a los usuarios.
+
+<div id="migrating-to-iosentrysentry-android-timber-562">
+  ## Migración a `io.sentry:sentry-android-timber 5.6.2`
+</div>
+
+A partir de la versión `5.6.2`, el uso de `Timber.tag` ya no es compatible con nuestro SDK (la etiqueta no se capturará ni se mostrará en Sentry). Por favor, vota en este [issue de GitHub](https://github.com/getsentry/sentry-java/issues/1900) para decirnos si deberíamos añadir soporte para ello.
+
+<Alert>
+  El soporte para `Timber.tag` se restauró en la versión `5.7.2`.
+</Alert>
+
+<div id="migrating-from-iosentrysentry-android-gradle-plugin-2x-to-iosentrysentry-android-gradle-plugin-300">
+  ## Migración de `io.sentry:sentry-android-gradle-plugin 2.x` a `io.sentry:sentry-android-gradle-plugin 3.0.0`
+</div>
+
+`io.sentry.android.gradle` &gt;= `3.0.0` requiere [Android Gradle Plugin &gt;= 7.0.0](https://developer.android.com/studio/releases/gradle-plugin#7-0-0). Para versiones anteriores de Android Gradle Plugin, usa `io.sentry.android.gradle:2.+`.
+
+<div id="includeproguardmapping">
+  ### includeProguardMapping
+</div>
+
+La opción `autoUpload` ha quedado obsoleta en favor de dos nuevas opciones:
+
+* `includeProguardMapping` - Activa o desactiva la funcionalidad de mapeo de Proguard. Cuando está activada, genera un UUID e intenta cargar a Sentry un mapeo de Proguard asociado con ese UUID. Cuando `autoUploadProguardMapping` está desactivada, el plugin solo generará un archivo `sentry-debug-meta.properties` que contiene el UUID, que luego puede usarse para cargar el mapeo manualmente usando, por ejemplo, [sentry-cli](/es/cli/dif/#proguard-mapping-upload).
+* `autoUploadProguardMapping` - Define si el plugin de Gradle debe intentar cargar automáticamente el archivo de mapeo en Sentry.
+  Cuando `includeProguardMapping` está desactivada, esta opción no tiene efecto.
+
+*Anterior*:
+
+```groovy
+sentry {
+    autoUpload = false
+}
+```
+
+```kotlin
+sentry {
+    autoUpload.set(false)
+}
+```
+
+*Novedad*:
+
+```groovy
+sentry {
+  includeProguardMapping = true
+  autoUploadProguardMapping = false
+}
+```
+
+```kotlin
+sentry {
+  includeProguardMapping.set(true)
+  autoUploadProguardMapping.set(false)
+}
+```
+
+<div id="tracinginstrumentation">
+  ### tracingInstrumentation
+</div>
+
+El plugin `io.sentry.android.gradle` habilita por defecto la instrumentación de trazado (mediante manipulación de bytecode) para las bibliotecas `androidx.sqlite` y `androidx.room`. Para desactivarla, consulta el fragmento de código a continuación.
+
+```groovy
+sentry {
+    // Habilita o deshabilita la instrumentación de trazado.
+    // Realiza instrumentación automática para las bibliotecas 'androidx.sqlite' y 'androidx.room'.
+    // Inicia y finaliza un Span dentro de cualquier operación CRUD.
+    // Habilitado por defecto.
+    // Solo disponible en v3.0.0 y versiones posteriores.
+    tracingInstrumentation {
+      enabled = false
+    }
+}
+```
+
+```kotlin
+sentry {
+    // Habilita o deshabilita la instrumentación de trazado.
+    // Realiza instrumentación automática para las bibliotecas 'androidx.sqlite' y 'androidx.room'.
+    // Inicia y finaliza un Span dentro de cualquier operación CRUD.
+    // Habilitado por defecto.
+    // Solo disponible en v3.0.0 y versiones posteriores.
+    tracingInstrumentation {
+      enabled.set(false)
+    }
+}
+```
+
+<div id="migrating-from-iosentrysentry-android-gradle-plugin-1x-to-iosentrysentry-android-gradle-plugin-200">
+  ## Migración de `io.sentry:sentry-android-gradle-plugin 1.x` a `io.sentry:sentry-android-gradle-plugin 2.0.0`
+</div>
+
+`io.sentry.android.gradle` &gt;= `2.0.0` requiere [Android Gradle Plugin &gt;= 4.0.0](https://developer.android.com/studio/releases/gradle-plugin#4-0-0).
+
+`io.sentry.android.gradle` &gt;= `2.0.0` debe aplicarse al módulo `app/build.gradle` (o al módulo que tenga aplicado el plugin `com.android.application`).
+
+`io.sentry.android.gradle` &gt;= `2.0.0` publica el Gradle Plugin Marker en Maven Central. Como resultado, ya no es necesario configurar el `classpath`.
+
+*Anterior*:
+
+```groovy
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'io.sentry:sentry-android-gradle-plugin:{version}'
+    }
+}
+
+apply plugin: 'io.sentry.android.gradle'
+```
+
+*Nueva*:
+
+```groovy
+plugins {
+    id "io.sentry.android.gradle" version "{version}"
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+```
+
+```kotlin
+plugins {
+    id("io.sentry.android.gradle") version "{version}"
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+```
+
+El `io.sentry.android.gradle` se ha reescrito en Kotlin. Como resultado, la sintaxis de Groovy o de la DSL de Kotlin ha cambiado ligeramente.
+
+Se ha eliminado la opción `autoProguardConfig`; a partir de la versión `2.0.0` del Android SDK, las reglas de ProGuard se combinan automáticamente.
+
+*Anterior*:
+
+```groovy
+sentry {
+    autoProguardConfig false
+    autoUpload true
+    uploadNativeSymbols false
+    includeNativeSources false
+}
+```
+
+*Nuevo*:
+
+```groovy
+sentry {
+    autoUpload = true
+    uploadNativeSymbols = false
+    includeNativeSources = false
+}
+```
+
+```kotlin
+sentry {
+    autoUpload.set(true)
+    uploadNativeSymbols.set(false)
+    includeNativeSources.set(false)
+}
+```
+
+<div id="migrating-from-iosentrysentry-android-430-to-iosentrysentry-android-500">
+  ## Migración de `io.sentry:sentry-android 4.3.0` a `io.sentry:sentry-android 5.0.0`
+</div>
+
+Puedes eliminar la metadato `android:extractNativeLibs="true"` en el archivo `AndroidManifest` o `android.bundle.enableUncompressedNativeLibs=false` en el archivo `gradle.properties` si usas el [Android Native Development Kit](/es/platforms/android/configuration/using-ndk/). Sentry ahora puede simbolicar eventos con el valor predeterminado de [extractNativeLibs](https://developer.android.com/studio/releases/gradle-plugin#extractNativeLibs) y [android.bundle.enableUncompressedNativeLibs](https://developer.android.com/studio/releases/gradle-plugin#behavior-changes).
+
+De forma predeterminada, `Sentry#startTransaction` no vincula la transacción creada al alcance (scope). Para iniciar una transacción vinculándola al alcance, usa uno de los nuevos métodos sobrecargados `startTransaction` que reciben el parámetro `bindToScope` y establécelo en `true`. La transacción vinculada se puede obtener con `Sentry#getSpan`.
+
+Todos los métodos del SDK han sido anotados con [JetBrains Annotations](https://github.com/JetBrains/java-annotations): `@Nullable` y `@NotNull`. El compilador de Kotlin respeta estas anotaciones, por lo que, en código Kotlin, algunos campos que se consideraban no nulos ahora son anulables y viceversa.
+
+`SentryBaseEvent#getOriginThrowable` se ha marcado como obsoleto a favor de `SentryBaseEvent#getThrowable`, y `SentryBaseEvent#getThrowable` ahora devuelve el throwable sin envolver.
+
+`SentryOptions#getCacheDirSize` se ha marcado como obsoleto a favor de `SentryOptions#getMaxCacheItems`.
+
+`InvalidDsnException` se ha eliminado. Se reemplaza por `IllegalArgumentException`.
+
+La interfaz `EventProcessor` tiene un nuevo método `default` que podría romper la instanciación al usar lambdas con trailing.
+
+*Antiguo*:
+
+```kotlin
+SentryOptions#addEventProcessor { event, _ -> event }
+```
+
+*Nuevo*:
+
+```kotlin
+SentryOptions#addEventProcessor(object : EventProcessor {
+    override fun process(event: SentryEvent, hint: Hint): SentryEvent? {
+        return event
+    }
+})
+```
+
+Se reemplaza `Settings.Secure.ANDROID_ID`, que se ha eliminado, por un `installationId` generado al azar. Esto puede afectar la cantidad de usuarios únicos que se muestra en la página de Issues y en Alerts.
+Si siempre configuras un usuario personalizado usando `Sentry.setUser(customUser)`, el comportamiento no ha cambiado. Aunque no es necesario que actualices nada, si quieres mantener el comportamiento anterior, usa el siguiente fragmento de código:
+
+```java
+User user = new User();
+user.setId(Settings.Secure.ANDROID_ID);
+
+Sentry.setUser(user);
+```
+
+`SentryOptions#setEnableSessionTracking(boolean)` está obsoleto; se recomienda usar `SentryOptions#setEnableAutoSessionTracking(boolean)`. Se eliminará en el futuro.
+
+*Anterior*:
+
+```java
+SentryAndroid.init(this, options -> {
+    options.setEnableSessionTracking(false);
+});
+```
+
+*Nueva*:
+
+```java
+SentryAndroid.init(this, options -> {
+    options.setEnableAutoSessionTracking(false);
+});
+```
+
+La metaetiqueta de AndroidManifest `io.sentry.session-tracking.enable` está en desuso en favor de `io.sentry.auto-session-tracking.enable`. Se eliminará en el futuro.
+
+*Anterior*:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.session-tracking.enable" android:value="false" />
+</application>
+```
+
+*Novedad*:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.auto-session-tracking.enable" android:value="false" />
+</application>
+```
+
+<div id="migrating-from-iosentrysentry-android-410-to-iosentrysentry-android-420">
+  ## Migración de `io.sentry:sentry-android 4.1.0` a `io.sentry:sentry-android 4.2.0`
+</div>
+
+`operation` ahora es una propiedad obligatoria de `SentryTransaction` y `SentrySpan`. Cada vez que se inicia una transacción o un span, se debe proporcionar el valor de `operation`:
+
+```java
+Sentry.startTransaction("nombre-de-transacción", "nombre-de-operación");
+```
+
+<div id="migrating-from-iosentrysentry-android-2x-to-iosentrysentry-android-3x">
+  ## Migración de `io.sentry:sentry-android 2.x` a `io.sentry:sentry-android 3.x`
+</div>
+
+<div id="package-changes">
+  ### Cambios del paquete
+</div>
+
+El paquete `io.sentry.core` pasó a llamarse `io.sentry`. Para compilar correctamente, reemplaza en todos los lugares `io.sentry.core.` por `io.sentry.`
+
+Por lo demás, las API no cambiaron. Release Health está activado de forma predeterminada. Si prefieres no hacer seguimiento de la salud de tus versiones, desactívalo con:
+
+```xml
+<application>
+  <meta-data android:name="io.sentry.session-tracking.enable" android:value="false" />
+</application>
+```
+
+<div id="migrating-from-iosentrysentry-android-1x-to-iosentrysentry-android-2x">
+  ## Migración de `io.sentry:sentry-android 1.x` a `io.sentry:sentry-android 2.x`
+</div>
+
+Con Sentry Android, hemos actualizado la API para que se parezca más a la [API unificada](https://develop.sentry.dev/sdk/miscellaneous/unified-api/). Y ahora que el SDK ya no se basa en `io.sentry:sentry-java`, Sentry Android incluye más funciones específicas de Android.
+
+Si quieres actualizar desde la versión anterior del SDK, consulta las siguientes secciones con cambios que podrían requerir ajustes en tu código.
+
+<div id="configuration">
+  ### Configuración
+</div>
+
+El archivo `sentry.properties` utilizado por la versión anterior del SDK se ha dejado de usar. La configuración del nuevo SDK se define en `AndroidManifest.xml` o directamente en el código.
+
+Ejemplo de configuración en el Manifest:
+
+```xml
+<application>
+    <!-- Ejemplo de configuración del DSN de Sentry -->
+    <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
+</application>
+```
+
+Si quieres establecer la configuración manualmente en el código, debes inicializar el SDK con `SentryAndroid.init()` —descrita en [Instalación](#installation)— en el mismo archivo que `SentryAndroidOptions`, que contiene los elementos de configuración.
+
+<div id="installation">
+  ### Instalación
+</div>
+
+El nuevo SDK puede inicializarse automáticamente; solo tienes que proporcionar el DSN en tu archivo Manifest, como se muestra en el ejemplo anterior en [Configuración](#configuration).
+
+<div id="manual-installation">
+  #### Instalación manual
+</div>
+
+Si quieres registrar algún callback para filtrar y modificar eventos y/o breadcrumbs, o si quieres proporcionar los valores de configuración mediante código, debes inicializar el SDK usando `SentryAndroid.init()`.
+
+Para inicializar el SDK manualmente:
+
+* Desactiva la función `auto-init` añadiendo la siguiente línea en el manifiesto:
+
+  ```xml
+  <application>
+      <meta-data android:name="io.sentry.auto-init" android:value="false" />
+  </application>
+  ```
+
+* Inicializa el SDK directamente en tu aplicación:
+
+```java
+SentryAndroid.init(this, options -> {
+  options.setDsn("___PUBLIC_DSN___");
+});
+```
+
+```kotlin
+SentryAndroid.init(this) { options ->
+  options.dsn = "___PUBLIC_DSN___"
+}
+```
+
+<div id="releases">
+  ### Lanzamientos
+</div>
+
+Ten en cuenta que el nuevo SDK enviará, con cada evento, una versión de lanzamiento en un formato distinto al del SDK anterior.
+
+Si usas las integraciones de [GitHub](/es/organization/integrations/source-code-mgmt/github/) o [GitLab](/es/organization/integrations/source-code-mgmt/gitlab/), debes hacer una de las siguientes:
+
+* [Usar el nuevo formato](/es/platforms/android/configuration/releases/)
+* Establecer la versión de lanzamiento en tu `AndroidManifest.xml`
+* Cambiar tu código como se describe en la sección de configuración
+
+<div id="api">
+  ### API
+</div>
+
+<div id="set-tag">
+  #### Definir etiqueta
+</div>
+
+*Anterior*:
+
+```java
+Sentry.getContext().addTag("tagName", "tagValue");
+```
+
+```kotlin
+Sentry.getContext().addTag("tagName", "tagValue")
+```
+
+*Nuevo*:
+
+```java
+Sentry.setTag("tagName", "tagValue");
+```
+
+```kotlin
+Sentry.setTag("tagName", "tagValue")
+```
+
+<div id="capture-custom-exception">
+  #### Capturar excepción personalizada
+</div>
+
+*Anterior*:
+
+```java
+try {
+  int x = 1 / 0;
+} catch (Exception e) {
+  Sentry.capture(e);
+}
+```
+
+```kotlin
+try {
+  val x = 1 / 0
+} catch (e: Exception) {
+  Sentry.capture(e)
+}
+```
+
+*Nueva*:
+
+```java
+try {
+  int x = 1 / 0;
+} catch (Exception e) {
+  Sentry.captureException(e);
+}
+```
+
+```kotlin
+try {
+  val x = 1 / 0
+} catch (e: Exception) {
+  Sentry.captureException(e)
+}
+```
+
+<div id="capture-a-message">
+  #### Capturar un mensaje
+</div>
+
+*Anterior*:
+
+```java
+Sentry.capture("Esta es una prueba");
+```
+
+```kotlin
+Sentry.capture("Esta es una prueba")
+```
+
+*Nueva*:
+
+```java
+Sentry.captureMessage("Esta es una prueba"); // SentryLevel.INFO de forma predeterminada
+Sentry.captureMessage("Esta es una prueba", SentryLevel.WARNING); // o un nivel específico
+```
+
+```kotlin
+Sentry.captureMessage("Esto es una prueba") // SentryLevel.INFO de forma predeterminada
+Sentry.captureMessage("Esto es una prueba", SentryLevel.WARNING) // o un nivel específico
+```
+
+<div id="breadcrumbs">
+  #### Ruta de navegación
+</div>
+
+*Anterior*:
+
+```java
+Sentry.getContext().recordBreadcrumb(
+  new BreadcrumbBuilder().setMessage("El usuario realizó una acción").build()
+);
+```
+
+```kotlin
+Sentry.getContext().recordBreadcrumb(
+  BreadcrumbBuilder().setMessage("El usuario hizo una acción").build()
+)
+```
+
+*Nuevo*:
+
+```java
+Sentry.addBreadcrumb("El usuario realizó una acción");
+```
+
+```kotlin
+Sentry.addBreadcrumb("El usuario realizó una acción")
+```
+
+<div id="user">
+  #### Usuario
+</div>
+
+*Anterior*:
+
+```java
+Sentry.getContext().setUser(
+  new UserBuilder().setEmail("hello@sentry.io").build()
+);
+```
+
+```kotlin
+Sentry.getContext().setUser(
+  UserBuilder().setEmail("hello@sentry.io").build()
+)
+```
+
+*Novedad:*
+
+```java
+User user = new User();
+user.setEmail("hello@sentry.io");
+Sentry.setUser(user);
+```
+
+```kotlin
+val user = User().apply {
+  email = "hello@sentry.io"
+}
+Sentry.setUser(user)
+```
+
+<div id="set-extra">
+  #### Ajustar valores extra
+</div>
+
+*Anterior*:
+
+```java
+Sentry.getContext().addExtra("extra", "thing");
+```
+
+```kotlin
+Sentry.getContext().addExtra("extra", "cosa")
+```
+
+*Nueva función*:
+
+```java
+Sentry.setExtra("extra", "thing");
+```
+
+```kotlin
+Sentry.setExtra("extra", "elemento")
+```
+
+<div id="clear-the-contextscope">
+  #### Borrar el contexto/alcance
+</div>
+
+*Anterior*:
+
+```java
+Sentry.clearContext();
+```
+
+```kotlin
+Sentry.clearContext()
+```
+
+*Nuevo*:
+
+```java
+Sentry.configureScope(s -> s.clear());
+```
+
+```kotlin
+Sentry.configureScope { it.clear() }
+```
+
+<div id="sentry-gradle-plugin">
+  ### Plugin de Gradle de Sentry
+</div>
+
+Desactiva la opción `autoProguardConfig` del plugin de Gradle de Sentry, ya que `io.sentry:sentry-android` &gt;= `2.0.0` lo hace automáticamente.
+
+```groovy
+sentry {
+    autoProguardConfig false
+}
+```

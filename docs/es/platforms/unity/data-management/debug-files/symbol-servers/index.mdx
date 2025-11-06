@@ -1,0 +1,302 @@
+---
+title: Servidores de símbolos
+description: "Conoce qué son los servidores de símbolos y cómo configurarlos con tus proyectos de Sentry."
+sidebar_order: 4
+---
+
+Sentry puede descargar archivos de información de depuración desde repositorios externos. Esto te permite dejar de cargar archivos de depuración y, en su lugar, configurar un servidor de símbolos público o ejecutar uno propio. También es posible configurar repositorios externos y cargar archivos de depuración al mismo tiempo.
+
+Para configurar repositorios externos, ve a **Project Settings > Debug Files**.
+Encima de la lista de archivos cargados, hay dos opciones para configurar repositorios externos:
+
+1. **Custom Repositories:** Configura repositorios personalizados que contienen archivos de depuración. Puedes optar por configurar un servidor de símbolos HTTP, un bucket de Amazon S3 o un bucket de Google Cloud Storage. Esto requiere un plan _Business_ o _Enterprise_.
+
+2. **Built-In Repositories:** Permite seleccionar de una lista de servidores de símbolos preconfigurados. De forma predeterminada, _iOS_ y _Microsoft_ están habilitados en SaaS. El repositorio de _iOS_ no está disponible en instalaciones autogestionadas (self-hosted), porque Apple no proporciona un servidor de símbolos público ni nos permite distribuir los Debug Information Files (DIFs) nosotros mismos.
+
+Sentry consulta los repositorios externos en el orden en que se configuran. Si hay repositorios personalizados, se consultan primero. Solo los archivos de información de depuración que no se encuentren en uno de los repositorios personalizados se consultan en los integrados.
+
+<div id="built-in-repositories">
+  ## Repositorios integrados
+</div>
+
+Para habilitar un repositorio integrado, selecciónalo en la lista desplegable. Esto
+añade el repositorio de inmediato y utiliza sus archivos de información de depuración para
+simbolicar nuevos informes de fallos. Del mismo modo, cualquier repositorio integrado se puede deshabilitar
+haciendo clic en la X junto al nombre.
+
+La adición o eliminación de repositorios externos se aplica de inmediato. Como resultado,
+los eventos pueden agruparse de manera diferente con la nueva información y generar nuevas incidencias.
+Ten en cuenta que esto enviará notificaciones a los miembros de tu equipo.
+
+<div id="custom-repositories">
+  ## Repositorios personalizados
+</div>
+
+<Alert title="Nota">
+
+Los repositorios personalizados están disponibles para organizaciones en los planes _Business_ y
+_Enterprise_.
+
+</Alert>
+
+Independientemente del formato interno, Sentry admite tres tipos de repositorios personalizados:
+
+- **Servidor de símbolos HTTP**: Un servidor HTTP que entrega archivos de depuración en una
+  ruta configurable. Las búsquedas en el servidor generalmente deben ser no sensibles a mayúsculas y minúsculas,
+  aunque puede configurarse una escritura con mayúsculas específica en los ajustes. Ten en cuenta
+  que Sentry requiere una velocidad mínima de descarga de 4 Mb/s para obtener archivos DIF
+  de servidores de símbolos HTTP personalizados.
+
+- **Bucket de Amazon S3**: Ya sea un bucket completo de S3 o un subdirectorio. Esto
+  requiere los permisos `s3:GetObject` y, opcionalmente, `s3:ListBucket` para la
+  clave de acceso configurada. Las búsquedas en el bucket distinguen entre mayúsculas y minúsculas, por lo que
+  recomendamos almacenar todos los archivos en minúsculas y usar una configuración de ruta en minúsculas.
+
+- **Bucket de Google Cloud Storage**: Ya sea un bucket completo de GCS o un
+  subdirectorio. Esto requiere los permisos `storage.objects.get` y `storage.objects.list`
+  para la cuenta de servicio configurada. Las búsquedas en el bucket distinguen
+  entre mayúsculas y minúsculas, por lo que recomendamos almacenar todos los archivos en minúsculas.
+
+Además de la configuración de autenticación, todos los tipos comparten parámetros de
+configuración:
+
+1. **Nombre**: Un nombre para identificar el repositorio.
+
+2. **Casing de ruta**: Define qué uso de mayúsculas utiliza Sentry para consultar los archivos de
+   información de depuración. El valor predeterminado es mixto y utilizará el uso
+   descrito en la siguiente sección. Si se anula, todo el acceso será
+   en minúsculas o en mayúsculas. El valor predeterminado es _"mixto"_.
+
+3. **Estructura del directorio**: La estructura interna del bucket o el protocolo
+   del servidor de símbolos. Hay tres estructuras a elegir, que se
+   describen en la siguiente sección. El valor predeterminado es _"Específica de la plataforma"_.
+
+<div id="compression-of-debug-files">
+  ## Compresión de archivos de depuración
+</div>
+
+Sentry admite los siguientes métodos de compresión al descargar archivos de
+información de depuración desde fuentes externas: Gzip, zlib (con y sin
+cabecera), Zstandard y Cabinet (CAB).
+
+La convención en el protocolo Symbol Server de Microsoft es almacenar estos archivos con
+el último carácter de la extensión del archivo reemplazado por `_`. Un ejemplo completo sería:
+`KERNEL32.dll/590285E9e0000/KERNEL32.dl_`. Esto no es obligatorio en tus propios
+repositorios, ya que Sentry detecta la compresión en todas las rutas.
+
+<div id="note-about-portable-pdbs-and-nuget">
+  ## Nota sobre los Portable PDB y NuGet
+</div>
+
+La descarga de un Portable PDB desde el servidor de símbolos de NuGet requiere proporcionar la suma de comprobación de depuración mediante el encabezado `SymbolChecksum`.
+
+<div id="directory-layouts">
+  ## Estructuras de directorios
+</div>
+
+Sentry admite varias estructuras para repositorios externos. Según la
+estructura seleccionada y el tipo de archivo, intentamos descargar archivos en rutas específicas.
+
+La siguiente tabla muestra el mapeo de las estructuras admitidas a los esquemas de rutas
+aplicados a archivos específicos:
+
+| Diseño                          | Mach-O  |    ELF     |    PE    |   PDB    |   PPDB   | Breakpad |  WASM   |
+| ------------------------------- | :-----: | :--------: | :------: | :------: | :------: | :------: | :-----: |
+| Específico de la plataforma     |  LLDB   |  BuildID   | SymStore | SymStore | SymStore | Breakpad | BuildID |
+| Microsoft SymStore              |    -    |     -      | SymStore | SymStore | SymStore |    -     |    -    |
+| Microsoft SymStore (index2.txt) |    -    |     -      |  Index2  |  Index2  |  Index2  |    -     |    -    |
+| Microsoft SSQP                  |  SSQP   |    SSQP    |   SSQP   |   SSQP   |   SSQP   |    -     |    -     |
+| NuGet                           |    -    |     -      |    -     |    -     | SymStore |    -     |    -     |
+| Debuginfod                      |    -    | Debuginfod |    -     |    -     |    -     |    -     |    -     |
+| Estructura unificada            | Unified |  Unified   | Unified  | Unified  | Unified  | Unified  | Unified |
+
+Los esquemas de rutas de la tabla anterior se definen de la siguiente manera:
+
+<div id="breakpad">
+  ### Breakpad
+</div>
+
+Path: `<DebugName>/<BREAKPADid>/<SymName>`
+
+Breakpad siempre utiliza un _Breakpad ID_ para almacenar símbolos. Estos identificadores pueden
+calculase a partir de _Debug Identifiers_ eliminando los guiones y aplicando las
+siguientes reglas de uso de mayúsculas y minúsculas:
+
+- La parte de firma del id (primeros 32 caracteres) va en **mayúsculas**.
+- La parte de edad del id (caracteres restantes) va en **minúsculas**.
+
+El nombre del archivo de símbolos depende de la plataforma. En Windows, la
+extensión del archivo (ya sea `.exe`, `.dll` o `.pdb`) se reemplaza por `.sym`. En todas
+las demás plataformas, la extensión `.sym` se **añade** al nombre completo del archivo,
+incluidas las posibles extensiones.
+
+Ejemplos:
+
+- `wkernel32.pdb/FF9F9F7841DB88F0CDEDA9E1E9BFF3B51/wkernel32.sym`
+- `MyFramework.dylib/5E012A646CC536F19B4DA0564049169B/MyFramework.dylib.sym`
+
+<div id="lldb">
+  ### LLDB
+</div>
+
+Ruta: `XXXX/XXXX/XXXX/XXXX/XXXX/XXXXXXXXXXXX[.app]`
+
+El depurador LLDB en macOS puede leer símbolos de depuración desde [File Mapped UUID Directories](https://lldb.llvm.org/use/symbols.html#file-mapped-uuid-directories).
+El UUID se divide separando los primeros 20 dígitos hexadecimales en bloques de 4 caracteres, y se crea un directorio para cada bloque. En el directorio final, LLDB suele esperar un enlace simbólico con el nombre de los últimos 12 dígitos hexadecimales, que apunta al archivo dSYM real.
+
+Esto no es en realidad una función de LLVM. De hecho, es una función de `CoreFoundation` y está implementada exclusivamente en macOS sobre Spotlight. Spotlight indexa estas rutas y la API privada `DBGCopyFullDSYMURLForUUID` es empleada por lldb para localizar los símbolos. macOS utiliza los enlaces simbólicos de esas ubicaciones.
+
+Dado que el ejecutable o la biblioteca comparten el mismo UUID que el archivo dSYM, los primeros se distinguen con el sufijo `.app`.
+
+Los dígitos hexadecimales van en **mayúsculas** y el sufijo de la app en **minúsculas**.
+
+Ejemplos:
+
+- `5E01/2A64/6CC5/36F1/9B4D/A0564049169B` (debug companion)
+- `5E01/2A64/6CC5/36F1/9B4D/A0564049169B.app` (ejecutable o biblioteca)
+
+<div id="buildid">
+  ### BuildID
+</div>
+
+Ruta: `nn/nnnnnnnnnnnnnnnn...[.debug]`
+
+GDB admite varios métodos de búsqueda, según cómo se especifique el archivo de información de depuración. Sentry usa el [método de Build ID]: si se ha escrito una nota o sección de GNU Build ID en el archivo ELF, esta proporciona un identificador único para el ejecutable que también se conserva en el archivo de depuración.
+
+El GNU Build ID es una cadena binaria de longitud variable, que suele consistir en un hash SHA1 de 20 bytes de la sección de código (`.text`). La ruta de búsqueda es
+_pp/nnnnnnnn.debug_, donde _pp_ son los primeros 2 caracteres hexadecimales de la cadena de bits del Build ID, y _nnnnnnnn_ es el resto de la cadena hexadecimal. Para buscar ejecutables, se omite el sufijo `.debug`.
+
+Ejemplos:
+
+- `b5/381a457906d279073822a5ceb24c4bfef94ddb` (ejecutable o biblioteca)
+- `b5/381a457906d279073822a5ceb24c4bfef94ddb.debug` (archivo de depuración sin símbolos)
+
+**Unificado**
+
+Ruta: `nn/nnnnnnnnnnnnnnnn.../type`
+
+El diseño de ruta unificado es específico de Sentry y permite una estructura coherente para todos los archivos de depuración, independientemente de la plataforma. Puede almacenar archivos Breakpad, PDB, PE y otros. La [herramienta symsorter] puede ordenar automáticamente los símbolos de depuración en este formato y también crear automáticamente paquetes de código fuente.
+
+La ruta se basa en un `build_id` formateado en hexadecimal con letras minúsculas. Los dos primeros bytes de ese ID se usan como carpeta raíz.
+
+La construcción de `build_id` difiere entre formatos de archivo:
+
+- PE: `<Signature><Age>` (edad en hex, sin relleno)
+- PDB: `<Signature><Age>` (edad en hex, sin relleno)
+- Portable PDB: `<Signature><Age>` (edad en hex, sin relleno)
+- ELF: la secuencia de bytes de la nota gnu-build-id
+- Mach-O: bytes de `LC_UUID`
+- WASM: sección `build_id` en bytes
+
+Ejemplos:
+
+- `b5/381a457906d279073822a5ceb24c4bfef94ddb/executable` (ejecutable o biblioteca)
+- `b5/381a457906d279073822a5ceb24c4bfef94ddb/debuginfo` (archivo de depuración)
+- `b5/381a457906d279073822a5ceb24c4bfef94ddb/breakpad` (archivo Breakpad)
+- `b5/381a457906d279073822a5ceb24c4bfef94ddb/sourcebundle` (paquete de código fuente)
+
+<div id="ssqp">
+  ### SSQP
+</div>
+
+Ruta: `<file_name>/<prefix>-<identifier>/<file_name>`
+
+[SSQP Key Conventions] es una extensión del protocolo original de Microsoft Symbol
+Server para .NET. Especifica rutas de búsqueda para archivos PE, PDB, Mach-O y ELF.
+La grafía de todas las rutas de búsqueda es generalmente en **minúsculas**, excepto el
+campo age de los identificadores PDB, que debe ir en **MAYÚSCULAS**.
+
+Para los archivos Mach-O y ELF, SSQP especifica usar los mismos identificadores que
+se usan en los métodos de LLDB y GNU build id, respectivamente. Consulta las secciones anteriores
+para más información. Esto da como resultado las siguientes rutas para todos los tipos de
+archivo posibles:
+
+- `<code_name>/<timestamp><size_of_image>/<code_name>`
+  (archivo PE)
+- `<debug_name>/<signature><AGE>/<debug_name>` (archivo
+  PDB)
+- `<debug_name>/<signature>FFFFFFFF/<debug_name>` (archivo PDB
+  portátil)
+- `<code_name>/elf-buildid-<buildid>/<code_name>` (binario
+  ELF)
+- `_.debug/elf-buildid-sym-<buildid>/_.debug` (archivo de depuración ELF)
+- `<code_name>/mach-uuid-<uuid>/<code_name>` (binario Mach-O)
+- `_.dwarf/mach-uuid-sym-<uuid>/_.dwarf` (binario Mach-O)
+
+SSQP especifica un método de búsqueda adicional mediante checksum SHA1 del
+contenido del archivo, comúnmente usado para búsquedas de archivos fuente. _Sentry no admite
+este método de búsqueda._
+
+Ejemplos:
+
+- `wkernel32.pdb/ff9f9f7841db88f0cdeda9e1e9bff3b5A/wkernel32.pdb`
+- `kernel32.dll/590285e9e0000/kernel32.dll`
+- `libc-2.23.so/elf-buildid-b5381a457906d279073822a5ceb24c4bfef94ddb/libc-2.23.so`
+- `_.debug/elf-buildid-sym-b5381a457906d279073822a5ceb24c4bfef94ddb/_.debug`
+- `CoreFoundation/mach-uuid-36385a3a60d332dbbf55c6d8931a7aa6/CoreFoundation`
+- `_.dwarf/mach-uuid-sym-36385a3a60d332dbbf55c6d8931a7aa6/_.dwarf`
+
+<div id="symstore">
+  ### SymStore
+</div>
+
+Path: `<FileName>/<SIGNATURE><AGE>/<FileName>` (`<FileName>/<SIGNATURE>FFFFFFFF/<FileName>` para PDB portables)
+
+El servidor público de símbolos proporcionado por Microsoft solía alojar solo PDB para la
+plataforma Windows. Estos usan un identificador de depuración de tipo _signature-age_ además del
+nombre de archivo para localizar símbolos. Las rutas de archivo son idénticas a SSQP, salvo por
+las reglas predeterminadas de mayúsculas y minúsculas:
+
+- Los nombres de archivo se mantienen **tal como están**.
+- La firma de un identificador PDB va en **MAYÚSCULAS**, pero la edad va en
+  **minúsculas**.
+- La marca de tiempo de un identificador PE va en **MAYÚSCULAS**, pero el tamaño va en
+  **minúsculas**.
+
+Como el Microsoft Symbol Server original no servía archivos ELF ni Mach-O,
+no recomendamos usar esta convención para esos tipos. Sin embargo, Sentry
+admitirá las convenciones SSQP con reglas de mayúsculas y minúsculas adaptadas cuando se seleccione este diseño.
+
+Ejemplos:
+
+- `wkernel32.pdb/FF9F9F7841DB88F0CDEDA9E1E9BFF3B5A/wkernel32.pdb`
+- `KERNEL32.dll/590285E9e0000/KERNEL32.dll`
+
+<div id="index2">
+  ### Index2
+</div>
+
+Ruta: `<Fi>/<FileName>/<SIGNATURE><AGE>/<FileName>` (`<Fi>/<FileName>/<SIGNATURE>FFFFFFFF/<FileName>` para PDB portátiles)
+
+Este diseño es idéntico a _SymStore_, excepto que los dos primeros caracteres
+del nombre del archivo se anteponen a la ruta como una carpeta adicional.
+
+Ejemplos:
+
+- `wk/wkernel32.pdb/FF9F9F7841DB88F0CDEDA9E1E9BFF3B5A/wkernel32.pdb`
+- `KE/KERNEL32.dll/590285E9e0000/KERNEL32.dll`
+
+<div id="debuginfod">
+  ### Debuginfod
+</div>
+
+Ruta: `<build id>/<type>`
+
+Debuginfod solo admite binarios ELF y archivos de depuración DWARF.
+
+`<build id>` es la secuencia de bytes de la nota de código gnu-build-id, igual que en el caso ELF del esquema de ruta unificado.
+
+Nota: Los archivos deben ubicarse en `buildid/` en el servidor.
+
+Ejemplos:
+
+- `69389d485a9793dbe873f0ea2c93e02efaa9aa3d/executable` (ejecutable o biblioteca)
+- `69389d485a9793dbe873f0ea2c93e02efaa9aa3d/debuginfo` (archivo de depuración)
+
+[symsorter tool]: https://github.com/getsentry/symbolicator/tree/master/crates/symsorter
+
+[ssqp key conventions]: https://github.com/dotnet/symstore/blob/master/docs/specs/SSQP_Key_Conventions.md
+
+[file mapped UUID directories]: https://lldb.llvm.org/use/symbols.html#file-mapped-uuid-directories
+
+[build id method]: https://sourceware.org/gdb/onlinedocs/gdb/Separate-Debug-Files.html

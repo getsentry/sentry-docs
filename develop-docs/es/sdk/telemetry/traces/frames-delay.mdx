@@ -1,0 +1,150 @@
+---
+title: Retraso de fotogramas
+---
+
+El retraso de fotogramas es la duración de la demora percibida por el usuario en los fotogramas renderizados. Los SDK pueden adjuntar esta información a los spans. Recomendamos implementar esta característica en los SDK para móviles y escritorio.
+
+<div id="background">
+  ## Contexto
+</div>
+
+Esta sección explica por qué el retraso de fotogramas es una métrica mejor que los fotogramas lentos y congelados. Si ya sabes por qué, puedes saltarte esta sección.
+
+En dispositivos móviles, los fotogramas lentos y congelados son métricas consolidadas para medir la capacidad de respuesta de las aplicaciones. Un teléfono o una tablet suele renderizar 60 fotogramas por segundo (fps). A 60 fps, cada fotograma dispone de 16 o 16,67 ms para renderizarse:
+
+* __Fotogramas lentos__: A 60 fps, son los que tardan más de 16,67 ms en renderizarse.
+* __Fotogramas congelados__: Son los que tardan más de 700 ms en renderizarse.
+
+La gran desventaja es que estas métricas no indican cuánto duran, lo cual es un problema importante al priorizar qué partes poco responsivas de la aplicación necesitan mejoras. Los siguientes escenarios ilustran el problema de priorizar fijándose solo en fotogramas lentos y congelados.
+
+Escenario | Fotogramas lentos | Fotogramas congelados
+-- | -- | --
+1 |  5, todos de 500 ms | 0
+2 | 10, todos de 20 ms | 0
+3 |  0 | 1 de 800 ms
+
+Al comparar los distintos escenarios, una persona podría querer arreglar primero el escenario 3 porque contiene un fotograma congelado. Al comparar los escenarios 1 y 2, elegiría el escenario 2 porque tiene más fotogramas lentos. Aunque el escenario 2 parezca peor, la experiencia de usuario es mucho peor en el escenario 1 porque los fotogramas lentos duran más.
+
+Ahí es donde entra en juego una nueva métrica llamada __retraso de fotogramas__. El retraso de fotogramas representa la duración de renderizado retrasado de todos los fotogramas. El retraso de un fotograma es `actual frame duration - expected frame duration`. Por ejemplo, con 60 fps la duración esperada de un fotograma es 16,67 ms. Cuando un fotograma tarda 20 ms en renderizarse, el retraso del fotograma es `20ms - 16.67ms = 3.33ms`.
+
+Calculemos el retraso de fotogramas para los escenarios 1 - 3.
+
+Escenario | Cálculo | Retraso de fotogramas
+-- | -- | --
+1 | (500ms - 16.67ms) * 5 | 2416.65ms
+2 | (20ms - 16.67 ms) * 10 | 33.3ms
+3 | 800ms - 16.67ms | 783.33ms
+
+Ahora, al priorizar la degradación de la capacidad de respuesta percibida por el usuario mediante el retraso de fotogramas, obtenemos 1, 3, 2 en lugar de 3, 2, 1 al fijarnos en fotogramas lentos y congelados.
+
+<div id="specification">
+  ## Especificación
+</div>
+
+El retraso de fotogramas representa la duración de renderizado diferido de todos los fotogramas. El retraso de un fotograma es
+`actual frame duration - expected frame duration`. Por ejemplo, con 60 fps, la duración esperada de un fotograma es de 16.67 ms.
+Cuando un fotograma tarda 20 ms en renderizarse, el retraso del fotograma es `20ms - 16.67ms = 3.33ms`. Como la tasa de fotogramas esperada puede
+cambiar en cualquier momento, los SDK deben comprobarla para cada fotograma. El retraso de fotogramas de un span es la suma
+de los retrasos de todos los fotogramas lentos y congelados durante el tiempo de inicio y fin del span.
+
+Los SDK deben adjuntar el retraso de fotogramas, en segundos, a los spans mediante <Link to="/sdk/performance/span-data-conventions/#mobile">span data</Link>
+y __adjuntar el retraso de fotogramas a todos los spans__, independientemente del hilo en el que se ejecute un span, así como a los spans que se ejecuten simultáneamente.
+Para las transacciones, los SDK deben enviar el retraso de fotogramas a través del span raíz con datos del span.
+Aunque tiene sentido calcular el retraso de fotogramas en milisegundos, __los SDK deben enviarlo en segundos__, ya que los SDK ya
+usan segundos para la mayoría de las marcas de tiempo. En esta especificación usamos milisegundos porque son más fáciles de leer.
+
+La especificación está escrita en la [sintaxis de Gherkin](https://cucumber.io/docs/gherkin/reference/).
+
+```Gherkin
+Escenario: Fotogramas lentos y congelados
+    Dada una tasa de fotogramas de 60 fps
+    Y 2 fotogramas con 300 ms
+    Y 1 fotograma con 900 ms
+    Y 10 fotogramas con 16.76 ms
+    Cuando se calcula el retraso de fotogramas
+    Entonces el retraso de fotogramas es (300 - 16.67) * 2 + 900 - 16.67 = 1449.99 ms
+
+Escenario: Cambios en la tasa de fotogramas
+    Dado 1 fotograma con 200 ms con 60 fps
+    Y 2 fotogramas con 500 ms con 120 fps
+    Y 10 fotogramas con 8.33 ms con 120 fps
+    Cuando se calcula el retraso de fotogramas
+    Entonces el retraso de fotogramas es 200 - 16.67 + (500 - 8.33) * 2 = 1166.67 ms
+
+Escenario: Fotograma retrasado en curso
+    """
+    [nf][ ------- ?? ------ ]   |  nf = fotograma normal,  ?? = Sin información de fotograma
+    [---- duración del intervalo ----]
+    Cuando hay un fotograma retrasado en curso, la lógica no sabe cuánto tiempo
+    durará y, por lo tanto, no tiene información del fotograma.
+    """
+    Dada una tasa de fotogramas de 60 fps
+    Y 1 fotograma con 16.67 ms
+    Y pasan 200 ms después sin que se dibuje ningún fotograma
+    Y ningún fotograma retrasado registrado
+    Cuando se calcula el retraso de fotogramas
+    Entonces el retraso de fotogramas es 200 ms - 16.67 ms = 183.33 ms
+
+
+Escenario: El fotograma retrasado comienza antes del intervalo
+    """
+    [----  fotograma retrasado ---- ]
+            [- duración del intervalo -]
+    """
+    Dada una tasa de fotogramas de 60 fps
+    Y un fotograma retrasado registrado con una duración de 300 ms
+    Cuando se calcula el retraso de fotogramas para el intervalo de 100 ms a 300 ms
+    Entonces el retraso de fotogramas es la duración completa del intervalo de 200 ms
+
+
+Escenario: El fotograma retrasado comienza poco antes del intervalo
+    """
+    [| e |  fotograma retrasado ---- ]      e = la duración esperada del fotograma
+        [--- duración del intervalo --- ]
+    """
+    Dada una tasa de fotogramas de 60 fps
+    Y un fotograma retrasado registrado con una duración de 300 ms
+    Y el fotograma retrasado comenzó en 0 ms poco antes del intervalo
+    Cuando se calcula el retraso de fotogramas para el intervalo de 10 ms a 300 ms
+    Entonces el retraso de fotogramas es 300 ms - 16.67 ms = 283.33 ms, que es solo la parte retrasada
+        del fotograma retrasado
+    Y la parte de duración esperada del fotograma retrasado no se agrega como retraso de fotograma
+
+Escenario: El fotograma retrasado comienza y termina antes del intervalo
+    """
+    [| e |  fotograma retrasado ------ ]      e = la duración esperada del fotograma
+        [--- duración del intervalo --- ]
+    """
+    Dada una tasa de fotogramas de 60 fps
+    Y un fotograma retrasado registrado con una duración de 310 ms
+    Y el fotograma retrasado comenzó en 0 ms poco antes del intervalo
+    Cuando se calcula el retraso de fotogramas para la duración del intervalo de 10 ms a 300 ms
+    Entonces el retraso de fotogramas es 300 ms - 6.67 ms = 293.33 ms, que es solo la parte retrasada del
+        fotograma retrasado que tiene intersección con la duración del intervalo
+    Y la parte de duración esperada del fotograma retrasado no se agrega como retraso de fotograma
+
+
+Escenario: Un fotograma retrasado comienza poco antes del final de un intervalo
+    """
+    [| e |  fotograma retrasado ][| e |  fotograma retrasado - ]  e = la duración esperada del fotograma
+    [---- duración del intervalo ---- ]
+    """
+    Dada una tasa de fotogramas de 60 fps
+    Y un fotograma retrasado registrado con una duración de 290 ms
+    Y un fotograma retrasado registrado con una duración de 200 ms
+    Cuando se calcula el retraso de fotogramas para la duración del intervalo de 0 ms a 300 ms
+    Entonces el retraso de fotogramas es 290 ms - 16.67 ms = 273.33 ms
+    Y la parte de duración esperada del segundo fotograma retrasado no se agrega como retraso de fotograma
+
+Escenario: Dos intervalos concurrentes
+    """
+    [| e | --- fotograma retrasado--- ]  e = la duración esperada del fotograma
+          [----- intervalo 1 -----]
+              [---- intervalo 2 ----]
+    """
+    Dada una tasa de fotogramas de 60 fps
+    Y un fotograma retrasado registrado con una duración de 300 ms
+    Cuando se calcula el retraso de fotogramas
+    Entonces el retraso de fotogramas para el intervalo 1 es su duración completa de 180 ms
+    Entonces el retraso de fotogramas para el intervalo 2 es su duración completa de 160 ms
+```

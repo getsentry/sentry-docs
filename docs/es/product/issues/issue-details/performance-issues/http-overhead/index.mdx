@@ -1,0 +1,51 @@
+---
+title: Sobrecarga de HTTP/1.1
+sidebar_order: 30
+description: Obtén más información sobre los problemas de sobrecarga de HTTP/1.1 y cómo diagnosticarlos y solucionarlos.
+og_image: /og-images/product-issues-issue-details-performance-issues-http-overhead.png
+---
+
+Los problemas de sobrecarga de HTTP/1.1 se producen cuando el navegador pone en cola un conjunto de spans de HTTP superpuestos para el mismo host y el tiempo de espera en la cola supera de forma constante los 500 ms.
+
+<div id="detection-criteria">
+  ## Criterios de detección
+</div>
+
+<Alert>
+
+Este problema está disponible actualmente solo para los SDK de navegador.
+
+</Alert>
+
+El detector de este problema de rendimiento busca un conjunto de spans HTTP/1.1 superpuestos que se vuelven más lentos porque la solicitud se está retrasando. Esto es un problema en HTTP/1.1 debido a los límites de conexión del navegador.
+
+Una vez encontrados estos spans, debe cumplirse lo siguiente:
+
+- El tiempo máximo de cola o “espera” del span más lento del conjunto debe superar el umbral de `500ms`.
+- Debe haber `6` o más spans HTTP superpuestos.
+- Cada span HTTP debe usar `HTTP/1.1`.
+- El tiempo en cola debe aumentar con cada nuevo span HTTP.
+- Todos los spans deben compartir un mismo host (con la conexión HTTP proveniente del mismo origen o del mismo nombre de dominio).
+
+Todos los spans HTTP experimentan algo de tiempo de espera y se incluirán en la detección, pero solo los spans HTTP por encima de `100ms` se marcarán como “problemáticos” y aparecerán en la evidencia del span.
+
+Si Sentry no detecta un problema de sobrecarga de HTTP donde lo esperas, probablemente sea porque la transacción no cumplió alguno de los criterios anteriores. Puedes configurar los umbrales del detector para problemas de sobrecarga de HTTP en Sentry yendo a la página **Settings**, seleccionando “Projects”, eligiendo el proyecto que te interesa, seleccionando “Performance” y desplazándote hasta “PERFORMANCE ISSUES - DETECTOR THRESHOLD SETTINGS” para realizar cualquier actualización.
+
+<div id="span-evidence">
+  ## Evidencia de span
+</div>
+
+Puedes encontrar información adicional sobre tu problema de HTTP consecutivo analizando dos aspectos principales en la sección "Evidencia de span":
+
+- **Nombre de la transacción**
+- **Tiempo máximo en cola**
+
+![Evidencia de spans de overhead HTTP](./img/http-overhead-spans.png)
+
+Puedes ver la evidencia del span yendo a la página **Issues** en Sentry, seleccionando tu proyecto, eligiendo el error de overhead HTTP que quieras examinar y luego desplazándote hasta la sección "Evidencia de span" en la pestaña "Details".
+
+<div id="how-to-fix-http-overhead">
+  ## Cómo solucionar el overhead de HTTP
+</div>
+
+Los problemas de overhead de HTTP pueden resolverse habilitando conexiones HTTP/2 o superiores hacia tu backend. Esto implicaría a tus balanceadores de carga si están delante de tus servidores, o al servidor si es accesible directamente. Como esto no siempre es posible, otras opciones son aplicar domain sharding o reducir el número de solicitudes simultáneas al backend, aunque estas soluciones son más manuales y difíciles de mantener a largo plazo.

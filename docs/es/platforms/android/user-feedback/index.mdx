@@ -1,0 +1,118 @@
+---
+title: Configurar comentarios de usuarios
+sidebar_title: Comentarios de usuarios
+description: Aprende a habilitar los comentarios de usuarios en tu app de Android.
+sidebar_order: 6000
+og_image: /og-images/platforms-android-user-feedback.png
+---
+
+La función de comentarios de usuarios te permite recopilar opiniones desde cualquier lugar de tu aplicación, en cualquier momento, sin que primero deba producirse un error.
+
+<Alert>
+Si usas una instancia autogestionada de Sentry, deberás estar en la versión 24.4.2 o superior para aprovechar todas las funcionalidades de comentarios de usuarios. Las versiones anteriores pueden tener capacidades limitadas.
+Asegúrate de usar la versión 8.14.0 o superior del SDK de Android para acceder a las funciones más recientes.
+</Alert>
+
+![Un ejemplo del widget de comentarios de usuarios en Android =350x](./img/user-feedback-android-widget.png)
+
+<div id="widget">
+  ## Widget
+</div>
+
+El widget es un botón personalizado que abre el formulario de comentarios. Puedes usarlo directamente en el XML de tu diseño o crearlo por código:
+
+```xml {filename:myLayout.xml}
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:orientation="vertical">
+
+    <io.sentry.android.core.SentryUserFeedbackButton
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"/>
+</LinearLayout>
+```
+
+```java
+import io.sentry.android.core.SentryUserFeedbackButton;
+
+SentryUserFeedbackButton widget = new SentryUserFeedbackButton(context);
+```
+
+```kotlin
+import io.sentry.android.core.SentryUserFeedbackButton
+
+val widget = SentryUserFeedbackButton(context)
+```
+
+
+<div id="user-feedback-form">
+  ## Formulario de feedback de usuarios
+</div>
+
+El formulario de feedback permite a los usuarios enviar sus comentarios desde cualquier parte de tu aplicación.
+Para ver las opciones de configuración, consulta la <PlatformLink to="/user-feedback/configuration/">Configuración del widget de feedback</PlatformLink>.
+
+```java
+import io.sentry.Sentry;
+
+SentryId sentryId = Sentry.captureMessage("My message"); // Opcionalmente puedes asociar un evento usando su id
+// Simplemente instancia el diálogo y muéstralo cuando quieras
+Sentry.showUserFeedbackDialog(sentryId, options -> {
+  // Las opciones configuradas aquí se aplicarán solo al formulario actual
+  options.setFormTitle("¡Queremos saber de ti!");
+});
+```
+
+```kotlin
+import io.sentry.Sentry
+
+val sentryId = Sentry.captureMessage("Mi mensaje") // Opcionalmente puedes asociar un evento usando su id
+// Simplemente instancia el diálogo y muéstralo cuando quieras
+Sentry.showUserFeedbackDialog(sentryId) { options ->
+  // Las opciones configuradas aquí se aplicarán solo al formulario actual
+  options.formTitle = "¡Queremos saber de ti!"
+}
+```
+
+
+<div id="session-replay">
+  ### Reproducción de sesiones
+</div>
+
+El widget de User Feedback se integra perfectamente con Reproducción de sesiones. Cuando se abre el widget, el SDK almacena hasta 30 segundos de la sesión del usuario. Si se envía feedback, esa reproducción se adjunta al envío, lo que te permite ver tanto el feedback como las acciones del usuario previas al envío.
+
+<div id="user-feedback-api">
+  ## API de comentarios de usuario
+</div>
+
+La API de comentarios de usuario te permite recopilar comentarios mientras utilizas tus propios componentes de UI. Puedes enviar comentarios directamente con el método `Sentry.captureFeedback(Feedback)`.
+
+De forma opcional, Sentry puede asociar estos comentarios a un evento, brindándote información adicional sobre los problemas. Sentry necesita el `eventId` para poder asociar los comentarios del usuario con el evento correspondiente. Por ejemplo, para obtener el `eventId`, puedes usar <PlatformLink to="/configuration/options/#beforeSend">beforeSend</PlatformLink> o el valor de retorno del método que captura un evento.
+
+```java
+import io.sentry.Sentry;
+import io.sentry.protocol.Feedback;
+
+Feedback feedback = new Feedback("Encontré un error mientras usaba la aplicación.");
+feedback.setName("John Doe");
+feedback.setContactEmail("john.doe@example.com");
+// Opcionalmente asociar el feedback con un evento
+SentryId sentryId = Sentry.captureMessage("Mi mensaje");
+feedback.setAssociatedEventId(sentryId);
+Sentry.captureFeedback(feedback);
+```
+
+```kotlin
+import io.sentry.Sentry
+import io.sentry.protocol.Feedback
+
+val feedback = Feedback("Encontré un error mientras usaba la aplicación.")
+feedback.name = "John Doe"
+feedback.contactEmail = "john.doe@example.com"
+// Opcionalmente asociar el feedback con un evento
+val sentryId = Sentry.captureMessage("Mi mensaje")
+feedback.associatedEventId = sentryId
+Sentry.captureFeedback(feedback)
+```

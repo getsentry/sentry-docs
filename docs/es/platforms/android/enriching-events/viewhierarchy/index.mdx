@@ -1,0 +1,118 @@
+---
+title: Jerarquía de vistas
+description: >-
+  Obtén más información sobre cómo depurar la jerarquía de vistas cuando ocurre un error. Sentry
+  empareja la representación de la jerarquía de vistas con el evento original, ofreciéndote
+  información adicional sobre los problemas.
+og_image: /og-images/platforms-android-enriching-events-viewhierarchy.png
+---
+
+Sentry permite generar una representación JSON de la jerarquía de vistas en caso de error y la incluye como un <PlatformLink to="/enriching-events/attachments/">adjunto</PlatformLink>.
+
+Esta función solo aplica a SDK con interfaz de usuario, como los de aplicaciones móviles y de escritorio. En algunos entornos, como iOS nativo, renderizar la jerarquía de vistas requiere el hilo de la interfaz y, en caso de un bloqueo, puede que no esté disponible. Otro ejemplo en el que la jerarquía de vistas podría no estar disponible es cuando el evento ocurre antes de que la pantalla comience a cargarse. Por lo tanto, esta función es, por naturaleza, una solución de “mejor esfuerzo”.
+
+<Alert>
+  La desofuscación de jerarquías de vistas está totalmente disponible para SDK nativos y React Native, pero actualmente no es compatible con Flutter.
+</Alert>
+
+<div id="enabling-view-hierarchy-attachments">
+  ## Habilitar archivos adjuntos de jerarquía de vistas
+</div>
+
+La depuración de la jerarquía de vistas es una función opcional. Puedes habilitarla como se muestra a continuación:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+  <meta-data android:name="io.sentry.attach-view-hierarchy" android:value="true" />
+</application>
+```
+
+<div id="customize-view-hierarchy-capturing">
+  ### Personalizar la captura de la jerarquía de vistas
+</div>
+
+<Alert>
+  Requiere la versión `6.24.0` del SDK o superior.
+</Alert>
+
+Como capturar la jerarquía de vistas puede ser una operación intensiva en recursos en Android, se limita a una jerarquía de vistas cada 2 segundos mediante un mecanismo de “debounce”. Este comportamiento puede anularse si proporcionas un `BeforeCaptureCallback` para jerarquías de vistas en `SentryAndroidOptions`.
+
+El `BeforeCaptureCallback` también permite personalizar el comportamiento según los datos del evento para decidir cuándo capturar la jerarquía de vistas y cuándo no. Por ejemplo, puedes optar por capturar la jerarquía de vistas solo para eventos con bloqueo y fatales:
+
+```java
+import io.sentry.SentryLevel;
+import io.sentry.android.core.SentryAndroid;
+
+SentryAndroid.init(this, options -> {
+    options.setBeforeViewHierarchyCaptureCallback((event, hint, debounce) -> {
+        // siempre capturar eventos que provocaron un bloqueo
+        if (event.isCrashed()) {
+            return true;
+        }
+
+        // si el antirrebote está activo, omitir la captura
+        if (debounce) {
+            return false;
+        } else {
+            // también capturar eventos fatales
+            return event.getLevel() == SentryLevel.FATAL;
+        }
+    });
+});
+```
+
+```kotlin
+import io.sentry.SentryLevel
+import io.sentry.android.core.SentryAndroid
+
+SentryAndroid.init(this) { options ->
+    options.setBeforeViewHierarchyCaptureCallback { event, hint, debounce ->
+        // siempre capturar eventos con fallos
+        if (event.isCrashed) {
+            return@setBeforeScreenshotCaptureCallback true
+        }
+
+        // si el debounce está activo, omitir captura
+        if (debounce) {
+            return@setBeforeScreenshotCaptureCallback false
+        } else {
+            // también capturar eventos fatales
+            return@setBeforeScreenshotCaptureCallback event.level == SentryLevel.FATAL
+        }
+    }
+}
+```
+
+<div id="jetpack-compose-support-using-the-sentry-kotlin-compiler-plugin">
+  ### Compatibilidad con Jetpack Compose mediante el Sentry Kotlin Compiler Plugin
+</div>
+
+<Alert>
+  El complemento Sentry Kotlin Compiler se considera experimental. Pruébalo y envía comentarios tempranos [en GitHub](https://github.com/getsentry/sentry-android-gradle-plugin).
+</Alert>
+
+Si tu aplicación usa Jetpack Compose, puedes usar el <PlatformLink to="/enhance-errors/kotlin-compiler-plugin/">Sentry Kotlin Compiler Plugin</PlatformLink> para ver los nombres de las funciones de tus elementos `@Composable`. Debes agregar el complemento a todos los módulos que contengan elementos `@Composable`.
+
+```groovy {filename:app/build.gradle}
+plugins {
+  id "io.sentry.kotlin.compiler.gradle" version "{{@inject packages.version('sentry.kotlin.compiler-plugin', '3.7.0') }}"
+}
+```
+
+```kotlin {filename:app/build.gradle.kts}
+plugins {
+  id("io.sentry.kotlin.compiler.gradle") version "{{@inject packages.version('sentry.kotlin.compiler-plugin', '3.7.0') }}"
+}
+```
+
+<div id="viewing-view-hierarchy-attachments">
+  ## Visualización de adjuntos de jerarquía de vistas
+</div>
+
+Las jerarquías de vistas aparecen en la pestaña &quot;Attachments&quot;, donde puedes ver todos los adjuntos, así como los eventos asociados. Haz clic en el ID del evento para abrir la página [Issue Details](/es/product/issues/issue-details) de ese evento específico.
+
+<Include name="common-imgs/viewhierarchy-list-example" />
+
+En la página **Issue Details**, puedes interactuar con el adjunto de jerarquía de vistas en una sección llamada &quot;View Hierarchy&quot;. Esta sección representa el estado de tu aplicación en el momento del evento de error. Hay tres vistas: árbol, wireframe y una vista detallada del nodo seleccionado. Puedes seleccionar nodos tanto en el árbol como en el wireframe para ver las propiedades recopiladas por el SDK. El SDK informa las siguientes claves para cada nodo de la vista: `alpha`, `visible`, `x`, `y`, `width`, `height`, `type` e `identifier` si corresponde, aunque puede haber valores adicionales específicos del SDK. Esta función puede usarse como herramienta exploratoria para depurar problemas de diseño, visualizar contenido renderizado innecesariamente o comprender mejor la relación entre vistas.
+
+![Ejemplo de jerarquía de vistas](./img/viewhierarchy-example-android.png)

@@ -1,0 +1,212 @@
+---
+title: Filtros de entrada
+sidebar_order: 5
+description: Conoce los distintos métodos para filtrar datos en tu proyecto.
+og_image: /og-images/concepts-data-management-filtering.png
+---
+
+Sentry ofrece varios métodos para filtrar datos en tu proyecto. Usar sentry.io para filtrar eventos es una opción sencilla, ya que no tienes que [configurar y desplegar tu SDK para filtrar proyectos](/es/platform-redirect/?next=/configuration/filtering/).
+
+<div id="inbound-data-filters">
+  ## Filtros de datos entrantes
+</div>
+
+Los filtros de datos entrantes te permiten decidir qué errores, si alguno, debería ignorar Sentry. Explóralos yendo a **[Project] &gt; Project Settings &gt; Inbound Filters.**
+
+Estos filtros se aplican únicamente en el momento de la ingesta y no más tarde durante el procesamiento. Esto, por ejemplo, te permite descartar un error por su mensaje cuando se ingiere a través de la API JSON. En cambio, este filtro no se aplica a minidumps ingeridos. Los eventos filtrados no consumen cuota, como se explica en [What Counts Toward My Quota](/es/pricing/quotas/#what-counts-toward-my-quota-an-overview).
+
+Los filtros de entrada incluyen:
+
+* Errores frecuentes de extensiones del navegador
+* Transacciones provenientes de health checks y solicitudes de ping
+* Eventos provenientes de navegadores antiguos
+* Eventos provenientes de localhost
+* Errores de rastreadores web conocidos
+* Errores de hidratación de React
+* ChunkLoadErrors
+* Eventos de ciertas direcciones IP
+* Eventos con ciertos mensajes de error
+* Eventos de versiones específicas de tu código
+
+<div id="legacy-browser-filters">
+  ### Filtros de navegadores heredados
+</div>
+
+Los filtros de navegadores heredados te permiten excluir ciertas versiones anteriores de navegadores que se sabe que causan problemas.
+
+Los filtros de navegadores heredados se actualizaron en feb de 2024 y se evaluarán periódicamente para incluir versiones heredadas adicionales.
+
+Si tenías un filtro de navegador heredado activado antes de la actualización, el filtro antiguo aparecerá en tu configuración como “Obsoleto”. Los filtros de navegadores heredados marcados como obsoletos siguen funcionando. Sin embargo, si los desactivas, no podrás volver a activarlos y tendrás que usar los nuevos filtros en su lugar.
+
+<div id="browser-extension-errors">
+  ### Errores de extensiones del navegador
+</div>
+
+Se sabe que algunas extensiones del navegador pueden causar errores. Puedes filtrarlos con el filtro de extensiones del navegador, que comprueba el mensaje de error y el origen del evento para determinar si es un error conocido que proviene de una extensión. Para ver la lista completa de errores filtrados por el filtro de extensiones del navegador, consulta el [código fuente en Relay](https://github.com/getsentry/relay/blob/master/relay-filter/src/browser_extensions.rs#L9-L76).
+
+<div id="web-crawler-errors">
+  ### Errores de rastreadores web
+</div>
+
+Por su naturaleza, los rastreadores web suelen toparse con errores que los usuarios comunes no verán. Puedes usar el filtro de rastreadores web para excluir errores de rastreadores, determinados por el user-agent del evento, de los siguientes sitios: Baidu, Yahoo, Sogou, Facebook, Alexa, Slack, Google Indexing, Pingdom, Lytics, AWS Security Scanner, HubSpot, ByteDance y otros bots y arañas genéricos. Los errores del rastreador web Slackbot de Slack no se filtrarán.
+
+<div id="ip-addresses">
+  ### Direcciones IP
+</div>
+
+Filtra eventos según la **dirección IP de origen del cliente que realiza la solicitud**, no la IP del usuario contenida en los datos del usuario dentro de la solicitud. Esto garantiza que las decisiones de filtrado se basen en la fuente real de la solicitud, determinada por información a nivel de red, en lugar de los datos proporcionados en la carga útil del evento.
+
+Sentry intenta identificar el origen de la solicitud usando la **dirección IP reenviada**. Si no hay una IP reenviada disponible, recurre a la **IP directa** del cliente que se conecta a los servidores de Sentry.
+
+Los formatos de direcciones IP admitidos son:
+
+* **Direcciones IPv4**: notación estándar decimal con puntos (por ejemplo, 1.2.3.4, 122.33.230.14, 127.0.0.1).
+* **Direcciones IPv6**: notación estándar hexadecimal separada por dos puntos (por ejemplo, aaaa:bbbb::cccc, a:b:c::1).
+* **Rangos de red IPv4 (notación CIDR)**: dirección IPv4 con máscara de subred (por ejemplo, 122.33.230.0/30, 127.0.0.0/8).
+* **Rangos de red IPv6 (notación CIDR)**: dirección IPv6 con máscara de subred (por ejemplo, a:b:c::0/126).
+
+<div id="transactions-coming-from-health-check">
+  ### Transacciones procedentes de Health Check
+</div>
+
+En esencia, el filtro de health check tiene como objetivo excluir las transacciones que se generan como parte de los procedimientos de health check.
+
+Al aplicar este filtro, omites de forma efectiva transacciones que, aunque son cruciales para evaluar la estabilidad de la app, tienen un valor limitado para ti más allá de su función específica.
+
+Consideramos que una transacción es un health check si su nombre coincide con uno de los siguientes patrones glob:
+
+* `*healthcheck*`
+* `*heartbeat*`
+* `*/health`
+* `*/healthy`
+* `*/healthz`
+* `*/_health`
+* `*/[_health]`
+* `*/live`
+* `*/livez`
+* `*/ready`
+* `*/readyz`
+* `*/ping`
+* `*/up`
+
+<div id="session-replay-filtering">
+  ## Filtrado de Session Replay
+</div>
+
+Los filtros de datos entrantes tienen compatibilidad parcial con [Session Replay](/es/product/explore/session-replay/). Solo un subconjunto de los filtros entrantes disponibles se aplica a Session Replay.
+
+Los siguientes filtros entrantes **sí** se aplican a Session Replay:
+
+* **Direcciones IP** - Filtra reproducciones según la dirección IP de origen
+* **Releases** - Filtra reproducciones de versiones de lanzamiento específicas
+* **URL de solicitud** - Filtra reproducciones según la URL donde se capturó la reproducción
+* **User-Agent** - Filtra reproducciones según la cadena user-agent del navegador
+
+Los siguientes filtros entrantes **no** se aplican a Session Replay:
+
+* Mensajes de error
+* Errores de extensiones del navegador
+* Errores de rastreadores web
+* Filtros de navegadores antiguos
+* Errores de hidratación de React
+* ChunkLoadErrors
+* Transacciones de comprobación de estado
+
+**Nota**: Dado que los resultados filtrados se emiten por **segmento**, mientras que los resultados correctos se emiten por **reproducción** (una reproducción es una colección de segmentos), es posible que veas un aumento notable en los resultados filtrados en tu página de [Stats](https://sentry.io/orgredirect/organizations/:orgslug/stats) cuando el filtrado de Session Replay esté activo. Esto es el comportamiento esperado y no un error.
+
+<hr />
+
+<Alert title="Note" level="warning">
+  Los filtros no se aplican a las [sesiones](/es/product/releases/health/#session). Los mensajes de error de minidumps aún no se aplican.
+</Alert>
+
+Una vez aplicados, puedes hacer un seguimiento de los eventos filtrados (cantidad y causa) mediante el gráfico en la parte superior de la vista Inbound Data Filters.
+
+![](./img/builtin-inbound-filters.png)
+
+<div id="logs-filtering">
+  ## Filtrado de Logs
+</div>
+
+Los filtros de datos entrantes tienen soporte parcial para [Logs](/es/product/explore/logs/). Solo un subconjunto de los filtros entrantes disponibles se aplica a Logs.
+
+Los siguientes filtros entrantes sí se aplican a Logs:
+
+* **Log Message** - Filtra logs según la coincidencia del mensaje de log
+* **Releases** - Filtra reproducciones de versiones específicas de release
+
+Los siguientes filtros entrantes no se aplican a Logs:
+
+* Mensajes de error
+* Errores de extensiones del navegador
+* Errores de rastreadores web
+* Filtros de navegadores obsoletos
+* Errores de hidratación de React
+* ChunkLoadErrors
+* Transacciones de comprobación de estado
+* Dirección IP
+* URLs de solicitud
+* User-Agents
+
+<div id="how-custom-filtering-works">
+  ## Cómo funciona el filtrado personalizado
+</div>
+
+<Include name="feature-available-for-plan-trial-business.mdx" />
+
+Los filtros de datos entrantes no distinguen entre mayúsculas y minúsculas.
+
+<div id="error-message">
+  ### Mensaje de error
+</div>
+
+Para usar filtros de datos entrantes para mensajes de error, ten en cuenta lo siguiente:
+
+* Puedes proporcionar varios patrones, uno por línea. El filtro se aplica si alguno de los patrones coincide.
+* En eventos de error, el filtro compara contra la descripción completa del error con el formato `{exception.type}: {exception.value}`. No recomendamos hacer coincidir la descripción completa (incluidos los dos puntos); en su lugar, usa comodines. Por ejemplo, para hacer coincidir cualquier &quot;ConnectionError&quot;, usa el filtro `*ConnectionError*`. El comodín puede usarse al principio o al final de la cadena.
+* En eventos de mensaje, el filtro compara contra el mensaje completamente formateado.
+* Las transacciones nunca se corresponden con este filtro.
+
+Para asegurarte de que agregas el mensaje correcto en la configuración del filtro de entrada, revisa el JSON de un evento en el issue. La opción de filtrar por mensaje de error coincide con los datos que se encuentran en el campo &quot;title&quot; cerca del final del archivo.
+
+<div id="releases">
+  ### Lanzamientos
+</div>
+
+Para filtrar lanzamientos, ten en cuenta lo siguiente:
+
+* El filtro coincide con el nombre completo del lanzamiento proporcionado durante la inicialización del SDK. Si proporcionas el prefijo de paquete recomendado, el lanzamiento tendrá el formato `package@version`, por ejemplo: `my-example@1.4.0-beta.1`.
+* Se aplican reglas de globbing y no hay un tratamiento especial para SemVer. Esto permite hacer coincidir prefijos, como `my-example@1.*`.
+* El filtro nunca se aplica a eventos que no tengan un lanzamiento.
+
+<div id="log-message">
+  ### Mensaje de registro
+</div>
+
+Para usar filtros de datos entrantes para mensajes de registro, ten en cuenta lo siguiente:
+
+* Puedes proporcionar varios patrones, uno por línea. El filtro se aplica si cualquiera de los patrones coincide.
+* En los registros, el filtro busca coincidencias en el mensaje de registro según el formato. No recomendamos hacer coincidir el mensaje completo; sugerimos usar comodines. Por ejemplo, para coincidir con cualquier &quot;Connection timeout asbq33q&quot;, usa el filtro `*Connection timeout*`. El comodín puede usarse al principio o al final de la cadena.
+
+<div id="glob-matching">
+  ### Coincidencias con glob
+</div>
+
+Los mensajes de error, los mensajes de registro y los filtros de versiones usan patrones glob. Los globs no distinguen entre mayúsculas y minúsculas y permiten especificar comodines para coincidir con entradas variables. Por ejemplo, `*panic*` coincide con cualquier error que contenga las palabras &quot;panic&quot;, &quot;PANIC&quot; o &quot;PaNiC&quot;.
+
+Algunos símbolos, como el carácter `*`, adquieren un significado especial como metacaracteres. Para hacer coincidir un asterisco literal, escápalo con una barra invertida: `\*`. Los filtros de datos entrantes usan los siguientes metacaracteres:
+
+* `?` coincide con cualquier carácter individual.
+* `*` coincide con cero o más caracteres.
+* `\` escapa el siguiente carácter, volviéndolo literal. Si precede a un carácter que no es metacarácter, la barra invertida se ignora.
+* `[`, `]`, `{` y `}` son metacaracteres reservados.
+* `!` sirve para negación, pero solo dentro de corchetes, como en `[!1-4]` para hacer coincidir cualquier carácter que no sea `[1-4]`.
+
+En general, el comportamiento predeterminado de bash para el globbing se parece mucho a lo que admite Sentry:
+
+```bash
+touch 1.2.3
+touch 1.2.4
+echo 1.2.*
+echo 1.2.[!3]
+```

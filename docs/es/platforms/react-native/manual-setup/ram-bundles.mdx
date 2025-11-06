@@ -1,0 +1,59 @@
+---
+title: RAM Bundle
+description: "Descubre cómo empaquetar nuestro SDK de React Native con RAM Bundle."
+sidebar_order: 40
+---
+
+El formato [RAM bundle](https://reactnative.dev/docs/ram-bundles-inline-requires) es un nuevo enfoque para empaquetar apps de React Native que optimiza el tiempo de arranque de tu app. Con los RAM bundles, es posible cargar en memoria solo los módulos necesarios para funcionalidades específicas, y solo cuando se necesiten.
+
+Todos los formatos existentes de RAM bundle se explican en detalle en la [documentación de Metro Bundler](https://facebook.github.io/metro/docs/bundling).
+
+<div id="enabling-ram-bundles">
+  ## Habilitar RAM Bundles
+</div>
+
+<Alert>
+  Si usas [Hermes](/es/platforms/react-native/manual-setup/hermes/), no deberías tener habilitada la función de RAM bundles. En Hermes, al cargar el bytecode, `mmap` garantiza que no se cargue el archivo completo. Usar Hermes con RAM bundles puede causar problemas, porque esos mecanismos no son compatibles entre sí.
+</Alert>
+
+Para habilitar RAM bundles en tu app, consulta la [documentación oficial de React Native](https://reactnative.dev/docs/ram-bundles-inline-requires#enable-the-ram-format).
+
+Si usas la integración oficial `react-native-sentry` a partir de la versión `0.43.1`, no se requiere ninguna acción adicional. `sentry-cli`, que la integración usa internamente, detectará automáticamente el tipo de bundle y luego subirá los módulos extraídos a Sentry.
+
+<div id="uploading-bundles-manually">
+  ## Carga manual de bundles
+</div>
+
+A partir de la versión `1.43.0`, `sentry-cli` incorpora dos parámetros adicionales al comando `sourcemaps upload` para simplificar la carga de bundles: `--bundle` y `--bundle-sourcemap`. Con estos parámetros, puedes indicar la ruta al bundle de la aplicación, junto con su sourcemap, y el bundle se extraerá automáticamente antes de la carga, si es necesario:
+
+```bash {tabTitle:Android}
+node_modules/@sentry/cli/bin/sentry-cli sourcemaps upload \
+    --release <release> \
+    --dist <dist> \
+    --strip-prefix $projectRoot/fullFolder \
+    --bundle index.android.bundle \
+    --bundle-sourcemap index.android.bundle.map
+```
+
+```bash {tabTitle:iOS}
+node_modules/@sentry/cli/bin/sentry-cli sourcemaps upload \
+    --release <release> \
+    --dist <dist> \
+    --strip-prefix $projectRoot/fullFolder \
+    --bundle main.jsbundle \
+    --bundle-sourcemap main.jsbundle.map
+```
+
+Se admiten todos los tipos de bundle (simple, RAM bundle indexado y RAM bundle de archivos).
+
+<div id="ram-bundles-and-performance">
+  ## RAM bundles y rendimiento
+</div>
+
+La compatibilidad inicial de Sentry con los RAM bundles, incorporada en `sentry-cli 1.43.0` y `react-native-sentry 0.43.1`, presenta un problema de rendimiento al subirlos cuando contienen un gran número de módulos. Esto se corregirá en futuras versiones del cliente.
+
+De forma predeterminada, cuando se ejecuta como parte del paso de compilación de Xcode (habitualmente llamado &quot;Bundle React Native Code And Images&quot;), `sentry-cli` sube los source maps a Sentry en segundo plano. Para ejecutarlo en primer plano y poder seguir su progreso, puedes añadir el parámetro `--force-foreground` al comando de `sentry-cli` en el archivo de configuración de tu proyecto de Xcode, `project.pbxproj`, de modo que el comando quede similar a:
+
+```shell
+./node_modules/@sentry/cli/bin/sentry-cli react-native xcode --force-foreground ../node_modules/react-native/scripts/react-native-xcode.sh
+```

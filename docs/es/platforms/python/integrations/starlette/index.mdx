@@ -1,0 +1,143 @@
+---
+title: Starlette
+description: "Aprende a usar Sentry con Starlette."
+---
+
+La integración de Starlette añade compatibilidad con el [framework Starlette](https://www.starlette.io/).
+
+<div id="install">
+  ## Instalar
+</div>
+
+Instala `sentry-sdk` desde PyPI con el extra `starlette`:
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk[starlette]"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk[starlette]"
+```
+
+<div id="configure">
+  ## Configurar
+</div>
+
+Si tienes el paquete `starlette` en tus dependencias, la integración con Starlette se habilitará automáticamente al inicializar el SDK de Sentry.
+
+<PlatformContent includePath="getting-started-config" />
+
+<div id="verify">
+  ## Verifica
+</div>
+
+```python
+from starlette.applications import Starlette
+from starlette.routing import Route
+
+sentry_sdk.init(...)  # mismo que arriba
+
+async def trigger_error(request):
+    division_por_cero = 1 / 0
+
+app = Starlette(routes=[
+    Route("/sentry-debug", trigger_error),
+])
+```
+
+Cuando abras en tu navegador [http://localhost:8000/sentry-debug](http://localhost:8000/sentry-debug), se creará una transacción en la sección Performance de [sentry.io](https://sentry.io). Además, se enviará un evento de error a [sentry.io](https://sentry.io) y se asociará a la transacción.
+
+Los datos pueden tardar unos instantes en aparecer en [sentry.io](https://sentry.io).
+
+<div id="behavior">
+  ## Comportamiento
+</div>
+
+* De forma predeterminada, se notifican todas las excepciones que provocan un error interno del servidor. Los códigos de estado HTTP que se deben notificar son configurables mediante la opción `failed_request_status_codes` [option](#options).
+
+* Los datos de la solicitud se adjuntan a todos los eventos: **método HTTP, URL, encabezados, datos de formulario, cargas útiles JSON**. Sentry excluye los cuerpos sin procesar y las cargas de archivos multiparte. Sentry también excluye la información de identificación personal (como IDs de usuario, nombres de usuario, cookies, encabezados de autorización, direcciones IP), a menos que configures `send_default_pii` en `True`.
+
+* Si se establece [traces&#95;sample&#95;rate](/es/platforms/python/configuration/options/#traces-sample-rate), también se informan los datos de rendimiento, que puedes ver en la página de **Performance** de [sentry.io](https://sentry.io).
+
+<div id="options">
+  ## Opciones
+</div>
+
+Al agregar `StarletteIntegration` explícitamente a tu llamada a `sentry_sdk.init()`, puedes establecer opciones para `StarletteIntegration` y ajustar su comportamiento:
+
+```python
+from sentry_sdk.integrations.starlette import StarletteIntegration
+
+sentry_sdk.init(
+    # ...
+    integrations=[
+        StarletteIntegration(
+            transaction_style="endpoint",
+            failed_request_status_codes={403, *range(500, 599)},
+            middleware_spans=False,
+            http_methods_to_capture=("GET",),
+        )
+    ],
+)
+```
+
+Puedes pasar los siguientes argumentos con nombre a `StarletteIntegration()`:
+
+* `transaction_style`:
+
+  ```python
+  async def product_detail(request):
+      return JSONResponse({...})
+
+  app = Starlette(routes=[
+      Route('/catalog/product/{product_id}', product_detail),
+  ])
+  ```
+
+  En el código anterior, el nombre de la transacción será:
+
+  * `"/catalog/product/{product_id}"` si configuras `transaction_style="url"`.
+  * `"product_detail"` si configuras `transaction_style="endpoint"`.
+
+  El valor predeterminado es `"url"`.
+
+* `failed_request_status_codes`:
+
+  Un `set` de enteros que determina qué códigos de estado deben reportarse a Sentry.
+
+  La opción `failed_request_status_codes` determina si las excepciones [`HTTPException`](https://www.starlette.io/exceptions/#httpexception) deben
+  reportarse a Sentry. Las excepciones no controladas que no tienen un atributo `status_code` siempre se reportarán a Sentry.
+
+  Ejemplos de `failed_request_status_codes` válidos:
+
+  * `{500}` solo enviará eventos en HTTP 500.
+  * `{400, *range(500, 600)}` enviará eventos en HTTP 400, así como en el rango 5xx.
+  * `{500, 503}` enviará eventos en HTTP 500 y 503.
+  * `set()` (el conjunto vacío) no enviará eventos para ningún código de estado HTTP.
+
+  El valor predeterminado es `{*range(500, 600)}`, lo que significa que todos los códigos de estado 5xx se reportan a Sentry.
+
+* `middleware_spans`:
+
+  Crea spans y realiza seguimiento del rendimiento de todo el middleware en tu proyecto Starlette. Establécelo en `False` para deshabilitarlo.
+
+  El valor predeterminado es `True`.
+
+* `http_methods_to_capture`:
+
+  Una tupla que contiene todos los métodos HTTP que deben crear una transacción en Sentry.
+
+  El valor predeterminado es `("CONNECT", "DELETE", "GET", "PATCH", "POST", "PUT", "TRACE",)`.
+
+  (Ten en cuenta que, de forma predeterminada, `OPTIONS` y `HEAD` no se incluyen).
+
+  <Alert title="Añadido en la 2.15.0">
+    La opción `http_methods_to_capture`.
+  </Alert>
+
+<div id="supported-versions">
+  ## Versiones compatibles
+</div>
+
+* Starlette: 0.19.1+
+* Python: 3.7+

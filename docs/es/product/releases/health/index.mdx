@@ -1,0 +1,198 @@
+---
+title: Salud de las versiones
+sidebar_order: 50
+description: >-
+  Supervisa la salud de las versiones observando la adopción de usuarios, el uso de la
+  aplicación, el porcentaje de fallos y los datos de sesiones.
+og_image: /og-images/product-releases-health.png
+---
+
+<Alert>
+  Ten en cuenta que las sesiones (como se describe a continuación) no son lo mismo que una [Session Replay](/es/product/explore/session-replay/) (una reproducción tipo video de la sesión del usuario). No cobramos por las sesiones de salud de versiones.
+</Alert>
+
+Puedes supervisar la salud de las versiones observando la adopción de usuarios, el uso de tu aplicación, el porcentaje de [fallos](#crashes) y los [datos de sesiones](#sessions). Los datos de salud de versiones ofrecen información sobre el impacto de fallos y errores en la experiencia del usuario y revelan tendencias con cada nuevo issue mediante los detalles de la versión, gráficos y filtros. Estos datos se muestran principalmente en las páginas de [Releases](/es/product/releases/) y [Release Details](/es/product/releases/release-details), pero también se reflejan en otras partes de [sentry.io](https://sentry.io).
+
+> Muchos SDK gestionan automáticamente el inicio y el fin de las [sesiones](#sessions) cuando se inicializa el SDK, pero la configuración de la salud de versiones es clave para asegurarte de recibir datos útiles, así que consulta nuestra información sobre [qué SDK admiten la salud de versiones](/es/product/releases/setup/#release-health) para obtener enlaces a la configuración del SDK, según sea necesario.
+
+Una vez que configures tu SDK, Sentry conecta los datos con la versión específica de tu aplicación y el código asociado. Esta página describe algunos conceptos clave de la salud de versiones y lo que puedes aprender de cada tipo de dato relacionado.
+
+<div id="sessions">
+  ## Sesiones
+</div>
+
+El componente principal que Sentry utiliza para supervisar el estado es una *sesión*, que representa la interacción entre el usuario y la aplicación.
+
+Sentry distingue entre dos tipos de sesiones:
+
+* Sesiones en modo usuario/modo aplicación
+* Sesiones en modo servidor/modo solicitud
+
+<div id="user-modeapplication-mode-sessions">
+  ### Sesiones en modo usuario/modo aplicación
+</div>
+
+<ul>
+  <li style={{listStyleType:'none'}}>
+    Una sesión en modo usuario o modo aplicación comienza cuando se inicia la aplicación,
+    o cuando se trae al primer plano una aplicación que ya estaba en segundo plano.
+    En este contexto, un usuario se define por uno o más de los siguientes: un ID único o UUID,
+    un nombre de usuario o un correo electrónico.
+  </li>
+
+  <br />
+
+  <li style={{listStyleType:'none'}}>
+    Este tipo de sesión termina al cerrar la aplicación o al enviarla a segundo plano.
+    Si la aplicación permanece en segundo plano por menos de 30 segundos, no iniciamos la sesión nuevamente.
+    Las aplicaciones que permanecen activas incluso en segundo plano (por ejemplo, un reproductor de música)
+    deben registrar las sesiones manualmente para el proceso en segundo plano.
+  </li>
+</ul>
+
+<div id="server-moderequest-mode-sessions">
+  ### Sesiones en modo servidor/modo solicitud
+</div>
+
+<ul>
+  <li style={{listStyleType:'none'}}>
+    Las sesiones en modo servidor o modo solicitud se corresponden, de forma aproximada, con solicitudes HTTP o llamadas RPC en un entorno de servidor. Una sesión comienza cuando el servidor recibe una solicitud y termina cuando el servidor envía una respuesta.
+  </li>
+
+  <br />
+
+  <li style={{listStyleType:'none'}}>
+    Suele haber muchas, ya que cada sesión corresponde a una única solicitud.
+  </li>
+</ul>
+
+Las sesiones, ya sean en modo aplicación o en modo solicitud, se envían a Sentry para que puedas hacer un seguimiento del uso y la adopción de tu aplicación. Cuando un usuario de tu aplicación sufre un bloqueo, un error o una salida anómala, la sesión se marca en consecuencia y Sentry calcula métricas derivadas. Estas métricas incluyen datos como la cantidad de usuarios que no tuvieron un bloqueo en el intervalo de tiempo especificado.
+
+En cuanto al modo en que se ejecuta un proyecto, Sentry puede detectar automáticamente si está en un entorno de servidor y, por lo tanto, debe ejecutarse en modo servidor/modo solicitud, o si está en un entorno de aplicación y, por lo tanto, debe ejecutarse en modo usuario/modo aplicación.
+
+Aunque las descripciones de sesión anteriores cubren muchos casos, la definición de una sesión puede variar según la plataforma. Por ejemplo, en aplicaciones JavaScript, creamos una sesión por cada carga de página y en cada cambio de navegación en aplicaciones de una sola página. En cambio, las aplicaciones de backend no tienen una entidad de usuario bien definida como las aplicaciones web y móviles, por lo que, para ellas, cada nueva solicitud de API representa una nueva sesión. Consulta la documentación de tu [plataforma específica](/es/platform-redirect/?next=/configuration/releases/%23sessions) para obtener más información.
+
+<div id="active-sessionsusers">
+  ### Sesiones/usuarios activos
+</div>
+
+*Las sesiones activas* son las que se iniciaron en la aplicación en las últimas 24 horas.
+
+*Los usuarios activos* son quienes abrieron la aplicación al menos una vez en las últimas 24 horas.
+
+Según tu selección en &quot;Display&quot;, cambian las opciones de orden de la página **Releases**. Para ordenar las versiones por sesiones activas, elige &quot;Sessions&quot; en el menú desplegable &quot;Display&quot;; para ordenar por usuarios activos, elige &quot;Users&quot;.
+
+![Sort By: Active Sessions dropdown](./img/release_active_sessions.png)
+
+![Sort By: Active Users dropdown](./img/release_active_users.png)
+
+<div id="crashes">
+  ## Fallos
+</div>
+
+Un *fallo* ocurre cuando la aplicación presenta un error no gestionado explícito o un bloqueo. Normalmente podrás ver la incidencia correspondiente que registra este evento en [sentry.io](https://sentry.io), y no deben incluirse los errores que no provocaron la finalización de la aplicación. Para buscar eventos de fallos en **Discover** o en la página **Issues**, filtra por `error.unhandled:true`.
+
+<div id="crash-free-sessionsusers">
+  ### Sesiones/usuarios sin bloqueos
+</div>
+
+El número de *sesiones sin bloqueos* es el porcentaje de sesiones, en el período de tiempo especificado, que no terminaron por un bloqueo de la aplicación.
+
+El número de *usuarios sin bloqueos* es el porcentaje de usuarios únicos que no experimentaron un bloqueo durante el período de tiempo especificado. Por ejemplo, si un usuario intenta completar el proceso de pago en tu aplicación y ocurre un bloqueo, eso representa un [usuario con bloqueo](#crashed-users). En cambio, si el usuario logra completar el pago con éxito, se cuenta como usuario sin bloqueos.
+
+Puedes configurar [alertas de tasa de bloqueos](/es/product/alerts/alert-types/#sessions-crash-rate-alerts) para que te avisen cuando tu porcentaje sin bloqueos, ya sea de sesiones o de usuarios, caiga por debajo de un umbral específico.
+
+Según tu selección en “Display”, cambian las opciones de ordenación de la página **Releases**. Para ordenar las versiones por sesiones sin bloqueos, selecciona “Sessions” en el desplegable “Display”; y para ordenar por usuarios sin bloqueos, selecciona “Users”.
+
+![Ordenar por: sesiones sin bloqueos (desplegable)](./img/release_crash_free_sessions.png)
+
+![Ordenar por: usuarios sin bloqueos (desplegable)](./img/release_crash_free_users.png)
+
+<Alert>
+  Ten en cuenta que no se espera que el número de bloqueos coincida con el número de sesiones con bloqueo, porque las sesiones no están sujetas a [filtros de entrada](/es/concepts/data-management/filtering/) ni a [muestreo](/es/platform-redirect/?next=/configuration/sampling/).
+</Alert>
+
+<div id="crashed-users">
+  ### Usuarios con fallo
+</div>
+
+La cantidad de usuarios que experimentaron un fallo en el intervalo de tiempo especificado.
+
+<div id="release-adoption">
+  ## Adopción de la versión
+</div>
+
+Según la opción de visualización seleccionada, mostramos:
+
+* Adopción por sesiones: El número de sesiones de una versión específica en las últimas 24 horas.
+* Adopción basada en usuarios: El número de usuarios que iniciaron la aplicación al menos una vez durante las últimas 24 horas para una versión específica.
+
+La barra de progreso de adopción se calcula como el porcentaje de sesiones/usuarios de esta versión en comparación con todas las versiones del proyecto durante las últimas 24 horas:
+
+![La barra de adopción en la página Releases](./img/adoption_bar.png)
+
+<div id="adoption-chart">
+  ### Gráfico de adopción
+</div>
+
+<Alert>
+  Esta función solo aplica si el proyecto seleccionado está disponible para dispositivos móviles o de escritorio.
+</Alert>
+
+Si seleccionas un proyecto con la salud de las versiones configurada y hay versiones y datos de usuarios/sesiones en el periodo seleccionado, se mostrará un gráfico de adopción. Este gráfico te ofrece los porcentajes de adopción de cada versión del proyecto a lo largo del tiempo.
+
+Cada versión aparece como una línea en el gráfico, y puedes ir a los [Detalles de la versión](/es/product/releases/health/release-details/) haciendo clic en ella.
+
+![Gráfico de adopción de versiones](./img/release_adoption_chart.png)
+
+El gráfico no se muestra si no seleccionas un proyecto o si seleccionas varios.
+
+<div id="adoption-stages">
+  ### Etapas de adopción
+</div>
+
+*La etapa de adopción* es una vista general de alto nivel del uso que está teniendo tu versión en comparación con otras. Se calcula cada hora procesando tus sesiones de las últimas seis horas:
+
+![Etiqueta de etapa de adopción en la página Releases.](./img/adoption-stage-label.png)
+
+<Alert>
+  Las etiquetas de etapa de adopción solo se muestran para proyectos móviles y únicamente cuando filtras por un solo entorno.
+</Alert>
+
+Para cada versión, el porcentaje de sesiones de esa versión se calcula con respecto a todas las sesiones en el mismo entorno y proyecto. Luego se clasifica en una de tres etapas, basadas en un umbral del 10%. Estas etapas son:
+
+* Adopted (Adoptada) - El porcentaje de sesiones de la versión frente al total de sesiones está por encima del umbral. Es decir, la versión apareció en el 10% o más de las sesiones entre todas las versiones en las últimas seis horas.
+* Low Adoption (Baja adopción) - El porcentaje de sesiones de la versión frente al total de sesiones está por debajo del umbral. Es decir, la versión apareció en menos del 10% de las sesiones entre todas las versiones en las últimas seis horas.
+* Replaced (Reemplazada) - La versión se etiquetó previamente como &quot;Adopted&quot;, pero ya no cumple el umbral mínimo. Las versiones &quot;Replaced&quot; que alcancen el umbral volverán a etiquetarse como &quot;Adopted&quot;.
+
+<div id="session-status">
+  ## Estado de la sesión
+</div>
+
+Una sesión puede tener uno de los siguientes estados:
+
+<div id="abnormal">
+  ### Anormal
+</div>
+
+La aplicación superó el tiempo de espera, se congeló o el sistema operativo la forzó a cerrarse. Por lo general, no hay un problema correspondiente en Sentry, ya que es una acción pasiva.
+
+<div id="crashed">
+  ### Falló
+</div>
+
+La aplicación tuvo un error no controlado explícito o un [fallo](#crashes) grave.
+
+<div id="errored">
+  ### Con errores
+</div>
+
+La aplicación se cerró correctamente, pero la sesión tuvo errores gestionados. Por lo general, podrás ver cualquier problema o error en sentry.io.
+
+<div id="healthy">
+  ### Correcta
+</div>
+
+La sesión finaliza con normalidad y no se produce ningún error durante su duración.
+
+El estado de la sesión puede definirse de forma ligeramente diferente según la plataforma, y no todas las plataformas utilizan todos los estados anteriores. Consulta la documentación de tu [plataforma específica](/es/platform-redirect/?next=/configuration/releases/%23sessions) para más información.

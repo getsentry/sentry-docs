@@ -1,0 +1,174 @@
+---
+title: Hermes
+description: "Sube mapas de origen para aplicaciones de React Native con Hermes."
+---
+
+El SDK de React Native de Sentry funciona de manera predeterminada con aplicaciones que usan el motor Hermes. Para ver rastreos de pila legibles en el producto, es necesario subir los mapas de origen a Sentry. Esta guía explica cómo subir manualmente mapas de origen desde el motor Hermes.
+
+<div id="set-up-automatic-upload">
+  ## Configurar la subida automática
+</div>
+
+<Include name="react-native-sourcemaps-wizard-instructions.mdx" />
+
+<div id="manual-upload">
+  ## Carga manual
+</div>
+
+Para subir manualmente los source maps, primero debes generar los source maps y el bundle. Luego compila el bundle de bytecode de Hermes y, por último, sube el source map a Sentry.
+
+Empieza añadiendo Sentry React Native Metro Plugin a tu `metro.config.js`:
+
+```javascript {filename="metro.config.js"}
+const { getDefaultConfig } = require("@react-native/metro-config");
+const { withSentryConfig } = require('@sentry/react-native/metro');
+
+const config = getDefaultConfig(__dirname);
+module.exports = withSentryConfig(config);
+```
+
+Genera el paquete de React Native Packager (Metro) y los mapas de origen:
+
+```bash {tabTitle:Android}
+npx react-native bundle \
+  --dev false \
+  --minify false \
+  --platform android \
+  --entry-file index.js \
+  --reset-cache \
+  --bundle-output index.android.bundle \
+  --sourcemap-output index.android.bundle.map
+```
+
+```bash {tabTitle:iOS}
+npx react-native bundle \
+  --dev false \
+  --minify false \
+  --platform ios \
+  --entry-file index.js \
+  --reset-cache \
+  --bundle-output main.jsbundle \
+  --sourcemap-output main.jsbundle.map
+```
+
+Compila el paquete de bytecode de Hermes y el mapa de origen:
+
+```bash {tabTitle:Android}
+node_modules/react-native/sdks/hermesc/osx-bin/hermesc \
+  -O -emit-binary \
+  -output-source-map \
+  -out=index.android.bundle.hbc \
+  index.android.bundle
+rm -f index.android.bundle
+mv index.android.bundle.hbc index.android.bundle
+```
+
+```bash {tabTitle:iOS}
+ios/Pods/hermes-engine/destroot/bin/hermesc \
+  -O -emit-binary \
+  -output-source-map \
+  -out=main.jsbundle.hbc \
+  main.jsbundle
+rm -f main.jsbundle
+mv main.jsbundle.hbc main.jsbundle
+```
+
+```bash {tabTitle:Android on Linux}
+node_modules/react-native/sdks/hermesc/linux64-bin/hermesc \
+  -O -emit-binary \
+  -output-source-map \
+  -out=index.android.bundle.hbc \
+  index.android.bundle
+rm -f index.android.bundle
+mv index.android.bundle.hbc index.android.bundle
+```
+
+```bash {tabTitle:Android on Windows}
+node_modules/react-native/sdks/hermesc/win64-bin/hermesc \
+  -O -emit-binary \
+  -output-source-map \
+  -out=index.android.bundle.hbc \
+  index.android.bundle
+rm -f index.android.bundle
+mv index.android.bundle.hbc index.android.bundle
+```
+
+```bash {tabTitle:RN 0.68 and older}
+# node_modules/hermes-engine/win64-bin/hermesc \
+# node_modules/hermes-engine/linux64-bin/hermesc \
+node_modules/hermes-engine/osx-bin/hermesc \
+  -O -emit-binary \
+  -output-source-map \
+  -out=index.android.bundle.hbc \
+  index.android.bundle
+rm -f index.android.bundle
+mv index.android.bundle.hbc index.android.bundle
+```
+
+Genera mapas de código fuente para el bytecode de Hermes y para Metro (React Native Packager):
+
+```bash {tabTitle:Android}
+mv index.android.bundle.map index.android.bundle.packager.map
+node \
+  node_modules/react-native/scripts/compose-source-maps.js \
+  index.android.bundle.packager.map \
+  index.android.bundle.hbc.map \
+  -o index.android.bundle.map
+node \
+  node_modules/@sentry/react-native/scripts/copy-debugid.js \
+  index.android.bundle.packager.map index.android.bundle.map
+rm -f index.android.bundle.packager.map
+```
+
+```bash {tabTitle:iOS}
+mv main.jsbundle.map main.jsbundle.packager.map
+node \
+  node_modules/react-native/scripts/compose-source-maps.js \
+  main.jsbundle.packager.map \
+  main.jsbundle.hbc.map \
+  -o main.jsbundle.map
+node \
+  node_modules/@sentry/react-native/scripts/copy-debugid.js \
+  main.jsbundle.packager.map main.jsbundle.map
+rm -f main.jsbundle.packager.map
+```
+
+Asegúrate de que `sentry-cli` esté configurado para tu proyecto y de configurar tus variables de entorno:
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env}
+SENTRY_ORG=___ORG_SLUG___
+SENTRY_PROJECT=___PROJECT_SLUG___
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+Sube el paquete y el mapa de código fuente a Sentry:
+
+```bash {tabTitle:Android}
+node_modules/@sentry/cli/bin/sentry-cli sourcemaps upload \
+  --debug-id-reference \
+  --strip-prefix /ruta/a/raíz/del/proyecto \
+  index.android.bundle index.android.bundle.map
+```
+
+```bash {tabTitle:iOS}
+node_modules/@sentry/cli/bin/sentry-cli sourcemaps upload \
+  --debug-id-reference \
+  --strip-prefix /ruta/a/raíz/del/proyecto \
+  main.jsbundle main.jsbundle.map
+```
+
+<Alert>
+  Al cargarlo, el archivo `bundle` tendrá un tamaño de 0 bytes. Esto es normal con el bytecode de Hermes y no afectará la resolución de los mapas de origen.
+</Alert>
+
+<div id="troubleshooting">
+  ## Solución de problemas
+</div>
+
+Si los mapas de origen generados con esta guía no parecen correctos, revisa la opción `Contexts` -&gt; `React Native` -&gt; `Hermes Debug Info` en los eventos. Si esa opción está en `true`, significa que el bundle incluido con el paquete de la aplicación nativa se generó sin mapas de origen de Hermes y, para la simbolización, se deben usar mapas de origen de Metro (JS Core) simples. Sigue la [guía de JavaScript Core](/es/platforms/react-native/sourcemaps/uploading/jsc/) para subir los mapas de origen correctos.
+
+Ten en cuenta que la información de depuración incluida en el bundle de Hermes aumenta el tamaño del bundle final, por lo que se recomienda habilitar los mapas de origen durante la compilación de la aplicación nativa (incluso si luego se suben manualmente, ya que generar los mapas de origen de Hermes tiene el efecto secundario de eliminar la información de depuración y guardarla en el mapa de origen). Para subir mapas de origen automáticamente, sigue la [guía de configuración manual](/es/platforms/react-native/manual-setup/manual-setup/). Los scripts de Sentry para Xcode y el plugin de Gradle habilitan automáticamente los mapas de origen. Si no puedes usar los scripts de carga automática, habilita los mapas de origen como se describe en la [guía de mapas de origen de React Native](https://reactnative.dev/docs/debugging-release-builds#enabling-source-maps).
+
+Para más guías de Hermes, consulta la sección de documentación [Hermes Troubleshooting](/es/platforms/react-native/manual-setup/hermes/#troubleshooting).

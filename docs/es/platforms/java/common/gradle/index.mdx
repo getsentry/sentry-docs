@@ -1,0 +1,133 @@
+---
+title: Gradle
+description: Aprende a usar el complemento de Gradle de Sentry.
+sidebar_order: 100
+og_image: /og-images/platforms-java-common-gradle.png
+---
+
+El [complemento de Gradle de Sentry](https://github.com/getsentry/sentry-android-gradle-plugin) es una ampliación del SDK principal de Java y ofrece
+una integración fluida con el sistema de compilación Gradle. Admite las siguientes funciones:
+
+- Instalación automática del SDK de Java de Sentry y de las integraciones correspondientes
+- Informe de dependencias externas
+- Carga de Source Context
+
+<div id="setup">
+  ## Configuración
+</div>
+
+<div id="install">
+  ### Instalación
+</div>
+
+En el archivo `build.gradle` del módulo de tu aplicación, agrega lo siguiente usando Gradle:
+
+```groovy
+plugins {
+    id "io.sentry.jvm.gradle" version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.9.0') }}"
+}
+```
+
+```kotlin
+plugins {
+    id("io.sentry.jvm.gradle") version "{{@inject packages.version('sentry.java.android.gradle-plugin', '3.9.0') }}"
+}
+```
+
+<Alert>
+  En proyectos que no son de Android, el complemento solo recopila dependencias externas y sube <PlatformLink to="/source-context/">Source Context</PlatformLink>.
+</Alert>
+
+
+<div id="configure">
+  ### Configuración
+</div>
+
+Ponemos a disposición los siguientes valores de configuración directamente en `build.gradle`:
+
+```groovy
+sentry {
+    // Habilita una salida de registros más detallada, p. ej., para sentry-cli.
+    //
+    // El valor predeterminado es false.
+    debug = true
+
+    // Genera un paquete del código fuente y lo sube a Sentry.
+    // Esto habilita el contexto del código, lo que te permite ver tu código fuente
+    // como parte de tus trazas de pila en Sentry.
+    //
+    // De forma predeterminada está deshabilitado. Para activarlo, consulta la guía de contexto del código.
+    includeSourceContext = true
+
+    // Incluye directorios de código fuente adicionales en el paquete del código.
+    // Estos directorios se resuelven de forma relativa al directorio del proyecto.
+    additionalSourceDirsForSourceContext = ["mysrc/java", "other-source-dir/main/kotlin"]
+
+    // Deshabilita o habilita el reporte de metadatos de dependencias para Sentry.
+    // Si está habilitado, el plugin recopilará dependencias externas y
+    // las subirá a Sentry como parte de los eventos. Si está deshabilitado, toda la lógica
+    // relacionada con el reporte de metadatos de dependencias se excluirá.
+    //
+    // De forma predeterminada está habilitado.
+    includeDependenciesReport = true
+
+    // Agrega automáticamente las dependencias de Sentry a tu proyecto.
+    autoInstallation {
+        enabled = true
+    }
+}
+```
+
+```kotlin
+sentry {
+    // Activa una salida de logs más detallada, p. ej., para sentry-cli.
+    //
+    // De forma predeterminada es false.
+    debug.set(true)
+
+    // Genera un paquete de código fuente y lo sube a Sentry.
+    // Esto habilita el contexto de código fuente y te permite ver tu código
+    // como parte de las trazas de pila en Sentry.
+    //
+    // De forma predeterminada está desactivado. Para activarlo, consulta la guía de contexto de código fuente.
+    includeSourceContext.set(true)
+
+    // Incluye directorios de código fuente adicionales en el paquete.
+    // Estos directorios se resuelven en relación con el directorio del proyecto.
+    additionalSourceDirsForSourceContext.set(setOf("mysrc/java", "other-source-dir/main/kotlin"))
+
+    // Desactiva o activa el informe de metadatos de dependencias para Sentry.
+    // Si está activado, el complemento recopilará dependencias externas y
+    // las subirá a Sentry como parte de los eventos. Si está desactivado, toda la lógica
+    // relacionada con el informe de metadatos de dependencias se excluirá.
+    //
+    // De forma predeterminada está activado.
+    includeDependenciesReport.set(true)
+
+    // Agrega automáticamente las dependencias de Sentry a tu proyecto.
+    autoInstallation {
+        enabled.set(true)
+    }
+}
+```
+
+
+<div id="auto-installation">
+  ## Instalación automática
+</div>
+
+El plugin agrega automáticamente el SDK Java de Sentry y las integraciones de Sentry disponibles como dependencias si detecta una biblioteca que admitimos. Por ejemplo, si tu proyecto depende de `graphql-java`, el plugin añadirá automáticamente `sentry-graphql` como dependencia adicional.
+
+<div id="source-context">
+  ## Contexto de origen
+</div>
+
+Consulta nuestra documentación sobre <PlatformLink to="/source-context/">Contexto de origen</PlatformLink>.
+
+<div id="dependencies-report">
+  ## Informe de dependencias
+</div>
+
+El plugin recopila automáticamente las dependencias externas de una aplicación (incluidas las transitivas) y genera un informe en tiempo de compilación. El SDK de Java de Sentry recoge el informe en tiempo de ejecución y lo envía junto con cada evento de Sentry. Los metadatos de dependencias del evento tendrán un aspecto similar a este:
+
+![Informe de dependencias de Java](./img/dependencies-report.png)

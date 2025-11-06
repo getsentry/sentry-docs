@@ -1,0 +1,46 @@
+---
+title: Contexto de origen
+description: >-
+  Aprende a configurar paquetes de origen para mostrar el código fuente en las trazas de pila en
+  la página de detalles del problema.
+sidebar_order: 5
+og_image: >-
+  /og-images/platforms-dotnet-common-data-management-debug-files-source-context.png
+---
+
+Si Sentry tiene acceso al código fuente de tu aplicación, puede mostrar fragmentos de código (*source context*) alrededor de la ubicación de los frames de la pila, lo que ayuda a identificar rápidamente el código problemático.
+
+Por ejemplo, esta es una traza de pila de una aplicación .NET. El contexto de origen contiene
+el código fuente original en C# de la aplicación, con la ubicación del frame resaltada.
+
+![Captura de pantalla de una traza de pila que muestra el contexto de origen.](./img/source-context-screenshot.png)
+
+<div id="source-bundles">
+  ### Paquetes de código fuente
+</div>
+
+Algunos SDK, como el SDK de Python, pueden resolver automáticamente este contexto de código fuente,
+ya que tienen acceso a código sin ofuscar en tiempo de ejecución.
+En cambio, para obtener el contexto de código fuente en aplicaciones compiladas, es necesario
+subir el código junto con los archivos de información de depuración.
+La forma recomendada de hacerlo es usando `sentry-cli`.
+Consulta [Creación de paquetes de código fuente](/es/cli/dif/#creating-source-bundles) para más información.
+
+<Alert>
+  Para proyectos .NET, puedes [configurar MSBuild](../../../configuration/msbuild/) para
+  invocar `sentry-cli` automáticamente. Habilita la propiedad `SentryUploadSources` para
+  crear y subir paquetes de código fuente automáticamente mientras subes los símbolos.
+
+  Como alternativa, puedes incrustar el código fuente directamente en archivos .NET Portable PDB usando la propiedad
+  [`EmbedAllSources`](https://github.com/dotnet/sourcelink/blob/main/docs/README.md#embedallsources)
+  en el archivo de tu proyecto. Después de que los PDB se hayan subido a Sentry, las fuentes se
+  extraerán de ellos automáticamente.
+
+  Ten en cuenta también que la opción similar `EmbedUntrackedSources` aún no es compatible, pero podría añadirse
+  en el futuro. Consulta [este issue](https://github.com/getsentry/symbolic/issues/735) para más detalles.
+</Alert>
+
+Una vez subidos, puedes revisar y administrar los paquetes de código fuente igual que
+cualquier otro archivo de información de depuración. Consulta [Administrar archivos de información de depuración](../#managing-debug-information-files).
+Los paquetes de código fuente se etiquetarán con `sources` y tendrán el mismo nombre de archivo que el
+archivo de información de depuración correspondiente del que fueron creados.

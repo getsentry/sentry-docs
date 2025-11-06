@@ -1,0 +1,128 @@
+---
+title: Migrar de 9.x a 10.x
+sidebar_order: 8880
+description: "Aprende a migrar del Sentry JavaScript SDK 9.x a 10.x"
+notSupported:
+  - javascript.capacitor
+  - javascript.cordova
+  - javascript.electron
+---
+
+<PlatformSection supported={["javascript"]}>
+  <Alert title="¿Usas un framework?" level="info">
+    Asegúrate de seleccionar tu framework en el menú desplegable de la esquina superior izquierda de la página.
+  </Alert>
+</PlatformSection>
+
+La versión 10 del Sentry JavaScript SDK se centra principalmente en actualizar las dependencias subyacentes de OpenTelemetry a la v2, con cambios incompatibles mínimos.
+
+La versión 10 del SDK es compatible con Sentry self-hosted a partir de la versión 24.4.2 (sin cambios respecto a la v9).
+Las versiones anteriores pueden seguir funcionando, pero puede que no admitan todas las funciones.
+
+<div id="version-support-changes">
+  ## Cambios en la compatibilidad de versiones:
+</div>
+
+La versión 10 del SDK de Sentry introduce nuevos rangos de compatibilidad para entornos de ejecución y frameworks.
+
+<div id="nodejs">
+  ### Node.js
+</div>
+
+Se han actualizado todas las dependencias de OpenTelemetry a `2.x.x` / `0.20x.x`, respectivamente, y todas las instrumentaciones de OpenTelemetry se han llevado a su última versión.
+
+Si no puedes usar las versiones v2 de OpenTelemetry, considera mantenerte en la versión 9 de nuestros SDK o usar [@sentry/node-core](https://www.npmjs.com/package/@sentry/node-core), que se distribuye con peer dependencies de OpenTelemetry más flexibles.
+
+<div id="aws-lambda-layer-changes">
+  ### Cambios en las capas de AWS Lambda
+</div>
+
+Se publicará una nueva capa de AWS Lambda para la versión 10 como `SentryNodeServerlessSDKv10`.
+
+Las actualizaciones y correcciones para la versión 9 se publicarán como `SentryNodeServerlessSDKv9`.
+
+<PlatformCategorySection supported={['browser']}>
+  ## Se elimina el reporte de la métrica web FID
+
+  **Los SDK ya no reportan la métrica web First Input Delay (FID)**.
+
+  Esto se debe a que FID fue reemplazada por Interaction to Next Paint (INP) y, por lo tanto, ya no es relevante para evaluar y hacer seguimiento al rendimiento de un sitio web.
+  Como referencia, FID llevaba tiempo en desuso en la biblioteca oficial `web-vitals` de Google y finalmente se eliminó en la versión `5.0.0`.
+  Sentry ahora sigue el ejemplo de Google y también la elimina.
+
+  Esta eliminación no implica **cambios incompatibles en la API**. Sin embargo, en casos poco frecuentes, quizá debas ajustar parte de la configuración de tu SDK de Sentry y del producto:
+
+  * Elimina cualquier lógica en `beforeSend` u otra lógica de filtrado/procesamiento de eventos que dependa de FID o reemplázala por lógica basada en INP.
+  * Si configuraste alertas de Sentry que dependen de FID, ten en cuenta que podrían activarse una vez que actualices el SDK, debido a la falta de nuevos valores.
+    Para reemplazarlas, ajusta tus alertas (o paneles) para usar INP.
+
+  ## Se elimina `_experiments.autoFlushOnFeedback` para Session Replays
+
+  La opción `_experiments.autoFlushOnFeedback` se eliminó y ahora es el comportamiento predeterminado.
+
+  ## Actualización: recopilación de la dirección IP del usuario condicionada por `sendDefaultPii`
+
+  La versión `10.4.0` introdujo un cambio que idealmente debería haberse incorporado con la `10.0.0` del SDK.
+  Originalmente destinado a la [versión `9.0.0`](/es/platforms/javascript/migration/v8-to-v9/#behavior-changes), pero sin el efecto deseado hasta la v10,
+  los SDK ahora controlarán la inferencia de la dirección IP de los usuarios según el valor de la opción de inicialización de nivel superior `sendDefaultPii`.
+
+  * Si `sendDefaultPii` es `true`, Sentry inferirá la dirección IP de los dispositivos de los usuarios en los eventos (errores, trazas, reproducciones, etc.) en todos los SDK basados en navegador.
+  * Si `sendDefaultPii` es `false` o no está configurado, Sentry no inferirá ni recopilará datos de direcciones IP.
+
+  Dado que esto ya era un [comportamiento anunciado](/es/platforms/javascript/data-management/data-collected/#users-ip-address-and-location) desde la v9,
+  clasificamos el cambio [como una corrección](https://github.com/getsentry/sentry-javascript/pull/17364), aunque reconocemos su posible impacto.
+
+  Si deseas seguir recibiendo direcciones IP de los usuarios, configura `sendDefaultPii: true` en tu configuración de `Sentry.init`:
+
+  ```js
+  Sentry.init({
+    // ...
+    sendDefaultPii: true,
+  });
+  ```
+
+  Pedimos disculpas por las molestias ocasionadas.
+</PlatformCategorySection>
+
+<div id="removed-apis">
+  ## APIs eliminadas
+</div>
+
+Los cambios descritos en esta sección detallan las APIs en desuso que ahora se han eliminado.
+
+* Se eliminó `BaseClient`; usa `Client` como reemplazo directo.
+* Se eliminó `hasTracingEnabled`; usa `hasSpansEnabled` como reemplazo directo.
+* Se eliminaron las exportaciones internas `logger` y el tipo `Logger` en `@sentry/core`; usa `debug` y el tipo `SentryDebugLogger` en su lugar. Esto no afecta la exportación `logger` utilizada para [Sentry Logging](/es/product/explore/logs/getting-started/).
+* Se eliminaron las opciones `_experiments.enableLogs` y `_experiments.beforeSendLog`; usa las opciones de nivel superior `enableLogs` y `beforeSendLog` en su lugar.
+
+```js
+// before
+Sentry.init({
+  _experiments: {
+    enableLogs: true,
+    beforeSendLog: (log) => {
+      return log;
+    },
+  },
+});
+
+// después
+Sentry.init({
+  enableLogs: true,
+  beforeSendLog: (log) => {
+    return log;
+  },
+});
+```
+
+<div id="version-support-timeline">
+  ## Cronograma de compatibilidad de versiones
+</div>
+
+Los cronogramas de compatibilidad de versiones pueden ser estresantes para quienes usan el SDK, así que no definiremos uno.
+En su lugar, aplicaremos correcciones de errores y funcionalidades a versiones anteriores mientras haya demanda.
+
+Además, asumimos la responsabilidad por cualquier problema de seguridad; es decir, si se encuentran vulnerabilidades, en casi todos los casos las retroportaremos.
+
+Ten en cuenta que las decisiones de retroportar se toman caso por caso.
+Si necesitas una corrección o una funcionalidad en una versión anterior del SDK, contáctanos mediante un [issue en GitHub](https://github.com/getsentry/sentry-javascript/issues).

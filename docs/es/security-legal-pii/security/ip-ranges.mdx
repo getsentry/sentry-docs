@@ -1,0 +1,190 @@
+---
+title: "Rangos de IP"
+sidebar_order: 5
+description: "Descubre cómo el producto SaaS de Sentry utiliza rangos de IP para el uso de la API, la ingestión de eventos, las solicitudes salientes y más."
+---
+
+<Alert title="Nota" level="warning">
+  El contenido de esta página aplica únicamente al producto SaaS de Sentry. **No**
+  aplica a implementaciones autogestionadas ni a entornos de un solo inquilino.
+</Alert>
+
+<Alert title="Acceso a la API" level="info">
+  Puedes acceder de forma programática a esta información de rangos de IP a través de nuestra API en `docs.sentry.io/api/ip-ranges`.
+</Alert>
+
+<div id="dashboard-and-api">
+  ## Panel y API
+</div>
+
+El panel de Sentry y su API se sirven desde dominios distintos, según
+la ubicación donde se almacenan los datos de tu organización. Las direcciones IP son:
+
+```plaintext
+sentry.io 35.186.247.156/32
+us.sentry.io 35.186.247.156/32
+de.sentry.io 34.36.122.224/32, 34.36.87.148/32
+```
+
+<div id="event-ingestion">
+  ## Ingesta de eventos
+</div>
+
+La ingesta de eventos de Sentry respeta dos dominios dentro de un Data Source Name (DSN):
+
+1. El [subdominio de la organización](https://forum.sentry.io/t/organization-subdomains-in-dsns/9360)
+2. El dominio de nivel superior (apex) de Sentry
+
+El dominio de nivel superior de Sentry (`sentry.io`) acepta eventos desde la misma dirección IP que el panel y la API:
+
+```plaintext
+35.186.247.156/32
+```
+
+Los subdominios de organización de Sentry (`o<number>.ingest.sentry.io` y `o<number>.us.ingest.sentry.io`) aceptan eventos desde una dirección IP distinta:
+
+```plaintext
+34.120.195.249/32
+```
+
+Los subdominios de organización de Sentry en la UE (`o<number>.ingest.de.sentry.io`) aceptan eventos procedentes de:
+
+```plaintext
+34.120.62.213/32
+130.211.36.74/32
+```
+
+El nombre de host de ingesta heredado de Sentry (`app.getsentry.com`) acepta eventos desde una dirección IP diferente:
+
+```plaintext
+34.96.102.34/32
+```
+
+Las organizaciones en la Ubicación de Almacenamiento de Datos de la UE no pueden ingerir eventos a través de
+`sentry.io` o `app.getsentry.com`. En su lugar, puedes usar
+`o<number>.ingest.de.sentry.io`.
+
+<div id="outbound-requests">
+  ## Solicitudes salientes
+</div>
+
+En algunas circunstancias, la infraestructura de Sentry alojado podría enviar solicitudes HTTP a tu servicio. Esto es especialmente relevante para [*JavaScript Source Maps*](/es/platforms/javascript/sourcemaps/), pero también afecta a los webhooks y otras integraciones.
+
+Sentry utiliza las siguientes direcciones IP para realizar solicitudes salientes:
+
+Ubicación de almacenamiento de datos en EE. UU.
+
+```plaintext
+35.184.238.160/32
+104.155.159.182/32
+104.155.149.19/32
+130.211.230.102/32
+```
+
+Ubicación de almacenamiento de datos en la UE
+
+```plaintext
+34.141.31.19/32
+34.141.4.162/32
+35.234.78.236/32
+```
+
+<div id="allowing-access-via-nginx">
+  ## Permitir acceso con Nginx
+</div>
+
+Para permitir el acceso a los source maps con Nginx, por ejemplo, puedes usar este bloque de location. Este ejemplo asume que tus source maps se encuentran en `/static/dist`:
+
+```nginx
+location ~ ^/static/dist/(.+)\.map$ {
+    alias /your/path/site/static/dist/$1.map;
+
+    allow 35.184.238.160/32;
+    allow 104.155.159.182/32;
+    allow 104.155.149.19/32;
+    allow 130.211.230.102/32;
+    deny all;
+}
+```
+
+<div id="allowing-access-via-apache">
+  ## Permitir el acceso con Apache
+</div>
+
+Para permitir el acceso a los mapas de origen (source maps) con Apache, puedes usar este ejemplo. Puede ir en tu archivo *.htaccess* o en la configuración global. Este ejemplo asume que tus mapas de origen están en `/static/dist`:
+
+```apacheconf
+<FilesMatch "\.map$">
+    Order deny,allow
+    Deny from all
+    Allow from 35.184.238.160/32
+    Allow from 104.155.159.182/32
+    Allow from 104.155.149.19/32
+    Allow from 130.211.230.102/32
+</FilesMatch>
+```
+
+<div id="email-delivery">
+  ## Entrega de correo electrónico
+</div>
+
+Todos los correos electrónicos se envían mediante [SendGrid](https://sendgrid.com/) desde las siguientes direcciones IP dedicadas y estáticas:
+
+```plaintext
+167.89.86.73
+167.89.84.75
+167.89.84.14
+```
+
+Estas direcciones IP son exclusivamente para uso de Sentry.
+
+<div id="uptime-monitoring">
+  ## Monitorización de disponibilidad
+</div>
+
+Sentry utiliza las siguientes direcciones IP para las comprobaciones de disponibilidad en todas las regiones:
+
+```plaintext
+34.123.33.225
+34.41.121.171
+34.169.179.115
+35.237.134.233
+34.85.249.57
+34.159.197.47
+35.242.231.10
+34.107.93.3
+35.204.169.245
+```
+
+<div id="dynamic-ip-address-retrieval">
+  ### Obtención dinámica de direcciones IP
+</div>
+
+Para obtener la lista más reciente de direcciones IP de Uptime Monitoring, puedes consultar el siguiente endpoint de la API:
+
+```plaintext
+https://us.sentry.io/api/0/uptime-ips/
+```
+
+Este endpoint devuelve una lista separada por saltos de línea con todas las direcciones IP vigentes de Uptime Monitoring (para todas las regiones) que pueden procesarse de forma programática en tus configuraciones de allowlist.
+
+<Alert title="Nota" level="warning">
+  Las direcciones IP de Uptime Monitoring pueden cambiar con el tiempo. Si necesitas verificar de forma programática si un visitante es un bot de Sentry, te recomendamos comprobar el [agente de usuario](/es/product/uptime-monitoring/troubleshooting/#user-agent).
+</Alert>
+
+<div id="information-for-hosting-providers">
+  ### Información para proveedores de hosting
+</div>
+
+Si eres un proveedor de hosting (como Vercel, Netlify u otras plataformas similares), ten en cuenta las siguientes recomendaciones sobre el monitoreo de disponibilidad (Uptime Monitoring) de Sentry:
+
+Muchas organizaciones usan Sentry para monitorear la disponibilidad de sus sitios web y aplicaciones. Cuando se bloquean las IP de monitoreo de Sentry, se generan alertas de interrupción falsas para todos los clientes que intentan monitorear sitios en tu plataforma.
+
+**Acciones recomendadas para proveedores de hosting:**
+
+1. Incluye en la lista de permitidos (allowlist) las direcciones IP de monitoreo de Sentry en las reglas de seguridad de tu plataforma
+2. Configura tu firewall para reconocer el agente de usuario (user agent) de monitoreo de Sentry y los rangos de IP como tráfico legítimo
+3. Asegúrate de que las políticas de limitación de solicitudes (rate limiting) no bloqueen inadvertidamente las capacidades de monitoreo de Sentry
+4. Considera implementar actualizaciones automáticas de las IP permitidas mediante nuestro endpoint de API
+
+Al garantizar que Sentry pueda monitorear correctamente los sitios en tu plataforma, mejorarás la experiencia de monitoreo de confiabilidad para todos tus clientes que usan Sentry.

@@ -1,0 +1,157 @@
+---
+title: Tipos de alertas
+sidebar_order: 10
+description: >-
+  Conoce los tres tipos de alertas que ofrece Sentry: alertas de incidencias,
+  alertas de métricas y alertas de disponibilidad (uptime).
+og_image: /og-images/product-alerts-alert-types.png
+---
+
+Puedes crear tres tipos de alertas:
+
+1. **Alertas de incidencias**: Se activan cuando una incidencia cumple criterios específicos.
+2. **Alertas de métricas**: Se activan cuando métricas a nivel macro superan umbrales específicos.
+3. **Alertas de disponibilidad**: Se activan cuando una solicitud HTTP no devuelve una respuesta correcta.
+
+<div id="issue-alerts">
+  ## Alertas de incidencias
+</div>
+
+Las alertas de incidencias se activan cada vez que se recibe un evento nuevo en cualquier incidencia de un proyecto que cumpla los criterios especificados. Estos criterios pueden ser, por ejemplo, que una incidencia resuelta reaparezca o que una incidencia afecte a muchos usuarios.
+
+En la pestaña “Alert Rules”, estas alertas se identifican por el icono de incidencias y, de forma predeterminada, se muestran al final de tu lista de alertas. (Si tienes varias alertas de métricas, esto puede hacer que tus alertas de incidencias no aparezcan en la primera página de la lista).
+
+![Reglas de alertas de incidencias al final de la lista de alertas.](./img/issue-alert-rules.png)
+
+En las alertas de incidencias, Sentry evalúa las condiciones de alerta configuradas cada vez que recibe un evento nuevo. Las condiciones de alerta constan de tres partes:
+
+1. [Triggers](/es/product/alerts/create-alerts/issue-alert-config/#when-conditions-triggers) especifican qué tipo de actividad quieres monitorizar o **cuándo** se debe activar una alerta.
+2. [Filters](/es/product/alerts/create-alerts/issue-alert-config/#if-conditions-filters) ayudan a reducir el ruido activando una alerta solo **si** la incidencia cumple los criterios especificados.
+3. **Entonces**, [Actions](/es/product/alerts/create-alerts/issue-alert-config/#then-conditions-actions) especifican qué debe suceder cuando se cumplen las condiciones del trigger y los filtros coinciden.
+
+<div id="alert-details">
+  ### Detalles de la alerta
+</div>
+
+La página de **Detalles de la alerta** muestra cuántas veces se activó una regla de alerta de incidencias a lo largo del tiempo, agrupadas en intervalos de una hora. Al hacer clic en el nombre de la regla de alerta en la pestaña &quot;Alert Rules&quot; o en la notificación que recibas, accederás a esta página. La página también incluye las condiciones de la regla de alerta, el estado actual de la alerta (Advertencia, Crítico o Resuelto) y detalles como cuándo se creó, cuándo se modificó por última vez y el equipo responsable de la alerta.
+
+![La sección de detalles de la alerta muestra un gráfico con las alertas activadas a lo largo del tiempo.](./img/issue-alert-status-page-example.png)
+
+La página de **Detalles de la alerta** también incluye una lista de incidencias que activaron la alerta. Puedes hacer clic en cualquiera de las incidencias de la lista para ir a la página de detalles de esa incidencia y obtener más información.
+
+<div id="metric-alerts">
+  ## Alertas de métricas
+</div>
+
+Las alertas de métricas te avisan cuando una [métrica](/es/product/insights/overview/metrics/) supera un umbral definido por ti, como un pico en la cantidad de errores de un proyecto, o un cambio en una métrica de rendimiento, como la [duración de transacción](/es/product/insights/overview/metrics/#latency), [Apdex](/es/product/insights/overview/metrics/#apdex), [tasa de fallos](/es/product/insights/overview/metrics/#failure-rate) o [throughput](/es/product/insights/overview/metrics/#throughput-total-tpm-tps). Puedes usar [alertas dinámicas](/es/product/alerts/create-alerts/metric-alert-config/#dynamic-alerts) para que Sentry defina el umbral por ti.
+
+Las alertas de métricas supervisan métricas de nivel macro tanto para eventos de error como de transacción. Una métrica toma un conjunto de eventos y calcula un valor agregado usando una función, como `count()` o `avg()`, aplicada a las propiedades del evento durante un periodo de tiempo. Al crear una alerta de métricas, puedes filtrar eventos por atributos y <PlatformLink to="/enriching-events/tags/">tags</PlatformLink>, lo cual es especialmente útil para agregar eventos que no están agrupados en un único issue. Sentry permite un máximo de 1000 alertas de métricas por organización.
+
+<Alert>
+  Las alertas de métricas pueden incluir [issues archivados](/es/product/issues/states-triage/#archive) si los eventos de esos issues coinciden con los filtros de tu regla de alerta de métricas. Los eventos de issues archivados y resueltos pueden excluirse usando el filtro `is:unresolved` en tu regla de alerta de métricas. Este filtro se agrega de forma predeterminada al crear una nueva alerta de métricas, pero quizá debas añadirlo manualmente a alertas de métricas antiguas si quieres que excluyan issues archivados.
+</Alert>
+
+Estas alertas usan disparadores de *Crítico* y *Advertencia* para medir la gravedad. El estado actual de una alerta es el disparador de mayor gravedad activo, que puede ser uno de tres valores: Advertencia, Crítico o Resuelto. Sentry te notifica cada vez que cambia el estado de una alerta.
+
+Cuando creas una alerta, todos los tipos de alerta mostrados (excepto “Issues”) pueden usarse para crear una alerta de métricas. Puedes crear alertas de métricas para Errors, Sessions (Crash Rate Alerts) y Performance:
+
+<div id="errors">
+  ### Errores
+</div>
+
+Las alertas de errores son útiles para supervisar el nivel general de errores en tu proyecto, los errores que ocurren en partes específicas de tu app o los que afectan a tus usuarios.
+
+* **Número de errores:** <a name="number-of-errors" />
+  Alerta cuando el número de errores en un proyecto que coinciden con tus filtros supera el umbral que estableciste.
+
+* **Usuarios que experimentan errores:** <a name="users-experiencing-errors" />
+  Alerta cuando el número de usuarios afectados por errores en tu proyecto supera el umbral que estableciste.
+
+<div id="sessions-crash-rate-alerts">
+  ### Sesiones (Alertas de tasa de fallos)
+</div>
+
+Las alertas de tasa de fallos pueden darte una mejor idea del estado de tu app por proyecto o en una versión específica. Se activan cuando el porcentaje sin fallos de [sesiones o usuarios](/es/product/releases/health/#active-sessionsusers) cae por debajo de un umbral específico. Esto puede suceder por un pico en el número de [fallos](/es/product/releases/health/#crashes) de sesiones o usuarios.
+
+* **Tasa de sesiones sin fallos:** <a name="crash-free-session-rate" />
+  Te alerta cuando la cantidad de sesiones con fallos supera el umbral que configures. Una sesión comienza cuando un usuario inicia la aplicación y termina cuando se cierra o pasa a segundo plano. Un fallo ocurre cuando una sesión termina debido a un error.
+
+* **Tasa de usuarios sin fallos:** <a name="crash-free-user-rate" />
+  Te alerta cuando la experiencia general de los usuarios cae por debajo del umbral que configures. Usuarios sin fallos representa el porcentaje de usuarios individuales que no han experimentado un fallo.
+
+<div id="performance">
+  ### Rendimiento
+</div>
+
+Las alertas de rendimiento de la aplicación pueden ayudarte a detectar e identificar problemas específicos que podrían estar causando una experiencia deficiente para tus usuarios.
+
+* **Throughput:** <a name="throughput" />
+  Alerta cuando el throughput (el número total de transacciones en un proyecto) alcanza un umbral que establezcas dentro de un periodo de tiempo determinado.
+
+* **Duración de la transacción:** <a name="transaction-duration" />
+  Alerta cuando las duraciones de las transacciones cumplen ciertas condiciones.
+
+**CONSEJO:** Las condiciones se pueden personalizar con agregaciones flexibles como percentiles, promedios y mínimos/máximos.
+
+* **Apdex:** <a name="apdex" />
+  Alerta sobre la puntuación Apdex (la proporción de solicitudes satisfactorias, tolerables y frustradas en una transacción o endpoint específicos). Apdex es una métrica utilizada para seguir y medir la satisfacción del usuario según los tiempos de respuesta de tu aplicación.
+
+* **Tasa de errores:** <a name="failure-rate" />
+  Alerta sobre la tasa de errores (el porcentaje de transacciones fallidas). Sentry considera fallidas las transacciones con un estado distinto de &quot;ok&quot;, &quot;canceled&quot; y &quot;unknown&quot;.
+
+* **Largest Contentful Display:** <a name="largest-contentful-display" />
+  Alerta cuando el Largest Contentful Paint (LCP), que mide el rendimiento de carga, es más lento de lo esperado. LCP marca el momento en que la imagen o el bloque de texto más grande es visible dentro del viewport.
+
+**CONSEJO:** Un LCP rápido ayuda a transmitir al usuario que la página es útil. Recomendamos un LCP inferior a 2,5 segundos.
+
+* **First Input Delay:** <a name="first-input-delay" />
+  Alerta cuando el First Input Delay (FID), que mide el tiempo de respuesta cuando un usuario intenta interactuar con el viewport, es mayor de lo esperado.
+
+**CONSEJO:** Un FID bajo ayuda a garantizar que una página sea útil. Recomendamos un FID inferior a 100 milisegundos.
+
+* **Cumulative Layout Shift:** <a name="cumulative-layout-shift" />
+  Alerta cuando el Cumulative Layout Shift (CLS), que mide la estabilidad visual cuantificando los cambios de diseño inesperados que ocurren durante toda la vida de la página, aumenta.
+
+**CONSEJO:** Un CLS inferior a 0,1 se traduce en una buena experiencia de usuario, mientras que cualquier valor superior a 0,25 es deficiente.
+
+* **Métrica personalizada:** <a name="custom-metric" />
+  Alerta sobre métricas no incluidas arriba, como first paint (FP), first contentful paint (FCP) y time to first byte (TTFB).
+
+<div id="alert-details">
+  ### Detalles de la alerta
+</div>
+
+La página **Detalles de la alerta** muestra, de forma predeterminada, el historial de una regla de alerta de métricas de las últimas 24 horas, aunque puedes modificar el período usando el desplegable “Display”. Cuando se activa una alerta, al hacer clic en la notificación que recibes accederás a esta página, que muestra el período durante el cual la alerta estuvo activa. La página también incluye detalles como las condiciones de la regla, el estado actual de la alerta y un resumen del tiempo que la alerta pasó en cada estado (Crítica, Advertencia o Resuelta).
+
+![Los detalles de la alerta muestran un gráfico con el rendimiento de una transacción a lo largo del tiempo.](./img/alert-details-example.png)
+
+La página **Detalles de la alerta** también incluye una lista de incidencias o transacciones sospechosas relacionadas con la métrica, para ayudar a identificar la causa raíz más rápidamente. Puedes ver qué pudo haber provocado la alerta y luego abrir la métrica en **[Discover](/es/product/explore/discover-queries)** para obtener más información.
+
+<div id="uptime-alerts">
+  ## Alertas de disponibilidad
+</div>
+
+Las alertas de disponibilidad se activan cuando una verificación de disponibilidad no cumple con nuestros [criterios de verificación](/es/product/uptime-monitoring/#uptime-check-criteria). Podrás ver el estado más reciente de la verificación (“Up” o “Down”) en la pestaña “Alert Rules”.
+
+<div id="alert-details">
+  ### Detalles de la alerta
+</div>
+
+La página **Detalles de la alerta** muestra una línea de tiempo de los eventos de comprobación de disponibilidad asociados con la alerta. Esta línea de tiempo te permite ver cuándo y dónde se produjeron los fallos. Al seleccionar una sección de la línea de tiempo, el filtro de rango de fechas se actualiza automáticamente, lo que te permite explorar datos históricos de las comprobaciones de disponibilidad.
+
+La página **Detalles de la alerta** también incluye una lista de [incidencias de disponibilidad](/es/product/issues/issue-details/uptime-issues) que la alerta crea cuando se detectan fallos de disponibilidad. Al hacer clic en cualquiera de las incidencias, irás a una página con información adicional que puede ayudarte a depurar ese problema.
+
+<div id="user-feedback-alerts">
+  ## Alertas de comentarios de usuarios
+</div>
+
+Puedes habilitar alertas para el [widget de comentarios de usuarios](/es/product/user-feedback/#user-feedback-widget) en la página de [alertas de incidencias](https://sentry.io/orgredirect/organizations/:orgslug/alerts/new/issue/) siguiendo los pasos a continuación:
+
+1. Crea una [nueva regla de alerta](https://sentry.io/orgredirect/organizations/:orgslug/alerts/new/issue/) en Sentry.
+2. Desplázate a la sección &quot;Set conditions&quot; y configura el filtro &quot;IF&quot; en `The issue's category is equal to… "Feedback"`.
+3. Elige qué acciones ejecutar en el filtro “THEN”.
+4. Añade un nombre y un responsable para la alerta.
+
+![Configuración de alertas de comentarios de usuarios.](../user-feedback/img/user-feedback-alert-configuration.png)
+
+Para recibir alertas cuando lleguen [comentarios de informes de fallos](/es/product/user-feedback/#crash-report-modal), asegúrate de activar &quot;Enable Crash Report Notifications&quot; en Settings &gt; Projects &gt; [Project Name] &gt; User Feedback.

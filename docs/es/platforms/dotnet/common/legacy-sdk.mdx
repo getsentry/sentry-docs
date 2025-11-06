@@ -1,0 +1,180 @@
+---
+title: SDK heredado
+sidebar_order: 9000
+description: "Consulta la documentación heredada del SDK de .NET. "
+---
+
+<Alert level="warning" title="Aviso de obsolescencia">
+  Para .NET Framework 4.6.1, .NET Core 2.0, Mono 5.4 o superior, recomendamos usar nuestro [.NET SDK](/es/platforms/dotnet/). Raven sigue siendo recomendable para .NET Framework 3.5 a 4.6.0.
+</Alert>
+
+Raven es un cliente heredado de Sentry escrito en C#, utilizado en versiones anteriores de .NET Framework.
+
+<div id="installation">
+  ## Instalación
+</div>
+
+Hay un [paquete NuGet](https://www.nuget.org/packages/SharpRaven) disponible para SharpRaven si no quieres compilarlo tú mismo.
+
+Crea una instancia del cliente con tu DSN:
+
+```csharp
+var ravenClient = new RavenClient("___PUBLIC_DSN___");
+```
+
+<div id="capturing-exceptions">
+  ## Captura de excepciones
+</div>
+
+Invoca al cliente en tu bloque catch:
+
+```csharp
+try
+{
+    int i2 = 0;
+    int i = 10 / i2;
+}
+catch (Exception exception)
+{
+    ravenClient.Capture(new SentryEvent(exception));
+}
+```
+
+<div id="logging-non-exceptions">
+  ## Registro de elementos que no son excepciones
+</div>
+
+Puedes capturar un mensaje sin estar vinculado a una excepción:
+
+```csharp
+ravenClient.Capture(new SentryEvent("Hello World!"));
+```
+
+<div id="additional-data">
+  ## Datos adicionales
+</div>
+
+Puedes agregar datos adicionales a la propiedad [Exception.Data](https://msdn.microsoft.com/en-us/library/system.exception.data.aspx) en las excepciones que se arrojen en tu solución:
+
+```csharp
+try
+{
+    // ...
+}
+catch (Exception exception)
+{
+    exception.Data.Add("SomeKey", "SomeValue");
+    throw;
+}
+```
+
+Los datos `SomeKey` y `SomeValue` se capturarán y se mostrarán en la propiedad `extra` de Sentry.
+
+Además, la clase `SentryEvent` te permite proporcionar datos adicionales para enviar con tu solicitud, como `ErrorLevel`, `Fingerprint`, un `Message` personalizado y *Tags*.
+
+<div id="async-support">
+  ## Compatibilidad asíncrona
+</div>
+
+En la compilación para .NET 4.5 de SharpRaven, también hay versiones `async` de los métodos anteriores:
+
+```csharp
+async Task<string> CaptureAsync(SentryEvent @event);
+```
+
+<div id="nancy-support">
+  ## Compatibilidad con Nancy
+</div>
+
+Puedes instalar el paquete [SharpRaven.Nancy](https://www.nuget.org/packages/SharpRaven.Nancy) para capturar el contexto HTTP en aplicaciones de [Nancy](https://nancyfx.org/). Se registrará automáticamente en el evento `IPipelines.OnError`, por lo que todas las excepciones no controladas se enviarán a Sentry.
+
+Lo único que debes hacer es proporcionar un DSN, ya sea registrando una instancia de la clase `Dsn` en tu contenedor:
+
+```csharp
+protected override void ApplicationStartup(TinyIoCContainer container, IPipelines pipelines)
+{
+    container.Register(new Dsn("___PUBLIC_DSN___"));
+}
+```
+
+o mediante la configuración:
+
+```xml
+<configuration>
+  <configSections>
+    <section name="sharpRaven" type="SharpRaven.Nancy.NancyConfiguration, SharpRaven.Nancy" />
+  </configSections>
+  <sharpRaven>
+    <dsn value="___PUBLIC_DSN___" />
+  </sharpRaven>
+</configuration>
+```
+
+El DSN será tomado por la instancia de `IRavenClient` registrada automáticamente, así que, si quieres enviar eventos a Sentry, lo único que tienes que hacer es declarar una dependencia de `IRavenClient` en tus clases:
+
+```csharp
+public class LoggingModule : NancyModule
+{
+    private readonly IRavenClient ravenClient;
+
+    public LoggingModule(IRavenClient ravenClient)
+    {
+        this.ravenClient = ravenClient;
+    }
+}
+```
+
+<div id="breadcrumbs">
+  ## Breadcrumbs
+</div>
+
+Sentry admite un concepto llamado [Breadcrumbs](/es/platforms/dotnet/enriching-events/breadcrumbs/), que es una secuencia de eventos que ocurrieron antes de un problema. A menudo, estos eventos se parecen a los registros tradicionales, pero también pueden capturar datos estructurados más detallados.
+
+```csharp
+public class ExampleController : ApiController
+{
+    private readonly IRavenClient ravenClient;
+
+    public ExampleController(IRavenClient ravenClient)
+    {
+        this.ravenClient = ravenClient;
+    }
+
+    public IHttpActionResult GetProduct(int id) {
+        ravenClient.AddTrail(new Breadcrumb("example") { Message = "un mensaje...", Level = BreadcrumbLevel.Info } );
+
+        var product = products.FirstOrDefault((p) => p.Id == id);
+        if (product == null)
+        {
+            ravenClient.AddTrail(new Breadcrumb("example") { Message = "¡Ups! No se encontró.", Level = BreadcrumbLevel.Warn } );
+            return NotFound();
+        }
+
+        return Ok(product);
+    }
+}
+```
+
+<div id="debugging-sharpraven">
+  ## Depuración de SharpRaven
+</div>
+
+Si se lanza una excepción internamente en `RavenClient`, se registra en la `Console`. Para ampliar este comportamiento, usa la propiedad `ErrorOnCapture`:
+
+```csharp
+ravenClient.ErrorOnCapture = exception =>
+{
+    // Código personalizado aquí
+};
+```
+
+También puedes engancharte a la función `BeforeSend` para inspeccionar o manipular los datos que se enviarán a Sentry antes de que se envíen:
+
+```csharp
+ravenClient.BeforeSend = requester =>
+{
+    // Aquí puedes registrar datos del solicitante
+    // o reemplazarlo por completo si lo deseas.
+    return requester;
+}
+```

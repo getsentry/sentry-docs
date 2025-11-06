@@ -1,0 +1,88 @@
+---
+title: ESM (MJS)
+sidebar_order: 10
+description: "Obtén información sobre cómo ejecutar Sentry en una aplicación ESM."
+supported:
+  - javascript.nestjs
+noindex: true
+---
+
+<Alert>
+  ¿No estás seguro de si deberías usar este método de instalación? Revisa nuestros
+  [métodos de instalación](../).
+</Alert>
+
+Al ejecutar tu aplicación en modo [ECMAScript Modules](https://nodejs.org/api/esm.html#introduction) (ESM), no puedes usar `require()` para cargar módulos. En su lugar, debes usar la opción de línea de comandos `--import` para cargar un módulo antes de que la aplicación se inicie.
+
+**Paso 1:** Crea un archivo llamado `instrument.mjs` que importe e inicialice Sentry:
+
+```javascript {tabTitle:ESM} {filename: instrument.mjs}
+import * as Sentry from "@sentry/nestjs";
+
+// ¡Asegúrate de ejecutar esto antes de importar cualquier otro módulo!
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Activa el tracing configurando tracesSampleRate
+  // Recomendamos ajustar este valor en producción
+  tracesSampleRate: 1.0,
+});
+```
+
+**Paso 2:** Ajusta el comando de inicio de tu aplicación para usar el parámetro [--import](https://nodejs.org/api/cli.html#--importmodule):
+
+```bash
+# Nota: Esto solo está disponible a partir de Node v18.19.0.
+"start": "--import ./instrument.mjs nest start"
+```
+
+Si no puedes pasar la opción `--import` al binario de Node.js, también puedes usar la variable de entorno `NODE_OPTIONS` de la siguiente manera:
+
+```bash
+NODE_OPTIONS="--import ./instrument.mjs" npm run start
+```
+
+<Alert>No damos soporte a ESM en versiones de Node anteriores a la 18.19.0.</Alert>
+
+
+<div id="troubleshooting-instrumentation">
+  ## Solución de problemas de instrumentación
+</div>
+
+De forma predeterminada, todos los paquetes se envuelven automáticamente con
+[import-in-the-middle](https://www.npmjs.com/package/import-in-the-middle) para
+facilitar su instrumentación.
+
+Si `import-in-the-middle` tiene problemas al envolver un paquete, es posible que veas
+errores de sintaxis en tiempo de ejecución o errores registrados en la consola:
+
+```logs
+SyntaxError: El módulo solicitado '...' no proporciona una exportación llamada '...'
+(node:3368) Error: 'import-in-the-middle' no pudo interceptar 'file://../../path/to/file.js'
+```
+
+Para confirmar que estos errores son causados por `import-in-the-middle`,
+desactívalo configurando `registerEsmLoaderHooks` en false. Ten en cuenta que esto también
+deshabilitará la instrumentación de trazado:
+
+```javascript {tabTitle:ESM} {filename: instrument.mjs} {4}
+import * as Sentry from "@sentry/nestjs";
+
+Sentry.init({
+  registerEsmLoaderHooks: false,
+});
+```
+
+Si inicias Sentry con `--import`, puedes indicar a `import-in-the-middle`
+que solo envuelva los paquetes que Sentry instrumenta específicamente. Para ello, puedes
+establecer `onlyIncludeInstrumentedModules` en `true`:
+
+```javascript {tabTitle:ESM} {filename: instrument.mjs} {4-6}
+import * as Sentry from "@sentry/nestjs";
+
+Sentry.init({
+  registerEsmLoaderHooks: {
+    onlyIncludeInstrumentedModules: true,
+  },
+});
+```

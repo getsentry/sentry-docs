@@ -1,0 +1,24 @@
+---
+title: sentry vs. getsentry
+sidebar_order: 20
+---
+
+Encontrarás numerosas referencias tanto a `sentry` como a `getsentry` en nuestra documentación. Ambos son aplicaciones de [Django](https://www.djangoproject.com/), pero `sentry` [es abierto](https://github.com/getsentry/sentry) y `getsentry` es cerrado. ¿Qué incluye cada uno?
+
+Lo principal a enfatizar es que todas nuestras funciones del producto —[Issues](https://docs.sentry.io/product/issues/), [Insights](https://docs.sentry.io/product/insights/), [Dashboards](https://docs.sentry.io/product/dashboards/) y [otras](https://docs.sentry.io/product/)— están implementadas y disponibles en `sentry`, el componente abierto. Es muy importante para nosotros no ser una empresa de “open core” que oculta funcionalidades clave detrás de un muro de pago. [Sentry es tan de código abierto como podemos hacerlo](https://open.sentry.io/licensing/).
+
+Entonces, ¿qué hay en `getsentry`? Implementa funciones de facturación y administración de cuentas para [nuestro SaaS, sentry.io](https://sentry.io/). `getsentry` es la aplicación de Django que desplegamos en producción. Importa la aplicación de Django `sentry`, agrega algunas rutas y modelos, y la vuelve a exportar.
+
+Además, `sentry` tiene muchos hooks, implementados mediante señales de Django, a los que `getsentry` se suscribe. Por ejemplo, hay una señal de Django llamada `event_received` en `sentry` que se activa cuando se guarda un evento. Si estás [ejecutando una instalación self‑hosted](/es/self-hosted/), nada está suscrito a este hook. Pero en `getsentry`, tenemos un contador para la facturación que se ejecuta cuando esa señal se dispara.
+
+También hay algunos backends intercambiables en `sentry` que `getsentry` utiliza, como `sentry.nodestore`, `sentry.quotas` y un sistema de feature flags propio. Al igual que con los hooks, estos backends modulares están técnicamente disponibles para instancias self‑hosted, pero en gran medida no están documentados. Por ejemplo, el sistema de feature flags tiene una tabla de funcionalidades codificada ([`SENTRY_FEATURES`](https://github.com/getsentry/sentry/blob/master/src/sentry/features/__init__.py)) que [las instalaciones self‑hosted pueden usar](/es/backend/feature-flags/) para controlar la disponibilidad de funciones. `getsentry` registra un manejador de feature flags diferente que activa o desactiva flags según nuestros [planes de facturación](https://sentry.io/pricing/) y el programa de acceso anticipado.
+
+<div id="notes-for-sentry-engineers">
+  ## Notas para ingenieros de Sentry
+</div>
+
+Si no trabajas en Sentry, no tendrás acceso para desarrollar en el código de `getsentry` y puedes ignorar las siguientes notas y otras menciones a lo largo de esta documentación.
+
+* A menudo puedes sustituir la CLI de `sentry` por la CLI de `getsentry` y se comportarán igual. En otros casos, hemos intentado señalar diferencias en el comportamiento.
+
+* La configuración de `getsentry` se encuentra en [`getsentry/conf/settings/defaults.py`](https://github.com/getsentry/getsentry/blob/master/getsentry/conf/settings/defaults.py). Las sobreescrituras específicas del entorno se encuentran en archivos que coinciden con el nombre del entorno. Por ejemplo, la configuración predeterminada para el desarrollo local se encuentra en [`getsentry/conf/settings/dev.py`](https://github.com/getsentry/getsentry/blob/master/getsentry/conf/settings/dev.py). También puedes usar `getsentry/conf/settings/devlocal.py` para sobreescrituras de configuración personales. Git ignora el archivo `devlocal.py`, por lo que no aparecerá accidentalmente en tus commits.

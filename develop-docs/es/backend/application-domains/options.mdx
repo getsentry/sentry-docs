@@ -1,0 +1,153 @@
+---
+title: Opciones
+sidebar_order: 10
+---
+
+Las opciones son una forma de almacenar configuración genérica a nivel del sistema. Cumplen un propósito similar al de los archivos de configuración, pero están respaldadas por una base de datos, por lo que es posible cambiarlas en tiempo de ejecución sin hacer un despliegue. Las opciones se guardan en la base de datos y se almacenan en caché, por lo que ofrecen buen rendimiento y fiabilidad. Esto hace que las opciones sean ideales para tarifas, cuotas y límites.
+
+Si bien el proceso para crear y usar opciones en el código es universal, el método para *gestionar sus valores* difiere entre la plataforma SaaS interna de Sentry y las instancias autohospedadas.
+
+> **Para empleados de Sentry**
+>
+> La gestión de opciones para los entornos SaaS internos de Sentry se realiza mediante un flujo de trabajo GitOps. Todos los cambios en los valores de las opciones se proponen, revisan y despliegan a través de pull requests. Para obtener todos los detalles sobre cómo cambiar valores, manejar desviaciones y realizar despliegues, consulta el repositorio **[sentry-options-automator](https://github.com/getsentry/sentry-options-automator)**.
+
+<div id="adding-new-options">
+  ## Añadir nuevas opciones
+</div>
+
+El proceso para registrar una nueva opción es el mismo en todos los entornos y se realiza en el código de Sentry. Añade tu opción en [`sentry/options/defaults.py`](https://github.com/getsentry/sentry/blob/master/sentry/options/defaults.py).
+
+```python
+register("performance.some-feature-rate", default=0.0)
+```
+
+Sigue estas reglas al agregar nuevas opciones:
+
+* asigna un espacio de nombres a tu opción (p. ej., `feature-scope.feature-name`)
+* coloca tu nueva opción junto con las opciones existentes relacionadas
+* usa guiones y no guiones bajos
+* define siempre un valor predeterminado con `default=`
+
+El valor de una opción puede ser cualquier valor que pueda serializarse con pickle.
+
+<Alert>
+  Es seguro declarar y usar una opción en la misma pull request; no necesitas dividirlas.
+</Alert>
+
+
+<div id="using-options">
+  ## Uso de opciones
+</div>
+
+Para consultar el valor de una opción, importa el módulo de opciones y usa el método get. Esto funciona igual en todos los entornos.
+
+```python
+from sentry import options
+feature_rate = options.get("performance.some-feature-rate")
+```
+
+
+<div id="setting-options">
+  ## Opciones de configuración
+</div>
+
+En instancias autoalojadas, puedes cambiar el valor de una opción usando `sentry shell` o mediante la [interfaz de opciones](#options-ui).
+
+<div id="sentry-shell">
+  ### Sentry Shell
+</div>
+
+Para manipular directamente la base de datos, puedes establecer valores de opciones usando Sentry Shell.
+
+Puedes establecer valores de opciones usando `sentry shell`. p. ej.,
+
+```bash
+sentry shell
+```
+
+entonces,
+
+```python
+from sentry import options
+options.set("performance.some-feature-rate", 0.01)
+```
+
+<Alert>
+  Si no tienes acceso a la shell, tendrás que ponerte en contacto con OPS para que configuren el valor de la opción por ti.
+</Alert>
+
+
+<div id="options-ui">
+  ### Interfaz de opciones
+</div>
+
+Si prevés actualizar tu opción con frecuencia, puedes hacerla editable en la interfaz de opciones. La página `/manage/settings` en la aplicación de Sentry incluye campos para un pequeño conjunto de las opciones disponibles. Puedes enviar un pull request para añadir tu opción a la interfaz [actualizando la vista de React correspondiente](https://github.com/getsentry/sentry/blob/master/static/app/views/admin/options.tsx). La interfaz de opciones solo está disponible para superusuarios. Editar opciones requiere el permiso "options.admin" y todos los cambios se registran en un log de auditoría.
+
+<div id="using-options-for-feature-rollout">
+  ## Uso de opciones para el lanzamiento de funcionalidades
+</div>
+
+Si estás trabajando en una funcionalidad a nivel del sistema, puedes optar por usar opciones para su lanzamiento en lugar de feature flags. A diferencia de los feature flags, las opciones no permiten una segmentación sencilla, pero ofrecen buen rendimiento, son estables y fáciles de implementar. p. ej.,
+
+```python
+from sentry.options.rollout import in_random_rollout
+
+if in_random_rollout("performance.some-feature-rate"):
+    do_feature_stuff()
+```
+
+¡Ojo! `in_random_rollout` usa `random.random` por debajo y hará que tu funcionalidad se active y desactive aleatoriamente entre solicitudes de página. Esto puede ser inaceptable para funciones de cara al usuario. Para evitarlo, puedes usar el helper `sample_modulo`. p. ej.,
+
+```python
+from sentry.utils.options import sample_modulo
+
+if sample_modulo("performance.some-feature-rate", organization.id):
+    do_feature_stuff()
+```
+
+`sample_modulo` garantiza que, para un valor determinado de la opción y una organización determinada, siempre devolverá el mismo valor booleano.
+
+
+<div id="setting-options-in-tests">
+  ## Configuración de opciones en las pruebas
+</div>
+
+Para probar funcionalidades que validan opciones, puedes usar el decorador `override_options`. Por ejemplo:
+
+```python
+from sentry.testutils.helpers import override_options
+
+@override_options({"performance.some-feature-rate": 1.0})
+def test_some_feature(self):
+    ...
+```
+
+También hay un administrador de contexto `override_options` equivalente:
+
+```python
+from sentry.testutils.helpers.options import override_options
+
+def test_some_feature(self):
+    with override_options({"performance.some-feature-rate": 1.0}):
+        ...
+```
+
+
+<div id="removing-options">
+  ## Eliminación de opciones
+</div>
+
+Si tu opción es temporal, debes eliminarla cuando ya no sea necesaria. Primero, crea un pull request para eliminar la opción y su uso. Una vez que se haya fusionado y desplegado, elimina la opción de la base de datos. En instancias autoalojadas, esto se hace a través de la shell de Sentry. De lo contrario, elimínala del repositorio de Options Automator.
+
+En instancias autoalojadas, puedes usar la shell de Sentry. Por ejemplo:
+
+```bash
+sentry shell
+```
+
+entonces,
+
+```python
+from sentry import options
+options.delete("performance.some-feature-rate")
+```

@@ -1,0 +1,171 @@
+---
+title: Fidelidad y sesgos
+sidebar_order: 2
+og_image: /og-images/application-architecture-dynamic-sampling-fidelity-and-biases.png
+---
+
+El muestreo dinámico permite que Sentry ajuste automáticamente la cantidad de datos que se conservan según el valor que tengan para el usuario. Técnicamente, esto se logra aplicando una **tasa de muestreo** a cada evento, determinada por un **conjunto de reglas** que se evalúan para cada evento.
+
+<Alert title="✨ Nota">
+  Una tasa de muestreo es un número en el intervalo `[0.0, 1.0]` que determina la probabilidad de que una transacción se conserve. Por ejemplo, una tasa de muestreo de `0.5` significa que, en promedio, la transacción se conservará el 50% de las veces.
+</Alert>
+
+<div id="the-concept-of-fidelity">
+  ## El concepto de fidelidad
+</div>
+
+En el núcleo de Dynamic Sampling está el concepto de **fidelidad**, que se concreta en una **tasa de muestreo objetivo** global que debe aplicarse a todos los spans y transacciones de una organización.
+
+<div id="dynamic-sampling-modes">
+  ### Modos de muestreo dinámico
+</div>
+
+Hay dos modos disponibles para definir las tasas de muestreo objetivo de Muestreo dinámico. Tanto el modo como las tasas de muestreo objetivo se configuran mediante las opciones de la organización `sentry:sampling_mode` y `sentry:target_sample_rate`, así como la opción del proyecto `sentry:target_sample_rate`.
+
+* **Modo automático** gestiona dinámicamente la tasa de muestreo objetivo de cada proyecto en función de la tasa de muestreo objetivo de la organización, priorizando los proyectos de menor volumen para aumentar la visibilidad. El Modo automático está activo si la opción de la organización `sentry:sampling_mode` está establecida en `organization`. La tasa de muestreo objetivo de la organización se almacena en la opción de **organization** `sentry:target_sample_rate`, y las tasas de muestreo objetivo de los proyectos se calculan a partir de la tasa de la organización.
+* **Modo manual** permite al usuario establecer tasas de muestreo objetivo estáticas por proyecto, que sirven como tasa base antes de aplicar los sesgos dinámicos descritos a continuación. El sistema no ajusta las tasas de muestreo objetivo. El Modo manual está activo si la opción de la organización `sentry:sampling_mode` está establecida en `project`. Las tasas de muestreo objetivo de los proyectos se almacenan en la opción de **project** `sentry:target_sample_rate`.
+
+Si la opción `sentry:sampling_mode` no está configurada, por defecto se usa el Modo automático; y si la opción `sentry:target_sample_rate` no está configurada, todas las tasas de muestreo objetivo tendrán el valor predeterminado de 1.
+
+Cuando el usuario cambia entre modos, las tasas de muestreo objetivo se transfieren a menos que se modifiquen explícitamente. Por ejemplo, si el usuario pasa del Modo automático al Modo manual, las tasas calculadas durante el Modo automático se conservan en la opción del proyecto `sentry:target_sample_rate`. A la inversa, si el usuario pasa del Modo manual al Modo automático, las tasas de muestreo objetivo del proyecto se recalculan en función de la tasa de muestreo objetivo general de la organización.
+
+Las [tasas de muestreo se recalibran periódicamente](https://github.com/getsentry/sentry/blob/9b98be6b97323a78809a829e06dcbef26a16365c/src/sentry/dynamic_sampling/rules/biases/recalibration_bias.py#L11-L44) para garantizar que se cumpla la tasa de muestreo objetivo general. Esta recalibración se realiza a nivel de proyecto o de organización, según el modo de muestreo dinámico. Dentro de la tasa de muestreo objetivo, Muestreo dinámico **prioriza los datos más relevantes**. Esto se logra actualizando y comunicando constantemente reglas específicas a Relay, mediante una configuración de proyecto, que luego aplica un muestreo dirigido a cada evento.
+
+![Concept of Fidelity](./images/fidelityAndPriorities.png)
+
+<Alert title="✨ Nota">
+  Para las organizaciones bajo AM2, Muestreo dinámico utiliza una [función de ventana deslizante](https://github.com/getsentry/sentry/blob/cc8cc38c8a108719d068e5622b24a8d0c744e84c/src/sentry/dynamic_sampling/tasks/sliding_window_org.py#L37-L61) sobre el volumen entrante para calcular la tasa de muestreo objetivo.
+</Alert>
+
+<div id="approximate-fidelity">
+  ### Fidelidad aproximada
+</div>
+
+Es importante tener en cuenta que la fidelidad solo determina una **tasa de muestreo objetivo aproximada**, por lo que hay flexibilidad para crear tasas de muestreo exactas. La canalización de ingesta, compuesta por [Relay](https://docs.sentry.io/product/relay/) y otros componentes, no cuenta con la infraestructura para rastrear el volumen, por lo que no puede crear una distribución ponderada real dentro de la tasa de muestreo objetivo.
+
+En su lugar, el backend de Sentry **calcula un conjunto de reglas** cuyo objetivo es lograr de forma cooperativa la tasa de muestreo objetivo. Determinar cuándo y cómo establecer estas reglas forma parte de la infraestructura de muestreo dinámico.
+
+<Alert title="✨ Nota">
+  La tasa de muestreo efectivamente aplicada, en última instancia, depende de cuántos datos coinciden con cada una de las anulaciones de sesgo.
+</Alert>
+
+<div id="trace-and-transaction-sampling">
+  ## Muestreo de trazas y transacciones
+</div>
+
+Sentry admite **dos tipos de muestreo fundamentalmente distintos**. Aunque esto es completamente transparente para el usuario, estos tipos de reglas constituyen los bloques básicos de toda la funcionalidad y el sesgo del muestreo dinámico.
+
+<div id="trace-sampling">
+  ### Muestreo de trazas
+</div>
+
+Una traza es una **colección de eventos relacionados entre sí**. Por ejemplo, una traza podría incluir eventos iniciados desde tu frontend que luego generan eventos en tu backend.
+
+El muestreo de trazas garantiza que **o bien se muestrean todos los eventos de una traza, o ninguno**. Es decir, estas reglas **siempre dan la misma decisión de muestreo** para cada evento dentro de la misma traza. Esto requiere la cooperación de los SDK y, por lo tanto, permite muestrear solo por nombre de `project`, `release`, `environment` y `transaction`.
+
+Para lograr el muestreo de trazas, los SDK transmiten todos los campos que pueden muestrearse mediante el [Dynamic Sampling Context (DSC)](/es/sdk/performance/dynamic-sampling-context/) (definido [aquí](https://getsentry.github.io/relay/relay_sampling/dsc/struct.DynamicSamplingContext.html)) a medida que propagan las trazas. *Esto garantiza que cada evento de la misma traza lleve el mismo DSC.*
+
+![Trace Sampling](./images/traceSampling.png)
+
+<Alert title="✨ Nota">
+  Para lograr un muestreo completo de trazas, el generador de números aleatorios utilizado por Relay se inicializa con el ID de la traza dentro del DSC enviado por el SDK. Esto asegura que las trazas con el mismo ID de traza siempre den la misma decisión de muestreo.
+</Alert>
+
+<div id="transaction-sampling">
+  ### Muestreo de transacciones
+</div>
+
+El muestreo de transacciones **no garantiza trazas completas** y, en cambio, **se aplica a transacciones individuales** analizando el cuerpo de la transacción entrante. Puede usarse para eliminar transacciones no deseadas de las trazas o para impulsar transacciones de forma individual a costa de obtener trazas contextuales incompletas.
+
+<div id="biases-for-sampling">
+  ## Sesgos para el muestreo
+</div>
+
+El muestreo dinámico utiliza sesgos para ajustar cuántos eventos que cumplen ciertas condiciones se muestrean. Estos sesgos se definen como un conjunto de reglas que Relay verifica para cada evento. Obtén más información sobre estas reglas [en la página de arquitectura](/es/dynamic-sampling/architecture/).
+
+Sentry define un conjunto de sesgos disponibles para todos los clientes. Algunos de los sesgos definidos por Sentry pueden habilitarse o deshabilitarse en la interfaz en **Project Settings -&gt; Performance**, mientras que otros están habilitados de forma predeterminada y no pueden deshabilitarse. Consulta este ejemplo de la interfaz (el contenido de esta captura de pantalla está sujeto a cambios):
+
+![Sesgos en la interfaz](./images/biasesUI.png)
+
+<div id="prioritize-new-releases">
+  ### Priorizar nuevas versiones
+</div>
+
+Este sesgo se utiliza para priorizar las trazas que provienen de una nueva versión. El objetivo es aumentar la tasa de muestreo en la ventana de tiempo entre la creación de una versión y su adopción por parte de los usuarios. *Las nuevas versiones se identifican en el `event_manager` definido [aquí](https://github.com/getsentry/sentry/blob/43d7c41aee2b22ca9f51916afac40f6cbdcd2b15/src/sentry/event_manager.py#L739-L773).*
+
+Como la adopción de versiones varía con el tiempo, un sistema de reglas con *decaimiento* interpola entre dos tasas de muestreo dentro de una ventana de tiempo determinada y utilizando una función de interpolación específica (por ejemplo, `linear`). La tasa de muestreo se reduce gradualmente a medida que aumenta la adopción de los usuarios y crece el volumen de muestras.
+
+![Tasa de muestreo y adopción](./images/sampleRateAndAdoption.png)
+
+El sesgo de la versión más reciente utiliza una regla con decaimiento para interpolar entre una tasa de muestreo inicial y final a lo largo de una ventana de tiempo definida de forma estática para cada plataforma. La lista de tiempos de adopción está definida [aquí](https://github.com/getsentry/sentry/blob/9b98be6b97323a78809a829e06dcbef26a16365c/src/sentry/dynamic_sampling/rules/helpers/time_to_adoptions.py#L25). Por ejemplo, Android tiene una ventana de tiempo más larga que JavaScript porque las apps de Android suelen tardar más en ser adoptadas por los usuarios.
+
+<div id="prioritize-dev-environments">
+  ### Priorizar entornos de desarrollo
+</div>
+
+Este sesgo incrementa la tasa de muestreo de las trazas en entornos de desarrollo, ya que estos datos suelen ser más valiosos para la depuración. Sentry identifica los entornos de desarrollo utilizando una lista, mantenida y actualizada periódicamente, de patrones de entornos conocidos. En estos entornos, la tasa de muestreo se establece en el 100%, por lo que se muestrean todas las trazas.
+
+```python
+ENVIRONMENT_GLOBS = [
+    "*debug*",
+    "*dev*",
+    "*local*",
+    "*qa*",
+    "*test*",
+    # ...
+]
+```
+
+La lista de entornos de desarrollo está disponible [aquí](https://github.com/getsentry/sentry/blob/4cb0d863de1ef8e3440153cb440eaca8025dee0d/src/sentry/dynamic_sampling/rules/biases/boost_environments_bias.py#L7).
+
+<div id="prioritize-low-volume-projects">
+  ### Priorizar proyectos de bajo volumen
+</div>
+
+<Alert title="✨ Nota">
+  Este sesgo solo está activo en el modo automático (no en el modo manual). Se aplica a cualquier traza entrante y se define por proyecto.
+</Alert>
+
+Este sesgo utiliza un algoritmo para aumentar la tasa de muestreo de los proyectos de bajo volumen, que de otro modo podrían quedar opacados por los de alto volumen. Calcula una nueva tasa de muestreo para cada proyecto según la tasa de muestreo general de la organización y la cantidad de transacciones que recibe cada proyecto, con el objetivo de lograr una distribución más equilibrada. El algoritmo ajusta estas tasas dinámicamente midiendo *el volumen de transacciones entrantes en una ventana temporal móvil* (también conocida como la tasa de fidelidad objetivo). A intervalos regulares, el sistema llama a la función `get_sampling_tier_for_volume` (definida [aquí](https://github.com/getsentry/sentry/blob/f3a2220ccd3a2118a1255a4c96a9ec2010dab0d8/src/sentry/quotas/base.py#L481)) para determinar la tasa de muestreo adecuada para cada proyecto.
+
+<div id="prioritize-low-volume-transactions">
+  ### Priorizar transacciones de bajo volumen
+</div>
+
+Las transacciones tienen volúmenes distintos y este sesgo se usa para priorizar las de bajo volumen, que pueden quedar eclipsadas por las de alto volumen. El objetivo es reequilibrar las tasas de muestreo de transacciones individuales para que las de bajo volumen tengan más probabilidades de contar con muestras representativas. La transacción considerada para el reequilibrio será la transacción raíz del trace.
+
+La priorización de transacciones de bajo volumen funciona de forma ligeramente distinta según el modo de muestreo dinámico:
+
+* En **modo automático** (`sentry:sampling_mode` == `organization`), la salida de la tarea [boost&#95;low&#95;volume&#95;projects](https://github.com/getsentry/sentry/blob/dee539472e999bf590cfc4e99b9b12981963defb/src/sentry/dynamic_sampling/tasks/boost_low_volume_transactions.py#L183) se utiliza como tasa de muestreo base para el algoritmo de balanceo.
+* En **modo manual** (`sentry:sampling_mode` == `project`), se utiliza la tasa de muestreo objetivo del proyecto como tasa de muestreo base para el algoritmo de balanceo.
+
+Para reequilibrar las transacciones, el sistema recupera los conteos de transacciones de cada proyecto y calcula una nueva tasa de muestreo para cada transacción.
+
+<Alert title="✨ Nota">
+  Los algoritmos para potenciar eventos de bajo volumen se ejecutan periódicamente (con cron jobs) con una ventana deslizante para tener en cuenta los cambios en el volumen entrante.
+</Alert>
+
+<div id="deprioritize-health-checks">
+  ### Dar menor prioridad a las comprobaciones de estado
+</div>
+
+Este sesgo reduce la tasa de muestreo de las transacciones identificadas como comprobaciones de estado, ya que suelen aportar poco valor para la depuración. Sentry mantiene y actualiza periódicamente una lista de endpoints de comprobación de estado conocidos para identificar estas transacciones y darles menor prioridad en consecuencia.
+
+```python
+HEALTH_CHECK_GLOBS = [
+    "*healthcheck*",
+    "*healthy*",
+    "*live*",
+    "*ready*",
+    "*heartbeat*",
+    "*/health",
+    "*/healthz",
+    # …
+]
+```
+
+La lista de endpoints de comprobación de estado está disponible [aquí](https://github.com/getsentry/sentry/blob/4cb0d863de1ef8e3440153cb440eaca8025dee0d/src/sentry/dynamic_sampling/rules/biases/ignore_health_checks_bias.py#L14).
+
+Para reducir la prioridad de las comprobaciones de estado, calculamos una nueva tasa de muestreo dividiendo la tasa de muestreo base del proyecto por un factor, que se define [aquí](https://github.com/getsentry/sentry/blob/master/src/sentry/dynamic_sampling/rules/utils.py#L13-L13).
+
+Si quieres saber más sobre la arquitectura de Dynamic Sampling, continúa a la [siguiente página](/es/dynamic-sampling/architecture/).

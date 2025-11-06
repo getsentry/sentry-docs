@@ -1,0 +1,63 @@
+---
+title: Rendimiento V2
+sidebar_order: 11
+description: Aprende a obtener aún más información sobre el rendimiento de apps Android
+og_image: /og-images/platforms-android-tracing-instrumentation-perf-v2.png
+---
+
+Rendimiento V2 incluye un conjunto de funciones que enriquecen la instrumentación de rendimiento. Se integra estrechamente con el módulo de Insights [Mobile Vitals](/es/product/insights/mobile/mobile-vitals/), lo que habilita los informes de <PlatformLink to="/tracing/instrumentation/perf-v2/#app-start">inicio de la app</PlatformLink> y <PlatformLink to="/tracing/instrumentation/perf-v2/#frames-delay">retraso de fotogramas</PlatformLink>.
+
+Desde la versión 8 del SDK, Rendimiento V2 está disponible de forma general y habilitado de manera predeterminada. En las versiones `7.4.0..<8.0.0`, esta función está disponible como *experimental* y debes optar por usarla:
+
+<div id="enabling-performance-v2">
+  ### Activar Performance V2
+</div>
+
+```java {filename:MyApplication.java} {4}
+import io.sentry.android.core.SentryAndroid;
+
+SentryAndroid.init(this, options -> {
+  options.setEnablePerformanceV2(true);
+});
+```
+
+```kotlin {filename:MyApplication.kt} {4}
+import io.sentry.android.core.SentryAndroid
+
+SentryAndroid.init(this) { options ->
+  options.enablePerformanceV2 = true
+}
+```
+
+```xml {filename:AndroidManifest.xml} {3-5}
+<manifest>
+    <application>
+        <meta-data
+          android:name="io.sentry.performance-v2.enable"
+          android:value="true" />
+    </application>
+</manifest>
+```
+
+<div id="app-start">
+  ### Inicio de la app
+</div>
+
+Además de habilitar Performance V2, esta función requiere aplicar el <PlatformLink to="/configuration/gradle/">Sentry Android Gradle Plugin</PlatformLink> (versión `4.2.0` o superior) al módulo de tu app.
+
+Una vez habilitada, la transacción de inicio de tu app mostrará un desglose detallado de spans de varios componentes:
+
+* `process.load`: Tiempo de inicialización del proceso
+* `contentprovider.load`: Tiempo de ejecución de `ContentProvider.onCreate()`
+* `application.load`: Tiempo de ejecución de `Application.onCreate()`
+* `activity.load`: Tiempo de ejecución del ciclo de vida de tu `Activity` antes de que se dibuje el primer fotograma
+
+![Captura de pantalla de App Start en Performance V2](./img/perf-v2-app-start.png)
+
+<div id="frames-delay">
+  ### Retraso de fotogramas
+</div>
+
+El retraso de fotogramas es el tiempo de demora percibido por el usuario en los fotogramas renderizados. El SDK de Android adjunta automáticamente esta información a cada span, lo que brinda información útil y muestra qué spans se correlacionan más con una experiencia de usuario deficiente. Para más detalles técnicos sobre el retraso de fotogramas, visita nuestra [documentación para desarrolladores](https://develop.sentry.dev/sdk/performance/frames-delay/).
+
+![Captura de pantalla Performance V2 Retraso de fotogramas](./img/perf-v2-frame-delay.png)

@@ -1,0 +1,135 @@
+---
+title: Uso de enmascaramiento personalizado para Session Replay
+sidebar_order: 5501
+description: "Aprende a enmascarar partes de los datos de tu app en Session Replay."
+notSupported:
+  - apple.macos
+  - apple.watchos
+  - apple.tvos
+  - apple.visionos
+---
+
+<PlatformSection notSupported={["apple.ios"]}>
+
+<Include name="apple-session-replay-support-alert" />
+
+</PlatformSection>
+
+<PlatformSection notSupported={["apple", "apple.macos", "apple.tvos", "apple.watchos", "apple.visionos"]}>
+<Alert level="warning">
+
+Antes de habilitar Session Replay en producción, verifica tu configuración de enmascaramiento para asegurarte de que no se capture información sensible. Nuestra configuración predeterminada enmascara de forma agresiva datos potencialmente sensibles, pero si modificas estos ajustes o actualizas frameworks de UI o SDK del sistema, debes probar tu aplicación a fondo. Si encuentras algún problema de enmascaramiento o datos sensibles que deberían estar enmascarados pero no lo están, [crea un issue en GitHub](https://github.com/getsentry/sentry-cocoa/issues/new/choose) y evita desplegar a producción con Session Replay habilitado hasta que se resuelva el problema.
+
+</Alert>
+
+De forma predeterminada, nuestro SDK de Session Replay enmascara todo el contenido de texto, las imágenes y la entrada del usuario. Esto ayuda a garantizar que no se exponga información sensible. También puedes elegir manualmente qué partes de los datos de tu app quieres enmascarar usando las diferentes opciones que se indican a continuación.
+
+<div id="mask-by-view-class">
+  ## Enmascarar por clase de vista
+</div>
+
+Puedes elegir qué tipo de vista quieres enmascarar o desenmascarar usando las opciones `maskedViewClasses` o `unmaskedViewClasses`.
+
+Supongamos que tienes una vista personalizada que quieres enmascarar y una subclase de `UILabel` (que normalmente estaría enmascarada) que no quieres enmascarar. Puedes establecer las opciones así:
+
+```swift
+options.sessionReplay.maskedViewClasses = [MyCustomView.self]
+options.sessionReplay.unmaskedViewClasses = [MyCustomLabel.self]
+```
+
+<div id="mask-by-view-instance">
+  ## Enmascarar por instancia de vista
+</div>
+
+También puedes enmascarar o desenmascarar una instancia específica de vista usando la API de replay (`SentrySDK.replay`) o extensiones de vista, así:
+
+```swift
+SentrySDK.replay.maskView(view: view)
+SentrySDK.replay.unmaskView(view: label)
+```
+
+o
+
+```swift
+view.sentryReplayMask()
+label.sentryReplayUnmask()
+```
+
+<div id="swiftui">
+  ## SwiftUI
+</div>
+
+Debido a la forma en que SwiftUI se transforma en UIKit, a menudo quedará sobreenmascarado. Un modificador como `background` usa el mismo elemento que una `Image`.
+Para controlar el proceso de enmascaramiento en SwiftUI, debes usar los modificadores `sentryReplayUnmask` y/o `sentryReplayMask`.
+
+En este ejemplo queremos mostrar el mensaje, pero no el nombre de usuario.
+
+```swift
+@Binding var user: String
+
+var body: some View {
+  VStack {
+    Text("Hello")
+      .sentryReplayUnmask()
+    Text("\(user)")
+  }
+}
+```
+
+En este ejemplo, necesitamos desenmascarar el VStack porque su elemento de fondo se enmascarará de forma predeterminada.
+Para ocultar el nombre de usuario, debemos enmascararlo.
+
+```swift
+@Binding var user: String
+
+var body: some View {
+  VStack {
+    Text("Hello")
+    Text("\(user)")
+      .sentryReplayMask()
+  }
+  .background(.blue)
+  .sentryReplayUnmask()
+}
+```
+
+<div id="debugging-session-replay-masking">
+  ## Depuración del enmascaramiento de Session Replay
+</div>
+
+Para ver cómo se están enmascarando los elementos, habilita la vista previa de enmascaramiento desde cualquier parte de tu app. Mostrará una superposición sobre los elementos enmascarados. Esto funciona en el simulador y en dispositivo, así como en Xcode Preview.
+
+```swift
+SentrySDK.replay.showMaskPreview()
+```
+
+De forma predeterminada, la superposición será opaca. Para configurar la opacidad, pasa la deseada como parámetro:
+
+```swift
+SentrySDK.replay.showMaskPreview(0.5) // Opacidad 0.5 para renderizar la vista previa semitransparente
+```
+
+Asegúrate de no incluir esto accidentalmente en tu build de release, por ejemplo, envolviéndolo en un bloque `#if DEBUG`.
+
+```swift
+#if DEBUG
+  SentrySDK.replay.showMaskPreview()
+#endif
+```
+
+Para previsualizar el enmascaramiento durante la fase de diseño de tus vistas SwiftUI, usa el modificador `sentryReplayPreviewMask`.
+
+Este modificador de vista funciona en el simulador y en dispositivo, así como en Xcode Preview. Por lo tanto, recomendamos aplicar el modificador solo en tu código de previsualización, para garantizar un enmascaramiento correcto sin afectar el build final de release.
+
+Ten en cuenta que cuando aplicas este modificador a una vista, mostrará la vista previa de enmascaramiento para toda la ventana que contiene esa vista, no solo para la vista en sí.
+
+```swift
+struct ContentView_Previews: PreviewProvider {
+  static var previews: some View {
+    ContentView()
+      .sentryReplayPreviewMask()
+  }
+}
+```
+
+</PlatformSection>

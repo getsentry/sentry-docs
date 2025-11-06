@@ -1,0 +1,90 @@
+---
+title: Errores del cliente GraphQL
+sidebar_order: 26
+description: "Esta función captura errores de graphql-client y los reporta a Sentry"
+---
+
+Una vez habilitada, esta función captura y reporta errores de GraphQL sobre HTTP cuando usas la biblioteca [graphql-client](https://github.com/graphql-dotnet/graphql-client). Además de la información básica sobre la solicitud y la respuesta HTTP, el evento de error también puede capturar detalles de la solicitud GraphQL, como el nombre y tipo de la operación, la consulta y la respuesta.
+
+Para capturar errores de GraphQL sobre HTTP, debes habilitar `SentryOptions.CaptureFailedRequests` y configurar `GraphQLHttpClientOptions.HttpMessageHandler` para usar `SentryGraphQLHttpMessageHandler`.
+
+1. Habilita la función en Sentry:
+
+```csharp
+// Agrega esto al callback de inicialización del SDK
+options.CaptureFailedRequests = true;
+```
+
+```fsharp
+// Agrega esto al callback de inicialización del SDK
+options.CaptureFailedRequests <- true
+```
+
+2. Configura la instrumentación de Sentry en el cliente de GraphQL:
+
+```csharp
+var graphClient = new GraphQLHttpClient(
+    options =>
+    {
+        options.EndPoint = new Uri("http://your.app.server/graphql");
+        options.HttpMessageHandler = new SentryGraphQLHttpMessageHandler(); // <-- Configura GraphQL para usar el controlador de mensajes de Sentry
+    },
+    new SystemTextJsonSerializer()
+    );
+```
+
+```fsharp
+let graphClient =
+    new GraphQLHttpClient(
+        fun options ->
+            options.EndPoint <- Uri("http://your.app.server/graphql")
+            options.HttpMessageHandler <- new SentryGraphQLHttpMessageHandler() // <-- Configura GraphQL para usar el controlador de mensajes de Sentry
+        ,
+        new SystemTextJsonSerializer()
+    )
+```
+
+De forma predeterminada, Sentry capturará errores de cliente de GraphQL sobre HTTP en solicitudes a cualquier endpoint de GraphQL. Puedes cambiar este comportamiento actualizando la opción `FailedRequestTargets` con expresiones regulares o cadenas de texto. Las cadenas de texto no tienen que coincidir por completo; es decir, la URL de una solicitud se considera coincidencia cuando contiene una subcadena proporcionada en la opción:
+
+```csharp
+options.FailedRequestTargets.Add("foo");      // subcadena
+options.FailedRequestTargets.Add("foo.*bar"); // expresión regular
+```
+
+```fsharp
+options.FailedRequestTargets.Add("foo")      // subcadena
+options.FailedRequestTargets.Add("foo.*bar") // expresión regular
+```
+
+Cuando la opción `SendDefaultPii` está habilitada, los eventos de error pueden contener datos personales (PII) como `Headers`, `Cookies` y la `query` de la solicitud GraphQL. Para limpiar estos datos antes de enviarlos, consulta [Scrubbing Sensitive Data](/es/platforms/dotnet/data-management/sensitive-data/).
+
+Estos eventos son buscables. Puedes configurar alertas para ellos usando propiedades como `http.url` y `http.status_code`. Lee nuestra documentación sobre [Searchable Properties](/es/concepts/search/searchable-properties/) para obtener más información.
+
+<div id="customize-or-drop-an-error-event">
+  ## Personalizar o descartar un evento de error
+</div>
+
+Cualquier evento de error capturado puede personalizarse o descartarse en el callback `SetBeforeSend`, así:
+
+```csharp
+options.SetBeforeSend((@event, hint) =>
+{
+    return @event.Breadcrumbs.Any(b => b.Type == "graphql" && b?.Data?["operation_name"] == "fakeMutation")
+        ? null  // Ignorar errores de fakeMutations
+        : @event;
+});
+```
+
+```fsharp
+options.SetBeforeSend(fun @event hint ->
+    let hasFakeMutation =
+        @event.Breadcrumbs
+        |> Seq.exists (fun b ->
+            b.Type = "graphql" &&
+            b.Data.["operation_name"] = "fakeMutation")
+
+    if hasFakeMutation then
+        null
+    else
+        @event)
+```

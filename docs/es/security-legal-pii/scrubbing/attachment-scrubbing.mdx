@@ -1,0 +1,150 @@
+---
+title: "Depuración de archivos adjuntos"
+sidebar_order: 4
+keywords:
+  ["pii", "gdpr", "personally identifiable data", "compliance", "minidump"]
+description: "Conoce cómo depurar archivos adjuntos si contienen PII."
+---
+
+La PII puede incluirse en archivos adjuntos que se agregan a los eventos.
+Los [minidumps](/es/platforms/native/guides/minidumps), un tipo común de archivo adjunto para informes de fallos nativos, pueden contener PII en varias secciones del archivo.
+
+<div id="data-scrubbing-methods-in-attachments">
+  ## Métodos de depuración de datos en adjuntos
+</div>
+
+La depuración de adjuntos, y especialmente de minidumps, debe hacerse con cuidado y sin alterar el formato original del archivo.
+Sentry cuenta con conocimiento integrado de algunos formatos de archivo y ofrece [selectores de origen](#attachment-source-selectors) personalizados para ayudarte a crear reglas de depuración que no dañen el archivo cuando se usan correctamente.
+
+Al modificar datos en el archivo, Sentry no puede cambiar la longitud del archivo. Esto tiene implicaciones en cómo se comportan los [métodos](../advanced-datascrubbing/#methods):
+
+* Cualquier modificación que dé como resultado un texto de reemplazo **más largo** que el original será **truncada**.
+* Cualquier modificación que dé como resultado un texto de reemplazo **más corto** que el original será **rellenada** usando `x` como carácter de relleno.
+
+Así es como funciona específicamente para cada método:
+
+* *Remove*: Como se elimina todo el campo, en esencia se reemplaza con el carácter de relleno.
+* *Mask*: Se comporta con normalidad; todos los datos se reemplazan con el carácter de enmascaramiento `*`.
+* *Hash*: El hashing se realiza como de costumbre; sin embargo, se aplica sobre la **representación binaria** de la coincidencia, independientemente de la codificación en la que se haya hecho la coincidencia. El hash resultante se rellena o se trunca como se describió anteriormente.
+* *Replace*: Se comporta con normalidad, con el valor de reemplazo rellenado o truncado como se describió anteriormente.
+
+<div id="attachment-source-selectors">
+  ## Selectores de origen de adjuntos
+</div>
+
+Todos los adjuntos se pueden seleccionar con el selector [Tipo de valor](../advanced-datascrubbing/#value-types) `$attachments` en la raíz del selector, seguido del nombre de archivo específico.
+El nombre de archivo debe ir entre comillas si se quiere indicar uno específico, pero también se pueden usar comodines.
+
+Por ejemplo, para el archivo `minidump.dmp`, puedes seleccionar todos los campos que se van a depurar usando `$attachments.'minidump.dmp'.**`.
+Para escribir lo mismo usando un comodín y seleccionar adjuntos con un nombre de archivo específico, escribirías `$attachments.'my_file.txt'.**` o incluso simplemente `$attachments.'my_file.txt'`.
+
+<Alert level="warning" title="Limitaciones al depurar adjuntos">
+  Sentry actualmente solo admite de forma limitada la depuración de adjuntos que no sean minidumps. Solo los adjuntos seleccionados explícitamente por una regla de [Advanced Data Scrubbing](../advanced-datascrubbing/) con un nombre de archivo sin comodines se depurarán realmente. Por ejemplo:
+
+  ```
+  # Will be scrubbed:
+  [Remove] [IP Addresses] from [$attachments.'foo.txt']
+
+  # Will NOT be scrubbed:
+  [Remove] [IP Addresses] from [$attachments.**]
+  ```
+</Alert>
+
+<div id="minidump-selectors">
+  ### Selectores de minidump
+</div>
+
+Un minidump siempre es un adjunto, pero también tiene su propio [tipo de valor](../advanced-datascrubbing/#value-types), `$minidump`, que te permite seleccionar todos los campos que pueden limpiarse en un minidump usando `$minidump.**`.
+Esto es en realidad una abreviatura para seleccionar los campos de todos los adjuntos que son minidumps: `$attachments.$minidump.**`.
+
+En nuestros ejemplos hasta ahora, nos hemos referido repetidamente a todos los campos de un minidump que pueden limpiarse.
+Para fines de limpieza de PII, actualmente representamos el minidump como una estructura plana con los siguientes campos:
+
+* La **memoria de pila**: Son regiones de memoria en el minidump que un hilo usa como memoria de pila.
+  Puedes usar el elemento de ruta `stack_memory` para seleccionar estas regiones.
+  Generalmente contendrán datos binarios, así que ten cuidado con los [tipos de datos](../advanced-datascrubbing/#data-types) usados para limpiar estos datos.
+
+  **No recomendamos** limpiar la memoria de pila, ya que Sentry la necesita para construir un stack trace legible del evento.
+  Modificar la pila de forma inadvertida hará que este proceso sea imposible y el evento mucho menos útil.
+  Por ello, no puedes seleccionar la memoria de pila con un selector más genérico como un [tipo de valor](../advanced-datascrubbing/#value-types).
+  Debes seleccionarla explícitamente, por ejemplo, con `stack_memory` o `$minidump.stack_memory`, para que se limpie.
+
+  En general, todos los [tipos de datos](../advanced-datascrubbing/#data-types) realizan una coincidencia mediante expresión regular textual sobre ciertos datos.
+  En el caso de la pila, esta expresión regular se aplica como una expresión regular binaria UTF-8, de modo que cualquier UTF-8 incrustado en los datos binarios coincida.
+  Además, la expresión regular se aplica a cualquier cadena UTF-16LE válida encontrada dentro de los datos binarios.
+
+* La **memoria dinámica (heap)**: Se considera cualquier región de memoria que no se use como memoria de pila.
+  Esto significa que estas regiones podrían incluir otras zonas no pertenecientes a la pila, como archivos mapeados a la memoria del proceso usando `mmap`.
+  Todas estas regiones se pueden seleccionar usando el selector de elemento de ruta `heap_memory`.
+  Además, estas regiones también tienen `$binary` como selector de [tipo de valor](../advanced-datascrubbing/#value-types), lo que te permite escribir reglas más genéricas.
+
+  Como Sentry no requiere la memoria dinámica para extraer stack traces, es mucho más seguro modificar estas regiones de memoria.
+
+  Al igual que con la memoria de pila, todos los [tipos de datos](../advanced-datascrubbing/#data-types) se hacen coincidir como una expresión regular binaria UTF-8, así como en cualquier cadena UTF-16LE válida encontrada dentro de la región de memoria binaria.
+
+* Un minidump también contiene una lista de **módulos de código**, que están cargados en el momento en que se crea el minidump.
+  Esta lista contiene información sobre cada módulo, incluidos dos campos que pueden contener rutas de archivos: la ruta del archivo de código y la ruta del archivo de depuración asociado.
+
+  Dado que estos campos son nombres de ruta, pueden incluir el directorio personal del usuario.
+  Por ello, tiene sentido aplicar el [tipo de datos](../advanced-datascrubbing/#data-types) *Usernames in filepaths* a estos campos.
+  Los campos se pueden seleccionar individualmente por sus respectivos nombres:
+
+  * `code_file`
+  * `debug_file`
+
+  Ambos campos tienen un [tipo de valor](../advanced-datascrubbing/#value-types) de `$string`. Cualquier modificación excluirá el nombre base de la ruta para asegurarse de que la canalización de procesamiento del evento aún pueda operar correctamente con el minidump.
+
+  Este ejemplo ilustra cómo se muestra en sentry.io una regla para limpiar estos campos:
+
+  ```
+  [Remove] [Usernames in filepaths] from [$minidump.code_file || $minidump.debug_file]
+  ```
+
+  Como esta regla es más genérica, también es posible aplicarla de forma más amplia usando el [tipo de valor](../advanced-datascrubbing/#value-types):
+
+  ```
+  [Remove] [Usernames in filepaths] from [$string]
+  ```
+
+* Los minidumps de Linux pueden contener tanto la **línea de comandos** como las **variables de entorno**, que se incluyen como copias de los archivos en `/proc/$pid/cmdline` y `/proc/$pid/environ`. Como son copias directas de esos archivos, tienen este formato: registros separados por NULL de argumentos `argv` o pares `VAR=val`, respectivamente.
+
+  Para seleccionarlas, actualmente solo puedes usar sus [tipos de valor](../advanced-datascrubbing/#value-types): `$binary`, lo cual funcionará porque, por ahora, estos son los únicos campos en el minidump con tipo de valor binario.
+
+  Este ejemplo muestra cómo la interfaz presenta una regla para limpiar el directorio personal de la variable de entorno `$HOME`:
+
+  ```
+  [Remove] [HOME=[^\u0000+]\u0000] from [$minidump.$binary]
+  ```
+
+  Observa la sintaxis para denotar una cadena delimitada por NULL en la expresión regular: cualquier secuencia de caracteres que no contenga NULL, pero termine en NULL. Aquí, NULL se representa por su punto de código Unicode: `\u0000`.
+
+<div id="malformed-minidumps">
+  ## Minidumps malformados
+</div>
+
+Si un minidump no se puede analizar porque está malformado, aún podría contener PII.
+Por este motivo, el archivo adjunto del minidump también se limpia como un único campo binario si no se puede analizar.
+
+En este caso, se puede seleccionar el archivo adjunto completo como de costumbre usando un selector de nombre de archivo o un comodín: `$attachments.'minidump.dmp'` o `$attachments.*`.
+Además, dado que el archivo adjunto completo ahora es un único campo, se puede seleccionar usando el [tipo de valor](../advanced-datascrubbing/#value-types) `$binary`.
+
+<div id="example">
+  ## Ejemplo
+</div>
+
+Un proceso suele contener una estructura con sus variables de entorno en las primeras posiciones de la memoria de la pila; en C, el propio proceso suele acceder a ellas mediante el parámetro `char *envp[]` de `main()`.
+El entorno suele incluir `$HOME`, que a su vez contiene el nombre de usuario y podría ser PII.
+Este bloque puede aparecer en varios lugares de un minidump:
+
+* Al principio de la pila, tal como se pasa a través de `**envp`.
+* En el bloque `/proc/$pid/environ`, que es una copia exacta de los datos de la pila.
+* Como un archivo adjunto en bruto, si el minidump no se pudo analizar.
+
+Se podría escribir una regla para depurar (scrub) la variable de entorno `$HOME` en todas estas ubicaciones como:
+
+```
+[Remove] [HOME=[^\u0000+]\u0000] from [stack_memory || $binary]
+```
+
+Ten en cuenta que `stack_memory` debe usarse explícitamente, ya que no puede cubrirse con una regla más general, porque limpiar este campo puede romper fácilmente el procesamiento del minidump.
+Sin embargo, los dos últimos casos se cubren junto con `$binary`, que coincidirá tanto con `$attachment.$minidump.$binary` (el archivo `environ`) como con `$attachment.'minidump.dmp'`.

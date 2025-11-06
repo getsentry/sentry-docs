@@ -1,0 +1,283 @@
+---
+title: Configuración
+sidebar_order: 6900
+description: >-
+  Obtén información sobre los campos de configuración generales de User Feedback para la versión 7 del
+  SDK de JavaScript.
+og_image: >-
+  /og-images/platforms-javascript-common-user-feedback-configuration-index__v7.x.png
+---
+
+<Alert level="warning" title="Aviso de deprecación">
+
+En la versión 7 de nuestro SDK de JavaScript, User Feedback se lanzó como una integración beta. Recomendamos seguir la [guía de migración](https://github.com/getsentry/sentry-javascript/blob/develop/docs/migration/feedback.md) y actualizar tu SDK a la versión más reciente.
+
+</Alert>
+
+<PlatformSection notSupported={["javascript.node", "javascript.aws-lambda", "javascript.azure-functions", "javascript.connect", "javascript.express", "javascript.fastify", "javascript.gcp-functions", "javascript.koa"]}>
+  ## Widget de comentarios de los usuarios
+
+  El widget de comentarios de usuario ofrece muchas opciones de personalización y, si las opciones disponibles no bastan, puedes [usar tu propia interfaz](#bring-your-own-widget). La siguiente imagen muestra qué elementos se pueden personalizar. Las claves de configuración a la izquierda de la imagen corresponden a la [personalización del texto](#text-customization), mientras que las de la derecha son para la [personalización del tema](#theme-customization).
+
+  ![Imagen de las opciones de personalización disponibles para el widget de comentarios de usuarios](./img/user-feedback-widget-customization_v7.png)
+
+  ### General
+
+  Puedes configurar las siguientes opciones de la integración en `feedbackIntegration({})`:
+
+  | Clave            | Tipo                     | Predeterminado    | Descripción                                                                                                                                                                                                                              |
+  | -------------- | ------------------------ | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------ |
+  | `autoInject`   | `boolean`                | `true`            | Inserta el widget de comentarios en la aplicación cuando se agrega la integración. Establece `autoInject: false` si quieres llamar a `feedback.attachTo()` o `feedback.openDialog()` directamente, o si solo quieres mostrar el widget en determinadas vistas. |
+  | `showBranding` | `boolean`                | `true`            | Muestra el logotipo de Sentry dentro del formulario                                                                                                                                                                                      |
+  | `colorScheme`  | <code>&quot;system&quot; | &quot;light&quot; | &quot;dark&quot;</code>                                                                                                                                                                                                                  | `"system"` | Muestra las opciones de tema. `"system"` usará el esquema de color de tu sistema operativo. |
+
+  ### Usuario y formulario
+
+  | Clave             | Tipo                     | Predeterminado                        | Descripción                                                                                                            |
+  | ----------------- | ------------------------ | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+  | `showName`        | `boolean`                | `true`                                | Muestra el campo nombre en el formulario de comentarios.                                                               |
+  | `showEmail`       | `boolean`                | `true`                                | Muestra el campo correo electrónico en el formulario de comentarios.                                                   |
+  | `isNameRequired`  | `boolean`                | `false`                               | Exige completar el campo nombre en el formulario de comentarios.                                                       |
+  | `isEmailRequired` | `boolean`                | `false`                               | Exige completar el campo correo electrónico en el formulario de comentarios.                                           |
+  | `useSentryUser`   | `Record<string, string>` | `{ email: 'email', name: 'username'}` | Asigna los campos `email` y `name` a los campos de usuario correspondientes del SDK de Sentry establecidos con `Sentry.setUser`. |
+
+  De forma predeterminada, la integración de Feedback intentará rellenar los campos de nombre y correo electrónico si has establecido un contexto de usuario mediante <PlatformLink to="/enriching-events/identify-user/">`Sentry.setUser()`</PlatformLink>. Se espera que los campos de correo y nombre sean `email` y `username`. A continuación se muestra un ejemplo de configuración con campos de usuario personalizados:
+
+  ```javascript
+  Sentry.setUser({
+    email: "foo@example.com",
+    fullName: "Jane Doe",
+  });
+
+  feedbackIntegration({
+    useSentryUser: {
+      email: "email",
+      name: "fullName",
+    },
+  });
+  ```
+
+  ### Personalización del texto
+
+  La mayor parte del texto que ves en el widget de comentarios predeterminado se puede personalizar.
+
+  | Clave                | Predeterminado                         | Descripción                                                        |
+  | -------------------- | -------------------------------------- | ------------------------------------------------------------------ |
+  | `buttonLabel`        | `Report a Bug`                         | La etiqueta del botón insertado.                                   |
+  | `submitButtonLabel`  | `Send Bug Report`                      | La etiqueta del botón Enviar del formulario de comentarios.        |
+  | `cancelButtonLabel`  | `Cancel`                               | La etiqueta del botón Cancelar del formulario de comentarios.      |
+  | `formTitle`          | `Report a Bug`                         | El título en la parte superior del formulario de comentarios.      |
+  | `nameLabel`          | `Name`                                 | La etiqueta del campo de nombre.                                   |
+  | `namePlaceholder`    | `Your Name`                            | El texto de ayuda del campo de nombre.                             |
+  | `emailLabel`         | `Email`                                | La etiqueta del campo de correo electrónico.                       |
+  | `emailPlaceholder`   | `your.email@example.org`               | El texto de ayuda del campo de correo electrónico.                 |
+  | `messageLabel`       | `Description`                          | La etiqueta del campo de descripción.                              |
+  | `messagePlaceholder` | `What's the bug? What did you expect?` | Texto de ayuda: ¿Cuál es el error? ¿Qué esperabas que ocurriera?   |
+  | `successMessageText` | `Thank you for your report!`           | ¡Gracias por tu informe!                                           |
+  | `isRequiredText`     | `(required)`                           | (obligatorio)                                                      |
+
+  Ejemplo de personalización:
+
+  ```javascript
+  feedbackIntegration({
+    buttonLabel: "Comentarios",
+    submitButtonLabel: "Enviar comentarios",
+    formTitle: "Enviar comentarios",
+  });
+  ```
+
+  ### Personalización del tema
+
+  Los colores pueden personalizarse mediante el constructor de la clase Feedback o definiendo variables CSS en el botón inyectado. Si usas el botón predeterminado, tendrá la propiedad `id="sentry-feedback"`, lo que significa que puedes usar el selector `#sentry-feedback` para definir las variables CSS que quieras sobrescribir.
+
+  | Clave                     | Variable CSS                   | Claro                                     | Oscuro                                    | Descripción                                                                                           |
+  | ------------------------- | ------------------------------ | ----------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+  | `background`              | `--background`                 | `#ffffff`                                 | `#29232f`                                 | Color de fondo del widget (botón insertado y formulario).                                             |
+  | `backgroundHover`         | `--background-hover`           | `#f6f6f7`                                 | `#352f3b`                                 | Color de fondo del botón insertado en estado hover.                                                   |
+  | `foreground`              | `--foreground`                 | `#2b2233`                                 | `#ebe6ef`                                 | Color de primer plano, p. ej., color del texto.                                                        |
+  | `error`                   | `--error`                      | `#df3338`                                 | `#f55459`                                 | Color usado para componentes relacionados con errores (p. ej., color del texto cuando ocurre un error al enviar comentarios). |
+  | `success`                 | `--success`                    | `#268d75`                                 | `#2da98c`                                 | Color usado para componentes relacionados con el éxito (p. ej., color del texto cuando los comentarios se envían correctamente). |
+  | `border`                  | `--border`                     | `1.5px solid rgba(41, 35, 47, 0.13)`      | `1.5px solid rgba(235, 230, 239, 0.15)`   | Estilo de borde usado para el widget (botón insertado y formulario).                                   |
+  | `borderRadius`            | `--border-radius`              | `12px`                                    | `12px`                                    | Radio de borde usado para el widget (botón insertado y mensaje de éxito).                              |
+  | `boxShadow`               | `--box-shadow`                 | `0px 4px 24px 0px rgba(43, 34, 51, 0.12)` | `0px 4px 24px 0px rgba(43, 34, 51, 0.12)` | Estilo de sombra de caja usado para el widget (botón insertado y formulario).                          |
+  | `submitBackground`        | `--submit-background`          | `rgba(88, 74, 192, 1)`                    | `rgba(88, 74, 192, 1)`                    | Color de fondo del botón de envío.                                                                     |
+  | `submitBackgroundHover`   | `--submit-background-hover`    | `rgba(108, 95, 199, 1)`                   | `rgba(108, 95, 199, 1)`                   | Color de fondo al pasar el cursor sobre el botón de envío.                                            |
+  | `submitBorder`            | `--submit-border`              | `rgba(108, 95, 199, 1)`                   | `rgba(108, 95, 199, 1)`                   | Estilo de borde del botón de envío.                                                                   |
+  | `submitOutlineFocus`      | `--submit-outline-focus`       | `rgba(108, 95, 199, 1)`                   | `rgba(108, 95, 199, 1)`                   | Color del contorno del botón de envío en estado de enfoque.                                           |
+  | `submitForeground`        | `--submit-foreground`          | `#ffffff`                                 | `#ffffff`                                 | Color de primer plano del botón de envío.                                                             |
+  | `submitForegroundHover`   | `--submit-foreground-hover`    | `#ffffff`                                 | `#ffffff`                                 | Color de primer plano del botón de envío al pasar el cursor.                                          |
+  | `cancelBackground`        | `--cancel-background`          | `transparent`                             | `transparent`                             | Color de fondo del botón de cancelar.                                                                  |
+  | `cancelBackgroundHover`   | `--cancel-background-hover`    | `var(--background-hover)`                 | `var(--background-hover)`                 | Color de fondo al pasar el cursor sobre el botón de cancelar.                                          |
+  | `cancelBorder`            | `--cancel-border`              | `var(--border)`                           | `var(--border)`                           | Estilo de borde del botón de cancelar.                                                                 |
+  | `cancelOutlineFocus`      | `--cancel-outline-focus`       | `var(--input-outline-focus)`              | `var(--input-outline-focus)`              | Color del contorno del botón de cancelar en estado de enfoque.                                         |
+  | `cancelForeground`        | `--cancel-foreground`          | `var(--foreground)`                       | `var(--foreground)`                       | Color de primer plano del botón de cancelar.                                                           |
+  | `cancelForegroundHover`   | `--cancel-foreground-hover`    | `var(--foreground)`                       | `var(--foreground)`                       | Color de primer plano del botón de cancelar al pasar el cursor.                                        |
+  | `inputBackground`         | `--input-background`           | `inherit`                                 | `inherit`                                 | Color de fondo de los campos del formulario.                                                           |
+  | `inputForeground`         | `--input-foreground`           | `inherit`                                 | `inherit`                                 | Color de primer plano de los campos del formulario.                                                    |
+  | `inputBorder`             | `--input-border`               | `var(--border)`                           | `var(--border)`                           | Estilo de borde de los campos del formulario.                                                          |
+  | `inputOutlineFocus`       | `--input-outline-focus`        | `rgba(108, 95, 199, 1)`                   | `rgba(108, 95, 199, 1)`                   | Color del contorno de los campos del formulario cuando están enfocados.                                |
+  | `formBorderRadius`        | `--form-border-radius`         | `20px`                                    | `20px`                                    | Radio de borde del formulario.                                                                         |
+  | `formContentBorderRadius` | `--form-content-border-radius` | `6px`                                     | `6px`                                     | Radio de borde para el contenido del formulario (p. ej., campos y botones).                           |
+
+  Aquí tienes un ejemplo de cómo personalizar únicamente el color de fondo del tema claro usando la configuración del constructor de Feedback:
+
+  ```javascript
+  feedbackIntegration({
+    themeLight: {
+      background: "#cccccc",
+    },
+  });
+  ```
+
+  O el mismo ejemplo anterior, pero usando el método de variables de CSS:
+
+  ```css
+  #sentry-feedback {
+    --background: #cccccc;
+  }
+  ```
+
+  ### Personalización adicional de la interfaz de usuario
+
+  Estas son variables CSS adicionales que se pueden reemplazar, similares a la personalización del tema mencionada arriba. No son compatibles en el constructor.
+
+  | Variable        | Predeterminado                          | Descripción                                                                         |
+  | --------------- | --------------------------------------- | ---------------------------------------------------------------------------------- |
+  | `--bottom`      | `1rem`                                  | De forma predeterminada, el widget tiene posición fija y se ubica en la esquina inferior derecha. |
+  | `--right`       | `1rem`                                  | De forma predeterminada, el widget tiene posición fija y se ubica en la esquina inferior derecha. |
+  | `--top`         | `auto`                                  | De forma predeterminada, el widget tiene posición fija y se ubica en la esquina inferior derecha. |
+  | `--left`        | `auto`                                  | De forma predeterminada, el widget tiene posición fija y se ubica en la esquina inferior derecha. |
+  | `--z-index`     | `100000`                                | El z-index del widget.                                                             |
+  | `--font-family` | `"'Helvetica Neue', Arial, sans-serif"` | Familia tipográfica predeterminada a usar.                                         |
+  | `--font-size`   | `14px`                                  | Tamaño de fuente.                                                                  |
+
+  ### Callbacks de eventos
+
+  Como a veces es útil saber cuándo un usuario comenzó a interactuar con el formulario de comentarios, hemos habilitado que agregues registros personalizados o que inicies y detengas temporizadores en segundo plano en la página para saber cuándo el usuario ha terminado.
+
+  Pasa estas funciones de retorno (callbacks) cuando inicies la integración de Feedback:
+
+  ```javascript
+  feedbackIntegration({
+    onFormOpen: () => {},
+    onFormClose: () => {},
+    onSubmitSuccess: () => {},
+    onSubmitError: () => {},
+  });
+  ```
+
+  ### Trae tu propio Button
+
+  Puedes usar tu propio Button en lugar del botón predeterminado inyectado para mostrar el formulario, llamando a `feedback.attachTo()` para que el SDK añada un detector de clic a tu Button. También puedes proporcionar las mismas opciones de personalización que acepta el constructor (por ejemplo, para etiquetas de texto y colores).
+
+  ```javascript
+  const feedback = feedbackIntegration({
+    // Desactivar la inyección del widget predeterminado
+    autoInject: false,
+  });
+
+  feedback.attachTo(document.querySelector("#your-button"), {
+    formTitle: "¡Informar un error!"
+  });
+  ```
+
+  Como alternativa, puedes invocar `feedback.openDialog()`:
+
+  ```typescript
+  import { BrowserClient, Feedback, getClient } from "@sentry/react";
+
+  function MyFeedbackButton() {
+    const client = getClient<BrowserClient>();
+    const feedback = client?.getIntegration(Feedback);
+
+    // No renderizar el botón de comentarios personalizado si la integración de Feedback no está instalada
+    if (!feedback) {
+      return null;
+    }
+
+    return (
+      <button type="button" onClick={() => feedback.openDialog()}>
+        Envíame tus comentarios
+      </button>
+    );
+  }
+  ```
+
+  ### Trae tu propio widget
+
+  También puedes usar tus propios componentes de interfaz para recopilar feedback y pasar el objeto de datos de feedback a la función `sendFeedback()`. La función `sendFeedback` acepta dos parámetros:
+
+  * Un objeto de JavaScript con la propiedad obligatoria `message` y las propiedades opcionales `name` y `email`, o una instancia de `FormData` con las mismas propiedades.
+  * Un objeto &quot;options&quot; opcional.
+
+  ```javascript
+  Sentry.sendFeedback(
+    {
+      name: "Jane Doe", // opcional
+      email: "email@example.org", // opcional
+      message: "Este es un ejemplo de comentarios", // obligatorio
+    },
+    {
+      includeReplay: true, // opcional
+    }
+  );
+  ```
+
+  Aquí tienes un ejemplo simple:
+
+  ```html
+  <form id="my-feedback-form">
+    <input name="name" />
+    <input name="email" />
+    <textarea name="message" placeholder="¿Qué sucede?" />
+  </form>
+  ```
+
+  ```javascript
+  import { sendFeedback } from "@sentry/react";
+
+  document
+    .getElementById("my-feedback-form")
+    .addEventListener("submit", (event) => {
+      const formData = new FormData(event.currentTarget);
+      sendFeedback(formData);
+      event.preventDefault();
+    });
+  ```
+</PlatformSection>
+
+<div id="crash-report-modal">
+  ## Modal de informe de fallos
+</div>
+
+Puedes personalizar el modal de informe de fallos según las necesidades de tu organización, por ejemplo, para fines de localización. Todas las opciones se pueden pasar mediante la llamada a `Sentry.showReportDialog`.
+
+| Param            | Default                                                                                              |
+| ---------------- | ---------------------------------------------------------------------------------------------------- |
+| `eventId`        | Establece manualmente el id del evento.                                                              |
+| `dsn`            | Establece manualmente el dsn al que se informará.                                                    |
+| `user`           | Establece manualmente los datos del usuario _[un objeto con las claves indicadas a continuación]_.   |
+| `user.email`     | Dirección de correo electrónico del usuario.                                                         |
+| `user.name`      | Nombre del usuario.                                                                                  |
+| `lang`           | _[automático]_ – (**Sobrescribe el código de idioma de Sentry.**)                                    |
+| `title`          | Parece que estamos teniendo problemas.                                                               |
+| `subtitle`       | Nuestro equipo ha sido notificado.                                                                   |
+| `subtitle2`      | Si quieres ayudar, cuéntanos abajo qué pasó. – (**No visible en pantallas con resoluciones pequeñas.**) |
+| `labelName`      | Nombre                                                                                               |
+| `labelEmail`     | Correo electrónico                                                                                   |
+| `labelComments`  | ¿Qué ocurrió?                                                                                        |
+| `labelClose`     | Cerrar                                                                                               |
+| `labelSubmit`    | Enviar                                                                                               |
+| `errorGeneric`   | Se produjo un error desconocido al enviar tu informe. Inténtalo de nuevo.                            |
+| `errorFormEntry` | Algunos campos no son válidos. Corrige los errores e inténtalo de nuevo.                             |
+| `successMessage` | Tu comentario se ha enviado. ¡Gracias!                                                                |
+| `onLoad`         | n/d - (**Una función de retorno opcional que se invocará cuando se abra el widget.**)               |
+| `onClose`        | n/d - (**Una función de retorno opcional que se invocará cuando se cierre el widget.**)              |
+
+La función opcional `onLoad` se llamará cuando los usuarios vean el widget. Puedes usarla para ejecutar lógica personalizada, por ejemplo, para registrar un evento de analítica:
+
+<PlatformContent includePath="user-feedback/example-widget-onload/" />
+
+La función opcional `onClose` se llamará cuando los usuarios cierren el widget. Puedes usarla para ejecutar lógica personalizada, por ejemplo, para recargar la página:
+
+<PlatformContent includePath="user-feedback/example-widget-onclose/" />

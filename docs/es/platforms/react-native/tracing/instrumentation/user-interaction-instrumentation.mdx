@@ -1,0 +1,83 @@
+---
+title: Instrumentación de interacciones del usuario
+sidebar_order: 20
+sdk: sentry.javascript.react-native
+
+description: "Descubre qué tipos de interacciones del usuario pueden capturarse"
+---
+
+La instrumentación de la interfaz captura transacciones y agrega breadcrumbs para las interacciones táctiles. También hay compatibilidad con gestos mediante React Native Gesture Handler, disponible con el wrapper `sentryTraceGesture`.
+
+<div id="touch-events">
+  ## Eventos táctiles
+</div>
+
+Los nombres de las transacciones se generan a partir de una combinación de los nombres de las pantallas mostradas (por ejemplo, `LoginScreen`) y las etiquetas de los elementos con los que interactúan los usuarios (por ejemplo, `login_button`).
+
+<Alert>
+  Para capturar transacciones de UI, primero debes configurar {<Link to="/platforms/react-native/tracing/instrumentation/automatic-instrumentation/#enable-routing-instrumentation">
+          la instrumentación de enrutamiento
+        </Link>}.
+</Alert>
+
+El rastreo de la instrumentación de la UI está deshabilitado de forma predeterminada, pero puedes activarlo estableciendo la opción `enableUserInteractionTracing` en `true` y envolviendo tu componente raíz:
+
+```javascript {3-3, 7-9}
+import * as Sentry from "@sentry/react-native";
+
+const navigationIntegration = Sentry.reactNavigationIntegration(); // O cualquier otra integración de navegación
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  enableUserInteractionTracing: true,
+  tracesSampleRate: 1.0,
+  integrations: [navigationIntegration],
+});
+
+const App = () => <View>Tu aplicación</View>;
+
+export default Sentry.wrap(App);
+```
+
+La etiqueta con la que se identifican los elementos de la interfaz se configura mediante la opción `labelName` en `Sentry.wrap`. Si no se proporciona un valor, se usará `sentry-label`. Si no se puede identificar un elemento, no se capturará la transacción.
+
+```javascript {2-2}
+export default Sentry.wrap(App, {
+  touchEventBoundaryProps: { labelName: "my-label" },
+});
+```
+
+<Alert>
+  Si la transacción de la UI quedó inactiva, pero no tenía spans hijos, se
+  descartará.
+</Alert>
+
+Como las transacciones se vinculan automáticamente al scope, puedes crear spans hijos usando [instrumentación personalizada](/es/platforms/react-native/tracing/instrumentation/custom-instrumentation/#retrieve-a-transaction). Ten en cuenta que el `idleTimeout` de las transacciones de UI en ejecución es de `1000` milisegundos (un segundo) de forma predeterminada.
+
+<div id="gesture-events">
+  ## Eventos de gestos
+</div>
+
+Para crear transacciones de UI con React Native Gesture Handler, debes envolver los gestos individuales con `sentryTraceGesture`. Esto también generará breadcrumbs automáticamente. El envoltorio `sentryTraceGesture(label, gesture)` acepta etiquetas de tipo `string` que identifican de forma única el gesto en una pantalla, así como el objeto de gesto que se está envolviendo.
+
+<Alert>
+  Solo es compatible [RNGH API v2](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/gesture/).
+</Alert>
+
+```javascript {10-11}
+import React from "react";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { sentryTraceGesture } from "@sentry/react-native";
+
+export const GesturesTracingScreen = () => {
+  const pinch = Gesture.Pinch();
+  const longPress = Gesture.LongPress();
+
+  const gesture = Gesture.Race(
+    sentryTraceGesture("pellizcar-para-hacer-zoom", pinch),
+    sentryTraceGesture("mantener-presionado-para-cancelar", longPress)
+  );
+
+  return <GestureDetector gesture={gesture}>// ...</GestureDetector>;
+};
+```

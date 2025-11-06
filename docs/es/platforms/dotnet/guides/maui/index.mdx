@@ -1,0 +1,136 @@
+---
+title: MAUI
+sdk: sentry.dotnet.maui
+description: "Conoce la integración de .NET de Sentry con .NET Multi-platform App UI (MAUI)."
+---
+
+Sentry ofrece una integración para [.NET Multi-platform App UI (MAUI)](https://dotnet.microsoft.com/apps/maui) a través del [paquete NuGet Sentry.Maui](https://www.nuget.org/packages/Sentry.Maui).
+
+<div id="overview-of-the-features">
+  ## Descripción general de las funciones
+</div>
+
+* Integración sencilla con MAUI llamando a `UseSentry` en tu `MauiAppBuilder`
+* Todas las funciones de nuestro [.NET SDK](/es/platforms/dotnet) para tu código administrado
+* Informes de fallos nativos para Android, aprovechando nuestro [Android SDK](/es/platforms/android)
+* Informes de fallos nativos para iOS y Mac Catalyst, aprovechando nuestro [Cocoa SDK para iOS](/es/platforms/apple/guides/ios)
+* Informes de fallos administrados (excepciones no controladas) en todas las plataformas de MAUI (iOS, Android, Windows, Mac Catalyst y Tizen)
+* Números de línea en tus trazas de pila de .NET cuando se suben los PDB a Sentry
+* Breadcrumbs automáticos para el ciclo de vida de la app MAUI y eventos de la interfaz de usuario
+* Información detallada del dispositivo y del entorno de ejecución enviada en cada evento
+* Seguimiento automático de sesiones habilitado para admitir el [estado de las versiones](/es/product/releases/)
+
+<div id="features">
+  ## Funciones
+</div>
+
+Además de capturar errores, puedes monitorear las interacciones entre varios servicios o aplicaciones si [habilitas el tracing](/es/concepts/key-terms/tracing/).
+
+Elige qué funciones de Sentry quieres instalar, además de Error Monitoring, para obtener a continuación las instrucciones correspondientes de instalación y configuración.
+
+<div id="install">
+  ## Instalación
+</div>
+
+<OnboardingOptionButtons options={['error-monitoring', 'performance']} />
+
+Añade la dependencia de Sentry a tu aplicación .NET MAUI:
+
+```shell {tabTitle:.NET Core CLI}
+dotnet add package Sentry.Maui -v {{@inject packages.version('sentry.dotnet.maui') }}
+```
+
+```powershell {tabTitle:Package Manager}
+Install-Package Sentry.Maui -Version {{@inject packages.version('sentry.dotnet.maui') }}
+```
+
+Este paquete amplía [Sentry.Extensions.Logging](/es/platforms/dotnet/guides/extensions-logging/). Esto significa que, además de las funciones relacionadas con MAUI, con este paquete también tendrás acceso a toda la integración de registro del framework y a las funciones disponibles en el SDK principal de [Sentry](/es/platforms/dotnet/).
+
+<div id="configure">
+  ## Configurar
+</div>
+
+En tu archivo `MauiProgram.cs`, llama a `UseSentry` en tu `MauiAppBuilder` e incluye cualquier opción que quieras establecer. `Dsn` es el único parámetro obligatorio.
+
+```csharp
+public static MauiApp CreateMauiApp()
+{
+    var builder = MauiApp.CreateBuilder();
+    builder
+        .UseMauiApp<App>()
+
+        // Agrega esta sección en cualquier parte del builder:
+        .UseSentry(options =>
+        {
+            // El DSN es la única configuración requerida.
+            options.Dsn = "___PUBLIC_DSN___";
+
+            // Usa el modo de depuración si quieres ver qué está haciendo el SDK.
+            // Los mensajes de depuración se escriben en stdout con Console.Writeline,
+            // y se pueden ver en la consola de depuración de tu IDE o con 'adb logcat', etc.
+            // Esta opción no se recomienda al implementar tu aplicación.
+            options.Debug = true;
+
+            // Agrega URL de solicitud y encabezados, IP y nombre de usuarios, etc.
+            options.SendDefaultPii = true;
+
+            // ___PRODUCT_OPTION_START___ performance
+            // Establece TracesSampleRate en 1.0 para capturar el 100% de las transacciones para el rastreo.
+            // Recomendamos ajustar este valor en producción.
+            options.TracesSampleRate = 1.0;
+            // ___PRODUCT_OPTION_END___ performance
+
+            // Otras opciones de Sentry se pueden configurar aquí.
+        })
+
+        // ... el resto de la configuración de tu aplicación MAUI
+
+    return builder.Build();
+}
+```
+
+<div id="options">
+  ### Opciones
+</div>
+
+Como se mencionó anteriormente, este paquete es un contenedor de [Sentry.Extensions.Logging](/es/platforms/dotnet/guides/extensions-logging/) y [Sentry](/es/platforms/dotnet/). Consulta la documentación de estos paquetes para conocer las opciones definidas en esos niveles.
+
+A continuación se describen las opciones específicas de `Sentry.Maui`.
+
+<div id="includetextinbreadcrumbs">
+  #### IncluirTextoEnMigasDePan
+</div>
+
+Esta opción controla si los elementos que implementan la interfaz `IText` (como `Button`, `Label`, `Entry` y otros) incluirán su texto en las migas de pan. Esta opción está deshabilitada de manera predeterminada.
+
+<Alert level="warning">
+  Usa precaución al habilitarla, ya que esos valores pueden contener información de identificación personal (PII).
+</Alert>
+
+<div id="includetitleinbreadcrumbs">
+  #### IncluirTítuloEnRutaDeNavegación
+</div>
+
+Esta opción controla si los elementos que implementan la interfaz `ITitledElement` (como `Window`, `Page` y otros) incluirán sus títulos en la ruta de navegación. Esta opción está deshabilitada de forma predeterminada.
+
+<Alert level="warning">
+  Ten cuidado al habilitarla, ya que esos valores pueden contener información de identificación personal (PII).
+</Alert>
+
+<div id="includebackgroundingstateinbreadcrumbs">
+  #### IncludeBackgroundingStateInBreadcrumbs
+</div>
+
+Controla si la migaja enviada para el evento `Window.Backgrounding` incluirá los datos de estado de `BackgroundingEventArgs.State`. Esta opción está deshabilitada de forma predeterminada.
+
+<Alert level="warning">
+  Ten cuidado al habilitarla, ya que esos valores pueden contener información de identificación personal (PII).
+</Alert>
+
+<div id="verify">
+  ## Verificar
+</div>
+
+Este fragmento incluye un error intencional para que puedas comprobar que todo funciona en cuanto lo configures.
+
+<PlatformContent includePath="getting-started-verify" />

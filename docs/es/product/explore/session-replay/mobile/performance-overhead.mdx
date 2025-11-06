@@ -1,0 +1,69 @@
+---
+title: "Sobrecarga de rendimiento de Replay"
+sidebar_order: 30
+description: "Descubre cómo habilitar Session Replay afecta el rendimiento de tu aplicación móvil."
+---
+
+Session Replay para móviles captura instantáneas de la jerarquía de vistas y una captura de pantalla dentro del mismo fotograma, una vez por segundo. Luego, se comprimen en un archivo de video que representa partes de la sesión del usuario y se envían a Sentry con identificadores de trazas, breadcrumbs y otra información de depuración para reconstruir la sesión completa.
+
+Para no afectar el rendimiento de la app anfitriona, Sentry minimiza el uso de CPU y memoria registrando las capturas de pantalla y la jerarquía de vistas de forma no intrusiva y solo cuando es necesario, enviando únicamente los bytes esenciales y utilizando endpoints de ingesta de baja latencia geográficamente cercanos a tus usuarios finales.
+
+**Para la mayoría de las aplicaciones móviles, la sobrecarga de rendimiento de nuestro SDK de Session Replay será imperceptible para los usuarios finales.**
+
+<div id="how-is-session-replay-optimized">
+  ## ¿Cómo se optimiza Session Replay?
+</div>
+
+El SDK de Session Replay de Sentry toma varias medidas para evitar impactar negativamente el rendimiento de la pantalla en la que se ejecuta.
+
+* El SDK de Session Replay funciona capturando pantallazos, codificándolos en pequeños segmentos de video y enviando el contenido a los servidores de Sentry. Para reducir la cantidad de datos transferidos, se aplican varias estrategias de optimización:
+  * El SDK captura como máximo un pantallazo por segundo con una densidad de píxeles de 1:1 (conocida como `@1x` en iOS y `mdpi` en Android). Esto acelera significativamente el proceso de captura manteniendo una calidad aceptable.
+  * Los pantallazos se comprimen en archivos `jpeg` con pérdida para reducir el uso de espacio en disco y permitir recuperar los últimos fotogramas de una repetición en caso de un crash o un ANR.
+  * Al enviar un segmento de repetición, los pantallazos se comprimen aún más en un archivo de video `mp4` usando compresión `h.264` con una tasa de bits de 75 kbps (comportamiento predeterminado). Esto garantiza un tamaño de carga útil pequeño preservando la calidad del video. Observamos una reducción de tamaño de casi 5x al comprimir cinco pantallazos en un segmento de video.
+  * El segmento de video, junto con otra información de depuración (como breadcrumbs), se comprime con gzip en el cliente antes de la transmisión por HTTP. Esta compresión se realiza en un hilo en segundo plano, asegurando que el hilo principal de la aplicación no se vea afectado.
+  * Para minimizar el uso de espacio en disco, los pantallazos y los archivos de los segmentos de video se eliminan del disco tras una carga exitosa.
+* La infraestructura de ingesta de eventos de Sentry utiliza [Puntos de Presencia (PoP) distribuidos](https://blog.sentry.io/2022/03/31/sentry-points-of-presence-how-we-built-a-distributed-ingestion/) que sitúan servidores de ingesta en todo el mundo y cerca de tus usuarios. Cuando se transmite un evento de Session Replay, el dispositivo del usuario se conecta y envía la carga útil del evento al PoP más cercano disponible para su región. Esto reduce en gran medida la latencia de extremo a extremo y minimiza la sobrecarga de red del dispositivo.
+* El SDK está diseñado para degradarse de forma elegante cuando sea necesario. Si se envían demasiados eventos de repetición y se alcanza el límite de tasa de Sentry, el SDK deshabilitará la grabación para asegurarse de que se respete el límite. Una vez que se levante, el SDK reanudará la grabación.
+
+<div id="factors-in-performance-overhead">
+  ## Factores en la sobrecarga de rendimiento
+</div>
+
+Si bien la sobrecarga de rendimiento de nuestro SDK de Session Replay será imperceptible para los usuarios finales la mayor parte del tiempo, puede variar según la complejidad de tu aplicación. Si una aplicación tiene pantallas con un árbol de vistas muy profundo, habrá mayor sobrecarga en comparación con pantallas más simples (por ejemplo, Ajustes).
+
+Si el enmascaramiento predeterminado está habilitado, la sobrecarga de red se reducirá aún más porque las capturas de pantalla tienen menos píxeles, lo que se traduce en archivos más pequeños.
+
+Existen diferentes etapas en el ciclo de vida de una aplicación móvil. Cada una tiene distintas características de rendimiento. A continuación se muestra una lista de las etapas del ciclo de vida y las métricas de rendimiento más importantes que debes tener en cuenta.
+
+<div id="app-start">
+  ### Inicio de la app
+</div>
+
+Prácticamente no hay sobrecarga del SDK durante el arranque de la aplicación. Solo realiza unas pocas tareas ligeras, como registrar los listeners necesarios para los eventos del sistema y programar un hilo en segundo plano para la captura.
+
+<div id="main-thread">
+  ### Hilo principal
+</div>
+
+El SDK realiza solo lo imprescindible en el hilo principal para capturar un nuevo fotograma para la repetición (una captura de pantalla y una instantánea de la jerarquía de vistas) antes de pasar de inmediato a un hilo en segundo plano para las tareas de posprocesamiento. Estas tareas incluyen enmascarar capturas de pantalla, almacenarlas en la caché en disco o codificar un segmento de video. Este proceso ocurre como máximo una vez por segundo y puede ser incluso menos frecuente según la configuración de la tasa de fotogramas.
+
+El SDK también supervisa los cambios en el árbol de vistas. Si no se han producido cambios desde la última captura de fotograma, reutiliza los datos capturados previamente, evitando por completo cualquier trabajo en el hilo principal.
+
+<div id="capturing-touch-events">
+  ### Captura de eventos táctiles
+</div>
+
+* Los eventos de clic/toque, deslizamiento y desplazamiento son extremadamente ligeros y rápidos de registrar, por lo que la sobrecarga es mínima.
+* Optimizamos el registro de eventos táctiles aplicando “debouncing” (limitación de la frecuencia de los eventos) y suavizando los eventos de movimiento. Esto garantiza una experiencia de depuración clara y detallada sin capturar datos excesivos ni redundantes.
+
+<div id="measuring-performance-overhead">
+  ## Medir la sobrecarga de rendimiento
+</div>
+
+La única forma de obtener métricas precisas es medir tú mismo la sobrecarga de rendimiento. Puedes aplicar patrones de uso realistas a tu propia aplicación y correlacionarlos con tus métricas empresariales clave.
+
+Medimos la sobrecarga del SDK de Replay en varias apps de código abierto que tienen millones de usuarios en producción. Por ejemplo, apps reales con un amplio conjunto de componentes y funcionalidades, como [Bluesky](https://github.com/bluesky-social/social-app) y [Pocket Casts](https://github.com/Automattic/pocket-casts-android). Puedes consultar los resultados en la documentación del SDK a continuación:
+
+* [iOS](/es/platforms/apple/guides/ios/session-replay/performance-overhead/)
+* [Android](/es/platforms/android/session-replay/performance-overhead/)
+* [React Native](/es/platforms/react-native/session-replay/performance-overhead/)

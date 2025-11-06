@@ -1,0 +1,94 @@
+---
+title: Protección de la privacidad del usuario en Session Replay
+sidebar_order: 96
+description: Obtén información sobre cómo Session Replay captura datos mientras protege la privacidad del usuario.
+og_image: /og-images/security-legal-pii-scrubbing-protecting-user-privacy.png
+---
+
+<Include name="session-replay-web-report-bug.mdx" />
+
+Dado el mayor escrutinio y sensibilidad en torno a los productos de session replay y el registro de interacciones de las personas usuarias (por ejemplo, entradas de texto, visitas a páginas, movimientos del cursor, clics y desplazamientos) en sitios web y aplicaciones, creamos nuestro propio producto de session replay con un enfoque en la privacidad.
+
+Session Replay de Sentry no es una grabación literal de la “pantalla”, sino un registro de los cambios en el Document Object Model (DOM) del navegador web (es decir, la representación de datos de la página). Esta distinción importante significa que los datos capturados por Session Replay se pueden buscar y limpiar.
+
+Ofrecemos a nuestros clientes una variedad de [opciones de configuración](/es/platforms/javascript/session-replay/privacy/) para controlar cuántos (o cuán pocos) datos se recopilan. Los clientes pueden usar nuestros controles de privacidad para ayudar a garantizar que ningún dato sensible del usuario salga del navegador. También pueden usar las capacidades de [limpieza del lado del servidor](/es/security-legal-pii/scrubbing/server-side-scrubbing/) para filtrar y eliminar aún más datos sensibles del usuario, o nuestras capacidades de eliminación para borrar grabaciones individuales después de la ingesta.
+
+A continuación ampliamos qué datos se pueden recopilar, cómo se tratan de forma predeterminada y qué controles adicionales están disponibles para los clientes. Al final de esta página también encontrarás nuestras [Preguntas frecuentes sobre aspectos legales y privacidad](#legal-and-privacy-faq).
+
+<div id="how-session-replay-approaches-data-capture">
+  ## Cómo aborda Session Replay la captura de datos
+</div>
+
+<div id="html-content">
+  ### Contenido HTML
+</div>
+
+Para reducir el riesgo de que Información de Identificación Personal (PII) sea ingerida y almacenada en nuestros servidores, el SDK de Session Replay de Sentry está diseñado para ser “privado por defecto”. En su configuración predeterminada, el SDK de Session Replay censura **todos** los nodos de texto e imágenes HTML antes de que salgan del navegador. Durante la reproducción, los nodos de texto y las imágenes censurados se indican claramente con asteriscos y con cuadros grises estáticos, respectivamente.
+
+Para ver contenido HTML sin censura —por ejemplo, tus elementos de navegación estáticos, menús y enlaces— puedes habilitar de forma opcional elementos HTML estáticos que se sabe que no contienen PII marcándolos con la clase `sentry-unmask`. Se recomienda encarecidamente no habilitar ningún contenido generado por el usuario.
+
+![Ejemplo de limpieza de PII en Replay](./img/Replay-PIIScrubbing.png)
+
+Como alternativa, puedes desactivar la configuración de privacidad predeterminada, lo que hará que todos los nodos de texto e imágenes se transfieran sin censura. Esto solo se recomienda cuando se trabaja con sitios web de contenido estático que se sabe que no contienen información sensible de los usuarios. Ten en cuenta que, al usar esta opción de configuración, no identificar cuidadosamente los elementos HTML que contienen PII implica el riesgo de que contenido sensible salga del navegador del usuario.
+
+Para obtener más información, incluidas otras opciones de configuración, consulta [Privacidad de Session Replay](/es/platforms/javascript/session-replay/privacy/).
+
+<div id="user-input">
+  ### Entrada del usuario
+</div>
+
+Además del contenido HTML, Session Replay registra interacciones clave del usuario como movimientos del cursor, clics y pulsaciones del teclado. De forma predeterminada, todas las pulsaciones se enmascaran y se reemplazan por asteriscos. Los movimientos del cursor capturados se limitan al origen y el destino (por ejemplo, de dónde vino el cursor y adónde fue, no la ruta exacta). Durante la reproducción se recrea una aproximación de baja fidelidad de este movimiento.
+
+<div id="breadcrumbs-and-other-metadata">
+  ### Rutas de navegación y otros metadatos
+</div>
+
+Para ayudar con la depuración, Session Replay captura metadatos adicionales como entradas de console.log, solicitudes de red, navegador, sistema operativo y más. De forma predeterminada, Sentry analiza estos datos en el servidor y elimina automáticamente cadenas potencialmente sensibles como números de tarjeta de crédito, números de seguridad social, tokens de API y más. Este mismo proceso se aplica a otros tipos de eventos de Sentry, como errores y transacciones.
+
+Para obtener más información, consulta [Depuración de datos del lado del servidor](/es/security-legal-pii/scrubbing/server-side-scrubbing/).
+
+<div id="legal-and-privacy-faq">
+  ## Preguntas frecuentes sobre aspectos legales y privacidad
+</div>
+
+**P: ¿Puedo usar Session Replay y cumplir con el RGPD y la CCPA?**
+
+R: Sí, ofrecemos un [Anexo de Tratamiento de Datos (DPA)](https://sentry.io/legal/dpa/) que cubre los requisitos del RGPD y la CCPA para cualquier dato personal enviado a Sentry, incluso a través de nuestro producto Session Replay. Puedes suscribir nuestro DPA siguiendo las instrucciones [aquí](https://sentry.io/trust/privacy/).
+
+**P: Tengo un DPA vigente con Sentry, ¿aplica a Session Replay?**
+
+R: Sí, ver arriba. Los compromisos de tratamiento de datos y de seguridad de nuestro DPA se aplican a los datos personales que envías al servicio de Sentry (también a través de nuestro producto Session Replay).
+
+**P: Tengo un Anexo de Asociado Comercial (BAA) vigente con Sentry, ¿aplica a Session Replay?**
+
+R: Sí, [nuestro BAA](https://sentry.io/legal/baa/) cubre los requisitos de la HIPAA para cualquier información de salud protegida (PHI) enviada al servicio de Sentry (incluido si decides hacerlo a través de nuestro producto Session Replay).
+
+**P: ¿Necesito cambiar mis políticas o avisos legales para usar Session Replay?**
+
+R: Como con todos los datos de usuario que envías a Sentry para su tratamiento en tu nombre, eres responsable de proporcionar avisos adecuados a tus usuarios. La forma en que decidas configurar Session Replay y tu propio sitio o app determinará, en última instancia, el contenido y la presentación de tus avisos de privacidad para usuarios.
+
+**P: ¿Necesito obtener el consentimiento de mis usuarios para usar Session Replay?**
+
+R: Al igual que con los avisos (ver arriba), debes considerar si necesitas obtener el consentimiento del usuario. En particular, en EE. UU. hemos observado un [aumento de demandas basadas en leyes estatales de interceptación de comunicaciones](https://iapp.org/resources/article/us-litigation-series-website-tracking/) que involucran software de session replay. Debes evaluar el riesgo según tu ubicación, servicio y tipo de cliente, y si quieres mitigarlo obteniendo el consentimiento de tus usuarios para recopilar datos sobre su interacción con tus servicios mediante Session Replay.
+
+**P: ¿Cómo debería ser el consentimiento para Session Replay?**
+
+R: El consentimiento puede adoptar diferentes formas, incluido el uso de banners de consentimiento o tecnología similar, así como el consentimiento incorporado en tus términos de servicio con los usuarios. El tipo de consentimiento que quieras presentar (si corresponde) dependerá en gran medida de tu evaluación de riesgos según tu ubicación, servicio y clientes.
+
+Aquí tienes un ejemplo de texto de consentimiento:
+
+> El Proveedor puede usar y recopilar datos y conocimientos sobre el uso que el cliente haga del servicio del Proveedor, incluida la conducta del cliente dentro del servicio del Proveedor, como clics, desplazamientos, movimientos del mouse, pulsaciones de teclas, actualizaciones de página y otra información de la sesión de usuario, para operar, mejorar y respaldar el servicio del Proveedor y para otros fines comerciales lícitos.
+
+**P: ¿Cómo configuro los SDK de Sentry para Session Replay para que sean compatibles con un banner de consentimiento?**
+
+R: Si decides utilizar un banner de consentimiento, puedes encontrar [orientación técnica](https://sentry.zendesk.com/hc/en-us/articles/37358708239003-How-can-I-delay-replay-recording-until-a-user-consents) para configurar los SDK de Session Replay de modo que se inicien solo después de obtener el consentimiento del usuario.
+
+**P: ¿Dónde se aloja la información de Session Replay?**
+
+Consulta nuestra [lista de subencargados de tratamiento](https://sentry.io/legal/subprocessors/) para conocer la ubicación del alojamiento de nuestra infraestructura, que aplica a todos los datos dentro de tu instancia específica de Sentry, incluidos los datos de Session Replay.
+
+**P: ¿Durante cuánto tiempo conservan los datos de Session Replay?**
+
+Consulta [nuestra política de seguridad](https://sentry.io/security/). Nuestra política de retención de datos se aplica al servicio general de Sentry, incluido Session Replay.
+
+*La información de esta página es únicamente informativa y no constituye asesoría legal. Debes consultar con tu propio asesor legal para determinar cómo se aplican las leyes y regulaciones pertinentes a tu situación específica, teniendo en cuenta tu configuración y el uso de Sentry y Session Replay, y para garantizar tu cumplimiento.*

@@ -1,0 +1,111 @@
+---
+title: Interfaz del SDK
+sidebar_order: 12
+---
+
+La interfaz del SDK describe el SDK de Sentry y su configuración para capturar
+y transmitir eventos.
+
+<div id="attributes">
+  ## Atributos
+</div>
+
+`name`
+
+: **Obligatorio**. El nombre del SDK. El formato es `entity.ecosystem[.flavor]`,
+donde _entity_ identifica al desarrollador del SDK, _ecosystem_ se refiere al
+lenguaje de programación o plataforma donde se usará el SDK y el _flavor_
+opcional se utiliza para identificar SDK independientes que forman parte de un
+ecosistema principal. Los SDK oficiales de Sentry usan la _entity_ `sentry`. Ejemplos:
+
+- `sentry.python`
+- `sentry.javascript.react-native`
+
+Para SDK que están compuestos por más de un SDK de Sentry. Por ejemplo, [el SDK de Unity](https://github.com/getsentry/sentry-unity/issues/616),
+que incluye una capa .NET así como diferentes capas nativas. Cuando los eventos provienen
+de la capa nativa, es importante distinguirlos del SDK nativo independiente.
+Lo hacemos agregando el SDK superior al final del nombre del SDK nativo. Ejemplos:
+
+SDK de Unity:
+
+- `sentry.dotnet.unity` para eventos que provienen de C#. Según la especificación anterior.
+  - `sentry.java.android.unity` para eventos de la capa Java en Android
+  - `sentry.native.android.unity` para eventos de la capa nativa en Android
+  - `sentry.cocoa.unity` para eventos de la capa iOS/macOS
+  - `sentry.native.unity` para eventos que provienen directamente de `sentry.native`, como en Windows y Linux.
+
+SDK de Android
+
+- `sentry.java.android` para eventos de la capa Java, ya que el SDK de Android se basa en el SDK de Java.
+- `sentry.native.android` para eventos del NDK. Es `sentry.native`, pero viene incluido en el SDK de Android con algunas personalizaciones.
+
+`version`
+
+: **Obligatorio**. La versión del SDK. Debe tener el formato de [versionado
+semántico](https://semver.org) `MAJOR.MINOR.PATCH`, sin ningún prefijo
+(sin `v` ni nada delante del número de versión mayor). Ejemplos:
+
+- `0.1.0`
+- `1.0.0`
+- `4.3.12`
+
+`integrations`
+
+: _Opcional_. Una lista de nombres que identifican las integraciones habilitadas. La lista debe
+incluir todas las integraciones habilitadas, incluidas las predeterminadas. Se incluyen las
+integraciones predeterminadas porque diferentes versiones del SDK pueden contener diferentes
+integraciones predeterminadas.
+
+`features`
+
+: _Opcional_. Una lista de nombres de funcionalidades que identifican las funciones del SDK habilitadas. Esta lista
+debe contener todas las funciones del SDK habilitadas. En algunos SDK, habilitar una función en las
+opciones también agrega una integración. Recomendamos registrar dichas funciones con integraciones
+o con funciones, pero no con ambas, para reducir el tamaño de la carga útil.
+
+`packages`
+
+: _Opcional_. Una lista de paquetes que se instalaron como parte de este SDK o de las
+integraciones activadas. Cada paquete consta de un `name` con el formato
+`source:identifier` y `version`. Si la fuente es un repositorio Git, la fuente debe ser `git`, el
+`identifier` debe ser un enlace de checkout y la `version` debe ser una referencia de Git
+(rama, etiqueta o SHA).
+
+`settings`
+
+: _Opcional_. Una colección de ajustes que se usan para controlar el comportamiento.
+
+- `infer_ip`: Controla el comportamiento de la inferencia de direcciones IP en función de la información de la solicitud. Se permiten los siguientes valores:
+  - `auto`: inferir la dirección IP en función de la información disponible de la solicitud. Esto equivale a [establecer la dirección IP en `{{auto}}`](https://develop.sentry.dev/sdk/data-model/event-payloads/user/#automatic-ip-addresses).
+  - `never`: No inferir la dirección IP a partir de la solicitud. Este es el valor predeterminado si se envió un valor no válido para `infer_ip`.
+  - `legacy`: Inferir la dirección IP solo si el valor es `{{auto}}`. Para JavaScript y Cocoa también inferirá si `ip_address` está vacío. Este es el valor predeterminado si no se envió ningún valor.
+
+<div id="example">
+  ## Ejemplo
+</div>
+
+El siguiente ejemplo ilustra la parte del SDK de la <Link to="/sdk/data-model/event-payloads/">carga útil del evento</Link> y omite otros atributos para simplificar.
+
+```json
+{
+  "sdk": {
+    "name": "sentry.javascript.react-native",
+    "version": "1.0.0",
+    "integrations": ["redux"],
+    "features": ["capture_failed_requests"],
+    "packages": [
+      {
+        "name": "npm:@sentry/react-native",
+        "version": "0.39.0"
+      },
+      {
+        "name": "git:https://github.com/getsentry/sentry-cocoa.git",
+        "version": "4.1.0"
+      }
+    ],
+    "settings": {
+      "infer_ip": "auto"
+    }
+  }
+}
+```

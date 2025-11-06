@@ -1,0 +1,223 @@
+---
+title: Interfaz de seguimiento de pila
+sidebar_order: 4
+---
+
+Un seguimiento de pila contiene una lista de marcos, cada uno con varios elementos (la mayoría opcionales)
+que describen el contexto de ese marco. Los marcos deben ordenarse del más antiguo
+al más reciente.
+
+<Alert>
+  Los seguimientos de pila siempre forman parte de una excepción o un hilo. No pueden
+  declararse como una propiedad de evento de nivel superior. Al agregar un seguimiento de pila a un evento,
+  sigue esta regla general:
+
+  * Si el seguimiento de pila es parte de un error, excepción o bloqueo, agrégalo a la [Interfaz de excepción](/es/sdk/data-model/event-payloads/exception/).
+  * De lo contrario, agrégalo como un hilo en la [Interfaz de hilos](/es/sdk/data-model/event-payloads/threads/).
+</Alert>
+
+<div id="attributes">
+  ## Atributos
+</div>
+
+`frames`
+
+: **Obligatorio**. Una lista no vacía de frames de la pila (ver más abajo). La lista está
+ordenada del llamador al llamado, o de más antiguo a más reciente. El último frame es el
+que genera la excepción.
+
+Cuando la carga útil del evento es demasiado grande (por ejemplo, en errores de recursión o desbordamiento de pila),
+algunos SDK truncan los frames para asegurarse de que el evento se envíe y no se descarte por completo.
+La forma recomendada de truncar en este caso es conservar 500 frames a cada lado para que Relay pueda truncar más en ambos lados según sea necesario.
+
+`registers`
+
+: *Opcional*. Un mapa con los nombres de los registros y sus valores. Los valores deben
+contener los valores reales de los registros del hilo, correspondiendo así al último
+frame de la lista.
+
+<div id="frame-attributes">
+  ## Atributos de Frame
+</div>
+
+Cada objeto debe contener **al menos** un atributo `filename`, `function` o
+`instruction_addr`. Todos los valores son opcionales, pero recomendados.
+
+`filename`
+
+: La ruta al archivo fuente relativa al directorio raíz del proyecto.
+
+El valor no debe hacer que los nombres de archivo sean indistinguibles y solo debería cambiar
+entre versiones para los archivos que realmente fueron renombrados.
+
+En algunos SDK, esto se implementa como la ruta relativa a un punto de entrada
+relevante para el lenguaje/plataforma. Por ejemplo, en Python el `filename`
+es relativo a `PYTHONPATH` o `site-packages`.
+
+`function`
+
+: El nombre de la función que se está llamando.
+
+Este nombre de función puede estar acortado o desofuscado. Si no, Sentry lo desofuscará
+y lo acortará. El nombre original de la función se almacenará en `raw_function`.
+
+`raw_function`
+
+: El nombre original de la función, si el nombre de la función está acortado o desofuscado.
+Sentry muestra la función sin procesar al hacer clic en la abreviada en la interfaz.
+
+`module`
+
+: Ruta del módulo específica de la plataforma (p. ej., `sentry.interfaces.Stacktrace`).
+
+`lineno`
+
+: El número de línea de la llamada, comenzando en 1.
+
+`colno`
+
+: El número de columna de la llamada, comenzando en 1.
+
+`abs_path`
+
+: La ruta absoluta al archivo fuente.
+
+`context_line`
+
+: Código fuente en el archivo en `lineno`.
+
+`pre_context`
+
+: Una lista de líneas de código fuente antes de `context_line` (en orden), normalmente
+`[lineno - 5:lineno]`.
+
+`post_context`
+
+: Una lista de líneas de código fuente después de `context_line` (en orden), normalmente
+`[lineno + 1:lineno + 5]`.
+
+`source_link`
+
+: Una URL que representa el código fuente, p. ej., enlace a código fuente sin procesar de GitHub específico de un commit:
+`https://raw.githubusercontent.com/getsentry/symbolicator/706d879a426a54230d91799a46a79376ffc86cf3/crates/symbolicator-service/src/types/mod.rs`
+
+`in_app`
+
+: Indica si este frame está relacionado con la ejecución del código relevante
+en este stack trace. Por ejemplo, los frames que podrían impulsar el servidor web
+del framework de tu app probablemente no sean relevantes. Sin embargo, las llamadas a la
+biblioteca del framework una vez que empiezas a manejar código probablemente sí lo sean.
+
+`stack_start`
+
+: Marca este frame como la parte inferior de un stack trace encadenado. Los stack traces
+de código asíncrono constan de varias subtrazas que se encadenan en
+una lista grande. Este indicador señala la función raíz de un stack trace encadenado.
+Dependiendo del runtime y del hilo, esto es la función `main` o un
+stub base de hilo. Este campo solo debe especificarse cuando sea `true`.
+
+`vars`
+
+: Un mapeo de variables que estaban disponibles dentro de este frame (generalmente
+variables locales de contexto).
+
+Los siguientes atributos se usan principalmente para lenguajes basados en C:
+
+`instruction_addr`
+
+: Una dirección de instrucción opcional para la simbolización. Debe ser una cadena
+con un número hexadecimal que incluya el prefijo `0x`. Si esto está configurado y hay una
+imagen conocida definida en la [Debug Meta Interface](/es/sdk/data-model/event-payloads/debugmeta/), entonces
+puede llevarse a cabo la simbolización. Ten en cuenta que el atributo `addr_mode` puede
+controlar el comportamiento de esta dirección.
+
+`addr_mode`
+
+: Cambia opcionalmente el modo de direccionamiento. El valor predeterminado es el mismo que `"abs"`,
+lo cual significa direccionamiento absoluto. También se puede establecer en `"rel:DEBUG_ID"` o
+`"rel:IMAGE_INDEX"` para hacer que las direcciones sean relativas a un objeto referenciado por ID de depuración
+o índice. Esto, por ejemplo, es necesario para el procesamiento de WASM, ya que WASM no usa
+un espacio de direcciones unificado.
+
+`symbol_addr`
+
+: Una dirección opcional que apunta a un símbolo. Usamos la dirección de
+instrucción para la simbolización, pero esta se puede usar para calcular automáticamente un
+desplazamiento de instrucción. Ten en cuenta que el atributo `addr_mode` puede
+controlar el comportamiento de esta dirección.
+
+`image_addr`
+
+: Opcionalmente, una dirección de la imagen de depuración a la que hacer referencia.
+
+`package`
+
+: El &quot;paquete&quot; en el que estaba contenido el frame. Dependiendo de la plataforma, esto puede
+ser cosas diferentes. Para C#, puede ser el nombre del ensamblado. Para código nativo,
+puede ser la ruta de la biblioteca dinámica, etc.
+
+`platform`
+
+: Esto puede anular la plataforma para un solo frame. De lo contrario, se asume la plataforma del
+evento. Esto puede usarse para stack traces multiplataforma, como
+en React Native.
+
+<div id="examples">
+  ## Ejemplos
+</div>
+
+Para el siguiente programa de ejemplo escrito en Python:
+
+```python
+def foo():
+  my_var = 'foo'
+  raise ValueError()
+
+def main():
+  foo()
+```
+
+Una traza de pila minimalista del programa anterior en el orden correcto:
+
+```json
+{
+  "frames": [{ "function": "main" }, { "function": "foo" }]
+}
+```
+
+El marco superior completamente lleno con cinco líneas de contexto de origen:
+
+```json
+{
+  "frames": [
+    {
+      "in_app": true,
+      "function": "myfunction",
+      "abs_path": "/real/file/name.py",
+      "filename": "file/name.py",
+      "lineno": 3,
+      "vars": {
+        "my_var": "'value'"
+      },
+      "pre_context": ["def foo():", "  my_var = 'foo'"],
+      "context_line": "  raise ValueError()",
+      "post_context": ["", "def main():"]
+    }
+  ]
+}
+```
+
+Un backtrace nativo mínimo con valores de registros. Ten en cuenta que el atributo de evento `package` debe ser `"native"` para que estos frames puedan simbolicarse.
+
+```json
+{
+  "frames": [
+    { "instruction_addr": "0x7fff5bf3456c" },
+    { "instruction_addr": "0x7fff5bf346c0" }
+  ],
+  "registers": {
+    "rip": "0x00007ff6eef54be2",
+    "rsp": "0x0000003b710cd9e0"
+  }
+}
+```

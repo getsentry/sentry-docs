@@ -1,0 +1,117 @@
+---
+title: Interfaz Request
+sidebar_order: 8
+---
+
+La interfaz Request contiene información sobre una solicitud HTTP relacionada con el evento. En los SDK del cliente, puede ser una solicitud saliente (usa el [contexto de página](../contexts/#page-context) para registrar desde qué página se realizó la solicitud). En los SDK del servidor, podría ser la solicitud web entrante que se está procesando.
+
+La variable data solo debe contener el cuerpo de la solicitud (no la cadena de consulta). Puede ser un diccionario (para solicitudes HTTP estándar) o un cuerpo de solicitud sin procesar.
+
+<div id="ordered-maps">
+  ## Mapas ordenados
+</div>
+
+En la interfaz Request, varios atributos pueden declararse como cadena,
+objeto o lista de tuplas. Sentry intenta extraer información estructurada a partir
+de la representación en cadena en esos casos.
+
+A veces, las claves pueden declararse varias veces o el orden de los elementos
+importa. En esos casos, usa la representación mediante tuplas en lugar de un objeto simple.
+
+Ejemplo de encabezados de la solicitud como objeto:
+
+```json
+{
+  "content-type": "application/json",
+  "accept": "application/json, application/xml"
+}
+```
+
+Ejemplo de los mismos encabezados como una lista de tuplas:
+
+```json
+[
+  ["content-type", "application/json"],
+  ["accept", "application/json"],
+  ["accept", "application/xml"]
+]
+```
+
+
+<div id="attributes">
+  ## Atributos
+</div>
+
+`method`
+
+: _Opcional_. El método HTTP de la solicitud.
+
+`url`
+
+: _Opcional_. La URL de la solicitud, si está disponible. La cadena de consulta puede
+  declararse como parte de la `url` o por separado en `query_string`.
+
+`query_string`
+
+: _Opcional_. El componente de cadena de consulta de la URL. Puede proporcionarse como cadena sin analizar,
+  diccionario o lista de tuplas.
+
+Si la cadena de consulta no se declara y forma parte del parámetro `url`, Sentry
+  la trasladará a la cadena de consulta.
+
+`data`
+
+: _Opcional_. Datos enviados en el formato que resulte más adecuado. Los SDK deben
+  descartar cuerpos grandes de forma predeterminada. Puede proporcionarse como cadena o como datos estructurados de
+  cualquier formato.
+
+Recorta y trunca siempre los datos de la solicitud antes de adjuntarlos al evento. Si
+  esto no es posible, incluye una descripción en la documentación de la API indicando que los usuarios
+  deben truncar los datos de la solicitud. Aunque Sentry intentará recortar este campo al
+  ingerirlo, los cuerpos grandes pueden hacer que la carga útil completa del evento supere su
+  límite máximo de tamaño, en cuyo caso el evento se descartará.
+
+`cookies`
+
+: _Opcional_. Los valores de las cookies. Pueden proporcionarse sin analizar como cadena, como diccionario
+  o como una lista de tuplas.
+
+`headers`
+
+: _Opcional_. Un diccionario de encabezados enviados. Si un encabezado aparece varias
+  veces, debe combinarse de acuerdo con el estándar HTTP para la
+  combinación de encabezados. Sentry trata los nombres de encabezados sin distinción de mayúsculas y minúsculas.
+
+`env`
+
+: _Opcional_. Un diccionario que contiene información del entorno pasada desde el
+  servidor. Aquí es donde van datos como las claves de CGI/WSGI/Rack que no son
+  encabezados HTTP.
+
+Sentry buscará explícitamente `REMOTE_ADDR` para extraer una dirección IP.
+
+<div id="examples">
+  ## Ejemplos
+</div>
+
+Una interfaz de solicitud completamente rellenada:
+
+```json
+{
+  "request": {
+    "method": "POST",
+    "url": "http://absolute.uri/foo",
+    "query_string": "query=foobar&page=2",
+    "data": {
+      "foo": "bar"
+    },
+    "cookies": "PHPSESSID=298zf09hf012fh2; csrftoken=u32t4o3tb3gg43; _gat=1;",
+    "headers": {
+      "content-type": "text/html"
+    },
+    "env": {
+      "REMOTE_ADDR": "192.168.0.1"
+    }
+  }
+}
+```

@@ -1,0 +1,185 @@
+---
+title: Registro
+description: "Aprende sobre el registro en Python."
+---
+
+Añade compatibilidad con el registro en Python.
+
+<div id="install">
+  ## Instalación
+</div>
+
+Instala `sentry-sdk` desde PyPI:
+
+```bash {tabTitle:pip}
+pip install "sentry-sdk"
+```
+
+```bash {tabTitle:uv}
+uv add "sentry-sdk"
+```
+
+<div id="configure">
+  ## Configuración
+</div>
+
+La integración de registros es una integración predeterminada, por lo que se habilitará automáticamente al inicializar el SDK de Sentry.
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    # Agrega datos como encabezados de la solicitud y la IP de los usuarios, si corresponde;
+    # consulta https://docs.sentry.io/platforms/python/data-management/data-collected/ para obtener más información
+    send_default_pii=True,
+)
+```
+
+<div id="verify">
+  ## Verifica
+</div>
+
+```python
+import logging
+
+def main():
+    sentry_sdk.init(...)  # igual que arriba
+
+    logging.debug("Se ignora")
+    logging.info("Esto se registra como breadcrumb")
+    logging.error("Esto es un evento", extra=dict(bar=43))
+    logging.exception("Se produjo una excepción")
+
+main()
+```
+
+* Se generará un evento de error con el mensaje &quot;I am an event&quot;.
+* &quot;I am a breadcrumb&quot; se adjuntará como breadcrumb a ese evento.
+* `bar` acabará en los atributos `extra` del evento.
+* &quot;An exception happened&quot; enviará la excepción actual de `sys.exc_info()` con el traceback y todo al Sentry Python SDK. Si no hay ninguna excepción, se adjuntará la traza actual.
+* El mensaje de depuración &quot;I am ignored&quot; no aparecerá en ninguna parte. Para capturarlo, debes bajar `level` a `DEBUG` (ver abajo).
+
+Los registros también pueden capturarse como [registros de Sentry](/es/platforms/python/logs/) siempre que la opción `enable_logs` sea `True`.
+
+```python
+import logging
+import sentry_sdk
+
+sentry_sdk.init(
+    # ...
+    enable_logs=True,
+)
+
+logging.info("Se enviará a los logs de Sentry")
+```
+
+<div id="working-with-extra-fields">
+  ### Trabajo con campos adicionales
+</div>
+
+Al enviar registros como logs de Sentry, los campos incluidos en el diccionario `extra` se elevan automáticamente a atributos de primer nivel en la entrada del log. Esto los hace fáciles de Buscar y de filtrar en la interfaz de Sentry.
+
+```python
+import logging
+import sentry_sdk
+
+sentry_sdk.init(
+    # ...
+    enable_logs=True,
+)
+
+logger = logging.getLogger(__name__)
+
+# Los campos adicionales se convierten en atributos de nivel superior buscables
+logger.error(
+    "Error al procesar el pago", 
+    extra={
+        "user_id": 12345,
+        "transaction_id": "txn_abc123", 
+        "payment_method": "tarjeta_de_crédito",
+        "amount": 99.99
+    }
+)
+```
+
+En este ejemplo, `user_id`, `transaction_id`, `payment_method` y `amount` aparecerán como atributos separados y se podrán buscar en la interfaz de registros de Sentry, no anidados dentro de un objeto `extra`. Puedes filtrar y consultar los registros usando estos atributos directamente, como `user_id:12345` o `payment_method:credit_card`.
+
+<div id="options">
+  ## Opciones
+</div>
+
+Para cambiar el comportamiento predeterminado de la integración de registro, instancia la integración manualmente y pásala a la función `init` de Sentry:
+
+```python
+import logging
+import sentry_sdk
+from sentry_sdk.integrations.logging import LoggingIntegration
+
+# El SDK respetará el nivel establecido por la biblioteca de logging, que es WARNING de forma predeterminada.
+# Si queremos capturar registros de menor gravedad, primero debemos configurar
+# el nivel del registrador.
+logging.basicConfig(level=logging.INFO)
+
+sentry_sdk.init(
+    # ...
+    integrations=[
+        LoggingIntegration(
+            level=logging.INFO,              # Capturar INFO y superiores como breadcrumbs
+            event_level=logging.ERROR,       # Enviar registros ERROR como eventos
+            sentry_logs_level=logging.INFO,  # Capturar INFO y superiores como logs
+        ),
+    ],
+)
+```
+
+Puedes pasar los siguientes argumentos con nombre a `LoggingIntegration()`:
+
+* `level` (predeterminado `INFO`): El SDK de Sentry para Python registrará entradas de registro con un nivel mayor o igual que `level` como breadcrumbs. A la inversa, el SDK ignorará por completo cualquier entrada con un nivel inferior. Si el valor es `None`, el SDK no enviará entradas como breadcrumbs.
+
+* `event_level` (predeterminado `ERROR`): El SDK de Sentry para Python reportará entradas de registro con un nivel mayor o igual que `event_level` como eventos siempre que el propio logger esté configurado para emitir entradas de esos niveles (ver nota abajo). Si el valor es `None`, el SDK no enviará entradas como eventos.
+
+* `sentry_logs_level` (predeterminado `INFO`): El SDK de Sentry para Python capturará entradas con un nivel mayor o igual que `sentry_logs_level` como [logs estructurados de Sentry](/es/platforms/python/logs/) siempre que la opción `enable_logs` sea `True`.
+
+  ```python
+  sentry_sdk.init(
+      # ...
+      enable_logs=True,
+  )
+  ```
+
+<Alert title="Nota">
+  El SDK de Sentry para Python respetará el nivel configurado de cada logger (definido con `logger.setLevel(level)` o `logging.basicConfig(level=level)`). Eso significa que no verás eventos `INFO` o `DEBUG` de un logger cuyo nivel esté establecido en `WARNING`, independientemente de cómo configures la integración. Si no se establece explícitamente, el nivel de logging predeterminado es `WARNING`.
+</Alert>
+
+<Alert title="¿No se envían los logs a Sentry?">
+  Algunos frameworks, como `uvicorn`, pueden restablecer o sobrescribir tu configuración de `logging`. Para asegurarte de que se aplique tu nivel de log y de que el SDK capte los logs en o por encima del nivel configurado, puedes usar la marca `force=True` al configurar el nivel. Por ejemplo, `logger.setLevel(level, force=True)` y `logging.basicConfig(level=level, force=True)`.
+</Alert>
+
+<div id="ignoring-a-logger">
+  ## Ignorar un logger
+</div>
+
+A veces un logger es extremadamente ruidoso y te llena de errores sin sentido. Puedes ignorarlo llamando a `ignore_logger`:
+
+```python
+from sentry_sdk.integrations.logging import ignore_logger
+
+ignore_logger("a.spammy.logger")
+
+logger = logging.getLogger("a.spammy.logger")
+logger.error("hola")  # no se envía ningún error a Sentry
+```
+
+También puedes usar `before-send` y `before-breadcrumb` para ignorar
+solo ciertos mensajes. Consulta <PlatformLink to="/configuration/filtering/">Filtrado de eventos</PlatformLink> para obtener más información.
+
+<div id="handler-classes">
+  ## Clases de controladores
+</div>
+
+En lugar de usar `LoggingIntegration`, puedes usar dos subclases normales de `logging.Handler` que exporta la integración.
+
+**Por lo general, no necesitas esto.** Puedes usarlo junto con `default_integrations=False` si quieres elegir explícitamente qué captura el SDK de Sentry para Python. Sin embargo, configurar correctamente el registro (logging) es complicado. Además, un enfoque de opt‑in para capturar datos omitirá errores en los que quizá no pensarías por tu cuenta.
+
+Consulta la [documentación de la API](https://getsentry.github.io/sentry-python/integrations.html#module-sentry_sdk.integrations.logging) para más información.

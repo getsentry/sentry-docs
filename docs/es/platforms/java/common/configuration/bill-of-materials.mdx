@@ -1,0 +1,43 @@
+---
+title: Uso de un BOM
+sidebar_order: 1000
+---
+
+Cuando utilices varias dependencias de Sentry, puedes evitar especificar la versión de cada una usando un *BOM* (Bill of Materials).
+
+Con Maven, agrega lo siguiente a la sección `dependencyManagement` de tu `pom.xml`:
+
+```xml {tabTitle:Maven}{filename:pom.xml}
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>io.sentry</groupId>
+            <artifactId>sentry-bom</artifactId>
+            <version>{{@inject packages.version('sentry.java.bom', '5.1.0') }}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+```
+
+Luego usa dependencias sin especificar una versión, por ejemplo:
+
+```xml {tabTitle:Maven}{filename:pom.xml}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-logback</artifactId>
+</dependency>
+```
+
+Si usas Gradle 5.0 o una versión posterior, puedes añadir lo siguiente a la sección `dependencies` de tu `build.gradle`:
+
+```groovy {filename:build.gradle}
+implementation platform('io.sentry:sentry-bom:{{@inject packages.version('sentry.java.bom', '5.1.0') }}') //importar BOM
+implementation('io.sentry:sentry') //sin versión especificada
+implementation('io.sentry:sentry-logback') //sin versión especificada
+```

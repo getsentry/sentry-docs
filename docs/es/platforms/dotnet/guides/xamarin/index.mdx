@@ -1,0 +1,117 @@
+---
+title: Xamarin
+sdk: sentry.dotnet.xamarin
+description: "Más información sobre cómo el SDK de .NET de Sentry funciona con aplicaciones Xamarin."
+---
+
+El SDK de .NET de Sentry funciona con aplicaciones Xamarin mediante el [paquete NuGet Sentry Xamarin](https://www.nuget.org/packages/Sentry.Xamarin) y con Xamarin Forms mediante el [paquete NuGet Sentry Xamarin Forms](https://www.nuget.org/packages/Sentry.Xamarin.Forms).
+
+El SDK es compatible con las siguientes versiones o superiores:
+
+- Xamarin.Android 9.0
+- Xamarin.iOS 10.14
+- Universal Windows Platform 10.0.16299
+- Tizen 4.0
+
+<div id="install">
+  ## Instalación
+</div>
+
+<PlatformContent includePath="getting-started-install" />
+
+<div id="configure">
+  ## Configurar
+</div>
+
+Una vez que hayas terminado de configurar un proyecto en Sentry, este te proporcionará un valor llamado DSN (Data Source Name). Se parece mucho a una URL estándar, pero es solo una representación de la configuración que requieren los SDK de Sentry. Consta de varias partes, incluido el protocolo, la clave pública, la dirección del servidor y el identificador del proyecto.
+
+<OnboardingOptionButtons options={['error-monitoring', 'performance']} />
+
+Debes inicializar el SDK lo antes posible; por ejemplo, al inicio de OnCreate
+en MainActivity para Android y al principio de FinishedLaunching en AppDelegate para iOS.
+
+```csharp
+SentryXamarin.Init(options =>
+{
+    options.AddXamarinFormsIntegration();
+    // Indica a qué proyecto de Sentry enviar los eventos:
+    options.Dsn = "___PUBLIC_DSN___";
+    // Al configurarlo por primera vez, para ver qué hace el SDK:
+    options.Debug = true;
+    // Agrega la URL y los encabezados de la solicitud, la IP y el nombre de los usuarios, etc.
+    options.SendDefaultPii = true;
+    // ___PRODUCT_OPTION_START___ performance
+    // Configura TracesSampleRate en 1.0 para capturar el 100 %
+    // de las transacciones para el trazado.
+    // Recomendamos ajustar este valor en producción
+    options.TracesSampleRate = 1.0;
+    // ___PRODUCT_OPTION_END___ performance
+});
+// Código de la aplicación
+
+```
+
+
+<div id="verify">
+  ## Verificar
+</div>
+
+¡Genial! Ahora que terminaste de configurar el SDK, quizá quieras probar rápidamente cómo funciona Sentry. Empieza capturando una excepción:
+
+<PlatformContent includePath="getting-started-verify" />
+
+Todo lo que necesitas hacer es [inicializar el SDK con `SentryXamarin.Init`](../../); no necesitarás ningún cambio adicional para que el SDK quede listo para usar.
+
+El SDK maneja automáticamente `AppDomain.UnhandledException` y `Application.UnhandledException`, así que no tendrás que preocuparte por intentar capturar excepciones no controladas.
+
+<div id="xamarin-options">
+  ### Opciones de Xamarin
+</div>
+
+Las siguientes opciones solo serán válidas durante la inicialización del SDK.
+
+<div id="disablenativeintegration">
+  #### DisableNativeIntegration
+</div>
+
+Deshabilita el procesador de eventos nativo para Android, iOS y UWP
+
+<div id="disableofflinecaching">
+  #### DisableOfflineCaching
+</div>
+
+Al llamarlo, el SDK no almacenará automáticamente en caché tus eventos y podrían perderse si ocurre un bloqueo grave o si no hay conectividad disponible durante el envío del evento.
+
+<div id="attachscreenshots">
+  #### AttachScreenshots
+</div>
+
+Adjunta automáticamente una captura de pantalla de la aplicación en el momento en que se registra el evento. De forma predeterminada, está establecido en false.
+
+<Alert level="warning" title="Nota">
+
+Ten en cuenta que la información de identificación personal (PII) podría incluirse en la captura de pantalla cuando actives esta función.
+
+</Alert>
+
+<div id="xamarin-forms-options">
+  ### Opciones de Xamarin.Forms
+</div>
+
+<div id="disablexamarinwarningsbreadcrumbs">
+  #### DisableXamarinWarningsBreadcrumbs
+</div>
+
+Desactiva el registro automático de advertencias internas provenientes de Xamarin.Forms.
+
+<div id="troubleshooting">
+  ## Solución de problemas
+</div>
+
+Para obtener más información, visita la página de [troubleshooting](troubleshooting).
+
+<div id="samples">
+  ## Ejemplos
+</div>
+
+- Un [ejemplo](https://github.com/getsentry/sentry-xamarin/tree/main/Samples) que utiliza Xamarin Forms y la mayoría de las funciones del SDK. (**Android, iOS, UWP**)

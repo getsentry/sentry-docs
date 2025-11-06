@@ -1,0 +1,75 @@
+---
+title: Travis CI
+description: >-
+  Aprende cómo Sentry y Travis CI automatizan la gestión de lanzamientos y te ayudan a identificar
+  commits sospechosos.
+og_image: /og-images/product-releases-setup-release-automation-travis-ci.png
+---
+
+Esta guía te acompaña en el proceso de automatizar la gestión de lanzamientos de Sentry y las notificaciones de despliegue en Travis CI. Después de desplegar en Travis CI, podrás identificar los commits sospechosos que probablemente sean los responsables de los nuevos errores. También podrás aplicar source maps para ver el código original en Sentry.
+
+Antes de comenzar, confirma que tu proyecto de Sentry está correctamente configurado para rastrear los metadatos de commits [instalando una integración de repositorio](/es/product/releases/setup/release-automation/). Una vez instalada y agregado tu repositorio, regresa a esta guía. Si ya instalaste una integración de repositorio, ya estás listo.
+
+<div id="create-a-sentry-internal-integration">
+  ## Crear una integración interna de Sentry
+</div>
+
+Para que Travis CI se comunique de forma segura con Sentry, necesitas crear una nueva integración interna. En Sentry, ve a **Settings &gt; Developer Settings &gt; New Internal Integration**.
+
+Asigna un nombre a tu nueva integración (por ejemplo, “Travis CI Deploy Integration”) y especifica los permisos necesarios. En este caso, necesitas acceso de administrador para “Release” y acceso de lectura para “Organization”.
+
+Para obtener más información sobre alcances y endpoints de la API, consulta la documentación completa sobre [API Permissions](/es/api/permissions/).
+
+![Vista de los permisos de la integración interna.](./img/internal-integration-permissions.png)
+
+Haz clic en &quot;Save&quot; y, a continuación, guarda tu token, que necesitarás en la siguiente sección.
+
+<div id="setting-environment-variables-in-travis-ci">
+  ## Configurar variables de entorno en Travis CI
+</div>
+
+A continuación, necesitarás algunas variables de entorno para configurar la CLI de Sentry:
+
+* `SENTRY_AUTH_TOKEN` - Tu token de integración interna
+* `SENTRY_ORG` - El “slug” de tu organización en Sentry
+* `SENTRY_PROJECT` - El “slug” de tu proyecto en Sentry
+
+Para acceder de forma segura a tu token de integración interna, guárdalo como una [variable de entorno en tu repositorio](https://docs.travis-ci.com/user/environment-variables/#defining-variables-in-repository-settings):
+
+1. En la aplicación de Travis CI, ve a la configuración de tu repositorio haciendo clic en “Settings” desde el menú “More options”.
+2. Busca la sección “Environment Variables”.
+3. Agrega una nueva variable con `SENTRY_AUTH_TOKEN` como nombre y tu token de integración interna como valor.
+
+![Vista de las variables de entorno de Travis CI.](./img/travis-env-vars.png)
+
+Las otras variables no contienen información confidencial, así que usarás la clave `env` para definirlas como variables de entorno en tu archivo .travis.yml.
+
+<div id="create-release-and-notify-sentry-of-deployment">
+  ## Crear una versión y notificar a Sentry del despliegue
+</div>
+
+Para automatizar tu proceso de gestión de versiones en Sentry, debes agregar el job `Create release and notify Sentry of deploy` que aparece a continuación, después de tu paso de despliegue:
+
+```yaml
+jobs:
+  include:
+    # ...
+    - name: Crear release y notificar a Sentry del deploy
+      env: SENTRY_ORG=sample-organization-slug SENTRY_PROJECT=sample-project-slug SENTRY_ENVIRONMENT=production
+      script: |
+        curl -sL https://sentry.io/get-cli/ | bash
+        export SENTRY_RELEASE=$(sentry-cli releases propose-version)
+        sentry-cli releases new -p $SENTRY_PROJECT $SENTRY_RELEASE
+        sentry-cli releases set-commits $SENTRY_RELEASE --auto
+        sentry-cli sourcemaps upload --release $SENTRY_RELEASE path-to-sourcemaps-if-applicable
+        sentry-cli releases finalize $SENTRY_RELEASE
+        sentry-cli deploys new -e $SENTRY_ENVIRONMENT
+```
+
+Para obtener más detalles sobre los conceptos de gestión de lanzamientos en el fragmento anterior, consulta la documentación completa sobre [gestión de lanzamientos](/es/cli/releases/).
+
+**Notas**:
+
+* Si no estás implementando un proyecto que requiera mapas de origen o ya enviaste los mapas de origen a Sentry por otro método, omite la línea `sourcemaps upload`.
+* Si no puedes instalar una integración de repositorio, envía los metadatos de los commits usando el [endpoint create release](/es/product/releases/associate-commits/#using-the-api) u omite la línea `set-commits` (`set-commits` es obligatorio para los commits sospechosos).
+* `sentry-cli releases propose-version` usa por defecto el SHA del commit que se está implementando (recomendado). Para establecer una versión diferente, modifica `SENTRY_RELEASE` con la versión preferida.

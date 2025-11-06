@@ -1,0 +1,364 @@
+---
+title: Sobres
+sidebar_order: 1
+---
+
+Este documento define los formatos de Envelope y Item utilizados por Sentry para la
+ingestión de datos, el reenvío y el almacenamiento sin conexión. La audiencia de este documento
+son los desarrolladores de los SDK de Sentry y los responsables del pipeline de ingestión.
+
+<Alert title="Compatibilidad con versiones anteriores">
+  Los Envelopes requieren Relay, introducido en **Sentry v20.6.0**.
+  Las versiones anteriores de Sentry no admiten Envelopes y responden con el error HTTP
+  *404 Not Found* a las cargas de envelopes. Del mismo modo, Relay requiere compatibilidad con
+  Envelopes en el upstream y no se puede usar con versiones anteriores de Sentry.
+</Alert>
+
+*Envelopes* es un formato de datos similar a los datos de formularios HTTP, que comprende
+*Headers* comunes y un conjunto de *Items* con sus propios encabezados y cargas útiles. Los Envelopes
+están optimizados para un análisis rápido y para ser legibles por personas. Admiten combinar
+múltiples Items en una sola carga útil, por ejemplo:
+
+* Enviar eventos con adjuntos binarios grandes.
+* Habilitar la comunicación entre saltos, por ejemplo, entre diferentes SDKs
+  (Native y Mobile, ReactNative y Android) y entre Relays.
+* Permitir el procesamiento por lotes de ciertos Items en un solo envío.
+* Almacenamiento sin conexión para el envío diferido tras problemas de conexión.
+
+Sentry especifica un endpoint dedicado para la ingestión de Envelopes:
+
+```
+POST /api/<project_id>/envelope/
+```
+
+<div id="terminology">
+  ## Terminología
+</div>
+
+* *obligatorio*: La implementación puede generar un error si falta este campo.
+* *recomendado*: Este campo debería incluirse al escribir, pero puede faltar
+  durante la lectura.
+* *opcional*: Puede omitirse libremente al escribir y puede faltar durante la
+  lectura.
+
+<div id="serialization-format">
+  ## Formato de serialización
+</div>
+
+Esta sección define el formato de datos del Envelope y su serialización. Para obtener detalles sobre la integridad de los datos y una lista de tipos de Item válidos, consulta [Envelope Items](/es/sdk/data-model/envelope-items/).
+
+<div id="prerequisites">
+  ### Requisitos previos
+</div>
+
+Estas definiciones se aplican a todas las partes del formato de datos Envelope:
+
+1. Los saltos de línea se definen como saltos de línea de UNIX, representados por `\n` y el código ASCII 10.
+   Si los saltos de línea están precedidos por `\r`, este carácter se considera parte de la
+   línea o del contenido anterior y podría generar un error.
+2. Los UUID se declaran como cadenas hexadecimales de 32 caracteres sin guiones
+   (`"12c2d058d58442709aa2eca08bf20986"`), o como cadenas de 36 caracteres con guiones
+   (`"12c2d058-d584-4270-9aa2-eca08bf20986"`). Se recomienda omitir los guiones
+   y usar UUID v4 en todos los casos.
+3. Los sobres (Envelope) no ofrecen un mecanismo de compresión. Sin embargo, un
+   sobre completo (Envelope) puede comprimirse o descomprimirse de una manera definida por la implementación
+   por cualquier componente que maneje sobres (Envelopes). Por ejemplo, [Ingestion](#ingestion)
+   permite la compresión mediante codificación de contenido.
+
+<div id="headers">
+  ### Encabezados
+</div>
+
+Los sobres contienen Headers en varios lugares. Los encabezados son objetos codificados en JSON
+(mapeos clave-valor) que siguen estas reglas:
+
+* Siempre codificados en UTF-8
+* Deben ser JSON válidos
+* Deben declararse en una sola línea; sin saltos de línea
+* Siempre seguidos por un salto de línea (`\n`) o el final del archivo
+* No deben tener espacios en blanco iniciales ni finales
+* Deben serializarse en su forma más compacta, sin espacios en blanco
+  adicionales. Se permite el uso de espacios en blanco dentro de los encabezados JSON, aunque no se recomienda.
+* Se permiten atributos desconocidos y deben conservarse en todas las implementaciones;
+  sin embargo, los atributos no cubiertos en esta especificación no deben emitirse activamente por
+  ninguna implementación.
+* Todos los encabezados conocidos y sus tipos de datos pueden validarse por una implementación;
+  si la validación falla, el sobre (Envelope) puede rechazarse por estar mal formado.
+* Los encabezados vacíos `{}` son técnicamente válidos
+
+Ejemplo solo de encabezado:
+
+```json
+{"event_id":"12c2d058d58442709aa2eca08bf20986"}
+```
+
+<div id="envelopes">
+  ### Sobres
+</div>
+
+La gramática completa de un sobre es:
+
+```
+Envelope = Headers { "\n" Item } [ "\n" ] ;
+Item = Headers "\n" Payload ;
+Payload = { * } ;
+```
+
+* **Los encabezados** son una única línea que contiene un objeto JSON, como se define en la sección [Headers](#headers). Los atributos definidos en el encabezado del Envelope delimitan el contenido del Envelope y pueden considerarse aplicables a todos los Items.
+* Según el contenido del Envelope, ciertos atributos de encabezado pueden ser obligatorios. Consulta [Envelope Items](/es/sdk/data-model/envelope-items/) para ver la especificación de los atributos requeridos.
+* **Los Items** incluyen sus propios encabezados y una carga útil. Puede haber un número arbitrario de **Items** en un Envelope, separados por un salto de línea. Una implementación debe consumir Items hasta que termine el archivo.
+* Los Envelopes deben finalizar con un salto de línea al final. Este salto de línea es opcional. Después del salto de línea final, no se permite ningún espacio en blanco.
+* Los Envelopes pueden estar vacíos y terminar inmediatamente después de los encabezados.
+* El fin de archivo (EOF) no termina implícitamente un Envelope si se esperan más datos, como una Payload.
+
+<div id="envelope-headers">
+  ### Encabezados del sobre
+</div>
+
+Los sobres pueden tener varios encabezados que son válidos en todas las situaciones:
+
+`dsn`
+
+: *Cadena, recomendado.* Un sobre puede autenticarse por sí mismo. Esto significa que
+el sobre tiene toda la información necesaria para enviarse a Sentry. En este
+caso, el DSN completo debe almacenarse en esta clave.
+
+`sdk`
+
+: *Objeto, recomendado.* Puede incluir la misma carga útil que la [interfaz `sdk`](/es/sdk/data-model/event-payloads/sdk/)
+en la carga útil del evento, pero puede aplicarse a todos los eventos. Esto significa que la información del SDK
+puede incluirse en minidumps, datos de sesión y otros envíos.
+
+`sent_at`
+
+: *Cadena, recomendado.* La marca de tiempo en la que el evento fue enviado desde el SDK, como cadena en
+formato [RFC 3339](https://tools.ietf.org/html/rfc3339). Se usa para la corrección del desfase
+de reloj de la marca de tiempo del evento. La zona horaria debe ser UTC.
+
+<Alert title="Guía de implementación para el encabezado sent_at">
+  Se recomienda *siempre* enviar el encabezado de sobre `sent_at`. No intentes determinar
+  si debe enviarse o no, ya que esa decisión puede tomarse en el lado receptor.
+
+  La marca de tiempo debe generarse lo más cerca posible de la transmisión del evento,
+  de modo que se minimice la demora entre el envío del sobre y su recepción del lado del servidor.
+  Esto suele lograrse durante la serialización del encabezado del sobre.
+
+  Sin embargo, es importante asegurarse de que el encabezado solo se aplique *una vez*. Si se escribe más de un encabezado `sent_at`,
+  Sentry rechazará todo el sobre. Por ejemplo, los SDK que implementan
+  funciones de caché deben evitar escribir el encabezado `sent_at` al guardar en caché en disco.
+  Escríbelo únicamente al enviar realmente el evento a Sentry.
+
+  La marca de tiempo puede generarse con cualquiera de las siguientes opciones (por ejemplo):
+
+  JavaScript
+
+  : `new Date().toISOString()`
+
+  Python
+
+  : `datetime.now(timezone.utc).isoformat()`<br />
+  *No uses `datetime.utcnow()`, ya que omitirá la zona horaria.*
+
+  .NET
+
+  : `DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)`
+  o
+  `DateTimeOffset.UtcNow.ToString("o", CultureInfo.InvariantCulture)`
+
+  Java
+
+  : `Instant.now().toString()`
+
+  *Ten también en cuenta que el encabezado `sent_at` reemplaza la clave `sentry_timestamp` previamente establecida en los encabezados de autorización,
+  la cual ha quedado completamente obsoleta. Solo debes enviar `sent_at`, y no `sentry_timestamp`.*
+</Alert>
+
+<div id="items">
+  ### Elementos
+</div>
+
+Los elementos proporcionan los datos de un Envelope. Sin elementos, un Envelope se considera
+*vacío* y puede descartarse sin problemas.
+
+Hay dos encabezados genéricos para cada elemento:
+
+`type`
+
+: **String, obligatorio.** Especifica el tipo de este elemento y su contenido. Según
+el tipo de elemento, pueden requerirse más encabezados. Consulta [Envelope Items](/es/sdk/data-model/envelope-items/) para ver la lista
+de todos los tipos de elementos.
+
+`length`
+
+: *int, recomendado.* La longitud del payload en bytes. Si no se especifica `length`,
+el payload, de forma implícita, se extiende hasta el siguiente salto de línea. Para payloads
+que contengan caracteres de salto de línea, se debe especificar `length`.
+
+<Alert title="Sobre omitir `length`" level="warning">
+  Por defecto, declara siempre la longitud del payload para habilitar un análisis más rápido de un
+  Envelope.
+
+  Si el Envelope contiene una gran cantidad de elementos muy pequeños, omitir la longitud
+  puede ser beneficioso para la compresión. Este es el caso de las sesiones.
+
+  La persona implementadora debe evaluar esto caso por caso y argumentar explícitamente
+  la decisión.
+</Alert>
+
+Notas para implementadores:
+
+* El encabezado del Envelope es **obligatorio**, pero puede estar vacío.
+* Las implementaciones **deben omitir y conservar correctamente** los elementos de tipo desconocido,
+  junto con su payload.
+* Los atributos desconocidos deben reenviarse al upstream.
+* Los payloads con prefijo de longitud deben terminar con `\n` o EOF. El salto de línea no
+  se considera parte del payload. Cualquier otro carácter, incluido el espacio en blanco,
+  significa que el Envelope está mal formado.
+* Si no puede consumirse `length`, es decir, si el Envelope llega a EOF antes de que se haya consumido el número
+  de bytes, entonces el Envelope está mal formado.
+* Si un elemento con longitud implícita termina con `\r\n`, entonces `\r` se considera
+  un carácter arbitrario que no forma parte del salto de línea y, por lo tanto, forma parte del
+  payload.
+
+<div id="full-examples">
+  ### Ejemplos completos
+</div>
+
+Estos ejemplos contienen cargas útiles completas de Envelope. Los saltos de línea se marcan explícitamente
+con `\n`, los caracteres no imprimibles se escapan con `\x<><>`. Todos los demás
+caracteres son literales.
+
+**Envelope con 2 elementos:**
+
+Ten en cuenta que el adjunto contiene un salto de línea de Windows al final de su
+carga útil, que se incluye en `length`:
+
+```
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc","dsn":"https://e12d836b15bb49d7bbf99e64295d995b:@sentry.io/42"}\n
+{"type":"attachment","length":10,"content_type":"text/plain","filename":"hello.txt"}\n
+\xef\xbb\xbfHello\r\n\n
+{"type":"event","length":41,"content_type":"application/json","filename":"application.log"}\n
+{"message":"hola mundo","level":"error"}\n
+```
+
+**Sobre con 2 elementos, última línea nueva omitida:**
+
+Ten en cuenta que el adjunto contiene una línea nueva de Windows al final de su
+contenido, la cual se incluye en `length`:
+
+```
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc","dsn":"https://e12d836b15bb49d7bbf99e64295d995b:@sentry.io/42"}\n
+{"type":"attachment","length":10,"content_type":"text/plain","filename":"hello.txt"}\n
+\xef\xbb\xbfHello\r\n\n
+{"type":"event","length":41,"content_type":"application/json","filename":"application.log"}\n
+{"message":"hola mundo","level":"error"}
+```
+
+**Sobre con 2 adjuntos vacíos:**
+
+```
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc"}\n
+{"type":"attachment","length":0}\n
+\n
+{"type":"attachment","length":0}\n
+\n
+```
+
+**Sobre con 2 adjuntos vacíos, se omitió la última línea nueva:**
+
+```
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc"}\n
+{"type":"attachment","length":0}\n
+\n
+{"type":"attachment","length":0}\n
+```
+
+**Elemento con longitud implícita, terminado por una nueva línea:**
+
+```
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc"}\n
+{"type":"attachment"}\n
+helloworld\n
+```
+
+**Elemento con longitud implícita, sin salto de línea final, terminado por EOF:**
+
+```
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc"}\n
+{"type":"attachment"}\n
+holamundo
+```
+
+**Sobre sin encabezados, longitud implícita, última línea nueva omitida, terminado por
+EOF:**
+
+```
+{}\n
+{"type":"session"}\n
+{"started": "2020-02-07T14:16:00Z","attrs":{"release":"sentry-test@1.0.0"}}
+```
+
+<div id="data-model">
+  ## Modelo de datos
+</div>
+
+Esta sección se ha trasladado a [Elementos de Envelope](/es/sdk/data-model/envelope-items/).
+
+<div id="ingestion">
+  ## Ingesta
+</div>
+
+Esta sección describe cómo incorporar Envelopes en Relay o Sentry. El endpoint principal
+de ingesta para Envelopes es:
+
+```
+POST /api/<project_id>/envelope/
+```
+
+<div id="http-headers">
+  ### Encabezados HTTP
+</div>
+
+Las solicitudes de Envelope pueden incluir todos los encabezados que admiten las solicitudes normales de la tienda. El único `content-type` aceptado es `application/x-sentry-envelope`, que se asume si falta. Para minimizar la necesidad de preflights de `CORS`, también se permite enviar `text/plain`, `multipart/form-data` y `application/x-www-form-urlencoded`. En cualquiera de esos casos, sin embargo, el comportamiento es el mismo que usar `application/x-sentry-envelope`.
+
+<div id="authentication">
+  ### Autenticación
+</div>
+
+Además de la autenticación habitual mediante encabezados HTTP y parámetros de consulta (query string), el endpoint de Envelope permite autenticarse mediante un encabezado de Envelope. Para elegir este método de autenticación, establece el encabezado de Envelope &quot;dsn&quot; en la cadena DSN completa.
+
+Si se proporcionan varias formas de autenticación, el endpoint valida que la información coincida; de lo contrario, rechaza la solicitud. Si faltan ambas, el Envelope se rechaza con el código de estado `403 Forbidden`.
+
+<Alert title="Compatibilidad retroactiva">
+  La autenticación mediante encabezado de Envelope requiere **Relay v21.6.0**.
+  Las versiones anteriores de Relay no admiten la autenticación mediante encabezado de Envelope y responden con el error HTTP
+  *401 Unauthorized (&quot;missing authorization information&quot;)* a las cargas de envelopes.
+
+  Los SDK no deberían depender de la autenticación mediante encabezado de Envelope para mantener la compatibilidad retroactiva con versiones anteriores de Sentry on‑premise a menos que sea absolutamente necesario. En su lugar, utiliza encabezados HTTP o parámetros de consulta siempre que sea posible.
+</Alert>
+
+<div id="size-limits">
+  ### Límites de tamaño
+</div>
+
+La ingesta de eventos impone límites al tamaño y al número de elementos en los sobres (envelopes).
+Estos límites pueden cambiar en el futuro y actualmente son:
+
+* *20 MB* para una solicitud de sobre comprimida
+* *100 MB* para un sobre completo después de la descompresión
+* *100 MB* para todos los adjuntos combinados
+* *100 MB* para cada archivo adjunto
+* *1 MB* para elementos de evento (errores y transacciones), spans, logs y métricas (statsd, buckets, meta)
+* *100 KB* para elementos de check-in de monitor
+* *50 MB* para elementos de perfil
+* *10 MB* para elementos de replay comprimidos
+* *100 MB* para elementos de replay después de la descompresión
+* *100 sesiones* por sobre
+* *100 buckets de sesiones preagregadas* por cada elemento `"sessions"`
+
+<div id="external-references">
+  ## Referencias externas
+</div>
+
+* [Datos de formulario con varias partes](https://tools.ietf.org/html/rfc7578)
+* [Codificación de transferencia en bloques](https://en.wikipedia.org/wiki/Chunked_transfer_encoding)

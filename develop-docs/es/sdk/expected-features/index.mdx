@@ -1,0 +1,655 @@
+---
+title: Funcionalidades
+description: A continuación se describen las funcionalidades que comúnmente se esperan en los SDK de Sentry.
+sidebar_order: 4
+---
+
+<Alert title="API unificada" level="warning">
+  Asegúrate también de leer la documentación de la <Link to="/sdk/miscellaneous/unified-api">API unificada</Link>,
+  que explica el diseño común de la API.
+</Alert>
+
+<div id="background-sending">
+  ## Envío en segundo plano
+</div>
+
+Los eventos deben transmitirse en un hilo de fondo o en un sistema similar. Esta cola debe vaciarse cuando la
+aplicación se cierre, respetando un tiempo de espera específico. Esta función suele ser visible para el usuario y se explica
+como parte de [apagado y vaciado](https://docs.sentry.io/platforms/javascript/configuration/draining/).
+
+<div id="uncaught-exception-handler">
+  ## Manejador de excepciones no capturadas
+</div>
+
+Posibilidad de configurar el SDK como un gancho para registrar cualquier excepción no capturada. A nivel de lenguaje, esto suele ser un gancho global proporcionado por el propio lenguaje. En integraciones con frameworks, podría formar parte del middleware u otro mecanismo.
+
+Este comportamiento suele venir de una integración predeterminada que puede desactivarse.
+
+<div id="scopes">
+  ## Scopes
+</div>
+
+Los SDK deberían proporcionar scopes para establecer atributos comunes y datos de contexto en los eventos enviados a Sentry desde el scope actual. Estos deberían heredarse a scopes inferiores para poder configurarlos de forma “global” al iniciar la aplicación. Ten en cuenta que algunos atributos solo pueden configurarse en las opciones del cliente (`release`, `environment`) y no en los scopes.
+
+Qué significa un scope depende de la aplicación; en un framework web, lo más probable es que sea un único ciclo de solicitud/respuesta. En una aplicación móvil, a menudo hay un único scope que representa al usuario y sus acciones. El scoping puede ser difícil de implementar porque a menudo debe lidiar con hilos o concurrencia y puede implicar una integración profunda con los frameworks. <Link to="/sdk/miscellaneous/unified-api#scope">Consulta la página de scopes</Link> para obtener más información.
+
+<div id="automatic-context-data">
+  ## Datos de contexto automáticos
+</div>
+
+Incorporación automática de atributos útiles como `flags`, `tags`, `extra` o `contexts` específicos. Por lo general, esto significa que el SDK se integra con un framework para poder establecer atributos que se sabe que son útiles para la mayoría de los usuarios. Consulta [Data Handling](/es/sdk/expected-features/data-handling) para conocer las consideraciones.
+
+## Breadcrumbs
+
+Registra manualmente eventos de la aplicación (en el alcance actual) durante el
+ciclo de vida de una aplicación. Implementa un búfer circular para evitar que crezca
+indefinidamente. Los breadcrumbs más recientes deben adjuntarse a los eventos a medida que ocurren.
+
+Con una integración más profunda con el framework, es posible y recomendable la captura automática de breadcrumbs, por ejemplo:
+
+* Eventos de UI: clics en botones, eventos táctiles, etc.
+* Eventos del sistema: batería baja, poco espacio de almacenamiento, modo avión activado, advertencias de memoria, cambio de orientación del dispositivo, etc.
+* [Solicitudes HTTP salientes](#http-client-integrations)
+
+Consulta la [documentación completa de breadcrumbs](/es/sdk/data-model/event-payloads/breadcrumbs/#breadcrumb-types) para ver más tipos.
+
+<div id="event-sampling">
+  ## Muestreo de eventos
+</div>
+
+Los SDK deben permitir al usuario configurar qué porcentaje de eventos se envía realmente al servidor (el resto debería ignorarse silenciosamente). Por ejemplo:
+
+```python
+sample_rate = options.get('sample_rate', 1.0)
+
+# suponiendo que random() devuelve un valor entre 0.0 (inclusivo) y 1.0 (exclusivo)
+if random() < sample_rate:
+    transport.capture_event(event)
+```
+
+Para simplificar aún más la exclusión de ciertos eventos antes de enviarlos a Sentry, también se sugiere proporcionar `ignoreTransactions` e `ignoreErrors` (o excepciones; elige la terminología que mejor se adapte a la plataforma). La matriz para `ignoreTransactions` en específico debe contener una lista de nombres de transacción, tal como se almacenan en el esquema del evento de transacción (p. ej., `GET /info`). Estas opciones deberían ofrecer una forma sencilla de permitir que los usuarios descarten (ignoren) eventos antes de que se envíen a Sentry. Esto evita enviar datos no deseados que podrían consumir cuota o recursos en el servidor de Sentry.
+
+```python
+ignore_transactions = ['GET /api/health','/api/v1/*']
+```
+
+<div id="rate-limiting">
+  ## Limitación de tasa
+</div>
+
+Respeta el encabezado HTTP 429 `Retry-After` de Sentry o, si el SDK admite varios tipos de cargas (por ejemplo, errores y transacciones), el encabezado `X-Sentry-Rate-Limits`. Las solicitudes salientes del SDK deben omitirse durante el período de backoff.
+
+Consulta <Link to="/sdk/expected-features/rate-limiting">Limitación de tasa</Link> para más detalles.
+
+<div id="backpressure-management">
+  ## Gestión de backpressure
+</div>
+
+Los SDK de backend (normalmente usados en aplicaciones de servidor) deben implementar lógica de gestión de backpressure que reduzca dinámicamente el muestreo de transacciones cuando el caudal del sistema es demasiado alto.
+
+Consulta <Link to="/sdk/telemetry/traces/backpressure/">Gestión de backpressure</Link> para más detalles.
+
+<div id="debug-mode">
+  ## Modo de depuración
+</div>
+
+Cada SDK debe implementar un modo de depuración, desactivado de forma predeterminada. Los usuarios pueden activarlo estableciendo la opción `debug` en `true`. Si el modo de depuración está activado, el SDK muestra información útil para depurar con dos objetivos principales:
+
+1. Ayudar a los usuarios a identificar y corregir problemas del SDK, como configuraciones incorrectas o fallos al enviar datos a Sentry.
+2. Ayudar a los ingenieros del SDK de Sentry a investigar problemas en los SDK de Sentry, ya sea durante el desarrollo o pidiendo a un usuario que active el modo de depuración y comparta los registros.
+
+Como la salida de logs puede añadir una sobrecarga innecesaria, recomendamos no activar el modo de depuración en producción. Aun así, los SDK pueden registrar mensajes de error críticos incluso cuando el modo de depuración está desactivado. Cuando se use el modo de depuración de forma intensiva para el segundo caso de uso, recomendamos añadir el nivel de diagnóstico, ya que los usuarios podrían pasar por alto fácilmente los mensajes de log de error o críticos.
+
+<div id="diagnostic-level">
+  ### Nivel de diagnóstico
+</div>
+
+Los SDK pueden ofrecer un nivel de diagnóstico opcional que controla lo detallado que es el modo de depuración. Hay cinco niveles:
+
+* `debug`: El modo más detallado
+* `info`: Mensajes informativos
+* `warning`: Advertencia de que algo podría no estar bien
+* `error`: Solo se registran errores internos del SDK
+* `fatal`: Solo se registran errores críticos
+
+El nivel predeterminado puede ser **debug** o **error**, según cómo el SDK use los mensajes de registro. Cuando el volumen de mensajes es bajo, el valor predeterminado puede ser **debug**. Cuando es alto, los usuarios podrían pasar por alto fácilmente errores o mensajes críticos. En ese caso, el SDK debe establecer el nivel predeterminado en **error**. Esta elección debe estar claramente documentada en la documentación para el usuario.
+
+<div id="auto-debug-mode">
+  ### Modo de depuración automático
+</div>
+
+Para que los usuarios puedan detectar fácilmente errores durante el desarrollo, el SDK puede habilitar automáticamente el modo de depuración cuando detecte de forma fiable que se está ejecutando en una build de depuración. Al hacerlo, el SDK debe indicarlo en la documentación y mostrar un mensaje en el log al inicializarse. Si el usuario establece explícitamente la opción `debug` en `false`, el SDK debe desactivar el modo de depuración.
+
+<div id="in-app-frames">
+  ## Frames en la aplicación
+</div>
+
+El análisis de la pila puede determinar qué frames deben identificarse como parte de la aplicación del usuario (en lugar del lenguaje, una biblioteca o un framework), ya sea automáticamente o mediante una configuración del usuario al inicio, a menudo declarada como un prefijo de paquete/módulo.
+
+<div id="surrounding-source-in-stack-trace">
+  ## Código circundante en la traza de pila
+</div>
+
+Líneas de código fuente para aportar contexto en las trazas de pila. Esto es más fácil en lenguajes interpretados y puede ser difícil o incluso imposible en los compilados.
+
+<div id="local-variables">
+  ## Variables locales
+</div>
+
+Nombres y valores de variables locales para cada marco de pila, cuando sea posible. Existen restricciones en algunas plataformas; por ejemplo, puede que solo se puedan recopilar los valores de los parámetros pasados a cada función, o puede que sea completamente imposible recopilar esta información.
+
+Esta funcionalidad debe estar controlada por la opción `includeLocalVariables`, que está establecida en `true` de forma predeterminada.
+
+<div id="feature-flags">
+  ## Feature flags
+</div>
+
+Un SDK puede, opcionalmente, realizar seguimiento de evaluaciones de feature flags. Los feature flags pueden adjuntarse a eventos de error o a eventos de span.
+
+Al realizar seguimiento de evaluaciones de feature flags en spans, registramos los primeros 10 feature flags evaluados dentro del alcance del span. Las evaluaciones son atributos del span y siguen el esquema de atributos de span existente.
+
+Al realizar seguimiento de evaluaciones de feature flags en errores, registramos las 100 evaluaciones de feature flags más recientes y únicas. Las evaluaciones se almacenan en el scope. Cuando el scope se bifurca, se entrega al scope hijo una copia de las evaluaciones de feature flags recopiladas. Las modificaciones a la copia del objeto de feature flags del hijo no deben propagarse al padre. Las evaluaciones de flags dentro de un scope se consideran locales a ese scope y no se propagan. Las evaluaciones deben enviarse a Sentry siguiendo el esquema especificado en la documentación del protocolo <Link to="/sdk/data-model/event-payloads/contexts/#feature-flag-context">Feature Flag Context</Link>.
+
+Si un SDK admite feature flags, debe exponer una función `add_feature_flag` con un comportamiento similar a la función `set_tag`. Debe aceptar una clave de tipo string y un valor que sea una unión de string, boolean, integer, float y structure.
+
+<div id="integrations">
+  ### Integraciones
+</div>
+
+Las integraciones automatizan el seguimiento de las evaluaciones de feature flags. Una integración debe conectarse a un SDK de terceros y registrar las evaluaciones de feature flags usando el ámbito actual.
+
+<div id="desymbolication">
+  ## Desimbolización
+</div>
+
+Restaura en los trazados de pila los nombres originales de código/métodos que estaban compilados u ofuscados. La desimbolización siempre requiere soporte del backend de Sentry. No es necesaria para muchos lenguajes.
+
+<div id="retrieve-last-event-id">
+  ## Obtener el ID del último evento
+</div>
+
+Permite obtener el ID del último evento enviado. Los ID de eventos son útiles para correlación, registro, clientes que crean sus propios formularios de comentarios, etc.
+
+<div id="user-feedback">
+  ## Comentarios de usuarios
+</div>
+
+Para todos los SDK, se recomienda encarecidamente enviar los comentarios de usuarios como un [elemento de sobre](/es/sdk/data-model/envelope-items/#user-report---deprecated). Como alternativa, los SDK pueden usar el [endpoint de comentarios de usuarios](https://docs.sentry.io/api/projects/submit-user-feedback/), aunque no se recomienda.
+
+<div id="user-facing-platforms">
+  ### Plataformas de cara al usuario
+</div>
+
+En plataformas de cara al usuario como móvil, escritorio o navegador, esto implica compatibilidad de primera clase para solicitar comentarios de usuario cuando ocurre un error o un bloqueo.
+Para ver algunos ejemplos de la API, consulta la documentación para [Apple](https://docs.sentry.io/platforms/apple/enriching-events/user-feedback/) y
+[Java](https://docs.sentry.io/platforms/java/enriching-events/user-feedback/).
+
+En móvil y escritorio, es común solicitar comentarios al usuario después de que se haya producido un bloqueo en la ejecución anterior de la aplicación. Por lo tanto, los SDK deben
+implementar el callback `onCrashedLastRun` en las opciones. Este callback se invoca poco después de la inicialización del SDK cuando la última ejecución del programa
+terminó con un bloqueo. El SDK debe ejecutar el callback solo una vez durante toda la ejecución del programa para evitar múltiples invocaciones si hay varios
+eventos de bloqueo por enviar.
+
+<div id="session-replay-integration-with-feedback-widgets">
+  #### Integración de Session Replay con widgets de comentarios
+</div>
+
+Cuando `onErrorSampleRate` de Session Replay es mayor que 0, los SDK deben integrar la captura de reproducciones con la funcionalidad de comentarios. El momento del muestreo de la reproducción depende de cómo se capturan los comentarios:
+
+**Integración con el widget de comentarios:**
+Cuando se agrega un widget de comentarios a una aplicación, el SDK debe muestrear la reproducción cuando el widget **se abre**, no cuando se envían los comentarios. Este momento es crucial porque:
+
+* Muestrear cuando el widget se abre captura la sesión del usuario hasta el momento en que decide dejar el comentario
+* Muestrear solo cuando se envían los comentarios haría que el búfer de reproducción muestre principalmente al usuario escribiendo su mensaje, lo que aporta un contexto de depuración mínimo
+* El búfer de reproducción debe contener las acciones del usuario y el estado de la aplicación antes de encontrarse con el problema que está reportando
+
+Los SDK deben activar el muestreo y el vaciado de la reproducción tan pronto como el widget de comentarios sea visible para el usuario, garantizando que se capture el contexto completo independientemente de si el usuario finalmente envía el comentario.
+
+**Integración con API manual:**
+Cuando los comentarios se capturan mediante la API manual, el SDK debe muestrear y vaciar la reproducción durante la ejecución de la API de captura de comentarios para asegurar que se preserve el contexto de la sesión.
+
+<div id="backend-platforms">
+  ### Plataformas de backend
+</div>
+
+En las plataformas de backend, los SDK deben documentar cómo usar el [ID del último evento](#retrieve-last-event-id) para solicitar directamente la opinión del usuario.
+
+### Implementaciones de ejemplo
+
+Clase User Feedback:
+
+* [Objective-C](https://github.com/getsentry/sentry-cocoa/blob/9eedc425727f0daccca1bd2be6021f6c3d9c654c/Sources/Sentry/SentryUserFeedback.m)
+* [Java](https://github.com/getsentry/sentry-java/blob/671f9e0b8b709ef18e8b0788c31df44f99d09d35/sentry/src/main/java/io/sentry/UserFeedback.java#L7)
+* [C#](https://github.com/getsentry/sentry-dotnet/blob/6ddf8363170bffee74a8c3cbf44335797d39ca9c/src/Sentry/Protocol/UserFeedback.cs#L10)
+
+Elemento de envelope:
+
+* [Objective-C](https://github.com/getsentry/sentry-cocoa/blob/fd3e46efe59324e894d5601a7b3028824a588dda/Sources/Sentry/SentryEnvelope.m#L145-L162)
+* [Java](https://github.com/getsentry/sentry-java/blob/b2e8dd43ea2ef37201b215ec409655e49e3231c8/sentry/src/main/java/io/sentry/SentryEnvelopeItem.java#L131-L155)
+* [C#](https://github.com/getsentry/sentry-dotnet/blob/3bc6c66a14e653982a6a25df033d68d8ad12c4af/src/Sentry/Protocol/Envelopes/EnvelopeItem.cs#L170-L178)
+
+<div id="attachments">
+  ## Archivos adjuntos
+</div>
+
+Los archivos adjuntos son archivos almacenados junto con un evento. Para enviar un archivo adjunto, agrégalo como un [elemento del sobre](/es/sdk/data-model/envelope-items/#attachment)
+al evento correspondiente.
+
+Recomendamos implementar dos tipos de archivos adjuntos: uno con una ruta y otro con un arreglo de bytes.
+Si el lenguaje de programación lo permite, crea una sola clase con múltiples constructores para mantener las cosas simples y deducir el tipo de contenido
+del archivo adjunto a partir del nombre de archivo.
+
+La sobrecarga que recibe un `path` debe considerar:
+
+* El SDK debe leer el archivo cuando se capture un evento y no cuando el usuario agregue un archivo adjunto al scope.
+* Si la lectura del archivo adjunto falla, el SDK no debe descartar todo el sobre, sino solo el elemento del sobre del archivo adjunto.
+* Si el SDK está en modo de depuración (`debug=true`), registra los errores para facilitar el diagnóstico.
+
+Si el SDK admite [transacciones](/es/sdk/data-model/envelope-items/#transaction), los archivos adjuntos deben ofrecer un indicador `addToTransactions`,
+que especifica si el SDK agrega el archivo adjunto a cada transacción o no. El valor predeterminado debe ser `false`.
+
+Usa las implementaciones de [Java](https://github.com/getsentry/sentry-java/blob/main/sentry/src/main/java/io/sentry/Attachment.java),
+[Objective-C](https://github.com/getsentry/sentry-cocoa/blob/master/Sources/Sentry/SentryAttachment.m) o
+[Python](https://github.com/getsentry/sentry-python/blob/master/sentry_sdk/attachments.py) como referencia para la API.
+
+<div id="max-attachment-size">
+  ### Tamaño máximo de adjuntos
+</div>
+
+Junto con la implementación de adjuntos, agrega `maxAttachmentSize` a las opciones y define el valor predeterminado en 20 MiB. Al convertir un adjunto en un
+elemento del sobre (envelope), el SDK debe descartar los elementos que superen `maxAttachmentSize`. En especial en SDK con caché sin conexión, típicos en móviles, esto resulta
+útil porque los adjuntos pueden consumir rápidamente el espacio en disco de los usuarios. Además, Relay tiene un
+[tamaño máximo para adjuntos](https://docs.sentry.io/product/relay/options/), y queremos reducir solicitudes innecesarias.
+
+<div id="screenshots">
+  ## Capturas de pantalla
+</div>
+
+Cuando el usuario acepta participar, si es técnicamente posible, toma una captura de pantalla de la aplicación durante un bloqueo o error e inclúyela como un [archivo adjunto](#attachments) al [envelope](/es/sdk/data-model/envelopes/) del evento.
+
+Esta función solo aplica a SDK con interfaz de usuario, como Mobile y Desktop.
+En algunos entornos, como iOS nativo, tomar una captura requiere el hilo de la UI y, en caso de un bloqueo, este podría no estar disponible. Por lo tanto, esta función será, por naturaleza, un esfuerzo de “mejor intento”.
+Además, algunos entornos no permiten acceder a la UI ni a ciertas funciones durante un bloqueo grave; iOS, por ejemplo, no permite ejecutar código Objective-C después de una señal, por lo que no será posible capturar capturas de pantalla de bloqueos graves.
+Se recomienda ofrecer esta función mediante una única opción llamada `attachScreenshot`. Esa es la forma preferida, pero en plataformas como Flutter se requiere un widget contenedor, por lo que la documentación puede orientar a los usuarios a eso en lugar del nombre de la opción sugerida.
+
+La función se logra añadiendo un archivo adjunto con:
+
+* El nombre del archivo debe contener la palabra `screenshot`
+* El tamaño de la imagen, si es posible, debería mantenerse por debajo de 2 MB, pero la calidad/tamaño podría ser configurable
+* `ContentType: image/jpg` o `ContentType: image/png`
+
+Siempre que sea posible, evita añadir el archivo adjunto si la toma de la captura de pantalla falla. Alternativamente, durante la transmisión, es posible que el encabezado del envelope ya se haya vaciado antes de intentar tomar la captura. En ese caso, se incluirá un archivo adjunto de 0 bytes. Entonces Sentry no mostrará una vista previa de la captura.
+
+<div id="before-send-hook">
+  ## Hook beforeSend
+</div>
+
+Hook invocado con el evento (y en algunas plataformas, con la sugerencia/hint) que permite al usuario decidir si un evento debe enviarse o no. También puede usarse para modificar el evento. Esto solo funciona para eventos de `error`. Otros tipos de eventos como `transactions` y `check-ins` **no** deberían pasar por `beforeSend`. Para `transactions` se recomienda implementar `beforeSendTransaction` en los SDK. Para `check-ins` puedes implementar opcionalmente `beforeSendCheckIn`. Para entender cuándo deberías llamar a esto en tu SDK, consulta el [orden de filtrado de errores de sesiones](/es/sdk/telemetry/sessions/#filter-order).
+
+<div id="before-breadcrumb-hook">
+  ## Hook previo al breadcrumb
+</div>
+
+Hook llamado con el breadcrumb (y en algunas plataformas, la sugerencia) que permite al usuario decidir si y cómo debe enviarse un breadcrumb.
+
+<div id="list-loaded-libraries">
+  ## Enumerar bibliotecas cargadas
+</div>
+
+Incluye una lista de bibliotecas cargadas (y sus versiones) al enviar un evento.
+
+<div id="buffer-to-disk">
+  ## Búfer en disco
+</div>
+
+Esta función también se conoce como &quot;caché sin conexión&quot;.
+
+Escribe los eventos en el disco antes de intentar enviarlos, de modo que puedan reintentarse en caso de una falla temporal de la red. Es necesario implementar un límite en la cantidad de eventos almacenados. Esto es especialmente útil en aplicaciones móviles y de escritorio (por ejemplo, portátiles), donde la conectividad estable a menudo no está disponible.
+
+<div id="dealing-with-network-failures">
+  ### Manejo de fallos de red
+</div>
+
+Una respuesta con código de estado `HTTP 2xx` de Sentry se considera un envío correcto. Es importante señalar que los reintentos solo se contemplan en caso de un fallo de red. Por ejemplo:
+
+* Tiempo de espera de la conexión
+* Error al resolver el DSN
+* Restablecimiento de la conexión por el par
+
+En otros fallos, como los provocados por el procesamiento del archivo en el propio SDK, se debe descartar la carga útil, ya que probablemente terminaría en un ciclo de reintentos infinito.
+Si el evento llegó a Sentry y se recibió un código de estado HTTP, incluso si fue un `HTTP 500`, el evento debe descartarse.
+
+<div id="additional-capabilities">
+  #### Capacidades adicionales
+</div>
+
+Considera hacer que el SDK reintente enviar eventos cuando el dispositivo vuelva a estar en línea, si la plataforma ofrece esa notificación.
+
+Una vez que el dispositivo vuelva a estar en línea, es probable que el SDK vacíe su cola en disco con una ráfaga rápida de solicitudes. Esto puede activar distintos filtros de abuso en Sentry. Para mitigar esto, considera agregar un pequeño retraso entre las capturas de eventos en caché. Se recomienda un valor de 100 milisegundos.
+
+Si el SDK está sujeto a [limitación de tasa](/es/sdk/expected-features/rate-limiting/), lo que hace que descarte cualquier evento que llegue a su transporte HTTP, considera dejar de consumir la caché en disco hasta que se alcance el tiempo de espera de `Retry-After` o la app se reinicie.
+
+<div id="example-implementations">
+  #### Ejemplos de implementaciones
+</div>
+
+* [C#](https://github.com/getsentry/sentry-dotnet/blob/main/src/Sentry/Internal/Http/CachingTransport.cs)
+* [Java](https://github.com/getsentry/sentry-java/blob/main/sentry/src/main/java/io/sentry/cache/EnvelopeCache.java)
+* [Objective-C](https://github.com/getsentry/sentry-cocoa/blob/master/Sources/Sentry/SentryHttpTransport.m)
+* [TypeScript](https://github.com/getsentry/sentry-electron/blob/master/src/main/transports/electron-offline-net.ts)
+
+<div id="start-up-crash-detection">
+  ## Detección de bloqueos al inicio
+</div>
+
+Recomendamos implementar esta función para SDK móviles y de escritorio.
+
+Si la aplicación se bloquea poco después de la inicialización del SDK, este debería proporcionar un mecanismo que garantice la transmisión
+a Sentry. Idealmente, los SDK podrían enviar los eventos en un proceso independiente no afectado por la aplicación que se bloquea. Con las
+limitaciones de las plataformas móviles, crear un proceso adicional solo para enviar envelopes es difícil o imposible.
+En estas plataformas, los SDK envían envelopes en un hilo en segundo plano para no bloquear el hilo de la UI o porque se prohíben las operaciones de red
+en el hilo de la UI. Un bloqueo que ocurra poco después de la inicialización del SDK podría provocar que nunca se informen dichos bloqueos,
+manteniendo a los usuarios sin conocimiento de un error crítico.
+
+Cuando la app se bloquea, el SDK debe verificar si sucede dentro de los dos segundos posteriores a la inicialización del SDK. Si es así, debe almacenar
+esa información en disco. Recomendamos usar un archivo marcador, que el SDK compruebe durante la inicialización. Si el SDK
+permite almacenar esta información en otro lugar para evitar crear un archivo marcador adicional y generar E/S extra, entonces
+recomendamos usar ese enfoque para evitar E/S adicional. Aceptamos el costo de E/S adicional para poder
+detectar bloqueos al inicio.
+
+Si la plataforma lo permite, el SDK puede llamar a flush inmediatamente después de que ocurra el bloqueo al inicio detectado y antes de que
+la aplicación termine. Si el SDK puede garantizar la transmisión a Sentry durante el bloqueo, puede omitir la creación de un archivo marcador
+y hacer una llamada de flush bloqueante en la siguiente inicialización.
+
+Si el archivo marcador existe en la siguiente inicialización del SDK, este debe borrar el marcador y bloquear la ejecución de `init` hasta
+cinco segundos para vaciar los envelopes pendientes. Si se supera el tiempo de espera de cinco segundos, el SDK debe liberar
+el bloqueo de `init` y continuar el vaciado en un hilo en segundo plano.
+
+Aunque, idealmente, el SDK debería vaciar solo el envelope del evento de bloqueo, es aceptable llamar a flush para todos los envelopes para
+reducir la complejidad, ya que la mayoría de las veces no debería haber demasiados envelopes en la caché sin conexión.
+
+Decidimos no hacer que esta función sea configurable. La única razón para desactivarla debería ser si la función está rota; por lo tanto,
+los usuarios no pueden desactivarla. Los usuarios no pueden modificar la duración para detectar los bloqueos al inicio, que es de dos segundos, ni la
+duración de flush, que es de cinco segundos, porque generalmente no saben qué valores elegir y así nosotros podemos escoger los adecuados.
+Siempre podemos añadir estos valores más adelante.
+
+<div id="example-implementations">
+  #### Ejemplos de implementaciones
+</div>
+
+* [Java](https://github.com/getsentry/sentry-java/pull/2277)
+* [Objective-C](https://github.com/getsentry/sentry-cocoa/pull/2220)
+
+<div id="http-proxy">
+  ## Proxy HTTP
+</div>
+
+Posibilidad de usar un proxy HTTP. A menudo es fácil de implementar utilizando el cliente HTTP existente. De ser posible, debería tomarse de la configuración del sistema; de lo contrario, especificarse explícitamente en las opciones del cliente.
+
+<div id="http-client-integrations">
+  ## Integraciones del cliente HTTP
+</div>
+
+Cada integración del cliente HTTP debe excluir las solicitudes HTTP que coincidan con el DSN configurado en las Options para excluir solicitudes HTTP a Sentry.
+
+Añade una migaja (breadcrumb) por cada solicitud HTTP saliente cuando la solicitud finalice:
+
+* type: `http`
+* category: `http`
+* level
+  * `info` - código de estado de respuesta 2XX - 3XX
+  * `warning` - código de estado de respuesta 4XX
+  * `error` - código de estado de respuesta 5XX
+* data (todos los campos son opcionales pero recomendados):
+  * `url` - La URL utilizada en la solicitud HTTP
+  * `http.request.method` - método HTTP en mayúsculas, p. ej.: GET, HEAD
+  * `http.response.status_code` - Código de estado numérico como `200` o `404`
+  * `http.query` - La parte de consulta de la URL
+  * `http.fragment` - El fragmento del URI (solo SDK de navegador)
+  * `http.request.body.size` Tamaño en bytes
+  * `http.response.body.size` Tamaño en bytes
+
+Si el monitoreo de rendimiento es compatible con el SDK y está habilitado en la aplicación cliente cuando la transacción está activa, se debe crear un nuevo `Span` alrededor de la solicitud HTTP:
+
+* operation: `http.client`
+* description: `$METHOD $url` (método HTTP en mayúsculas), p. ej. `GET https://sentry.io`
+* Las solicitudes HTTP deben incluir un [`sentry-trace` HTTP header](/es/sdk/telemetry/traces/#header-sentry-trace) para admitir el [trazado distribuido](https://docs.sentry.io/product/sentry-basics/tracing/distributed-tracing)
+* Las solicitudes HTTP deben incluir un [`baggage` HTTP header](/es/sdk/telemetry/traces/dynamic-sampling-context/#baggage-header) para admitir el [muestreo dinámico](/es/sdk/telemetry/traces/dynamic-sampling-context/)
+* el estado del span debe coincidir con el código de estado de la respuesta HTTP ([consulta el mapeo de estado de Span a código de estado HTTP](/es/sdk/data-model/event-payloads/span/))
+* cuando ocurra un error de red, el estado del span debe establecerse en `internal_error`
+* los datos del span deben seguir las [convenciones de datos de Span](/es/sdk/telemetry/traces/span-data-conventions/)
+
+<div id="http-client-errors">
+  ### Errores del cliente HTTP
+</div>
+
+El SDK captura automáticamente los errores del cliente HTTP y los envía a [sentry.io](https://sentry.io).
+
+La integración del cliente HTTP debe tener 3 opciones de configuración:
+
+* `captureFailedRequests` tiene como valor predeterminado `false` al introducir esta función por motivos de PII y se puede cambiar a `true` en una próxima versión principal.
+  * El SDK solo capturará errores del cliente HTTP si está habilitado.
+* `failedRequestStatusCodes` tiene como valor predeterminado `500 - 599`; esta opción de configuración acepta una `List` de `HttpStatusCodeRange`, que es un rango de códigos de estado HTTP -&gt; de `min` a `max`, o un único `status_code`.
+  * El SDK solo capturará errores del cliente HTTP si el código de estado de la respuesta HTTP está dentro de los rangos definidos en `failedRequestStatusCodes`.
+  * Si el lenguaje tiene un tipo `Range`, debería usarse en lugar de `HttpStatusCodeRange`.
+* `failedRequestTargets` tiene como valor predeterminado (`.*`); esta opción de configuración acepta una `List` de `String` que también pueden ser expresiones regulares, similar a <Link to="/sdk/telemetry/traces/#tracepropagationtargets">tracePropagationTargets</Link>.
+  * El SDK solo capturará errores del cliente HTTP si la URL de la solicitud HTTP coincide con cualquiera de los `failedRequestTargets`.
+* Los `headers` sensibles solo deberían establecerse si `sendDefaultPii` está habilitado; p. ej., `Cookie` y `Set-Cookie`.
+
+La integración del cliente HTTP debe capturar eventos de error con las siguientes propiedades:
+
+La interfaz Request; consulta la <Link to="/sdk/data-model/event-payloads/request/">Especificación</Link> para más detalles.
+
+El contexto Response; consulta la <Link to="/sdk/data-model/event-payloads/contexts/#response-context">Especificación</Link> para más detalles.
+
+```json
+{
+  "contexts": {
+    "response": {
+      "type": "response",
+      "cookies": "PHPSESSID=298zf09hf012fh2; csrftoken=u32t4o3tb3gg43; _gat=1;",
+      "headers": {
+        "content-type": "text/html"
+        /// ...
+      },
+      "status_code": 500,
+      "body_size": 1000 // en bytes
+    }
+  }
+}
+```
+
+La interfaz de excepciones; consulta la <Link to="/sdk/data-model/event-payloads/exception/">Especificación</Link> para más detalles.
+
+Si la integración del cliente HTTP no lanza una excepción para solicitudes fallidas, puedes crear una excepción sintética siguiendo esta especificación:
+
+* Configura el <Link to="/sdk/data-model/event-payloads/exception/#exception-mechanism">mecanismo de excepción</Link> con un `type` adecuado, como `SentryOkHttpInterceptor`.
+* Configura la <Link to="/sdk/data-model/event-payloads/stacktrace/">interfaz de traza de pila</Link> con `snapshot=true`.
+  * `HTTP Client Error with status code: $code`.
+
+Al capturar eventos de error, pasa los objetos originales `Request` y `Response` del cliente HTTP como `hints`, para que los usuarios puedan filtrar eventos en `beforeSend` con todo el contexto.
+
+Los eventos de error del cliente HTTP capturados automáticamente pueden buscarse y generar alertas con las propiedades `http.url` y `http.status_code`. Obtén más información en la documentación de [Searchable Properties](https://docs.sentry.io/concepts/search/searchable-properties/).
+
+Como ejemplo, consulta la [integración de OkHttp Client](https://github.com/getsentry/sentry-java/pull/2287) para Android.
+
+<div id="graphql-client-integrations">
+  ## Integraciones del cliente GraphQL
+</div>
+
+Las integraciones del cliente GraphQL deben seguir las pautas de [Integraciones del cliente HTTP](/es/sdk/expected-features/#http-client-integrations), con algunas diferencias:
+
+El parámetro `failedRequestStatusCodes` no existe porque los errores de GraphQL no son errores HTTP, por lo que una solicitud puede considerarse con error aunque el código de estado HTTP de la respuesta sea satisfactorio.
+
+En su lugar, se debe capturar el error si la respuesta de GraphQL contiene un array `errors`. Esto se puede hacer aplicando una expresión regular al cuerpo de la respuesta, por ejemplo:
+
+```kotlin
+val regex = "(?i)\"errors\"\\s*:\\s*\\[".toRegex()
+
+// [body] es el cuerpo de la respuesta de GraphQL convertido a cadena
+if (regex.containsMatchIn(body)) {
+    // captura el error
+}
+```
+
+Campos adicionales para breadcrumbs:
+
+* data (todos los campos son opcionales, pero recomendados):
+  * `operation_name` - Nombre de la operación de GraphQL
+  * `operation_type` - Tipo de operación de GraphQL, p. ej.: `query`, `mutation`, `subscription`
+  * `operation_id` - ID de la operación de GraphQL
+
+Campos obligatorios para la interfaz Request:
+
+```json
+{
+  "request": {
+    "api_target": "graphql",
+    "data": {
+      "foo": "bar"
+    }
+  }
+}
+```
+
+El campo `data` es un objeto JSON que contiene la carga de la solicitud de GraphQL.
+
+Campos obligatorios de la interfaz Response:
+
+```json
+{
+  "contexts": {
+    "response": {
+      "data": {
+        "foo": "bar"
+      }
+    }
+  }
+}
+```
+
+El campo `data` es un objeto JSON que contiene la carga de la respuesta de GraphQL. Adjuntar los cuerpos de la solicitud y la respuesta debe estar condicionado por `sendDefaultPii` y/o por otra bandera de incorporación voluntaria (p. ej., `captureFailedRequests`).
+
+Campos obligatorios para la interfaz Event:
+
+El campo `fingerprints` debe configurarse como `["$operationName", "$operationType", "$statusCode"]`.
+
+```json
+{
+  "fingerprints": ["$operationName", "$operationType", "$statusCode"]
+}
+```
+
+<div id="graphql-performance">
+  ## Rendimiento de GraphQL
+</div>
+
+<div id="server">
+  ### Servidor
+</div>
+
+La integración de GraphQL Performance debe cumplir las pautas de [GraphQL Client Integrations](/es/sdk/expected-features/#graphql-client-integrations) con algunas diferencias:
+
+El nombre de la transacción debe configurarse con el nombre de la operación de GraphQL, si es posible; de lo contrario, usar algo único que tenga sentido, p. ej., el nombre canónico de la clase real/generada.
+
+La descripción de la transacción debe configurarse con el nombre de la operación de GraphQL, el tipo de operación (`query`, `mutation` o `subscription`) y el código de estado, si es posible.
+
+El `request.api_target` debe establecerse en `graphql`.
+
+El `request.data` debe establecerse con la carga útil sin procesar de la solicitud GraphQL, si es posible. Esto debe estar protegido por una opción de inclusión voluntaria (opt‑in), p. ej., `sendDefaultPii`.
+
+El `contexts.response.data` debe establecerse con la carga útil sin procesar de la respuesta de GraphQL, solo si hubo `errors`. Esto debe estar protegido por una opción de inclusión voluntaria (opt‑in), p. ej., `sendDefaultPii` y `maxResponseBodySize`.
+
+Algunos frameworks pueden usar un objeto `Stream` para la respuesta; en este caso, el objeto no puede consumirse dos veces, por lo que el SDK debería intentar comprobar y clonar el objeto, si es posible.
+
+Se deben crear spans para [resolvers](https://www.apollographql.com/docs/apollo-server/data/resolvers/), si es posible. A veces también se llaman [data fetchers](https://www.graphql-java.com/documentation/data-fetching/).
+
+Se deben crear spans para [data loaders](https://graphql.org/learn/best-practices/#server-side-batching-caching/), si es posible.
+
+El tipo de operación debe seguir las [Span Operation Conventions](/es/sdk/telemetry/traces/span-operations/).
+
+Atributos extra (`data`) para transacciones y/o spans: existen convenciones de [Span Data](/es/sdk/telemetry/traces/span-data-conventions/) y [OTel GraphQL](https://opentelemetry.io/docs/specs/otel/trace/semantic_conventions/instrumentation/graphql/).
+
+La instrumentación de APM para GraphQL dependerá de la biblioteca de GraphQL instrumentada; si hay hooks disponibles, el SDK debería usarlos; de lo contrario, el SDK podría intentar aplicar monkey patch a la biblioteca o instrumentar la capa de transporte usando heurísticas, por ejemplo, si la URL termina con `graphql`, si hay encabezados HTTP, etc.
+
+Si hay hooks disponibles y la capa de transporte también está instrumentada (p. ej., Apollo Interceptors para GraphQL y Spring), el SDK debe dar preferencia a la capa que tenga más información y evitar crear transacciones/spans duplicados, o fusionar la información, si es posible.
+
+Spring GraphQL tiene su propio [paquete de observación](https://github.com/spring-projects/spring-graphql/tree/main/spring-graphql/src/main/java/org/springframework/graphql/observation).
+
+GraphQL Java tiene su propio [paquete de instrumentación](https://github.com/graphql-java/graphql-java/tree/master/src/main/java/graphql/execution/instrumentation).
+
+Apollo GraphQL tiene sus propias [extensiones de tracing](https://github.com/apollographql/apollo-tracing#response-format); en este caso incluso sería posible crear transacciones y spans sintéticos a partir de la extensión de tracing.
+
+Pueden ser necesarios cambios en el producto; p. ej., si `request.api_target` está establecido en `graphql`, `request.data` y `contexts.response.data` deberían tener resaltado de sintaxis.
+
+Se pueden crear problemas de rendimiento para transacciones y spans de GraphQL, por ejemplo, N+1, complejidad de consulta, etc.
+
+<div id="client">
+  ### Cliente
+</div>
+
+El rendimiento de GraphQL para clientes es muy similar a la implementación para servidores; la diferencia es que crearás un `span` en lugar de una `transaction`.
+
+Los spans no incluyen las interfaces `request` y `response`, pero establece la descripción del span de manera similar a la descripción de la transaction.
+
+<div id="breadcrumbs">
+  ### Migas de navegación
+</div>
+
+Se deben añadir migas de navegación para cada operación de GraphQL (resolvers, data loaders, etc.), si es posible.
+
+El `type` de la miga debe ser `graphql` y la `category` debe ser el tipo de operación; de lo contrario, `graphql.operation` si no está disponible.
+
+Campos adicionales para las migas de navegación:
+
+* data (todos los campos son opcionales pero recomendados):
+  * `operation_name` - Nombre de la operación de GraphQL
+  * `operation_type` - Tipo de operación de GraphQL, p. ej.: `query`, `mutation`, `subscription`
+  * `operation_id` - ID de la operación de GraphQL
+
+Evita incluir la cadena `query` como parte del campo `data`, ya que el evento puede descartarse debido al límite de tamaño.
+
+Si se necesitan más campos adicionales, el campo `data` puede usarse para añadir más contexto, p. ej. `graphql.path`, `graphql.field`, `graphql.type`, etc.
+
+La `category` también puede adaptarse a su propio tipo, p. ej. `graphql.resolver`, `graphql.data_loader`, etc.
+
+Para resolvers o data fetchers, una miga podría tener los siguientes campos:
+
+* `type` = `graphql`
+* `category` = `graphql.fetcher`
+* `path` - Ruta en la consulta, p. ej. `project/status`
+* `field` - Campo que se está obteniendo, p. ej. `status`
+* `type` - Tipo que se está obteniendo, p. ej. `String`
+* `object_type` - Tipo de objeto que se está obteniendo, p. ej. `Project`
+
+Para data loaders, una miga podría tener los siguientes campos:
+
+* `type` = `graphql`
+* `category` = `graphql.data_loader`
+* `keys` - Claves que debe cargar el data loader
+* `key_type` - Tipo de la clave
+* `value_type` - Tipo del valor
+* `name` - Nombre del data loader
+
+Si hay hooks disponibles y la capa de transporte también está instrumentada (p. ej., Apollo Interceptors para GraphQL y Spring), el SDK debe dar preferencia a la capa que tenga más información y evitar crear migas duplicadas, o fusionar la información si es posible.
+
+<div id="attaching-request-body-in-server-sdks">
+  ## Adjuntar el cuerpo de la solicitud en los SDK del servidor
+</div>
+
+Funcionalidad del SDK para adjuntar el cuerpo de la solicitud a los eventos, activada durante la ejecución de la solicitud.
+
+El usuario debe poder establecer la opción de configuración `maxRequestBodySize` para indicar al SDK el tamaño de los cuerpos de solicitud que deben adjuntarse.
+El SDK determina el tamaño real en bytes para cada opción:
+
+* `none`
+* `small` - `1000` bytes
+* `medium` - `10000` bytes (predeterminado)
+* `always`
+
+<div id="log-context">
+  ## Contexto de registro
+</div>
+
+Algunos frameworks de registro ofrecen la opción de establecer un contexto de registro. En Java, esto se llama MDC (Mapped Diagnostic Context).
+
+Los usuarios deberían poder definir una lista de entradas de contexto de registro en la opción de configuración `contextTags` para indicar al SDK que convierta esas entradas en etiquetas de Sentry.

@@ -1,0 +1,91 @@
+---
+title: Lanzamientos
+sidebar_order: 110
+description: >-
+  Aprende cómo proporcionar a Sentry información importante sobre tus lanzamientos,
+  como la salud y los detalles del lanzamiento, para detectar regresiones y
+  resolver problemas más rápido.
+og_image: /og-images/product-releases.png
+---
+
+<Alert>
+  Si buscas los detalles más recientes de los lanzamientos del SDK de Sentry, dirígete al <a href="https://github.com/getsentry" className="plausible-event-name=release+cta">perfil de GitHub de Sentry</a>, encuentra el repositorio de tu SDK y revisa las etiquetas de los lanzamientos.
+</Alert>
+
+Un *lanzamiento* es una versión de tu código desplegada en un entorno. Cuando notificas a Sentry un <SandboxLink scenario="oneRelease" projectSlug="react">lanzamiento</SandboxLink>, puedes identificar fácilmente [problemas](/es/product/issues/) nuevos y regresiones, determinar si un problema se resolvió y monitorear la salud de tu app recién desplegada. La página **Lanzamientos** ofrece una visualización de tus lanzamientos. Muestra la adopción de los lanzamientos de las últimas 24 horas y brinda una vista general de:
+
+* Cada versión del lanzamiento (una versión corta del nombre del lanzamiento sin el hash)
+* El proyecto asociado
+* La etapa de adopción de cada lanzamiento
+* Los autores de cada commit
+* El porcentaje de usuarios sin fallos
+* El porcentaje de sesiones sin fallos
+
+![Vista de la página de índice de lanzamientos que muestra cada versión de los proyectos relacionados con el lanzamiento y los detalles del proyecto.](./img/release_index.png)
+
+Notificar a Sentry un lanzamiento permite descubrir automáticamente qué commits asociar a un lanzamiento e identifica lo que consideramos «el lanzamiento más reciente» al buscar en [sentry.io](https://sentry.io).
+
+Cada lanzamiento está vinculado a uno o más proyectos. Si un lanzamiento incluye varios proyectos, Sentry duplicará los datos del lanzamiento con respecto a cada uno. Desde esta página, también puedes hacer clic en cualquier lanzamiento para ir a [Detalles del lanzamiento](/es/product/releases/release-details/) y obtener más información.
+
+Los lanzamientos ofrecen funciones adicionales importantes cuando están [totalmente configurados](/es/product/releases/setup/):
+
+* Determina los problemas y regresiones introducidos en un nuevo lanzamiento
+* Predice qué commit provocó un problema y quién probablemente es responsable
+* Resuelve problemas incluyendo el número del problema en tu mensaje de commit
+* [Recibe notificaciones por correo electrónico cuando se despliega tu código](/es/product/alerts/notifications/#deploy-notifications)
+
+<Alert>
+  Recomendamos notificar a Sentry un nuevo lanzamiento antes de desplegarlo. Si no lo haces, Sentry creará automáticamente una entidad de lanzamiento en el sistema la primera vez que vea un evento con ese identificador de lanzamiento.
+</Alert>
+
+No necesitas una integración de repositorio para ninguna de estas funciones, aunque recomendamos [instalar una como parte de una opción de lanzamiento automatizado](/es/product/releases/setup/release-automation/) para mayor eficiencia.
+
+<div id="associate-commits-in-releases">
+  ## Asociar commits en las versiones
+</div>
+
+Con las versiones, puedes [asociar commits](/es/product/releases/associate-commits/), lo que permite llevar un registro de los commits usados en una versión.
+
+Puedes resolver problemas rápidamente desde la página **Release Details**, donde puedes ver qué commits se usaron para crear una versión y la lista de autores de esos commits.
+
+<div id="track-release-health">
+  ## Seguimiento del estado de las versiones
+</div>
+
+*La salud de la versión* ofrece información sobre el impacto de fallos y errores en la experiencia de tus usuarios y revela tendencias con cada nueva incidencia. Supervisa la [salud de las versiones](/es/product/releases/health/) observando la adopción por parte de los usuarios, el uso de la aplicación, el porcentaje de fallos y los datos de sesiones. Puedes explorar con más detalle la salud de una versión en la página de [Detalles de la versión](/es/product/releases/release-details/).
+
+Puedes ver los datos de la salud de la versión desde la página de <SandboxLink scenario="oneIssue" projectSlug="react">Detalles de la incidencia</SandboxLink> seleccionando el ID del commit indicado en “Last Seen”, o desde la página **Releases**.
+
+<div id="3-different-ways-to-resolve-issues">
+  ## 3 formas diferentes de resolver problemas
+</div>
+
+Si quieres marcar un problema como [resuelto](/es/product/issues/states-triage/#resolve) tanto en la versión actual como en una futura, puedes hacerlo resolviéndolo en una versión mediante el menú desplegable en la página de detalles del problema.
+
+Hay varias opciones para resolver un problema de versión. Si quieres dejar el problema de la versión sin resolver y recibir una notificación la próxima vez que se detecte cualquier evento en una versión, haz clic en el botón principal &quot;Resolve&quot;. Pero si prefieres ignorar el problema de la versión hasta que vuelva a aparecer en tu versión actual o siguiente, puedes seleccionar &quot;Resolved In The next release&quot; o &quot;Resolved In The current release&quot; en el menú desplegable.
+
+![Vista de las opciones del menú desplegable para resolver un problema en los detalles del problema.](./img/resolved_in_options.png)
+
+<div id="resolved-in-the-current-release">
+  ### Resuelto en la versión actual
+</div>
+
+La opción &quot;Resuelto en la versión actual&quot; registra la versión actual que se muestra en la interfaz. Los eventos nuevos relacionados con el problema de esa versión se comparan con la versión registrada para determinar si debe volver a marcarse como no resuelto. Si la versión usa semver, el problema se marcará como no resuelto si la versión es de un semver mayor que la versión resuelta. Si la versión no usa semver, se compararán las fechas de creación de las versiones.
+
+<div id="resolved-in-the-next-release">
+  ### Resuelto en la próxima versión
+</div>
+
+La opción &quot;Resuelto en la próxima versión&quot; funciona como resolver en la versión actual, pero como la próxima aún no existe, registramos la última versión en la que se detectó el problema. Esto se actualiza automáticamente cuando se crea una nueva versión. Con versionado semántico, el problema se resuelve en la siguiente versión más reciente de entre todas las versiones actuales.
+
+<div id="resolved-in-a-commit">
+  ### Resuelto en un commit
+</div>
+
+La opción &quot;Resuelto en un commit&quot; te permite esperar a que se publique una versión que incluya el commit especificado. Una vez que se crea la versión, los eventos nuevos se comparan con esa versión o con su fecha de publicación. Si los eventos nuevos pertenecen a una versión más reciente, el issue se marca como regresión y aparece en tu [pestaña For Review](/es/product/issues/states-triage/) para su triage.
+
+<div id="learn-more-about-releases">
+  ## Más información sobre las versiones
+</div>
+
+<PageGrid />
