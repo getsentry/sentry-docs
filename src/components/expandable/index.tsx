@@ -3,10 +3,9 @@
 import {ReactNode, useCallback, useEffect, useRef, useState} from 'react';
 import {ChevronDownIcon, ChevronRightIcon} from '@radix-ui/react-icons';
 import * as Sentry from '@sentry/nextjs';
+import {useGT} from 'gt-next';
 
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
-
-import {useGT} from 'gt-next';
 
 // explicitly not using CSS modules here
 // because there's some prerendered content that depends on these exact class names

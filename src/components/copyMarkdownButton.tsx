@@ -3,13 +3,12 @@
 import {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {Clipboard} from 'react-feather';
+import {T,useGT} from 'gt-next';
 import Link from 'next/link';
 
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 import Chevron from 'sentry-docs/icons/Chevron';
 import Markdown from 'sentry-docs/icons/Markdown';
-
-import {useGT, T} from 'gt-next';
 
 interface CopyMarkdownButtonProps {
   pathname: string;

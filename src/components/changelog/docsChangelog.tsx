@@ -1,5 +1,6 @@
 import {T} from 'gt-next';
 import {getGT} from 'gt-next/server';
+
 interface ChangelogEntry {
   author: string;
   description: string;

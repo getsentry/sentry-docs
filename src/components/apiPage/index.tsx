@@ -1,4 +1,5 @@
 import {Fragment, ReactElement, useMemo} from 'react';
+import {T} from 'gt-next';
 import {bundleMDX} from 'mdx-bundler';
 import {getMDXComponent} from 'mdx-bundler/client';
 
@@ -12,8 +13,6 @@ import './styles.scss';
 import {ApiExamples} from '../apiExamples/apiExamples';
 import {DocPage} from '../docPage';
 import {SmartLink} from '../smartLink';
-
-import {T} from 'gt-next';
 
 function Params({params}) {
   return (

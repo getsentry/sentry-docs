@@ -1,8 +1,8 @@
+import {T, Var} from 'gt-next';
+
 import getAppRegistry from 'sentry-docs/build/appRegistry';
 
 import styles from './styles.module.scss';
-
-import {T, Var} from 'gt-next';
 
 export async function CliChecksumTable() {
   const appRegistry = await getAppRegistry();

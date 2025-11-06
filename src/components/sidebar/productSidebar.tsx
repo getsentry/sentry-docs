@@ -1,11 +1,11 @@
+import {useGT, useMessages} from 'gt-next';
+
 import {nodeForPath} from 'sentry-docs/docTree';
 
 import {DynamicNav, toTree} from './dynamicNav';
 import {SidebarLink, SidebarSeparator} from './sidebarLink';
 import {NavNode, ProductSidebarProps} from './types';
 import {docNodeToNavNode, getNavNodes} from './utils';
-
-import {useGT, useMessages} from 'gt-next';
 
 export function ProductSidebar({rootNode, items}: ProductSidebarProps) {
   const gt = useGT();

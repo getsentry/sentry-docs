@@ -1,6 +1,7 @@
 'use client';
 
 import {HamburgerMenuIcon} from '@radix-ui/react-icons';
+import {T} from 'gt-next';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -12,8 +13,6 @@ import {MobileMenu} from './mobileMenu';
 import {NavLink} from './navlink';
 import {Search} from './search';
 import {ThemeToggle} from './theme-toggle';
-
-import {T} from 'gt-next';
 
 export const sidebarToggleId = sidebarStyles['navbar-menu-toggle'];
 

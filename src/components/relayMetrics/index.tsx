@@ -1,4 +1,5 @@
 import {Fragment} from 'react';
+import {T} from 'gt-next';
 import {micromark} from 'micromark';
 
 import metrics from 'sentry-docs/data/relay_metrics.json';
@@ -6,8 +7,6 @@ import metrics from 'sentry-docs/data/relay_metrics.json';
 import styles from './styles.module.scss';
 
 import {Alert} from '../alert';
-
-import {T} from 'gt-next';
 
 export function RelayMetrics() {
   const metricsWithMarkdown = metrics.map(metric => ({

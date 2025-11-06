@@ -11,6 +11,7 @@ import {
 import {Combobox, ComboboxItem, ComboboxList, ComboboxProvider} from '@ariakit/react';
 import {CaretRightIcon, CaretSortIcon, MagnifyingGlassIcon} from '@radix-ui/react-icons';
 import * as RadixSelect from '@radix-ui/react-select';
+import {useGT} from 'gt-next';
 import {matchSorter} from 'match-sorter';
 import {usePathname, useRouter} from 'next/navigation';
 
@@ -21,8 +22,6 @@ import {uniqByReference} from 'sentry-docs/utils';
 import styles from './style.module.scss';
 
 import {SidebarLink, SidebarSeparator} from '../sidebar/sidebarLink';
-
-import {useGT} from 'gt-next';
 
 export function PlatformSelector({
   platforms,

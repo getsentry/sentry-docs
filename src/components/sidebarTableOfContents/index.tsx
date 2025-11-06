@@ -1,12 +1,11 @@
 'use client';
 
 import {useEffect, useState} from 'react';
+import {T} from 'gt-next';
 
 import {isNotNil} from 'sentry-docs/utils';
 
 import styles from './style.module.scss';
-
-import {T} from 'gt-next';
 
 interface TocItem {
   depth: number;

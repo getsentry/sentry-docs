@@ -1,8 +1,8 @@
+import {T} from 'gt-next';
+
 import fields from 'sentry-docs/data/relay_event_pii.json';
 
 import styles from './style.module.scss';
-
-import {T} from 'gt-next';
 
 function PiiField({field}) {
   const asterisk_flag = field.additional_properties;

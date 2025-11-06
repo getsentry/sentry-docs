@@ -1,4 +1,5 @@
 import {ReactNode} from 'react';
+import {msg} from 'gt-next';
 
 import {getCurrentGuide, getCurrentPlatform, nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
@@ -22,8 +23,6 @@ import {PlatformSdkDetail} from '../platformSdkDetail';
 import {Sidebar} from '../sidebar';
 import {SidebarTableOfContents} from '../sidebarTableOfContents';
 import {ReaderDepthTracker} from '../track-reader-depth';
-
-import {msg} from 'gt-next';
 
 type Props = {
   children: ReactNode;

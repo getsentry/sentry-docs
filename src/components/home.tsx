@@ -1,3 +1,4 @@
+import {T, useGT, Var} from 'gt-next';
 import Image from 'next/image';
 
 import {Banner} from 'sentry-docs/components/banner';
@@ -18,8 +19,6 @@ import {Card} from './card';
 import {Header} from './header';
 import {NavLink, NavLinkProps} from './navlink';
 import {PlatformFilter} from './platformFilter';
-
-import {useGT, T, Var} from 'gt-next';
 
 export function Home() {
   const gt = useGT();

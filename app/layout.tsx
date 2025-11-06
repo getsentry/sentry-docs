@@ -1,16 +1,15 @@
 import './globals.css';
 
 import {Theme} from '@radix-ui/themes';
+import {getLocaleDirection} from 'generaltranslation';
+import {GTProvider} from 'gt-next';
+import {getLocale} from 'gt-next/server';
 import type {Metadata} from 'next';
 import {Rubik} from 'next/font/google';
 import Script from 'next/script';
 import PlausibleProvider from 'next-plausible';
 
 import {ThemeProvider} from 'sentry-docs/components/theme-provider';
-import {GTProvider} from 'gt-next';
-
-import {getLocale} from 'gt-next/server';
-import {getLocaleDirection} from 'generaltranslation';
 
 const rubik = Rubik({
   weight: ['400', '500', '700'],

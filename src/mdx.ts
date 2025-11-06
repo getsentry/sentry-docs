@@ -1,4 +1,5 @@
 import matter from 'gray-matter';
+import {getDefaultLocale, getLocale, getLocales} from 'gt-next/server';
 import {s} from 'hastscript';
 import yaml from 'js-yaml';
 import {bundleMDX} from 'mdx-bundler';
@@ -42,7 +43,6 @@ import remarkVariables from './remark-variables';
 import {FrontMatter, Platform, PlatformConfig} from './types';
 import {isNotNil} from './utils';
 import {isVersioned, VERSION_INDICATOR} from './versioning';
-import {getLocale, getDefaultLocale, getLocales} from 'gt-next/server';
 
 type SlugFile = {
   frontMatter: Platform & {slug: string};

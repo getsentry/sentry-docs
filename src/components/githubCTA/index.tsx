@@ -1,11 +1,10 @@
+import {T} from 'gt-next';
 import Link from 'next/link';
 
 import {nodeForPath} from 'sentry-docs/docTree';
 import {serverContext} from 'sentry-docs/serverContext';
 
 import styles from './styles.module.css';
-
-import {T} from 'gt-next';
 
 export function GitHubCTA() {
   const {path, rootNode} = serverContext();

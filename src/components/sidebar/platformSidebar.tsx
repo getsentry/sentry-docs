@@ -1,10 +1,10 @@
+import {useGT} from 'gt-next';
+
 import {DocNode, getGuide, getPlatform, nodeForPath} from 'sentry-docs/docTree';
 
 import {DynamicNav, toTree} from './dynamicNav';
 import {PlatformSidebarProps} from './types';
 import {getNavNodes} from './utils';
-
-import {useGT} from 'gt-next';
 
 export function PlatformSidebar({
   rootNode,

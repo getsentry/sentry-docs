@@ -2,6 +2,7 @@
 import {TriangleRightIcon} from '@radix-ui/react-icons';
 import * as Popover from '@radix-ui/react-popover';
 import {Box, Button, Theme} from '@radix-ui/themes';
+import {T} from 'gt-next';
 import Link from 'next/link';
 
 import {Search} from 'sentry-docs/components/search';
@@ -9,8 +10,6 @@ import {Search} from 'sentry-docs/components/search';
 import styles from './styles.module.scss';
 
 import {ThemeToggle} from '../theme-toggle';
-
-import {T} from 'gt-next';
 
 type Props = {
   pathname: string;

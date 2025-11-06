@@ -1,3 +1,5 @@
+import {msg, useGT, useMessages} from 'gt-next';
+
 import {DocNode, nodeForPath} from 'sentry-docs/docTree';
 
 import styles from './style.module.scss';
@@ -6,8 +8,6 @@ import {DynamicNav, toTree} from './dynamicNav';
 import {SidebarLink, SidebarSeparator} from './sidebarLink';
 import {NavNode} from './types';
 import {docNodeToNavNode, getNavNodes} from './utils';
-
-import {useGT, msg, useMessages} from 'gt-next';
 
 const devDocsMenuItems: {root: string; title: string}[] = [
   {root: 'getting-started', title: msg('Getting Started')},

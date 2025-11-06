@@ -1,4 +1,6 @@
 import {Fragment} from 'react';
+import {msg} from 'gt-next';
+import {getGT} from 'gt-next/server';
 
 import {getDocsRootNode, nodeForPath} from 'sentry-docs/docTree';
 
@@ -8,9 +10,6 @@ import {ProductSidebar} from './productSidebar';
 import {SidebarSeparator} from './sidebarLink';
 import {NavNode} from './types';
 import {docNodeToNavNode, getNavNodes} from './utils';
-
-import {msg} from 'gt-next';
-import {getGT} from 'gt-next/server';
 
 /** a root of `"some-root"` maps to the `/some-root/` url */
 // todo: we should probably get rid of this

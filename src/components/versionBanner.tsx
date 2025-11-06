@@ -1,6 +1,5 @@
 import {useState} from 'react';
 import {Button} from '@radix-ui/themes';
-
 import {T, Var} from 'gt-next';
 
 export function VersionBanner({
