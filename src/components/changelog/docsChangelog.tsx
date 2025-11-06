@@ -1,5 +1,5 @@
-import { T } from 'gt-next';
-import { getGT } from 'gt-next/server';
+import {T} from 'gt-next';
+import {getGT} from 'gt-next/server';
 interface ChangelogEntry {
   author: string;
   description: string;
@@ -84,7 +84,9 @@ export async function DocsChangelog() {
                 {totalFiles > 0 && <span>•</span>}
                 {totalFiles > 0 && (
                   <span>
-                    {gt('{totalFiles} file{s, plural, one {s} other {}} changed', {totalFiles})}
+                    {gt('{totalFiles} file{s, plural, one {s} other {}} changed', {
+                      totalFiles,
+                    })}
                   </span>
                 )}
               </div>

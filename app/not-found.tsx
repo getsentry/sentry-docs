@@ -6,7 +6,7 @@ import {Button} from '@radix-ui/themes';
 import {Header} from 'sentry-docs/components/header';
 import {Search} from 'sentry-docs/components/search';
 
-import { T } from 'gt-next';
+import {T} from 'gt-next';
 
 export default function NotFound() {
   const [pathname, setPathname] = useState('');

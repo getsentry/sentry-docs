@@ -13,7 +13,7 @@ import styles from './style.module.scss';
 
 import {PlatformIcon} from '../platformIcon';
 
-import { T } from 'gt-next';
+import {T} from 'gt-next';
 
 const mostViewedPlatforms: {icon: string; key: string; title: string; url: string}[] = [
   {

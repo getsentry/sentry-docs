@@ -2,7 +2,7 @@ import getPackageRegistry from 'sentry-docs/build/packageRegistry';
 
 import styles from './styles.module.scss';
 
-import { T } from 'gt-next';
+import {T} from 'gt-next';
 
 export async function JsBundleList() {
   const packageRegistry = await getPackageRegistry();

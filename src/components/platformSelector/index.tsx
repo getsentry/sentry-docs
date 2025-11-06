@@ -22,7 +22,7 @@ import styles from './style.module.scss';
 
 import {SidebarLink, SidebarSeparator} from '../sidebar/sidebarLink';
 
-import { useGT } from 'gt-next';
+import {useGT} from 'gt-next';
 
 export function PlatformSelector({
   platforms,
@@ -174,7 +174,9 @@ export function PlatformSelector({
               </div>
               <Combobox
                 autoSelect
-                placeholder={gt('Search platforms', {$context:'as in searching for a platform, not a platform for search'})}
+                placeholder={gt('Search platforms', {
+                  $context: 'as in searching for a platform, not a platform for search',
+                })}
                 className={styles.combobox}
                 // Ariakit's Combobox manually triggers a blur event on virtually
                 // blurred items, making them work as if they had actual DOM
@@ -249,7 +251,9 @@ export function PlatformSelector({
         <div className="mt-3">
           <SidebarLink
             href={storedPlatform.url}
-            title={gt("Sentry for {platform}", {platform: storedPlatform.title ?? storedPlatform.key})}
+            title={gt('Sentry for {platform}', {
+              platform: storedPlatform.title ?? storedPlatform.key,
+            })}
             collapsible
             topLevel
           />

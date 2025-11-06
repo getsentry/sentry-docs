@@ -9,7 +9,7 @@ import styles from './styles.module.scss';
 
 import {CodeContext} from '../codeContext';
 
-import { T, msg, useMessages } from 'gt-next';
+import {T, msg, useMessages} from 'gt-next';
 
 const OPTION_IDS = [
   'error-monitoring',
@@ -45,8 +45,8 @@ const optionDetails: Record<
     description: (
       <T>
         <span>
-            Send text-based log information from your applications to Sentry for viewing
-            alongside relevant errors and searching by text-string or individual attributes.
+          Send text-based log information from your applications to Sentry for viewing
+          alongside relevant errors and searching by text-string or individual attributes.
         </span>
       </T>
     ),
@@ -102,8 +102,8 @@ const optionDetails: Record<
     description: (
       <T>
         <span>
-          Collect user feedback from anywhere in your application with an embeddable widget
-          that allows users to report bugs and provide insights.
+          Collect user feedback from anywhere in your application with an embeddable
+          widget that allows users to report bugs and provide insights.
         </span>
       </T>
     ),
@@ -115,7 +115,7 @@ const optionDetails: Record<
         <span>
           Upload your source code to allow Sentry to display snippets of your code next to
           the event stack traces.
-      </span>
+        </span>
       </T>
     ),
   },
@@ -124,9 +124,10 @@ const optionDetails: Record<
     description: (
       <T>
         <span>
-          Debug symbols for iOS and macOS that provide the necessary information to convert
-          program addresses back to function names, source file names, and line numbers.
-      </span>
+          Debug symbols for iOS and macOS that provide the necessary information to
+          convert program addresses back to function names, source file names, and line
+          numbers.
+        </span>
       </T>
     ),
   },

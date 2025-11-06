@@ -26,7 +26,7 @@ import {
 } from './styles';
 import {dropdownPopperOptions} from './utils';
 
-import { useGT } from 'gt-next';
+import {useGT} from 'gt-next';
 
 type KeywordSelectorProps = {
   group: string;

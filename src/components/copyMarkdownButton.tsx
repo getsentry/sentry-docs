@@ -9,7 +9,7 @@ import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 import Chevron from 'sentry-docs/icons/Chevron';
 import Markdown from 'sentry-docs/icons/Markdown';
 
-import { useGT, T } from 'gt-next';
+import {useGT, T} from 'gt-next';
 
 interface CopyMarkdownButtonProps {
   pathname: string;
@@ -139,7 +139,9 @@ export function CopyMarkdownButton({pathname}: CopyMarkdownButtonProps) {
             disabled={isLoading}
           >
             <Clipboard size={16} />
-            <span>{error ? gt('Failed to copy') : copied ? gt('Copied!') : gt('Copy page')}</span>
+            <span>
+              {error ? gt('Failed to copy') : copied ? gt('Copied!') : gt('Copy page')}
+            </span>
           </button>
 
           <div className="w-px h-full bg-gray-200 dark:bg-[var(--gray-6)]" />

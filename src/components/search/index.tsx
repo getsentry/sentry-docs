@@ -24,7 +24,7 @@ import {Logo} from '../logo';
 import {SearchResultItems} from './searchResultItems';
 import {relativizeUrl} from './util';
 
-import { useGT, T, Var } from 'gt-next';
+import {useGT, T, Var} from 'gt-next';
 
 // Initialize Algolia Insights
 algoliaInsights('init', {
@@ -302,7 +302,7 @@ export function Search({
         <div className={styles['input-wrapper']}>
           <input
             type="text"
-            placeholder={gt("Search Docs")}
+            placeholder={gt('Search Docs')}
             aria-label="Search"
             className={styles['search-input']}
             value={query}
@@ -353,7 +353,11 @@ export function Search({
                 <div className={styles['sgs-ai-button-content']}>
                   <div className={styles['sgs-ai-button-heading']}>
                     Ask Sentry about{' '}
-                    <span><Var name='query'>{query.length > 30 ? query.slice(0, 30) + '...' : query}</Var></span>
+                    <span>
+                      <Var name="query">
+                        {query.length > 30 ? query.slice(0, 30) + '...' : query}
+                      </Var>
+                    </span>
                   </div>
                   <div className={styles['sgs-ai-hint']}>
                     Get an AI-powered answer to your question
@@ -384,7 +388,11 @@ export function Search({
                   onClick={() => setShowOffsiteResults(true)}
                   onMouseOver={() => searchFor(query, {searchAllIndexes: true})}
                 >
-                  Search <Var name='query'><em>{query}</em></Var> across all Sentry sites
+                  Search{' '}
+                  <Var name="query">
+                    <em>{query}</em>
+                  </Var>{' '}
+                  across all Sentry sites
                 </button>
               </div>
             </T>

@@ -7,7 +7,7 @@ import styles from './styles.module.scss';
 
 import {Alert} from '../alert';
 
-import { T } from 'gt-next';
+import {T} from 'gt-next';
 
 export function RelayMetrics() {
   const metricsWithMarkdown = metrics.map(metric => ({

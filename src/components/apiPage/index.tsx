@@ -13,7 +13,7 @@ import {ApiExamples} from '../apiExamples/apiExamples';
 import {DocPage} from '../docPage';
 import {SmartLink} from '../smartLink';
 
-import { T } from 'gt-next';
+import {T} from 'gt-next';
 
 function Params({params}) {
   return (
@@ -32,14 +32,20 @@ function Params({params}) {
                   </em>
                 )}
               </div>
-              {!!param.required && <T><div className="required">REQUIRED</div></T>}
+              {!!param.required && (
+                <T>
+                  <div className="required">REQUIRED</div>
+                </T>
+              )}
             </dt>
 
             {!!param.description && (
               <dd>
                 {param.schema?.enum && (
                   <Fragment>
-                    <T><b>choices</b>:</T>
+                    <T>
+                      <b>choices</b>:
+                    </T>
                     <ul>
                       <code>
                         {param.schema?.enum.map(e => {
@@ -51,7 +57,9 @@ function Params({params}) {
                 )}
                 {param.schema?.items?.enum && (
                   <Fragment>
-                    <T><b>choices</b>:</T>
+                    <T>
+                      <b>choices</b>:
+                    </T>
                     <ul>
                       <code>
                         {param.schema?.items?.enum.map(e => {
@@ -174,7 +182,9 @@ export function ApiPage({api}: Props) {
 
           {api.security?.length && (
             <div className="api-info-row">
-              <T><h3>Scopes</h3></T>
+              <T>
+                <h3>Scopes</h3>
+              </T>
 
               <T>
                 <div>

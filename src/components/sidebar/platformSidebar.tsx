@@ -4,7 +4,7 @@ import {DynamicNav, toTree} from './dynamicNav';
 import {PlatformSidebarProps} from './types';
 import {getNavNodes} from './utils';
 
-import { useGT } from 'gt-next';
+import {useGT} from 'gt-next';
 
 export function PlatformSidebar({
   rootNode,

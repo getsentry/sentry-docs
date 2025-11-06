@@ -2,7 +2,7 @@ import {DoubleArrowLeftIcon, DoubleArrowRightIcon} from '@radix-ui/react-icons';
 
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
 
-import { useMessages } from 'gt-next';
+import {useMessages} from 'gt-next';
 
 export function PaginationNav({
   node,

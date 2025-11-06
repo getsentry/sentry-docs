@@ -13,7 +13,7 @@ import {NavLink} from './navlink';
 import {Search} from './search';
 import {ThemeToggle} from './theme-toggle';
 
-import { T } from 'gt-next';
+import {T} from 'gt-next';
 
 export const sidebarToggleId = sidebarStyles['navbar-menu-toggle'];
 

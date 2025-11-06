@@ -7,7 +7,7 @@ import {SidebarLink, SidebarSeparator} from './sidebarLink';
 import {NavNode} from './types';
 import {docNodeToNavNode, getNavNodes} from './utils';
 
-import { useGT, msg, useMessages } from 'gt-next';
+import {useGT, msg, useMessages} from 'gt-next';
 
 const devDocsMenuItems: {root: string; title: string}[] = [
   {root: 'getting-started', title: msg('Getting Started')},

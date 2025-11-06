@@ -10,7 +10,7 @@ import styles from './styles.module.scss';
 
 import {ThemeToggle} from '../theme-toggle';
 
-import { T } from 'gt-next';
+import {T} from 'gt-next';
 
 type Props = {
   pathname: string;

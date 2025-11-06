@@ -19,7 +19,7 @@ import {Header} from './header';
 import {NavLink, NavLinkProps} from './navlink';
 import {PlatformFilter} from './platformFilter';
 
-import { useGT, T, Var } from 'gt-next';
+import {useGT, T, Var} from 'gt-next';
 
 export function Home() {
   const gt = useGT();
@@ -59,8 +59,10 @@ export function Home() {
               href="/product/"
               image={RocketImage}
               imageAlt="Rocket image"
-              title={gt("What is Sentry?")}
-              description={gt("Application monitoring and debugging software considered “not bad” by 4 million developers.")}
+              title={gt('What is Sentry?')}
+              description={gt(
+                'Application monitoring and debugging software considered “not bad” by 4 million developers.'
+              )}
             />
 
             <Card
@@ -68,8 +70,10 @@ export function Home() {
               href="/organization"
               image={OrganizationImage}
               imageAlt="Organization image"
-              title={gt("Organization settings")}
-              description={gt("Information for setting up your organization's Sentry account.")}
+              title={gt('Organization settings')}
+              description={gt(
+                "Information for setting up your organization's Sentry account."
+              )}
             />
 
             <Card
@@ -77,8 +81,8 @@ export function Home() {
               href="/pricing"
               image={CalculatorImage}
               imageAlt="Calculator image"
-              title={gt("Pricing & Billing")}
-              description={gt("All about our pricing and billing structure.")}
+              title={gt('Pricing & Billing')}
+              description={gt('All about our pricing and billing structure.')}
             />
 
             <Card
@@ -86,8 +90,8 @@ export function Home() {
               href="/api"
               image={PlugImage}
               imageAlt="Plug image"
-              title={gt("API")}
-              description={gt("APIs for accessing Sentry programmatically.")}
+              title={gt('API')}
+              description={gt('APIs for accessing Sentry programmatically.')}
             />
 
             <Card
@@ -95,8 +99,8 @@ export function Home() {
               href="/cli"
               image={TerminalImage}
               imageAlt="Terminal image"
-              title={gt("CLI")}
-              description={gt("How to use ‘sentry-cli’ on the command line.")}
+              title={gt('CLI')}
+              description={gt('How to use ‘sentry-cli’ on the command line.')}
             />
 
             <Card
@@ -104,8 +108,8 @@ export function Home() {
               href="/security-legal-pii"
               image={SecurityImage}
               imageAlt="Stamped paper image"
-              title={gt("Security, Legal & PII")}
-              description={gt("Security, compliance, and data-scrubbing processes.")}
+              title={gt('Security, Legal & PII')}
+              description={gt('Security, compliance, and data-scrubbing processes.')}
             />
 
             <Card
@@ -113,8 +117,8 @@ export function Home() {
               href="/concepts"
               image={ConceptsImage}
               imageAlt="Concept and references image"
-              title={gt("Concepts & Reference")}
-              description={gt("Core concepts that make Sentry, Sentry.")}
+              title={gt('Concepts & Reference')}
+              description={gt('Core concepts that make Sentry, Sentry.')}
             />
           </div>
           <h2 className="text-2xl mt-10 mb-6 font-medium">Talk to us</h2>
@@ -124,8 +128,8 @@ export function Home() {
               href="https://discord.com/invite/sentry"
               image={ChatBubble}
               imageAlt="Chat bubble image"
-              title={gt("Sentry Discord")}
-              description={gt("Real talk in real time. Get in it.")}
+              title={gt('Sentry Discord')}
+              description={gt('Real talk in real time. Get in it.')}
             />
 
             <Card
@@ -133,8 +137,8 @@ export function Home() {
               href="https://sentry.zendesk.com/hc/en-us/"
               image={SupportImage}
               imageAlt="Support image"
-              title={gt("Support")}
-              description={gt("See how we can help.")}
+              title={gt('Support')}
+              description={gt('See how we can help.')}
             />
           </div>
         </div>
@@ -165,8 +169,8 @@ export function Home() {
             </FooterLink>
           </div>
           <p className="px-3 text-sm">
-            © <Var name='trademarkYear'>{new Date().getFullYear()}</Var> • Sentry is a registered trademark of Functional
-            Software, Inc.
+            © <Var name="trademarkYear">{new Date().getFullYear()}</Var> • Sentry is a
+            registered trademark of Functional Software, Inc.
           </p>
           <div className="bg-accent-purple max-w-max md:ml-auto ml-2 px-5">
             <SentryWordmarkLogo height={50} fill="#ffffff" />

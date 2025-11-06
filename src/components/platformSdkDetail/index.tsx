@@ -6,7 +6,7 @@ import styles from './styles.module.scss';
 
 import {SmartLink} from '../smartLink';
 
-import { T, Var } from 'gt-next';
+import {T, Var} from 'gt-next';
 
 export async function PlatformSdkDetail() {
   const {rootNode, path} = serverContext();
@@ -39,11 +39,17 @@ export async function PlatformSdkDetail() {
 
   return (
     <div className={styles.PackageDetail}>
-      <T><h3>Package Details</h3></T>
+      <T>
+        <h3>Package Details</h3>
+      </T>
       <ul>
         <T>
-          <li>Latest version: <Var name='version'>{version}</Var></li>
-          <Var name='packageName'><li>{url ? <SmartLink to={url}>{canonical}</SmartLink> : canonical}</li></Var>
+          <li>
+            Latest version: <Var name="version">{version}</Var>
+          </li>
+          <Var name="packageName">
+            <li>{url ? <SmartLink to={url}>{canonical}</SmartLink> : canonical}</li>
+          </Var>
           <li>
             <SmartLink to={repoUrl} target="_blank">
               Repository on GitHub
